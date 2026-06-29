@@ -29,13 +29,12 @@ own recollection.
    dotnet cake --target=update-docs            # mdoc update + format → "To be added." placeholders
    ```
 
-2. **List the docs to fill.** Right after a stub regen the new placeholders show up as changed files, so
-   the `new` mode targets them:
+2. **List the docs to fill.** Right after a stub regen the new placeholders show up as changed files:
    ```bash
-   dotnet cake --target=docs-resolve-scope --scope=new
+   git -C docs diff --name-only --diff-filter=ACM
    ```
-   Each line includes a candidate `binding/` source path (`source:NONE` → `grep` for it). Shard the result
-   into ~25–40-file batches.
+   Map each `<Type>.xml` to its source at `binding/<Namespace>/<Type>.cs` (if the guess is wrong, `grep`
+   for the type). Shard the result into ~25–40-file batches.
 
 3. **Write (per file).** A field is **in scope to fill** when it is empty, self-closing, or still a
    placeholder (`To be added.`, or a bracketed remarks scaffold like `[Describe …]`). Do not rewrite
@@ -63,8 +62,8 @@ own recollection.
 4. **Review** the files just written with the review checks ([`reviewing.md`](reviewing.md) §Checks), then
    fix CRITICAL findings by editing the XML directly.
 
-5. **Validate & format** ([`validation.md`](validation.md)): structural validator → linter →
-   `docs-format-docs`.
+5. **Validate & format** ([`validation.md`](validation.md)): run `docs-format-docs` — it formats and runs
+   the deterministic checks; fix any build-failing broken-XML errors.
 
 6. **Land:** commit on a `dev/...` branch in the `docs` submodule and open a PR (the submodule protects
    `main`).

@@ -3,7 +3,7 @@
 The single source of truth for **obsolete members that must never appear in a code example**, and
 their modern replacements. Two consumers read this file:
 
-1. The **deterministic linter** (`dotnet cake --target=docs-lint`) parses the machine table below to flag
+1. The **deterministic checks** in `docs-format-docs` parse the machine table below to flag
    any obsolete member used inside a `csharp` code fence.
 2. **Agent prompts** (writer + reviewer-examples) point here instead of restating the list.
 

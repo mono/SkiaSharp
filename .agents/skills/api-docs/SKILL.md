@@ -25,8 +25,8 @@ load only when needed.
   `git submodule update --init docs` if it is empty.
 - Each `<Type>.xml` maps 1:1 to `binding/SkiaSharp/<Type>.cs` (or `binding/HarfBuzzSharp/`) → always read
   source before documenting.
-- **Edit the XML directly.** Safety comes from the post-edit structural validator
-  ([`references/validation.md`](references/validation.md)).
+- **Edit the XML directly.** Safety comes from `docs-format-docs`, which formats every file and fails the
+  build on broken XML/CDATA ([`references/validation.md`](references/validation.md)).
 - **Never edit generated files:** `index.xml`, `ns-*.xml`, `_filter.xml`, `FrameworksIndex/`.
 
 ## How to work
@@ -39,10 +39,11 @@ work in batches of ~25–40 files so each pass stays auditable and resumable.
 | Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
 | **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
-The user asks in plain language ("review the font docs", "fill in what's missing").
-`dotnet cake --target=docs-resolve-scope --scope=<mode>` lists the inventory — `all`, `new`/`changed`
-(docs changed vs the git baseline), or `file:PATH` — and **you** pick the files a request covers. For a
-theme, list `all` and select the matching files yourself; the chosen procedure file covers the rest.
+The user asks in plain language ("review the font docs", "fill in what's missing"). The docs live at
+`docs/SkiaSharpAPI/<Namespace>/<Type>.xml`; list them directly, and use
+`git -C docs diff --name-only origin/main...HEAD` for "what changed". Each `<Type>.xml` maps to its source
+at `binding/<Namespace>/<Type>.cs`, and **you** pick the files a request covers — for a theme, scan the
+list and select the matching types yourself; the chosen procedure file covers the rest.
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
@@ -60,12 +61,11 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 ## Tooling & validation
 
-- Inventory + checks (Cake targets in `scripts/infra/docs/docs.cake`): `docs-resolve-scope` (lists
-  `all`/`new`/`changed`/`file:`), `docs-lint` (deterministic), `docs-validate` (structural) — each driven
-  by `--scope=<mode>`. See [`references/validation.md`](references/validation.md).
+- Format + checks (one Cake target in `scripts/infra/docs/docs.cake`): `docs-format-docs` formats every
+  type file and runs the deterministic content checks — warnings for missing/quality issues, build-failing
+  errors for broken XML/CDATA. See [`references/validation.md`](references/validation.md).
 - Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
   `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
-- Format: `dotnet cake --target=docs-format-docs`.
 
 ## Landing changes
 

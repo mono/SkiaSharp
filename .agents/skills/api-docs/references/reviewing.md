@@ -28,19 +28,17 @@ across many files almost certainly skimmed. Every factual finding must cite sour
 
 ## Procedure
 
-1. **Pick which docs to review.** Run:
-   ```bash
-   dotnet cake --target=docs-resolve-scope --scope=<all|new|changed|file:PATH>
-   ```
-   It prints each doc path plus a candidate `binding/` source path (`source:NONE` if it can't guess — then
-   `grep` for it). The user describes the target in plain language. For a theme ("the font docs"), list
-   `all` and **select the matching files yourself** — e.g. expand "font" to `SKFont`, `SKTypeface`,
-   `SKFontMetrics`, `SKTextBlob`, and the text APIs on `SKPaint`/`SKCanvas`, judging by each type's purpose
-   not just its filename. For "whatever changed" use `changed`; for the whole library use `all`. Shard into
-   ~25–40-file batches; review is incremental against the `last-reviewed` marker.
+1. **Pick which docs to review.** The docs live at `docs/SkiaSharpAPI/<Namespace>/<Type>.xml`; list them
+   directly and map each to its source at `binding/<Namespace>/<Type>.cs` (`grep` if the guess is wrong).
+   The user describes the target in plain language. For a theme ("the font docs"), scan the list and
+   **select the matching files yourself** — e.g. expand "font" to `SKFont`, `SKTypeface`, `SKFontMetrics`,
+   `SKTextBlob`, and the text APIs on `SKPaint`/`SKCanvas`, judging by each type's purpose not just its
+   filename. For "whatever changed" use `git -C docs diff --name-only origin/main...HEAD`; for the whole
+   library review every file. Shard into ~25–40-file batches; review is incremental against the
+   `last-reviewed` marker.
 
-2. **Run the deterministic linter** on the batch ([`validation.md`](validation.md) §1). It finds objective
-   defects with no model cost and emits findings in the shared contract.
+2. **Run the deterministic checks** on the batch with `docs-format-docs` ([`validation.md`](validation.md)).
+   It finds objective defects with no model cost and emits findings in the shared contract.
 
 3. **Review each file (source first).** From the filename, find and **READ the C# source in `binding/`
    BEFORE reading the XML** and build a fact sheet: constructors, overloads, accessor kind per property
@@ -56,7 +54,8 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    findings, and expand examples where types are example-poor — port the `SKCanvas`/`SKShader` bar to
    barren types like `SKFont`, `SKImageFilter`.
 
-6. **Validate & format** ([`validation.md`](validation.md) §2–3) — only if step 5 made edits.
+6. **Validate & format** — only if step 5 made edits: run `docs-format-docs` and fix any build-failing
+   broken-XML errors ([`validation.md`](validation.md)).
 
 7. **Land** per-wave PRs on `dev/...` branches in the `docs` submodule.
 

@@ -299,6 +299,14 @@ Task ("docs-format-docs")
         }
     }
 
+    // QA gate state. docs-format-docs is both a formatter and a checker: as it
+    // walks every doc it also runs the deterministic lint (see QaLintFile) and
+    // fails the build if any file has broken XML/CDATA that would break the site.
+    var qaObsolete = QaObsoleteErrorMembers ();
+    var qaTypeFiles = 0;
+    var qaFindings = 0;
+    QA_ERRORS = 0;
+
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
 
@@ -535,7 +543,7 @@ Task ("docs-format-docs")
         if (currentMemberCount > 0) {
             var fullName = xdoc.Root.Attribute ("FullName");
             if (fullName != null)
-                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
+                Warning ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
         }
 
         // get the whitespaces right
@@ -552,6 +560,14 @@ Task ("docs-format-docs")
 
         // empty line at the end
         System.IO.File.AppendAllText (file.ToString (), "\n");
+
+        // Lint the formatted type file. Missing-doc placeholders are already
+        // reported above as warnings, so they are suppressed here; the remaining
+        // checks catch broken XML/CDATA (errors) and quality issues (warnings).
+        if (xdoc.Root.Name == "Type" && !QaIsGenerated (file.FullPath)) {
+            qaTypeFiles++;
+            qaFindings += QaLintFile (file.FullPath, qaObsolete, reportPlaceholders: false);
+        }
     }
 
     // sync extension method docs from type files to index.xml
@@ -626,40 +642,31 @@ Task ("docs-format-docs")
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.",
         typeCount, totalTypes, typeCount / totalTypes,
         memberCount, totalMembers, memberCount / totalMembers);
+
+    // Lint summary, then fail the build if any doc has broken XML/CDATA.
+    Information ("Docs lint: scanned {0} type file(s), {1} finding(s), {2} error(s).",
+        qaTypeFiles, qaFindings, QA_ERRORS);
+    if (QA_ERRORS > 0)
+        throw new Exception (
+            $"{QA_ERRORS} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
 });
 
 // ===========================================================================
-// Docs QA gates (no LLM) — used by the api-docs skill + auto-api-docs-writer.
+// Docs lint (no LLM) — the deterministic content checks that docs-format-docs
+// runs over every type file as it formats. Findings surface as Cake warnings,
+// except the broken XML/CDATA classes (QA_ERROR_CLASSES) which fail the build
+// so nothing site-breaking is ever published. Missing-doc placeholders are
+// reported separately by docs-format-docs (also as warnings).
 //
-// Agents edit the ECMA/mdoc XML directly, so these three targets give the
-// deterministic gates the skill relies on:
-//
-//   docs-resolve-scope   List the docs to work on (+ candidate C# source path)
-//                        for sharding. Driven by --scope=<all|new|changed|file:PATH>.
-//   docs-lint            Objective defect scan -> machine-parseable findings.
-//   docs-validate        Post-edit structural safety vs the git baseline
-//                        (fails the build on any regression).
-//
-// Output is a stable, machine-parseable line contract (FILE/COUNT/SEVERITY/
-// LINT-SUMMARY/VALIDATE/VALIDATE-SUMMARY) consumed by the skill + workflow.
-//
-// Paths default to the in-repo submodule layout but can be overridden so the
-// tool works when the docs repo is the *primary* checkout (the gh-aw
-// auto-api-docs-writer sandbox clones SkiaSharp as a secondary repo and
-// downloads the docs separately). QA_REPO_ROOT stays pointed at the SkiaSharp
-// clone so binding/ source lookups keep working while docs come from elsewhere.
+// QA_REPO_ROOT points at the SkiaSharp clone so binding/ lookups and the
+// obsolete-api map resolve even when docs are a separate checkout (the gh-aw
+// auto-api-docs-writer sandbox).
 // ===========================================================================
 
 string QA_REPO_ROOT = ROOT_PATH.FullPath;
-string QA_DOCS_GIT = MakeAbsolute (Directory (
-    Argument ("docsGitRoot", EnvironmentVariable ("DOCS_GIT_ROOT") ?? DOCS_ROOT_PATH.FullPath))).FullPath;
-string QA_DOCS_XML = MakeAbsolute (Directory (
-    Argument ("docsDir", EnvironmentVariable ("DOCS_DIR") ?? DOCS_PATH.FullPath))).FullPath;
 string QA_OBSOLETE_MAP = MakeAbsolute (File (
     Argument ("obsoleteMap", EnvironmentVariable ("OBSOLETE_MAP")
         ?? ROOT_PATH.CombineWithFilePath (".agents/skills/api-docs/references/obsolete-api-map.md").FullPath))).FullPath;
-string QA_REVIEW_BASE = Argument ("docsReviewBase", EnvironmentVariable ("DOCS_REVIEW_BASE") ?? "origin/main");
-string QA_SCOPE = Argument ("scope", "");
 
 var QA_MISSPELL = new Dictionary<string, string> {
     { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
@@ -685,9 +692,6 @@ XmlDocument QaLoadXml (string path)
     return doc;
 }
 
-int QaCountSignatures (XmlDocument doc) =>
-    doc.SelectNodes ("//MemberSignature").Count + doc.SelectNodes ("//TypeSignature").Count;
-
 string QaRelTo (string root, string abs)
 {
     var full = abs;
@@ -699,95 +703,8 @@ string QaRelTo (string root, string abs)
 }
 
 string QaRelToRepo (string abs) => QaRelTo (QA_REPO_ROOT, abs);
-string QaRelToDocs (string abs) => QaRelTo (QA_DOCS_GIT, abs);
 
 string QaAttr (XmlNode n, string name) => (n as XmlElement)?.GetAttribute (name);
-
-// Best-effort C# source path for a docs xml file.
-string QaSourcePath (string xmlPath)
-{
-    var type = System.IO.Path.GetFileNameWithoutExtension (xmlPath);
-    var ns = System.IO.Path.GetFileName (System.IO.Path.GetDirectoryName (xmlPath));
-    var candidates = new [] {
-        $"{QA_REPO_ROOT}/binding/{ns}/{type}.cs",
-        $"{QA_REPO_ROOT}/binding/SkiaSharp/{type}.cs",
-        $"{QA_REPO_ROOT}/binding/HarfBuzzSharp/{type}.cs",
-    };
-    foreach (var c in candidates)
-        if (System.IO.File.Exists (c)) return QaRelToRepo (c);
-    var hit = GetFiles ($"{QA_REPO_ROOT}/binding/**/{type}.cs").FirstOrDefault ();
-    if (hit != null) return QaRelToRepo (hit.FullPath);
-    return "NONE";
-}
-
-List<string> QaGit (string args, string wd, out int exit)
-{
-    IEnumerable<string> output = null;
-    var settings = new ProcessSettings {
-        Arguments = args,
-        WorkingDirectory = wd,
-        RedirectStandardOutput = true,
-        RedirectStandardError = true,
-    };
-    try { exit = StartProcess ("git", settings, out output); }
-    catch { exit = -1; output = null; }
-    return output?.ToList () ?? new List<string> ();
-}
-
-// Scope core (shared by docs-resolve-scope, docs-lint, docs-validate).
-List<string> QaScopeFiles (string sel)
-{
-    if (string.IsNullOrEmpty (sel))
-        throw new Exception ("a mode is required (--scope=all|new|changed|file:PATH)");
-
-    var files = new List<string> ();
-    var m = Regex.Match (sel, @"^file:(.+)$");
-    if (m.Success) {
-        var p = m.Groups[1].Value;
-        if (!System.IO.Path.IsPathRooted (p)) p = System.IO.Path.Combine (QA_REPO_ROOT, p);
-        if (System.IO.File.Exists (p)) files.Add (System.IO.Path.GetFullPath (p));
-    } else if (sel == "all") {
-        foreach (var f in GetFiles ($"{QA_DOCS_XML}/**/*.xml"))
-            if (!QaIsGenerated (f.FullPath)) files.Add (f.FullPath);
-    } else if (sel == "new" || sel == "changed") {
-        // Files changed vs the baseline (or, when there is no baseline diff,
-        // the working tree). Right after mdoc regen the freshly written stubs
-        // show up here, which is how the add pass finds new placeholders.
-        int exit;
-        var diff = QaGit ($"diff --name-only --diff-filter=ACM {QA_REVIEW_BASE}...HEAD", QA_DOCS_GIT, out exit)
-            .Where (l => !string.IsNullOrWhiteSpace (l)).ToList ();
-        if (diff.Count == 0)
-            diff = QaGit ("diff --name-only --diff-filter=ACM", QA_DOCS_GIT, out exit)
-                .Where (l => !string.IsNullOrWhiteSpace (l)).ToList ();
-        foreach (var d in diff) {
-            if (!d.EndsWith (".xml")) continue;
-            var abs = System.IO.Path.Combine (QA_DOCS_GIT, d);
-            if (System.IO.File.Exists (abs) && !QaIsGenerated (abs))
-                files.Add (System.IO.Path.GetFullPath (abs));
-        }
-    } else {
-        throw new Exception ($"Unrecognized mode '{sel}' (use all|new|changed|file:PATH)");
-    }
-
-    return files.Distinct ().OrderBy (x => x, StringComparer.Ordinal).ToList ();
-}
-
-// Resolve a path-or-mode argument to a concrete file list (for lint/validate).
-List<string> QaExpandTarget (string arg)
-{
-    if (string.IsNullOrEmpty (arg))
-        throw new Exception ("a path or mode is required (--scope=all|new|changed|file:PATH)");
-    if (arg.StartsWith ("file:") || arg == "all" || arg == "new" || arg == "changed")
-        return QaScopeFiles (arg);
-    var p = arg;
-    if (!System.IO.Path.IsPathRooted (p)) p = System.IO.Path.Combine (QA_REPO_ROOT, p);
-    if (System.IO.File.Exists (p)) return new List<string> { System.IO.Path.GetFullPath (p) };
-    if (System.IO.Directory.Exists (p))
-        return GetFiles ($"{p}/**/*.xml").Select (f => f.FullPath).Where (f => !QaIsGenerated (f)).ToList ();
-    throw new Exception ($"Target not found: {arg}");
-}
-
-// Parse the fenced ```obsolete-map table -> member tokens flagged 'error'.
 List<string> QaObsoleteErrorMembers ()
 {
     var members = new List<string> ();
@@ -813,10 +730,18 @@ string QaMemberDocId (XmlNode member)
     return n == null ? null : QaAttr (n, "Value");
 }
 
-int QaEmit (string sev, string cls, string file, string docId, string msg)
+// Classes that mean the XML itself is broken and would break the published
+// site (won't parse, or CDATA was destroyed). These FAIL the build. Everything
+// else (missing pieces, spelling, style) is a non-fatal warning.
+HashSet<string> QA_ERROR_CLASSES = new HashSet<string> { "malformed-xml", "broken-cdata" };
+int QA_ERRORS = 0;
+
+int QaEmit (string cls, string file, string docId, string msg)
 {
     if (string.IsNullOrEmpty (docId)) docId = "-";
-    Console.WriteLine ($"{sev} | {cls} | {file} | {docId} | {msg}");
+    var line = $"[docs] {cls} | {file} | {docId} | {msg}";
+    if (QA_ERROR_CLASSES.Contains (cls)) { QA_ERRORS++; Error (line); }
+    else { Warning (line); }
     return 1;
 }
 
@@ -837,13 +762,13 @@ List<string> QaProseSegments (XmlNode node)
     return segments;
 }
 
-int QaLintFile (string xmlPath, List<string> obsoleteMembers)
+int QaLintFile (string xmlPath, List<string> obsoleteMembers, bool reportPlaceholders = true)
 {
     var rel = QaRelToRepo (xmlPath);
     var count = 0;
     XmlDocument doc;
     try { doc = QaLoadXml (xmlPath); }
-    catch (Exception ex) { return QaEmit ("CRITICAL", "malformed-xml", rel, "-", $"XML will not parse: {ex.Message}"); }
+    catch (Exception ex) { return QaEmit ("malformed-xml", rel, "-", $"XML will not parse: {ex.Message}"); }
 
     var root = doc.DocumentElement;
     var units = new List<(string docId, XmlNode docs, bool isProp, bool hasSet)> ();
@@ -883,7 +808,7 @@ int QaLintFile (string xmlPath, List<string> obsoleteMembers)
         foreach (var tag in new [] { "summary", "value", "returns" }) {
             var node = docs.SelectSingleNode (tag);
             if (node != null && string.IsNullOrWhiteSpace (node.InnerXml))
-                count += QaEmit ("IMPORTANT", "empty-tag", rel, docId, $"<{tag}> is empty");
+                count += QaEmit ("empty-tag", rel, docId, $"<{tag}> is empty");
         }
 
         // Per-field text checks
@@ -893,11 +818,12 @@ int QaLintFile (string xmlPath, List<string> obsoleteMembers)
             var text = node.InnerText;
             if (string.IsNullOrWhiteSpace (inner)) continue;
 
-            // Placeholder
-            if (Regex.IsMatch (text, @"To be added\.?"))
-                count += QaEmit ("IMPORTANT", "placeholder", rel, docId, $"<{node.Name}> still 'To be added.'");
+            // Placeholder ("To be added.") — suppressed when the caller already
+            // reports missing-doc coverage (docs-format-docs), to avoid duplication.
+            if (reportPlaceholders && Regex.IsMatch (text, @"To be added\.?"))
+                count += QaEmit ("placeholder", rel, docId, $"<{node.Name}> still 'To be added.'");
             if (inner.Contains ("[Describe ") || inner.Contains ("[Show "))
-                count += QaEmit ("IMPORTANT", "placeholder", rel, docId, $"<{node.Name}> has an unfilled remarks scaffold");
+                count += QaEmit ("placeholder", rel, docId, $"<{node.Name}> has an unfilled remarks scaffold");
 
             // Repeated words + spelling run on prose only (code fences stripped;
             // per text node so empty inline elements don't fuse adjacent words)
@@ -906,13 +832,13 @@ int QaLintFile (string xmlPath, List<string> obsoleteMembers)
                 if (!reportedRepeat) {
                     var rm = Regex.Match (seg, @"(?<![-\w])([A-Za-z]{2,})\s+\1\b", RegexOptions.IgnoreCase);
                     if (rm.Success && rm.Groups[1].Value.ToLowerInvariant () != "that" && rm.Groups[1].Value.ToLowerInvariant () != "had") {
-                        count += QaEmit ("CRITICAL", "repeated-word", rel, docId, $"repeated word '{rm.Groups[1].Value}' in <{node.Name}>");
+                        count += QaEmit ("repeated-word", rel, docId, $"repeated word '{rm.Groups[1].Value}' in <{node.Name}>");
                         reportedRepeat = true;
                     }
                 }
                 foreach (var kv in QA_MISSPELL) {
                     if (Regex.IsMatch (seg, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase))
-                        count += QaEmit ("CRITICAL", "spelling", rel, docId, $"'{kv.Key}' -> '{kv.Value}' in <{node.Name}>");
+                        count += QaEmit ("spelling", rel, docId, $"'{kv.Key}' -> '{kv.Value}' in <{node.Name}>");
                 }
             }
 
@@ -920,22 +846,22 @@ int QaLintFile (string xmlPath, List<string> obsoleteMembers)
             foreach (Match mm in Regex.Matches (inner, @"<see\s+cref=""([^""]+)""")) {
                 var target = mm.Groups[1].Value;
                 if (!QA_CREF_PREFIXES.Any (p => target.StartsWith (p)))
-                    count += QaEmit ("IMPORTANT", "invalid-cref", rel, docId, $"<see cref='{target}'> missing DocId prefix (T:/M:/P:/F:)");
+                    count += QaEmit ("invalid-cref", rel, docId, $"<see cref='{target}'> missing DocId prefix (T:/M:/P:/F:)");
             }
 
             // xref prefix inside CDATA remarks
             foreach (Match mm in Regex.Matches (inner, @"<xref:(T:|M:|P:|F:)"))
-                count += QaEmit ("IMPORTANT", "bad-xref", rel, docId, $"<xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
+                count += QaEmit ("bad-xref", rel, docId, $"<xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
             // destroyed CDATA (escaped xref)
             if (inner.Contains ("&lt;xref:"))
-                count += QaEmit ("CRITICAL", "broken-cdata", rel, docId, "escaped '&lt;xref:' — CDATA was destroyed");
+                count += QaEmit ("broken-cdata", rel, docId, "escaped '&lt;xref:' — CDATA was destroyed");
 
             // Obsolete members in csharp fences
             foreach (Match fence in Regex.Matches (inner, @"(?s)```csharp(.*?)```")) {
                 var code = fence.Groups[1].Value;
                 foreach (var om in obsoleteMembers)
                     if (Regex.IsMatch (code, @"\." + Regex.Escape (om) + @"\b"))
-                        count += QaEmit ("CRITICAL", "obsolete-in-example", rel, docId, $"example uses obsolete member '.{om}' (see obsolete-api-map.md)");
+                        count += QaEmit ("obsolete-in-example", rel, docId, $"example uses obsolete member '.{om}' (see obsolete-api-map.md)");
             }
         }
 
@@ -946,90 +872,16 @@ int QaLintFile (string xmlPath, List<string> obsoleteMembers)
                 var s = summary.InnerText.TrimStart ();
                 if (u.hasSet) {
                     if (Regex.IsMatch (s, @"^Gets\b", RegexOptions.IgnoreCase) && !Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase))
-                        count += QaEmit ("IMPORTANT", "accessor-verb", rel, docId, "settable property summary should be 'Gets or sets'");
+                        count += QaEmit ("accessor-verb", rel, docId, "settable property summary should be 'Gets or sets'");
                 } else {
                     if (Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase))
-                        count += QaEmit ("IMPORTANT", "accessor-verb", rel, docId, "read-only property summary should be 'Gets' (not 'Gets or sets')");
+                        count += QaEmit ("accessor-verb", rel, docId, "read-only property summary should be 'Gets' (not 'Gets or sets')");
                 }
             }
         }
     }
     return count;
 }
-
-// Clone, blank every <Docs> body, return OuterXml of everything-but-Docs.
-string QaStrippedShape (XmlDocument doc)
-{
-    var clone = new XmlDocument { PreserveWhitespace = true };
-    clone.LoadXml (doc.OuterXml);
-    foreach (XmlNode d in clone.SelectNodes ("//Docs")) d.InnerXml = "";
-    return clone.OuterXml.Replace ("\r\n", "\n").Trim ();
-}
-
-bool QaValidateFile (string xmlPath)
-{
-    var rel = QaRelToRepo (xmlPath);
-    XmlDocument cur;
-    try { cur = QaLoadXml (xmlPath); }
-    catch (Exception ex) { Console.WriteLine ($"VALIDATE | FAIL | {rel} | not well-formed: {ex.Message}"); return false; }
-
-    var docsRel = QaRelToDocs (xmlPath);
-    int exit;
-    var baseLines = QaGit ($"show HEAD:{docsRel}", QA_DOCS_GIT, out exit);
-    if (exit != 0 || baseLines.Count == 0) {
-        Console.WriteLine ($"VALIDATE | OK | {rel} | new file (well-formed; no baseline)");
-        return true;
-    }
-
-    var baseDoc = new XmlDocument { PreserveWhitespace = true };
-    baseDoc.LoadXml (string.Join ("\n", baseLines));
-
-    var cb = QaCountSignatures (baseDoc);
-    var cc = QaCountSignatures (cur);
-    if (cb != cc) {
-        Console.WriteLine ($"VALIDATE | FAIL | {rel} | signature count changed ({cb} -> {cc})");
-        return false;
-    }
-    if (QaStrippedShape (baseDoc) != QaStrippedShape (cur)) {
-        Console.WriteLine ($"VALIDATE | FAIL | {rel} | content changed outside <Docs>");
-        return false;
-    }
-    Console.WriteLine ($"VALIDATE | OK | {rel} | docs-only, signatures preserved");
-    return true;
-}
-
-Task ("docs-resolve-scope")
-    .Description ("List the docs to work on (+ candidate C# source path). --scope=all|new|changed|file:PATH")
-    .Does (() =>
-{
-    var files = QaScopeFiles (QA_SCOPE);
-    foreach (var f in files)
-        Console.WriteLine ($"FILE | {QaRelToRepo (f)} | source:{QaSourcePath (f)}");
-    Console.WriteLine ($"COUNT | {files.Count}");
-});
-
-Task ("docs-lint")
-    .Description ("Objective defect scan over docs XML -> machine findings. --scope=all|new|changed|file:PATH")
-    .Does (() =>
-{
-    var targets = QaExpandTarget (QA_SCOPE);
-    var obs = QaObsoleteErrorMembers ();
-    int total = 0, n = 0;
-    foreach (var t in targets) { total += QaLintFile (t, obs); n++; }
-    Console.WriteLine ($"LINT-SUMMARY | files:{n} | findings:{total}");
-});
-
-Task ("docs-validate")
-    .Description ("Post-edit structural safety vs the git baseline. --scope=all|new|changed|file:PATH")
-    .Does (() =>
-{
-    var targets = QaExpandTarget (QA_SCOPE);
-    int fail = 0, n = 0;
-    foreach (var t in targets) { if (!QaValidateFile (t)) fail++; n++; }
-    Console.WriteLine ($"VALIDATE-SUMMARY | files:{n} | failures:{fail}");
-    if (fail > 0)
-        throw new Exception ($"docs-validate failed for {fail} file(s)");
-});
 
 Task ("update-docs")
     .Description ("Regenerate all docs.")

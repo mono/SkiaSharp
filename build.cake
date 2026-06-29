@@ -167,20 +167,8 @@ Task ("docs-update-frameworks")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
 
 Task ("docs-format-docs")
-    .Description ("Format doc XML files.")
+    .Description ("Format doc XML files and run the deterministic content checks (warns on quality/missing docs, fails on broken XML).")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
-
-Task ("docs-resolve-scope")
-    .Description ("List docs to work on (+ candidate C# source). --scope=all|new|changed|file:PATH")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-resolve-scope"));
-
-Task ("docs-lint")
-    .Description ("Objective defect scan over docs XML. --scope=all|new|changed|file:PATH")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-lint"));
-
-Task ("docs-validate")
-    .Description ("Post-edit structural safety vs the git baseline. --scope=all|new|changed|file:PATH")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-validate"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // CLEAN - remove all the build artefacts
