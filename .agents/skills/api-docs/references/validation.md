@@ -32,16 +32,17 @@ These are advisory: a fresh regen full of placeholders is just noisy, not broken
 
 ## What FAILS the build (errors)
 
-Two classes mean the XML itself is broken and would break the published Learn site. They are logged as
-**errors** and make the target exit non-zero:
+Two things stop a doc from parsing or rendering on the published Learn site, so both fail the target:
 
-- `malformed-xml` — the file will not parse.
+- **Unparseable XML** — `docs-format-docs` loads every file with `XDocument.Load`; a file that is not
+  well-formed throws immediately (with its name) and aborts the run before anything else is checked.
 - `broken-cdata` — a `csharp`/`xref` CDATA block was destroyed (e.g. `<` escaped to `&lt;xref:`), which
-  silently corrupts the rendered remarks.
+  silently corrupts the rendered remarks. Logged as a `[docs] broken-cdata` **error**.
 
-Fix every `[docs] malformed-xml` / `[docs] broken-cdata` error before landing — the build will not pass
+Fix any parse failure and every `[docs] broken-cdata` error before landing — the build will not pass
 otherwise. This is the guarantee that a direct XML edit cannot ship site-breaking markup.
 
 > There is no separate `docs-lint`/`docs-validate` target and no git-baseline "only `<Docs>` changed"
-> structural check anymore. Signatures are owned by mdoc regeneration and are visible in the PR diff; the
-> broken-XML error above is what keeps the site safe.
+> structural check anymore. The checks run in the same pass that formats each file, on the tree it already
+> loaded. Signatures are owned by mdoc regeneration and are visible in the PR diff; the broken-XML failures
+> above are what keep the site safe.
