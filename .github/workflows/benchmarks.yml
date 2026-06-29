@@ -21,6 +21,19 @@ name: "Benchmarks"
 #                  which needs mobile workloads that are not present on the runners.
 #                  It is best-effort (continue-on-error) because a full native build on a
 #                  hosted runner is slow and can fail for reasons unrelated to benchmarks.
+#
+# IMPORTANT - reading the "current" column:
+#   The from-source `externals-*` native is NOT built with the same optimization/official
+#   build flags as the shipped NuGet native, so its ABSOLUTE timings are systematically
+#   different (typically slower) than the optimized published packages. Do not read a
+#   `current`-vs-`published` ratio as the effect of a PR's code. To measure a native change,
+#   compare two `current` runs built the same way (the PR branch and its base). The
+#   `published` columns are the apples-to-apples comparison across released versions.
+#
+#   Only the operating systems whose native library reliably builds from source on a hosted
+#   runner take part in `current` (Linux and macOS by default). The Windows hosted image
+#   currently cannot build the native library (missing Windows SDK / Spectre libs), so it is
+#   left out of `current` by default and still appears in the `published` comparison.
 
 on:
   pull_request:
@@ -52,6 +65,11 @@ on:
         required: false
         default: true
         type: boolean
+      current_oses:
+        description: 'Comma-separated runners to build the native library on for the current column'
+        required: false
+        default: 'ubuntu-latest,macos-14'
+        type: string
       extra_feed:
         description: 'Optional extra NuGet feed (e.g. a PR preview package source)'
         required: false
@@ -83,6 +101,7 @@ jobs:
       filter: ${{ steps.vars.outputs.filter }}
       job: ${{ steps.vars.outputs.job }}
       build_current: ${{ steps.vars.outputs.build_current }}
+      current_oses: ${{ steps.vars.outputs.current_oses }}
       extra_feed: ${{ steps.vars.outputs.extra_feed }}
     steps:
       - name: Compute matrix
@@ -92,6 +111,7 @@ jobs:
           FILTER_INPUT: ${{ inputs.filter }}
           JOB_INPUT: ${{ inputs.job }}
           BUILD_CURRENT_INPUT: ${{ inputs.build_current }}
+          CURRENT_OSES_INPUT: ${{ inputs.current_oses }}
           EXTRA_FEED_INPUT: ${{ inputs.extra_feed }}
         shell: bash
         run: |
@@ -102,6 +122,7 @@ jobs:
           FILTER="${FILTER_INPUT:-*BlurImageFilterBenchmark* *SurfaceCanvasBenchmark*}"
           JOB="${JOB_INPUT:-short}"
           BUILD_CURRENT="${BUILD_CURRENT_INPUT:-true}"
+          CURRENT_OSES="${CURRENT_OSES_INPUT:-ubuntu-latest,macos-14}"
           EXTRA_FEED="${EXTRA_FEED_INPUT:-}"
 
           # Comma-separated versions -> JSON array; the first entry is the baseline.
@@ -118,17 +139,31 @@ jobs:
           done
           JSON+="]"
 
+          # Comma-separated current runners -> JSON array.
+          CUR_JSON="["
+          FIRST=1
+          IFS=',' read -ra CUR_PARTS <<< "$CURRENT_OSES"
+          for raw in "${CUR_PARTS[@]}"; do
+            o="$(echo "$raw" | xargs)"
+            [ -z "$o" ] && continue
+            if [ $FIRST -eq 1 ]; then FIRST=0; else CUR_JSON+=","; fi
+            CUR_JSON+="\"$o\""
+          done
+          CUR_JSON+="]"
+
           echo "versions=$JSON" >> "$GITHUB_OUTPUT"
           echo "oses=[\"ubuntu-latest\",\"windows-latest\",\"macos-14\"]" >> "$GITHUB_OUTPUT"
           echo "baseline=$BASELINE" >> "$GITHUB_OUTPUT"
           echo "filter=$FILTER" >> "$GITHUB_OUTPUT"
           echo "job=$JOB" >> "$GITHUB_OUTPUT"
           echo "build_current=$BUILD_CURRENT" >> "$GITHUB_OUTPUT"
+          echo "current_oses=$CUR_JSON" >> "$GITHUB_OUTPUT"
           echo "extra_feed=$EXTRA_FEED" >> "$GITHUB_OUTPUT"
 
           echo "Versions: $JSON (baseline $BASELINE)"
           echo "Filter:   $FILTER"
           echo "Job:      $JOB"
+          echo "Current:  $CUR_JSON"
 
   # ── Benchmark each published version on each OS ──────────────
   published:
@@ -216,7 +251,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ${{ fromJSON(needs.setup.outputs.oses) }}
+        os: ${{ fromJSON(needs.setup.outputs.current_oses) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
