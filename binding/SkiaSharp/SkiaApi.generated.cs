@@ -8514,6 +8514,28 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
+		// bool sk_paint_can_compute_fast_bounds(const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		}
+		private static Delegates.sk_paint_can_compute_fast_bounds sk_paint_can_compute_fast_bounds_delegate;
+		internal static bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint) =>
+			(sk_paint_can_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_can_compute_fast_bounds> ("sk_paint_can_compute_fast_bounds")).Invoke (cpaint);
+		#endif
+
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -8531,6 +8553,25 @@ namespace SkiaSharp
 		private static Delegates.sk_paint_clone sk_paint_clone_delegate;
 		internal static sk_paint_t sk_paint_clone (sk_paint_t param0) =>
 			(sk_paint_clone_delegate ??= GetSymbol<Delegates.sk_paint_clone> ("sk_paint_clone")).Invoke (param0);
+		#endif
+
+		// void sk_paint_compute_fast_bounds(const sk_paint_t* cpaint, const sk_rect_t* orig, sk_rect_t* storage)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		}
+		private static Delegates.sk_paint_compute_fast_bounds sk_paint_compute_fast_bounds_delegate;
+		internal static void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage) =>
+			(sk_paint_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_compute_fast_bounds> ("sk_paint_compute_fast_bounds")).Invoke (cpaint, orig, storage);
 		#endif
 
 		// void sk_paint_delete(sk_paint_t*)
