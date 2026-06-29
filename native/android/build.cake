@@ -34,7 +34,7 @@ Task("libSkiaSharp")
             $"skia_use_system_zlib=false " +
             $"skia_use_vulkan=true " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-g', '-ggdb3' ] " +
             $"extra_ldflags=[ '-Wl,-z,max-page-size=16384' ] " +
             $"ndk='{ANDROID_NDK_HOME}' " +
             $"ndk_api=21");

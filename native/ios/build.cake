@@ -63,7 +63,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DHAVE_ARC4RANDOM_BUF' ] " +
             ADDITIONAL_GN_ARGS);
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {
