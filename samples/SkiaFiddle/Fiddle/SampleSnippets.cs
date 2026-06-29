@@ -6,18 +6,12 @@ namespace SkiaFiddle.Fiddle;
 /// <summary>
 /// A bundled sample. <see cref="Setup"/> goes in the Setup box (class scope —
 /// fields, methods, ctor) and runs once per Run. <see cref="Draw"/> goes in
-/// the Draw box and runs every frame as the body of
-/// <c>Draw(SKCanvas, int, int, double)</c>.
+/// the Draw box and runs every frame as the body of <c>Draw(SKCanvas, int, int, double)</c>.
 /// <see cref="Font"/> and <see cref="Image"/> optionally preset the font picker
 /// and image strip so the sample's <c>typeface</c>/<c>image</c> variables point
 /// at the right asset.
 /// </summary>
-public record FiddleSample(
-    string Name,
-    string Draw,
-    string Setup = "",
-    string? Font = null,
-    int? Image = null);
+public record FiddleSample(string Name, string Draw, string Setup = "", string? Font = null, int? Image = null);
 
 public static class SampleSnippets
 {
@@ -403,16 +397,12 @@ public static class SampleSnippets
     {
         new FiddleSample("Static · Hello world", DefaultDraw, DefaultSetup),
         new FiddleSample("Image · Source image", SourceImageDraw, Image: 2),
-        new FiddleSample(
-            "Text · Variable font", VariableFontDraw, Font: "Inter (variable)"),
-        new FiddleSample(
-            "Text · Color font", ColorFontDraw, Font: "Nabla (color)"),
+        new FiddleSample("Text · Variable font", VariableFontDraw, Font: "Inter (variable)"),
+        new FiddleSample("Text · Color font", ColorFontDraw, Font: "Nabla (color)"),
         new FiddleSample("Animated · Orbits", OrbitsDraw, OrbitsSetup),
         new FiddleSample("Shader · Plasma", PlasmaDraw, PlasmaSetup),
         new FiddleSample("Shader · Ripple", RippleDraw, RippleSetup),
         new FiddleSample("Animated · Sine wave", SineWaveDraw),
         new FiddleSample("Animated · Color grid", ColorGridDraw),
-    }
-    .OrderBy(s => s.Name)
-    .ToArray();
+    }.OrderBy(s => s.Name).ToArray();
 }
