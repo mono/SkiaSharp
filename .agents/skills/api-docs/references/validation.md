@@ -6,7 +6,7 @@ run **after** any edit. Run both before opening a PR.
 ## 1. Deterministic linter (objective defects, no model)
 
 ```bash
-pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 lint <files-or-scope>
+dotnet cake --target=docs-lint --scope=<files-or-scope>
 ```
 
 Catches the things that never need judgment:
@@ -28,7 +28,7 @@ SEVERITY | <class> | <file> | <docId> | <message>
 ## 2. Structural validator (edit-safety, no model)
 
 ```bash
-pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 validate <files>
+dotnet cake --target=docs-validate --scope=<files>
 ```
 
 Replaces the old `merge` guards now that edits are in place. For each changed file it asserts:
@@ -52,6 +52,6 @@ Normalizes whitespace/attribute order so diffs stay minimal and reviewable.
 
 ## Order of operations
 
-`resolve-scope` → edit (writer or fix step) → **`validate`** (structural) → **`lint`** (objective) →
-`docs-format-docs` → PR. Reviews that only *report* (no edits) skip the validate/format steps and just
-run `lint` alongside the LLM reviewers.
+`docs-resolve-scope` → edit (writer or fix step) → **`docs-validate`** (structural) → **`docs-lint`**
+(objective) → `docs-format-docs` → PR. Reviews that only *report* (no edits) skip the validate/format
+steps and just run `docs-lint` alongside the LLM reviewers.

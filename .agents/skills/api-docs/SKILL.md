@@ -40,9 +40,9 @@ work in batches of ~25–40 files so each pass stays auditable and resumable.
 | **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
 The user asks in plain language ("review the font docs", "fill in what's missing").
-`scripts/docs-tool.ps1 resolve-scope` lists the inventory — `all`, `new` (placeholders), `changed`, or
-`file:PATH` — and **you** pick the files a request covers. For a theme, list `all` and select the matching
-files yourself; the chosen procedure file covers the rest.
+`dotnet cake --target=docs-resolve-scope --scope=<mode>` lists the inventory — `all`, `new`/`changed`
+(docs changed vs the git baseline), or `file:PATH` — and **you** pick the files a request covers. For a
+theme, list `all` and select the matching files yourself; the chosen procedure file covers the rest.
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
@@ -60,8 +60,9 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 ## Tooling & validation
 
-- Inventory + checks: `scripts/docs-tool.ps1` — `resolve-scope` (lists `all`/`new`/`changed`/`file:`),
-  `lint` (deterministic), `validate` (structural). See [`references/validation.md`](references/validation.md).
+- Inventory + checks (Cake targets in `scripts/infra/docs/docs.cake`): `docs-resolve-scope` (lists
+  `all`/`new`/`changed`/`file:`), `docs-lint` (deterministic), `docs-validate` (structural) — each driven
+  by `--scope=<mode>`. See [`references/validation.md`](references/validation.md).
 - Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
   `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
 - Format: `dotnet cake --target=docs-format-docs`.

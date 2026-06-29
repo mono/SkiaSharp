@@ -30,7 +30,7 @@ across many files almost certainly skimmed. Every factual finding must cite sour
 
 1. **Pick which docs to review.** Run:
    ```bash
-   pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope <all|new|changed|file:PATH>
+   dotnet cake --target=docs-resolve-scope --scope=<all|new|changed|file:PATH>
    ```
    It prints each doc path plus a candidate `binding/` source path (`source:NONE` if it can't guess — then
    `grep` for it). The user describes the target in plain language. For a theme ("the font docs"), list

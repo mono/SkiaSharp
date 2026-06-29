@@ -29,9 +29,10 @@ own recollection.
    dotnet cake --target=update-docs            # mdoc update + format → "To be added." placeholders
    ```
 
-2. **List the docs to fill.** Placeholders are easiest to target with the `new` mode:
+2. **List the docs to fill.** Right after a stub regen the new placeholders show up as changed files, so
+   the `new` mode targets them:
    ```bash
-   pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope new
+   dotnet cake --target=docs-resolve-scope --scope=new
    ```
    Each line includes a candidate `binding/` source path (`source:NONE` → `grep` for it). Shard the result
    into ~25–40-file batches.
