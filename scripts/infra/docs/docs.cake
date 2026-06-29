@@ -723,17 +723,15 @@ bool QaIsGenerated (string path)
     return false;
 }
 
-string QaRelTo (string root, string abs)
+string QaRelToRepo (string abs)
 {
     var full = abs;
     try { full = System.IO.Path.GetFullPath (abs); } catch { }
-    var r = root.Replace ('\\', '/').TrimEnd ('/');
+    var r = QA_REPO_ROOT.Replace ('\\', '/').TrimEnd ('/');
     var f = full.Replace ('\\', '/');
     if (f.StartsWith (r)) return f.Substring (r.Length).TrimStart ('/');
     return f;
 }
-
-string QaRelToRepo (string abs) => QaRelTo (QA_REPO_ROOT, abs);
 
 List<string> QaObsoleteMembers ()
 {
