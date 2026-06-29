@@ -5,8 +5,7 @@ dual of [`adding.md`](adding.md) (which fills blanks); review improves what is a
 **report-only by default**; fixing is a separate, gated step.
 
 You run this yourself, end to end — resolve scope, read source, compare, report, and (if approved) fix.
-There is no sub-agent fan-out and no per-role model: one agent does the whole pass. Work in batches of
-~25–40 files so each pass stays auditable and resumable.
+One agent does the whole pass. Work in batches of ~25–40 files so each pass stays auditable and resumable.
 
 ## Required reading (first)
 
@@ -33,8 +32,8 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope <all|new|changed|file:PATH>
    ```
-   The user describes the target in plain language; there is no selector to craft. For a theme ("the font
-   docs"), resolve `all` and **select the matching files yourself**; for "whatever changed" use `changed`.
+   The user describes the target in plain language. For a theme ("the font docs"), list `all` and **select
+   the matching files yourself**; for "whatever changed" use `changed`; for the whole library use `all`.
    Shard into ~25–40-file batches; review is incremental against the `last-reviewed` marker.
 
 2. **Run the deterministic linter** on the batch ([`validation.md`](validation.md) §1). It finds objective

@@ -9,11 +9,11 @@
 
       resolve-scope <all|new|changed|file:PATH>
                                  List the docs to work on (+ candidate C# source
-                                 path) for sharding. There is no selector grammar:
-                                 `all` lists every type doc (the model picks the
-                                 ones matching a natural-language request itself),
+                                 path) for sharding. `all` lists every type doc
+                                 (the caller picks the ones a request covers),
                                  `new` lists docs with `To be added.` placeholders,
-                                 `changed` lists docs changed vs the git baseline.
+                                 `changed` lists docs changed vs the git baseline,
+                                 `file:PATH` names one file.
       lint <path|all|new|changed|file:PATH>      Objective defect scan -> machine findings.
       validate <path|all|new|changed|file:PATH>  Post-edit structural safety vs the git baseline.
 

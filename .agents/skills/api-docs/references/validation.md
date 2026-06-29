@@ -1,6 +1,6 @@
 # Workflow: Validation
 
-Because agents now edit the `.xml` directly (no JSON round-trip), safety comes from two non-LLM gates that
+Agents edit the `.xml` directly, so safety comes from two non-LLM gates that
 run **after** any edit. Run both before opening a PR.
 
 ## 1. Deterministic linter (objective defects, no model)

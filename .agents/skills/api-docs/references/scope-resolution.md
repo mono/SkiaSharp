@@ -1,8 +1,8 @@
 # Choosing which docs to work on
 
-The user speaks in natural language — "review the font docs", "fill in everything that's missing". There is
-**no selector grammar to craft**: the model decides which files a request covers. The script only provides a
-deterministic *inventory* so the choice is auditable and shardable:
+The user describes the target in plain language — "review the font docs", "fill in everything that's
+missing". You decide which files that covers. The script just lists a deterministic *inventory* so the
+choice is auditable and shardable:
 
 ```bash
 pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope <all|new|changed|file:PATH>
@@ -23,10 +23,9 @@ Output per file: the doc path, a candidate `binding/` source path, and a count.
 
 1. **"Add the missing docs" / "do all adds"** → `resolve-scope new`, then fill every placeholder.
 2. **A theme ("review the font docs", "the image-filter types")** → `resolve-scope all`, then **select the
-   files that fit the theme yourself** and print the chosen set for the record before proceeding. A capable
-   model expands "font" to `SKFont`, `SKTypeface`, `SKFontMetrics`, `SKTextBlob`, the text APIs on
-   `SKPaint`/`SKCanvas`, … far more accurately than any filename substring or hand-curated list (which
-   drifts as new types ship).
+   files that fit the theme yourself** and print the chosen set for the record before proceeding. Expand
+   "font" to `SKFont`, `SKTypeface`, `SKFontMetrics`, `SKTextBlob`, and the text APIs on `SKPaint`/
+   `SKCanvas`; let each type's purpose — not just its filename — decide what belongs.
 3. **"Whatever changed" / CI incremental** → `resolve-scope changed`.
 4. **A specific type the user named** → open that file directly; pass `file:<path>` to lint/validate it.
 

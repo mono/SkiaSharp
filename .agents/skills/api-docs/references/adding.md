@@ -1,10 +1,10 @@
 # Adding docs for new APIs
 
 Use this when new APIs have shipped and their doc files contain `To be added.` placeholders (typically
-triggered by the daily `auto-api-docs-writer` workflow after a NuGet/CI update). This is the **direct-XML**
-pipeline — no extract/merge JSON round-trip.
+triggered by the daily `auto-api-docs-writer` workflow after a NuGet/CI update). You edit the mdoc XML
+directly.
 
-You run this yourself, end to end — one agent, no sub-agent fan-out. Accuracy comes from reading the C#
+You run this yourself, end to end — one agent. Accuracy comes from reading the C#
 source first; prose comes from the .NET conventions in the reference files. You write for developers who
 copy your examples into real code, so every claim must be true and every example must compile.
 

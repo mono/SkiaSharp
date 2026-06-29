@@ -25,26 +25,24 @@ load only when needed.
   `git submodule update --init docs` if it is empty.
 - Each `<Type>.xml` maps 1:1 to `binding/SkiaSharp/<Type>.cs` (or `binding/HarfBuzzSharp/`) → always read
   source before documenting.
-- **Edit the XML directly** — there is no extract/merge JSON step. Safety comes from the post-edit
-  structural validator ([`references/validation.md`](references/validation.md)).
+- **Edit the XML directly.** Safety comes from the post-edit structural validator
+  ([`references/validation.md`](references/validation.md)).
 - **Never edit generated files:** `index.xml`, `ns-*.xml`, `_filter.xml`, `FrameworksIndex/`.
 
 ## How to work
 
-One agent does the whole pass — there is no sub-agent fan-out and no per-role model selection. Read the
-relevant reference, resolve scope into an explicit file list, then work in batches of ~25–40 files so each
-pass stays auditable and resumable.
+One agent does the whole pass. Read the relevant reference, resolve scope into an explicit file list, then
+work in batches of ~25–40 files so each pass stays auditable and resumable.
 
 | If the task is… | Read |
 |---|---|
 | Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
 | **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
-There is **no selector to craft.** The user asks in plain language ("review the font docs", "fill in
-what's missing"); `scripts/docs-tool.ps1 resolve-scope` only lists the inventory — `all`, `new`
-(placeholders), `changed`, or `file:PATH` — and **you** pick the files a request covers. For a theme,
-resolve `all` and select the matching files yourself. See
-[`references/scope-resolution.md`](references/scope-resolution.md).
+The user asks in plain language ("review the font docs", "fill in what's missing").
+`scripts/docs-tool.ps1 resolve-scope` lists the inventory — `all`, `new` (placeholders), `changed`, or
+`file:PATH` — and **you** pick the files a request covers. For a theme, list `all` and select the matching
+files yourself. See [`references/scope-resolution.md`](references/scope-resolution.md).
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
