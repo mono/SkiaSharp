@@ -6,8 +6,11 @@ namespace SkiaFiddle.Fiddle;
 /// A bundled sample. <see cref="Setup"/> goes in the Setup box (class scope —
 /// fields, methods, ctor) and runs once per Run. <see cref="Draw"/> goes in
 /// the Draw box and runs every frame as the body of <c>Draw(SKCanvas, int, int, double)</c>.
+/// <see cref="Font"/> and <see cref="Image"/> optionally preset the font picker
+/// and image strip so the sample's <c>typeface</c>/<c>image</c> variables point
+/// at the right asset.
 /// </summary>
-public record FiddleSample(string Name, string Draw, string Setup = "");
+public record FiddleSample(string Name, string Draw, string Setup = "", string? Font = null, int? Image = null);
 
 public static class SampleSnippets
 {
@@ -32,7 +35,7 @@ public static class SampleSnippets
         using var font = new SKFont(SKTypeface.Default, 28) { Embolden = true };
         const string text = "Hello SkiaFiddle";
         var w = font.MeasureText(text);
-        canvas.DrawText(text, cx - w / 2, cy - r - 24, font, paint);
+        canvas.DrawText(text, cx - w / 2, cy - r - 24, SKTextAlign.Left, font, paint);
         """;
 
     public const string DefaultSetup =
@@ -222,9 +225,99 @@ public static class SampleSnippets
         canvas.DrawPath(path, paint);
         """;
 
+    public const string SourceImageDraw =
+        """
+        canvas.Clear(new SKColor(0x0B, 0x0F, 0x14));
+
+        // `image` is the picture chosen in the image strip above the editor.
+        var cx = width / 2f;
+        var cy = height / 2f;
+        var scale = Math.Min(width, height) / (float)Math.Max(image.Width, image.Height) * 0.72f;
+        scale *= 0.95f + 0.05f * (float)Math.Sin(t * 1.5);
+
+        canvas.Save();
+        canvas.Translate(cx, cy);
+        canvas.RotateDegrees((float)Math.Sin(t * 0.6) * 8);
+        canvas.Scale(scale);
+        canvas.Translate(-image.Width / 2f, -image.Height / 2f);
+
+        var dst = new SKRect(0, 0, image.Width, image.Height);
+        canvas.DrawImage(image, dst, new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear));
+
+        using var border = new SKPaint
+        {
+            Style = SKPaintStyle.Stroke,
+            StrokeWidth = 2 / scale,
+            Color = new SKColor(0x4F, 0xA3, 0xFF),
+            IsAntialias = true,
+        };
+        canvas.DrawRect(dst, border);
+        canvas.Restore();
+
+        using var font = new SKFont(typeface, 18);
+        using var paint = new SKPaint { Color = new SKColor(0xE6, 0xED, 0xF3), IsAntialias = true };
+        const string label = "Pick a source image above";
+        var w = font.MeasureText(label);
+        canvas.DrawText(label, cx - w / 2, height - 24, SKTextAlign.Left, font, paint);
+        """;
+
+    public const string VariableFontDraw =
+        """
+        canvas.Clear(SKColors.White);
+
+        // `typeface` is the font chosen in the picker — this one morphs the
+        // wght (weight) axis, so pick "Inter (variable)" to see it animate.
+        var wght = 100f + (float)(Math.Sin(t * 1.2) * 0.5 + 0.5) * 800f; // 100..900
+        var coords = new[]
+        {
+            new SKFontVariationPositionCoordinate { Axis = SKFourByteTag.Parse("wght"), Value = wght },
+        };
+        using var morphed = typeface.Clone(coords);
+
+        using var font = new SKFont(morphed ?? typeface, 96) { Edging = SKFontEdging.SubpixelAntialias };
+        using var paint = new SKPaint { Color = new SKColor(0x10, 0x14, 0x1E), IsAntialias = true };
+
+        const string text = "Variable";
+        font.MeasureText(text, out var bounds, paint);
+        canvas.DrawText(text, width / 2f - bounds.MidX, height / 2f, SKTextAlign.Left, font, paint);
+
+        using var infoFont = new SKFont(typeface, 22);
+        using var infoPaint = new SKPaint { Color = new SKColor(0x88, 0x88, 0x88), IsAntialias = true };
+        var info = $"wght {wght:0}";
+        var iw = infoFont.MeasureText(info);
+        canvas.DrawText(info, width / 2f - iw / 2, height / 2f + 56, SKTextAlign.Left, infoFont, infoPaint);
+        """;
+
+    public const string ColorFontDraw =
+        """
+        canvas.Clear(SKColors.White);
+
+        // `typeface` is the font chosen in the picker — this one cycles the
+        // built-in COLR/CPAL palettes, so pick "Nabla (color)" to see colors.
+        var palette = (int)(t * 1.5) % 7;
+        if (palette < 0) palette = 0;
+        using var colored = typeface.Clone(palette);
+
+        using var font = new SKFont(colored ?? typeface, 110);
+        using var paint = new SKPaint { IsAntialias = true };
+
+        const string text = "Color";
+        font.MeasureText(text, out var bounds, paint);
+        canvas.DrawText(text, width / 2f - bounds.MidX, height / 2f + bounds.Height / 2, SKTextAlign.Left, font, paint);
+
+        using var infoFont = new SKFont(SKTypeface.Default, 20);
+        using var infoPaint = new SKPaint { Color = new SKColor(0x88, 0x88, 0x88), IsAntialias = true };
+        var info = $"palette {palette + 1} / 7";
+        var iw = infoFont.MeasureText(info);
+        canvas.DrawText(info, width / 2f - iw / 2, height - 36, SKTextAlign.Left, infoFont, infoPaint);
+        """;
+
     public static IReadOnlyList<FiddleSample> All { get; } = new[]
     {
         new FiddleSample("Static · Hello world", DefaultDraw, DefaultSetup),
+        new FiddleSample("Image · Source image", SourceImageDraw, Image: 2),
+        new FiddleSample("Text · Variable font", VariableFontDraw, Font: "Inter (variable)"),
+        new FiddleSample("Text · Color font", ColorFontDraw, Font: "Nabla (color)"),
         new FiddleSample("Animated · Orbits", OrbitsDraw, OrbitsSetup),
         new FiddleSample("Shader · Plasma", PlasmaDraw, PlasmaSetup),
         new FiddleSample("Shader · Ripple", RippleDraw, RippleSetup),
