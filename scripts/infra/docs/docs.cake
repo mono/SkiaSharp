@@ -55,22 +55,14 @@ void RunMdoc (string arguments, DirectoryPath workingDirectory)
     }
 }
 
-// ===========================================================================
-// Docs lint (no LLM): deterministic content checks that docs-format-docs runs
-// over every type file in the same pass that formats it, working on the
-// XDocument it already loaded (see CheckDocs). Each issue is logged as a Cake
-// warning, except broken-cdata which fails the build so nothing site-breaking is
-// ever published; a file that will not parse at all already throws from
-// XDocument.Load. Missing-doc placeholders are reported separately (also
-// warnings).
-// ===========================================================================
+// Docs lint (no LLM): the deterministic content checks docs-format-docs runs on
+// each file's already-loaded XDocument (see CheckDocs). broken-cdata is an Error
+// that fails the build (it would break the published site); every other issue is a
+// Warning. A file that will not parse at all already throws from XDocument.Load.
 
 string OBSOLETE_MAP_PATH = MakeAbsolute (File (
     Argument ("obsoleteMap", EnvironmentVariable ("OBSOLETE_MAP")
         ?? ROOT_PATH.CombineWithFilePath (".agents/skills/api-docs/references/obsolete-api-map.md").FullPath))).FullPath;
-
-// Count of broken-cdata errors found this run; > 0 fails docs-format-docs.
-int DocErrors = 0;
 
 var MISSPELLINGS = new Dictionary<string, string> {
     { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
@@ -88,17 +80,6 @@ bool IsGeneratedDocFile (string path)
     if (Regex.IsMatch (path, @"[\\/]FrameworksIndex[\\/]")) return true;
     return false;
 }
-
-string RelativeToRepo (string abs)
-{
-    var full = abs;
-    try { full = System.IO.Path.GetFullPath (abs); } catch { }
-    var r = ROOT_PATH.FullPath.Replace ('\\', '/').TrimEnd ('/');
-    var f = full.Replace ('\\', '/');
-    if (f.StartsWith (r)) return f.Substring (r.Length).TrimStart ('/');
-    return f;
-}
-
 
 List<string> ReadObsoleteMembers ()
 {
@@ -138,12 +119,12 @@ List<string> ProseSegments (XElement node)
 
 // Lint one <Docs> element against the live tree docs-format-docs already loaded
 // (no re-parse). Logs each issue as "[docs] <class> | <file> | <docId> | <msg>"
-// and returns how many it found; broken-cdata is also counted in DocErrors and
-// fails the build, everything else is just a warning.
-int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string rel, List<string> obsoleteMembers)
+// and returns how many it found; broken-cdata also bumps the caller's error count
+// (via ref) and fails the build, everything else is just a warning.
+int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string path, List<string> obsoleteMembers, ref int errors)
 {
     if (string.IsNullOrEmpty (docId)) docId = "-";
-    var where = $"{rel} | {docId}";
+    var where = $"{path} | {docId}";
     var count = 0;
 
     // Empty summary/value/returns (a real defect — mdoc stubs say "To be added.")
@@ -205,7 +186,7 @@ int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string rel
                 if (val.Contains ("&lt;xref:")) {
                     Error ($"[docs] broken-cdata | {where} | escaped '&lt;xref:' inside CDATA — xref will not resolve");
                     count++;
-                    DocErrors++;
+                    errors++;
                 }
                 foreach (Match mm in Regex.Matches (val, @"<xref:(T:|M:|P:|F:)")) {
                     Warning ($"[docs] bad-xref | {where} | <xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
@@ -223,7 +204,7 @@ int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string rel
             } else if (val.Contains ("<xref:")) {
                 Error ($"[docs] broken-cdata | {where} | '<xref:' in plain text — CDATA was destroyed");
                 count++;
-                DocErrors++;
+                errors++;
             }
         }
     }
@@ -500,7 +481,7 @@ Task ("docs-format-docs")
     var obsolete = ReadObsoleteMembers ();
     var lintedTypes = 0;
     var lintFindings = 0;
-    DocErrors = 0;
+    var lintErrors = 0;
 
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
@@ -512,7 +493,7 @@ Task ("docs-format-docs")
         try {
             xdoc = XDocument.Load (file.FullPath);
         } catch (Exception ex) {
-            throw new Exception ($"{RelativeToRepo (file.FullPath)}: XML will not parse - {ex.Message}", ex);
+            throw new Exception ($"{file.FullPath}: XML will not parse - {ex.Message}", ex);
         }
 
         // Delete orphan namespace stub files (ns-*.xml) whose namespace no longer
@@ -770,14 +751,14 @@ Task ("docs-format-docs")
         // quality issues (warnings). Generated index/ns/framework files are skipped.
         if (xdoc.Root.Name == "Type" && !IsGeneratedDocFile (file.FullPath)) {
             lintedTypes++;
-            var rel = RelativeToRepo (file.FullPath);
+            var path = file.FullPath;
             var fullName = xdoc.Root.Attribute ("FullName")?.Value;
             var typeName = !string.IsNullOrEmpty (fullName) ? fullName : xdoc.Root.Attribute ("Name")?.Value;
 
             // type-level Docs
             var typeDocs = xdoc.Root.Element ("Docs");
             if (typeDocs != null)
-                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, rel, obsolete);
+                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, path, obsolete, ref lintErrors);
 
             // each Member's Docs (DocId + property accessor shape come from the member)
             foreach (var mn in xdoc.Root.Elements ("Members").Elements ("Member")) {
@@ -788,14 +769,14 @@ Task ("docs-format-docs")
                 var csharp = sigs.FirstOrDefault (s => (string) s.Attribute ("Language") == "C#")?.Attribute ("Value")?.Value ?? "";
                 var isProp = (string) mn.Element ("MemberType") == "Property";
                 var hasSet = isProp && Regex.IsMatch (csharp, @"set\s*;");
-                lintFindings += CheckDocs (d, docId, isProp, hasSet, rel, obsolete);
+                lintFindings += CheckDocs (d, docId, isProp, hasSet, path, obsolete, ref lintErrors);
             }
 
             // MemberGroup carries shared remarks/examples for overload sets (e.g. DrawText)
             foreach (var g in xdoc.Root.Elements ("Members").Elements ("MemberGroup")) {
                 var d = g.Element ("Docs");
                 if (d == null) continue;
-                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, rel, obsolete);
+                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, path, obsolete, ref lintErrors);
             }
         }
     }
@@ -875,10 +856,10 @@ Task ("docs-format-docs")
 
     // Lint summary, then fail the build if any doc has broken XML/CDATA.
     Information ("Docs lint: scanned {0} type file(s), {1} finding(s), {2} error(s).",
-        lintedTypes, lintFindings, DocErrors);
-    if (DocErrors > 0)
+        lintedTypes, lintFindings, lintErrors);
+    if (lintErrors > 0)
         throw new Exception (
-            $"{DocErrors} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
+            $"{lintErrors} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
 });
 
 Task ("update-docs")
