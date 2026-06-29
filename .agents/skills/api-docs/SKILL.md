@@ -42,7 +42,7 @@ work in batches of ~25–40 files so each pass stays auditable and resumable.
 The user asks in plain language ("review the font docs", "fill in what's missing").
 `scripts/docs-tool.ps1 resolve-scope` lists the inventory — `all`, `new` (placeholders), `changed`, or
 `file:PATH` — and **you** pick the files a request covers. For a theme, list `all` and select the matching
-files yourself. See [`references/scope-resolution.md`](references/scope-resolution.md).
+files yourself; the chosen procedure file covers the rest.
 
 All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 

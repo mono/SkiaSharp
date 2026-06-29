@@ -29,12 +29,12 @@ own recollection.
    dotnet cake --target=update-docs            # mdoc update + format → "To be added." placeholders
    ```
 
-2. **List the docs to fill** (see [`scope-resolution.md`](scope-resolution.md)). Placeholders are easiest to
-   target with the `new` mode:
+2. **List the docs to fill.** Placeholders are easiest to target with the `new` mode:
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope new
    ```
-   Shard the result into ~25–40-file batches.
+   Each line includes a candidate `binding/` source path (`source:NONE` → `grep` for it). Shard the result
+   into ~25–40-file batches.
 
 3. **Write (per file).** A field is **in scope to fill** when it is empty, self-closing, or still a
    placeholder (`To be added.`, or a bracketed remarks scaffold like `[Describe …]`). Do not rewrite

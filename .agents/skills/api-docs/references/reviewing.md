@@ -28,13 +28,16 @@ across many files almost certainly skimmed. Every factual finding must cite sour
 
 ## Procedure
 
-1. **Pick which docs to review** (see [`scope-resolution.md`](scope-resolution.md)):
+1. **Pick which docs to review.** Run:
    ```bash
    pwsh .agents/skills/api-docs/scripts/docs-tool.ps1 resolve-scope <all|new|changed|file:PATH>
    ```
-   The user describes the target in plain language. For a theme ("the font docs"), list `all` and **select
-   the matching files yourself**; for "whatever changed" use `changed`; for the whole library use `all`.
-   Shard into ~25–40-file batches; review is incremental against the `last-reviewed` marker.
+   It prints each doc path plus a candidate `binding/` source path (`source:NONE` if it can't guess — then
+   `grep` for it). The user describes the target in plain language. For a theme ("the font docs"), list
+   `all` and **select the matching files yourself** — e.g. expand "font" to `SKFont`, `SKTypeface`,
+   `SKFontMetrics`, `SKTextBlob`, and the text APIs on `SKPaint`/`SKCanvas`, judging by each type's purpose
+   not just its filename. For "whatever changed" use `changed`; for the whole library use `all`. Shard into
+   ~25–40-file batches; review is incremental against the `last-reviewed` marker.
 
 2. **Run the deterministic linter** on the batch ([`validation.md`](validation.md) §1). It finds objective
    defects with no model cost and emits findings in the shared contract.
