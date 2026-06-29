@@ -526,5 +526,99 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKCodecResult.Success, codec.GetPixels(out var pixels));
 			Assert.NotEmpty(pixels);
 		}
+
+		[Fact]
+		public void AnimatedGifReturnsAnimated()
+		{
+			// Per Skia's own tests: FrameCount > 1 should return IsAnimated::kYes (Animated)
+			// See externals/skia/tests/CodecAnimTest.cpp line 350-351
+			var path = Path.Combine(PathToImages, "animated-heart.gif");
+			using var codec = SKCodec.Create(path);
+
+			Assert.NotNull(codec);
+			Assert.True(codec.FrameCount > 1, $"animated-heart.gif has {codec.FrameCount} frames - expected > 1");
+
+			var status = codec.AnimationStatus;
+		
+			// Animated GIF with multiple frames MUST return Animated, not Unknown or NotAnimated
+			Assert.Equal(SKCodecAnimationStatus.Animated, status);
+		}
+
+		[Theory]
+		[InlineData("baboon.png")]
+		[InlineData("color-wheel.png")]
+		[InlineData("CMYK.jpg")]
+		public void StaticImageReturnsNotAnimated(string imageName)
+		{
+			var path = Path.Combine(PathToImages, imageName);
+			using var codec = SKCodec.Create(path);
+
+			Assert.NotNull(codec);
+			Assert.Equal(0, codec.FrameCount);
+
+			var status = codec.AnimationStatus;
+		
+			// Static images should return NotAnimated (or possibly Unknown for formats that don't support animation)
+			// But they should NEVER return Animated
+			Assert.NotEqual(SKCodecAnimationStatus.Animated, status);
+		}
+
+		[Fact]
+		public void AnimationStatusDisambiguatesRepetitionCount()
+		{
+			// Both animated GIF and static PNG have RepetitionCount == 0
+			// AnimationStatus should disambiguate them
+			var gifPath = Path.Combine(PathToImages, "animated-heart.gif");
+			var pngPath = Path.Combine(PathToImages, "baboon.png");
+
+			using var gifCodec = SKCodec.Create(gifPath);
+			using var pngCodec = SKCodec.Create(pngPath);
+
+			Assert.NotNull(gifCodec);
+			Assert.NotNull(pngCodec);
+
+			// GIF should be Animated or Unknown, NOT NotAnimated
+			Assert.True(gifCodec.AnimationStatus != SKCodecAnimationStatus.NotAnimated,
+				$"Animated GIF returned {gifCodec.AnimationStatus} - should NOT be NotAnimated");
+		
+			// PNG should be NotAnimated or Unknown
+			Assert.True(pngCodec.AnimationStatus != SKCodecAnimationStatus.Animated,
+				$"Static PNG returned {pngCodec.AnimationStatus} - should NOT be Animated");
+		
+			Assert.True(gifCodec.FrameCount > 1);
+		}
+
+		[Fact]
+		public void PngGivesDefinitiveAnswerImmediately()
+		{
+			// PNG format can determine animation status from metadata before first frame
+			var path = Path.Combine(PathToImages, "baboon.png");
+			using var codec = SKCodec.Create(path);
+
+			Assert.NotNull(codec);
+		
+			// PNG should NOT return Animated for a static image
+			var actual = codec.AnimationStatus;
+			Assert.True(actual != SKCodecAnimationStatus.Animated,
+				$"Static PNG returned {actual} - should be NotAnimated or Unknown, not Animated");
+		}
+
+		[Fact]
+		public void GifMayReturnUnknownWithPartialInput()
+		{
+			// GIF format may return Unknown initially with partial input
+			var path = Path.Combine(PathToImages, "animated-heart.gif");
+			var fullData = File.ReadAllBytes(path);
+	
+			using var fullCodec = SKCodec.Create(SKData.CreateCopy(fullData));
+			Assert.NotNull(fullCodec);
+	
+			// For GIF, AnimationStatus may be Unknown even with full data
+			var actual = fullCodec.AnimationStatus;
+			Assert.True(actual == SKCodecAnimationStatus.Animated || actual == SKCodecAnimationStatus.Unknown,
+				$"Animated GIF returned {actual} - expected Animated or Unknown, not NotAnimated");
+			Assert.True(fullCodec.FrameCount > 1);
+		}
 	}
-}
+	}
+

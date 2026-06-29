@@ -87,6 +87,14 @@ namespace SkiaSharp
 			}
 		}
 
+		public SKCodecAnimationStatus AnimationStatus {
+			get {
+				var result = SkiaApi.sk_codec_is_animated (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+
 		public int FrameCount {
 			get {
 				var result = SkiaApi.sk_codec_get_frame_count (Handle);
@@ -318,7 +326,7 @@ namespace SkiaSharp
 			if (stream == null)
 				throw new ArgumentNullException (nameof (stream));
 			if (stream is SKFileStream filestream && !filestream.IsValid)
-				throw new ArgumentException ("File stream was not valid.", nameof(stream));
+				throw new ArgumentException ("File stream was not valid.", nameof (stream));
 
 			fixed (SKCodecResult* r = &result) {
 				var codec = GetObject (SkiaApi.sk_codec_new_from_stream (stream.Handle, r));
