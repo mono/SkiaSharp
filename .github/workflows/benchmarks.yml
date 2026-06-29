@@ -184,7 +184,7 @@ jobs:
           dotnet run -c Release \
             --project benchmarks/SkiaSharp.Benchmarks.Compare \
             -p:SkiaSharpBenchmarkVersion="$VERSION" \
-            "${FEED_ARGS[@]}" \
+            ${FEED_ARGS[@]+"${FEED_ARGS[@]}"} \
             -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
 
           printf '{"os":"%s","version":"%s"}\n' "$OSLABEL" "$VERSION" > "$OUT/meta.json"
