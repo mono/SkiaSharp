@@ -20,30 +20,30 @@ onto `SKFont`. The `Obsolete` message always names the replacement — use it.
 
 ## Machine table
 
-Columns are tab-or-pipe separated: `Type | Member | Replacement | Severity`.
-`Severity` = `error` (compile-fails — CRITICAL) or `warn` (still compiles — IMPORTANT).
-The linter reads only the rows inside the fenced block.
+Columns are tab-or-pipe separated: `Type | Member | Replacement`. Every member listed here is **banned
+from code examples** — the `docs-format-docs` linter emits a `obsolete-in-example` **warning** for each
+one it finds inside a `csharp` fence. The linter reads only the rows inside the fenced block.
 
 ```obsolete-map
-Type        | Member                         | Replacement                              | Severity
-SKPaint     | TextSize                       | SKFont.Size                              | error
-SKPaint     | TextScaleX                     | SKFont.ScaleX                            | error
-SKPaint     | TextSkewX                      | SKFont.SkewX                             | error
-SKPaint     | Typeface                       | SKFont.Typeface                          | error
-SKPaint     | SubpixelText                   | SKFont.Subpixel                          | error
-SKPaint     | LcdRenderText                  | SKFont.Edging                            | error
-SKPaint     | HintingLevel                   | SKFont.Hinting                           | error
-SKPaint     | FakeBoldText                   | SKFont.Embolden                          | error
-SKPaint     | ForceAutoHinting               | SKFont.ForceAutoHinting                  | error
-SKPaint     | TextAlign                      | SKTextAlign draw overloads               | error
-SKPaint     | TextEncoding                   | SKTextEncoding draw overloads            | error
-SKPaint     | MeasureText                    | SKFont.MeasureText                       | error
-SKPaint     | BreakText                      | SKFont.BreakText                         | error
-SKPaint     | GetTextPath                    | SKFont.GetTextPath                       | error
-SKPaint     | GetFontMetrics                 | SKFont.Metrics                           | error
-SKCanvas    | DrawText(string,float,float,SKPaint) | DrawText(string,float,float,SKTextAlign,SKFont,SKPaint) | error
-SKCanvas    | DrawText(string,SKPoint,SKPaint)     | DrawText(string,SKPoint,SKTextAlign,SKFont,SKPaint)     | error
-SKCanvas    | DrawTextOnPath(string,SKPath,float,float,SKPaint) | DrawTextOnPath(string,SKPath,float,float,SKTextAlign,SKFont,SKPaint) | error
+Type        | Member                         | Replacement
+SKPaint     | TextSize                       | SKFont.Size
+SKPaint     | TextScaleX                     | SKFont.ScaleX
+SKPaint     | TextSkewX                      | SKFont.SkewX
+SKPaint     | Typeface                       | SKFont.Typeface
+SKPaint     | SubpixelText                   | SKFont.Subpixel
+SKPaint     | LcdRenderText                  | SKFont.Edging
+SKPaint     | HintingLevel                   | SKFont.Hinting
+SKPaint     | FakeBoldText                   | SKFont.Embolden
+SKPaint     | ForceAutoHinting               | SKFont.ForceAutoHinting
+SKPaint     | TextAlign                      | SKTextAlign draw overloads
+SKPaint     | TextEncoding                   | SKTextEncoding draw overloads
+SKPaint     | MeasureText                    | SKFont.MeasureText
+SKPaint     | BreakText                      | SKFont.BreakText
+SKPaint     | GetTextPath                    | SKFont.GetTextPath
+SKPaint     | GetFontMetrics                 | SKFont.Metrics
+SKCanvas    | DrawText(string,float,float,SKPaint) | DrawText(string,float,float,SKTextAlign,SKFont,SKPaint)
+SKCanvas    | DrawText(string,SKPoint,SKPaint)     | DrawText(string,SKPoint,SKTextAlign,SKFont,SKPaint)
+SKCanvas    | DrawTextOnPath(string,SKPath,float,float,SKPaint) | DrawTextOnPath(string,SKPath,float,float,SKTextAlign,SKFont,SKPaint)
 ```
 
 ## Correct modern text example

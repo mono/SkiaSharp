@@ -302,7 +302,7 @@ Task ("docs-format-docs")
     // QA gate state. docs-format-docs is both a formatter and a checker: as it
     // walks every doc it also runs the deterministic lint (see QaLintFile) and
     // fails the build if any file has broken XML/CDATA that would break the site.
-    var qaObsolete = QaObsoleteErrorMembers ();
+    var qaObsolete = QaObsoleteMembers ();
     var qaTypeFiles = 0;
     var qaFindings = 0;
     QA_ERRORS = 0;
@@ -705,7 +705,7 @@ string QaRelTo (string root, string abs)
 string QaRelToRepo (string abs) => QaRelTo (QA_REPO_ROOT, abs);
 
 string QaAttr (XmlNode n, string name) => (n as XmlElement)?.GetAttribute (name);
-List<string> QaObsoleteErrorMembers ()
+List<string> QaObsoleteMembers ()
 {
     var members = new List<string> ();
     if (!System.IO.File.Exists (QA_OBSOLETE_MAP)) return members;
@@ -715,9 +715,8 @@ List<string> QaObsoleteErrorMembers ()
         if (inBlock && line.StartsWith ("```")) break;
         if (!inBlock) continue;
         var cols = line.Split ('|').Select (c => c.Trim ()).ToArray ();
-        if (cols.Length < 4) continue;
+        if (cols.Length < 3) continue;
         if (cols[0] == "Type" || cols[0] == "") continue;
-        if (cols[3] != "error") continue;
         var member = Regex.Replace (cols[1], @"\(.*$", "").Trim ();
         if (!string.IsNullOrEmpty (member)) members.Add (member);
     }

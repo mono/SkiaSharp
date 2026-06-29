@@ -14,8 +14,8 @@ One agent does the whole pass. Work in batches of ~25–40 files so each pass st
    do **not** "correct" it from your own reasoning about how a macro "should" expand.
 2. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
 3. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
-4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete→replacement table. Any member listed `error`
-   is a **compile failure** in an example → CRITICAL.
+4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete→replacement table. Every member listed is
+   **banned from code examples**; using one is a compile failure → CRITICAL.
 
 Apply these facts; do not restate them in the docs.
 
@@ -94,7 +94,8 @@ property access, and:
 - Null safety: if a call returns nullable (`SKData?`, `SKTypeface.FromFamilyName`), is null handled
   before use?
 - **Obsolete check:** match every member against the obsolete map AND grep its source for `[Obsolete(...)]`.
-  An `error`-level obsolete member in an example is CRITICAL.
+  A member from the map (or any `[Obsolete(..., error: true)]` member) in an example is CRITICAL — it
+  won't compile; a soft-obsolete (`[Obsolete]` warning-only) member is IMPORTANT.
 - Self-contained: every identifier referenced must be declared in the snippet (using `bitmap2` when only
   `bitmap` was declared is a compile error).
 - Ownership: never `using`/`Dispose` a parent-owned object (the canvas from `SKDocument.BeginPage` and
