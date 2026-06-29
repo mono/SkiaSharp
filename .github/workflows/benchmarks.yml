@@ -11,11 +11,16 @@ name: "Benchmarks"
 #   * published  - the SkiaSharp.Benchmarks.Compare harness restores a published NuGet
 #                  version (e.g. the latest stable preview and a 3.x release) from nuget.org.
 #                  This path is fast and reliable and always reports real numbers.
-#   * current    - the in-repo SkiaSharp.Benchmarks project benchmarks the working tree
-#                  after building the native libSkiaSharp from source for a single
-#                  architecture. This is best-effort (continue-on-error) because a full
-#                  native build on a hosted runner is slow and can fail for reasons
-#                  unrelated to the benchmarks; when it succeeds it adds a "current" column.
+#   * current    - benchmarks the working tree's native code. The native libSkiaSharp is
+#                  built from source for a single architecture and then swapped in for the
+#                  baseline version's published native binary inside the same Compare
+#                  harness. The managed binding stays a known published version (the
+#                  baseline) while the native library is the one built from this PR, so the
+#                  column measures the effect of native changes (the common case for perf
+#                  PRs). This avoids building the multi-targeted in-repo binding graph,
+#                  which needs mobile workloads that are not present on the runners.
+#                  It is best-effort (continue-on-error) because a full native build on a
+#                  hosted runner is slow and can fail for reasons unrelated to benchmarks.
 
 on:
   pull_request:
@@ -234,6 +239,28 @@ jobs:
         shell: bash
         run: scripts/infra/native/linux/docker/glibc/build-local.sh x64
 
+      - name: Install MSVC Spectre-mitigated libs (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # The Windows native build links against the Spectre-mitigated MSVC libs, which
+          # are not installed on the hosted image by default. Best-effort: install them and
+          # export VS_INSTALL so windows-shared.cake can find lib/spectre/<arch>.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -property installationPath
+          Write-Host "VS install path: $vsPath"
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $components = @(
+            'Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre',
+            'Microsoft.VisualStudio.Component.VC.Runtimes.x86.x64.Spectre'
+          )
+          $addArgs = $components | ForEach-Object { @('--add', $_) }
+          $args = @('modify', '--installPath', $vsPath, '--quiet', '--norestart', '--nocache') + $addArgs
+          Write-Host "vs_installer $($args -join ' ')"
+          $p = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru
+          Write-Host "vs_installer exit code: $($p.ExitCode)"
+          "VS_INSTALL=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: Build native (Windows x64)
         if: runner.os == 'Windows'
         shell: bash
@@ -247,6 +274,7 @@ jobs:
       - name: Run benchmarks
         id: run
         env:
+          BASELINE: ${{ needs.setup.outputs.baseline }}
           FILTER: ${{ needs.setup.outputs.filter }}
           JOB: ${{ needs.setup.outputs.job }}
         shell: bash
@@ -254,13 +282,35 @@ jobs:
           set -euo pipefail
           set -f
 
+          # Map the runner to: the benchmark label, the freshly built native library, and
+          # the published native-asset package whose binary it replaces.
+          OSLABEL="$RUNNER_OS"; BUILT=""; PKG=""; CACHE_REL=""
           case "$RUNNER_OS" in
-            Linux)   OSLABEL=linux-x64 ;;
-            Windows) OSLABEL=windows-x64 ;;
-            macOS)   OSLABEL=osx-arm64 ;;
-            *)       OSLABEL="$RUNNER_OS" ;;
+            Linux)
+              OSLABEL=linux-x64
+              BUILT="$GITHUB_WORKSPACE/output/native/linux/x64/libSkiaSharp.so"
+              PKG=skiasharp.nativeassets.linux.nodependencies
+              CACHE_REL=runtimes/linux-x64/native/libSkiaSharp.so ;;
+            Windows)
+              OSLABEL=windows-x64
+              BUILT="$GITHUB_WORKSPACE/output/native/windows/x64/libSkiaSharp.dll"
+              PKG=skiasharp.nativeassets.win32
+              CACHE_REL=runtimes/win-x64/native/libSkiaSharp.dll ;;
+            macOS)
+              OSLABEL=osx-arm64
+              BUILT="$GITHUB_WORKSPACE/output/native/osx/libSkiaSharp.dylib"
+              PKG=skiasharp.nativeassets.macos
+              CACHE_REL=runtimes/osx/native/libSkiaSharp.dylib ;;
+            *)
+              OSLABEL="$RUNNER_OS" ;;
           esac
           echo "oslabel=$OSLABEL" >> "$GITHUB_OUTPUT"
+
+          if [ ! -f "$BUILT" ]; then
+            echo "::error::Native library not found at $BUILT — the native build did not produce it."
+            ls -R "$GITHUB_WORKSPACE/output/native" 2>/dev/null || true
+            exit 1
+          fi
 
           OUT="$GITHUB_WORKSPACE/bench-out"
           mkdir -p "$OUT"
@@ -270,8 +320,31 @@ jobs:
           FILTER_ARGS=(--filter)
           for f in $FILTER; do FILTER_ARGS+=("$f"); done
 
-          dotnet run -c Release \
-            --project benchmarks/SkiaSharp.Benchmarks \
+          NUGET_PKGS="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+
+          # Restore the Compare harness for the baseline published managed package so the
+          # managed binding is a known, stable version. BenchmarkDotNet generates and builds
+          # a child project at run time that copies the native asset from the global package
+          # cache, so replacing the cached binary makes the benchmark exercise the native
+          # library built from this PR while keeping the published managed API.
+          dotnet restore benchmarks/SkiaSharp.Benchmarks.Compare \
+            -p:SkiaSharpBenchmarkVersion="$BASELINE"
+
+          DEST="$NUGET_PKGS/$PKG/$BASELINE/$CACHE_REL"
+          if [ ! -f "$DEST" ]; then
+            echo "::error::Published native asset not found at $DEST"
+            find "$NUGET_PKGS/$PKG" -name 'libSkiaSharp*' 2>/dev/null || true
+            exit 1
+          fi
+          echo "Replacing published native with the working-tree build:"
+          echo "  built: $BUILT ($(shasum -a 256 "$BUILT" 2>/dev/null | cut -d' ' -f1 || echo n/a))"
+          echo "  cache: $DEST ($(shasum -a 256 "$DEST" 2>/dev/null | cut -d' ' -f1 || echo n/a))"
+          cp -f "$BUILT" "$DEST"
+          echo "  after: $(shasum -a 256 "$DEST" 2>/dev/null | cut -d' ' -f1 || echo n/a)"
+
+          dotnet run -c Release --no-restore \
+            --project benchmarks/SkiaSharp.Benchmarks.Compare \
+            -p:SkiaSharpBenchmarkVersion="$BASELINE" \
             -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
 
           printf '{"os":"%s","version":"current"}\n' "$OSLABEL" > "$OUT/meta.json"
