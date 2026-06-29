@@ -1,20 +1,37 @@
 # Release Notes
 
-Release notes for all SkiaSharp versions.
+Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose minor version is the Chrome/Skia milestone it builds on. Two release lines are supported at a time — a **stable** line for production and a **preview** line for the milestone currently being stabilized — mirroring [Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) (stable / extended-stable and beta). Everything else stays published for reference but is no longer serviced.
 
-### SkiaSharp 4.x
+## Support overview
 
-- **Version 4.150.x**
+- **Stable** — the line we recommend for production apps. Tracks Chrome's Stable / Extended Stable channel.
+- **Preview** — prerelease NuGets for the next milestone, so you can test ahead of its stable release. Tracks Chrome's Beta channel.
+- **Out of support** — older 3.x / 4.x lines, still listed below for reference but no longer serviced.
+- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.
+
+| Path | Version line | Latest release |
+|------|--------------|----------------|
+| Stable | 4.148.x | [4.148.0](4.148.0.md) |
+| Preview | 4.150.x | [4.150.0](4.150.0.md) |
+
+## Supported versions
+
+- **Version 4.150.x** — Preview
   - [Version 4.150.0](4.150.0.md)
   - [Version 4.150.0 (Unreleased)](4.150.0-unreleased.md)
-- **Version 4.148.x**
+- **Version 4.148.x** — Stable
   - [Version 4.148.1 (Unreleased)](4.148.1-unreleased.md)
   - [Version 4.148.0](4.148.0.md)
+
+## Out of support
+
+These SkiaSharp 3.x and 4.x lines are no longer supported. They remain available for reference.
+
+<details>
+<summary>Show out-of-support releases</summary>
+
 - **Version 4.147.x**
   - [Version 4.147.0](4.147.0.md)
-
-### SkiaSharp 3.x
-
 - **Version 3.119.x**
   - [Version 3.119.5 (Unreleased)](3.119.5-unreleased.md)
   - [Version 3.119.4](3.119.4.md)
@@ -30,7 +47,14 @@ Release notes for all SkiaSharp versions.
 - **Version 3.0.x**
   - [Version 3.0.0](3.0.0.md)
 
-### SkiaSharp 2.x
+</details>
+
+## Obsolete versions
+
+SkiaSharp 1.x and 2.x are obsolete and no longer maintained.
+
+<details>
+<summary>Show obsolete releases</summary>
 
 - **Version 2.88.x**
   - [Version 2.88.9](2.88.9.md)
@@ -49,9 +73,6 @@ Release notes for all SkiaSharp versions.
   - [Version 2.80.2](2.80.2.md)
   - [Version 2.80.1](2.80.1.md)
   - [Version 2.80.0](2.80.0.md)
-
-### SkiaSharp 1.x
-
 - **Version 1.68.x**
   - [Version 1.68.3](1.68.3.md)
   - [Version 1.68.2.1](1.68.2.1.md)
@@ -102,9 +123,12 @@ Release notes for all SkiaSharp versions.
   - [Version 1.49.1](1.49.1.md)
   - [Version 1.49.0](1.49.0.md)
 
-### HarfBuzzSharp
+</details>
+
+## HarfBuzzSharp
 
 - **HarfBuzzSharp 14.2.x**
+  - [HarfBuzzSharp 14.2.1](harfbuzzsharp/14.2.1.md)
   - [HarfBuzzSharp 14.2.0](harfbuzzsharp/14.2.0.md)
 - **HarfBuzzSharp 8.3.x**
   - [HarfBuzzSharp 8.3.1.6 (Unreleased)](harfbuzzsharp/8.3.1.6-unreleased.md)
