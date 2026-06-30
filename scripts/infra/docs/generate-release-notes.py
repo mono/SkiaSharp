@@ -96,6 +96,7 @@ import json
 import re
 import subprocess
 import sys
+import urllib.request
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -525,6 +526,110 @@ def version_key(version):
     # type: (str) -> list[int]
     """Sortable key from version string."""
     return [int(n) for n in re.findall(r"\d+", version)]
+
+
+# Chrome's public release schedule (Chromium Dash). Used to drive the release
+# cadence section with the real phase dates for the milestones currently in
+# flight. The four SkiaSharp cadence phases map onto these schedule fields:
+#   Beta Promotion -> earliest_beta   Early Stable  -> early_stable
+#   Stable Cut     -> stable_cut      Stable Release -> stable_date
+CHROME_SCHEDULE_URL = (
+    "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
+
+_MONTH_ABBR = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+def format_schedule_date(iso):
+    # type: (str) -> str
+    """``2026-06-03T00:00:00`` -> ``Jun 3`` (no leading zero)."""
+    _, month, day = iso[:10].split("-")
+    return "{} {}".format(_MONTH_ABBR[int(month) - 1], int(day))
+
+
+def fetch_chrome_schedule(milestone, timeout=8):
+    # type: (int, int) -> dict
+    """Return real Chrome phase dates for ``milestone`` from Chromium Dash.
+
+    Returns ``{"beta", "early_stable", "stable_cut", "stable"}`` -> ISO date
+    string. The schedule is required, so any problem (offline, timeout,
+    HTTP/JSON error, missing milestone or missing phase date) raises
+    ``RuntimeError`` and fails generation loudly rather than emitting a
+    placeholder — a retry once connectivity is back recreates the page.
+    """
+    url = CHROME_SCHEDULE_URL.format(milestone)
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "SkiaSharp-docs"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            status = getattr(resp, "status", 200)
+            if status != 200:
+                raise RuntimeError("HTTP {}".format(status))
+            payload = json.loads(resp.read().decode("utf-8"))
+    except Exception as e:
+        raise RuntimeError(
+            "Could not fetch Chrome schedule for m{} from {}: {}".format(
+                milestone, url, e))
+    mstones = payload.get("mstones") or []
+    if not mstones:
+        raise RuntimeError(
+            "Chrome schedule for m{} returned no milestone data".format(milestone))
+    ms = mstones[0]
+    fields = {
+        "beta": "earliest_beta",
+        "early_stable": "early_stable",
+        "stable_cut": "stable_cut",
+        "stable": "stable_date",
+    }
+    schedule = {}
+    for phase, key in fields.items():
+        value = ms.get(key)
+        if not value:
+            raise RuntimeError(
+                "Chrome schedule for m{} is missing '{}'".format(milestone, key))
+        schedule[phase] = value
+    return schedule
+
+
+def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base):
+    # type: (int, int, str, str) -> list[str]
+    """Build the schedule-timeline table for the release cadence section.
+
+    Pulls the *real* Chrome schedule for the two milestones currently in flight
+    (``cur_ms`` / ``next_ms``) from Chromium Dash and renders the four cadence
+    phases for each, sorted by actual date. If the schedule cannot be fetched,
+    ``fetch_chrome_schedule`` raises and generation fails (by design) — there is
+    no placeholder fallback.
+    """
+    # (cadence phase, schedule key, package suffix appended to the base)
+    phases = [
+        ("Beta Promotion", "beta", ".0-preview.1"),
+        ("Early Stable", "early_stable", ".0-preview.2"),
+        ("Stable Cut", "stable_cut", ".0-rc.1"),
+        ("Stable Release", "stable", ".0"),
+    ]
+
+    cur_sched = fetch_chrome_schedule(cur_ms)
+    next_sched = fetch_chrome_schedule(next_ms)
+
+    events = []  # type: list[tuple[str, str, str]]
+    for ms_num, base, sched in (
+            (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
+        for label, key, suffix in phases:
+            iso = sched[key]
+            events.append((iso,
+                           "m{} {}".format(ms_num, label),
+                           "`{}{}`".format(base, suffix)))
+    events.sort(key=lambda e: e[0])
+
+    header = (
+        "**Schedule for the two milestones currently in flight "
+        "(m{} and m{}), from the "
+        "[Chromium release schedule](https://chromiumdash.appspot.com/schedule):**"
+        .format(cur_ms, next_ms))
+    rows = ["| Date | Event | Package |", "|------|-------|---------|"]
+    rows += ["| {} | {} | {} |".format(format_schedule_date(iso), ev, pkg)
+             for iso, ev, pkg in events]
+    return [header, ""] + rows
 
 
 def get_upcoming_version():
@@ -2027,7 +2132,9 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate index.md grouped by support tier (spec §3.5).
 
-    When a ``support`` block is configured the page opens with a "Support
+    When a ``support`` block is configured the page opens with a "Release
+    cadence" section (how the 4.x line tracks Chrome's release cycle, the
+    versioning scheme, and the schedule reference) followed by a "Support
     overview" — a short lifecycle legend (stable / preview / out of support /
     obsolete) and a table of the currently-supported lines and their latest
     release — so a reader sees what to use at a glance. SkiaSharp lines are then
@@ -2114,6 +2221,72 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     lines = ["# Release Notes", "", intro, ""]
 
     if configured:
+        # Forward-looking version examples derived from what is on disk: the
+        # current milestone is the highest one in the major line, and the next is
+        # current + 1 (the one we will cut next). Used for both the example
+        # timeline (N / N+1) and the "Versioning" examples so they stay ahead of
+        # what has already shipped instead of being pinned to a fixed milestone.
+        sk_keys = [version_key(v) for v in (list(versions) + list(next_versions))
+                   if v and len(version_key(v)) >= 2]
+        next_major = max((k[0] for k in sk_keys), default=4)
+        line_ms = [k[1] for k in sk_keys if k[0] == next_major]
+        cur_ms = max(line_ms) if line_ms else 1
+        next_ms = cur_ms + 1
+        cur_base = "{}.{}".format(next_major, cur_ms)    # e.g. "4.150"
+        next_base = "{}.{}".format(next_major, next_ms)  # e.g. "4.151"
+        next_ver = next_base + ".0"
+        scheme = "`" + str(next_major) + ".{chrome_milestone}.{patch}`"
+        lines.extend([
+            "## Release cadence",
+            "",
+            "SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor "
+            "version corresponds to a Chrome/Skia milestone and progresses through "
+            "four phases:",
+            "",
+            "| Chrome Event | SkiaSharp Release | Purpose |",
+            "|---|---|---|",
+            "| Beta Promotion | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Early Stable | Preview 2 | Bug fixes and API additions from preview feedback |",
+            "| Stable Cut | RC | Critical bug fixes only, no new features |",
+            "| Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |",
+            "",
+        ])
+        lines.extend(render_cadence_timeline(cur_ms, next_ms, cur_base, next_base))
+        lines.extend([
+            "",
+            "Two milestones are always in flight — as one enters its RC/stable "
+            "phase, the next begins its preview phase.",
+            "",
+            "> [!NOTE]",
+            "> Starting with Chrome 153 (September 2026), Chrome moves from a "
+            "4-week to a 3-week release cycle. Because SkiaSharp's cadence is "
+            "driven by Chrome's actual schedule events, the phases above will "
+            "naturally compress — preview through stable will complete in ~3 weeks "
+            "instead of ~4.",
+            "",
+            "### Versioning",
+            "",
+            "Packages follow the scheme " + scheme + " — the "
+            "middle number **is** the Chrome milestone number. For example, "
+            "`" + next_ver + "` ships alongside Chrome " + str(next_ms) + "'s "
+            "stable release.",
+            "",
+            "- Preview: `" + next_ver + "-preview.1`, `" + next_ver + "-preview.2`",
+            "- Release candidate: `" + next_ver + "-rc.1`",
+            "- Stable: `" + next_ver + "`",
+            "",
+            "Prerelease suffixes follow "
+            "[NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).",
+            "",
+            "### Schedule reference",
+            "",
+            "The full Chrome release calendar is published at "
+            "[Chromium's release schedule](https://chromiumdash.appspot.com/schedule). "
+            "SkiaSharp milestones are synced automatically from this schedule — "
+            "check the [GitHub milestones](https://github.com/mono/SkiaSharp/milestones) "
+            "for upcoming release dates.",
+            "",
+        ])
         lines.extend([
             "## Support overview",
             "",
