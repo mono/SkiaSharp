@@ -35,13 +35,13 @@
   <PropertyGroup>
     <!-- samples-generate's version-substitution will override this value so that
         implicit references from Uno.Sdk match the versions specified in SkiaSharpSample.Shared -->
-    <SkiaSharpVersion>4.150.0-preview.2.1</SkiaSharpVersion>
+    <SkiaSharpVersion>4.150.0-rc.1.1</SkiaSharpVersion>
   </PropertyGroup>
   <!-- SkiaSharp.Views.WinUI is needed for SKXamlCanvas/SKSwapChainPanel on Windows.
        In-tree, this comes via _UnoPlatformSamples.targets (as a ProjectReference).
        In generated samples, that import is stripped, so this PackageReference ensures
        the generated build can resolve the types. samples-generate bumps the version. -->
   <ItemGroup Condition="$(TargetFramework.Contains('-windows'))">
-    <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.150.0-preview.2.1" />
+    <PackageReference Include="SkiaSharp.Views.WinUI" Version="4.150.0-rc.1.1" />
   </ItemGroup>
 </Project>
