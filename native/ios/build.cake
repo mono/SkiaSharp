@@ -55,6 +55,7 @@ Task("libSkiaSharp")
             $"ios_use_simulator={(isSim ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_metal=true " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +

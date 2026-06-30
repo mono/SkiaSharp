@@ -46,6 +46,7 @@ Task("libSkiaSharp")
         $"skia_use_freetype=true " +
         $"skia_use_harfbuzz=false " +
         $"skia_use_icu=false " +
+        $"skia_use_partition_alloc=false " +
         $"skia_use_piex=false " +
         $"skia_use_expat=true " +
         $"skia_use_libwebp_encode=true " +
@@ -125,6 +126,7 @@ Task("libHarfBuzzSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        $"skia_use_partition_alloc=false " +
         $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
