@@ -139,7 +139,9 @@
   <!-- Windows Desktop TFMs -->
   <PropertyGroup>
     <WindowsDesktopTargetFrameworks></WindowsDesktopTargetFrameworks>
-    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworks);$(WindowsTargetFrameworks)</WindowsDesktopTargetFrameworks>
+    <WindowsDesktopTargetFrameworksCurrent Condition="$(IsWindows)">$(WindowsTargetFrameworksCurrent);$(TFMCurrent)-windows</WindowsDesktopTargetFrameworksCurrent>
+    <WindowsDesktopTargetFrameworksPrevious Condition="$(IsWindows) and '$(TFMPrevious)' != ''">$(WindowsTargetFrameworksPrevious);$(TFMPrevious)-windows</WindowsDesktopTargetFrameworksPrevious>
+    <WindowsDesktopTargetFrameworks Condition="$(IsWindows)">$(WindowsDesktopTargetFrameworksCurrent);$(WindowsDesktopTargetFrameworksPrevious)</WindowsDesktopTargetFrameworks>
   </PropertyGroup>
 
   <!-- .NET MAUI -->
