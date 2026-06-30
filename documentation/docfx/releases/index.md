@@ -2,6 +2,49 @@
 
 Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose minor version is the Chrome/Skia milestone it builds on. Two release lines are supported at a time — a **stable** line for production and a **preview** line for the milestone currently being stabilized — mirroring [Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) (stable / extended-stable and beta). Everything else stays published for reference but is no longer serviced.
 
+## Release cadence
+
+SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corresponds to a Chrome/Skia milestone and progresses through four phases:
+
+| Chrome Event | SkiaSharp Release | Purpose |
+|---|---|---|
+| Beta Promotion | Preview 1 | Merge upstream Skia, ship initial preview |
+| Early Stable | Preview 2 | Bug fixes and API additions from preview feedback |
+| Stable Cut | RC | Critical bug fixes only, no new features |
+| Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |
+
+**Schedule for the two milestones currently in flight (m150 and m151), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
+
+| Date | Event | Package |
+|------|-------|---------|
+| Jun 3 | m150 Beta Promotion | `4.150.0-preview.1` |
+| Jun 17 | m150 Early Stable | `4.150.0-preview.2` |
+| Jun 23 | m150 Stable Cut | `4.150.0-rc.1` |
+| Jun 30 | m150 Stable Release | `4.150.0` |
+| Jul 1 | m151 Beta Promotion | `4.151.0-preview.1` |
+| Jul 15 | m151 Early Stable | `4.151.0-preview.2` |
+| Jul 21 | m151 Stable Cut | `4.151.0-rc.1` |
+| Jul 28 | m151 Stable Release | `4.151.0` |
+
+Two milestones are always in flight — as one enters its RC/stable phase, the next begins its preview phase.
+
+> [!NOTE]
+> Starting with Chrome 153 (September 2026), Chrome moves from a 4-week to a 3-week release cycle. Because SkiaSharp's cadence is driven by Chrome's actual schedule events, the phases above will naturally compress — preview through stable will complete in ~3 weeks instead of ~4.
+
+### Versioning
+
+Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.151.0` ships alongside Chrome 151's stable release.
+
+- Preview: `4.151.0-preview.1`, `4.151.0-preview.2`
+- Release candidate: `4.151.0-rc.1`
+- Stable: `4.151.0`
+
+Prerelease suffixes follow [NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).
+
+### Schedule reference
+
+The full Chrome release calendar is published at [Chromium's release schedule](https://chromiumdash.appspot.com/schedule). SkiaSharp milestones are synced automatically from this schedule — check the [GitHub milestones](https://github.com/mono/SkiaSharp/milestones) for upcoming release dates.
+
 ## Support overview
 
 - **Stable** — the line we recommend for production apps. Tracks Chrome's Stable / Extended Stable channel.
