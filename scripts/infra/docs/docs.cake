@@ -59,10 +59,12 @@ void RunMdoc (string arguments, DirectoryPath workingDirectory)
 // each file's already-loaded XDocument (see CheckDocs). broken-cdata is an Error
 // that fails the build (it would break the published site); every other issue is a
 // Warning. A file that will not parse at all already throws from XDocument.Load.
-
-string OBSOLETE_MAP_PATH = MakeAbsolute (File (
-    Argument ("obsoleteMap", EnvironmentVariable ("OBSOLETE_MAP")
-        ?? ROOT_PATH.CombineWithFilePath (".agents/skills/api-docs/references/obsolete-api-map.md").FullPath))).FullPath;
+//
+// Obsolete-member usage in code examples is deliberately NOT linted here. Name-only
+// matching cannot distinguish an obsolete overload from a modern one (e.g.
+// SKCanvas.DrawText with vs without an SKFont argument), so it produced false
+// positives on valid modern calls. That judgement is left to the docs author and
+// reviewer, guided by references/obsolete-api-map.md.
 
 var MISSPELLINGS = new Dictionary<string, string> {
     { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
@@ -79,24 +81,6 @@ bool IsGeneratedDocFile (string path)
     if (name.StartsWith ("ns-") && name.EndsWith (".xml")) return true;
     if (Regex.IsMatch (path, @"[\\/]FrameworksIndex[\\/]")) return true;
     return false;
-}
-
-List<string> ReadObsoleteMembers ()
-{
-    var members = new List<string> ();
-    if (!System.IO.File.Exists (OBSOLETE_MAP_PATH)) return members;
-    var inBlock = false;
-    foreach (var line in System.IO.File.ReadAllLines (OBSOLETE_MAP_PATH)) {
-        if (line.StartsWith ("```obsolete-map")) { inBlock = true; continue; }
-        if (inBlock && line.StartsWith ("```")) break;
-        if (!inBlock) continue;
-        var cols = line.Split ('|').Select (c => c.Trim ()).ToArray ();
-        if (cols.Length < 3) continue;
-        if (cols[0] == "Type" || cols[0] == "") continue;
-        var member = Regex.Replace (cols[1], @"\(.*$", "").Trim ();
-        if (!string.IsNullOrEmpty (member)) members.Add (member);
-    }
-    return members.Distinct ().OrderBy (x => x, StringComparer.Ordinal).ToList ();
 }
 
 // Prose text for natural-language checks (repeated word, spelling): one string
@@ -121,7 +105,7 @@ List<string> ProseSegments (XElement node)
 // (no re-parse). Logs each issue as "[docs] <class> | <file> | <docId> | <msg>"
 // and returns how many it found; broken-cdata also bumps the caller's error count
 // (via ref) and fails the build, everything else is just a warning.
-int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string path, List<string> obsoleteMembers, ref int errors)
+int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string path, ref int errors)
 {
     if (string.IsNullOrEmpty (docId)) docId = "-";
     var where = $"{path} | {docId}";
@@ -179,7 +163,7 @@ int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string pat
         // xref / CDATA integrity, by node kind. A <xref: in an ordinary text node
         // means the CDATA wrapper was destroyed (it is stored escaped as &lt;xref:);
         // inside CDATA an xref must use the bare UID (no DocId prefix) and must not be
-        // doubly escaped. CDATA also carries the csharp examples we obsolete-check.
+        // doubly escaped.
         foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
             var val = t.Value;
             if (t is XCData) {
@@ -191,15 +175,6 @@ int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string pat
                 foreach (Match mm in Regex.Matches (val, @"<xref:(T:|M:|P:|F:)")) {
                     Warning ($"[docs] bad-xref | {where} | <xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
                     count++;
-                }
-                foreach (Match fence in Regex.Matches (val, @"(?s)```csharp(.*?)```")) {
-                    var code = fence.Groups[1].Value;
-                    foreach (var om in obsoleteMembers) {
-                        if (Regex.IsMatch (code, @"\." + Regex.Escape (om) + @"\b")) {
-                            Warning ($"[docs] obsolete-in-example | {where} | example uses obsolete member '.{om}' (see obsolete-api-map.md)");
-                            count++;
-                        }
-                    }
                 }
             } else if (val.Contains ("<xref:")) {
                 Error ($"[docs] broken-cdata | {where} | '<xref:' in plain text — CDATA was destroyed");
@@ -478,7 +453,6 @@ Task ("docs-format-docs")
     // docs-format-docs is both a formatter and a checker: in the same pass it walks
     // every type's <Docs> and runs the deterministic lint (see CheckDocs), failing
     // the build if any file has broken CDATA that would break the site.
-    var obsolete = ReadObsoleteMembers ();
     var lintedTypes = 0;
     var lintFindings = 0;
     var lintErrors = 0;
@@ -758,7 +732,7 @@ Task ("docs-format-docs")
             // type-level Docs
             var typeDocs = xdoc.Root.Element ("Docs");
             if (typeDocs != null)
-                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, path, obsolete, ref lintErrors);
+                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, path, ref lintErrors);
 
             // each Member's Docs (DocId + property accessor shape come from the member)
             foreach (var mn in xdoc.Root.Elements ("Members").Elements ("Member")) {
@@ -769,14 +743,14 @@ Task ("docs-format-docs")
                 var csharp = sigs.FirstOrDefault (s => (string) s.Attribute ("Language") == "C#")?.Attribute ("Value")?.Value ?? "";
                 var isProp = (string) mn.Element ("MemberType") == "Property";
                 var hasSet = isProp && Regex.IsMatch (csharp, @"set\s*;");
-                lintFindings += CheckDocs (d, docId, isProp, hasSet, path, obsolete, ref lintErrors);
+                lintFindings += CheckDocs (d, docId, isProp, hasSet, path, ref lintErrors);
             }
 
             // MemberGroup carries shared remarks/examples for overload sets (e.g. DrawText)
             foreach (var g in xdoc.Root.Elements ("Members").Elements ("MemberGroup")) {
                 var d = g.Element ("Docs");
                 if (d == null) continue;
-                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, path, obsolete, ref lintErrors);
+                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, path, ref lintErrors);
             }
         }
     }

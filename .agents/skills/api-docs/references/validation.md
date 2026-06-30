@@ -25,8 +25,11 @@ Findings use the shared contract, logged as Cake **warnings**:
   for `<see cref>`).
 - Empty `<summary/>` / `<value/>` / `<returns/>` (note `<remarks/>` is allowed).
 - Accessor-verb mismatch vs the `MemberSignature` (`{ get; }` documented as "Gets or sets").
-- **Obsolete members used in a `csharp` fence**, matched against [`obsolete-api-map.md`](obsolete-api-map.md).
 - Repeated words ("the the") and common misspellings (dictionary, not an LLM).
+
+> **Not checked here:** obsolete members in examples. Distinguishing an obsolete overload from a modern one
+> (e.g. `SKCanvas.DrawText` with vs without `SKFont`) needs signature awareness a name match can't do, so
+> that is a reviewer judgement — see [`obsolete-api-map.md`](obsolete-api-map.md) and `reviewing.md` Check B.
 
 These are advisory: a fresh regen full of placeholders is just noisy, not broken.
 

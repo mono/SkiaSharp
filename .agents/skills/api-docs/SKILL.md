@@ -53,8 +53,9 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 - [`references/skia-patterns.md`](references/skia-patterns.md) — domain facts (color layouts, struct
   defaults, standard-based enums, caller-owned vs parent-owned).
 - [`references/checklist.md`](references/checklist.md) — CRITICAL/IMPORTANT/MINOR severity taxonomy.
-- [`references/obsolete-api-map.md`](references/obsolete-api-map.md) — obsolete→replacement table (linter
-  + procedures read it).
+- [`references/obsolete-api-map.md`](references/obsolete-api-map.md) — obsolete members and their modern
+  replacements; the writer and example reviewer read it (not the linter — obsolete use is a model
+  judgement, see the reference for why).
 
 > **DRY rule:** the procedures describe *what to do*; the reference tables hold the *facts*. Procedures
 > point to references — they must not restate the tables. Keep reference chains one level deep.

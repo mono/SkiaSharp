@@ -14,8 +14,9 @@ One agent does the whole pass. Work in batches of ~25–40 files so each pass st
    do **not** "correct" it from your own reasoning about how a macro "should" expand.
 2. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
 3. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
-4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete→replacement table. Every member listed is
-   **banned from code examples**; using one is a compile failure → CRITICAL.
+4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
+   §1 lists members that are always obsolete; §2 lists methods whose name also exists on the modern API
+   (disambiguate by signature). Using an obsolete member in an example is a compile failure → CRITICAL.
 
 Apply these facts; do not restate them in the docs.
 
@@ -93,15 +94,16 @@ property access, and:
 - Flag C# reserved words used as identifiers (`override`, `base`, `event`, `class`, `struct`, …).
 - Null safety: if a call returns nullable (`SKData?`, `SKTypeface.FromFamilyName`), is null handled
   before use?
-- **Obsolete check:** match every member against the obsolete map AND grep its source for `[Obsolete(...)]`.
-  A member from the map (or any `[Obsolete(..., error: true)]` member) in an example is CRITICAL — it
-  won't compile; a soft-obsolete (`[Obsolete]` warning-only) member is IMPORTANT.
-  - **Linter false positives — verify the overload before "fixing."** The deterministic
-    `docs-format-docs` obsolete-in-example check matches by **member name**, so it flags every `.DrawText`
-    and `.MeasureText` even on the **modern, non-obsolete** overloads (`SKCanvas.DrawText(string, float,
-    float, SKTextAlign, SKFont, SKPaint)`, `SKFont.MeasureText(...)`). Before acting on such a finding, grep
-    the source for the exact overload: if it is **not** `[Obsolete]`, the finding is a false positive —
-    leave the example as-is and do **not** delete a valid modern call to silence the linter.
+- **Obsolete check:** match every member against [`obsolete-api-map.md`](obsolete-api-map.md) AND grep
+  its source for `[Obsolete(...)]`. A member from the map's §1 (or any `[Obsolete(..., error: true)]`
+  member) in an example is CRITICAL — it won't compile; a soft-obsolete (`[Obsolete]` warning-only)
+  member is IMPORTANT.
+  - **Disambiguate overloads — same name ≠ obsolete.** Text methods like `DrawText`/`MeasureText` exist
+    in both an obsolete and a modern form (map §2). Judge by *receiver and signature*, not by name: the
+    deprecated forms are on `SKPaint` or are the `SKCanvas` overloads with no `SKFont` argument; the modern
+    forms are on `SKFont` or take an `SKFont`. `font.MeasureText(...)` and
+    `canvas.DrawText(..., SKTextAlign, font, paint)` are **correct** — never rewrite a valid modern call.
+    Only flag `paint.MeasureText(...)` and `canvas.DrawText(string, x, y, paint)`.
 - Self-contained: every identifier referenced must be declared in the snippet (using `bitmap2` when only
   `bitmap` was declared is a compile error).
 - Ownership: never `using`/`Dispose` a parent-owned object (the canvas from `SKDocument.BeginPage` and
