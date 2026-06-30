@@ -24,6 +24,8 @@ JSON schema for the security audit report. The AI generates this JSON as structu
   },
   "versionVerification": [ ... ],
   "findings": [ ... ],
+  "cgAlerts": { ... },
+  "chromeReleases": { ... },
   "nextSteps": [ ... ]
 }
 ```
@@ -67,7 +69,14 @@ Array of objects, one per dependency:
 
 ## `findings` — Individual Dependency Findings
 
-Array of finding objects, sorted by priority then severity:
+Array of finding objects, sorted by priority then severity.
+
+> 🛑 **ONE finding per dependency.** Every dependency (e.g., "skia", "libpng", "freetype")
+> must appear as exactly ONE object in this array. All CVEs for that dependency — regardless
+> of their status (affected, already_fixed, false_positive) — go inside that single finding's
+> `cves[]` array. Use each CVE object's `assessment` field to distinguish affected vs. fixed
+> vs. false positive. **Do NOT create multiple finding objects for the same dependency split
+> by status, milestone, or category.** The validator enforces this as an error.
 
 ```json
 {
@@ -129,6 +138,47 @@ Array of finding objects, sorted by priority then severity:
 | `needs_review` | Cannot determine without manual analysis |
 | `nvd_range_error` | NVD version range is wrong; fix commit already in our tree |
 
+### CVE Fields — "Value OR Note" Principle
+
+> **Every essential CVE field must be either a concrete value OR a `*Note` field explaining
+> why it's missing.** Silent nulls ("we couldn't find it so we left it blank") are forbidden
+> and are rejected by the validator. This forces every CVE to be fully investigated.
+
+Examples:
+
+| ✅ Valid | ❌ Invalid |
+|---------|------------|
+| `"bugId": "496526419"` | `"bugId": null` |
+| `"bugId": null, "bugIdNote": "CVE has no issues.chromium.org reference URL in NVD"` | (no note) |
+| `"fixCommit": "4320748a..."` | `"fixCommit": null` |
+| `"fixCommit": null, "fixCommitNote": "Bug NNN has no matching commit on chrome/m147 or chrome/m148 branches after full fetch"` | (no note) |
+| `"severity": "HIGH", "cvss": 8.3` | `"severity": null` (severity is always required) |
+| `"severity": "HIGH", "cvss": null, "severityNote": "CVSS not yet assigned by NVD; using Chromium 'High' rating"` | `"cvss": null` (no note) |
+
+### CVE Object Fields
+
+| Field | Type | Required | Note Fallback | Description |
+|-------|------|----------|---------------|-------------|
+| `id` | string | ✅ Always | — | CVE ID, e.g., `CVE-2026-8579` |
+| `severity` | enum | ✅ Always | — | `CRITICAL` / `HIGH` / `MEDIUM` / `LOW`. Use Chromium rating if NVD CVSS pending. |
+| `description` | string | ✅ Always | — | What the vulnerability is |
+| `source` | string | ✅ Always | — | Where this CVE came from |
+| `assessment` | enum | ✅ Always | — | See assessment table above |
+| `bugId` | string\|null | Value or note | `bugIdNote` | Chromium bug ID |
+| `bugUrl` | string\|null | Required when `bugId` set | — | `https://issues.chromium.org/issues/{bugId}` |
+| `fixCommit` | string\|null | Value or note | `fixCommitNote` | Upstream Skia commit SHA that fixes the CVE |
+| `fixCommitTitle` | string\|null | Optional | — | Subject of the fix commit |
+| `fixMilestone` | string\|null | Optional | — | Chrome milestone, e.g., `m148` |
+| `cvss` | number\|null | Value or note | `severityNote` | CVSS score |
+| `filesModified` | string[]\|null | Optional | — | Files changed by the fix commit |
+| `onUpstreamMilestone` | bool\|null | Value or note (when `affected`) | `branchNote` | Is fix on `upstream/chrome/m{OUR}`? |
+| `inOurTree` | bool\|null | ✅ When `affected` (never null) | — | Is fix in our fork's HEAD? |
+| `cherryPicksCleanly` | bool\|null | Value or note (when `affected`) | `cherryPickNote` | Did `git cherry-pick --no-commit` succeed? |
+| `reachability` | enum\|null | Value or note (when `affected`) | `reachabilityNote` | `REACHABLE` / `COMPILED_NOT_EXPOSED` / `NOT_REACHABLE` |
+| `evidence` | string | Optional | — | Freeform summary/evidence |
+
+When `assessment == "affected"`, the resolution fields (`cherryPicksCleanly`, `reachability`, `onUpstreamMilestone`, `inOurTree`) are strictly enforced — each requires either a value or its note counterpart (with `inOurTree` always requiring a boolean).
+
 ### CVE `source` Values
 
 Examples: `"NVD (Chrome CPE)"`, `"NVD web search"`, `"Android Security Bulletin"`, `"Huawei HarmonyOS Bulletin"`, `"Chromium severity rating (CVSS pending)"`
@@ -156,3 +206,89 @@ Array of action objects:
 | `dependency` | string | Yes | Which dependency |
 | `reason` | string | Yes | Why (cite CVE count/severity) |
 | `command` | string | No | CLI command if applicable (e.g., `bump libpng to 1.6.56`) |
+
+## `chromeReleases` — Chrome Releases Blog Data (Optional)
+
+When the Chrome Releases blog was queried (Step 2), include this section for traceability.
+This section is optional — omit it only if the blog query was skipped or failed.
+
+```json
+{
+  "queriedAt": "2026-04-10T14:30:00Z",
+  "monthsQueried": 6,
+  "postsReviewed": 12,
+  "totalCvesExtracted": 45,
+  "skiaRelevantCves": 8,
+  "structuredCves": [
+    {
+      "cveId": "CVE-2026-8510",
+      "severity": "Critical",
+      "component": "Skia",
+      "description": "Integer overflow in Skia",
+      "bugId": "502636904",
+      "milestone": 148,
+      "blogPostUrl": "https://chromereleases.googleblog.com/...",
+      "inNvd": false,
+      "extraction": "regex"
+    }
+  ],
+  "earlyDisclosures": [],
+  "cacheFile": "output/ai/chrome-releases-cache.json"
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `queriedAt` | string | Yes | ISO timestamp of the query |
+| `monthsQueried` | integer | Yes | How many months back were queried |
+| `postsReviewed` | integer | Yes | Number of posts that matched keywords |
+| `totalCvesExtracted` | integer | Yes | Total CVEs found across all posts (all components) |
+| `skiaRelevantCves` | integer | Yes | CVEs in Skia-relevant components |
+| `structuredCves` | array | Yes | **All** Skia-relevant CVEs from the blog (the primary rendered array). Each has camelCase fields: `cveId`, `severity`, `component`, `milestone`, `bugId`, `blogPostUrl` |
+| `earlyDisclosures` | array | No | Subset: CVEs found in blog but NOT yet in NVD (may be empty). Same schema as `structuredCves` items. |
+| `cacheFile` | string | Yes | Path to the cached JSON from the script |
+
+### Field Name Mapping (Script → Report JSON)
+
+The `query-chrome-releases.py` script outputs **snake_case** fields. When building the report
+JSON, transform to **camelCase**:
+
+| Script field (`structured_cves[]`) | Report field (`structuredCves[]`) |
+|------------------------------------|-----------------------------------|
+| `cve_id` | `cveId` |
+| `bug_id` | `bugId` |
+| `blog_post_url` | `blogPostUrl` |
+| `severity` | `severity` (unchanged) |
+| `component` | `component` (unchanged) |
+| `milestone` | `milestone` (unchanged) |
+
+### Setting `blogPostUrl` on Findings CVEs
+
+When a CVE in `findings[].cves[]` also appears in `structuredCves[]`, copy the `blogPostUrl`
+onto the finding's CVE object. This enables the HTML viewer to link directly to the source
+blog post.
+
+### CVE `source` Field (Updated)
+
+The `source` field on individual CVE objects in `findings[].cves[]` should indicate provenance:
+
+| Value | Meaning |
+|-------|---------|
+| `"NVD (Chrome CPE)"` | Found via NVD query with Chrome CPE match |
+| `"NVD web search"` | Found via NVD keyword search |
+| `"Chrome Releases blog"` | Found in Chrome Releases blog only (early disclosure) |
+| `"NVD + Chrome Releases"` | Found in both sources (most common) |
+| `"Android Security Bulletin"` | Vendor bulletin — Android |
+| `"Huawei HarmonyOS Bulletin"` | Vendor bulletin — Huawei |
+| `"Chromium severity rating (CVSS pending)"` | Severity from Chromium, NVD CVSS not yet published |
+
+### CVE `extraction` Field (New, Optional)
+
+For CVEs that came from Chrome Releases data, indicate how they were extracted:
+
+| Value | Meaning |
+|-------|---------|
+| `"regex"` | Deterministically extracted by the script's regex parser |
+| `"ai_review"` | Found by AI reviewing the raw post text (format variation) |
+
+This helps track reliability and identify if the regex needs updating.

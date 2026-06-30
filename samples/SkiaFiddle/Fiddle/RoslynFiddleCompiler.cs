@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
-using SkiaSharp;
 
 namespace SkiaFiddle.Fiddle;
 
@@ -93,20 +92,28 @@ public class RoslynFiddleCompiler : IFiddleCompiler
         if (_references is not null)
             return _references;
 
+        // Build references from the runtime assemblies loaded in the app.
         var refs = new List<MetadataReference>();
-        refs.AddRange(Basic.Reference.Assemblies.Net100.References.All);
-        AddRuntimeAssembly(refs, typeof(SKCanvas));
+        foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+        {
+            if (assembly.IsDynamic)
+            {
+                continue;
+            }
+            
+            AddRuntimeAssembly(refs, assembly);
+        }
 
         _references = refs.ToArray();
+
         return _references;
     }
 
-    private static void AddRuntimeAssembly(List<MetadataReference> list, Type type)
+    private static void AddRuntimeAssembly(List<MetadataReference> list, Assembly assembly)
     {
-        var asm = type.Assembly;
         unsafe
         {
-            if (asm.TryGetRawMetadata(out byte* blob, out int length))
+            if (assembly.TryGetRawMetadata(out byte* blob, out int length))
             {
                 var moduleMetadata = ModuleMetadata.CreateFromMetadata((IntPtr)blob, length);
                 var assemblyMetadata = AssemblyMetadata.Create(moduleMetadata);
@@ -134,6 +141,13 @@ public class RoslynFiddleCompiler : IFiddleCompiler
         sb.AppendLine(setupCode);
         sb.AppendLine("#line hidden");
         sb.AppendLine("public void Draw(SkiaSharp.SKCanvas canvas, int width, int height, double t) {");
+        // Inject the selected asset variables, mirroring fiddle.skia.org. These read
+        // the live selection so switching the image/font updates the next frame. They
+        // sit under "#line hidden" so they never show up in diagnostics, and the
+        // discards keep them from warning when a snippet doesn't use them.
+        sb.AppendLine("var image = global::SkiaFiddle.Fiddle.FiddleAssets.Image;");
+        sb.AppendLine("var typeface = global::SkiaFiddle.Fiddle.FiddleAssets.Typeface;");
+        sb.AppendLine("_ = image; _ = typeface;");
         sb.AppendLine("#line 1 \"Draw\"");
         sb.AppendLine(drawCode);
         sb.AppendLine("#line hidden");
@@ -141,18 +155,12 @@ public class RoslynFiddleCompiler : IFiddleCompiler
         return sb.ToString();
     }
 
-    // Reference-identity warnings emitted because SkiaSharp's own transitive deps overlap
-    // with Basic.Reference.Assemblies.Net100. They're harmless and noisy.
-    private static readonly HashSet<string> SuppressedDiagnosticIds = new() { "CS1701", "CS1702", "CS8019" };
-
     private static string FormatDiagnostics(IEnumerable<Diagnostic> diagnostics, bool includeErrors = true)
     {
         var sb = new StringBuilder();
         foreach (var d in diagnostics)
         {
             if (d.Severity == DiagnosticSeverity.Hidden)
-                continue;
-            if (SuppressedDiagnosticIds.Contains(d.Id))
                 continue;
             if (!includeErrors && d.Severity == DiagnosticSeverity.Error)
                 continue;

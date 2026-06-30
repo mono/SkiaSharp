@@ -3,7 +3,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/tizen"));
 
-#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
 
 DirectoryPath TIZEN_STUDIO_HOME = EnvironmentVariable("TIZEN_STUDIO_HOME") ?? PROFILE_PATH.Combine("tizen-studio");
 
@@ -44,6 +44,7 @@ Task("libSkiaSharp")
            $"skia_enable_ganesh=true " +
            $"skia_use_harfbuzz=false " +
            $"skia_use_icu=false " +
+           $"skia_use_partition_alloc=false " +
            $"skia_use_piex=true " +
            $"skia_use_system_expat=false " +
            $"skia_use_system_freetype2=true " +

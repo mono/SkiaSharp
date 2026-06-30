@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(str, str2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PathPointsAreCorrect()
 		{
 			using var builder = new SKPathBuilder();
@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKPathSegmentMask.Cubic | SKPathSegmentMask.Line, path.SegmentMasks);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PathContainsPoint()
 		{
 			using var builder = new SKPathBuilder();
@@ -81,7 +81,7 @@ namespace SkiaSharp.Tests
 			Assert.False(path.Contains(5, 30));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PathContainsPointInRoundRect()
 		{
 			using var builder = new SKPathBuilder();
@@ -93,7 +93,7 @@ namespace SkiaSharp.Tests
 			Assert.False(path.Contains(5, 30));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void GetLastPoint()
 		{
@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(10, 20), path.LastPoint);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ThumbtackShapeIsConcave()
 		{
 			// based on test_skbug_3469
@@ -119,7 +119,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKPathConvexity.Concave, path.Convexity);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RawIteratorReturnsCorrectPointsAndVerb()
 		{
 			using var builder = new SKPathBuilder();
@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PathConsistentAfterClose()
 		{
 			// based on test_path_close_issue1474
@@ -209,7 +209,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(95, last.Y);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ParsePathReturnsValidPath()
 		{
 			// based on ParsePath
@@ -239,7 +239,7 @@ namespace SkiaSharp.Tests
 			TestToFromSvgPath(p3);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PathBoundsAndRegionBoundsMatch()
 		{
 			using var builder = new SKPathBuilder();
@@ -263,7 +263,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(90f, regionBounds.Bottom);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BoundsAndTightBoundAreCorrect()
 		{
 			const int Precision = 6;
@@ -286,7 +286,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)14.185303f, (double)tightBounds.Bottom, Precision);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasuringSegementsWorks()
 		{
 			using var builder = new SKPathBuilder();
@@ -309,7 +309,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(60, 10), segment.Points[1]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TightBoundsForEnclosedPathIsNotZero()
 		{
 			const int Precision = 3;
@@ -330,7 +330,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)rect.Bottom, (double)bounds.Bottom, Precision);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectPathIsRect()
 		{
 			using var builder = new SKPathBuilder();
@@ -347,7 +347,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKPathDirection.CounterClockwise, dir);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RoundRectPathIsRoundRect()
 		{
 			using var builder = new SKPathBuilder();
@@ -363,7 +363,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rrect.Radii, path.GetRoundRect().Radii);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinePathIsLine()
 		{
 			using var builder = new SKPathBuilder();
@@ -377,7 +377,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new[] { SKPoint.Empty, new SKPoint(100, 100) }, path.GetLine());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OvalPathIsOval()
 		{
 			using var builder = new SKPathBuilder();
@@ -392,7 +392,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rect, path.GetOvalBounds());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TrimPathEffectWorksInverted()
 		{
 			using var builder = new SKPathBuilder();
@@ -440,7 +440,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TrimPathEffectWorks()
 		{
 			using var builder = new SKPathBuilder();
@@ -488,7 +488,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToWinding()
 		{
 			using var builder = new SKPathBuilder();
@@ -516,7 +516,7 @@ namespace SkiaSharp.Tests
 
 #pragma warning disable CS0618 // Obsolete SKPath mutation/dst APIs are intentional here.
 
-		[SkippableFact]
+		[Fact]
 		public void BatchedMutationsVisibleThroughSKPathBuilderAddPath()
 		{
 			// SKPathBuilder.AddPath reads other.Handle directly in native code.
@@ -534,7 +534,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(30, 40), snapshot.Points[1]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BatchedMutationsVisibleToSKRegionSetPath()
 		{
 			// SKRegion.SetPath reads path.Handle in the C shim.
@@ -549,7 +549,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRectI(0, 0, 100, 100), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BatchedMutationsVisibleToSKCanvasDrawPath()
 		{
 			// SKCanvas.DrawPath reads path.Handle. Without flush, the rect wouldn't be drawn.
@@ -567,7 +567,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.White, bitmap.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MutateReadMutateReadCycleIsConsistent()
 		{
 			// Exercises the flush/swap/rebuild-builder/flush chain.
@@ -584,7 +584,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRect(0, 0, 10, 10), boundsAfterFlush);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FillTypeStaysConsistentAcrossFlush()
 		{
 			// FillType setter writes to both native path and builder (if any); getter reads
@@ -606,7 +606,7 @@ namespace SkiaSharp.Tests
 		// A destination SKPath may hold pending batched mutations. The operation must
 		// overwrite those mutations (matching the "destination is overwritten" contract).
 
-		[SkippableFact]
+		[Fact]
 		public void TransformWithDestinationOverwritesBatchedMutations()
 		{
 			using var src = new SKPath();
@@ -624,7 +624,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(15, 5), dst.Points[1]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OpWithDestinationOverwritesBatchedMutations()
 		{
 			using var a = new SKPath();
@@ -640,7 +640,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRect(0, 0, 15, 15), result.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SimplifyWithDestinationOverwritesBatchedMutations()
 		{
 			using var path = new SKPath();
@@ -653,7 +653,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRect(0, 0, 10, 10), result.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToWindingWithDestinationOverwritesBatchedMutations()
 		{
 			using var path = new SKPath();
@@ -668,7 +668,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKRect(0, 0, 10, 10), result.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKPaintGetFillPathWithSKPathDstOverwritesBatchedMutations()
 		{
 			// Backward-compat overload restored as [Obsolete]. Goes through a temp
@@ -688,7 +688,7 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain(new SKPoint(999, 999), dst.Points);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SKPathMeasureGetSegmentWithSKPathDstOverwritesBatchedMutations()
 		{
 			// Backward-compat overload restored as [Obsolete]. Pre-fix: CS1503 at compile time.
@@ -706,7 +706,7 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain(new SKPoint(999, 999), dst.Points);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TransformInPlaceWhenSrcEqualsDst()
 		{
 			// Edge case: path.Transform(matrix, path) — native code computes the result
@@ -725,5 +725,31 @@ namespace SkiaSharp.Tests
 		}
 
 #pragma warning restore CS0618
+
+		[Fact]
+		public void PathWithPendingBuilderMutationsSurvivesFinalization()
+		{
+			// Reproduces a finalizer-ordering crash: SKPath holds a private SKPathBuilder
+			// for batched mutations. Both are SKObjects with their own finalizers, and the
+			// CLR may finalize the builder first. When the path's finalizer then accesses
+			// path.Handle, the override calls FlushBuilder, which calls
+			// sk_pathbuilder_detach_path on the builder's already-freed handle.
+			MakeAndAbandon();
+
+			CollectGarbage();
+			CollectGarbage();
+
+			// If the bug is present, the second collect crashes the finalizer thread on
+			// sk_pathbuilder_detach_path(IntPtr.Zero). Reaching here without an unhandled
+			// native exception means the disposal path skipped FlushBuilder correctly.
+
+			static void MakeAndAbandon()
+			{
+				var path = new SKPath();
+				path.MoveTo(0, 0);
+				path.LineTo(10, 10);
+				// drop both references; the builder is private and goes with it
+			}
+		}
 	}
 }

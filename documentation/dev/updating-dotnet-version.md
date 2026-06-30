@@ -68,14 +68,13 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 ### 6. Cake Build Scripts
 
 - [ ] `build.cake` — 4 hardcoded TFMs in test tasks (~lines 285, 333, 365, 397)
-- [ ] `scripts/cake/UtilsManaged.cake` — Framework check list (add new `netX.0`)
-- [ ] `scripts/cake/UpdateDocs.cake` — Apple/Android ref package names include TFM+TPV (e.g., `Microsoft.iOS.Ref.net10.0_18.0`)
+- [ ] `scripts/infra/managed/utils-managed.cake` — Framework check list (add new `netX.0`)
+- [ ] `scripts/infra/docs/docs.cake` — Apple/Android ref package names include TFM+TPV (e.g., `Microsoft.iOS.Ref.net10.0_18.0`)
 - [ ] `native/winui/build.cake` — WinUI Projection output path uses `$(WindowsTargetFrameworksPrevious)` 
 
 ### 7. Utility Projects
 
 - [ ] `utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj`
-- [ ] `utils/WasmTestRunner/WasmTestRunner.csproj`
 - [ ] `utils/NativeLibraryMiniTest/docker/NativeLibraryMiniTest.csproj`
 
 ### 8. Sample Projects
@@ -91,7 +90,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 
 ### 10. Docker Images
 
-- [ ] All Dockerfiles in `scripts/Docker/*/Dockerfile` — Update `FROM mcr.microsoft.com/dotnet/sdk:X.0` to new version
+- [ ] All Dockerfiles in `scripts/infra/native/linux/docker/*/Dockerfile` — Update `FROM mcr.microsoft.com/dotnet/sdk:X.0` to new version
   - debian10-amd64, debian11-amd64, debian11-arm64, debian12-amd64
   - fedora40-amd64, ubuntu18.04-amd64, ubuntu20.04-amd64, ubuntu22.04-amd64
   - alpine-amd64, alpine-arm64, alpine-x86

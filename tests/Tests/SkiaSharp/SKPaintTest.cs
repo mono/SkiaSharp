@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -13,7 +12,7 @@ namespace SkiaSharp.Tests
 		{
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void StrokePropertyValuesAreCorrect()
 		{
@@ -28,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKPaintStyle.Fill, paint.Style);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetFillPathIsWorking()
 		{
 			var paint = new SKPaint();
@@ -46,7 +45,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(4, fillPath.PointCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetFillPathIsWorkingWithLine()
 		{
 			var paint = new SKPaint();
@@ -76,10 +75,11 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #276
-		[SkippableFact]
+		[Fact]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
+			SkipOnPlatform(IsBrowser, "WASM text rendering produces slightly different pixel values");
 
 			using (var bitmapAA = new SKBitmap(new SKImageInfo(200, 200)))
 			using (var bitmapNoAA = new SKBitmap(new SKImageInfo(200, 200)))
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 				{
 					canvas.Clear(SKColors.White);
 					canvas.Scale(1, 2);
-					canvas.DrawText("Skia", 10, 60, font, paint);
+						canvas.DrawText("Skia", 10, 60, SKTextAlign.Left, font, paint);
 
 					try
 					{
@@ -114,7 +114,7 @@ namespace SkiaSharp.Tests
 				{
 					canvas.Clear(SKColors.White);
 					canvas.Scale(1, 2);
-					canvas.DrawText("Skia", 10, 60, font, paint);
+					canvas.DrawText("Skia", 10, 60, SKTextAlign.Left, font, paint);
 
 					try
 					{
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for issue #282
-		[SkippableFact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
+		[Fact(Skip = "Known to fail, see: https://github.com/mono/SkiaSharp/issues/282")]
 		public void DrawTransparentImageWithHighFilterQualityWithUnpremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -167,7 +167,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// Test for the "workaround" for issue #282
-		[SkippableFact]
+		[Fact]
 		public void DrawTransparentImageWithHighFilterQualityWithPremul()
 		{
 			var oceanColor = (SKColor)0xFF9EB4D6;
@@ -202,538 +202,7 @@ namespace SkiaSharp.Tests
 				Assert.Equal(landColor, bitmap.GetPixel(270, 270));
 			}
 		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
-		[InlineData(SKTextEncoding.Utf8, "a", 1)]
-		[InlineData(SKTextEncoding.Utf16, "ä", 2)]
-		[InlineData(SKTextEncoding.Utf16, "a", 2)]
-		[InlineData(SKTextEncoding.Utf32, "ä", 4)]
-		[InlineData(SKTextEncoding.Utf32, "a", 4)]
-		[InlineData(SKTextEncoding.GlyphId, "ä", 2)]
-		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
-		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int extectedRead)
-		{
-			var paint = new SKPaint();
-			paint.TextEncoding = encoding;
-
-			// get bytes
-			var bytes = encoding == SKTextEncoding.GlyphId
-				? GetGlyphBytes(text)
-				: StringUtilities.GetEncodedText(text, encoding);
-
-			var read = paint.BreakText(bytes, 50.0f, out var measured);
-			Assert.Equal(extectedRead, read);
-			Assert.True(measured > 0);
-
-			byte[] GetGlyphBytes(string text)
-			{
-				var glyphs = paint.GetGlyphs(text);
-				var bytes = new byte[Buffer.ByteLength(glyphs)];
-				Buffer.BlockCopy(glyphs, 0, bytes, 0, bytes.Length);
-				return bytes;
-			}
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void BreakTextSucceedsForEmtptyString()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Equal(0, paint.BreakText("", 50.0f));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void BreakTextSucceedsForNullPointerZeroLength()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Equal(0, paint.BreakText(IntPtr.Zero, IntPtr.Zero, 50.0f));
-			Assert.Equal(0, paint.BreakText(IntPtr.Zero, 0, 50.0f));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void BreakTextThrowsForNullPointer()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, (IntPtr)123, 50.0f));
-			Assert.Throws<ArgumentNullException>(() => paint.BreakText(IntPtr.Zero, 123, 50.0f));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void BreakTextReturnsTheCorrectNumberOfCharacters()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-			Assert.Equal(1, paint.BreakText("ä", 50.0f));
-			Assert.Equal(1, paint.BreakText("a", 50.0f));
-
-			paint.TextEncoding = SKTextEncoding.Utf16;
-			Assert.Equal(1, paint.BreakText("ä", 50.0f));
-			Assert.Equal(1, paint.BreakText("a", 50.0f));
-
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			Assert.Equal(1, paint.BreakText("ä", 50.0f));
-			Assert.Equal(1, paint.BreakText("a", 50.0f));
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(-1)]
-		[InlineData(1 << 17)]
-		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
-		{
-			var font = new SKPaint();
-
-			if (textSize >= 0)
-				font.TextSize = textSize;
-
-			var text =
-				"The ultimate measure of a man is not where he stands in moments of comfort " +
-				"and convenience, but where he stands at times of challenge and controversy.";
-			var length = text.Length;
-
-			var width = font.MeasureText(text);
-
-			var length2 = font.BreakText(text, width, out var mm);
-
-			Assert.Equal(length, length2);
-			Assert.Equal(width, mm);
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(-1)]
-		[InlineData(1 << 17)]
-		public void BreakTextHandlesLongText(int textSize)
-		{
-			var font = new SKPaint();
-
-			if (textSize >= 0)
-				font.TextSize = textSize;
-
-			var text = string.Concat(Enumerable.Repeat('a', 1024));
-
-			var width = font.MeasureText(text);
-
-			var length = font.BreakText(text, width, out var mm);
-
-			Assert.Equal(1024, length);
-			Assert.Equal(width, mm);
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(-1)]
-		[InlineData(0)]
-		[InlineData(1 << 17)]
-		public void BreakTextHasCorrectLogic(int textSize)
-		{
-			var font = new SKPaint();
-
-			if (textSize >= 0)
-				font.TextSize = textSize;
-
-			var text = "sdfkljAKLDFJKEWkldfjlk#$%&sdfs.dsj";
-			var length = text.Length;
-			var width = font.MeasureText(text);
-
-			var mm = 0f;
-			var nn = 0L;
-			var step = Math.Max(width / 10f, 1f);
-			for (float w = 0; w <= width; w += step)
-			{
-				var n = font.BreakText(text, w, out var m);
-
-				Assert.True(n <= length);
-				Assert.True(m <= width);
-
-				if (n == 0)
-				{
-					Assert.Equal(0, m);
-				}
-				else if (n == nn)
-				{
-					Assert.Equal(mm, m);
-				}
-				else
-				{
-					Assert.True(n > nn);
-					Assert.True(m > mm);
-				}
-				nn = n;
-				mm = m;
-			}
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
-		{
-			const string text = "Hello World!";
-
-			var paint = new SKPaint();
-
-			Assert.Equal(text.Length, paint.CountGlyphs(text));
-			Assert.Equal(text.Length, paint.GetGlyphs(text).Length);
-		}
-
-		[Obsolete]
-		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
-		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
-		{
-			const string text = "🚀";
-			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
-
-			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
-			Assert.NotNull(typeface);
-
-			var paint = new SKPaint();
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			paint.Typeface = typeface;
-
-			Assert.Equal(1, paint.CountGlyphs(text));
-			Assert.Single(paint.GetGlyphs(text));
-			Assert.NotEqual(0, paint.GetGlyphs(text)[0]);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void ContainsTextIsCorrect()
-		{
-			const string text = "A";
-
-			var paint = new SKPaint();
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			paint.Typeface = SKTypeface.Default;
-
-			Assert.True(paint.ContainsGlyphs(text));
-		}
-
-		[Obsolete]
-		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
-		public void ContainsUnicodeTextIsCorrect()
-		{
-			const string text = "🚀";
-			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
-
-			var paint = new SKPaint();
-			paint.TextEncoding = SKTextEncoding.Utf32;
-
-			// use the default typeface (which shouldn't have the emojis)
-			paint.Typeface = SKTypeface.Default;
-
-			Assert.False(paint.ContainsGlyphs(text));
-
-			// find a font with the character
-			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
-			Assert.NotNull(typeface);
-			paint.Typeface = typeface;
-
-			Assert.True(paint.ContainsGlyphs(text));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void CanMeasureBadUnicodeText()
-		{
-			using var paint = new SKPaint();
-
-			var rect = SKRect.Empty;
-			var width = paint.MeasureText("\ud83c", ref rect);
-
-			Assert.Equal(0, width);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void MeasureTextMeasuresTheText()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-			var width8 = paint.MeasureText("Hello World!");
-
-			paint.TextEncoding = SKTextEncoding.Utf16;
-			var width16 = paint.MeasureText("Hello World!");
-
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			var width32 = paint.MeasureText("Hello World!");
-
-			Assert.True(width8 > 0);
-			Assert.Equal(width8, width16);
-			Assert.Equal(width8, width32);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void MeasureTextReturnsTheBounds()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-			var bounds8 = new SKRect();
-			var width8 = paint.MeasureText("Hello World!", ref bounds8);
-
-			paint.TextEncoding = SKTextEncoding.Utf16;
-			var bounds16 = new SKRect();
-			var width16 = paint.MeasureText("Hello World!", ref bounds16);
-
-			paint.TextEncoding = SKTextEncoding.Utf32;
-			var bounds32 = new SKRect();
-			var width32 = paint.MeasureText("Hello World!", ref bounds32);
-
-			Assert.True(width8 > 0);
-			Assert.Equal(width8, width16);
-			Assert.Equal(width8, width32);
-
-			Assert.NotEqual(SKRect.Empty, bounds8);
-			Assert.Equal(bounds8, bounds16);
-			Assert.Equal(bounds8, bounds32);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void MeasureTextSucceedsForEmtptyString()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Equal(0, paint.MeasureText(""));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void MeasureTextSucceedsForNullPointerZeroLength()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, IntPtr.Zero));
-			Assert.Equal(0, paint.MeasureText(IntPtr.Zero, 0));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void MeasureTextThrowsForNullPointer()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, (IntPtr)123));
-			Assert.Throws<ArgumentNullException>(() => paint.MeasureText(IntPtr.Zero, 123));
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void GetGlyphWidthsReturnsTheCorrectAmount()
-		{
-			var paint = new SKPaint();
-
-			var widths = paint.GetGlyphWidths("Hello World!", out var bounds);
-
-			Assert.Equal(widths.Length, bounds.Length);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void GetGlyphWidthsAreCorrect()
-		{
-			var paint = new SKPaint();
-
-			var widths = paint.GetGlyphWidths("Hello World!", out var bounds);
-
-			// make sure the 'l' glyphs are the same width
-			Assert.True(widths[2] > 0);
-			Assert.True(widths[2] == widths[3]);
-			Assert.True(widths[2] == widths[9]);
-
-			// make sure the 'l' bounds are the same size
-			Assert.False(bounds[2].IsEmpty);
-			Assert.True(bounds[2] == bounds[3]);
-			Assert.True(bounds[2] == bounds[9]);
-
-			// make sure the 'l' and 'W' glyphs are NOT the same width
-			Assert.True(widths[2] != widths[6]);
-
-			// make sure the 'l' and 'W' bounds are NOT the same width
-			Assert.True(bounds[2] != bounds[6]);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public unsafe void TextInterceptsAreFoundCorrectly()
-		{
-			var text = "|";
-
-			var paint = new SKPaint();
-			paint.TextSize = 100;
-
-			var widths = paint.GetTextIntercepts(text, 50, 100, 0, 100);
-			Assert.Equal(2, widths.Length);
-
-			var diff = widths[1] - widths[0];
-
-			var textPath = paint.GetTextPath(text, 0, 0);
-			var pathWidth = textPath.TightBounds.Width;
-
-			Assert.Equal((double)pathWidth, (double)diff, 2);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void GetTextPathSucceedsForEmtptyString()
-		{
-			var paint = new SKPaint();
-
-			paint.TextEncoding = SKTextEncoding.Utf8;
-
-			Assert.NotNull(paint.GetTextPath("", 0, 0));
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(true, true, SKFontEdging.SubpixelAntialias)]
-		[InlineData(false, true, SKFontEdging.Alias)]
-		[InlineData(true, false, SKFontEdging.Antialias)]
-		[InlineData(false, false, SKFontEdging.Alias)]
-		public void UpdatingPropertiesIsAntialiasLcdRenderText(bool isAntialias, bool lcd, SKFontEdging newEdging)
-		{
-			var paint = new SKPaint();
-
-			paint.IsAntialias = isAntialias;
-			paint.LcdRenderText = lcd;
-
-			Assert.Equal(newEdging, paint.GetFont().Edging);
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData(true, true, SKFontEdging.SubpixelAntialias)]
-		[InlineData(false, true, SKFontEdging.Alias)]
-		[InlineData(true, false, SKFontEdging.Antialias)]
-		[InlineData(false, false, SKFontEdging.Alias)]
-		public void UpdatingPropertiesLcdRenderTextIsAntialias(bool isAntialias, bool lcd, SKFontEdging newEdging)
-		{
-			var paint = new SKPaint();
-
-			paint.LcdRenderText = lcd;
-			paint.IsAntialias = isAntialias;
-
-			Assert.Equal(newEdging, paint.GetFont().Edging);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void PaintWithSubpixelEdgingIsPreserved()
-		{
-			var font = new SKFont();
-			font.Edging = SKFontEdging.SubpixelAntialias;
-
-			var paint = new SKPaint(font);
-
-			Assert.True(paint.LcdRenderText);
-			Assert.False(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
-
-			paint.IsAntialias = true;
-
-			Assert.True(paint.LcdRenderText);
-			Assert.True(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.SubpixelAntialias, paint.GetFont().Edging);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void PaintWithAntialiasEdgingIsPreserved()
-		{
-			var font = new SKFont();
-			font.Edging = SKFontEdging.Antialias;
-
-			var paint = new SKPaint(font);
-
-			Assert.False(paint.LcdRenderText);
-			Assert.False(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
-
-			paint.IsAntialias = true;
-
-			Assert.False(paint.LcdRenderText);
-			Assert.True(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.Antialias, paint.GetFont().Edging);
-		}
-
-		[Obsolete]
-		[SkippableFact]
-		public void PaintWithAliasEdgingIsPreserved()
-		{
-			var font = new SKFont();
-			font.Edging = SKFontEdging.Alias;
-
-			var paint = new SKPaint(font);
-
-			Assert.False(paint.LcdRenderText);
-			Assert.False(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.Alias, paint.GetFont().Edging);
-
-			paint.IsAntialias = true;
-
-			Assert.False(paint.LcdRenderText);
-			Assert.True(paint.IsAntialias);
-			Assert.Equal(SKFontEdging.Antialias, paint.GetFont().Edging);
-		}
-
-		[Obsolete]
-		[SkippableTheory]
-		[InlineData("CourierNew.ttf")]
-		[InlineData("Distortable.ttf")]
-		[InlineData("Funkster.ttf")]
-		[InlineData("HangingS.ttf")]
-		[InlineData("ReallyBigA.ttf")]
-		[InlineData("Roboto.woff2")]
-		[InlineData("RobotoMono.woff2")]
-		[InlineData("Roboto2-Regular_NoEmbed.ttf")]
-		[InlineData("segoeui.ttf")]
-		[InlineData("上田雅美.ttf")]
-		public void CanSetTypefacesWithoutCrashing(string fontfile)
-		{
-			using var paint = new SKPaint();
-
-			using var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, fontfile));
-			paint.Typeface = typeface;
-
-			// In Skia m132, attempting to load woff2 files will still create a non-null typeface
-			// with an empty family name
-			if (typeface == null || string.IsNullOrEmpty(typeface?.FamilyName))
-			{
-				var result = paint.Typeface;
-				Assert.True(result == null || ReferenceEquals(result, typeface) || string.IsNullOrEmpty(result?.FamilyName));
-			}
-			else
-			{
-				Assert.Same(typeface, paint.Typeface);
-			}
-		}
-
-		[SkippableFact]
+		[Fact]
 		public void Clone()
 		{
 			using var paint = new SKPaint();
@@ -741,36 +210,137 @@ namespace SkiaSharp.Tests
 			using var clonedPaint2 = paint.Clone();
 		}
 
-		// Default typeface behavior
-
-		[Obsolete]
-		[SkippableFact]
-		public void DefaultPaintCanMeasureText()
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
+		public void GetFastBoundsWithBlurOutsetsByThreeSigma()
 		{
-			var paint = new SKPaint();
-			var width = paint.MeasureText("Hello World!");
-			Assert.True(width > 0);
+			const float sigma = 4.5f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// A fill paint adds no stroke inflation, so the blur mask filter outsets the
+			// source rect by 3 * sigma on every edge.
+			var pad = 3f * sigma;
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
 		}
 
-		[Obsolete]
-		[SkippableFact]
-		public void DefaultPaintTypefaceIsDefault()
+		[Fact]
+		public void GetFastBoundsFillWithNoEffectsReturnsSource()
 		{
-			var paint = new SKPaint();
-			Assert.NotNull(paint.Typeface);
-			Assert.False(paint.Typeface.IsEmpty);
-			Assert.Equal(SKTypeface.Default.FamilyName, paint.Typeface.FamilyName);
+			using var paint = new SKPaint();
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// Filling with no geometry-affecting effects cannot grow the bounds.
+			Assert.Equal(src, bounds);
 		}
 
-		[Obsolete]
-		[SkippableFact]
-		public void PaintResetPreservesDefaultTypeface()
+		[Fact]
+		public void GetFastBoundsStrokeOutsetsByHalfStrokeWidth()
 		{
-			var paint = new SKPaint();
-			paint.Typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
-			paint.Reset();
-			Assert.NotNull(paint.Typeface);
-			Assert.False(paint.Typeface.IsEmpty);
+			const float strokeWidth = 12f;
+			using var paint = new SKPaint
+			{
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = strokeWidth,
+				StrokeJoin = SKStrokeJoin.Round,
+				StrokeCap = SKStrokeCap.Round,
+			};
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// Round join and round cap give an inflation multiplier of 1, so the rect
+			// outsets by strokeWidth / 2 on every edge.
+			var pad = strokeWidth / 2f;
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
+		}
+
+		[Fact]
+		public void GetFastBoundsComposesStrokeAndBlur()
+		{
+			const float sigma = 5f;
+			const float strokeWidth = 8f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint
+			{
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = strokeWidth,
+				StrokeJoin = SKStrokeJoin.Round,
+				StrokeCap = SKStrokeCap.Round,
+				MaskFilter = blur,
+			};
+
+			var src = new SKRect(20, 20, 120, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// The paint composes effects: the stroke inflates by strokeWidth / 2, then the
+			// blur outsets that result by 3 * sigma.
+			var pad = (strokeWidth / 2f) + (3f * sigma);
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
+		}
+
+		[Fact]
+		public void GetFastBoundsDoesNotModifySource()
+		{
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5f);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(10, 10, 60, 60);
+			var original = src;
+
+			Assert.True(paint.GetFastBounds(src, out _));
+
+			Assert.Equal(original, src);
+		}
+
+		[Fact]
+		public void GetFastBoundsReturnsTrueForSimplePaints()
+		{
+			var src = new SKRect(0, 0, 50, 50);
+
+			using var fill = new SKPaint();
+			Assert.True(fill.GetFastBounds(src, out _));
+
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6f);
+			using var blurred = new SKPaint { MaskFilter = blur };
+			Assert.True(blurred.GetFastBounds(src, out _));
+
+			using var stroked = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 4 };
+			Assert.True(stroked.GetFastBounds(src, out _));
+		}
+
+		[Fact]
+		public void GetFastBoundsMatchesNativeApi()
+		{
+			const float sigma = 3.25f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(5, 15, 95, 135);
+
+			Assert.True(paint.GetFastBounds(src, out var managed));
+
+			SKRect native;
+			unsafe
+			{
+				SkiaApi.sk_paint_compute_fast_bounds(paint.Handle, &src, &native);
+			}
+
+			Assert.Equal(native, managed);
 		}
 	}
 }

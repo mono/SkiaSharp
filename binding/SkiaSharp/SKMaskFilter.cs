@@ -62,6 +62,16 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_maskfilter_new_clip (min, max));
 		}
 
+		public static SKMaskFilter CreateShader (SKShader shader)
+		{
+			if (shader == null)
+				throw new ArgumentNullException (nameof (shader));
+
+			var maskFilter = GetObject (SkiaApi.sk_maskfilter_new_shader (shader.Handle));
+			GC.KeepAlive (shader);
+			return maskFilter;
+		}
+
 		internal static SKMaskFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKMaskFilter (h, o));
 	}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 using SkiaSharp.Extended;
 
 namespace SkiaSharp.Tests
@@ -198,6 +197,18 @@ namespace SkiaSharp.Tests
 			Assert.Equal(eTrimmed, aTrimmed);
 		}
 
+		protected static void AssertSimilarColor(SKColor expected, SKColor actual, int tolerance = 1)
+		{
+			Assert.True(Math.Abs(expected.Alpha - actual.Alpha) <= tolerance,
+				$"Alpha differs: expected {expected.Alpha}, actual {actual.Alpha} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Red - actual.Red) <= tolerance,
+				$"Red differs: expected {expected.Red}, actual {actual.Red} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Green - actual.Green) <= tolerance,
+				$"Green differs: expected {expected.Green}, actual {actual.Green} (tolerance {tolerance})");
+			Assert.True(Math.Abs(expected.Blue - actual.Blue) <= tolerance,
+				$"Blue differs: expected {expected.Blue}, actual {actual.Blue} (tolerance {tolerance})");
+		}
+
 		protected void AssertSimilar(SKBitmap expected, SKBitmap actual, int precision = PRECISION)
 		{
 			var percentage = 1 / Math.Pow(10, precision);
@@ -228,7 +239,8 @@ namespace SkiaSharp.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"Unable to create GL context: {ex.Message}");
+				Assert.Skip($"Unable to create GL context: {ex.Message}");
+				throw;
 			}
 		}
 

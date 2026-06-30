@@ -1,10 +1,11 @@
 ﻿#nullable disable
 
 using System;
+using System.Threading;
 
 namespace SkiaSharp
 {
-	[Obsolete ($"Use {nameof (SKFontHinting)} instead.")]
+	[Obsolete ($"Use {nameof (SKFontHinting)} instead.", error: true)]
 	public enum SKPaintHinting
 	{
 		NoHinting = 0,
@@ -13,7 +14,7 @@ namespace SkiaSharp
 		Full = 3,
 	}
 
-	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
+	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.", error: true)]
 	public enum SKFilterQuality
 	{
 		None = 0,
@@ -24,7 +25,7 @@ namespace SkiaSharp
 
 	public static partial class SkiaExtensions
 	{
-		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
+		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.", error: true)]
 		public static SKSamplingOptions ToSamplingOptions (this SKFilterQuality quality) =>
 			quality switch {
 				SKFilterQuality.None => new SKSamplingOptions (SKFilterMode.Nearest, SKMipmapMode.None),
@@ -44,17 +45,27 @@ namespace SkiaSharp
 		// reset-to-default font. sk_compatpaint_new_with_font / sk_compatpaint_reset
 		// both *copy* the font state into SkCompatPaint::fFont, so this singleton is
 		// never mutated by callers.
-		private static readonly SKFont defaultFont;
+		private static SKFont defaultFont;
+		private static bool defaultFontInitialized;
+		private static object defaultFontLock = new object ();
 
-		static SKPaint ()
-		{
-			defaultFont = new SKFontStatic (
-				SkiaApi.sk_font_new_with_values (
-					SKTypeface.Default.Handle,
-					SKFont.DefaultSize,
-					SKFont.DefaultScaleX,
-					SKFont.DefaultSkewX));
-		}
+		private static SKFont DefaultFont =>
+			LazyInitializer.EnsureInitialized (
+				ref defaultFont, ref defaultFontInitialized, ref defaultFontLock,
+				() => {
+					var font = new SKFont (
+						SkiaApi.sk_font_new_with_values (
+							SKTypeface.Default.Handle,
+							SKFont.DefaultSize,
+							SKFont.DefaultScaleX,
+							SKFont.DefaultSkewX),
+						owns: true);
+					// The PreventPublicDisposal call here doesn't suffer from the case of skia
+					// giving us the same handle as a return value of another pinvoke call,
+					// because sk_font_new_with_values creates a new object.
+					font.PreventPublicDisposal ();
+					return font;
+				});
 
 		internal SKPaint (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -62,14 +73,14 @@ namespace SkiaSharp
 		}
 
 		public SKPaint ()
-			: this (SkiaApi.sk_compatpaint_new_with_font (defaultFont.Handle), true)
+			: this (SkiaApi.sk_compatpaint_new_with_font (DefaultFont.Handle), true)
 		{
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
 			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)} instead.", error: true)]
 		public SKPaint (SKFont font)
 			: this (IntPtr.Zero, true)
 		{
@@ -77,6 +88,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (font));
 
 			Handle = SkiaApi.sk_compatpaint_new_with_font (font.Handle);
+			GC.KeepAlive (font);
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
@@ -85,70 +97,90 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		protected override void DisposeNative () =>
+		protected override void DisposeNative ()
+		{
 			SkiaApi.sk_compatpaint_delete (Handle);
+			GC.KeepAlive (this);
+		}
 
 		// Reset
 
-		public void Reset () =>
-			SkiaApi.sk_compatpaint_reset (Handle, defaultFont.Handle);
-
-		private sealed class SKFontStatic : SKFont
+		public void Reset ()
 		{
-			internal SKFontStatic (IntPtr handle) : base (handle, false) { }
-
-			protected override void Dispose (bool disposing) { }
+			SkiaApi.sk_compatpaint_reset (Handle, DefaultFont.Handle);
+			GC.KeepAlive (this);
 		}
 
 		// properties
 
 		public bool IsAntialias {
-			get => SkiaApi.sk_paint_is_antialias (Handle);
-			set => SkiaApi.sk_compatpaint_set_is_antialias (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_is_antialias (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_compatpaint_set_is_antialias (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool IsDither {
-			get => SkiaApi.sk_paint_is_dither (Handle);
-			set => SkiaApi.sk_paint_set_dither (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_is_dither (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_dither (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.LinearMetrics)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.LinearMetrics)} instead.", error: true)]
 		public bool IsLinearText {
 			get => GetFont ().LinearMetrics;
 			set => GetFont ().LinearMetrics = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Subpixel)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Subpixel)} instead.", error: true)]
 		public bool SubpixelText {
 			get => GetFont ().Subpixel;
 			set => GetFont ().Subpixel = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Edging)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Edging)} instead.", error: true)]
 		public bool LcdRenderText {
-			get => SkiaApi.sk_compatpaint_get_lcd_render_text (Handle);
-			set => SkiaApi.sk_compatpaint_set_lcd_render_text (Handle, value);
+			get {
+				var r = SkiaApi.sk_compatpaint_get_lcd_render_text (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_compatpaint_set_lcd_render_text (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.EmbeddedBitmaps)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.EmbeddedBitmaps)} instead.", error: true)]
 		public bool IsEmbeddedBitmapText {
 			get => GetFont ().EmbeddedBitmaps;
 			set => GetFont ().EmbeddedBitmaps = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ForceAutoHinting)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ForceAutoHinting)} instead.", error: true)]
 		public bool IsAutohinted {
 			get => GetFont ().ForceAutoHinting;
 			set => GetFont ().ForceAutoHinting = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Hinting)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Hinting)} instead.", error: true)]
 		public SKPaintHinting HintingLevel {
 			get => (SKPaintHinting)GetFont ().Hinting;
 			set => GetFont ().Hinting = (SKFontHinting)value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Embolden)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Embolden)} instead.", error: true)]
 		public bool FakeBoldText {
 			get => GetFont ().Embolden;
 			set => GetFont ().Embolden = value;
@@ -160,209 +192,339 @@ namespace SkiaSharp
 		}
 
 		public SKPaintStyle Style {
-			get => SkiaApi.sk_paint_get_style (Handle);
-			set => SkiaApi.sk_paint_set_style (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_style (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_style (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKColor Color {
-			get => SkiaApi.sk_paint_get_color (Handle);
-			set => SkiaApi.sk_paint_set_color (Handle, (uint)value);
+			get {
+				var r = SkiaApi.sk_paint_get_color (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_color (Handle, (uint)value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKColorF ColorF {
 			get {
 				SKColorF color4f;
 				SkiaApi.sk_paint_get_color4f (Handle, &color4f);
+				GC.KeepAlive (this);
 				return color4f;
 			}
-			set => SkiaApi.sk_paint_set_color4f (Handle, &value, IntPtr.Zero);
+			set {
+				SkiaApi.sk_paint_set_color4f (Handle, &value, IntPtr.Zero);
+				GC.KeepAlive (this);
+			}
 		}
 
-		public void SetColor (SKColorF color, SKColorSpace colorspace) =>
+		public void SetColor (SKColorF color, SKColorSpace colorspace)
+		{
 			SkiaApi.sk_paint_set_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (colorspace);
+			GC.KeepAlive (this);
+		}
 
 		public float StrokeWidth {
-			get => SkiaApi.sk_paint_get_stroke_width (Handle);
-			set => SkiaApi.sk_paint_set_stroke_width (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_stroke_width (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_stroke_width (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public float StrokeMiter {
-			get => SkiaApi.sk_paint_get_stroke_miter (Handle);
-			set => SkiaApi.sk_paint_set_stroke_miter (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_stroke_miter (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_stroke_miter (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKStrokeCap StrokeCap {
-			get => SkiaApi.sk_paint_get_stroke_cap (Handle);
-			set => SkiaApi.sk_paint_set_stroke_cap (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_stroke_cap (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_stroke_cap (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKStrokeJoin StrokeJoin {
-			get => SkiaApi.sk_paint_get_stroke_join (Handle);
-			set => SkiaApi.sk_paint_set_stroke_join (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_stroke_join (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_stroke_join (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKShader Shader {
-			get => SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
-			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKMaskFilter MaskFilter {
-			get => SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
-			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKColorFilter ColorFilter {
-			get => SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
-			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKImageFilter ImageFilter {
-			get => SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
-			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKBlendMode BlendMode {
-			get => SkiaApi.sk_paint_get_blendmode (Handle);
-			set => SkiaApi.sk_paint_set_blendmode (Handle, value);
+			get {
+				var r = SkiaApi.sk_paint_get_blendmode (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_blendmode (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKBlender Blender {
-			get => SKBlender.GetObject (SkiaApi.sk_paint_get_blender (Handle));
-			set => SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKBlender.GetObject (SkiaApi.sk_paint_get_blender (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
+		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.", error: true)]
 		public SKFilterQuality FilterQuality {
-			get => (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
-			set => SkiaApi.sk_compatpaint_set_filter_quality (Handle, (int)value);
+			get {
+				var r = (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_compatpaint_set_filter_quality (Handle, (int)value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Typeface)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Typeface)} instead.", error: true)]
 		public SKTypeface Typeface {
 			get => GetFont ().Typeface;
 			set => GetFont ().Typeface = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Size)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Size)} instead.", error: true)]
 		public float TextSize {
 			get => GetFont ().Size;
 			set => GetFont ().Size = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKTextAlign)} method overloads instead.")]
+		[Obsolete ($"Use {nameof (SKTextAlign)} method overloads instead.", error: true)]
 		public SKTextAlign TextAlign {
-			get => SkiaApi.sk_compatpaint_get_text_align (Handle);
-			set => SkiaApi.sk_compatpaint_set_text_align (Handle, value);
+			get {
+				var r = SkiaApi.sk_compatpaint_get_text_align (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_compatpaint_set_text_align (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKTextEncoding)} method overloads instead.")]
+		[Obsolete ($"Use {nameof (SKTextEncoding)} method overloads instead.", error: true)]
 		public SKTextEncoding TextEncoding {
-			get => SkiaApi.sk_compatpaint_get_text_encoding (Handle);
-			set => SkiaApi.sk_compatpaint_set_text_encoding (Handle, value);
+			get {
+				var r = SkiaApi.sk_compatpaint_get_text_encoding (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_compatpaint_set_text_encoding (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ScaleX)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ScaleX)} instead.", error: true)]
 		public float TextScaleX {
 			get => GetFont ().ScaleX;
 			set => GetFont ().ScaleX = value;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.SkewX)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.SkewX)} instead.", error: true)]
 		public float TextSkewX {
 			get => GetFont ().SkewX;
 			set => GetFont ().SkewX = value;
 		}
 
 		public SKPathEffect PathEffect {
-			get => SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
-			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		// FontSpacing
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Spacing)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Spacing)} instead.", error: true)]
 		public float FontSpacing =>
 			GetFont ().Spacing;
 
 		// FontMetrics
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Metrics)} instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Metrics)} instead.", error: true)]
 		public SKFontMetrics FontMetrics {
 			get {
 				return GetFont ().Metrics;
 			}
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetFontMetrics)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetFontMetrics)}() instead.", error: true)]
 		public float GetFontMetrics (out SKFontMetrics metrics) =>
 			GetFont ().GetFontMetrics (out metrics);
 
 		// Clone
 
-		public SKPaint Clone () =>
-			GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
+		public SKPaint Clone ()
+		{
+			var r = GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		// MeasureText
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (string text) =>
 			GetFont ().MeasureText (text, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (ReadOnlySpan<char> text) =>
 			GetFont ().MeasureText (text, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (byte[] text) =>
 			GetFont ().MeasureText (text, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (ReadOnlySpan<byte> text) =>
 			GetFont ().MeasureText (text, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (IntPtr buffer, int length) =>
 			GetFont ().MeasureText (buffer, length, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (IntPtr buffer, IntPtr length) =>
 			GetFont ().MeasureText (buffer, (int)length, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (string text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (ReadOnlySpan<char> text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (byte[] text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (ReadOnlySpan<byte> text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (IntPtr buffer, int length, ref SKRect bounds) =>
 			GetFont ().MeasureText (buffer, length, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.", error: true)]
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds) =>
 			GetFont ().MeasureText (buffer, (int)length, TextEncoding, out bounds, this);
 
 		// BreakText
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (string text, float maxWidth) =>
 			GetFont ().BreakText (text, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (string text, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (text, maxWidth, out measuredWidth, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText)
 		{
 			if (text == null)
@@ -381,97 +543,97 @@ namespace SkiaSharp
 			return charsRead;
 		}
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (ReadOnlySpan<char> text, float maxWidth) =>
 			GetFont ().BreakText (text, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (ReadOnlySpan<char> text, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (text, maxWidth, out measuredWidth, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (byte[] text, float maxWidth) =>
 			GetFont ().BreakText (text, TextEncoding, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (byte[] text, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (text, TextEncoding, maxWidth, out measuredWidth, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (ReadOnlySpan<byte> text, float maxWidth) =>
 			GetFont ().BreakText (text, TextEncoding, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (ReadOnlySpan<byte> text, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (text, TextEncoding, maxWidth, out measuredWidth, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (IntPtr buffer, int length, float maxWidth) =>
 			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out measuredWidth, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out _, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.", error: true)]
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out measuredWidth, this);
 
 		// GetTextPath
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (string text, float x, float y) =>
 			GetFont ().GetTextPath (text, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (ReadOnlySpan<char> text, float x, float y) =>
 			GetFont ().GetTextPath (text, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (byte[] text, float x, float y) =>
 			GetFont ().GetTextPath (text, TextEncoding, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (ReadOnlySpan<byte> text, float x, float y) =>
 			GetFont ().GetTextPath (text, TextEncoding, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (IntPtr buffer, int length, float x, float y) =>
 			GetFont ().GetTextPath (buffer, length, TextEncoding, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y) =>
 			GetFont ().GetTextPath (buffer, (int)length, TextEncoding, new SKPoint (x, y));
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (string text, SKPoint[] points) =>
 			GetFont ().GetTextPath (text, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> points) =>
 			GetFont ().GetTextPath (text, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (byte[] text, SKPoint[] points) =>
 			GetFont ().GetTextPath (text, TextEncoding, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (ReadOnlySpan<byte> text, ReadOnlySpan<SKPoint> points) =>
 			GetFont ().GetTextPath (text, TextEncoding, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points) =>
 			GetFont ().GetTextPath (buffer, length, TextEncoding, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (IntPtr buffer, int length, ReadOnlySpan<SKPoint> points) =>
 			GetFont ().GetTextPath (buffer, length, TextEncoding, points);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetTextPath)}() instead.", error: true)]
 		public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points) =>
 			GetFont ().GetTextPath (buffer, (int)length, TextEncoding, points);
 
@@ -565,208 +727,223 @@ namespace SkiaSharp
 			_ = src ?? throw new ArgumentNullException (nameof (src));
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 
-			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, cullRect, &matrix);
+			var result = SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, cullRect, &matrix);
+			GC.KeepAlive (src);
+			GC.KeepAlive (dst);
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		// GetFastBounds
+
+		public bool GetFastBounds (SKRect bounds, out SKRect fastBounds)
+		{
+			if (!SkiaApi.sk_paint_can_compute_fast_bounds (Handle)) {
+				GC.KeepAlive (this);
+				fastBounds = SKRect.Empty;
+				return false;
+			}
+
+			fixed (SKRect* storage = &fastBounds) {
+				SkiaApi.sk_paint_compute_fast_bounds (Handle, &bounds, storage);
+			}
+			GC.KeepAlive (this);
+			return true;
 		}
 
 		// CountGlyphs
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (string text) =>
 			GetFont ().CountGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (ReadOnlySpan<char> text) =>
 			GetFont ().CountGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (byte[] text) =>
 			GetFont ().CountGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (ReadOnlySpan<byte> text) =>
 			GetFont ().CountGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (IntPtr text, int length) =>
 			GetFont ().CountGlyphs (text, length, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]
 		public int CountGlyphs (IntPtr text, IntPtr length) =>
 			GetFont ().CountGlyphs (text, (int)length, TextEncoding);
 
 		// GetGlyphs
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (string text) =>
 			GetFont ().GetGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (ReadOnlySpan<char> text) =>
 			GetFont ().GetGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (byte[] text) =>
 			GetFont ().GetGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (ReadOnlySpan<byte> text) =>
 			GetFont ().GetGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (IntPtr text, int length) =>
 			GetFont ().GetGlyphs (text, length, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.", error: true)]
 		public ushort[] GetGlyphs (IntPtr text, IntPtr length) =>
 			GetFont ().GetGlyphs (text, (int)length, TextEncoding);
 
 		// ContainsGlyphs
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (string text) =>
 			GetFont ().ContainsGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
 			GetFont ().ContainsGlyphs (text);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (byte[] text) =>
 			GetFont ().ContainsGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text) =>
 			GetFont ().ContainsGlyphs (text, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (IntPtr text, int length) =>
 			GetFont ().ContainsGlyphs (text, length, TextEncoding);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.", error: true)]
 		public bool ContainsGlyphs (IntPtr text, IntPtr length) =>
 			GetFont ().ContainsGlyphs (text, (int)length, TextEncoding);
 
 		// GetGlyphPositions
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.", error: true)]
 		public SKPoint[] GetGlyphPositions (string text, SKPoint origin = default) =>
 			GetFont ().GetGlyphPositions (text, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.", error: true)]
 		public SKPoint[] GetGlyphPositions (ReadOnlySpan<char> text, SKPoint origin = default) =>
 			GetFont ().GetGlyphPositions (text, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.", error: true)]
 		public SKPoint[] GetGlyphPositions (ReadOnlySpan<byte> text, SKPoint origin = default) =>
 			GetFont ().GetGlyphPositions (text, TextEncoding, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphPositions)}() instead.", error: true)]
 		public SKPoint[] GetGlyphPositions (IntPtr text, int length, SKPoint origin = default) =>
 			GetFont ().GetGlyphPositions (text, length, TextEncoding, origin);
 
 		// GetGlyphOffsets
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.", error: true)]
 		public float[] GetGlyphOffsets (string text, float origin = 0f) =>
 			GetFont ().GetGlyphOffsets (text, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.", error: true)]
 		public float[] GetGlyphOffsets (ReadOnlySpan<char> text, float origin = 0f) =>
 			GetFont ().GetGlyphOffsets (text, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.", error: true)]
 		public float[] GetGlyphOffsets (ReadOnlySpan<byte> text, float origin = 0f) =>
 			GetFont ().GetGlyphOffsets (text, TextEncoding, origin);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphOffsets)}() instead.", error: true)]
 		public float[] GetGlyphOffsets (IntPtr text, int length, float origin = 0f) =>
 			GetFont ().GetGlyphOffsets (text, length, TextEncoding, origin);
 
 		// GetGlyphWidths
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (string text) =>
 			GetFont ().GetGlyphWidths (text, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (ReadOnlySpan<char> text) =>
 			GetFont ().GetGlyphWidths (text, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (byte[] text) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (ReadOnlySpan<byte> text) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (IntPtr text, int length) =>
 			GetFont ().GetGlyphWidths (text, length, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (IntPtr text, IntPtr length) =>
 			GetFont ().GetGlyphWidths (text, (int)length, TextEncoding, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (string text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (ReadOnlySpan<char> text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (byte[] text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (ReadOnlySpan<byte> text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, length, TextEncoding, out bounds, this);
 
-		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
+		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.", error: true)]
 		public float[] GetGlyphWidths (IntPtr text, IntPtr length, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, (int)length, TextEncoding, out bounds, this);
 
 		// GetTextIntercepts
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text.AsSpan (), x, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (ReadOnlySpan<char> text, float x, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.Create (text, GetFont (), new SKPoint (x, y));
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text.AsSpan (), x, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (ReadOnlySpan<byte> text, float x, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.Create (text, TextEncoding, GetFont (), new SKPoint (x, y));
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (IntPtr text, IntPtr length, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text, (int)length, x, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds)
 		{
 			if (text == IntPtr.Zero && length != 0)
@@ -778,7 +955,7 @@ namespace SkiaSharp
 
 		// GetTextIntercepts (SKTextBlob)
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds)
 		{
 			if (text == null)
@@ -789,39 +966,33 @@ namespace SkiaSharp
 
 		// GetPositionedTextIntercepts
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.CreatePositioned (text, GetFont (), positions);
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<SKPoint> positions, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.CreatePositioned (text, TextEncoding, GetFont (), positions);
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text, (IntPtr)length, positions, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetPositionedTextIntercepts (IntPtr text, IntPtr length, SKPoint[] positions, float upperBounds, float lowerBounds)
 		{
 			if (text == IntPtr.Zero && length != IntPtr.Zero)
@@ -833,39 +1004,33 @@ namespace SkiaSharp
 
 		// GetHorizontalTextIntercepts
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<char> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.CreateHorizontal (text, GetFont (), xpositions, y);
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (ReadOnlySpan<byte> text, ReadOnlySpan<float> xpositions, float y, float upperBounds, float lowerBounds)
 		{
-			if (text == null)
-				throw new ArgumentNullException (nameof (text));
-
 			using var blob = SKTextBlob.CreateHorizontal (text, TextEncoding, GetFont (), xpositions, y);
 			return blob.GetIntercepts (upperBounds, lowerBounds, this);
 		}
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text, (IntPtr)length, xpositions, y, upperBounds, lowerBounds);
 
-		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
+		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.", error: true)]
 		public float[] GetHorizontalTextIntercepts (IntPtr text, IntPtr length, float[] xpositions, float y, float upperBounds, float lowerBounds)
 		{
 			if (text == IntPtr.Zero && length != IntPtr.Zero)
@@ -877,13 +1042,50 @@ namespace SkiaSharp
 
 		// Font
 
-		[Obsolete ($"Use {nameof (SKFont)} instead.")]
-		public SKFont ToFont () =>
-			SKFont.GetObject (SkiaApi.sk_compatpaint_make_font (Handle));
+		[Obsolete ($"Use {nameof (SKFont)} instead.", error: true)]
+		public SKFont ToFont ()
+		{
+			var r = SKFont.GetObject (SkiaApi.sk_compatpaint_make_font (Handle));
+			GC.KeepAlive (this);
+			return r;
+		}
 
-		[Obsolete ($"Use {nameof (SKFont)} instead.")]
-		internal SKFont GetFont () =>
+		[Obsolete ($"Use {nameof (SKFont)} instead.", error: true)]
+		private SKFont GetFont () =>
 			font ??= OwnedBy (SKFont.GetObject (SkiaApi.sk_compatpaint_get_font (Handle), false), this);
+
+		// Internal compat-paint bypass helpers used by the non-obsolete public APIs
+		// in SKCanvas (DrawImage/DrawAtlas/DrawText) and SkiaSharp.HarfBuzz that
+		// still respect the legacy paint.FilterQuality / paint.TextAlign /
+		// paint.TextEncoding / paint.GetFont state. These mirror the obsolete
+		// properties but avoid the CS0619 compile error and ref-assembly stripping
+		// when called from a non-obsolete context. Exposed to SkiaSharp.HarfBuzz
+		// via InternalsVisibleTo. Remove together with SkCompatPaint in Phase 2
+		// of #3732.
+		[Obsolete ("Use SKFont directly instead.")]
+		internal SKTextAlign GetLegacyTextAlign () =>
+			SkiaApi.sk_compatpaint_get_text_align (Handle);
+
+		[Obsolete ("Use SKFont directly instead.")]
+		internal SKTextEncoding GetLegacyTextEncoding () =>
+			SkiaApi.sk_compatpaint_get_text_encoding (Handle);
+
+		[Obsolete ("Use SKFont directly instead.")]
+		internal SKFont GetLegacyFont () =>
+			GetFont ();
+
+		[Obsolete ("Use SKSamplingOptions directly instead.")]
+		internal SKSamplingOptions GetLegacyFilterQualitySampling ()
+		{
+			var quality = SkiaApi.sk_compatpaint_get_filter_quality (Handle);
+			return quality switch {
+				0 => new SKSamplingOptions (SKFilterMode.Nearest, SKMipmapMode.None),
+				1 => new SKSamplingOptions (SKFilterMode.Linear, SKMipmapMode.None),
+				2 => new SKSamplingOptions (SKFilterMode.Linear, SKMipmapMode.Linear),
+				3 => new SKSamplingOptions (SKCubicResampler.Mitchell),
+				_ => throw new ArgumentOutOfRangeException (nameof (quality), $"Unknown filter quality: '{quality}'"),
+			};
+		}
 
 		//
 

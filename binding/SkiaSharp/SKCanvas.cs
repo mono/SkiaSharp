@@ -24,6 +24,7 @@ namespace SkiaSharp
 			if (bitmap == null)
 				throw new ArgumentNullException (nameof (bitmap));
 			Handle = SkiaApi.sk_canvas_new_from_bitmap (bitmap.Handle);
+			GC.KeepAlive (bitmap);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -32,14 +33,19 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_canvas_destroy (Handle);
 
-		public void Discard () =>
+		public void Discard ()
+		{
 			SkiaApi.sk_canvas_discard (Handle);
+			GC.KeepAlive (this);
+		}
 
 		// QuickReject
 
 		public bool QuickReject (SKRect rect)
 		{
-			return SkiaApi.sk_canvas_quick_reject (Handle, &rect);
+			var result = SkiaApi.sk_canvas_quick_reject (Handle, &rect);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool QuickReject (SKPath path)
@@ -56,32 +62,56 @@ namespace SkiaSharp
 		{
 			if (Handle == IntPtr.Zero)
 				throw new ObjectDisposedException ("SKCanvas");
-			return SkiaApi.sk_canvas_save (Handle);
+			var result = SkiaApi.sk_canvas_save (Handle);
+			GC.KeepAlive (this);
+			return result;
 		}
 
-		public int SaveLayer (SKRect limit, SKPaint? paint) =>
-			SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
-	
-		public int SaveLayer (SKPaint? paint) =>
-			SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
+		public int SaveLayer (SKRect limit, SKPaint? paint)
+		{
+			var result = SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		public int SaveLayer (SKPaint? paint)
+		{
+			var result = SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public int SaveLayer (in SKCanvasSaveLayerRec rec)
 		{
 			var native = rec.ToNative ();
-			return SkiaApi.sk_canvas_save_layer_rec (Handle, &native);
+			var result = SkiaApi.sk_canvas_save_layer_rec (Handle, &native);
+			GC.KeepAlive (this);
+			return result;
 		}
 
-		public int SaveLayer () =>
-			SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
+		public int SaveLayer ()
+		{
+			var result = SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
+			GC.KeepAlive (this);
+			return result;
+		}
 #nullable disable
 
 		// DrawColor
 
-		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src) =>
+		public void DrawColor (SKColor color, SKBlendMode mode = SKBlendMode.Src)
+		{
 			SkiaApi.sk_canvas_draw_color (Handle, (uint)color, mode);
+			GC.KeepAlive (this);
+		}
 
-		public void DrawColor (SKColorF color, SKBlendMode mode = SKBlendMode.Src) =>
+		public void DrawColor (SKColorF color, SKBlendMode mode = SKBlendMode.Src)
+		{
 			SkiaApi.sk_canvas_draw_color4f (Handle, color, mode);
+			GC.KeepAlive (this);
+		}
 
 		// DrawLine
 
@@ -95,6 +125,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_line (Handle, x0, y0, x1, y1, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// Clear
@@ -102,22 +134,30 @@ namespace SkiaSharp
 		public void Clear () =>
 			Clear (SKColors.Empty);
 
-		public void Clear (SKColor color) =>
+		public void Clear (SKColor color)
+		{
 			SkiaApi.sk_canvas_clear (Handle, (uint)color);
+			GC.KeepAlive (this);
+		}
 
-		public void Clear (SKColorF color) =>
+		public void Clear (SKColorF color)
+		{
 			SkiaApi.sk_canvas_clear_color4f (Handle, color);
+			GC.KeepAlive (this);
+		}
 
 		// Restore*
 
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void RestoreToCount (int count)
 		{
 			SkiaApi.sk_canvas_restore_to_count (Handle, count);
+			GC.KeepAlive (this);
 		}
 
 		// Translate
@@ -128,6 +168,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_translate (Handle, dx, dy);
+			GC.KeepAlive (this);
 		}
 
 		public void Translate (SKPoint point)
@@ -136,6 +177,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_translate (Handle, point.X, point.Y);
+			GC.KeepAlive (this);
 		}
 
 		// Scale
@@ -146,6 +188,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, s, s);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (float sx, float sy)
@@ -154,6 +197,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, sx, sy);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (SKPoint size)
@@ -162,6 +206,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_scale (Handle, size.X, size.Y);
+			GC.KeepAlive (this);
 		}
 
 		public void Scale (float sx, float sy, float px, float py)
@@ -182,6 +227,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_rotate_degrees (Handle, degrees);
+			GC.KeepAlive (this);
 		}
 
 		public void RotateRadians (float radians)
@@ -190,6 +236,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_rotate_radians (Handle, radians);
+			GC.KeepAlive (this);
 		}
 
 		public void RotateDegrees (float degrees, float px, float py)
@@ -220,6 +267,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_skew (Handle, sx, sy);
+			GC.KeepAlive (this);
 		}
 
 		public void Skew (SKPoint skew)
@@ -228,6 +276,7 @@ namespace SkiaSharp
 				return;
 
 			SkiaApi.sk_canvas_skew (Handle, skew.X, skew.Y);
+			GC.KeepAlive (this);
 		}
 
 		// Concat
@@ -240,6 +289,7 @@ namespace SkiaSharp
 			fixed (SKMatrix44* ptr = &m) {
 				SkiaApi.sk_canvas_concat (Handle, ptr);
 			}
+			GC.KeepAlive (this);
 		}
 
 		// Clip*
@@ -247,6 +297,7 @@ namespace SkiaSharp
 		public void ClipRect (SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
 		{
 			SkiaApi.sk_canvas_clip_rect_with_operation (Handle, &rect, operation, antialias);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipRoundRect (SKRoundRect rect, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -255,6 +306,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (rect));
 
 			SkiaApi.sk_canvas_clip_rrect_with_operation (Handle, rect.Handle, operation, antialias);
+			GC.KeepAlive (rect);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipPath (SKPath path, SKClipOperation operation = SKClipOperation.Intersect, bool antialias = false)
@@ -263,6 +316,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			SkiaApi.sk_canvas_clip_path_with_operation (Handle, path.Handle, operation, antialias);
+			GC.KeepAlive (path);
+			GC.KeepAlive (this);
 		}
 
 		public void ClipRegion (SKRegion region, SKClipOperation operation = SKClipOperation.Intersect)
@@ -271,6 +326,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (region));
 
 			SkiaApi.sk_canvas_clip_region (Handle, region.Handle, operation);
+			GC.KeepAlive (region);
+			GC.KeepAlive (this);
 		}
 
 		public SKRect LocalClipBounds {
@@ -287,21 +344,37 @@ namespace SkiaSharp
 			}
 		}
 
-		public bool IsClipEmpty => SkiaApi.sk_canvas_is_clip_empty (Handle);
+		public bool IsClipEmpty {
+			get {
+				var result = SkiaApi.sk_canvas_is_clip_empty (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public bool IsClipRect => SkiaApi.sk_canvas_is_clip_rect (Handle);
+		public bool IsClipRect {
+			get {
+				var result = SkiaApi.sk_canvas_is_clip_rect (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public bool GetLocalClipBounds (out SKRect bounds)
 		{
 			fixed (SKRect* b = &bounds) {
-				return SkiaApi.sk_canvas_get_local_clip_bounds (Handle, b);
+				var result = SkiaApi.sk_canvas_get_local_clip_bounds (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool GetDeviceClipBounds (out SKRectI bounds)
 		{
 			fixed (SKRectI* b = &bounds) {
-				return SkiaApi.sk_canvas_get_device_clip_bounds (Handle, b);
+				var result = SkiaApi.sk_canvas_get_device_clip_bounds (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -312,6 +385,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_paint (Handle, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRegion
@@ -323,6 +398,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_region (Handle, region.Handle, paint.Handle);
+			GC.KeepAlive (region);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRect
@@ -337,6 +415,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_rect (Handle, &rect, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRoundRect
@@ -348,6 +428,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_rrect (Handle, rect.Handle, paint.Handle);
+			GC.KeepAlive (rect);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawRoundRect (float x, float y, float w, float h, float rx, float ry, SKPaint paint)
@@ -360,6 +443,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_round_rect (Handle, &rect, rx, ry, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawRoundRect (SKRect rect, SKSize r, SKPaint paint)
@@ -384,6 +469,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_oval (Handle, &rect, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawCircle
@@ -393,6 +480,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_circle (Handle, cx, cy, radius, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawCircle (SKPoint c, float radius, SKPaint paint)
@@ -409,6 +498,9 @@ namespace SkiaSharp
 			if (path == null)
 				throw new ArgumentNullException (nameof (path));
 			SkiaApi.sk_canvas_draw_path (Handle, path.Handle, paint.Handle);
+			GC.KeepAlive (path);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPoints
@@ -422,6 +514,8 @@ namespace SkiaSharp
 			fixed (SKPoint* p = points) {
 				SkiaApi.sk_canvas_draw_points (Handle, mode, (IntPtr)points.Length, p, paint.Handle);
 			}
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPoint
@@ -436,6 +530,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_point (Handle, x, y, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawPoint (SKPoint p, SKColor color)
@@ -452,11 +548,10 @@ namespace SkiaSharp
 
 		// DrawImage
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKPoint p, SKPaint paint = null)
 		{
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, p.X, p.Y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, p.X, p.Y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
 		public void DrawImage (SKImage image, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
@@ -464,11 +559,10 @@ namespace SkiaSharp
 			DrawImage (image, p.X, p.Y, sampling, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, x, y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, x, y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
 		public void DrawImage (SKImage image, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
@@ -476,13 +570,15 @@ namespace SkiaSharp
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
 			SkiaApi.sk_canvas_draw_image (Handle, image.Handle, x, y, &sampling, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (image);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
 		{
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, null, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, null, &dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
 		public void DrawImage (SKImage image, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
@@ -490,11 +586,10 @@ namespace SkiaSharp
 			DrawImage (image, null, &dest, sampling, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, &source, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawImage (image, &source, &dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
@@ -507,6 +602,9 @@ namespace SkiaSharp
 			if (image == null)
 				throw new ArgumentNullException (nameof (image));
 			SkiaApi.sk_canvas_draw_image_rect (Handle, image.Handle, source, dest, &sampling, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (image);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPicture
@@ -528,6 +626,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (picture));
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, m, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (picture);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawPicture (SKPicture picture, SKPaint paint = null)
@@ -535,6 +636,9 @@ namespace SkiaSharp
 			if (picture == null)
 				throw new ArgumentNullException (nameof (picture));
 			SkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (picture);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawDrawable
@@ -545,6 +649,8 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (drawable));
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_canvas_draw_drawable (Handle, drawable.Handle, m);
+			GC.KeepAlive (drawable);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawDrawable (SKDrawable drawable, float x, float y)
@@ -565,25 +671,50 @@ namespace SkiaSharp
 
 		// DrawBitmap
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKPaint paint = null) =>
 			DrawBitmap (bitmap, p.X, p.Y, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, x, y, paint);
+			DrawImage (image, x, y, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, dest, paint);
+			DrawImage (image, dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
 		}
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 			using var image = SKImage.FromBitmap (bitmap);
-			DrawImage (image, source, dest, paint);
+			DrawImage (image, source, dest, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null) =>
+			DrawBitmap (bitmap, p.X, p.Y, sampling, paint);
+
+		public void DrawBitmap (SKBitmap bitmap, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, x, y, sampling, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, dest, sampling, paint);
+		}
+
+		public void DrawBitmap (SKBitmap bitmap, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			using var image = SKImage.FromBitmap (bitmap);
+			DrawImage (image, source, dest, sampling, paint);
 		}
 
 		// DrawSurface
@@ -624,30 +755,31 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			SkiaApi.sk_canvas_draw_text_blob (Handle, text.Handle, x, y, paint.Handle);
+			GC.KeepAlive (text);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawText
 
-		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawText (string text, SKPoint p, SKPaint paint) =>
-			DrawText (text, p, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text, p, paint.TextAlign, paint.GetLegacyFont (), paint);
 
-		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawText (string text, float x, float y, SKPaint paint) =>
-			DrawText (text, x, y, paint.TextAlign, paint.GetFont (), paint);
+			DrawText (text, x, y, paint.TextAlign, paint.GetLegacyFont (), paint);
 
+		[Obsolete ("Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawText (text, p, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawText (text, p, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawText (text, p.X, p.Y, textAlign, font, paint);
 
+		[Obsolete ("Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: false)]
 		public void DrawText (string text, float x, float y, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawText (text, x, y, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawText (text, x, y, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawText (string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
@@ -674,38 +806,35 @@ namespace SkiaSharp
 
 		// DrawTextOnPath
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, paint);
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint);
 
-		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
+		[Obsolete ("Use DrawTextOnPath(string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.", error: true)]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint) =>
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetFont (), paint);
+			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetLegacyFont (), paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, offset, true, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, offset, true, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, offset, true, textAlign, font, paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) =>
 			DrawTextOnPath (text, path, new SKPoint (hOffset, vOffset), true, textAlign, font, paint);
 
+		[Obsolete ("Use the overload with SKTextAlign parameter instead.")]
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKFont font, SKPaint paint) =>
-#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)
-			DrawTextOnPath (text, path, offset, warpGlyphs, paint.TextAlign, font, paint);
-#pragma warning restore CS0618 // Type or member is obsolete
+			DrawTextOnPath (text, path, offset, warpGlyphs, paint.GetLegacyTextAlign (), font, paint);
 
 		public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint)
 		{
@@ -731,15 +860,25 @@ namespace SkiaSharp
 		// Surface
 
 #nullable enable
-		public SKSurface? Surface =>
-			SKSurface.GetObject (SkiaApi.sk_get_surface (Handle), owns: false, unrefExisting: false);
+		public SKSurface? Surface {
+			get {
+				var result = SKSurface.GetObject (SkiaApi.sk_get_surface (Handle), owns: false, unrefExisting: false);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 #nullable disable
 
 		// Context
 
 #nullable enable
-		public GRRecordingContext? Context =>
-			GRRecordingContext.GetObject (SkiaApi.sk_get_recording_context (Handle), owns: false, unrefExisting: false);
+		public GRRecordingContext? Context {
+			get {
+				var result = GRRecordingContext.GetObject (SkiaApi.sk_get_recording_context (Handle), owns: false, unrefExisting: false);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 #nullable disable
 
 		// Flush
@@ -757,11 +896,15 @@ namespace SkiaSharp
 			fixed (byte* b = bytes) {
 				SkiaApi.sk_canvas_draw_annotation (base.Handle, &rect, b, value == null ? IntPtr.Zero : value.Handle);
 			}
+			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public void DrawUrlAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_url_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
+			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawUrlAnnotation (SKRect rect, string value)
@@ -774,6 +917,8 @@ namespace SkiaSharp
 		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, &point, value == null ? IntPtr.Zero : value.Handle);
+			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
@@ -786,6 +931,8 @@ namespace SkiaSharp
 		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
+			GC.KeepAlive (value);
+			GC.KeepAlive (this);
 		}
 
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
@@ -818,6 +965,9 @@ namespace SkiaSharp
 				throw new ArgumentException ("Center rectangle must be contained inside the image bounds.", nameof (center));
 
 			SkiaApi.sk_canvas_draw_image_nine (Handle, image.Handle, &center, &dst, filterMode, paint == null ? IntPtr.Zero : paint.Handle);
+			GC.KeepAlive (image);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// Draw*Lattice
@@ -883,6 +1033,9 @@ namespace SkiaSharp
 				}
 				SkiaApi.sk_canvas_draw_image_lattice (Handle, image.Handle, &nativeLattice, &dst, filterMode, paint == null ? IntPtr.Zero : paint.Handle);
 			}
+			GC.KeepAlive (image);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// *Matrix
@@ -890,6 +1043,7 @@ namespace SkiaSharp
 		public void ResetMatrix ()
 		{
 			SkiaApi.sk_canvas_reset_matrix (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void SetMatrix (in SKMatrix matrix) =>
@@ -904,6 +1058,7 @@ namespace SkiaSharp
 			fixed (SKMatrix44* ptr = &matrix) {
 				SkiaApi.sk_canvas_set_matrix (Handle, ptr);
 			}
+			GC.KeepAlive (this);
 		}
 
 		public SKMatrix TotalMatrix => TotalMatrix44.Matrix;
@@ -912,13 +1067,20 @@ namespace SkiaSharp
 			get {
 				SKMatrix44 matrix;
 				SkiaApi.sk_canvas_get_matrix (Handle, &matrix);
+				GC.KeepAlive (this);
 				return matrix;
 			}
 		}
 
 		// SaveCount
 
-		public int SaveCount => SkiaApi.sk_canvas_get_save_count (Handle);
+		public int SaveCount {
+			get {
+				var result = SkiaApi.sk_canvas_get_save_count (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		// DrawVertices
 
@@ -953,6 +1115,9 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_vertices (Handle, vertices.Handle, mode, paint.Handle);
+			GC.KeepAlive (vertices);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawArc
@@ -962,6 +1127,8 @@ namespace SkiaSharp
 			if (paint == null)
 				throw new ArgumentNullException (nameof (paint));
 			SkiaApi.sk_canvas_draw_arc (Handle, &oval, startAngle, sweepAngle, useCenter, paint.Handle);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawRoundRectDifference
@@ -976,30 +1143,31 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (paint));
 
 			SkiaApi.sk_canvas_draw_drrect (Handle, outer.Handle, inner.Handle, paint.Handle);
+			GC.KeepAlive (outer);
+			GC.KeepAlive (inner);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawAtlas
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, null, paint);
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, sampling, null, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, null, paint);
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, null, paint);
 
+		[Obsolete ("Use the overload with SKSamplingOptions instead.")]
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
-#pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, &cullRect, paint);
-#pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.GetLegacyFilterQualitySampling () ?? SKSamplingOptions.Default, &cullRect, paint);
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
 			DrawAtlas (atlas, sprites, transforms, colors, mode, sampling, &cullRect, paint);
@@ -1023,6 +1191,9 @@ namespace SkiaSharp
 			fixed (SKColor* c = colors) {
 				SkiaApi.sk_canvas_draw_atlas (Handle, atlas.Handle, t, s, (uint*)c, transforms.Length, mode, &sampling, cullRect, paint?.Handle ?? IntPtr.Zero);
 			}
+			GC.KeepAlive (atlas);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// DrawPatch
@@ -1051,6 +1222,8 @@ namespace SkiaSharp
 			fixed (SKPoint* coords = texCoords) {
 				SkiaApi.sk_canvas_draw_patch (Handle, cubes, (uint*)cols, coords, mode, paint.Handle);
 			}
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		internal static SKCanvas GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>

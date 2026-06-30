@@ -1,7 +1,7 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 string EMSCRIPTEN_ROOT = Argument("emscripten", EnvironmentVariable("EMSCRIPTEN_SDK_ROOT") ?? EnvironmentVariable("EMSDK") ?? "");
@@ -46,6 +46,7 @@ Task("libSkiaSharp")
         $"skia_use_freetype=true " +
         $"skia_use_harfbuzz=false " +
         $"skia_use_icu=false " +
+        $"skia_use_partition_alloc=false " +
         $"skia_use_piex=false " +
         $"skia_use_expat=true " +
         $"skia_use_libwebp_encode=true " +
@@ -59,7 +60,7 @@ Task("libSkiaSharp")
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DXML_POOR_ENTROPY', " + 
+        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
@@ -74,12 +75,12 @@ Task("libSkiaSharp")
 
     var a = SKIA_PATH.CombineWithFilePath($"out/wasm/libSkiaSharp.a");
 
-    // separate all the .a.wasm files into .o files
+    // separate all the .wasm.a files into .o files
     var skiaOut = SKIA_PATH.Combine("out/wasm");
     var mergeDir = skiaOut.Combine("obj/merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
-    foreach (var file in GetFiles($"{skiaOut}/*.a.wasm")) {
+    foreach (var file in GetFiles($"{skiaOut}/*.wasm.a")) {
         RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
@@ -125,6 +126,7 @@ Task("libHarfBuzzSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        $"skia_use_partition_alloc=false " +
         $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
@@ -137,7 +139,7 @@ Task("libHarfBuzzSharp")
     if (emscriptenFeaturesModifiers.Length != 0)
         outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
-    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a.wasm");
+    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.wasm.a");
     CopyFileToDirectory(so, outDir);
     CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
 });

@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuSurfaceHasCanvas()
 		{
 			using var ctx = CreateGlContext();
@@ -62,7 +62,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(canvas);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RasterSurfaceHasCanvas()
 		{
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
@@ -71,7 +71,45 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(canvas);
 		}
 
-		[SkippableFact]
+		[Fact]
+		public void CanvasReturnsSameInstanceAcrossCalls()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+
+			var canvas1 = surface.Canvas;
+			var canvas2 = surface.Canvas;
+
+			// Skia caches the canvas for the surface's lifetime, so the managed
+			// wrapper is cached too and the same instance is returned each call.
+			Assert.NotNull(canvas1);
+			Assert.Same(canvas1, canvas2);
+			Assert.Equal(canvas1.Handle, canvas2.Handle);
+		}
+
+		[Fact]
+		public void CanvasIsRefetchedAfterExplicitCanvasDispose()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+
+			var canvas1 = surface.Canvas;
+			Assert.NotNull(canvas1);
+
+			// Disposing the surface-owned canvas is an anti-pattern, but it must not
+			// leave the cache holding a dead wrapper: the next access re-fetches a
+			// fresh, usable canvas wrapping the still-alive native canvas.
+			canvas1.Dispose();
+			Assert.Equal(IntPtr.Zero, canvas1.Handle);
+
+			var canvas2 = surface.Canvas;
+			Assert.NotNull(canvas2);
+			Assert.NotEqual(IntPtr.Zero, canvas2.Handle);
+			Assert.NotSame(canvas1, canvas2);
+
+			// The re-fetched canvas is fully functional.
+			canvas2.Clear(SKColors.Red);
+		}
+
+		[Fact]
 		public void SimpleSurfaceIsUnknownPixelGeometry()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -82,7 +120,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SimpleSurfaceWithPropertiesIsCorrect()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -99,7 +137,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void Snapshot()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -113,7 +151,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(info.Height, image.Height);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SnapshotReturnsSameInstance()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -128,7 +166,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(image1, image2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SnapshotWithBoundsReturnsSameInstance()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -143,7 +181,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(image1, image2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SnapshotWithBoundsReturnsDifferentInstance()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -158,7 +196,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(image1, image2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SnapshotWithSameBoundsReturnsSameInstance()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -173,7 +211,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(image1, image2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SnapshotWithDifferentBoundsReturnsDifferentInstance()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -189,7 +227,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Obsolete]
-		[SkippableFact]
+		[Fact]
 		public void SimpleSurfaceWithPropsIsCorrect()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -206,7 +244,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSimpleSurface()
 		{
@@ -217,7 +255,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateSurfaceFromExistingMemory()
 		{
 			var info = new SKImageInfo(100, 100);
@@ -233,7 +271,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(memory);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateSurfaceFromExistingMemoryUsingReleaseDelegate()
 		{
 			var hasReleased = false;
@@ -260,7 +298,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuBackendSurfaceIsCreated()
 		{
 			DrawGpuSurface((surface, info) =>
@@ -275,7 +313,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuTextureSurfaceIsCreated()
 		{
 			DrawGpuTexture((surface, texture) =>
@@ -290,7 +328,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuTextureSurfaceCanBeRead()
 		{
 			DrawGpuTexture((surface, texture) =>
@@ -317,7 +355,7 @@ namespace SkiaSharp.Tests
 			});
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawSurfaceWithSamplingOptions()
 		{
 			// Create source surface with red fill (50x50)
@@ -340,7 +378,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawSurfaceOnCanvasWithSamplingOptions()
 		{
 			// Create source surface with green fill (50x50)

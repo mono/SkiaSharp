@@ -1,4 +1,4 @@
-name: "Docs - Deploy"
+name: "Pages - Deploy"
 
 on:
   push:
@@ -120,7 +120,7 @@ jobs:
       # ── Build Gallery Blazor WASM app ──────────────────────────
       - name: Build WASM native libraries
         run: |
-          bash scripts/Docker/wasm/build-local.sh 3.1.56 "_wasmeh,st"
+          bash scripts/infra/native/wasm/docker/build-local.sh 3.1.56 "_wasmeh,st"
           sudo chown -R $(id -u):$(id -g) output
 
       - name: Publish Gallery Blazor WASM
@@ -220,6 +220,10 @@ jobs:
           if [ -d documentation/site/images ]; then
             cp -r documentation/site/images site/images
           fi
+
+          # AI in SkiaSharp page → /ai/
+          cp -r documentation/site/ai site/ai
+
           touch site/.nojekyll
 
           # Inject build info into landing page footer
@@ -336,8 +340,8 @@ jobs:
           git config user.email "action@github.com"
           git config user.name "GitHub Action"
 
-          # Fetch docs-live if it exists; otherwise create an orphan branch
-          if git fetch origin docs-live 2>/dev/null; then
+          # Fetch docs-live (depth=1 to avoid accumulating history)
+          if git fetch --depth=1 origin docs-live 2>/dev/null; then
             git checkout -b docs-live origin/docs-live
           else
             echo "docs-live branch does not exist, creating orphan branch"
@@ -345,8 +349,13 @@ jobs:
             git rm -rf . 2>/dev/null || true
             touch .nojekyll
             git add .nojekyll
-            git commit -m "Initialize docs-live branch"
-            git push origin docs-live
+            git commit -m "docs-live"
+            # If another workflow beat us to creating the branch, just use theirs
+            if ! git push origin docs-live 2>/dev/null; then
+              echo "Branch was created by another workflow, fetching it instead"
+              git fetch --depth=1 origin docs-live
+              git checkout -B docs-live origin/docs-live
+            fi
           fi
 
       - name: Download site artifact
@@ -366,20 +375,45 @@ jobs:
               -not -name '..' \
             -exec rm -rf {} \;
           cp -r /tmp/site-temp/. .
-          rm -rf /tmp/site-temp
 
           # Ensure .nojekyll exists so _framework/ directories are served
           touch .nojekyll
 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
+          git add -A
           if ! git diff --cached --quiet; then
-            git commit -m "Deploy main documentation from commit ${{ github.sha }}"
-            git push origin docs-live
+            # Amend the single commit to prevent history accumulation (keeps repo clone size small)
+            git commit --amend -m "docs-live"
+            # Force-push with lease: fails atomically if another workflow pushed in the meantime
+            for attempt in 1 2 3 4 5; do
+              if git push --force-with-lease origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), re-fetching and retrying..."
+              # Hard-reset to latest origin (picks up any staging changes from parallel workflows)
+              # then re-apply our main site content on top, preserving their staging/ dirs.
+              git fetch --depth=1 origin docs-live
+              git reset --hard origin/docs-live
+              find . -maxdepth 1 \
+                  -not -name 'staging' \
+                  -not -name '.git' \
+                  -not -name '.' \
+                  -not -name '..' \
+                -exec rm -rf {} \;
+              cp -r /tmp/site-temp/. .
+              touch .nojekyll
+              git add -A
+              git commit --amend -m "docs-live"
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
           else
             echo "No changes to commit"
           fi
+
+          rm -rf /tmp/site-temp
 
       - name: Deploy staging site content
         if: needs.build.outputs.is_staging == 'true'
@@ -396,21 +430,39 @@ jobs:
           mkdir -p "staging/$PR_NUMBER"
           cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
 
-          rm -rf /tmp/site-temp
-
           # Ensure .nojekyll exists at root so _framework is served
           touch .nojekyll
 
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .nojekyll staging/$PR_NUMBER
+          git add .nojekyll "staging/$PR_NUMBER"
           if ! git diff --cached --quiet; then
-            git commit -m "Deploy staging docs for PR #$PR_NUMBER" \
-              -m "https://mono.github.io/SkiaSharp/staging/$PR_NUMBER/"
-            git push origin docs-live
+            # Amend the single commit to prevent history accumulation (keeps repo clone size small)
+            git commit --amend -m "docs-live"
+            # Force-push with lease: fails atomically if another workflow pushed in the meantime
+            for attempt in 1 2 3 4 5; do
+              if git push --force-with-lease origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), re-fetching and retrying..."
+              # Hard-reset to latest origin, then re-apply our staging content
+              git fetch --depth=1 origin docs-live
+              git reset --hard origin/docs-live
+              rm -rf "staging/$PR_NUMBER"
+              mkdir -p "staging/$PR_NUMBER"
+              cp -r /tmp/site-temp/. "staging/$PR_NUMBER/"
+              touch .nojekyll
+              git add .nojekyll "staging/$PR_NUMBER"
+              git commit --amend -m "docs-live"
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
           else
             echo "No changes to commit"
           fi
+
+          rm -rf /tmp/site-temp
 
   # ── Comment on PR with preview URL ──────────────────────────
   comment:

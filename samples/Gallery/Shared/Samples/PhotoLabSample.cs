@@ -28,10 +28,22 @@ public class PhotoLabSample : CanvasSampleBase
 
 	public override string Title => "Photo Lab";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description =>
 		"Composable image effect stack — color filters, blur, morphology, magnifier, and high contrast.";
 
-	public override string Category => SampleCategories.ImageFilters;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKImageFilter", "SKImageFilter.CreateDilate", "SKImageFilter.CreateErode",
+		"SKImageFilter.CreateMagnifier", "SKImageFilter.CreateBlur",
+		"SKColorFilter", "SKColorFilter.CreateHighContrast",
+		"SKColorFilter.CreateBlendMode", "SKColorFilter.CreateColorMatrix",
+		"SKColorFilter.CreateCompose", "SKManagedStream", "SKBitmap",
+		"SKCanvas.DrawBitmap", "SKCanvas", "SKPaint",
+	];
+
+	public override string Category => SampleManager.ImageFilters;
 
 	protected override Task OnInit()
 	{
@@ -173,7 +185,7 @@ public class PhotoLabSample : CanvasSampleBase
 				ColorFilter = colorFilter,
 				ImageFilter = lastFilter,
 			};
-			canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
+			canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), SKSamplingOptions.Default, paint);
 		}
 		finally
 		{

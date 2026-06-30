@@ -2,6 +2,9 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -10,8 +13,10 @@
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Version>1.0.0</Version>
     
-    <!-- Package versions - set via command line or environment -->
-    <!-- dotnet test -p:SkiaSharpVersion=3.119.2-preview.2 -p:HarfBuzzSharpVersion=8.3.1.3-preview.2 -->
+    <!-- Package versions must be specified explicitly; there is no default and no floating ("*")
+         version. The release pipeline / release-testing skill passes the exact version under test
+         (e.g. dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N). A bare run
+         with no version fails fast via the ValidateVersions target below. -->
     <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
     <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
     
@@ -30,12 +35,10 @@
 
   <ItemGroup>
     <PackageReference Include="Appium.WebDriver" Version="5.1.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageReference Include="Microsoft.Playwright" Version="1.49.0" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
-    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
-    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
     <PackageReference Include="SkiaSharp.Extended" Version="3.1.0-preview.3" />
   </ItemGroup>
 

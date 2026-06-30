@@ -4081,6 +4081,25 @@ namespace SkiaSharp
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_overdraw(const sk_color_t[6] colors = 6)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		}
+		private static Delegates.sk_colorfilter_new_overdraw sk_colorfilter_new_overdraw_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors) =>
+			(sk_colorfilter_new_overdraw_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_overdraw> ("sk_colorfilter_new_overdraw")).Invoke (colors);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7621,6 +7640,25 @@ namespace SkiaSharp
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_crop(const sk_rect_t* rect, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_imagefilter_new_crop sk_imagefilter_new_crop_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input) =>
+			(sk_imagefilter_new_crop_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_crop> ("sk_imagefilter_new_crop")).Invoke (rect, tileMode, input);
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7733,6 +7771,25 @@ namespace SkiaSharp
 		private static Delegates.sk_imagefilter_new_drop_shadow_only sk_imagefilter_new_drop_shadow_only_delegate;
 		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
+		#endif
+
+		// sk_imagefilter_t* sk_imagefilter_new_empty()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_empty ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_empty ();
+		}
+		private static Delegates.sk_imagefilter_new_empty sk_imagefilter_new_empty_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_empty () =>
+			(sk_imagefilter_new_empty_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_empty> ("sk_imagefilter_new_empty")).Invoke ();
 		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
@@ -8457,6 +8514,28 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
+		// bool sk_paint_can_compute_fast_bounds(const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		}
+		private static Delegates.sk_paint_can_compute_fast_bounds sk_paint_can_compute_fast_bounds_delegate;
+		internal static bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint) =>
+			(sk_paint_can_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_can_compute_fast_bounds> ("sk_paint_can_compute_fast_bounds")).Invoke (cpaint);
+		#endif
+
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -8474,6 +8553,25 @@ namespace SkiaSharp
 		private static Delegates.sk_paint_clone sk_paint_clone_delegate;
 		internal static sk_paint_t sk_paint_clone (sk_paint_t param0) =>
 			(sk_paint_clone_delegate ??= GetSymbol<Delegates.sk_paint_clone> ("sk_paint_clone")).Invoke (param0);
+		#endif
+
+		// void sk_paint_compute_fast_bounds(const sk_paint_t* cpaint, const sk_rect_t* orig, sk_rect_t* storage)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		}
+		private static Delegates.sk_paint_compute_fast_bounds sk_paint_compute_fast_bounds_delegate;
+		internal static void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage) =>
+			(sk_paint_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_compute_fast_bounds> ("sk_paint_compute_fast_bounds")).Invoke (cpaint, orig, storage);
 		#endif
 
 		// void sk_paint_delete(sk_paint_t*)
@@ -12158,6 +12256,28 @@ namespace SkiaSharp
 			(sk_webpencoder_encode_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode> ("sk_webpencoder_encode")).Invoke (dst, src, options);
 		#endif
 
+		// bool sk_webpencoder_encode_animated(sk_wstream_t* dst, const sk_webpencoder_frame_t* src, int count, const sk_webpencoder_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		}
+		private static Delegates.sk_webpencoder_encode_animated sk_webpencoder_encode_animated_delegate;
+		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options) =>
+			(sk_webpencoder_encode_animated_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode_animated> ("sk_webpencoder_encode_animated")).Invoke (dst, src, count, options);
+		#endif
+
 		#endregion
 
 		#region sk_region.h
@@ -14429,6 +14549,25 @@ namespace SkiaSharp
 		private static Delegates.sk_stream_fork sk_stream_fork_delegate;
 		internal static sk_stream_t sk_stream_fork (sk_stream_t cstream) =>
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
+		#endif
+
+		// sk_data_t* sk_stream_get_data(sk_stream_t* cstream)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		}
+		private static Delegates.sk_stream_get_data sk_stream_get_data_delegate;
+		internal static sk_data_t sk_stream_get_data (sk_stream_t cstream) =>
+			(sk_stream_get_data_delegate ??= GetSymbol<Delegates.sk_stream_get_data> ("sk_stream_get_data")).Invoke (cstream);
 		#endif
 
 		// size_t sk_stream_get_length(sk_stream_t* cstream)
@@ -18204,8 +18343,8 @@ namespace SkiaSharp {
 		}
 
 		// public gr_vk_ycbcrconversioninfo_t fYcbcrConversionInfo
-		private GrVkYcbcrConversionInfo fYcbcrConversionInfo;
-		public GrVkYcbcrConversionInfo YcbcrConversionInfo {
+		private GRVkYcbcrConversionInfo fYcbcrConversionInfo;
+		public GRVkYcbcrConversionInfo YcbcrConversionInfo {
 			readonly get => fYcbcrConversionInfo;
 			set => fYcbcrConversionInfo = value;
 		}
@@ -18310,7 +18449,7 @@ namespace SkiaSharp {
 
 	// gr_vk_ycbcrconversioninfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
+	public unsafe partial struct GRVkYcbcrConversionInfo : IEquatable<GRVkYcbcrConversionInfo> {
 		// public uint32_t fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
@@ -18388,18 +18527,18 @@ namespace SkiaSharp {
 			set => fSupportsLinearFilter = value ? (byte)1 : (byte)0;
 		}
 
-		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+		public readonly bool Equals (GRVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
 			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fComponents == obj.fComponents && fSamplerFilterMustMatchChromaFilter == obj.fSamplerFilterMustMatchChromaFilter && fSupportsLinearFilter == obj.fSupportsLinearFilter;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is GrVkYcbcrConversionInfo f && Equals (f);
+			obj is GRVkYcbcrConversionInfo f && Equals (f);
 
-		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator == (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			left.Equals (right);
 
-		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator != (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
@@ -19038,7 +19177,7 @@ namespace SkiaSharp {
 	public unsafe partial struct SKDocumentXpsOptions : IEquatable<SKDocumentXpsOptions> {
 		// public float fDPI
 		private Single fDPI;
-		public Single DPI {
+		public Single Dpi {
 			readonly get => fDPI;
 			set => fDPI = value;
 		}
@@ -20658,6 +20797,39 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_webpencoder_frame_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKWebpEncoderFrameNative : IEquatable<SKWebpEncoderFrameNative> {
+		// public const sk_pixmap_t* pixmap
+		public sk_pixmap_t pixmap;
+
+		// public int duration
+		public Int32 duration;
+
+		public readonly bool Equals (SKWebpEncoderFrameNative obj) =>
+#pragma warning disable CS8909
+			pixmap == obj.pixmap && duration == obj.duration;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKWebpEncoderFrameNative f && Equals (f);
+
+		public static bool operator == (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (pixmap);
+			hash.Add (duration);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
@@ -21009,20 +21181,22 @@ namespace SkiaSharp {
 		R8g8Unorm = 19,
 		// A16_FLOAT_SK_COLORTYPE = 20
 		A16Float = 20,
-		// R16G16_FLOAT_SK_COLORTYPE = 21
-		R16g16Float = 21,
-		// A16_UNORM_SK_COLORTYPE = 22
-		A16Unorm = 22,
-		// R16_UNORM_SK_COLORTYPE = 23
-		R16Unorm = 23,
-		// R16G16_UNORM_SK_COLORTYPE = 24
-		R16g16Unorm = 24,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 25
-		R16g16b16a16Unorm = 25,
-		// SRGBA_8888_SK_COLORTYPE = 26
-		Srgba8888 = 26,
-		// R8_UNORM_SK_COLORTYPE = 27
-		R8Unorm = 27,
+		// R16_FLOAT_SK_COLORTYPE = 21
+		R16Float = 21,
+		// R16G16_FLOAT_SK_COLORTYPE = 22
+		R16g16Float = 22,
+		// A16_UNORM_SK_COLORTYPE = 23
+		A16Unorm = 23,
+		// R16_UNORM_SK_COLORTYPE = 24
+		R16Unorm = 24,
+		// R16G16_UNORM_SK_COLORTYPE = 25
+		R16g16Unorm = 25,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 26
+		R16g16b16a16Unorm = 26,
+		// SRGBA_8888_SK_COLORTYPE = 27
+		Srgba8888 = 27,
+		// R8_UNORM_SK_COLORTYPE = 28
+		R8Unorm = 28,
 	}
 
 	// sk_encoded_image_format_t

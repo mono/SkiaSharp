@@ -76,11 +76,41 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.gr_backendtexture_delete (Handle);
 
-		public bool IsValid => SkiaApi.gr_backendtexture_is_valid (Handle);
-		public int Width => SkiaApi.gr_backendtexture_get_width (Handle);
-		public int Height => SkiaApi.gr_backendtexture_get_height (Handle);
-		public bool HasMipMaps => SkiaApi.gr_backendtexture_has_mipmaps (Handle);
-		public GRBackend Backend => SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
+		public bool IsValid {
+			get {
+				var result = SkiaApi.gr_backendtexture_is_valid (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+		public int Width {
+			get {
+				var result = SkiaApi.gr_backendtexture_get_width (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+		public int Height {
+			get {
+				var result = SkiaApi.gr_backendtexture_get_height (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+		public bool HasMipMaps {
+			get {
+				var result = SkiaApi.gr_backendtexture_has_mipmaps (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
+		public GRBackend Backend {
+			get {
+				var result = SkiaApi.gr_backendtexture_get_backend (Handle).FromNative ();
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 		public SKSizeI Size => new SKSizeI (Width, Height);
 		public SKRectI Rect => new SKRectI (0, 0, Width, Height);
 
@@ -90,7 +120,9 @@ namespace SkiaSharp
 		public bool GetGlTextureInfo (out GRGlTextureInfo glInfo)
 		{
 			fixed (GRGlTextureInfo* g = &glInfo) {
-				return SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, g);
+				var result = SkiaApi.gr_backendtexture_get_gl_textureinfo (Handle, g);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 	}

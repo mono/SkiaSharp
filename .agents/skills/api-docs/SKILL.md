@@ -1,120 +1,75 @@
 ---
 name: api-docs
 description: >
-  Write and review XML API documentation for SkiaSharp following .NET guidelines.
-  
-  Triggers: "document class", "add XML docs", "write XML documentation", "add triple-slash comments",
-  "review documentation quality", "check docs for errors", "fix doc issues", "fill in missing docs",
-  "remove To be added placeholders", API documentation requests.
+  Write AND review XML API documentation for SkiaSharp (ECMA/mdoc XML in the docs submodule). Two modes:
+  (1) ADD docs for new APIs with "To be added." placeholders; (2) REVIEW existing docs by scope for
+  accuracy, freshness, examples, and hygiene.
+  Triggers: "document class", "add XML docs", "write XML documentation", "fill in missing docs",
+  "remove To be added placeholders", "review documentation", "check docs for errors", "fix doc issues",
+  "audit the docs", "review the font docs", "are the examples correct", "update out-of-date docs",
+  any request to add, validate, correct, or expand SkiaSharp API documentation.
+metadata:
+  layer: router
 ---
 
 # API Documentation
 
-Write and review XML API documentation for SkiaSharp.
+Add and review SkiaSharp API documentation. This file is a **router**: it picks a procedure and points to
+the reference and tooling files that do the work. The detailed instructions live in `references/` so they
+load only when needed.
 
-## Key Concepts
+## Key facts
 
-- The `docs/` directory is a **Git submodule** pointing to [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) — changes must be committed and PR'd to that repository
-- XML files are **generated from NuGet assemblies** using `mdoc` — if new APIs were added, regenerate before editing (see [Regenerating Docs](#regenerating-docs))
-- For existing APIs, you can edit the XML files directly without regenerating
+- `docs/` is the **`mono/SkiaSharp-API-docs`** submodule — one ECMA/mdoc **`.xml` per type**, generated
+  from NuGet assemblies via `mdoc`. CDATA `<remarks>` may hold `csharp` code fences. Run
+  `git submodule update --init docs` if it is empty.
+- Each `<Type>.xml` maps 1:1 to `binding/SkiaSharp/<Type>.cs` (or `binding/HarfBuzzSharp/`) → always read
+  source before documenting.
+- **Edit the XML directly.** Safety comes from `docs-format-docs`, which formats every file and fails the
+  build on broken XML/CDATA ([`references/validation.md`](references/validation.md)).
+- **Never edit generated files:** `index.xml`, `ns-*.xml`, `_filter.xml`, `FrameworksIndex/`.
 
-## File Locations
+## How to work
 
-```
-docs/SkiaSharpAPI/
-├── SkiaSharp/              # Main namespace
-│   ├── SKCanvas.xml        # One XML file per type
-│   ├── SKPaint.xml
-│   ├── SKImage.xml
-│   └── ...
-├── HarfBuzzSharp/          # HarfBuzz namespace
-├── SkiaSharp.Views.*/      # Platform-specific views
-└── index.xml               # Extension methods (auto-synced, don't edit)
-```
+One agent does the whole pass. Read the relevant reference, resolve scope into an explicit file list, then
+work in batches of ~25–40 files so each pass stays auditable and resumable.
 
-## Writing Documentation
+| If the task is… | Read |
+|---|---|
+| Documenting **new** APIs / filling `To be added.` placeholders | [`references/adding.md`](references/adding.md) |
+| **Reviewing/correcting/expanding** existing docs (one type, a theme, what changed, or all) | [`references/reviewing.md`](references/reviewing.md) |
 
-1. Find the type's XML file in `docs/SkiaSharpAPI/<Namespace>/<TypeName>.xml`
-2. Edit `<summary>`, `<param>`, `<returns>`, `<value>` tags within `<Docs>` sections
-3. Follow patterns in [references/patterns.md](references/patterns.md)
-4. **After editing a file, validate XML syntax** (see [XML Validation](#xml-validation) below)
-5. Run `dotnet cake --target=docs-format-docs` to validate and format
+The user asks in plain language ("review the font docs", "fill in what's missing"). The docs live at
+`docs/SkiaSharpAPI/<Namespace>/<Type>.xml`; list them directly, and use
+`git -C docs diff --name-only origin/main...HEAD` for "what changed". Each `<Type>.xml` maps to its source
+at `binding/<Namespace>/<Type>.cs`, and **you** pick the files a request covers — for a theme, scan the
+list and select the matching types yourself; the chosen procedure file covers the rest.
 
-## Reviewing Documentation
+All findings use one machine-parseable contract: `SEVERITY | class | file | docId | message`.
 
-1. Search for issues using grep patterns below
-2. Classify by severity using [references/checklist.md](references/checklist.md)
-3. Fix issues following [references/patterns.md](references/patterns.md)
-4. Run `dotnet cake --target=docs-format-docs` to validate
+## References (canonical facts)
 
-### Quick Issue Search
+- [`references/patterns.md`](references/patterns.md) — .NET XML doc syntax, verb conventions, formatting.
+- [`references/skia-patterns.md`](references/skia-patterns.md) — domain facts (color layouts, struct
+  defaults, standard-based enums, caller-owned vs parent-owned).
+- [`references/checklist.md`](references/checklist.md) — CRITICAL/IMPORTANT/MINOR severity taxonomy.
+- [`references/obsolete-api-map.md`](references/obsolete-api-map.md) — obsolete members and their modern
+  replacements; the writer and example reviewer read it (not the linter — obsolete use is a model
+  judgement, see the reference for why).
 
-```bash
-# Find placeholders
-grep -r "To be added" docs/SkiaSharpAPI/
+> **DRY rule:** the procedures describe *what to do*; the reference tables hold the *facts*. Procedures
+> point to references — they must not restate the tables. Keep reference chains one level deep.
 
-# Find empty tags (self-closing)
-grep -rE "<(summary|value|returns)\s*/>" docs/SkiaSharpAPI/
+## Tooling & validation
 
-# Find empty tags (open/close with optional whitespace)
-grep -rE "<(summary|value|returns)>\s*</" docs/SkiaSharpAPI/
+- Format + checks (one Cake target in `scripts/infra/docs/docs.cake`): `docs-format-docs` formats every
+  type file and runs the deterministic content checks — warnings for missing/quality issues, build-failing
+  errors for broken XML/CDATA. See [`references/validation.md`](references/validation.md).
+- Snippet build (C#-only, download is fine): `dotnet cake --target=externals-download` then
+  `dotnet build binding/SkiaSharp/SkiaSharp.csproj`.
 
-# Find spelling errors (common ones)
-grep -riE "teh|recieve|seperate|occured|paramter" docs/SkiaSharpAPI/
+## Landing changes
 
-# Find whitespace issues
-grep -rE " </|  </" docs/SkiaSharpAPI/
-```
-
-## Resources
-
-- [references/patterns.md](references/patterns.md) - XML syntax and examples
-- [references/checklist.md](references/checklist.md) - Review severity criteria
-- [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) - Full docs generation workflow (automated pipeline, local generation, cake targets)
-
-## Regenerating Docs
-
-When new APIs have been added (new classes, methods, properties), the XML doc files must be regenerated before you can document them. A daily GitHub Actions workflow does this automatically from the latest CI NuGet packages.
-
-**To regenerate locally** (e.g., after adding new APIs):
-
-```bash
-dotnet tool restore
-dotnet cake --target=docs-download-output   # Download latest NuGets
-dotnet cake --target=update-docs            # Regenerate XML docs
-```
-
-New members will appear with "To be added." placeholders. See [documentation/dev/writing-docs.md](../../../documentation/dev/writing-docs.md) for full details.
-
-**To edit existing docs** (no regeneration needed): just edit the XML files directly and run `dotnet cake --target=docs-format-docs` to format and validate.
-
-## XML Validation
-
-**CRITICAL**: After completing all edits to an XML file, validate its XML syntax before moving to the next file.
-
-### Validation Command
-
-```bash
-# Validate a single file
-xmllint --noout docs/SkiaSharpAPI/SkiaSharp/SKCanvas.xml
-
-# Validate all XML files in a namespace
-find docs/SkiaSharpAPI/SkiaSharp -name "*.xml" -exec xmllint --noout {} \;
-
-# Validate entire docs directory
-find docs/SkiaSharpAPI -name "*.xml" -exec xmllint --noout {} \;
-```
-
-### Common XML Errors to Avoid
-
-1. **Duplicate closing tags**: `</param></param>` - happens when copy/pasting
-2. **Mismatched tags**: `<summary>...</param>` - tag names must match
-3. **Unescaped characters**: `<`, `>`, `&` must be `&lt;`, `&gt;`, `&amp;`
-4. **Missing closing tags**: `<summary>text` without `</summary>`
-
-### Workflow
-
-1. Make all edits to a file
-2. Run `xmllint --noout <file>` to validate
-3. If errors, fix them before proceeding
-4. Move to next file
+The `docs` submodule protects `main` — commit on a `dev/...` branch and open a PR (per-wave). Skill asset
+changes land in the parent `mono/SkiaSharp` repo; the `auto-api-docs-writer` agentic workflow that runs
+this skill on CI lives in `mono/SkiaSharp-API-docs`.

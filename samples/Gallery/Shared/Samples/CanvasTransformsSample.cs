@@ -15,9 +15,20 @@ public class CanvasTransformsSample : CanvasSampleBase
 
 	public override string Title => "2D Transforms";
 
-	public override string Category => SampleCategories.General;
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
+	public override string Category => SampleManager.General;
 
 	public override string Description => "Visualize 2D canvas transformations — translate, rotate, and scale with live matrix display.";
+
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKMatrix", "SKRoundRect",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.Save", "SKCanvas.Restore", "SKCanvas.Translate", "SKCanvas.RotateDegrees", "SKCanvas.Scale",
+		"SKCanvas.DrawRoundRect", "SKCanvas.DrawLine", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -169,7 +180,7 @@ public class CanvasTransformsSample : CanvasSampleBase
 		using var font = new SKFont(SKTypeface.Default, 14);
 		using var headerFont = new SKFont(SKTypeface.Default, 13);
 
-		canvas.DrawText("Transform Matrix:", 10, 22, headerFont, textPaint);
+		canvas.DrawText("Transform Matrix:", 10, 22, SKTextAlign.Left, headerFont, textPaint);
 
 		var vals = new[]
 		{
@@ -183,7 +194,7 @@ public class CanvasTransformsSample : CanvasSampleBase
 		for (var row = 0; row < 3; row++)
 		{
 			var line = $"│ {vals[row * 3],8:F2}  {vals[row * 3 + 1],8:F2}  {vals[row * 3 + 2],8:F2} │";
-			canvas.DrawText(line, 12, startY + row * lineH, font, textPaint);
+			canvas.DrawText(line, 12, startY + row * lineH, SKTextAlign.Left, font, textPaint);
 		}
 	}
 }

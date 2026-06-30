@@ -1,0 +1,56 @@
+{
+  "$comment": "Shared version-comparison overrides for API diffs AND release notes. See documentation/dev/release-notes-and-api-diffs.md (the behavior spec). OVERRIDE-ONLY: list a line only when it needs a non-default comparison baseline (compare_to) or is superseded (status + superseded_by), or to force emission of a never-stable line. The default baseline is the previous emitted line; the inverse 'supersedes' back-link is DERIVED from superseded_by and must not be set here. Top level is keyed by FAMILY (spec 1.5): 'skiasharp' for SkiaSharp-versioned packages and 'harfbuzzsharp' for HarfBuzzSharp-versioned packages. Each family is then keyed by line core (X.Y.Z). The separate top-level 'support' block (read only by the release-notes engine) declares the SkiaSharp supported release paths (stable + preview) that drive the TOC/index grouping.",
+  "support": {
+    "$comment": "SkiaSharp's SUPPORTED release paths, used only by the release-notes TOC/index grouping. SkiaSharp ships NuGet packages on two paths (it is NOT a multi-tier channel product), so this is two lists of 'major.minor' lines (the SkiaSharp MINOR number IS the Chrome/Skia milestone). 'stable' = the supported stable line(s): normally the current Chrome Stable milestone, or the Chrome Extended-stable milestone during the promotion gap (when a preview is about to go stable). 'preview' = the in-flight preview/RC line(s): normally the Chrome Beta milestone, or newer when we are previewing ahead in Dev/Canary. Every other 3.x+ line is OUT OF SUPPORT; 1.x/2.x lines are OBSOLETE. MAINTAINED BY HAND on each release (we do not ship every Chrome milestone, so this must not be auto-derived from Chromium Dash). The security audit's heads-up check (.agents/skills/security-audit/scripts/query-milestone-schedule.py) compares these lists to the live Chrome channels and reports drift; the fix is always a manual edit here. Empty/absent block => every 3.x+ line is treated as supported (legacy behavior).",
+    "stable": [
+      "4.148",
+      "4.150"
+    ],
+    "preview": [
+      "4.151"
+    ]
+  },
+  "skiasharp": {
+    "3.0.0": {
+      "status": "superseded",
+      "superseded_by": "3.116.0",
+      "$comment": "3.0.x series was replaced by the 3.116 rewrite"
+    },
+    "3.116.0": {
+      "compare_to": "2.88.9",
+      "$comment": "First stable after the rewrite; compare against last 2.x stable"
+    },
+    "3.118.0": {
+      "status": "superseded",
+      "superseded_by": "3.119.0",
+      "$comment": "3.118.x never went stable"
+    },
+    "3.119.0": {
+      "compare_to": "3.116.1",
+      "$comment": "Skips over 3.118.x which never shipped stable"
+    },
+    "3.119.3": {
+      "status": "superseded",
+      "superseded_by": "3.119.4",
+      "$comment": "Hotfix 3.119.4 replaced 3.119.3"
+    },
+    "3.119.4": {
+      "compare_to": "3.119.2",
+      "$comment": "Supersedes 3.119.3; compare against last good patch before it"
+    },
+    "4.147.0": {
+      "status": "superseded",
+      "superseded_by": "4.148.0",
+      "$comment": "4.147.x was preview-only, never went stable"
+    },
+    "4.148.0": {
+      "compare_to": "3.119.4",
+      "$comment": "First 4.x RC; compare against last stable (3.119.4)"
+    },
+    "4.150.0": {
+      "compare_to": "4.148.0",
+      "$comment": "Compares against previous 4.x release"
+    }
+  },
+  "harfbuzzsharp": {}
+}

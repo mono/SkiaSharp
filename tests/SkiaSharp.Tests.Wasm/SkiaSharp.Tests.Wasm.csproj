@@ -1,21 +1,26 @@
-<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
   <PropertyGroup>
     <TargetFramework>$(TFMCurrent)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>SkiaSharp.Tests</RootNamespace>
-    <AssemblyName>SkiaSharp.Tests</AssemblyName>
+    <RootNamespace>SkiaSharp.Tests.Wasm</RootNamespace>
+    <AssemblyName>SkiaSharp.Tests.Wasm</AssemblyName>
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+    <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
+    <WasmEnableSIMD>true</WasmEnableSIMD>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.extensibility.core" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.utility" Version="2.9.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.8" />
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Blazor" Version="0.1.0-preview.11" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Xunit3" Version="0.1.0-preview.11" />
+    <PackageReference Include="DeviceRunners.Testing.Targets" Version="0.1.0-preview.11" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,6 +30,12 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
+  </ItemGroup>
+
+  <!-- Embed test content as resources, extracted to VFS at startup -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />

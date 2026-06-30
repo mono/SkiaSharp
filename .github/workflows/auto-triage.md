@@ -1,7 +1,7 @@
 ---
 description: "Triage a SkiaSharp issue: classify, label, and update the backlog project board."
 on:
-  schedule: every 10m
+  schedule: daily
   workflow_dispatch:
     inputs:
       issue_number:
@@ -69,7 +69,7 @@ safe-outputs:
     github-token: ${{ secrets.GH_AW_WRITE_PROJECT_TOKEN }}
 ---
 
-# Auto-Triage SkiaSharp Issue
+# Sync - Issue Triage
 
 Triage issue **#${{ needs.pre_activation.outputs.issue_number }}** using the issue-triage skill, then apply labels and update the SkiaSharp Backlog project board.
 
@@ -118,15 +118,17 @@ Only include fields that have non-null values in the triage JSON. Omit any field
 
 ## Step 4 — Upload triage reports and write step summary
 
-Copy the three triage output files into `/tmp/gh-aw/agent/` so they are included in the workflow's `agent` artifact, then write the Markdown report to the step summary so it's visible on the Actions run page without downloading artifacts.
+Copy the triage output files into `/tmp/gh-aw/agent/ai-triage/{number}/` so they are included in the workflow's `agent` artifact and can be persisted to the `aw-data` branch. Then write the Markdown report to the step summary so it's visible on the Actions run page without downloading artifacts.
 
 ```bash
-cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.json /tmp/gh-aw/agent/
-cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md /tmp/gh-aw/agent/
-cp output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.html /tmp/gh-aw/agent/
-cat output/ai/repos/mono-SkiaSharp/ai-triage/${{ needs.pre_activation.outputs.issue_number }}.md >> /tmp/gh-aw/agent/step-summary.md
+NUM=${{ needs.pre_activation.outputs.issue_number }}
+mkdir -p /tmp/gh-aw/agent/ai-triage/$NUM
+cp output/ai-triage/$NUM/triage.json /tmp/gh-aw/agent/ai-triage/$NUM/
+cp output/ai-triage/$NUM/triage.md /tmp/gh-aw/agent/ai-triage/$NUM/
+cp output/ai-triage/$NUM/triage.html /tmp/gh-aw/agent/ai-triage/$NUM/
+cat output/ai-triage/$NUM/triage.md >> /tmp/gh-aw/agent/step-summary.md
 ```
 
 **IMPORTANT:** Write to the literal path `/tmp/gh-aw/agent/step-summary.md` — this file is symlinked to the step summary. Do NOT use `$GITHUB_STEP_SUMMARY` as it resolves to an inaccessible path.
 
-All three files MUST be copied and the markdown MUST be appended to `/tmp/gh-aw/agent/step-summary.md`. Verify they exist before finishing.
+All three files MUST be copied into `/tmp/gh-aw/agent/ai-triage/{number}/` and the markdown MUST be appended to `/tmp/gh-aw/agent/step-summary.md`. Verify they exist before finishing.

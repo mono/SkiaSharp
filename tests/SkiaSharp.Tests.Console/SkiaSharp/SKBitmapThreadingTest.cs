@@ -11,7 +11,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKBitmapThreadingTest : SKTest
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(10, 10)]
 		[InlineData(10, 100)]
 		[InlineData(100, 1000)]
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			// GC finalizer throughput. On x86 (2GB address space), the GC can't keep up and
 			// Skia's native allocator fails. See #3608.
 			if (IntPtr.Size == 4 && numThreads >= 100 && numIterationsPerThread >= 1000)
-				throw new SkipException("Stress test skipped on x86 due to address space limit.");
+				Assert.Skip("Stress test skipped on x86 due to address space limit.");
 
 			var referenceFile = Path.Combine(PathToImages, "baboon.jpg");
 

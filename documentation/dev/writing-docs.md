@@ -1,5 +1,10 @@
 # Writing Documentation
 
+> **New here?** Read **[docs-overview.md](docs-overview.md)** first — it maps the whole
+> documentation system (the four artifacts, the engines, the skills, and the cross-repo
+> automation). This page is the hands-on **operator** guide for generating and editing
+> API docs and api diffs.
+
 This guide covers generating and updating SkiaSharp API documentation.
 
 SkiaSharp provides two types of documentation: concept docs and API docs.
@@ -24,29 +29,53 @@ This repository is pulled into the main SkiaSharp repo as a Git submodule at `do
 
 ## Automated Pipeline
 
-A GitHub Actions workflow in [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs) regenerates the API docs daily from the latest CI build artifacts. It checks out this repo (for the Cake build scripts) and the docs repo, then runs the doc generation targets:
+Two workflows automate the full docs lifecycle. They live in **different repos** —
+the stub-generation/AI-writing workflow is in the docs repo (it writes into that
+repo), and the submodule-sync workflow is here:
 
-- **Workflow**: [`update-docs.yml`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/update-docs.yml) (in the docs repo)
-- **Schedule**: Runs daily at 6 AM UTC
-- **Manual trigger**: Go to the [Actions tab](https://github.com/mono/SkiaSharp-API-docs/actions) on `mono/SkiaSharp-API-docs` → "Update API Docs" → "Run workflow"
-- **Branch parameter**: Optionally specify a SkiaSharp branch to generate docs from (defaults to `main`)
+### Step 1: Stub generation + AI docs (auto-api-docs-writer)
 
-### What the pipeline does
+A single agentic workflow handles the entire pipeline — regenerating XML stubs from CI NuGet packages AND filling "To be added." placeholders with AI-written documentation:
 
-1. Downloads the latest NuGet packages from the [SkiaSharp-CI](https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json) Azure Artifacts feed (public, no authentication required)
-2. Runs `dotnet cake --target=update-docs` which:
-   - Generates API diffs and changelogs (`docs-api-diff`)
-   - Extracts assemblies from NuGets, builds framework monikers, and runs `mdoc update` to regenerate XML docs (`docs-update-frameworks`)
-   - Cleans up, formats, and validates the generated XML (`docs-format-docs`)
-3. If there are changes, creates a PR on [`mono/SkiaSharp-API-docs`](https://github.com/mono/SkiaSharp-API-docs)
+- **Workflow**: [`auto-api-docs-writer.md`](https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md) (agentic, in the **docs repo** `mono/SkiaSharp-API-docs` — it checks SkiaSharp out to borrow the engines, then writes the XML into the docs repo)
+- **Schedule**: Daily at 8 AM UTC
+- **What it does**:
+  1. **Pre-agent step**: Downloads latest NuGet packages from CI, runs `dotnet cake --target=update-docs` to regenerate XML stubs
+  2. **AI agent**: Reads the `api-docs` skill, finds all "To be added." placeholders, reads C# source code, writes proper documentation
+  3. **Post-step**: Pushes branch and creates PR in `mono/SkiaSharp-API-docs`
+- **Output**: PR `automation/write-api-docs` → `main` in `mono/SkiaSharp-API-docs`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp-API-docs/actions/workflows/auto-api-docs-writer.lock.yml) → "Auto API Docs Writer" → "Run workflow"
 
-### After the PR is merged
+> **Runner note**: `mdoc.exe` is a .NET Framework executable, but `docs.cake` runs it
+> under **mono**, so the stub-regeneration job runs on a Linux runner with
+> `mono-complete` installed (see [docs-overview.md](docs-overview.md) → Path 3).
 
-Once the docs PR is merged into `mono/SkiaSharp-API-docs`, update the submodule pointer in the main SkiaSharp repo:
+### Step 2: Submodule sync (auto-docs-submodule-sync)
+
+After docs changes are merged to `mono/SkiaSharp-API-docs` `main` (whether from the AI pipeline, manual edits, or any other source), the submodule pointer in this repo needs to be updated:
+
+- **Workflow**: [`auto-docs-submodule-sync.yml`](../../.github/workflows/auto-docs-submodule-sync.yml) (in this repo)
+- **Schedule**: Daily at 10 AM UTC
+- **What it does**: Compares the `docs/` submodule SHA with the latest `mono/SkiaSharp-API-docs` `main` SHA. If behind, creates a PR to bump the submodule.
+- **Output**: PR `automation/update-docs-submodule` → `main` in `mono/SkiaSharp`
+- **Manual trigger**: Go to [Actions](https://github.com/mono/SkiaSharp/actions/workflows/auto-docs-submodule-sync.yml) → "Sync - Docs Submodule" → "Run workflow"
+
+### Pipeline timeline
+
+| Time (UTC) | Workflow | Action |
+|------------|----------|--------|
+| 8:00 AM | `auto-api-docs-writer` | Regenerates stubs + AI fills placeholders → PR to docs repo |
+| 10:00 AM | `auto-docs-submodule-sync` | Bumps `docs/` submodule → PR to SkiaSharp |
+
+Each step produces a PR that requires human review before merging.
+
+### Manual submodule update
+
+You can also update the submodule manually:
 
 ```bash
 cd docs
-git checkout master
+git checkout main
 git pull
 cd ..
 git add docs
@@ -87,7 +116,8 @@ dotnet cake --target=docs-download-output --gitBranch=my-feature-branch
 dotnet cake --target=update-docs
 ```
 
-This generates both the changelogs and the XML API docs in the `docs/` directory.
+This generates the XML API docs in the `docs/` directory. (The API diffs
+are produced separately by the `docs-api-diff*` targets — see below.)
 
 ## Editing API Docs
 
@@ -107,17 +137,120 @@ Once you are happy with your changes, push them to your fork of [`mono/SkiaSharp
 
 For detailed XML documentation patterns and review criteria, see:
 
-- [`.claude/skills/api-docs/references/patterns.md`](../../.claude/skills/api-docs/references/patterns.md) — XML syntax and examples
-- [`.claude/skills/api-docs/references/checklist.md`](../../.claude/skills/api-docs/references/checklist.md) — Review severity criteria
+- [`.agents/skills/api-docs/references/patterns.md`](../../.agents/skills/api-docs/references/patterns.md) — XML syntax and examples
+- [`.agents/skills/api-docs/references/checklist.md`](../../.agents/skills/api-docs/references/checklist.md) — Review severity criteria
 
 ## Cake Targets Reference
 
 | Target | Description |
 |--------|-------------|
 | `docs-download-output` | Downloads `_nugets` and `_nugetspreview` packages from the SkiaSharp-CI Azure Artifacts feed |
-| `docs-api-diff` | Compares current NuGets against latest published versions, generates markdown diffs and changelogs |
-| `docs-api-diff-past` | Generates historical API diffs across all published versions |
+| `docs-api-diff` | Compares current (unpublished CI) NuGets against latest published versions; writes transient markdown diffs to `output/api-diff/` only (a CI gate — never the committed tree) |
+| `docs-api-diff-past` | Regenerates the committed historical API diffs under `documentation/docfx/releases/` across all published versions |
 | `docs-update-frameworks` | Extracts assemblies, builds `frameworks.xml` with monikers, runs `mdoc update` to generate XML API docs |
 | `docs-format-docs` | Cleans XML output, removes duplicates, syncs extension method docs, reports coverage |
-| `update-docs` | Runs `docs-api-diff` → `docs-update-frameworks` → `docs-format-docs` in sequence |
+| `update-docs` | Runs `docs-update-frameworks` → `docs-format-docs` in sequence (the current API diff is a standalone CI gate, not bundled here) |
+
+> The two `docs-api-diff*` targets live alongside the other doc engines at
+> [`scripts/infra/docs/api-diff.cake`](../../scripts/infra/docs/api-diff.cake);
+> the wrappers in `build.cake` just forward to it. The behavior is specified in
+> [`release-notes-and-api-diffs.md`](release-notes-and-api-diffs.md) — read it
+> before changing either engine.
+
+## API diffs
+
+The per-assembly API diffs are written into the in-site releases tree
+(line-first, package-namespaced): `documentation/docfx/releases/<line>/{PackageId}/{Assembly}.md`
+for SkiaSharp-versioned packages, and the parallel
+`documentation/docfx/releases/harfbuzzsharp/<hb-line>/{PackageId}/{Assembly}.md`
+tree for HarfBuzzSharp-versioned packages (see
+[`release-notes-and-api-diffs.md`](release-notes-and-api-diffs.md) §3). They are
+generated by `Mono.ApiTools.NuGetDiff` (the `docs-api-diff-past` Cake target) and
+kept up to date automatically as part of the **Prepare** phase of the unified
+[`update-release-notes`](../../.github/workflows/update-release-notes.md) pipeline
+(on push to `main` and on a daily cron — `main` walks every `release/*` ref and
+reads `v*` tags itself, so release branches and tags need no trigger of their own).
+That one workflow's
+Prepare phase regenerates both the API diffs and the release-notes raw data,
+then the AI **Polish** phase rewrites prose, and it opens a single rolling PR with
+both the api diffs and the notes — there is no separate api-diff workflow.
+
+To regenerate the full committed set locally exactly the way CI does:
+
+```bash
+dotnet tool restore
+dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true
+git diff documentation/docfx/releases/
+```
+
+`docs-api-diff-past` diffs **published** NuGet.org versions: every version is
+compared against its predecessor, with baselines and superseded-version skips
+driven by [`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json) (same config the
+release-notes script uses). Superseded versions still get their own api diff;
+they are only removed from the pool of *baselines*, so e.g. `4.148.0` walks past
+the abandoned `4.147.*` previews and lands on `3.119.4`.
+
+### Previewing an unreleased branch
+
+Previewing the API diff of a branch/tag that is **not yet on NuGet.org** is a
+manual, multi-step operation (it is intentionally not part of the automated
+workflow). It diffs CI packages for the ref against their NuGet.org baseline:
+
+1. Overlay the ref's nuget versions onto `scripts/VERSIONS.txt` so the download
+   and diff targets resolve the right package versions (skip this if previewing
+   `main`, which is already the working tree):
+
+   ```bash
+   git fetch --depth=1 origin release/4.150.0-preview.1
+   git show FETCH_HEAD:scripts/VERSIONS.txt | grep -E '[[:space:]]nuget[[:space:]]'
+   # replace the "# nuget versions" block in scripts/VERSIONS.txt with those lines
+   ```
+
+2. Download the CI packages for the ref and run the diff against the feed:
+
+   ```bash
+   dotnet cake --target=docs-download-output --gitBranch=release/4.150.0-preview.1
+   dotnet cake --target=docs-api-diff --gitBranch=release/4.150.0-preview.1 --nugetDiffPrerelease=true
+   ```
+
+   (Use `--gitSha=<40-char-sha>` instead of `--gitBranch` for a tag or commit.)
+
+The preview output lands in `output/api-diff/` for inspection — it is **not**
+meant to be committed.
+
+### Relationship to release notes
+
+The API diffs (Cake) and the website release notes
+([`generate-release-notes.py`](../../scripts/infra/docs/generate-release-notes.py))
+are **separate systems** that deliberately share only one thing:
+[`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json). That file is the single
+source of truth for two decisions, and both systems honour it identically:
+
+- **Supersession** — only a version with an explicit `status: superseded` entry
+  is treated as superseded (Cake's `IsVersionSuperseded`, Python's
+  `resolve_superseded_by`). Neither side auto-detects it; to skip a version
+  everywhere, add it to `versions.json`.
+- **`compare_to` baselines** — when present, both sides diff against the same
+  baseline version (e.g. `4.148.0` → `3.119.4`).
+
+For any version *not* carrying a `compare_to` override, each system picks the
+default baseline (the previous version) on its own, and the two can differ
+slightly: the Python release-notes generator additionally skips any candidate
+baseline that has no stable git tag, whereas Cake walks purely by version order.
+This only matters for unlisted, preview-only versions; add a `compare_to` entry
+to `versions.json` to pin both systems to the same baseline.
+
+Where they intentionally differ is **granularity**, and this is by design — do
+not "fix" them into agreement:
+
+- **API diffs** produce one diff *per published NuGet package*, including
+  preview-to-preview deltas (e.g. each `4.147.0-preview.*` against the one
+  before it). The audience is "what changed in this exact package".
+- **Release notes** produce one cumulative page *per release* (the highest
+  branch for each version), diffed against the previous stable/baseline. The
+  audience is "what's new since the last release".
+
+So a given version can show a finer-grained baseline under
+`documentation/docfx/releases/<line>/` than on its release-notes page, even
+though both agree on supersession and any explicit `compare_to` override.
 

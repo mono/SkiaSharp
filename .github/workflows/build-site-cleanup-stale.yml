@@ -1,9 +1,9 @@
-name: "Docs - PR Staging - Sweep Stale"
+name: "Pages - PR Staging - Sweep Stale"
 
 on:
   schedule:
-    # Every Monday at 06:00 UTC
-    - cron: "0 6 * * 1"
+    # Every day at 06:00 UTC
+    - cron: "0 6 * * *"
   workflow_dispatch:
 
 # Default to no permissions — each job declares only what it needs.
@@ -21,10 +21,9 @@ jobs:
       contents: write        # push to docs-live
       pull-requests: read    # check PR state
     steps:
-      - name: Checkout docs-live branch
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: docs-live
           fetch-depth: 1
 
       - name: Find and remove stale staging directories
@@ -32,6 +31,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
+          # Switch to docs-live branch; exit cleanly if it doesn't exist yet
+          if ! git fetch --depth=1 origin docs-live:docs-live 2>/dev/null; then
+            echo "docs-live branch does not exist, nothing to sweep"
+            exit 0
+          fi
+          if ! git checkout docs-live 2>/dev/null; then
+            echo "Failed to checkout docs-live, nothing to sweep"
+            exit 0
+          fi
+
           if [ ! -d staging ]; then
             echo "No staging directory found, nothing to do"
             exit 0
@@ -77,8 +86,37 @@ jobs:
           git config --local user.name "GitHub Action"
           git add -A
           if ! git diff --cached --quiet; then
-            git commit -m "Sweep stale staging docs for ${#stale_dirs[@]} closed PR(s)"
-            git push origin docs-live
+            # Amend the single commit to prevent history accumulation
+            git commit --amend -m "docs-live"
+            # Force-push with lease: fails atomically if another workflow pushed
+            for attempt in 1 2 3 4 5; do
+              if git push --force-with-lease origin docs-live; then
+                break
+              fi
+              echo "Push failed (attempt $attempt), re-fetching and retrying..."
+              git fetch --depth=1 origin docs-live
+              git reset --hard origin/docs-live
+              # Re-check which dirs are still stale after re-fetch
+              removed_any=false
+              for d in "${stale_dirs[@]}"; do
+                if [ -d "$d" ]; then
+                  rm -rf "$d"
+                  removed_any=true
+                fi
+              done
+              if [ "$removed_any" = true ]; then
+                git add -A
+                git commit --amend -m "docs-live"
+              else
+                echo "Stale directories already removed by another workflow"
+                break
+              fi
+              if [ $attempt -eq 5 ]; then
+                echo "Failed to push after 5 attempts"
+                exit 1
+              fi
+              sleep $((attempt * 2))
+            done
           else
             echo "No changes to commit"
           fi

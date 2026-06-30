@@ -9,7 +9,7 @@ trigger:
       - .devcontainer/**
       - .github/**
       - .vscode/**
-      - changelogs/**
+      - documentation/docfx/releases/**
       - README.md
 
 pr: none
@@ -23,10 +23,6 @@ schedules:
     always: true
 
 parameters:
-  - name: buildExternals
-    displayName: 'The Build ID containing the specific native artifacts to use:'
-    type: string
-    default: 'latest'
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -90,22 +86,21 @@ extends:
         enabled: true
       credscan:
         enabled: true
-        # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+        # suppressionsFile: $(Build.SourcesDirectory)/scripts/infra/security/CredScanSuppressions.json
       policheck:
         enabled: true
-        exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+        exclusionsFile: $(Build.SourcesDirectory)/scripts/infra/security/PoliCheckExclusions.xml
       spotBugs:
         enabled: false
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)/scripts/infra/security/source.gdnsuppress
       tsa:
         enabled: true
-        configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+        configFile: $(Build.SourcesDirectory)/scripts/infra/security/tsaoptions-v2.json
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'native'
-          buildExternals: ${{ parameters.buildExternals }}
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}

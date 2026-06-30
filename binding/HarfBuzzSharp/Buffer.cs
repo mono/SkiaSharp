@@ -22,53 +22,125 @@ namespace HarfBuzzSharp
 		}
 
 		public ContentType ContentType {
-			get => HarfBuzzApi.hb_buffer_get_content_type (Handle);
-			set => HarfBuzzApi.hb_buffer_set_content_type (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_content_type (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_content_type (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public Direction Direction {
-			get => HarfBuzzApi.hb_buffer_get_direction (Handle);
-			set => HarfBuzzApi.hb_buffer_set_direction (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_direction (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_direction (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public Language Language {
-			get => new Language (HarfBuzzApi.hb_buffer_get_language (Handle));
-			set => HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle);
+			get {
+				var r = new Language (HarfBuzzApi.hb_buffer_get_language (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_language (Handle, value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public BufferFlags Flags {
-			get => HarfBuzzApi.hb_buffer_get_flags (Handle);
-			set => HarfBuzzApi.hb_buffer_set_flags (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_flags (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_flags (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public ClusterLevel ClusterLevel {
-			get => HarfBuzzApi.hb_buffer_get_cluster_level (Handle);
-			set => HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_cluster_level (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_cluster_level (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public uint ReplacementCodepoint {
-			get => HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle);
-			set => HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_replacement_codepoint (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_replacement_codepoint (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public uint InvisibleGlyph {
-			get => HarfBuzzApi.hb_buffer_get_invisible_glyph (Handle);
-			set => HarfBuzzApi.hb_buffer_set_invisible_glyph (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_invisible_glyph (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_invisible_glyph (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public Script Script {
-			get => HarfBuzzApi.hb_buffer_get_script (Handle);
-			set => HarfBuzzApi.hb_buffer_set_script (Handle, value);
+			get {
+				var r = HarfBuzzApi.hb_buffer_get_script (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_script (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public int Length {
-			get => (int)HarfBuzzApi.hb_buffer_get_length (Handle);
-			set => HarfBuzzApi.hb_buffer_set_length (Handle, (uint)value);
+			get {
+				var r = (int)HarfBuzzApi.hb_buffer_get_length (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_length (Handle, (uint)value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public UnicodeFunctions UnicodeFunctions {
-			get => new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle));
-			set => HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
+			get {
+				var r = new UnicodeFunctions (HarfBuzzApi.hb_buffer_get_unicode_funcs (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_buffer_set_unicode_funcs (Handle, value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public GlyphInfo[] GlyphInfos {
@@ -97,6 +169,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
 			HarfBuzzApi.hb_buffer_add (Handle, codepoint, cluster);
+			GC.KeepAlive (this);
 		}
 
 		public void AddUtf8 (string utf8text) => AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
@@ -124,6 +197,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be Glyphs");
 
 			HarfBuzzApi.hb_buffer_add_utf8 (Handle, (void*)text, textLength, (uint)itemOffset, itemLength);
+			GC.KeepAlive (this);
 		}
 
 		public void AddUtf16 (string text) => AddUtf16 (text, 0, -1);
@@ -164,6 +238,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
 			HarfBuzzApi.hb_buffer_add_utf16 (Handle, (ushort*)text, textLength, (uint)itemOffset, itemLength);
+			GC.KeepAlive (this);
 		}
 
 		public void AddUtf32 (string text) => AddUtf32 (Encoding.UTF32.GetBytes (text));
@@ -206,6 +281,7 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
 			HarfBuzzApi.hb_buffer_add_utf32 (Handle, (uint*)text, textLength, (uint)itemOffset, itemLength);
+			GC.KeepAlive (this);
 		}
 
 		public void AddCodepoints (ReadOnlySpan<uint> text) => AddCodepoints (text, 0, -1);
@@ -238,12 +314,14 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be of type Glyphs");
 
 			HarfBuzzApi.hb_buffer_add_codepoints (Handle, (uint*)text, textLength, (uint)itemOffset, itemLength);
+			GC.KeepAlive (this);
 		}
 
 		public unsafe ReadOnlySpan<GlyphInfo> GetGlyphInfoSpan ()
 		{
 			uint length;
 			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_infos (Handle, &length);
+			GC.KeepAlive (this);
 			return new ReadOnlySpan<GlyphInfo> (infoPtrs, (int)length);
 		}
 
@@ -251,6 +329,7 @@ namespace HarfBuzzSharp
 		{
 			uint length;
 			var infoPtrs = HarfBuzzApi.hb_buffer_get_glyph_positions (Handle, &length);
+			GC.KeepAlive (this);
 			return new ReadOnlySpan<GlyphPosition> (infoPtrs, (int)length);
 		}
 
@@ -260,11 +339,20 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must be of type Unicode.");
 
 			HarfBuzzApi.hb_buffer_guess_segment_properties (Handle);
+			GC.KeepAlive (this);
 		}
 
-		public void ClearContents () => HarfBuzzApi.hb_buffer_clear_contents (Handle);
+		public void ClearContents ()
+		{
+			HarfBuzzApi.hb_buffer_clear_contents (Handle);
+			GC.KeepAlive (this);
+		}
 
-		public void Reset () => HarfBuzzApi.hb_buffer_reset (Handle);
+		public void Reset ()
+		{
+			HarfBuzzApi.hb_buffer_reset (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public void Append (Buffer buffer) => Append (buffer, 0, -1);
 
@@ -276,6 +364,8 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must be of same type.");
 
 			HarfBuzzApi.hb_buffer_append (Handle, buffer.Handle, (uint)start, (uint)(end == -1 ? buffer.Length : end));
+			GC.KeepAlive (buffer);
+			GC.KeepAlive (this);
 		}
 
 		public void NormalizeGlyphs ()
@@ -286,14 +376,26 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("GlyphPositions can't be empty.");
 
 			HarfBuzzApi.hb_buffer_normalize_glyphs (Handle);
+			GC.KeepAlive (this);
 		}
 
-		public void Reverse () => HarfBuzzApi.hb_buffer_reverse (Handle);
+		public void Reverse ()
+		{
+			HarfBuzzApi.hb_buffer_reverse (Handle);
+			GC.KeepAlive (this);
+		}
 
-		public void ReverseRange (int start, int end) =>
+		public void ReverseRange (int start, int end)
+		{
 			HarfBuzzApi.hb_buffer_reverse_range (Handle, (uint)start, (uint)(end == -1 ? Length : end));
+			GC.KeepAlive (this);
+		}
 
-		public void ReverseClusters () => HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
+		public void ReverseClusters ()
+		{
+			HarfBuzzApi.hb_buffer_reverse_clusters (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public string SerializeGlyphs () =>
 			SerializeGlyphs (0, -1, null, SerializeFormat.Text, SerializeFlag.Default);
@@ -340,6 +442,9 @@ namespace HarfBuzzSharp
 				builder.Append (Marshal.PtrToStringAnsi ((IntPtr)pinned.Pointer, (int)consumed));
 			}
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
+
 			return builder.ToString ();
 		}
 
@@ -357,6 +462,8 @@ namespace HarfBuzzSharp
 				throw new InvalidOperationException ("ContentType must not be Glyphs.");
 
 			HarfBuzzApi.hb_buffer_deserialize_glyphs (Handle, data, -1, null, font?.Handle ?? IntPtr.Zero, format);
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 		}
 
 		protected override void Dispose (bool disposing) =>

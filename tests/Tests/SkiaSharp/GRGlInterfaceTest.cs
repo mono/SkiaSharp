@@ -7,10 +7,11 @@ namespace SkiaSharp.Tests
 {
 	public class GRGlInterfaceTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void InterfaceConstructionWithoutContextDoesNotCrash()
 		{
 			SkipOnPlatform(IsIOS || IsMacCatalyst, "GRGlInterface construction without context crashes on iOS/MacCatalyst");
+			SkipOnPlatform(IsBrowser, "GRGlInterface native call aborts the WASM runtime without a WebGL canvas");
 
 			var glInterface = GRGlInterface.Create();
 
@@ -18,7 +19,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -32,7 +33,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void AssembleInterfaceIsValid()
 		{
 			using (var ctx = CreateGlContext()) {

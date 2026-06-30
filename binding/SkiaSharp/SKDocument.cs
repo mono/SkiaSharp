@@ -18,20 +18,37 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public void Abort () =>
+		public void Abort ()
+		{
 			SkiaApi.sk_document_abort (Handle);
+			GC.KeepAlive (this);
+		}
 
-		public SKCanvas BeginPage (float width, float height) =>
-			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
+		public SKCanvas BeginPage (float width, float height)
+		{
+			var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public SKCanvas BeginPage (float width, float height, SKRect content) =>
-			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
+		public SKCanvas BeginPage (float width, float height, SKRect content)
+		{
+			var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public void EndPage () =>
+		public void EndPage ()
+		{
 			SkiaApi.sk_document_end_page (Handle);
+			GC.KeepAlive (this);
+		}
 
-		public void Close () =>
+		public void Close ()
+		{
 			SkiaApi.sk_document_close (Handle);
+			GC.KeepAlive (this);
+		}
 
 		// CreateXps
 
@@ -71,6 +88,35 @@ namespace SkiaSharp
 			}
 
 			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream (stream.Handle, dpi)), stream);
+		}
+
+		public static SKDocument CreateXps (string path, SKDocumentXpsOptions options)
+		{
+			if (path == null) {
+				throw new ArgumentNullException (nameof (path));
+			}
+
+			var stream = SKFileWStream.OpenStream (path);
+			return Owned (CreateXps (stream, options), stream);
+		}
+
+		public static SKDocument CreateXps (Stream stream, SKDocumentXpsOptions options)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			var managed = new SKManagedWStream (stream);
+			return Owned (CreateXps (managed, options), managed);
+		}
+
+		public static SKDocument CreateXps (SKWStream stream, SKDocumentXpsOptions options)
+		{
+			if (stream == null) {
+				throw new ArgumentNullException (nameof (stream));
+			}
+
+			return Referenced (GetObject (SkiaApi.sk_document_create_xps_from_stream_with_options (stream.Handle, &options)), stream);
 		}
 
 		// CreatePdf

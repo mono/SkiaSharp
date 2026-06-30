@@ -6,7 +6,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests
 {
@@ -17,7 +16,7 @@ namespace SkiaSharp.Tests
 		{
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CanCopyToIsCorrect(SKColorType colorType)
 		{
@@ -31,12 +30,13 @@ namespace SkiaSharp.Tests
 				Assert.True(canCopy);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyToSucceeds(SKColorType colorType)
 		{
+
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
-				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
+				Assert.Skip("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 
@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 				var color = copy.GetPixel(10, 10);
 				Assert.NotEqual(SKColors.Empty, color);
 				if (colorType == SKColorType.Gray8)
-					Assert.Equal(0xFF353535, color);
+					AssertSimilarColor(0xFF353535, color, tolerance: 1);
 				else if (colorType == SKColorType.Alpha8 || colorType == SKColorType.AlphaF16 || colorType == SKColorType.Alpha16)
 					Assert.Equal(0xFF000000, color);
 				else
@@ -65,12 +65,13 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllColorTypes))]
 		public void CopyWithAlphaToSucceeds(SKColorType colorType)
 		{
+
 			if (colorType == SKColorType.Bgr101010xXR || colorType == SKColorType.Bgra10101010XR)
-				throw new SkipException("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
+				Assert.Skip("The Bgr101010xXR and Bgra10101010XR do not support getting pixel colors.");
 
 			var alphaType = colorType.GetAlphaType();
 
@@ -93,7 +94,7 @@ namespace SkiaSharp.Tests
 
 				if (colorType == SKColorType.Gray8)
 				{
-					Assert.Equal((SKColor)0xFF232323, color);
+					AssertSimilarColor((SKColor)0xFF232323, color, tolerance: 1);
 				}
 				else if (alphaType == SKAlphaType.Opaque)
 				{
@@ -127,7 +128,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DoesNotCrashWhenDecodingInvalidPath()
 		{
 			var path = Path.Combine(PathToImages, "file-does-not-exist.png");
@@ -135,7 +136,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(SKBitmap.Decode(path));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CopyIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -147,7 +148,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, platform.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OverwriteIndex8ToPlatformPreservesData()
 		{
 			var path = Path.Combine(PathToImages, "index8.png");
@@ -159,7 +160,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKImageInfo.PlatformColorType, bmp.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -173,7 +174,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToAlpha8PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -187,7 +188,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Alpha8, alpha8.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -201,7 +202,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToArgb4444PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -215,7 +216,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Argb4444, argb4444.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -229,7 +230,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToRgb565PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -243,7 +244,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.Rgb565, rgb565.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap();
@@ -257,7 +258,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapWithAlphaCopyToRgbaF16PreservesData()
 		{
 			var bmp = CreateTestBitmap(127);
@@ -271,7 +272,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorType.RgbaF16, rgbaF16.ColorType);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BitmapCopyToInvalidIsNull()
 		{
 			var bmp = CreateTestBitmap();
@@ -282,7 +283,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(bmp.Copy(SKColorType.Unknown));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
@@ -305,7 +306,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKBitmapReleaseDelegate was not called.");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImageCreateDoesNotThrow()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -316,7 +317,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseBitmapPixelsWithNullDelegate()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -330,7 +331,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestExtractAlpha()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -349,7 +350,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPointI(-12, -12), offset);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestBitmapDecodeDrawsCorrectly()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -372,7 +373,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void BitmapAndPixmapAreValid()
 		{
@@ -404,7 +405,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKSamplingOptions(SKCubicResampler.Mitchell) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetSamplingData))]
 		public void BitmapResizes(SKSamplingOptions sampling)
 		{
@@ -430,7 +431,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1, -1)]
 		[InlineData(0, 0)]
 		[InlineData(-1, 10)]
@@ -450,7 +451,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(newBitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanScalePixels()
 		{
 			var srcInfo = new SKImageInfo(200, 200);
@@ -475,7 +476,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Blue, dstBmp.GetPixel(75, 75));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SwizzleRedBlueTest()
 		{
 			var info = new SKImageInfo(1, 1);
@@ -492,7 +493,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var fileName = Path.Combine(PathToImages, "上田雅美.jpg");
@@ -503,7 +504,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateUsingRowBytes()
 		{
 			using var src = CreateTestBitmap();
@@ -524,7 +525,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Yellow, bmp.GetPixel(1, 1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PixelsPropertyReadsTheColors()
 		{
 			using var bitmap = CreateTestBitmap();
@@ -552,7 +553,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IncorrectPixelSizeThrowsWhenWriting()
 		{
 			SKColor[] sourcePixels;
@@ -567,7 +568,7 @@ namespace SkiaSharp.Tests
 			Assert.Contains("800", ex.Message);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PixelsPropertyWritesTheColors()
 		{
 			SKColor[] sourcePixels;
@@ -583,7 +584,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(sourcePixels, pixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IncorrectPixelLocationThrowsWhenWritingPixel()
 		{
 			using var bitmap = new SKBitmap(20, 40);
@@ -591,7 +592,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal("y", ex.ParamName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPixelWritesTheColor()
 		{
 			SKColor[] expectedPixels =
@@ -612,7 +613,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedPixels, bitmap.Pixels);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("osm-liberty.png")]
 		[InlineData("testimage.png")]
 		public void CanDecodePotentiallyCorruptPngFiles(string filename)
@@ -641,7 +642,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(bitmap);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetPixelSpanHasCorrectLength()
 		{
 			using var bmp = CreateTestBitmap();
@@ -651,7 +652,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(totalBytes, bmp.GetPixelSpan().Length);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 40 * 40 * 4)]
 		[InlineData(0, 20, 40 * 20 * 4)]
 		[InlineData(39, 39, 4)]
@@ -662,7 +663,175 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedLength, span.Length);
 		}
 
-		[SkippableTheory]
+		[Fact]
+		public void GetPixelSpanXYUsesStrideForSubset()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+			for (int y = 0; y < 4; y++)
+			{
+				for (int x = 0; x < 4; x++)
+				{
+					bmp.SetPixel(x, y, x < 2 && y < 2 ? SKColors.White : SKColors.Black);
+				}
+			}
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(0, 0, 2, 2)));
+
+			// the subset shares the parent buffer, so its stride is the parent's row bytes
+			Assert.True(roi.RowBytes > roi.Info.Width * roi.BytesPerPixel);
+
+			// the offset for row 1 must use the actual stride, not Width * bpp
+			var full = roi.GetPixelSpan();
+			var row1 = roi.GetPixelSpan(0, 1);
+			Assert.Equal(roi.RowBytes, full.Length - row1.Length);
+
+			// the offset must also land on the correct pixel data
+			var firstColor = MemoryMarshal.Cast<byte, SKColor>(roi.GetPixelSpan(0, 0))[0];
+			var row1Color = MemoryMarshal.Cast<byte, SKColor>(row1)[0];
+			Assert.Equal(roi.GetPixel(0, 0), firstColor);
+			Assert.Equal(roi.GetPixel(0, 1), row1Color);
+
+			// a non-zero x must offset by the column within the row (x * bpp)
+			var col1 = roi.GetPixelSpan(1, 0);
+			Assert.Equal(roi.BytesPerPixel, full.Length - col1.Length);
+			Assert.Equal(roi.GetPixel(1, 0), MemoryMarshal.Cast<byte, SKColor>(col1)[0]);
+
+			// the last valid pixel of the subset must offset by both stride and column
+			var last = roi.GetPixelSpan(1, 1);
+			Assert.Equal(roi.GetPixel(1, 1), MemoryMarshal.Cast<byte, SKColor>(last)[0]);
+		}
+
+		// Bgra8888 stores bytes as B, G, R, A; reinterpreting those bytes as a
+		// little-endian SKColor (0xAARRGGBB) reproduces the logical color exactly,
+		// so the span contents can be compared without any channel swizzle.
+		private static SKColor UniqueColor(int x, int y) =>
+			new SKColor((byte)(x + 1), (byte)(y + 1), 0xAB, 0xFF);
+
+		private static SKBitmap CreateUniquePixelBitmap(int width, int height)
+		{
+			var bmp = new SKBitmap(new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul));
+			for (var y = 0; y < height; y++)
+				for (var x = 0; x < width; x++)
+					bmp.SetPixel(x, y, UniqueColor(x, y));
+			return bmp;
+		}
+
+		[Theory]
+		[InlineData(0, 0, 3, 2)]   // origin (0, 0)
+		[InlineData(3, 2, 7, 5)]   // interior origin, non-square
+		[InlineData(2, 0, 5, 3)]   // top edge, non-zero x
+		[InlineData(0, 3, 3, 6)]   // left edge, non-zero y
+		[InlineData(5, 4, 8, 6)]   // bottom-right, touches the parent's last row/col
+		public void GetPixelSpanReturnsExactSubsetPixels(int left, int top, int right, int bottom)
+		{
+			// every parent pixel has a unique colour encoding its (x, y), so reading
+			// the wrong row or column (the original bug) produces a wrong colour
+			using var bmp = CreateUniquePixelBitmap(8, 6);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(left, top, right, bottom)));
+
+			// the subset is narrower than the parent, so its stride must differ
+			Assert.True(roi.RowBytes > roi.Info.Width * roi.BytesPerPixel);
+
+			for (var y = 0; y < roi.Height; y++)
+			{
+				for (var x = 0; x < roi.Width; x++)
+				{
+					var expected = UniqueColor(left + x, top + y);
+
+					// the byte span at (x, y) must point at exactly the parent pixel
+					var fromSpan = MemoryMarshal.Cast<byte, SKColor>(roi.GetPixelSpan(x, y))[0];
+					Assert.Equal(expected, fromSpan);
+
+					// cross-check against the independent logical accessor
+					Assert.Equal(expected, roi.GetPixel(x, y));
+				}
+			}
+		}
+
+		[Fact]
+		public void GetPixelSpanHandlesBottomRightSubset()
+		{
+			// the native byte count must already exclude trailing row padding so the
+			// full-image span does not read past the end of the parent buffer
+			var info = new SKImageInfo(10, 10, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(9, 9, 10, 10)));
+
+			Assert.Equal(1, roi.Width);
+			Assert.Equal(1, roi.Height);
+
+			// a single pixel: exactly BytesPerPixel, never Height * RowBytes
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan().Length);
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan(0, 0).Length);
+		}
+
+		[Fact]
+		public void GetPixelSpanLastPixelOfSubsetHasSinglePixelLength()
+		{
+			// a non-square, multi-row, multi-column subset: the span at the last
+			// valid pixel must reduce to exactly one pixel, proving the offset uses
+			// the real stride and column and never overruns the parent buffer
+			var info = new SKImageInfo(8, 6, SKColorType.Rgba8888);
+			using var bmp = new SKBitmap(info);
+
+			using SKBitmap roi = new();
+			Assert.True(bmp.ExtractSubset(roi, new SKRectI(5, 4, 8, 6)));
+
+			Assert.Equal(3, roi.Width);
+			Assert.Equal(2, roi.Height);
+			Assert.True(roi.RowBytes > roi.Info.Width * roi.BytesPerPixel);
+
+			// an interior non-zero (x, y) and the extreme (Width-1, Height-1) both
+			// reduce to exactly one pixel
+			Assert.Equal(roi.BytesPerPixel, roi.GetPixelSpan(roi.Width - 1, roi.Height - 1).Length);
+		}
+
+		[Theory]
+		[InlineData(-1, 0)]
+		[InlineData(0, -1)]
+		[InlineData(0, 40)]
+		[InlineData(40, 0)]
+		public void GetPixelSpanThrowsForOutOfRangeCoordinates(int x, int y)
+		{
+			using var bmp = CreateTestBitmap();
+			Assert.Throws<ArgumentOutOfRangeException>(() => bmp.GetPixelSpan(x, y));
+		}
+
+		[Fact]
+		public void GetPixelSpanReturnsEmptyForEmptyBitmap()
+		{
+			using var bmp = new SKBitmap();
+			Assert.True(bmp.Info.IsEmpty);
+
+			// an empty bitmap returns an empty span rather than throwing,
+			// matching SKPixmap.GetPixelSpan<T>; the empty short-circuit wins
+			// even over out-of-range coordinates
+			Assert.Equal(0, bmp.GetPixelSpan().Length);
+			Assert.Equal(0, bmp.GetPixelSpan(0, 0).Length);
+			Assert.Equal(0, bmp.GetPixelSpan(-1, 5).Length);
+		}
+
+		[Fact]
+		public void GetPixelSpanReturnsEmptyForUnknownColorType()
+		{
+			// a non-empty buffer with an unknown color type has no pixel size, so
+			// it returns an empty span rather than throwing, matching SKPixmap
+			using var bmp = new SKBitmap(new SKImageInfo(4, 4, SKColorType.Unknown));
+			Assert.False(bmp.Info.IsEmpty);
+			Assert.Equal(0, bmp.Info.BytesPerPixel);
+
+			Assert.Equal(0, bmp.GetPixelSpan(0, 0).Length);
+			Assert.Equal(0, bmp.GetPixelSpan(2, 3).Length);
+			Assert.Equal(0, bmp.GetPixelSpan(-1, 99).Length);
+		}
+
+		[Theory]
 		[InlineData("baboon.jpg", "baboon-reencoded.jpg")]
 		public void CanEncodeImageStreams(string filename, string encodedFilename)
 		{

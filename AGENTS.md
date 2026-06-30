@@ -13,21 +13,34 @@ These rules are **non-negotiable**. Violating them causes broken builds, crashes
 
 ### 1. Bootstrap First
 
-Before any other command works, ensure native binaries exist:
+Before C# code can build, native binaries must exist in `output/native/`. **How** you produce them depends on what you're changing:
 
-```bash
-# Run if output/native/ is empty
-dotnet cake --target=externals-download
-```
+| You are changing… | Bootstrap with |
+|---|---|
+| **Only C# code** (no files under `externals/skia/`, no `DEPS`, no submodule bump) | `dotnet cake --target=externals-download` (downloads pre-built natives from the **current** milestone) |
+| **Native code, C API, `DEPS`, or the Skia submodule** (incl. milestone updates) | `dotnet cake --target=externals-{platform} --arch={arch}` — build from source. |
 
-### 2. Never Edit Generated Files
+> **🛑 If you are doing a Skia milestone update, a C API change, or anything under `externals/skia/`, STOP. Do not run `externals-download` — ever. The downloaded binaries are from the OLD milestone and do not contain your changes; using them produces silently-wrong builds and `EntryPointNotFoundException` at runtime.** When source builds fail (missing `gn`, network errors, etc.), debug the source build — do not fall back to download.
+
+### 2. Never `externals-download` After Native Changes
+
+If you have modified **any** of the following, `externals-download` is FORBIDDEN until your changes ship to the pre-built artifact server (which only happens after merge):
+
+- `externals/skia/**` (including the submodule SHA)
+- `externals/skia/src/c/**`, `externals/skia/include/c/**`
+- `externals/skia/DEPS`
+- Any milestone bump or version file (`VERSIONS.txt`, `sk_types.h SK_C_INCREMENT`)
+
+Falling back to `externals-download` because a native build failed is the #1 way agents corrupt milestone updates. Fix the source build instead.
+
+### 3. Never Edit Generated Files
 
 Files matching `*.generated.cs` and `docs/` are auto-generated.
 
 - **NEVER** manually edit these files
 - **ALWAYS** regenerate after C API changes (see [Commands](#commands))
 
-### 3. ABI Stability
+### 4. ABI Stability
 
 SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
@@ -37,11 +50,11 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 | Add new methods | Remove public APIs |
 | Add new classes | Change return types |
 
-### 4. Tests Are Mandatory
+### 5. Tests Are Mandatory
 
 **Building alone is NOT sufficient.** Run tests before claiming completion (see [Commands](#commands)).
 
-### 5. Branch Protection (COMPLIANCE REQUIRED)
+### 6. Branch Protection (COMPLIANCE REQUIRED)
 
 **Direct commits to protected branches are a policy violation.**
 
@@ -79,7 +92,7 @@ Single source of truth for all commands:
 
 | Task | Command |
 |------|---------|
-| **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
+| **Bootstrap (C#-only work — see Rule #1, FORBIDDEN for native changes)** | `dotnet cake --target=externals-download` |
 | **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
 | **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
 | **Build Native (Windows x64)** | `dotnet cake --target=externals-windows --arch=x64` |
@@ -88,17 +101,17 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
-| **Fetch release notes** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --last 5` |
-| **Fetch unreleased PRs** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased` |
-| **Update release notes TOC** | `python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc` |
+| **Diff branch for release notes** | `python3 scripts/infra/docs/generate-release-notes.py --branch main` |
+| **Update release notes TOC** | `python3 scripts/infra/docs/generate-release-notes.py --update-toc` |
 
 ### When to Use Which Bootstrap
 
 | What You Changed | Command Required |
 |------------------|------------------|
 | C# code only (`binding/SkiaSharp/*.cs`) | `externals-download` (pre-built natives) |
-| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives)** |
-| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives)** |
+| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
+| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
+| Skia submodule SHA / milestone update | **`externals-{platform}` (MUST rebuild natives — `externals-download` is FORBIDDEN)** |
 
 > **CRITICAL:** If you modify ANY native code (C API headers/implementations), you MUST rebuild
 > the native library with `dotnet cake --target=externals-{platform}`. Using `externals-download`
@@ -111,8 +124,11 @@ Single source of truth for all commands:
 
 | Problem | Command |
 |---------|---------|
-| Clean rebuild | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Clean rebuild (**C#-only work**) | `dotnet cake --target=clean && dotnet cake --target=externals-download` |
+| Clean rebuild (**any native or milestone work**) | `dotnet cake --target=clean && dotnet cake --target=externals-{platform} --arch={arch}` |
 | Reset submodule | `git submodule update --init --recursive` |
+
+> **Native build failing?** Do **NOT** "fall back" to `externals-download`. Common causes: missing `gn`/`ninja`, missing depot_tools on PATH, missing network access to `chromium.googlesource.com`. Diagnose and fix the source build. Using `externals-download` to make the failure go away will produce a build that runs against stale binaries and silently corrupts milestone updates.
 
 ---
 
@@ -338,15 +354,17 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
-| Start release | `/release-branch` | "release now", "start release X" |
-| Test release | `/release-testing` | "test the release", "verify packages" |
-| Publish release | `/release-publish` | "push to nuget", "tag release" |
+| Start release (Step 1/4) | `/release-branch` | "release now", "start release X" |
+| Check release status (Step 2/4) | `/release-status` | "check release status", "how is the build", "pipeline status" |
+| Test release (Step 3/4) | `/release-testing` | "test the release", "verify packages" |
+| Publish release (Step 4/4) | `/release-publish` | "push to nuget", "tag release" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
-| Audit release notes | `/release-notes-audit` | "compare Skia changes", "API gap analysis" |
+| Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |
 | Review Skia update | `/review-skia-update` | "review the Skia merge PR" |
 | PR commit message | `/pr-commit-message` | "write commit message for PR" |
 | Validate samples | `/validate-samples` | "build samples", "test sample projects" |
+| Scout GM samples | `/sample-scout` | "find demos to port", "what samples are we missing", "gallery ideas" |
 | Create/improve skill | `/skill-creator` | "create a new skill", "improve skill X" |
 
 ### Issue Pipeline (3 steps)
@@ -395,3 +413,4 @@ Work directly for:
 | Error Handling | `documentation/dev/error-handling.md` |
 | Debugging | `documentation/dev/debugging-methodology.md` |
 | NuGet Packages | `documentation/dev/packages.md` |
+| Release Notes & API Diffs | `documentation/dev/release-notes-and-api-diffs.md` |

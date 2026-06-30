@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Issue #3817 regression guard. This is a dedicated test assembly that contains a
+    single test which touches SKFontManager.Default as the FIRST SkiaSharp type in
+    the process. Because static constructors run once per process and "dotnet test"
+    launches a separate test host per assembly, this naturally reproduces the
+    "first type touched" scenario that used to crash the SKObject static-constructor
+    eager-initialization cascade. Keeping it in its own assembly is what guarantees
+    the ordering — do not add other tests or types that touch SkiaSharp here.
+  -->
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);net48</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Tests.SingletonInit</RootNamespace>
+    <AssemblyName>SkiaSharp.Tests.SingletonInit</AssemblyName>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
+    <PackageReference Include="coverlet.msbuild" Version="10.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>

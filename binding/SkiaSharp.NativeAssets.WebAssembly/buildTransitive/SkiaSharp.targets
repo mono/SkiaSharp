@@ -10,9 +10,8 @@
     <Content Include="@(SkiaSharpStaticLibrary)" Visible="false" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!-- Include the GL symbol when running under net7 (https://github.com/dotnet/runtime/issues/76077) -->
     <WasmShellEmccExportedRuntimeMethod Include="GL" />
-    <!-- Include the emscripten_gl* symbols in net8 -->
+    <!-- Include the emscripten_gl* symbols -->
     <WasmShellExtraEmccFlags Include="-s USE_WEBGL2=1"/>
     <!-- Enable GLCtx when threading is available -->
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
@@ -30,15 +29,17 @@
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True'">
-    <!-- net6.0 (only has st and non-simd) -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\2.0.23\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0'))" />
-    <!-- net7.0 -->
-    <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.12\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '7.0'))" />
     <!-- net8.0 -->
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
     <!-- net9.0+ -->
     <NativeFileReference Include="$(SkiaSharpStaticLibraryPath)\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0'))" />
   </ItemGroup>
+
+  <!-- Error when targeting unsupported WASM TFMs -->
+  <Target Name="_SkiaSharpCheckWasmTfm" BeforeTargets="PrepareForBuild"
+          Condition="(('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') or ('$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly')) and '$(TargetFrameworkVersion)' != '' and '$(ShouldIncludeNativeSkiaSharp)' == 'True' and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '8.0'))">
+    <Error Text="SkiaSharp WebAssembly native assets require .NET 8.0 or later. Please update your project to target net8.0 or newer." />
+  </Target>
 
   <!-- Workaround for https://github.com/dotnet/runtime/issues/109289 -->
   <Target Name="_SkiaSharpRuntimeIssue109289Workaround" AfterTargets="_BrowserWasmWriteRspForLinking">

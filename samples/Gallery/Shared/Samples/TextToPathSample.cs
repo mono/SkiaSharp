@@ -26,10 +26,21 @@ public class TextToPathSample : CanvasSampleBase
 
 	public override string Title => "Text to Path";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 4, 27);
+
 	public override string Description =>
 		"Convert text to an SKPath using SKFont.GetTextPath, then compute the stroked outline with GetFillPath.";
 
-	public override string Category => SampleCategories.Text;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKFont.GetTextPath", "SKPaint.GetFillPath",
+		"SKTypeface", "SKTypeface.FromData", "SKData", "SKPath",
+		"SKFont.MeasureText",
+		"SKCanvas.DrawPath", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
+	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -95,7 +106,7 @@ public class TextToPathSample : CanvasSampleBase
 				Color = SKColors.Black.WithAlpha(40),
 				IsAntialias = true,
 			};
-			canvas.DrawText(text, x, y, font, textPaint);
+			canvas.DrawText(text, x, y, SKTextAlign.Left, font, textPaint);
 		}
 
 		// Draw the glyph outlines (the raw text path)
@@ -152,7 +163,7 @@ public class TextToPathSample : CanvasSampleBase
 			IsAntialias = true,
 		};
 		var info = $"Path points: {textPath.PointCount}   Text size: {textSize:F0}   Stroke: {strokeWidth:F1}";
-		canvas.DrawText(info, 12, height - 12, infoFont, infoPaint);
+		canvas.DrawText(info, 12, height - 12, SKTextAlign.Left, infoFont, infoPaint);
 	}
 
 	protected override System.Threading.Tasks.Task OnInit()

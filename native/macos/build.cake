@@ -1,8 +1,8 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/osx"));
 
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/xcode.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/native/apple/xcode.cake"
 
 string GetDeploymentTarget(string arch)
 {
@@ -33,6 +33,7 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -40,7 +41,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DHAVE_ARC4RANDOM_BUF', '-stdlib=libc++' ] " +
             $"extra_ldflags=[ '-stdlib=libc++' ]");
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", "macosx", arch, properties: new Dictionary<string, string> {

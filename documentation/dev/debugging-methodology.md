@@ -188,7 +188,7 @@ grep "libs = " externals/skia/out/linux/arm64/obj/SkiaSharp.ninja
 
 # Check if library exists in cross-compile sysroot
 docker run --rm skiasharp-linux-gnu-cross-arm64 bash -c \
-  "ls -la /usr/aarch64-linux-gnu/lib/libfontconfig*"
+  "source /etc/skia-env && ls -la \${SYSROOT_ROOT}/usr/lib/aarch64-linux-gnu/libfontconfig*"
 ```
 
 **Common issue:** The `-dev` package provides a broken symlink (`libfoo.so -> libfoo.so.1.2.3`)
@@ -199,7 +199,7 @@ but the actual `.so.1.2.3` file is in the runtime package (`libfoo1`), not the d
 | Root Cause | Fix Location |
 |------------|--------------|
 | Library missing from linker flags | `native/linux/build.cake` or `externals/skia/third_party/BUILD.gn` |
-| Library missing from cross-compile sysroot | `scripts/Docker/debian/clang-cross/*/Dockerfile` |
+| Library missing from cross-compile sysroot | `scripts/infra/native/linux/docker/{glibc,glibc-x86,alpine,bionic}/Dockerfile` |
 | Indirect dependency (A→B→C missing) | Fix B's linkage or add C explicitly |
 
 ### Real Example: ARM64 fontconfig issue (#3369)

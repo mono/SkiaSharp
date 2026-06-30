@@ -7,7 +7,7 @@
     Performs ALL version updates required by Phase 6 of the update-skia skill:
     - scripts/VERSIONS.txt (milestone, increment, soname, assembly, file, all nuget lines)
     - cgmanifest.json (commitHash, version, chrome_milestone, upstream_merge_commit)
-    - scripts/azure-pipelines-variables.yml (if it exists)
+    - scripts/azure-templates-variables.yml (SKIASHARP_VERSION)
     - externals/skia/include/c/sk_types.h (verifies SK_C_INCREMENT is 0)
 
     Then runs the mandatory verification greps to catch any stale references.
@@ -105,59 +105,89 @@ foreach ($reg in $cgJson.registrations) {
 $cgJson | ConvertTo-Json -Depth 10 | Set-Content $cgPath
 Write-Host "  Updated cgmanifest.json" -ForegroundColor Green
 
-# --- Step 3: azure-pipelines-variables.yml ---
-$pipelinePath = Join-Path $repoRoot 'scripts/azure-pipelines-variables.yml'
-if (Test-Path $pipelinePath) {
-    Write-Host "`n--- Updating azure-pipelines-variables.yml ---" -ForegroundColor Yellow
-    $pipelineContent = Get-Content $pipelinePath -Raw
-    $pipelineContent = $pipelineContent -replace "$Current", "$Target"
-    Set-Content $pipelinePath $pipelineContent -NoNewline
-    Write-Host "  Updated azure-pipelines-variables.yml" -ForegroundColor Green
-} else {
-    Write-Host "`n--- scripts/azure-pipelines-variables.yml not found (skipping) ---" -ForegroundColor DarkGray
+# --- Step 3: azure-templates-variables.yml (SKIASHARP_VERSION) ---
+# This must match the SkiaSharp nuget version in VERSIONS.txt. It is a separate,
+# compile-time constant used by the BUILD_NUMBER counter, so it cannot be derived
+# dynamically and must be bumped here too.
+$targetNuget = "$currentMajor.$Target.0"
+$pipelinePath = Join-Path $repoRoot 'scripts/azure-templates-variables.yml'
+if (-not (Test-Path $pipelinePath)) {
+    Write-Error "Expected $pipelinePath not found. If the file was renamed, update this script (Step 3) and the verification gate below."
 }
+Write-Host "`n--- Updating azure-templates-variables.yml ---" -ForegroundColor Yellow
+$pipelineContent = Get-Content $pipelinePath -Raw
+$pipelineContent = $pipelineContent -replace "(SKIASHARP_VERSION:\s*)$currentMajor\.$Current\.\d+", "`${1}$targetNuget"
+Set-Content $pipelinePath $pipelineContent -NoNewline
+Write-Host "  Updated SKIASHARP_VERSION -> $targetNuget" -ForegroundColor Green
 
-# --- Step 4: Verify SK_C_INCREMENT ---
-Write-Host "`n--- Verifying SK_C_INCREMENT ---" -ForegroundColor Yellow
+# --- Step 4: Reset and verify SK_C_INCREMENT ---
+Write-Host "`n--- Checking SK_C_INCREMENT ---" -ForegroundColor Yellow
 $skTypesPath = Join-Path $repoRoot 'externals/skia/include/c/sk_types.h'
-$incrementLine = Select-String -Path $skTypesPath -Pattern 'SK_C_INCREMENT'
-if ($incrementLine -match 'SK_C_INCREMENT\s+0') {
-    Write-Host "  SK_C_INCREMENT is 0" -ForegroundColor Green
+if ($Current -ne $Target) {
+    Write-Host "  Milestone change (m$Current -> m$Target) — resetting SK_C_INCREMENT to 0" -ForegroundColor Yellow
+    $skTypesContent = Get-Content $skTypesPath -Raw
+    $skTypesContent = $skTypesContent -replace '(#define\s+SK_C_INCREMENT\s+)\d+', '${1}0'
+    Set-Content $skTypesPath $skTypesContent -NoNewline
+    Write-Host "  SK_C_INCREMENT reset to 0" -ForegroundColor Green
 } else {
-    Write-Error "SK_C_INCREMENT is NOT 0 — reset it to 0 in $skTypesPath"
+    $incrementLine = Select-String -Path $skTypesPath -Pattern 'SK_C_INCREMENT'
+    if ($incrementLine -match 'SK_C_INCREMENT\s+0') {
+        Write-Host "  SK_C_INCREMENT is 0" -ForegroundColor Green
+    } else {
+        Write-Error "SK_C_INCREMENT is NOT 0 — reset it to 0 in $skTypesPath"
+    }
 }
 
 # --- Step 5: Mandatory Verification ---
 Write-Host "`n=== Verification ===" -ForegroundColor Cyan
 
-$staleVersions = Select-String -Path $versionsPath -Pattern "$Current" |
-    Where-Object { $_.Line -notmatch '^\s*#' -and $_.Line -notmatch 'HarfBuzz' }
-
-$staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
-
-$failures = @()
-
-if ($staleVersions) {
-    $failures += "VERSIONS.txt still contains '$Current':"
-    foreach ($match in $staleVersions) {
-        $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
-    }
-}
-
-if ($staleCgmanifest) {
-    $failures += "cgmanifest.json still contains '$Current':"
-    foreach ($match in $staleCgmanifest) {
-        $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
-    }
-}
-
-if ($failures.Count -gt 0) {
-    Write-Host "`n❌ GATE FAILED — stale references found:" -ForegroundColor Red
-    foreach ($f in $failures) { Write-Host "  $f" -ForegroundColor Red }
-    exit 1
+if ($Current -eq $Target) {
+    Write-Host "  Same-milestone sync (m$Current -> m$Target) — skipping stale-reference check" -ForegroundColor Yellow
+    Write-Host "  (only commitHash/upstream_merge_commit were updated)" -ForegroundColor Yellow
+    Write-Host "`n✅ GATE PASSED — same-milestone sync, version numbers unchanged" -ForegroundColor Green
 } else {
-    Write-Host "`n✅ GATE PASSED — no stale milestone references found" -ForegroundColor Green
-    Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
-    Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
-    Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
+    $staleVersions = Select-String -Path $versionsPath -Pattern "$Current" |
+        Where-Object { $_.Line -notmatch '^\s*#' -and $_.Line -notmatch 'HarfBuzz' }
+
+    $staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
+
+    # Positive assertion: the SKIASHARP_VERSION must end up EXACTLY at the target
+    # nuget version. A stale-only check (looking for $Current) would pass if the
+    # value were stuck on a different milestone (e.g. 4.146.0) or carried a suffix
+    # (e.g. 4.147.0-preview.2 -> 4.148.0-preview.2 no longer contains 147).
+    $pipelineNow = Get-Content $pipelinePath -Raw
+    $pipelineVerMatch = [regex]::Match($pipelineNow, 'SKIASHARP_VERSION:\s*(?<ver>\S+)')
+    $pipelineVer = if ($pipelineVerMatch.Success) { $pipelineVerMatch.Groups['ver'].Value } else { '<missing>' }
+
+    $failures = @()
+
+    if ($staleVersions) {
+        $failures += "VERSIONS.txt still contains '$Current':"
+        foreach ($match in $staleVersions) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($staleCgmanifest) {
+        $failures += "cgmanifest.json still contains '$Current':"
+        foreach ($match in $staleCgmanifest) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($pipelineVer -ne $targetNuget) {
+        $failures += "azure-templates-variables.yml SKIASHARP_VERSION is '$pipelineVer', expected '$targetNuget' (must match VERSIONS.txt nuget version)"
+    }
+
+    if ($failures.Count -gt 0) {
+        Write-Host "`n❌ GATE FAILED — stale references found:" -ForegroundColor Red
+        foreach ($f in $failures) { Write-Host "  $f" -ForegroundColor Red }
+        exit 1
+    } else {
+        Write-Host "`n✅ GATE PASSED — no stale milestone references found" -ForegroundColor Green
+        Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
+        Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
+        Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
+        Write-Host "  azure-templates-variables.yml: SKIASHARP_VERSION = $targetNuget" -ForegroundColor Green
+    }
 }

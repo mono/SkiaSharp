@@ -166,6 +166,7 @@ namespace SkiaSharp
 				SKColorType.R8Unorm => GRGlSizedFormat.R8,
 				SKColorType.RgbF16F16F16x => 0,
 				SKColorType.R16Unorm => GRGlSizedFormat.R16,
+				SKColorType.RF16 => GRGlSizedFormat.R16F,
 				_ => throw new ArgumentOutOfRangeException (nameof (colorType), $"Unknown color type: '{colorType}'"),
 			};
 	}
@@ -289,5 +290,29 @@ namespace SkiaSharp
 
 		// Compressed texture sized formats
 		internal const uint COMPRESSED_ETC1_RGB8 = 0x8D64;
+	}
+
+	[Obsolete ("Use GRVkYcbcrConversionInfo instead.")]
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GrVkYcbcrConversionInfo
+	{
+		private GRVkYcbcrConversionInfo inner;
+
+		public UInt32 Format { readonly get => inner.Format; set => inner.Format = value; }
+		public UInt64 ExternalFormat { readonly get => inner.ExternalFormat; set => inner.ExternalFormat = value; }
+		public UInt32 YcbcrModel { readonly get => inner.YcbcrModel; set => inner.YcbcrModel = value; }
+		public UInt32 YcbcrRange { readonly get => inner.YcbcrRange; set => inner.YcbcrRange = value; }
+		public UInt32 XChromaOffset { readonly get => inner.XChromaOffset; set => inner.XChromaOffset = value; }
+		public UInt32 YChromaOffset { readonly get => inner.YChromaOffset; set => inner.YChromaOffset = value; }
+		public UInt32 ChromaFilter { readonly get => inner.ChromaFilter; set => inner.ChromaFilter = value; }
+		public UInt32 ForceExplicitReconstruction { readonly get => inner.ForceExplicitReconstruction; set => inner.ForceExplicitReconstruction = value; }
+		public GRVkYcbcrComponents Components { readonly get => inner.Components; set => inner.Components = value; }
+		[Obsolete ("FormatFeatures is no longer supported in the native API.")]
+		public UInt32 FormatFeatures { readonly get => 0; set { } }
+		public bool SamplerFilterMustMatchChromaFilter { readonly get => inner.SamplerFilterMustMatchChromaFilter; set => inner.SamplerFilterMustMatchChromaFilter = value; }
+		public bool SupportsLinearFilter { readonly get => inner.SupportsLinearFilter; set => inner.SupportsLinearFilter = value; }
+
+		public static implicit operator GRVkYcbcrConversionInfo (GrVkYcbcrConversionInfo value) => value.inner;
+		public static implicit operator GrVkYcbcrConversionInfo (GRVkYcbcrConversionInfo value) => new GrVkYcbcrConversionInfo { inner = value };
 	}
 }

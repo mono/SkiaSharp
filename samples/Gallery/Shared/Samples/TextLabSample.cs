@@ -22,10 +22,20 @@ public class TextLabSample : CanvasSampleBase
 
 	public override string Title => "Text Lab";
 
+	public override DateOnly? DateAdded => new DateOnly(2026, 3, 27);
+
 	public override string Description =>
 		"Explore text rendering with font selection, alignment, size, and metric visualization.";
 
-	public override string Category => SampleCategories.Text;
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKFontMetrics", "SKFont.MeasureText",
+		"SKPathEffect", "SKPathEffect.CreateDash",
+		"SKCanvas.DrawText", "SKCanvas.DrawRect", "SKCanvas.DrawLine",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
+	public override string Category => SampleManager.Text;
 
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
@@ -169,11 +179,11 @@ public class TextLabSample : CanvasSampleBase
 				IsAntialias = true,
 			};
 			labelPaint.Color = SKColors.Blue;
-			canvas.DrawText("baseline", 4, y - 4, labelFont, labelPaint);
+			canvas.DrawText("baseline", 4, y - 4, SKTextAlign.Left, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Green;
-			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, labelFont, labelPaint);
+			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, SKTextAlign.Left, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Orange;
-			canvas.DrawText("descent", 4, y + metrics.Descent - 4, labelFont, labelPaint);
+			canvas.DrawText("descent", 4, y + metrics.Descent - 4, SKTextAlign.Left, labelFont, labelPaint);
 		}
 	}
 

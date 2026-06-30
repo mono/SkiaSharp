@@ -1,13 +1,10 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 
-#load "../../scripts/cake/native-shared.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
 
 string SUPPORT_GPU_VAR = Argument("supportGpu", EnvironmentVariable("SUPPORT_GPU") ?? "true").ToLower();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
-
-string SUPPORT_VULKAN_VAR = Argument("supportVulkan", EnvironmentVariable("SUPPORT_VULKAN") ?? "true");
-bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() == "true";
 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
@@ -94,9 +91,14 @@ Task("libSkiaSharp")
         // Bionic (Android NDK) builds need SK_BUILD_FOR_UNIX to prevent the
         // NDK's __ANDROID__ define from suppressing SkDebugf (stdio port).
         // Fontconfig is not available on Bionic.
+        // The Android NDK ships libc++ as both static and shared — without
+        // -static-libstdc++ clang would pick libc++_shared.so as a runtime dep
+        // that we don't bundle. The .NET glibc/musl cross-images ship libc++
+        // static-only, so this flag is a no-op there but doesn't hurt.
         var isBionic = VARIANT.ToLower().StartsWith("bionic");
         var bionicDefine = isBionic ? ", '-DSK_BUILD_FOR_UNIX'" : "";
         var bionicArgs = isBionic ? "skia_use_fontconfig=false " : "";
+        var staticLibcxx = isBionic ? ", '-static-libstdc++'" : "";
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
@@ -104,6 +106,7 @@ Task("libSkiaSharp")
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
@@ -112,11 +115,11 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
+            $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
@@ -140,6 +143,9 @@ Task("libHarfBuzzSharp")
         if (Skip(arch)) return;
 
         var skiaArch = GetSkiaArch(arch);
+        var isBionicHB = VARIANT.ToLower().StartsWith("bionic");
+        var bionicDefineHB = isBionicHB ? ", '-DSK_BUILD_FOR_UNIX'" : "";
+        var staticLibcxxHB = isBionicHB ? ", '-static-libstdc++'" : "";
 
         var soname = GetVersion("HarfBuzz", "soname");
         var map = MakeAbsolute((FilePath)"libHarfBuzzSharp/libHarfBuzzSharp.map");
@@ -148,9 +154,10 @@ Task("libHarfBuzzSharp")
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
+            $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ {(VARIANT.ToLower().StartsWith("bionic") ? "'-DSK_BUILD_FOR_UNIX'" : "")} ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
+            $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);

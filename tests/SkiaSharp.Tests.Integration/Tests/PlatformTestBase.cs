@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 
@@ -10,6 +9,14 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public abstract class PlatformTestBase : IDisposable
 {
+    /// <summary>
+    /// Base target framework the generated temp projects build against. Passed to
+    /// <c>dotnet new … -f</c> so the template-generated TFMs stay pinned to the .NET 10 band even
+    /// when a newer SDK (e.g. a net11.0 preview) is installed on the machine. Platform-suffixed
+    /// MAUI TFMs (e.g. net10.0-android) derive from this.
+    /// </summary>
+    protected const string BaseFramework = "net10.0";
+
     protected readonly ITestOutputHelper Output;
     protected readonly string TestDir;
     protected readonly string SkiaVersion;
@@ -46,12 +53,18 @@ public abstract class PlatformTestBase : IDisposable
             </configuration>
             """);
         
-        // Write global.json to allow latest SDK (prevents inheriting repo's .NET 8 restriction)
+        // Write global.json to pin the temp projects to the .NET 10 SDK band. The MAUI/console
+        // temp projects are generated outside the repo (in TempPath), so without this they would
+        // resolve to the highest installed SDK — including .NET 11 previews — which makes
+        // `dotnet new maui` emit net11.0-* TFMs that don't match the net10.0-* frameworks the
+        // harness builds (causing NETSDK1005 "doesn't have a target for net10.0-*"). Stay within
+        // 10.0.x and never roll forward to a prerelease major.
         File.WriteAllText(Path.Combine(TestDir, "global.json"), """
             {
               "sdk": {
-                "version": "8.0.0",
-                "rollForward": "latestMajor"
+                "version": "10.0.100",
+                "rollForward": "latestFeature",
+                "allowPrerelease": false
               }
             }
             """);
@@ -203,14 +216,19 @@ public abstract class PlatformTestBase : IDisposable
         
         using var process = Process.Start(psi)!;
         
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        // Start draining both pipes immediately so neither can fill and deadlock,
+        // then enforce the timeout via WaitForExit while the reads are in flight.
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
         
         if (!process.WaitForExit(timeoutSeconds * 1000))
         {
-            process.Kill();
+            try { process.Kill(true); } catch { }
             throw new TimeoutException($"Command timed out after {timeoutSeconds}s");
         }
+        
+        var output = await outputTask;
+        var error = await errorTask;
         
         Output.WriteLine($"Process exited with code {process.ExitCode}");
 

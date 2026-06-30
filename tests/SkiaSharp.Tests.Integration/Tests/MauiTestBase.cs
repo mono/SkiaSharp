@@ -2,7 +2,6 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace SkiaSharp.Tests.Integration;
@@ -128,7 +127,8 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     private async Task RunMauiTest(string canvasView, string eventArgsType)
     {
         var skipReason = CanRunOnCurrentMachine();
-        Skip.If(skipReason != null, skipReason);
+        if (skipReason != null)
+            Assert.Skip(skipReason);
         
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in MAUI {PlatformName} ({canvasView})");
         
@@ -170,8 +170,11 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var projectDir = Path.Combine(TestDir, projectName);
         var relativeProjectDir = projectName;  // Relative to TestDir
         
-        // Create project (run from TestDir to pick up global.json)
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir}");
+        // Create project (run from TestDir to pick up global.json). Pin the template to the shared
+        // BaseFramework (net10.0) so the generated TFMs always match the framework the harness
+        // builds below — the installed MAUI template can otherwise default to a newer (e.g. net11.0)
+        // framework even when the SDK is pinned, since its default comes from the MAUI workload.
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {BaseFramework}");
 
         // Add SkiaSharp package (run from TestDir)
         await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");

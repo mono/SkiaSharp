@@ -1,119 +1,289 @@
 ---
-description: "Update the upcoming version's release notes when PRs merge to main."
+description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
+# TRIGGERS — main is the single source of truth for EVERY version/branch.
+# Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
+# runs the workflow copy that lives on THAT ref, not main's, so those triggers can
+# only ever run a stale per-branch copy (exactly the duplicate-PR problem we removed).
+# Instead, main's run walks every release/* ref and reads git tags itself, so a new
+# stable tag or release-branch commit is picked up by the next daily run with no
+# per-branch/tag workflow needed. Want it instant after tagging? Dispatch manually.
 on:
   push:
     branches: [main]
     paths-ignore:
-      - "documentation/docfx/releases/*.md"
-      - ".github/**"
+      - "documentation/docfx/releases/**"
+      # The pipeline rewrites this PR-author cache and commits it inside its own
+      # docs PR. It lives outside the releases tree, so without this entry merging
+      # that PR re-triggers the whole pipeline on its own commit (a wasted heavy
+      # prepare run). Ignore it: a change to ONLY the cache never needs a docs run,
+      # and the daily cron still picks the cache up. A push that also touches real
+      # sources still triggers (paths-ignore skips only when ALL files match).
+      - "scripts/infra/docs/pr-authors.json"
+  schedule:
+    # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
+    # release-branch commits (unreleased deltas), and newly published NuGets
+    # within ~24h. Quiet days are cheap: the generators are deterministic, so an
+    # unchanged run yields an empty Prepare patch and the agent + PR are skipped
+    # (see the `prepare` job's `has_changes` output and the top-level `if:`).
+    - cron: "0 0 * * *"
   workflow_dispatch:
+    inputs:
+      source_branch:
+        description: "Branch to generate from (its scripts + content). Defaults to main; override to validate a feature branch's pipeline before merge, or to refresh immediately after tagging instead of waiting for the daily run."
+        required: false
+        default: "main"
+        type: string
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: update-release-notes
   cancel-in-progress: true
-timeout-minutes: 10
+# The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
+# in its own `prepare` job (below), so the agent's own budget is modest.
+timeout-minutes: 60
 permissions:
   contents: read
+# The agent replays the Prepare patch onto a clean main checkout and polishes; it
+# needs main's history for create-pull-request's branch operations.
+checkout:
+  - fetch-depth: 0
+# AGENT GATE — only polish + open a PR when Prepare actually changed something.
+# The `prepare` job emits `has_changes` (its patch is non-empty); on a no-op run
+# it is 'false', this `if:` is false, and the agent job is skipped — which also
+# skips `safe_outputs`, so no spurious PR is opened and no agent runtime is spent.
+# The agent still `needs:` activation + prepare, so a skipped need (e.g. activation
+# gated off) also skips the agent the usual way.
+if: needs.prepare.outputs.has_changes == 'true'
+# ---------------------------------------------------------------------------
+# PREPARE — a dedicated, disk-managed, VERBOSE job on its own runner.
+#
+# The deterministic generators (Cake API-diff over EVERY published NuGet of BOTH
+# families incl. prereleases + Python raw data over every branch) are far too
+# disk- and time-heavy to share the agent runner: that combination exhausted the
+# hosted runner's disk on the first post-merge run (issue #4191). So Prepare gets
+# its OWN job with its OWN timeout and a free-disk-space step, runs verbose (all
+# progress visible in the job log), and hands its result to the agent as an
+# artifact — a git patch of every working-tree change plus the files-to-polish
+# list. See documentation/dev/release-notes-and-api-diffs.md §2.2/§2.3.
+# ---------------------------------------------------------------------------
+jobs:
+  prepare:
+    name: Prepare (api diffs + release-notes raw data)
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    outputs:
+      # true iff Prepare's patch is non-empty (something actually changed). The
+      # top-level `if:` uses this to skip the agent + PR on no-op runs.
+      has_changes: ${{ steps.package.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+        with:
+          fetch-depth: 0
+      - name: Free up disk space
+        run: |
+          set -euo pipefail
+          echo "Disk before cleanup:"; df -h /
+          # Drop large preinstalled toolchains we never use here so the NuGet
+          # diff (every package of both families) has room. setup-dotnet below
+          # reinstalls the pinned SDK after we clear the preinstalled one.
+          sudo rm -rf /usr/local/lib/android /opt/ghc /usr/local/.ghcup \
+                      /usr/share/swift /usr/share/dotnet/sdk 2>/dev/null || true
+          sudo docker image prune --all --force 2>/dev/null || true
+          echo "Disk after cleanup:"; df -h /
+      - name: Start from a clean source tree
+        env:
+          SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
+        run: |
+          set -euo pipefail
+          # Make EVERY release/* branch and tag available locally. The generators
+          # walk all release/* refs (release-notes deltas, cross-minor rollups) and
+          # read git tags to decide stable-vs-prerelease (_version_has_stable_tag):
+          # a daily run is the moment a freshly-pushed vX.Y.Z tag flips its page to
+          # "stable", so fetch tags explicitly (belt-and-suspenders over checkout's
+          # fetch-depth:0) and force-update any moved refs.
+          git fetch origin --tags --force --quiet
+          # Release notes/api diffs target main, so push/schedule runs always
+          # generate from main (a push to release/* is a content *source*, not the
+          # PR base). A manual dispatch may point SOURCE_BRANCH at a feature branch
+          # to validate its pipeline on CI before merge.
+          git fetch origin "$SOURCE_BRANCH" --quiet
+          git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
+      - name: Setup .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          global-json-file: global.json
+      - name: Generate (verbose)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # Single entry point: Cake (API diffs) then Python (raw data), both
+          # VERBOSE. No args = --all; the "Files to polish" list lands at its
+          # default location, output/files-to-polish.txt.
+          bash .agents/skills/release-notes/scripts/generate.sh
+      - name: Package Prepare output
+        id: package
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/prepare-out"
+          # Capture EVERY working-tree change (the releases tree, the co-release
+          # map sidecar, the author cache, and any deletions/pruning) as one patch
+          # so the agent can replay it onto a clean main checkout.
+          git add -A
+          git diff --cached --binary > "$RUNNER_TEMP/prepare-out/prepare.patch"
+          git reset -q
+          cp output/files-to-polish.txt "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
+          echo "Patch size: $(wc -c < "$RUNNER_TEMP/prepare-out/prepare.patch") bytes"
+          echo "Files to polish:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
+          # Drive the top-level agent `if:`: a non-empty patch means something
+          # changed and the agent should polish + open the PR; an empty patch is a
+          # no-op run, so skip the agent and the PR entirely.
+          if [ -s "$RUNNER_TEMP/prepare-out/prepare.patch" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "Prepare produced an empty patch — agent and PR will be skipped."
+          fi
+      - name: Upload Prepare output
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v4.4.3
+        with:
+          name: release-notes-prepare
+          path: ${{ runner.temp }}/prepare-out
+          retention-days: 1
+          if-no-files-found: error
+# ---------------------------------------------------------------------------
+# POLISH — the agent restores Prepare's output, then edits prose only.
+# These steps run in the agent job after its checkout and before the engine.
+# ---------------------------------------------------------------------------
+pre-agent-steps:
+  - name: Start from a clean source tree
+    env:
+      SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
+    run: |
+      set -euo pipefail
+      mkdir -p /tmp/gh-aw
+      # Match the prepare job's source so its patch applies cleanly.
+      git fetch origin "$SOURCE_BRANCH" --quiet
+      git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
+  - name: Download Prepare output
+    uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8
+    with:
+      name: release-notes-prepare
+      path: /tmp/gh-aw/prepare-in
+  - name: Restore Prepare output
+    run: |
+      set -euo pipefail
+      # The skill always reads output/files-to-polish.txt — put it back at that same
+      # path so the agent's Polish phase is identical to a manual run.
+      mkdir -p output
+      cp /tmp/gh-aw/prepare-in/files-to-polish.txt output/files-to-polish.txt
+      # Replay Prepare's working-tree changes; an empty patch = nothing changed.
+      if [ -s /tmp/gh-aw/prepare-in/prepare.patch ]; then
+        git apply --3way --whitespace=nowarn /tmp/gh-aw/prepare-in/prepare.patch
+        echo "Applied Prepare patch."
+      else
+        echo "Prepare produced no changes; nothing to apply."
+      fi
 tools:
-  bash: ["python3", "gh", "git", "cat", "grep"]
+  # The agent reads the restored files, rewrites prose, then commits and opens the
+  # PR. It must NOT re-run the scripts (they already ran in the prepare job) — no
+  # python3 here on purpose. Keep an explicit allowlist: it is the only thing that
+  # stops the agent shelling out to anything else. Dropping the bash block entirely
+  # makes gh-aw compile to `--allow-all-tools` (strictly worse). No sed/awk: they
+  # rewrite files in place, bypassing the edit tool.
+  #
+  # git is REQUIRED, not optional: the create-pull-request safe-output is
+  # commit-based — it errors with "No changes to commit" unless the agent has run
+  # `git add` + `git commit` first (and gh-aw force-injects the git suite anyway).
+  # The agent MUST commit its work before calling create_pull_request — see the
+  # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
+  # mistake: the agent created a branch but never committed, so gh-aw's patch
+  # generator fell back to diffing months of history and exceeded the PR file cap.
+  bash: ["cat", "grep", "sort", "head", "tail", "git"]
   edit:
-network:
-  allowed:
-    - defaults
+# The agent has no network: it only polishes prose from already-generated files.
+network: {}
 safe-outputs:
   create-pull-request:
     title-prefix: "[docs] "
     labels: [documentation]
     draft: false
+    allowed-base-branches: [main]
+    preserve-branch-name: true
+    recreate-ref: true
 ---
 
-# Update Upcoming Release Notes
+# Sync - Release Notes & API Diffs
 
-When code merges to main, update the upcoming version's release notes page with a
-polished summary of all changes since the last release.
+This is the single pipeline that keeps the website release notes **and** the API
+api diffs current — there is no separate api-diff workflow. The deterministic
+generators run in a dedicated **`prepare`** job, the agent then polishes prose,
+and **one** pull request ships everything.
 
-## Step 1 — Set up
+## What already ran: the Prepare phase (do NOT re-run)
 
-Determine the upcoming version and ensure the file exists:
+Before you (the agent) started, a **separate `prepare` job** ran the skill's
+**Prepare** phase on its own disk-managed runner — the single script
+`.agents/skills/release-notes/scripts/generate.sh`, which in turn:
 
-```bash
-grep 'SKIASHARP_VERSION:' scripts/azure-templates-variables.yml
-```
+1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
+   `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
+2. ran **Python** (`generate-release-notes.py --all`) to regenerate every version
+   page's raw-data block, write the deterministic page→API-diff links, and write
+   the **"Files to polish"** list.
 
-Extract the version number (e.g., `4.133.0`). Then ensure the version file and TOC exist:
+The `prepare` job uploaded its complete working-tree change as a patch plus that
+list as an artifact, and a host step **already restored both** into this checkout:
+the regenerated files are on disk, and the list is at
+`output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet cake`, or the
+Python script** — they already ran. Your job is the Polish phase, then committing
+and opening the PR.
 
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --update-toc
-```
+> This agent job is gated on Prepare having actually changed something
+> (`prepare.outputs.has_changes`). A no-op run — where the deterministic
+> generators reproduced the existing tree byte-for-byte — is skipped *before* you
+> start, so when you are running there is always at least the regenerated Prepare
+> output on disk to commit.
 
-This creates `documentation/docfx/releases/{version}.md` if missing and regenerates
-`TOC.yml` and `index.md`. Read the version file to see its current content.
+## Your job: the Polish phase
 
-## Step 2 — Get raw change data
+Use the **release-notes skill**
+([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
+in its **unattended** mode: the Prepare phase already ran, so skip it and go straight
+to **Polish**.
 
-Fetch the list of changes since the last release:
+1. Read `output/files-to-polish.txt`. It lists exactly the pages under
+   `documentation/docfx/releases/` whose raw data changed this run (one
+   repo-relative path per line).
+2. If it is **empty**, make **no edits** and exit — leave any existing PR
+   untouched. No PR will be created.
+3. Otherwise, for **each** listed file, follow the skill: rewrite only the human
+   prose, keeping every script-owned region verbatim — the raw-data HTML comment
+   block, the `> **API changes**` link line, and the `## Links` entries. Never
+   hand-author API-diff or HarfBuzz links, never touch `TOC.yml`/`index.md`, and
+   never create, rename, or delete pages.
 
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --unreleased --output /tmp/unreleased-raw.md
-```
+## How the PR is made
 
-This uses git commit ancestry (not dates) to find all PRs on main that are not in the last
-release tag. Read `/tmp/unreleased-raw.md` to capture the raw content.
+`create-pull-request` is a **commit-based** safe-output: it turns your commit into
+the PR. It does **not** stage or commit for you. If you call it with an uncommitted
+working tree it returns *"No changes to commit"*, and gh-aw then falls back to
+diffing months of history (2000+ files, exceeding the PR file cap and failing the
+run). So once polishing is done you **must** commit everything yourself, then create
+the PR:
 
-## Step 3 — Read the template
+1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
+2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
+   (Cake API-diff tree + Python raw data) **and** your prose edits.
+3. `git commit -m "docs: regenerate API diffs and polish release notes"`.
+4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
+   the `bot/release-notes` branch.
 
-Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished release
-notes page. Use it as the style reference — match its structure, tone, and formatting.
-
-The upcoming version adapts the template for unreleased status:
-- Use `> **Upcoming release** · In development · Not yet available on NuGet` as the header
-- Omit the Links section (no NuGet, no changelog, no API diff yet)
-- Omit Preview sections (no tagged previews yet)
-- Keep everything else: Highlights, Breaking Changes, New Features, Security, Bug Fixes,
-  Platform Support, Community Contributors
-
-## Step 4 — Write polished content
-
-Rewrite the raw PR list into polished release notes following the template:
-
-1. **Highlights** — 1-3 sentences. What's the story of this version? Lead with the biggest
-   changes. Mention community contributors by linked name.
-
-2. **Skia engine** — The version number encodes the Skia milestone (e.g., 4.**133**.0 = Skia m133).
-   Search for the merged bump PR: `gh pr list --repo mono/SkiaSharp --state merged --search "bump skia milestone {N}" --json number,title --limit 1`
-   If found, list it first under an **Engine** category. If the raw data already contains
-   a "Bump skia" PR, use that directly.
-
-3. **Categorize features** — Group by what they affect. Use sub-headers like:
-   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
-
-4. **Community contributors** — Anyone not `@mattleibow`. Mark with ❤️ inline AND list
-   in a Contributors table. **ALWAYS** link usernames: `[@user](https://github.com/user)`.
-   Never write bare `@user` anywhere.
-
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow changes,
-   skill file edits. If many, mention as: "Plus several CI and documentation improvements."
-
-6. **Breaking changes** — If any PR has a `breaking` label or "BREAKING" in the title,
-   list under `### ⚠️ Breaking Changes` right after Highlights.
-
-7. **PR links** — Every item links to its PR: `([#NNN](url))`.
-
-If there are no user-facing changes, write: `*No user-facing changes yet.*`
-
-## Step 5 — Write the version file
-
-Use the `edit` tool to **replace the entire content** of `documentation/docfx/releases/{version}.md`
-with the polished release notes from Step 4.
-
-The file should follow the template structure exactly — title, blockquote header
-(`> **Upcoming release** · In development · Not yet available on NuGet`),
-then the polished sections (Highlights, Breaking Changes, New Features, etc.).
-
-No fence markers or placeholders needed — the workflow overwrites the whole file each run.
-
-## Step 6 — Create or update the pull request
-
-Always use `dev/upcoming-release-notes` as the branch name when creating the pull request.
-This ensures each workflow run updates the **same PR** instead of opening a new one.
+Commit **once**, at the very end, after every edit is done — not incrementally.
+Because the job only starts when Prepare produced changes, the working tree is
+never completely clean here, so you will always commit and open exactly one PR.
+(As a defensive fallback only: if `git status` somehow shows no changes at all,
+make no edits, run no git, and exit — no PR is created.)

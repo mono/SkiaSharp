@@ -21,7 +21,9 @@ description: >
 
 Verify SkiaSharp packages work correctly before publishing.
 
-⚠️ **NO UNDO:** This is step 2 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ **NO UNDO:** This is **Step 3 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → **Step 3 (this skill)** → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## CRITICAL: ANY FAIL IS TOTAL FAIL
 
@@ -58,25 +60,19 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 
 ## Step 1: Check CI Status
 
-Before testing, verify CI builds have completed. Check commit statuses on the release branch head:
+Before testing, verify CI builds have completed using the **release-status** skill:
 
 ```bash
-gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | \(.state) | \(.description // "no desc") | \(.created_at)"'
+python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-### Required Pipelines
+**Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
+the pipeline that signs and publishes packages to the internal feed.
 
-| Pipeline | Required | Notes |
-|----------|----------|-------|
-| `SkiaSharp-Native` | ✅ Must pass | Builds native binaries |
-| `SkiaSharp` | ⚠️ May not exist publically | Builds managed code & publishes packages |
-| `SkiaSharp-Tests` | ⚠️ May fail or not exist publically | Sometimes flaky on release branches - warn user but don't block |
+`SkiaSharp-Tests` (ID 15756) should pass but does not block testing/publishing.
 
-**Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
-
-### Understanding Multiple Statuses
-
-The API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
+See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
+manual queries, and troubleshooting.
 
 ### Extracting NuGet Version
 
@@ -237,19 +233,27 @@ dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
 
 ### Test Commands
 
+> **Note:** This project uses **Microsoft.Testing.Platform (MTP)** with xUnit v3 (since #4143).
+> The legacy VSTest `--filter "FullyQualifiedName~..."` syntax is **silently ignored** under MTP
+> and runs ALL tests. Use the MTP filter args after the `--` separator instead:
+> `--filter-class`, `--filter-method`, `--filter-namespace` (and `--filter-not-class`, etc.),
+> with `*` wildcards. MSBuild `-p:` properties (e.g. `-p:SkiaSharpVersion=`, `-p:iOSDevice=`)
+> must stay BEFORE the `--`; only the test-platform filter args go AFTER it.
+
 ```bash
 # Run by category
-dotnet test --filter "FullyQualifiedName~SmokeTests" ...
-dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
-dotnet test --filter "FullyQualifiedName~LinuxConsoleTests" ...
-dotnet test --filter "FullyQualifiedName~BlazorTests" ...
-dotnet test --filter "FullyQualifiedName~MauiiOSTests" ... -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2"
-dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
+dotnet test ... -- --filter-class "*SmokeTests"
+dotnet test ... -- --filter-class "*ConsoleTests"
+dotnet test ... -- --filter-class "*LinuxConsoleTests"
+dotnet test ... -- --filter-class "*BlazorTests"
+dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
+dotnet test ... -- --filter-class "*MauiMacCatalystTests"
 
 # Android: specify device ID and expected API level for validation
-dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
+dotnet test ... \
   -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23"
+  -p:AndroidApiLevel="23" \
+  -- --filter-class "*MauiAndroidTests"
 ```
 
 ### Android Emulator Workflow
@@ -282,11 +286,12 @@ dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
    DEVICE_ID=$(adb devices | grep emulator | awk '{print $1}')
    API_LEVEL=$(adb -s $DEVICE_ID shell getprop ro.build.version.sdk | tr -d '\r')
    
-   dotnet test --filter "FullyQualifiedName~MauiAndroidTests" \
+   dotnet test \
      -p:AndroidDeviceId="$DEVICE_ID" \
      -p:AndroidApiLevel="$API_LEVEL" \
      -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version}
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -- --filter-class "*MauiAndroidTests"
    ```
 
 4. **Shut down emulator before next test:**

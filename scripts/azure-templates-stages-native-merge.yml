@@ -11,6 +11,7 @@ stages:
       - native_macos
       - native_linux
       - native_wasm
+      - native_tizen
     jobs:
 
       - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Artifacts
@@ -25,8 +26,8 @@ stages:
             - name: native_android_arm_windows
             - name: native_android_arm64_windows
             # Tizen
-            - name: native_tizen_x64_windows
-            - name: native_tizen_arm64_windows
+            - name: native_tizen_x64_linux
+            - name: native_tizen_arm64_linux
             # Win32
             - name: native_win32_x86_windows
             - name: native_win32_x64_windows
@@ -75,12 +76,6 @@ stages:
             - name: native_linux_x64_bionic_linux
             - name: native_linux_arm64_bionic_linux            
             # WASM
-            - name: native_wasm_2_0_23_linux
-            - name: native_wasm_2_0_6_linux
-            - name: native_wasm_3_1_12_linux
-            - name: native_wasm_3_1_12_SIMD_linux
-            - name: native_wasm_3_1_12_Threading_linux
-            - name: native_wasm_3_1_12_Threading_SIMD_linux
             - name: native_wasm_3_1_34_linux
             - name: native_wasm_3_1_34_SIMD_linux
             - name: native_wasm_3_1_34_SIMD_Threading_linux
@@ -89,7 +84,6 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
-            - name: native_wasm_3_1_7_linux
 
       - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Linux Artifacts
         parameters:
@@ -129,12 +123,6 @@ stages:
           displayName: Merge Native WASM Artifacts
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
-            - name: native_wasm_2_0_23_linux
-            - name: native_wasm_2_0_6_linux
-            - name: native_wasm_3_1_12_linux
-            - name: native_wasm_3_1_12_SIMD_linux
-            - name: native_wasm_3_1_12_Threading_linux
-            - name: native_wasm_3_1_12_Threading_SIMD_linux
             - name: native_wasm_3_1_34_linux
             - name: native_wasm_3_1_34_SIMD_linux
             - name: native_wasm_3_1_34_SIMD_Threading_linux
@@ -143,7 +131,6 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
-            - name: native_wasm_3_1_7_linux
 
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts

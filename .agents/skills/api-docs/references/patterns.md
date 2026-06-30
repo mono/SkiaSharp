@@ -1,5 +1,7 @@
 # XML Documentation Patterns
 
+.NET XML documentation formatting rules. For SkiaSharp/HarfBuzz domain knowledge, see [skia-patterns.md](skia-patterns.md).
+
 Based on [official .NET API documentation guidelines](https://github.com/dotnet/dotnet-api-docs/wiki).
 
 ## Contents
@@ -12,6 +14,9 @@ Based on [official .NET API documentation guidelines](https://github.com/dotnet/
 - [Punctuation Exceptions](#punctuation-exceptions)
 - [Common Mistakes](#common-mistakes)
 - [Extension Methods](#extension-methods)
+- [Platform View Constructors](#platform-view-constructors)
+- [Rich Remarks and Examples](#rich-remarks-and-examples)
+- [Type-Level Documentation](#type-level-documentation)
 
 ## File Structure
 
@@ -91,6 +96,8 @@ Each type has its own XML file with this structure:
 
 ### Constructors
 
+Always open with the exact .NET phrase **"Initializes a new instance of the `<see cref>` class."** — use "struct" instead of "class" for value types. The type kind (class vs struct) is in the entry's `signature` field (e.g. `public readonly struct HBColor`). A shortened form like "Initializes a new `<see cref>` from a packed value" is a guideline violation.
+
 ```xml
 <!-- Class constructor -->
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPaint" /> class.</summary>
@@ -100,21 +107,28 @@ Each type has its own XML file with this structure:
 <param name="width">The width of the bitmap.</param>
 <param name="height">The height of the bitmap.</param>
 
-<!-- Struct constructor -->
+<!-- Struct constructor (note "struct", not "class") -->
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.SKPoint" /> struct.</summary>
 
 <!-- Abstract class constructor -->
 <summary>Called from constructors in derived classes to initialize the <see cref="T:SkiaSharp.SKObject" /> class.</summary>
+
+<!-- ❌ WRONG — omits "instance of the ... struct" (a real mistake from a past batch) -->
+<summary>Initializes a new <see cref="T:HarfBuzzSharp.HBColor" /> from a packed BGRA value.</summary>
+<!-- ✅ Right -->
+<summary>Initializes a new instance of the <see cref="T:HarfBuzzSharp.HBColor" /> struct from a packed BGRA value.</summary>
 ```
 
 ### Properties
 
+The opening verb is decided by the accessor, which is shown verbatim in the entry's `signature` field — read it, don't infer from the property's purpose. `{ get; set; }` → **"Gets or sets"**; `{ get; }` → **"Gets"**. Struct properties are an easy trap: many look read-only but are actually settable (e.g. every property on `SKFontVariationAxis` is `{ get; set; }`).
+
 ```xml
-<!-- Read/write -->
+<!-- Read/write — signature: public SKColor Color { get; set; } -->
 <summary>Gets or sets the color.</summary>
 <value>The color value.</value>
 
-<!-- Read-only (do NOT say "This property is read-only") -->
+<!-- Read-only — signature: public int Width { get; } (do NOT say "This property is read-only") -->
 <summary>Gets the width of the bitmap.</summary>
 <value>The width in pixels.</value>
 
@@ -125,6 +139,9 @@ Each type has its own XML file with this structure:
 <!-- Boolean read-only -->
 <summary>Gets a value indicating whether the path is empty.</summary>
 <value><see langword="true" /> if the path contains no lines or curves; otherwise, <see langword="false" />.</value>
+
+<!-- ❌ WRONG — signature is { get; set; } but summary says only "Gets" -->
+<summary>Gets the variation axis minimum value.</summary>   <!-- should be "Gets or sets" -->
 ```
 
 ### Methods
@@ -347,3 +364,108 @@ Native platform views have special constructors with specific purposes. Always i
 <summary>Initializes a new instance of the <see cref="T:SkiaSharp.Views.Forms.SKCanvasView" /> class.</summary>
 <remarks />
 ```
+
+## Rich Remarks and Examples
+
+The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the convention for type-level remarks and important factory methods.
+
+### When to Write Rich Remarks
+
+| API type | Remarks level |
+|----------|--------------|
+| Types (classes/structs) | Rich: overview, usage example, disposal notes, threading |
+| Factory methods (`Create*`) | Rich: code example showing common usage |
+| Important methods (`Draw*`, `Save`/`Restore`) | Brief explanation + link to related concepts |
+| Simple properties, getters, overloads | `<remarks />` (empty) is fine |
+| Enum members | No remarks needed |
+
+### Rich Remarks Format (Markdown in CDATA)
+
+For types and important methods, wrap markdown content in `<format type="text/markdown"><![CDATA[...]]></format>`. Microsoft Learn renders the CDATA content as full markdown.
+
+Example remarks value for a type:
+
+````xml
+<format type="text/markdown"><![CDATA[
+## Remarks
+
+`SKPaint` controls how drawing operations render on the canvas, including
+color, stroke width, anti-aliasing, blend modes, shaders, and text properties.
+Create an instance, configure the desired properties, and pass it to drawing
+methods on `SKCanvas`.
+
+This type wraps a native Skia resource and implements `IDisposable`. Always
+dispose of it when done, either with a `using` statement or by calling
+`Dispose()` directly.
+
+## Examples
+
+```csharp
+using var paint = new SKPaint
+{
+    Color = SKColors.CornflowerBlue,
+    IsAntialias = true,
+    Style = SKPaintStyle.Fill,
+};
+canvas.DrawCircle(128, 128, 80, paint);
+```
+]]></format>
+````
+
+### Type-Level Remarks Template
+
+For classes and structs, follow this structure inside the CDATA:
+
+1. `## Remarks` heading
+2. One paragraph: what the type does and when to use it
+3. Optional: how to create instances — constructor vs factory methods
+4. Optional: disposal pattern for `SKObject` subclasses
+5. Optional: threading notes — Skia is NOT thread-safe for mutable types
+6. `## Examples` heading
+7. One ` ```csharp ``` ` block showing the most common usage pattern
+
+### What Makes Good Examples
+
+- **Show the most common use case** — not edge cases
+- **Include using/disposal** — SkiaSharp objects are IDisposable (but never `using` a parent-owned object like the canvas from `SKDocument.BeginPage`)
+- **Show the full picture** — create + configure + use, not just one call
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Be self-contained** — every variable referenced must be declared in the snippet; a stray `bitmap2` that was never created won't compile
+
+Look at `samples/Gallery/Shared/Samples/` for real usage patterns. These samples show how developers actually use the APIs.
+
+### Cross-References in Rich Remarks
+
+Inside CDATA blocks, use `<xref:...>` (NOT `<see cref>`). An `xref` takes the **bare DocFX UID** — the fully-qualified name with **no `T:`/`M:`/`P:`/`F:` prefix**. Those DocId prefixes belong only to `<see cref>`; carrying them into an `xref` produces a broken link.
+
+```
+✅ See <xref:SkiaSharp.SKCanvas> for drawing operations.
+✅ Use <xref:SkiaSharp.SKPathBuilder> to construct paths incrementally.
+✅ Call <xref:SkiaSharp.SKPathBuilder.MoveTo(System.Single,System.Single)> to start a contour.
+
+❌ See <xref:T:SkiaSharp.SKCanvas> ...      (drop the T:)
+❌ Use <xref:P:SkiaSharp.SKPaint.Color> ... (drop the P:)
+```
+
+Outside CDATA (in summary/param/returns), use `<see cref="T:..." />` **with** the prefix as usual. So the same type is `<see cref="T:SkiaSharp.SKCanvas" />` in a summary but `<xref:SkiaSharp.SKCanvas>` in a remarks CDATA block.
+
+## Type-Level Documentation
+
+Types that wrap native resources (`IDisposable`) should have remarks that cover:
+1. What the type does and when to use it
+2. How to create instances (constructor vs factory)
+3. Disposal pattern — always show `using` in examples
+4. Threading constraints if applicable
+
+**remarks** should use the CDATA format shown above with `## Remarks`, disposal note, and `## Examples` with a code block.
+
+### Code Example Best Practices
+
+- **Show disposal** — if the type is `IDisposable`, examples must use `using` or call `Dispose()` — *except* for objects owned by a parent (e.g. the canvas from `SKDocument.BeginPage` or `SKSurface.Canvas`), which the parent disposes
+- **Show the full picture** — create + configure + use, not just one call
+- **Use realistic values** — not `0, 0, 0, 0` but actual coordinates/colors
+- **Keep it short** — 5-15 lines, enough to understand the pattern
+- **Be self-contained and compilable** — every variable referenced must be declared in the snippet; a stray identifier (e.g. `bitmap2` when only `bitmap` was created) is a compile error
+- **Only use real APIs** — verify every method/overload exists in source before using in an example
+- **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. Check every example against `references/obsolete-api-map.md`, which names the replacement (and in §2 disambiguates the overloads that share a name with the modern API). The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").

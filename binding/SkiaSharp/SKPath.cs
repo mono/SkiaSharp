@@ -25,9 +25,17 @@ namespace SkiaSharp
 		// reads path.Handle directly and P/Invokes with it. If mutations have been batched
 		// into _builder but not yet flushed, base.Handle points at a stale native SkPath.
 		// Flushing in the getter keeps every reader — internal or external — honest.
+		//
+		// Skip the flush once disposal has begun. SKPathBuilder is itself an SKObject with
+		// its own finalizer, so on the finalizer thread it may already have been collected
+		// (its Handle is IntPtr.Zero, native pointer freed). Touching it here would call
+		// sk_pathbuilder_detach_path on a null/dangling handle. The pending mutations are
+		// going to be discarded with the path anyway, and DisposeNative cleans up _builder
+		// defensively.
 		public override IntPtr Handle {
 			get {
-				FlushBuilder ();
+				if (!IsDisposed)
+					FlushBuilder ();
 				return base.Handle;
 			}
 			protected set => base.Handle = value;
@@ -44,6 +52,7 @@ namespace SkiaSharp
 		public SKPath (SKPath path)
 			: this (SkiaApi.sk_path_clone (path.Handle), true)
 		{
+			GC.KeepAlive (path);
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
 			}
@@ -60,9 +69,14 @@ namespace SkiaSharp
 		}
 
 		public SKPathFillType FillType {
-			get => SkiaApi.sk_path_get_filltype (Handle);
+			get {
+				var r = SkiaApi.sk_path_get_filltype (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
 			set {
 				SkiaApi.sk_path_set_filltype (Handle, value);
+				GC.KeepAlive (this);
 				if (_builder != null)
 					_builder.FillType = value;
 			}
@@ -70,25 +84,25 @@ namespace SkiaSharp
 
 		public SKPathConvexity Convexity { get { return IsConvex ? SKPathConvexity.Convex : SKPathConvexity.Concave; } }
 
-		public bool IsConvex { get { return SkiaApi.sk_path_is_convex (Handle); } }
+		public bool IsConvex { get { var r = SkiaApi.sk_path_is_convex (Handle); GC.KeepAlive (this); return r; } }
 
 		public bool IsConcave => !IsConvex;
 
 		public bool IsEmpty => VerbCount == 0;
 
-		public bool IsOval { get { return SkiaApi.sk_path_is_oval (Handle, null); } }
+		public bool IsOval { get { var r = SkiaApi.sk_path_is_oval (Handle, null); GC.KeepAlive (this); return r; } }
 
-		public bool IsRoundRect { get { return SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero); } }
+		public bool IsRoundRect { get { var r = SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero); GC.KeepAlive (this); return r; } }
 
-		public bool IsLine { get { return SkiaApi.sk_path_is_line (Handle, null); } }
+		public bool IsLine { get { var r = SkiaApi.sk_path_is_line (Handle, null); GC.KeepAlive (this); return r; } }
 
-		public bool IsRect { get { return SkiaApi.sk_path_is_rect (Handle, null, null, null); } }
+		public bool IsRect { get { var r = SkiaApi.sk_path_is_rect (Handle, null, null, null); GC.KeepAlive (this); return r; } }
 
-		public SKPathSegmentMask SegmentMasks { get { return (SKPathSegmentMask)SkiaApi.sk_path_get_segment_masks (Handle); } }
+		public SKPathSegmentMask SegmentMasks { get { var r = (SKPathSegmentMask)SkiaApi.sk_path_get_segment_masks (Handle); GC.KeepAlive (this); return r; } }
 
-		public int VerbCount { get { return SkiaApi.sk_path_count_verbs (Handle); } }
+		public int VerbCount { get { var r = SkiaApi.sk_path_count_verbs (Handle); GC.KeepAlive (this); return r; } }
 
-		public int PointCount { get { return SkiaApi.sk_path_count_points (Handle); } }
+		public int PointCount { get { var r = SkiaApi.sk_path_count_points (Handle); GC.KeepAlive (this); return r; } }
 
 		public SKPoint this[int index] => GetPoint (index);
 
@@ -98,6 +112,7 @@ namespace SkiaSharp
 			get {
 				SKPoint point;
 				SkiaApi.sk_path_get_last_point (Handle, &point);
+				GC.KeepAlive (this);
 				return point;
 			}
 		}
@@ -106,6 +121,7 @@ namespace SkiaSharp
 			get {
 				SKRect rect;
 				SkiaApi.sk_path_get_bounds (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -123,7 +139,9 @@ namespace SkiaSharp
 		public SKRect GetOvalBounds ()
 		{
 			SKRect bounds;
-			if (SkiaApi.sk_path_is_oval (Handle, &bounds)) {
+			var isOval = SkiaApi.sk_path_is_oval (Handle, &bounds);
+			GC.KeepAlive (this);
+			if (isOval) {
 				return bounds;
 			} else {
 				return SKRect.Empty;
@@ -134,6 +152,7 @@ namespace SkiaSharp
 		{
 			var rrect = new SKRoundRect ();
 			var result = SkiaApi.sk_path_is_rrect (Handle, rrect.Handle);
+			GC.KeepAlive (this);
 			if (result) {
 				return rrect;
 			} else {
@@ -147,6 +166,7 @@ namespace SkiaSharp
 			var temp = new SKPoint[2];
 			fixed (SKPoint* t = temp) {
 				var result = SkiaApi.sk_path_is_line (Handle, t);
+				GC.KeepAlive (this);
 				if (result) {
 					return temp;
 				} else {
@@ -164,6 +184,7 @@ namespace SkiaSharp
 			fixed (SKPathDirection* d = &direction) {
 				SKRect rect;
 				var result = SkiaApi.sk_path_is_rect (Handle, &rect, &c, d);
+				GC.KeepAlive (this);
 				isClosed = c > 0;
 				if (result) {
 					return rect;
@@ -180,6 +201,7 @@ namespace SkiaSharp
 
 			SKPoint point;
 			SkiaApi.sk_path_get_point (Handle, index, &point);
+			GC.KeepAlive (this);
 			return point;
 		}
 
@@ -193,13 +215,17 @@ namespace SkiaSharp
 		public int GetPoints (SKPoint[] points, int max)
 		{
 			fixed (SKPoint* p = points) {
-				return SkiaApi.sk_path_get_points (Handle, p, max);
+				var r = SkiaApi.sk_path_get_points (Handle, p, max);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
 		public bool Contains (float x, float y)
 		{
-			return SkiaApi.sk_path_contains (Handle, x, y);
+			var r = SkiaApi.sk_path_contains (Handle, x, y);
+			GC.KeepAlive (this);
+			return r;
 		}
 
 		public void Offset (SKPoint offset) =>
@@ -218,6 +244,7 @@ namespace SkiaSharp
 				_builder = null;
 			}
 			SkiaApi.sk_path_reset (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public bool GetBounds (out SKRect rect)
@@ -228,6 +255,7 @@ namespace SkiaSharp
 			} else {
 				fixed (SKRect* r = &rect) {
 					SkiaApi.sk_path_get_bounds (Handle, r);
+					GC.KeepAlive (this);
 				}
 			}
 			return !isEmpty;
@@ -237,13 +265,16 @@ namespace SkiaSharp
 		{
 			SKRect rect;
 			SkiaApi.sk_path_compute_tight_bounds (Handle, &rect);
+			GC.KeepAlive (this);
 			return rect;
 		}
 
 		public void Transform (in SKMatrix matrix)
 		{
-			fixed (SKMatrix* m = &matrix)
+			fixed (SKMatrix* m = &matrix) {
 				SkiaApi.sk_path_transform (Handle, m);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public void Transform (in SKMatrix matrix, SKPath destination)
@@ -253,6 +284,8 @@ namespace SkiaSharp
 
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_path_transform_to_dest (Handle, m, destination.Handle);
+			GC.KeepAlive (destination);
+			GC.KeepAlive (this);
 		}
 
 		[Obsolete("Use Transform(in SKMatrix) instead.", true)]
@@ -280,7 +313,11 @@ namespace SkiaSharp
 			if (result == null)
 				throw new ArgumentNullException (nameof (result));
 
-			return SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
+			var success = SkiaApi.sk_pathop_op (Handle, other.Handle, op, result.Handle);
+			GC.KeepAlive (other);
+			GC.KeepAlive (result);
+			GC.KeepAlive (this);
+			return success;
 		}
 
 		public SKPath Op (SKPath other, SKPathOp op)
@@ -299,7 +336,10 @@ namespace SkiaSharp
 			if (result == null)
 				throw new ArgumentNullException (nameof (result));
 
-			return SkiaApi.sk_pathop_simplify (Handle, result.Handle);
+			var success = SkiaApi.sk_pathop_simplify (Handle, result.Handle);
+			GC.KeepAlive (result);
+			GC.KeepAlive (this);
+			return success;
 		}
 
 		public SKPath Simplify ()
@@ -316,7 +356,9 @@ namespace SkiaSharp
 		public bool GetTightBounds (out SKRect result)
 		{
 			fixed (SKRect* r = &result) {
-				return SkiaApi.sk_pathop_tight_bounds (Handle, r);
+				var success = SkiaApi.sk_pathop_tight_bounds (Handle, r);
+				GC.KeepAlive (this);
+				return success;
 			}
 		}
 
@@ -325,7 +367,10 @@ namespace SkiaSharp
 			if (result == null)
 				throw new ArgumentNullException (nameof (result));
 
-			return SkiaApi.sk_pathop_as_winding (Handle, result.Handle);
+			var success = SkiaApi.sk_pathop_as_winding (Handle, result.Handle);
+			GC.KeepAlive (result);
+			GC.KeepAlive (this);
+			return success;
 		}
 
 		public SKPath ToWinding ()
@@ -343,6 +388,7 @@ namespace SkiaSharp
 		{
 			using var str = new SKString ();
 			SkiaApi.sk_path_to_svg_string (Handle, str.Handle);
+			GC.KeepAlive (this);
 			return (string)str;
 		}
 
@@ -402,6 +448,7 @@ namespace SkiaSharp
 			_builder.Dispose ();
 			_builder = null;
 			SkiaApi.sk_path_delete (Handle);
+			GC.KeepAlive (this);
 			Handle = newHandle;
 		}
 
@@ -412,7 +459,9 @@ namespace SkiaSharp
 				_builder = null;
 			}
 			var newHandle = SkiaApi.sk_pathbuilder_detach_path (builder.Handle);
+			GC.KeepAlive (builder);
 			SkiaApi.sk_path_delete (Handle);
+			GC.KeepAlive (this);
 			Handle = newHandle;
 		}
 
@@ -770,24 +819,36 @@ namespace SkiaSharp
 
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
-				if (points == null)
-					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_iter_next (Handle, p);
+					var r = SkiaApi.sk_path_iter_next (Handle, p);
+					GC.KeepAlive (this);
+					return r;
 				}
 			}
 
-			public float ConicWeight () =>
-				SkiaApi.sk_path_iter_conic_weight (Handle);
+			public float ConicWeight ()
+			{
+				var r = SkiaApi.sk_path_iter_conic_weight (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
 
-			public bool IsCloseLine () =>
-				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+			public bool IsCloseLine ()
+			{
+				var r = SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
+				GC.KeepAlive (this);
+				return r;
+			}
 
-			public bool IsCloseContour () =>
-				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
+			public bool IsCloseContour ()
+			{
+				var r = SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
+				GC.KeepAlive (this);
+				return r;
+			}
 		}
 
 		public class RawIterator : SKObject, ISKSkipObjectRegistration
@@ -811,20 +872,28 @@ namespace SkiaSharp
 
 			public SKPathVerb Next (Span<SKPoint> points)
 			{
-				if (points == null)
-					throw new ArgumentNullException (nameof (points));
 				if (points.Length != 4)
 					throw new ArgumentException ("Must be an array of four elements.", nameof (points));
 				fixed (SKPoint* p = points) {
-					return SkiaApi.sk_path_rawiter_next (Handle, p);
+					var r = SkiaApi.sk_path_rawiter_next (Handle, p);
+					GC.KeepAlive (this);
+					return r;
 				}
 			}
 
-			public float ConicWeight () =>
-				SkiaApi.sk_path_rawiter_conic_weight (Handle);
+			public float ConicWeight ()
+			{
+				var r = SkiaApi.sk_path_rawiter_conic_weight (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
 
-			public SKPathVerb Peek () =>
-				SkiaApi.sk_path_rawiter_peek (Handle);
+			public SKPathVerb Peek ()
+			{
+				var r = SkiaApi.sk_path_rawiter_peek (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
 		}
 
 		public class OpBuilder : SKObject, ISKSkipObjectRegistration
@@ -834,15 +903,22 @@ namespace SkiaSharp
 			{
 			}
 
-			public void Add (SKPath path, SKPathOp op) =>
+			public void Add (SKPath path, SKPathOp op)
+			{
 				SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
+				GC.KeepAlive (path);
+				GC.KeepAlive (this);
+			}
 
 			public bool Resolve (SKPath result)
 			{
 				if (result == null)
 					throw new ArgumentNullException (nameof (result));
 
-				return SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
+				var success = SkiaApi.sk_opbuilder_resolve (Handle, result.Handle);
+				GC.KeepAlive (result);
+				GC.KeepAlive (this);
+				return success;
 			}
 
 			protected override void Dispose (bool disposing) =>
