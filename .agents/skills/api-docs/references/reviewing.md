@@ -96,6 +96,12 @@ property access, and:
 - **Obsolete check:** match every member against the obsolete map AND grep its source for `[Obsolete(...)]`.
   A member from the map (or any `[Obsolete(..., error: true)]` member) in an example is CRITICAL — it
   won't compile; a soft-obsolete (`[Obsolete]` warning-only) member is IMPORTANT.
+  - **Linter false positives — verify the overload before "fixing."** The deterministic
+    `docs-format-docs` obsolete-in-example check matches by **member name**, so it flags every `.DrawText`
+    and `.MeasureText` even on the **modern, non-obsolete** overloads (`SKCanvas.DrawText(string, float,
+    float, SKTextAlign, SKFont, SKPaint)`, `SKFont.MeasureText(...)`). Before acting on such a finding, grep
+    the source for the exact overload: if it is **not** `[Obsolete]`, the finding is a false positive —
+    leave the example as-is and do **not** delete a valid modern call to silence the linter.
 - Self-contained: every identifier referenced must be declared in the snippet (using `bitmap2` when only
   `bitmap` was declared is a compile error).
 - Ownership: never `using`/`Dispose` a parent-owned object (the canvas from `SKDocument.BeginPage` and
