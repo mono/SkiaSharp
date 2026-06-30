@@ -77,22 +77,27 @@
         <p class="section-kicker">How it fits together</p>
         <h2 class="section-title">The loop</h2>
         <p class="section-lead">
-          The workflows chain into a mostly scheduled pipeline. Deterministic jobs prepare the
-          mechanical inputs, the agent does the part that needs judgement, and the result is a
-          reviewable PR. The same loop runs every day.
+          The Skia update lifecycle runs in two phases. First the upstream sync lands in the
+          library. Then, once a release is on main, two independent flows publish in parallel:
+          one writes the website release notes, the other writes the API reference. Automation
+          does the mechanical work, the AI agent does the parts that need judgement, and a
+          maintainer reviews before anything ships.
         </p>
 
         <ul class="legend" aria-label="Who performs each step">
           <li><span class="swatch swatch-agent"></span> AI agent</li>
-          <li><span class="swatch swatch-auto"></span> Deterministic automation</li>
-          <li><span class="swatch swatch-both"></span> Prepare then polish</li>
+          <li><span class="swatch swatch-auto"></span> Automation</li>
+          <li><span class="swatch swatch-human"></span> Human review</li>
         </ul>
 
-        <div class="loop">
+        <!-- Phase 1: sync to merge -->
+        <p class="loop-band-label">Phase 1 &middot; Sync to merge</p>
+        <div class="flow-box">
+          <div class="loop">
           <div class="loop-node" data-actor="agent">
             <span class="loop-step">Step 1</span>
             <h3>Sync upstream</h3>
-            <p>Merge new commits from Google's Skia, resolve conflicts, and update the binding.</p>
+            <p>Merge new commits from Google's Skia, resolve conflicts, and regenerate the bindings.</p>
             <span class="loop-actor">AI agent</span>
           </div>
           <div class="loop-arrow" aria-hidden="true">&rarr;</div>
@@ -100,41 +105,82 @@
           <div class="loop-node" data-actor="auto">
             <span class="loop-step">Step 2</span>
             <h3>Build &amp; test</h3>
-            <p>Build the native and managed libraries and run the test suite to catch regressions.</p>
+            <p>Build the native and managed libraries and run the full test suite on the pull requests.</p>
             <span class="loop-actor">Automation</span>
           </div>
           <div class="loop-arrow" aria-hidden="true">&rarr;</div>
 
-          <div class="loop-node" data-actor="both">
+          <div class="loop-node" data-actor="human">
             <span class="loop-step">Step 3</span>
-            <h3>Diff &amp; note</h3>
-            <p>Compute the public API diff across every NuGet, then write readable release notes.</p>
-            <span class="loop-actor">Prepare then polish</span>
+            <h3>Review &amp; merge</h3>
+            <p>A maintainer reviews the two pull requests and merges them into main.</p>
+            <span class="loop-actor">Human review</span>
           </div>
-          <div class="loop-arrow" aria-hidden="true">&rarr;</div>
-
-          <div class="loop-node" data-actor="both">
-            <span class="loop-step">Step 4</span>
-            <h3>Write docs</h3>
-            <p>Regenerate XML doc stubs, fill the missing entries, and review existing docs.</p>
-            <span class="loop-actor">Prepare then polish</span>
-          </div>
-          <div class="loop-arrow" aria-hidden="true">&rarr;</div>
-
-          <div class="loop-node" data-actor="auto">
-            <span class="loop-step">Step 5</span>
-            <h3>Publish</h3>
-            <p>Gate the docs PR on the Microsoft Learn build, auto-merge, and go live.</p>
-            <span class="loop-actor">Automation</span>
           </div>
         </div>
 
+        <!-- Vertical connector: phase 1 forks into two parallel flows -->
+        <div class="flow-connect" aria-hidden="true">
+          <span class="flow-connect-arrow">&darr;</span>
+          <span class="flow-connect-label">a release on main starts two flows in parallel</span>
+        </div>
+
+        <!-- Phase 2: two parallel publish flows -->
+        <p class="loop-band-label">Phase 2 &middot; Publish, in parallel</p>
+        <div class="parallel">
+
+          <div class="flow-row">
+            <p class="track-name">Release notes &amp; API diffs <span class="track-target">&rarr; website</span></p>
+            <div class="loop">
+              <div class="loop-node" data-actor="auto">
+                <h3>Diff the packages</h3>
+                <p>Compute the public API diff across every published NuGet of both families.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="agent">
+                <h3>Polish the notes</h3>
+                <p>Turn the raw diffs and data into readable, human release notes.</p>
+                <span class="loop-actor">AI agent</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="human">
+                <h3>Review &amp; merge</h3>
+                <p>A maintainer merges the docs PR and the website rebuilds.</p>
+                <span class="loop-actor">Human review</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-row">
+            <p class="track-name">API docs <span class="track-target">&rarr; Microsoft Learn</span></p>
+            <div class="loop">
+              <div class="loop-node" data-actor="auto">
+                <h3>Regenerate stubs</h3>
+                <p>Rebuild the XML reference stubs from the latest published packages.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="agent">
+                <h3>Fill &amp; review</h3>
+                <p>Fill the missing entries and review the existing reference docs.</p>
+                <span class="loop-actor">AI agent</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="auto">
+                <h3>Validate &amp; publish</h3>
+                <p>The Microsoft Learn build gates the PR; it auto-merges, then a maintainer takes it live.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
         <p class="loop-note">
-          Running alongside the main line: issue triage classifies and labels new reports, the
-          security audit cross-references CVEs and Component Governance alerts, and a CI health
-          pass watches the build pipelines. Every agentic run uploads its artifacts, which a
-          separate automation commits to the <code>aw-data</code> branch so the work stays
-          inspectable and measurable over time.
+          The two publish flows are genuinely independent: the release notes live in the
+          SkiaSharp repo and rebuild the website, while the API reference lives in a separate
+          repo and ships to Microsoft Learn. Neither waits on the other.
         </p>
       </div>
     </section>

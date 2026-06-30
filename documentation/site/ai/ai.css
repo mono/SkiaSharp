@@ -6,6 +6,11 @@
    cards with a metadata grid, and the skills board.
    ───────────────────────────────────────────────────────────── */
 
+/* Human-review accent — used by the loop legend and "human" nodes.
+   Theme-aware so it stays legible on both the light and dark themes. */
+:root { --human: #15a34a; }
+[data-theme="dark"] { --human: #2bd673; }
+
 /* ── Hero additions ───────────────────────────────────────── */
 
 .ai-hero .hero-subtitle {
@@ -120,9 +125,7 @@
 
 .swatch-agent { background: var(--accent); border-color: var(--accent); }
 .swatch-auto { background: var(--bg-subtle); }
-.swatch-both {
-  background: linear-gradient(135deg, var(--accent) 0 50%, var(--bg-subtle) 50% 100%);
-}
+.swatch-human { background: var(--human); border-color: var(--human); }
 
 /* ── The loop / pipeline diagram ──────────────────────────── */
 
@@ -149,10 +152,7 @@
 
 .loop-node[data-actor="agent"] { border-top: 3px solid var(--accent); }
 .loop-node[data-actor="auto"] { border-top: 3px solid var(--text-secondary); }
-.loop-node[data-actor="both"] {
-  border-top: 3px solid transparent;
-  border-image: linear-gradient(90deg, var(--accent), var(--text-secondary)) 1;
-}
+.loop-node[data-actor="human"] { border-top: 3px solid var(--human); }
 
 .loop-step {
   font-size: 11px;
@@ -217,10 +217,104 @@
   color: var(--text);
 }
 
+/* ── Phase labels ─────────────────────────────────────────── */
+
+.loop-band-label {
+  max-width: 900px;
+  margin: 36px auto 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.loop-band-label:first-of-type { margin-top: 8px; }
+
+/* ── Vertical connector between the two phases ────────────── */
+
+.flow-connect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 26px auto;
+  color: var(--text-secondary);
+}
+
+.flow-connect-arrow {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.flow-connect-label {
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ── Two parallel publish flows ───────────────────────────── */
+
+.parallel {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+}
+
+/* Shared box chrome for a phase / track container */
+.flow-box,
+.flow-row {
+  padding: 18px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.flow-row {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Inside the parallel block each track flows top-to-bottom */
+.parallel .loop {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.parallel .loop-node {
+  flex: none;
+  max-width: none;
+}
+
+.parallel .loop-arrow {
+  justify-content: center;
+  transform: rotate(90deg);
+}
+
+.track-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.track-target {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 @media (max-width: 720px) {
   .loop { flex-direction: column; align-items: stretch; }
   .loop-node { max-width: none; }
   .loop-arrow { justify-content: center; transform: rotate(90deg); }
+  .parallel { flex-direction: column; }
 }
 
 /* ── Workflow cards ───────────────────────────────────────── */
