@@ -55,7 +55,7 @@
               <span class="stat-label">agentic workflows across two repositories</span>
             </div>
             <div class="stat">
-              <span class="stat-num">21</span>
+              <span class="stat-num">20</span>
               <span class="stat-label">reusable skills the workflows and maintainers share</span>
             </div>
             <div class="stat">
@@ -93,6 +93,7 @@
         <!-- Phase 1: sync to merge -->
         <p class="loop-band-label">Phase 1 &middot; Sync to merge</p>
         <div class="flow-box">
+          <p class="track-name">Engine &amp; bindings <a class="track-target" href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener">&rarr; nuget.org</a></p>
           <div class="loop">
           <div class="loop-node" data-actor="agent">
             <span class="loop-step">Step 1</span>
@@ -130,7 +131,7 @@
         <div class="parallel">
 
           <div class="flow-row">
-            <p class="track-name">Release notes &amp; API diffs <span class="track-target">&rarr; website</span></p>
+            <p class="track-name">Release notes &amp; API diffs <a class="track-target" href="../docs/releases/">&rarr; website</a></p>
             <div class="loop">
               <div class="loop-node" data-actor="auto">
                 <h3>Diff the packages</h3>
@@ -153,7 +154,7 @@
           </div>
 
           <div class="flow-row">
-            <p class="track-name">API docs <span class="track-target">&rarr; Microsoft Learn</span></p>
+            <p class="track-name">API docs <a class="track-target" href="https://learn.microsoft.com/dotnet/api/skiasharp" target="_blank" rel="noopener">&rarr; Microsoft Learn</a></p>
             <div class="loop">
               <div class="loop-node" data-actor="auto">
                 <h3>Regenerate stubs</h3>
@@ -177,11 +178,6 @@
 
         </div>
 
-        <p class="loop-note">
-          The two publish flows are genuinely independent: the release notes live in the
-          SkiaSharp repo and rebuild the website, while the API reference lives in a separate
-          repo and ships to Microsoft Learn. Neither waits on the other.
-        </p>
       </div>
     </section>
 
@@ -204,14 +200,15 @@
               <span class="badge badge-model">claude-opus-4.7</span>
             </div>
             <p class="wf-desc">
-              Merges new commits from Google's upstream Skia, resolves the conflicts, builds and
-              tests, and opens a pull request with the result. The hardest reasoning in the whole
-              pipeline, which is why it runs on the strongest model.
+              Merges new commits from Google's upstream Skia, resolves the conflicts, regenerates
+              the bindings, and opens the two paired pull requests: one in mono/skia for the
+              submodule and one in mono/SkiaSharp. The hardest reasoning in the whole pipeline,
+              which is why it runs on the strongest model.
             </p>
             <dl class="wf-meta">
               <dt>When</dt><dd>07:00, 12:00, and 17:00 UTC daily, plus manual dispatch</dd>
               <dt>Engine</dt><dd>GitHub Copilot</dd>
-              <dt>Allowed outputs</dt><dd>open a pull request</dd>
+              <dt>Allowed outputs</dt><dd>open pull requests (mono/skia submodule + mono/SkiaSharp)</dd>
               <dt>Skill</dt><dd><code>update-skia</code></dd>
               <dt>Repo</dt><dd>mono/SkiaSharp</dd>
             </dl>
@@ -346,9 +343,11 @@
               <span class="badge badge-auto">Automation</span>
             </div>
             <p class="wf-desc">
-              Watches the docs writer's pull request branch and checks the Microsoft Learn and
-              OpenPublishing build statuses. When they pass, it merges the PR. The AI proposes the
-              documentation, and a deterministic gate verifies it builds before it ships.
+              Watches the docs writer's pull request branch and waits for the
+              <code>OpenPublishing.Build</code> and <code>PoliCheck Scan</code> checks to pass with
+              no new warnings. When they do, it squash-merges the PR. The AI proposes the
+              documentation, and deterministic gates verify it builds and passes policy before it
+              ships.
             </p>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/automerge-docs.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
@@ -361,9 +360,9 @@
               <span class="badge badge-auto">Automation</span>
             </div>
             <p class="wf-desc">
-              Promotes the merged documentation by opening and merging a pull request from the
-              working branch into the published branch. This is the final, deliberate publish step
-              for the API reference on Microsoft Learn.
+              The final, deliberate publish step, triggered manually by a maintainer. It opens (or
+              reuses) a pull request from <code>main</code> into the <code>live</code> branch;
+              merging that PR ships the latest API reference to Microsoft Learn.
             </p>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/go-live.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
@@ -409,7 +408,7 @@
               <li><span class="skill-name">release-status</span><br>Track the release build pipeline across its stages.</li>
               <li><span class="skill-name">release-testing</span><br>Run integration tests that verify the NuGet packages on real devices.</li>
               <li><span class="skill-name">release-publish</span><br>Publish to NuGet, tag, create the GitHub release, and close the milestone.</li>
-              <li><span class="skill-name">release-notes <span class="skill-auto">Automated</span></span><br>Generate the website release notes and API diffs from git history.</li>
+              <li><span class="skill-name">release-notes <span class="skill-auto">Automated</span></span><br>Generate the website release notes and API diffs from published NuGets and git history.</li>
             </ul>
           </div>
 
@@ -446,13 +445,6 @@
               <li><span class="skill-name">sample-scout</span><br>Scout Skia GM test files for demos worth porting to the gallery.</li>
               <li><span class="skill-name">validate-samples</span><br>Build and validate the sample projects against CI packages.</li>
               <li><span class="skill-name">ci-status</span><br>Collect the build health across pipelines and render a daily dashboard.</li>
-            </ul>
-          </div>
-
-          <div class="skill-group">
-            <h3>Meta</h3>
-            <ul class="skill-list">
-              <li><span class="skill-name">skill-creator</span><br>Create, improve, and measure the skills themselves.</li>
             </ul>
           </div>
         </div>
