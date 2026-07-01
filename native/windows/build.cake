@@ -55,6 +55,7 @@ Task("libSkiaSharp")
             $"skia_use_dng_sdk=true " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -70,7 +71,7 @@ Task("libSkiaSharp")
             $"skia_use_system_freetype2={SYSTEM_FREETYPE} ".ToLower () +			
             clang +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 

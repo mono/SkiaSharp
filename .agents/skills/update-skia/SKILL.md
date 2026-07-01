@@ -126,10 +126,12 @@ E. Ship (Phase 11)
    ```bash
    cd externals/skia
    git remote add upstream https://github.com/google/skia.git 2>/dev/null
-   git fetch upstream chrome/m{TARGET}
+   git fetch upstream {UPSTREAM_REF}   # chrome/m{TARGET} for a milestone, or main for tip mode
    ```
+   `{UPSTREAM_REF}` is the upstream ref you merge from: `chrome/m{TARGET}` for a normal
+   milestone/release-line update, or `main` for a `main`/tip sync (see step 5).
    > **Note:** When this phase is pre-computed by the automated workflow, you still need to
-   > add the `upstream` remote and fetch `chrome/m{TARGET}` — Phase 5 depends on it.
+   > add the `upstream` remote and fetch `{UPSTREAM_REF}` — Phase 5 depends on it.
 
 5. **Determine the base branch (`main` vs a release line).** Most updates target `main`
    (newest, in-development line) with `skiasharp` as the mono/skia base. But when the target
@@ -143,22 +145,41 @@ E. Ship (Phase 11)
    git -C externals/skia ls-remote --heads origin "refs/heads/release/*.{TARGET}.x"
    ```
 
-   | Variable | `main` target | release-line target |
-   |----------|---------------|---------------------|
-   | `{BASE_BRANCH}` (SkiaSharp) | `main` | `release/<major>.{TARGET}.x` |
-   | `{SKIA_BASE_BRANCH}` (mono/skia) | `skiasharp` | `release/<major>.{TARGET}.x` |
-   | `{HEAD_BRANCH}` (both repos) | `skia-sync/m{TARGET}` | `skia-sync/release-<major>.{TARGET}.x` |
+   | Variable | `main` target | release-line target | `main`/tip mode |
+   |----------|---------------|---------------------|-----------------|
+   | `{UPSTREAM_REF}` (merge from) | `chrome/m{TARGET}` | `chrome/m{TARGET}` | `main` (HEAD) |
+   | `{BASE_BRANCH}` (SkiaSharp) | `main` | `release/<major>.{TARGET}.x` | `main` |
+   | `{SKIA_BASE_BRANCH}` (mono/skia) | `skiasharp` | `release/<major>.{TARGET}.x` | `skiasharp` |
+   | `{HEAD_BRANCH}` (both repos) | `skia-sync/m{TARGET}` | `skia-sync/release-<major>.{TARGET}.x` | `skia-sync/main` |
 
-   A release-line update is always a **bug-fix-only sync** (`CURRENT == TARGET`): do NOT bump
-   the milestone/soname/nuget version in Phase 6 — only `cgmanifest.json`'s commit hash changes.
+   The table's three columns are the three possible sync modes. **`main` target** (the default)
+   is a normal milestone bump; the other two are special cases:
+
+   **Release-line target** — chosen when `{TARGET}` is older than `main`'s milestone AND a
+   matching `release/<major>.{TARGET}.x` branch exists. Always a **bug-fix-only sync**
+   (`CURRENT == TARGET`): do NOT bump the milestone/soname/nuget version in Phase 6 — only
+   `cgmanifest.json`'s commit hash changes.
 
    > 🛑 **The release branch must already exist in BOTH repos.** Branch *creation* is owned by
    > the release process (`release-branch` skill), not this skill. If the SkiaSharp
    > `release/<major>.{TARGET}.x` branch exists but the mono/skia one does NOT, **STOP and fail** —
    > do not create it here. Ask a human to cut the mono/skia release branch first.
 
-   Use these `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}` values everywhere below in
-   place of the hardcoded `main` / `skiasharp` / `skia-sync/m{TARGET}` defaults.
+   **`main` (tip) mode** — instead of a `chrome/m{TARGET}` milestone branch, merge the very tip of
+   upstream `google/skia` `main` (HEAD). Like a `main` target it uses `{BASE_BRANCH}` = `main` and
+   `{SKIA_BASE_BRANCH}` = `skiasharp`, but with `{HEAD_BRANCH}` = `skia-sync/main` and
+   `{UPSTREAM_REF}` = `main`, and `CURRENT == TARGET`, so it is **NOT a version bump** — keep the
+   milestone/soname/nuget versions unchanged. Unlike a release-line bug-fix sync it MAY still
+   include new upstream API/binding changes, so regenerate + build + test as normal (Phases 8–10).
+   A tip merge is large and conflict-heavy because the submodule base is well behind `main`, so the
+   verify-upstream-or-reapply policy (Phase 5 / [gotcha #15](references/known-gotchas.md)) is
+   mandatory. Because the tip is not a milestone branch, the milestone-pair diff in **Phase 2 step 4**
+   doesn't apply — substitute `$(git merge-base {SKIA_BASE_BRANCH} upstream/main)..upstream/main`
+   (Phase 5's diffs already use `{UPSTREAM_REF}`, so they need no change).
+
+   Use these `{UPSTREAM_REF}` / `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}` values
+   everywhere below in place of the hardcoded `chrome/m{TARGET}` / `main` / `skiasharp` /
+   `skia-sync/m{TARGET}` defaults.
 
 > 🛑 **GATE**: Confirm current milestone, target milestone, the base branch (main vs release line,
 > with the mono/skia base branch confirmed to exist), and that the upstream branch exists.
@@ -228,9 +249,9 @@ milestone numbers and paste your breaking change analysis table. The default exp
 > ⚠️ **This phase creates BOTH branches before making ANY changes.** You may be on a
 > workflow branch, a feature branch, or a detached HEAD — none of which is the right base.
 > You MUST branch from `origin/{BASE_BRANCH}` (parent) and `origin/{SKIA_BASE_BRANCH}`
-> (submodule). For a `main` update those are `origin/main` and `origin/skiasharp`; for a
-> release-line update they are `origin/release/<major>.{TARGET}.x` in both repos
-> (see Phase 1 step 5).
+> (submodule). For a `main` update (and `main`/tip mode) those are `origin/main` and
+> `origin/skiasharp`; for a release-line update they are `origin/release/<major>.{TARGET}.x` in
+> both repos (see Phase 1 step 5).
 
 **Parent repo (SkiaSharp):**
 
@@ -299,15 +320,24 @@ You should still be inside `externals/skia` from Phase 4.
 
 1. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
-   git merge --no-commit upstream/chrome/m{TARGET}
+   git merge --no-commit upstream/{UPSTREAM_REF}   # chrome/m{TARGET}, or main in tip mode
    ```
 
 2. **Resolve conflicts** — each conflict must be resolved individually.
    Never use `git merge -s ours` or `git read-tree --reset` — this destroys `git blame` attribution.
 
-   **⚠️ MANDATORY: Before resolving ANY conflict, check file history for fork-specific patches.**
-   Run `git log --oneline skiasharp -- <conflicted-file>` — if the log shows intentional
-   fork patches, keep our version. See [gotcha #15](references/known-gotchas.md) for details.
+   **⚠️ MANDATORY: classify every fork patch as *upstreamed* or *not* before resolving.**
+   For each conflicted file, list the fork patches touching it and check whether upstream already
+   carries each one (see [gotcha #15](references/known-gotchas.md) for the exact commands):
+
+   ```bash
+   git log --oneline {SKIA_BASE_BRANCH} -- <conflicted-file>           # our fork patches on this file
+   git log -S "<distinctive code>" --oneline upstream/{UPSTREAM_REF}   # did upstream adopt it?
+   ```
+
+   - **Upstreamed** → take upstream's (possibly refined) form; record `"<subject>" upstreamed as <sha>`.
+   - **Not upstreamed** → re-apply our patch on top of upstream's edits; **never drop it**; record `re-applied`.
+   - **Never** blanket `git checkout --theirs`/`--ours` on a file you have not classified.
 
    | File Category | Strategy |
    |--------------|----------|
@@ -315,7 +345,16 @@ You should still be inside `externals/skia` from Phase 4.
    | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
    | `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
-   | Other upstream source (`src/`, `include/`) | **Check history first** — see [gotcha #15](references/known-gotchas.md) |
+   | Other upstream source (`src/`, `include/`) | **Verify-upstream-or-reapply** — see [gotcha #15](references/known-gotchas.md) |
+
+   **Audit (mandatory).** Snapshot fork patches before merging, then cross-reference every conflict:
+   ```bash
+   MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
+   git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+   ```
+   For every conflicted file, the fork patch(es) touching it must appear in the mono/skia PR's "Conflicts
+   resolved" table as *upstreamed* or *re-applied*. A fork patch on a conflicted file that is neither is a
+   lost patch — STOP and fix it. (Patches whose files did not conflict merge cleanly and need no listing.)
 
 3. **Commit the merge**:
    ```bash
@@ -329,7 +368,7 @@ You should still be inside `externals/skia` from Phase 4.
 
 5. **Source file verification** — Check for added/deleted upstream files:
    ```bash
-   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=AD --name-only -- src/ include/
+   git diff $(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})..upstream/{UPSTREAM_REF} --diff-filter=AD --name-only -- src/ include/
    ```
    Cross-reference against `BUILD.gn` — new source files may need to be added.
 
@@ -341,8 +380,8 @@ You should still be inside `externals/skia` from Phase 4.
 > ```
 
 > ✅ **Before proceeding to C (Update & Build):**
-> - Parent branch is based on `origin/main`
-> - Submodule is at the SHA referenced by the parent's `origin/main` submodule pointer
+> - Parent branch is based on `origin/{BASE_BRANCH}`
+> - Submodule is at the SHA referenced by the parent's `origin/{BASE_BRANCH}` submodule pointer
 > - Upstream merge committed with proper two-parent history
 > - C API files intact, zero conflict markers
 
@@ -407,6 +446,16 @@ must be updated when the underlying C++ APIs change.
    | Changed signature | Update C wrapper function signature |
    | New header required | Add `#include` in the relevant `.cpp` |
    | Legacy flag breaks C API | Update C API to use replacement API (see gotcha #6). Do not just comment out the flag without a plan |
+   | New *required* upstream gn arg | A new upstream dependency our fork doesn't vendor may need a gn toggle (e.g. `skia_use_partition_alloc=false`). Add it to the affected platforms' `native/**/build.cake` gn-args lists — NOT a one-off `--gnArgs` flag (see [gotcha #23](references/known-gotchas.md)) |
+
+   > **GN args belong in `build.cake`, not CLI flags.** When the upstream merge introduces a
+   > *genuinely required* new gn argument (typically a dependency our `DEPS` deliberately doesn't
+   > vendor), add it to **every affected platform's** `native/**/build.cake` gn-args list — that
+   > file is the single source of truth, next to the existing `skia_use_*` toggles. Don't paper
+   > over it with a one-off `dotnet cake … --gnArgs` flag (non-durable), and don't add gn args (or
+   > change compiler/linker flags) merely to silence a host-specific build error — that's a
+   > missing-dependency problem, not a config one. Full rationale + the `skia_use_partition_alloc`
+   > example and the milestone-sequencing caveat: [gotcha #23](references/known-gotchas.md).
 
 3. **Update `sk_types.h`** for any new enums or type changes.
    Phase 6 reset `SK_C_INCREMENT` to 0. Only bump it if you add new C API functions in this milestone.
@@ -459,9 +508,9 @@ the build succeeds.
 
 1. **Review new generated bindings for unwrapped functions:**
    ```bash
-   git diff origin/main -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
+   git diff origin/{BASE_BRANCH} -- binding/SkiaSharp/SkiaApi.generated.cs | grep "^+.*internal static"
    ```
-   > ⚠️ The `git diff origin/main` may show additional changes beyond new functions (e.g.
+   > ⚠️ The `git diff origin/{BASE_BRANCH}` may show additional changes beyond new functions (e.g.
    > struct renames, type changes from Phase 7 shim work). These are expected and correct.
    > Only investigate `+internal static` lines — ignore other diff noise.
 
@@ -513,13 +562,15 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    > you missed a version update — go back to Phase 6 and verify ALL version lines.
    > Do NOT work around this with `--no-incremental` or by copying native libs manually.
 
-2. **Full test suite (required before any PR):**
+2. **Full test suite (required before any PR):** capture the output to a log you can inspect
+   afterward. Standalone runs can use any writable path; the automated workflow overrides this to
+   `/tmp/gh-aw/agent/test-output.txt` so it's uploaded as an artifact (see the workflow's Phase 10 note).
    ```bash
-   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/gh-aw/agent/test-output.txt
+   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/skia-test-output.txt
    ```
    Wait for it to finish (takes 5–7 min). Then read the summary:
    ```bash
-   tail -5 /tmp/gh-aw/agent/test-output.txt
+   tail -5 /tmp/skia-test-output.txt
    ```
    The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
 
@@ -531,7 +582,7 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    > while tests are still running. Capture with `tee` first, wait for completion, then `tail`
    > the output file. After the run, inspect failures with:
    > ```bash
-   > grep '^  Failed' /tmp/gh-aw/agent/test-output.txt
+   > grep '^  Failed' /tmp/skia-test-output.txt
    > ```
 
 Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
@@ -556,10 +607,10 @@ before the update can be considered complete. Do not create PRs with only smoke 
 > `[skia-sync] Merge upstream chrome/m{TARGET} bug fixes` instead of milestone-bump titles.
 > A release-line update is always such a sync.
 
-> **Release-line targets:** Use the `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}`
+> **Branch targets by mode:** Use the `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}`
 > values resolved in Phase 1 step 5. For a `main` update they are `main` / `skiasharp` /
-> `skia-sync/m{TARGET}`; for a release-line update they are `release/<major>.{TARGET}.x` (both
-> repos) / `skia-sync/release-<major>.{TARGET}.x`.
+> `skia-sync/m{TARGET}`; for `main`/tip mode `main` / `skiasharp` / `skia-sync/main`; for a
+> release-line update `release/<major>.{TARGET}.x` (both repos) / `skia-sync/release-<major>.{TARGET}.x`.
 
 #### PR 1: mono/skia (submodule)
 

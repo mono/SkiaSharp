@@ -167,7 +167,7 @@ Task ("docs-update-frameworks")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
 
 Task ("docs-format-docs")
-    .Description ("Format doc XML files.")
+    .Description ("Format doc XML files and run the deterministic content checks (warns on quality/missing docs, fails on broken XML).")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -10,6 +10,7 @@
 
 using System.Xml;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
@@ -52,6 +53,157 @@ void RunMdoc (string arguments, DirectoryPath workingDirectory)
             WorkingDirectory = workingDirectory
         });
     }
+}
+
+// Docs lint (no LLM): the deterministic content checks docs-format-docs runs on
+// each file's already-loaded XDocument (see CheckDocs). broken-cdata is an Error
+// that fails the build (it would break the published site); every other issue is a
+// Warning. A file that will not parse at all already throws from XDocument.Load.
+//
+// Obsolete-member usage in code examples is deliberately NOT linted here. Name-only
+// matching cannot distinguish an obsolete overload from a modern one (e.g.
+// SKCanvas.DrawText with vs without an SKFont argument), so it produced false
+// positives on valid modern calls. That judgement is left to the docs author and
+// reviewer, guided by references/obsolete-api-map.md.
+
+var MISSPELLINGS = new Dictionary<string, string> {
+    { "teh", "the" }, { "recieve", "receive" }, { "seperate", "separate" }, { "occured", "occurred" },
+    { "paramter", "parameter" }, { "retreive", "retrieve" }, { "initalize", "initialize" },
+    { "lenght", "length" }, { "widht", "width" }, { "colour", "color" }, { "visable", "visible" },
+    { "arguement", "argument" }, { "depricated", "deprecated" }, { "existant", "existent" }
+};
+var CREF_PREFIXES = new [] { "T:", "M:", "P:", "F:", "E:", "N:", "Overload:" };
+
+bool IsGeneratedDocFile (string path)
+{
+    var name = System.IO.Path.GetFileName (path);
+    if (name == "index.xml" || name == "_filter.xml") return true;
+    if (name.StartsWith ("ns-") && name.EndsWith (".xml")) return true;
+    if (Regex.IsMatch (path, @"[\\/]FrameworksIndex[\\/]")) return true;
+    return false;
+}
+
+// Prose text for natural-language checks (repeated word, spelling): one string
+// per text/CDATA node, with fenced code blocks stripped out of CDATA. Splitting
+// per text node means empty inline elements (e.g. <see cref=".." />) act as
+// boundaries, so words on either side are never treated as adjacent. (XCData
+// derives from XText, so OfType<XText> yields both kinds.)
+List<string> ProseSegments (XElement node)
+{
+    var segments = new List<string> ();
+    foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
+        var val = t.Value;
+        if (string.IsNullOrWhiteSpace (val)) continue;
+        if (t is XCData)
+            val = Regex.Replace (val, "(?s)```.*?```", " ");
+        segments.Add (val);
+    }
+    return segments;
+}
+
+// Lint one <Docs> element against the live tree docs-format-docs already loaded
+// (no re-parse). Logs each issue as "[docs] <class> | <file> | <docId> | <msg>"
+// and returns how many it found; broken-cdata also bumps the caller's error count
+// (via ref) and fails the build, everything else is just a warning.
+int CheckDocs (XElement docs, string docId, bool isProp, bool hasSet, string path, ref int errors)
+{
+    if (string.IsNullOrEmpty (docId)) docId = "-";
+    var where = $"{path} | {docId}";
+    var count = 0;
+
+    // Empty summary/value/returns (a real defect — mdoc stubs say "To be added.")
+    foreach (var tag in new [] { "summary", "value", "returns" }) {
+        var el = docs.Element (tag);
+        if (el != null && !el.HasElements && string.IsNullOrWhiteSpace (el.Value)) {
+            Warning ($"[docs] empty-tag | {where} | <{tag}> is empty");
+            count++;
+        }
+    }
+
+    foreach (var node in docs.Elements ()) {
+        if (string.IsNullOrWhiteSpace (node.Value) && !node.HasElements)
+            continue;
+        var name = node.Name.LocalName;
+
+        // Half-filled AI remarks scaffold (Value spans CDATA too)
+        if (node.Value.Contains ("[Describe ") || node.Value.Contains ("[Show ")) {
+            Warning ($"[docs] placeholder | {where} | <{name}> has an unfilled remarks scaffold");
+            count++;
+        }
+
+        // Repeated words + spelling run on prose only (code fences stripped;
+        // per text node so empty inline elements don't fuse adjacent words)
+        var reportedRepeat = false;
+        foreach (var seg in ProseSegments (node)) {
+            if (!reportedRepeat) {
+                var rm = Regex.Match (seg, @"(?<![-\w])([A-Za-z]{2,})\s+\1\b", RegexOptions.IgnoreCase);
+                if (rm.Success && rm.Groups[1].Value.ToLowerInvariant () != "that" && rm.Groups[1].Value.ToLowerInvariant () != "had") {
+                    Warning ($"[docs] repeated-word | {where} | repeated word '{rm.Groups[1].Value}' in <{name}>");
+                    count++;
+                    reportedRepeat = true;
+                }
+            }
+            foreach (var kv in MISSPELLINGS) {
+                if (Regex.IsMatch (seg, $@"\b{kv.Key}\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] spelling | {where} | '{kv.Key}' -> '{kv.Value}' in <{name}>");
+                    count++;
+                }
+            }
+        }
+
+        // <see cref="..."> must carry a DocId prefix (structured XML, not CDATA)
+        foreach (var see in node.Descendants ("see")) {
+            var cref = (string) see.Attribute ("cref");
+            if (cref != null && !CREF_PREFIXES.Any (p => cref.StartsWith (p))) {
+                Warning ($"[docs] invalid-cref | {where} | <see cref='{cref}'> missing DocId prefix (T:/M:/P:/F:)");
+                count++;
+            }
+        }
+
+        // xref / CDATA integrity, by node kind. A <xref: in an ordinary text node
+        // means the CDATA wrapper was destroyed (it is stored escaped as &lt;xref:);
+        // inside CDATA an xref must use the bare UID (no DocId prefix) and must not be
+        // doubly escaped.
+        foreach (var t in node.DescendantNodes ().OfType<XText> ()) {
+            var val = t.Value;
+            if (t is XCData) {
+                if (val.Contains ("&lt;xref:")) {
+                    Error ($"[docs] broken-cdata | {where} | escaped '&lt;xref:' inside CDATA — xref will not resolve");
+                    count++;
+                    errors++;
+                }
+                foreach (Match mm in Regex.Matches (val, @"<xref:(T:|M:|P:|F:)")) {
+                    Warning ($"[docs] bad-xref | {where} | <xref:{mm.Groups[1].Value}...> uses a DocId prefix; xref takes the bare UID");
+                    count++;
+                }
+            } else if (val.Contains ("<xref:")) {
+                Error ($"[docs] broken-cdata | {where} | '<xref:' in plain text — CDATA was destroyed");
+                count++;
+                errors++;
+            }
+        }
+    }
+
+    // Accessor verb agreement on property summaries
+    if (isProp) {
+        var summary = docs.Element ("summary");
+        if (summary != null && !string.IsNullOrWhiteSpace (summary.Value)) {
+            var s = summary.Value.TrimStart ();
+            if (hasSet) {
+                if (Regex.IsMatch (s, @"^Gets\b", RegexOptions.IgnoreCase) && !Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] accessor-verb | {where} | settable property summary should be 'Gets or sets'");
+                    count++;
+                }
+            } else {
+                if (Regex.IsMatch (s, @"^Gets or sets\b", RegexOptions.IgnoreCase)) {
+                    Warning ($"[docs] accessor-verb | {where} | read-only property summary should be 'Gets' (not 'Gets or sets')");
+                    count++;
+                }
+            }
+        }
+    }
+
+    return count;
 }
 
 Task ("docs-download-output")
@@ -298,10 +450,25 @@ Task ("docs-format-docs")
         }
     }
 
+    // docs-format-docs is both a formatter and a checker: in the same pass it walks
+    // every type's <Docs> and runs the deterministic lint (see CheckDocs), failing
+    // the build if any file has broken CDATA that would break the site.
+    var lintedTypes = 0;
+    var lintFindings = 0;
+    var lintErrors = 0;
+
     foreach (var file in docFiles) {
         Debug("Processing {0}...", file.FullPath);
 
-        var xdoc = XDocument.Load (file.FullPath);
+        // One parse per file. A doc that will not parse can never be published, so
+        // let it fail the build here (with the file name) - this is also why the
+        // lint below needs no separate "malformed XML" check.
+        XDocument xdoc;
+        try {
+            xdoc = XDocument.Load (file.FullPath);
+        } catch (Exception ex) {
+            throw new Exception ($"{file.FullPath}: XML will not parse - {ex.Message}", ex);
+        }
 
         // Delete orphan namespace stub files (ns-*.xml) whose namespace no longer
         // has any types in index.xml (see validNamespaces above). mdoc leaves these
@@ -534,7 +701,7 @@ Task ("docs-format-docs")
         if (currentMemberCount > 0) {
             var fullName = xdoc.Root.Attribute ("FullName");
             if (fullName != null)
-                Information ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
+                Warning ("Docs missing on {0} = {1}", fullName.Value, currentMemberCount);
         }
 
         // get the whitespaces right
@@ -551,6 +718,41 @@ Task ("docs-format-docs")
 
         // empty line at the end
         System.IO.File.AppendAllText (file.ToString (), "\n");
+
+        // Deterministic content lint, run on the doc tree we already loaded (no
+        // re-parse). Missing-doc placeholders are reported above; here we drill into
+        // each <Docs> to catch broken CDATA (an error - it would break the site) plus
+        // quality issues (warnings). Generated index/ns/framework files are skipped.
+        if (xdoc.Root.Name == "Type" && !IsGeneratedDocFile (file.FullPath)) {
+            lintedTypes++;
+            var path = file.FullPath;
+            var fullName = xdoc.Root.Attribute ("FullName")?.Value;
+            var typeName = !string.IsNullOrEmpty (fullName) ? fullName : xdoc.Root.Attribute ("Name")?.Value;
+
+            // type-level Docs
+            var typeDocs = xdoc.Root.Element ("Docs");
+            if (typeDocs != null)
+                lintFindings += CheckDocs (typeDocs, "T:" + typeName, false, false, path, ref lintErrors);
+
+            // each Member's Docs (DocId + property accessor shape come from the member)
+            foreach (var mn in xdoc.Root.Elements ("Members").Elements ("Member")) {
+                var d = mn.Element ("Docs");
+                if (d == null) continue;
+                var sigs = mn.Elements ("MemberSignature");
+                var docId = sigs.FirstOrDefault (s => (string) s.Attribute ("Language") == "DocId")?.Attribute ("Value")?.Value;
+                var csharp = sigs.FirstOrDefault (s => (string) s.Attribute ("Language") == "C#")?.Attribute ("Value")?.Value ?? "";
+                var isProp = (string) mn.Element ("MemberType") == "Property";
+                var hasSet = isProp && Regex.IsMatch (csharp, @"set\s*;");
+                lintFindings += CheckDocs (d, docId, isProp, hasSet, path, ref lintErrors);
+            }
+
+            // MemberGroup carries shared remarks/examples for overload sets (e.g. DrawText)
+            foreach (var g in xdoc.Root.Elements ("Members").Elements ("MemberGroup")) {
+                var d = g.Element ("Docs");
+                if (d == null) continue;
+                lintFindings += CheckDocs (d, $"G:{typeName}.{(string) g.Attribute ("MemberName")}", false, false, path, ref lintErrors);
+            }
+        }
     }
 
     // sync extension method docs from type files to index.xml
@@ -625,6 +827,13 @@ Task ("docs-format-docs")
         "Documentation missing in {0}/{1} ({2:0.0%}) types and {3}/{4} ({5:0.0%}) members.",
         typeCount, totalTypes, typeCount / totalTypes,
         memberCount, totalMembers, memberCount / totalMembers);
+
+    // Lint summary, then fail the build if any doc has broken XML/CDATA.
+    Information ("Docs lint: scanned {0} type file(s), {1} finding(s), {2} error(s).",
+        lintedTypes, lintFindings, lintErrors);
+    if (lintErrors > 0)
+        throw new Exception (
+            $"{lintErrors} doc(s) have broken XML/CDATA that would break the site — fix the [docs] errors logged above.");
 });
 
 Task ("update-docs")
