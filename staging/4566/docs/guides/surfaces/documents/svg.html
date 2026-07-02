@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Create an SVG document with SkiaSharp | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Create an SVG document with SkiaSharp | SkiaSharp ">
+      
+      <meta name="description" content="Create a single SVG document with SKSvgCanvas, draw through SKCanvas, and finalize valid XML without closing the caller-owned stream.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/documents/svg.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="create-an-svg-document-with-skiasharp">Create an SVG document with SkiaSharp</h1>
+
+<p>Use <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksvgcanvas"><code>SKSvgCanvas</code></a> to translate <code>SKCanvas</code> draw calls into a Scalable Vector Graphics (SVG) stream. Unlike PDF and XPS, SVG creation returns the canvas directly and has no page lifecycle. Dispose the canvas to complete the XML.</p>
+<h2 id="create-and-complete-the-svg">Create and complete the SVG</h2>
+<p>The bounds passed to <code>SKSvgCanvas.Create</code> define the initial SVG viewport. This complete example writes a 640 by 480 SVG:</p>
+<pre><code class="lang-csharp">using System.IO;
+using SkiaSharp;
+
+const string outputPath = &quot;drawing.svg&quot;;
+var bounds = SKRect.Create(640, 480);
+
+using (var output = File.Create(outputPath))
+using (var canvas = SKSvgCanvas.Create(bounds, output))
+using (var backgroundPaint = new SKPaint { Color = SKColors.White })
+using (var paint = new SKPaint
+{
+    IsAntialias = true,
+    Color = SKColors.CornflowerBlue,
+})
+{
+    canvas.DrawRect(bounds, backgroundPaint);
+    canvas.DrawCircle(bounds.MidX, bounds.MidY, 140, paint);
+}
+</code></pre>
+<p>The SVG canvas may buffer output. Its closing XML is not guaranteed to be present until the canvas is disposed. Keep the output stream alive for the full canvas lifetime and dispose the canvas before reading, sending, or closing the stream.</p>
+<p>The <code>Stream</code> overload does not dispose the caller's .NET stream. In the example, the nested <code>using</code> statements dispose the canvas first and the file stream second.</p>
+<h2 id="reuse-drawing-code">Reuse drawing code</h2>
+<p><code>SKSvgCanvas.Create</code> returns an ordinary <code>SKCanvas</code>, so drawing helpers that accept <code>SKCanvas</code> can target SVG without an <code>SKSurface</code>. Keep the SVG bounds and stream lifecycle in the caller:</p>
+<pre><code class="lang-csharp">static void DrawBadge(SKCanvas canvas, SKRect bounds, SKPaint paint)
+{
+    canvas.DrawCircle(bounds.MidX, bounds.MidY, 64, paint);
+}
+</code></pre>
+<p>The SVG output represents drawing commands rather than a pixel snapshot. Open the result in the browsers or SVG renderers your application supports. If you require exact raster pixels instead, <a href="../raster/index.html">render to a raster surface</a> and encode the resulting image.</p>
+<h2 id="verify-the-result">Verify the result</h2>
+<p>The file should parse as XML with an <code>svg</code> root element whose width and height are <code>640</code> and <code>480</code>. It should display a blue circle on a white background.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Documents</a></li>
+<li><a href="pdf.html">Create a PDF document</a></li>
+<li><a href="../../curves/path-data.html">SVG path data in SkiaSharp</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/documents/svg.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 4e7a11f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,219 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.148.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.148.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/5016/merge/documentation/docfx/releases/4.148.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41480">Version 4.148.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:4 version:4.148.0 -->
+
+<blockquote>
+<p><strong>First stable v4 release</strong> · Released June 22, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/4.148.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.148.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Supersedes <a href="4.147.0.html">4.147.0</a></strong> · Rolls up preview-only work that was never released as stable — those changes are included cumulatively below.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.148.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.2.0/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148. It adds variable and color fonts, animated WebP encoding, and reworks the singleton lifecycle. This is a breaking release with several behavioral changes from the m132/m147/m148 Skia upgrade — check the changes below before upgrading.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>New SKFont() now has an empty typeface instead of a lazy default</strong> — new SKFont().Typeface used to resolve to the platform default at draw time; it now stores SKTypeface.Empty, so MeasureText returns 0 and nothing draws. Construct with an explicit typeface (e.g. new SKFont(SKTypeface.Default)) and detect &quot;unset&quot; with Typeface.IsEmpty instead of a null check. (<a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>)</li>
+<li><strong>new SKPaint().Typeface now returns Default instead of null</strong> — SkiaSharp still seeds a usable default font, but code that checked paint.Typeface == null to detect &quot;no typeface set&quot; no longer fires. Use Typeface.IsEmpty, or drop the check. (<a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>)</li>
+<li><strong>SKTypeface.FromFamilyName(&quot;missing&quot;) no longer returns null on Android</strong> — All platforms are now consistent and return SKTypeface.Default for an unknown family. For a strict &quot;was it actually found?&quot; check, use SKFontManager.Default.MatchFamily(name, style), which still returns null on no match. (<a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>)</li>
+<li><strong>SKTypeface.Default is now guaranteed non-null</strong> — Default resolution moved to the font manager; behavior is unchanged on macOS/Windows/Linux, and Android API 36+ now falls back to SKTypeface.Empty instead of crashing. (<a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>)</li>
+<li><strong>SKStream.Move(long) now throws and is obsolete</strong> — The overload used to silently truncate out-of-range offsets to a native 32-bit int. It now throws OverflowException for out-of-range values and is marked [Obsolete] (CS0618). Call Move(int) with an in-range, validated offset instead. (<a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>)</li>
+<li><strong>GRContext.CreateVulkan aborts the process on Vulkan 1.0 instead of returning null</strong> — Ganesh now requires Vulkan 1.1 and calls a fatal native abort — not a catchable exception — when the instance/device version is below 1.1. Declare VK_API_VERSION_1_1 on both the VkApplicationInfo used to create the instance and on GRVkBackendContext.MaxAPIVersion (do not leave MaxAPIVersion at its unsafe default of 0). Vulkan-1.0-only hardware can no longer run Ganesh Vulkan and must fall back to another backend. (<a href="https://github.com/mono/SkiaSharp/pull/3741">#3741</a>)</li>
+<li><strong>GRVkBackendContextNative dropped five interop fields</strong> — fMinAPIVersion, fInstanceVersion, fExtensions, fFeatures, and fOwnsInstanceAndDevice were removed. Delete those assignments; use fVkExtensions instead of fExtensions and fDeviceFeatures/fDeviceFeatures2 instead of fFeatures. Skia no longer manages instance/device ownership through the backend context. (<a href="https://github.com/mono/SkiaSharp/pull/3741">#3741</a>)</li>
+<li><strong>GrVkYcbcrConversionInfo layout and identity changed</strong> — The struct gained a new Components field (backed by GRVkYcbcrComponents), and GRVkImageInfo.YcbcrConversionInfo retyped from GrVkYcbcrConversionInfo to GRVkYcbcrConversionInfo, losing value-equality (Equals/== / != are gone). Code that manually builds the struct or compares instances for equality must be updated. (<a href="https://github.com/mono/SkiaSharp/pull/3741">#3741</a>)</li>
+<li><strong>SKNativeObject.IgnorePublicDispose lost its public setter</strong> — The property is now get-only from outside the type. Remove any external assignment to it. (<a href="https://github.com/mono/SkiaSharp/pull/4205">#4205</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia bumped through m132, m133, m147, to m148</strong> — Brings the bundled Skia engine up to the m148 upstream release line, the basis for this v4 line, plus the ongoing chrome/m147 upstream bug-fix merges. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3560">#3560</a>, <a href="https://github.com/mono/SkiaSharp/pull/3660">#3660</a>, <a href="https://github.com/mono/SkiaSharp/pull/3702">#3702</a>, <a href="https://github.com/mono/SkiaSharp/pull/4125">#4125</a>, <a href="https://github.com/mono/SkiaSharp/pull/4044">#4044</a>, <a href="https://github.com/mono/SkiaSharp/pull/4081">#4081</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Variable and color fonts</strong> — Adds variable font support across SkiaSharp and HarfBuzzSharp, plus color font palette selection, with improved variable font robustness. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3703">#3703</a>, <a href="https://github.com/mono/SkiaSharp/pull/3742">#3742</a>)</li>
+<li><strong>Animated WebP encoding and zero-copy stream data</strong> — SKWebpEncoder can now encode animated WebP images, and SKStream.GetData() converts a stream to SKData without an extra copy. (<a href="https://github.com/mono/SkiaSharp/pull/3771">#3771</a>, <a href="https://github.com/mono/SkiaSharp/pull/3772">#3772</a>)</li>
+<li><strong>SKSamplingOptions on surface drawing</strong> — SKSurface.Draw and SKCanvas.DrawSurface now accept SKSamplingOptions to control filtering when compositing surfaces. (<a href="https://github.com/mono/SkiaSharp/pull/3491">#3491</a>)</li>
+<li><strong>HarfBuzz HBColor and API cleanup</strong> — Adds an HBColor struct for hb_color_t, plus missing API wrappers and naming-convention fixes across the binding. (<a href="https://github.com/mono/SkiaSharp/pull/4000">#4000</a>, <a href="https://github.com/mono/SkiaSharp/pull/4001">#4001</a>)</li>
+<li><strong>Legacy pre-v4 obsoletes promoted to compile errors</strong> — Remaining pre-v4 obsolete APIs (legacy paint text/font state, and other trimmed obsolete enum members) now fail to compile instead of just warning, completing the v3-to-v4 migration path. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4068">#4068</a>, <a href="https://github.com/mono/SkiaSharp/pull/4114">#4114</a>, <a href="https://github.com/mono/SkiaSharp/pull/4205">#4205</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Pixel access corrected</strong> — SKPixmap/SKBitmap.GetPixelSpan now uses RowBytes for stride and the correct axis (Width, not Height) for the (x, y) overload's offset, fixing incorrect pixel reads. (<a href="https://github.com/mono/SkiaSharp/pull/4148">#4148</a>, <a href="https://github.com/mono/SkiaSharp/pull/4128">#4128</a>)</li>
+<li><strong>SKPath finalizer crash fixed</strong> — Fixes a crash when the SKPathBuilder backing an SKPath is collected before the path itself. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3796">#3796</a>)</li>
+<li><strong>Default-typeface resolution moved to managed code</strong> — Fixes a null-typeface crash on newer Android by resolving the default typeface in the managed layer instead of relying on the native platform path. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3730">#3730</a>)</li>
+<li><strong>Android SKGLView rendering after tab switch</strong> — Fixes SKGLView failing to render again after switching tabs in a MAUI TabBar. — ❤️ <a href="https://github.com/SimonvBez">@SimonvBez</a> (<a href="https://github.com/mono/SkiaSharp/pull/3076">#3076</a>)</li>
+<li><strong>Apple and WinUI packaging fixes</strong> — Corrects Apple platform TFMs (26.0 for libraries, unversioned for apps) and fixes a missing WinUI projection DLL for .NET 9 consumers. (<a href="https://github.com/mono/SkiaSharp/pull/3798">#3798</a>, <a href="https://github.com/mono/SkiaSharp/pull/4084">#4084</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Singleton lifecycle reworked</strong> — Reworks how SkiaSharp's native singleton instances are created and torn down, and moves the native-compatibility gate from a module initializer into the SkiaApi static constructor for more predictable startup. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4080">#4080</a>, <a href="https://github.com/mono/SkiaSharp/pull/4133">#4133</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>New native targets added</strong> — Adds Linux Bionic native asset support and Tizen x64/arm64 native builds. — ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>, <a href="https://github.com/mono/SkiaSharp/pull/3620">#3620</a>)</li>
+<li><strong>WASM Emscripten floor raised</strong> — Drops native builds for pre-.NET 8 Emscripten versions. (<a href="https://github.com/mono/SkiaSharp/pull/4022">#4022</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Bundled native dependencies refreshed</strong> — Updates expat, HarfBuzz, libjpeg-turbo, FreeType, zlib, libpng, and libexpat to their latest versions. (<a href="https://github.com/mono/SkiaSharp/pull/4079">#4079</a>, <a href="https://github.com/mono/SkiaSharp/pull/4035">#4035</a>, <a href="https://github.com/mono/SkiaSharp/pull/4012">#4012</a>, <a href="https://github.com/mono/SkiaSharp/pull/3726">#3726</a>, <a href="https://github.com/mono/SkiaSharp/pull/3720">#3720</a>, <a href="https://github.com/mono/SkiaSharp/pull/3718">#3718</a>, <a href="https://github.com/mono/SkiaSharp/pull/3717">#3717</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1420">HarfBuzzSharp 14.2.0</h2>
+<p>Adds an HBColor struct for hb_color_t along with variable font shaping support, and bumps the bundled HarfBuzz to 14.2.0.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Singleton lifecycle rework, variable font support, the SKPath finalizer fix, the m147 Skia bump, and Uno sample updates. (<a href="https://github.com/mono/SkiaSharp/pull/3560">#3560</a>, <a href="https://github.com/mono/SkiaSharp/pull/3666">#3666</a>, <a href="https://github.com/mono/SkiaSharp/pull/3692">#3692</a>, <a href="https://github.com/mono/SkiaSharp/pull/3702">#3702</a>, <a href="https://github.com/mono/SkiaSharp/pull/3703">#3703</a>, <a href="https://github.com/mono/SkiaSharp/pull/3714">#3714</a>, <a href="https://github.com/mono/SkiaSharp/pull/3730">#3730</a>, <a href="https://github.com/mono/SkiaSharp/pull/3758">#3758</a>, <a href="https://github.com/mono/SkiaSharp/pull/3762">#3762</a>, <a href="https://github.com/mono/SkiaSharp/pull/3785">#3785</a>, <a href="https://github.com/mono/SkiaSharp/pull/3790">#3790</a>, <a href="https://github.com/mono/SkiaSharp/pull/3796">#3796</a>, <a href="https://github.com/mono/SkiaSharp/pull/3821">#3821</a>, <a href="https://github.com/mono/SkiaSharp/pull/3867">#3867</a>, <a href="https://github.com/mono/SkiaSharp/pull/4068">#4068</a>, <a href="https://github.com/mono/SkiaSharp/pull/4080">#4080</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>Linux Bionic native asset support and PolySharp-based C# 13 support on legacy TFMs. (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>, <a href="https://github.com/mono/SkiaSharp/pull/3642">#3642</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ebariche">@ebariche</a></td>
+<td>Contributed to this release. (<a href="https://github.com/mono/SkiaSharp/pull/3849">#3849</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/sasakrsmanovic">@sasakrsmanovic</a></td>
+<td>Contributed to this release. (<a href="https://github.com/mono/SkiaSharp/pull/3966">#3966</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/SimonvBez">@SimonvBez</a></td>
+<td>Fixed SKGLView not rendering after a MAUI TabBar tab switch. (<a href="https://github.com/mono/SkiaSharp/pull/3076">#3076</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-1-june-12-2026">Release Candidate 1 (June 12, 2026)</h2>
+<p>Release Candidate 1 bumped to Skia m148, fixed the pixel-access and finalizer bugs, and promoted the remaining legacy obsoletes toward v4's stable API surface.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.3.1...v4.148.0-rc.1.2">Full changelog</a></p>
+<h2 id="preview-3-may-24-2026">Preview 3 (May 24, 2026)</h2>
+<p>Preview 3 added variable font support, color font palettes, animated WebP encoding, and SKStream.GetData(), plus the singleton lifecycle rework.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.2.1...v4.147.0-preview.3.1">Full changelog</a></p>
+<h2 id="preview-2-may-6-2026">Preview 2 (May 6, 2026)</h2>
+<p>Preview 2 continued the m147 bug-fix merges and CI stabilization work.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.1.1...v4.147.0-preview.2.1">Full changelog</a></p>
+<h2 id="preview-1-april-28-2026">Preview 1 (April 28, 2026)</h2>
+<p>Preview 1 opened the v4 line, bumping Skia to milestone 132/147 and adding native asset support for Linux Bionic and Tizen.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.4...v4.147.0-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/5016/merge/documentation/docfx/releases/4.148.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #5016 · mattleibow-gate-skia-sync-delivery-signal · 24a7a85
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

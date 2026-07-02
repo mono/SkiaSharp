@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Render with SkiaSharp in .NET MAUI | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Render with SkiaSharp in .NET MAUI | SkiaSharp ">
+      
+      <meta name="description" content="Register and use SkiaSharp.Views.Maui.Controls raster and GPU views across Android, iOS, Mac Catalyst, and Windows.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/maui.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="render-with-skiasharp-in-net-maui">Render with SkiaSharp in .NET MAUI</h1>
+
+<p>The <code>SkiaSharp.Views.Maui.Controls</code> package provides two cross-platform controls:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Surface</th>
+<th>Paint event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKCanvasView</code></td>
+<td>CPU raster</td>
+<td><code>PaintSurface</code> with <code>SKPaintSurfaceEventArgs</code></td>
+</tr>
+<tr>
+<td><code>SKGLView</code></td>
+<td>Ganesh GPU</td>
+<td><code>PaintSurface</code> with <code>SKPaintGLSurfaceEventArgs</code></td>
+</tr>
+</tbody>
+</table>
+<p>Start with <code>SKCanvasView</code>. Choose <code>SKGLView</code> only after checking the backend and support level on every target your app ships.</p>
+<h2 id="register-the-handlers">Register the handlers</h2>
+<p>Call <code>UseSkiaSharp()</code> when creating the MAUI app. Without this call, MAUI does not register the handlers for the controls:</p>
+<pre><code class="lang-csharp">using SkiaSharp.Views.Maui.Controls.Hosting;
+
+public static MauiApp CreateMauiApp() =&gt;
+    MauiApp
+        .CreateBuilder()
+        .UseMauiApp&lt;App&gt;()
+        .UseSkiaSharp()
+        .Build();
+</code></pre>
+<h2 id="add-a-view">Add a view</h2>
+<p>Declare the controls from the <code>SkiaSharp.Views.Maui.Controls</code> namespace:</p>
+<pre><code class="lang-xml">&lt;ContentPage
+    xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+    xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
+    xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;&gt;
+    &lt;skia:SKCanvasView PaintSurface=&quot;OnPaintSurface&quot; /&gt;
+&lt;/ContentPage&gt;
+</code></pre>
+<p>The handler receives <code>SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs</code>. Draw on <code>e.Surface.Canvas</code>, then let the control present the result.</p>
+<p>Use <code>InvalidateSurface()</code> when application state changes and the control needs another frame. For <code>SKGLView</code>, set <code>HasRenderLoop</code> only while continuous rendering is required; otherwise invalidate on demand.</p>
+<h2 id="check-the-platform-backend">Check the platform backend</h2>
+<p>The public MAUI controls remain the same, but their handlers use different native views:</p>
+<table>
+<thead>
+<tr>
+<th>Target</th>
+<th><code>SKCanvasView</code> handler</th>
+<th><code>SKGLView</code> handler</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Android</td>
+<td>Native raster <code>SKCanvasView</code></td>
+<td><code>SKGLTextureView</code> with OpenGL ES</td>
+</tr>
+<tr>
+<td>iOS</td>
+<td>Native raster <code>SKCanvasView</code></td>
+<td>Native <code>SKGLView</code> with OpenGL ES</td>
+</tr>
+<tr>
+<td>Mac Catalyst</td>
+<td>Native raster <code>SKCanvasView</code></td>
+<td>Native <code>SKMetalView</code> with Metal</td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>SKXamlCanvas</code></td>
+<td><code>SKSwapChainPanel</code> with ANGLE/OpenGL ES</td>
+</tr>
+</tbody>
+</table>
+<p>The current MAUI projects target Android, iOS, Mac Catalyst, and Windows. They do not target tvOS, macOS, or Tizen.</p>
+<p>On iOS, the <code>SKGLView</code> handler is marked obsolete starting with iOS 12 because it uses OpenGL ES. The MAUI package does not expose a separate <code>SKMetalView</code> control for iOS. Use <code>SKCanvasView</code> or provide a native/custom Metal integration when an iOS GPU path is required.</p>
+<p>On Mac Catalyst, the MAUI <code>SKGLView</code> handler uses Metal internally, but the callback type is still the MAUI <code>SKPaintGLSurfaceEventArgs</code>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Choose a SkiaSharp view</a></li>
+<li><a href="android.html">Android views</a></li>
+<li><a href="apple.html">Apple platform views</a></li>
+<li><a href="windows.html">Windows views</a></li>
+<li><a href="../../basics/integration.html">Integrating with .NET MAUI</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/maui.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 4e7a11f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>HarfBuzzSharp 14.2.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="HarfBuzzSharp 14.2.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="../../TOC.html">
+      <meta name="docfx:tocrel" content="../TOC.html">
+      
+      <meta name="docfx:rel" content="../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/3779/merge/documentation/docfx/releases/harfbuzzsharp/14.2.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="harfbuzzsharp-1420">HarfBuzzSharp 14.2.0</h1>
+<!--
+  RAW PR DATA — Do not remove this comment block.
+  AI uses this data to generate the polished release notes below.
+  Re-run the script to refresh this data from git history.
+
+  Generated: 2026-06-23T19:20:24Z by generate-release-notes.py
+  version:   14.2.0
+  status:    stable
+  branch:    release/4.148.0
+  diff:      release/3.119.4..release/4.148.0
+  prs:       10
+  api:       self=14.2.0/index.md;ships=4.148.0
+
+  PRs grouped by the preview they first shipped in (newest first). Render each milestone as a trailing
+  "## <label> (<date>)" section per TEMPLATE.md, and merge them all for the top-level Highlights:
+
+  ## Release Candidate 1 · 4.148.0 · 2026-06-12 · https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.3.1...v4.148.0-rc.1.2  (1 PRs)
+    - Rework the lifecycle of singleton instances by @ramezgerges in https://github.com/mono/SkiaSharp/pull/4080 [community ✨]
+
+  ## Preview 3 · 4.147.0 · 2026-05-24 · https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.2.1...v4.147.0-preview.3.1  (3 PRs)
+    - [WASM] Drop native builds for pre-.NET 8 Emscripten versions by @mattleibow in https://github.com/mono/SkiaSharp/pull/4022
+    - Add HBColor struct for proper hb_color_t representation by @mattleibow in https://github.com/mono/SkiaSharp/pull/4000
+    - Enable TreatWarningsAsErrors in binding/ and fix all warnings by @mattleibow in https://github.com/mono/SkiaSharp/pull/3752
+
+  ## Preview 2 · 4.147.0 · 2026-05-06 · https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.1.1...v4.147.0-preview.2.1  (1 PRs)
+    - [samples] Fix Skottie package downgrade NU1605 in Uno gallery by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3785 [community ✨]
+
+  ## Preview 1 · 4.147.0 · 2026-04-28 · https://github.com/mono/SkiaSharp/compare/v3.119.4...v4.147.0-preview.1.1  (5 PRs)
+    - Bump skia to milestone 147 by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3702 [community ✨] (skia: mono/skia#184)
+    - Add color font palette support and improve variable font robustness by @mattleibow in https://github.com/mono/SkiaSharp/pull/3742 (skia: mono/skia#197)
+    - Add variable font support to SkiaSharp and HarfBuzzSharp by @ramezgerges in https://github.com/mono/SkiaSharp/pull/3703 [community ✨] (skia: mono/skia#185)
+    - Add Linux Bionic native assets support by @4Darmygeometry in https://github.com/mono/SkiaSharp/pull/3217 [community ✨]
+    - [tizen] Add x64 and arm64 native build support by @mattleibow in https://github.com/mono/SkiaSharp/pull/3620 (skia: mono/skia#175)
+-->
+<!-- Generated: 2026-06-23T19:21:35Z by claude-sonnet-4.6 -->
+
+<blockquote>
+<p><strong>Variable fonts, color palettes, and <code>HBColor</code></strong> · Ships with <a href="../4.148.0.html">SkiaSharp 4.148.0</a> · <a href="https://www.nuget.org/packages/HarfBuzzSharp/14.2.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.148.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="14.2.0/index.html">HarfBuzzSharp API diff</a> · Ships with <a href="../4.148.0.html">SkiaSharp 4.148.0</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>HarfBuzzSharp 14.2.0 ships with <a href="../4.148.0.html">SkiaSharp 4.148.0</a> and delivers variable font support, a new <code>HBColor</code> struct, a reworked singleton lifecycle, and expanded platform coverage. OpenType variable-font axis APIs land in both <code>HBFace</code> and <code>HBFont</code>, and the lifecycle of singleton native objects is now ref-counted and crash-free. Community contributors <a href="https://github.com/ramezgerges">@ramezgerges</a> and <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> drove the major features and Linux Bionic support.</p>
+<h2 id="new-features">New Features</h2>
+<ul>
+<li><strong><code>HBColor</code> struct</strong> — Proper managed type for <code>hb_color_t</code>, enabling correct color glyph API usage. (<a href="https://github.com/mono/SkiaSharp/pull/4000">#4000</a>)</li>
+<li><strong>Variable font support</strong> — Adds <code>HBFace</code> and <code>HBFont</code> variable-instance APIs for full OpenType font variation axis access. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/3703">#3703</a>)</li>
+<li><strong>Color font palette support</strong> — Improved color palette handling for color and emoji fonts. (<a href="https://github.com/mono/SkiaSharp/pull/3742">#3742</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Reworked singleton lifecycle</strong> — Singleton native objects now use a proper ref-counted lifecycle, preventing use-after-free crashes in HarfBuzz singleton instances. ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4080">#4080</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Linux Bionic native assets</strong> — Prebuilt HarfBuzzSharp natives for Android Bionic libc on Linux. ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>)</li>
+<li><strong>Tizen x64 and ARM64 native builds</strong> (<a href="https://github.com/mono/SkiaSharp/pull/3620">#3620</a>)</li>
+<li><strong>WASM: Dropped pre-.NET 8 Emscripten builds</strong> (<a href="https://github.com/mono/SkiaSharp/pull/4022">#4022</a>)</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>What They Did</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Variable font support; singleton lifecycle rework; Skia/HarfBuzz m147 engine bump</td>
+</tr>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>Linux Bionic native assets</td>
+</tr>
+</tbody>
+</table>
+<h2 id="links">Links</h2>
+<ul>
+<li><a href="https://github.com/mono/SkiaSharp/compare/v3.119.4...v4.148.0">Full Changelog</a></li>
+<li><a href="https://www.nuget.org/packages/HarfBuzzSharp/14.2.0">NuGet Package</a></li>
+</ul>
+<hr>
+<h2 id="release-candidate-1-june-12-2026">Release Candidate 1 (June 12, 2026)</h2>
+<p>Reworked singleton lifecycle for HarfBuzz native objects, preventing use-after-free crashes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.3.1...v4.148.0-rc.1.2">Full Changelog</a></p>
+<hr>
+<h2 id="preview-3-may-24-2026">Preview 3 (May 24, 2026)</h2>
+<p>Added <code>HBColor</code> struct and dropped pre-.NET 8 WASM Emscripten builds.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.2.1...v4.147.0-preview.3.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-2-may-6-2026">Preview 2 (May 6, 2026)</h2>
+<p>Build and sample fixes for HarfBuzzSharp on Uno Platform.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.147.0-preview.1.1...v4.147.0-preview.2.1">Full Changelog</a></p>
+<hr>
+<h2 id="preview-1-april-28-2026">Preview 1 (April 28, 2026)</h2>
+<p>Introduced variable font support, color font palettes, Linux Bionic native assets, and Tizen x64/arm64 native builds alongside the SkiaSharp v4 launch.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.4...v4.147.0-preview.1.1">Full Changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/3779/merge/documentation/docfx/releases/harfbuzzsharp/14.2.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #3779 · mattleibow/dev-skmesh-api · c9dc174
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

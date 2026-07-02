@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Graphite with Metal | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Graphite with Metal | SkiaSharp ">
+      
+      <meta name="description" content="Create a Graphite Metal context, wrap Metal textures, and account for iOS and tvOS Simulator pipeline limitations.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/metal.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="use-graphite-with-metal">Use Graphite with Metal</h1>
+
+<p>Graphite Metal is available on macOS, iOS, Mac Catalyst, and tvOS, including Apple Silicon simulators. <code>SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal)</code> reports whether the Metal factory was compiled into the current native library; it does not validate the selected <code>MTLDevice</code>.</p>
+<h2 id="create-the-graphite-context">Create the Graphite context</h2>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Before creating the command queue or calling <code>CreateMetal</code>, use the platform binding for <code>supportsFamily:</code> to confirm that the device reports a GPU family accepted by the current Skia build. Current macOS builds check Apple 7 through 9 and Mac 2; iOS-family builds also check Apple 2 through 6. If none of those families is reported, Skia calls <code>SK_ABORT</code> instead of returning <code>null</code>, which terminates the process.</p>
+</div>
+<p>Supply an <code>MTLDevice</code> and <code>MTLCommandQueue</code>. On Apple target frameworks you can assign typed <code>IMTLDevice</code> and <code>IMTLCommandQueue</code> objects; from other targets, assign their native handles:</p>
+<pre><code class="lang-csharp">using var backendContext = new SKGraphiteMtlBackendContext
+{
+    MtlDevice = mtlDeviceHandle,
+    MtlQueue = mtlCommandQueueHandle,
+};
+
+using var context = SKGraphiteContext.CreateMetal(backendContext);
+</code></pre>
+<h2 id="wrap-metal-textures">Wrap Metal textures</h2>
+<p>Describe an existing <code>MTLTexture</code> with <code>SKGraphiteBackendTexture.CreateMetal</code>, then use the shared surface-wrapping call:</p>
+<pre><code class="lang-csharp">using var backendTexture = SKGraphiteBackendTexture.CreateMetal(
+    width, height, mtlTextureHandle);
+using var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888);
+</code></pre>
+<p>The native <code>MTLTexture</code> remains owned by the code that created it. If you supply a release callback, release the native allocation only after the callback fires.</p>
+<h2 id="simulator-caveats">Simulator caveats</h2>
+<p>Graphite Metal works on the iOS and tvOS Simulator on Apple Silicon because it uses the host GPU. The simulator's <code>MTLDevice</code> can under-report its family, so detect the Apple Simulator explicitly and allow it as an exception to the family probe. Do not apply that exception to other devices or virtualized Metal environments.</p>
+<p>The simulator's Metal shader compiler cannot build some Graphite pipelines, including some gradient shaders. In that case, <code>recorder.Snap()</code> returns <code>null</code> for the frame. The same content renders with Graphite Metal on macOS and physical iOS hardware, and with Ganesh Metal on the simulator. See <a href="https://github.com/mono/SkiaSharp/issues/4555">mono/SkiaSharp#4555</a>, and always check the result of <code>Snap()</code>.</p>
+<h2 id="next-steps">Next steps</h2>
+<p>Continue with the shared <a href="index.html">Graphite recording, submission, readback, texture, and resource flow</a>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Graphite GPU surfaces</a></li>
+<li><a href="../ganesh/metal.html">Ganesh with Metal</a></li>
+<li><a href="migrate-from-ganesh.html">Migrate from Ganesh to Graphite</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/metal.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 4e7a11f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

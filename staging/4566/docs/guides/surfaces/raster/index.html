@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Raster surfaces | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Raster surfaces | SkiaSharp ">
+      
+      <meta name="description" content="Create CPU-backed SKSurface objects for offscreen and headless rendering, draw into caller-owned memory, and save or read pixels.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/raster/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="raster-surfaces">Raster surfaces</h1>
+
+<p>A <strong>raster</strong> surface keeps its pixels in system (CPU) memory. It needs no GPU and is available on every platform SkiaSharp supports. Use a raster surface when you want a portable CPU rendering path for images, thumbnails, raster assets for document or print pipelines, server workloads, or tests.</p>
+<h2 id="creating-a-raster-surface">Creating a raster surface</h2>
+<p>The most common way to create a raster surface is to describe the image you want with an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo"><code>SKImageInfo</code></a> and let SkiaSharp allocate the pixel buffer for you:</p>
+<pre><code class="lang-csharp">var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+using var surface = SKSurface.Create(info);
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
+var canvas = surface.Canvas;
+
+canvas.Clear(SKColors.White);
+canvas.DrawCircle(128, 128, 100, paint);
+</code></pre>
+<p><code>SKImageInfo</code> describes the width, height, color type, and alpha type of the surface. <code>SKColorType.Rgba8888</code> with <code>SKAlphaType.Premul</code> is a common, portable choice, but you can pick whatever format your pipeline needs.</p>
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface.create#skiasharp-sksurface-create(skiasharp-skimageinfo)"><code>SKSurface.Create(SKImageInfo)</code></a> overload returns <code>null</code> if the surface could not be created, for example when dimensions are invalid. The snippets in this guide use valid inputs and focus on the successful rendering flow.</p>
+<h2 id="getting-the-result-out">Getting the result out</h2>
+<p>Once you've finished drawing, there are two common ways to get the pixels back.</p>
+<p>The simplest is to take an immutable snapshot as an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage"><code>SKImage</code></a>, which you can then encode to PNG, JPEG, or another format:</p>
+<pre><code class="lang-csharp">using System.IO;
+
+using var image = surface.Snapshot();
+using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+using var stream = File.OpenWrite(&quot;output.png&quot;);
+data.SaveTo(stream);
+</code></pre>
+<p>If you need the raw pixels rather than an encoded image, read them back into a buffer with <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface.readpixels"><code>ReadPixels</code></a>. Because a raster surface already lives in CPU memory, this read is synchronous and does not cross a GPU boundary:</p>
+<pre><code class="lang-csharp">using System.Runtime.InteropServices;
+
+var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
+var pixels = new byte[info.BytesSize];
+
+var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+try
+{
+    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
+}
+finally
+{
+    handle.Free();
+}
+</code></pre>
+<div class="NOTE">
+<h5>Note</h5>
+<p>Synchronous <code>ReadPixels</code> is a raster and Ganesh convenience. Graphite surfaces do <strong>not</strong> support it — see <a href="../graphite/index.html#reading-pixels-back">Graphite GPU surfaces</a>.</p>
+</div>
+<h2 id="raster-direct-drawing-into-memory-you-own">Raster-direct: drawing into memory you own</h2>
+<p>The <code>SKSurface.Create(SKImageInfo)</code> overload lets Skia allocate the pixel buffer. Sometimes you already have a buffer — a <code>byte[]</code>, a native allocation, or the pixels of an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap"><code>SKBitmap</code></a> — and you want Skia to draw <em>directly</em> into it with no extra copy. That is a <strong>raster-direct</strong> surface.</p>
+<p>Pass the address of your buffer along with the info and row stride:</p>
+<pre><code class="lang-csharp">using System.Runtime.InteropServices;
+
+var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
+var pixels = new byte[info.BytesSize];
+var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+try
+{
+    using var surface = SKSurface.Create(info, handle.AddrOfPinnedObject(), info.RowBytes);
+    using var paint = new SKPaint { Color = SKColors.Red };
+
+    // every draw call writes straight into `pixels`
+    surface.Canvas.Clear(SKColors.White);
+    surface.Canvas.DrawCircle(128, 128, 100, paint);
+}
+finally
+{
+    handle.Free();
+}
+</code></pre>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>The memory you pass must stay alive and pinned until the <code>SKSurface</code> and every image or pixmap that still shares the buffer have been disposed. Flushing a raster canvas does not release the pointer. Freeing a <code>GCHandle</code> earlier lets the garbage collector move the buffer while Skia can still access it.</p>
+</div>
+<p>You can also wrap an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpixmap"><code>SKPixmap</code></a> — which already bundles an <code>SKImageInfo</code> with a pixel pointer — using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface.create#skiasharp-sksurface-create(skiasharp-skpixmap)"><code>SKSurface.Create(SKPixmap)</code></a> overload:</p>
+<pre><code class="lang-csharp">using var bitmap = new SKBitmap(info);
+using var pixmap = bitmap.PeekPixels();
+using var surface = SKSurface.Create(pixmap);
+
+surface.Canvas.Clear(SKColors.White);
+// ... draw ...
+// the pixels are now visible directly in `bitmap`
+</code></pre>
+<p>This is a convenient way to draw straight into an <code>SKBitmap</code> you already have.</p>
+<h2 id="when-to-use-a-raster-surface">When to use a raster surface</h2>
+<p>Reach for a raster surface when:</p>
+<ul>
+<li>You are rendering <strong>offscreen</strong> or <strong>headless</strong> — no window, no GPU context.</li>
+<li>You want a portable CPU rendering path without a graphics API or driver dependency.</li>
+<li>You are producing images to save, stream, or process further (thumbnails, tiles, reports).</li>
+<li>You need to draw directly into a buffer you already own (raster-direct).</li>
+</ul>
+<p>If you need GPU acceleration — because you are rendering many frames per second, compositing with other GPU content, or drawing very large scenes — use a GPU-backed surface instead. See <a href="../ganesh/index.html">Ganesh GPU surfaces</a> and <a href="../graphite/index.html">Graphite GPU surfaces</a>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+<li><a href="../index.html">Surface overview</a></li>
+<li><a href="../../bitmaps/drawing.html">Creating and drawing on bitmaps</a></li>
+<li><a href="https://skia.org/docs/user/api/skcanvas_creation/">Skia canvas creation, Raster backend (skia.org)</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/raster/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 4e7a11f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

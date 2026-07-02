@@ -1,0 +1,204 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Graphite with Vulkan | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Graphite with Vulkan | SkiaSharp ">
+      
+      <meta name="description" content="Create a Graphite Vulkan context, wrap Vulkan images with the required usage flags, and release backend textures safely.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/vulkan.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="use-graphite-with-vulkan">Use Graphite with Vulkan</h1>
+
+<p>Graphite Vulkan is available on Linux, Android, and Windows. Apple builds use <a href="metal.html">Metal</a>, not Vulkan. <code>SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Vulkan)</code> reports whether the Vulkan factory was compiled into the current native library.</p>
+<h2 id="create-the-graphite-context">Create the Graphite context</h2>
+<p>Fill <code>SKGraphiteVkBackendContext</code> with the Vulkan objects owned by your host:</p>
+<pre><code class="lang-csharp">using var backendContext = new SKGraphiteVkBackendContext
+{
+    VkInstance = instanceHandle,
+    VkPhysicalDevice = physicalDeviceHandle,
+    VkDevice = deviceHandle,
+    VkQueue = graphicsQueueHandle,
+    GraphicsQueueIndex = graphicsFamilyIndex,
+    MaxApiVersion = apiVersion,
+    GetProcedureAddress = (name, instance, device) =&gt;
+        System.IntPtr.Zero, // TODO: Forward to vkGetInstanceProcAddr or vkGetDeviceProcAddr.
+};
+
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
+</code></pre>
+<p>Replace the zero-returning placeholder with your <code>vkGetInstanceProcAddr</code> and <code>vkGetDeviceProcAddr</code> integration.</p>
+<p>There is no typed Graphite-specific Vulkan adapter. With <a href="https://www.nuget.org/packages/Silk.NET.Vulkan">Silk.NET</a>, pass each object's <code>.Handle</code> value:</p>
+<pre><code class="lang-csharp">using Silk.NET.Vulkan;
+
+using var backendContext = new SKGraphiteVkBackendContext
+{
+    VkInstance = instance.Handle,
+    VkPhysicalDevice = physicalDevice.Handle,
+    VkDevice = device.Handle,
+    VkQueue = graphicsQueue.Handle,
+    GraphicsQueueIndex = graphicsFamily,
+    MaxApiVersion = apiVersion,
+    GetProcedureAddress = getProc,
+};
+
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
+</code></pre>
+<p>Use Silk.NET or raw <code>libvulkan</code> P/Invoke for new code. The legacy SharpVk binding is unmaintained.</p>
+<h2 id="wrap-and-release-vulkan-images">Wrap and release Vulkan images</h2>
+<p>Use <code>SKGraphiteBackendTexture.CreateVulkan</code> to describe an existing <code>VkImage</code>. A Vulkan image wrapped as a <strong>renderable surface</strong> must include both <code>VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT</code> (<code>0x10</code>) and <code>VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT</code> (<code>0x80</code>). Without them, <code>SKSurface.Create</code> returns <code>null</code>.</p>
+<p>A typical renderable mask is <code>TRANSFER_SRC | TRANSFER_DST | SAMPLED | COLOR_ATTACHMENT | INPUT_ATTACHMENT</code> (<code>0x97</code>). An image used only for sampling needs <code>SAMPLED</code>, not <code>INPUT_ATTACHMENT</code>.</p>
+<p>When Skia is done with a wrapped texture, the parameterless <code>SKGraphiteReleaseDelegate</code> fires after the wrapper is disposed and pending GPU work has drained. Disposing the wrapper alone does not mean the allocation is safe to delete.</p>
+<h3 id="release-a-wrapped-texture">Release a wrapped texture</h3>
+<p>Starting with an initialized Vulkan <code>backendContext</code>, this successful-path sequence allocates a backend texture through the recorder, wraps it, submits work, waits for the release callback, and deletes the allocation while the recorder is still alive:</p>
+<pre><code class="lang-csharp">const int width = 256;
+const int height = 256;
+
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
+using var recorder = context.CreateRecorder();
+
+var vkInfo = new SKGraphiteVkTextureInfo
+{
+    Format = 37,           // VK_FORMAT_R8G8B8A8_UNORM
+    ImageTiling = 0,       // VK_IMAGE_TILING_OPTIMAL
+    SampleCount = 1,
+    AspectMask = 1,        // VK_IMAGE_ASPECT_COLOR_BIT
+    SharingMode = 0,       // VK_SHARING_MODE_EXCLUSIVE
+    ImageUsageFlags = 0x1 | 0x2 | 0x4 | 0x10 | 0x80, // = 0x97
+};
+using var textureInfo = SKGraphiteTextureInfo.CreateVulkan(vkInfo);
+using var backendTexture = recorder.CreateBackendTexture(width, height, textureInfo);
+
+var released = false;
+using (var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888,
+    colorSpace: null, props: null,
+    releaseProc: () =&gt; released = true))
+{
+    surface.Canvas.Clear(SKColors.Red);
+    using var recording = recorder.Snap();
+    context.InsertRecording(recording);
+    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+}
+
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+while (!released)
+    context.CheckAsyncWorkCompletion();
+
+context.FreeGpuResources();
+recorder.DeleteBackendTexture(backendTexture);
+</code></pre>
+<p>The sample assumes wrapping and submission succeed so the release ordering is easy to see. Production code should bound the callback wait. If insertion or submission fails, do not delete an allocation while Skia might still reference it; tear down and recreate the owning Graphite context and native Vulkan device instead.</p>
+<p>For a <code>VkImage</code> allocated by your own Vulkan code, construct the wrapper with <code>SKGraphiteBackendTexture.CreateVulkan</code> and release the native image through Vulkan after the callback. <code>SKImage.FromTexture</code> uses the same callback timing.</p>
+<h2 id="next-steps">Next steps</h2>
+<p>Continue with the shared <a href="index.html">Graphite recording, submission, readback, texture, and resource flow</a>.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Graphite GPU surfaces</a></li>
+<li><a href="../ganesh/vulkan.html">Ganesh with Vulkan</a></li>
+<li><a href="migrate-from-ganesh.html">Migrate from Ganesh to Graphite</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/vulkan.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 4e7a11f
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

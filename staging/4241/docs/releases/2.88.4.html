@@ -1,0 +1,234 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.4 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.4 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/2.88.4.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2884">Version 2.88.4</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:2.88.4 -->
+
+<blockquote>
+<p><strong>.NET 8, Apple Silicon and WASM refresh</strong> · Released August 22, 2023 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.4">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.4">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.88.4/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/2.8.2.4/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.88.4 adds .NET 8 and Apple Silicon macOS support and refreshes bundled native libraries. This release adds native ARM64 macOS binaries, .NET 8 WASM assets for Blazor, and moves the WinUI target onto <code>JSImport</code> on <code>net7.0</code>. It refreshes libpng, libexpat and zlib, ships the Android <code>.aar</code> inside the NuGet, and picks up Uno WASM improvements including EH+SIMD.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Apple Silicon macOS</strong> — Native binaries are now produced for ARM64 macOS machines, so <code>.NET on macOS-arm64</code> no longer runs SkiaSharp under Rosetta. (<a href="https://github.com/mono/SkiaSharp/pull/2468">#2468</a>)</li>
+<li><strong>.NET 8 WASM assets for Blazor</strong> — The new WebAssembly assets shipped with .NET 8 are now included so Blazor apps on .NET 8 pick up the right native. (<a href="https://github.com/mono/SkiaSharp/pull/2497">#2497</a>)</li>
+<li><strong>.NET iOS and Mac Catalyst samples</strong> — New .NET iOS and Mac Catalyst samples plus a .NET &quot;Core&quot; sample host demonstrate the modern-platform bindings. (<a href="https://github.com/mono/SkiaSharp/pull/2491">#2491</a>)</li>
+<li><strong>Android .aar shipped in the NuGet</strong> — The Android <code>.aar</code> is now included in the NuGet package so consumers no longer have to source it separately. — ❤️ <a href="https://github.com/dellis1972">@dellis1972</a> (<a href="https://github.com/mono/SkiaSharp/pull/2465">#2465</a>)</li>
+<li><strong>.NET 5 SDK requirement dropped</strong> — All build-time requirements on the .NET 5 SDK have been removed. (<a href="https://github.com/mono/SkiaSharp/pull/2266">#2266</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>WinUI moves to JSImport on net7.0</strong> — The WinUI target now uses <code>JSImport</code> on <code>net7.0</code>, aligning with the modern WinUI/Uno interop model. — ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/2428">#2428</a>)</li>
+<li><strong>Faster hex-string parsing on SKColor</strong> — <code>SKColor</code> hex-string parsing was rewritten to avoid the per-character allocations and lookups it used to do. — ❤️ <a href="https://github.com/jwikberg">@jwikberg</a> (<a href="https://github.com/mono/SkiaSharp/pull/2467">#2467</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>SKCanvasView dispose race fixed</strong> — <code>SKCanvasView</code> no longer throws when the view is disposed before it has been rendered for the first time. — ❤️ <a href="https://github.com/jjzhang12">@jjzhang12</a> (<a href="https://github.com/mono/SkiaSharp/pull/2472">#2472</a>)</li>
+<li><strong>WASM canvas resilience</strong> — <code>SKXamlCanvas</code> on WASM tolerates a missing canvas element, updates the bitmap <code>SKAlphaType</code> correctly, and disambiguates <code>SKGLView</code> between Uno and MAUI targets. — ❤️ <a href="https://github.com/roubachof">@roubachof</a>, <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/2443">#2443</a>, <a href="https://github.com/mono/SkiaSharp/pull/2529">#2529</a>)</li>
+<li><strong>Uno Opaque defaults on Apple platforms</strong> — <code>SKXamlCanvas</code> on Uno now defaults <code>Opaque</code> to <code>false</code> on macOS and iOS to match the platform expectation, and <code>SKSwapChainPanel</code> was updated for Android and iOS. — ❤️ <a href="https://github.com/roubachof">@roubachof</a> (<a href="https://github.com/mono/SkiaSharp/pull/2398">#2398</a>, <a href="https://github.com/mono/SkiaSharp/pull/2400">#2400</a>, <a href="https://github.com/mono/SkiaSharp/pull/2401">#2401</a>, <a href="https://github.com/mono/SkiaSharp/pull/2477">#2477</a>)</li>
+<li><strong>Tizen canvas sizing corrected</strong> — The Tizen views now compute canvas size correctly on high-DPI displays. — ❤️ <a href="https://github.com/myroot">@myroot</a> (<a href="https://github.com/mono/SkiaSharp/pull/2322">#2322</a>)</li>
+<li><strong>ToRect extension fixed</strong> — The <code>ToRect</code> extension no longer returns wrong bounds in an edge case. — ❤️ <a href="https://github.com/niza93">@niza93</a> (<a href="https://github.com/mono/SkiaSharp/pull/2392">#2392</a>)</li>
+<li><strong>Guard against a race in the view lifecycle</strong> — An additional check avoids an exception in a lifecycle race path. — ❤️ <a href="https://github.com/FoggyFinder">@FoggyFinder</a> (<a href="https://github.com/mono/SkiaSharp/pull/2313">#2313</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Bundled native libraries refreshed</strong> — libpng bumped to 1.6.40, libexpat to 2.5.0, and zlib to 1.2.13 — pulling in the latest upstream security and correctness fixes. (<a href="https://github.com/mono/SkiaSharp/pull/2510">#2510</a>, <a href="https://github.com/mono/SkiaSharp/pull/2484">#2484</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Cleaner using scopes</strong> — Several internal blocks were rewritten with C# 8 block-scoped <code>using</code> statements to reduce nesting. — ❤️ <a href="https://github.com/Lehonti">@Lehonti</a> (<a href="https://github.com/mono/SkiaSharp/pull/2528">#2528</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-2824">HarfBuzzSharp 2.8.2.4</h2>
+<p>HarfBuzzSharp 2.8.2.4 adds native binaries for Apple Silicon macOS, ships the Hot Restart native reference, and enables WASM multi-threading and SIMD alongside SkiaSharp.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Moved WinUI to <code>JSImport</code> on net7.0, disambiguated <code>SKGLView</code>, and enabled WASM EH+SIMD in all configurations for net8+ (<a href="https://github.com/mono/SkiaSharp/pull/2286">#2286</a>, <a href="https://github.com/mono/SkiaSharp/pull/2428">#2428</a>, <a href="https://github.com/mono/SkiaSharp/pull/2457">#2457</a>, <a href="https://github.com/mono/SkiaSharp/pull/2495">#2495</a>, <a href="https://github.com/mono/SkiaSharp/pull/2503">#2503</a>, <a href="https://github.com/mono/SkiaSharp/pull/2529">#2529</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/roubachof">@roubachof</a></td>
+<td>Fixed the Uno <code>SKXamlCanvas</code> Alpha type on WASM, defaulted <code>Opaque</code> on Apple platforms, and updated the Android and iOS <code>SKSwapChainPanel</code> (<a href="https://github.com/mono/SkiaSharp/pull/2398">#2398</a>, <a href="https://github.com/mono/SkiaSharp/pull/2400">#2400</a>, <a href="https://github.com/mono/SkiaSharp/pull/2401">#2401</a>, <a href="https://github.com/mono/SkiaSharp/pull/2443">#2443</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pjcollins">@pjcollins</a></td>
+<td>Contributed to the modern-platform enablement work landing in this release (<a href="https://github.com/mono/SkiaSharp/pull/2389">#2389</a>, <a href="https://github.com/mono/SkiaSharp/pull/2393">#2393</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dellis1972">@dellis1972</a></td>
+<td>Made the Android <code>.aar</code> ship inside the NuGet package (<a href="https://github.com/mono/SkiaSharp/pull/2465">#2465</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/FoggyFinder">@FoggyFinder</a></td>
+<td>Added a defensive check to avoid an exception in a lifecycle race path (<a href="https://github.com/mono/SkiaSharp/pull/2313">#2313</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JamieMagee">@JamieMagee</a></td>
+<td>Contributed dependency and infrastructure improvements (<a href="https://github.com/mono/SkiaSharp/pull/2232">#2232</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jjzhang12">@jjzhang12</a></td>
+<td>Fixed the <code>SKCanvasView</code> dispose exception when the view is disposed before it has been rendered (<a href="https://github.com/mono/SkiaSharp/pull/2472">#2472</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jwikberg">@jwikberg</a></td>
+<td>Rewrote hex-string parsing in <code>SKColor</code> for a large performance win (<a href="https://github.com/mono/SkiaSharp/pull/2467">#2467</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Lehonti">@Lehonti</a></td>
+<td>Removed nesting by adopting block-scoped <code>using</code> statements (<a href="https://github.com/mono/SkiaSharp/pull/2528">#2528</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/myroot">@myroot</a></td>
+<td>Fixed Tizen canvas-size calculation on high-DPI displays (<a href="https://github.com/mono/SkiaSharp/pull/2322">#2322</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/niza93">@niza93</a></td>
+<td>Fixed the <code>ToRect</code> extension method (<a href="https://github.com/mono/SkiaSharp/pull/2392">#2392</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Redth">@Redth</a></td>
+<td>Contributed to the modern-platform enablement work landing in this release (<a href="https://github.com/mono/SkiaSharp/pull/2303">#2303</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-96-august-17-2023">Preview 96 (August 17, 2023)</h2>
+<p>Preview 96 shipped the final Hot Restart native reference.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.95...v2.88.4-preview.96">Full changelog</a></p>
+<h2 id="preview-95-august-16-2023">Preview 95 (August 16, 2023)</h2>
+<p>Preview 95 landed the libpng/libexpat refresh, WinUI JSImport move, the SKCanvasView disambiguation and the <code>using</code>-scope cleanup.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.82...v2.88.4-preview.95">Full changelog</a></p>
+<h2 id="preview-82-june-22-2023">Preview 82 (June 22, 2023)</h2>
+<p>Preview 82 added the .NET 8 WASM assets and the ToRect fix.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.76...v2.88.4-preview.82">Full changelog</a></p>
+<h2 id="preview-76-june-19-2023">Preview 76 (June 19, 2023)</h2>
+<p>Preview 76 added the .NET iOS/Catalyst samples, faster SKColor hex parsing and ARM64 macOS binaries.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.4-preview.70...v2.88.4-preview.76">Full changelog</a></p>
+<h2 id="preview-70-june-14-2023">Preview 70 (June 14, 2023)</h2>
+<p>Preview 70 opened the line with zlib 1.2.13, Uno Opaque and swap-chain fixes, and the drop of the .NET 5 SDK requirement.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.3...v2.88.4-preview.70">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/2.88.4.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4241 · mattleibow-dev-issue-2779-skmatrix-managed-math · b059699
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
