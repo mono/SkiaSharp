@@ -71,6 +71,86 @@
       </div>
     </section>
 
+    <!-- ── Moving faster with AI (live dashboard) ────────── -->
+    <section class="ai-section section-alt dashboard" id="moving-faster" aria-labelledby="moving-faster-title">
+      <div class="container">
+        <p class="section-kicker">Moving faster with AI</p>
+        <h2 class="section-title" id="moving-faster-title">The dashboard</h2>
+        <p class="section-lead">
+          A few signals the automation moves, cached when the site rebuilds and refreshed
+          from public data. Every number below links back to its source, and each panel notes
+          the date it was last refreshed so a stale figure is obvious rather than hidden.
+        </p>
+
+        <div class="dash-grid" data-dashboard>
+          <!-- Panel 1 — Adoption at a glance -->
+          <article class="dash-panel" data-panel="adoption" aria-busy="true">
+            <header class="dash-head">
+              <h3>Adoption at a glance</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading NuGet download figures&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener" data-source-link>Source: nuget.org &rarr;</a>
+            </footer>
+          </article>
+
+          <!-- Panel 2 — Time to keep up with upstream (the hero) -->
+          <article class="dash-panel dash-panel-hero" data-panel="cadence" aria-busy="true">
+            <header class="dash-head">
+              <h3>Time to keep up with upstream</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <p class="dash-caption" data-caption>
+              AI opens, tests, and lands the sync PR; humans review the API.
+            </p>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading milestone cadence&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://chromiumdash.appspot.com/schedule" target="_blank" rel="noopener" data-source-link>Chrome schedule &rarr;</a>
+              <a href="https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle" target="_blank" rel="noopener" data-prs-link>Bump PRs &rarr;</a>
+            </footer>
+          </article>
+
+          <!-- Panel 3 — What the automation costs (per run) -->
+          <article class="dash-panel" data-panel="cost" aria-busy="true">
+            <header class="dash-head">
+              <h3>What the automation costs</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading per-run cost&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener" data-source-link>The workflows &rarr;</a>
+            </footer>
+          </article>
+        </div>
+
+        <noscript>
+          <p class="loop-note">
+            This dashboard renders from cached data with JavaScript. With scripting off, read the
+            numbers at their sources:
+            <a href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener">NuGet downloads</a>,
+            the <a href="https://chromiumdash.appspot.com/schedule" target="_blank" rel="noopener">Chrome schedule</a>,
+            the <a href="https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle" target="_blank" rel="noopener">milestone bump PRs</a>,
+            and the <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener">workflows</a>.
+          </p>
+        </noscript>
+
+        <p class="loop-note dash-footer">
+          Every figure here is auditable: the downloads come from NuGet, the milestone dates from
+          the Chromium schedule and our own merged bump PRs, and the run costs from the workflow
+          logs. Read the machinery in the
+          <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener">mono/SkiaSharp workflows</a>
+          directory.
+        </p>
+      </div>
+    </section>
+
     <!-- ── The loop ──────────────────────────────────────── -->
     <section class="ai-section">
       <div class="container">
@@ -544,5 +624,6 @@
   </footer>
 
   <script src="../site.js"></script>
+  <script src="dashboard.js"></script>
 </body>
 </html>
