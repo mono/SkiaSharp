@@ -6,6 +6,43 @@ on:
   pull_request:
     branches: [ main ]
     types: [ opened, synchronize, reopened ]
+    # Skip building a staging preview when a PR touches ONLY files that can never
+    # change the rendered site. This is a conservative EXCLUDE list (paths-ignore),
+    # which is fail-safe: the full build still runs unless EVERY changed file matches
+    # a pattern below, so anything we did not anticipate still gets a preview.
+    #
+    # The site is built from:
+    #   documentation/docfx/**  -> /docs/ and the release notes
+    #   documentation/site/**   -> the landing page and /ai/
+    #   samples/**              -> the /gallery/, /gallery-uno/ and /fiddle/ apps,
+    #                              which ProjectReference binding/** + source/** and
+    #                              load WASM native libs built from native/wasm/**,
+    #                              scripts/infra/native/{wasm,shared}/** + externals/skia
+    # None of the paths below feed any of those, so they cannot alter the preview.
+    # (Applies to PR previews only; pushes to main always redeploy the root site.)
+    paths-ignore:
+      - 'tests/**'                     # test projects — never built for the site
+      - 'benchmarks/**'                # benchmark projects — not on the site
+      - 'documentation/dev/**'         # dev docs — NOT in the docfx content root
+      - 'native/android/**'            # non-WASM native — galleries are WASM only
+      - 'native/ios/**'
+      - 'native/maccatalyst/**'
+      - 'native/macos/**'
+      - 'native/tvos/**'
+      - 'native/tizen/**'
+      - 'native/windows/**'
+      - 'native/winui/**'
+      - 'native/winui-angle/**'
+      - 'native/linux/**'
+      - 'native/linux-clang-cross/**'
+      - 'native/linuxnodeps/**'
+      - 'native/nanoserver/**'
+      - 'README.md'                    # repo meta docs — not rendered on the site
+      - 'CONTRIBUTING.md'
+      - 'CODE_OF_CONDUCT.md'
+      - 'SECURITY.md'
+      - '.agents/**'                   # agent skills/workflows — not built into the site
+      - 'cgmanifest.json'              # component-governance manifest — not a site input
   workflow_dispatch:
     inputs:
       pr_number:
