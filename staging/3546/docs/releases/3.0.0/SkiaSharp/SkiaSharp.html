@@ -1,0 +1,2194 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/3546/merge/documentation/docfx/releases/3.0.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 3.0.0.0 vs 2.88.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrbackendrendertarget">Type Changed: SkiaSharp.GRBackendRenderTarget</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GRBackendRenderTarget(int, int, int, int, GRGlFramebufferInfo) instead.&quot;)]
+public GRBackendRenderTarget (GRBackend backend, GRBackendRenderTargetDesc desc);
+</code></pre>
+<h4 id="type-changed-skiasharpgrbackendtexture">Type Changed: SkiaSharp.GRBackendTexture</h4>
+<p>Removed constructors:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.&quot;)]
+public GRBackendTexture (GRBackendTextureDesc desc);
+
+[Obsolete (&quot;Use GRBackendTexture(int, int, bool, GRGlTextureInfo) instead.&quot;)]
+public GRBackendTexture (GRGlBackendTextureDesc desc);
+</code></pre>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public GRBackendTexture (int width, int height, bool mipmapped, GRMtlTextureInfo mtlInfo);
+</code></pre>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public ---override--- GRBackend Backend { get; }
+ public ---override--- bool IsAbandoned { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use CreateGl() instead.&quot;)]
+public static GRContext Create (GRBackend backend);
+
+[Obsolete (&quot;Use CreateGl(GRGlInterface) instead.&quot;)]
+public static GRContext Create (GRBackend backend, GRGlInterface backendContext);
+
+[Obsolete (&quot;Use CreateGl(GRGlInterface) instead.&quot;)]
+public static GRContext Create (GRBackend backend, IntPtr backendContext);
+
+[Obsolete]
+public int GetRecommendedSampleCount (GRPixelConfig config, float dpi);
+
+[Obsolete (&quot;Use GetResourceCacheLimit() instead.&quot;)]
+public void GetResourceCacheLimits (out int maxResources, out long maxResourceBytes);
+
+[Obsolete (&quot;Use SetResourceCacheLimit(long) instead.&quot;)]
+public void SetResourceCacheLimits (int maxResources, long maxResourceBytes);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static GRContext CreateMetal (GRMtlBackendContext backendContext);
+public static GRContext CreateMetal (GRMtlBackendContext backendContext, GRContextOptions options);
+</code></pre>
+<h4 id="type-changed-skiasharpgrglframebufferinfo">Type Changed: SkiaSharp.GRGlFramebufferInfo</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public bool Protected { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpgrglinterface">Type Changed: SkiaSharp.GRGlInterface</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use CreateAngle(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use CreateAngle(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleAngleInterface (object context, GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use CreateOpenGl(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleGlInterface (GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use CreateOpenGl(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleGlInterface (object context, GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use CreateGles(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleGlesInterface (GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use CreateGles(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleGlesInterface (object context, GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use Create(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleInterface (GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use Create(GRGlGetProcedureAddressDelegate) instead.&quot;)]
+public static GRGlInterface AssembleInterface (object context, GRGlGetProcDelegate get);
+
+[Obsolete (&quot;Use Create() instead.&quot;)]
+public static GRGlInterface CreateDefaultInterface ();
+
+[Obsolete (&quot;Use Create() instead.&quot;)]
+public static GRGlInterface CreateNativeAngleInterface ();
+
+[Obsolete (&quot;Use CreateEvas(IntPtr) instead.&quot;)]
+public static GRGlInterface CreateNativeEvasInterface (IntPtr evas);
+
+[Obsolete (&quot;Use Create() instead.&quot;)]
+public static GRGlInterface CreateNativeGlInterface ();
+</code></pre>
+<h4 id="type-changed-skiasharpgrgltextureinfo">Type Changed: SkiaSharp.GRGlTextureInfo</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public bool Protected { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpgrrecordingcontext">Type Changed: SkiaSharp.GRRecordingContext</h4>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public ---virtual--- GRBackend Backend { get; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public virtual bool IsAbandoned { get; }
+public int MaxRenderTargetSize { get; }
+public int MaxTextureSize { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskabstractmanagedstream">Type Changed: SkiaSharp.SKAbstractManagedStream</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected abstract IntPtr OnCreateNew ()
++protected abstract IntPtr OnCreateNew ()
+-protected virtual IntPtr OnDuplicate ()
++protected virtual IntPtr OnDuplicate ()
+-protected virtual IntPtr OnFork ()
++protected virtual IntPtr OnFork ()
+-protected abstract IntPtr OnGetLength ()
++protected abstract IntPtr OnGetLength ()
+-protected abstract IntPtr OnGetPosition ()
++protected abstract IntPtr OnGetPosition ()
+-protected abstract bool OnHasLength ()
++protected abstract bool OnHasLength ()
+-protected abstract bool OnHasPosition ()
++protected abstract bool OnHasPosition ()
+-protected abstract bool OnIsAtEnd ()
++protected abstract bool OnIsAtEnd ()
+-protected abstract bool OnMove (int offset)
++protected abstract bool OnMove (int offset)
+-protected abstract IntPtr OnPeek (IntPtr buffer, IntPtr size)
++protected abstract IntPtr OnPeek (IntPtr buffer, IntPtr size)
+-protected abstract IntPtr OnRead (IntPtr buffer, IntPtr size)
++protected abstract IntPtr OnRead (IntPtr buffer, IntPtr size)
+-protected abstract bool OnRewind ()
++protected abstract bool OnRewind ()
+-protected abstract bool OnSeek (IntPtr position)
++protected abstract bool OnSeek (IntPtr position)
+</code></pre>
+<h4 id="type-changed-skiasharpskabstractmanagedwstream">Type Changed: SkiaSharp.SKAbstractManagedWStream</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected abstract IntPtr OnBytesWritten ()
++protected abstract IntPtr OnBytesWritten ()
+-protected abstract void OnFlush ()
++protected abstract void OnFlush ()
+-protected abstract bool OnWrite (IntPtr buffer, IntPtr size)
++protected abstract bool OnWrite (IntPtr buffer, IntPtr size)
+</code></pre>
+<h4 id="type-changed-skiasharpskbitmap">Type Changed: SkiaSharp.SKBitmap</h4>
+<p>Removed constructors:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo) instead.&quot;)]
+public SKBitmap (SKImageInfo info, SKColorTable ctable);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use SKBitmap(SKImageInfo, SKBitmapAllocFlags) instead.&quot;)]
+public SKBitmap (SKImageInfo info, SKColorTable ctable, SKBitmapAllocFlags flags);
+</code></pre>
+<p>Removed properties:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;The Index8 color type and color table is no longer supported.&quot;)]
+public SKColorTable ColorTable { get; }
+
+[Obsolete]
+public bool IsVolatile { get; set; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GetAddress instead.&quot;)]
+public IntPtr GetAddr (int x, int y);
+
+[Obsolete]
+public ushort GetAddr16 (int x, int y);
+
+[Obsolete]
+public uint GetAddr32 (int x, int y);
+
+[Obsolete]
+public byte GetAddr8 (int x, int y);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixel(int, int) instead.&quot;)]
+public SKPMColor GetIndex8Color (int x, int y);
+public System.ReadOnlySpan&lt;byte&gt; GetPixelSpan ();
+public bool InstallMaskPixels (SKMask mask);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int) instead.&quot;)]
+public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use InstallPixels(SKImageInfo, IntPtr, int, SKBitmapReleaseDelegate, object) instead.&quot;)]
+public bool InstallPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable, SKBitmapReleaseDelegate releaseProc, object context);
+
+[Obsolete (&quot;Use ScalePixels(SKBitmap, SKFilterQuality) instead.&quot;)]
+public bool Resize (SKBitmap dst, SKBitmapResizeMethod method);
+
+[Obsolete (&quot;Use Resize(SKImageInfo, SKFilterQuality) instead.&quot;)]
+public SKBitmap Resize (SKImageInfo info, SKBitmapResizeMethod method);
+
+[Obsolete (&quot;Use ScalePixels(SKBitmap, SKFilterQuality) instead.&quot;)]
+public static bool Resize (SKBitmap dst, SKBitmap src, SKBitmapResizeMethod method);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported.&quot;)]
+public void SetColorTable (SKColorTable ct);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use SetPixels(IntPtr) instead.&quot;)]
+public void SetPixels (IntPtr pixels, SKColorTable ct);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Resize(SKImageInfo info, SKSamplingOptions sampling) instead.&quot;)]
+ public SKBitmap Resize (SKImageInfo info, SKFilterQuality quality);
+ [Obsolete (&quot;Use Resize(SKSizeI size, SKSamplingOptions sampling) instead.&quot;)]
+ public SKBitmap Resize (SKSizeI size, SKFilterQuality quality);
+ [Obsolete (&quot;Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.&quot;)]
+ public bool ScalePixels (SKBitmap destination, SKFilterQuality quality);
+ [Obsolete (&quot;Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.&quot;)]
+ public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public System.Span&lt;byte&gt; GetPixelSpan ();
+public System.Span&lt;byte&gt; GetPixelSpan (int x, int y);
+public SKBitmap Resize (SKImageInfo info, SKSamplingOptions sampling);
+public SKBitmap Resize (SKSizeI size, SKSamplingOptions sampling);
+public bool ScalePixels (SKBitmap destination, SKSamplingOptions sampling);
+public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling);
+
+[Obsolete (&quot;Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.&quot;)]
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality);
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling);
+
+[Obsolete (&quot;Use ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.&quot;)]
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix);
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix);
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKMatrix44 TotalMatrix44 { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public void Concat (ref SKMatrix m);
+public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix);
+public void DrawPicture (SKPicture picture, ref SKMatrix matrix, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawPositionedText (byte[] text, SKPoint[] points, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawPositionedText (string text, SKPoint[] points, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawPositionedText (IntPtr buffer, int length, SKPoint[] points, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawText (byte[] text, SKPoint p, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawText (byte[] text, float x, float y, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawText (IntPtr buffer, int length, SKPoint p, SKPaint paint);
+
+[Obsolete (&quot;Use DrawText(SKTextBlob, float, float, SKPaint) instead.&quot;)]
+public void DrawText (IntPtr buffer, int length, float x, float y, SKPaint paint);
+
+[Obsolete (&quot;Use DrawTextOnPath(string, SKPath, SKPoint, SKPaint) instead.&quot;)]
+public void DrawTextOnPath (byte[] text, SKPath path, SKPoint offset, SKPaint paint);
+
+[Obsolete (&quot;Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.&quot;)]
+public void DrawTextOnPath (byte[] text, SKPath path, float hOffset, float vOffset, SKPaint paint);
+
+[Obsolete (&quot;Use DrawTextOnPath(string, SKPath, SKPoint, SKPaint) instead.&quot;)]
+public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, SKPoint offset, SKPaint paint);
+
+[Obsolete (&quot;Use DrawTextOnPath(string, SKPath, float, float, SKPaint) instead.&quot;)]
+public void DrawTextOnPath (IntPtr buffer, int length, SKPath path, float hOffset, float vOffset, SKPaint paint);
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = NULL)
++public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint)
+-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = NULL)
++public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint)
+-public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = NULL)
++public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint)
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use DrawText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.&quot;)]
+ public void DrawText (string text, SKPoint p, SKPaint paint);
+ [Obsolete (&quot;Use DrawText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.&quot;)]
+ public void DrawText (string text, float x, float y, SKPaint paint);
+ [Obsolete (&quot;Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.&quot;)]
+ public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKPaint paint);
+ [Obsolete (&quot;Use DrawTextOnPath(string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.&quot;)]
+ public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKPaint paint);
+ [Obsolete (&quot;Use DrawTextOnPath(string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.&quot;)]
+ public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKPaint paint);
+ [Obsolete (&quot;Use SetMatrix(in SKMatrix) instead.&quot;)]
+ public void SetMatrix (SKMatrix matrix);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Concat (ref SKMatrix m);
+public void Concat (ref SKMatrix44 m);
+public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint);
+public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint);
+public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint);
+public void DrawBitmapLattice (SKBitmap bitmap, SKLattice lattice, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawBitmapLattice (SKBitmap bitmap, int[] xDivs, int[] yDivs, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawBitmapNinePatch (SKBitmap bitmap, SKRectI center, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawDrawable (SKDrawable drawable, ref SKMatrix matrix);
+public void DrawImage (SKImage image, SKPoint p, SKSamplingOptions sampling, SKPaint paint);
+public void DrawImage (SKImage image, SKRect dest, SKSamplingOptions sampling, SKPaint paint);
+public void DrawImage (SKImage image, SKRect source, SKRect dest, SKSamplingOptions sampling, SKPaint paint);
+public void DrawImage (SKImage image, float x, float y, SKSamplingOptions sampling, SKPaint paint);
+public void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawImageLattice (SKImage image, int[] xDivs, int[] yDivs, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawImageNinePatch (SKImage image, SKRectI center, SKRect dst, SKFilterMode filterMode, SKPaint paint);
+public void DrawPicture (SKPicture picture, ref SKMatrix matrix, SKPaint paint);
+public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint);
+public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint);
+public void DrawText (string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint);
+public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKFont font, SKPaint paint);
+public void DrawTextOnPath (string text, SKPath path, SKPoint offset, SKTextAlign textAlign, SKFont font, SKPaint paint);
+public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKFont font, SKPaint paint);
+public void DrawTextOnPath (string text, SKPath path, SKPoint offset, bool warpGlyphs, SKTextAlign textAlign, SKFont font, SKPaint paint);
+public void DrawTextOnPath (string text, SKPath path, float hOffset, float vOffset, SKTextAlign textAlign, SKFont font, SKPaint paint);
+public void SetMatrix (ref SKMatrix matrix);
+public void SetMatrix (ref SKMatrix44 matrix);
+</code></pre>
+<h4 id="type-changed-skiasharpskcodec">Type Changed: SkiaSharp.SKCodec</h4>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use EncodedOrigin instead.&quot;)]
+public SKCodecOrigin Origin { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKColorTable colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, IntPtr colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, SKCodecOptions) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use GetPixels(SKImageInfo, IntPtr, int, SKCodecOptions) instead.&quot;)]
+public SKCodecResult GetPixels (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.&quot;)]
+public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use StartIncrementalDecode(SKImageInfo, IntPtr, int, SKCodecOptions) instead.&quot;)]
+public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.&quot;)]
+public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, SKColorTable colorTable, ref int colorTableCount);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use StartScanlineDecode(SKImageInfo, SKCodecOptions) instead.&quot;)]
+public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options, IntPtr colorTable, ref int colorTableCount);
+</code></pre>
+<h4 id="type-changed-skiasharpskcodecframeinfo">Type Changed: SkiaSharp.SKCodecFrameInfo</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKCodecAnimationBlend Blend { get; set; }
+public SKRectI FrameRect { get; set; }
+public bool HasAlphaWithinBounds { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcodecoptions">Type Changed: SkiaSharp.SKCodecOptions</h4>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKTransferFunctionBehavior PremulBehavior { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorfilter">Type Changed: SkiaSharp.SKColorFilter</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateColorMatrix (System.ReadOnlySpan&lt;float&gt; matrix);
+public static SKColorFilter CreateTable (System.ReadOnlySpan&lt;byte&gt; table);
+public static SKColorFilter CreateTable (System.ReadOnlySpan&lt;byte&gt; tableA, System.ReadOnlySpan&lt;byte&gt; tableR, System.ReadOnlySpan&lt;byte&gt; tableG, System.ReadOnlySpan&lt;byte&gt; tableB);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorspace">Type Changed: SkiaSharp.SKColorSpace</h4>
+<p>Removed properties:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GetNumericalTransferFunction() instead.&quot;)]
+public SKNamedGamma NamedGamma { get; }
+
+[Obsolete]
+public SKColorSpaceType Type { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKColorSpaceGamut gamut);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKNamedGamma gamma, SKMatrix44 toXyzD50);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceRenderTargetGamma gamma, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKColorSpaceGamut gamut, SKColorSpaceFlags flags);
+
+[Obsolete (&quot;Use CreateRgb(SKColorSpaceTransferFn, SKColorSpaceXyz) instead.&quot;)]
+public static SKColorSpace CreateRgb (SKColorSpaceTransferFn coeffs, SKMatrix44 toXyzD50, SKColorSpaceFlags flags);
+
+[Obsolete]
+public SKMatrix44 FromXyzD50 ();
+
+[Obsolete (&quot;Use ToColorSpaceXyz() instead.&quot;)]
+public SKMatrix44 ToXyzD50 ();
+
+[Obsolete (&quot;Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.&quot;)]
+public bool ToXyzD50 (SKMatrix44 toXyzD50);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorspaceprimaries">Type Changed: SkiaSharp.SKColorSpacePrimaries</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use ToColorSpaceXyz() instead.&quot;)]
+public SKMatrix44 ToXyzD50 ();
+
+[Obsolete (&quot;Use ToColorSpaceXyz(out SKColorSpaceXyz) instead.&quot;)]
+public bool ToXyzD50 (SKMatrix44 toXyzD50);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorspacexyz">Type Changed: SkiaSharp.SKColorSpaceXyz</h4>
+<p>Added field:</p>
+<pre><code class="lang-csharp">public static SKColorSpaceXyz Identity;
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use DisplayP3 instead.&quot;)]
+public static SKColorSpaceXyz Dcip3 { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcolortype">Type Changed: SkiaSharp.SKColorType</h4>
+<p>Added values:</p>
+<pre><code class="lang-csharp">Bgr101010xXR = 21,
+R8Unorm = 23,
+Srgba8888 = 22,
+</code></pre>
+<h4 id="type-changed-skiasharpskdocument">Type Changed: SkiaSharp.SKDocument</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use CreatePdf(SKWStream, SKDocumentPdfMetadata) instead.&quot;)]
+public static SKDocument CreatePdf (SKWStream stream, SKDocumentPdfMetadata metadata, float dpi);
+</code></pre>
+<h4 id="type-changed-skiasharpskdrawable">Type Changed: SkiaSharp.SKDrawable</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public int ApproximateBytesUsed { get; }
+</code></pre>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public void Draw (SKCanvas canvas, ref SKMatrix matrix);
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected virtual void OnDraw (SKCanvas canvas)
++protected virtual void OnDraw (SKCanvas canvas)
+-protected virtual SKRect OnGetBounds ()
++protected virtual SKRect OnGetBounds ()
+-protected virtual SKPicture OnSnapshot ()
++protected virtual SKPicture OnSnapshot ()
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Draw (SKCanvas canvas, ref SKMatrix matrix);
+protected virtual int OnGetApproximateBytesUsed ();
+</code></pre>
+<h4 id="type-changed-skiasharpskencodedimageformat">Type Changed: SkiaSharp.SKEncodedImageFormat</h4>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Jpegxl = 13,
+</code></pre>
+<h4 id="type-changed-skiasharpskfont">Type Changed: SkiaSharp.SKFont</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public int BreakText (System.ReadOnlySpan&lt;char&gt; text, float maxWidth, SKPaint paint);
+public int BreakText (string text, float maxWidth, SKPaint paint);
+public int BreakText (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, float maxWidth, SKPaint paint);
+public int BreakText (System.ReadOnlySpan&lt;char&gt; text, float maxWidth, out float measuredWidth, SKPaint paint);
+public int BreakText (string text, float maxWidth, out float measuredWidth, SKPaint paint);
+public int BreakText (IntPtr text, int length, SKTextEncoding encoding, float maxWidth, SKPaint paint);
+public int BreakText (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, float maxWidth, out float measuredWidth, SKPaint paint);
+public int BreakText (IntPtr text, int length, SKTextEncoding encoding, float maxWidth, out float measuredWidth, SKPaint paint);
+public float[] GetGlyphOffsets (System.ReadOnlySpan&lt;char&gt; text, float origin);
+public float[] GetGlyphOffsets (System.ReadOnlySpan&lt;ushort&gt; glyphs, float origin);
+public float[] GetGlyphOffsets (string text, float origin);
+public float[] GetGlyphOffsets (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, float origin);
+public void GetGlyphOffsets (System.ReadOnlySpan&lt;char&gt; text, System.Span&lt;float&gt; offsets, float origin);
+public void GetGlyphOffsets (string text, System.Span&lt;float&gt; offsets, float origin);
+public float[] GetGlyphOffsets (IntPtr text, int length, SKTextEncoding encoding, float origin);
+public void GetGlyphOffsets (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, System.Span&lt;float&gt; offsets, float origin);
+public void GetGlyphOffsets (IntPtr text, int length, SKTextEncoding encoding, System.Span&lt;float&gt; offsets, float origin);
+public SKPoint[] GetGlyphPositions (System.ReadOnlySpan&lt;char&gt; text, SKPoint origin);
+public SKPoint[] GetGlyphPositions (System.ReadOnlySpan&lt;ushort&gt; glyphs, SKPoint origin);
+public SKPoint[] GetGlyphPositions (string text, SKPoint origin);
+public SKPoint[] GetGlyphPositions (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, SKPoint origin);
+public void GetGlyphPositions (System.ReadOnlySpan&lt;char&gt; text, System.Span&lt;SKPoint&gt; offsets, SKPoint origin);
+public void GetGlyphPositions (string text, System.Span&lt;SKPoint&gt; offsets, SKPoint origin);
+public SKPoint[] GetGlyphPositions (IntPtr text, int length, SKTextEncoding encoding, SKPoint origin);
+public void GetGlyphPositions (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, System.Span&lt;SKPoint&gt; offsets, SKPoint origin);
+public void GetGlyphPositions (IntPtr text, int length, SKTextEncoding encoding, System.Span&lt;SKPoint&gt; offsets, SKPoint origin);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;char&gt; text, SKPaint paint);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;ushort&gt; glyphs, SKPaint paint);
+public float[] GetGlyphWidths (string text, SKPaint paint);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, SKPaint paint);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;char&gt; text, out SKRect[] bounds, SKPaint paint);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;ushort&gt; glyphs, out SKRect[] bounds, SKPaint paint);
+public float[] GetGlyphWidths (string text, out SKRect[] bounds, SKPaint paint);
+public float[] GetGlyphWidths (IntPtr text, int length, SKTextEncoding encoding, SKPaint paint);
+public float[] GetGlyphWidths (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint);
+public void GetGlyphWidths (System.ReadOnlySpan&lt;char&gt; text, System.Span&lt;float&gt; widths, System.Span&lt;SKRect&gt; bounds, SKPaint paint);
+public void GetGlyphWidths (string text, System.Span&lt;float&gt; widths, System.Span&lt;SKRect&gt; bounds, SKPaint paint);
+public float[] GetGlyphWidths (IntPtr text, int length, SKTextEncoding encoding, out SKRect[] bounds, SKPaint paint);
+public void GetGlyphWidths (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, System.Span&lt;float&gt; widths, System.Span&lt;SKRect&gt; bounds, SKPaint paint);
+public void GetGlyphWidths (IntPtr text, int length, SKTextEncoding encoding, System.Span&lt;float&gt; widths, System.Span&lt;SKRect&gt; bounds, SKPaint paint);
+public ushort[] GetGlyphs (System.ReadOnlySpan&lt;char&gt; text);
+public ushort[] GetGlyphs (System.ReadOnlySpan&lt;int&gt; codepoints);
+public ushort[] GetGlyphs (string text);
+public ushort[] GetGlyphs (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding);
+public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding);
+public SKPath GetTextPath (System.ReadOnlySpan&lt;char&gt; text, SKPoint origin);
+public SKPath GetTextPath (System.ReadOnlySpan&lt;char&gt; text, System.ReadOnlySpan&lt;SKPoint&gt; positions);
+public SKPath GetTextPath (string text, SKPoint origin);
+public SKPath GetTextPath (string text, System.ReadOnlySpan&lt;SKPoint&gt; positions);
+public SKPath GetTextPath (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, SKPoint origin);
+public SKPath GetTextPath (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, System.ReadOnlySpan&lt;SKPoint&gt; positions);
+public SKPath GetTextPath (IntPtr text, int length, SKTextEncoding encoding, SKPoint origin);
+public SKPath GetTextPath (IntPtr text, int length, SKTextEncoding encoding, System.ReadOnlySpan&lt;SKPoint&gt; positions);
+public SKPath GetTextPathOnPath (System.ReadOnlySpan&lt;char&gt; text, SKPath path, SKTextAlign textAlign, SKPoint origin);
+public SKPath GetTextPathOnPath (System.ReadOnlySpan&lt;ushort&gt; glyphs, SKPath path, SKTextAlign textAlign, SKPoint origin);
+public SKPath GetTextPathOnPath (string text, SKPath path, SKTextAlign textAlign, SKPoint origin);
+public SKPath GetTextPathOnPath (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, SKPath path, SKTextAlign textAlign, SKPoint origin);
+public SKPath GetTextPathOnPath (System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;float&gt; glyphWidths, System.ReadOnlySpan&lt;SKPoint&gt; glyphPositions, SKPath path, SKTextAlign textAlign);
+public SKPath GetTextPathOnPath (IntPtr text, int length, SKTextEncoding encoding, SKPath path, SKTextAlign textAlign, SKPoint origin);
+public float MeasureText (System.ReadOnlySpan&lt;char&gt; text, SKPaint paint);
+public float MeasureText (string text, SKPaint paint);
+public float MeasureText (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, SKPaint paint);
+public float MeasureText (System.ReadOnlySpan&lt;char&gt; text, out SKRect bounds, SKPaint paint);
+public float MeasureText (string text, out SKRect bounds, SKPaint paint);
+public float MeasureText (IntPtr text, int length, SKTextEncoding encoding, SKPaint paint);
+public float MeasureText (System.ReadOnlySpan&lt;byte&gt; text, SKTextEncoding encoding, out SKRect bounds, SKPaint paint);
+public float MeasureText (IntPtr text, int length, SKTextEncoding encoding, out SKRect bounds, SKPaint paint);
+</code></pre>
+<h4 id="type-changed-skiasharpskfontmanager">Type Changed: SkiaSharp.SKFontManager</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public SKTypeface MatchTypeface (SKTypeface face, SKFontStyle style);
+</code></pre>
+<h4 id="type-changed-skiasharpskfrontbufferedmanagedstream">Type Changed: SkiaSharp.SKFrontBufferedManagedStream</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected override IntPtr OnCreateNew ()
++protected override IntPtr OnCreateNew ()
+-protected override IntPtr OnGetLength ()
++protected override IntPtr OnGetLength ()
+-protected override IntPtr OnGetPosition ()
++protected override IntPtr OnGetPosition ()
+-protected override bool OnHasLength ()
++protected override bool OnHasLength ()
+-protected override bool OnHasPosition ()
++protected override bool OnHasPosition ()
+-protected override bool OnIsAtEnd ()
++protected override bool OnIsAtEnd ()
+-protected override bool OnMove (int offset)
++protected override bool OnMove (int offset)
+-protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
++protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
+-protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
++protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
+-protected override bool OnRewind ()
++protected override bool OnRewind ()
+-protected override bool OnSeek (IntPtr position)
++protected override bool OnSeek (IntPtr position)
+</code></pre>
+<h4 id="type-changed-skiasharpskgraphics">Type Changed: SkiaSharp.SKGraphics</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static int GetFontCachePointSizeLimit ();
+public static int SetFontCachePointSizeLimit (int count);
+</code></pre>
+<h4 id="type-changed-skiasharpskhorizontalrunbuffer">Type Changed: SkiaSharp.SKHorizontalRunBuffer</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public System.Span&lt;float&gt; Positions { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Positions instead.&quot;)]
+ public System.Span&lt;float&gt; GetPositionSpan ();
+</code></pre>
+<h4 id="type-changed-skiasharpskimage">Type Changed: SkiaSharp.SKImage</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKData Encode (SKPixelSerializer serializer);
+
+[Obsolete (&quot;Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc);
+
+[Obsolete (&quot;Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc);
+
+[Obsolete (&quot;Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.&quot;)]
+public static SKImage FromAdoptedTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha);
+
+[Obsolete (&quot;Use FromAdoptedTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.&quot;)]
+public static SKImage FromAdoptedTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use FromPixelCopy(SKImageInfo, IntPtr, int) instead.&quot;)]
+public static SKImage FromPixelCopy (SKImageInfo info, IntPtr pixels, int rowBytes, SKColorTable ctable);
+
+[Obsolete (&quot;Use FromPixels (SKImageInfo, SKData, int) instead.&quot;)]
+public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
+
+[Obsolete (&quot;Use FromTexture(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKAlphaType, SKColorSpace, SKImageTextureReleaseDelegate, object) instead.&quot;)]
+public static SKImage FromTexture (GRContext context, GRGlBackendTextureDesc desc, SKAlphaType alpha, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
+
+[Obsolete (&quot;Use ToTextureImage(GRContext) instead.&quot;)]
+public SKImage ToTextureImage (GRContext context, SKColorSpace colorspace);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling) instead.&quot;)]
+ public bool ScalePixels (SKPixmap dst, SKFilterQuality quality);
+ [Obsolete (&quot;Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling, SKImageCachingHint cachingHint) instead.&quot;)]
+ public bool ScalePixels (SKPixmap dst, SKFilterQuality quality, SKImageCachingHint cachingHint);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public bool ScalePixels (SKPixmap dst, SKSamplingOptions sampling);
+public bool ScalePixels (SKPixmap dst, SKSamplingOptions sampling, SKImageCachingHint cachingHint);
+public SKImage Subset (GRRecordingContext context, SKRectI subset);
+public SKShader ToRawShader ();
+public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY);
+public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKMatrix localMatrix);
+public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling);
+public SKShader ToRawShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix);
+
+[Obsolete (&quot;Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling) instead.&quot;)]
+public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality);
+public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling);
+
+[Obsolete (&quot;Use ToShader(SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix) instead.&quot;)]
+public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKFilterQuality quality, SKMatrix localMatrix);
+public SKShader ToShader (SKShaderTileMode tileX, SKShaderTileMode tileY, SKSamplingOptions sampling, SKMatrix localMatrix);
+public SKImage ToTextureImage (GRContext context, bool mipmapped, bool budgeted);
+</code></pre>
+<h4 id="type-changed-skiasharpskimagefilter">Type Changed: SkiaSharp.SKImageFilter</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold);
+public static SKImageFilter CreateAlphaThreshold (SKRectI region, float innerThreshold, float outerThreshold, SKImageFilter input);
+public static SKImageFilter CreateAlphaThreshold (SKRegion region, float innerThreshold, float outerThreshold, SKImageFilter input);
+public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter background, SKImageFilter foreground, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter background, SKImageFilter foreground, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateColorFilter (SKColorFilter cf, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDilate (int radiusX, int radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDisplacementMapEffect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+
+[Obsolete (&quot;Use CreateDisplacementMapEffect(SKColorChannel, SKColorChannel, float, SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.&quot;)]
+public static SKImageFilter CreateDisplacementMapEffect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDistantLitSpecular (SKPoint3 direction, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input, SKImageFilter.CropRect cropRect);
+
+[Obsolete (&quot;Use CreateDropShadow or CreateDropShadowOnly instead.&quot;)]
+public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKDropShadowImageFilterShadowMode shadowMode, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateErode (int radiusX, int radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMagnifier (SKRect src, float inset);
+public static SKImageFilter CreateMagnifier (SKRect src, float inset, SKImageFilter input);
+public static SKImageFilter CreateMagnifier (SKRect src, float inset, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMagnifier (SKRect src, float inset, SKImageFilter input, SKRect cropRect);
+public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, System.ReadOnlySpan&lt;float&gt; kernel, float gain, float bias, SKPointI kernelOffset, SKShaderTileMode tileMode, bool convolveAlpha, SKImageFilter input, SKImageFilter.CropRect cropRect);
+
+[Obsolete (&quot;Use CreateMatrixConvolution(SKSizeI, ReadOnlySpan&lt;float&gt;, float, float, SKPointI, SKShaderTileMode, bool, SKImageFilter, SKImageFilter.CropRect) instead.&quot;)]
+public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKMatrixConvolutionTileMode tileMode, bool convolveAlpha, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMatrixConvolution (SKSizeI kernelSize, float[] kernel, float gain, float bias, SKPointI kernelOffset, SKShaderTileMode tileMode, bool convolveAlpha, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMerge (SKImageFilter[] filters, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMerge (System.ReadOnlySpan&lt;SKImageFilter&gt; filters, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateMerge (SKImageFilter first, SKImageFilter second, SKImageFilter.CropRect cropRect);
+
+[Obsolete (&quot;Use CreateMerge(ReadOnlySpan&lt;SKImageFilter&gt;, SKImageFilter.CropRect) instead.&quot;)]
+public static SKImageFilter CreateMerge (SKImageFilter[] filters, SKBlendMode[] modes, SKImageFilter.CropRect cropRect);
+
+[Obsolete (&quot;Use CreateMerge(SKImageFilter, SKImageFilter, SKImageFilter.CropRect) instead.&quot;)]
+public static SKImageFilter CreateMerge (SKImageFilter first, SKImageFilter second, SKBlendMode mode, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateOffset (float dx, float dy, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreatePaint (SKPaint paint, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreatePointLitDiffuse (SKPoint3 location, SKColor lightColor, float surfaceScale, float kd, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreatePointLitSpecular (SKPoint3 location, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateShader (SKShader shader, bool dither, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateSpotLitDiffuse (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float kd, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateSpotLitSpecular (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter input, SKImageFilter.CropRect cropRect);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.&quot;)]
+ public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality);
+ [Obsolete (&quot;Use SetMatrix(in SKMatrix) instead.&quot;)]
+ public static SKImageFilter CreateMatrix (SKMatrix matrix);
+ [Obsolete (&quot;Use SetMatrix(in SKMatrix, SKSamplingOptions, SKImageFilter) instead.&quot;)]
+ public static SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter input);
+ [Obsolete (&quot;Use CreateShader(SKShader) instead.&quot;)]
+ public static SKImageFilter CreatePaint (SKPaint paint);
+ [Obsolete (&quot;Use CreateShader(SKShader, bool, SKRect) instead.&quot;)]
+ public static SKImageFilter CreatePaint (SKPaint paint, SKRect cropRect);
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff"> public SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter input--- = NULL---)
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter background);
+public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter background);
+public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter background, SKImageFilter foreground);
+public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter background, SKImageFilter foreground, SKRect cropRect);
+public static SKImageFilter CreateImage (SKImage image, SKSamplingOptions sampling);
+public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKSamplingOptions sampling);
+public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling);
+public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter input);
+public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter input, SKRect cropRect);
+public static SKImageFilter CreateMatrix (ref SKMatrix matrix);
+public static SKImageFilter CreateMatrix (ref SKMatrix matrix, SKSamplingOptions sampling);
+public static SKImageFilter CreateMatrix (ref SKMatrix matrix, SKSamplingOptions sampling, SKImageFilter input);
+public static SKImageFilter CreateMerge (System.ReadOnlySpan&lt;SKImageFilter&gt; filters, SKRect* cropRect);
+</code></pre>
+<h4 id="removed-type-skiasharpskimagefiltercroprect">Removed Type SkiaSharp.SKImageFilter.CropRect</h4>
+<h4 id="type-changed-skiasharpskimageinfo">Type Changed: SkiaSharp.SKImageInfo</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public int BitShiftPerPixel { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskjpegencoderoptions">Type Changed: SkiaSharp.SKJpegEncoderOptions</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use SKJpegEncoderOptions(int, SKJpegEncoderDownsample, SKJpegEncoderAlphaOption) instead.&quot;)]
+public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption, SKTransferFunctionBehavior blendBehavior);
+</code></pre>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public SKJpegEncoderOptions (int quality);
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKTransferFunctionBehavior BlendBehavior { get; set; }
+</code></pre>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public SKJpegEncoderAlphaOption AlphaOption { get; ---set;--- }
+ public SKJpegEncoderDownsample Downsample { get; ---set;--- }
+ public int Quality { get; ---set;--- }
+</code></pre>
+<h4 id="type-changed-skiasharpskmanagedstream">Type Changed: SkiaSharp.SKManagedStream</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected override IntPtr OnCreateNew ()
++protected override IntPtr OnCreateNew ()
+-protected override IntPtr OnDuplicate ()
++protected override IntPtr OnDuplicate ()
+-protected override IntPtr OnFork ()
++protected override IntPtr OnFork ()
+-protected override IntPtr OnGetLength ()
++protected override IntPtr OnGetLength ()
+-protected override IntPtr OnGetPosition ()
++protected override IntPtr OnGetPosition ()
+-protected override bool OnHasLength ()
++protected override bool OnHasLength ()
+-protected override bool OnHasPosition ()
++protected override bool OnHasPosition ()
+-protected override bool OnIsAtEnd ()
++protected override bool OnIsAtEnd ()
+-protected override bool OnMove (int offset)
++protected override bool OnMove (int offset)
+-protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
++protected override IntPtr OnPeek (IntPtr buffer, IntPtr size)
+-protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
++protected override IntPtr OnRead (IntPtr buffer, IntPtr size)
+-protected override bool OnRewind ()
++protected override bool OnRewind ()
+-protected override bool OnSeek (IntPtr position)
++protected override bool OnSeek (IntPtr position)
+</code></pre>
+<h4 id="type-changed-skiasharpskmanagedwstream">Type Changed: SkiaSharp.SKManagedWStream</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected override IntPtr OnBytesWritten ()
++protected override IntPtr OnBytesWritten ()
+-protected override void OnFlush ()
++protected override void OnFlush ()
+-protected override bool OnWrite (IntPtr buffer, IntPtr size)
++protected override bool OnWrite (IntPtr buffer, IntPtr size)
+</code></pre>
+<h4 id="type-changed-skiasharpskmaskfilter">Type Changed: SkiaSharp.SKMaskFilter</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use CreateBlur(SKBlurStyle, float) instead.&quot;)]
+public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKBlurMaskFilterFlags flags);
+
+[Obsolete (&quot;Use CreateBlur(SKBlurStyle, float) instead.&quot;)]
+public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder);
+
+[Obsolete (&quot;Use CreateBlur(SKBlurStyle, float) instead.&quot;)]
+public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, SKBlurMaskFilterFlags flags);
+
+[Obsolete (&quot;Use CreateBlur(SKBlurStyle, float, bool) instead.&quot;)]
+public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma, SKRect occluder, bool respectCTM);
+</code></pre>
+<h4 id="type-changed-skiasharpskmatrix">Type Changed: SkiaSharp.SKMatrix</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static void Concat (ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);
+
+[Obsolete (&quot;Use CreateIdentity() instead.&quot;)]
+public static SKMatrix MakeIdentity ();
+
+[Obsolete (&quot;Use CreateRotation(float) instead.&quot;)]
+public static SKMatrix MakeRotation (float radians);
+
+[Obsolete (&quot;Use CreateRotation(float, float, float) instead.&quot;)]
+public static SKMatrix MakeRotation (float radians, float pivotx, float pivoty);
+
+[Obsolete (&quot;Use CreateRotationDegrees(float) instead.&quot;)]
+public static SKMatrix MakeRotationDegrees (float degrees);
+
+[Obsolete (&quot;Use CreateRotationDegrees(float, float, float) instead.&quot;)]
+public static SKMatrix MakeRotationDegrees (float degrees, float pivotx, float pivoty);
+
+[Obsolete (&quot;Use CreateScale(float, float) instead.&quot;)]
+public static SKMatrix MakeScale (float sx, float sy);
+
+[Obsolete (&quot;Use CreateScale(float, float, float, float) instead.&quot;)]
+public static SKMatrix MakeScale (float sx, float sy, float pivotX, float pivotY);
+
+[Obsolete (&quot;Use CreateSkew(float, float) instead.&quot;)]
+public static SKMatrix MakeSkew (float sx, float sy);
+
+[Obsolete (&quot;Use CreateTranslation(float, float) instead.&quot;)]
+public static SKMatrix MakeTranslation (float dx, float dy);
+
+[Obsolete (&quot;Use MapRect(SKRect) instead.&quot;)]
+public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source);
+
+[Obsolete (&quot;Use PostConcat(SKMatrix) instead.&quot;)]
+public static void PostConcat (ref SKMatrix target, SKMatrix matrix);
+
+[Obsolete (&quot;Use PostConcat(SKMatrix) instead.&quot;)]
+public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix);
+
+[Obsolete (&quot;Use PreConcat(SKMatrix) instead.&quot;)]
+public static void PreConcat (ref SKMatrix target, SKMatrix matrix);
+
+[Obsolete (&quot;Use PreConcat(SKMatrix) instead.&quot;)]
+public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix);
+
+[Obsolete (&quot;Use CreateRotation(float) instead.&quot;)]
+public static void Rotate (ref SKMatrix matrix, float radians);
+
+[Obsolete (&quot;Use CreateRotation(float, float, float) instead.&quot;)]
+public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty);
+
+[Obsolete (&quot;Use CreateRotationDegrees(float) instead.&quot;)]
+public static void RotateDegrees (ref SKMatrix matrix, float degrees);
+
+[Obsolete (&quot;Use CreateRotationDegrees(float, float, float) instead.&quot;)]
+public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty);
+
+[Obsolete (&quot;Use CreateScaleTranslation(float, float, float, float) instead.&quot;)]
+public void SetScaleTranslate (float sx, float sy, float tx, float ty);
+</code></pre>
+<h4 id="type-changed-skiasharpskmatrix44">Type Changed: SkiaSharp.SKMatrix44</h4>
+<p>Modified base type:</p>
+<pre><code class="lang-diff">-SkiaSharp.SKObject
++System.ValueType
+</code></pre>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">public SKMatrix44 (SKMatrix44 a, SKMatrix44 b);
+</code></pre>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public SKMatrix44 (float m00, float m01, float m02, float m03, float m10, float m11, float m12, float m13, float m20, float m21, float m22, float m23, float m30, float m31, float m32, float m33);
+</code></pre>
+<p>Removed interface:</p>
+<pre><code class="lang-csharp">System.IDisposable
+</code></pre>
+<p>Added interface:</p>
+<pre><code class="lang-csharp">System.IEquatable&lt;SKMatrix44&gt;
+</code></pre>
+<p>Added fields:</p>
+<pre><code class="lang-csharp">public static SKMatrix44 Empty;
+public static SKMatrix44 Identity;
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">public SKMatrix44TypeMask Type { get; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public float M00 { get; set; }
+public float M01 { get; set; }
+public float M02 { get; set; }
+public float M03 { get; set; }
+public float M10 { get; set; }
+public float M11 { get; set; }
+public float M12 { get; set; }
+public float M13 { get; set; }
+public float M20 { get; set; }
+public float M21 { get; set; }
+public float M22 { get; set; }
+public float M23 { get; set; }
+public float M30 { get; set; }
+public float M31 { get; set; }
+public float M32 { get; set; }
+public float M33 { get; set; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKMatrix44 CreateTranslate (float x, float y, float z);
+public double Determinant ();
+protected override void Dispose (bool disposing);
+protected override void DisposeNative ();
+public static bool Equal (SKMatrix44 left, SKMatrix44 right);
+public static SKMatrix44 FromColumnMajor (float[] src);
+public static SKMatrix44 FromRowMajor (float[] src);
+public bool Invert (SKMatrix44 inverse);
+public SKPoint[] MapPoints (SKPoint[] src);
+public float[] MapScalars (float[] srcVector4);
+public void MapScalars (float[] srcVector4, float[] dstVector4);
+public float[] MapScalars (float x, float y, float z, float w);
+public float[] MapVector2 (float[] src2);
+public void MapVector2 (float[] src2, float[] dst4);
+public void PostConcat (SKMatrix44 m);
+public void PostScale (float sx, float sy, float sz);
+public void PostTranslate (float dx, float dy, float dz);
+public void PreConcat (SKMatrix44 m);
+public void PreScale (float sx, float sy, float sz);
+public void PreTranslate (float dx, float dy, float dz);
+public bool Preserves2DAxisAlignment (float epsilon);
+public void Set3x3ColumnMajor (float[] src);
+public void Set3x3RowMajor (float[] src);
+public void SetColumnMajor (float[] src);
+public void SetConcat (SKMatrix44 a, SKMatrix44 b);
+public void SetIdentity ();
+public void SetRotationAbout (float x, float y, float z, float radians);
+public void SetRotationAboutDegrees (float x, float y, float z, float degrees);
+public void SetRotationAboutUnit (float x, float y, float z, float radians);
+public void SetRowMajor (float[] src);
+public void SetScale (float sx, float sy, float sz);
+public void SetTranslate (float dx, float dy, float dz);
+public void ToColumnMajor (float[] dst);
+public void ToRowMajor (float[] dst);
+public void Transpose ();
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-public SKPoint MapPoint (SKPoint src)
++public SKPoint MapPoint (SKPoint point)
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKMatrix44 Add (SKMatrix44 value1, SKMatrix44 value2);
+public static SKMatrix44 Concat (SKMatrix44 first, SKMatrix44 second);
+public static void Concat (ref SKMatrix44 target, SKMatrix44 first, SKMatrix44 second);
+public static SKMatrix44 CreateScale (float x, float y, float z, float pivotX, float pivotY, float pivotZ);
+public float Determinant ();
+public virtual bool Equals (SKMatrix44 obj);
+public override bool Equals (object obj);
+public static SKMatrix44 FromColumnMajor (System.ReadOnlySpan&lt;float&gt; src);
+public static SKMatrix44 FromRowMajor (System.ReadOnlySpan&lt;float&gt; src);
+public override int GetHashCode ();
+public SKPoint3 MapPoint (SKPoint3 point);
+public SKPoint MapPoint (float x, float y);
+public SKPoint3 MapPoint (float x, float y, float z);
+public static SKMatrix44 Multiply (SKMatrix44 value1, SKMatrix44 value2);
+public static SKMatrix44 Multiply (SKMatrix44 value1, float value2);
+public static SKMatrix44 Negate (SKMatrix44 value);
+public SKMatrix44 PostConcat (SKMatrix44 matrix);
+public SKMatrix44 PreConcat (SKMatrix44 matrix);
+public static SKMatrix44 Subtract (SKMatrix44 value1, SKMatrix44 value2);
+public void ToColumnMajor (System.Span&lt;float&gt; dst);
+public void ToRowMajor (System.Span&lt;float&gt; dst);
+public SKMatrix44 Transpose ();
+public bool TryInvert (out SKMatrix44 inverse);
+public static SKMatrix44 op_Addition (SKMatrix44 value1, SKMatrix44 value2);
+public static bool op_Equality (SKMatrix44 left, SKMatrix44 right);
+public static System.Numerics.Matrix4x4 op_Implicit (SKMatrix44 matrix);
+public static SKMatrix44 op_Implicit (System.Numerics.Matrix4x4 matrix);
+public static bool op_Inequality (SKMatrix44 left, SKMatrix44 right);
+public static SKMatrix44 op_Multiply (SKMatrix44 value1, SKMatrix44 value2);
+public static SKMatrix44 op_Multiply (SKMatrix44 value1, float value2);
+public static SKMatrix44 op_Subtraction (SKMatrix44 value1, SKMatrix44 value2);
+public static SKMatrix44 op_UnaryNegation (SKMatrix44 value);
+</code></pre>
+<h4 id="type-changed-skiasharpskpaint">Type Changed: SkiaSharp.SKPaint</h4>
+<p>Obsoleted constructors:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use SKFont instead.&quot;)]
+ public SKPaint (SKFont font);
+</code></pre>
+<p>Removed properties:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public bool DeviceKerningEnabled { get; set; }
+
+[Obsolete]
+public bool IsVerticalText { get; set; }
+</code></pre>
+<p>Obsoleted properties:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use SKFont.Embolden instead.&quot;)]
+ public bool FakeBoldText { get; set; }
+ [Obsolete (&quot;Use SKSamplingOptions instead.&quot;)]
+ public SKFilterQuality FilterQuality { get; set; }
+ [Obsolete (&quot;Use SKFont.Metrics instead.&quot;)]
+ public SKFontMetrics FontMetrics { get; }
+ [Obsolete (&quot;Use SKFont.Spacing instead.&quot;)]
+ public float FontSpacing { get; }
+ [Obsolete (&quot;Use SKFont.Hinting instead.&quot;)]
+ public SKPaintHinting HintingLevel { get; set; }
+ [Obsolete (&quot;Use SKFont.ForceAutoHinting instead.&quot;)]
+ public bool IsAutohinted { get; set; }
+ [Obsolete (&quot;Use SKFont.EmbeddedBitmaps instead.&quot;)]
+ public bool IsEmbeddedBitmapText { get; set; }
+ [Obsolete (&quot;Use SKFont.LinearMetrics instead.&quot;)]
+ public bool IsLinearText { get; set; }
+ [Obsolete (&quot;Use SKFont.Edging instead.&quot;)]
+ public bool LcdRenderText { get; set; }
+ [Obsolete (&quot;Use SKFont.Subpixel instead.&quot;)]
+ public bool SubpixelText { get; set; }
+ [Obsolete (&quot;Use SKTextAlign method overloads instead.&quot;)]
+ public SKTextAlign TextAlign { get; set; }
+ [Obsolete (&quot;Use SKTextEncoding method overloads instead.&quot;)]
+ public SKTextEncoding TextEncoding { get; set; }
+ [Obsolete (&quot;Use SKFont.ScaleX instead.&quot;)]
+ public float TextScaleX { get; set; }
+ [Obsolete (&quot;Use SKFont.Size instead.&quot;)]
+ public float TextSize { get; set; }
+ [Obsolete (&quot;Use SKFont.SkewX instead.&quot;)]
+ public float TextSkewX { get; set; }
+ [Obsolete (&quot;Use SKFont.Typeface instead.&quot;)]
+ public SKTypeface Typeface { get; set; }
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKBlender Blender { get; set; }
+</code></pre>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GetFontMetrics (out SKFontMetrics) instead.&quot;)]
+public float GetFontMetrics (out SKFontMetrics metrics, float scale);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (byte[] text, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (System.ReadOnlySpan&lt;byte&gt; text, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (System.ReadOnlySpan&lt;char&gt; text, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (string text, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (byte[] text, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (IntPtr buffer, int length, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (IntPtr buffer, IntPtr length, float maxWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (System.ReadOnlySpan&lt;byte&gt; text, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (System.ReadOnlySpan&lt;char&gt; text, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (string text, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth);
+ [Obsolete (&quot;Use SKFont.BreakText() instead.&quot;)]
+ public long BreakText (string text, float maxWidth, out float measuredWidth, out string measuredText);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (byte[] text);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (System.ReadOnlySpan&lt;byte&gt; text);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (System.ReadOnlySpan&lt;char&gt; text);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (string text);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (IntPtr text, int length);
+ [Obsolete (&quot;Use SKFont.ContainsGlyphs() instead.&quot;)]
+ public bool ContainsGlyphs (IntPtr text, IntPtr length);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (byte[] text);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (System.ReadOnlySpan&lt;byte&gt; text);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (System.ReadOnlySpan&lt;char&gt; text);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (string text);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (IntPtr text, int length);
+ [Obsolete (&quot;Use SKFont.CountGlyphs() instead.&quot;)]
+ public int CountGlyphs (IntPtr text, IntPtr length);
+ [Obsolete (&quot;Use SKFont.GetFontMetrics() instead.&quot;)]
+ public float GetFontMetrics (out SKFontMetrics metrics);
+ [Obsolete (&quot;Use SKFont.GetGlyphOffsets() instead.&quot;)]
+ public float[] GetGlyphOffsets (System.ReadOnlySpan&lt;byte&gt; text, float origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphOffsets() instead.&quot;)]
+ public float[] GetGlyphOffsets (System.ReadOnlySpan&lt;char&gt; text, float origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphOffsets() instead.&quot;)]
+ public float[] GetGlyphOffsets (string text, float origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphOffsets() instead.&quot;)]
+ public float[] GetGlyphOffsets (IntPtr text, int length, float origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphPositions() instead.&quot;)]
+ public SKPoint[] GetGlyphPositions (System.ReadOnlySpan&lt;byte&gt; text, SKPoint origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphPositions() instead.&quot;)]
+ public SKPoint[] GetGlyphPositions (System.ReadOnlySpan&lt;char&gt; text, SKPoint origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphPositions() instead.&quot;)]
+ public SKPoint[] GetGlyphPositions (string text, SKPoint origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphPositions() instead.&quot;)]
+ public SKPoint[] GetGlyphPositions (IntPtr text, int length, SKPoint origin);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (byte[] text);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (System.ReadOnlySpan&lt;byte&gt; text);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (System.ReadOnlySpan&lt;char&gt; text);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (string text);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (byte[] text, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (IntPtr text, int length);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (IntPtr text, IntPtr length);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (System.ReadOnlySpan&lt;byte&gt; text, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (System.ReadOnlySpan&lt;char&gt; text, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (string text, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphWidths() instead.&quot;)]
+ public float[] GetGlyphWidths (IntPtr text, IntPtr length, out SKRect[] bounds);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (byte[] text);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (System.ReadOnlySpan&lt;byte&gt; text);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (System.ReadOnlySpan&lt;char&gt; text);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (string text);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (IntPtr text, int length);
+ [Obsolete (&quot;Use SKFont.GetGlyphs() instead.&quot;)]
+ public ushort[] GetGlyphs (IntPtr text, IntPtr length);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;float&gt; xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (System.ReadOnlySpan&lt;char&gt; text, System.ReadOnlySpan&lt;float&gt; xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetHorizontalTextIntercepts (IntPtr text, IntPtr length, float[] xpositions, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;SKPoint&gt; positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (System.ReadOnlySpan&lt;char&gt; text, System.ReadOnlySpan&lt;SKPoint&gt; positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetPositionedTextIntercepts (IntPtr text, IntPtr length, SKPoint[] positions, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (System.ReadOnlySpan&lt;byte&gt; text, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (System.ReadOnlySpan&lt;char&gt; text, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKTextBlob.GetIntercepts() instead.&quot;)]
+ public float[] GetTextIntercepts (IntPtr text, IntPtr length, float x, float y, float upperBounds, float lowerBounds);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (byte[] text, SKPoint[] points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;SKPoint&gt; points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (System.ReadOnlySpan&lt;char&gt; text, System.ReadOnlySpan&lt;SKPoint&gt; points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (string text, SKPoint[] points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (byte[] text, float x, float y);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (IntPtr buffer, int length, SKPoint[] points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (IntPtr buffer, int length, System.ReadOnlySpan&lt;SKPoint&gt; points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (IntPtr buffer, IntPtr length, SKPoint[] points);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (System.ReadOnlySpan&lt;byte&gt; text, float x, float y);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (System.ReadOnlySpan&lt;char&gt; text, float x, float y);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (string text, float x, float y);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (IntPtr buffer, int length, float x, float y);
+ [Obsolete (&quot;Use SKFont.GetTextPath() instead.&quot;)]
+ public SKPath GetTextPath (IntPtr buffer, IntPtr length, float x, float y);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (byte[] text);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (System.ReadOnlySpan&lt;byte&gt; text);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (System.ReadOnlySpan&lt;char&gt; text);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (string text);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (byte[] text, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (IntPtr buffer, int length);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (IntPtr buffer, IntPtr length);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (System.ReadOnlySpan&lt;byte&gt; text, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (System.ReadOnlySpan&lt;char&gt; text, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (string text, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (IntPtr buffer, int length, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont.MeasureText() instead.&quot;)]
+ public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds);
+ [Obsolete (&quot;Use SKFont instead.&quot;)]
+ public SKFont ToFont ();
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKPath GetFillPath (SKPath src, SKMatrix matrix);
+public bool GetFillPath (SKPath src, SKPath dst, SKMatrix matrix);
+public SKPath GetFillPath (SKPath src, SKRect cullRect, SKMatrix matrix);
+public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, SKMatrix matrix);
+</code></pre>
+<h4 id="type-changed-skiasharpskpath">Type Changed: SkiaSharp.SKPath</h4>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public SKPathConvexity Convexity { get; ---set;--- }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public void AddPath (SKPath other, ref SKMatrix matrix, SKPathAddMode mode);
+
+[Obsolete (&quot;Use AddRoundRect instead.&quot;)]
+public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Transform(in SKMatrix) instead.&quot;)]
+ public void Transform (SKMatrix matrix);
+ [Obsolete (&quot;Use Transform(in SKMatrix matrix, SKPath destination) instead.&quot;)]
+ public void Transform (SKMatrix matrix, SKPath destination);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void AddPath (SKPath other, ref SKMatrix matrix, SKPathAddMode mode);
+public void Transform (ref SKMatrix matrix);
+public void Transform (ref SKMatrix matrix, SKPath destination);
+</code></pre>
+<h4 id="type-changed-skiasharpskpathiterator">Type Changed: SkiaSharp.SKPath.Iterator</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use Next(SKPoint[]) instead.&quot;)]
+public SKPathVerb Next (SKPoint[] points, bool doConsumeDegenerates, bool exact);
+</code></pre>
+<h4 id="type-changed-skiasharpskpicture">Type Changed: SkiaSharp.SKPicture</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public int ApproximateBytesUsed { get; }
+public int ApproximateOperationCount { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public int GetApproximateOperationCount (bool includeNested);
+public void Playback (SKCanvas canvas);
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode);
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKRect tile);
+public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix localMatrix, SKRect tile);
+</code></pre>
+<h4 id="type-changed-skiasharpskpicturerecorder">Type Changed: SkiaSharp.SKPictureRecorder</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public SKCanvas BeginRecording (SKRect cullRect, bool useRTree);
+</code></pre>
+<h4 id="type-changed-skiasharpskpixmap">Type Changed: SkiaSharp.SKPixmap</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use SKPixmap(SKImageInfo, IntPtr, int) instead.&quot;)]
+public SKPixmap (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable);
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;The Index8 color type and color table is no longer supported.&quot;)]
+public SKColorTable ColorTable { get; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public int BitShiftPerPixel { get; }
+public long BytesSize64 { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use Encode(SKWStream, SKJpegEncoderOptions) instead.&quot;)]
+public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options);
+
+[Obsolete (&quot;Use Encode(SKWStream, SKPngEncoderOptions) instead.&quot;)]
+public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options);
+
+[Obsolete (&quot;Use Encode(SKWStream, SKWebpEncoderOptions) instead.&quot;)]
+public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options);
+
+[Obsolete (&quot;Use Encode(SKWStream, SKEncodedImageFormat, int) instead.&quot;)]
+public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality);
+
+[Obsolete (&quot;Use Encode(SKWStream, SKEncodedImageFormat, int) instead.&quot;)]
+public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality);
+public bool Erase (SKColorF color, SKColorSpace colorspace, SKRectI subset);
+public System.ReadOnlySpan&lt;byte&gt; GetPixelSpan ();
+
+[Obsolete (&quot;Use ReadPixels(SKImageInfo, IntPtr, int, int, int) instead.&quot;)]
+public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKTransferFunctionBehavior behavior);
+
+[Obsolete (&quot;The Index8 color type and color table is no longer supported. Use Reset(SKImageInfo, IntPtr, int) instead.&quot;)]
+public void Reset (SKImageInfo info, IntPtr addr, int rowBytes, SKColorTable ctable);
+
+[Obsolete (&quot;Use ScalePixels(SKPixmap, SKFilterQuality) instead.&quot;)]
+public static bool Resize (SKPixmap dst, SKPixmap src, SKBitmapResizeMethod method);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.&quot;)]
+ public bool ScalePixels (SKPixmap destination, SKFilterQuality quality);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public bool ComputeIsOpaque ();
+public float GetPixelAlpha (int x, int y);
+public SKColorF GetPixelColorF (int x, int y);
+public System.Span&lt;byte&gt; GetPixelSpan ();
+public System.Span&lt;T&gt; GetPixelSpan&lt;T&gt; (int x, int y);
+public System.Span&lt;byte&gt; GetPixelSpan (int x, int y);
+public bool ScalePixels (SKPixmap destination);
+public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling);
+</code></pre>
+<h4 id="type-changed-skiasharpskpngencoderoptions">Type Changed: SkiaSharp.SKPngEncoderOptions</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Using SKPngEncoderOptions(SKPngEncoderFilterFlags, int) instead.&quot;)]
+public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel, SKTransferFunctionBehavior unpremulBehavior);
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKTransferFunctionBehavior UnpremulBehavior { get; set; }
+</code></pre>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public SKPngEncoderFilterFlags FilterFlags { get; ---set;--- }
+ public int ZLibLevel { get; ---set;--- }
+</code></pre>
+<h4 id="type-changed-skiasharpskpoint">Type Changed: SkiaSharp.SKPoint</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static System.Numerics.Vector2 op_Implicit (SKPoint point);
+public static SKPoint op_Implicit (System.Numerics.Vector2 vector);
+</code></pre>
+<h4 id="type-changed-skiasharpskpoint3">Type Changed: SkiaSharp.SKPoint3</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static System.Numerics.Vector3 op_Implicit (SKPoint3 point);
+public static SKPoint3 op_Implicit (System.Numerics.Vector3 vector);
+</code></pre>
+<h4 id="type-changed-skiasharpskpointi">Type Changed: SkiaSharp.SKPointI</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public static System.Numerics.Vector2 op_Implicit (SKPointI point);
+</code></pre>
+<h4 id="type-changed-skiasharpskpositionedrunbuffer">Type Changed: SkiaSharp.SKPositionedRunBuffer</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public System.Span&lt;SKPoint&gt; Positions { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Positions instead.&quot;)]
+ public System.Span&lt;SKPoint&gt; GetPositionSpan ();
+</code></pre>
+<h4 id="type-changed-skiasharpskregion">Type Changed: SkiaSharp.SKRegion</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public bool SetRects (SKRectI[] rects);
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public bool SetRects (System.ReadOnlySpan&lt;SKRectI&gt; rects);
+</code></pre>
+<h4 id="type-changed-skiasharpskrotationscalerunbuffer">Type Changed: SkiaSharp.SKRotationScaleRunBuffer</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public System.Span&lt;SKRotationScaleMatrix&gt; Positions { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Positions instead.&quot;)]
+ public System.Span&lt;SKRotationScaleMatrix&gt; GetRotationScaleSpan ();
+ [Obsolete (&quot;Use SetPositions instead.&quot;)]
+ public void SetRotationScale (System.ReadOnlySpan&lt;SKRotationScaleMatrix&gt; positions);
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void SetPositions (System.ReadOnlySpan&lt;SKRotationScaleMatrix&gt; positions);
+</code></pre>
+<h4 id="type-changed-skiasharpskroundrect">Type Changed: SkiaSharp.SKRoundRect</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void SetRectRadii (SKRect rect, System.ReadOnlySpan&lt;SKPoint&gt; radii);
+</code></pre>
+<h4 id="type-changed-skiasharpskrunbuffer">Type Changed: SkiaSharp.SKRunBuffer</h4>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public int TextSize { get; }
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public System.Span&lt;ushort&gt; Glyphs { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public System.Span&lt;uint&gt; GetClusterSpan ();
+
+[Obsolete]
+public System.Span&lt;byte&gt; GetTextSpan ();
+
+[Obsolete]
+public void SetClusters (System.ReadOnlySpan&lt;uint&gt; clusters);
+
+[Obsolete]
+public void SetText (System.ReadOnlySpan&lt;byte&gt; text);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Glyphs instead.&quot;)]
+ public System.Span&lt;ushort&gt; GetGlyphSpan ();
+</code></pre>
+<h4 id="type-changed-skiasharpskruntimeeffect">Type Changed: SkiaSharp.SKRuntimeEffect</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKRuntimeEffect Create (string sksl, out string errors);
+public SKShader ToShader (bool isOpaque);
+public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms);
+public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);
+public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKRuntimeBlenderBuilder BuildBlender (string sksl);
+public static SKRuntimeColorFilterBuilder BuildColorFilter (string sksl);
+public static SKRuntimeShaderBuilder BuildShader (string sksl);
+public static SKRuntimeEffect CreateBlender (string sksl, out string errors);
+public static SKRuntimeEffect CreateColorFilter (string sksl, out string errors);
+public static SKRuntimeEffect CreateShader (string sksl, out string errors);
+public SKBlender ToBlender ();
+public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms);
+public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);
+public SKShader ToShader ();
+public SKShader ToShader (SKRuntimeEffectUniforms uniforms);
+public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);
+public SKShader ToShader (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix);
+</code></pre>
+<h4 id="type-changed-skiasharpskruntimeeffectchildren">Type Changed: SkiaSharp.SKRuntimeEffectChildren</h4>
+<p>Added interface:</p>
+<pre><code class="lang-csharp">System.IDisposable
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">public SKShader Item { set; }
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKRuntimeEffectChild? Item { set; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public void Add (string name, SKShader value);
+public SKShader[] ToArray ();
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Add (string name, SKRuntimeEffectChild? value);
+public virtual void Dispose ();
+public SKObject[] ToArray ();
+</code></pre>
+<h4 id="type-changed-skiasharpskruntimeeffectuniform">Type Changed: SkiaSharp.SKRuntimeEffectUniform</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKRuntimeEffectUniform op_Implicit (SKColor value);
+public static SKRuntimeEffectUniform op_Implicit (SKColorF value);
+public static SKRuntimeEffectUniform op_Implicit (SKPoint value);
+public static SKRuntimeEffectUniform op_Implicit (SKPoint3 value);
+public static SKRuntimeEffectUniform op_Implicit (SKPointI value);
+public static SKRuntimeEffectUniform op_Implicit (SKSize value);
+public static SKRuntimeEffectUniform op_Implicit (SKSizeI value);
+public static SKRuntimeEffectUniform op_Implicit (int value);
+public static SKRuntimeEffectUniform op_Implicit (int[] value);
+public static SKRuntimeEffectUniform op_Implicit (System.ReadOnlySpan&lt;int&gt; value);
+public static SKRuntimeEffectUniform op_Implicit (System.Span&lt;int&gt; value);
+</code></pre>
+<h4 id="type-changed-skiasharpskruntimeeffectuniforms">Type Changed: SkiaSharp.SKRuntimeEffectUniforms</h4>
+<p>Added interface:</p>
+<pre><code class="lang-csharp">System.IDisposable
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public int Size { get; }
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public virtual void Dispose ();
+</code></pre>
+<h4 id="type-changed-skiasharpskshader">Type Changed: SkiaSharp.SKShader</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKShader CreateLerp (float weight, SKShader dst, SKShader src);
+public static SKShader CreatePerlinNoiseImprovedNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float z);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKShader CreateBlend (SKBlendMode mode, SKShader shaderA, SKShader shaderB);
+public static SKShader CreateBlend (SKBlender blender, SKShader shaderA, SKShader shaderB);
+
+[Obsolete (&quot;Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling) instead.&quot;)]
+public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality);
+public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling);
+
+[Obsolete (&quot;Use CreateImage(SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix) instead.&quot;)]
+public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterQuality quality, SKMatrix localMatrix);
+public static SKShader CreateImage (SKImage src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKSamplingOptions sampling, SKMatrix localMatrix);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKRect tile);
+public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKFilterMode filterMode, SKMatrix localMatrix, SKRect tile);
+</code></pre>
+<h4 id="type-changed-skiasharpsksurface">Type Changed: SkiaSharp.SKSurface</h4>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use SurfaceProperties instead.&quot;)]
+public SKSurfaceProps SurfaceProps { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRBackendTextureDesc desc);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc);
+
+[Obsolete (&quot;Use Create(SKImageInfo, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (SKImageInfo info, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(SKPixmap, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (SKPixmap pixmap, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRBackendRenderTargetDesc desc, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(SKImageInfo, IntPtr, rowBytes, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(SKImageInfo) instead.&quot;)]
+public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType);
+
+[Obsolete (&quot;Use Create(GRContext, bool, SKImageInfo, int, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(SKImageInfo, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(SKImageInfo, IntPtr, int) instead.&quot;)]
+public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes);
+
+[Obsolete (&quot;Use Create(SKImageInfo, IntPtr, int, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface Create (int width, int height, SKColorType colorType, SKAlphaType alphaType, IntPtr pixels, int rowBytes, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, SKColorType) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTextureDesc desc, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRGlBackendTextureDesc desc, SKSurfaceProps props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+
+[Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace, SKSurfaceProperties) instead.&quot;)]
+public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+</code></pre>
+<h4 id="type-changed-skiasharpsksurfaceproperties">Type Changed: SkiaSharp.SKSurfaceProperties</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKSurfaceProperties (SKSurfaceProps props);
+</code></pre>
+<h4 id="type-changed-skiasharpsksvgcanvas">Type Changed: SkiaSharp.SKSvgCanvas</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use Create(SKRect, Stream) instead.&quot;)]
+public static SKCanvas Create (SKRect bounds, SKXmlWriter writer);
+</code></pre>
+<h4 id="type-changed-skiasharpsktextblobbuilder">Type Changed: SkiaSharp.SKTextBlobBuilder</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;float&gt; positions);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;float&gt; positions, SKRect? bounds);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, SKRect bounds);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;float&gt; positions, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;float&gt; positions, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters, SKRect? bounds);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, byte[] text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AddHorizontalRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;float&gt;, float) instead.&quot;)]
+public void AddHorizontalRun (SKPaint font, float y, ushort[] glyphs, float[] positions, string text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;SKPoint&gt; positions);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;SKPoint&gt; positions, SKRect? bounds);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, SKRect bounds);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;SKPoint&gt; positions, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;SKPoint&gt; positions, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters, SKRect? bounds);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, byte[] text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AddPositionedRun (ReadOnlySpan&lt;ushort&gt;, SKFont, ReadOnlySpan&lt;SKPoint&gt;) instead.&quot;)]
+public void AddPositionedRun (SKPaint font, ushort[] glyphs, SKPoint[] positions, string text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, SKRect? bounds);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, SKRect bounds);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, System.ReadOnlySpan&lt;ushort&gt; glyphs, System.ReadOnlySpan&lt;byte&gt; text, System.ReadOnlySpan&lt;uint&gt; clusters, SKRect? bounds);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, byte[] text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AddRun (ReadOnlySpan&lt;ushort&gt;, SKFont, float, float) instead.&quot;)]
+public void AddRun (SKPaint font, float x, float y, ushort[] glyphs, string text, uint[] clusters, SKRect bounds);
+
+[Obsolete (&quot;Use AllocateHorizontalRun (SKFont, int, float, SKRect?) instead.&quot;)]
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y);
+
+[Obsolete (&quot;Use AllocateHorizontalRun (SKFont, int, float, SKRect?) instead.&quot;)]
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount);
+
+[Obsolete (&quot;Use AllocateHorizontalRun (SKFont, int, float, SKRect?) instead.&quot;)]
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, SKRect? bounds);
+
+[Obsolete (&quot;Use AllocateHorizontalRun (SKFont, int, float, SKRect?) instead.&quot;)]
+public SKHorizontalRunBuffer AllocateHorizontalRun (SKPaint font, int count, float y, int textByteCount, SKRect? bounds);
+
+[Obsolete (&quot;Use AllocatePositionedRun (SKFont, int, SKRect?) instead.&quot;)]
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count);
+
+[Obsolete (&quot;Use AllocatePositionedRun (SKFont, int, SKRect?) instead.&quot;)]
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount);
+
+[Obsolete (&quot;Use AllocatePositionedRun (SKFont, int, SKRect?) instead.&quot;)]
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, SKRect? bounds);
+
+[Obsolete (&quot;Use AllocatePositionedRun (SKFont, int, SKRect?) instead.&quot;)]
+public SKPositionedRunBuffer AllocatePositionedRun (SKPaint font, int count, int textByteCount, SKRect? bounds);
+public SKRotationScaleRunBuffer AllocateRotationScaleRun (SKFont font, int count);
+
+[Obsolete (&quot;Use AllocateRun (SKFont, int, float, float, SKRect?) instead.&quot;)]
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y);
+
+[Obsolete (&quot;Use AllocateRun (SKFont, int, float, float, SKRect?) instead.&quot;)]
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount);
+
+[Obsolete (&quot;Use AllocateRun (SKFont, int, float, float, SKRect?) instead.&quot;)]
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, SKRect? bounds);
+
+[Obsolete (&quot;Use AllocateRun (SKFont, int, float, float, SKRect?) instead.&quot;)]
+public SKRunBuffer AllocateRun (SKPaint font, int count, float x, float y, int textByteCount, SKRect? bounds);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKHorizontalTextRunBuffer AllocateHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds);
+public SKPositionedTextRunBuffer AllocatePositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;float&gt; AllocateRawHorizontalRun (SKFont font, int count, float y, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;float&gt; AllocateRawHorizontalTextRun (SKFont font, int count, float y, int textByteCount, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;SKPoint&gt; AllocateRawPositionedRun (SKFont font, int count, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;SKPoint&gt; AllocateRawPositionedTextRun (SKFont font, int count, int textByteCount, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;SKRotationScaleMatrix&gt; AllocateRawRotationScaleRun (SKFont font, int count, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;SKRotationScaleMatrix&gt; AllocateRawRotationScaleTextRun (SKFont font, int count, int textByteCount, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;float&gt; AllocateRawRun (SKFont font, int count, float x, float y, SKRect? bounds);
+public SkiaSharp.SKRawRunBuffer&lt;float&gt; AllocateRawTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds);
+public SKRotationScaleRunBuffer AllocateRotationScaleRun (SKFont font, int count, SKRect? bounds);
+public SKRotationScaleTextRunBuffer AllocateRotationScaleTextRun (SKFont font, int count, int textByteCount, SKRect? bounds);
+public SKTextRunBuffer AllocateTextRun (SKFont font, int count, float x, float y, int textByteCount, SKRect? bounds);
+</code></pre>
+<h4 id="type-changed-skiasharpsktracememorydump">Type Changed: SkiaSharp.SKTraceMemoryDump</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
++protected virtual void OnDumpNumericValue (string dumpName, string valueName, string units, ulong value)
+-protected virtual void OnDumpStringValue (string dumpName, string valueName, string value)
++protected virtual void OnDumpStringValue (string dumpName, string valueName, string value)
+</code></pre>
+<h4 id="type-changed-skiasharpsktypeface">Type Changed: SkiaSharp.SKTypeface</h4>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use FontWeight and FontSlant instead.&quot;)]
+public SKTypefaceStyle Style { get; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GetGlyphs(string, out ushort[]) instead.&quot;)]
+public int CharsToGlyphs (string chars, out ushort[] glyphs);
+
+[Obsolete (&quot;Use GetGlyphs(IntPtr, int, SKTextEncoding, out ushort[]) instead.&quot;)]
+public int CharsToGlyphs (IntPtr str, int strlen, SKEncoding encoding, out ushort[] glyphs);
+
+[Obsolete (&quot;Use CountGlyphs(byte[], SKTextEncoding) instead.&quot;)]
+public int CountGlyphs (byte[] str, SKEncoding encoding);
+
+[Obsolete (&quot;Use CountGlyphs(ReadOnlySpan&lt;byte&gt;, SKTextEncoding) instead.&quot;)]
+public int CountGlyphs (System.ReadOnlySpan&lt;byte&gt; str, SKEncoding encoding);
+
+[Obsolete (&quot;Use CountGlyphs(string) instead.&quot;)]
+public int CountGlyphs (string str, SKEncoding encoding);
+
+[Obsolete (&quot;Use CountGlyphs(IntPtr, int, SKTextEncoding) instead.&quot;)]
+public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding);
+
+[Obsolete (&quot;Use FromFamilyName(string, SKFontStyleWeight, SKFontStyleWidth, SKFontStyleSlant) instead.&quot;)]
+public static SKTypeface FromFamilyName (string familyName, SKTypefaceStyle style);
+
+[Obsolete]
+public static SKTypeface FromTypeface (SKTypeface typeface, SKTypefaceStyle style);
+
+[Obsolete (&quot;Use GetGlyphs(ReadOnlySpan&lt;byte&gt;, SKTextEncoding) instead.&quot;)]
+public ushort[] GetGlyphs (byte[] text, SKEncoding encoding);
+
+[Obsolete (&quot;Use GetGlyphs(ReadOnlySpan&lt;byte&gt;, SKTextEncoding) instead.&quot;)]
+public ushort[] GetGlyphs (System.ReadOnlySpan&lt;byte&gt; text, SKEncoding encoding);
+
+[Obsolete (&quot;Use GetGlyphs(string) instead.&quot;)]
+public ushort[] GetGlyphs (string text, SKEncoding encoding);
+
+[Obsolete (&quot;Use GetGlyphs(string) instead.&quot;)]
+public int GetGlyphs (string text, out ushort[] glyphs);
+
+[Obsolete (&quot;Use GetGlyphs(byte[], SKTextEncoding) instead.&quot;)]
+public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs);
+
+[Obsolete (&quot;Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.&quot;)]
+public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding);
+
+[Obsolete (&quot;Use GetGlyphs(ReadOnlySpan&lt;byte&gt;, SKTextEncoding) instead.&quot;)]
+public int GetGlyphs (System.ReadOnlySpan&lt;byte&gt; text, SKEncoding encoding, out ushort[] glyphs);
+
+[Obsolete (&quot;Use GetGlyphs(string) instead.&quot;)]
+public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs);
+
+[Obsolete (&quot;Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.&quot;)]
+public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort[] glyphs);
+</code></pre>
+<h4 id="type-changed-skiasharpskwebpencoderoptions">Type Changed: SkiaSharp.SKWebpEncoderOptions</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use SKWebpEncoderOptions(SKWebpEncoderCompression, float) instead.&quot;)]
+public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality, SKTransferFunctionBehavior unpremulBehavior);
+</code></pre>
+<p>Removed property:</p>
+<pre><code class="lang-csharp">[Obsolete]
+public SKTransferFunctionBehavior UnpremulBehavior { get; set; }
+</code></pre>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public SKWebpEncoderCompression Compression { get; ---set;--- }
+ public float Quality { get; ---set;--- }
+</code></pre>
+<h4 id="type-changed-skiasharpskiaextensions">Type Changed: SkiaSharp.SkiaExtensions</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use SKColorChannel instead.&quot;)]
+public static SKColorChannel ToColorChannel (this SKDisplacementMapEffectChannelSelectorType channelSelectorType);
+
+[Obsolete]
+public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKColorSpaceRenderTargetGamma gamma);
+
+[Obsolete]
+public static SKColorSpaceTransferFn ToColorSpaceTransferFn (this SKNamedGamma gamma);
+
+[Obsolete]
+public static SKColorSpaceXyz ToColorSpaceXyz (this SKColorSpaceGamut gamut);
+
+[Obsolete]
+public static SKColorSpaceXyz ToColorSpaceXyz (this SKMatrix44 matrix);
+
+[Obsolete (&quot;Use SKColorType instead.&quot;)]
+public static SKColorType ToColorType (this GRPixelConfig config);
+
+[Obsolete]
+public static SKFilterQuality ToFilterQuality (this SKBitmapResizeMethod method);
+
+[Obsolete (&quot;Use SKColorType instead.&quot;)]
+public static uint ToGlSizedFormat (this GRPixelConfig config);
+
+[Obsolete (&quot;Use SKColorType instead.&quot;)]
+public static GRPixelConfig ToPixelConfig (this SKColorType colorType);
+
+[Obsolete (&quot;Use SKShaderTileMode instead.&quot;)]
+public static SKShaderTileMode ToShaderTileMode (this SKMatrixConvolutionTileMode tileMode);
+
+[Obsolete]
+public static SKTextEncoding ToTextEncoding (this SKEncoding encoding);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static int GetBitShiftPerPixel (this SKColorType colorType);
+
+[Obsolete (&quot;Use SKSamplingOptions instead.&quot;)]
+public static SKSamplingOptions ToSamplingOptions (this SKFilterQuality quality);
+</code></pre>
+<h4 id="type-changed-skiasharpstringutilities">Type Changed: SkiaSharp.StringUtilities</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">[Obsolete (&quot;Use GetEncodedText(string, SKTextEncoding) instead.&quot;)]
+public static byte[] GetEncodedText (string text, SKEncoding encoding);
+</code></pre>
+<h4 id="removed-type-skiasharpsk3dview">Removed Type SkiaSharp.SK3dView</h4>
+<h4 id="removed-type-skiasharpskautomaskfreeimage">Removed Type SkiaSharp.SKAutoMaskFreeImage</h4>
+<h4 id="removed-type-skiasharpskcroprectflags">Removed Type SkiaSharp.SKCropRectFlags</h4>
+<h4 id="removed-type-skiasharpskmask">Removed Type SkiaSharp.SKMask</h4>
+<h4 id="removed-type-skiasharpskmaskformat">Removed Type SkiaSharp.SKMaskFormat</h4>
+<h4 id="removed-type-skiasharpskmatrix44typemask">Removed Type SkiaSharp.SKMatrix44TypeMask</h4>
+<h4 id="removed-type-skiasharpskxmlstreamwriter">Removed Type SkiaSharp.SKXmlStreamWriter</h4>
+<h4 id="removed-type-skiasharpskxmlwriter">Removed Type SkiaSharp.SKXmlWriter</h4>
+<h4 id="new-type-skiasharpgrmtlbackendcontext">New Type: SkiaSharp.GRMtlBackendContext</h4>
+<pre><code class="lang-csharp">public class GRMtlBackendContext : System.IDisposable {
+	// constructors
+	public GRMtlBackendContext ();
+	// properties
+	public IntPtr DeviceHandle { get; set; }
+	public IntPtr QueueHandle { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpgrmtltextureinfo">New Type: SkiaSharp.GRMtlTextureInfo</h4>
+<pre><code class="lang-csharp">public struct GRMtlTextureInfo {
+	// constructors
+	public GRMtlTextureInfo (IntPtr textureHandle);
+	// properties
+	public IntPtr TextureHandle { get; set; }
+	// methods
+	public bool Equals (GRMtlTextureInfo obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (GRMtlTextureInfo left, GRMtlTextureInfo right);
+	public static bool op_Inequality (GRMtlTextureInfo left, GRMtlTextureInfo right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskblender">New Type: SkiaSharp.SKBlender</h4>
+<pre><code class="lang-csharp">public class SKBlender : SkiaSharp.SKObject, System.IDisposable {
+	// methods
+	public static SKBlender CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor);
+	public static SKBlender CreateBlendMode (SKBlendMode mode);
+	protected override void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcodecanimationblend">New Type: SkiaSharp.SKCodecAnimationBlend</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKCodecAnimationBlend {
+	Src = 1,
+	SrcOver = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcubicresampler">New Type: SkiaSharp.SKCubicResampler</h4>
+<pre><code class="lang-csharp">public struct SKCubicResampler, System.IEquatable&lt;SKCubicResampler&gt; {
+	// constructors
+	public SKCubicResampler (float b, float c);
+	// fields
+	public static SKCubicResampler CatmullRom;
+	public static SKCubicResampler Mitchell;
+	// properties
+	public float B { get; }
+	public float C { get; }
+	// methods
+	public virtual bool Equals (SKCubicResampler obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKCubicResampler left, SKCubicResampler right);
+	public static bool op_Inequality (SKCubicResampler left, SKCubicResampler right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskfiltermode">New Type: SkiaSharp.SKFilterMode</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKFilterMode {
+	Linear = 1,
+	Nearest = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskhorizontaltextrunbuffer">New Type: SkiaSharp.SKHorizontalTextRunBuffer</h4>
+<pre><code class="lang-csharp">public sealed class SKHorizontalTextRunBuffer : SkiaSharp.SKTextRunBuffer {
+	// properties
+	public System.Span&lt;float&gt; Positions { get; }
+	// methods
+	public void SetPositions (System.ReadOnlySpan&lt;float&gt; positions);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskmipmapmode">New Type: SkiaSharp.SKMipmapMode</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKMipmapMode {
+	Linear = 2,
+	Nearest = 1,
+	None = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpositionedtextrunbuffer">New Type: SkiaSharp.SKPositionedTextRunBuffer</h4>
+<pre><code class="lang-csharp">public sealed class SKPositionedTextRunBuffer : SkiaSharp.SKTextRunBuffer {
+	// properties
+	public System.Span&lt;SKPoint&gt; Positions { get; }
+	// methods
+	public void SetPositions (System.ReadOnlySpan&lt;SKPoint&gt; positions);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskrawrunbuffer1">New Type: SkiaSharp.SKRawRunBuffer`1</h4>
+<pre><code class="lang-csharp">public struct SKRawRunBuffer`1 {
+	// properties
+	public System.Span&lt;uint&gt; Clusters { get; }
+	public System.Span&lt;ushort&gt; Glyphs { get; }
+	public System.Span&lt;T&gt; Positions { get; }
+	public System.Span&lt;byte&gt; Text { get; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskrotationscaletextrunbuffer">New Type: SkiaSharp.SKRotationScaleTextRunBuffer</h4>
+<pre><code class="lang-csharp">public sealed class SKRotationScaleTextRunBuffer : SkiaSharp.SKTextRunBuffer {
+	// properties
+	public System.Span&lt;SKRotationScaleMatrix&gt; Positions { get; }
+	// methods
+	public void SetPositions (System.ReadOnlySpan&lt;SKRotationScaleMatrix&gt; positions);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeblenderbuilder">New Type: SkiaSharp.SKRuntimeBlenderBuilder</h4>
+<pre><code class="lang-csharp">public class SKRuntimeBlenderBuilder : SkiaSharp.SKRuntimeEffectBuilder, System.IDisposable {
+	// constructors
+	public SKRuntimeBlenderBuilder (SKRuntimeEffect effect);
+	// methods
+	public SKBlender Build ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimecolorfilterbuilder">New Type: SkiaSharp.SKRuntimeColorFilterBuilder</h4>
+<pre><code class="lang-csharp">public class SKRuntimeColorFilterBuilder : SkiaSharp.SKRuntimeEffectBuilder, System.IDisposable {
+	// constructors
+	public SKRuntimeColorFilterBuilder (SKRuntimeEffect effect);
+	// methods
+	public SKColorFilter Build ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectbuilder">New Type: SkiaSharp.SKRuntimeEffectBuilder</h4>
+<pre><code class="lang-csharp">public class SKRuntimeEffectBuilder : System.IDisposable {
+	// constructors
+	public SKRuntimeEffectBuilder (SKRuntimeEffect effect);
+	// properties
+	public SKRuntimeEffectChildren Children { get; }
+	public SKRuntimeEffect Effect { get; }
+	public SKRuntimeEffectUniforms Uniforms { get; }
+	// methods
+	public virtual void Dispose ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectbuilderexception">New Type: SkiaSharp.SKRuntimeEffectBuilderException</h4>
+<pre><code class="lang-csharp">public class SKRuntimeEffectBuilderException : System.ApplicationException, System.Runtime.Serialization.ISerializable {
+	// constructors
+	public SKRuntimeEffectBuilderException (string message);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectchild">New Type: SkiaSharp.SKRuntimeEffectChild</h4>
+<pre><code class="lang-csharp">public struct SKRuntimeEffectChild {
+	// constructors
+	public SKRuntimeEffectChild (SKBlender blender);
+	public SKRuntimeEffectChild (SKColorFilter colorFilter);
+	public SKRuntimeEffectChild (SKShader shader);
+	// properties
+	public SKBlender Blender { get; }
+	public SKColorFilter ColorFilter { get; }
+	public SKShader Shader { get; }
+	public SKObject Value { get; }
+	// methods
+	public static SKRuntimeEffectChild op_Implicit (SKBlender blender);
+	public static SKRuntimeEffectChild op_Implicit (SKColorFilter colorFilter);
+	public static SKRuntimeEffectChild op_Implicit (SKShader shader);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeshaderbuilder">New Type: SkiaSharp.SKRuntimeShaderBuilder</h4>
+<pre><code class="lang-csharp">public class SKRuntimeShaderBuilder : SkiaSharp.SKRuntimeEffectBuilder, System.IDisposable {
+	// constructors
+	public SKRuntimeShaderBuilder (SKRuntimeEffect effect);
+	// methods
+	public SKShader Build ();
+	public SKShader Build (SKMatrix localMatrix);
+}
+</code></pre>
+<h4 id="new-type-skiasharpsksamplingoptions">New Type: SkiaSharp.SKSamplingOptions</h4>
+<pre><code class="lang-csharp">public struct SKSamplingOptions, System.IEquatable&lt;SKSamplingOptions&gt; {
+	// constructors
+	public SKSamplingOptions (SKCubicResampler resampler);
+	public SKSamplingOptions (SKFilterMode filter);
+	public SKSamplingOptions (int maxAniso);
+	public SKSamplingOptions (SKFilterMode filter, SKMipmapMode mipmap);
+	// fields
+	public static SKSamplingOptions Default;
+	// properties
+	public SKCubicResampler Cubic { get; }
+	public SKFilterMode Filter { get; }
+	public bool IsAniso { get; }
+	public int MaxAniso { get; }
+	public SKMipmapMode Mipmap { get; }
+	public bool UseCubic { get; }
+	// methods
+	public virtual bool Equals (SKSamplingOptions obj);
+	public override bool Equals (object obj);
+	public override int GetHashCode ();
+	public static bool op_Equality (SKSamplingOptions left, SKSamplingOptions right);
+	public static bool op_Inequality (SKSamplingOptions left, SKSamplingOptions right);
+}
+</code></pre>
+<h4 id="new-type-skiasharpsktextrunbuffer">New Type: SkiaSharp.SKTextRunBuffer</h4>
+<pre><code class="lang-csharp">public class SKTextRunBuffer : SkiaSharp.SKRunBuffer {
+	// properties
+	public System.Span&lt;uint&gt; Clusters { get; }
+	public System.Span&lt;byte&gt; Text { get; }
+	public int TextSize { get; }
+	// methods
+	public void SetClusters (System.ReadOnlySpan&lt;uint&gt; clusters);
+	public void SetText (System.ReadOnlySpan&lt;byte&gt; text);
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/3546/merge/documentation/docfx/releases/3.0.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #3546 · dev/fix-macos-gl-stencil-perf · bdeeacb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

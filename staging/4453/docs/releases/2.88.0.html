@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/2.88.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2880">Version 2.88.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:2.88.0 -->
+
+<blockquote>
+<p><strong>MAUI, .NET 6 and Mac Catalyst</strong> · Released May 22, 2022 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.88.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/2.8.2/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.88.0 adds .NET 6, .NET MAUI, Mac Catalyst, WinUI and Blazor WebAssembly support. This is the first stable release built for the .NET 6 era. It ships new views for .NET MAUI (both compat and handlers), first-class Mac Catalyst binaries, an ASP.NET Blazor WebAssembly component, and refreshes HarfBuzz to 2.8.2. Native lifecycle and packaging were reworked to fit the new TFMs.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>iOS and tvOS ToUIImage overloads that used nfloat were removed</strong> — The <code>nfloat</code> overloads of <code>ToUIImage</code> on <code>SKBitmap</code>, <code>SKPixmap</code> and <code>SKPicture</code> in <code>SkiaSharp.Views.iOS</code> and <code>SkiaSharp.Views.tvOS</code> were removed as part of the .NET 6 unification. Pass the scale as <code>float</code> and the orientation on the remaining overloads instead.</li>
+<li><strong>GRContext now derives from GRRecordingContext</strong> — <code>GRContext</code> was reparented from <code>SKObject</code> onto the new <code>GRRecordingContext</code> base type to match upstream Skia. Existing code that uses <code>GRContext</code> continues to work; code that reflected on the base type or cast to <code>SKObject</code> needs to update.</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>.NET 6 and .NET MAUI targets</strong> — The binding, views and HarfBuzz projects gained <code>net6.0-*</code> TFMs, and shipping .NET MAUI views (both the compat layer and the new handlers) are included. (<a href="https://github.com/mono/SkiaSharp/pull/1740">#1740</a>, <a href="https://github.com/mono/SkiaSharp/pull/1707">#1707</a>, <a href="https://github.com/mono/SkiaSharp/pull/1678">#1678</a>, <a href="https://github.com/mono/SkiaSharp/pull/1749">#1749</a>, <a href="https://github.com/mono/SkiaSharp/pull/1782">#1782</a>, <a href="https://github.com/mono/SkiaSharp/pull/1932">#1932</a>, <a href="https://github.com/mono/SkiaSharp/pull/1965">#1965</a>, <a href="https://github.com/mono/SkiaSharp/pull/1967">#1967</a>, <a href="https://github.com/mono/SkiaSharp/pull/1986">#1986</a>, <a href="https://github.com/mono/SkiaSharp/pull/2004">#2004</a>, <a href="https://github.com/mono/SkiaSharp/pull/2029">#2029</a>)</li>
+<li><strong>Mac Catalyst is a first-class target</strong> — Mac Catalyst native binaries are built and packaged, with the frameworks reorganised through the gn files. (<a href="https://github.com/mono/SkiaSharp/pull/1681">#1681</a>, <a href="https://github.com/mono/SkiaSharp/pull/1760">#1760</a>, <a href="https://github.com/mono/SkiaSharp/pull/1865">#1865</a>)</li>
+<li><strong>WinUI, Windows App SDK and Xamarin.Forms on .NET Core 3.1</strong> — The Windows story was refreshed to target the Windows App SDK, and Xamarin.Forms views now light up on <code>netcoreapp3.1</code>. (<a href="https://github.com/mono/SkiaSharp/pull/1800">#1800</a>, <a href="https://github.com/mono/SkiaSharp/pull/1774">#1774</a>)</li>
+<li><strong>ASP.NET Blazor WebAssembly components</strong> — A new <code>SKCanvasView</code> component targets ASP.NET Blazor WebAssembly, with an infinite-loop guard on invalidation. — ❤️ <a href="https://github.com/JensKrumsieck">@JensKrumsieck</a> (<a href="https://github.com/mono/SkiaSharp/pull/1811">#1811</a>, <a href="https://github.com/mono/SkiaSharp/pull/1889">#1889</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>HarfBuzz refreshed to 2.8.2</strong> — The bundled HarfBuzz shaping engine is updated to 2.8.2. (<a href="https://github.com/mono/SkiaSharp/pull/1766">#1766</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>New APIs added across the surface</strong> — A batch of new APIs from upstream Skia is now exposed on the managed surface. (<a href="https://github.com/mono/SkiaSharp/pull/1828">#1828</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>IgnorePixelScaling now works as expected</strong> — The <code>IgnorePixelScaling</code> property on the canvas views produces the intended coordinate space instead of double-scaling. (<a href="https://github.com/mono/SkiaSharp/pull/1804">#1804</a>)</li>
+<li><strong>.NET MAUI SKCanvasView null-reference fix</strong> — The .NET MAUI <code>SKCanvasView</code> no longer throws a <code>NullReferenceException</code> in certain lifecycle paths. — ❤️ <a href="https://github.com/jsuarezruiz">@jsuarezruiz</a> (<a href="https://github.com/mono/SkiaSharp/pull/1734">#1734</a>)</li>
+<li><strong>Windows handle lookup is faster and safer</strong> — The internal <code>HandleDictionary</code> lock was replaced with a critical section on Windows to reduce contention under load. — ❤️ <a href="https://github.com/toptensoftware">@toptensoftware</a> (<a href="https://github.com/mono/SkiaSharp/pull/1817">#1817</a>)</li>
+<li><strong>iOS views paint an opaque background</strong> — The iOS view now has a background set, so first-frame content is not lost on some devices. (<a href="https://github.com/mono/SkiaSharp/pull/1730">#1730</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Static native objects are no longer disposed</strong> — Statically-cached native handles skip disposal, avoiding double-free on shutdown. (<a href="https://github.com/mono/SkiaSharp/pull/1863">#1863</a>)</li>
+<li><strong>Enum marshalling workaround</strong> — A workaround was added for enums not being treated as blittable in some scenarios, keeping interop stable. (<a href="https://github.com/mono/SkiaSharp/pull/1857">#1857</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Native tooling refreshed</strong> — The native build moved to Python 3, Clang 12 and a newer gcc/llvm pair for reproducible modern builds. (<a href="https://github.com/mono/SkiaSharp/pull/1959">#1959</a>, <a href="https://github.com/mono/SkiaSharp/pull/1806">#1806</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-282">HarfBuzzSharp 2.8.2</h2>
+<p>HarfBuzzSharp 2.8.2 refreshes the bundled HarfBuzz shaping engine, adds Mac Catalyst binaries and gains <code>net6.0-*</code> TFMs alongside its SkiaSharp counterpart.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Bumped Uno to 4.0 so the Uno-hosted views keep pace with the SDK (<a href="https://github.com/mono/SkiaSharp/pull/1746">#1746</a>, <a href="https://github.com/mono/SkiaSharp/pull/1873">#1873</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jonathanpeppers">@jonathanpeppers</a></td>
+<td>Android packaging fixes — kept <code>.so</code> files out of class libraries and trimmed generated <code>Resource.designer.cs</code> fields (<a href="https://github.com/mono/SkiaSharp/pull/1812">#1812</a>, <a href="https://github.com/mono/SkiaSharp/pull/1895">#1895</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/akoeplinger">@akoeplinger</a></td>
+<td>Made the Linux native loader try <code>libdl.so.2</code> before <code>libdl.so</code> so newer distributions resolve (<a href="https://github.com/mono/SkiaSharp/pull/2010">#2010</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/JensKrumsieck">@JensKrumsieck</a></td>
+<td>Fixed an infinite invalidation loop in the Blazor <code>SKCanvasView</code> (<a href="https://github.com/mono/SkiaSharp/pull/1889">#1889</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/jsuarezruiz">@jsuarezruiz</a></td>
+<td>Guarded against a <code>NullReferenceException</code> in the .NET MAUI <code>SKCanvasView</code> (<a href="https://github.com/mono/SkiaSharp/pull/1734">#1734</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/mjbond-msft">@mjbond-msft</a></td>
+<td>Contributed to the .NET 6 / MAUI enablement work landing in this release (<a href="https://github.com/mono/SkiaSharp/pull/1954">#1954</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/toptensoftware">@toptensoftware</a></td>
+<td>Replaced the Windows <code>HandleDictionary</code> lock with a critical section to cut contention (<a href="https://github.com/mono/SkiaSharp/pull/1817">#1817</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-266-may-11-2022">Preview 266 (May 11, 2022)</h2>
+<p>Preview 266 finished the .NET MAUI RC 3 line-up and picked up the last packaging fixes before stable.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.256...v2.88.0-preview.266">Full changelog</a></p>
+<h2 id="preview-256-april-20-2022">Preview 256 (April 20, 2022)</h2>
+<p>Preview 256 moved to .NET MAUI RC 2.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.254...v2.88.0-preview.256">Full changelog</a></p>
+<h2 id="preview-254-april-13-2022">Preview 254 (April 13, 2022)</h2>
+<p>Preview 254 moved to .NET MAUI RC 1 and switched CI to macOS Monterey.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.232...v2.88.0-preview.254">Full changelog</a></p>
+<h2 id="preview-232-march-4-2022">Preview 232 (March 4, 2022)</h2>
+<p>Preview 232 refreshed native tooling to Python 3 and Clang 12, and picked up more upstream Skia fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.209...v2.88.0-preview.232">Full changelog</a></p>
+<h2 id="preview-209-february-18-2022">Preview 209 (February 18, 2022)</h2>
+<p>Preview 209 rolled up Skia and interop fixes, and refreshed the Mac Catalyst build inputs.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.187...v2.88.0-preview.209">Full changelog</a></p>
+<h2 id="preview-187-january-27-2022">Preview 187 (January 27, 2022)</h2>
+<p>Preview 187 moved to .NET MAUI Preview 12 and tightened Android packaging.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.179...v2.88.0-preview.187">Full changelog</a></p>
+<h2 id="preview-179-december-16-2021">Preview 179 (December 16, 2021)</h2>
+<p>Preview 179 bumped Uno to 4.0.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.178...v2.88.0-preview.179">Full changelog</a></p>
+<h2 id="preview-178-december-15-2021">Preview 178 (December 15, 2021)</h2>
+<p>Preview 178 moved to .NET MAUI Preview 11 and added the Blazor SKCanvasView infinite-loop guard, the Windows lock rework and the enum-blittability workaround.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.155...v2.88.0-preview.178">Full changelog</a></p>
+<h2 id="preview-155-october-28-2021">Preview 155 (October 28, 2021)</h2>
+<p>Preview 155 rolled up upstream updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.152...v2.88.0-preview.155">Full changelog</a></p>
+<h2 id="preview-152-october-14-2021">Preview 152 (October 14, 2021)</h2>
+<p>Preview 152 refreshed a batch of dependencies and picked up new APIs.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.150...v2.88.0-preview.152">Full changelog</a></p>
+<h2 id="preview-150-october-11-2021">Preview 150 (October 11, 2021)</h2>
+<p>Preview 150 added the ASP.NET Blazor WebAssembly SKCanvasView component.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.145...v2.88.0-preview.150">Full changelog</a></p>
+<h2 id="preview-145-september-28-2021">Preview 145 (September 28, 2021)</h2>
+<p>Preview 145 tuned Android packaging and moved to .NET MAUI Preview 7.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.140...v2.88.0-preview.145">Full changelog</a></p>
+<h2 id="preview-140-september-14-2021">Preview 140 (September 14, 2021)</h2>
+<p>Preview 140 was a plumbing-only cut.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.139...v2.88.0-preview.140">Full changelog</a></p>
+<h2 id="preview-139-september-12-2021">Preview 139 (September 12, 2021)</h2>
+<p>Preview 139 fixed IgnorePixelScaling, added main PDBs to the packages and moved to Windows App SDK.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.127...v2.88.0-preview.139">Full changelog</a></p>
+<h2 id="preview-127-august-20-2021">Preview 127 (August 20, 2021)</h2>
+<p>Preview 127 updated HarfBuzz to 2.8.2 and added Xamarin.Forms support on netcoreapp3.1.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.120...v2.88.0-preview.127">Full changelog</a></p>
+<h2 id="preview-120-august-9-2021">Preview 120 (August 9, 2021)</h2>
+<p>Preview 120 moved to .NET 6, guarded the .NET MAUI SKCanvasView and set the iOS view background.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0-preview.61...v2.88.0-preview.120">Full changelog</a></p>
+<h2 id="preview-61-july-12-2021">Preview 61 (July 12, 2021)</h2>
+<p>Preview 61 opened the 2.88 line with .NET 6 TFMs, Mac Catalyst binaries and the first .NET MAUI views.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.4...v2.88.0-preview.61">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/2.88.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4453 · dev/memory-leak-release-proc-gchandle-ab82e648318c0666 · 2fbf339
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

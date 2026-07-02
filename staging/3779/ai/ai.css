@@ -1,0 +1,931 @@
+/* ─────────────────────────────────────────────────────────────
+   AI in SkiaSharp — page-scoped styles.
+   Built on top of the shared site theme in ../style.css. Only
+   adds components that the landing page does not already provide:
+   the honesty banner, the pipeline ("loop") diagram, workflow
+   cards with a metadata grid, and the skills board.
+   ───────────────────────────────────────────────────────────── */
+
+/* Human-review accent — used by the loop legend and "human" nodes.
+   Theme-aware so it stays legible on both the light and dark themes. */
+:root { --human: #15a34a; }
+[data-theme="dark"] { --human: #2bd673; }
+
+/* ── Hero additions ───────────────────────────────────────── */
+
+.ai-hero .hero-subtitle {
+  margin-bottom: 32px;
+}
+
+.ai-honesty {
+  max-width: 760px;
+  margin: 0 auto 32px;
+  padding: 18px 22px;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.ai-honesty strong {
+  font-weight: 700;
+}
+
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.stat {
+  flex: 1 1 160px;
+  max-width: 240px;
+  padding: 18px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  text-align: center;
+}
+
+.stat-num {
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.stat-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* ── Shared section helpers ───────────────────────────────── */
+
+.ai-section {
+  padding: 64px 0;
+}
+
+.section-lead {
+  max-width: 720px;
+  margin: -24px auto 36px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+.subhead {
+  max-width: 760px;
+  margin: 40px auto 20px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+/* ── Legend (who does what) ───────────────────────────────── */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin: 0 auto 32px;
+  list-style: none;
+  padding: 0;
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  flex: none;
+}
+
+.swatch-agent { background: var(--accent); border-color: var(--accent); }
+.swatch-auto { background: var(--bg-subtle); }
+.swatch-human { background: var(--human); border-color: var(--human); }
+
+/* ── The loop / pipeline diagram ──────────────────────────── */
+
+.loop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loop-node {
+  flex: 1 1 200px;
+  max-width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  position: relative;
+}
+
+.loop-node[data-actor="agent"] { border-top: 3px solid var(--accent); }
+.loop-node[data-actor="auto"] { border-top: 3px solid var(--text-secondary); }
+.loop-node[data-actor="human"] { border-top: 3px solid var(--human); }
+
+.loop-step {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.loop-node h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: var(--text);
+}
+
+.loop-node p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  flex: 1;
+}
+
+.loop-actor {
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}
+
+.loop-arrow {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 20px;
+  font-weight: 700;
+  flex: none;
+}
+
+.loop-note {
+  max-width: 760px;
+  margin: 28px auto 0;
+  padding: 16px 20px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+
+.loop-note code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+/* ── Phase labels ─────────────────────────────────────────── */
+
+.loop-band-label {
+  max-width: 900px;
+  margin: 36px auto 16px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.loop-band-label:first-of-type { margin-top: 8px; }
+
+/* ── Vertical connector between the two phases ────────────── */
+
+.flow-connect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 26px auto;
+  color: var(--text-secondary);
+}
+
+.flow-connect-arrow {
+  font-size: 26px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.flow-connect-label {
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* ── Two parallel publish flows ───────────────────────────── */
+
+.parallel {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 20px;
+}
+
+/* Shared box chrome for a phase / track container */
+.flow-box,
+.flow-row {
+  padding: 18px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.flow-row {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Inside the parallel block each track flows top-to-bottom */
+.parallel .loop {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.parallel .loop-node {
+  flex: none;
+  max-width: none;
+}
+
+.parallel .loop-arrow {
+  justify-content: center;
+  transform: rotate(90deg);
+}
+
+.track-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.track-target {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a.track-target:hover { text-decoration: underline; }
+
+@media (max-width: 720px) {
+  .loop { flex-direction: column; align-items: stretch; }
+  .loop-node { max-width: none; }
+  .loop-arrow { justify-content: center; transform: rotate(90deg); }
+  .parallel { flex-direction: column; }
+}
+
+/* ── Workflow cards ───────────────────────────────────────── */
+
+.wf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.wf-card {
+  display: flex;
+  flex-direction: column;
+  padding: 24px 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+}
+
+.wf-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+.wf-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.wf-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+  margin-right: auto;
+}
+
+.wf-desc {
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.badge-agentic { background: var(--accent-subtle); color: var(--accent); }
+.badge-auto {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+.badge-model {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+/* metadata grid */
+.wf-meta {
+  margin: 16px 0 0;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 14px;
+  font-size: 13px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.wf-meta dt {
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.wf-meta dd {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.wf-meta code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-subtle);
+  color: var(--text);
+}
+
+.wf-foot {
+  margin-top: 16px;
+}
+
+.wf-foot a {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Skills board ─────────────────────────────────────────── */
+
+.skill-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.skill-group {
+  padding: 22px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+}
+
+.skill-group h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 14px;
+  letter-spacing: 0.02em;
+}
+
+.skill-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skill-list li {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.skill-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.skill-auto {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+  background: var(--accent-subtle);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+/* ── Guardrails ───────────────────────────────────────────── */
+
+.guard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.guard {
+  padding: 24px 20px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+}
+
+.guard-icon {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: var(--accent-subtle);
+  color: var(--accent);
+  margin-bottom: 14px;
+}
+
+.guard-icon svg { width: 20px; height: 20px; }
+
+.guard h3 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.guard p {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* ── Call to action ───────────────────────────────────────── */
+
+.cta {
+  text-align: center;
+}
+
+.cta .hero-actions {
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .ai-section { padding: 44px 0; }
+  .wf-grid { grid-template-columns: 1fr; }
+  .ai-honesty { font-size: 15px; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Moving faster with AI — the live dashboard.
+   Three panels rendered by dashboard.js from a build-time cache.
+   Uses the shared theme tokens plus the --human green (defined at
+   the top of this file) to highlight the newest, "winning" values.
+   ───────────────────────────────────────────────────────────── */
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* The hero panel (cadence) spans the full width and leads visually. */
+.dash-panel-hero { grid-column: 1 / -1; order: -1; }
+
+.dash-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+}
+
+.dash-panel-hero { border-top: 3px solid var(--human); }
+
+.dash-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.dash-head h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dash-asof {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-body { flex: 1; }
+
+.dash-loading,
+.dash-error {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.dash-caption {
+  margin: -6px 0 16px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--text-secondary);
+}
+
+.dash-subhead {
+  margin: 20px 0 10px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.dash-foot {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.dash-foot a { font-size: 12px; font-weight: 600; }
+
+.dash-footer { margin-top: 28px; }
+
+/* ── Panel 1: adoption figures + version bars ─────────────── */
+
+.dash-figs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dash-fig {
+  flex: 1 1 140px;
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.dash-fig-num {
+  display: block;
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-fig-label {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.ver-table-wrap { overflow-x: auto; }
+
+.ver-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.ver-table th,
+.ver-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+
+.ver-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+}
+
+.ver-table .ver-num { text-align: right; }
+
+.ver-line {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ver-sub {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.ver-table td.ver-num {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.ver-table td.ver-zero { color: var(--text-secondary); font-weight: 500; }
+
+/* ── Panel 2: cadence table (the hero) ────────────────────── */
+
+.cad-table-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+
+.cad-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.cad-table th,
+.cad-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.cad-table thead th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border);
+  vertical-align: bottom;
+}
+
+.cad-table td,
+.cad-table .cad-ms-cell { text-align: right; }
+.cad-table thead th { text-align: right; }
+.cad-table th.cad-th-ms,
+.cad-table .cad-ms-cell { text-align: left; }
+
+.cad-unit {
+  display: block;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.cad-ms-cell {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cad-ms {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cad-note {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.cad-win {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: var(--human);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.cad-tr-newest { background: color-mix(in srgb, var(--human) 9%, transparent); }
+.cad-tr-newest .cad-val { color: var(--human); }
+.cad-tr-newest td,
+.cad-tr-newest th { border-bottom-color: var(--human); }
+
+.cad-cell { line-height: 1.25; }
+
+.cad-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cad-val-zero {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--human);
+}
+
+.cad-cell-empty .cad-val { color: var(--text-secondary); font-weight: 500; }
+
+/* Signed change chip vs the previous milestone. Fewer days is better, so a
+   drop (good) is green and an increase (bad) is amber/red. */
+.cad-delta {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.cad-delta-good { color: var(--human); background: color-mix(in srgb, var(--human) 15%, transparent); }
+.cad-delta-bad { color: #d1602a; background: color-mix(in srgb, #d1602a 15%, transparent); }
+.cad-delta-flat { color: var(--text-secondary); background: var(--bg-subtle); }
+
+.cad-pct { opacity: 0.75; font-weight: 600; }
+
+[data-theme="dark"] .cad-delta-bad { color: #f0894f; }
+
+.cad-legend-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.cad-legend-note .cad-delta { margin-left: 0; }
+
+.cad-ahead {
+  margin-top: 16px;
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text);
+  background: color-mix(in srgb, var(--human) 10%, var(--bg-subtle));
+  border: 1px solid var(--human);
+  border-radius: var(--radius-sm);
+}
+
+.cad-ahead b { color: var(--human); }
+
+/* ── Panel 3: automation cost cards ───────────────────────── */
+
+.cost-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cost-card {
+  padding: 14px 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.cost-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cost-name { font-size: 14px; font-weight: 700; color: var(--text); }
+.cost-name a { color: var(--text); }
+.cost-name a:hover { color: var(--accent); }
+
+.cost-cadence {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.cost-metrics { display: flex; gap: 20px; }
+
+.cost-num {
+  display: block;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.cost-label {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.cost-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+@media (max-width: 720px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}

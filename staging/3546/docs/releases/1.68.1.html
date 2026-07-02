@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.68.1 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.68.1 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/3546/merge/documentation/docfx/releases/1.68.1.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1681">Version 1.68.1</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:1.68.1 -->
+
+<blockquote>
+<p><strong>1.68.1 stable</strong> · Released November 22, 2019 · <a href="https://www.nuget.org/packages/SkiaSharp/1.68.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.68.1">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="1.68.1/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/2.6.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 1.68.1 ships the long-running 1.68.1 line as stable with a broad wave of API, view and HarfBuzz work. This is a large servicing release built from six release candidates over four months. It expands the managed API with Span-based buffers, an SKPictureShader binding and new SKTypeface members, reworks the managed/native type layer for stability, splits the desktop view packages, and refreshes HarfBuzzSharp to 2.6.1.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Span-based data, bitmap and text APIs</strong> — Adds Span<t> overloads for data buffers, bitmap pixels and text blobs so callers can hand SkiaSharp existing memory without copying through byte arrays. (<a href="https://github.com/mono/SkiaSharp/pull/865">#865</a>)</t></li>
+<li><strong>SKPictureShader and typeface additions</strong> — Binds SkPictureShader for tiling and transforming recorded pictures, adds SKTypeface.IsFixedPitch, and lands int-unicode overloads for consistency across the text APIs. — ❤️ <a href="https://github.com/alexandrvslv">@alexandrvslv</a>, <a href="https://github.com/Gillibald">@Gillibald</a> (<a href="https://github.com/mono/SkiaSharp/pull/973">#973</a>, <a href="https://github.com/mono/SkiaSharp/pull/1019">#1019</a>, <a href="https://github.com/mono/SkiaSharp/pull/972">#972</a>)</li>
+<li><strong>Managed/native type layer reworked</strong> — Reworks how managed wrappers own and reference native objects so shared instances such as colour spaces stop being disposed out from under callers. (<a href="https://github.com/mono/SkiaSharp/pull/900">#900</a>, <a href="https://github.com/mono/SkiaSharp/pull/922">#922</a>)</li>
+<li><strong>HarfBuzzSharp font funcs and table loading</strong> — Adds font-funcs bindings on the HarfBuzzSharp side and lets faces be loaded directly from table data, alongside general HarfBuzz binding polish. — ❤️ <a href="https://github.com/Gillibald">@Gillibald</a> (<a href="https://github.com/mono/SkiaSharp/pull/881">#881</a>, <a href="https://github.com/mono/SkiaSharp/pull/862">#862</a>, <a href="https://github.com/mono/SkiaSharp/pull/915">#915</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>iOS canvas and raster view corrections</strong> — Fixes the iOS canvas implementation and stops raster views allocating zero-byte buffers when the surface has no size yet. — ❤️ <a href="https://github.com/Odirb">@Odirb</a> (<a href="https://github.com/mono/SkiaSharp/pull/879">#879</a>, <a href="https://github.com/mono/SkiaSharp/pull/761">#761</a>, <a href="https://github.com/mono/SkiaSharp/pull/863">#863</a>)</li>
+<li><strong>Memory and stability fixes</strong> — Frees native memory when a view is detached, plugs an SKRoundRect leak, and improves UWP GPU view stability under teardown. (<a href="https://github.com/mono/SkiaSharp/pull/1005">#1005</a>, <a href="https://github.com/mono/SkiaSharp/pull/995">#995</a>, <a href="https://github.com/mono/SkiaSharp/pull/1024">#1024</a>, <a href="https://github.com/mono/SkiaSharp/pull/1023">#1023</a>, <a href="https://github.com/mono/SkiaSharp/pull/1000">#1000</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Desktop view packages split; WPF Forms backend added</strong> — Splits the desktop view projects and NuGet packages so consumers can pull only the framework they need, and adds a WPF backend for Xamarin.Forms. (<a href="https://github.com/mono/SkiaSharp/pull/899">#899</a>, <a href="https://github.com/mono/SkiaSharp/pull/917">#917</a>)</li>
+<li><strong>watchOS and tvOS bitcode, arm64_32 for watchOS</strong> — Enables bitcode for watchOS and tvOS and adds the watchOS arm64_32 slice so SkiaSharp keeps working on modern Apple wearables. (<a href="https://github.com/mono/SkiaSharp/pull/971">#971</a>, <a href="https://github.com/mono/SkiaSharp/pull/967">#967</a>)</li>
+<li><strong>Optional fontconfig on Linux</strong> — Lets SkiaSharp be built without fontconfig for stripped-down Linux containers and images that do not ship the library. (<a href="https://github.com/mono/SkiaSharp/pull/821">#821</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-261">HarfBuzzSharp 2.6.1</h2>
+<p>No HarfBuzzSharp binding changes shipped in this release — it rebuilds the same HarfBuzz as the previous line.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/Gillibald">@Gillibald</a></td>
+<td>HarfBuzzSharp 2.6.1 bump, HarfBuzz font funcs, int-unicode overloads, and additional HarfBuzz updates (<a href="https://github.com/mono/SkiaSharp/pull/872">#872</a>, <a href="https://github.com/mono/SkiaSharp/pull/881">#881</a>, <a href="https://github.com/mono/SkiaSharp/pull/904">#904</a>, <a href="https://github.com/mono/SkiaSharp/pull/929">#929</a>, <a href="https://github.com/mono/SkiaSharp/pull/972">#972</a>, <a href="https://github.com/mono/SkiaSharp/pull/984">#984</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/alexandrvslv">@alexandrvslv</a></td>
+<td>SKPictureShader binding (<a href="https://github.com/mono/SkiaSharp/pull/973">#973</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/danien">@danien</a></td>
+<td>Contributed a fix landing in this release (<a href="https://github.com/mono/SkiaSharp/pull/892">#892</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/newky2k">@newky2k</a></td>
+<td>Contributed a fix landing in this release (<a href="https://github.com/mono/SkiaSharp/pull/724">#724</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Odirb">@Odirb</a></td>
+<td>Fixed ToSKPixmap display artifacts with transparent bitmaps (#849) (<a href="https://github.com/mono/SkiaSharp/pull/863">#863</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-172-november-17-2019">Release Candidate 172 (November 17, 2019)</h2>
+<p>Release Candidate 172 was the final RC before stable, folding in the last UWP GPU view stability fixes and colour corrections.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1-rc.170...v1.68.1-rc.172">Full changelog</a></p>
+<h2 id="release-candidate-170-november-16-2019">Release Candidate 170 (November 16, 2019)</h2>
+<p>Release Candidate 170 added the SKTypeface.IsFixedPitch binding and prepared for the stable cut.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1-rc.169...v1.68.1-rc.170">Full changelog</a></p>
+<h2 id="release-candidate-169-november-12-2019">Release Candidate 169 (November 12, 2019)</h2>
+<p>Release Candidate 169 landed the SKRoundRect leak fix and view teardown corrections.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1-rc.165...v1.68.1-rc.169">Full changelog</a></p>
+<h2 id="release-candidate-165-november-6-2019">Release Candidate 165 (November 6, 2019)</h2>
+<p>Release Candidate 165 brought in the SKPictureShader binding and further HarfBuzz updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1-rc.153...v1.68.1-rc.165">Full changelog</a></p>
+<h2 id="release-candidate-153-october-19-2019">Release Candidate 153 (October 19, 2019)</h2>
+<p>Release Candidate 153 shipped the managed/native type rework and bitcode support for watchOS/tvOS.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.1-rc.147...v1.68.1-rc.153">Full changelog</a></p>
+<h2 id="release-candidate-147-july-30-2019">Release Candidate 147 (July 30, 2019)</h2>
+<p>Release Candidate 147 opened the 1.68.1 line with the Span<t> APIs, the desktop package split, and the WPF Xamarin.Forms backend.</t></p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.0...v1.68.1-rc.147">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/3546/merge/documentation/docfx/releases/1.68.1.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #3546 · dev/fix-macos-gl-stencil-perf · bdeeacb
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,223 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/3.119.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31190">Version 3.119.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:3.119.0 -->
+
+<blockquote>
+<p><strong>New platforms and Skia m119</strong> · Released April 25, 2025 · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v3.119.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Supersedes <a href="3.118.0.html">3.118.0</a></strong> · Rolls up preview-only work that was never released as stable — those changes are included cumulatively below.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.119.0 advances the engine to Skia m119 and adds LoongArch64, RISC-V64, and Alpine Linux support. This release adds Direct3D rendering on Windows, iOS Simulator Metal performance gains, tvOS Metal view support, LoongArch64 and RISC-V64 Linux builds, Alpine Linux cross-compilation, and SKColorFilter additions. It also fixes a .NET Framework packages.config regression.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia advanced to milestone m119</strong> — The bundled Skia engine moves to m119, bringing upstream rendering improvements and bug fixes. (<a href="https://github.com/mono/SkiaSharp/pull/3062">#3062</a>)</li>
+<li><strong>Direct3D rendering enabled on Windows</strong> — Skia is now compiled with Direct3D backend support on Windows, unlocking hardware-accelerated GPU rendering via D3D12. — ❤️ <a href="https://github.com/Kation">@Kation</a> (<a href="https://github.com/mono/SkiaSharp/pull/2823">#2823</a>)</li>
+<li><strong>Vulkan Memory Allocator updated</strong> — vulkanmemoryallocator has been updated to 3.2.1. — ❤️ <a href="https://github.com/kasperk81">@kasperk81</a> (<a href="https://github.com/mono/SkiaSharp/pull/3196">#3196</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Missing SKColorFilter types added</strong> — Several SKColorFilter factory methods that were present in Skia but missing from the binding have been exposed. (<a href="https://github.com/mono/SkiaSharp/pull/2882">#2882</a>)</li>
+<li><strong>SaveLayerRec support added to SKCanvas</strong> — SKCanvas now exposes the SaveLayerRec overload of SaveLayer, enabling fine-grained control over layer compositing parameters. — ❤️ <a href="https://github.com/ahmed605">@ahmed605</a> (<a href="https://github.com/mono/SkiaSharp/pull/2962">#2962</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>packages.config regression fixed</strong> — A regression in 3.116.0 that broke .NET Framework and Mono projects using packages.config has been corrected. — ❤️ <a href="https://github.com/sungaila">@sungaila</a> (<a href="https://github.com/mono/SkiaSharp/pull/3112">#3112</a>)</li>
+<li><strong>iOS Simulator Metal performance restored</strong> — The iOS Simulator was incorrectly bypassing Metal; this fix restores proper GPU-accelerated rendering in the simulator. — ❤️ <a href="https://github.com/taublast">@taublast</a> (<a href="https://github.com/mono/SkiaSharp/pull/3156">#3156</a>)</li>
+<li><strong>SKImage.FromPicture implementation corrected</strong> — SKImage.FromPicture was producing incorrect output; the implementation has been fixed to match the expected behaviour. (<a href="https://github.com/mono/SkiaSharp/pull/3231">#3231</a>)</li>
+<li><strong>SKCanvas incorrect call fixed</strong> — An incorrect native call in SKCanvas has been corrected. — ❤️ <a href="https://github.com/kkwpsv">@kkwpsv</a> (<a href="https://github.com/mono/SkiaSharp/pull/3143">#3143</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>LoongArch64 and RISC-V64 Linux builds added</strong> — Native assets are now produced for LoongArch64 and RISC-V64 Linux targets, expanding the set of supported architectures. — ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a>, <a href="https://github.com/kasperk81">@kasperk81</a> (<a href="https://github.com/mono/SkiaSharp/pull/3198">#3198</a>, <a href="https://github.com/mono/SkiaSharp/pull/3192">#3192</a>)</li>
+<li><strong>Alpine Linux cross-compilation support added</strong> — The clang-cross toolchain has been extended to support Alpine Linux, enabling musl-based Linux builds. — ❤️ <a href="https://github.com/kasperk81">@kasperk81</a> (<a href="https://github.com/mono/SkiaSharp/pull/3200">#3200</a>)</li>
+<li><strong>tvOS Metal view support added</strong> — SKMetalView is now available on tvOS, bringing hardware-accelerated rendering to the tvOS platform. — ❤️ <a href="https://github.com/MartinZikmund">@MartinZikmund</a> (<a href="https://github.com/mono/SkiaSharp/pull/3114">#3114</a>)</li>
+<li><strong>Metal API available for GRBackendRenderTarget on all platforms</strong> — Metal-specific constructors and accessors for GRBackendRenderTarget are now available on all supported Apple platforms including tvOS. — ❤️ <a href="https://github.com/spouliot">@spouliot</a> (<a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>)</li>
+<li><strong>Windows ARM GL and tvOS targets corrected</strong> — GL rendering is now enabled on Windows ARM, and tvOS deployment targets have been corrected. (<a href="https://github.com/mono/SkiaSharp/pull/3189">#3189</a>, <a href="https://github.com/mono/SkiaSharp/pull/3199">#3199</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Native dependencies updated</strong> — libpng has been updated to 1.6.44, freetype2 to 2.13.3+, libexpat to 2.6.4, libjpeg-turbo to 2.1.5.1+, and HarfBuzz to 8.3.1. (<a href="https://github.com/mono/SkiaSharp/pull/3059">#3059</a>, <a href="https://github.com/mono/SkiaSharp/pull/3061">#3061</a>, <a href="https://github.com/mono/SkiaSharp/pull/3056">#3056</a>, <a href="https://github.com/mono/SkiaSharp/pull/3060">#3060</a>, <a href="https://github.com/mono/SkiaSharp/pull/3052">#3052</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-8311">HarfBuzzSharp 8.3.1.1</h2>
+<p>Ships HarfBuzzSharp 8.3.1.1 with extended platform coverage for LoongArch64, RISC-V64, Alpine Linux, and corrected ARM and Blazor targets.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/kasperk81">@kasperk81</a></td>
+<td>Added RISC-V64 and LoongArch64 build support and fixed Linux tests (<a href="https://github.com/mono/SkiaSharp/pull/3192">#3192</a>, <a href="https://github.com/mono/SkiaSharp/pull/3194">#3194</a>, <a href="https://github.com/mono/SkiaSharp/pull/3196">#3196</a>, <a href="https://github.com/mono/SkiaSharp/pull/3200">#3200</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>Added LoongArch64 native build support (<a href="https://github.com/mono/SkiaSharp/pull/3198">#3198</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ahmed605">@ahmed605</a></td>
+<td>Implemented SaveLayerRec support for SKCanvas (<a href="https://github.com/mono/SkiaSharp/pull/2962">#2962</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/Kation">@Kation</a></td>
+<td>Added Direct3D rendering support on Windows (<a href="https://github.com/mono/SkiaSharp/pull/2823">#2823</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/kkwpsv">@kkwpsv</a></td>
+<td>Fixed an incorrect native call in SKCanvas (<a href="https://github.com/mono/SkiaSharp/pull/3143">#3143</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MartinZikmund">@MartinZikmund</a></td>
+<td>Improved tvOS Metal view support (<a href="https://github.com/mono/SkiaSharp/pull/3114">#3114</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/pjcollins">@pjcollins</a></td>
+<td>Resolved the CVE-2024-30105 vulnerability (<a href="https://github.com/mono/SkiaSharp/pull/3166">#3166</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/spouliot">@spouliot</a></td>
+<td>Added Metal API for GRBackendRenderTarget (<a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/sungaila">@sungaila</a></td>
+<td>Fixed the packages.config regression for .NET Framework and Mono projects (<a href="https://github.com/mono/SkiaSharp/pull/3112">#3112</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/taublast">@taublast</a></td>
+<td>Improved iOS Simulator Metal performance (<a href="https://github.com/mono/SkiaSharp/pull/3156">#3156</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-1-march-31-2025">Preview 1 (March 31, 2025)</h2>
+<p>Preview 1 introduced LoongArch64 and RISC-V64 Linux support, Direct3D on Windows, tvOS Metal view, Alpine Linux cross-compilation, SaveLayerRec, missing SKColorFilter types, and fixes for packages.config, iOS Simulator Metal, and the SKImage.FromPicture implementation.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.118.0-preview.2.3...v3.119.0-preview.1.2">Full changelog</a></p>
+<h2 id="preview-2-december-5-2024">Preview 2 (December 5, 2024)</h2>
+<p>Preview 2 of 3.118.0 added Metal GRBackendRenderTarget APIs, fixed .NET 9 Blazor rendering, updated the Android NDK to r27c, and resolved the NuGet PackagePath issue.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.118.0-preview.1.2...v3.118.0-preview.2.3">Full changelog</a></p>
+<h2 id="preview-1-november-6-2024">Preview 1 (November 6, 2024)</h2>
+<p>Preview 1 of 3.118.0 advanced the bundled Skia engine through milestones m117 and m118 and updated HarfBuzz to 8.3.1.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.116.1...v3.118.0-preview.1.2">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/3.119.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4468 · dev/memory-leak-buffer-unicodefunctions-f44c958d98a7dd98 · a3aff87
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

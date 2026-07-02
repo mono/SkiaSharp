@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/3.119.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 3.119.0.0 vs 3.116.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrbackend">Type Changed: SkiaSharp.GRBackend</h4>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Unsupported = 5,
+</code></pre>
+<h4 id="type-changed-skiasharpgrbackendrendertarget">Type Changed: SkiaSharp.GRBackendRenderTarget</h4>
+<p>Obsoleted constructors:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use GRBackendRenderTarget(int width, int height, GRVkImageInfo vkImageInfo) instead.&quot;)]
+ public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo);
+</code></pre>
+<p>Added constructors:</p>
+<pre><code class="lang-csharp">public GRBackendRenderTarget (int width, int height, GRD3DTextureResourceInfo d3dTextureInfo);
+public GRBackendRenderTarget (int width, int height, GRMtlTextureInfo mtlInfo);
+public GRBackendRenderTarget (int width, int height, GRVkImageInfo vkImageInfo);
+</code></pre>
+<h4 id="type-changed-skiasharpgrbackendtexture">Type Changed: SkiaSharp.GRBackendTexture</h4>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public GRBackendTexture (int width, int height, GRD3DTextureResourceInfo d3dTextureInfo);
+</code></pre>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static GRContext CreateDirect3D (GRD3DBackendContext backendContext);
+public static GRContext CreateDirect3D (GRD3DBackendContext backendContext, GRContextOptions options);
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public GRRecordingContext Context { get; }
+public SKSurface Surface { get; }
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public int SaveLayer (ref SKCanvasSaveLayerRec rec);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorfilter">Type Changed: SkiaSharp.SKColorFilter</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKColorFilter CreateHslaColorMatrix (System.ReadOnlySpan&lt;float&gt; matrix);
+public static SKColorFilter CreateLerp (float weight, SKColorFilter filter0, SKColorFilter filter1);
+public static SKColorFilter CreateLinearToSrgbGamma ();
+public static SKColorFilter CreateSrgbToLinearGamma ();
+</code></pre>
+<h4 id="type-changed-skiasharpskcolortype">Type Changed: SkiaSharp.SKColorType</h4>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Rgba10x6 = 24,
+</code></pre>
+<h4 id="new-type-skiasharpgrd3dbackendcontext">New Type: SkiaSharp.GRD3DBackendContext</h4>
+<pre><code class="lang-csharp">public class GRD3DBackendContext : System.IDisposable {
+	// constructors
+	public GRD3DBackendContext ();
+	// properties
+	public IntPtr Adapter { get; set; }
+	public IntPtr Device { get; set; }
+	public bool ProtectedContext { get; set; }
+	public IntPtr Queue { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpgrd3dtextureresourceinfo">New Type: SkiaSharp.GRD3DTextureResourceInfo</h4>
+<pre><code class="lang-csharp">public class GRD3DTextureResourceInfo : System.IDisposable {
+	// constructors
+	public GRD3DTextureResourceInfo ();
+	// properties
+	public uint Format { get; set; }
+	public uint LevelCount { get; set; }
+	public bool Protected { get; set; }
+	public IntPtr Resource { get; set; }
+	public uint ResourceState { get; set; }
+	public uint SampleCount { get; set; }
+	public uint SampleQualityPattern { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcanvassavelayerrec">New Type: SkiaSharp.SKCanvasSaveLayerRec</h4>
+<pre><code class="lang-csharp">public struct SKCanvasSaveLayerRec {
+	// properties
+	public SKImageFilter Backdrop { get; set; }
+	public SKRect? Bounds { get; set; }
+	public SKCanvasSaveLayerRecFlags Flags { get; set; }
+	public SKPaint Paint { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpskcanvassavelayerrecflags">New Type: SkiaSharp.SKCanvasSaveLayerRecFlags</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKCanvasSaveLayerRecFlags {
+	F16ColorType = 16,
+	InitializeWithPrevious = 4,
+	None = 0,
+	PreserveLcdText = 2,
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/3.119.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4453 · dev/memory-leak-release-proc-gchandle-ab82e648318c0666 · 2fbf339
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

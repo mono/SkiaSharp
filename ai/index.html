@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI in SkiaSharp — How a Tiny Team Keeps a Large Binding Current</title>
+  <meta name="description" content="How SkiaSharp uses agentic workflows and reusable AI skills to do the toil of maintaining a large native binding: upstream syncing, API diffing, documentation, triage, and security auditing, with human review on every change.">
+  <link rel="icon" href="../images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="ai.css">
+  <script src="../theme-init.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="../" class="logo-link">
+        <img src="../images/logo.png" alt="SkiaSharp" class="logo-img" width="32" height="32">
+        <span>SkiaSharp</span>
+      </a>
+      <nav class="header-nav">
+        <a href="./" class="nav-link" aria-current="page">AI</a>
+        <a href="../docs/" class="nav-link">Docs</a>
+        <a href="../docs/releases/" class="nav-link">Release Notes</a>
+        <a href="https://github.com/mono/SkiaSharp" class="nav-link" target="_blank" rel="noopener">GitHub</a>
+        <button id="theme-toggle" class="theme-btn" aria-label="Toggle theme" aria-pressed="false">
+          <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ── Hero ──────────────────────────────────────────── -->
+    <section class="hero ai-hero">
+      <div class="container">
+        <div class="hero-content">
+          <p class="section-kicker">Automation &amp; AI</p>
+          <h1 class="hero-title">AI in <span class="accent">SkiaSharp</span></h1>
+          <p class="hero-subtitle">
+            SkiaSharp is a large native binding that tracks Google's Skia engine along Chrome's
+            release train. A small team keeps it current because agentic workflows handle the
+            repetitive work and deterministic scripts handle the mechanics. Humans spend their
+            time on API design and correctness.
+          </p>
+          <p class="ai-honesty">
+            <strong>AI does not write the graphics engine.</strong> It does the toil: syncing
+            upstream, diffing APIs, scaffolding docs, triaging issues, and auditing for CVEs. The
+            mechanical steps run as plain scripts, the agent does the judgement work, and every
+            change lands as a normal pull request that a maintainer reviews.
+          </p>
+          <div class="stat-row">
+            <div class="stat">
+              <span class="stat-num">4</span>
+              <span class="stat-label">agentic workflows across two repositories</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">21</span>
+              <span class="stat-label">reusable skills the workflows and maintainers share</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">4&times;</span>
+              <span class="stat-label">daily upstream Skia sync passes</span>
+            </div>
+            <div class="stat">
+              <span class="stat-num">100%</span>
+              <span class="stat-label">changes shipped as human-reviewed PRs</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Moving faster with AI (live dashboard) ────────── -->
+    <section class="ai-section section-alt dashboard" id="moving-faster" aria-labelledby="moving-faster-title">
+      <div class="container">
+        <p class="section-kicker">Moving faster with AI</p>
+        <h2 class="section-title" id="moving-faster-title">The dashboard</h2>
+        <p class="section-lead">
+          A few signals the automation moves, cached when the site rebuilds and refreshed
+          from public data. Every number below links back to its source, and each panel notes
+          the date it was last refreshed so a stale figure is obvious rather than hidden.
+        </p>
+
+        <div class="dash-grid" data-dashboard>
+          <!-- Panel 1 — Adoption at a glance -->
+          <article class="dash-panel" data-panel="adoption" aria-busy="true">
+            <header class="dash-head">
+              <h3>Adoption at a glance</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading NuGet download figures&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener" data-source-link>Source: nuget.org &rarr;</a>
+            </footer>
+          </article>
+
+          <!-- Panel 2 — Time to keep up with upstream (the hero) -->
+          <article class="dash-panel dash-panel-hero" data-panel="cadence" aria-busy="true">
+            <header class="dash-head">
+              <h3>Time to keep up with upstream</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <p class="dash-caption" data-caption>
+              AI opens, tests, and lands the sync PR; humans review the API.
+            </p>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading milestone cadence&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://chromiumdash.appspot.com/schedule" target="_blank" rel="noopener" data-source-link>Chrome schedule &rarr;</a>
+              <a href="https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle" target="_blank" rel="noopener" data-prs-link>Bump PRs &rarr;</a>
+            </footer>
+          </article>
+
+          <!-- Panel 3 — What the automation costs (per run) -->
+          <article class="dash-panel" data-panel="cost" aria-busy="true">
+            <header class="dash-head">
+              <h3>What the automation costs</h3>
+              <span class="dash-asof" data-asof>&nbsp;</span>
+            </header>
+            <div class="dash-body" data-body>
+              <p class="dash-loading">Loading per-run cost&hellip;</p>
+            </div>
+            <footer class="dash-foot">
+              <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener" data-source-link>The workflows &rarr;</a>
+            </footer>
+          </article>
+        </div>
+
+        <noscript>
+          <p class="loop-note">
+            This dashboard renders from cached data with JavaScript. With scripting off, read the
+            numbers at their sources:
+            <a href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener">NuGet downloads</a>,
+            the <a href="https://chromiumdash.appspot.com/schedule" target="_blank" rel="noopener">Chrome schedule</a>,
+            the <a href="https://github.com/mono/SkiaSharp/pulls?q=is%3Apr+milestone+in%3Atitle" target="_blank" rel="noopener">milestone bump PRs</a>,
+            and the <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener">workflows</a>.
+          </p>
+        </noscript>
+
+        <p class="loop-note dash-footer">
+          Every figure here is auditable: the downloads come from NuGet, the milestone dates from
+          the Chromium schedule and our own merged bump PRs, and the run costs from the workflow
+          logs. Read the machinery in the
+          <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener">mono/SkiaSharp workflows</a>
+          directory.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── The loop ──────────────────────────────────────── -->
+    <section class="ai-section">
+      <div class="container">
+        <p class="section-kicker">How it fits together</p>
+        <h2 class="section-title">The loop</h2>
+        <p class="section-lead">
+          The Skia update lifecycle runs in two phases. First the upstream sync lands in the
+          library. Then, once a release is on main, two independent flows publish in parallel:
+          one writes the website release notes, the other writes the API reference. Automation
+          does the mechanical work, the AI agent does the parts that need judgement, and a
+          maintainer reviews before anything ships.
+        </p>
+
+        <ul class="legend" aria-label="Who performs each step">
+          <li><span class="swatch swatch-agent"></span> AI agent</li>
+          <li><span class="swatch swatch-auto"></span> Automation</li>
+          <li><span class="swatch swatch-human"></span> Human review</li>
+        </ul>
+
+        <!-- Phase 1: sync to merge -->
+        <p class="loop-band-label">Phase 1 &middot; Sync to merge</p>
+        <div class="flow-box">
+          <p class="track-name">Engine &amp; bindings <a class="track-target" href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener">&rarr; nuget.org</a></p>
+          <div class="loop">
+          <div class="loop-node" data-actor="agent">
+            <span class="loop-step">Step 1</span>
+            <h3>Sync upstream</h3>
+            <p>Merge new commits from Google's Skia, resolve conflicts, and regenerate the bindings.</p>
+            <span class="loop-actor">AI agent</span>
+          </div>
+          <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+
+          <div class="loop-node" data-actor="auto">
+            <span class="loop-step">Step 2</span>
+            <h3>Build &amp; test</h3>
+            <p>Build the native and managed libraries and run the full test suite on the pull requests.</p>
+            <span class="loop-actor">Automation</span>
+          </div>
+          <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+
+          <div class="loop-node" data-actor="human">
+            <span class="loop-step">Step 3</span>
+            <h3>Review &amp; merge</h3>
+            <p>A maintainer reviews the two pull requests and merges them into main.</p>
+            <span class="loop-actor">Human review</span>
+          </div>
+          </div>
+        </div>
+
+        <!-- Vertical connector: phase 1 forks into two parallel flows -->
+        <div class="flow-connect" aria-hidden="true">
+          <span class="flow-connect-arrow">&darr;</span>
+          <span class="flow-connect-label">a release on main starts two flows in parallel</span>
+        </div>
+
+        <!-- Phase 2: two parallel publish flows -->
+        <p class="loop-band-label">Phase 2 &middot; Publish, in parallel</p>
+        <div class="parallel">
+
+          <div class="flow-row">
+            <p class="track-name">Release notes &amp; API diffs <a class="track-target" href="../docs/releases/">&rarr; website</a></p>
+            <div class="loop">
+              <div class="loop-node" data-actor="auto">
+                <h3>Diff the packages</h3>
+                <p>Compute the public API diff across every published NuGet of both families.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="agent">
+                <h3>Polish the notes</h3>
+                <p>Turn the raw diffs and data into readable, human release notes.</p>
+                <span class="loop-actor">AI agent</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="human">
+                <h3>Review &amp; merge</h3>
+                <p>A maintainer merges the docs PR and the website rebuilds.</p>
+                <span class="loop-actor">Human review</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flow-row">
+            <p class="track-name">API docs <a class="track-target" href="https://learn.microsoft.com/dotnet/api/skiasharp" target="_blank" rel="noopener">&rarr; Microsoft Learn</a></p>
+            <div class="loop">
+              <div class="loop-node" data-actor="auto">
+                <h3>Regenerate stubs</h3>
+                <p>Rebuild the XML reference stubs from the latest published packages.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="agent">
+                <h3>Fill &amp; review</h3>
+                <p>Fill the missing entries and review the existing reference docs.</p>
+                <span class="loop-actor">AI agent</span>
+              </div>
+              <div class="loop-arrow" aria-hidden="true">&rarr;</div>
+              <div class="loop-node" data-actor="auto">
+                <h3>Validate &amp; publish</h3>
+                <p>The Microsoft Learn build gates the PR; it auto-merges, then a maintainer takes it live.</p>
+                <span class="loop-actor">Automation</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Agentic workflows ─────────────────────────────── -->
+    <section class="ai-section section-alt">
+      <div class="container">
+        <p class="section-kicker">Where we use AI</p>
+        <h2 class="section-title">The agentic workflows</h2>
+        <p class="section-lead">
+          Four workflows run an AI agent. Each one is wired so the agent can only emit a small set
+          of constrained outputs, listed as "allowed outputs" below. Everything else is read-only.
+        </p>
+
+        <div class="wf-grid">
+          <!-- Skia upstream sync -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Sync - Skia Upstream</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-opus-4.7</span>
+            </div>
+            <p class="wf-desc">
+              Merges new commits from Google's upstream Skia, resolves the conflicts, regenerates
+              the bindings, and opens the two paired pull requests: one in mono/skia for the
+              submodule and one in mono/SkiaSharp. The hardest reasoning in the whole pipeline,
+              which is why it runs on the strongest model.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>00:00, 06:00, 12:00, and 18:00 UTC daily (every 6 hours), plus manual dispatch</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>open pull requests (mono/skia submodule + mono/SkiaSharp)</dd>
+              <dt>Skill</dt><dd><code>update-skia</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/auto-skia-sync.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- Issue triage -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Sync - Issue Triage</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-sonnet-4.6</span>
+            </div>
+            <p class="wf-desc">
+              Reads new and untriaged issues, classifies them by type, area, platform, and backend,
+              applies the right labels, and fills the triage fields on the project board. It writes
+              a triage report as an artifact rather than posting noise on the issue.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>04:05 UTC daily, plus manual dispatch for a single issue</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>add labels (up to 10), update the project board</dd>
+              <dt>Skill</dt><dd><code>issue-triage</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/auto-triage.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- Release notes & API diffs -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Sync - Release Notes &amp; API Diffs</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-sonnet-4.6</span>
+            </div>
+            <p class="wf-desc">
+              A deterministic prepare job computes the public API diff over every NuGet and
+              generates the raw release-note data. The agent then turns that data into readable
+              notes and opens one pull request, only when the prepare step actually found changes.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>Every push to main and 00:00 UTC daily, plus manual dispatch</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>open a pull request to main (<code>[docs]</code> title, documentation label)</dd>
+              <dt>Skill</dt><dd><code>release-notes</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/update-release-notes.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- API docs writer -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Auto API Docs Writer</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-opus-4.7</span>
+            </div>
+            <p class="wf-desc">
+              A deterministic job regenerates the XML doc stubs from the latest CI NuGets. The
+              agent then runs a two-pass pipeline: it fills the "To be added." placeholders, then
+              runs three correctness review passes over a scope of existing docs, editing the mdoc
+              XML directly, and opens a pull request.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>08:00 UTC daily, plus manual dispatch</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>open a pull request</dd>
+              <dt>Skill</dt><dd><code>api-docs</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp-API-docs</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Automation that pairs with the AI ─────────────── -->
+    <section class="ai-section">
+      <div class="container">
+        <p class="section-kicker">How we automate the rest</p>
+        <h2 class="section-title">Automation around the AI</h2>
+        <p class="section-lead">
+          A lot of the pipeline is plain GitHub Actions with no AI at all. These run before the
+          agent to prepare its inputs, or after it to publish the result. The agent handles one
+          part, the deterministic step handles the other, so we need both.
+        </p>
+
+        <div class="wf-grid">
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Deterministic prepare steps</h3>
+              <span class="badge badge-auto">Automation</span>
+            </div>
+            <p class="wf-desc">
+              Before any agent runs, scripts do the mechanical work: a Cake task computes the API
+              diff across NuGets, mdoc regenerates the XML doc stubs, and generators produce the
+              raw release-note data. The agent starts from a clean, factual baseline rather than
+              gathering it by hand.
+            </p>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/tree/main/scripts/infra/docs" target="_blank" rel="noopener">View the docs scripts &rarr;</a>
+            </p>
+          </article>
+
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Sync - Agentic Data</h3>
+              <span class="badge badge-auto">Automation</span>
+            </div>
+            <p class="wf-desc">
+              When an agentic run finishes, this workflow downloads its uploaded artifacts and
+              commits them to the <code>aw-data</code> branch under a key derived from the workflow
+              name, for example triage reports under <code>ai-triage</code>. It keeps a durable,
+              inspectable record of what the agents did.
+            </p>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/persist-aw-data.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Auto-merge docs PR</h3>
+              <span class="badge badge-auto">Automation</span>
+            </div>
+            <p class="wf-desc">
+              Watches the docs writer's pull request branch and waits for the
+              <code>OpenPublishing.Build</code> and <code>PoliCheck Scan</code> checks to pass with
+              no new warnings. When they do, it squash-merges the PR. The AI proposes the
+              documentation, and deterministic gates verify it builds and passes policy before it
+              ships.
+            </p>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/automerge-docs.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Go Live</h3>
+              <span class="badge badge-auto">Automation</span>
+            </div>
+            <p class="wf-desc">
+              The final, deliberate publish step, triggered manually by a maintainer. It opens (or
+              reuses) a pull request from <code>main</code> into the <code>live</code> branch;
+              merging that PR ships the latest API reference to Microsoft Learn.
+            </p>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/go-live.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+        </div>
+
+        <p class="loop-note">
+          More plain automation keeps the project moving: the website deploy and staging cleanup,
+          the samples build, the docs submodule sync, PR backport and rebase commands, and a build
+          artifacts comment for fork PRs. None of these use AI; they are the connective tissue the
+          agents plug into.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Skills ────────────────────────────────────────── -->
+    <section class="ai-section section-alt">
+      <div class="container">
+        <p class="section-kicker">Reusable instructions</p>
+        <h2 class="section-title">The skills</h2>
+        <p class="section-lead">
+          A skill is a folder under <code>.agents/skills/</code> with a <code>SKILL.md</code> file
+          that captures how to do one job well: the steps, the rules, and the checks. The agentic
+          workflows load a skill and let it drive, and maintainers invoke the same skills by hand
+          as slash commands. One source of truth, used by both the automation and the humans.
+        </p>
+
+        <div class="skill-groups">
+          <div class="skill-group">
+            <h3>Upstream &amp; Skia</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">update-skia <span class="skill-auto">Automated</span></span><br>Merge a new upstream Skia milestone, fix the C shim, regenerate bindings, and update wrappers.</li>
+              <li><span class="skill-name">review-skia-update</span><br>Security-audit a Skia merge PR by diffing against upstream and verifying generated bindings.</li>
+              <li><span class="skill-name">skia-analyst</span><br>Analyze what shipped and what is missing between Skia versions, and find APIs to bind next.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>Release</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">release-branch</span><br>Create a release branch and trigger the build chain.</li>
+              <li><span class="skill-name">release-status</span><br>Track the release build pipeline across its stages.</li>
+              <li><span class="skill-name">release-testing</span><br>Run integration tests that verify the NuGet packages on real devices.</li>
+              <li><span class="skill-name">release-publish</span><br>Publish to NuGet, tag, create the GitHub release, and close the milestone.</li>
+              <li><span class="skill-name">release-notes <span class="skill-auto">Automated</span></span><br>Generate the website release notes and API diffs from published NuGets and git history.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>API &amp; docs</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">api-add-review</span><br>Wrap new Skia functionality as C# APIs, or review an API PR for design and safety.</li>
+              <li><span class="skill-name">api-docs <span class="skill-auto">Automated</span></span><br>Write and review the XML API documentation following .NET guidelines.</li>
+              <li><span class="skill-name">pr-commit-message</span><br>Write high-signal merge and squash commit messages that preserve the why.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>Issues</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">issue-triage <span class="skill-auto">Automated</span></span><br>Classify an issue into structured fields, labels, and a suggested response.</li>
+              <li><span class="skill-name">issue-bulk-process</span><br>Triage and reproduce many issues in one orchestrated pass.</li>
+              <li><span class="skill-name">issue-repro</span><br>Reproduce an issue systematically and capture the result.</li>
+              <li><span class="skill-name">issue-fix</span><br>Investigate, fix, and test a bug in the C# bindings.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>Security &amp; dependencies</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">security-audit</span><br>Audit native dependencies for CVEs and Component Governance alerts. Read-only.</li>
+              <li><span class="skill-name">native-dependency-update</span><br>Update a native dependency such as libpng or zlib to fix a CVE or bug.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>Samples &amp; CI</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">sample-scout</span><br>Scout Skia GM test files for demos worth porting to the gallery.</li>
+              <li><span class="skill-name">validate-samples</span><br>Build and validate the sample projects against CI packages.</li>
+              <li><span class="skill-name">ci-status</span><br>Collect the build health across pipelines and render a daily dashboard.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
+            <h3>Authoring</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">skill-creator</span><br>Create, improve, and evaluate the reusable skills themselves.</li>
+            </ul>
+          </div>
+        </div>
+
+        <p class="loop-note">
+          Want the full text? Each skill is a plain Markdown file you can read in the repository.
+          <a href="https://github.com/mono/SkiaSharp/tree/main/.agents/skills" target="_blank" rel="noopener">Browse the skills folder &rarr;</a>
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Guardrails ────────────────────────────────────── -->
+    <section class="ai-section">
+      <div class="container">
+        <p class="section-kicker">How we keep it safe</p>
+        <h2 class="section-title">Guardrails</h2>
+        <p class="section-lead">
+          The trust story is deliberate. The agents are boxed in by design, and a human signs off
+          on everything that lands.
+        </p>
+
+        <div class="guard-grid">
+          <div class="guard">
+            <div class="guard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M9 15l2 2 4-4"/></svg>
+            </div>
+            <h3>Deterministic first</h3>
+            <p>The mechanical work runs as plain scripts before the agent starts. The agent only does the part that needs judgement, so its surface area is small.</p>
+          </div>
+
+          <div class="guard">
+            <div class="guard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+            </div>
+            <h3>Constrained outputs</h3>
+            <p>Each workflow declares an allow-list of safe outputs: open a pull request, add labels, set project fields. The agent cannot make arbitrary writes to the repository.</p>
+          </div>
+
+          <div class="guard">
+            <div class="guard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+            </div>
+            <h3>Human review</h3>
+            <p>Every agentic change arrives as an ordinary pull request. A maintainer reads it, asks for changes, and merges it. Nothing the agent produces ships unreviewed.</p>
+          </div>
+
+          <div class="guard">
+            <div class="guard-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+            </div>
+            <h3>Extra checks for docs</h3>
+            <p>The docs writer runs three correctness review passes over its own output, and the resulting PR only auto-merges after the Microsoft Learn build passes.</p>
+          </div>
+        </div>
+
+        <p class="loop-note">
+          <strong>Transparency.</strong> Everything here runs as public GitHub Actions you can
+          open and inspect, and every agentic run persists its artifacts to the
+          <a href="https://github.com/mono/SkiaSharp/tree/aw-data" target="_blank" rel="noopener"><code>aw-data</code></a>
+          branch. The machinery is not a black box; it is in the open, in the same repositories as
+          the code.
+        </p>
+      </div>
+    </section>
+
+    <!-- ── Call to action ────────────────────────────────── -->
+    <section class="ai-section section-alt cta">
+      <div class="container">
+        <p class="section-kicker">Go deeper</p>
+        <h2 class="section-title">Read the machinery, or help build it</h2>
+        <p class="section-lead">
+          All of it is open. Read the workflows and skills, or open a pull request to make them
+          better.
+        </p>
+        <div class="hero-actions">
+          <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" class="btn btn-primary" target="_blank" rel="noopener">SkiaSharp workflows</a>
+          <a href="https://github.com/mono/SkiaSharp-API-docs/tree/main/.github/workflows" class="btn btn-secondary" target="_blank" rel="noopener">Docs workflows</a>
+          <a href="https://github.com/mono/SkiaSharp/tree/main/.agents/skills" class="btn btn-secondary" target="_blank" rel="noopener">The skills</a>
+          <a href="https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md" class="btn btn-secondary" target="_blank" rel="noopener">Contribute</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>
+        SkiaSharp is licensed under the <a href="https://github.com/mono/SkiaSharp/blob/main/LICENSE.md" target="_blank" rel="noopener">MIT License</a>.
+        Built with &#10084;&#65039; by the .NET community.
+      </p>
+      <div class="footer-links">
+        <a href="../">Home</a>
+        <a href="https://github.com/mono/SkiaSharp" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.nuget.org/packages/SkiaSharp" target="_blank" rel="noopener">NuGet</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="../site.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,241 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/1.57.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 1.57.0.0 vs 1.56.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrpixelconfig">Type Changed: SkiaSharp.GRPixelConfig</h4>
+<p>Removed value:</p>
+<pre><code class="lang-csharp">Index8 = 2,
+</code></pre>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Gray8 = 2,
+</code></pre>
+<h4 id="type-changed-skiasharpskbitmap">Type Changed: SkiaSharp.SKBitmap</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public bool Encode (SKWStream dst, SKEncodedImageFormat format, int quality);
+public void NotifyPixelsChanged ();
+public bool PeekPixels (SKPixmap pixmap);
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void DrawSurface (SKSurface surface, float x, float y, SKPaint paint);
+</code></pre>
+<h4 id="type-changed-skiasharpskcodec">Type Changed: SkiaSharp.SKCodec</h4>
+<p>Modified properties:</p>
+<pre><code class="lang-diff">-public SKEncodedFormat EncodedFormat { get; }
++public SKEncodedImageFormat EncodedFormat { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcodecframeinfo">Type Changed: SkiaSharp.SKCodecFrameInfo</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public bool FullyRecieved { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskdata">Type Changed: SkiaSharp.SKData</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKData Create (int size);
+public static SKData Create (ulong size);
+</code></pre>
+<h4 id="type-changed-skiasharpskdocument">Type Changed: SkiaSharp.SKDocument</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKDocument CreateXps (SKWStream stream, float dpi);
+public static SKDocument CreateXps (string path, float dpi);
+</code></pre>
+<h4 id="type-changed-skiasharpskdynamicmemorywstream">Type Changed: SkiaSharp.SKDynamicMemoryWStream</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void CopyTo (SKWStream dst);
+public void CopyTo (IntPtr data);
+public SKData DetachAsData ();
+</code></pre>
+<h4 id="type-changed-skiasharpskimage">Type Changed: SkiaSharp.SKImage</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public SKImage ToTextureImage (GRContext context);
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Encode(SKEncodedImageFormat, int) instead.&quot;)]
+ public SKData Encode (SKImageEncodeFormat format, int quality);
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public SKData Encode (SKEncodedImageFormat format, int quality);
+</code></pre>
+<h4 id="type-changed-skiasharpskimageencodeformat">Type Changed: SkiaSharp.SKImageEncodeFormat</h4>
+<p>Removed value:</p>
+<pre><code class="lang-csharp">Unknown = 0,
+</code></pre>
+<p>Modified fields:</p>
+<pre><code class="lang-diff">-Bmp = 1
++Bmp = 0
+-Gif = 2
++Gif = 1
+-Ico = 3
++Ico = 2
+-Jpeg = 4
++Jpeg = 3
+-Png = 5
++Png = 4
+-Wbmp = 6
++Wbmp = 5
+-Webp = 7
++Webp = 6
+</code></pre>
+<h4 id="type-changed-skiasharpskmaskfilter">Type Changed: SkiaSharp.SKMaskFilter</h4>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public static SKMaskFilter CreateEmboss (float blurSigma, SKPoint3 direction, float ambient, float specular);
+public static SKMaskFilter CreateEmboss (float blurSigma, float directionX, float directionY, float directionZ, float ambient, float specular);
+public static SKMaskFilter CreateShadow (float occluderHeight, SKPoint3 lightPos, float lightRadius, float ambientAlpha, float spotAlpha, SKShadowMaskFilterShadowFlags flags);
+</code></pre>
+<h4 id="type-changed-skiasharpskpixmap">Type Changed: SkiaSharp.SKPixmap</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKData Encode (SKEncodedImageFormat encoder, int quality);
+public bool Encode (SKWStream dst, SKEncodedImageFormat encoder, int quality);
+public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality);
+</code></pre>
+<h4 id="type-changed-skiasharpsksurface">Type Changed: SkiaSharp.SKSurface</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKSurfaceProps SurfaceProps { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Draw (SKCanvas canvas, float x, float y, SKPaint paint);
+public SKPixmap PeekPixels ();
+public bool PeekPixels (SKPixmap pixmap);
+public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY);
+</code></pre>
+<h4 id="type-changed-skiasharpskwstream">Type Changed: SkiaSharp.SKWStream</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public void NewLine ();
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public bool NewLine ();
+</code></pre>
+<h4 id="removed-type-skiasharpskencodedformat">Removed Type SkiaSharp.SKEncodedFormat</h4>
+<h4 id="removed-type-skiasharpskshadowmaskfiltershadowflags">Removed Type SkiaSharp.SKShadowMaskFilterShadowFlags</h4>
+<h4 id="new-type-skiasharpskencodedimageformat">New Type: SkiaSharp.SKEncodedImageFormat</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKEncodedImageFormat {
+	Astc = 9,
+	Bmp = 0,
+	Dng = 10,
+	Gif = 1,
+	Ico = 2,
+	Jpeg = 3,
+	Ktx = 8,
+	Pkm = 7,
+	Png = 4,
+	Wbmp = 5,
+	Webp = 6,
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/1.57.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4468 · dev/memory-leak-buffer-unicodefunctions-f44c958d98a7dd98 · a3aff87
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

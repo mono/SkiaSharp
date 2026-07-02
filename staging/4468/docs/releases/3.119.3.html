@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.3 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.3 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/3.119.3.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31193">Version 3.119.3</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:3.119.3 -->
+
+<blockquote>
+<p><strong>Security and dependency updates</strong> · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.3-preview">NuGet (prerelease)</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Superseded by <a href="3.119.4.html">3.119.4</a></strong> · Never released as stable — these changes rolled up into 3.119.4.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.3/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.4/index.md">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.119.3 is a preview focused on native security mitigations and dependency refreshes. Spectre mitigations are added for Linux, native dependencies including libwebp and brotli are updated, and an AoT crash with IlcDisableReflection is fixed.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this preview line.</em></p>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>AoT crash with IlcDisableReflection fixed</strong> — Applications using Native AoT with IlcDisableReflection=true were crashing; the reflection-dependent code path has been removed. (<a href="https://github.com/mono/SkiaSharp/pull/3485">#3485</a>)</li>
+<li><strong>Linux ARM64 fontconfig runtime dependency added</strong> — A missing fontconfig runtime library has been added to the Linux ARM64 cross-compile sysroot, fixing crashes on ARM64 Linux. (<a href="https://github.com/mono/SkiaSharp/pull/3494">#3494</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Spectre mitigations enabled for Linux native binaries</strong> — Spectre v1 mitigation flags are now applied to libSkiaSharp.so on Linux, complementing the Windows mitigations from 3.119.2. — ❤️ <a href="https://github.com/sshumakov">@sshumakov</a> (<a href="https://github.com/mono/SkiaSharp/pull/3502">#3502</a>, <a href="https://github.com/mono/SkiaSharp/pull/3496">#3496</a>)</li>
+<li><strong>Native dependencies updated</strong> — libpng updated to 1.6.54, libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed. (<a href="https://github.com/mono/SkiaSharp/pull/3452">#3452</a>, <a href="https://github.com/mono/SkiaSharp/pull/3478">#3478</a>, <a href="https://github.com/mono/SkiaSharp/pull/3469">#3469</a>, <a href="https://github.com/mono/SkiaSharp/pull/3463">#3463</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-8314">HarfBuzzSharp 8.3.1.4</h2>
+<p>No HarfBuzzSharp binding changes shipped in this release — it rebuilds the same HarfBuzz as the previous line.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/sshumakov">@sshumakov</a></td>
+<td>Enabled Spectre mitigation flags for Windows and Linux native binaries (<a href="https://github.com/mono/SkiaSharp/pull/3496">#3496</a>, <a href="https://github.com/mono/SkiaSharp/pull/3502">#3502</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-1-february-7-2026">Preview 1 (February 7, 2026)</h2>
+<p>Preview 1 delivered Spectre mitigations for Linux, AoT reflection fix, Linux ARM64 crash fix, and updates for libpng, libwebp, and brotli.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2...v3.119.3-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4468/merge/documentation/docfx/releases/3.119.3.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4468 · dev/memory-leak-buffer-unicodefunctions-f44c958d98a7dd98 · a3aff87
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

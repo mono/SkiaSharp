@@ -1,0 +1,176 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.150.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.150.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4531/merge/documentation/docfx/releases/4.150.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41500">Version 4.150.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:4.150.0 -->
+
+<blockquote>
+<p><strong>Skia m150 and new filter APIs</strong> · Released July 7, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/4.150.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v4.150.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.150.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.2.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.150.0 upgrades to Skia m150 and adds image filter, color filter, and fast-bounds APIs. This release lands three new image-processing APIs, a performance improvement for SKSurface, and HarfBuzz 14.2.1. It also completes the v4 breaking change story by promoting remaining obsoletes to compile errors and removing .NET Interactive support.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>Remaining pre-v4 obsolete members promoted to compile errors</strong> — SKPaint text/font members and enum values that were marked [Obsolete] in v3 now emit compile errors in v4. Migration: switch to SKFont for text sizing and typeface assignment and remove any references to the removed enum values. (<a href="https://github.com/mono/SkiaSharp/pull/4195">#4195</a>)</li>
+<li><strong>.NET Interactive (Polyglot Notebooks) support removed</strong> — The SkiaSharp .NET Interactive / Polyglot Notebooks integration package has been removed. If you depend on it, pin to 4.148.x or migrate to the standard SkiaSharp NuGet package. (<a href="https://github.com/mono/SkiaSharp/pull/4186">#4186</a>)</li>
+</ul>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia upgraded to milestone m150</strong> — The bundled Skia engine is now built from chrome/m150, bringing upstream rendering bug fixes and performance improvements across all platforms. (<a href="https://github.com/mono/SkiaSharp/pull/4146">#4146</a>, <a href="https://github.com/mono/SkiaSharp/pull/4190">#4190</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>SKPaint.GetFastBounds() for quick-reject culling</strong> — A new GetFastBounds() method returns a conservative bounding box for a paint, enabling fast visibility culling without a full draw pass. (<a href="https://github.com/mono/SkiaSharp/pull/4271">#4271</a>)</li>
+<li><strong>New image filter factories: CreateCrop and CreateEmpty</strong> — SKImageFilter gains two new factory methods — CreateCrop() to crop the output of a filter chain, and CreateEmpty() to produce a no-op transparent filter. (<a href="https://github.com/mono/SkiaSharp/pull/4229">#4229</a>, <a href="https://github.com/mono/SkiaSharp/pull/4228">#4228</a>)</li>
+<li><strong>SKColorFilter.CreateOverdraw() for overdraw visualization</strong> — A new overdraw color filter maps pixel overdraw counts to a configurable color ramp, making it easy to visualize rendering hotspots. (<a href="https://github.com/mono/SkiaSharp/pull/4227">#4227</a>)</li>
+<li><strong>HarfBuzz updated to 14.2.1</strong> — The bundled HarfBuzz library is updated to 14.2.1, picking up upstream shaping bug fixes. (<a href="https://github.com/mono/SkiaSharp/pull/4167">#4167</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Small-sigma raster blur regression fixed</strong> — A regression introduced in an upstream sync caused incorrect raster-pipeline blur results for small sigma values. The fix defines SK_AVOID_SLOW_RASTER_PIPELINE_BLURS, restoring the correct fast path. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4269">#4269</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>SKSurface.Canvas wrapper cached across calls</strong> — SKSurface now caches its Canvas wrapper instead of creating a new managed object on every access, eliminating repeated allocations in render loops. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4247">#4247</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1421">HarfBuzzSharp 14.2.1</h2>
+<p>HarfBuzzSharp 14.2.1 ships with this release, updating the bundled HarfBuzz library to 14.2.1 with upstream shaping bug fixes.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Raster blur regression fix, SKSurface canvas-wrapper caching, and Uno sample updates (<a href="https://github.com/mono/SkiaSharp/pull/4195">#4195</a>, <a href="https://github.com/mono/SkiaSharp/pull/4247">#4247</a>, <a href="https://github.com/mono/SkiaSharp/pull/4269">#4269</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="release-candidate-1-june-29-2026">Release Candidate 1 (June 29, 2026)</h2>
+<p>Release Candidate 1 added SKPaint.GetFastBounds(), the three new filter factory methods (CreateCrop, CreateEmpty, CreateOverdraw), the SKSurface canvas-wrapper cache, and the small-sigma blur regression fix.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.2.1...v4.150.0-rc.1.1">Full changelog</a></p>
+<h2 id="preview-2-june-24-2026">Preview 2 (June 24, 2026)</h2>
+<p>Preview 2 promoted remaining v4 obsoletes to compile errors, removed .NET Interactive support, and updated HarfBuzz to 14.2.1.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.1.1...v4.150.0-preview.2.1">Full changelog</a></p>
+<h2 id="preview-1-june-13-2026">Preview 1 (June 13, 2026)</h2>
+<p>Preview 1 opened the 4.150 line with the Skia m150 milestone upgrade.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.148.0...v4.150.0-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4531/merge/documentation/docfx/releases/4.150.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4531 · mattleibow-windows-vulkan-ci-icd · 22f2df3
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

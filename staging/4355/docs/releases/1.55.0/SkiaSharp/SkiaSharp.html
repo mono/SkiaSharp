@@ -1,0 +1,444 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4355/merge/documentation/docfx/releases/1.55.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 1.55.0.0 vs 1.54.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Flush() instead.&quot;)]
+ public void Flush (GRContextFlushBits flagsBitfield);
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff"> public void Flush (GRContextFlushBits flagsBitfield--- = 0---)
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void Flush ();
+</code></pre>
+<h4 id="type-changed-skiasharpgrcontextoptions">Type Changed: SkiaSharp.GRContextOptions</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public bool AllowPathMaskCaching { get; set; }
+public static GRContextOptions Default { get; }
+public bool DisableDistanceFieldPaths { get; set; }
+public bool EnableInstancedRendering { get; set; }
+public bool ForceSWPathMasks { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKRect ClipBounds { get; }
+public SKRectI ClipDeviceBounds { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use ClipPath(SKPath, SKClipOperation, bool) instead.&quot;)]
+ public void ClipPath (SKPath path, SKRegionOperation operation, bool antialias);
+ [Obsolete (&quot;Use ClipRect(SKRect, SKClipOperation, bool) instead.&quot;)]
+ public void ClipRect (SKRect rect, SKRegionOperation operation, bool antialias);
+ [Obsolete (&quot;Use DrawColor(SKColor, SKBlendMode) instead.&quot;)]
+ public void DrawColor (SKColor color, SKXferMode mode);
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff"> public void ClipPath (SKPath path, SKRegionOperation operation--- = 1---, bool antialias = false)
+ public void ClipRect (SKRect rect, SKRegionOperation operation--- = 1---, bool antialias = false)
+ public void DrawColor (SKColor color, SKXferMode mode--- = 1---)
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void ClipPath (SKPath path, SKClipOperation operation, bool antialias);
+public void ClipRect (SKRect rect, SKClipOperation operation, bool antialias);
+public void ClipRegion (SKRegion region, SKClipOperation operation);
+public void DrawBitmapLattice (SKBitmap bitmap, SKLattice lattice, SKRect dst, SKPaint paint);
+public void DrawColor (SKColor color, SKBlendMode mode);
+public void DrawImageLattice (SKImage image, SKLattice lattice, SKRect dst, SKPaint paint);
+public void DrawOval (float cx, float cy, float rx, float ry, SKPaint paint);
+public void Scale (float s);
+</code></pre>
+<h4 id="type-changed-skiasharpskcodec">Type Changed: SkiaSharp.SKCodec</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public void GetValidSubset (ref SKRectI desiredSubset);
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public bool GetValidSubset (ref SKRectI desiredSubset);
+</code></pre>
+<h4 id="type-changed-skiasharpskcodecoptions">Type Changed: SkiaSharp.SKCodecOptions</h4>
+<p>Added constructor:</p>
+<pre><code class="lang-csharp">public SKCodecOptions (SKRectI subset);
+</code></pre>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public bool HasSubset { get; ---set;--- }
+-public SKRectI Subset { get; set; }
++public SKRectI? Subset { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcolor">Type Changed: SkiaSharp.SKColor</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKColor Parse (string hexString);
+public static bool TryParse (string hexString, out SKColor color);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorfilter">Type Changed: SkiaSharp.SKColorFilter</h4>
+<p>Obsoleted fields:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use MaxColorCubeDimension instead.&quot;)]
+ public static const int MaxCubeSize;
+ [Obsolete (&quot;Use MinColorCubeDimension instead.&quot;)]
+ public static const int MinCubeSize;
+</code></pre>
+<p>Added fields:</p>
+<pre><code class="lang-csharp">public static const int ColorMatrixSize;
+public static const int MaxColorCubeDimension;
+public static const int MinColorCubeDimension;
+</code></pre>
+<h4 id="type-changed-skiasharpskdocument">Type Changed: SkiaSharp.SKDocument</h4>
+<p>Removed method:</p>
+<pre><code class="lang-csharp">public bool Close ();
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void Close ();
+</code></pre>
+<h4 id="type-changed-skiasharpskfontstylewidth">Type Changed: SkiaSharp.SKFontStyleWidth</h4>
+<p>Obsoleted fields:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use UltraExpanded instead.&quot;)]
+ UltaExpanded = 9,
+</code></pre>
+<p>Added value:</p>
+<pre><code class="lang-csharp">UltraExpanded = 9,
+</code></pre>
+<h4 id="type-changed-skiasharpskimagefilter">Type Changed: SkiaSharp.SKImageFilter</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use CreateDisplacementMapEffect instead.&quot;)]
+ public static SKImageFilter CreateCompose (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter background, SKImageFilter foreground, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter background, SKImageFilter foreground, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateDisplacementMapEffect (SKDisplacementMapEffectChannelSelectorType xChannelSelector, SKDisplacementMapEffectChannelSelectorType yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateTile (SKRect src, SKRect dst, SKImageFilter input);
+</code></pre>
+<h4 id="type-changed-skiasharpskmatrix">Type Changed: SkiaSharp.SKMatrix</h4>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-static public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
++ public void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source)
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use MapPoint instead.&quot;)]
+ public SKPoint MapXY (float x, float y);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second);
+public SKPoint MapPoint (SKPoint point);
+public SKPoint MapPoint (float x, float y);
+public static void PostConcat (ref SKMatrix target, SKMatrix matrix);
+public static void PreConcat (ref SKMatrix target, SKMatrix matrix);
+</code></pre>
+<h4 id="type-changed-skiasharpskpaint">Type Changed: SkiaSharp.SKPaint</h4>
+<p>Obsoleted properties:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use BlendMode instead.&quot;)]
+ public SKXferMode XferMode { get; set; }
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKBlendMode BlendMode { get; set; }
+public float FontSpacing { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKPaint Clone ();
+public bool GetFillPath (SKPath src, SKPath dst, float resScale);
+public bool GetFillPath (SKPath src, SKPath dst, SKRect cullRect, float resScale);
+public float GetFontMetrics (out SKFontMetrics metrics, float scale);
+</code></pre>
+<h4 id="type-changed-skiasharpskpath">Type Changed: SkiaSharp.SKPath</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void ArcTo (SKPoint point1, SKPoint point2, float radius);
+public void ArcTo (SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo);
+public void ArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy);
+public void ArcTo (float x1, float y1, float x2, float y2, float radius);
+public void ConicTo (SKPoint point0, SKPoint point1, float w);
+public static SKPoint[] ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, int pow2);
+public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint[] pts, int pow2);
+public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, out SKPoint[] pts, int pow2);
+public void CubicTo (SKPoint point0, SKPoint point1, SKPoint point2);
+public void LineTo (SKPoint point);
+public void MoveTo (SKPoint point);
+public void Offset (SKPoint offset);
+public SKPath Op (SKPath other, SKPathOp op);
+public void QuadTo (SKPoint point0, SKPoint point1);
+public void RArcTo (SKPoint r, float xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, SKPoint xy);
+public void RConicTo (SKPoint point0, SKPoint point1, float w);
+public void RCubicTo (SKPoint point0, SKPoint point1, SKPoint point2);
+public void RLineTo (SKPoint point);
+public void RMoveTo (SKPoint point);
+public void RQuadTo (SKPoint point0, SKPoint point1);
+public SKPath Simplify ();
+</code></pre>
+<h4 id="type-changed-skiasharpskpatheffect">Type Changed: SkiaSharp.SKPathEffect</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Create1DPath(SKPath, float, float, SKPath1DPathEffectStyle) instead.&quot;)]
+ public static SKPathEffect Create1DPath (SKPath path, float advance, float phase, SkPath1DPathEffectStyle style);
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public static SKPathEffect Create1DPath (SKPath path, float advance, float phase, SKPath1DPathEffectStyle style);
+</code></pre>
+<h4 id="type-changed-skiasharpskpicturerecorder">Type Changed: SkiaSharp.SKPictureRecorder</h4>
+<p>Removed constructor:</p>
+<pre><code class="lang-csharp">public SKPictureRecorder (IntPtr handle, bool owns);
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public SKCanvas RecordingCanvas { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskpoint">Type Changed: SkiaSharp.SKPoint</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Offset (SKPoint p);
+public void Offset (float dx, float dy);
+</code></pre>
+<h4 id="type-changed-skiasharpskrect">Type Changed: SkiaSharp.SKRect</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public float MidX { get; }
+public float MidY { get; }
+public SKRect Standardized { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKRect AspectFill (SKSize size);
+public SKRect AspectFit (SKSize size);
+</code></pre>
+<h4 id="type-changed-skiasharpskrecti">Type Changed: SkiaSharp.SKRectI</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public int MidX { get; }
+public int MidY { get; }
+public SKRectI Standardized { get; }
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKRectI AspectFill (SKSizeI size);
+public SKRectI AspectFit (SKSizeI size);
+</code></pre>
+<h4 id="type-changed-skiasharpsktypeface">Type Changed: SkiaSharp.SKTypeface</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKFontStyleSlant FontSlant { get; }
+public int FontWeight { get; }
+public int FontWidth { get; }
+public SKTypefaceStyle Style { get; }
+</code></pre>
+<h4 id="new-type-skiasharpskblendmode">New Type: SkiaSharp.SKBlendMode</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKBlendMode {
+	Clear = 0,
+	Color = 27,
+	ColorBurn = 19,
+	ColorDodge = 18,
+	Darken = 16,
+	Difference = 22,
+	Dst = 2,
+	DstATop = 10,
+	DstIn = 6,
+	DstOut = 8,
+	DstOver = 4,
+	Exclusion = 23,
+	HardLight = 20,
+	Hue = 25,
+	Lighten = 17,
+	Luminosity = 28,
+	Modulate = 13,
+	Multiply = 24,
+	Overlay = 15,
+	Plus = 12,
+	Saturation = 26,
+	Screen = 14,
+	SoftLight = 21,
+	Src = 1,
+	SrcATop = 9,
+	SrcIn = 5,
+	SrcOut = 7,
+	SrcOver = 3,
+	Xor = 11,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskclipoperation">New Type: SkiaSharp.SKClipOperation</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKClipOperation {
+	Difference = 0,
+	Intersect = 1,
+}
+</code></pre>
+<h4 id="new-type-skiasharpsklattice">New Type: SkiaSharp.SKLattice</h4>
+<pre><code class="lang-csharp">public struct SKLattice {
+	// properties
+	public SKRectI? Bounds { get; set; }
+	public SKLatticeFlags[] Flags { get; set; }
+	public int[] XDivs { get; set; }
+	public int[] YDivs { get; set; }
+}
+</code></pre>
+<h4 id="new-type-skiasharpsklatticeflags">New Type: SkiaSharp.SKLatticeFlags</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKLatticeFlags {
+	Default = 0,
+	Transparent = 1,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpath1dpatheffectstyle">New Type: SkiaSharp.SKPath1DPathEffectStyle</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKPath1DPathEffectStyle {
+	Morph = 2,
+	Rotate = 1,
+	Translate = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpathmeasure">New Type: SkiaSharp.SKPathMeasure</h4>
+<pre><code class="lang-csharp">public class SKPathMeasure : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKPathMeasure ();
+	public SKPathMeasure (SKPath path, bool forceClosed, float resScale);
+	// properties
+	public bool IsClosed { get; }
+	public float Length { get; }
+	// methods
+	protected override void Dispose (bool disposing);
+	public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
+	public bool GetPosition (float distance, out SKPoint position);
+	public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent);
+	public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo);
+	public bool GetTangent (float distance, out SKPoint tangent);
+	public bool NextContour ();
+	public void SetPath (SKPath path, bool forceClosed);
+
+	// inner types
+	[Serializable]
+	[Flags]
+	public enum MatrixFlags {
+		GetPosition = 1,
+		GetPositionAndTangent = 3,
+		GetTangent = 2,
+	}
+}
+</code></pre>
+<h4 id="new-type-skiasharpskregion">New Type: SkiaSharp.SKRegion</h4>
+<pre><code class="lang-csharp">public class SKRegion : SkiaSharp.SKObject, System.IDisposable {
+	// constructors
+	public SKRegion ();
+	public SKRegion (SKRegion region);
+	// properties
+	public SKRectI Bounds { get; }
+	// methods
+	public bool Contains (SKPointI xy);
+	public bool Contains (SKRegion src);
+	public bool Contains (int x, int y);
+	public bool Intersects (SKRectI rect);
+	public bool Intersects (SKRegion region);
+	public bool Op (SKRectI rect, SKRegionOperation op);
+	public bool Op (SKRegion region, SKRegionOperation op);
+	public bool Op (int left, int top, int right, int bottom, SKRegionOperation op);
+	public bool SetPath (SKPath path);
+	public bool SetPath (SKPath path, SKRegion clip);
+	public bool SetRect (SKRectI rect);
+	public bool SetRegion (SKRegion region);
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4355/merge/documentation/docfx/releases/1.55.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4355 · dev/memory-leak-skregion-spaniterator-65fa9da9fc1e4543 · 097ca21
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

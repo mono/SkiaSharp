@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.118.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.118.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4521/merge/documentation/docfx/releases/3.118.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31180">Version 3.118.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:3.118.0 -->
+
+<blockquote>
+<p><strong>Skia m117/m118 preview</strong> · <a href="https://www.nuget.org/packages/SkiaSharp/3.118.0-preview">NuGet (prerelease)</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Superseded by <a href="3.119.0.html">3.119.0</a></strong> · Never released as stable — these changes rolled up into 3.119.0.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.118.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1/index.md">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.118.0 previews Skia milestones m117 and m118 with security and platform updates. Includes a new Metal API for GRBackendRenderTarget, .NET 9 Blazor fixes, updated freetype2, libexpat, libjpeg-turbo and HarfBuzz 8.3.1, plus Android NDK r27c and WASM improvements.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this preview line.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia updated to milestones m117 and m118</strong> — The bundled Skia engine advances through two milestones, bringing upstream rendering improvements and bug fixes. (<a href="https://github.com/mono/SkiaSharp/pull/3047">#3047</a>, <a href="https://github.com/mono/SkiaSharp/pull/3048">#3048</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Metal API added for GRBackendRenderTarget</strong> — New Metal-specific constructors and accessors on GRBackendRenderTarget are now available across all supported Apple platforms. — ❤️ <a href="https://github.com/spouliot">@spouliot</a> (<a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Blazor and WASM issues resolved</strong> — .NET 9 ASP.NET Blazor rendering issues are fixed, and Blazor workarounds have been moved into the WASM layer for cleaner behaviour. (<a href="https://github.com/mono/SkiaSharp/pull/3064">#3064</a>, <a href="https://github.com/mono/SkiaSharp/pull/3082">#3082</a>, <a href="https://github.com/mono/SkiaSharp/pull/3088">#3088</a>)</li>
+<li><strong>NuGet PackagePath attribute corrected</strong> — An incorrect PackagePath attribute in the NuGet packages has been fixed. (<a href="https://github.com/mono/SkiaSharp/pull/3101">#3101</a>)</li>
+<li><strong>Windows SDK version pinned via project property</strong> — The Windows SDK version is now set via the WindowsSdkPackageVersion project property, avoiding version conflicts. (<a href="https://github.com/mono/SkiaSharp/pull/3085">#3085</a>)</li>
+<li><strong>Base-path import fixed for Blazor apps</strong> — Blazor applications that configure a base path now correctly import SkiaSharp assets. (<a href="https://github.com/mono/SkiaSharp/pull/3092">#3092</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Android NDK updated to r27c with 16 KB page alignment</strong> — The Android NDK is updated to r27c, supporting the 16 KB memory page size required by newer Android devices. (<a href="https://github.com/mono/SkiaSharp/pull/3099">#3099</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Native dependencies updated</strong> — freetype2, libexpat, libjpeg-turbo, and HarfBuzz have all been updated to their latest versions. (<a href="https://github.com/mono/SkiaSharp/pull/3061">#3061</a>, <a href="https://github.com/mono/SkiaSharp/pull/3056">#3056</a>, <a href="https://github.com/mono/SkiaSharp/pull/3060">#3060</a>, <a href="https://github.com/mono/SkiaSharp/pull/3052">#3052</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-831">HarfBuzzSharp 8.3.1</h2>
+<p>Updates HarfBuzzSharp to 8.3.1 alongside the NDK and platform packaging fixes from this release.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/spouliot">@spouliot</a></td>
+<td>Added Metal API support for GRBackendRenderTarget across Apple platforms (<a href="https://github.com/mono/SkiaSharp/pull/3070">#3070</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-2-december-5-2024">Preview 2 (December 5, 2024)</h2>
+<p>Preview 2 added the Metal GRBackendRenderTarget API, fixed .NET 9 Blazor rendering, updated the Android NDK to r27c, and resolved the NuGet PackagePath issue.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.118.0-preview.1.2...v3.118.0-preview.2.3">Full changelog</a></p>
+<h2 id="preview-1-november-6-2024">Preview 1 (November 6, 2024)</h2>
+<p>Preview 1 advanced the bundled Skia engine through milestones m117 and m118 and updated HarfBuzz to 8.3.1.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.116.1...v3.118.0-preview.1.2">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4521/merge/documentation/docfx/releases/3.118.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4521 · skia-sync/m151 · faaca15
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

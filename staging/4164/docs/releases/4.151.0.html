@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.151.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.151.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4164/merge/documentation/docfx/releases/4.151.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41510">Version 4.151.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:4.151.0 -->
+
+<blockquote>
+<p><strong>Skia m151 performance and platform</strong> · <a href="https://www.nuget.org/packages/SkiaSharp/4.151.0-preview">NuGet (prerelease)</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="4.151.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/14.2.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.151.0 updates to Skia m151 and eliminates allocations across several performance-critical hot paths. Color parsing, SKShaper glyph reads, and HarfBuzz shaping are reworked for zero-copy, allocation-free operation. A CPU raster regression introduced with the m151 sync is also corrected.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this preview line.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Skia updated to milestone m151</strong> — Aligns the bundled renderer with Chrome milestone 151 and merges several rounds of upstream m151 bug fixes. (<a href="https://github.com/mono/SkiaSharp/pull/4294">#4294</a>, <a href="https://github.com/mono/SkiaSharp/pull/4312">#4312</a>, <a href="https://github.com/mono/SkiaSharp/pull/4382">#4382</a>, <a href="https://github.com/mono/SkiaSharp/pull/4443">#4443</a>)</li>
+<li><strong>CPU raster regression corrected</strong> — Restores SK_ENABLE_LEGACY_SHADERCONTEXT so CPU-rasterised surfaces produce correct output after the m151 sync. (<a href="https://github.com/mono/SkiaSharp/pull/4428">#4428</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>SKColor gains ReadOnlySpan<char> hex-parse overloads</char></strong> — Adds ReadOnlySpan<char> overloads to SKColor hex parsing and optimises the internal path, removing a string allocation on every call. (<a href="https://github.com/mono/SkiaSharp/pull/4345">#4345</a>)</char></li>
+<li><strong>SKShaper glyph results read via zero-copy spans</strong> — GlyphRun data is now consumed through a Span<t> path rather than copying each element, reducing allocations during text layout. (<a href="https://github.com/mono/SkiaSharp/pull/4388">#4388</a>)</t></li>
+<li><strong>GRContextOptions unsafe modifier removed</strong> — Drops the unnecessary unsafe modifier from GRContextOptions, making it accessible from safe-only contexts without a compiler switch. (<a href="https://github.com/mono/SkiaSharp/pull/3991">#3991</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Native resource leak in SKImage.FromEncodedData fixed</strong> — SKImage.FromEncodedData(SKData, SKRectI) now releases the underlying native handle when the subset crop fails, preventing a handle leak. (<a href="https://github.com/mono/SkiaSharp/pull/3997">#3997</a>)</li>
+<li><strong>Per-call allocation in SKFourByteTag.Parse eliminated</strong> — Removes the char[4] heap allocation made on every SKFourByteTag.Parse call by inlining the character construction. (<a href="https://github.com/mono/SkiaSharp/pull/4396">#4396</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Emscripten 5.0.6 static libraries for .NET 11 WASM</strong> — Adds the Emscripten 5.0.6 prebuilt libraries needed to target .NET 11's WASM runtime, keeping SkiaSharp usable on the next .NET WASM host. — ❤️ <a href="https://github.com/ramezgerges">@ramezgerges</a> (<a href="https://github.com/mono/SkiaSharp/pull/4459">#4459</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-1421">HarfBuzzSharp 14.2.1</h2>
+<p>Removes per-call heap allocations in HarfBuzzSharp.Buffer.AddUtf8 via a pooled UTF-8 encoder and in HarfBuzzSharp.Tag.Parse by inlining the char array construction, making shaping hot paths allocation-free.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Added Emscripten 5.0.6 static libraries for .NET 11 WASM, fixed the SK_BUILD_FOR_WASM redefinition in the Skia submodule, and built the cross-backend golden-image visual regression test harness (<a href="https://github.com/mono/SkiaSharp/pull/3788">#3788</a>, <a href="https://github.com/mono/SkiaSharp/pull/4340">#4340</a>, <a href="https://github.com/mono/SkiaSharp/pull/4459">#4459</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-2-july-14-2026">Preview 2 (July 14, 2026)</h2>
+<p>Preview 2 landed the allocation-free SKShaper span path, the ReadOnlySpan<char> SKColor overloads, the GRContextOptions unsafe removal, HarfBuzz hot-path allocation fixes, and a batch of upstream m151 engine bug fixes.</char></p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.151.0-preview.1.1...v4.151.0-preview.2.1">Full changelog</a></p>
+<h2 id="preview-1-july-2-2026">Preview 1 (July 2, 2026)</h2>
+<p>Preview 1 opened the 4.151 line with the Skia m151 engine update and a fix to remove the SK_BUILD_FOR_WASM redefinition warning from WASM builds.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v4.150.1...v4.151.0-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4164/merge/documentation/docfx/releases/4.151.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4164 · mattleibow/apple-gn-off-main · f196078
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

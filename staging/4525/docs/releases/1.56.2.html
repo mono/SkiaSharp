@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 1.56.2 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 1.56.2 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4525/merge/documentation/docfx/releases/1.56.2.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-1562">Version 1.56.2</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:1.56.2 -->
+
+<blockquote>
+<p><strong>Index8 rework</strong> · Released March 7, 2017 · <a href="https://www.nuget.org/packages/SkiaSharp/1.56.2">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v1.56.2">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="1.56.2/index.html">SkiaSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 1.56.2 reworks the indexed-colour APIs and trims a handful of SKPath and SKBitmap helpers. SKColorTable now speaks premultiplied colours (SKPMColor) to match how Skia stores its palette, and SKBitmap.GetIndex8Color is gone. Several SKPath overloads drop optional add-mode defaults so their overload set is explicit.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><strong>SKColorTable exposes SKPMColor</strong> — SKColorTable.Colors and the indexer now return SKPMColor[] / SKPMColor rather than SKColor. Convert to and from premultiplied colours when interacting with palette data.</li>
+<li><strong>SKBitmap.GetIndex8Color removed</strong> — GetIndex8Color(x, y) is gone. Read the palette index and look it up through the bitmap's SKColorTable instead.</li>
+<li><strong>SKPath.AddPath defaults removed</strong> — The AddMode = 0 default was removed from the SKPath.AddPath overloads. Pass the AddMode explicitly.</li>
+<li><strong>SKPath.Iterator.Next overload removed</strong> — The Next(SKPoint[], bool doConsumeDegenerates, bool exact) overload was removed from SKPath.Iterator; use the remaining overload.</li>
+<li><strong>SKImageInfo fields no longer readonly</strong> — SKImageInfo.Empty and SKImageInfo.PlatformColorType are no longer readonly, so referencing code that expected compile-time constness needs to adjust.</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Indexed-colour APIs use premultiplied colours</strong> — SKColorTable now surfaces SKPMColor, matching Skia's internal storage and avoiding a hidden conversion on every palette read.</li>
+<li><strong>SKPath overloads made explicit</strong> — Removes optional AddMode defaults from SKPath.AddPath so overloads resolve unambiguously and the ABI is stable.</li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4525/merge/documentation/docfx/releases/1.56.2.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4525 · skia-sync/main · 4c20ab8
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

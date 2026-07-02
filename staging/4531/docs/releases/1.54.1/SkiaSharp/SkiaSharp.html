@@ -1,0 +1,270 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4531/merge/documentation/docfx/releases/1.54.1/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void Flush (GRContextFlushBits flagsBitfield);
+</code></pre>
+<h4 id="type-changed-skiasharpgrglinterface">Type Changed: SkiaSharp.GRGlInterface</h4>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use CreateNativeGlInterface() or CreateDefaultInterface() instead. This method will be removed in the next release.&quot;)]
+ public static GRGlInterface CreateNativeInterface ();
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static GRGlInterface AssembleAngleInterface (GRGlGetProcDelegate get);
+public static GRGlInterface AssembleAngleInterface (object context, GRGlGetProcDelegate get);
+public static GRGlInterface CreateNativeAngleInterface ();
+public static GRGlInterface CreateNativeGlInterface ();
+</code></pre>
+<h4 id="type-changed-skiasharpskmatrix">Type Changed: SkiaSharp.SKMatrix</h4>
+<p>Removed fields:</p>
+<pre><code class="lang-csharp">public float Persp0;
+public float Persp1;
+public float Persp2;
+public float ScaleX;
+public float ScaleY;
+public float SkewX;
+public float SkewY;
+public float TransX;
+public float TransY;
+</code></pre>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public float Persp0 { get; set; }
+public float Persp1 { get; set; }
+public float Persp2 { get; set; }
+public float ScaleX { get; set; }
+public float ScaleY { get; set; }
+public float SkewX { get; set; }
+public float SkewY { get; set; }
+public float TransX { get; set; }
+public float TransY { get; set; }
+public float[] Values { get; set; }
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public void GetValues (float[] values);
+</code></pre>
+<h4 id="type-changed-skiasharpskobject">Type Changed: SkiaSharp.SKObject</h4>
+<p>Modified base type:</p>
+<pre><code class="lang-diff">-System.Object
++SkiaSharp.SKNativeObject
+</code></pre>
+<p>Modified properties:</p>
+<pre><code class="lang-diff"> public ---override--- IntPtr Handle { get; set; }
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public virtual void Dispose ();
+protected override void ~SKObject ();
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-protected virtual void Dispose (bool disposing)
++protected override void Dispose (bool disposing)
+</code></pre>
+<h4 id="type-changed-skiasharpskpath">Type Changed: SkiaSharp.SKPath</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public SKRect Bounds { get; }
+public SKPathConvexity Convexity { get; set; }
+public bool IsConcave { get; }
+public bool IsConvex { get; }
+public SKRect TightBounds { get; }
+</code></pre>
+<p>Modified methods:</p>
+<pre><code class="lang-diff">-public void AddCircle (float x, float y, float radius, SKPathDirection dir = 0)
++public void AddCircle (float x, float y, float radius, SKPathDirection dir)
+-public void AddOval (SKRect rect, SKPathDirection direction = 0)
++public void AddOval (SKRect rect, SKPathDirection direction)
+-public void AddRect (SKRect rect, SKPathDirection direction = 0)
++public void AddRect (SKRect rect, SKPathDirection direction)
+-public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir = 0)
++public void AddRoundedRect (SKRect rect, float rx, float ry, SKPathDirection dir)
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public bool GetTightBounds (out SKRect result);
+public bool Op (SKPath other, SKPathOp op, SKPath result);
+public static SKPath ParseSvgPathData (string svgPath);
+public bool Simplify (SKPath result);
+public string ToSvgPathData ();
+</code></pre>
+<h4 id="type-changed-skiasharpskpathiterator">Type Changed: SkiaSharp.SKPath.Iterator</h4>
+<p>Modified base type:</p>
+<pre><code class="lang-diff">-System.Object
++SkiaSharp.SKNativeObject
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public virtual void Dispose ();
+protected override void ~Iterator ();
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">protected override void Dispose (bool disposing);
+</code></pre>
+<h4 id="type-changed-skiasharpskpathrawiterator">Type Changed: SkiaSharp.SKPath.RawIterator</h4>
+<p>Modified base type:</p>
+<pre><code class="lang-diff">-System.Object
++SkiaSharp.SKNativeObject
+</code></pre>
+<p>Removed methods:</p>
+<pre><code class="lang-csharp">public virtual void Dispose ();
+protected override void ~RawIterator ();
+</code></pre>
+<p>Added method:</p>
+<pre><code class="lang-csharp">protected override void Dispose (bool disposing);
+</code></pre>
+<h4 id="new-type-skiasharpskpathopbuilder">New Type: SkiaSharp.SKPath.OpBuilder</h4>
+<pre><code class="lang-csharp">public class OpBuilder : SkiaSharp.SKNativeObject, System.IDisposable {
+	// constructors
+	public SKPath.OpBuilder ();
+	// methods
+	public void Add (SKPath path, SKPathOp op);
+	protected override void Dispose (bool disposing);
+	public bool Resolve (SKPath result);
+}
+</code></pre>
+<h4 id="new-type-skiasharpgrcontextflushbits">New Type: SkiaSharp.GRContextFlushBits</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum GRContextFlushBits {
+	Discard = 2,
+	None = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpsknativeobject">New Type: SkiaSharp.SKNativeObject</h4>
+<pre><code class="lang-csharp">public class SKNativeObject : System.IDisposable {
+	// properties
+	protected virtual IntPtr Handle { get; set; }
+	// methods
+	public virtual void Dispose ();
+	protected virtual void Dispose (bool disposing);
+	protected override void ~SKNativeObject ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpathconvexity">New Type: SkiaSharp.SKPathConvexity</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKPathConvexity {
+	Concave = 2,
+	Convex = 1,
+	Unknown = 0,
+}
+</code></pre>
+<h4 id="new-type-skiasharpskpathop">New Type: SkiaSharp.SKPathOp</h4>
+<pre><code class="lang-csharp">[Serializable]
+public enum SKPathOp {
+	Difference = 0,
+	Intersect = 1,
+	ReverseDifference = 4,
+	Union = 2,
+	Xor = 3,
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4531/merge/documentation/docfx/releases/1.54.1/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4531 · mattleibow-windows-vulkan-ci-icd · 22f2df3
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 4.151.0 (Unreleased) | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 4.151.0 (Unreleased) | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.151.0-unreleased.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-41510-unreleased">Version 4.151.0 (Unreleased)</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:4.151.0 -->
+
+<blockquote>
+<p><strong>New platforms and performance</strong></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 4.151.0 adds Vulkan/Silk.NET support, FreeType on Nano Server, and several performance fixes. This release expands platform reach with a new Vulkan binding package and FreeType-backed font support on Windows Nano Server. It also includes a memory-leak fix in raster image creation and two performance improvements in text encoding and runtime-effect uniforms.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this preview line.</em></p>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>New SkiaSharp.Vulkan.Silk.NET package</strong> — A dedicated NuGet package integrates SkiaSharp with Vulkan via the Silk.NET bindings, enabling GPU-accelerated rendering on Linux and Android Vulkan back-ends. (<a href="https://github.com/mono/SkiaSharp/pull/4527">#4527</a>)</li>
+<li><strong>FreeType font support on Windows Nano Server</strong> — Nano Server containers lack the GDI font stack; SkiaSharp now falls back to FreeType so font rendering works in that environment. — ❤️ <a href="https://github.com/jeffska">@jeffska</a> (<a href="https://github.com/mono/SkiaSharp/pull/4280">#4280</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>Memory leak in SKImage.Create raster failure path fixed</strong> — A CoTaskMem pixel buffer was not freed when the underlying Skia raster-image creation failed, causing a native memory leak. The buffer is now released on the failure path. (<a href="https://github.com/mono/SkiaSharp/pull/4455">#4455</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Avoid intermediate string allocation in GetEncodedText null-terminated path</strong> — The hot path that reads null-terminated text no longer allocates an intermediate string, reducing GC pressure on text-heavy workloads. (<a href="https://github.com/mono/SkiaSharp/pull/4498">#4498</a>)</li>
+<li><strong>Pre-size uniform lookup map in SKRuntimeEffectUniforms</strong> — The uniform-name lookup dictionary is now sized to the known count at construction time, eliminating rehash allocations for typical runtime-effect usage. (<a href="https://github.com/mono/SkiaSharp/pull/4512">#4512</a>)</li>
+<li><strong>Solutions converted to .slnx format</strong> — All .sln solution files have been migrated to the lighter .slnx format for improved tooling compatibility. (<a href="https://github.com/mono/SkiaSharp/pull/4528">#4528</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Containerized test legs added: Azure Linux, Alpine/musl, Nano Server</strong> — CI now runs a full test matrix on Azure Linux, Alpine (musl libc), and Windows Nano Server containers, catching platform-specific regressions earlier. (<a href="https://github.com/mono/SkiaSharp/pull/4515">#4515</a>)</li>
+</ul>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeffska">@jeffska</a></td>
+<td>FreeType font support on Windows Nano Server, fixing long-standing font rendering failures in container environments. (<a href="https://github.com/mono/SkiaSharp/pull/4280">#4280</a>)</td>
+</tr>
+</tbody>
+</table>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/main/documentation/docfx/releases/4.151.0-unreleased.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          main · main · a2ead62
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

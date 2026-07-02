@@ -1,0 +1,328 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>API diff: SkiaSharp.dll | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="API diff: SkiaSharp.dll | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/2.88.0/SkiaSharp/SkiaSharp.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="api-diff-skiasharpdll">API diff: SkiaSharp.dll</h1>
+
+<h2 id="skiasharpdll">SkiaSharp.dll</h2>
+<blockquote>
+<p>Assembly Version Changed: 2.88.0.0 vs 2.80.0.0</p>
+</blockquote>
+<h3 id="namespace-skiasharp">Namespace SkiaSharp</h3>
+<h4 id="type-changed-skiasharpgrbackend">Type Changed: SkiaSharp.GRBackend</h4>
+<p>Added value:</p>
+<pre><code class="lang-csharp">Direct3D = 4,
+</code></pre>
+<h4 id="type-changed-skiasharpgrcontext">Type Changed: SkiaSharp.GRContext</h4>
+<p>Modified base type:</p>
+<pre><code class="lang-diff">-SkiaSharp.SKObject
++SkiaSharp.GRRecordingContext
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">protected override void DisposeNative ();
+public void Flush (bool submit, bool synchronous);
+public void Submit (bool synchronous);
+</code></pre>
+<h4 id="type-changed-skiasharpgrvkimageinfo">Type Changed: SkiaSharp.GRVkImageInfo</h4>
+<p>Added properties:</p>
+<pre><code class="lang-csharp">public uint ImageUsageFlags { get; set; }
+public uint SampleCount { get; set; }
+public uint SharingMode { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskbitmap">Type Changed: SkiaSharp.SKBitmap</h4>
+<p>Obsoleted properties:</p>
+<pre><code class="lang-diff"> [Obsolete ()]
+ public bool IsVolatile { get; set; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcanvas">Type Changed: SkiaSharp.SKCanvas</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public void Clear (SKColorF color);
+public void DrawColor (SKColorF color, SKBlendMode mode);
+</code></pre>
+<h4 id="type-changed-skiasharpskcolorspacexyz">Type Changed: SkiaSharp.SKColorSpaceXyz</h4>
+<p>Obsoleted properties:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use DisplayP3 instead.&quot;)]
+ public static SKColorSpaceXyz Dcip3 { get; }
+</code></pre>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public static SKColorSpaceXyz DisplayP3 { get; }
+</code></pre>
+<h4 id="type-changed-skiasharpskcolortype">Type Changed: SkiaSharp.SKColorType</h4>
+<p>Added values:</p>
+<pre><code class="lang-csharp">Bgr101010x = 20,
+Bgra1010102 = 19,
+</code></pre>
+<h4 id="type-changed-skiasharpskimage">Type Changed: SkiaSharp.SKImage</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public SKImage ApplyImageFilter (GRContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
+public SKImage ApplyImageFilter (GRRecordingContext context, SKImageFilter filter, SKRectI subset, SKRectI clipBounds, out SKRectI outSubset, out SKPointI outOffset);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
+public static SKImage FromAdoptedTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc);
+public static SKImage FromTexture (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace, SKImageTextureReleaseDelegate releaseProc, object releaseContext);
+public bool IsValid (GRRecordingContext context);
+</code></pre>
+<h4 id="type-changed-skiasharpskimagefilter">Type Changed: SkiaSharp.SKImageFilter</h4>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+public static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter input, SKImageFilter.CropRect cropRect);
+</code></pre>
+<h4 id="type-changed-skiasharpskpixmap">Type Changed: SkiaSharp.SKPixmap</h4>
+<p>Added method:</p>
+<pre><code class="lang-csharp">public bool Erase (SKColorF color, SKColorSpace colorspace, SKRectI subset);
+</code></pre>
+<h4 id="type-changed-skiasharpsksurface">Type Changed: SkiaSharp.SKSurface</h4>
+<p>Added property:</p>
+<pre><code class="lang-csharp">public GRRecordingContext Context { get; }
+</code></pre>
+<p>Obsoleted methods:</p>
+<pre><code class="lang-diff"> [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, SKColorType) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, SKColorType, SKSurfaceProperties) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, SKColorType, SKSurfaceProperties) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKSurfaceProperties) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+ [Obsolete (&quot;Use Create(GRContext, GRBackendTexture, GRSurfaceOrigin, int, SKColorType, SKColorSpace, SKSurfaceProperties) instead.&quot;)]
+ public static SKSurface CreateAsRenderTarget (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+</code></pre>
+<p>Added methods:</p>
+<pre><code class="lang-csharp">public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, GRBackendTexture texture, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props);
+public static SKSurface Create (GRRecordingContext context, bool budgeted, SKImageInfo info, int sampleCount, GRSurfaceOrigin origin, SKSurfaceProperties props, bool shouldCreateWithMips);
+public void Flush (bool submit, bool synchronous);
+</code></pre>
+<h4 id="new-type-skiasharpgrrecordingcontext">New Type: SkiaSharp.GRRecordingContext</h4>
+<pre><code class="lang-csharp">public class GRRecordingContext : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public GRBackend Backend { get; }
+	// methods
+	public int GetMaxSurfaceSampleCount (SKColorType colorType);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffect">New Type: SkiaSharp.SKRuntimeEffect</h4>
+<pre><code class="lang-csharp">public class SKRuntimeEffect : SkiaSharp.SKObject, System.IDisposable {
+	// properties
+	public System.Collections.Generic.IReadOnlyList&lt;string&gt; Children { get; }
+	public int UniformSize { get; }
+	public System.Collections.Generic.IReadOnlyList&lt;string&gt; Uniforms { get; }
+	// methods
+	public static SKRuntimeEffect Create (string sksl, out string errors);
+	public SKColorFilter ToColorFilter ();
+	public SKColorFilter ToColorFilter (SKRuntimeEffectUniforms uniforms);
+	public SKColorFilter ToColorFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);
+	public SKShader ToShader (bool isOpaque);
+	public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms);
+	public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);
+	public SKShader ToShader (bool isOpaque, SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children, SKMatrix localMatrix);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectchildren">New Type: SkiaSharp.SKRuntimeEffectChildren</h4>
+<pre><code class="lang-csharp">public class SKRuntimeEffectChildren : System.Collections.Generic.IEnumerable&lt;string&gt;, System.Collections.IEnumerable {
+	// constructors
+	public SKRuntimeEffectChildren (SKRuntimeEffect effect);
+	// properties
+	public int Count { get; }
+	public SKShader Item { set; }
+	public System.Collections.Generic.IReadOnlyList&lt;string&gt; Names { get; }
+	// methods
+	public void Add (string name, SKShader value);
+	public bool Contains (string name);
+	public virtual System.Collections.Generic.IEnumerator&lt;string&gt; GetEnumerator ();
+	public void Reset ();
+	public SKShader[] ToArray ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectuniform">New Type: SkiaSharp.SKRuntimeEffectUniform</h4>
+<pre><code class="lang-csharp">public struct SKRuntimeEffectUniform {
+	// properties
+	public static SKRuntimeEffectUniform Empty { get; }
+	public bool IsEmpty { get; }
+	public int Size { get; }
+	// methods
+	public void WriteTo (System.Span&lt;byte&gt; data);
+	public static SKRuntimeEffectUniform op_Implicit (SKMatrix value);
+	public static SKRuntimeEffectUniform op_Implicit (System.ReadOnlySpan&lt;float&gt; value);
+	public static SKRuntimeEffectUniform op_Implicit (float value);
+	public static SKRuntimeEffectUniform op_Implicit (float[] value);
+	public static SKRuntimeEffectUniform op_Implicit (float[][] value);
+	public static SKRuntimeEffectUniform op_Implicit (System.Span&lt;float&gt; value);
+}
+</code></pre>
+<h4 id="new-type-skiasharpskruntimeeffectuniforms">New Type: SkiaSharp.SKRuntimeEffectUniforms</h4>
+<pre><code class="lang-csharp">public class SKRuntimeEffectUniforms : System.Collections.Generic.IEnumerable&lt;string&gt;, System.Collections.IEnumerable {
+	// constructors
+	public SKRuntimeEffectUniforms (SKRuntimeEffect effect);
+	// properties
+	public int Count { get; }
+	public SKRuntimeEffectUniform Item { set; }
+	public System.Collections.Generic.IReadOnlyList&lt;string&gt; Names { get; }
+	// methods
+	public void Add (string name, SKRuntimeEffectUniform value);
+	public bool Contains (string name);
+	public virtual System.Collections.Generic.IEnumerator&lt;string&gt; GetEnumerator ();
+	public void Reset ();
+	public SKData ToData ();
+}
+</code></pre>
+<h3 id="new-namespace-skiasharpinternals">New Namespace SkiaSharp.Internals</h3>
+<h4 id="new-type-skiasharpinternalsiplatformlock">New Type: SkiaSharp.Internals.IPlatformLock</h4>
+<pre><code class="lang-csharp">public interface IPlatformLock {
+	// methods
+	public virtual void EnterReadLock ();
+	public virtual void EnterUpgradeableReadLock ();
+	public virtual void EnterWriteLock ();
+	public virtual void ExitReadLock ();
+	public virtual void ExitUpgradeableReadLock ();
+	public virtual void ExitWriteLock ();
+}
+</code></pre>
+<h4 id="new-type-skiasharpinternalsplatformlock">New Type: SkiaSharp.Internals.PlatformLock</h4>
+<pre><code class="lang-csharp">public static class PlatformLock {
+	// properties
+	public static System.Func&lt;IPlatformLock&gt; Factory { get; set; }
+	// methods
+	public static IPlatformLock Create ();
+	public static IPlatformLock DefaultFactory ();
+}
+</code></pre>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4453/merge/documentation/docfx/releases/2.88.0/SkiaSharp/SkiaSharp.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4453 · dev/memory-leak-release-proc-gchandle-ab82e648318c0666 · 2fbf339
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
