@@ -52,9 +52,6 @@ jobs:
       ${{ if ne(length(parameters.variables), 0) }}:
         ${{ parameters.variables }}
     templateContext:
-      ${{ if and(ne(parameters.docker, ''), eq(parameters.use1ESPipelineTemplates, 'true')) }}:
-        authenticatedContainerRegistries:
-          - serviceConnection: skiasharp-docker
       outputParentDirectory: 'output'
       outputs:
         - ${{ if eq(parameters.shouldPublish, 'true') }}:
@@ -357,11 +354,6 @@ jobs:
                 buildArguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
-            - task: Docker@2
-              displayName: Authenticate with the Docker registry
-              inputs:
-                command: login
-                containerRegistry: skiasharp-docker
             - task: Docker@2
               displayName: Build the Docker image for ${{ parameters.docker }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
