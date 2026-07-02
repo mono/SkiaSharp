@@ -131,9 +131,14 @@ public class SurfaceCanvasBenchmark
 		canvas.Restore();
 	}
 
+	// Uses SKPath (not SKPathBuilder) so the benchmark compiles against every SkiaSharp
+	// version the CI workflow compares, including older releases that predate SKPathBuilder.
+	// Newer releases mark the SKPath mutators obsolete in favour of SKPathBuilder, so the
+	// obsoletion warning is intentionally suppressed to keep the source cross-version.
+#pragma warning disable CS0618
 	private static SKPath CreateStar(float radius)
 	{
-		var builder = new SKPathBuilder();
+		var path = new SKPath();
 		const int points = 5;
 		for (var k = 0; k < points * 2; k++)
 		{
@@ -142,11 +147,12 @@ public class SurfaceCanvasBenchmark
 			var px = 20 + r * System.MathF.Sin(angle);
 			var py = 20 - r * System.MathF.Cos(angle);
 			if (k == 0)
-				builder.MoveTo(px, py);
+				path.MoveTo(px, py);
 			else
-				builder.LineTo(px, py);
+				path.LineTo(px, py);
 		}
-		builder.Close();
-		return builder.Detach();
+		path.Close();
+		return path;
 	}
+#pragma warning restore CS0618
 }

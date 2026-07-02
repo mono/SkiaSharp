@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Comparison benchmark harness.
+
+    Runs the SAME benchmark sources as SkiaSharp.Benchmarks, but against a published
+    SkiaSharp NuGet version instead of the local source tree. The benchmarks CI workflow
+    invokes this once per version (e.g. the latest stable, a 3.x release, and a build of
+    the PR) and merges the results, because BenchmarkDotNet cannot host two different
+    versions of the same assembly in a single process.
+
+    Pass the version to benchmark with the SkiaSharpBenchmarkVersion MSBuild property, then
+    pass BenchmarkDotNet arguments after the run separator, for example a filter and a job.
+
+    The PR build is benchmarked by publishing its packages to a local feed and selecting
+    that version via SkiaSharpBenchmarkVersion plus RestoreAdditionalProjectSources.
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework Condition="'$(TargetFramework)' == ''">net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <!--
+      The shared benchmarks deliberately use APIs that exist in every compared version
+      (e.g. SKPath rather than the newer SKPathBuilder); newer releases mark some of them
+      obsolete, so the obsoletion warning is suppressed to keep the source cross-version.
+    -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <SkiaSharpBenchmarkVersion Condition="'$(SkiaSharpBenchmarkVersion)' == ''">4.150.0-preview.2.1</SkiaSharpBenchmarkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpBenchmarkVersion)" />
+    <PackageReference Include="SkiaSharp.NativeAssets.macOS" Version="$(SkiaSharpBenchmarkVersion)" Condition="$([MSBuild]::IsOSPlatform('OSX'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="$(SkiaSharpBenchmarkVersion)" Condition="$([MSBuild]::IsOSPlatform('Linux'))" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="$(SkiaSharpBenchmarkVersion)" Condition="$([MSBuild]::IsOSPlatform('Windows'))" />
+  </ItemGroup>
+
+  <!-- Link the shared benchmark sources so there is a single source of truth. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)..\SkiaSharp.Benchmarks\BenchmarkConfig.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\SkiaSharp.Benchmarks\Benchmarks\BlurImageFilterBenchmark.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)..\SkiaSharp.Benchmarks\Benchmarks\SurfaceCanvasBenchmark.cs" />
+  </ItemGroup>
+
+</Project>

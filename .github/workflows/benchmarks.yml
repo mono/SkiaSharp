@@ -1,0 +1,434 @@
+name: "Benchmarks"
+
+# Runs the SkiaSharp micro-benchmarks across several SkiaSharp versions and merges the
+# results into a single comparison report.
+#
+# BenchmarkDotNet cannot host two different versions of the same assembly in one process,
+# so each (operating system, version) combination is benchmarked in its own job and the
+# JSON exports are merged afterwards by scripts/benchmarks/merge-benchmarks.py.
+#
+# Two sets of numbers are produced:
+#   * published  - the SkiaSharp.Benchmarks.Compare harness restores a published NuGet
+#                  version (e.g. the latest stable preview and a 3.x release) from nuget.org.
+#                  This path is fast and reliable and always reports real numbers.
+#   * current    - benchmarks the working tree's native code. The native libSkiaSharp is
+#                  built from source for a single architecture and then swapped in for the
+#                  baseline version's published native binary inside the same Compare
+#                  harness. The managed binding stays a known published version (the
+#                  baseline) while the native library is the one built from this PR, so the
+#                  column measures the effect of native changes (the common case for perf
+#                  PRs). This avoids building the multi-targeted in-repo binding graph,
+#                  which needs mobile workloads that are not present on the runners.
+#                  It is best-effort (continue-on-error) because a full native build on a
+#                  hosted runner is slow and can fail for reasons unrelated to benchmarks.
+#
+# IMPORTANT - reading the "current" column:
+#   The from-source `externals-*` native is NOT built with the same optimization/official
+#   build flags as the shipped NuGet native, so its ABSOLUTE timings are systematically
+#   different (typically slower) than the optimized published packages. Do not read a
+#   `current`-vs-`published` ratio as the effect of a PR's code. To measure a native change,
+#   compare two `current` runs built the same way (the PR branch and its base). The
+#   `published` columns are the apples-to-apples comparison across released versions.
+#
+#   Only the operating systems whose native library reliably builds from source on a hosted
+#   runner take part in `current` (Linux and macOS by default). The Windows hosted image
+#   currently cannot build the native library (missing Windows SDK / Spectre libs), so it is
+#   left out of `current` by default and still appears in the `published` comparison.
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+    paths:
+      - 'benchmarks/**'
+      - 'scripts/benchmarks/**'
+      - '.github/workflows/benchmarks.yml'
+  workflow_dispatch:
+    inputs:
+      versions:
+        description: 'Comma-separated published SkiaSharp versions to compare'
+        required: false
+        default: '4.150.0-preview.2.1,3.119.4'
+        type: string
+      filter:
+        description: 'BenchmarkDotNet filter glob(s), space separated'
+        required: false
+        default: '*BlurImageFilterBenchmark* *SurfaceCanvasBenchmark*'
+        type: string
+      job:
+        description: 'BenchmarkDotNet job (short = quick CI run, default = full run)'
+        required: false
+        default: 'short'
+        type: string
+      build_current:
+        description: 'Build the native library and benchmark the working tree'
+        required: false
+        default: true
+        type: boolean
+      current_oses:
+        description: 'Comma-separated runners to build the native library on for the current column'
+        required: false
+        default: 'ubuntu-latest,macos-14'
+        type: string
+      extra_feed:
+        description: 'Optional extra NuGet feed (e.g. a PR preview package source)'
+        required: false
+        default: ''
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+# Default to no permissions — each job declares only what it needs.
+permissions: {}
+
+env:
+  DOTNET_NOLOGO: 1
+  DOTNET_CLI_TELEMETRY_OPTOUT: 1
+
+jobs:
+  # ── Resolve the matrix inputs into JSON arrays ───────────────
+  setup:
+    name: Setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      versions: ${{ steps.vars.outputs.versions }}
+      oses: ${{ steps.vars.outputs.oses }}
+      baseline: ${{ steps.vars.outputs.baseline }}
+      filter: ${{ steps.vars.outputs.filter }}
+      job: ${{ steps.vars.outputs.job }}
+      build_current: ${{ steps.vars.outputs.build_current }}
+      current_oses: ${{ steps.vars.outputs.current_oses }}
+      extra_feed: ${{ steps.vars.outputs.extra_feed }}
+    steps:
+      - name: Compute matrix
+        id: vars
+        env:
+          VERSIONS_INPUT: ${{ inputs.versions }}
+          FILTER_INPUT: ${{ inputs.filter }}
+          JOB_INPUT: ${{ inputs.job }}
+          BUILD_CURRENT_INPUT: ${{ inputs.build_current }}
+          CURRENT_OSES_INPUT: ${{ inputs.current_oses }}
+          EXTRA_FEED_INPUT: ${{ inputs.extra_feed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Defaults apply for the pull_request trigger, which has no inputs.
+          VERSIONS="${VERSIONS_INPUT:-4.150.0-preview.2.1,3.119.4}"
+          FILTER="${FILTER_INPUT:-*BlurImageFilterBenchmark* *SurfaceCanvasBenchmark*}"
+          JOB="${JOB_INPUT:-short}"
+          BUILD_CURRENT="${BUILD_CURRENT_INPUT:-true}"
+          CURRENT_OSES="${CURRENT_OSES_INPUT:-ubuntu-latest,macos-14}"
+          EXTRA_FEED="${EXTRA_FEED_INPUT:-}"
+
+          # Comma-separated versions -> JSON array; the first entry is the baseline.
+          BASELINE=""
+          JSON="["
+          FIRST=1
+          IFS=',' read -ra PARTS <<< "$VERSIONS"
+          for raw in "${PARTS[@]}"; do
+            v="$(echo "$raw" | xargs)"   # trim whitespace
+            [ -z "$v" ] && continue
+            [ -z "$BASELINE" ] && BASELINE="$v"
+            if [ $FIRST -eq 1 ]; then FIRST=0; else JSON+=","; fi
+            JSON+="\"$v\""
+          done
+          JSON+="]"
+
+          # Comma-separated current runners -> JSON array.
+          CUR_JSON="["
+          FIRST=1
+          IFS=',' read -ra CUR_PARTS <<< "$CURRENT_OSES"
+          for raw in "${CUR_PARTS[@]}"; do
+            o="$(echo "$raw" | xargs)"
+            [ -z "$o" ] && continue
+            if [ $FIRST -eq 1 ]; then FIRST=0; else CUR_JSON+=","; fi
+            CUR_JSON+="\"$o\""
+          done
+          CUR_JSON+="]"
+
+          echo "versions=$JSON" >> "$GITHUB_OUTPUT"
+          echo "oses=[\"ubuntu-latest\",\"windows-latest\",\"macos-14\"]" >> "$GITHUB_OUTPUT"
+          echo "baseline=$BASELINE" >> "$GITHUB_OUTPUT"
+          echo "filter=$FILTER" >> "$GITHUB_OUTPUT"
+          echo "job=$JOB" >> "$GITHUB_OUTPUT"
+          echo "build_current=$BUILD_CURRENT" >> "$GITHUB_OUTPUT"
+          echo "current_oses=$CUR_JSON" >> "$GITHUB_OUTPUT"
+          echo "extra_feed=$EXTRA_FEED" >> "$GITHUB_OUTPUT"
+
+          echo "Versions: $JSON (baseline $BASELINE)"
+          echo "Filter:   $FILTER"
+          echo "Job:      $JOB"
+          echo "Current:  $CUR_JSON"
+
+  # ── Benchmark each published version on each OS ──────────────
+  published:
+    name: ${{ matrix.os }} · ${{ matrix.version }}
+    needs: setup
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.setup.outputs.oses) }}
+        version: ${{ fromJSON(needs.setup.outputs.versions) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+          global-json-file: global.json
+
+      - name: Run benchmarks
+        id: run
+        env:
+          VERSION: ${{ matrix.version }}
+          FILTER: ${{ needs.setup.outputs.filter }}
+          JOB: ${{ needs.setup.outputs.job }}
+          EXTRA_FEED: ${{ needs.setup.outputs.extra_feed }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -f   # the filter values are globs — keep the shell from expanding them
+
+          case "$RUNNER_OS" in
+            Linux)   OSLABEL=linux-x64 ;;
+            Windows) OSLABEL=windows-x64 ;;
+            macOS)   OSLABEL=osx-arm64 ;;
+            *)       OSLABEL="$RUNNER_OS" ;;
+          esac
+          echo "oslabel=$OSLABEL" >> "$GITHUB_OUTPUT"
+
+          OUT="$GITHUB_WORKSPACE/bench-out"
+          mkdir -p "$OUT"
+
+          # BenchmarkDotNet takes multiple filter globs as values of a single --filter
+          # option; repeating the option is rejected as "defined multiple times".
+          FILTER_ARGS=(--filter)
+          for f in $FILTER; do FILTER_ARGS+=("$f"); done
+
+          FEED_ARGS=()
+          if [ -n "$EXTRA_FEED" ]; then
+            FEED_ARGS+=(-p:RestoreAdditionalProjectSources="$EXTRA_FEED")
+          fi
+
+          dotnet run -c Release \
+            --project benchmarks/SkiaSharp.Benchmarks.Compare \
+            -p:SkiaSharpBenchmarkVersion="$VERSION" \
+            ${FEED_ARGS[@]+"${FEED_ARGS[@]}"} \
+            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
+
+          printf '{"os":"%s","version":"%s"}\n' "$OSLABEL" "$VERSION" > "$OUT/meta.json"
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ steps.run.outputs.oslabel }}-${{ matrix.version }}
+          path: bench-out
+          if-no-files-found: warn
+
+  # ── Benchmark the working tree (native built from source) ────
+  current:
+    name: ${{ matrix.os }} · current
+    needs: setup
+    if: needs.setup.outputs.build_current == 'true'
+    runs-on: ${{ matrix.os }}
+    # Best-effort: a from-source native build on a hosted runner is slow and can fail for
+    # reasons unrelated to the benchmarks, so it must never block the published comparison.
+    continue-on-error: true
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ${{ fromJSON(needs.setup.outputs.current_oses) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+          global-json-file: global.json
+
+      - name: Restore .NET tools
+        shell: bash
+        run: dotnet tool restore
+
+      - name: Build native (Linux x64)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: scripts/infra/native/linux/docker/glibc/build-local.sh x64
+
+      - name: Install MSVC Spectre-mitigated libs (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # The Windows native build links against the Spectre-mitigated MSVC libs, which
+          # are not installed on the hosted image by default. Best-effort: install them and
+          # export VS_INSTALL so windows-shared.cake can find lib/spectre/<arch>.
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -property installationPath
+          Write-Host "VS install path: $vsPath"
+          $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+          $components = @(
+            'Microsoft.VisualStudio.Component.VC.Tools.x86.x64.Spectre',
+            'Microsoft.VisualStudio.Component.VC.Runtimes.x86.x64.Spectre'
+          )
+          $addArgs = $components | ForEach-Object { @('--add', $_) }
+          $args = @('modify', '--installPath', $vsPath, '--quiet', '--norestart', '--nocache') + $addArgs
+          Write-Host "vs_installer $($args -join ' ')"
+          $p = Start-Process -FilePath $installer -ArgumentList $args -Wait -PassThru
+          Write-Host "vs_installer exit code: $($p.ExitCode)"
+          "VS_INSTALL=$vsPath" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build native (Windows x64)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: dotnet cake --target=externals-windows --arch=x64
+
+      - name: Build native (macOS arm64)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: dotnet cake --target=externals-macos --arch=arm64
+
+      - name: Run benchmarks
+        id: run
+        env:
+          BASELINE: ${{ needs.setup.outputs.baseline }}
+          FILTER: ${{ needs.setup.outputs.filter }}
+          JOB: ${{ needs.setup.outputs.job }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -f
+
+          # Map the runner to: the benchmark label, the freshly built native library, and
+          # the published native-asset package whose binary it replaces.
+          OSLABEL="$RUNNER_OS"; BUILT=""; PKG=""; CACHE_REL=""
+          case "$RUNNER_OS" in
+            Linux)
+              OSLABEL=linux-x64
+              BUILT="$GITHUB_WORKSPACE/output/native/linux/x64/libSkiaSharp.so"
+              PKG=skiasharp.nativeassets.linux.nodependencies
+              CACHE_REL=runtimes/linux-x64/native/libSkiaSharp.so ;;
+            Windows)
+              OSLABEL=windows-x64
+              BUILT="$GITHUB_WORKSPACE/output/native/windows/x64/libSkiaSharp.dll"
+              PKG=skiasharp.nativeassets.win32
+              CACHE_REL=runtimes/win-x64/native/libSkiaSharp.dll ;;
+            macOS)
+              OSLABEL=osx-arm64
+              BUILT="$GITHUB_WORKSPACE/output/native/osx/libSkiaSharp.dylib"
+              PKG=skiasharp.nativeassets.macos
+              CACHE_REL=runtimes/osx/native/libSkiaSharp.dylib ;;
+            *)
+              OSLABEL="$RUNNER_OS" ;;
+          esac
+          echo "oslabel=$OSLABEL" >> "$GITHUB_OUTPUT"
+
+          if [ ! -f "$BUILT" ]; then
+            echo "::error::Native library not found at $BUILT — the native build did not produce it."
+            ls -R "$GITHUB_WORKSPACE/output/native" 2>/dev/null || true
+            exit 1
+          fi
+
+          OUT="$GITHUB_WORKSPACE/bench-out"
+          mkdir -p "$OUT"
+
+          # BenchmarkDotNet takes multiple filter globs as values of a single --filter
+          # option; repeating the option is rejected as "defined multiple times".
+          FILTER_ARGS=(--filter)
+          for f in $FILTER; do FILTER_ARGS+=("$f"); done
+
+          NUGET_PKGS="${NUGET_PACKAGES:-$HOME/.nuget/packages}"
+
+          # Restore the Compare harness for the baseline published managed package so the
+          # managed binding is a known, stable version. BenchmarkDotNet generates and builds
+          # a child project at run time that copies the native asset from the global package
+          # cache, so replacing the cached binary makes the benchmark exercise the native
+          # library built from this PR while keeping the published managed API.
+          dotnet restore benchmarks/SkiaSharp.Benchmarks.Compare \
+            -p:SkiaSharpBenchmarkVersion="$BASELINE"
+
+          DEST="$NUGET_PKGS/$PKG/$BASELINE/$CACHE_REL"
+          if [ ! -f "$DEST" ]; then
+            echo "::error::Published native asset not found at $DEST"
+            find "$NUGET_PKGS/$PKG" -name 'libSkiaSharp*' 2>/dev/null || true
+            exit 1
+          fi
+          echo "Replacing published native with the working-tree build:"
+          echo "  built: $BUILT ($(shasum -a 256 "$BUILT" 2>/dev/null | cut -d' ' -f1 || echo n/a))"
+          echo "  cache: $DEST ($(shasum -a 256 "$DEST" 2>/dev/null | cut -d' ' -f1 || echo n/a))"
+          cp -f "$BUILT" "$DEST"
+          echo "  after: $(shasum -a 256 "$DEST" 2>/dev/null | cut -d' ' -f1 || echo n/a)"
+
+          dotnet run -c Release --no-restore \
+            --project benchmarks/SkiaSharp.Benchmarks.Compare \
+            -p:SkiaSharpBenchmarkVersion="$BASELINE" \
+            -- "${FILTER_ARGS[@]}" --job "$JOB" --artifacts "$OUT"
+
+          printf '{"os":"%s","version":"current"}\n' "$OSLABEL" > "$OUT/meta.json"
+
+      - name: Upload results
+        if: always() && steps.run.outputs.oslabel != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-${{ steps.run.outputs.oslabel }}-current
+          path: bench-out
+          if-no-files-found: warn
+
+  # ── Merge every run into one comparison report ───────────────
+  report:
+    name: Report
+    needs: [ setup, published, current ]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all results
+        uses: actions/download-artifact@v4
+        with:
+          path: all-results
+          pattern: bench-*
+
+      - name: Merge and summarize
+        env:
+          BASELINE: ${{ needs.setup.outputs.baseline }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -d all-results ] || [ -z "$(ls -A all-results 2>/dev/null)" ]; then
+            echo "No benchmark artifacts were produced." | tee "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          python3 scripts/benchmarks/merge-benchmarks.py all-results \
+            --baseline "$BASELINE" \
+            --output benchmark-report.md
+          cat benchmark-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-report
+          path: benchmark-report.md
+          if-no-files-found: warn
