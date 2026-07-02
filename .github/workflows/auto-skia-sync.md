@@ -248,6 +248,10 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **Phase 6 (version files)**: For a release-line sync (`is_release == true`, so `current == target`) this is a
   bug-fix-only sync — keep the release line's milestone/soname/nuget versions unchanged; the only expected
   parent-repo change is `cgmanifest.json`'s commit hash. Do NOT advance the milestone.
+  Pass the ref you actually merged to `update-versions.ps1` so `cgmanifest.json`'s `upstream_merge_commit`
+  resolves to a real SHA: **`-UpstreamRef "${{ needs.pre_activation.outputs.upstream_ref }}"`**
+  (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
+  `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,

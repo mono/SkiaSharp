@@ -18,8 +18,18 @@
 .PARAMETER Target
     The target Skia milestone number (e.g., 120)
 
+.PARAMETER UpstreamRef
+    The upstream ref that was actually merged, as named under the `upstream` remote
+    (without the `upstream/` prefix). Normally `chrome/m<Target>`; pass `main` for a
+    bleeding-edge main-tip sync (where no `chrome/m<Target>` branch is merged). Defaults
+    to `chrome/m<Target>`.
+
 .EXAMPLE
     pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
+
+.EXAMPLE
+    # main-tip sync (same milestone, merged from upstream/main):
+    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 151 -Target 151 -UpstreamRef main
 #>
 
 param(
@@ -27,7 +37,9 @@ param(
     [int]$Current,
 
     [Parameter(Mandatory=$true)]
-    [int]$Target
+    [int]$Target,
+
+    [string]$UpstreamRef
 )
 
 $ErrorActionPreference = 'Stop'
@@ -69,13 +81,20 @@ $cgContent = Get-Content $cgPath -Raw
 $submoduleHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse HEAD
 Write-Host "  Submodule HEAD: $submoduleHash"
 
-# Get upstream merge commit
-$upstreamHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse "upstream/chrome/m$Target" 2>$null
-if (-not $upstreamHash) {
-    Write-Warning "  Could not resolve upstream/chrome/m$Target - set upstream_merge_commit manually"
+# Get upstream merge commit. Resolve the ref that was ACTUALLY merged: a chrome/m<N>
+# milestone branch normally, or `main` for a bleeding-edge tip sync. `--verify --quiet`
+# makes git fail cleanly (empty output + non-zero $LASTEXITCODE) when the ref is missing,
+# instead of echoing the literal argument back on stdout — without it, a wrong or absent
+# ref (e.g. upstream/chrome/m151 on a main-tip merge) would be written verbatim into
+# upstream_merge_commit as if it were a SHA. `^{commit}` peels the ref to its commit.
+if (-not $UpstreamRef) { $UpstreamRef = "chrome/m$Target" }
+$upstreamHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse --verify --quiet "upstream/$UpstreamRef^{commit}"
+if ($LASTEXITCODE -ne 0 -or -not $upstreamHash) {
+    Write-Warning "  Could not resolve upstream/$UpstreamRef - set upstream_merge_commit manually"
     $upstreamHash = "UNKNOWN"
 } else {
-    Write-Host "  Upstream m$Target tip: $upstreamHash"
+    $upstreamHash = $upstreamHash.Trim()
+    Write-Host "  Upstream ($UpstreamRef) tip: $upstreamHash"
 }
 
 # Update cgmanifest.json fields
