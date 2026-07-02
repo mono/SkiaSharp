@@ -15,43 +15,41 @@
 #     (so GitHub renders annotations and the machine output stays clean for sourcing).
 #
 # Args:
-#   --mode <current|next|latest|main>  Which milestone line to track. The workflow resolves
-#                                  this from the dispatch input or the triggering cron
-#                                  (the cron→mode mapping lives in the workflow, next to
-#                                  where the crons are declared). Defaults to `next`.
-#                                  `main` is the bleeding-edge tip: it merges google/skia's
-#                                  `main` HEAD (not a chrome/m<N> branch) into the newest
-#                                  line. It is NOT a version bump — the target milestone
-#                                  stays equal to main's current milestone.
-#   --milestone <number>           Exact milestone override; when set, mode becomes
-#                                  `explicit` and the target is this number.
+#   --target <""|main|number>      What to sync. There are only two shapes:
+#                                    * empty  → ROTATE: pick one supported versions.json
+#                                               line per run, round-robin (rotate_select).
+#                                               This is the scheduled default.
+#                                    * main   → the bleeding-edge tip: merge google/skia's
+#                                               `main` HEAD (not a chrome/m<N> branch) into
+#                                               the newest line. NOT a version bump — the
+#                                               target milestone stays == main's milestone.
+#                                    * number → an exact milestone (e.g. 151); merge
+#                                               chrome/m<number>.
 #   --gate                         Also run the gating checks (does upstream exist? is it
 #                                  already merged?) and emit `skip=true` / exit
 #                                  accordingly. Only pre_activation needs this.
 #
 # Inputs (env):
-#   GITHUB_REPOSITORY owner/repo of this SkiaSharp checkout (default GitHub env)
-#   GITHUB_REF        ref whose scripts/VERSIONS.txt gives main's milestone
-#   GH_TOKEN          token for `gh api`
+#   GITHUB_REPOSITORY  owner/repo of this SkiaSharp checkout (default GitHub env)
+#   GITHUB_SHA         immutable triggering commit; main's config is read here so the two
+#                      detector invocations of a run agree (falls back to GITHUB_REF)
+#   GITHUB_REF         branch ref (fallback, and used for release-line reads)
+#   GITHUB_RUN_NUMBER  per-workflow run counter; the rotation round-robin index
+#   GH_TOKEN           token for `gh api`
 
 set -euo pipefail
 
 GATE=false
-MODE=""
-MILESTONE=""
+SYNC_TARGET=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --gate) GATE=true; shift ;;
-    --mode)
-      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --mode requires a value"; exit 2; }
-      MODE="$2"; shift 2 ;;
-    --milestone)
-      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --milestone requires a value"; exit 2; }
-      MILESTONE="$2"; shift 2 ;;
+    --target)
+      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --target requires a value"; exit 2; }
+      SYNC_TARGET="$2"; shift 2 ;;
     *) echo "::error::skia-sync-detect.sh: unknown argument '$1'"; exit 2 ;;
   esac
 done
-MODE="${MODE:-next}"
 
 OUT="${SKIA_SYNC_OUT:-${GITHUB_OUTPUT:?SKIA_SYNC_OUT or GITHUB_OUTPUT must be set}}"
 emit() { printf '%s=%s\n' "$1" "$2" >>"$OUT"; }
@@ -62,28 +60,105 @@ milestone_of() {
     --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}'
 }
 
-# -- Mode -------------------------------------------------------------
-# Resolved by the caller (workflow): the cron→mode mapping lives in the workflow,
-# next to where the crons are declared. Here it is simply a value in
-# {current,next,latest,main}.
-MAIN_MS=$(milestone_of "$GITHUB_REF")
+# -- Milestone facts --------------------------------------------------
+# SYNC_TARGET (the single dispatch input) is empty for scheduled/rotation runs, `main`
+# for a bleeding-edge tip sync, or an exact milestone number. MAIN_MS is main's shipped
+# milestone; NEXT (= MAIN_MS + 1) is the rotation's leading-edge fallback.
+#
+# Read main's config at the IMMUTABLE triggering commit ($GITHUB_SHA), not the branch
+# ref: both the pre_activation gate and the agent-job align step re-run this script, and
+# a branch (GITHUB_REF) could advance between them and make them disagree. (Release-line
+# reads below intentionally use the branch name, to pick up that line's own tip.)
+REF_IMMUTABLE="${GITHUB_SHA:-$GITHUB_REF}"
+MAIN_MS=$(milestone_of "$REF_IMMUTABLE")
 NEXT=$((MAIN_MS + 1))
-LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
-  | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' | sort -n | tail -1)
+
+# -- Rotation helpers -------------------------------------------------
+# The rotation (used by every scheduled run) drives the sync set from the hand-maintained
+# `support` block in scripts/infra/docs/versions.json — the single source of truth for
+# which lines we actually ship — instead of a fixed cron→mode map.
+
+# versions.json `support` block, read remotely at the immutable triggering commit
+# (pre_activation only sparse-checks out .github/scripts, so the file is not on disk).
+support_json() {
+  gh api "repos/${GITHUB_REPOSITORY}/contents/scripts/infra/docs/versions.json?ref=${REF_IMMUTABLE}" \
+    --jq '.content' | base64 -d
+}
+# Has upstream cut the chrome/m<N> milestone branch yet? Fail hard on a lookup error so a
+# transient git failure can't be mistaken for "branch absent" and silently fall back to main.
+chrome_branch_exists() {
+  local out
+  if ! out=$(git ls-remote --heads https://github.com/google/skia.git "refs/heads/chrome/m$1"); then
+    echo "::error::git ls-remote failed while checking upstream chrome/m$1"
+    exit 1
+  fi
+  [ -n "$out" ]
+}
+
+# rotate_select: enumerate the supported lines (stables ascending, then previews
+# ascending, then the single leading-edge `next`) and pick ONE per run, round-robin.
+#
+# The picker is GITHUB_RUN_NUMBER, which increments by exactly 1 per run of THIS workflow
+# and is identical across every job/step of a run. So the round-robin is fully
+# deterministic between the pre_activation gate and the agent-job align step (separate
+# jobs that each re-run this script) — no wall-clock read, so no risk of the two steps
+# landing on different targets near a time boundary. It advances one line per run; with a
+# 6-hourly schedule that is one line every 6h, cycling through a list of ANY length.
+#
+# `next` = highest supported milestone + 1: if upstream has a chrome/m<N> branch it is
+# a real milestone bump into main; otherwise it falls back to the bleeding-edge main tip
+# (head skia-sync/main). The skip-gate no-ops any run that has nothing new, so a run
+# landing on an up-to-date line is essentially free.
+rotate_select() {
+  local support next_ms specs len idx chosen rest m run_number
+  local -a stable_ms preview_ms
+  support=$(support_json)
+  readarray -t stable_ms < <(printf '%s' "$support" \
+    | jq -r '[.support.stable[]?  | (split(".")[1]|tonumber)] | sort | .[]')
+  readarray -t preview_ms < <(printf '%s' "$support" \
+    | jq -r '[.support.preview[]? | (split(".")[1]|tonumber)] | sort | .[]')
+
+  specs=()
+  for m in "${stable_ms[@]}";  do [ -n "$m" ] && specs+=("stable|$m|chrome/m$m"); done
+  for m in "${preview_ms[@]}"; do [ -n "$m" ] && specs+=("preview|$m|chrome/m$m"); done
+
+  next_ms=$(printf '%s' "$support" \
+    | jq -r '[.support.stable[]?, .support.preview[]? | (split(".")[1]|tonumber)] | if length>0 then (max+1) else empty end')
+  [ -n "$next_ms" ] || next_ms="$NEXT"
+  if chrome_branch_exists "$next_ms"; then
+    specs+=("next|$next_ms|chrome/m$next_ms")
+  else
+    specs+=("main|$MAIN_MS|main")
+  fi
+
+  len=${#specs[@]}
+  if [ "$len" -eq 0 ]; then
+    echo "::error::rotation produced no targets — versions.json 'support' block is empty."
+    exit 1
+  fi
+
+  # Deterministic round-robin index — see the function header (GITHUB_RUN_NUMBER is stable
+  # across both detector invocations of a run). Defaults to 0 outside Actions.
+  run_number="${GITHUB_RUN_NUMBER:-0}"
+  idx=$(( run_number % len ))
+  chosen="${specs[$idx]}"
+  MODE="${chosen%%|*}"
+  rest="${chosen#*|}"
+  TARGET="${rest%%|*}"
+  UPSTREAM_REF="${rest#*|}"
+  echo "Rotation: ${len} target(s) [$(IFS=' '; echo "${specs[*]}")]; run=${run_number} idx=${idx} → ${chosen}"
+}
 
 # -- Target -----------------------------------------------------------
-# UPSTREAM_REF is the google/skia ref we merge FROM: a `chrome/m<N>` milestone branch
-# for every mode except `main`, which merges the very tip (`refs/heads/main` HEAD).
-if [ -n "$MILESTONE" ]; then
-  TARGET="$MILESTONE"; MODE="explicit"; UPSTREAM_REF="chrome/m${TARGET}"
-elif [ "$MODE" = main ]; then
-  TARGET="$MAIN_MS"; UPSTREAM_REF="main"
-elif [ "$MODE" = latest ]; then
-  TARGET="$LATEST"; UPSTREAM_REF="chrome/m${TARGET}"
-elif [ "$MODE" = current ]; then
-  TARGET="$MAIN_MS"; UPSTREAM_REF="chrome/m${TARGET}"
+# UPSTREAM_REF is the google/skia ref we merge FROM. Two shapes only (see --target):
+# empty ⇒ rotate over versions.json; `main` ⇒ upstream tip; a number ⇒ chrome/m<number>.
+INVALID=false
+if [ -z "$SYNC_TARGET" ]; then
+  rotate_select
+elif [ "$SYNC_TARGET" = main ]; then
+  MODE="main"; TARGET="$MAIN_MS"; UPSTREAM_REF="main"
 else
-  TARGET="$NEXT"; UPSTREAM_REF="chrome/m${TARGET}"
+  MODE="explicit"; TARGET="$SYNC_TARGET"; UPSTREAM_REF="chrome/m${TARGET}"
 fi
 
 # -- Target line: `main` (newest) vs a release/<major>.<TARGET>.x maintenance line.
@@ -94,8 +169,8 @@ fi
 #
 # The `main` (tip) mode targets the newest line too (TARGET == MAIN_MS, so the
 # release-detection block below stays skipped), but uses a DISTINCT head branch
-# (`skia-sync/main`) so a bleeding-edge tip sync never collides with the `current`
-# milestone sync branch (`skia-sync/m${TARGET}`).
+# (`skia-sync/main`) so a bleeding-edge tip sync never collides with a same-milestone
+# sync branch (`skia-sync/m${TARGET}`).
 IS_RELEASE=false
 BASE_BRANCH=main
 SKIA_BASE_BRANCH=skiasharp
@@ -129,6 +204,12 @@ if [ -n "$RELEASE_BRANCH" ]; then
     echo "::error::mono/skia branch '${SKIA_BASE_BRANCH}' does not exist. Release branches are owned by the release process (release-branch skill) — create it before running a release sync for m${TARGET}."
     exit 1
   fi
+elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
+  # A supported/rotation line older than main but with NO release/<major>.<TARGET>.x
+  # branch has no home — do NOT merge an older milestone into main. Flag it so the gate
+  # skips (fix versions.json 'support' if this milestone should still be synced).
+  INVALID=true
+  echo "::notice::milestone m${TARGET} is older than main (m${MAIN_MS}) but has no release/*.${TARGET}.x branch — nothing to sync."
 fi
 
 # `current` = milestone of the BASE branch we sync INTO:
@@ -141,8 +222,6 @@ else
 fi
 
 emit mode "$MODE"
-emit next "$NEXT"
-emit latest "$LATEST"
 emit target "$TARGET"
 emit upstream_ref "$UPSTREAM_REF"
 emit is_release "$IS_RELEASE"
@@ -151,10 +230,16 @@ emit skia_base_branch "$SKIA_BASE_BRANCH"
 emit head_branch "$HEAD_BRANCH"
 emit current "$CURRENT"
 
-echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, upstream=${UPSTREAM_REF}, base milestone=m${CURRENT}, latest=m${LATEST}, head=${HEAD_BRANCH}, release=${IS_RELEASE})"
+echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, upstream=${UPSTREAM_REF}, base milestone=m${CURRENT}, head=${HEAD_BRANCH}, release=${IS_RELEASE}, invalid=${INVALID})"
 
 # Branch derivation is all the agent job needs; gating is pre_activation-only.
 $GATE || exit 0
+
+# A supported/rotation line older than main with no release branch has nowhere to sync.
+if [ "$INVALID" = true ]; then
+  emit skip true
+  exit 0
+fi
 
 # -- Gate: only spin up the (expensive) agent when there is new upstream work ----
 UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/${UPSTREAM_REF}" | awk '{print $1}')
