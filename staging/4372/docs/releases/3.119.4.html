@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.4 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.4 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4372/merge/documentation/docfx/releases/3.119.4.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31194">Version 3.119.4</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:3.119.4 -->
+
+<blockquote>
+<p><strong>Platforms, GTK4, and .NET 10</strong> · Released May 22, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.4">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v3.119.4">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>Supersedes <a href="3.119.3.html">3.119.3</a></strong> · Rolls up preview-only work that was never released as stable — those changes are included cumulatively below.</p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.4/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.5/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.119.4 adds GTK4 views, Linux Bionic, Tizen x64/arm64 support, and .NET 10 SDK compatibility. New platform support spans Linux Bionic (Android-like) native assets, GTK4 via GirCore, Tizen on x64 and arm64, and a .NET 10 SDK upgrade. On Windows, MAUI TabBar SKGLView rendering is fixed and net48 full-framework targeting is added. Security mitigations and multiple native dependency updates are also included.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>SKManagedStream reworked: parent/child chain replaced with SKData snapshot</strong> — The internal stream lifetime model is replaced with a cleaner SKData snapshot approach, fixing edge-case disposal issues and simplifying the ownership model. (<a href="https://github.com/mono/SkiaSharp/pull/3589">#3589</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>MAUI TabBar SKGLView rendering fixed</strong> — SKGLView no longer stops rendering after a tab switch in a MAUI TabBar on Android. — ❤️ <a href="https://github.com/SimonvBez">@SimonvBez</a> (<a href="https://github.com/mono/SkiaSharp/pull/3076">#3076</a>)</li>
+<li><strong>GTK4 Cairo assertion crash fixed</strong> — SKDrawingArea in GTK4 was triggering a Cairo assertion failure; the rendering path has been corrected. (<a href="https://github.com/mono/SkiaSharp/pull/3562">#3562</a>)</li>
+<li><strong>AoT crash with IlcDisableReflection fixed</strong> — Native AoT builds using IlcDisableReflection=true no longer crash at startup. (<a href="https://github.com/mono/SkiaSharp/pull/3485">#3485</a>)</li>
+<li><strong>tvOS native builds split to device and simulator frameworks</strong> — tvOS NativeReference targets now correctly separate device and simulator slices, matching the iOS pattern. (<a href="https://github.com/mono/SkiaSharp/pull/3563">#3563</a>, <a href="https://github.com/mono/SkiaSharp/pull/3561">#3561</a>)</li>
+<li><strong>DesignMode detection uses property directly in WinForms</strong> — SkiaSharp.Views.WindowsForms now uses the DesignMode property directly rather than reflection-based detection. (<a href="https://github.com/mono/SkiaSharp/pull/3614">#3614</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Linux Bionic native assets added</strong> — Native library assets for Linux Bionic (the Android-like Linux variant) are now included, enabling SkiaSharp use in Bionic-based environments. — ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>)</li>
+<li><strong>GTK4 view added via GirCore bindings</strong> — A new SkiaSharp.Views.Gtk4 package provides SKDrawingArea for GTK4 applications using the GirCore.Gtk-4.0 bindings. (<a href="https://github.com/mono/SkiaSharp/pull/3527">#3527</a>)</li>
+<li><strong>Tizen x64 and arm64 native builds added</strong> — Tizen support expands to x64 and arm64 architectures with updated Studio 6.1 tooling and TFM fixes. (<a href="https://github.com/mono/SkiaSharp/pull/3620">#3620</a>, <a href="https://github.com/mono/SkiaSharp/pull/3619">#3619</a>)</li>
+<li><strong>.NET 10 SDK with workload version pinning</strong> — The build system is updated to the .NET 10 SDK with explicit workload version pinning for reproducible builds. (<a href="https://github.com/mono/SkiaSharp/pull/3514">#3514</a>)</li>
+<li><strong>net48 full-framework target added</strong> — A net48 (Windows .NET Framework 4.8) full-framework build target is added for Windows validation scenarios. — ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3631">#3631</a>)</li>
+<li><strong>C# 13 support on legacy TFMs via PolySharp</strong> — PolySharp is used to polyfill C# 13 language features on legacy target frameworks, keeping the codebase on the latest language version everywhere. — ❤️ <a href="https://github.com/4Darmygeometry">@4Darmygeometry</a> (<a href="https://github.com/mono/SkiaSharp/pull/3642">#3642</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Spectre mitigations enabled for all native binaries</strong> — Spectre v1 mitigation flags are now applied to both libSkiaSharp.dll (Windows) and libSkiaSharp.so (Linux/Android). — ❤️ <a href="https://github.com/sshumakov">@sshumakov</a> (<a href="https://github.com/mono/SkiaSharp/pull/3502">#3502</a>, <a href="https://github.com/mono/SkiaSharp/pull/3496">#3496</a>)</li>
+<li><strong>Native dependencies updated</strong> — libpng updated to 1.6.58 (from 1.6.54), libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed. (<a href="https://github.com/mono/SkiaSharp/pull/3723">#3723</a>, <a href="https://github.com/mono/SkiaSharp/pull/3478">#3478</a>, <a href="https://github.com/mono/SkiaSharp/pull/3469">#3469</a>, <a href="https://github.com/mono/SkiaSharp/pull/3463">#3463</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-8315">HarfBuzzSharp 8.3.1.5</h2>
+<p>Ships HarfBuzzSharp 8.3.1.5 with Linux Bionic support, tvOS build fixes, and the .NET 10 SDK update from this release.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/4Darmygeometry">@4Darmygeometry</a></td>
+<td>Added Linux Bionic native assets support and HarfBuzz platform improvements (<a href="https://github.com/mono/SkiaSharp/pull/3217">#3217</a>, <a href="https://github.com/mono/SkiaSharp/pull/3631">#3631</a>, <a href="https://github.com/mono/SkiaSharp/pull/3642">#3642</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/sshumakov">@sshumakov</a></td>
+<td>Enabled Spectre mitigation flags for Windows and Linux native binaries (<a href="https://github.com/mono/SkiaSharp/pull/3496">#3496</a>, <a href="https://github.com/mono/SkiaSharp/pull/3502">#3502</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ramezgerges">@ramezgerges</a></td>
+<td>Improved the Android NDK build configuration (<a href="https://github.com/mono/SkiaSharp/pull/3692">#3692</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/SimonvBez">@SimonvBez</a></td>
+<td>Fixed SKGLView not rendering after tab switch in MAUI TabBar (<a href="https://github.com/mono/SkiaSharp/pull/3076">#3076</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-1-april-22-2026">Preview 1 (April 22, 2026)</h2>
+<p>Preview 1 introduced Linux Bionic support, GTK4 views, Tizen x64/arm64 builds, .NET 10 SDK, the MAUI TabBar fix, tvOS build splits, GTK4 crash fix, SKManagedStream rework, and numerous dependency updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.3-preview.1.1...v3.119.4-preview.1.1">Full changelog</a></p>
+<h2 id="preview-1-february-7-2026">Preview 1 (February 7, 2026)</h2>
+<p>Preview 1 of 3.119.3 delivered Spectre mitigations for Linux, the AoT reflection fix, Linux ARM64 crash fix, and libpng/libwebp/brotli updates.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2...v3.119.3-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4372/merge/documentation/docfx/releases/3.119.4.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4372 · dev/fix-nway-overdraw-canvas-uaf-4a1467a42e8170e6 · 342c1f8
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

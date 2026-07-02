@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.8 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.8 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/2.88.8.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2888">Version 2.88.8</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:2.88.8 -->
+
+<blockquote>
+<p><strong>Trimming and compatibility overloads</strong> · Released April 9, 2024 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.8">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.8">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.88.8/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/7.3.0.2/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.88.8 adds compat overloads for SKImageFilter and makes SKXamlCanvas trim-friendly.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<ul>
+<li><em><em>Default arguments removed from SKImageFilter.Create</em> methods</em>* — Optional trailing arguments on <code>SKImageFilter.CreateAlphaThreshold</code>, <code>CreateArithmetic</code>, <code>CreateBlendMode</code>, <code>CreateBlur</code>, <code>CreateColorFilter</code>, <code>CreateDilate</code>, <code>CreateDisplacementMapEffect</code>, <code>CreateDistantLitDiffuse/Specular</code>, <code>CreateDropShadow</code>, <code>CreateDropShadowOnly</code>, <code>CreateErode</code>, <code>CreateMagnifier</code>, <code>CreateMatrixConvolution</code>, <code>CreateMerge</code>, <code>CreateOffset</code>, <code>CreatePaint</code>, <code>CreatePointLitDiffuse/Specular</code> and <code>CreateSpotLitDiffuse/Specular</code> no longer have C# default values. Companion overloads without those optional parameters were added (#2810) so calls made through the compiler continue to work, but any code that reflected on the signature or dispatched dynamically may need to be updated. (<a href="https://github.com/mono/SkiaSharp/pull/2810">#2810</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>New SKImageFilter compatibility overloads</strong> — New overloads on the <code>SKImageFilter.Create*</code> factory methods keep existing source-level callers working now that the default arguments have been removed. (<a href="https://github.com/mono/SkiaSharp/pull/2810">#2810</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Trim-friendly PlatformConfiguration</strong> — The <code>PlatformConfiguration</code> properties are now annotated so the trimmer can preserve them, avoiding runtime failures in trimmed apps. (<a href="https://github.com/mono/SkiaSharp/pull/2734">#2734</a>)</li>
+<li><strong>SKXamlCanvas removes async void</strong> — <code>SKXamlCanvas</code> no longer uses <code>async void</code>, so exceptions surface where callers can observe them. (<a href="https://github.com/mono/SkiaSharp/pull/2731">#2731</a>)</li>
+<li><strong>Invalid externs no longer emitted</strong> — The native binding no longer declares extern functions for entry points that don't exist, so the DLL loads cleanly on tighter loaders. (<a href="https://github.com/mono/SkiaSharp/pull/2710">#2710</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-7302">HarfBuzzSharp 7.3.0.2</h2>
+<p>HarfBuzzSharp 7.3.0.2 picks up the APIScan and compliance YAML clean-up alongside the SkiaSharp maintenance.</p>
+<h2 id="preview-1-april-4-2024">Preview 1 (April 4, 2024)</h2>
+<p>Preview 1 landed the SKImageFilter compatibility overloads, the trim annotations on <code>PlatformConfiguration</code>, the SKXamlCanvas async void fix and the invalid-extern cleanup.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.7...v2.88.8-preview.1.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4241/merge/documentation/docfx/releases/2.88.8.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4241 · mattleibow-dev-issue-2779-skmatrix-managed-math · b059699
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 3.119.2 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 3.119.2 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4372/merge/documentation/docfx/releases/3.119.2.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-31192">Version 3.119.2</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:3.119.2 -->
+
+<blockquote>
+<p><strong>Security hardening and platform fixes</strong> · Released February 6, 2026 · <a href="https://www.nuget.org/packages/SkiaSharp/3.119.2">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v3.119.2">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="3.119.2/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/8.3.1.3/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 3.119.2 adds Windows Spectre mitigations, security hardening flags, and missing tvOS API overloads.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Missing tvOS SKSurface.Create overloads added</strong> — Several SKSurface.Create overloads that were available on other Apple platforms were missing on tvOS; they are now included. — ❤️ <a href="https://github.com/MartinZikmund">@MartinZikmund</a> (<a href="https://github.com/mono/SkiaSharp/pull/3342">#3342</a>)</li>
+<li><strong>Android debug symbols preserved and packaged</strong> — Android native debug symbols are now preserved and included in the symbol packages, improving crash diagnostics. (<a href="https://github.com/mono/SkiaSharp/pull/3374">#3374</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Spectre mitigations enabled for Windows native binaries</strong> — Spectre v1 mitigation flags (/Qspectre) are now enabled for both libSkiaSharp.dll and libSkiaSharp.so on Windows. (<a href="https://github.com/mono/SkiaSharp/pull/3497">#3497</a>, <a href="https://github.com/mono/SkiaSharp/pull/3503">#3503</a>)</li>
+<li><strong>Control Flow Guard and BufferSecurityCheck enabled</strong> — All Windows native DLLs now build with Control Flow Guard (/guard:cf) and BufferSecurityCheck (/GS) flags, satisfying BinSkim BA2007 and improving exploit resistance. — ❤️ <a href="https://github.com/Aguilex">@Aguilex</a> (<a href="https://github.com/mono/SkiaSharp/pull/3397">#3397</a>, <a href="https://github.com/mono/SkiaSharp/pull/3404">#3404</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-8313">HarfBuzzSharp 8.3.1.3</h2>
+<p>Ships HarfBuzzSharp 8.3.1.3 with the Windows security hardening and tvOS packaging improvements from this release.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/Aguilex">@Aguilex</a></td>
+<td>Enabled Spectre mitigations and security hardening flags for Windows native binaries (<a href="https://github.com/mono/SkiaSharp/pull/3397">#3397</a>, <a href="https://github.com/mono/SkiaSharp/pull/3404">#3404</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/MartinZikmund">@MartinZikmund</a></td>
+<td>Added missing tvOS SKSurface.Create overloads (<a href="https://github.com/mono/SkiaSharp/pull/3342">#3342</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-3-february-5-2026">Preview 3 (February 5, 2026)</h2>
+<p>Preview 3 added the Spectre mitigation flag for libSkiaSharp.dll on Windows.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1">Full changelog</a></p>
+<h2 id="preview-2-january-25-2026">Preview 2 (January 25, 2026)</h2>
+<p>Preview 2 enabled Control Flow Guard and BufferSecurityCheck on Windows native DLLs to satisfy BinSkim security requirements.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.2-preview.1.2...v3.119.2-preview.2.3">Full changelog</a></p>
+<h2 id="preview-1-october-13-2025">Preview 1 (October 13, 2025)</h2>
+<p>Preview 1 introduced the missing tvOS SKSurface.Create overloads and Android symbol packaging.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2-preview.1.2">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4372/merge/documentation/docfx/releases/3.119.2.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4372 · dev/fix-nway-overdraw-canvas-uaf-4a1467a42e8170e6 · 342c1f8
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

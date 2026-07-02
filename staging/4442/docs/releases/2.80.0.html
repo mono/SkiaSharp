@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.80.0 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.80.0 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4442/merge/documentation/docfx/releases/2.80.0.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2800">Version 2.80.0</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:2.80.0 -->
+
+<blockquote>
+<p><strong>Skia m80 and Vulkan everywhere</strong> · Released July 8, 2020 · <a href="https://www.nuget.org/packages/SkiaSharp/2.80.0">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.80.0">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.80.0/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/2.6.1.5/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.80.0 rebases on Skia m80, brings Vulkan everywhere, and adds Linux ARM, Alpine, ARM64, and WebAssembly natives. Vulkan is now available on every platform that supports it, alongside a cleaned-up GPU API. Native coverage grows to Linux ARM32/ARM64, Alpine, and Win32 ARM64, plus a first WebAssembly build. SKFont becomes the canonical text/glyph type, and several disposal and GL crashes are fixed.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="engine">Engine</h2>
+<ul>
+<li><strong>Rebased on Skia m80</strong> — The bundled engine is refreshed from a much older Skia to milestone 80, bringing years of upstream rendering and text fixes into SkiaSharp. (<a href="https://github.com/mono/SkiaSharp/pull/986">#986</a>)</li>
+</ul>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Vulkan on every supported platform</strong> — Vulkan support is built for Win32 alongside the existing platforms, with a shared managed API so consumers can target Vulkan the same way everywhere. (<a href="https://github.com/mono/SkiaSharp/pull/1010">#1010</a>, <a href="https://github.com/mono/SkiaSharp/pull/1287">#1287</a>)</li>
+<li><strong>GPU APIs cleaned up</strong> — The GPU surface is reworked for consistency across backends and to expose the pieces callers previously had to reach around. (<a href="https://github.com/mono/SkiaSharp/pull/1294">#1294</a>)</li>
+<li><strong>SKFont becomes the text/glyph type</strong> — SKFont's public API is now glyph-only, and the other text types are built on top of it — the canonical shape for text work going forward. (<a href="https://github.com/mono/SkiaSharp/pull/1299">#1299</a>)</li>
+<li><strong>New drawing and path helpers</strong> — SKCanvas.DrawTextOnPath, SKPath.ToWinding, SKPaint.ColorF, and image snapshots with bounds fill in gaps that consumers previously had to work around. — ❤️ <a href="https://github.com/ziriax">@ziriax</a> (<a href="https://github.com/mono/SkiaSharp/pull/1198">#1198</a>, <a href="https://github.com/mono/SkiaSharp/pull/1326">#1326</a>, <a href="https://github.com/mono/SkiaSharp/pull/1325">#1325</a>, <a href="https://github.com/mono/SkiaSharp/pull/1357">#1357</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>GL and shader crashes fixed</strong> — A crash when no GL context is present is resolved, the correct shaders are used, and GL ES 3.x is explicitly requested when available. (<a href="https://github.com/mono/SkiaSharp/pull/1328">#1328</a>, <a href="https://github.com/mono/SkiaSharp/pull/1323">#1323</a>, <a href="https://github.com/mono/SkiaSharp/pull/1388">#1388</a>)</li>
+<li><strong>Text and font lifetime corrected</strong> — The text blob builder and font set are now kept alive while in use, fixing intermittent crashes during text rendering. (<a href="https://github.com/mono/SkiaSharp/pull/1365">#1365</a>, <a href="https://github.com/mono/SkiaSharp/pull/1362">#1362</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>Managed/native disposal reworked</strong> — The relationship between managed wrappers and native objects is disposed correctly again, closing a class of finalizer and use-after-dispose issues. (<a href="https://github.com/mono/SkiaSharp/pull/1344">#1344</a>)</li>
+<li><strong>Native library loading on desktop</strong> — Desktop and .NET Framework hosts now load a specific native library rather than relying on ambient search order, and libSkiaSharp is no longer embedded inside the managed assemblies. (<a href="https://github.com/mono/SkiaSharp/pull/1342">#1342</a>, <a href="https://github.com/mono/SkiaSharp/pull/1296">#1296</a>)</li>
+</ul>
+<h2 id="platform">Platform</h2>
+<ul>
+<li><strong>Linux ARM, Alpine, and Win32 ARM64 natives</strong> — Ships native libraries for Linux ARM32 (armhf) and ARM64 (aarch64), Alpine, and Win32 ARM64 — SkiaSharp now runs out of the box on those targets. (<a href="https://github.com/mono/SkiaSharp/pull/1382">#1382</a>, <a href="https://github.com/mono/SkiaSharp/pull/1339">#1339</a>, <a href="https://github.com/mono/SkiaSharp/pull/1358">#1358</a>)</li>
+<li><strong>WebAssembly build</strong> — There is now a libSkiaSharp build for WebAssembly and a matching WASM package, laying the groundwork for browser-hosted rendering. (<a href="https://github.com/mono/SkiaSharp/pull/1359">#1359</a>, <a href="https://github.com/mono/SkiaSharp/pull/1389">#1389</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-2615">HarfBuzzSharp 2.6.1.5</h2>
+<p>HarfBuzzSharp 2.6.1.5 rides along with the SkiaSharp packaging, native library, and platform coverage work — the same builds now ship for Linux ARM, Alpine, and the other new targets.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/bender2k14">@bender2k14</a></td>
+<td>Made SkiaSharpSample the default startup project in the WPF sample solution (<a href="https://github.com/mono/SkiaSharp/pull/1369">#1369</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/ziriax">@ziriax</a></td>
+<td>Contributed the SKCanvas.DrawTextOnPath implementation (<a href="https://github.com/mono/SkiaSharp/pull/1198">#1198</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-33-june-30-2020">Preview 33 (June 30, 2020)</h2>
+<p>Preview 33 wrapped up packaging fixes and text/font lifetime fixes ahead of stable.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.0-preview.24...v2.80.0-preview.33">Full changelog</a></p>
+<h2 id="preview-24-june-27-2020">Preview 24 (June 27, 2020)</h2>
+<p>Preview 24 added Win32 ARM64 natives, image snapshots with bounds, and disposal fixes.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.0-preview.14...v2.80.0-preview.24">Full changelog</a></p>
+<h2 id="preview-14-june-17-2020">Preview 14 (June 17, 2020)</h2>
+<p>Preview 14 introduced the Alpine native libraries.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.0-preview.12...v2.80.0-preview.14">Full changelog</a></p>
+<h2 id="preview-12-june-11-2020">Preview 12 (June 11, 2020)</h2>
+<p>Preview 12 added SKPath.ToWinding, SKPaint.ColorF, and fixed a crash when no GL context is present.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.80.0-preview.3...v2.80.0-preview.12">Full changelog</a></p>
+<h2 id="preview-3-june-7-2020">Preview 3 (June 7, 2020)</h2>
+<p>Preview 3 was the initial v2 preview: Skia m80, Vulkan for Win32, GPU API cleanup, the SKFont refactor, and SKCanvas.DrawTextOnPath.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v1.68.3...v2.80.0-preview.3">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4442/merge/documentation/docfx/releases/2.80.0.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4442 · dev/memory-leak-runtimeeffect-uniforms-reset-7f2da0a70a30eb7b · 2a264ce
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

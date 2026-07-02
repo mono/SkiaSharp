@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Render with SkiaSharp views on Android | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Render with SkiaSharp views on Android | SkiaSharp ">
+      
+      <meta name="description" content="Choose a native Android raster, GLSurfaceView, or GLTextureView control and draw through its paint event.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/android.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="render-with-skiasharp-views-on-android">Render with SkiaSharp views on Android</h1>
+
+<p>The <code>SkiaSharp.Views</code> package includes native Android controls in the <code>SkiaSharp.Views.Android</code> namespace:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Android base</th>
+<th>Rendering path</th>
+<th>Paint event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKCanvasView</code></td>
+<td><code>View</code></td>
+<td>CPU raster</td>
+<td><code>SKPaintSurfaceEventArgs</code></td>
+</tr>
+<tr>
+<td><code>SKGLSurfaceView</code></td>
+<td><code>GLSurfaceView</code></td>
+<td>Ganesh over OpenGL ES</td>
+<td><code>SKPaintGLSurfaceEventArgs</code></td>
+</tr>
+<tr>
+<td><code>SKGLTextureView</code></td>
+<td><code>TextureView</code> through SkiaSharp's <code>GLTextureView</code></td>
+<td>Ganesh over OpenGL ES</td>
+<td><code>SKPaintGLSurfaceEventArgs</code></td>
+</tr>
+</tbody>
+</table>
+<p>Use <code>SKCanvasView</code> for the default raster path. The two GPU controls expose the same SkiaSharp drawing model but inherit from different Android view primitives. Choose between surface-view and texture-view behavior based on the composition needs of the Android layout.</p>
+<h2 id="create-a-view-in-code">Create a view in code</h2>
+<p>This example installs a raster view as an activity's content:</p>
+<pre><code class="lang-csharp">using SkiaSharp.Views.Android;
+
+var skiaView = new SKCanvasView(this);
+skiaView.PaintSurface += OnPaintSurface;
+SetContentView(skiaView);
+</code></pre>
+<p>The view owns the surface passed to <code>OnPaintSurface</code>. Do not dispose the surface or retain its canvas after the callback.</p>
+<p>For GPU rendering, create <code>SKGLSurfaceView</code> or <code>SKGLTextureView</code> and handle <code>SKPaintGLSurfaceEventArgs</code> instead. Both controls expose their managed <code>GRContext</code> while the GL context is valid.</p>
+<h2 id="request-another-frame">Request another frame</h2>
+<p>Call <code>Invalidate()</code> on <code>SKCanvasView</code> after state changes. The GL controls use their inherited render-request and render-mode APIs. Avoid running a continuous render loop when the scene is unchanged.</p>
+<p>Android screen density can make the raw pixel size differ from the logical control size. Check <code>Info</code>, <code>RawInfo</code>, and the control's pixel-scaling option before mixing Skia coordinates with Android layout coordinates.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Choose a SkiaSharp view</a></li>
+<li><a href="maui.html">.NET MAUI views</a></li>
+<li><a href="../ganesh/opengl.html">Ganesh with OpenGL</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/android.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

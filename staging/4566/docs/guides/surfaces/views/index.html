@@ -1,0 +1,184 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Choose a SkiaSharp view | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Choose a SkiaSharp view | SkiaSharp ">
+      
+      <meta name="description" content="Choose a raster or Ganesh-backed SkiaSharp view for .NET MAUI, native platforms, Uno Platform, or Blazor WebAssembly.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="choose-a-skiasharp-view">Choose a SkiaSharp view</h1>
+
+<p>SkiaSharp view controls create the drawing surface, size it to the control, and provide its canvas through a paint callback. Use a view when drawing belongs in an app UI and you do not need to create, wrap, present, or dispose the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface"><code>SKSurface</code></a> yourself.</p>
+<p>View controls use one of two rendering paths:</p>
+<table>
+<thead>
+<tr>
+<th>View family</th>
+<th>Typical controls</th>
+<th>Rendering path</th>
+<th>Use when</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Raster</td>
+<td><code>SKCanvasView</code>, <code>SKXamlCanvas</code>, <code>SKElement</code>, <code>SKControl</code>, <code>SKDrawingArea</code></td>
+<td>CPU <a href="../raster/index.html">raster surface</a>, then platform presentation</td>
+<td>You want the broadest support or do not need continuous GPU rendering</td>
+</tr>
+<tr>
+<td>GPU</td>
+<td><code>SKGLView</code>, <code>SKMetalView</code>, <code>SKGLSurfaceView</code>, <code>SKGLTextureView</code>, <code>SKSwapChainPanel</code>, <code>SKGLElement</code>, <code>SKGLControl</code></td>
+<td><a href="../ganesh/index.html">Ganesh</a> over OpenGL, OpenGL ES, Metal, ANGLE, or WebGL</td>
+<td>You render continuously or have a workload that benefits from a GPU-backed target</td>
+</tr>
+</tbody>
+</table>
+<div class="NOTE">
+<h5>Note</h5>
+<p>The shipped view controls use raster surfaces or Ganesh. They do not drive <a href="../graphite/index.html">Graphite</a>. Graphite remains a manually managed rendering path.</p>
+<p><code>SkiaSharp.Views.Tizen.NUI.SKGLSurfaceView</code> is an exception to the control naming pattern: it raises raster <code>SKPaintSurfaceEventArgs</code>, not Ganesh-backed <code>SKPaintGLSurfaceEventArgs</code>. See <a href="tizen.html">Tizen views</a>.</p>
+</div>
+<h2 id="draw-in-the-paint-callback">Draw in the paint callback</h2>
+<p>Raster controls raise or invoke a callback with <code>SKPaintSurfaceEventArgs</code>. Draw on the provided surface and do not retain its canvas after the callback returns:</p>
+<pre><code class="lang-csharp">void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs e)
+{
+    var canvas = e.Surface.Canvas;
+    using var paint = new SKPaint
+    {
+        IsAntialias = true,
+        Color = SKColors.CornflowerBlue,
+    };
+
+    canvas.Clear(SKColors.White);
+    canvas.DrawCircle(e.Info.Width / 2f, e.Info.Height / 2f, 100, paint);
+}
+</code></pre>
+<p>GL-, ANGLE-, and WebGL-backed controls use <code>SKPaintGLSurfaceEventArgs</code>. Native Apple Metal controls use <code>SKPaintMetalSurfaceEventArgs</code>. All of these event arguments expose an <code>SKSurface</code>; the drawing code still starts with <code>e.Surface.Canvas</code>.</p>
+<p>The .NET MAUI <code>SKGLView</code> always exposes the MAUI <code>SKPaintGLSurfaceEventArgs</code>, including on Mac Catalyst where its handler uses a native Metal view.</p>
+<h2 id="choose-a-platform-or-integration">Choose a platform or integration</h2>
+<ul>
+<li><a href="maui.html">.NET MAUI</a> - use cross-platform <code>SKCanvasView</code> and <code>SKGLView</code> controls and register their handlers.</li>
+<li><a href="android.html">Android</a> - use native raster, GL surface, or GL texture views.</li>
+<li><a href="apple.html">Apple platforms</a> - choose raster, OpenGL, or Metal controls on iOS, tvOS, macOS, and Mac Catalyst.</li>
+<li><a href="windows.html">Windows</a> - use WPF, Windows Forms, or WinUI controls.</li>
+<li><a href="linux.html">Linux</a> - use the GTK 3 or GTK 4 raster drawing area.</li>
+<li><a href="tizen.html">Tizen</a> - choose the ElmSharp or NUI control family.</li>
+<li><a href="uno.html">Uno Platform</a> - use WinUI-shaped raster and GPU controls with target-specific support.</li>
+<li><a href="blazor.html">Blazor WebAssembly</a> - use raster HTML canvas or WebGL Razor components.</li>
+</ul>
+<h2 id="choose-raster-or-gpu">Choose raster or GPU</h2>
+<p>Start with the raster control for your UI framework. Move to a GPU control when profiling shows that raster presentation is the bottleneck, or when the app renders a continuously changing scene that benefits from GPU acceleration.</p>
+<p>Changing the control does not require changing shared drawing helpers that accept <code>SKCanvas</code>. It does change the platform APIs, event argument type, invalidation model, and GPU availability, so verify the chosen control on every target your app ships.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="../index.html">Choose a SkiaSharp drawing destination</a></li>
+<li><a href="../ganesh/index.html">Ganesh GPU surfaces</a></li>
+<li><a href="../documents/index.html">Documents</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Render with SkiaSharp views on Tizen | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Render with SkiaSharp views on Tizen | SkiaSharp ">
+      
+      <meta name="description" content="Choose the ElmSharp or NUI SkiaSharp view controls and understand which Tizen path is GPU-backed.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/tizen.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="render-with-skiasharp-views-on-tizen">Render with SkiaSharp views on Tizen</h1>
+
+<p>The <code>SkiaSharp.Views</code> package contains separate control families for ElmSharp and Tizen NUI.</p>
+<h2 id="elmsharp-controls">ElmSharp controls</h2>
+<p>The <code>SkiaSharp.Views.Tizen</code> namespace provides:</p>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Rendering path</th>
+<th>Paint event</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>SKCanvasView</code></td>
+<td>CPU raster</td>
+<td><code>SKPaintSurfaceEventArgs</code></td>
+</tr>
+<tr>
+<td><code>SKGLSurfaceView</code></td>
+<td>Ganesh over OpenGL ES</td>
+<td><code>SKPaintGLSurfaceEventArgs</code></td>
+</tr>
+</tbody>
+</table>
+<p>The GPU control creates an Evas GL context, tries OpenGL ES 3 before falling back to OpenGL ES 2 or the platform default, and exposes its <code>GRContext</code>.</p>
+<h2 id="nui-controls">NUI controls</h2>
+<p>The <code>SkiaSharp.Views.Tizen.NUI</code> namespace also provides <code>SKCanvasView</code> and <code>SKGLSurfaceView</code>. Both NUI controls expose <code>SKPaintSurfaceEventArgs</code> and draw through memory-backed <code>SKSurface</code> instances before presenting through NUI. The NUI <code>SKGLSurfaceView</code> is therefore not the same Ganesh API as the ElmSharp control with the same class name.</p>
+<p>Choose the namespace that matches the application's Tizen UI framework, and use the event argument type supplied by that control rather than assuming it from the class name.</p>
+<h2 id="invalidate-and-dispose">Invalidate and dispose</h2>
+<p>Create Tizen controls on the main thread. Call <code>Invalidate()</code> to request a new frame after state changes. The control owns its surface and native presentation resources; drawing code owns and disposes the paints, paths, images, and other objects it creates.</p>
+<p>The current <code>SkiaSharp.Views.Maui.Controls</code> package does not target Tizen. Use the native Tizen controls directly.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Choose a SkiaSharp view</a></li>
+<li><a href="../raster/index.html">Raster surfaces</a></li>
+<li><a href="../ganesh/opengl.html">Ganesh with OpenGL</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/tizen.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

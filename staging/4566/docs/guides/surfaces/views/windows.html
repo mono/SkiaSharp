@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Render with SkiaSharp views on Windows | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Render with SkiaSharp views on Windows | SkiaSharp ">
+      
+      <meta name="description" content="Choose SkiaSharp raster or GPU controls for WPF, Windows Forms, and WinUI 3.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/windows.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="render-with-skiasharp-views-on-windows">Render with SkiaSharp views on Windows</h1>
+
+<p>SkiaSharp ships separate view packages for the major Windows UI frameworks:</p>
+<table>
+<thead>
+<tr>
+<th>UI framework</th>
+<th>Package</th>
+<th>Raster control</th>
+<th>GPU control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WPF</td>
+<td><code>SkiaSharp.Views.WPF</code></td>
+<td><code>SKElement</code></td>
+<td><code>SKGLElement</code></td>
+</tr>
+<tr>
+<td>Windows Forms</td>
+<td><code>SkiaSharp.Views.WindowsForms</code></td>
+<td><code>SKControl</code></td>
+<td><code>SKGLControl</code></td>
+</tr>
+<tr>
+<td>WinUI 3</td>
+<td><code>SkiaSharp.Views.WinUI</code></td>
+<td><code>SKXamlCanvas</code></td>
+<td><code>SKSwapChainPanel</code></td>
+</tr>
+</tbody>
+</table>
+<p>The raster controls raise <code>SKPaintSurfaceEventArgs</code>. The GPU controls raise <code>SKPaintGLSurfaceEventArgs</code>.</p>
+<h2 id="wpf">WPF</h2>
+<p>Add the WPF namespace and choose <code>SKElement</code> or <code>SKGLElement</code>:</p>
+<pre><code class="lang-xml">&lt;Window
+    xmlns=&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;
+    xmlns:x=&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;
+    xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF&quot;&gt;
+    &lt;skia:SKElement PaintSurface=&quot;OnPaintSurface&quot; /&gt;
+&lt;/Window&gt;
+</code></pre>
+<p><code>SKElement</code> renders through a <code>WriteableBitmap</code>. <code>SKGLElement</code> creates a Ganesh OpenGL context through OpenTK. Use <code>InvalidateVisual()</code> to request another WPF frame.</p>
+<h2 id="windows-forms">Windows Forms</h2>
+<p>Create <code>SKControl</code> for raster drawing or <code>SKGLControl</code> for Ganesh OpenGL:</p>
+<pre><code class="lang-csharp">using System.Windows.Forms;
+using SkiaSharp.Views.Desktop;
+
+var skiaControl = new SKControl { Dock = DockStyle.Fill };
+skiaControl.PaintSurface += OnPaintSurface;
+Controls.Add(skiaControl);
+</code></pre>
+<p>Use the normal Windows Forms invalidation and lifetime APIs. The control owns the per-frame surface; application code owns any drawing resources it creates.</p>
+<h2 id="winui-3">WinUI 3</h2>
+<p>The WinUI controls use the <code>SkiaSharp.Views.Windows</code> namespace:</p>
+<pre><code class="lang-xml">&lt;Page
+    xmlns=&quot;http://schemas.microsoft.com/winfx/2006/xaml/presentation&quot;
+    xmlns:x=&quot;http://schemas.microsoft.com/winfx/2006/xaml&quot;
+    xmlns:skia=&quot;using:SkiaSharp.Views.Windows&quot;&gt;
+    &lt;skia:SKXamlCanvas PaintSurface=&quot;OnPaintSurface&quot; /&gt;
+&lt;/Page&gt;
+</code></pre>
+<p><code>SKXamlCanvas</code> presents raster pixels through a <code>WriteableBitmap</code>. <code>SKSwapChainPanel</code> uses Ganesh over ANGLE/OpenGL ES. Call the control's <code>Invalidate()</code> method for on-demand rendering; enable its render loop only for continuous animation.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Choose a SkiaSharp view</a></li>
+<li><a href="maui.html">.NET MAUI views</a></li>
+<li><a href="uno.html">Uno Platform views</a></li>
+<li><a href="../ganesh/opengl.html">Ganesh with OpenGL</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/views/windows.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

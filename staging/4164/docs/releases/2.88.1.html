@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Version 2.88.1 | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Version 2.88.1 | SkiaSharp ">
+      
+      
+      <link rel="icon" href="../images/favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="../TOC.html">
+      <meta name="docfx:tocrel" content="TOC.html">
+      
+      <meta name="docfx:rel" content="../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4164/merge/documentation/docfx/releases/2.88.1.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../images/logo.png" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="version-2881">Version 2.88.1</h1>
+<!-- RELEASE-NOTES DATA (generated, do not edit) format:3 version:2.88.1 -->
+
+<blockquote>
+<p><strong>First 2.88 servicing release</strong> · Released August 16, 2022 · <a href="https://www.nuget.org/packages/SkiaSharp/2.88.1">NuGet</a> · <a href="https://github.com/mono/SkiaSharp/releases/tag/v2.88.1">GitHub Release</a></p>
+</blockquote>
+<blockquote>
+<p><strong>API changes</strong> · <a href="2.88.1/index.html">SkiaSharp API diff</a> · <a href="harfbuzzsharp/2.8.2.1/index.html">HarfBuzzSharp API diff</a></p>
+</blockquote>
+<h2 id="highlights">Highlights</h2>
+<p>SkiaSharp 2.88.1 adds WinUI, Skottie, AVIF and tvOS/Tizen TFMs on top of the 2.88 native stack. The first servicing release for 2.88 refreshes bundled native libraries (libjpeg-turbo, libwebp, libexpat, zlib), splits Skottie and SceneGraph into their own packages, and rounds out the .NET 6 target matrix with WinUI, Tizen, iOS/Android/macOS TFMs for Skottie, and nullable attributes across the API.</p>
+<h2 id="breaking-changes">Breaking Changes</h2>
+<p><em>None in this release.</em></p>
+<h2 id="api-surface">API Surface</h2>
+<ul>
+<li><strong>Skottie graduates from experimental</strong> — Skottie and SceneGraph move out of the core <code>SkiaSharp.dll</code> into their own packages, gain <code>net6.0</code> TFMs for iOS/Android/Catalyst/macOS/tvOS/Tizen, and pick up <code>TimeSpan</code> overloads, nullable attributes and non-seekable stream support. — ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/2091">#2091</a>, <a href="https://github.com/mono/SkiaSharp/pull/2119">#2119</a>, <a href="https://github.com/mono/SkiaSharp/pull/1987">#1987</a>, <a href="https://github.com/mono/SkiaSharp/pull/2126">#2126</a>)</li>
+<li><strong>AVIF encoding</strong> — The <code>SKEncodedImageFormat</code> surface now exposes AVIF so images can be encoded to AVIF where the underlying decoder supports it. — ❤️ <a href="https://github.com/mgood7123">@mgood7123</a> (<a href="https://github.com/mono/SkiaSharp/pull/2154">#2154</a>)</li>
+<li><strong>WinUI support</strong> — SkiaSharp views now light up on WinUI, and the Uno WinUI target ships the missing JavaScript support file. — ❤️ <a href="https://github.com/jeromelaban">@jeromelaban</a> (<a href="https://github.com/mono/SkiaSharp/pull/2042">#2042</a>, <a href="https://github.com/mono/SkiaSharp/pull/2086">#2086</a>)</li>
+<li><strong>Writable SKDataStream and animations with a BOM</strong> — <code>SKDataStream</code> is now writable like <code>SKData</code>, and animation loaders tolerate a leading byte-order mark. (<a href="https://github.com/mono/SkiaSharp/pull/2128">#2128</a>, <a href="https://github.com/mono/SkiaSharp/pull/2167">#2167</a>)</li>
+<li><strong>Nullable attributes and new TFMs on the binding</strong> — The binding project adds nullable annotations plus newer TFMs, and the <code>net6.0-tizen</code> TFM is added. (<a href="https://github.com/mono/SkiaSharp/pull/2120">#2120</a>, <a href="https://github.com/mono/SkiaSharp/pull/2099">#2099</a>)</li>
+</ul>
+<h2 id="bug-fixes">Bug Fixes</h2>
+<ul>
+<li><strong>PNG decoding regressions fixed</strong> — The bundled zlib was updated to pick up upstream decode fixes that resolved PNG loading failures. (<a href="https://github.com/mono/SkiaSharp/pull/2045">#2045</a>)</li>
+<li><strong>Fonts with Unicode filenames load correctly</strong> — Font loaders no longer fail when the font's file name contains Unicode characters. — ❤️ <a href="https://github.com/lindexi">@lindexi</a> (<a href="https://github.com/mono/SkiaSharp/pull/2146">#2146</a>)</li>
+<li><strong>GLView reshapes on scale change</strong> — <code>SKGLView</code> on macOS now reshapes when the window's backing scale factor changes so content stays crisp on scale transitions. — ❤️ <a href="https://github.com/HarlanHugh">@HarlanHugh</a> (<a href="https://github.com/mono/SkiaSharp/pull/1854">#1854</a>)</li>
+<li><strong>Finalized locks no longer throw</strong> — Internal critical sections now check whether the lock has been finalized before entering, avoiding rare shutdown exceptions. — ❤️ <a href="https://github.com/RichardD2">@RichardD2</a> (<a href="https://github.com/mono/SkiaSharp/pull/2195">#2195</a>)</li>
+<li><strong>SKShaper honours SKPaint.TextAlign</strong> — <code>SKShaper</code> now respects the <code>TextAlign</code> on the supplied <code>SKPaint</code> when laying out shaped text. — ❤️ <a href="https://github.com/koolkdev">@koolkdev</a> (<a href="https://github.com/mono/SkiaSharp/pull/1910">#1910</a>)</li>
+<li><strong>Resize returns null on invalid bounds</strong> — <code>Resize</code> now returns <code>null</code> instead of asserting when called with a zero or negative dimension. (<a href="https://github.com/mono/SkiaSharp/pull/2054">#2054</a>)</li>
+<li><strong>Linux libc resolution</strong> — The Linux native loader uses the full library name of libc so it resolves on more distributions. (<a href="https://github.com/mono/SkiaSharp/pull/2213">#2213</a>)</li>
+</ul>
+<h2 id="security">Security</h2>
+<ul>
+<li><strong>Bundled native libraries refreshed</strong> — libjpeg-turbo bumped to 2.1.3, libwebp to 1.2.3, and libexpat to 2.4.8 — all pull in upstream security and correctness fixes. (<a href="https://github.com/mono/SkiaSharp/pull/2206">#2206</a>, <a href="https://github.com/mono/SkiaSharp/pull/2193">#2193</a>, <a href="https://github.com/mono/SkiaSharp/pull/2189">#2189</a>)</li>
+</ul>
+<h2 id="lifecycle--internals">Lifecycle &amp; Internals</h2>
+<ul>
+<li><strong>C API version incremented</strong> — The C API version was incremented to mark the surface changes in this release for downstream consumers of the native library. (<a href="https://github.com/mono/SkiaSharp/pull/2137">#2137</a>)</li>
+</ul>
+<h2 id="harfbuzzsharp-2821">HarfBuzzSharp 2.8.2.1</h2>
+<p>HarfBuzzSharp 2.8.2.1 picks up the merged &quot;classic&quot; project layout, refreshed generator and the missing macOS/iOS feature implementation alongside the SkiaSharp packaging changes.</p>
+<h2 id="community-contributors-">Community Contributors ❤️</h2>
+<p>Thank you to everyone who contributed to this release!</p>
+<table>
+<thead>
+<tr>
+<th>Contributor</th>
+<th>Contributions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/jeromelaban">@jeromelaban</a></td>
+<td>Landed the initial Skottie support, the WinUI target, and the missing Uno WinUI JavaScript support file (<a href="https://github.com/mono/SkiaSharp/pull/1987">#1987</a>, <a href="https://github.com/mono/SkiaSharp/pull/2042">#2042</a>, <a href="https://github.com/mono/SkiaSharp/pull/2086">#2086</a>, <a href="https://github.com/mono/SkiaSharp/pull/2088">#2088</a>, <a href="https://github.com/mono/SkiaSharp/pull/2094">#2094</a>, <a href="https://github.com/mono/SkiaSharp/pull/2133">#2133</a>, <a href="https://github.com/mono/SkiaSharp/pull/2199">#2199</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/mgood7123">@mgood7123</a></td>
+<td>Exposed the AVIF image encode format (<a href="https://github.com/mono/SkiaSharp/pull/2138">#2138</a>, <a href="https://github.com/mono/SkiaSharp/pull/2154">#2154</a>, <a href="https://github.com/mono/SkiaSharp/pull/2162">#2162</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/HarlanHugh">@HarlanHugh</a></td>
+<td>Fixed <code>SKGLView</code> reshape when the macOS window's backing scale factor changes (<a href="https://github.com/mono/SkiaSharp/pull/1854">#1854</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/koolkdev">@koolkdev</a></td>
+<td>Made <code>SKShaper</code> honour <code>SKPaint.TextAlign</code> when shaping text (<a href="https://github.com/mono/SkiaSharp/pull/1910">#1910</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/lindexi">@lindexi</a></td>
+<td>Fixed font loading for fonts whose file names contain Unicode text (<a href="https://github.com/mono/SkiaSharp/pull/2146">#2146</a>)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/RichardD2">@RichardD2</a></td>
+<td>Guarded the internal critical section against being entered after finalization (<a href="https://github.com/mono/SkiaSharp/pull/2195">#2195</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="preview-108-august-12-2022">Preview 108 (August 12, 2022)</h2>
+<p>Preview 108 finished the .NET 6 TFM matrix and picked up the last fixes before stable.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.104...v2.88.1-preview.108">Full changelog</a></p>
+<h2 id="preview-104-august-8-2022">Preview 104 (August 8, 2022)</h2>
+<p>Preview 104 rolled up the native-library refreshes — libjpeg-turbo, libwebp, libexpat — and the finalized-lock guard.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.91...v2.88.1-preview.104">Full changelog</a></p>
+<h2 id="preview-91-july-14-2022">Preview 91 (July 14, 2022)</h2>
+<p>Preview 91 added Unicode font-file support, non-seekable Skottie streams and BOM-tolerant animations, and incremented the C API.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.79...v2.88.1-preview.91">Full changelog</a></p>
+<h2 id="preview-79-june-29-2022">Preview 79 (June 29, 2022)</h2>
+<p>Preview 79 rounded out the Skottie API with nullable attributes and <code>TimeSpan</code> overloads and the writable <code>SKDataStream</code>.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.75...v2.88.1-preview.79">Full changelog</a></p>
+<h2 id="preview-75-june-26-2022">Preview 75 (June 26, 2022)</h2>
+<p>Preview 75 landed the <code>SKGLView</code> macOS reshape fix.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.71...v2.88.1-preview.75">Full changelog</a></p>
+<h2 id="preview-71-june-20-2022">Preview 71 (June 20, 2022)</h2>
+<p>Preview 71 added the <code>net6.0-tizen</code> TFM and the Skottie/SceneGraph package split.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.63...v2.88.1-preview.71">Full changelog</a></p>
+<h2 id="preview-63-june-8-2022">Preview 63 (June 8, 2022)</h2>
+<p>Preview 63 was the big cut — WinUI support, Skottie, <code>SKShaper</code> text alignment, and the initial nullable/TFM refresh.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.1-preview.1...v2.88.1-preview.63">Full changelog</a></p>
+<h2 id="preview-1-may-22-2022">Preview 1 (May 22, 2022)</h2>
+<p>Preview 1 opened the 2.88.1 line with documentation and CI fixes and the zlib update that resolved PNG loading.</p>
+<p><a href="https://github.com/mono/SkiaSharp/compare/v2.88.0...v2.88.1-preview.1">Full changelog</a></p>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4164/merge/documentation/docfx/releases/2.88.1.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4164 · mattleibow/apple-gn-off-main · f196078
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

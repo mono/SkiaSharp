@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Ganesh with Direct3D | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Ganesh with Direct3D | SkiaSharp ">
+      
+      <meta name="description" content="Create a Ganesh Direct3D context from D3D12 objects and describe existing Direct3D resources for SkiaSharp GPU surfaces.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/ganesh/direct3d.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="use-ganesh-with-direct3d">Use Ganesh with Direct3D</h1>
+
+<p>Use the Direct3D backend on Windows when your host owns a DXGI adapter, D3D12 device, and command queue. Graphite has no direct Direct3D backend, so Ganesh is the SkiaSharp path when D3D12 is a requirement.</p>
+<h2 id="create-the-ganesh-context">Create the Ganesh context</h2>
+<p>Build a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.grd3dbackendcontext"><code>GRD3DBackendContext</code></a> from the native handles:</p>
+<pre><code class="lang-csharp">using var backendContext = new GRD3DBackendContext
+{
+    Adapter = adapterHandle,
+    Device = d3d12DeviceHandle,
+    Queue = commandQueueHandle,
+};
+
+using var context = GRContext.CreateDirect3D(backendContext);
+</code></pre>
+<h2 id="describe-direct3d-resources">Describe Direct3D resources</h2>
+<p>Use <code>GRD3DTextureResourceInfo</code> when constructing a <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.grbackendrendertarget"><code>GRBackendRenderTarget</code></a> or <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.grbackendtexture"><code>GRBackendTexture</code></a> for an existing D3D12 resource. Your host remains responsible for allocation, resource-state transitions, synchronization, presentation, and final release.</p>
+<p>After constructing the backend target or texture, return to <a href="index.html#wrapping-an-existing-render-target">wrapping an existing Ganesh resource</a> for the shared <code>SKSurface.Create</code> calls.</p>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a href="index.html">Ganesh GPU surfaces</a></li>
+<li><a href="../views/index.html">Choose a SkiaSharp view</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/ganesh/direct3d.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,335 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Graphite GPU surfaces | SkiaSharp </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Graphite GPU surfaces | SkiaSharp ">
+      
+      <meta name="description" content="Create Graphite GPU surfaces for Vulkan, Metal, or WebGPU, submit recordings, wrap textures, and read pixels asynchronously.">
+      <link rel="icon" href="../../../images/favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="../../../TOC.html">
+      <meta name="docfx:tocrel" content="../../TOC.html">
+      
+      <meta name="docfx:rel" content="../../../">
+      
+      
+      <meta name="docfx:docurl" content="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/index.md/#L1">
+      <meta name="loc:inThisArticle" content="In this article">
+      <meta name="loc:searchResultsCount" content="{count} results for &quot;{query}&quot;">
+      <meta name="loc:searchNoResults" content="No results for &quot;{query}&quot;">
+      <meta name="loc:tocFilter" content="Filter by title">
+      <meta name="loc:nextArticle" content="Next">
+      <meta name="loc:prevArticle" content="Previous">
+      <meta name="loc:themeLight" content="Light">
+      <meta name="loc:themeDark" content="Dark">
+      <meta name="loc:themeAuto" content="Auto">
+      <meta name="loc:changeTheme" content="Change theme">
+      <meta name="loc:copy" content="Copy">
+      <meta name="loc:downloadPdf" content="Download PDF">
+
+      <script type="module" src="./../../../public/docfx.min.js"></script>
+
+      <script>
+        const theme = localStorage.getItem('theme') || 'auto'
+        document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+      </script>
+
+  </head>
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../images/logo.png" alt="SkiaSharp">
+            SkiaSharp
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+              <form class="search" role="search" id="search">
+                <i class="bi bi-search"></i>
+                <input class="form-control" id="search-query" type="search" disabled="" placeholder="Search" autocomplete="off" aria-label="Search">
+              </form>
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="graphite-gpu-surfaces">Graphite GPU surfaces</h1>
+
+<p><em>Graphite</em> is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an <strong>offscreen</strong> rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the <a href="../views/index.html">view controls</a>.</p>
+<p>Where the older <a href="../ganesh/index.html">Ganesh</a> backend issues GPU work as you draw and auto-flushes it, Graphite separates <strong>recording</strong> from <strong>submission</strong>: drawing is captured into a <em>recording</em> that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.</p>
+<p>Graphite differs from <a href="../ganesh/index.html">Ganesh</a> in two important ways:</p>
+<ul>
+<li><strong>Drawing is recorded, not flushed.</strong> You draw onto a surface's canvas as usual, but instead of flushing a context you <em>snap</em> a <strong>recording</strong> from a <strong>recorder</strong> and <em>insert</em> that recording into the context, then <em>submit</em> it.</li>
+<li><strong>Reading pixels back is asynchronous.</strong> Graphite surfaces do not support the synchronous <code>SKSurface.ReadPixels</code> you use with raster and Ganesh surfaces. You request a readback and drive it to completion. This is the single most important thing to get right — see <a href="#reading-pixels-back">Reading pixels back</a>.</li>
+</ul>
+<p>Graphite supports three backends: <strong>Vulkan</strong>, <strong>Metal</strong>, and <strong>Dawn</strong> (WebGPU).</p>
+<p><strong>Threading model:</strong> A single <code>SKGraphiteRecorder</code> and the surfaces created from it belong to one thread; don't use them concurrently. To record in parallel, give each thread its own recorder, then feed the recordings to one shared <code>SKGraphiteContext</code>. Serialize context-level calls such as <code>InsertRecording</code> and <code>Submit</code>.</p>
+<h2 id="backend-platform-support">Backend platform support</h2>
+<p>Which Graphite backend you use is determined by the platform:</p>
+<table>
+<thead>
+<tr>
+<th>Backend</th>
+<th>Platforms</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="metal.html"><strong>Metal</strong></a></td>
+<td>macOS, iOS (including the iOS Simulator on Apple Silicon, with one caveat), Mac Catalyst, tvOS</td>
+</tr>
+<tr>
+<td><a href="vulkan.html"><strong>Vulkan</strong></a></td>
+<td>Linux, Android, Windows</td>
+</tr>
+<tr>
+<td><a href="dawn.html"><strong>Dawn</strong></a> (WebGPU)</td>
+<td>WebAssembly / browser only</td>
+</tr>
+</tbody>
+</table>
+<p>A few consequences worth calling out:</p>
+<ul>
+<li><strong>Apple platforms use Metal, not Vulkan.</strong> The native Skia build for Apple is not compiled with Vulkan, so on macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal.</li>
+<li><strong>On Windows, Graphite means Vulkan.</strong> There is <strong>no Direct3D Graphite backend</strong> in SkiaSharp — a D3D path would only exist as Graphite→Dawn→D3D12, which is not exposed. If you need D3D specifically, use <a href="../ganesh/direct3d.html">Ganesh with Direct3D</a>.</li>
+<li><strong>Dawn is browser-only.</strong> It is the WebAssembly path and cannot submit synchronously; see <a href="dawn.html">Graphite with Dawn</a>.</li>
+</ul>
+<h2 id="checking-a-backend-is-available">Checking a backend is available</h2>
+<p>A given build of SkiaSharp may not include every Graphite backend. Before creating a context, you can check whether a backend is compiled in with <code>SKGraphiteContext.IsBackendAvailable</code>:</p>
+<pre><code class="lang-csharp">if (SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal))
+{
+    // The Metal factory is compiled in. Validate the device before creating a context.
+}
+</code></pre>
+<p>The check does not validate native devices, queues, or required capabilities. Most factory failures return <code>null</code>, but the current Metal backend terminates the process if its <code>MTLDevice</code> reports none of the GPU families Skia supports. Follow each backend page's preflight requirements before calling its factory.</p>
+<h2 id="choose-and-create-a-backend">Choose and create a backend</h2>
+<p>Create the context from the native device objects owned by your host:</p>
+<ul>
+<li><a href="vulkan.html">Vulkan</a> — raw Vulkan handles on Linux, Android, or Windows, including the render-target usage flags and release ordering required for wrapped images.</li>
+<li><a href="metal.html">Metal</a> — an <code>MTLDevice</code> and <code>MTLCommandQueue</code> on Apple platforms, including iOS Simulator caveats.</li>
+<li><a href="dawn.html">Dawn</a> — WebGPU handles in a browser/WebAssembly host, including its asynchronous submission constraint.</li>
+</ul>
+<p>Each backend page returns the same <code>SKGraphiteContext</code>. Return here after context creation for the shared recorder, surface, submission, readback, texture, image-provider, and resource-management flow. Every factory also has an overload that takes <a href="#context-options"><code>SKGraphiteContextOptions</code></a>.</p>
+<h2 id="the-render-loop">The render loop</h2>
+<p>Once you have a context, the Graphite drawing loop is: create a <strong>recorder</strong>, create a surface from it, draw, <strong>snap</strong> a recording, <strong>insert</strong> it, and <strong>submit</strong>.</p>
+<pre><code class="lang-csharp">var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
+
+using var recorder = context.CreateRecorder();
+using var surface = SKSurface.Create(recorder, info);
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
+
+// draw exactly as you would on any other surface
+surface.Canvas.Clear(SKColors.White);
+surface.Canvas.DrawCircle(256, 256, 200, paint);
+
+// capture everything recorded so far
+using var recording = recorder.Snap();
+
+// hand the recording to the context and submit it to the GPU
+context.InsertRecording(recording);
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+</code></pre>
+<p>A few things to note:</p>
+<ul>
+<li><code>CreateRecorder</code> returns an <code>SKGraphiteRecorder</code>. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly. If you draw raster (CPU-backed) <code>SKImage</code>s, create the recorder with an image provider instead — see <a href="#drawing-cpu-images-the-image-provider">Drawing CPU images</a>.</li>
+<li><code>Snap</code> produces an <code>SKGraphiteRecording</code> — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It can return <strong><code>null</code></strong> if the recording could not be built, for example if the driver could not compile a pipeline for something you drew; see <a href="#pipeline-compilation">Pipeline compilation</a>.</li>
+<li><code>InsertRecording</code> returns an <a href="#status-and-enums"><code>SKGraphiteInsertStatus</code></a> that production code can inspect when it needs to recover from submission problems.</li>
+<li><code>Submit(new SKGraphiteSubmitInfo { Sync = true })</code> flushes the work to the GPU and, with <code>Sync = true</code>, waits for it to finish. It returns <code>false</code> if submission failed.</li>
+</ul>
+<h2 id="reading-pixels-back">Reading pixels back</h2>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Graphite surfaces do <strong>not</strong> support the synchronous <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface.readpixels"><code>SKSurface.ReadPixels</code></a> used with <a href="../raster/index.html">raster</a> and <a href="../ganesh/index.html">Ganesh</a> surfaces — it returns <code>false</code>. To get pixels off a Graphite surface you must use the <strong>asynchronous</strong> readback path. This is the number-one thing to get right when porting existing code.</p>
+</div>
+<p>Call <code>RequestReadPixels</code> with the surface, the destination <code>SKImageInfo</code>, the source rectangle, and a callback. Then drive the request to completion by submitting and repeatedly calling <code>CheckAsyncWorkCompletion</code> until the callback fires. This bounded helper is for native hosts, where synchronous submission is supported:</p>
+<pre><code class="lang-csharp">static byte[] ReadPixelsFromGraphite(
+    SKGraphiteContext context,
+    SKSurface surface,
+    SKImageInfo dstInfo)
+{
+    byte[] pixels = null;
+    var done = false;
+
+    context.RequestReadPixels(
+        surface,
+        dstInfo,
+        new SKRectI(0, 0, dstInfo.Width, dstInfo.Height),
+        result =&gt;
+        {
+            // ToArray copies the plane into a tightly-packed byte[] that outlives the
+            // callback, stripping any per-row transfer padding for you.
+            pixels = result.ToArray();
+            done = true;
+        });
+
+    // Flush the queued readback and wait, then pump until the callback runs.
+    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+    while (!done)
+        context.CheckAsyncWorkCompletion();
+
+    return pixels;
+}
+
+var dstInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
+var pixels = ReadPixelsFromGraphite(context, surface, dstInfo);
+</code></pre>
+<p>The focused helper waits for the callback so the sequence is easy to see. In a production renderer, pump completion from the host's render or event loop and apply the timeout or cancellation policy appropriate for the application. Browser hosts cannot use <code>Sync = true</code>; see <a href="dawn.html">Graphite with Dawn</a>.</p>
+<p>The callback receives an <a href="#status-and-enums"><code>SKImageReadPixelsResult</code></a> — the backend-neutral async-read result type shared by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage"><code>SKImage</code></a>, <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sksurface"><code>SKSurface</code></a>, and <code>SKGraphiteContext</code> read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws <code>ObjectDisposedException</code>. Keep the context and surface undisposed until the callback completes.</p>
+<p>It offers a few ways to extract pixels:</p>
+<ul>
+<li><code>ToArray(planeIndex = 0)</code> — a tightly-packed <code>byte[]</code> copy (padding stripped), as above.</li>
+<li><code>ToBitmap()</code> / <code>ToImage()</code> — an owned <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skbitmap"><code>SKBitmap</code></a> or <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage"><code>SKImage</code></a> for single-plane (interleaved) results.</li>
+<li><code>CopyPlaneTo(planeIndex, destination)</code> — copies one plane into a <code>Span&lt;byte&gt;</code> you own, stripping row padding.</li>
+<li><code>GetPlaneData(planeIndex)</code> / <code>GetPlaneRowBytes(planeIndex)</code> — the raw <code>ReadOnlySpan&lt;byte&gt;</code> and its stride, if you want to handle padding yourself.</li>
+</ul>
+<p>A shorter <code>RequestReadPixels</code> overload uses default rescaling; a longer overload lets you pass an <a href="#status-and-enums"><code>SKImageRescaleGamma</code></a> and <a href="#status-and-enums"><code>SKImageRescaleMode</code></a> when you want the read to also rescale the image. The default is <code>(SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest)</code>.</p>
+<h2 id="wrapping-an-external-gpu-texture">Wrapping an external GPU texture</h2>
+<p>Instead of letting Skia allocate the surface's texture, you can render into a GPU texture your own code created. Build an <code>SKGraphiteBackendTexture</code> as shown on the <a href="vulkan.html#wrap-and-release-vulkan-images">Vulkan</a>, <a href="metal.html#wrap-metal-textures">Metal</a>, or <a href="dawn.html#wrap-dawn-textures">Dawn</a> page, then create a surface that wraps it:</p>
+<pre><code class="lang-csharp">using var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888);
+
+surface.Canvas.Clear(SKColors.White);
+// ... draw, then Snap / InsertRecording / Submit as above ...
+</code></pre>
+<h3 id="releasing-a-wrapped-texture">Releasing a wrapped texture</h3>
+<p>When Skia is done with a wrapped backend texture it can notify you through the parameterless <code>SKGraphiteReleaseDelegate</code> accepted by the wrap overloads. The callback means Skia no longer needs the texture; it does not automatically delete a texture allocated through <code>CreateBackendTexture</code>.</p>
+<p>The callback fires after the wrapping surface or image is disposed and pending GPU work has drained. Disposing the wrapper alone is not enough. Delete a Skia-allocated backend texture only after the callback fires, and release an externally allocated texture through the API that created it. The <a href="vulkan.html#release-a-wrapped-texture">Vulkan page</a> contains the complete wrapper-dispose, GPU-drain, callback, delete, and failure sequence.</p>
+<p><code>SKImage.FromTexture</code> has the same release-callback overload and fires after image disposal and GPU drain.</p>
+<h2 id="using-textures-as-images">Using textures as images</h2>
+<p>You can also move between GPU textures and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage"><code>SKImage</code></a> objects on a recorder:</p>
+<ul>
+<li><p><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage.fromtexture"><code>SKImage.FromTexture</code></a> wraps a backend texture as a sampling image you can draw onto a surface:</p>
+<pre><code class="lang-csharp">using var image = SKImage.FromTexture(
+    recorder, backendTexture, SKColorType.Rgba8888, SKAlphaType.Premul);
+</code></pre>
+<p>A longer overload also takes a color space and a parameterless <code>SKGraphiteReleaseDelegate</code> that fires once when Skia releases the wrapped texture.</p>
+</li>
+<li><p><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimage.totextureimage"><code>ToTextureImage</code></a> uploads an existing image (for example, one decoded on the CPU) into a GPU-backed image on the recorder:</p>
+<pre><code class="lang-csharp">using var gpuImage = cpuImage.ToTextureImage(recorder);
+</code></pre>
+</li>
+</ul>
+<h2 id="drawing-cpu-images-the-image-provider">Drawing CPU images: the image provider</h2>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>Unlike Ganesh, Graphite does <strong>not</strong> automatically upload a non-Graphite <code>SKImage</code> to the GPU. If you draw a raster/CPU-backed <code>SKImage</code> — for example one you decoded with <code>SKImage.FromEncodedData</code> — onto a Graphite surface <strong>without an image provider, the draw is silently dropped</strong>: nothing appears and no error is raised.</p>
+</div>
+<p>There are two ways to handle this. You can upload each image yourself with <a href="#using-textures-as-images"><code>ToTextureImage</code></a> and draw the GPU-backed result. Or you can give the recorder an <em>image provider</em> callback that uploads CPU images on demand when ordinary <code>DrawImage</code> calls need them.</p>
+<p>Pass the callback to the <code>CreateRecorder</code> overload that accepts one. SkiaSharp ships a ready-made <code>SKGraphiteImageCache</code> whose <code>FindOrCreate</code> method implements the callback (uploading via <code>ToTextureImage</code>) and caches the results — an LRU cache (capped at 256 entries, keyed on the image's unique id and mipmap flag) so repeated draws of the same image don't re-upload every frame:</p>
+<pre><code class="lang-csharp">static SKGraphiteRecorder CreateRecorderWithImageCache(SKGraphiteContext context)
+{
+    var imageCache = new SKGraphiteImageCache();
+    return context.CreateRecorder(
+        recorderBudgetBytes: -1,                   // -1 = use Skia's default budget
+        findOrCreate: imageCache.FindOrCreate,     // uploads + caches CPU images on demand
+        findOrCreateDispose: imageCache.Dispose);  // released with the recorder
+}
+
+using var recorder = CreateRecorderWithImageCache(context);
+
+using var surface = SKSurface.Create(recorder, info);
+surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provider
+</code></pre>
+<p>The callback has the signature <code>SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)</code>, and returning <code>null</code> drops that image's draw. <code>SKGraphiteImageCache</code> is <code>IDisposable</code>; pass its <code>Dispose</code> as <code>findOrCreateDispose</code> so its cached GPU images are released while the recorder is still alive. Provide your own delegate if you want custom upload or caching behavior; otherwise <code>SKGraphiteImageCache</code> is the simplest default.</p>
+<h2 id="context-options">Context options</h2>
+<p>The <code>Create*</code> factories accept an optional <code>SKGraphiteContextOptions</code>. The most commonly useful field is <code>InternalMultisampleCount</code> (the internal MSAA sample count), which must be <code>0</code> (use Skia's default) or one of <code>1</code>, <code>2</code>, <code>4</code>, <code>8</code>, or <code>16</code>; other values are rejected. Other options include a GPU byte budget (<code>GpuBudgetInBytes</code>) and driver-workaround toggles.</p>
+<pre><code class="lang-csharp">var options = new SKGraphiteContextOptions
+{
+    InternalMultisampleCount = 4,
+    GpuBudgetInBytes = -1, // preserve Skia's default 256 MB resource budget
+};
+using var context = SKGraphiteContext.CreateMetal(backendContext, options);
+</code></pre>
+<p>The factory overloads that <strong>don't</strong> take options use Skia's defaults, including its default GPU resource budget (256 MB). If you build an <code>SKGraphiteContextOptions</code> yourself and want that same default budget, set <code>GpuBudgetInBytes = -1</code> (the &quot;use Skia's default&quot; sentinel). A literal <code>0</code> creates a zero-byte resource cache.</p>
+<h2 id="managing-resources">Managing resources</h2>
+<p>An <code>SKGraphiteContext</code> exposes a few properties and methods for inspecting and managing GPU resources:</p>
+<ul>
+<li><code>Backend</code>, <code>IsDeviceLost</code>, <code>MaxTextureSize</code>, and <code>SupportsProtectedContent</code> report the state of the underlying device.</li>
+<li><code>MaxBudgetedBytes</code> gets or sets the GPU memory budget (defaulting to Skia's 256 MB); <code>CurrentBudgetedBytes</code> reports current usage.</li>
+<li><code>FreeGpuResources()</code> releases cached GPU resources; <code>PerformDeferredCleanup(TimeSpan)</code> purges resources unused for longer than the given duration.</li>
+</ul>
+<p>Dispose recordings, surfaces, recorders, and the context when you are done. The context manages its cached GPU resources. Backend textures created with <code>CreateBackendTexture</code> remain caller-owned and must be deleted after their wrappers and pending GPU work are gone, as shown in <a href="#releasing-a-wrapped-texture">Releasing a wrapped texture</a>.</p>
+<h2 id="pipeline-compilation">Pipeline compilation</h2>
+<p>Graphite renders by building a GPU <strong>pipeline</strong> (a compiled shader program) for each distinct combination of draw operation, paint effects, blend mode, and target surface format. Each pipeline is compiled the <strong>first time</strong> that combination is drawn, and then cached on the context for reuse.</p>
+<p>Two practical consequences follow:</p>
+<ul>
+<li><strong>The first frame that uses a new combination can be slower</strong>, because the pipeline is compiled on demand (during <code>Snap</code>/<code>InsertRecording</code>). Subsequent frames can reuse the cached pipeline and avoid that first-use compilation cost.</li>
+<li><strong>If the driver cannot compile the pipeline, <code>recorder.Snap()</code> returns <code>null</code></strong> for that frame. This is exactly the <a href="metal.html#simulator-caveats">iOS Simulator gradient limitation</a> — the simulator's Metal compiler rejects the pipeline Graphite emits for gradient shaders. Always null-check <code>Snap()</code>.</li>
+</ul>
+<p>Skia itself supports <em>pipeline precompilation</em> — warming the pipeline cache before the first frame so there is no first-use hitch — but that is not yet surfaced in SkiaSharp. The first use of a new draw/paint combination therefore pays a one-time compilation cost.</p>
+<h2 id="status-and-enums">Status and enums</h2>
+<p>Graphite uses a handful of enums and one shared result type:</p>
+<ul>
+<li><code>SKGraphiteBackend</code> — <code>Dawn</code>, <code>Metal</code>, <code>Vulkan</code>, or <code>Unknown</code>.</li>
+<li><code>SKGraphiteInsertStatus</code> — the result of <code>InsertRecording</code>; <code>Success</code> plus failure reasons such as <code>InvalidRecording</code>, <code>AddCommandsFailed</code>, and <code>OutOfOrderRecording</code>.</li>
+<li><code>SKImageRescaleGamma</code> — <code>Src</code> or <code>Linear</code>, for the optional readback rescale. Backend-neutral (shared with the Ganesh async-read path), not Graphite-specific.</li>
+<li><code>SKImageRescaleMode</code> — <code>Nearest</code>, <code>Linear</code>, <code>RepeatedLinear</code>, or <code>RepeatedCubic</code>, for the optional readback rescale. Also backend-neutral.</li>
+<li><code>SKImageReadPixelsResult</code> — the backend-neutral result handed to the <code>RequestReadPixels</code> callback (see <a href="#reading-pixels-back">Reading pixels back</a>). <code>IDisposable</code> and valid only for the duration of the callback.</li>
+</ul>
+<h2 id="related-links">Related links</h2>
+<ul>
+<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp">SkiaSharp APIs</a></li>
+<li><a href="../index.html">Surface overview</a></li>
+<li><a href="../ganesh/index.html">Ganesh GPU surfaces</a></li>
+<li><a href="migrate-from-ganesh.html">Migrate from Ganesh to Graphite</a></li>
+<li><a href="https://skia.org/docs/user/api/skcanvas_creation/">Skia GPU documentation (skia.org)</a></li>
+</ul>
+
+</article>
+
+        <div class="contribution d-print-none">
+          <a href="https://github.com/mono/SkiaSharp/blob/4566/merge/documentation/docfx/guides/surfaces/graphite/index.md/#L1" class="edit-link">Edit this page</a>
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+    <div class="container-xxl search-results" id="search-results"></div>
+
+    <footer class="border-top text-secondary">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          PR #4566 · mattleibow-graphite-surface-docs · 44857b2
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
