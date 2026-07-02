@@ -224,6 +224,19 @@ jobs:
           # AI in SkiaSharp page → /ai/
           cp -r documentation/site/ai site/ai
 
+          # Refresh the "Moving faster with AI" dashboard cache. Best-effort: the
+          # committed snapshot (already copied above) is the fallback, and each
+          # source degrades independently keeping its last-known "as of" values.
+          # Deepen only the superproject (never the huge Skia submodule) so the
+          # generator can read milestone-bump history from git instead of the API.
+          git fetch --no-recurse-submodules --unshallow 2>/dev/null \
+            || git fetch --no-recurse-submodules --deepen=5000 2>/dev/null \
+            || true
+          python3 scripts/infra/docs/generate-ai-dashboard.py \
+            --output site/ai/dashboard-data.json \
+            --base documentation/site/ai/dashboard-data.json \
+            || echo "::warning::AI dashboard refresh failed; shipping committed snapshot"
+
           touch site/.nojekyll
 
           # Inject build info into landing page footer
