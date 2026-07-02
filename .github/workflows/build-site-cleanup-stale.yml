@@ -46,6 +46,12 @@ jobs:
             exit 0
           fi
 
+          # Open PRs whose staging is removed once inactive longer than this.
+          STALE_MAX_AGE_DAYS="${STALE_MAX_AGE_DAYS:-90}"
+          now_epoch=$(date -u +%s)
+          cutoff_epoch=$(date -u -d "${STALE_MAX_AGE_DAYS} days ago" +%s)
+          echo "Removing staging for closed/merged PRs, and open PRs inactive for more than ${STALE_MAX_AGE_DAYS} days"
+
           stale_dirs=()
 
           for dir in staging/*/; do
@@ -58,14 +64,28 @@ jobs:
               continue
             fi
 
-            # Query PR state via GitHub CLI
-            pr_state=$(gh pr view "$pr_number" \
+            # Query PR state and last-updated time via GitHub CLI
+            pr_json=$(gh pr view "$pr_number" \
               --repo "$GITHUB_REPOSITORY" \
-              --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
+              --json state,updatedAt 2>/dev/null || echo "")
 
-            echo "PR #$pr_number — state: $pr_state"
+            # Leave the directory in place if the PR can't be resolved
+            if [ -z "$pr_json" ]; then
+              echo "PR #$pr_number — state: UNKNOWN (leaving in place)"
+              continue
+            fi
+
+            pr_state=$(echo "$pr_json" | jq -r '.state')
+            pr_updated=$(echo "$pr_json" | jq -r '.updatedAt')
+            updated_epoch=$(date -u -d "$pr_updated" +%s)
+            age_days=$(( (now_epoch - updated_epoch) / 86400 ))
+
+            echo "PR #$pr_number — state: $pr_state, last updated: $pr_updated (${age_days}d ago)"
 
             if [ "$pr_state" = "CLOSED" ] || [ "$pr_state" = "MERGED" ]; then
+              stale_dirs+=("staging/$pr_number")
+            elif [ "$updated_epoch" -lt "$cutoff_epoch" ]; then
+              echo "  → open but inactive for more than ${STALE_MAX_AGE_DAYS} days, marking stale"
               stale_dirs+=("staging/$pr_number")
             fi
           done
