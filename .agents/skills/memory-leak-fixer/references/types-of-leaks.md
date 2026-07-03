@@ -13,7 +13,8 @@ family here is therefore something you can prove and fix from C#.
 Read this alongside [`documentation/dev/memory-management.md`](../../../../documentation/dev/memory-management.md),
 which is the authoritative ownership model (pointer types, `owns:` flag, ref-count rules,
 the `HandleDictionary`, and the same-instance-return contract). This file adds, per family:
-**what it is → why it's bad → a leaking example → the idiomatic fix → a watch-out.**
+**where to look → what it is → why it's bad → a leaking example → the idiomatic fix → a
+watch-out.**
 
 Code samples are illustrative and trimmed to the essential lines; real wrappers add
 argument validation and `GC.KeepAlive`. `✓` = correct, `❌` = the bug.
@@ -40,6 +41,8 @@ Quick index (the `#` is the rotating focus index the skill uses):
 ---
 
 ## 0 — Undisposed native handle
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp`, then trace ownership of each hit through to a `Dispose`/`using`.
 
 **What it is.** A factory, getter, or cache mints an *owned* or *ref-counted* `SKObject`
 (pixels, GPU resources, font tables, encoded data) that escapes without ever being disposed
@@ -80,6 +83,8 @@ or you convert a leak into a double-free.
 
 ## 1 — Wrong `owns:` flag
 
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp`, then match each against the P/Invoke name that produced the handle.
+
 **What it is.** The `owns:` argument to `GetObject`/the wrapper ctor doesn't match the
 ownership contract: a *borrowed* pointer (a `_get_` getter that returns an internal pointer)
 is wrapped `owns:true`, or an *owned* handle (a `_new_`/create that returns a fresh object)
@@ -115,6 +120,8 @@ getter against whether it returns a fresh ref or a borrowed pointer.
 ---
 
 ## 2 — Same-instance double-dispose
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "Subset|ToRasterImage|== source|!= source" binding/SkiaSharp` — any method that can return `this`.
 
 **What it is.** Some methods may return the **same** instance rather than a new one —
 `SKImage.Subset` (can return `this`), `SKImage.ToRasterImage(ensurePixelData:false)`,
@@ -152,6 +159,8 @@ same object.
 ---
 
 ## 3 — Managed retention (Views / handlers)
+
+**Where to look.** `source/SkiaSharp.Views*/**`. `grep -rnE "\+= |event |WeakReference|base\.Dispose|Detach" source/SkiaSharp.Views*` — every `+=` needs a matching teardown.
 
 **What it is.** In `source/SkiaSharp.Views*`: a handler, control, or renderer subscribes to
 an event (`PaintSurface`, `PropertyChanged`, an invalidation ticker, a platform peer callback)
@@ -199,6 +208,8 @@ chaining fixes across the WPF / Forms / MAUI view layers.
 
 ## 4 — `fixed`-pointer lifetime
 
+**Where to look.** `binding/**` and `source/**`. `grep -rnE "fixed *\(" binding source`, then check whether the native call copies the buffer or retains the pointer past the block.
+
 **What it is.** A `fixed` block produces a pointer into a managed array and hands it to native
 code that **stores** the pointer (a non-copying mode) and outlives the block. Once the block
 exits, the array is unpinned.
@@ -237,6 +248,8 @@ API); the ownership model in `documentation/dev/memory-management.md`.
 ---
 
 ## 5 — Finalizer / collection ordering
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "GC.KeepAlive|internal .* Handle" binding/SkiaSharp`, and compare sibling wrappers — one that keeps no parent field where the others do is suspect.
 
 **What it is.** A child wrapper holds a **raw** pointer into a parent's native object but
 keeps no managed reference to the parent. Finalization order is non-deterministic, so the
@@ -288,6 +301,8 @@ covers the current method, so a stored child needs the field.
 
 ## 6 — Clone / copy double-free
 
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "Clone|MemberwiseClone|_clone" binding/SkiaSharp` — check whether the copy shares or duplicates the native pointer.
+
 **What it is.** A `Clone()`/copy that **shares** one native pointer between two managed
 wrappers, both of which believe they own it and will dispose it.
 
@@ -314,6 +329,8 @@ first). The clone must own a *separate* native object, not borrow the source's.
 ---
 
 ## 7 — Disposing native statics / singletons
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "GetDisposeProtectedObject|unrefExisting|CreateSrgb|Empty" binding/SkiaSharp` — immortal objects reached via a non-protected cache.
 
 **What it is.** An *immortal* native object — the default/empty typeface, the sRGB /
 sRGB-linear color spaces and gamma color filters, the blend-mode blender cache, `SKData.Empty`
@@ -347,6 +364,8 @@ gamma filters are the canonical correct implementations to copy.
 ---
 
 ## 8 — Field not nulled on dispose
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "DisposeManaged|= null;" binding/SkiaSharp` — a freed native child field that isn't cleared afterwards.
 
 **What it is.** A `Dispose`/`DisposeManaged` frees a cached native child (a canvas, a
 sub-object) but leaves the managed field still pointing at the now-dead wrapper.
@@ -385,6 +404,8 @@ only reference and leak the native object instead. The order is fixed: **dispose
 
 ## 9 — Managed stream / callback / delegate-proxy lifetime
 
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "DelegateProxies|GCHandle|ManagedStream|ReleaseDelegate" binding/SkiaSharp` — a `GCHandle`/proxy freed too early (dangling) or never (leak).
+
 **What it is.** A managed object handed to native code as a callback sink — an
 `SKManagedStream`/`SKManagedWStream`/`SKAbstractManagedStream`, a delegate or function-pointer
 proxy, or a `GCHandle` pinned for a release/destroy callback — is freed at the wrong time.
@@ -418,6 +439,8 @@ user-data `GCHandle` freed by the destroy proxy — the reference implementation
 ---
 
 ## 10 — Allocation-failure path
+
+**Where to look.** `binding/SkiaSharp/**`. `grep -rnE "GetObject\(\s*[a-z]|if \(handle == " binding/SkiaSharp` — a wrapper returned (or half-built) even when the native create returned null.
 
 **What it is.** A factory wraps and returns a managed object even when the native
 create/decode returned `null`/`0` or failed, or leaks a half-built native object on the error

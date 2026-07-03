@@ -155,10 +155,20 @@ All the methodology lives in the skill. Follow it exactly.
 
 Read and follow `.agents/skills/memory-leak-fixer/SKILL.md` end-to-end.
 
-- If `${{ github.event.inputs.issue_number }}` is set, **fix that specific reported leak**
-  (skill Mode = "Fix a known/reported leak"; consume the issue's retention path, then still
-  enforce Phase 3 red→green).
-- Otherwise **scan and fix** (skill Mode = "Scan and fix"): Phase 1 → 2 → 3 → 4 → 5.
+**Trigger for this run:** `${{ github.event_name }}` — use it to pick the skill mode:
+
+- **`schedule`** or **`pull_request`** → there is never a specific target issue. Run
+  **"Scan and fix"** (Phase 1 → 2 → 3 → 4 → 5). (`pull_request` is additionally a forced
+  dry-run — see Guardrail 6.)
+- **`workflow_dispatch`** → a maintainer may have pinned a specific `[memory-leak]` issue to
+  fix. Its number appears here → `${{ github.event.inputs.issue_number }}`
+  - If that shows a **bare number**, run **"Fix a known/reported leak"** on it (consume the
+    issue's retention path), then still enforce Phase 3 red→green.
+  - If it is **blank** or shows raw, unresolved template text instead of a number, none was
+    supplied — fall back to **"Scan and fix"**.
+
+> That raw, unresolved template text only appears when the value is empty — GitHub leaves the
+> reference in place when there is nothing to substitute. Always read it as "not set".
 
 Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
 Each bash call is a fresh subshell — re-`cd` as needed.
@@ -181,9 +191,10 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    `[memory-leak]` issue with the Phase 1–2 evidence and the proposed fix instead.
 5. **Never weaken, skip, mute, or delete a test, and never edit `*.generated.cs` or anything
    under `externals/skia/**`** (upstream Skia + the C shim are out of scope for this skill).
-6. **Dry run (forced on PRs).** You are in **DRY-RUN** whenever either
-   `${{ github.event.inputs.dry_run }}` is `true` **or** `${{ github.event_name }}` is
-   `pull_request` (a PR editing this workflow/skill is a self-test). In DRY-RUN you do the
+6. **Dry run (forced on PRs).** Decide from the trigger `${{ github.event_name }}`:
+   `pull_request` → **always DRY-RUN** (a PR editing this workflow/skill is a self-test);
+   `workflow_dispatch` with the **dry_run** input `true` (shown as
+   `${{ github.event.inputs.dry_run }}`) → **DRY-RUN**; `schedule` → real run. In DRY-RUN you do the
    full scan→prove→fix locally but you **MUST NOT** emit any `create-pull-request` or
    `create-issue` safe output under any circumstances. Instead, report your findings in the
    step summary **and** emit exactly one **`noop`** whose body is that same summary (what you

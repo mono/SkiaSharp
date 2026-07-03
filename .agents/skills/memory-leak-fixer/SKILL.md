@@ -93,51 +93,29 @@ Run the phases in order. The skill has two entry points:
 
 ## Phase 1 — Scan (find ONE candidate)
 
-### 1.1 Choose a focus area (spread coverage across runs)
-A full 11-family sweep every run is wasteful and the surface is mostly hardened, so start
-from ONE focus family and widen only if it's exhausted. To keep repeated runs from
-re-scanning the same family, rotate the *starting* family. Pick the seed from whatever is
-available — all of these work **locally and in CI** (no dependency on `$GITHUB_RUN_NUMBER`
-or `$RANDOM`, which don't exist / aren't deterministic outside GitHub Actions):
+### 1.1 Choose a focus area (round-robin across runs)
+A full 11-family sweep every run is wasteful and the surface is mostly hardened, so start from
+ONE focus family and widen only if it's exhausted. Rotate the *starting* family on a
+time-based **round-robin** so consecutive runs cover different families. This needs only
+`date`, so it behaves identically locally and in CI — no `$GITHUB_RUN_NUMBER` / `$RANDOM`
+(which don't exist or aren't deterministic outside GitHub Actions):
 
-1. **By recent changes (preferred).** New code is where new leaks are — start with the
-   family the latest changes most plausibly touch:
-   ```bash
-   git log --oneline -30 -- binding/SkiaSharp binding/HarfBuzzSharp source/SkiaSharp.Views*
-   ```
-   (new `owns:`/`GetObject` → family 0/1; new Views event/`Dispose` → 3;
-   new `fixed`/`GCHandle`/proxy → 4/9; new child/iterator type → 5.)
-2. **Deterministic rotation (portable fallback).** If nothing stands out, derive the family
-   from the repo's own commit count — always present in any clone, advances as code lands,
-   no CI env vars, no shell-specific `$RANDOM`:
-   ```bash
-   FOCUS=$(( $(git rev-list --count HEAD 2>/dev/null || echo 0) % 11 ))
-   echo "focus family: $FOCUS"
-   ```
-3. **Manual.** For a targeted local run, just name the family you care about.
+```bash
+# Round-robin: advance one family every hour, cycling through all 11.
+DOY=$(date -u +%j); HOUR=$(date -u +%H)         # day-of-year + hour, both zero-padded
+FOCUS=$(( (10#$DOY * 24 + 10#$HOUR) % 11 ))      # 10# forces base-10
+echo "focus family: $FOCUS"
+```
+The `10#` prefix is **required**: `date` zero-pads `%j`/`%H`, and `$(( 08 ))` is an
+invalid-octal error without it. For a targeted local run, skip the rotation and just name the
+family you want.
 
-Each family is drawn from a **real, historical SkiaSharp leak fix**. The full catalogue —
-description, why-it's-bad, and a leak→fix code example per family — lives in
-**[references/types-of-leaks.md](references/types-of-leaks.md)**. **Read it before scanning.**
-The table below is the scan cheat-sheet (where to look + grep starting points); the `#`
-matches the family numbers in the reference.
-
-| # | Leak family | Where to look | Grep starting points |
-|--:|---|---|---|
-| 0 | Undisposed native handle | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp` (then trace ownership) |
-| 1 | Wrong `owns:` flag | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
-| 2 | Same-instance double-dispose | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
-| 3 | Managed retention (Views) | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · cf. #3309, #2955, #2472 |
-| 4 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · cf. #3472 / PR #3473 (a `fixed` pointer stored by a non-copying native API) |
-| 5 | Finalizer / collection ordering | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` · cf. #3796, #3291; compare sibling wrappers — one that keeps no parent field where others do is suspect |
-| 6 | Clone / copy double-free | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · cf. #2904, #2899 |
-| 7 | Disposing native statics/singletons | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|Empty" binding/SkiaSharp` · cf. #1863, #4080, #1224 |
-| 8 | Field not nulled on dispose | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` · cf. #1256, #1344 |
-| 9 | Stream / callback / delegate-proxy lifetime | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · cf. #3589, #2916, #996 |
-| 10 | Allocation-failure path | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` · cf. #1784, #1642 |
-
-Treat the table as a starting point, not a cage. If the focus family is exhausted (its
-leaks are already open issues/PRs — see 1.3), advance to the next index.
+Every family is drawn from a **real, historical SkiaSharp leak fix**. Now open
+**[references/types-of-leaks.md](references/types-of-leaks.md)** and load family `#FOCUS`: its
+**Where to look** line gives the path + grep starting points, and the rest of the entry is the
+description, why-it's-bad, a leak→fix example, and the per-family anti-pattern. **Read that
+family before scanning.** If it's exhausted (its leaks are already open issues/PRs — see 1.3),
+advance to the next index and load that family.
 
 ### 1.2 Establish the retention/ownership path
 For each candidate write the precise path **with `file:line` citations**:
