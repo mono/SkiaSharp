@@ -1944,7 +1944,7 @@ def format_pr_list(prs, metadata):
 
     ai_lines = [
         "<!-- AI: Use the raw PR data in the comment above to write polished",
-        "     release notes here. Follow documentation/docfx/releases/TEMPLATE.md",
+        "     release notes here. Follow .agents/skills/release-notes/references/TEMPLATE.md",
         "     for structure and tone.",
     ]
     if metadata.get("preview_milestones"):
@@ -2003,7 +2003,7 @@ def get_version_files():
     versions = []
     next_versions = []
     for f in RELEASES_DIR.iterdir():
-        if (f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md")
+        if (f.suffix == ".md" and f.name != "index.md"
                 and not f.name.endswith(".notes.md")):
             stem = f.stem
             if stem.endswith("-unreleased"):
