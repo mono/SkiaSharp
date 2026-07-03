@@ -6,8 +6,8 @@ namespace SkiaSharp;
 
 public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 {
-	private IReadOnlyList<string> uniformNames;
-	private IReadOnlyList<string> childNames;
+	private IReadOnlyList<string> uniformNames = Array.Empty<string>();
+	private IReadOnlyList<string> childNames = Array.Empty<string>();
 
 	internal SKMeshSpecification (IntPtr handle, bool owns)
 		: base (handle, owns)
@@ -108,7 +108,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 					alphaType,
 					errorString.Handle));
 
-				errors = errorString?.ToString ();
+				errors = errorString.ToString ();
 				if (errors?.Length == 0)
 					errors = null;
 
@@ -145,7 +145,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		ReadOnlySpan<SKMeshSpecificationVarying> varyings,
 		string vertexShader,
 		string fragmentShader,
-		SKColorSpace colorSpace,
+		SKColorSpace? colorSpace,
 		SKAlphaType alphaType)
 	{
 		var spec = Create (attributes, vertexStride, varyings, vertexShader, fragmentShader, colorSpace, alphaType, out var errors);
@@ -192,7 +192,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 	// ToMesh
 
-	public SKMesh ToMesh (
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -202,7 +202,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out _);
 	}
 
-	public SKMesh ToMesh (
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -213,7 +213,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, (SKData?)null, null, bounds, out errors);
 	}
 
-	public SKMesh ToMesh (
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -226,7 +226,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			uniforms?.ToData (), children?.ToArray (), bounds, out _);
 	}
 
-	public SKMesh ToMesh (
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -237,7 +237,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out _);
 	}
 
-	public SKMesh ToMesh (
+	public SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -249,7 +249,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return ToMesh (mode, vertexBuffer, vertexCount, vertexOffset, uniforms, null, bounds, out errors);
 	}
 
-	private SKMesh ToMesh (
+	private SKMesh? ToMesh (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -284,7 +284,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (!SkiaApi.sk_mesh_validate (mesh.Handle, errorString.Handle)) {
 			mesh.Dispose ();
 
-			errors = errorString?.ToString ();
+			errors = errorString.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
 
@@ -297,7 +297,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 
 	// ToMeshIndexed
 
-	public SKMesh ToMeshIndexed (
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -311,7 +311,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out _);
 	}
 
-	public SKMesh ToMeshIndexed (
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -326,7 +326,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			indexBuffer, indexCount, indexOffset, (SKData?)null, null, bounds, out errors);
 	}
 
-	public SKMesh ToMeshIndexed (
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -343,7 +343,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			uniforms?.ToData (), children?.ToArray (), bounds, out _);
 	}
 
-	public SKMesh ToMeshIndexed (
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -358,7 +358,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			indexBuffer, indexCount, indexOffset, uniforms, null, bounds, out _);
 	}
 
-	public SKMesh ToMeshIndexed (
+	public SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -374,7 +374,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 			indexBuffer, indexCount, indexOffset, uniforms, null, bounds, out errors);
 	}
 
-	private SKMesh ToMeshIndexed (
+	private SKMesh? ToMeshIndexed (
 		SKMeshMode mode,
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
@@ -415,7 +415,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		if (!SkiaApi.sk_mesh_validate (mesh.Handle, errorString.Handle)) {
 			mesh.Dispose ();
 
-			errors = errorString?.ToString ();
+			errors = errorString.ToString ();
 			if (errors?.Length == 0)
 				errors = null;
 
@@ -426,7 +426,7 @@ public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounte
 		return mesh;
 	}
 
-	internal static SKMeshSpecification GetObject (IntPtr handle) =>
+	internal static SKMeshSpecification? GetObject (IntPtr handle) =>
 		handle == IntPtr.Zero ? null : new SKMeshSpecification (handle, true);
 }
 
