@@ -81,15 +81,19 @@ This release focuses on hardening the native libraries against common exploit te
 
 ## Breaking Changes
 
-<!-- Always include. SUMMARIZE from the companions the raw-data block lists (§4.7):
-     - the API breaking diff (*.breaking.md) — the changed / removed signatures; and
-     - any behavioral breaking notes in the manual additions sidecar (<stem>.notes.md)
-       (same signature, different runtime behavior — these NEVER appear in a signature
-       diff, so the sidecar is the only channel for them).
+<!-- Always include. OPEN and SUMMARIZE from the companions the raw-data block lists (§4.7):
+     - the API breaking diff (*.breaking.md) — OPEN every listed file and turn each concrete
+       entry (removed interface, removed / changed / obsoleted member, retyped property) into a
+       bullet; group related ones but drop nothing. A link is NOT a substitute for reading it,
+       and PR titles are NOT a substitute for the diff's actual entries; and
+     - the manual additions sidecar (<stem>.notes.md) — behavioral breaks (same signature,
+       different runtime behavior) AND interop / native-struct breaks (e.g. removed
+       GRVkBackendContextNative fields) that NEVER appear in a signature diff. The sidecar is
+       the only channel for these — fold them in alongside the diff items.
      Summarize, don't dump: e.g. "Obsoleted several APIs in SKPaint and SKFont" or
      "SKFooBar was removed — use SKBaz instead". Small migration code examples are welcome.
-     Point at the API diff link (above) for the exhaustive list. If NEITHER companion has
-     anything, say so explicitly. -->
+     Point at the API diff link (above) for the exhaustive member list. If NEITHER companion
+     has anything, say so explicitly. -->
 
 *None in this release.*
 

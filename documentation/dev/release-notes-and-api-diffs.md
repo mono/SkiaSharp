@@ -951,16 +951,25 @@ need to escape a companion's own `-->` (the loader only hashes bytes).
 The AI reads the page's raw-data block, then **opens and reads** the manifest's companions
 and writes a **summary**, not a dump:
 
-- **Breaking changes → a concise `## ⚠️ Breaking Changes` section.** From the `.breaking.md`
-  (the signature "what") plus any behavioral items in `.notes.md` (the "why / how"), the AI
-  summarizes — e.g. "Obsoleted several APIs in `SKPaint` and `SKFont`", "`SKFooBar` was
-  removed — use `SKBaz` instead" — and may include small **migration code examples**. It is
-  not required to enumerate every changed member; it surfaces the ones that matter and points
-  at the diff for the exhaustive list.
-- **Behavioral breaking changes** (same signature, different runtime behavior — e.g.
-  `new SKPaint().Typeface` now returning `Default` instead of `null`) never appear in a
-  signature diff, so they reach the notes **only** through `.notes.md`; the AI folds them into
-  the same section.
+- **Breaking changes → a concise `## ⚠️ Breaking Changes` section.** The AI must **open every
+  `.breaking.md` the manifest lists** and turn its concrete entries — each removed interface,
+  removed / changed / obsoleted member, and retyped property under its `####`/`###` headings —
+  into prose. **A link to the breaking diff is not a substitute for reading it, and PR titles
+  are not a substitute for the diff's actual entries:** never emit a section that only links the
+  file and then lists PRs. Summarize rather than dump (group related members — "obsoleted the
+  text/font members on `SKPaint`"; "`SKFooBar` was removed — use `SKBaz`"), but every
+  **distinct** break in the diff must be represented, not silently dropped; add small
+  **migration code examples** where they help and point at the API-diff index for the exhaustive
+  member list.
+- **Breaks the signature diff cannot see** reach the notes **only** through `.notes.md`, and the
+  AI folds them into the same section:
+  - **behavioral changes** — same signature, different runtime behavior (e.g.
+    `new SKPaint().Typeface` now returning `Default` instead of `null`); and
+  - **interop / native structs** outside the public-API surface the diff compares (e.g. removed
+    `GRVkBackendContextNative` fields) — real compile-time breaks that never show in any
+    `.breaking.md`.
+  Treat the breaking diff and the notes sidecar as **complementary**: include both, and never
+  let one substitute for the other.
 - **Editorial "bring this out" notes** from `.notes.md` are woven into Highlights / a callout
   as the maintainer intends — kept close to verbatim where the wording clearly matters,
   summarized where they are rough notes.
