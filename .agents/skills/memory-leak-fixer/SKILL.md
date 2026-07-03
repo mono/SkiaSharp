@@ -44,6 +44,11 @@ C-API `sk_ref_sp` / `.release()` conventions). This skill assumes that model.
 6. **Honest scope note.** In every issue/PR, say whether it is a clear framework bug or a
    usage footgun the framework could harden — and what is *empirically proven* vs
    *statically reasoned*.
+7. **Finding nothing is the expected outcome.** SkiaSharp is mature and heavily hardened;
+   there is **no planted/seeded bug** waiting to be found. Most runs should end with **no
+   candidate**. Never invent a leak, never rationalize deliberately-hardened, well-documented
+   code as "decoys," and never lower the evidence bar to force a result. A quiet run is a
+   first-class success — report it and emit a single `noop` (see Phase 5).
 
 ---
 
@@ -60,6 +65,12 @@ Run the phases in order. The skill has two entry points:
 ---
 
 ## Phase 0 — Setup
+
+> **CI runner reality:** on the agentic-workflow runner the **skia submodule is NOT checked
+> out**, so the C/C++ sources under `externals/skia` are unavailable. Scan the **managed C#**
+> surface (`binding/**`, `source/SkiaSharp.Views*`) only, and prefer managed-C# fixes you can
+> validate with pre-built natives. Treat the missing submodule as a normal constraint — do not
+> try to fetch it, and do not treat its absence as a failure.
 
 1. Confirm the SDK: `dotnet --version`.
 2. Decide the **fix layer** you are willing to validate this run (this gates which
@@ -128,8 +139,10 @@ gh pr list --repo "$GITHUB_REPOSITORY" --search '"[memory-leak]" in:title' \
 A candidate is OUT only if an **open** issue/PR already covers the same
 handle / ownership path. A candidate whose only prior item is CLOSED may be re-filed.
 
-Pick the ONE strongest candidate. If none is convincing, stop — a quiet run is a success
-(the surface is hardened; the value is catching *new* leaks as code lands).
+Pick the ONE strongest candidate. If none is convincing, **stop** — a quiet run is a success
+(the surface is hardened; the value is catching *new* leaks as code lands). Do not keep
+digging past a reasonable single pass hoping to manufacture a finding: report the quiet result
+and emit a `noop` (Phase 5).
 
 ---
 
@@ -247,6 +260,12 @@ Phase 1–2 evidence and the proposed fix instead, so nothing is lost.
 Write a short summary: which family, the candidate, proof result, and the PR/issue link.
 When run from the agentic workflow, append this to the run's step summary.
 
+**Always end with exactly one safe output.** If you shipped a fix, that is the
+`create-pull-request`; if you filed an issue, that is the `create-issue`; if the run was quiet
+(no convincing candidate) **or** a dry run, emit a single **`noop`** carrying this summary. A
+`noop` is the correct "nothing to do / analysis only" signal — never finish with no safe
+output, which makes the run look incomplete.
+
 ## Anti-patterns (reject your own attempt if you catch these)
 
 | Anti-pattern | Why it's wrong |
@@ -257,3 +276,4 @@ When run from the agentic workflow, append this to the run's step summary.
 | Editing `*.generated.cs` by hand | Overwritten on regenerate; use `generate.ps1`. |
 | Changing a public signature to "fix" ownership | ABI break — add an overload or fix internals. |
 | Disposing a same-instance return unconditionally | Double-free crash. |
+| Assuming a bug must exist / calling hardened code "decoys" | There is no seeded bug; manufacturing a finding produces false positives. |

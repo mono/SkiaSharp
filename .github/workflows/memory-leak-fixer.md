@@ -125,8 +125,25 @@ safe-outputs:
 You **scan** SkiaSharp for one native ownership / disposal memory leak, **prove** it with a
 red→green regression test, **fix** it, and open **one draft PR** — or, when the only viable
 fix needs a native/C-API source build you can't validate this run, file **one**
-`[memory-leak]` issue instead. **At most one action per run.** A quiet run (nothing
-convincing found) is a success — create nothing.
+`[memory-leak]` issue instead. **At most one action per run.**
+
+**Read this first — set your expectations correctly:**
+
+- SkiaSharp is a **mature, heavily-hardened** codebase. There is **no planted/seeded/injected
+  bug** to find. Most runs will (and should) find **nothing convincing** — that is the normal,
+  expected, successful outcome, **not** a failure and **not** a puzzle with a guaranteed answer.
+  Do **not** invent a leak, do **not** rationalize well-documented, deliberately-hardened code
+  as "decoys," and do **not** lower your evidence bar just to produce a result.
+- A quiet run is a **first-class success**: when you find nothing that clears the bar, emit
+  exactly **one `noop`** safe output summarizing what you scanned and why nothing qualified.
+  A `noop` is the correct "nothing to do" signal — silence makes the run look incomplete.
+- The **skia submodule is NOT checked out** on this runner, so the C/C++ sources under
+  `externals/skia` are unavailable. Scan the **managed C# bindings** (`binding/`,
+  `source/SkiaSharp.Views*`) only. Treat the submodule's absence as a normal constraint, not a
+  blocker — never spend time trying to fetch it or reason about C-API source you cannot see.
+- **Timebox the scan.** Do one focused pass over the leak families, pick the single strongest
+  candidate early, and stop. If nothing clears the bar in that pass, emit the `noop` and finish
+  — do not launch open-ended sub-agent explorations that may not return within the budget.
 
 All the methodology lives in the skill. Follow it exactly.
 
@@ -144,8 +161,9 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 
 ## Step 2 — Guardrails (in addition to the skill's golden rules)
 
-1. **One action per run.** Emit either one `create-pull-request` **or** one `create-issue`,
-   never both, or nothing.
+1. **One action per run.** Emit either one `create-pull-request` **or** one `create-issue`
+   **or** one `noop`, never more than one. When you have nothing to ship, the action is a
+   single `noop` — never finish with no safe output at all (that makes the run look incomplete).
 2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
    `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
    CLOSED may be re-filed.
@@ -166,8 +184,10 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    `${{ github.event.inputs.dry_run }}` is `true` **or** `${{ github.event_name }}` is
    `pull_request` (a PR editing this workflow/skill is a self-test). In DRY-RUN you do the
    full scan→prove→fix locally but you **MUST NOT** emit any `create-pull-request` or
-   `create-issue` safe output under any circumstances — report everything in the step
-   summary only.
+   `create-issue` safe output under any circumstances. Instead, report your findings in the
+   step summary **and** emit exactly one **`noop`** whose body is that same summary (what you
+   scanned, the strongest candidate if any, and — had this been a real run — whether you would
+   have opened a PR or filed an issue). Never finish a dry run with no safe output.
 7. **AI attribution.** Every PR/issue body must clearly state it was produced by this
    agentic workflow + the `memory-leak-fixer` skill, and include an honest scope note
    (framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact).
@@ -178,3 +198,7 @@ Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symli
 run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak family, the candidate
 (with `file:line`), the proof result (alive/collected counts or red→green status), and the
 resulting PR/issue link — or "no convincing candidate this run" for a quiet run.
+
+Then make sure you have emitted exactly one safe output (Step 2.1): a `create-pull-request`, a
+`create-issue`, or — for a dry run or a quiet run — a single `noop` carrying this same summary.
+Never finish the run with no safe output.
