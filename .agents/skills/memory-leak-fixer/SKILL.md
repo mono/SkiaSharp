@@ -266,7 +266,8 @@ the *fix* are tracked separately and the issue **auto-closes when the PR merges*
 
 ### 4.1 The issue — the finding
 Emit a `create_issue` that describes the **leak, not the fix**. Give it a `temporary_id`
-(format `aw_` + 3–12 letters/digits/underscores, e.g. `aw_leak1`) so the PR can reference it
+(format `aw_` + 3–8 alphanumeric characters — no underscores or other symbols — e.g. `aw_leak1`)
+so the PR can reference it
 before its real number exists. Body (markdown):
 - **AI-generated banner** naming this workflow + the `memory-leak-fixer` skill.
 - **Family**, and the **retention/ownership path** with `file:line` citations.
