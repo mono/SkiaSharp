@@ -22,6 +22,16 @@
      "No changes" pages (a HarfBuzz line with no HarfBuzz-touching changes) are written
      in full by the GENERATOR and are NOT in your "Files to polish" list — never author
      or edit one.
+
+     COMPANION FILES (see release-notes-and-api-diffs.md §4.7): the raw-data block at the
+     top of a page may list "companions — open and read these during polish":
+       - the manual additions sidecar (<stem>.notes.md) — freeform maintainer notes;
+       - the full API diff (<line>/index.md, + per-assembly files); and
+       - the API breaking diff (*.breaking.md) — present only when signatures broke.
+     OPEN and READ each listed companion, then SUMMARIZE — never paste it verbatim or dump
+     the whole diff. Weave the manual notes into Highlights / Breaking Changes; summarize
+     breaking changes from the breaking diff. You may READ these files but NEVER edit them,
+     and never touch git or the gh API.
 -->
 
 # Version 3.119.2
@@ -61,15 +71,39 @@
 
 ## Highlights
 
-<!-- 1-3 sentences. Lead with what matters most. Mention community contributors. -->
+<!-- 1-3 sentences. Lead with what matters most. Mention community contributors.
+     If the manual additions sidecar (<stem>.notes.md, see §4.7) has editorial points
+     the maintainer wants brought out, weave them in here in your own words. -->
 
 This release focuses on hardening the native libraries against common exploit techniques on Windows and Linux. Spectre mitigations, Control Flow Guard, and BufferSecurityCheck are now enabled across all Windows and Linux native builds. Three community contributors drove every user-facing change in this release.
 
 ## Breaking Changes
 
-<!-- Always include. If none, say so explicitly. -->
+<!-- Always include. SUMMARIZE from the companions the raw-data block lists (§4.7):
+     - the API breaking diff (*.breaking.md) — the changed / removed signatures; and
+     - any behavioral breaking notes in the manual additions sidecar (<stem>.notes.md)
+       (same signature, different runtime behavior — these NEVER appear in a signature
+       diff, so the sidecar is the only channel for them).
+     Summarize, don't dump: e.g. "Obsoleted several APIs in SKPaint and SKFont" or
+     "SKFooBar was removed — use SKBaz instead". Small migration code examples are welcome.
+     Point at the API diff link (above) for the exhaustive list. If NEITHER companion has
+     anything, say so explicitly. -->
 
 *None in this release.*
+
+<!-- Example when there ARE breaking changes:
+- **`SKFont` default typeface** — `new SKFont()` now carries an empty typeface instead of
+  the default. Pass one explicitly when you need the default face:
+
+  ```csharp
+  // Before: implicitly the default typeface
+  var font = new SKFont();
+  // After: pass the typeface you want
+  var font = new SKFont(SKTypeface.Default);
+  ```
+- **Removed Vulkan fields** — several `GRVkBackendContext` fields were removed; see the API
+  diff for the full list.
+-->
 
 ## New Features
 
@@ -158,4 +192,9 @@ Added missing tvOS `SKSurface.Create` overloads, plus build system improvements.
        links. The script injects the "> **API changes**" line under the banner on every
        emitted page; keep it verbatim and add nothing. No block means no folder yet — a
        hand-written link would dangle.
+     - Companions (§4.7): if the raw-data block lists "companions", open and read each one
+       (manual notes sidecar, full API diff, breaking diff) and SUMMARIZE. Weave manual
+       notes into Highlights/Breaking Changes; summarize breaking changes from the breaking
+       diff with a small migration example where it helps. Never dump a diff verbatim, and
+       never edit a companion file.
 -->

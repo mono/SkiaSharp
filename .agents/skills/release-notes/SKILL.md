@@ -117,12 +117,14 @@ script** (module + function docstrings in `generate-release-notes.py`) and are i
 NOT restated here, so this skill can never drift from the code.
 
 **Your job is narrow: rewrite the body of each file in the "Files to polish" list**, using
-that file's embedded raw-data block, and nothing else. Do **not** create files, rename
-files, compute diff ranges, or reason about released-vs-unreleased or rollup-vs-delta — if
-you catch yourself doing any of that, stop: the script already did it. **Never edit the
-script.** If a page you expect is missing (or an unexpected one exists, or any data looks
-wrong), **stop and report it** — do not work around it and do not touch the script. A
-maintainer decides whether the script needs fixing; the Polish phase only polishes.
+that file's raw-data block **plus the companion files that block references** (see
+[Companion files](#companion-files-open-and-read-them) below), and nothing else. Do **not**
+create files, rename files, compute diff ranges, or reason about released-vs-unreleased or
+rollup-vs-delta — if you catch yourself doing any of that, stop: the script already did it.
+**Never edit the script, and never edit a companion file.** If a page you expect is missing
+(or an unexpected one exists, or any data looks wrong), **stop and report it** — do not work
+around it and do not touch the script. A maintainer decides whether the script needs fixing;
+the Polish phase only polishes.
 
 The one structural fact you **consume** (never compute) while polishing: when a page rolls
 up tagged previews, the script delivers the PRs already **grouped into per-preview buckets**
@@ -137,6 +139,34 @@ reorder, or recompute any of this; it is the script's output.
 The file starts with an HTML comment block containing both metadata (version, status, branch,
 diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
 placeholder for polished content. The raw data comment must be preserved in the final file.
+
+#### Companion files (open and read them)
+
+The raw-data block is still your **primary** input, and it remains the reason you never touch
+git or the gh API — it carries the PR titles, authors, and numbers. On top of that, the block
+may list a **companions** manifest: extra files, already on disk, that you should **open and
+read** while polishing, then **summarize**. There are up to three, all referenced by
+page-relative path (see `release-notes-and-api-diffs.md` §4.7):
+
+| Companion | What it is | Use it for |
+| --- | --- | --- |
+| `<stem>.notes.md` | **Manual additions sidecar** — freeform Markdown the maintainer wrote to bring something out (not always breaking). | Weave its editorial points into Highlights; surface any behavioral breaking notes under Breaking Changes. |
+| `<line>/index.md` (+ per-assembly files) | The **full public-API diff**. | Draw richer, accurate highlights (what was added/changed). Do **not** paste it — summarize. |
+| `<line>/…/*.breaking.md` | The **API breaking diff** — present only when signatures actually broke. | The "what" of Breaking Changes: obsoleted / removed / changed signatures. |
+
+Rules for companions:
+
+- **Open and read** each one the manifest lists, then **summarize** — never paste a diff
+  verbatim or dump the whole file. A human summary ("obsoleted several APIs in `SKPaint` and
+  `SKFont`"; "`SKFooBar` was removed — use `SKBaz`") with a small migration code example where
+  it helps is the goal.
+- **Behavioral breaking changes** (same signature, different runtime behavior — e.g.
+  `new SKFont()` now carries an empty typeface) will **not** appear in the API breaking diff.
+  The `<stem>.notes.md` sidecar is the **only** channel for them — read it carefully.
+- You may **read** these files but **never edit them** — they are inputs/artifacts, owned by
+  the maintainer and the Prepare script. Still no git, no gh API, no other files.
+- If the manifest lists a companion but the file is missing (or vice-versa), **stop and
+  report it** — do not work around it.
 
 **IMPORTANT:** The list of files to polish is **always** at `output/files-to-polish.txt`
 (one repo-relative path per line, nothing else). For a **manual** run the Prepare script
@@ -246,7 +276,13 @@ Follow these rules:
 5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
    If many, mention as: "Plus several CI and documentation improvements."
 
-6. **Breaking changes** — If any, list under `### ⚠️ Breaking Changes` after Highlights.
+6. **Breaking changes** — Always include a `## Breaking Changes` section (say
+   *"None in this release."* when there are none). When the raw block lists an api
+   **breaking** companion and/or a manual notes sidecar, **summarize** from them: the
+   `.breaking.md` gives the "what" (obsoleted/removed/changed signatures), the
+   `<stem>.notes.md` gives behavioral breaks and migration "how". Keep it concise — a small
+   migration code example is welcome; point at the API diff for the exhaustive list. Do not
+   dump the diff. (See [Companion files](#companion-files-open-and-read-them) and TEMPLATE.md.)
 
 7. **PR links** — Every item links to its PR.
 

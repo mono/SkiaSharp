@@ -92,6 +92,7 @@ Requirements: git, Python 3.7+
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -366,6 +367,59 @@ def harfbuzz_lines_from_map():
     return result
 
 
+def _sha256_bytes(data):
+    # type: (bytes) -> str
+    """``sha256:<hex>`` digest of raw bytes (companion-file content key, §4.7)."""
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def load_notes_sidecar(stem, base_dir):
+    # type: (str, Path) -> Optional[dict]
+    """The maintainer-authored manual additions sidecar (spec §3.7).
+
+    A ``<stem>.notes.md`` co-located with the hub page: freeform Markdown a human
+    injects to survive re-polish. Returns ``{'path': <page-relative>, 'sha256':
+    <hash>}`` when present, else None. Only the BYTES are hashed — Python never
+    parses the content (the Polish AI reads it, §4.7). The path is page-relative
+    (same directory as the hub), so the AI resolves it straight from the page.
+    """
+    notes_path = base_dir / "{}.notes.md".format(stem)
+    if not notes_path.is_file():
+        return None
+    return {"path": "{}.notes.md".format(stem),
+            "sha256": _sha256_bytes(notes_path.read_bytes())}
+
+
+def load_breaking_companions(line, base_dir):
+    # type: (str, Path) -> Optional[dict]
+    """The API breaking-diff companions for a line (spec §3.3/§4.7).
+
+    Globs ``<line>/**/<assembly>.breaking.md`` under the line's API-diff folder.
+    ``api-diff.cake`` writes a ``.breaking.md`` ONLY when real breaking changes
+    exist (it deletes an empty one, §5.2), so any match means this line broke
+    something. Returns ``{'paths': [<page-relative>, …], 'sha256': <combined
+    hash>}`` or None. The combined hash covers the sorted ``(path, bytes)`` pairs,
+    so it is order-stable and flips when any breaking file is added, removed, or
+    changed — which is what re-polishes the page (§4.6).
+    """
+    folder = base_dir / line
+    if not folder.is_dir():
+        return None
+    files = sorted(folder.glob("**/*.breaking.md"))
+    if not files:
+        return None
+    h = hashlib.sha256()
+    paths = []  # type: list[str]
+    for f in files:
+        rel = f.relative_to(base_dir).as_posix()
+        paths.append(rel)
+        h.update(rel.encode("utf-8"))
+        h.update(b"\0")
+        h.update(f.read_bytes())
+        h.update(b"\0")
+    return {"paths": paths, "sha256": "sha256:" + h.hexdigest()}
+
+
 def _api_signature(metadata):
     # type: (dict) -> str
     """Compact, deterministic signature of a page's script-owned API-changes line.
@@ -398,8 +452,9 @@ def _api_signature(metadata):
 
 def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
                           new_status=None, new_superseded_by=None,
-                          new_supersedes=None, new_api_sig=None):
-    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]], Optional[str]) -> bool
+                          new_supersedes=None, new_api_sig=None,
+                          new_notes_hash=None, new_breaking_hash=None):
+    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]], Optional[str], Optional[str], Optional[str]) -> bool
     """Check whether the existing file already encodes identical raw data.
 
     Compares the fields the script controls: PR count, diff range, the
@@ -414,7 +469,10 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     loses) an API-diff folder, or whose HarfBuzz mapping changes, must be
     rewritten to inject (or drop) the API-changes line even when its PRs are
     identical. Returns True only when every tracked field matches, so those
-    metadata-only changes still force a rewrite.
+    metadata-only changes still force a rewrite. The companion-file hashes
+    (``notes:`` and ``breaking:``, §4.7) are compared for the same reason: editing
+    the manual additions sidecar or a change in the line's breaking diff must
+    re-polish the page even when its PR set is unchanged.
 
     Reads the metadata from the HTML comment block at the top of the file.
     """
@@ -460,6 +518,23 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
         m_api = re.search(r"^\s*api:\s*(.*)$", content, re.MULTILINE)
         existing_api = m_api.group(1).strip() if m_api else ""
         if existing_api != (new_api_sig or ""):
+            return False
+
+    # notes: <hash> / breaking: <hash> — the companion-file content key (§4.7).
+    # These are emitted only when the companion exists, so an absent line means
+    # "no companion"; treat it as "" so a page that newly GAINS a sidecar or a
+    # breaking diff is rewritten to backfill the manifest (§4.6). NOTE: use
+    # ``[ \t]*`` (never ``\s*``) around the value — in MULTILINE mode ``\s*``
+    # would span the newline and swallow the next line for an empty value.
+    if new_notes_hash is not None:
+        m_notes = re.search(r"^[ \t]*notes:[ \t]*(\S+)", content, re.MULTILINE)
+        existing_notes = m_notes.group(1) if m_notes else ""
+        if existing_notes != (new_notes_hash or ""):
+            return False
+    if new_breaking_hash is not None:
+        m_brk = re.search(r"^[ \t]*breaking:[ \t]*(\S+)", content, re.MULTILINE)
+        existing_brk = m_brk.group(1) if m_brk else ""
+        if existing_brk != (new_breaking_hash or ""):
             return False
 
     return True
@@ -1687,6 +1762,41 @@ def format_pr_list(prs, metadata):
     for i, extra in enumerate(meta_extra):
         lines.insert(8 + i, extra)
 
+    # Companion files (spec §4.7): record each present companion's content hash
+    # (notes/breaking — the content key, §4.6) and a human-readable manifest of
+    # page-relative paths the Polish AI opens and SUMMARIZES. Content is
+    # referenced, never embedded, so the block stays small.
+    companions = metadata.get("companions") or {}
+    notes = companions.get("notes")
+    apidiff = companions.get("apidiff")
+    breaking = companions.get("breaking")
+    comp_block = []  # type: list[str]
+    if notes:
+        comp_block.append("  notes:     {}".format(notes["sha256"]))
+    if breaking:
+        comp_block.append("  breaking:  {}".format(breaking["sha256"]))
+    if notes or apidiff or breaking:
+        comp_block.append("")
+        comp_block.append(
+            "  companions (open and read these during polish, §4.7 — "
+            "summarize, don't dump):")
+        if notes:
+            comp_block.append("    - notes:    {}  (manual additions)".format(
+                notes["path"]))
+        if apidiff:
+            comp_block.append("    - api diff: {}  (full public-API diff)".format(
+                apidiff["path"]))
+        if breaking:
+            for p in breaking["paths"]:
+                comp_block.append("    - breaking: {}  (breaking signatures)".format(p))
+    # Splice just before the trailing blank separator (the last element of
+    # `lines`) so the hashes sit with the metadata and the manifest leads into
+    # the PR list.
+    insert_at = len(lines) - 1
+    for extra in comp_block:
+        lines.insert(insert_at, extra)
+        insert_at += 1
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
@@ -1893,7 +2003,8 @@ def get_version_files():
     versions = []
     next_versions = []
     for f in RELEASES_DIR.iterdir():
-        if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md"):
+        if (f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md")
+                and not f.name.endswith(".notes.md")):
             stem = f.stem
             if stem.endswith("-unreleased"):
                 next_versions.append(stem[:-11])  # strip "-unreleased"
@@ -1918,7 +2029,8 @@ def get_harfbuzz_version_files():
     next_versions = []  # type: list[str]
     if hb_dir.is_dir():
         for f in hb_dir.iterdir():
-            if not f.is_file() or f.suffix != ".md" or f.name == "index.md":
+            if (not f.is_file() or f.suffix != ".md" or f.name == "index.md"
+                    or f.name.endswith(".notes.md")):
                 continue
             stem = f.stem
             if stem.endswith("-unreleased"):
@@ -1969,13 +2081,45 @@ def cleanup_stale_unreleased():
 
     removed = []
     for f in sorted(RELEASES_DIR.iterdir()):
-        if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
+        if (f.suffix != ".md" or not f.stem.endswith("-unreleased")
+                or f.name.endswith(".notes.md")):
             continue
         version = f.stem[:-len("-unreleased")]
         if version not in live:
             f.unlink()
             removed.append(str(f))
     return removed
+
+
+def warn_orphan_notes_sidecars():
+    # type: () -> list[str]
+    """Warn about ``*.notes.md`` sidecars with no matching hub page (spec §3.7).
+
+    A manual additions sidecar attaches to a page by sharing its stem: it is
+    ``<stem>.notes.md`` beside ``<stem>.md``. A sidecar whose ``<stem>.md`` hub
+    page does not exist (neither a released ``<line>.md`` nor an in-flight
+    ``<line>-unreleased.md``, since either would be the stem) is a maintainer typo
+    — Python **warns** and ignores it, writing nothing on its behalf. Call this at
+    the end of a generation run, once every page that will exist is on disk.
+
+    Checks both families: SkiaSharp sidecars under ``releases/`` and HarfBuzz
+    sidecars under ``releases/harfbuzzsharp/``. Returns the orphan paths (for
+    tests); the side effect is the warning log.
+    """
+    orphans = []  # type: list[str]
+    for base_dir in (RELEASES_DIR, RELEASES_DIR / "harfbuzzsharp"):
+        if not base_dir.is_dir():
+            continue
+        for f in sorted(base_dir.iterdir()):
+            if not f.is_file() or not f.name.endswith(".notes.md"):
+                continue
+            stem = f.name[:-len(".notes.md")]
+            if not (base_dir / "{}.md".format(stem)).is_file():
+                log("WARNING: orphan manual notes sidecar {} has no matching "
+                    "page {}.md — ignoring it (spec §3.7). Did you mean a "
+                    "different stem?".format(f.name, stem))
+                orphans.append(str(f))
+    return orphans
 
 
 def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
@@ -2543,9 +2687,21 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     api_sig = _api_signature({"api_diff_link": api_diff_link,
                               "harfbuzz": harfbuzz})
 
+    # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
+    # page STEM so it attaches to this exact page) and the API breaking-diff
+    # (under the line's <version>/ folder). Their hashes join the content key so a
+    # companion-only edit re-polishes just this page (§4.6). Computed BEFORE the
+    # unchanged check for the same backfill reason as api_sig.
+    stem = _page_filename(branch, version)[:-len(".md")]
+    notes_comp = load_notes_sidecar(stem, RELEASES_DIR)
+    breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
+                     if not is_head else None)
+    notes_hash = notes_comp["sha256"] if notes_comp else ""
+    breaking_hash = breaking_comp["sha256"] if breaking_comp else ""
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
-                                           api_sig):
+                                           api_sig, notes_hash, breaking_hash):
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
@@ -2600,6 +2756,19 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+
+    # Companion-file manifest for the raw-data block (§4.7). The api-diff index is
+    # a companion the AI reads too, listed via api_diff_link (not hashed — its
+    # change signal is carried by prs/diff/api, §4.6).
+    companions = {}  # type: dict
+    if notes_comp:
+        companions["notes"] = notes_comp
+    if api_diff_link:
+        companions["apidiff"] = {"path": api_diff_link}
+    if breaking_comp:
+        companions["breaking"] = breaking_comp
+    if companions:
+        metadata["companions"] = companions
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -2718,10 +2887,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     output_path = hb_dir / owned
     api_diff_link = "{}/index.md".format(hb_line) if published else None
 
+    # The manual additions sidecar (spec §3.7), keyed by this page's STEM. When a
+    # maintainer has written one, it OVERRIDES both No-changes short-circuits
+    # below (§4.5): the hand-written content is exactly what needs surfacing, so
+    # the line gets a real polished page instead of a prune / deterministic page.
+    stem = owned[:-len(".md")]
+    notes_comp = load_notes_sidecar(stem, hb_dir)
+
     # An in-flight HarfBuzz line earns a page ONLY when its introducing SkiaSharp
     # head actually carries HarfBuzz changes (spec §4.5). An empty delta means the
     # head merely rebuilds an already-released HarfBuzz — no page; prune a stale one.
-    if not published and not prs:
+    if not published and not prs and not notes_comp:
         if output_path.exists():
             output_path.unlink()
             log("  Removed empty {} (nothing unreleased)".format(output_path))
@@ -2729,7 +2905,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
 
     # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
     # (no AI block, never polished; spec §4.5). Idempotent by exact text equality.
-    if published and not prs:
+    if published and not prs and not notes_comp:
         text = _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link)
         if not force and output_path.exists() and output_path.read_text() == text:
             log("  Skipping {} (unchanged, no changes)".format(output_path))
@@ -2766,9 +2942,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         metadata["supersedes"] = supersedes
     api_sig = _api_signature(metadata)
 
+    # Companion files (spec §3.7/§4.7), same as the SkiaSharp path: the manual
+    # additions sidecar (resolved above) plus the API breaking-diff under this
+    # HarfBuzz line's folder. Hashes join the content key (§4.6).
+    breaking_comp = (load_breaking_companions(hb_line, hb_dir)
+                     if published else None)
+    notes_hash = notes_comp["sha256"] if notes_comp else ""
+    breaking_hash = breaking_comp["sha256"] if breaking_comp else ""
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
-                                           api_sig):
+                                           api_sig, notes_hash, breaking_hash):
         log("  Skipping {} (unchanged)".format(output_path))
         return None, owned
 
@@ -2788,6 +2972,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         metadata["preview_milestones"] = preview_milestones
         metadata["pr_buckets"] = bucket_prs_by_milestone(
             prs, preview_milestones, from_ref)
+
+    # Companion-file manifest for the raw-data block (§4.7).
+    companions = {}  # type: dict
+    if notes_comp:
+        companions["notes"] = notes_comp
+    if api_diff_link:
+        companions["apidiff"] = {"path": api_diff_link}
+    if breaking_comp:
+        companions["breaking"] = breaking_comp
+    if companions:
+        metadata["companions"] = companions
 
     hb_dir.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -2844,6 +3039,8 @@ def cmd_branch(branch, force=False, polish_list_path=None):
         files_to_polish.extend(_regen_unreleased(target, all_branches, force=force))
 
     cmd_update_toc()
+
+    warn_orphan_notes_sidecars()
 
     log("")
     write_polish_list(files_to_polish, polish_list_path)
@@ -3008,6 +3205,10 @@ def cmd_all(force=False, polish_list_path=None):
 
     # Regenerate TOC and index
     cmd_update_toc()
+
+    # Every page that will exist is now on disk — flag any manual notes sidecar
+    # whose hub page is missing (a maintainer typo, spec §3.7).
+    warn_orphan_notes_sidecars()
 
     # Print summary for the AI agent
     log("")
