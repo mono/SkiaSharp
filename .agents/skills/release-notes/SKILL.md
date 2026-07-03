@@ -152,7 +152,7 @@ page-relative path (see `release-notes-and-api-diffs.md` §4.7):
 | --- | --- | --- |
 | `<stem>.notes.md` | **Manual additions sidecar** — freeform Markdown the maintainer wrote to bring something out (not always breaking). | Weave its editorial points into Highlights; surface any behavioral breaking notes under Breaking Changes. |
 | `<line>/index.md` (indexes every per-assembly diff; flags breaking) | The **full public-API diff** landing page — one door to the whole folder. | Open it, follow the assemblies that matter, draw richer/accurate highlights. Do **not** paste it — summarize. |
-| `<line>/…/*.breaking.md` (**one per broken assembly**) | The **API breaking diff** — present only where signatures actually broke; a big release lists many. | The "what" of Breaking Changes: obsoleted / removed / changed signatures, summarized across all listed files. |
+| `<line>/…/*.breaking.md` (**one per broken assembly**) | The **API breaking diff** — present only where signatures actually broke; a big release lists many. | The "what" of Breaking Changes. **Open every listed file** and turn each concrete entry (removed interface, removed / changed / obsoleted member, retyped property) into a prose bullet — grouped, but nothing dropped. A link is **not** a substitute for reading it. |
 
 Rules for companions:
 
@@ -160,9 +160,15 @@ Rules for companions:
   verbatim or dump the whole file. A human summary ("obsoleted several APIs in `SKPaint` and
   `SKFont`"; "`SKFooBar` was removed — use `SKBaz`") with a small migration code example where
   it helps is the goal.
-- **Behavioral breaking changes** (same signature, different runtime behavior — e.g.
-  `new SKFont()` now carries an empty typeface) will **not** appear in the API breaking diff.
-  The `<stem>.notes.md` sidecar is the **only** channel for them — read it carefully.
+- **Itemize the breaking diff — don't just link it.** The `## Breaking Changes` section must
+  reflect the **actual entries** in each `.breaking.md` (every distinct removed / changed /
+  obsoleted type or member), grouped and summarized. A section that only links the diff and
+  lists PR titles has **not** done the job.
+- **Some real breaks never appear in any `.breaking.md`** — behavioral changes (same signature,
+  different runtime behavior, e.g. `new SKFont()` now carrying an empty typeface) and
+  interop / native structs outside the public-API surface (e.g. removed `GRVkBackendContextNative`
+  fields). The `<stem>.notes.md` sidecar is the **only** channel for these — read it carefully
+  and fold it into Breaking Changes alongside the diff itemization.
 - You may **read** these files but **never edit them** — they are inputs/artifacts, owned by
   the maintainer and the Prepare script. Still no git, no gh API, no other files.
 - If the manifest lists a companion but the file is missing (or vice-versa), **stop and
@@ -278,11 +284,14 @@ Follow these rules:
 
 6. **Breaking changes** — Always include a `## Breaking Changes` section (say
    *"None in this release."* when there are none). When the raw block lists an api
-   **breaking** companion and/or a manual notes sidecar, **summarize** from them: the
-   `.breaking.md` gives the "what" (obsoleted/removed/changed signatures), the
-   `<stem>.notes.md` gives behavioral breaks and migration "how". Keep it concise — a small
-   migration code example is welcome; point at the API diff for the exhaustive list. Do not
-   dump the diff. (See [Companion files](#companion-files-open-and-read-them) and TEMPLATE.md.)
+   **breaking** companion and/or a manual notes sidecar, **open them and summarize — do not
+   just link them.** The `.breaking.md` gives the "what": reflect **every distinct** entry it
+   contains (obsoleted/removed/changed signatures), grouped but not dropped. The
+   `<stem>.notes.md` gives behavioral breaks, interop-struct breaks the diff can't see (e.g.
+   removed `GRVkBackendContextNative` fields), and migration "how". Keep it concise — a small
+   migration code example is welcome; point at the API diff for the exhaustive member list. Do
+   not dump the diff, and do not reduce the section to a bare link plus PR titles. (See
+   [Companion files](#companion-files-open-and-read-them) and TEMPLATE.md.)
 
 7. **PR links** — Every item links to its PR.
 
