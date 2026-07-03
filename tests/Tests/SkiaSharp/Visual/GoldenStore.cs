@@ -198,11 +198,27 @@ namespace SkiaSharp.Tests.Visual
 		{
 			get
 			{
+				var seen = new HashSet<Assembly>();
+
+				// Fast path: the entry assembly (the Content-embedding host on WASM /
+				// Console) and this shared assembly.
 				var entry = Assembly.GetEntryAssembly();
-				if (entry is not null)
+				if (entry is not null && seen.Add(entry))
 					yield return entry;
-				if (typeof(GoldenStore).Assembly != entry)
+				if (seen.Add(typeof(GoldenStore).Assembly))
 					yield return typeof(GoldenStore).Assembly;
+
+				// On the MAUI device hosts Assembly.GetEntryAssembly() is null, and the
+				// Content resources are embedded in the host app assembly (e.g.
+				// SkiaSharp.Tests.Devices) — not in this shared assembly. Without this
+				// fallback no golden is ever found on device and every cell fails as
+				// unseeded. Scan every loaded assembly so the goldens are located
+				// regardless of which host embeds them.
+				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+				{
+					if (seen.Add(assembly))
+						yield return assembly;
+				}
 			}
 		}
 
