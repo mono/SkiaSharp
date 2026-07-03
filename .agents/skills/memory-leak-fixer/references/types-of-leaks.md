@@ -4,13 +4,22 @@ The catalogue the `memory-leak-fixer` skill scans against. **Every family below 
 from a real, historical SkiaSharp fix** (issue/PR cited), so the hunt targets patterns that
 have actually shipped as bugs in this repo — not hypotheticals.
 
+**Scope: managed C# only.** This skill hunts and fixes leaks in the code SkiaSharp owns —
+the C# bindings (`binding/**`) and view layers (`source/**`). The native Skia C/C++ under
+`externals/skia/**` (including our C shim) is **out of scope**: it is upstream, cannot be
+built or validated on a standard runner, and its fixes go through a different process. Every
+family here is therefore something you can prove and fix from C#.
+
 Read this alongside [`documentation/dev/memory-management.md`](../../../../documentation/dev/memory-management.md),
 which is the authoritative ownership model (pointer types, `owns:` flag, ref-count rules,
 the `HandleDictionary`, and the same-instance-return contract). This file adds, per family:
-**what it is → why it's bad → a leaking example → the idiomatic fix.**
+**what it is → why it's bad → a leaking example → the idiomatic fix → a watch-out.**
 
 Code samples are illustrative and trimmed to the essential lines; real wrappers add
 argument validation and `GC.KeepAlive`. `✓` = correct, `❌` = the bug.
+
+Each family ends with a **Watch out (❌ don't):** note — the leak-specific *wrong fix* that
+turns one bug into another. Re-read the matching one during the pre-PR self-review gate.
 
 Quick index (the `#` is the rotating focus index the skill uses):
 
@@ -18,16 +27,15 @@ Quick index (the `#` is the rotating focus index the skill uses):
 |--:|---|---|
 | 0 | Undisposed native handle | owned/ref-counted `SKObject` escapes a factory/cache and is never disposed |
 | 1 | Wrong `owns:` flag | borrowed pointer wrapped `owns:true` (double-free) or owned handle `owns:false` (leak) |
-| 2 | C-API ownership mismatch | missing `sk_ref_sp`/`.release()`, or `delete` on a ref-counted type in the C shim |
-| 3 | Same-instance double-dispose | `Subset`/`ToRasterImage`-style self-return disposed twice |
-| 4 | Managed retention (Views) | event/handler subscribed but never torn down; `base.Dispose` not chained |
-| 5 | `fixed`-pointer lifetime | a `fixed` pointer stored by native code beyond the block |
-| 6 | Finalizer / collection ordering | child holds a raw pointer into a parent that can be collected first |
-| 7 | Clone / copy double-free | `Clone()` shares one native pointer across two wrappers |
-| 8 | Disposing native statics/singletons | an immortal native object reached via a non-protected cache is unref'd |
-| 9 | Field not nulled on dispose | disposed native child left referenced → double-dispose / graph retained |
-| 10 | Stream / callback / delegate-proxy lifetime | `GCHandle`/proxy freed too early (dangling) or never (leak) |
-| 11 | Allocation-failure path | wrapper returned even when native create failed, or half-built object leaked |
+| 2 | Same-instance double-dispose | `Subset`/`ToRasterImage`-style self-return disposed twice |
+| 3 | Managed retention (Views) | event/handler subscribed but never torn down; `base.Dispose` not chained |
+| 4 | `fixed`-pointer lifetime | a `fixed` pointer stored by native code beyond the block |
+| 5 | Finalizer / collection ordering | child holds a raw pointer into a parent that can be collected first |
+| 6 | Clone / copy double-free | `Clone()` shares one native pointer across two wrappers |
+| 7 | Disposing native statics/singletons | an immortal native object reached via a non-protected cache is unref'd |
+| 8 | Field not nulled on dispose | disposed native child left referenced → double-dispose / graph retained |
+| 9 | Stream / callback / delegate-proxy lifetime | `GCHandle`/proxy freed too early (dangling) or never (leak) |
+| 10 | Allocation-failure path | wrapper returned even when native create failed, or half-built object leaked |
 
 ---
 
@@ -61,6 +69,11 @@ foreach (var frame in frames) {
 ```
 For a cache, dispose evicted entries and clear the cache on teardown.
 
+**Watch out (❌ don't):** don't slap `using`/`Dispose` on a handle you don't actually own —
+a *borrowed getter* result (family 1), a *same-instance return* (family 2), or a
+*process-wide singleton* (family 7). Confirm the object is genuinely owned before disposing,
+or you convert a leak into a double-free.
+
 **Real cases:** the general class behind many reports; see `documentation/dev/memory-management.md`.
 
 ---
@@ -68,9 +81,9 @@ For a cache, dispose evicted entries and clear the cache on teardown.
 ## 1 — Wrong `owns:` flag
 
 **What it is.** The `owns:` argument to `GetObject`/the wrapper ctor doesn't match the
-C-API contract: a *borrowed* pointer (a `_get_` getter that returns an internal pointer) is
-wrapped `owns:true`, or an *owned* handle (a `_new_`/create that returns a fresh object) is
-wrapped `owns:false`.
+ownership contract: a *borrowed* pointer (a `_get_` getter that returns an internal pointer)
+is wrapped `owns:true`, or an *owned* handle (a `_new_`/create that returns a fresh object)
+is wrapped `owns:false`.
 
 **Why it's bad.** `owns:true` on a borrowed pointer → the wrapper's `DisposeNative` deletes
 or unrefs an object it doesn't own → **double-free / `AccessViolationException`**, often in
@@ -90,46 +103,18 @@ public SKBar Bar =>
 ```
 Conversely, a `sk_bar_new(...)` result is a fresh object and must be `owns: true`.
 
-**Real cases:** the counterpart of family 8 (dispose-protected singletons); verify each new
-getter against whether the C shim returns a fresh ref or a borrowed pointer.
+**Watch out (❌ don't):** don't guess the flag or flip it to make a crash/leak "go away."
+Read the P/Invoke name: `_new_`/`_create` returns owned → `owns:true`; `_get_`/property-style
+accessors return borrowed → `owns:false`. Getting this backwards just swaps a leak for a
+crash. When the contract is genuinely unclear from the managed side, file an issue rather
+than flipping blind.
+
+**Real cases:** the counterpart of family 7 (dispose-protected singletons); verify each new
+getter against whether it returns a fresh ref or a borrowed pointer.
 
 ---
 
-## 2 — C-API ownership mismatch (the C shim)
-
-**What it is.** In our C shim (`externals/skia/src/c/**`): C++ takes a `sk_sp<T>` but the shim
-passes a raw pointer without `sk_ref_sp`; a function returns an `sk_sp<T>` but forgets
-`.release()`; or `delete` is used on a `SkRefCnt`/`SkNVRefCnt` type instead of unref.
-
-**Why it's bad.** Missing `.release()` → the local `sk_sp` destructor unrefs the object we
-just handed back to managed code → **returned pointer is already dead**. Missing `sk_ref_sp`
-where C++ adopts a reference → the object is unref'd once too often → **premature free**.
-`delete` on a ref-counted type → **double-free** against the reference count.
-
-**Leak/crash (❌):**
-```cpp
-sk_image_t* sk_image_new_from_foo(const sk_data_t* cdata) {
-    // SkImages::Foo returns sk_sp<SkImage>; without release() the temporary
-    // unrefs the image as it goes out of scope → dangling return.
-    return ToImage(SkImages::Foo(sk_ref_sp(AsData(cdata))));   // ❌ missing .release()
-}
-```
-
-**Fix (✓):**
-```cpp
-sk_image_t* sk_image_new_from_foo(const sk_data_t* cdata) {
-    return ToImage(SkImages::Foo(sk_ref_sp(AsData(cdata))).release());  // hand off the ref
-}
-```
-After any C-shim change: `pwsh ./utils/generate.ps1`, then **rebuild natives from source**
-(`dotnet cake --target=externals-<platform>`) — never `externals-download`.
-
-**Note:** requires the `externals/skia` submodule to be checked out to read/verify. If it
-isn't, flag the candidate "needs C-shim verification" rather than guessing.
-
----
-
-## 3 — Same-instance double-dispose
+## 2 — Same-instance double-dispose
 
 **What it is.** Some methods may return the **same** instance rather than a new one —
 `SKImage.Subset` (can return `this`), `SKImage.ToRasterImage(ensurePixelData:false)`,
@@ -157,11 +142,16 @@ image.Dispose();
 ```
 Framework-side pattern (see `SKImage.Encode`): `if (this != raster) raster.Dispose();`.
 
+**Watch out (❌ don't):** don't add an *unconditional* `result.Dispose()` — the reference
+check `if (result != source)` is the whole fix; dropping it re-introduces the double-free.
+And don't dispose the source before you're finished with the result, since they may be the
+same object.
+
 **Real cases:** the `Subset`/`ToRasterImage` contract in `documentation/dev/memory-management.md`.
 
 ---
 
-## 4 — Managed retention (Views / handlers)
+## 3 — Managed retention (Views / handlers)
 
 **What it is.** In `source/SkiaSharp.Views*`: a handler, control, or renderer subscribes to
 an event (`PaintSurface`, `PropertyChanged`, an invalidation ticker, a platform peer callback)
@@ -197,12 +187,17 @@ protected override void Dispose(bool disposing)
 }
 ```
 
+**Watch out (❌ don't):** don't unsubscribe from inside a finalizer — a finalizer must not
+touch other managed objects (the event source may already be finalized). Do the `-=` in
+`Dispose(bool disposing)` under `if (disposing)`. And don't forget to chain
+`base.Dispose(disposing)` — a subtle leak that looks fixed but isn't.
+
 **Real cases:** #2955, #2472, #1095; **#3309** — `SKGLElement.Dispose(bool)` never calls
 `base.Dispose()` on the OpenTK `GLWpfControl`, leaking the GL context (fix PR #3311 open).
 
 ---
 
-## 5 — `fixed`-pointer lifetime
+## 4 — `fixed`-pointer lifetime
 
 **What it is.** A `fixed` block produces a pointer into a managed array and hands it to native
 code that **stores** the pointer (a non-copying mode) and outlives the block. Once the block
@@ -233,12 +228,16 @@ return new Blob(handle.AddrOfPinnedObject(), data.Length,
 ```
 (Or use `MemoryMode.Duplicate` so HarfBuzz copies and no pin is needed.)
 
+**Watch out (❌ don't):** don't "fix" this by adding `GC.KeepAlive(data)` *inside* the `fixed`
+block — the pointer escapes the block, so KeepAlive there proves nothing. And don't free the
+`GCHandle` before native is finished with the memory; free it in the release delegate.
+
 **Real cases:** open bug **#3472**, open fix PR **#3473** ("Make Blob.FromStream GC safe");
 documented in `documentation/dev/memory-management.md`.
 
 ---
 
-## 6 — Finalizer / collection ordering
+## 5 — Finalizer / collection ordering
 
 **What it is.** A child wrapper holds a **raw** pointer into a parent's native object but
 keeps no managed reference to the parent. Finalization order is non-deterministic, so the
@@ -273,6 +272,11 @@ public class SpanIterator : SKObject, ISKSkipObjectRegistration
 ```
 The lighter-weight alternative for one-shot calls is `GC.KeepAlive(parent)` after the P/Invoke.
 
+**Watch out (❌ don't):** don't root the parent with a pinned `GCHandle` — a plain managed
+field is enough and a pinned handle is its own leak (family 9). And don't lean on
+`GC.KeepAlive` for a *long-lived* child (an iterator you hold across calls); KeepAlive only
+covers the current method, so a stored child needs the field.
+
 **Real cases:** #3796 (SKPath/SKPathBuilder finalizer race), #3291 (SKAutoCanvasRestore).
 **Un-filed examples this workflow surfaced:** `SKRegion.SpanIterator` (above); and
 `SKPixmap.ExtractSubset`/`WithColorType`/`WithColorSpace`/`WithAlphaType` don't propagate the
@@ -281,7 +285,7 @@ bitmap → dangling pixels. Fix: `result.pixelSource = pixelSource ?? this;`.
 
 ---
 
-## 7 — Clone / copy double-free
+## 6 — Clone / copy double-free
 
 **What it is.** A `Clone()`/copy that **shares** one native pointer between two managed
 wrappers, both of which believe they own it and will dispose it.
@@ -294,17 +298,21 @@ public SKPaint Clone() =>
     new SKPaint(Handle, owns: true);   // ❌ two wrappers own the same native paint
 ```
 
-**Fix (✓):** mint a *fresh* native object via the clone C-API:
+**Fix (✓):** mint a *fresh* native object via the clone API:
 ```csharp
 public SKPaint Clone() =>
     GetObject<SKPaint>(SkiaApi.sk_compatpaint_clone(Handle));  // fresh handle, owns:true
 ```
 
+**Watch out (❌ don't):** don't "fix" the double-free by setting `owns:false` on the clone —
+that just swaps a double-free for a leak (or a use-after-free if the original is disposed
+first). The clone must own a *separate* native object, not borrow the source's.
+
 **Real cases:** #2904 (SKPaint.Clone), #2899.
 
 ---
 
-## 8 — Disposing native statics / singletons
+## 7 — Disposing native statics / singletons
 
 **What it is.** An *immortal* native object — the default/empty typeface, the sRGB /
 sRGB-linear color spaces and gamma color filters, the blend-mode blender cache, `SKData.Empty`
@@ -327,12 +335,17 @@ public static SKColorSpace CreateSrgb() =>
         SkiaApi.sk_colorspace_new_srgb(), owns: false, unrefExisting: false);
 ```
 
+**Watch out (❌ don't):** don't null out or replace the cached static, and don't wrap it
+`owns:true` "just in case." The only correct fix is the dispose-protected accessor with
+`unrefExisting:false`; copy an existing correct singleton (`SKBlender` cache) rather than
+inventing a new disposal path.
+
 **Real cases:** #1863, #4080, #1224, #3730. The `SKBlender` mode cache and `SKColorFilter`
 gamma filters are the canonical correct implementations to copy.
 
 ---
 
-## 9 — Field not nulled on dispose
+## 8 — Field not nulled on dispose
 
 **What it is.** A `Dispose`/`DisposeManaged` frees a cached native child (a canvas, a
 sub-object) but leaves the managed field still pointing at the now-dead wrapper.
@@ -361,12 +374,15 @@ protected override void DisposeManaged()
 }
 ```
 
+**Watch out (❌ don't):** don't null the field *before* disposing the child — you'd drop the
+only reference and leak the native object instead. The order is fixed: **dispose, then null.**
+
 **Real cases:** #1256, #1344. `SKSurface` (nulls its cached `SKCanvas`) and `SKPixmap` (nulls
 `pixelSource`) are the correct patterns.
 
 ---
 
-## 10 — Managed stream / callback / delegate-proxy lifetime
+## 9 — Managed stream / callback / delegate-proxy lifetime
 
 **What it is.** A managed object handed to native code as a callback sink — an
 `SKManagedStream`/`SKManagedWStream`/`SKAbstractManagedStream`, a delegate or function-pointer
@@ -391,12 +407,16 @@ return HarfBuzzApi.hb_blob_create(ptr, len, mode, (void*)ctx, proxy);
 ```
 Keep the handle rooted for **exactly** the native object's lifetime — not shorter, not longer.
 
+**Watch out (❌ don't):** don't `Free()` the `GCHandle` in the same method that hands it to
+native — native still holds it. And don't leave the destroy proxy `null` to "avoid a crash";
+that leaks. Free it in the destroy/release callback, and only there.
+
 **Real cases:** #3589, #2916, #996, #2446. `SKManagedStream`/`DelegateProxies` use a `Weak`
 user-data `GCHandle` freed by the destroy proxy — the reference implementation.
 
 ---
 
-## 11 — Allocation-failure path
+## 10 — Allocation-failure path
 
 **What it is.** A factory wraps and returns a managed object even when the native
 create/decode returned `null`/`0` or failed, or leaks a half-built native object on the error
@@ -426,6 +446,11 @@ public static SKFoo? Create(...)
 }
 ```
 On multi-step builds, free any partial native objects before returning on the error path.
+
+**Watch out (❌ don't):** don't make a *factory* throw when its contract is to return `null`
+(that's an ABI/behavior break — add the null-return, don't change the exception surface).
+And don't return `null` while leaving an earlier half-built native object un-freed on the
+error branch.
 
 **Real cases:** #1784, #1642. `SKCodec.Create` (revokes stream ownership before disposing on
 `codec == null`) and `SKColorSpaceIccProfile.Create` (disposes the half-built profile on parse

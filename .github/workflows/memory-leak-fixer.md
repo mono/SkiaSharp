@@ -2,18 +2,19 @@
 # =============================================================================
 # Fixer - Memory Leak — SkiaSharp
 #
-# Periodic AI-driven workflow that SCANS SkiaSharp for a native ownership /
-# disposal memory leak, PROVES it with a red→green regression test, FIXES it,
-# and opens a DRAFT PR. Adapted from dotnet/maui's leak scanner+fixer idea to
-# SkiaSharp's real leak family (undisposed SKObject handles, wrong `owns:`
-# flags, C-API ref-count mismatches, same-instance double-dispose, unremoved
-# view/handler subscriptions, `fixed`-pointer lifetime).
+# Periodic AI-driven workflow that SCANS SkiaSharp's managed C# for a native
+# ownership / disposal memory leak, PROVES it with a red→green regression test,
+# FIXES it, and opens a DRAFT PR. Adapted from dotnet/maui's leak scanner+fixer
+# idea to SkiaSharp's real leak family (undisposed SKObject handles, wrong
+# `owns:` flags, same-instance double-dispose, unremoved view/handler
+# subscriptions, `fixed`-pointer lifetime). Scope: managed C# only — the native
+# Skia under externals/skia/** is upstream and out of scope.
 #
 # All the domain knowledge lives in the reusable skill
 # `.agents/skills/memory-leak-fixer/SKILL.md`; this file is the schedule + the
 # guardrails (one action per run, de-dup, validate-before-PR).
 # =============================================================================
-description: "Scan SkiaSharp for a native/disposal memory leak, prove it with a red→green test, fix it, and open a draft PR."
+description: "Scan SkiaSharp's managed C# for a native ownership/disposal memory leak, prove it with a red→green test, fix it, and open a draft PR."
 
 environment: gh-aw-agents
 
@@ -69,14 +70,12 @@ concurrency:
 
 timeout-minutes: 120
 
-# create-pull-request is commit-based and needs full history for its branch ops.
-# submodules: true pulls the skia fork so the SCAN phase can read our C shim
-# (externals/skia/src/c + include/c) to verify managed `owns:` flags against the
-# real ref-count contracts. We only READ it — native builds still use pre-built
-# packages (externals-download) — so `true` is enough; no need for `recursive`.
+# create-pull-request is commit-based and needs full history for its branch ops
+# (and for the skill's git-commit-count focus rotation). This skill is managed-C#
+# only and builds against pre-built natives (externals-download), so the skia
+# source submodule is NOT needed — a plain checkout keeps runs fast.
 checkout:
   - fetch-depth: 0
-    submodules: true
 
 permissions:
   contents: read
@@ -108,8 +107,8 @@ network:
     - "*.blob.core.windows.net"
 
 # -- Safe outputs ------------------------------------------------------
-# Primary: a DRAFT fix PR. Fallback: a [memory-leak] issue when the only fix
-# would require an unvalidatable native/C-API source build this run. At most ONE
+# Primary: a DRAFT fix PR (managed C#). Fallback: a [memory-leak] issue when the
+# only correct fix is in native / upstream Skia (out of scope here). At most ONE
 # of the two per run (enforced in the prompt). Quiet runs create nothing.
 safe-outputs:
   create-pull-request:
@@ -127,9 +126,9 @@ safe-outputs:
 
 # Fixer - Memory Leak
 
-You **scan** SkiaSharp for one native ownership / disposal memory leak, **prove** it with a
-red→green regression test, **fix** it, and open **one draft PR** — or, when the only viable
-fix needs a native/C-API source build you can't validate this run, file **one**
+You **scan** SkiaSharp's **managed C#** for one native ownership / disposal memory leak,
+**prove** it with a red→green regression test, **fix** it, and open **one draft PR** — or,
+when the only correct fix is in native / upstream Skia (out of scope here), file **one**
 `[memory-leak]` issue instead. **At most one action per run.**
 
 **Read this first — set your expectations correctly:**
@@ -142,12 +141,10 @@ fix needs a native/C-API source build you can't validate this run, file **one**
 - A quiet run is a **first-class success**: when you find nothing that clears the bar, emit
   exactly **one `noop`** safe output summarizing what you scanned and why nothing qualified.
   A `noop` is the correct "nothing to do" signal — silence makes the run look incomplete.
-- The **skia submodule IS checked out** (via `checkout: submodules: true`), so you **can** read
-  our C shim under `externals/skia/src/c/**` and `externals/skia/include/c/**` to verify a
-  managed `owns:` flag against the real C ref-count contract (does the C function hand back a
-  fresh ref via `sk_ref_sp(...).release()`, or a borrowed pointer?). Read it to strengthen a
-  candidate — but you still cannot *build* native code here (native tests use pre-built packages
-  via `externals-download`), so a fix that must change the C shim is issue-only (see 2.4).
+- **Scope is managed C# only.** Fix only code SkiaSharp owns — `binding/**` and `source/**`.
+  Everything under `externals/skia/**` (including our C shim) is upstream Skia: not checked
+  out, not buildable here (native tests use pre-built packages via `externals-download`), and
+  out of scope. A leak whose only correct fix is native is **issue-only** (see 2.4).
 - **Timebox the scan.** Do one focused pass over the leak families, pick the single strongest
   candidate early, and stop. If nothing clears the bar in that pass, emit the `noop` and finish
   — do not launch open-ended sub-agent explorations that may not return within the budget.
@@ -177,16 +174,13 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 3. **Validate before you open a PR.** Only open a PR when you have demonstrated the
    regression test **fails without the fix and passes with it** (skill Phase 3, both
    directions). No red→green ⇒ no PR.
-4. **Scope the PR to a runner-validatable fix.** Prefer a fix confined to **managed C#**,
-   bootstrapped with `dotnet cake --target=externals-download` (pre-built natives) and
-   validated with `dotnet test`. If the strongest candidate's only fix touches the **C API**
-   (`externals/skia/src/c`, `externals/skia/include/c`) and you cannot rebuild + validate
-   natives this run, do **not** open an unvalidated PR — file a `[memory-leak]` issue with
-   the Phase 1–2 evidence and the proposed fix instead. **Never** run `externals-download`
-   after touching native code.
-5. **Never weaken, skip, mute, or delete a test, and never edit `*.generated.cs` or upstream
-   Skia** (only our C shim under `externals/skia/src/c` + `include/c`, regenerated via
-   `pwsh ./utils/generate.ps1`).
+4. **Managed-C# fixes only.** The fix must live in `binding/**` / `source/**`, bootstrapped
+   with `dotnet cake --target=externals-download` (pre-built natives) and validated with
+   `dotnet test`. If the strongest candidate's only correct fix is in native / upstream Skia
+   (`externals/skia/**`, including the C shim), do **not** open an unvalidated PR — file a
+   `[memory-leak]` issue with the Phase 1–2 evidence and the proposed fix instead.
+5. **Never weaken, skip, mute, or delete a test, and never edit `*.generated.cs` or anything
+   under `externals/skia/**`** (upstream Skia + the C shim are out of scope for this skill).
 6. **Dry run (forced on PRs).** You are in **DRY-RUN** whenever either
    `${{ github.event.inputs.dry_run }}` is `true` **or** `${{ github.event_name }}` is
    `pull_request` (a PR editing this workflow/skill is a self-test). In DRY-RUN you do the

@@ -3,9 +3,9 @@ name: memory-leak-fixer
 description: >
   Scan SkiaSharp for native ownership / disposal memory leaks AND fix them with a
   red→green regression test. Two combined modes in one skill: (1) SCAN — hunt the
-  SkiaSharp leak signature (undisposed SKObject handle, wrong `owns:` flag, C-API
-  ref-count mismatch, same-instance double-dispose, unremoved event/handler
-  subscription, `fixed`-pointer lifetime) and empirically confirm it; (2) FIX — write
+  SkiaSharp leak signature (undisposed SKObject handle, wrong `owns:` flag,
+  same-instance double-dispose, unremoved event/handler subscription,
+  `fixed`-pointer lifetime) and empirically confirm it; (2) FIX — write
   a failing regression test, implement the minimal idiomatic fix, prove it goes green,
   and open a PR.
 
@@ -21,15 +21,21 @@ description: >
 
 Proactively **find** and **fix** memory leaks in SkiaSharp. SkiaSharp is a thin managed
 wrapper over native Skia, so its recurring, high-impact leak family is **native
-ownership / disposal correctness** — not the managed view-retention leaks a pure-managed
-app framework worries about. This skill hunts that family and produces a validated fix.
+ownership / disposal correctness** — the C# binding failing to dispose, own, pin, or root a
+native object correctly — not the managed view-retention leaks a pure-managed app framework
+worries about. This skill hunts that family and produces a validated fix.
+
+**Scope: managed C# only.** Work only in the code SkiaSharp owns — the C# bindings
+(`binding/**`) and view layers (`source/**`). Everything under `externals/skia/**` is
+upstream Skia (including our C shim): out of scope, not buildable on a standard runner, and
+handled by a separate process. Every candidate must be provable and fixable from C#.
 
 Read [`documentation/dev/memory-management.md`](../../../documentation/dev/memory-management.md)
 first — it is the authoritative model (pointer types, `owns:` flag, ref-count rules, the
-C-API `sk_ref_sp` / `.release()` conventions). This skill assumes that model.
+same-instance-return contract). This skill assumes that model.
 
-The leak catalogue this skill scans against — **12 real families**, each with a description,
-why it's bad, and a leak→fix code example — is in
+The leak catalogue this skill scans against — **11 real families**, each with a description,
+why it's bad, a leak→fix code example, and a leak-specific anti-pattern — is in
 [`references/types-of-leaks.md`](references/types-of-leaks.md). Read it before scanning
 (Phase 1) and consult the matching family when writing a fix (Phase 3).
 
@@ -42,9 +48,8 @@ why it's bad, and a leak→fix code example — is in
 3. **Never weaken, skip, mute, `[Obsolete]`-hide, or delete a test to make it pass.** If
    the only thing that turns green is a mute, the fix is wrong — reject it.
 4. **Never edit generated files or upstream Skia.** `*.generated.cs` and everything under
-   `externals/skia/**` except our C shim (`externals/skia/src/c/**`,
-   `externals/skia/include/c/**`) are off-limits. Regenerate with `pwsh ./utils/generate.ps1`
-   after any C-API change — never hand-edit the generated bindings.
+   `externals/skia/**` (including our C shim) are off-limits — this skill is **managed-C#
+   only**. Every fix lives in `binding/**` or `source/**`.
 5. **ABI stability.** Add overloads / methods; never change or remove a public signature.
 6. **Honest scope note.** In every issue/PR, say whether it is a clear framework bug or a
    usage footgun the framework could harden — and what is *empirically proven* vs
@@ -71,43 +76,45 @@ Run the phases in order. The skill has two entry points:
 
 ## Phase 0 — Setup
 
-> **CI runner reality:** the agentic workflow checks out the skia submodule read-only
-> (`checkout: submodules: true`), so you **can read** our C shim under `externals/skia/src/c`
-> and `externals/skia/include/c` to verify a managed `owns:` flag against the real C ref-count
-> contract. You **cannot build** native code on the runner, though — native tests run against
-> pre-built packages (`externals-download`). So prefer managed-C# fixes you can validate; a fix
-> that must change the C shim is issue-only (Phase 4).
+> **CI runner reality:** this skill fixes **managed C# only** (`binding/**`, `source/**`).
+> The native library is consumed as a **pre-built package** (`externals-download`) — you
+> never build native code, so every candidate must be provable and fixable from C#. A leak
+> whose only fix is in native / upstream Skia is out of scope: file an issue (Phase 4),
+> never open a PR you cannot validate.
 
 1. Confirm the SDK: `dotnet --version`.
-2. Decide the **fix layer** you are willing to validate this run (this gates which
-   candidates are in scope — see the table). For a fix confined to **managed C#**
-   (`binding/**/*.cs`, `source/**` views), you can validate on a standard runner with
-   pre-built natives:
+2. Restore the pre-built natives so the C# projects build and the tests run:
 
    ```bash
-   dotnet cake --target=externals-download   # C#-ONLY fixes. FORBIDDEN after native changes.
+   dotnet cake --target=externals-download   # pre-built natives for managed-C# work
    ```
-
-   For a fix that touches the **C API** (`externals/skia/src/c`, `externals/skia/include/c`)
-   you MUST rebuild natives from source (`dotnet cake --target=externals-{platform} --arch={arch}`)
-   — `externals-download` is forbidden and produces `EntryPointNotFoundException`.
-
-| Candidate fix lives in… | Validate with | Runner-friendly? |
-|---|---|---|
-| C# binding / views (`owns:` flag, missing `Dispose`, same-instance guard, event teardown, `GCHandle` pin) | `externals-download` + `dotnet test` | ✅ yes — preferred |
-| C API shim (`sk_ref_sp` / `.release()` / delete-vs-unref) | `externals-{platform}` source build + `dotnet test` | ⚠️ heavy — needs native build |
 
 ---
 
 ## Phase 1 — Scan (find ONE candidate)
 
-### 1.1 Rotate the focus area
-So successive runs explore different surface, pick a rotating focus:
+### 1.1 Choose a focus area (spread coverage across runs)
+A full 11-family sweep every run is wasteful and the surface is mostly hardened, so start
+from ONE focus family and widen only if it's exhausted. To keep repeated runs from
+re-scanning the same family, rotate the *starting* family. Pick the seed from whatever is
+available — all of these work **locally and in CI** (no dependency on `$GITHUB_RUN_NUMBER`
+or `$RANDOM`, which don't exist / aren't deterministic outside GitHub Actions):
 
-```bash
-FOCUS=$(( ${GITHUB_RUN_NUMBER:-$RANDOM} % 12 ))
-echo "focus family: $FOCUS"
-```
+1. **By recent changes (preferred).** New code is where new leaks are — start with the
+   family the latest changes most plausibly touch:
+   ```bash
+   git log --oneline -30 -- binding/SkiaSharp binding/HarfBuzzSharp source/SkiaSharp.Views*
+   ```
+   (new `owns:`/`GetObject` → family 0/1; new Views event/`Dispose` → 3;
+   new `fixed`/`GCHandle`/proxy → 4/9; new child/iterator type → 5.)
+2. **Deterministic rotation (portable fallback).** If nothing stands out, derive the family
+   from the repo's own commit count — always present in any clone, advances as code lands,
+   no CI env vars, no shell-specific `$RANDOM`:
+   ```bash
+   FOCUS=$(( $(git rev-list --count HEAD 2>/dev/null || echo 0) % 11 ))
+   echo "focus family: $FOCUS"
+   ```
+3. **Manual.** For a targeted local run, just name the family you care about.
 
 Each family is drawn from a **real, historical SkiaSharp leak fix**. The full catalogue —
 description, why-it's-bad, and a leak→fix code example per family — lives in
@@ -119,16 +126,15 @@ matches the family numbers in the reference.
 |--:|---|---|---|
 | 0 | Undisposed native handle | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp` (then trace ownership) |
 | 1 | Wrong `owns:` flag | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
-| 2 | C-API ownership mismatch | `externals/skia/src/c/**` | `grep -rnE "\.release\(\)|sk_ref_sp|delete As|SkSafeUnref" externals/skia/src/c` |
-| 3 | Same-instance double-dispose | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
-| 4 | Managed retention (Views) | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · cf. #3309, #2955, #2472 |
-| 5 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · canonical `Blob.FromStream` (#3472 / PR #3473) |
-| 6 | Finalizer / collection ordering | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` · cf. #3796, #3291; live: `SKRegion.SpanIterator`, `SKPixmap.ExtractSubset` |
-| 7 | Clone / copy double-free | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · cf. #2904, #2899 |
-| 8 | Disposing native statics/singletons | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|Empty" binding/SkiaSharp` · cf. #1863, #4080, #1224 |
-| 9 | Field not nulled on dispose | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` · cf. #1256, #1344 |
-| 10 | Stream / callback / delegate-proxy lifetime | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · cf. #3589, #2916, #996 |
-| 11 | Allocation-failure path | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` · cf. #1784, #1642 |
+| 2 | Same-instance double-dispose | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
+| 3 | Managed retention (Views) | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · cf. #3309, #2955, #2472 |
+| 4 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · canonical `Blob.FromStream` (#3472 / PR #3473) |
+| 5 | Finalizer / collection ordering | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` · cf. #3796, #3291; live: `SKRegion.SpanIterator`, `SKPixmap.ExtractSubset` |
+| 6 | Clone / copy double-free | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · cf. #2904, #2899 |
+| 7 | Disposing native statics/singletons | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|Empty" binding/SkiaSharp` · cf. #1863, #4080, #1224 |
+| 8 | Field not nulled on dispose | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` · cf. #1256, #1344 |
+| 9 | Stream / callback / delegate-proxy lifetime | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · cf. #3589, #2916, #996 |
+| 10 | Allocation-failure path | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` · cf. #1784, #1642 |
 
 Treat the table as a starting point, not a cage. If the focus family is exhausted (its
 leaks are already open issues/PRs — see 1.3), advance to the next index.
@@ -136,8 +142,9 @@ leaks are already open issues/PRs — see 1.3), advance to the next index.
 ### 1.2 Establish the retention/ownership path
 For each candidate write the precise path **with `file:line` citations**:
 - Native-handle leaks: `creation site → escape path → missing Dispose/unref`.
-- `owns:` bugs: the C-API function that produced the handle (owned `new` vs borrowed
-  getter vs ref-counted `sk_sp`) vs the `owns:` value the C# wrapper passed.
+- `owns:` bugs: the P/Invoke name that produced the handle (`_new_`/`_create` returns an
+  owned object; `_get_`/property-style returns a borrowed pointer) vs the `owns:` value the
+  C# wrapper passed.
 - Views retention: `long-lived root → subscription/handler → transient view`, and the
   unload path that should have detached but doesn't.
 
@@ -165,7 +172,7 @@ gh pr    list --repo "$GITHUB_REPOSITORY" --search 'Blob.FromStream in:title,bod
 A candidate is OUT only if an **open** issue/PR already covers the same
 handle / ownership path (by our prefix OR by the api/type name). A candidate whose only
 prior item is CLOSED may be re-filed. **Worked example:** the `HarfBuzzSharp.Blob.FromStream`
-`fixed`-pointer leak (family 5) is a genuine, still-present bug — but open PR #3473 "Make
+`fixed`-pointer leak (family 4) is a genuine, still-present bug — but open PR #3473 "Make
 Blob.FromStream GC safe" already fixes it, so it is OUT: stand down, do **not** open a
 duplicate PR, emit a `noop`.
 
@@ -178,21 +185,18 @@ and emit a `noop` (Phase 5).
 
 ## Phase 2 — Prove (empirical confirmation)
 
-The proof technique depends on whether the leak is observable from managed code.
-
-### 2A — Managed-observable leaks → shipped-package probe, no native build
-
-For undisposed wrappers, views retention, same-instance, and `fixed`-pointer leaks, mirror
-the existing memory tests: `WeakReference` + forced GC. You can prove these against the
-**shipped `SkiaSharp` NuGet** in a throwaway project — no source build, no display:
+Every in-scope leak is observable from **managed** code, so prove it with a `WeakReference` +
+forced-GC probe that mirrors the existing memory tests. Prove it against the **shipped
+`SkiaSharp` NuGet** in a throwaway project — no source build, no display:
 
 ```bash
 mkdir -p /tmp/leakprobe && cd /tmp/leakprobe
 ```
 
-`leakprobe.csproj` referencing `<PackageReference Include="SkiaSharp" Version="3.*" />`
-(pick a version that restores from nuget.org) + `xunit` + `Microsoft.NET.Test.Sdk`, then a
-single `[Fact]` that:
+`leakprobe.csproj` referencing `<PackageReference Include="SkiaSharp" Version="*" />` — the
+floating `*` resolves to the **latest stable** SkiaSharp on nuget.org automatically (use
+`Version="*-*"` to include the latest preview) — plus `xunit` + `Microsoft.NET.Test.Sdk`,
+then a single `[Fact]` that:
 1. runs **Control** (correct usage), **Leaky** (the suspect path), **Mitigation** (the
    proposed workaround), each allocating N subjects tracked by `WeakReference`;
 2. forces GC (`for (i=0;i<6;i++){ GC.Collect(); GC.WaitForPendingFinalizers(); GC.Collect(); }`);
@@ -207,13 +211,6 @@ cd /tmp/leakprobe && dotnet test --logger "console;verbosity=normal"
 - For undisposed-handle leaks, prefer proving the wrapper is **not collected /
   `Dispose` is never reached**; the in-repo equivalent uses `SKObject.GetInstance<T>(handle,
   out _)` + `CollectGarbage()` (see `tests/Tests/SkiaSharp/SKObjectTest.cs`).
-
-### 2B — Native-only leaks (C-API `sk_ref_sp` / `.release()` / delete-vs-unref)
-
-These grow native memory that a managed `WeakReference` can't see. Proof is either a
-source-built regression test that asserts on handle/ref-count/disposal state, or a tight,
-citable violation of a memory-management rule that the Phase 3 red→green test captures. Be
-explicit that this is native-level and requires the source native build (Phase 0 heavy path).
 
 ---
 
@@ -231,7 +228,7 @@ run via `tests/SkiaSharp.Tests.Console`). Model it on existing disposal/leak tes
 Build and **confirm the test FAILS** on the current tree (proves it catches the leak):
 
 ```bash
-dotnet cake --target=externals-download      # C#-only fixes; skip for native-source path
+dotnet cake --target=externals-download      # pre-built natives
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filter "FullyQualifiedName~<YourTestName>"
 ```
@@ -239,25 +236,17 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 If a test you *expected* to be red is green, your hypothesis is wrong — go back to Phase 1.
 
 ### 3.2 Implement the minimal idiomatic fix
-Pick the fix that matches the family (all from the memory-management model):
+Apply the **Fix (✓)** for the matching family in
+[`references/types-of-leaks.md`](references/types-of-leaks.md) — every family has a worked
+before/after there. Then re-read that family's **Watch out (❌ don't):** note: it names the
+specific *wrong fix* that turns one leak into another (an unconditional `Dispose`, flipping
+`owns:` blind, nulling a field before disposing, a pinned `GCHandle` where a plain field
+suffices, …).
 
-| Family | Idiomatic fix |
-|---|---|
-| Undisposed handle | Dispose the escaped object, or make the wrapper own+dispose it; clear the cache on the missing path. |
-| Wrong `owns:` | Flip the flag to match the C-API contract (`owns: false` for borrowed/getters; `true` only for owned `_new_`). |
-| C-API mismatch | Add `sk_ref_sp(...)` where C++ takes `sk_sp<T>`; add `.release()` on `sk_sp` returns; replace `delete` with `SkSafeUnref` for ref-counted types. Then `pwsh ./utils/generate.ps1`. |
-| Same-instance | Guard: `if (result != source) source.Dispose();` — never dispose a same-instance return. |
-| Views retention | Detach the subscription on unload/dispose, or route it through a weak subscription mirroring existing view teardown. Chain `base.Dispose(disposing)` if the base owns native resources (cf. #3309). |
-| `fixed`-pointer | Replace the temporary `fixed` with a pinned `GCHandle.Alloc(obj, GCHandleType.Pinned)`, hand native `AddrOfPinnedObject()`, and `Free()` the handle in the release delegate (cf. Blob.FromStream / PR #3473). |
-| Finalizer/ordering | Add `GC.KeepAlive(parent)` after the P/Invoke, or give the child an owns-link so the parent can't be collected first. |
-| Clone/copy | Mint a fresh native via the `_clone` C-API wrapped `owns:true` (never share one pointer across two wrappers). |
-| Dispose static/singleton | Route the accessor through `GetDisposeProtectedObject(..., owns:false, unrefExisting:false)` so `DisposeNative` skips the immortal native. |
-| Field-not-nulled | Null the managed field after disposing the native child so a later dispose is a no-op and the graph can be collected. |
-| Stream/callback/proxy | Keep the `GCHandle`/proxy rooted for exactly the native object's lifetime; free it in the release/destroy delegate — not before, not never. |
-| Allocation-failure | Return `null` (factory) when the native create returns 0; free any half-built partials on the error path. |
-
-Touch only the minimal code. If the fix is in the C API, regenerate bindings and rebuild
-natives from source (do **not** `externals-download`).
+Touch only the minimal code, and keep it inside `binding/**` / `source/**`. Never change a
+public signature to fix ownership — add an overload or fix internals (ABI stability). If the
+only correct fix is in native / upstream Skia, **stop and file an issue** (Phase 4) — this
+skill does not open native PRs.
 
 ### 3.3 Confirm green + no regressions
 Rebuild and re-run the regression test (now PASSES) plus neighbouring tests:
@@ -269,6 +258,26 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 
 Enforce red→green **in both directions**: revert the fix ⇒ red; re-apply ⇒ green.
 
+### 3.4 Self-review gate — before you open the PR
+Run this checklist **before** committing or opening the PR, so a bad attempt is dropped now
+instead of pushed and reverted. If any box can't be ticked, **fix it or stand down** (emit a
+`noop`) — do not open the PR.
+
+- [ ] The test genuinely goes **red without the fix, green with it**, both directions
+      (§3.3) — not green because a test was muted, `[Obsolete]`-hidden, skipped, or weakened.
+- [ ] The fix is inside `binding/**` / `source/**` only — no `*.generated.cs`, no
+      `externals/skia/**`, no native / upstream change.
+- [ ] **No public signature changed** — overloads / internals only (ABI stable).
+- [ ] The matching family's **Watch out (❌ don't):** note in
+      [`references/types-of-leaks.md`](references/types-of-leaks.md) does **not** describe
+      what you just did (no unconditional same-instance `Dispose`, no blind `owns:` flip, no
+      field nulled before dispose, no pinned `GCHandle` where a plain field suffices, …).
+- [ ] This is a real leak with a citable path — not hardened, documented code rationalised
+      as a "decoy," and not a finding manufactured to avoid a quiet run.
+- [ ] Not already covered by an open issue/PR (§1.3).
+
+All ticked ⇒ open the PR. Any unticked ⇒ no PR (fix, re-file as an issue, or `noop`).
+
 ---
 
 ## Phase 4 — Open the PR
@@ -279,15 +288,16 @@ Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix,
 - **AI-generated banner** naming this workflow/skill.
 - **The leak**: family, and the retention/ownership path with `file:line` citations.
 - **Proof (red→green)**: the failing-then-passing test, the exact `dotnet test` commands,
-  and (for 2A) the alive/collected counts.
+  and the alive/collected counts from the Phase 2 probe.
 - **The fix**: what changed and why it is the idiomatic SkiaSharp pattern.
 - **Scope note**: framework bug vs footgun; empirically-proven vs statically-reasoned;
   ABI impact (should be none).
 - `Fixes #N` when fixing a filed issue.
 
-If the strongest candidate's fix would require a **native/C-API source build** you cannot
-validate this run, do **not** open an unvalidated PR — file a `[memory-leak]` issue with the
-Phase 1–2 evidence and the proposed fix instead, so nothing is lost.
+If the strongest candidate cannot be **proven and fixed from managed C#** this run — e.g. the
+only correct fix is in native / upstream Skia — do **not** open an unvalidated PR. File a
+`[memory-leak]` issue with the Phase 1–2 evidence and the proposed fix instead, so nothing is
+lost.
 
 ---
 
@@ -301,15 +311,3 @@ When run from the agentic workflow, append this to the run's step summary.
 (no convincing candidate) **or** a dry run, emit a single **`noop`** carrying this summary. A
 `noop` is the correct "nothing to do / analysis only" signal — never finish with no safe
 output, which makes the run look incomplete.
-
-## Anti-patterns (reject your own attempt if you catch these)
-
-| Anti-pattern | Why it's wrong |
-|---|---|
-| PR without a demonstrated red→green test | Unproven; could be a false positive. |
-| Muting/`[Obsolete]`/skipping a test to go green | Hides the leak instead of fixing it. |
-| `externals-download` after touching C-API | `EntryPointNotFoundException`; stale natives. |
-| Editing `*.generated.cs` by hand | Overwritten on regenerate; use `generate.ps1`. |
-| Changing a public signature to "fix" ownership | ABI break — add an overload or fix internals. |
-| Disposing a same-instance return unconditionally | Double-free crash. |
-| Assuming a bug must exist / calling hardened code "decoys" | There is no seeded bug; manufacturing a finding produces false positives. |
