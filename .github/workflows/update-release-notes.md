@@ -40,6 +40,11 @@ on:
         required: false
         default: "main"
         type: string
+      force:
+        description: "Re-polish EVERY page even when its raw data is unchanged. Use once after a Polish skill/TEMPLATE change to re-flow the whole back-catalogue under the new instructions (e.g. to itemize breaking diffs on existing releases). Off for normal runs."
+        required: false
+        default: false
+        type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: update-release-notes
@@ -125,12 +130,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
+          FORCE_REPOLISH: ${{ inputs.force || false }}
         run: |
           set -euo pipefail
           # Single entry point: Cake (API diffs) then Python (raw data), both
           # VERBOSE. No args = --all; the "Files to polish" list lands at its
           # default location, output/files-to-polish.txt.
-          bash .agents/skills/release-notes/scripts/generate.sh
+          #
+          # A manual dispatch may set force=true to re-polish EVERY page even when
+          # its raw-data content key is unchanged (--force). This is the deliberate
+          # backfill lever for after a Polish skill/TEMPLATE change — the content
+          # key does not track the skill, so improving the instructions otherwise
+          # leaves existing pages untouched (spec §4.6). Off for push/schedule runs.
+          if [ "${FORCE_REPOLISH}" = "true" ]; then
+            echo "==> force re-polish: regenerating ALL pages regardless of content key (--force)"
+            bash .agents/skills/release-notes/scripts/generate.sh --all --force
+          else
+            bash .agents/skills/release-notes/scripts/generate.sh
+          fi
       - name: Package Prepare output
         id: package
         run: |

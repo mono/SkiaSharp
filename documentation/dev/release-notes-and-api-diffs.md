@@ -361,7 +361,8 @@ itself — it walks every `release/*` ref and reads `v*` tags during generation
 (§1.4, §3) — so a new release-branch commit or a freshly-pushed stable tag is picked up
 by the next daily run (within ~24h) with no per-branch/tag workflow. A manual
 `workflow_dispatch` refreshes immediately when waiting for the daily run is undesirable
-(e.g. right after tagging). (Walking a `release/*` ref is a *git source* for content,
+(e.g. right after tagging), and its **`force`** input re-polishes every page under a changed
+Polish skill/`TEMPLATE.md` (§4.6). (Walking a `release/*` ref is a *git source* for content,
 not an emission trigger; emission is governed solely by §1.4.)
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
@@ -886,6 +887,19 @@ refresh forces no spurious re-polish. Then regenerate `TOC.yml` +
 Polish phase reads (§2.3) — names only genuinely-changed pages, so the AI never
 re-polishes an up-to-date page. When it is empty and the tree is unchanged, the workflow
 opens no PR (§2.3).
+
+**Forcing a full re-polish.** The content key intentionally tracks only the *script-owned raw
+data* — it does **not** track the Polish skill or `TEMPLATE.md`. So improving the Polish
+instructions (e.g. teaching the AI to **itemize** every `.breaking.md` rather than just link it,
+§4.7) does **not** by itself re-flow existing pages: their raw data is unchanged, so they are
+skipped and keep their old prose. To re-apply improved instructions across the whole
+back-catalogue, the `update-release-notes` `workflow_dispatch` exposes a **`force`** input. When
+set, Prepare runs the generator with `--force`, which rewrites every line's raw-data block
+regardless of its content key and lists **every** page under "Files to polish", so the AI
+re-polishes the entire set once under the new skill/TEMPLATE. Leave it off for normal
+push/schedule runs — those stay idempotent (§4.6). Use it sparingly and deliberately: a forced
+pass re-polishes ~every version page in one agent run, so it is a manual, maintainer-initiated
+backfill, not an automatic reaction to editing the skill.
 
 ### 4.7 Manual additions & breaking-change summaries (companion files)
 
