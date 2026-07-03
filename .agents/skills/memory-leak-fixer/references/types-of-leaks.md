@@ -246,31 +246,37 @@ parent can be collected/finalized while the child is still alive.
 **Why it's bad.** The child then dereferences freed parent memory → **use-after-free**.
 The fix is cheap (root the parent) and has zero ABI impact.
 
-**Leak (❌):** `SKRegion.SpanIterator` keeps no parent field, though its siblings do:
+**Leak (❌):** a child cursor is built from a parent's *raw* native handle but drops the
+managed parent, so nothing keeps it alive:
 ```csharp
-public class SpanIterator : SKObject, ISKSkipObjectRegistration
+public class ChildCursor : SKObject, ISKSkipObjectRegistration
 {
-    internal SpanIterator(SKRegion region, int y, int left, int right)
-        : base(SkiaApi.sk_region_spanerator_new(region.Handle, y, left, right), true)
+    internal ChildCursor(SKParent parent)
+        : base(SkiaApi.sk_parent_cursor_new(parent.Handle), owns: true)
     {
-        // ❌ `region` is discarded; native spanerator holds a raw SkRegion*.
+        // ❌ `parent` is discarded; the native cursor still points at parent's SkParent*.
     }
 }
 ```
 
-**Fix (✓):** mirror the sibling `RectIterator`/`ClipIterator`, which root the parent:
+**Fix (✓):** root the parent in a managed field for the child's whole lifetime:
 ```csharp
-public class SpanIterator : SKObject, ISKSkipObjectRegistration
+public class ChildCursor : SKObject, ISKSkipObjectRegistration
 {
-    private readonly SKRegion region;    // keep the parent alive
-    internal SpanIterator(SKRegion region, int y, int left, int right)
-        : base(SkiaApi.sk_region_spanerator_new(region.Handle, y, left, right), true)
+    private readonly SKParent parent;    // keep the parent alive
+    internal ChildCursor(SKParent parent)
+        : base(SkiaApi.sk_parent_cursor_new(parent.Handle), owns: true)
     {
-        this.region = region;
+        this.parent = parent;
     }
 }
 ```
-The lighter-weight alternative for one-shot calls is `GC.KeepAlive(parent)` after the P/Invoke.
+For a one-shot P/Invoke (no stored child), `GC.KeepAlive(parent)` after the call is enough.
+
+**How to find it.** Look for wrapper types constructed from a parent's `.Handle` that keep
+**no** field referencing that parent — especially when *sibling* wrappers of the same parent
+type DO keep such a field (e.g. one iterator/cursor stores `private readonly SKParent` and
+another doesn't). The odd one out is the prime suspect. Prove it before believing it (Phase 2).
 
 **Watch out (❌ don't):** don't root the parent with a pinned `GCHandle` — a plain managed
 field is enough and a pinned handle is its own leak (family 9). And don't lean on
@@ -278,10 +284,6 @@ field is enough and a pinned handle is its own leak (family 9). And don't lean o
 covers the current method, so a stored child needs the field.
 
 **Real cases:** #3796 (SKPath/SKPathBuilder finalizer race), #3291 (SKAutoCanvasRestore).
-**Un-filed examples this workflow surfaced:** `SKRegion.SpanIterator` (above); and
-`SKPixmap.ExtractSubset`/`WithColorType`/`WithColorSpace`/`WithAlphaType` don't propagate the
-`pixelSource` GC-root the way `PeekPixels` does, so a subset pixmap can outlive its backing
-bitmap → dangling pixels. Fix: `result.pixelSource = pixelSource ?? this;`.
 
 ---
 
