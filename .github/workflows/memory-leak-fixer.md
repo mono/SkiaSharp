@@ -1,11 +1,11 @@
 ---
 # =============================================================================
-# Fixer - Memory Leak — SkiaSharp
+# Fixer - Memory Leak
 #
-# Periodic AI-driven workflow that SCANS SkiaSharp's managed C# for a native
+# Periodic AI-driven workflow that SCANS the repo's managed C# for a native
 # ownership / disposal memory leak, PROVES it with a red→green regression test,
 # FIXES it, and opens a DRAFT PR. Adapted from dotnet/maui's leak scanner+fixer
-# idea to SkiaSharp's real leak family (undisposed SKObject handles, wrong
+# idea to our real leak family (undisposed SKObject handles, wrong
 # `owns:` flags, same-instance double-dispose, unremoved view/handler
 # subscriptions, `fixed`-pointer lifetime). Scope: managed C# only — the native
 # Skia under externals/skia/** is upstream and out of scope.
@@ -14,7 +14,7 @@
 # `.agents/skills/memory-leak-fixer/SKILL.md`; this file is the schedule + the
 # guardrails (one action per run, de-dup, validate-before-PR).
 # =============================================================================
-description: "Scan SkiaSharp's managed C# for a native ownership/disposal memory leak, prove it with a red→green test, fix it, and open a draft PR."
+description: "Scan the repo's managed C# for a native ownership/disposal memory leak, prove it with a red→green test, fix it, and open a draft PR."
 
 environment: gh-aw-agents
 
@@ -126,14 +126,14 @@ safe-outputs:
 
 # Fixer - Memory Leak
 
-You **scan** SkiaSharp's **managed C#** for one native ownership / disposal memory leak,
+You **scan** the repo's **managed C#** for one native ownership / disposal memory leak,
 **prove** it with a red→green regression test, **fix** it, and open **one draft PR** — or,
 when the only correct fix is in native / upstream Skia (out of scope here), file **one**
 `[memory-leak]` issue instead. **At most one action per run.**
 
 **Read this first — set your expectations correctly:**
 
-- SkiaSharp is a **mature, heavily-hardened** codebase. There is **no planted/seeded/injected
+- This codebase is **mature and heavily-hardened**. There is **no planted/seeded/injected
   bug** to find. Most runs will (and should) find **nothing convincing** — that is the normal,
   expected, successful outcome, **not** a failure and **not** a puzzle with a guaranteed answer.
   Do **not** invent a leak, do **not** rationalize well-documented, deliberately-hardened code
@@ -141,7 +141,7 @@ when the only correct fix is in native / upstream Skia (out of scope here), file
 - A quiet run is a **first-class success**: when you find nothing that clears the bar, emit
   exactly **one `noop`** safe output summarizing what you scanned and why nothing qualified.
   A `noop` is the correct "nothing to do" signal — silence makes the run look incomplete.
-- **Scope is managed C# only.** Fix only code SkiaSharp owns — `binding/**` and `source/**`.
+- **Scope is managed C# only.** Fix only code the repo owns — `binding/**` and `source/**`.
   Everything under `externals/skia/**` (including our C shim) is upstream Skia: not checked
   out, not buildable here (native tests use pre-built packages via `externals-download`), and
   out of scope. A leak whose only correct fix is native is **issue-only** (see 2.4).

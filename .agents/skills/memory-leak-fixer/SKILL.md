@@ -17,9 +17,9 @@ description: >
   For a user-reported functional bug that is not a leak, use `issue-fix` instead.
 ---
 
-# Memory Leak Fixer — SkiaSharp
+# Memory Leak Fixer
 
-Proactively **find** and **fix** memory leaks in SkiaSharp. SkiaSharp is a thin managed
+Proactively **find** and **fix** memory leaks in SkiaSharp — a thin managed
 wrapper over native Skia, so its recurring, high-impact leak family is **native
 ownership / disposal correctness** — the C# binding failing to dispose, own, pin, or root a
 native object correctly — not the managed view-retention leaks a pure-managed app framework
