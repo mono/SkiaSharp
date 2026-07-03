@@ -69,8 +69,8 @@ Run the phases in order. The skill has two entry points:
 | You were asked to… | Start at | Notes |
 |---|---|---|
 | Find a leak (scan only) / file an issue | Phase 1 → 2 → (report) | Stop after confirmation; file `[memory-leak]` issue. |
-| Fix a known/reported leak | Phase 0 → 3 → 4 → 5 | Consume the issue's retention path; still enforce red→green. |
-| Scan **and** fix (the default, and what the workflow does) | Phase 0 → 1 → 2 → 3 → 4 → 5 | End-to-end: hunt → prove → fix → PR. |
+| Fix a known/reported leak | Phase 0 → 3 → 4 → 5 | The issue already exists — consume its retention path, still enforce red→green, then open the **PR only** with `Fixes #<that issue number>`. |
+| Scan **and** fix (the default, and what the workflow does) | Phase 0 → 1 → 2 → 3 → 4 → 5 | End-to-end: hunt → prove → fix → **file the finding as an issue and open a linked draft PR** that closes it (`Fixes #…`). |
 
 ---
 
@@ -254,38 +254,57 @@ instead of pushed and reverted. If any box can't be ticked, **fix it or stand do
       as a "decoy," and not a finding manufactured to avoid a quiet run.
 - [ ] Not already covered by an open issue/PR (§1.3).
 
-All ticked ⇒ open the PR. Any unticked ⇒ no PR (fix, re-file as an issue, or `noop`).
+All ticked ⇒ proceed to Phase 4 (file the finding, then open the PR). Any unticked ⇒ no PR
+(fix it, file the finding as an issue on its own, or `noop`).
 
 ---
 
-## Phase 4 — Open the PR
+## Phase 4 — File the finding, then open the linked fix PR
 
+A confirmed, managed-C#-fixable leak produces **two linked safe outputs** so the *finding* and
+the *fix* are tracked separately and the issue **auto-closes when the PR merges**.
+
+### 4.1 The issue — the finding
+Emit a `create_issue` that describes the **leak, not the fix**. Give it a `temporary_id`
+(format `aw_` + 3–12 letters/digits/underscores, e.g. `aw_leak1`) so the PR can reference it
+before its real number exists. Body (markdown):
+- **AI-generated banner** naming this workflow + the `memory-leak-fixer` skill.
+- **Family**, and the **retention/ownership path** with `file:line` citations.
+- **Evidence**: the Phase 2 proof — the probe you ran and its alive/collected counts.
+- **Scope note**: framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact.
+
+### 4.2 The PR — the fix
 Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix, and open a
-**draft** PR. Body (markdown):
+**draft** `create_pull_request`. Body (markdown):
+- **AI-generated banner** naming this workflow + skill.
+- **The fix**: what changed and why it is the idiomatic pattern (point at the family's `Fix ✓`).
+- **Proof (red→green)**: the failing-then-passing test and the exact `dotnet test` commands.
+- **A closing keyword on its own line so merging auto-closes the finding:**
+  - **Scan-and-fix** (you filed the issue in 4.1 this run): `Fixes #<temporary_id>` — e.g.
+    `Fixes #aw_leak1`. gh-aw rewrites it to the real issue number once the issue is created.
+  - **Fix-a-known-leak** (a maintainer supplied a real `issue_number`): the issue already
+    exists — **do not file a new one**; open the PR only, with `Fixes #<that number>`.
 
-- **AI-generated banner** naming this workflow/skill.
-- **The leak**: family, and the retention/ownership path with `file:line` citations.
-- **Proof (red→green)**: the failing-then-passing test, the exact `dotnet test` commands,
-  and the alive/collected counts from the Phase 2 probe.
-- **The fix**: what changed and why it is the idiomatic SkiaSharp pattern.
-- **Scope note**: framework bug vs footgun; empirically-proven vs statically-reasoned;
-  ABI impact (should be none).
-- `Fixes #N` when fixing a filed issue.
-
-If the strongest candidate cannot be **proven and fixed from managed C#** this run — e.g. the
-only correct fix is in native / upstream Skia — do **not** open an unvalidated PR. File a
-`[memory-leak]` issue with the Phase 1–2 evidence and the proposed fix instead, so nothing is
-lost.
+### 4.3 Out of scope (native / upstream only)
+If the leak is real but the only correct fix lives under `externals/skia/**` (incl. the C
+shim), do **not** open a PR. Emit the `create_issue` from 4.1 **alone** — finding plus the
+proposed native fix — so nothing is lost.
 
 ---
 
 ## Phase 5 — Report
 
-Write a short summary: which family, the candidate, proof result, and the PR/issue link.
-When run from the agentic workflow, append this to the run's step summary.
+Write a short summary: which family, the candidate (`file:line`), the proof result, and the
+resulting issue + PR links. When run from the agentic workflow, append this to the run's step
+summary.
 
-**Always end with exactly one safe output.** If you shipped a fix, that is the
-`create-pull-request`; if you filed an issue, that is the `create-issue`; if the run was quiet
-(no convincing candidate) **or** a dry run, emit a single **`noop`** carrying this summary. A
-`noop` is the correct "nothing to do / analysis only" signal — never finish with no safe
+**End with the right safe output(s):**
+- **Confirmed + managed-C# fix** → the **issue + PR pair** from Phase 4 (the PR body carries
+  `Fixes #…` so merging closes the issue). In *fix-a-known-leak* mode the issue already exists,
+  so it is the **PR alone**.
+- **Confirmed but native/upstream-only fix** → the **`create-issue`** alone (finding + proposal).
+- **Quiet run** (no convincing candidate) **or** a **dry run** → a single **`noop`** carrying
+  this summary.
+
+A `noop` is the correct "nothing to do / analysis only" signal — never finish with no safe
 output, which makes the run look incomplete.

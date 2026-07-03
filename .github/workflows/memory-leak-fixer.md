@@ -12,7 +12,7 @@
 #
 # All the domain knowledge lives in the reusable skill
 # `.agents/skills/memory-leak-fixer/SKILL.md`; this file is the schedule + the
-# guardrails (one action per run, de-dup, validate-before-PR).
+# guardrails (one finding per run, de-dup, validate-before-PR).
 # =============================================================================
 description: "Scan the repo's managed C# for a native ownership/disposal memory leak, prove it with a red→green test, fix it, and open a draft PR."
 
@@ -107,9 +107,10 @@ network:
     - "*.blob.core.windows.net"
 
 # -- Safe outputs ------------------------------------------------------
-# Primary: a DRAFT fix PR (managed C#). Fallback: a [memory-leak] issue when the
-# only correct fix is in native / upstream Skia (out of scope here). At most ONE
-# of the two per run (enforced in the prompt). Quiet runs create nothing.
+# A confirmed, managed-C#-fixable leak emits a PAIR: a [memory-leak] issue (the
+# finding) + a draft fix PR that closes it on merge (Fixes #<temp-id>, resolved
+# by gh-aw to the real number). When the only correct fix is native / upstream
+# Skia (out of scope here), the issue is filed alone. Quiet/dry runs emit a noop.
 safe-outputs:
   create-pull-request:
     title-prefix: "[memory-leak] "
@@ -117,6 +118,7 @@ safe-outputs:
     draft: true
     allowed-base-branches: [main]
   create-issue:
+    title-prefix: "[memory-leak] "
     labels: [agentic-workflows]
     allowed-labels: [agentic-workflows]
     max: 1
@@ -127,9 +129,10 @@ safe-outputs:
 # Fixer - Memory Leak
 
 You **scan** the repo's **managed C#** for one native ownership / disposal memory leak,
-**prove** it with a red→green regression test, **fix** it, and open **one draft PR** — or,
-when the only correct fix is in native / upstream Skia (out of scope here), file **one**
-`[memory-leak]` issue instead. **At most one action per run.**
+**prove** it with a red→green regression test, **fix** it, then **file the finding as a
+`[memory-leak]` issue and open a draft PR that closes it** (`Fixes #…`) — or, when the only
+correct fix is in native / upstream Skia (out of scope here), file the `[memory-leak]` issue
+alone. **One finding per run.**
 
 **Read this first — set your expectations correctly:**
 
@@ -175,9 +178,14 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 
 ## Step 2 — Guardrails (in addition to the skill's golden rules)
 
-1. **One action per run.** Emit either one `create-pull-request` **or** one `create-issue`
-   **or** one `noop`, never more than one. When you have nothing to ship, the action is a
-   single `noop` — never finish with no safe output at all (that makes the run look incomplete).
+1. **What to emit — one finding per run.** For a confirmed, managed-C#-fixable leak, emit the
+   **linked pair**: one `create-issue` (the finding, with a `temporary_id`) **and** one
+   `create-pull-request` (the fix, whose body ends with `Fixes #<that temporary_id>` so merging
+   auto-closes the issue) — see skill Phase 4. In *fix-a-known-leak* mode (a real `issue_number`
+   was supplied) the issue already exists → emit the **PR only** with `Fixes #<that number>`, no
+   new issue. If the only correct fix is native / upstream (out of scope) → emit the
+   **`create-issue` alone**. If nothing clears the bar → exactly one **`noop`**. Never finish a
+   run with no safe output at all (that makes the run look incomplete).
 2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
    `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
    CLOSED may be re-filed.
@@ -198,8 +206,8 @@ Each bash call is a fresh subshell — re-`cd` as needed.
    full scan→prove→fix locally but you **MUST NOT** emit any `create-pull-request` or
    `create-issue` safe output under any circumstances. Instead, report your findings in the
    step summary **and** emit exactly one **`noop`** whose body is that same summary (what you
-   scanned, the strongest candidate if any, and — had this been a real run — whether you would
-   have opened a PR or filed an issue). Never finish a dry run with no safe output.
+   scanned, the strongest candidate if any, and — had this been a real run — the finding you
+   would have filed and the fix PR you would have opened). Never finish a dry run with no safe output.
 7. **AI attribution.** Every PR/issue body must clearly state it was produced by this
    agentic workflow + the `memory-leak-fixer` skill, and include an honest scope note
    (framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact).
@@ -209,8 +217,9 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symlinked to the
 run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak family, the candidate
 (with `file:line`), the proof result (alive/collected counts or red→green status), and the
-resulting PR/issue link — or "no convincing candidate this run" for a quiet run.
+resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
 
-Then make sure you have emitted exactly one safe output (Step 2.1): a `create-pull-request`, a
-`create-issue`, or — for a dry run or a quiet run — a single `noop` carrying this same summary.
+Then make sure you have emitted the safe output(s) from Step 2.1: the **issue + PR pair** (or a
+`create-issue` alone when the fix is out of scope, or a PR alone in fix-a-known-leak mode), or —
+for a dry run or a quiet run — a single `noop` carrying this same summary.
 Never finish the run with no safe output.
