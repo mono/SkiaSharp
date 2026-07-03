@@ -951,16 +951,23 @@ need to escape a companion's own `-->` (the loader only hashes bytes).
 The AI reads the page's raw-data block, then **opens and reads** the manifest's companions
 and writes a **summary**, not a dump:
 
-- **Breaking changes → a concise `## ⚠️ Breaking Changes` section.** The AI must **open every
-  `.breaking.md` the manifest lists** and turn its concrete entries — each removed interface,
-  removed / changed / obsoleted member, and retyped property under its `####`/`###` headings —
-  into prose. **A link to the breaking diff is not a substitute for reading it, and PR titles
-  are not a substitute for the diff's actual entries:** never emit a section that only links the
-  file and then lists PRs. Summarize rather than dump (group related members — "obsoleted the
-  text/font members on `SKPaint`"; "`SKFooBar` was removed — use `SKBaz`"), but every
-  **distinct** break in the diff must be represented, not silently dropped; add small
-  **migration code examples** where they help and point at the API-diff index for the exhaustive
-  member list.
+- **Breaking changes → a concise `## ⚠️ Breaking Changes` section.** Always emit this heading —
+  **omitting the section is never acceptable.** **Open every `.breaking.md` the manifest lists**
+  (for a large one a skim is enough — a quick `wc -l` plus reading the `####`/`###` headings —
+  the rule is that you never *skip* opening it, not that you transcribe it). Then **size the
+  summary to the shape of the break**:
+  - **A small / curated set** (up to a handful of distinct entries) → **itemize** them: turn each
+    removed interface, removed / changed / obsoleted member, and retyped property into a prose
+    bullet, with a small **migration code example** where it helps.
+  - **A bulk / mechanical sweep** (dozens-to-hundreds of members removed at once — e.g. the
+    pre-3.0 `[Obsolete]` cull, a dropped target framework) → **group and summarize** it in a
+    sentence or two and **link the API diff** for the exhaustive list (e.g. *"Members obsoleted
+    before 3.0 were removed across `SKPaint`, `SKCanvas`, and others — see the API diff for the
+    full list"*). Do **not** try to list every member; a grouped summary **is** the complete,
+    correct answer for a sweep this large.
+  In every case, **a bare link plus PR titles is not enough** — read the diff, do not just point
+  at it — and when "itemize everything" is infeasible, **degrade to a grouped summary + link,
+  never to silence.** The section always says *something*.
 - **Breaks the signature diff cannot see** reach the notes **only** through `.notes.md`, and the
   AI folds them into the same section:
   - **behavioral changes** — same signature, different runtime behavior (e.g.

@@ -152,7 +152,7 @@ page-relative path (see `release-notes-and-api-diffs.md` §4.7):
 | --- | --- | --- |
 | `<stem>.notes.md` | **Manual additions sidecar** — freeform Markdown the maintainer wrote to bring something out (not always breaking). | Weave its editorial points into Highlights; surface any behavioral breaking notes under Breaking Changes. |
 | `<line>/index.md` (indexes every per-assembly diff; flags breaking) | The **full public-API diff** landing page — one door to the whole folder. | Open it, follow the assemblies that matter, draw richer/accurate highlights. Do **not** paste it — summarize. |
-| `<line>/…/*.breaking.md` (**one per broken assembly**) | The **API breaking diff** — present only where signatures actually broke; a big release lists many. | The "what" of Breaking Changes. **Open every listed file** and turn each concrete entry (removed interface, removed / changed / obsoleted member, retyped property) into a prose bullet — grouped, but nothing dropped. A link is **not** a substitute for reading it. |
+| `<line>/…/*.breaking.md` (**one per broken assembly**) | The **API breaking diff** — present only where signatures actually broke; a big release lists many. | The "what" of Breaking Changes. **Open every listed file** (skim large ones — `wc -l` + read the headings), then **size the summary to the break**: itemize a small/curated set; **group + summarize + link** a bulk mechanical sweep (hundreds of `[Obsolete]` removals). A link is **not** a substitute for reading it — but never drop the section. |
 
 Rules for companions:
 
@@ -160,10 +160,17 @@ Rules for companions:
   verbatim or dump the whole file. A human summary ("obsoleted several APIs in `SKPaint` and
   `SKFont`"; "`SKFooBar` was removed — use `SKBaz`") with a small migration code example where
   it helps is the goal.
-- **Itemize the breaking diff — don't just link it.** The `## Breaking Changes` section must
-  reflect the **actual entries** in each `.breaking.md` (every distinct removed / changed /
-  obsoleted type or member), grouped and summarized. A section that only links the diff and
-  lists PR titles has **not** done the job.
+- **Read the breaking diff — never just link it, never drop the section.** The
+  `## Breaking Changes` section must reflect what the `.breaking.md` files actually contain,
+  **sized to the break**:
+  - **Small / curated** (a handful of entries) → **itemize** each distinct removed / changed /
+    obsoleted type or member, with a migration snippet where it helps.
+  - **Bulk / mechanical sweep** (dozens-to-hundreds at once — the pre-3.0 `[Obsolete]` cull, a
+    dropped TFM) → **group + summarize in a sentence or two + link the API diff** for the full
+    list. Do **not** try to list every member — a grouped summary is the *complete* answer here.
+  Opening the files is mandatory (a skim of a large one is fine); a section that only links the
+  diff and lists PR titles has **not** done the job, and **omitting the section is never allowed** —
+  if "itemize everything" is infeasible, degrade to a grouped summary + link, never to silence.
 - **Some real breaks never appear in any `.breaking.md`** — behavioral changes (same signature,
   different runtime behavior, e.g. `new SKFont()` now carrying an empty typeface) and
   interop / native structs outside the public-API surface (e.g. removed `GRVkBackendContextNative`
@@ -282,15 +289,18 @@ Follow these rules:
 5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
    If many, mention as: "Plus several CI and documentation improvements."
 
-6. **Breaking changes** — Always include a `## Breaking Changes` section (say
-   *"None in this release."* when there are none). When the raw block lists an api
-   **breaking** companion and/or a manual notes sidecar, **open them and summarize — do not
-   just link them.** The `.breaking.md` gives the "what": reflect **every distinct** entry it
-   contains (obsoleted/removed/changed signatures), grouped but not dropped. The
+6. **Breaking changes** — **Always** include a `## Breaking Changes` section (say
+   *"None in this release."* only when there genuinely are none) — **never drop the heading.**
+   When the raw block lists an api **breaking** companion and/or a manual notes sidecar,
+   **open them and summarize — do not just link them.** Size the summary to the break: **itemize**
+   a small/curated set (obsoleted/removed/changed signatures) with migration snippets; **group +
+   summarize + link the diff** for a bulk mechanical sweep (hundreds of `[Obsolete]` removals) —
+   don't try to list every member. Opening the file is mandatory even when you only skim it. The
    `<stem>.notes.md` gives behavioral breaks, interop-struct breaks the diff can't see (e.g.
    removed `GRVkBackendContextNative` fields), and migration "how". Keep it concise — a small
    migration code example is welcome; point at the API diff for the exhaustive member list. Do
-   not dump the diff, and do not reduce the section to a bare link plus PR titles. (See
+   not dump the diff, do not reduce the section to a bare link plus PR titles, and **never omit
+   it** — degrade to a grouped summary, never to silence. (See
    [Companion files](#companion-files-open-and-read-them) and TEMPLATE.md.)
 
 7. **PR links** — Every item links to its PR.

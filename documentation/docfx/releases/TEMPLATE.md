@@ -81,19 +81,26 @@ This release focuses on hardening the native libraries against common exploit te
 
 ## Breaking Changes
 
-<!-- Always include. OPEN and SUMMARIZE from the companions the raw-data block lists (§4.7):
-     - the API breaking diff (*.breaking.md) — OPEN every listed file and turn each concrete
-       entry (removed interface, removed / changed / obsoleted member, retyped property) into a
-       bullet; group related ones but drop nothing. A link is NOT a substitute for reading it,
-       and PR titles are NOT a substitute for the diff's actual entries; and
+<!-- ALWAYS include this heading — never drop it. OPEN and SUMMARIZE from the companions the
+     raw-data block lists (§4.7):
+     - the API breaking diff (*.breaking.md) — OPEN every listed file (skim a large one: wc -l +
+       read the headings), then SIZE the summary to the break:
+         * small / curated set (a handful of entries) → itemize each removed / changed /
+           obsoleted member as a bullet, with a migration snippet where it helps;
+         * bulk / mechanical sweep (dozens-to-hundreds at once, e.g. the pre-3.0 [Obsolete] cull
+           or a dropped TFM) → GROUP + summarize in a sentence or two + LINK the API diff for the
+           full list. Do NOT list every member — a grouped summary IS the complete answer here.
+       A link is NOT a substitute for reading it, and PR titles are NOT a substitute for the
+       diff's entries; and
      - the manual additions sidecar (<stem>.notes.md) — behavioral breaks (same signature,
        different runtime behavior) AND interop / native-struct breaks (e.g. removed
        GRVkBackendContextNative fields) that NEVER appear in a signature diff. The sidecar is
        the only channel for these — fold them in alongside the diff items.
      Summarize, don't dump: e.g. "Obsoleted several APIs in SKPaint and SKFont" or
      "SKFooBar was removed — use SKBaz instead". Small migration code examples are welcome.
-     Point at the API diff link (above) for the exhaustive member list. If NEITHER companion
-     has anything, say so explicitly. -->
+     OMITTING this section is never acceptable — if you cannot itemize, degrade to a grouped
+     summary + link, never to silence. Only if NEITHER companion has anything, write
+     "None in this release." -->
 
 *None in this release.*
 
