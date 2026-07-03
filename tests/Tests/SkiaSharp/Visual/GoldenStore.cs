@@ -167,12 +167,21 @@ namespace SkiaSharp.Tests.Visual
 		{
 			var suffix = ("Content." + relative.Replace('/', '.'));
 
+			// MSBuild derives the manifest name of an EmbeddedResource by mangling
+			// every *directory* segment into a valid identifier — 'ganesh-metal.ios'
+			// embeds as 'ganesh_metal.ios' — while the file name itself is kept
+			// verbatim. Any renderer with a dash in its name (ganesh-*, graphite-*)
+			// would otherwise never resolve on the device/browser hosts that read
+			// goldens from embedded resources.
+			var mangledSuffix = "Content." + MangleDirectorySegments(relative);
+
 			foreach (var assembly in ResourceAssemblies)
 			{
 				string match = null;
 				foreach (var name in assembly.GetManifestResourceNames())
 				{
-					if (name.EndsWith(suffix, StringComparison.Ordinal))
+					if (name.EndsWith(suffix, StringComparison.Ordinal) ||
+						name.EndsWith(mangledSuffix, StringComparison.Ordinal))
 					{
 						match = name;
 						break;
@@ -192,6 +201,17 @@ namespace SkiaSharp.Tests.Visual
 			}
 
 			return null;
+		}
+
+		// Applies the directory-segment half of MSBuild's manifest-name mangling
+		// to a 'dir/dir/file.ext' relative path: '-' (invalid in an identifier)
+		// becomes '_' in directory segments; the trailing file name is untouched.
+		private static string MangleDirectorySegments(string relative)
+		{
+			var segments = relative.Split('/');
+			for (var i = 0; i < segments.Length - 1; i++)
+				segments[i] = segments[i].Replace('-', '_');
+			return string.Join(".", segments);
 		}
 
 		private static IEnumerable<Assembly> ResourceAssemblies
