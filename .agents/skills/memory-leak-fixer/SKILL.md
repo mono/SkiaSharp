@@ -100,18 +100,27 @@ Run the phases in order. The skill has two entry points:
 So successive runs explore different surface, pick a rotating focus:
 
 ```bash
-FOCUS=$(( ${GITHUB_RUN_NUMBER:-$RANDOM} % 6 ))
+FOCUS=$(( ${GITHUB_RUN_NUMBER:-$RANDOM} % 12 ))
 echo "focus family: $FOCUS"
 ```
 
-| # | Leak family (SkiaSharp signature) | Where to look | Grep starting points |
+Each family below is drawn from a **real, historical SkiaSharp leak fix** (issue/PR cited),
+so the hunt targets patterns that have actually shipped as bugs here — not hypotheticals.
+
+| # | Leak family (SkiaSharp signature) | Where to look | Grep starting points · real cases |
 |--:|---|---|---|
 | 0 | **Undisposed native handle** — a factory/getter/cache creates an *owned* or *ref-counted* `SKObject` that escapes without being disposed (or is held in a static/instance cache never cleared). | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp` (then trace ownership) |
 | 1 | **Wrong `owns:` flag** — `owns: true` on a *borrowed*/getter return (premature dispose / double-free) OR an owned `new`/`_new_` handle wrapped `owns: false` (leak). | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
 | 2 | **C-API ownership mismatch** — C++ expects `sk_sp<T>` but no `sk_ref_sp`; a returned `sk_sp` missing `.release()`; `delete` used on a `SkRefCnt`/`SkNVRefCnt` type; unref vs delete. | `externals/skia/src/c/**` | `grep -rnE "\.release\(\)|sk_ref_sp|delete As|SkSafeUnref" externals/skia/src/c` |
-| 3 | **Same-instance double-dispose** — a method that may return the *same* instance (`Subset`, `ToRasterImage`, …) whose caller disposes both source and result. | `binding/SkiaSharp/**` | `grep -rnE "Subset|ToRasterImage|== source|!= source" binding/SkiaSharp` |
-| 4 | **Managed retention (Views)** — a handler / control / `SKObject`-backed view subscribes to an event (`PaintSurface`, `PropertyChanged`, invalidation ticker, platform peer) with **no teardown on unload**, rooting the transient. | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= |event |WeakReference|Dispose\(\)|Detach" source/SkiaSharp.Views*` |
-| 5 | **`fixed`-pointer lifetime** — a temporary `fixed` pointer handed to native code that *stores* it beyond the block (GC then moves/frees it). Canonical: `HarfBuzzSharp.Blob.FromStream`. | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` (flag any whose pointer outlives the block) |
+| 3 | **Same-instance double-dispose** — a method that may return the *same* instance (`Subset`, `ToRasterImage`, …) whose caller disposes both source and result. | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
+| 4 | **Managed retention (Views)** — a handler / control / `SKObject`-backed view subscribes to an event (`PaintSurface`, `PropertyChanged`, invalidation ticker, platform peer) with **no teardown on unload**, rooting the transient; or a base-class `Dispose` is never chained. | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · **cf. #3309 (SKGLElement missing `base.Dispose()`), #2955, #2472, #1095** |
+| 5 | **`fixed`-pointer lifetime** — a temporary `fixed` pointer handed to native code that *stores* it beyond the block (`MemoryMode.ReadOnly`, non-copying); GC then moves/frees the array. | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · **canonical: `HarfBuzzSharp.Blob.FromStream` (open #3472 / PR #3473)** |
+| 6 | **Finalizer / collection ordering** — a child wrapper holds a *raw* pointer into a parent; if the parent is GC'd/disposed first, use-after-free. Needs `GC.KeepAlive` or an owns-link back to the parent. | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` (flag children missing KeepAlive) · **cf. #3796 (SKPath/SKPathBuilder), #3291 (SKAutoCanvasRestore)**. *Real un-filed examples this workflow surfaced:* `SKRegion.SpanIterator` keeps no parent field though its sibling `RectIterator`/`ClipIterator` do; `SKPixmap.ExtractSubset`/`With*` don't propagate `pixelSource` the way `PeekPixels` does. |
+| 7 | **Clone / copy double-free** — a `Clone()`/copy that *shares* one native pointer between two managed wrappers that both dispose it. Must mint a fresh native (`_clone`) wrapped `owns:true`. | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · **cf. #2904 (SKPaint.Clone), #2899** |
+| 8 | **Disposing native statics/singletons** — an *immortal* native object (default typeface, srgb color space/filter, blend-mode/empty-data singletons) reached via a cache that ISN'T dispose-protected, so `DisposeNative` unrefs an object it must never touch. | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|_empty\|Empty" binding/SkiaSharp` (flag singletons NOT dispose-protected) · **cf. #1863, #4080, #1224, #3730** |
+| 9 | **Field not nulled on dispose** — a `Dispose`/`DisposeManaged` that frees a native child but leaves the managed field pointing at it, enabling a later double-dispose or blocking GC of a graph. | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` (check disposed children are nulled) · **cf. #1256, #1344** |
+| 10 | **Managed stream / callback / delegate-proxy lifetime** — a `SKManagedStream`/`SKManagedWStream`/`SKAbstract*Stream`, delegate/function-pointer proxy, or pinned `GCHandle` handed to native code but freed *too early* (dangling callback) or *never* (leak). | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · **cf. #3589, #2916, #996, #2446** |
+| 11 | **Allocation-failure path** — a factory that wraps and returns a managed object even when the native create returned `null`/failed, or leaks a half-built object on the error path. | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` (check null-return handling) · **cf. #1784, #1642** |
 
 Treat the table as a starting point, not a cage. If the focus family is exhausted (its
 leaks are already open issues/PRs — see 1.3), advance to the next index.
@@ -128,17 +137,29 @@ For each candidate write the precise path **with `file:line` citations**:
 `ConditionalWeakTable`, or the ownership already matches the memory-management rules.
 
 ### 1.3 De-dup against this project's own open issues/PRs
-Before confirming, fetch and skip anything already covered:
+Before confirming, fetch and skip anything already covered. **Search two ways** — real
+SkiaSharp leak fixes are usually filed as `[BUG] …` (not `[memory-leak] …`), so the
+title-prefix search alone will miss them. Also search by the specific **type/API name**:
 
 ```bash
+# 1. Prior runs of THIS workflow (our own prefix):
 gh issue list --repo "$GITHUB_REPOSITORY" --search '"[memory-leak]" in:title' \
   --state open --limit 100 --json number,title,body
 gh pr list --repo "$GITHUB_REPOSITORY" --search '"[memory-leak]" in:title' \
   --state open --limit 100 --json number,title,body
+
+# 2. Human-reported coverage of the SAME api/type (the important check):
+#    e.g. for the Blob.FromStream candidate below, this surfaces open PR #3473.
+gh issue list --repo "$GITHUB_REPOSITORY" --search 'Blob.FromStream in:title,body' --state open --json number,title
+gh pr    list --repo "$GITHUB_REPOSITORY" --search 'Blob.FromStream in:title,body' --state open --json number,title
 ```
 
 A candidate is OUT only if an **open** issue/PR already covers the same
-handle / ownership path. A candidate whose only prior item is CLOSED may be re-filed.
+handle / ownership path (by our prefix OR by the api/type name). A candidate whose only
+prior item is CLOSED may be re-filed. **Worked example:** the `HarfBuzzSharp.Blob.FromStream`
+`fixed`-pointer leak (family 5) is a genuine, still-present bug — but open PR #3473 "Make
+Blob.FromStream GC safe" already fixes it, so it is OUT: stand down, do **not** open a
+duplicate PR, emit a `noop`.
 
 Pick the ONE strongest candidate. If none is convincing, **stop** — a quiet run is a success
 (the surface is hardened; the value is catching *new* leaks as code lands). Do not keep
@@ -218,8 +239,14 @@ Pick the fix that matches the family (all from the memory-management model):
 | Wrong `owns:` | Flip the flag to match the C-API contract (`owns: false` for borrowed/getters; `true` only for owned `_new_`). |
 | C-API mismatch | Add `sk_ref_sp(...)` where C++ takes `sk_sp<T>`; add `.release()` on `sk_sp` returns; replace `delete` with `SkSafeUnref` for ref-counted types. Then `pwsh ./utils/generate.ps1`. |
 | Same-instance | Guard: `if (result != source) source.Dispose();` — never dispose a same-instance return. |
-| Views retention | Detach the subscription on unload/dispose, or route it through a weak subscription mirroring existing view teardown. |
-| `fixed`-pointer | Replace the temporary `fixed` with a pinned `GCHandle.Alloc(obj, GCHandleType.Pinned)` freed when native releases the pointer. |
+| Views retention | Detach the subscription on unload/dispose, or route it through a weak subscription mirroring existing view teardown. Chain `base.Dispose(disposing)` if the base owns native resources (cf. #3309). |
+| `fixed`-pointer | Replace the temporary `fixed` with a pinned `GCHandle.Alloc(obj, GCHandleType.Pinned)`, hand native `AddrOfPinnedObject()`, and `Free()` the handle in the release delegate (cf. Blob.FromStream / PR #3473). |
+| Finalizer/ordering | Add `GC.KeepAlive(parent)` after the P/Invoke, or give the child an owns-link so the parent can't be collected first. |
+| Clone/copy | Mint a fresh native via the `_clone` C-API wrapped `owns:true` (never share one pointer across two wrappers). |
+| Dispose static/singleton | Route the accessor through `GetDisposeProtectedObject(..., owns:false, unrefExisting:false)` so `DisposeNative` skips the immortal native. |
+| Field-not-nulled | Null the managed field after disposing the native child so a later dispose is a no-op and the graph can be collected. |
+| Stream/callback/proxy | Keep the `GCHandle`/proxy rooted for exactly the native object's lifetime; free it in the release/destroy delegate — not before, not never. |
+| Allocation-failure | Return `null` (factory) when the native create returns 0; free any half-built partials on the error path. |
 
 Touch only the minimal code. If the fix is in the C API, regenerate bindings and rebuild
 natives from source (do **not** `externals-download`).
