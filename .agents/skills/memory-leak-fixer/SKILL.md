@@ -66,11 +66,12 @@ Run the phases in order. The skill has two entry points:
 
 ## Phase 0 — Setup
 
-> **CI runner reality:** on the agentic-workflow runner the **skia submodule is NOT checked
-> out**, so the C/C++ sources under `externals/skia` are unavailable. Scan the **managed C#**
-> surface (`binding/**`, `source/SkiaSharp.Views*`) only, and prefer managed-C# fixes you can
-> validate with pre-built natives. Treat the missing submodule as a normal constraint — do not
-> try to fetch it, and do not treat its absence as a failure.
+> **CI runner reality:** the agentic workflow checks out the skia submodule read-only
+> (`checkout: submodules: true`), so you **can read** our C shim under `externals/skia/src/c`
+> and `externals/skia/include/c` to verify a managed `owns:` flag against the real C ref-count
+> contract. You **cannot build** native code on the runner, though — native tests run against
+> pre-built packages (`externals-download`). So prefer managed-C# fixes you can validate; a fix
+> that must change the C shim is issue-only (Phase 4).
 
 1. Confirm the SDK: `dotnet --version`.
 2. Decide the **fix layer** you are willing to validate this run (this gates which

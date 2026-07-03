@@ -1,6 +1,6 @@
 ---
 # =============================================================================
-# Memory Leak Fixer — SkiaSharp
+# Fixer - Memory Leak — SkiaSharp
 #
 # Periodic AI-driven workflow that SCANS SkiaSharp for a native ownership /
 # disposal memory leak, PROVES it with a red→green regression test, FIXES it,
@@ -70,8 +70,13 @@ concurrency:
 timeout-minutes: 120
 
 # create-pull-request is commit-based and needs full history for its branch ops.
+# submodules: true pulls the skia fork so the SCAN phase can read our C shim
+# (externals/skia/src/c + include/c) to verify managed `owns:` flags against the
+# real ref-count contracts. We only READ it — native builds still use pre-built
+# packages (externals-download) — so `true` is enough; no need for `recursive`.
 checkout:
   - fetch-depth: 0
+    submodules: true
 
 permissions:
   contents: read
@@ -120,7 +125,7 @@ safe-outputs:
     report-as-issue: false
 ---
 
-# Memory Leak Fixer — SkiaSharp
+# Fixer - Memory Leak
 
 You **scan** SkiaSharp for one native ownership / disposal memory leak, **prove** it with a
 red→green regression test, **fix** it, and open **one draft PR** — or, when the only viable
@@ -137,10 +142,12 @@ fix needs a native/C-API source build you can't validate this run, file **one**
 - A quiet run is a **first-class success**: when you find nothing that clears the bar, emit
   exactly **one `noop`** safe output summarizing what you scanned and why nothing qualified.
   A `noop` is the correct "nothing to do" signal — silence makes the run look incomplete.
-- The **skia submodule is NOT checked out** on this runner, so the C/C++ sources under
-  `externals/skia` are unavailable. Scan the **managed C# bindings** (`binding/`,
-  `source/SkiaSharp.Views*`) only. Treat the submodule's absence as a normal constraint, not a
-  blocker — never spend time trying to fetch it or reason about C-API source you cannot see.
+- The **skia submodule IS checked out** (via `checkout: submodules: true`), so you **can** read
+  our C shim under `externals/skia/src/c/**` and `externals/skia/include/c/**` to verify a
+  managed `owns:` flag against the real C ref-count contract (does the C function hand back a
+  fresh ref via `sk_ref_sp(...).release()`, or a borrowed pointer?). Read it to strengthen a
+  candidate — but you still cannot *build* native code here (native tests use pre-built packages
+  via `externals-download`), so a fix that must change the C shim is issue-only (see 2.4).
 - **Timebox the scan.** Do one focused pass over the leak families, pick the single strongest
   candidate early, and stop. If nothing clears the bar in that pass, emit the `noop` and finish
   — do not launch open-ended sub-agent explorations that may not return within the budget.
