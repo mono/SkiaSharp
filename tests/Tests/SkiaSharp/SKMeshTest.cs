@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 
 		// Specification tests
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateSpecification()
 		{
 			var spec = SKMeshSpecification.Create(
@@ -52,7 +52,7 @@ namespace SkiaSharp.Tests
 			spec.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpecificationWithColorSpaceSucceeds()
 		{
 			using var cs = SKColorSpace.CreateSrgb();
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			spec.Dispose();
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpecificationWithInvalidShaderReturnsError()
 		{
 			var spec = SKMeshSpecification.Create(
@@ -88,7 +88,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(errors);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpecificationStrideMatchesInput()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -103,7 +103,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(sizeof(float) * 2, spec.Stride);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpecificationRequiresAttributes()
 		{
 			Assert.Throws<ArgumentException>(() =>
@@ -116,7 +116,7 @@ namespace SkiaSharp.Tests
 					out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpecificationRequiresVertexShader()
 		{
 			Assert.Throws<ArgumentNullException>(() =>
@@ -129,7 +129,7 @@ namespace SkiaSharp.Tests
 					out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BuildThrowsOnInvalidShader()
 		{
 			Assert.Throws<SKMeshSpecificationException>(() =>
@@ -141,7 +141,7 @@ namespace SkiaSharp.Tests
 					SimpleFragmentShader));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BuildReturnsMeshBuilder()
 		{
 			using var builder = SKMeshSpecification.Build(
@@ -157,7 +157,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(builder.Children);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void UniformsAndChildrenProperties()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -175,7 +175,7 @@ namespace SkiaSharp.Tests
 
 		// Buffer tests
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateVertexBuffer()
 		{
 			var vertices = new float[] { 0, 0, 100, 0, 50, 100 };
@@ -187,7 +187,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(vertices.Length * sizeof(float), vb.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateZeroInitializedVertexBuffer()
 		{
 			using var vb = SKMeshVertexBuffer.Make(24);
@@ -196,7 +196,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(24, vb.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateIndexBuffer()
 		{
 			var indices = new ushort[] { 0, 1, 2 };
@@ -210,7 +210,7 @@ namespace SkiaSharp.Tests
 
 		// Mesh creation tests
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateNonIndexedMesh()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -240,7 +240,7 @@ namespace SkiaSharp.Tests
 			Assert.True(mesh.IsValid);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateIndexedMesh()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -277,7 +277,7 @@ namespace SkiaSharp.Tests
 			Assert.True(mesh.IsValid);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToMeshRequiresVertexBuffer()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -292,7 +292,7 @@ namespace SkiaSharp.Tests
 				spec.ToMesh(SKMeshMode.Triangles, null, 3, 0, new SKRect(0, 0, 100, 100)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToMeshIndexedRequiresVertexBuffer()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -311,7 +311,7 @@ namespace SkiaSharp.Tests
 
 		// Drawing tests
 
-		[SkippableFact]
+		[Fact]
 		public void CanDrawMesh()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -350,7 +350,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(image);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawMeshWithBlender()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -390,7 +390,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(image);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawMeshRequiresMesh()
 		{
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
@@ -400,7 +400,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => canvas.DrawMesh(null, paint));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DrawMeshRequiresPaint()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -428,7 +428,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => canvas.DrawMesh(mesh, null));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TriangleStripModeWorks()
 		{
 			using var spec = SKMeshSpecification.Create(
@@ -459,7 +459,7 @@ namespace SkiaSharp.Tests
 			Assert.True(mesh.IsValid);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeshBuilderCreatesNonIndexedMesh()
 		{
 			var spec = SKMeshSpecification.Create(
@@ -486,7 +486,7 @@ namespace SkiaSharp.Tests
 			Assert.True(mesh.IsValid);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeshBuilderCreatesIndexedMesh()
 		{
 			var spec = SKMeshSpecification.Create(
