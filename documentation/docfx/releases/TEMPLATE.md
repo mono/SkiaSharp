@@ -81,26 +81,15 @@ This release focuses on hardening the native libraries against common exploit te
 
 ## Breaking Changes
 
-<!-- ALWAYS include this heading — never drop it. OPEN and SUMMARIZE from the companions the
-     raw-data block lists (§4.7):
-     - the API breaking diff (*.breaking.md) — OPEN every listed file (skim a large one: wc -l +
-       read the headings), then SIZE the summary to the break:
-         * small / curated set (a handful of entries) → itemize each removed / changed /
-           obsoleted member as a bullet, with a migration snippet where it helps;
-         * bulk / mechanical sweep (dozens-to-hundreds at once, e.g. the pre-3.0 [Obsolete] cull
-           or a dropped TFM) → GROUP + summarize in a sentence or two + LINK the API diff for the
-           full list. Do NOT list every member — a grouped summary IS the complete answer here.
-       A link is NOT a substitute for reading it, and PR titles are NOT a substitute for the
-       diff's entries; and
+<!-- ALWAYS include this heading — never drop it. If the raw-data block lists companions (§4.7),
+     open them and SUMMARIZE the breaks as a few bullets:
+     - the API breaking diff (*.breaking.md) — open every listed file (one per broken assembly)
+       and name the affected types/areas in a few bullets, with a small migration snippet where
+       it helps. Summarize, don't dump — readers follow the API-diff link for the full list.
      - the manual additions sidecar (<stem>.notes.md) — behavioral breaks (same signature,
-       different runtime behavior) AND interop / native-struct breaks (e.g. removed
-       GRVkBackendContextNative fields) that NEVER appear in a signature diff. The sidecar is
-       the only channel for these — fold them in alongside the diff items.
-     Summarize, don't dump: e.g. "Obsoleted several APIs in SKPaint and SKFont" or
-     "SKFooBar was removed — use SKBaz instead". Small migration code examples are welcome.
-     OMITTING this section is never acceptable — if you cannot itemize, degrade to a grouped
-     summary + link, never to silence. Only if NEITHER companion has anything, write
-     "None in this release." -->
+       different runtime behavior) and interop / native-struct breaks (e.g. removed
+       GRVkBackendContextNative fields) that never appear in a signature diff. Fold them in here.
+     If NEITHER companion has anything, write "None in this release." -->
 
 *None in this release.*
 

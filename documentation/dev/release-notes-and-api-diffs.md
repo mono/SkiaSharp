@@ -948,44 +948,29 @@ need to escape a companion's own `-->` (the loader only hashes bytes).
 
 #### What the Polish AI does with them
 
-The AI reads the page's raw-data block, then **opens and reads** the manifest's companions
-and writes a **summary**, not a dump:
+The AI reads the page's raw-data block, then **opens and reads** each companion the manifest
+lists and writes a **short summary**, not a dump. Four rules cover it:
 
-- **Breaking changes → a concise `## ⚠️ Breaking Changes` section.** Always emit this heading —
-  **omitting the section is never acceptable.** **Open every `.breaking.md` the manifest lists**
-  (for a large one a skim is enough — a quick `wc -l` plus reading the `####`/`###` headings —
-  the rule is that you never *skip* opening it, not that you transcribe it). Then **size the
-  summary to the shape of the break**:
-  - **A small / curated set** (up to a handful of distinct entries) → **itemize** them: turn each
-    removed interface, removed / changed / obsoleted member, and retyped property into a prose
-    bullet, with a small **migration code example** where it helps.
-  - **A bulk / mechanical sweep** (dozens-to-hundreds of members removed at once — e.g. the
-    pre-3.0 `[Obsolete]` cull, a dropped target framework) → **group and summarize** it in a
-    sentence or two and **link the API diff** for the exhaustive list (e.g. *"Members obsoleted
-    before 3.0 were removed across `SKPaint`, `SKCanvas`, and others — see the API diff for the
-    full list"*). Do **not** try to list every member; a grouped summary **is** the complete,
-    correct answer for a sweep this large.
-  In every case, **a bare link plus PR titles is not enough** — read the diff, do not just point
-  at it — and when "itemize everything" is infeasible, **degrade to a grouped summary + link,
-  never to silence.** The section always says *something*.
-- **Breaks the signature diff cannot see** reach the notes **only** through `.notes.md`, and the
-  AI folds them into the same section:
-  - **behavioral changes** — same signature, different runtime behavior (e.g.
-    `new SKPaint().Typeface` now returning `Default` instead of `null`); and
-  - **interop / native structs** outside the public-API surface the diff compares (e.g. removed
-    `GRVkBackendContextNative` fields) — real compile-time breaks that never show in any
-    `.breaking.md`.
-  Treat the breaking diff and the notes sidecar as **complementary**: include both, and never
-  let one substitute for the other.
-- **Editorial "bring this out" notes** from `.notes.md` are woven into Highlights / a callout
-  as the maintainer intends — kept close to verbatim where the wording clearly matters,
-  summarized where they are rough notes.
-- **Richer highlights** may draw on the full API diff for context, but the PR list in the raw
-  block remains the primary source for "what's new".
+1. **Manual notes (`.notes.md`) — merge neatly.** Read it and fold its points into the prose:
+   editorial "bring this out" notes into Highlights (kept close to the maintainer's wording
+   where it matters), behavioral and interop breaks under Breaking Changes. This sidecar is the
+   **only** channel for breaks the signature diff cannot see — **behavioral changes** (same
+   signature, different runtime behavior, e.g. `new SKPaint().Typeface` now returning `Default`
+   instead of `null`) and **interop / native structs** (e.g. removed `GRVkBackendContextNative`
+   fields).
+2. **Breaking diff (`.breaking.md`) — summarize as a few bullets.** Open **every** file the
+   manifest lists (one per broken assembly) and write a handful of bullets under
+   `## Breaking Changes` naming the affected types/areas, with a small migration example where
+   it helps. Readers follow the API-diff link (already on the page, §4.4) for the exhaustive
+   member list — a few bullets is enough, for a bulk sweep as much as a curated set.
+3. **Summarize, don't transcribe.** Never paste a diff or list every member; a short human
+   summary is the goal.
+4. **Always emit the section.** `## Breaking Changes` is always present; when neither companion
+   has anything, it reads *"None in this release."* (TEMPLATE.md).
 
 The AI still writes **no links or structure** (§4.4), **never edits a companion**, and never
-touches git or the gh API. When neither the breaking diff nor the manual notes has any
-breaking content, the section reads *"None in this release."* (TEMPLATE.md).
+touches git or the gh API. Richer highlights may draw on the full API diff for context, but the
+PR list in the raw block remains the primary source for "what's new".
 
 #### Idempotency
 
