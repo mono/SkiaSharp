@@ -12,7 +12,7 @@ public unsafe class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipOb
 	protected override void Dispose (bool disposing) =>
 		base.Dispose (disposing);
 
-	public static SKMeshIndexBuffer Make (ReadOnlySpan<byte> data)
+	public static SKMeshIndexBuffer? Make (ReadOnlySpan<byte> data)
 	{
 		fixed (byte* d = data)
 		{
@@ -20,18 +20,18 @@ public unsafe class SKMeshIndexBuffer : SKObject, ISKReferenceCounted, ISKSkipOb
 		}
 	}
 
-	public static SKMeshIndexBuffer Make (IntPtr data, int size)
+	public static SKMeshIndexBuffer? Make (IntPtr data, int size)
 	{
 		return GetObject (SkiaApi.sk_mesh_index_buffer_make (data, (IntPtr)size));
 	}
 
-	public static SKMeshIndexBuffer Make (int size)
+	public static SKMeshIndexBuffer? Make (int size)
 	{
 		return GetObject (SkiaApi.sk_mesh_index_buffer_make (IntPtr.Zero, (IntPtr)size));
 	}
 
 	public int Size => (int)SkiaApi.sk_mesh_index_buffer_get_size (Handle);
 
-	internal static SKMeshIndexBuffer GetObject (IntPtr handle) =>
+	internal static SKMeshIndexBuffer? GetObject (IntPtr handle) =>
 		handle == IntPtr.Zero ? null : new SKMeshIndexBuffer (handle, true);
 }

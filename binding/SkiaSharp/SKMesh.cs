@@ -14,7 +14,7 @@ public unsafe class SKMesh : SKObject, ISKSkipObjectRegistration
 
 	public bool IsValid => SkiaApi.sk_mesh_get_is_valid (Handle);
 
-	internal static SKMesh GetObject (IntPtr handle) =>
+	internal static SKMesh? GetObject (IntPtr handle) =>
 		handle == IntPtr.Zero ? null : new SKMesh (handle, true);
 }
 
@@ -37,13 +37,13 @@ public class SKMeshBuilder : IDisposable
 
 	public SKRect Bounds { get; set; }
 
-	public SKMesh Build (SKMeshVertexBuffer vertexBuffer, int vertexCount, int vertexOffset)
+	public SKMesh? Build (SKMeshVertexBuffer vertexBuffer, int vertexCount, int vertexOffset)
 	{
 		return Specification.ToMesh (Mode, vertexBuffer, vertexCount, vertexOffset,
 			Uniforms, Children, Bounds);
 	}
 
-	public SKMesh BuildIndexed (
+	public SKMesh? BuildIndexed (
 		SKMeshVertexBuffer vertexBuffer,
 		int vertexCount,
 		int vertexOffset,
