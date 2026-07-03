@@ -12,7 +12,7 @@ public unsafe class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipO
 	protected override void Dispose (bool disposing) =>
 		base.Dispose (disposing);
 
-	public static SKMeshVertexBuffer Make (ReadOnlySpan<byte> data)
+	public static SKMeshVertexBuffer? Make (ReadOnlySpan<byte> data)
 	{
 		fixed (byte* d = data)
 		{
@@ -20,18 +20,18 @@ public unsafe class SKMeshVertexBuffer : SKObject, ISKReferenceCounted, ISKSkipO
 		}
 	}
 
-	public static SKMeshVertexBuffer Make (IntPtr data, int size)
+	public static SKMeshVertexBuffer? Make (IntPtr data, int size)
 	{
 		return GetObject (SkiaApi.sk_mesh_vertex_buffer_make (data, (IntPtr)size));
 	}
 
-	public static SKMeshVertexBuffer Make (int size)
+	public static SKMeshVertexBuffer? Make (int size)
 	{
 		return GetObject (SkiaApi.sk_mesh_vertex_buffer_make (IntPtr.Zero, (IntPtr)size));
 	}
 
 	public int Size => (int)SkiaApi.sk_mesh_vertex_buffer_get_size (Handle);
 
-	internal static SKMeshVertexBuffer GetObject (IntPtr handle) =>
+	internal static SKMeshVertexBuffer? GetObject (IntPtr handle) =>
 		handle == IntPtr.Zero ? null : new SKMeshVertexBuffer (handle, true);
 }
