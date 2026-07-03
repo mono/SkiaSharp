@@ -925,9 +925,19 @@ For each present companion, Python writes into the raw-data block:
   ```
     companions (open and read these during polish, §4.7 — summarize, don't dump):
       - notes:    4.150.0.notes.md  (manual additions)
-      - api diff: 4.150.0/index.md  (full public-API diff)
+      - api diff: 4.150.0/index.md  (index of all per-assembly diffs; flags breaking)
       - breaking: 4.150.0/SkiaSharp/SkiaSharp.breaking.md  (breaking signatures)
   ```
+
+  The **api diff** is a single `index.md` entry on purpose: that landing page (§3.3)
+  already links *every* per-assembly diff and tags the breaking ones `⚠️ breaking`, so
+  it is the one door to the whole folder — the AI need not have each `<assembly>.md`
+  spelled out. **Breaking is different: one `- breaking:` line is emitted per broken
+  assembly** (a release like `3.116.0` lists all twelve), because a `.breaking.md`
+  exists only where signatures actually broke and each is worth summarizing. Every path
+  keeps its package folder prefix, so two assemblies that share a file name (e.g.
+  `SkiaSharp.Views.Windows.breaking.md` under both `SkiaSharp.Views.Uno.WinUI/` and
+  `SkiaSharp.Views.WinUI/`) stay distinct.
 
 - content-key metadata lines — `notes:  sha256:…` and `breaking:  sha256:…` (empty when the
   companion is absent) — parsed by §4.6 exactly like the `api:` link.

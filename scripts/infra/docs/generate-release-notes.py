@@ -1784,7 +1784,7 @@ def format_pr_list(prs, metadata):
             comp_block.append("    - notes:    {}  (manual additions)".format(
                 notes["path"]))
         if apidiff:
-            comp_block.append("    - api diff: {}  (full public-API diff)".format(
+            comp_block.append("    - api diff: {}  (index of all per-assembly diffs; flags breaking)".format(
                 apidiff["path"]))
         if breaking:
             for p in breaking["paths"]:

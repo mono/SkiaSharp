@@ -151,8 +151,8 @@ page-relative path (see `release-notes-and-api-diffs.md` §4.7):
 | Companion | What it is | Use it for |
 | --- | --- | --- |
 | `<stem>.notes.md` | **Manual additions sidecar** — freeform Markdown the maintainer wrote to bring something out (not always breaking). | Weave its editorial points into Highlights; surface any behavioral breaking notes under Breaking Changes. |
-| `<line>/index.md` (+ per-assembly files) | The **full public-API diff**. | Draw richer, accurate highlights (what was added/changed). Do **not** paste it — summarize. |
-| `<line>/…/*.breaking.md` | The **API breaking diff** — present only when signatures actually broke. | The "what" of Breaking Changes: obsoleted / removed / changed signatures. |
+| `<line>/index.md` (indexes every per-assembly diff; flags breaking) | The **full public-API diff** landing page — one door to the whole folder. | Open it, follow the assemblies that matter, draw richer/accurate highlights. Do **not** paste it — summarize. |
+| `<line>/…/*.breaking.md` (**one per broken assembly**) | The **API breaking diff** — present only where signatures actually broke; a big release lists many. | The "what" of Breaking Changes: obsoleted / removed / changed signatures, summarized across all listed files. |
 
 Rules for companions:
 

@@ -26,8 +26,10 @@
      COMPANION FILES (see release-notes-and-api-diffs.md §4.7): the raw-data block at the
      top of a page may list "companions — open and read these during polish":
        - the manual additions sidecar (<stem>.notes.md) — freeform maintainer notes;
-       - the full API diff (<line>/index.md, + per-assembly files); and
-       - the API breaking diff (*.breaking.md) — present only when signatures broke.
+       - the full API diff — <line>/index.md indexes every per-assembly diff and flags
+         the breaking ones; open it, then follow the assemblies that matter; and
+       - the API breaking diff (*.breaking.md) — one per broken assembly, present only
+         when signatures broke (a big release can list many; summarize across them).
      OPEN and READ each listed companion, then SUMMARIZE — never paste it verbatim or dump
      the whole diff. Weave the manual notes into Highlights / Breaking Changes; summarize
      breaking changes from the breaking diff. You may READ these files but NEVER edit them,
