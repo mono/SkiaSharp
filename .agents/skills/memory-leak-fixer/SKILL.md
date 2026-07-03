@@ -128,7 +128,7 @@ matches the family numbers in the reference.
 | 1 | Wrong `owns:` flag | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
 | 2 | Same-instance double-dispose | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
 | 3 | Managed retention (Views) | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · cf. #3309, #2955, #2472 |
-| 4 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · canonical `Blob.FromStream` (#3472 / PR #3473) |
+| 4 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · cf. #3472 / PR #3473 (a `fixed` pointer stored by a non-copying native API) |
 | 5 | Finalizer / collection ordering | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` · cf. #3796, #3291; compare sibling wrappers — one that keeps no parent field where others do is suspect |
 | 6 | Clone / copy double-free | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · cf. #2904, #2899 |
 | 7 | Disposing native statics/singletons | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|Empty" binding/SkiaSharp` · cf. #1863, #4080, #1224 |

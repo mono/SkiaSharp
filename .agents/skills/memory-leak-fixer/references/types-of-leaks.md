@@ -192,8 +192,8 @@ touch other managed objects (the event source may already be finalized). Do the 
 `Dispose(bool disposing)` under `if (disposing)`. And don't forget to chain
 `base.Dispose(disposing)` — a subtle leak that looks fixed but isn't.
 
-**Real cases:** #2955, #2472, #1095; **#3309** — `SKGLElement.Dispose(bool)` never calls
-`base.Dispose()` on the OpenTK `GLWpfControl`, leaking the GL context (fix PR #3311 open).
+**Real cases:** #3309, #2955, #2472, #1095 — event/handler teardown and `base.Dispose(bool)`
+chaining fixes across the WPF / Forms / MAUI view layers.
 
 ---
 
@@ -207,33 +207,32 @@ exits, the array is unpinned.
 code still holds the old address → **use-after-free / silent data corruption** under GC
 pressure. Intermittent, load-dependent, extremely hard to reproduce.
 
-**Leak (❌):** the real, still-unfixed `HarfBuzzSharp.Blob.FromStream`:
+**Leak (❌):** a non-copying native API stores the pointer, but the array is unpinned the
+moment the `fixed` block exits:
 ```csharp
-using var ms = new MemoryStream();
-stream.CopyTo(ms);
-var data = ms.ToArray();
-fixed (byte* dataPtr = data) {
-    // MemoryMode.ReadOnly = non-copying: HarfBuzz keeps dataPtr.
-    // `data` is unpinned the instant this fixed block exits → dangling.
-    return new Blob((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose());
+byte[] data = GetManagedBuffer();
+fixed (byte* ptr = data)
+{
+    // ❌ native keeps `ptr`, yet `data` is free to move/collect once this block ends
+    return new SKNativeThing(ptr, data.Length, copy: false, () => { /* release */ });
 }
 ```
 
-**Fix (✓):** pin stably with a `GCHandle` and free it when native releases the blob:
+**Fix (✓):** pin stably with a `GCHandle` and free it only when native releases the object:
 ```csharp
-var data = ms.ToArray();
-var handle = GCHandle.Alloc(data, GCHandleType.Pinned);
-return new Blob(handle.AddrOfPinnedObject(), data.Length,
-                MemoryMode.ReadOnly, () => handle.Free());
+byte[] data = GetManagedBuffer();
+var handle = GCHandle.Alloc(data, GCHandleType.Pinned);     // stable pin; GC can't move it
+return new SKNativeThing(handle.AddrOfPinnedObject(), data.Length,
+                         copy: false, () => handle.Free());  // freed in the release callback
 ```
-(Or use `MemoryMode.Duplicate` so HarfBuzz copies and no pin is needed.)
+(Or have the native API copy the buffer, so no pin is needed at all.)
 
 **Watch out (❌ don't):** don't "fix" this by adding `GC.KeepAlive(data)` *inside* the `fixed`
 block — the pointer escapes the block, so KeepAlive there proves nothing. And don't free the
 `GCHandle` before native is finished with the memory; free it in the release delegate.
 
-**Real cases:** open bug **#3472**, open fix PR **#3473** ("Make Blob.FromStream GC safe");
-documented in `documentation/dev/memory-management.md`.
+**Real cases:** #3472 / PR #3473 (a `fixed`-pointer that escapes into a non-copying native
+API); the ownership model in `documentation/dev/memory-management.md`.
 
 ---
 
@@ -296,14 +295,14 @@ wrappers, both of which believe they own it and will dispose it.
 
 **Leak (❌):**
 ```csharp
-public SKPaint Clone() =>
-    new SKPaint(Handle, owns: true);   // ❌ two wrappers own the same native paint
+public SKThing Clone() =>
+    new SKThing(Handle, owns: true);   // ❌ two wrappers own the same native object
 ```
 
 **Fix (✓):** mint a *fresh* native object via the clone API:
 ```csharp
-public SKPaint Clone() =>
-    GetObject<SKPaint>(SkiaApi.sk_compatpaint_clone(Handle));  // fresh handle, owns:true
+public SKThing Clone() =>
+    GetObject<SKThing>(SkiaApi.sk_thing_clone(Handle));  // fresh handle, owns:true
 ```
 
 **Watch out (❌ don't):** don't "fix" the double-free by setting `owns:false` on the clone —
