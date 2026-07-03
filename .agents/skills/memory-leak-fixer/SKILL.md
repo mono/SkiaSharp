@@ -28,6 +28,11 @@ Read [`documentation/dev/memory-management.md`](../../../documentation/dev/memor
 first — it is the authoritative model (pointer types, `owns:` flag, ref-count rules, the
 C-API `sk_ref_sp` / `.release()` conventions). This skill assumes that model.
 
+The leak catalogue this skill scans against — **12 real families**, each with a description,
+why it's bad, and a leak→fix code example — is in
+[`references/types-of-leaks.md`](references/types-of-leaks.md). Read it before scanning
+(Phase 1) and consult the matching family when writing a fix (Phase 3).
+
 ## Golden rules (non-negotiable)
 
 1. **One leak per run.** Pick the single strongest candidate; do not batch.
@@ -104,23 +109,26 @@ FOCUS=$(( ${GITHUB_RUN_NUMBER:-$RANDOM} % 12 ))
 echo "focus family: $FOCUS"
 ```
 
-Each family below is drawn from a **real, historical SkiaSharp leak fix** (issue/PR cited),
-so the hunt targets patterns that have actually shipped as bugs here — not hypotheticals.
+Each family is drawn from a **real, historical SkiaSharp leak fix**. The full catalogue —
+description, why-it's-bad, and a leak→fix code example per family — lives in
+**[references/types-of-leaks.md](references/types-of-leaks.md)**. **Read it before scanning.**
+The table below is the scan cheat-sheet (where to look + grep starting points); the `#`
+matches the family numbers in the reference.
 
-| # | Leak family (SkiaSharp signature) | Where to look | Grep starting points · real cases |
+| # | Leak family | Where to look | Grep starting points |
 |--:|---|---|---|
-| 0 | **Undisposed native handle** — a factory/getter/cache creates an *owned* or *ref-counted* `SKObject` that escapes without being disposed (or is held in a static/instance cache never cleared). | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp` (then trace ownership) |
-| 1 | **Wrong `owns:` flag** — `owns: true` on a *borrowed*/getter return (premature dispose / double-free) OR an owned `new`/`_new_` handle wrapped `owns: false` (leak). | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
-| 2 | **C-API ownership mismatch** — C++ expects `sk_sp<T>` but no `sk_ref_sp`; a returned `sk_sp` missing `.release()`; `delete` used on a `SkRefCnt`/`SkNVRefCnt` type; unref vs delete. | `externals/skia/src/c/**` | `grep -rnE "\.release\(\)|sk_ref_sp|delete As|SkSafeUnref" externals/skia/src/c` |
-| 3 | **Same-instance double-dispose** — a method that may return the *same* instance (`Subset`, `ToRasterImage`, …) whose caller disposes both source and result. | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
-| 4 | **Managed retention (Views)** — a handler / control / `SKObject`-backed view subscribes to an event (`PaintSurface`, `PropertyChanged`, invalidation ticker, platform peer) with **no teardown on unload**, rooting the transient; or a base-class `Dispose` is never chained. | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · **cf. #3309 (SKGLElement missing `base.Dispose()`), #2955, #2472, #1095** |
-| 5 | **`fixed`-pointer lifetime** — a temporary `fixed` pointer handed to native code that *stores* it beyond the block (`MemoryMode.ReadOnly`, non-copying); GC then moves/frees the array. | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · **canonical: `HarfBuzzSharp.Blob.FromStream` (open #3472 / PR #3473)** |
-| 6 | **Finalizer / collection ordering** — a child wrapper holds a *raw* pointer into a parent; if the parent is GC'd/disposed first, use-after-free. Needs `GC.KeepAlive` or an owns-link back to the parent. | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` (flag children missing KeepAlive) · **cf. #3796 (SKPath/SKPathBuilder), #3291 (SKAutoCanvasRestore)**. *Real un-filed examples this workflow surfaced:* `SKRegion.SpanIterator` keeps no parent field though its sibling `RectIterator`/`ClipIterator` do; `SKPixmap.ExtractSubset`/`With*` don't propagate `pixelSource` the way `PeekPixels` does. |
-| 7 | **Clone / copy double-free** — a `Clone()`/copy that *shares* one native pointer between two managed wrappers that both dispose it. Must mint a fresh native (`_clone`) wrapped `owns:true`. | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · **cf. #2904 (SKPaint.Clone), #2899** |
-| 8 | **Disposing native statics/singletons** — an *immortal* native object (default typeface, srgb color space/filter, blend-mode/empty-data singletons) reached via a cache that ISN'T dispose-protected, so `DisposeNative` unrefs an object it must never touch. | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|_empty\|Empty" binding/SkiaSharp` (flag singletons NOT dispose-protected) · **cf. #1863, #4080, #1224, #3730** |
-| 9 | **Field not nulled on dispose** — a `Dispose`/`DisposeManaged` that frees a native child but leaves the managed field pointing at it, enabling a later double-dispose or blocking GC of a graph. | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` (check disposed children are nulled) · **cf. #1256, #1344** |
-| 10 | **Managed stream / callback / delegate-proxy lifetime** — a `SKManagedStream`/`SKManagedWStream`/`SKAbstract*Stream`, delegate/function-pointer proxy, or pinned `GCHandle` handed to native code but freed *too early* (dangling callback) or *never* (leak). | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · **cf. #3589, #2916, #996, #2446** |
-| 11 | **Allocation-failure path** — a factory that wraps and returns a managed object even when the native create returned `null`/failed, or leaks a half-built object on the error path. | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` (check null-return handling) · **cf. #1784, #1642** |
+| 0 | Undisposed native handle | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(|new SK[A-Za-z]+\(" binding/SkiaSharp` (then trace ownership) |
+| 1 | Wrong `owns:` flag | `binding/SkiaSharp/**` | `grep -rnE "owns: *(true|false)|GetOrAddObject" binding/SkiaSharp` |
+| 2 | C-API ownership mismatch | `externals/skia/src/c/**` | `grep -rnE "\.release\(\)|sk_ref_sp|delete As|SkSafeUnref" externals/skia/src/c` |
+| 3 | Same-instance double-dispose | `binding/SkiaSharp/**` | `grep -rnE "Subset\|ToRasterImage\|== source\|!= source" binding/SkiaSharp` |
+| 4 | Managed retention (Views) | `source/SkiaSharp.Views*/**` | `grep -rnE "\+= \|event \|WeakReference\|base\.Dispose\|Detach" source/SkiaSharp.Views*` · cf. #3309, #2955, #2472 |
+| 5 | `fixed`-pointer lifetime | `binding/**`, `source/**` | `grep -rnE "fixed *\(" binding source` · canonical `Blob.FromStream` (#3472 / PR #3473) |
+| 6 | Finalizer / collection ordering | `binding/SkiaSharp/**` | `grep -rnE "GC.KeepAlive\|internal .* Handle" binding/SkiaSharp` · cf. #3796, #3291; live: `SKRegion.SpanIterator`, `SKPixmap.ExtractSubset` |
+| 7 | Clone / copy double-free | `binding/SkiaSharp/**` | `grep -rnE "Clone\|MemberwiseClone\|_clone" binding/SkiaSharp` · cf. #2904, #2899 |
+| 8 | Disposing native statics/singletons | `binding/SkiaSharp/**` | `grep -rnE "GetDisposeProtectedObject\|unrefExisting\|CreateSrgb\|Empty" binding/SkiaSharp` · cf. #1863, #4080, #1224 |
+| 9 | Field not nulled on dispose | `binding/SkiaSharp/**` | `grep -rnE "DisposeManaged\|= null;" binding/SkiaSharp` · cf. #1256, #1344 |
+| 10 | Stream / callback / delegate-proxy lifetime | `binding/SkiaSharp/**` | `grep -rnE "DelegateProxies\|GCHandle\|ManagedStream\|ReleaseDelegate" binding/SkiaSharp` · cf. #3589, #2916, #996 |
+| 11 | Allocation-failure path | `binding/SkiaSharp/**` | `grep -rnE "GetObject\(\s*[a-z]\|if \(handle == " binding/SkiaSharp` · cf. #1784, #1642 |
 
 Treat the table as a starting point, not a cage. If the focus family is exhausted (its
 leaks are already open issues/PRs — see 1.3), advance to the next index.
