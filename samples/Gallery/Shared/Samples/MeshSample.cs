@@ -98,6 +98,13 @@ public class MeshSample : CanvasSampleBase
 	protected override Task OnInit()
 	{
 		timeBase = DateTime.UtcNow;
+		return base.OnInit();
+	}
+
+	private void EnsureResources()
+	{
+		if (builder != null)
+			return;
 
 		// Load the baboon image and create an image shader
 		using var stream = SampleMedia.Images.Baboon;
@@ -112,17 +119,22 @@ public class MeshSample : CanvasSampleBase
 		}
 
 		// Build the mesh specification with SkSL shaders.
-		// No color space needed since FS doesn't output color.
-		builder = SKMeshSpecification.Build(
+		var spec = SKMeshSpecification.Create(
 			Attrs, Stride, Varyings, VS, FS,
-			null, SKAlphaType.Premul);
+			null, SKAlphaType.Premul,
+			out var errors);
 
-		return base.OnInit();
+		if (spec != null)
+		{
+			builder = new SKMeshBuilder(spec);
+		}
 	}
 
 	protected override void OnDrawSample(SKCanvas canvas, int width, int height)
 	{
 		canvas.Clear(new SKColor(0xFF333333));
+
+		EnsureResources();
 
 		if (builder == null || image == null || imageShader == null)
 			return;
