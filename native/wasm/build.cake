@@ -9,6 +9,14 @@ string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("E
 string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "").ToLower()
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
+// Graphite/Dawn/WebGPU need Skia's is_canvaskit path, which m151 wrote against
+// the newer WebGPU headers only present in emsdk >= 3.1.51. The .NET-8 (3.1.34)
+// WASM matrix would fail to compile Dawn (WGPUBufferMapAsyncStatus_*, ShaderF16,
+// wgpu::Buffer::GetMapState, etc.), so drop back to a raster + ganesh-only build
+// there. Ganesh (WebGL) stays enabled either way.
+bool SUPPORT_GRAPHITE = SUPPORT_GPU &&
+    (string.IsNullOrEmpty(EMSCRIPTEN_VERSION) ||
+     string.CompareOrdinal(EMSCRIPTEN_VERSION, "3.1.51") >= 0);
 
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
@@ -38,9 +46,9 @@ Task("libSkiaSharp")
         // sources resolve <webgpu/webgpu_cpp.h> via Emscripten's bundled headers
         // (added by -sUSE_WEBGPU=1 at the final link) instead of trying to
         // include the native-Dawn-generated webgpu_cpp.h that doesn't exist on
-        // Emscripten. Tracks SUPPORT_GPU so a GPU-less build stays a clean
-        // raster-only WASM bundle.
-        $"is_canvaskit={SUPPORT_GPU} ".ToLower() +
+        // Emscripten. Tracks SUPPORT_GRAPHITE so a Graphite-less build stays a
+        // clean ganesh-or-raster WASM bundle.
+        $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
@@ -67,12 +75,9 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
-        $"skia_enable_graphite={SUPPORT_GPU} ".ToLower() +
-        $"skia_use_dawn={SUPPORT_GPU} ".ToLower() +
-        $"skia_use_webgpu={SUPPORT_GPU} ".ToLower() +
-        // m151 added a partition_alloc dep that pulls in an out-of-tree gni
-        // file we don't sync. Fall back to the in-tree noop raw_ptr headers.
-        $"skia_use_partition_alloc=false " +
+        $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
+        $"skia_use_dawn={SUPPORT_GRAPHITE} ".ToLower() +
+        $"skia_use_webgpu={SUPPORT_GRAPHITE} ".ToLower() +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
