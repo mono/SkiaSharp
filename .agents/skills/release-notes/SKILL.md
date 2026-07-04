@@ -187,8 +187,10 @@ Read each file to get its raw data and metadata, then rewrite it with polished c
 
 #### Read the template
 
-Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
-release notes page. Match its structure, tone, and formatting exactly.
+Read `.agents/skills/release-notes/references/TEMPLATE.md`. This is a representative
+(fictional) example of a polished release notes page — its version, PR numbers, handles,
+and API names are placeholders. Match its structure, tone, and formatting exactly, but
+never copy its placeholder content; write from the page's real raw-data.
 
 Determine the version's status from the HTML comment block in the file (`status: unreleased`, `status: preview`, or `status: stable`):
 - **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link

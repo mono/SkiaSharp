@@ -292,6 +292,8 @@ know the individual commands:
 ```
 .agents/skills/release-notes/
   SKILL.md                       the AI's polish-only instructions (§4.4)
+  references/
+    TEMPLATE.md                  the page-structure/tone example the polish follows (§4.4)
   scripts/
     generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
                                  and writes the Files-to-polish list to a file (§2.2)
@@ -779,7 +781,9 @@ diff is large.
 | **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish". Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
-`.agents/skills/release-notes/SKILL.md`.
+`.agents/skills/release-notes/SKILL.md` and the page-structure example it follows,
+`.agents/skills/release-notes/references/TEMPLATE.md` (a skill reference asset,
+co-located with the skill and outside the published docs).
 
 #### API-diff link rule
 

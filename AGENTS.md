@@ -152,7 +152,7 @@ C# Wrapper (binding/SkiaSharp/)  ->  P/Invoke  ->  C API (externals/skia/src/c/)
 | `docs/` | No | Auto-generated |
 | `documentation/dev/` | Yes | Architecture guides |
 | `documentation/docfx/releases/` | Yes | Website release notes (template-formatted) |
-| `documentation/docfx/releases/TEMPLATE.md` | Yes | Template for AI formatting |
+| `.agents/skills/release-notes/references/TEMPLATE.md` | Yes | Template for AI formatting (skill reference asset) |
 
 ---
 
