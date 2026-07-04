@@ -84,12 +84,17 @@
 
 ## Highlights
 
-<!-- 1-3 sentences. Lead with what matters most. Mention community contributors by linked name.
-     If the manual additions sidecar (<stem>.notes.md, see §4.7) has editorial points the
-     maintainer wants brought out, weave them in here in your own words. On a supersedes
-     rollup, note in one line that the skipped preview work is included cumulatively. -->
+<!-- Short and impact-first — HARD CAP: at most 2-3 sentences, no matter how big the release.
+     Name only the 3-4 biggest / coolest things (the engine jump, the headline feature, a
+     breaking change to know about). A hook, not a table of contents — the categories below
+     carry the full list, so never enumerate dependency bumps, individual fixes, or every new
+     API here; the bigger the release, the more SELECTIVE (not longer) it gets. Mention only
+     standout community contributors by linked name. If the manual additions sidecar
+     (<stem>.notes.md, see §4.7) has editorial points the maintainer wants brought out, weave
+     them in here in your own words. On a supersedes rollup, note in one line that the skipped
+     preview work is included cumulatively. -->
 
-SkiaSharp 9.990.0 rolls up all preview work from [9.989.0](9.989.0.md) cumulatively and completes a round of API-surface cleanup. It delivers a Skia engine upgrade, promotes long-deprecated members to compile errors, reworks singleton object lifecycles for correctness, and ships several `SKFooMap` fixes. HarfBuzz 9.9.0 ships alongside — see [HarfBuzzSharp 9.9.0](harfbuzzsharp/9.9.0.md). Notable community work from [@octocat](https://github.com/octocat), [@monalisa](https://github.com/monalisa), [@hubot](https://github.com/hubot), and [@octobot](https://github.com/octobot).
+The first engine bump of the 9.x line: Skia m998 lands with variable-font support and animated encoding, alongside a major-version API cleanup that promotes long-deprecated members to compile errors — check Breaking Changes before upgrading. HarfBuzz 9.9.0 ships too ([HarfBuzzSharp 9.9.0](harfbuzzsharp/9.9.0.md)). Standout community work from [@octocat](https://github.com/octocat) and [@monalisa](https://github.com/monalisa).
 
 ## Breaking Changes
 
@@ -169,27 +174,14 @@ SkiaSharp 9.990.0 rolls up all preview work from [9.989.0](9.989.0.md) cumulativ
 - **zlib updated to 9.9.9** ([#1221](https://github.com/mono/SkiaSharp/pull/1221))
 - **libpng updated to 9.9.9** ([#1222](https://github.com/mono/SkiaSharp/pull/1222))
 
-## Platform Support
-
-<!-- Quick at-a-glance table. One row per platform that has something new; omit rows with
-     nothing to report. Keep entries short — they mirror items already listed above. -->
-
-| Platform | What's New |
-|----------|-----------|
-| 🍎 Apple | Fixed platform TFMs for libraries vs apps |
-| 🤖 Android | Fixed `SKFooView` blank after MAUI tab switch |
-| 🌐 WebAssembly | Dropped pre-.NET 8 Emscripten builds |
-| 🐧 Linux | Linux Bionic native assets |
-| 🪟 Windows | Fixed WinUI Projection DLL for .NET 9 |
-| 📦 General | Tizen x64/arm64 native builds; C# 13 on legacy TFMs |
-
-<!-- Platform emoji reference: 🍎 Apple · 🪟 Windows · 🐧 Linux · 🤖 Android · 🌐 WebAssembly · 🎨 Core API · 🏗️ Build/CI · 📦 General -->
-
 ## Community Contributors ❤️
 
 <!-- Only include if there are community contributors (anyone not @mattleibow).
      ALWAYS link usernames: [@user](https://github.com/user) — never bare @user anywhere.
-     One row per contributor; summarize everything they landed this release. -->
+     TWO columns: "Contributor" is the PLAIN link with NO ❤️ (the heart belongs only on the
+     inline category bullets above; in this table it just wraps badly on long rows). "What They
+     Did" is a SHORT PROSE summary of everything they landed this release — NEVER just a list of
+     PR numbers. One row per contributor. -->
 
 | Contributor | What They Did |
 |-------------|--------------|
@@ -236,12 +228,31 @@ Variable font support, animated encoding, and the first engine bump of the line.
 [Full Changelog](https://github.com/mono/SkiaSharp/compare/v9.988.0...v9.989.0-preview.1.1)
 
 <!-- FORMATTING RULES:
+     - Highlights: short and impact-first — HARD CAP at 2-3 sentences, no matter how big the
+       release. Name only the 3-4 biggest / coolest things; a hook, not a table of contents.
+       Never enumerate dependency bumps, individual fixes, or every new API here — the bigger
+       the release, the more selective (not longer) it gets.
      - Rollup at top: aggregate ALL changes across all previews into one polished summary
      - Categories are top-level `##` sections (Engine, API Surface, Bug Fixes, Platform, …),
        NOT nested under a "New Features" parent; pick the ones that fit and never force empties
      - Previews/RC are minimal: one sentence + changelog link each
-     - Omit noise: don't itemize version bumps, CI fixes, doc/skill/workflow changes
-     - Community ❤️: always credit and link anyone not @mattleibow; never bare @user
+     - Product over project: write for people USING the library. The test is whether the
+       SHIPPED library / native binary / NuGet package changed for a consumer. Drop repo
+       processes entirely (CI/build + caching, GitHub Actions/workflows, the project's own agent
+       skills like security-audit / ci-status, the release-notes & docs tooling, the docs
+       website / PR-staging, sample-publishing pipelines, milestone/label automation, test-infra,
+       the package's own version bump) — EVEN when the title mentions security, a CVE, caching,
+       or an API name (a change to the security-audit skill is not a library security fix). When
+       there's a lot, collapse to ONE trailing line ("Plus various CI, documentation, and
+       internal tooling improvements."). Keep native-dep bumps, native build flags that ship in
+       the binary (Spectre mitigation, new RIDs/TFMs), API changes, behavior/bug fixes, and
+       consumer-visible packaging.
+     - Attribution: item shape is `**title** — desc. ❤️ [@user](url) ([#NNN](url))`. Credit &
+       link every community contributor (anyone not @mattleibow); the maintainer's own PRs end
+       with just the `([#NNN](url))` link (no ❤️). NEVER write `by @handle`, and never emit a
+       bare @user anywhere in the rendered body. In the Community Contributors TABLE the
+       "Contributor" cell is a plain `[@user](url)` with NO ❤️ (the heart is only on the inline
+       bullets above) and "What They Did" is a short PROSE summary, never a bare list of PRs.
      - Adapt to content: security release leads with security, feature release leads with features
      - Skia engine: if a "Bump skia" PR is in the data, list it first under Engine
      - Breaking Changes: always emit the `## Breaking Changes` heading right after Highlights

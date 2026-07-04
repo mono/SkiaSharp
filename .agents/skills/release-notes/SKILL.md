@@ -240,7 +240,8 @@ the top of the file must remain intact. Replace everything AFTER it (the skeleto
 placeholder) with polished content. When you write the polished content, start with the
 `<!-- Generated: ... -->` timestamp line, then the `# Version X.Y.Z` heading, then the rest.
 
-The final file structure should be:
+The final file structure should be (omit any section with nothing to report — never force
+an empty category):
 
 ```markdown
 <!-- RAW PR DATA — Do not remove this comment block. ... -->
@@ -251,8 +252,13 @@ The final file structure should be:
 
 > **theme** · status · links
 
-## Highlights
-...
+## Highlights            (short, impact-first — rule 1)
+## Breaking Changes      (always present; "None in this release." when none — rule 6)
+## <Category>            (one or more: Engine, GPU & Rendering, API Surface, Text & Fonts,
+                          Bug Fixes, Lifecycle & Internals, Platform, Security — rules 2-3)
+## Community Contributors ❤️   (linked table, only when there are community contributors — rule 4)
+## Links                 (Full Changelog + NuGet only — rule 11)
+## <Preview label> (date)      (one trailing section per preview bucket, newest first — rule 10)
 ```
 
 Each file has its own HTML comment block with version, status, branch, and diff range.
@@ -264,22 +270,64 @@ NOT a rollup of the version file.
 
 Follow these rules:
 
-1. **Highlights** — 1-3 sentences. What's the story? Lead with the biggest changes.
-   Mention community contributors by linked name.
+1. **Highlights — short and impact-first (hard cap).** At most **2-3 sentences, no matter how
+   big the release**. Name only the **3-4 biggest / coolest** things — the engine jump, the
+   headline feature(s), a breaking change users must know about. It's a **hook, not a table of
+   contents** (the categories below carry the full list), so **never enumerate** dependency
+   bumps, individual bug fixes, or every new API here. The bigger the release, the more
+   **selective** Highlights get — not longer. Mention only standout community contributors, by
+   linked name.
 
 2. **Skia engine** — If a "Bump skia" or "milestone" PR appears in the raw data,
    list it first under an **Engine** category.
 
 3. **Categorize features** — Group by what they affect. Use sub-headers:
    Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
+   Every item follows one exact shape:
+   `**bold title** — description. ❤️ [@user](https://github.com/user) ([#NNN](url))`
+   - The PR link `([#NNN](url))` always comes **last**.
+   - A community contributor's credit is `❤️ [@user](https://github.com/user)`, placed
+     **immediately before** the PR link. The maintainer (@mattleibow) is **not** credited —
+     his items end with just the `([#NNN](url))` link, no `❤️`.
+   - **Never write `by @handle`.** The raw-data block's `… by @user in …` is *source data*,
+     not output format — do not carry it through. And **never emit a bare `@handle`** anywhere
+     in the rendered body — every handle is a `[@user](https://github.com/user)` link, never a
+     bare or **backticked** `@user`, and never the sentence's subject (credit goes in the `❤️`
+     slot, not the prose).
 
-4. **Community contributors** — Anyone not @mattleibow. Mark with ❤️ inline AND
-   in a Contributors table. **ALWAYS** link: `[@user](https://github.com/user)`.
-   Never write bare `@user` anywhere in the file.
+4. **Community contributors** — Anyone other than @mattleibow appears in **two places, with two
+   different formats**:
+   - **Inline**, on their category bullet: end it with `❤️ [@user](https://github.com/user)
+     ([#NNN](url))` (the shape in rule 3). The ❤️ lives **only** here.
+   - **In the `## Community Contributors ❤️` table**: one row per contributor, two columns —
+     `Contributor` and `What They Did`. The **`Contributor` cell is a plain
+     `[@user](https://github.com/user)` — NO `❤️`, no `by`** (the heart wraps badly in the
+     table, so it stays on the inline bullets only). The **`What They Did` cell is a short prose
+     summary** of what they landed (e.g. "Variable-font support, singleton lifecycle rework,
+     `SKPath` crash fix") — **not** a list of `[#NNN]` links or `[#NNN] — note` fragments.
+   Always link `[@user](https://github.com/user)`; never a bare, backticked, or `by @user`
+   handle anywhere in the rendered body (the raw-data comment block is exempt; it is not
+   rendered).
 
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
-   If many, mention as: "Plus several CI and documentation improvements."
+5. **Focus on the product, not the project.** Release notes are for people *using* the library.
+   The **test** for every PR: *did the shipped SkiaSharp / HarfBuzzSharp library — its public
+   API, runtime behavior, native binary, or NuGet package — change for a consumer?* If only a
+   **repo process** changed, **drop it entirely** (do not itemize): CI/build pipelines and build
+   caching, GitHub Actions/workflows, the project's own agent skills (`security-audit`,
+   `ci-status`, the release-notes/docs tooling, etc.), the docs website / PR-staging,
+   sample-publishing pipelines, milestone/label automation, and test-infra migrations — **even
+   when the PR title mentions security, a CVE, performance, caching, or an API name** (a change
+   to the `security-audit` *skill* is not a library security fix; ADO build caching is not a
+   feature). Also drop the package's own version bump. When there is a lot of this, collapse it
+   to a **single trailing line** — e.g. *"Plus various CI, documentation, and internal tooling
+   improvements."* — never a bullet per change. **Keep** anything that ships: native-dependency
+   bumps (they change the binary — security/behavior), API additions/changes, behavior and bug
+   fixes, platform-support and native build flags that ship in the binary (e.g. Spectre
+   mitigation, new RIDs/TFMs), and consumer-visible packaging changes. **Dev-cycle and
+   `-unreleased` pages are often heavy on internal work** (the recent weeks may be mostly
+   tooling/CI/skill PRs) — do **not** itemize any of it there; one collapse line covers the
+   whole lot, and if nothing consumer-facing shipped, the page may legitimately be just
+   Highlights + that one line.
 
 6. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
    release."* when there are none — never drop the heading). If the raw block lists a

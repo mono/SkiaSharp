@@ -785,6 +785,41 @@ A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/references/TEMPLATE.md` (a skill reference asset,
 co-located with the skill and outside the published docs).
 
+#### Prose principles (what the AI polishes toward)
+
+The script decides *what pages exist and how they link*; these principles govern the *prose
+the AI writes inside them*. They exist so the notes read like a **product changelog, not a
+repository activity log**. The operational detail lives in `SKILL.md`; the principles are
+fixed here.
+
+1. **Write for the consumer, not the contributor — product over project.** The test for every
+   PR is whether the **shipped SkiaSharp/HarfBuzzSharp library** — its public API, runtime
+   behavior, native binary, or NuGet package — changed for a consumer. If only a **repo
+   process** changed it is **not** release-notes material and is dropped (or, when there is a lot
+   of it, collapsed into a single trailing line): CI/build pipelines and caching, GitHub
+   Actions/workflows, the project's own agent skills (`security-audit`, `ci-status`, the
+   release-notes/docs tooling), the docs website, PR-staging, sample-publishing pipelines,
+   milestone/label automation, and test-infra migrations — **even when the PR title mentions
+   security, a CVE, performance, or an API name** (a change to the `security-audit` skill is not
+   a library security fix). Native-dependency bumps and native build flags that ship in the
+   binary (e.g. Spectre mitigation, new RIDs/TFMs) stay; the package's own version bump does not.
+2. **Highlights are short and impact-first — a hard cap.** At most two or three sentences, no
+   matter how big the release, naming only the three or four biggest / coolest items — the
+   engine jump, the headline feature, a breaking change users must know about. Highlights are a
+   hook, not a table of contents: the categories below carry the full list, so they never
+   enumerate dependency bumps, individual fixes, or every new API. The bigger the release, the
+   more *selective* Highlights get — not longer.
+3. **Attribution is linked, and the maintainer is not credited.** Every `@handle` in the
+   rendered body is a Markdown link (`[@user](https://github.com/user)`) — never a bare
+   `@handle`, and never the raw-data block's `by @user` phrasing carried through into the
+   prose. Community contributors (anyone other than the maintainer) are credited with a
+   `❤️ [@user](url)` immediately before the PR link **on their inline category bullet**; the
+   maintainer's own PRs carry just the `([#NNN](url))` link with no attribution. The
+   `## Community Contributors ❤️` table has two columns: the **Contributor** cell is a plain
+   `[@user](url)` with no ❤️ (the heart is only on the inline bullets — in the table it wraps
+   badly), and the **What They Did** cell is a short prose summary of their work, not a bare
+   list of PR numbers.
+
 #### API-diff link rule
 
 **The API-diff links are required, fixed, and non-AI.** Every emitted page **whose line has
