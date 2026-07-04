@@ -1,0 +1,159 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4335,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-04T05:30:00Z",
+    "currentLabels": ["agentic-workflows"]
+  },
+  "summary": "The 'Sync - Release Notes & API Diffs' CI workflow fails repeatedly because the prepare job's 'git add -A' captures changes to protected agent instruction files (SKILL.md, TEMPLATE.md) and workflow files, which the safe-outputs supply-chain protection blocks when the agent tries to create a PR.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.93 },
+    "area": { "value": "area/Build", "confidence": 0.95 },
+    "tenets": ["tenet/reliability"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "Cannot create pull request: patch modifies protected files (.agents/skills/release-notes/SKILL.md, .github/workflows/update-release-notes.lock.yml, .github/workflows/update-release-notes.md)",
+      "reproQuality": "complete",
+      "targetFrameworks": []
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Trigger the 'Sync - Release Notes & API Diffs' workflow (manually or via push to main)",
+        "Observe the Prepare job running generate.sh and executing 'git add -A'",
+        "Observe the Polish agent attempting to create a PR via create-pull-request safe-output",
+        "Safe-output blocks the PR because the patch includes protected files"
+      ],
+      "environmentDetails": "GitHub Actions, ubuntu-latest runner, agentic-workflows v0.71.5",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/28677098312", "description": "First failing run from branch mattleibow-release-notes-manual-notes" },
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/28691638310", "description": "Follow-up failure run targeting PR #3645" },
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/28692883974", "description": "Second follow-up failure run targeting PR #3645" },
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/28693884290", "description": "Third follow-up failure run targeting PR #3645" },
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/28695310266", "description": "Fourth follow-up failure run targeting PR #3645" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/4202", "description": "Prior similar failure (closed not_planned) - same protected-files pattern, more files" },
+        { "url": "https://github.com/mono/SkiaSharp/issues/4266", "description": "Prior similar failure (closed not_planned) - security-audit skill protected files" }
+      ],
+      "relatedIssues": [4202, 4266]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["v0.71.5"],
+      "currentRelevance": "likely",
+      "relevanceReason": "The workflow uses gh-aw v0.71.5 (seen in lock file metadata) and continues to fail with the same protected-files error."
+    }
+  },
+  "analysis": {
+    "summary": "The prepare job runs 'git add -A' which captures ALL working-tree changes — including changes to agent instruction files (SKILL.md, TEMPLATE.md) and compiled workflow YAML (.lock.yml) that exist on the source branch or are produced by the generate scripts. The safe-outputs create-pull-request tool's supply-chain protection correctly blocks PRs containing those files. The workflow has no 'allowed-files' configuration and no 'protected-files: fallback-to-issue' setting, so each run fails hard instead of falling back gracefully. This is a recurring pattern — identical issues (#4202, #4266) occurred before.",
+    "rationale": "This is clearly a CI build pipeline bug: the workflow is failing 5+ times with the same protected-file error, not a one-off transient failure. The root cause is in the prepare job's 'git add -A' at .github/workflows/update-release-notes.md line ~142, which is too broad — it captures protected files along with the legitimate documentation output. The issue began from a manual dispatch against branch 'mattleibow-release-notes-manual-notes' (which itself modifies SKILL.md and workflow files as PR #4334), but the subsequent 4 agent-job failures on the main-branch runs (targeting PR #3645) suggest that SKILL.md/TEMPLATE.md are appearing in the working tree of main-branch runs as well, possibly because those files are being generated/modified by the prepare pipeline or are present on the PR branch.",
+    "codeInvestigation": [
+      {
+        "file": ".github/workflows/update-release-notes.md",
+        "lines": "138-145",
+        "finding": "The prepare job runs 'git add -A && git diff --cached --binary > prepare.patch' which captures every working-tree change — not just the expected documentation output. If any protected files (SKILL.md, TEMPLATE.md, .lock.yml) are modified or tracked as new files relative to HEAD, they end up in the patch.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".github/workflows/update-release-notes.md",
+        "lines": "216-223",
+        "finding": "The safe-outputs create-pull-request configuration has no 'allowed-files' list and no 'protected-files: fallback-to-issue' setting. Without these, the supply-chain protection blocks the PR entirely rather than creating a fallback issue or silently excluding protected paths.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".agents/skills/release-notes/SKILL.md",
+        "lines": "1-30",
+        "finding": "The SKILL.md file is an agent instruction file (hand-authored, not generated). It is correctly a protected file. Its presence in the prepare patch from the 'mattleibow-release-notes-manual-notes' branch is explained by that branch containing a version of SKILL.md that differs from what was on that branch's HEAD — likely PR #4334 is modifying SKILL.md as part of a release-notes workflow improvement.",
+        "relevance": "related"
+      },
+      {
+        "file": ".agents/skills/release-notes/references/TEMPLATE.md",
+        "lines": "1-1",
+        "finding": "TEMPLATE.md is also listed as protected and appears in the patch for main-branch runs (the 4 comment failures). This suggests that either the generate scripts modify TEMPLATE.md as part of their output, or TEMPLATE.md is out of sync between the PR branch and main.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Cannot create pull request: patch modifies protected files (.agents/skills/release-notes/SKILL.md, .github/workflows/update-release-notes.lock.yml, .github/workflows/update-release-notes.md)",
+        "source": "issue body — first run",
+        "interpretation": "The prepare patch from branch 'mattleibow-release-notes-manual-notes' includes SKILL.md and the compiled workflow YAML, which are protected agent/workflow files. This indicates the source branch has modifications to those files (PR #4334)."
+      },
+      {
+        "text": "Cannot create pull request: patch modifies protected files (.agents/skills/release-notes/SKILL.md, .agents/skills/release-notes/references/TEMPLATE.md)",
+        "source": "issue comments — 4 subsequent agent-job failures targeting PR #3645",
+        "interpretation": "Even after the source switched to main-branch runs targeting PR #3645, SKILL.md and TEMPLATE.md are still appearing. This may indicate these files changed on main since the PR branch was created, causing a diff against the PR branch head."
+      },
+      {
+        "text": "Branch: mattleibow-release-notes-manual-notes / Pull Request: #4334",
+        "source": "issue body",
+        "interpretation": "The first failure was manually dispatched against a non-main branch that is the source branch for PR #4334, which is specifically a PR to modify the release-notes workflow/skill files — explaining why those protected files appear in the patch."
+      }
+    ],
+    "nextQuestions": [
+      "Does PR #4334 modify .agents/skills/release-notes/SKILL.md and the workflow YAML files? If so, why was the workflow manually dispatched against that branch?",
+      "Why does TEMPLATE.md appear in main-branch runs (comment failures targeting PR #3645)? Has TEMPLATE.md been recently changed on main while the PR #3645 branch still has an older version?",
+      "Should the prepare job's 'git add -A' be scoped to only 'documentation/docfx/releases/' and 'scripts/infra/docs/pr-authors.json' to prevent capturing protected files?"
+    ],
+    "workarounds": [
+      "Add 'protected-files: fallback-to-issue' to the safe-outputs create-pull-request configuration in .github/workflows/update-release-notes.md to allow graceful degradation instead of hard failure.",
+      "Scope the 'git add' in the prepare job to only expected output directories: 'git add documentation/docfx/releases/ scripts/infra/docs/pr-authors.json' instead of 'git add -A'."
+    ],
+    "resolution": {
+      "hypothesis": "The prepare job uses 'git add -A' which is too broad — it captures protected files that are either present on the dispatched branch (for the first run) or appear as diffs relative to an older PR branch (for the main-branch runs). The fix is to either scope 'git add' to expected output paths, or configure 'protected-files: fallback-to-issue' as a safety net.",
+      "proposals": [
+        {
+          "title": "Scope git add to expected output directories",
+          "description": "In the prepare job, replace 'git add -A' with 'git add -- documentation/docfx/releases/ scripts/infra/docs/pr-authors.json' so only the expected generated output is captured in the patch. This prevents any protected agent/workflow files from ever entering the prepare patch.",
+          "category": "fix",
+          "confidence": 0.82,
+          "effort": "cost/s",
+          "validated": "untested"
+        },
+        {
+          "title": "Add protected-files fallback configuration",
+          "description": "Add 'protected-files: fallback-to-issue' to the safe-outputs create-pull-request section in update-release-notes.md. This converts hard failures into review issues instead of blocking the run, providing a safety net for any future cases where protected files unexpectedly appear.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Scope git add to expected output directories",
+      "recommendedReason": "Fixing the root cause (overly broad 'git add -A') prevents protected files from ever entering the patch. The fallback option only masks the symptom. Both should be applied together for defense-in-depth."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.82,
+      "reason": "Root cause is likely the over-broad 'git add -A' in the prepare job, but the exact mechanism for main-branch runs including TEMPLATE.md needs confirmation before applying the fix. The fix requires modifying a protected workflow file.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/Build, tenet/reliability labels",
+        "risk": "low",
+        "confidence": 0.95,
+        "labels": ["type/bug", "area/Build", "tenet/reliability"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis identifying root cause and suggesting fix path",
+        "risk": "medium",
+        "confidence": 0.82,
+        "comment": "**Root cause identified:** The prepare job in `.github/workflows/update-release-notes.md` uses `git add -A` which captures **all** working-tree changes — not just the expected documentation output under `documentation/docfx/releases/`. When the workflow runs from branch `mattleibow-release-notes-manual-notes` (which modifies `SKILL.md` and the compiled workflow YAML as part of PR #4334), those protected files end up in the prepare patch. The subsequent failures on main-branch runs (targeting PR #3645) suggest `SKILL.md` and `TEMPLATE.md` also appear in main-branch patches, possibly due to a drift between the PR #3645 branch head and current main.\n\n**Recommended fix:** Replace `git add -A` in the prepare job with a scoped `git add -- documentation/docfx/releases/ scripts/infra/docs/pr-authors.json` to prevent protected files from ever entering the patch. As a safety net, also add `protected-files: fallback-to-issue` to the `safe-outputs.create-pull-request` configuration.\n\nSimilar issues: #4202, #4266 (both closed `not_planned` with the same pattern)."
+      },
+      {
+        "type": "link-related",
+        "description": "Cross-reference prior similar failures",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 4202
+      }
+    ]
+  }
+}
