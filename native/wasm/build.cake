@@ -101,6 +101,7 @@ Task("libSkiaSharp")
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
     var archivesToMerge = GetFiles($"{skiaOut}/*.a.wasm").ToList();
+    archivesToMerge.AddRange(GetFiles($"{skiaOut}/*.wasm.a"));
     archivesToMerge.AddRange(GetFiles($"{skiaOut}/*.a"));
     foreach (var file in archivesToMerge) {
         var name = file.GetFilename().FullPath;
@@ -166,9 +167,13 @@ Task("libHarfBuzzSharp")
     if (emscriptenFeaturesModifiers.Length != 0)
         outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
-    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a.wasm");
-    CopyFileToDirectory(so, outDir);
-    CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
+    // Emsdk 3.1.56 emits `libHarfBuzzSharp.wasm.a`; newer versions emit
+    // `libHarfBuzzSharp.a.wasm`. Take whichever exists.
+    var hb = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a.wasm");
+    if (!FileExists(hb))
+        hb = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.wasm.a");
+    CopyFileToDirectory(hb, outDir);
+    CopyFile(hb, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
 });
 
 Task("Default")
