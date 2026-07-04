@@ -70,6 +70,9 @@ Task("libSkiaSharp")
         $"skia_enable_graphite={SUPPORT_GPU} ".ToLower() +
         $"skia_use_dawn={SUPPORT_GPU} ".ToLower() +
         $"skia_use_webgpu={SUPPORT_GPU} ".ToLower() +
+        // m151 added a partition_alloc dep that pulls in an out-of-tree gni
+        // file we don't sync. Fall back to the in-tree noop raw_ptr headers.
+        $"skia_use_partition_alloc=false " +
         $"extra_cflags=[ " +
         $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
@@ -154,6 +157,7 @@ Task("libHarfBuzzSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        // See libSkiaSharp target above.
         $"skia_use_partition_alloc=false " +
         $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
         $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
