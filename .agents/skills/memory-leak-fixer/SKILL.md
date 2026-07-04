@@ -69,7 +69,6 @@ Run the phases in order. The skill has two entry points:
 | You were asked to… | Start at | Notes |
 |---|---|---|
 | Find a leak (scan only) / file an issue | Phase 1 → 2 → (report) | Stop after confirmation; file `[memory-leak]` issue. |
-| Fix a known/reported leak | Phase 0 → 3 → 4 → 5 | The issue already exists — consume its retention path, still enforce red→green, then open the **PR only** with `Fixes #<that issue number>`. |
 | Scan **and** fix (the default, and what the workflow does) | Phase 0 → 1 → 2 → 3 → 4 → 5 | End-to-end: hunt → prove → fix → **file the finding as an issue and open a linked draft PR** that closes it (`Fixes #…`). |
 
 ---
@@ -280,11 +279,9 @@ Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix,
 - **AI-generated banner** naming this workflow + skill.
 - **The fix**: what changed and why it is the idiomatic pattern (point at the family's `Fix ✓`).
 - **Proof (red→green)**: the failing-then-passing test and the exact `dotnet test` commands.
-- **A closing keyword on its own line so merging auto-closes the finding:**
-  - **Scan-and-fix** (you filed the issue in 4.1 this run): `Fixes #<temporary_id>` — e.g.
-    `Fixes #aw_leak1`. gh-aw rewrites it to the real issue number once the issue is created.
-  - **Fix-a-known-leak** (a maintainer supplied a real `issue_number`): the issue already
-    exists — **do not file a new one**; open the PR only, with `Fixes #<that number>`.
+- **A closing keyword on its own line so merging auto-closes the finding:** `Fixes #<temporary_id>`
+  — e.g. `Fixes #aw_leak1` (the id you gave the issue in 4.1). gh-aw rewrites it to the real issue
+  number once the issue is created.
 
 ### 4.3 Out of scope (native / upstream only)
 If the leak is real but the only correct fix lives under `externals/skia/**` (incl. the C
@@ -301,8 +298,7 @@ summary.
 
 **End with the right safe output(s):**
 - **Confirmed + managed-C# fix** → the **issue + PR pair** from Phase 4 (the PR body carries
-  `Fixes #…` so merging closes the issue). In *fix-a-known-leak* mode the issue already exists,
-  so it is the **PR alone**.
+  `Fixes #…` so merging closes the issue).
 - **Confirmed but native/upstream-only fix** → the **`create-issue`** alone (finding + proposal).
 - **Quiet run** (no convincing candidate) **or** a **dry run** → a single **`noop`** carrying
   this summary.

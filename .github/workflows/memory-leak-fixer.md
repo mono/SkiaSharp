@@ -26,19 +26,15 @@ engine:
   model: claude-opus-4.8
 
 # -- Triggers ----------------------------------------------------------
-# Every 12h + manual + PR-driven self-test. Manual dispatch may pin a specific
-# reported leak (`issue_number`) or do everything-but-open-nothing (`dry_run`).
-# A `pull_request` that edits THIS workflow or its skill re-runs the whole
-# pipeline in FORCED DRY-RUN (see Step 2.6) so we can iterate on the prompt/skill
-# and watch the run without ever opening a real PR/issue.
+# Every 12h + manual + PR-driven self-test. Every run does the same full
+# scan→prove→fix→file pipeline; the only knob is `dry_run` (do everything but
+# open nothing). A `pull_request` that edits THIS workflow or its skill re-runs
+# the whole pipeline in FORCED DRY-RUN (see Step 2.6) so we can iterate on the
+# prompt/skill and watch the run without ever opening a real PR/issue.
 on:
   schedule: every 12h
   workflow_dispatch:
     inputs:
-      issue_number:
-        description: "Fix a specific reported [memory-leak] issue (leave blank to scan for a new leak)."
-        required: false
-        type: string
       dry_run:
         description: "Do the full scan→prove→fix locally but do NOT open a PR/issue."
         required: false
@@ -158,20 +154,10 @@ All the methodology lives in the skill. Follow it exactly.
 
 Read and follow `.agents/skills/memory-leak-fixer/SKILL.md` end-to-end.
 
-**Trigger for this run:** `${{ github.event_name }}` — use it to pick the skill mode:
-
-- **`schedule`** or **`pull_request`** → there is never a specific target issue. Run
-  **"Scan and fix"** (Phase 1 → 2 → 3 → 4 → 5). (`pull_request` is additionally a forced
-  dry-run — see Guardrail 6.)
-- **`workflow_dispatch`** → a maintainer may have pinned a specific `[memory-leak]` issue to
-  fix. Its number appears here → `${{ github.event.inputs.issue_number }}`
-  - If that shows a **bare number**, run **"Fix a known/reported leak"** on it (consume the
-    issue's retention path), then still enforce Phase 3 red→green.
-  - If it is **blank** or shows raw, unresolved template text instead of a number, none was
-    supplied — fall back to **"Scan and fix"**.
-
-> That raw, unresolved template text only appears when the value is empty — GitHub leaves the
-> reference in place when there is nothing to substitute. Always read it as "not set".
+**Every run does the same thing — "Scan and fix"** (skill Phase 1 → 2 → 3 → 4 → 5): hunt a new
+leak, prove it, fix it, then file the finding issue + linked fix PR. There is no per-issue target
+mode. The only variation is dry-run — forced on `pull_request`, opt-in via the `dry_run` input
+(see Guardrail 6).
 
 Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
 Each bash call is a fresh subshell — re-`cd` as needed.
@@ -181,11 +167,9 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 1. **What to emit — one finding per run.** For a confirmed, managed-C#-fixable leak, emit the
    **linked pair**: one `create-issue` (the finding, with a `temporary_id`) **and** one
    `create-pull-request` (the fix, whose body ends with `Fixes #<that temporary_id>` so merging
-   auto-closes the issue) — see skill Phase 4. In *fix-a-known-leak* mode (a real `issue_number`
-   was supplied) the issue already exists → emit the **PR only** with `Fixes #<that number>`, no
-   new issue. If the only correct fix is native / upstream (out of scope) → emit the
-   **`create-issue` alone**. If nothing clears the bar → exactly one **`noop`**. Never finish a
-   run with no safe output at all (that makes the run look incomplete).
+   auto-closes the issue) — see skill Phase 4. If the only correct fix is native / upstream (out
+   of scope) → emit the **`create-issue` alone**. If nothing clears the bar → exactly one
+   **`noop`**. Never finish a run with no safe output at all (that makes the run look incomplete).
 2. **De-dup first.** Run skill Phase 1.3 — skip any candidate already covered by an OPEN
    `[memory-leak]` issue or PR on `mono/SkiaSharp`. A candidate whose only prior item is
    CLOSED may be re-filed.
@@ -220,6 +204,5 @@ run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak family, 
 resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
 
 Then make sure you have emitted the safe output(s) from Step 2.1: the **issue + PR pair** (or a
-`create-issue` alone when the fix is out of scope, or a PR alone in fix-a-known-leak mode), or —
-for a dry run or a quiet run — a single `noop` carrying this same summary.
-Never finish the run with no safe output.
+`create-issue` alone when the fix is out of scope), or — for a dry run or a quiet run — a single
+`noop` carrying this same summary. Never finish the run with no safe output.
