@@ -227,26 +227,23 @@ Variable font support, animated encoding, and the first engine bump of the line.
 
 [Full Changelog](https://github.com/mono/SkiaSharp/compare/v9.988.0...v9.989.0-preview.1.1)
 
-<!-- FORMATTING RULES:
+<!-- FORMATTING RULES (priority order — product-focus first):
+     - Product over project (RULE 1): write for people USING the library. Every raw-data PR line
+       is pre-tagged [product] or [internal] by the script (product = touches binding/ native/
+       externals/ source/; everything else = internal). DROP every [internal] line — never a
+       bullet per internal change; roll them all into ONE trailing "Plus various CI,
+       documentation, and internal tooling improvements." line (or omit it if none). Write up
+       only [product] lines. The title is not evidence (a security-audit skill change is not a
+       library security fix). Keep native-dep bumps, native build flags that ship in the binary
+       (Spectre mitigation, new RIDs/TFMs), API changes, behavior/bug fixes, packaging.
      - Highlights: short and impact-first — HARD CAP at 2-3 sentences, no matter how big the
        release. Name only the 3-4 biggest / coolest things; a hook, not a table of contents.
        Never enumerate dependency bumps, individual fixes, or every new API here — the bigger
        the release, the more selective (not longer) it gets.
-     - Rollup at top: aggregate ALL changes across all previews into one polished summary
+     - Rollup at top: aggregate ALL [product] changes across all previews into one polished summary
      - Categories are top-level `##` sections (Engine, API Surface, Bug Fixes, Platform, …),
        NOT nested under a "New Features" parent; pick the ones that fit and never force empties
      - Previews/RC are minimal: one sentence + changelog link each
-     - Product over project: write for people USING the library. The test is whether the
-       SHIPPED library / native binary / NuGet package changed for a consumer. Drop repo
-       processes entirely (CI/build + caching, GitHub Actions/workflows, the project's own agent
-       skills like security-audit / ci-status, the release-notes & docs tooling, the docs
-       website / PR-staging, sample-publishing pipelines, milestone/label automation, test-infra,
-       the package's own version bump) — EVEN when the title mentions security, a CVE, caching,
-       or an API name (a change to the security-audit skill is not a library security fix). When
-       there's a lot, collapse to ONE trailing line ("Plus various CI, documentation, and
-       internal tooling improvements."). Keep native-dep bumps, native build flags that ship in
-       the binary (Spectre mitigation, new RIDs/TFMs), API changes, behavior/bug fixes, and
-       consumer-visible packaging.
      - Attribution: item shape is `**title** — desc. ❤️ [@user](url) ([#NNN](url))`. Credit &
        link every community contributor (anyone not @mattleibow); the maintainer's own PRs end
        with just the `([#NNN](url))` link (no ❤️). NEVER write `by @handle`, and never emit a

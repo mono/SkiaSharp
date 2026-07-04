@@ -803,6 +803,14 @@ fixed here.
    security, a CVE, performance, or an API name** (a change to the `security-audit` skill is not
    a library security fix). Native-dependency bumps and native build flags that ship in the
    binary (e.g. Spectre mitigation, new RIDs/TFMs) stay; the package's own version bump does not.
+   **This decision is made deterministically in Prepare, not left to per-PR judgment in Polish:**
+   `generate-release-notes.py` tags every raw-data PR line **`[product]`** or **`[internal]`**
+   by the files it changed — a PR touching anything under `binding/`, `native/`, `externals/`, or
+   `source/` ships (`[product]`); everything else is `[internal]` (a mixed PR counts as
+   `[product]`, so we under-drop rather than hide a real change). Polish **drops `[internal]`**
+   and rolls it into the one collapse line, and writes up **`[product]`**; the prose test above
+   is only the tie-breaker for a mis-tagged line. Moving the classification out of the LLM is
+   what makes product-focus reliable run-to-run instead of a judgment loop over every PR.
 2. **Highlights are short and impact-first — a hard cap.** At most two or three sentences, no
    matter how big the release, naming only the three or four biggest / coolest items — the
    engine jump, the headline feature, a breaking change users must know about. Highlights are a

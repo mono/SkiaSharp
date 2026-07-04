@@ -1612,6 +1612,43 @@ def determine_diff_range(branch):
     return base_sha, "origin/{}".format(branch), version
 
 
+# A PR is "product" if it touches any file that ships in a package (and thus can
+# change a consumer's compiled app); otherwise it is "internal" (repo process: CI,
+# workflows, agent skills, the docs site, tests, samples, build/meta files). Mixed
+# PRs count as product — we would rather under-drop than hide a real change (the
+# Polish AI's "one test", §4.4, is the tie-breaker). Emitting this tag on every
+# raw-data PR line lets Polish drop internal work by a lexical filter instead of
+# re-judging every PR from its title each run (the source of the leak variance).
+_PRODUCT_PATH_PREFIXES = ("binding/", "native/", "externals/", "source/")
+
+
+def _pr_is_internal(files):
+    # type: (set) -> bool
+    """True when NONE of the touched files ship in a package (§4.4 product test)."""
+    return not any(f.startswith(_PRODUCT_PATH_PREFIXES) for f in files)
+
+
+def _files_by_commit(from_ref, to_ref):
+    # type: (str, str) -> dict
+    """Map each commit hash in ``from_ref..to_ref`` to the set of files it touched.
+
+    One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
+    file set to classify it product vs internal). A ``\\x1e`` record separator
+    prefixes each hash line so file lines can never be mistaken for a hash.
+    """
+    out = run(["git", "log", "--no-renames", "--name-only",
+               "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
+    files_by = {}  # type: dict
+    cur = None
+    for line in out.split("\n"):
+        if line.startswith("\x1e"):
+            cur = line[1:].strip()
+            files_by[cur] = set()
+        elif line.strip() and cur is not None:
+            files_by[cur].add(line.strip())
+    return files_by
+
+
 def get_prs_from_diff(from_ref, to_ref, paths=None):
     # type: (str, str, Optional[list[str]]) -> list[dict]
     """Extract merged PRs from git log between two refs.
@@ -1635,6 +1672,11 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
         cmd.append("--")
         cmd.extend(paths)
     log = run(cmd)
+
+    # One extra git call gives every commit's full file set, used to tag each PR
+    # product vs internal (§4.4). Unfiltered by ``paths`` on purpose — a PR's
+    # classification depends on everything it changed, not the co-ship subset.
+    files_by = _files_by_commit(from_ref, to_ref)
 
     prs = []
     seen = set()  # type: set[int]
@@ -1692,6 +1734,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "body": body,
             "commit": commit_hash,
             "skiaPr": skia_pr,
+            "internal": _pr_is_internal(files_by.get(commit_hash, set())),
         })
 
     return prs
@@ -1715,7 +1758,10 @@ def _format_pr_bullet(pr):
     skia_pr = pr.get("skiaPr")
     skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
     by = "by @{}".format(login) if login else "by {}".format(name)
-    return "{} {} in {}{}{}".format(title, by, url, community_str, skia_str)
+    # Deterministic product/internal tag (§4.4). Polish drops [internal] lines and
+    # collapses them into one trailing line; [product] lines are what it writes up.
+    tag = "[internal] " if pr.get("internal") else "[product] "
+    return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
 
 
 def format_pr_list(prs, metadata):
@@ -1743,6 +1789,9 @@ def format_pr_list(prs, metadata):
         "  branch:    {}".format(metadata["branch"]),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
+        "  internal:  {} of {} PRs are [internal] — DROP them (roll into one trailing "
+        "\"Plus various … internal tooling improvements.\" line); write up only [product]".format(
+            sum(1 for p in prs if p.get("internal")), len(prs)),
         "  api:       {}".format(api_sig),
         "",
     ]
@@ -1800,6 +1849,12 @@ def format_pr_list(prs, metadata):
     if not prs:
         lines.append("  *No changes found.*")
     else:
+        # Each PR line is tagged [product] or [internal] (§4.4). Remind the AI in
+        # context so the drop/keep decision is a lexical filter, not a re-judgment.
+        lines.append("  Each PR is tagged [product] (write it up, categorized) or "
+                     "[internal] (DROP — never a bullet each; roll ALL of them into one")
+        lines.append('  trailing "Plus various CI, documentation, and internal tooling '
+                     'improvements." line, or omit it when there are none).')
         # When the page rolls up tagged previews, group the PRs into per-preview
         # buckets (each PR under the preview it first shipped in) so the AI can
         # write a concrete "## Preview N" section per milestone AND merge the
