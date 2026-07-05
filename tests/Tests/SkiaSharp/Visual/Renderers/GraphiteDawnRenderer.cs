@@ -51,31 +51,45 @@ namespace SkiaSharp.Tests.Visual
 
 			if (!s_dawnReady)
 			{
-				var adapter = await SKWebGpu.RequestAdapter()
-					?? throw new RendererUnavailableException("navigator.gpu.requestAdapter returned null — WebGPU unavailable.");
-				var device = await SKWebGpu.RequestDevice(adapter)
-					?? throw new RendererUnavailableException("adapter.requestDevice returned null.");
-				s_offscreenDevice = device;
-
-				var queue = SKWebGpu.GetDeviceQueue(device);
-				int queueId = SKWebGpu.RegisterQueue(queue);
-				int deviceId = SKWebGpu.RegisterDevice(device);
-				// Emscripten 3.1.56 has no mgrInstance — wgpuCreateInstance returns
-				// a hard-coded value. Skia's DawnBackendContext stores fInstance
-				// opaquely, so any non-null value works.
-				int instanceId = SKWebGpu.CreateInstance();
-
-				var bc = new SKGraphiteDawnBackendContext
+				// SKWebGpu's static ctor walks JSHost.DotnetInstance → Module → WebGPU →
+				// mgr{Device,Queue,Texture}. Any failure there (Module.WebGPU missing
+				// because EXPORTED_RUNTIME_METHODS lacks 'WebGPU', browser without
+				// WebGPU support, etc.) becomes a TypeInitializationException on the
+				// first SKWebGpu call. Convert it to an unavailable signal so the
+				// matrix skips the cell cleanly instead of failing hard.
+				try
 				{
-					WgpuInstance = (IntPtr)instanceId,
-					WgpuDevice = (IntPtr)deviceId,
-					WgpuQueue = (IntPtr)queueId,
-				};
-				s_ctx = SKGraphiteContext.CreateDawn(bc)
-					?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
-				s_recorder = s_ctx.CreateRecorder()
-					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
-				s_dawnReady = true;
+					var adapter = await SKWebGpu.RequestAdapter()
+						?? throw new RendererUnavailableException("navigator.gpu.requestAdapter returned null — WebGPU unavailable.");
+					var device = await SKWebGpu.RequestDevice(adapter)
+						?? throw new RendererUnavailableException("adapter.requestDevice returned null.");
+					s_offscreenDevice = device;
+
+					var queue = SKWebGpu.GetDeviceQueue(device);
+					int queueId = SKWebGpu.RegisterQueue(queue);
+					int deviceId = SKWebGpu.RegisterDevice(device);
+					// Emscripten 3.1.56 has no mgrInstance — wgpuCreateInstance returns
+					// a hard-coded value. Skia's DawnBackendContext stores fInstance
+					// opaquely, so any non-null value works.
+					int instanceId = SKWebGpu.CreateInstance();
+
+					var bc = new SKGraphiteDawnBackendContext
+					{
+						WgpuInstance = (IntPtr)instanceId,
+						WgpuDevice = (IntPtr)deviceId,
+						WgpuQueue = (IntPtr)queueId,
+					};
+					s_ctx = SKGraphiteContext.CreateDawn(bc)
+						?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
+					s_recorder = s_ctx.CreateRecorder()
+						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+					s_dawnReady = true;
+				}
+				catch (TypeInitializationException ex)
+				{
+					throw new RendererUnavailableException(
+						$"WebGPU host bring-up failed: {ex.InnerException?.Message ?? ex.Message}", ex);
+				}
 			}
 
 			var texture = SKWebGpu.CreateTexture(s_offscreenDevice, info.Width, info.Height);
