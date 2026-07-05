@@ -9,10 +9,22 @@ of **thematic bullets**, each telling one product story. This file is how.
 
 ## The density budget
 
-Across **all** category sections combined, aim for **5–12 product bullets total** — not one per
+Across **all** category sections combined, aim for **8–15 product bullets total** — not one per
 PR. A single bullet carries **2–8 related PRs**. Reserve a solo bullet only for a genuine
-standalone landmark (the engine bump, one headline API, a breaking-only change). **If your draft
-has more than ~15 bullets, you are enumerating — go back and merge.**
+standalone landmark (the engine bump, one headline API, a breaking-only change).
+
+**The countable rule: at most ~4 bullets per category section.** After you draft a category,
+count its bullets — if a `##` section (other than `## Breaking Changes`, which is one bullet per
+distinct break) has **more than ~4**, you are enumerating: find the same-kind items and merge
+them into one grouped bullet. Concretely, within a category:
+
+- Several **fixes to the same subsystem** (all Uno/XAML, all MAUI, all memory/leak) → **one**
+  "Fixed … regressions" bullet listing them, main-style (see the example below).
+- Several **native-dependency bumps** (libpng, libwebp, brotli, expat) → **one** bullet.
+- Several **overloads of the same shape** (all the `Span<T>` additions) → **one** bullet.
+
+`## Breaking Changes` is the exception — it may carry one bullet per distinct break (a v4-style
+release legitimately has ~10). Every *other* category is curated down to a few grouped bullets.
 
 A 130-PR release and a 12-PR release should have Highlights and category sections of *similar
 length*. The big release is more *selective*, not longer.

@@ -353,9 +353,10 @@ would tempt you to include an internal PR, rule 1 wins.
    list it first under an **Engine** category.
 
 5. **Group and categorize — curate, don't enumerate.** Merge related `[product]` PRs into a few
-   **thematic bullets** (target **5–12 total across the whole page**), each telling one product
-   story with all its PRs credited at the end — **never one bullet per PR**. Read
-   **[`references/grouping.md`](references/grouping.md)** for the density budget, the clustering
+   **thematic bullets** (target **8–15 total across the whole page, at most ~4 per category
+   section** — count them; `## Breaking Changes` is the only exception and may list one per
+   distinct break). **Never one bullet per PR.** Read
+   **[`references/grouping.md`](references/grouping.md)** for the countable cap, the clustering
    axes, and a worked example. Group under top-level `##` categories (Engine & native
    dependencies, New APIs, GPU & Rendering, Text & Fonts, Views & platforms, Fixes, Lifecycle &
    Internals, Security). Each grouped bullet:
@@ -418,7 +419,8 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
 1. **Banner shape** — `> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)`
    on a stable page (never a bare `> [NuGet](…)`); `Preview only` / `In development` variants per
    TEMPLATE.md. The release date comes from the raw-data `released:` line.
-2. **Curated, not enumerated** — 5–12 grouped product bullets total, not one per PR
+2. **Curated, not enumerated** — 8–15 grouped product bullets total, **at most ~4 per category
+   section** (Breaking Changes exempt); not one per PR
    (see [`references/grouping.md`](references/grouping.md)).
 3. **Product test** — no `[internal]` PR gets a bullet; they collapse into the single
    *"Plus various CI, documentation, and internal tooling improvements."* line.

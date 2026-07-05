@@ -42,9 +42,10 @@ VERDICT: PASS | FAIL   (score N/12)
    line *"Plus various CI, documentation, and internal tooling improvements."* is allowed once.
 
 6. **grouping-density** — Count top-level product bullets across `##` category sections (exclude
-   previews and the Contributors table). Target **5–12**. FAIL if > 15, or if any category has
-   > 8 bullets with obvious mergeable adjacencies (same area / platform / symptom).
-   Grep: `grep -c '^- \*\*' <version>.md`.
+   previews and the Contributors table). Target **8–15**, and **at most ~4 per category section**
+   (`## Breaking Changes` is exempt — one bullet per distinct break is fine). FAIL if any
+   non-breaking category has > 5 bullets with obvious mergeable adjacencies (same subsystem,
+   same dependency set, same overload shape). Grep: `grep -c '^- \*\*' <version>.md`.
 
 7. **highlights-length** — `## Highlights` is ≤ 3 sentences, no bullet list, no enumeration of
    dependency bumps / individual fixes / every new API.
