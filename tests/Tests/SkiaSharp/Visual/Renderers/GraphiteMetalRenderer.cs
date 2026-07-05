@@ -55,6 +55,16 @@ namespace SkiaSharp.Tests.Visual
 					if (queue == IntPtr.Zero)
 						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
+					// Skia's Graphite Metal init walks MTLGPUFamilyApple9..7 and Mac2, and
+					// SK_ABORTs the process if none is supported. Virtualized macOS runners
+					// (Actions VMs) advertise Metal but only support MTLGPUFamilyMac1, which
+					// makes CreateMetal fatal instead of returning null. Probe here first
+					// and skip cleanly.
+					if (!MetalHasGraphiteCapableFamily(device))
+						throw new RendererUnavailableException(
+							"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
+							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+
 					var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
 					using var context = SKGraphiteContext.CreateMetal(backendContext)
 						?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
@@ -87,6 +97,28 @@ namespace SkiaSharp.Tests.Visual
 		public void Dispose()
 		{
 		}
+
+		// MTLGPUFamily values from Metal.framework (see MTLDevice.h). Skia's
+		// Graphite backend needs any one of Apple7+, or Mac2. If the device
+		// advertises Metal but none of these, CreateMetal SK_ABORTs.
+		private const ulong MTLGPUFamilyApple7 = 1007;
+		private const ulong MTLGPUFamilyApple8 = 1008;
+		private const ulong MTLGPUFamilyApple9 = 1009;
+		private const ulong MTLGPUFamilyMac2   = 2002;
+
+		private static bool MetalHasGraphiteCapableFamily(IntPtr device)
+		{
+			var sel = sel_registerName("supportsFamily:");
+			foreach (var f in new[] { MTLGPUFamilyApple9, MTLGPUFamilyApple8, MTLGPUFamilyApple7, MTLGPUFamilyMac2 })
+			{
+				if (objc_msgSend_supportsFamily(device, sel, f) != 0)
+					return true;
+			}
+			return false;
+		}
+
+		[DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+		private static extern byte objc_msgSend_supportsFamily(IntPtr receiver, IntPtr selector, ulong family);
 
 		[DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
 		private static extern IntPtr MTLCreateSystemDefaultDevice();
