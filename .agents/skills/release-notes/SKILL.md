@@ -295,7 +295,7 @@ an empty category):
 
 # Version X.Y.Z
 
-> **theme** · status · links
+> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)    ← rule 7
 
 ## Highlights            (short, impact-first — rule 2)
 ## Breaking Changes      (always present; "None in this release." when none — rule 3)
@@ -303,8 +303,8 @@ an empty category):
                           Bug Fixes, Lifecycle & Internals, Platform, Security — rules 4-5;
                           only [product] items — rule 1)
 ## Community Contributors ❤️   (linked table, only when there are community contributors — rule 6)
-## Links                 (Full Changelog + NuGet only — rule 10)
-## <Preview label> (date)      (one trailing section per preview bucket, newest first — rule 9)
+## Links                 (Full Changelog + NuGet only — rule 11)
+## <Preview label> (date)      (one trailing section per preview bucket, newest first — rule 10)
 ```
 
 Each file has its own HTML comment block with version, status, branch, and diff range.
@@ -378,22 +378,34 @@ would tempt you to include an internal PR, rule 1 wins.
      links, and **not** `[#N] — note` fragments.
    - **Never** a row for @mattleibow or any bot.
 
-7. **PR links** — Every item links to its PR.
+7. **Banner — themed, dated, linked.** The blockquote directly under `# Version X.Y.Z` is
+   **never** a bare `> [NuGet](…)`. Write exactly one of these shapes:
+   - **Stable:** `> **<theme>** · Released <date> · [NuGet](https://www.nuget.org/packages/SkiaSharp/<v>) · [GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v<v>)`
+     — `<date>` is the raw-data block's `released:` field **verbatim** (e.g. *December 2, 2024*);
+     `<theme>` is a 2–4 word editorial phrase you write from the Highlights (e.g. *First stable
+     3.x release*, *Engine upgrade & API cleanup*).
+   - **Preview-only:** `> **<theme>** · Preview only · [NuGet](<preview-url>) · [GitHub Release](url)`
+   - **Unreleased:** `> **Upcoming release** · In development · Not yet available on NuGet`
+   - **HarfBuzz:** `> **<theme>** · Ships with SkiaSharp <X> · [NuGet](<hb-url>) · [GitHub Release](url)`
+   If the existing page already has a bare banner, **replace it** — do not preserve it. The
+   script-owned `> **Supersedes …**` and `> **API changes** …` lines stay verbatim below it.
 
-8. **Rollup at top** — Aggregate ALL `[product]` changes across all previews into the main
+8. **PR links** — Every item links to its PR.
+
+9. **Rollup at top** — Aggregate ALL `[product]` changes across all previews into the main
    sections.
 
-9. **Previews are minimal** — One sentence + Full Changelog link each, at the bottom.
-   Render one trailing `## <label> (<date>)` section per entry in the data-block's
-   `preview milestones` list (newest first), using that entry's compare link. Do not invent
-   previews or dates — the list is authoritative (sourced from published prerelease tags).
+10. **Previews are minimal** — One sentence + Full Changelog link each, at the bottom.
+    Render one trailing `## <label> (<date>)` section per entry in the data-block's
+    `preview milestones` list (newest first), using that entry's compare link. Do not invent
+    previews or dates — the list is authoritative (sourced from published prerelease tags).
 
-10. **Links section** — Full Changelog and NuGet Package only. **Do not add an API-diff
+11. **Links section** — Full Changelog and NuGet Package only. **Do not add an API-diff
     or HarfBuzz link** — the script injects a `> **API changes**` line under the banner
     when a diff folder exists (gated on existence, so it never dangles). Keep that line
     verbatim and author no API links yourself (see TEMPLATE.md "SCRIPT-OWNED API LINKS").
 
-11. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
+12. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
     as the first line AFTER the raw data comment block (before the `# Version` heading).
     Use the current UTC time and your model name.
 
