@@ -196,6 +196,20 @@ share the resulting line set** for that family:
 Within each family the release-notes page set and the API-diff line set therefore
 cover exactly the same lines.
 
+**History floor (a performance skip, not a rule change).** The top-level
+`history_floor` block in `versions.json` optionally sets a per-family minimum line core
+(e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
+re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
+line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
+deletion: pages and API-diff folders already committed below the floor are left exactly
+as they are — the Cake engine skips *clearing* them symmetrically with skipping their
+*emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
+are unaffected: a floored line can still be downloaded as a `compare_to` baseline (e.g.
+`3.116.0` still diffs against `2.88.9`). Absent/empty block ⇒ no floor (every line is
+regenerated, the legacy behavior). Raise the floor as old lines stop needing refreshes;
+lower or remove it to rebuild history. Both engines read the same block, so their line
+sets stay identical above the floor.
+
 ### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
 SkiaSharp and HarfBuzzSharp ship together (HarfBuzz never releases on its own) but

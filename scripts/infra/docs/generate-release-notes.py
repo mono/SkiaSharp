@@ -266,6 +266,46 @@ def load_support_config():
     return _SUPPORT_CONFIG
 
 
+# History floor (spec §1.4) — an optional per-family minimum line core below which
+# NO page is regenerated and NO API diff is emitted, so a full ``--all`` run skips
+# the obsolete back-catalogue (e.g. every 1.x/2.x line) it would otherwise rebuild
+# from the NuGet feed on each run. It is a PERFORMANCE floor, not a delete: pages
+# and API-diff folders already committed below the floor are left untouched (the
+# Cake engine likewise skips clearing them), so history stays intact — it is simply
+# not rebuilt. Absent/empty ``history_floor`` block => no floor (legacy behavior:
+# every line is regenerated). Read from the top-level ``history_floor`` block in
+# versions.json, keyed by family (spec §1.5): ``{"skiasharp": "3.0.0"}``.
+_HISTORY_FLOOR = None  # type: Optional[dict]
+
+
+def history_floor(family="skiasharp"):
+    # type: (str) -> Optional[str]
+    """The configured minimum line core for ``family``, or None when unset."""
+    global _HISTORY_FLOOR
+    if _HISTORY_FLOOR is None:
+        _HISTORY_FLOOR = {}
+        if VERSIONS_JSON_PATH.exists():
+            with open(VERSIONS_JSON_PATH) as f:
+                block = json.load(f).get("history_floor") or {}
+            if isinstance(block, dict):
+                _HISTORY_FLOOR = {
+                    k: v for k, v in block.items() if isinstance(v, str) and v}
+    return _HISTORY_FLOOR.get(family)
+
+
+def is_below_history_floor(version, family="skiasharp"):
+    # type: (str, str) -> bool
+    """True when ``version``'s line core sorts below the family's history floor.
+
+    Used to skip regenerating obsolete back-catalogue pages (spec §1.4). With no
+    floor configured this is always False, so every line is processed as before.
+    """
+    floor = history_floor(family)
+    if not floor:
+        return False
+    return _core_tuple(version) < _core_tuple(floor)
+
+
 def classify_support_tier(group, support=None):
     # type: (str, Optional[dict]) -> str
     """Classify a minor group ("3.119") into a TOC/index support tier (spec §3.5).
@@ -2721,6 +2761,15 @@ def _write_page(branch, all_branches, verbose=False, force=False):
             branch, e), file=sys.stderr)
         return None
 
+    # History floor (spec §1.4): below the configured floor we do not regenerate
+    # the page at all. Its already-committed page (and API-diff folder) stay as
+    # they are — this is a performance skip of the obsolete back-catalogue, not a
+    # delete. No floor configured => never triggers.
+    if is_below_history_floor(version):
+        log("  Skipping {} (below history floor {}).".format(
+            version, history_floor()))
+        return None
+
     from_display = _removeprefix(from_ref, "origin/")
     to_display = _removeprefix(to_ref, "origin/")
     if re.match(r"^[0-9a-f]{7,}$", from_display):
@@ -2940,6 +2989,12 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     """
     hb_line = hb["hb_line"]
     canonical_skia = hb["canonical_skia"]
+    # History floor (spec §1.4): a HarfBuzz line whose introducing SkiaSharp
+    # release is below the SkiaSharp floor — or which is itself below a HarfBuzz
+    # floor — is left as committed and not regenerated.
+    if (is_below_history_floor(canonical_skia, "skiasharp")
+            or is_below_history_floor(hb_line, "harfbuzzsharp")):
+        return None, None
     hb_dir = RELEASES_DIR / "harfbuzzsharp"
     # A HarfBuzz line is "published" (released) exactly when the API-diff
     # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).

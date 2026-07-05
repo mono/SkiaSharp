@@ -200,6 +200,7 @@ Task ("docs-api-diff-past")
 
         var isHarfBuzz = IsHarfBuzzFamily (id);
         var versionsConfig = isHarfBuzz ? hbConfig : skiaConfig;
+        var family = isHarfBuzz ? "harfbuzzsharp" : "skiasharp";
 
         Information ($"Comparing the assemblies in '{id}'...");
 
@@ -239,11 +240,15 @@ Task ("docs-api-diff-past")
         //      drop the line's own page — a shipped preview still needs its diff; or
         //   3. it is a preview-only line ahead of the last stable (active dev line).
         // Any other preview-only line (old, never shipped, not listed) is dropped.
+        // The history floor (spec §1.4) then removes any line below the configured
+        // minimum — the obsolete back-catalogue whose committed folders we keep but
+        // do not rebuild (ClearOwnedApiDiffFolders skips them symmetrically).
         var emit = lines
             .Where (l => !l.rep.IsPrerelease
                 || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
                 || latestStable == null
                 || l.rep.CompareTo (latestStable) > 0)
+            .Where (l => !IsBelowHistoryFloor (l.key, family))
             .ToList ();
 
         for (var idx = 0; idx < emit.Count; idx++) {
@@ -379,7 +384,9 @@ void ClearOwnedApiDiffFolders ()
             // line folder individually.
             foreach (var lineDir in GetSubDirectories (dir)) {
                 var lineKey = lineDir.GetDirectoryName ();
-                if (lineKey.Length > 0 && char.IsDigit (lineKey [0]))
+                // History floor (spec §1.4): keep committed obsolete folders intact.
+                if (lineKey.Length > 0 && char.IsDigit (lineKey [0])
+                        && !IsBelowHistoryFloor (lineKey, "harfbuzzsharp"))
                     ClearGeneratedApiDiffsIn (lineDir.FullPath);
             }
             DeleteEmptyDirectories (dir.FullPath);
@@ -387,7 +394,11 @@ void ClearOwnedApiDiffFolders ()
         }
 
         // SkiaSharp family: a line folder is a top-level directory named by a version core.
-        if (name.Length > 0 && char.IsDigit (name [0])) {
+        // A folder below the history floor (spec §1.4) is left exactly as committed —
+        // not cleared here and not re-emitted above — so the obsolete back-catalogue
+        // survives a floored regen instead of being wiped.
+        if (name.Length > 0 && char.IsDigit (name [0])
+                && !IsBelowHistoryFloor (name, "skiasharp")) {
             ClearGeneratedApiDiffsIn (dir.FullPath);
             DeleteEmptyDirectories (dir.FullPath);
         }
