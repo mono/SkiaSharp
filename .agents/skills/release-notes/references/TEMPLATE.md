@@ -176,19 +176,21 @@ The first engine bump of the 9.x line: Skia m998 lands with variable-font suppor
 
 ## Community Contributors ❤️
 
-<!-- Only include if there are community contributors (anyone not @mattleibow).
+<!-- Only include if there are community contributors (anyone not @mattleibow, and NEVER a bot).
      ALWAYS link usernames: [@user](https://github.com/user) — never bare @user anywhere.
-     TWO columns: "Contributor" is the PLAIN link with NO ❤️ (the heart belongs only on the
-     inline category bullets above; in this table it just wraps badly on long rows). "What They
-     Did" is a SHORT PROSE summary of everything they landed this release — NEVER just a list of
-     PR numbers. One row per contributor. -->
+     TWO columns, ONE LINE per contributor:
+       "Contributor"  = the PLAIN link with NO ❤️ (the heart belongs only on the inline category
+                        bullets above; in this table it just wraps badly).
+       "What They Did" = a SHORT PROSE summary of everything they landed (Feature A, bug B, thing
+                        C), FOLLOWED BY that contributor's PR links in one parenthetical.
+                        Never just a bare list of PR numbers with no prose. -->
 
 | Contributor | What They Did |
 |-------------|--------------|
-| [@octocat](https://github.com/octocat) | Skia m998 bump; variable fonts; obsoletes promotion; singleton lifecycle; `SKFooPath` crash fix |
-| [@monalisa](https://github.com/monalisa) | Linux Bionic native assets; C# 13 support on legacy TFMs |
-| [@hubot](https://github.com/hubot) | Fixed Android `SKFooView` rendering after MAUI tab switch |
-| [@octobot](https://github.com/octobot) | `SKQuxOptions` overloads for `SKQux.Draw` |
+| [@octocat](https://github.com/octocat) | Skia m998 bump, variable fonts, singleton lifecycle rework, and the `SKFooPath` crash fix ([#1204](https://github.com/mono/SkiaSharp/pull/1204), [#1205](https://github.com/mono/SkiaSharp/pull/1205), [#1212](https://github.com/mono/SkiaSharp/pull/1212), [#1210](https://github.com/mono/SkiaSharp/pull/1210)) |
+| [@monalisa](https://github.com/monalisa) | Linux Bionic native assets and C# 13 support on legacy TFMs ([#1214](https://github.com/mono/SkiaSharp/pull/1214), [#1224](https://github.com/mono/SkiaSharp/pull/1224)) |
+| [@hubot](https://github.com/hubot) | Fixed Android `SKFooView` rendering after a MAUI tab switch ([#1211](https://github.com/mono/SkiaSharp/pull/1211)) |
+| [@octobot](https://github.com/octobot) | `SKQuxOptions` overloads for `SKQux.Draw` ([#1208](https://github.com/mono/SkiaSharp/pull/1208)) |
 
 ## Links
 

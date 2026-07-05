@@ -317,6 +317,12 @@ NOT a rollup of the version file.
 Follow these rules, **in priority order — earlier rules trump later ones.** If a later rule
 would tempt you to include an internal PR, rule 1 wins.
 
+> **References (read the two that carry the detail):**
+> [`references/grouping.md`](references/grouping.md) — how to merge related PRs into a few
+> thematic bullets (rule 5); [`references/review-checklist.md`](references/review-checklist.md)
+> — the 12-point self-review you run before saving; [`references/TEMPLATE.md`](references/TEMPLATE.md)
+> — the canonical page shape (banner, sections, worked example).
+
 1. **Focus on the product, not the project — drop internal work.** This is the rule that makes
    the page useful (see the **Purpose** section above). Every raw-data
    PR line is tagged `[product]` or `[internal]` by the script:
@@ -346,33 +352,31 @@ would tempt you to include an internal PR, rule 1 wins.
 4. **Skia engine first** — If a "Bump skia" or "milestone" PR appears in the raw data,
    list it first under an **Engine** category.
 
-5. **Categorize what remains** — Group the `[product]` items by what they affect. Use
-   sub-headers: Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Every item follows one exact shape:
-   `**bold title** — description. ❤️ [@user](https://github.com/user) ([#NNN](url))`
-   - The PR link `([#NNN](url))` always comes **last**.
-   - A community contributor's credit is `❤️ [@user](https://github.com/user)`, placed
-     **immediately before** the PR link. The maintainer (@mattleibow) is **not** credited —
-     his items end with just the `([#NNN](url))` link, no `❤️`.
-   - **Never write `by @handle`.** The raw-data block's `… by @user in …` is *source data*,
-     not output format — do not carry it through. And **never emit a bare `@handle`** anywhere
-     in the rendered body — every handle is a `[@user](https://github.com/user)` link, never a
-     bare or **backticked** `@user`, and never the sentence's subject (credit goes in the
-     `❤️` slot, not the prose).
+5. **Group and categorize — curate, don't enumerate.** Merge related `[product]` PRs into a few
+   **thematic bullets** (target **5–12 total across the whole page**), each telling one product
+   story with all its PRs credited at the end — **never one bullet per PR**. Read
+   **[`references/grouping.md`](references/grouping.md)** for the density budget, the clustering
+   axes, and a worked example. Group under top-level `##` categories (Engine & native
+   dependencies, New APIs, GPU & Rendering, Text & Fonts, Views & platforms, Fixes, Lifecycle &
+   Internals, Security). Each grouped bullet:
+   `**impact-statement title** — one line on why it matters. ❤️ [@a](url), [@b](url) ([#N](url), [#M](url))`
+   - The PR link(s) come **last**, in one parenthetical.
+   - Community contributors are credited with `❤️ [@user](url)` before the PR links. The
+     maintainer (@mattleibow) and **all bot accounts** (`github-actions[bot]`, `copilot[bot]`,
+     `dependabot[bot]`, any `*[bot]`) are **never** credited — their PRs may be listed but carry
+     no `❤️` and no "by".
+   - **Never** a bare, backticked, or `by @handle` — every handle is a `[@user](https://github.com/user)`
+     link, never the sentence's subject (the raw-data `by @user` is source data, not output).
 
-6. **Community contributors** — Anyone other than @mattleibow appears in **two places, with two
-   different formats**:
-   - **Inline**, on their category bullet: end it with `❤️ [@user](https://github.com/user)
-     ([#NNN](url))` (the shape in rule 5). The ❤️ lives **only** here.
-   - **In the `## Community Contributors ❤️` table**: one row per contributor, two columns —
-     `Contributor` and `What They Did`. The **`Contributor` cell is a plain
-     `[@user](https://github.com/user)` — NO `❤️`, no `by`** (the heart wraps badly in the
-     table, so it stays on the inline bullets only). The **`What They Did` cell is a short prose
-     summary** of what they landed (e.g. "Variable-font support, singleton lifecycle rework,
-     `SKPath` crash fix") — **not** a list of `[#NNN]` links or `[#NNN] — note` fragments.
-   Always link `[@user](https://github.com/user)`; never a bare, backticked, or `by @user`
-   handle anywhere in the rendered body (the raw-data comment block is exempt; it is not
-   rendered).
+6. **Community Contributors table** — Only when there is a non-maintainer, non-bot contributor.
+   `## Community Contributors ❤️`, **one row per contributor, one line each**:
+   `| [@user](https://github.com/user) | <short prose summary of their work> ([#N](url), [#M](url)) |`
+   - Column 1 `Contributor` is a **plain `[@user](url)` — no ❤️** (the heart wraps badly here; it
+     lives only on the inline bullets).
+   - Column 2 `What They Did` is a **single line**: a prose summary (Feature A, bug B, thing C),
+     then that contributor's PR links in **one** parenthetical. **Not** a bare list of `[#N]`
+     links, and **not** `[#N] — note` fragments.
+   - **Never** a row for @mattleibow or any bot.
 
 7. **PR links** — Every item links to its PR.
 
@@ -393,21 +397,24 @@ would tempt you to include an internal PR, rule 1 wins.
     as the first line AFTER the raw data comment block (before the `# Version` heading).
     Use the current UTC time and your model name.
 
-## Before you save each page — self-check
+## Before you save each page — self-review
 
-Read the file back once and verify **only these**, in order. The first two are the ones that
-go wrong most; the rest are quick search-and-fix:
+Apply **[`references/review-checklist.md`](references/review-checklist.md)** to the page you just
+wrote — it is the 12-point rubric (also runnable standalone to grade any finished page). Fix
+every FAIL and re-check once. The checks that go wrong most often, watch these first:
 
-1. **Product test.** Scan every category bullet. Each must be a `[product]` change you can
-   justify with *"a consumer notices this because …"* in about five words. Delete any that
-   fail; if you deleted several, replace them with the single *"Plus various CI, documentation,
-   and internal tooling improvements."* trailing line. **No `[internal]` PR gets its own bullet.**
-2. **Highlights ≤ 3 sentences**, impact-first, with no dependency / fix / API enumeration.
-3. **`## Breaking Changes` heading present** (body may be *"None in this release."*).
-4. **No bare `@handle`** anywhere in the body — every handle is `[@user](https://github.com/user)`.
-5. **`## Community Contributors ❤️` table — no ❤️ in the Contributor cell**, and the
-   "What They Did" cell is prose, not a list of PR numbers.
-6. **Raw-data comment block intact** at the top; **generation timestamp** line right after it.
+1. **Banner shape** — `> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)`
+   on a stable page (never a bare `> [NuGet](…)`); `Preview only` / `In development` variants per
+   TEMPLATE.md. The release date comes from the raw-data `released:` line.
+2. **Curated, not enumerated** — 5–12 grouped product bullets total, not one per PR
+   (see [`references/grouping.md`](references/grouping.md)).
+3. **Product test** — no `[internal]` PR gets a bullet; they collapse into the single
+   *"Plus various CI, documentation, and internal tooling improvements."* line.
+4. **No bare `@handle`, no bot credits** — every handle is `[@user](url)`; no `❤️`/row/"by" for
+   any `*[bot]`.
+5. **Contributors table** — one line per contributor: plain `[@user](url)` · prose summary +
+   PR links, no ❤️ in the cell.
+6. **Highlights ≤ 3 sentences**; **`## Breaking Changes` present**; raw-data comment intact.
 
 ## Parallelization
 

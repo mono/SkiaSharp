@@ -1764,6 +1764,32 @@ def _format_pr_bullet(pr):
     return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
 
 
+def _release_date_display(version):
+    # type: (str) -> Optional[str]
+    """Human release date (e.g. 'December 3, 2024') from the ``vX.Y.Z`` tag, or None.
+
+    Used to fill the stable-page banner's ``Released <date>`` field deterministically
+    so Polish never has to guess it. Prefers the tag's creator date (annotated tag);
+    falls back to the tagged commit's date; returns None if the tag is not present.
+    """
+    tag = "v{}".format(version)
+    out = ""
+    try:
+        out = run(["git", "for-each-ref", "--format=%(creatordate:short)",
+                   "refs/tags/{}".format(tag)]).strip()
+    except Exception:
+        out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        try:
+            out = run(["git", "log", "-1", "--format=%cs", tag]).strip()
+        except Exception:
+            out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        return None
+    y, m, d = (int(x) for x in out.split("-"))
+    return "{} {}, {}".format(datetime(y, m, 1).strftime("%B"), d, y)
+
+
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
     """Format the PR list as markdown with raw data in an HTML comment.
@@ -1799,6 +1825,10 @@ def format_pr_list(prs, metadata):
     superseded_by = metadata.get("superseded_by")
     supersedes = metadata.get("supersedes")
     meta_extra = []
+    if metadata.get("status") == "stable":
+        rd = _release_date_display(version)
+        if rd:
+            meta_extra.append("  released:   {} (use verbatim in the banner)".format(rd))
     if superseded_by:
         meta_extra.append(
             "  superseded: {} (preview only, never released as stable)".format(

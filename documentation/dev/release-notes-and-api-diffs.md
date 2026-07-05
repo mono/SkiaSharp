@@ -291,9 +291,11 @@ know the individual commands:
 
 ```
 .agents/skills/release-notes/
-  SKILL.md                       the AI's polish-only instructions (§4.4)
+  SKILL.md                       the AI's polish instructions — a router (§4.4)
   references/
     TEMPLATE.md                  the page-structure/tone example the polish follows (§4.4)
+    grouping.md                  how to merge related PRs into a few thematic bullets
+    review-checklist.md          the 12-point self-review the agent runs before saving
   scripts/
     generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
                                  and writes the Files-to-polish list to a file (§2.2)
