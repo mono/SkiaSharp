@@ -34,8 +34,10 @@ VERDICT: PASS | FAIL   (score N/12)
    Grep: `grep -nE '(^|[^`[/])@[A-Za-z0-9_-]+' <version>.md | grep -v 'RAW PR DATA'`.
 
 4. **no-bot-credit** — No `❤️`, Contributors row, or "by" is given to a bot: `github-actions[bot]`,
-   `copilot[bot]`, `dependabot[bot]`, `dotnet-policy-service[bot]`, any `*[bot]`. Their PRs may be
-   listed, but with no attribution. Grep: `grep -nE '@github-actions|@dependabot|@copilot|\[bot\]' <version>.md`.
+   `Copilot` (the coding agent — links to `github.com/apps/copilot-swe-agent`), `dependabot[bot]`,
+   `dotnet-policy-service[bot]`, any `*[bot]`. Their PRs may be listed, but with no attribution
+   (Prepare already strips the `[community ✨]` marker from bot lines, so a bot credit means Polish
+   invented one). Grep: `grep -nE '@github-actions|@dependabot|@[Cc]opilot|apps/copilot|\[bot\]' <version>.md`.
 
 5. **product-only** — No bullet describes an `[internal]` PR (CI/build, `.agents/**` skills,
    workflows, docs-site, PR-staging, milestone automation, tests, samples). The one collapse

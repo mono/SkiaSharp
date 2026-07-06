@@ -1841,7 +1841,11 @@ def _format_pr_bullet(pr):
     login = author_info.get("login")
     name = author_info.get("name") or "unknown"
     url = pr.get("url", "")
-    community_str = " [community ✨]" if login != "mattleibow" else ""
+    # The community marker invites Polish to credit the author, so it must NOT appear
+    # on bot or maintainer PRs (§4.5): the maintainer is never credited, and bots are
+    # never credited — leaving it on a bot line makes Polish emit a ❤️ @bot bullet.
+    is_community = login and login != "mattleibow" and not _is_bot_login(login)
+    community_str = " [community ✨]" if is_community else ""
     skia_pr = pr.get("skiaPr")
     skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
     by = "by @{}".format(login) if login else "by {}".format(name)
