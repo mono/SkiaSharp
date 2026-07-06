@@ -84,15 +84,17 @@
 
 ## Highlights
 
-<!-- Short and impact-first — HARD CAP: at most 2-3 sentences, no matter how big the release.
-     Name only the 3-4 biggest / coolest things (the engine jump, the headline feature, a
-     breaking change to know about). A hook, not a table of contents — the categories below
-     carry the full list, so never enumerate dependency bumps, individual fixes, or every new
-     API here; the bigger the release, the more SELECTIVE (not longer) it gets. Mention only
-     standout community contributors by linked name. If the manual additions sidecar
-     (<stem>.notes.md, see §4.7) has editorial points the maintainer wants brought out, weave
-     them in here in your own words. On a supersedes rollup, note in one line that the skipped
-     preview work is included cumulatively. -->
+<!-- Short and impact-first — HARD CAP: ≤ 80 WORDS and at most 2-3 short sentences, no matter
+     how big the release (count them). Name only the 3-4 biggest things (the engine jump, the
+     headline feature, the fact that there are breaking changes) in plain prose. A hook, not a
+     summary — the categories below carry the full list. In Highlights, do NOT: enumerate APIs /
+     dependency bumps / fixes; list contributors one by one (the table does that — name at most
+     one standout by linked handle); use per-item parentheticals, PR/issue links, or `code` API
+     names as a checklist; or write "Compared to X: A, B, C, D, …" (that comma-run IS the banned
+     enumeration). If a reader could rebuild the category sections from Highlights, it is too
+     long. If the manual additions sidecar (<stem>.notes.md, see §4.7) has editorial points the
+     maintainer wants brought out, weave them in here in your own words. On a supersedes rollup,
+     note in one line that the skipped preview work is included cumulatively. -->
 
 The first engine bump of the 9.x line: Skia m998 lands with variable-font support and animated encoding, alongside a major-version API cleanup that promotes long-deprecated members to compile errors — check Breaking Changes before upgrading. HarfBuzz 9.9.0 ships too ([HarfBuzzSharp 9.9.0](harfbuzzsharp/9.9.0.md)). Standout community work from [@octocat](https://github.com/octocat) and [@monalisa](https://github.com/monalisa).
 
@@ -247,10 +249,11 @@ Variable font support, animated encoding, and the first engine bump of the line.
        not evidence (a security-audit skill change is not a library security fix). Keep native-dep
        bumps, native build flags that ship in the binary (Spectre mitigation, new RIDs/TFMs), API
        changes, behavior/bug fixes, packaging.
-     - Highlights: short and impact-first — HARD CAP at 2-3 sentences, no matter how big the
-       release. Name only the 3-4 biggest / coolest things; a hook, not a table of contents.
-       Never enumerate dependency bumps, individual fixes, or every new API here — the bigger
-       the release, the more selective (not longer) it gets.
+     - Highlights: a hook, not a summary — HARD CAP ≤ 80 WORDS and ≤ 3 short sentences, no
+       matter how big the release (count them). Name only the 3-4 biggest things in plain prose.
+       Never enumerate APIs / dependency bumps / fixes, never list contributors one by one (name
+       at most one standout handle), never use per-item parentheticals or a "Compared to X: A, B,
+       C, …" comma-run — the categories and the contributor table carry the full detail.
      - Rollup at top: aggregate ALL [product] changes across all previews into one polished summary
      - Categories are top-level `##` sections (Engine, API Surface, Bug Fixes, Platform, …),
        NOT nested under a "New Features" parent; pick the ones that fit and never force empties

@@ -349,13 +349,32 @@ would tempt you to include an internal PR, rule 1 wins.
    **Dev-cycle and `-unreleased` pages are often mostly `[internal]`** — that is expected; such a
    page may legitimately be just Highlights + the single collapse line.
 
-2. **Highlights — short and impact-first (hard cap).** At most **2-3 sentences, no matter how
-   big the release**. Name only the **3-4 biggest / coolest** things — the engine jump, the
-   headline feature(s), a breaking change users must know about. It's a **hook, not a table of
-   contents** (the categories below carry the full list), so **never enumerate** dependency
-   bumps, individual bug fixes, or every new API here. The bigger the release, the more
-   **selective** Highlights get — not longer. Mention only standout community contributors, by
-   linked name.
+2. **Highlights — a hook, not a summary (HARD CAP: ≤ 80 words).** Two or three **short**
+   sentences, **maximum ~80 words total**, no matter how big the release — count them. Name only
+   the **3-4 biggest** things (the engine jump, the one headline feature, the fact that there are
+   breaking changes) in plain prose. This is the single most-violated rule, so the bans are
+   explicit — in Highlights, **do NOT**:
+   - enumerate APIs, dependency bumps, or fixes (the categories below carry the full list);
+   - list contributors one by one (the Community Contributors table does that) — at most name the
+     *one* standout by linked handle;
+   - use per-item parentheticals, PR/issue links, or `code` API names as a checklist;
+   - write "Compared to X, v4 delivers: A, B, C, D, E, F …" — that comma-run **is** the
+     enumeration this rule forbids.
+   If a reader could reconstruct the category sections from your Highlights, it is too long —
+   cut it back to the hook. The bigger the release, the more **selective** Highlights get, never
+   longer.
+
+   > **Too long (what not to do):** *"4.148.0 is the shipped v4 stable… Compared to 3.119.x, v4
+   > delivers: variable font support (`SKFontArguments`), color font palettes, animated WebP
+   > encoding (`SKWebpEncoder`), `SKStream.GetData()` zero-copy, `SKSamplingOptions` overloads…
+   > Behavioral hardening: default typeface resolution moves… `new SKFont()`… Standout community
+   > work: @ramezgerges (16 PRs — …), @4Darmygeometry (…), @SimonvBez (…), @ebariche (…)…"*
+   > (228 words — the whole page crammed into the hook).
+   >
+   > **Right:** *"The first stable v4 release upgrades the engine to Skia m148 and lands the big
+   > v4 feature wave — variable fonts, color font palettes, and animated WebP — alongside a set
+   > of behavioural breaking changes to review before upgrading. Community work from
+   > [@ramezgerges](https://github.com/ramezgerges) anchored the release."* (~50 words.)
 
 3. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
    release."* when there are none — never drop the heading). If the raw block lists a
@@ -452,7 +471,8 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
    any `*[bot]`.
 5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
    none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
-6. **Highlights ≤ 3 sentences**; **`## Breaking Changes` present**; raw-data comment intact.
+6. **Highlights ≤ 80 words** (count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration;
+   **`## Breaking Changes` present**; raw-data comment intact.
 
 ## Parallelization
 

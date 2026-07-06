@@ -838,12 +838,16 @@ fixed here.
    above is only the tie-breaker for a mis-tagged `[product]`/`[internal]` line. Moving the
    classification out of the LLM is what makes product-focus reliable run-to-run instead of a
    judgment loop over every PR.
-2. **Highlights are short and impact-first — a hard cap.** At most two or three sentences, no
-   matter how big the release, naming only the three or four biggest / coolest items — the
-   engine jump, the headline feature, a breaking change users must know about. Highlights are a
-   hook, not a table of contents: the categories below carry the full list, so they never
-   enumerate dependency bumps, individual fixes, or every new API. The bigger the release, the
-   more *selective* Highlights get — not longer.
+2. **Highlights are a hook, not a summary — a hard cap.** At most **~80 words** and two or three
+   short sentences, no matter how big the release, naming only the three or four biggest items —
+   the engine jump, the headline feature, the fact that there are breaking changes to review.
+   Highlights are a hook, not a table of contents: the categories below carry the full list and
+   the contributor table carries the credits, so Highlights never enumerate APIs, dependency
+   bumps, or fixes, never list contributors one by one (at most one standout handle), and never
+   fall back to a "Compared to X: A, B, C, …" comma-run — that enumeration is exactly what the
+   cap exists to prevent. The bigger the release, the more *selective* Highlights get — not
+   longer. A word cap (not just a sentence count) is the enforceable form of this rule, because a
+   sentence count alone is gamed by long comma-run sentences.
 3. **Attribution is linked, and the maintainer is not credited.** Every `@handle` in the
    rendered body is a Markdown link (`[@user](https://github.com/user)`) — never a bare
    `@handle`, and never the raw-data block's `by @user` phrasing carried through into the
