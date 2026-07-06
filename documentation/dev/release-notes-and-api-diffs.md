@@ -952,6 +952,7 @@ All of this is deterministic and script-owned.
 Always the full, idempotent pass: fetch `main` + every `release/*`, regenerate each
 line's raw-data block (§4.3), prune orphaned `-unreleased` pages (§4.2), and **write only files
 whose content key changed** — the key compares PR count, diff range, the
+**raw-data format version** (the `format:` field — see below), the
 supersession metadata (`status`, `superseded_by`, `supersedes`), the **script-owned
 API-changes link** (whether this line has an API-diff folder, its HarfBuzz co-release
 mapping, and — for a HarfBuzz page — its canonical SkiaSharp back-link target, §4.4),
@@ -967,6 +968,18 @@ refresh forces no spurious re-polish. Then regenerate `TOC.yml` +
 Polish phase reads (§2.3) — names only genuinely-changed pages, so the AI never
 re-polishes an up-to-date page. When it is empty and the tree is unchanged, the workflow
 opens no PR (§2.3).
+
+**The `format:` field rolls out raw-data changes.** The content key above detects *data*
+changes (a new PR, a supersession toggle, a companion edit) but not changes to the raw-data
+block's own **structure or embedded Polish instructions** — e.g. adding a `[mixed]` tag or the
+contributor roster. Without a signal for that, a quiet line (a stable/RC page with no new PRs)
+would keep its old-format page indefinitely, re-polished on the old instructions only when its
+next PR happens to land. The `format:` field is a single integer the generator stamps into every
+raw-data block and folds into the content key: an existing page whose `format:` is missing (a
+page from before the field existed) or lower than the generator's current version is considered
+changed and rewritten, so **one `--all` run rolls a new format out to every page at once and then
+settles back to idempotent**. Bump it (`_RAWDATA_FORMAT_VERSION` in `generate-release-notes.py`)
+whenever the raw-data block's shape or its Polish directions change materially.
 
 ### 4.7 Manual additions & breaking-change summaries (companion files)
 

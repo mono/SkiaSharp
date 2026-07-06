@@ -528,6 +528,15 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     if int(m_prs.group(1)) != new_prs_count or m_diff.group(1) != new_diff_range:
         return False
 
+    # format: <n> — the raw-data FORMAT VERSION (§4.6). An existing page written by
+    # an older generator either lacks this line or carries a lower number; either way
+    # its raw-data block predates the current structure/instructions, so it must be
+    # rewritten even though its PR set is unchanged. Absent => treat as 0 (mismatch).
+    m_fmt = re.search(r"^\s*format:\s*(\d+)", content, re.MULTILINE)
+    existing_fmt = int(m_fmt.group(1)) if m_fmt else 0
+    if existing_fmt != _RAWDATA_FORMAT_VERSION:
+        return False
+
     # status: only compare when the caller supplies the new value.
     if new_status is not None:
         m_status = re.search(r"^\s*status:\s*(\S+)", content, re.MULTILINE)
@@ -1884,6 +1893,18 @@ def _release_date_display(version):
     return "{} {}, {}".format(datetime(y, m, 1).strftime("%B"), d, y)
 
 
+# Raw-data block FORMAT VERSION — part of the content key (§4.6). `_is_content_unchanged`
+# compares this against the `format:` line in the existing page; a mismatch (or an older
+# page with no `format:` line) forces a rewrite even when the PR set and diff range are
+# unchanged. BUMP THIS whenever the raw-data block's structure or the Polish instructions
+# embedded in it change materially, so a single `--all` run rolls the new format out to
+# every otherwise-quiet page (e.g. a stable line with no new PRs) instead of leaving it
+# stranded on the old format until its next PR lands.
+#   1 — original (binary [product]/[internal] tag, no contributor roster)
+#   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
+_RAWDATA_FORMAT_VERSION = 2
+
+
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
     """Format the PR list as markdown with raw data in an HTML comment.
@@ -1907,6 +1928,7 @@ def format_pr_list(prs, metadata):
         "  version:   {}".format(version),
         "  status:    {}".format(metadata["status"]),
         "  branch:    {}".format(metadata["branch"]),
+        "  format:    {}".format(_RAWDATA_FORMAT_VERSION),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
         "  tags:      {} [product] · {} [mixed] · {} [internal] of {} PRs".format(
