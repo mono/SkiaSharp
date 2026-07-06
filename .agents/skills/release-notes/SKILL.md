@@ -65,10 +65,21 @@ PRs **do not appear in the notes**, however much work they were.
   the package's own version bump.)
 
 **You do not have to make this call from scratch.** The Prepare script pre-tags every
-raw-data PR line **`[product]`** or **`[internal]`** by the files the PR changed (anything
-under `binding/`, `native/`, `externals/`, or `source/` ships → `[product]`; everything else →
-`[internal]`). **Trust the tag** — drop `[internal]`, write up `[product]`. The one test above
-is only the tie-breaker for the rare line the tag gets wrong.
+raw-data PR line **`[product]`**, **`[mixed]`**, or **`[internal]`** by the files the PR
+changed:
+
+- **`[product]`** — touches shipped code (`binding/`, `externals/`, `source/`). A real change
+  a consumer can see. **Write it up.**
+- **`[internal]`** — touches none of the above (CI, workflows, our `.agents/**` skills, the docs
+  site, tests, samples, build/meta files). **Drop it** into the single collapse line.
+- **`[mixed]`** — touches only build config (`native/`): it *might* change the shipped binary via
+  a compile flag (e.g. a rasteriser define), or it *might* be pure infra (a Docker image or SDK
+  pin). **Take a best guess from the title/context in the block — no need to open the PR.**
+  Surface it as a bullet only when it plausibly changes what ships (a rendering/behaviour fix,
+  a crash fix, a new platform); otherwise fold it into the collapse line.
+
+**Trust the tag.** The one test above is only the tie-breaker for the rare `[product]`/`[internal]`
+line the tag clearly got wrong.
 
 **The PR title is not evidence — test what shipped, not what it is called.** *"Chrome Releases
 blog integration in security-audit skill"* is an internal skill change even though it says
@@ -301,8 +312,8 @@ an empty category):
 ## Breaking Changes      (always present; "None in this release." when none — rule 3)
 ## <Category>            (one or more: Engine, GPU & Rendering, API Surface, Text & Fonts,
                           Bug Fixes, Lifecycle & Internals, Platform, Security — rules 4-5;
-                          only [product] items — rule 1)
-## Community Contributors ❤️   (linked table, only when there are community contributors — rule 6)
+                          [product] items + surfaced [mixed] items — rule 1)
+## Community Contributors ❤️   (linked table — one row per `contributors:` roster entry — rule 6)
 ## Links                 (Full Changelog + NuGet only — rule 11)
 ## <Preview label> (date)      (one trailing section per preview bucket, newest first — rule 10)
 ```
@@ -325,11 +336,15 @@ would tempt you to include an internal PR, rule 1 wins.
 
 1. **Focus on the product, not the project — drop internal work.** This is the rule that makes
    the page useful (see the **Purpose** section above). Every raw-data
-   PR line is tagged `[product]` or `[internal]` by the script:
+   PR line is tagged `[product]`, `[mixed]`, or `[internal]` by the script:
    - **`[internal]` → do not write a bullet for it.** Roll ALL internal PRs into a single
      trailing line — *"Plus various CI, documentation, and internal tooling improvements."* — or
      omit even that when there were none. Never one bullet per internal change.
    - **`[product]` → keep it**, categorized below.
+   - **`[mixed]` (build config only) → guess from the title/context in the block** (no need to
+     open the PR). Give it a bullet only when it plausibly changes what ships — a rendering or
+     behaviour fix, a crash fix, a new platform/RID; otherwise fold it into the collapse line
+     with the internal work. When unsure, prefer the collapse line.
    Apply the *one test* (see Purpose) only as a tie-breaker for a line the tag clearly got wrong.
    **Dev-cycle and `-unreleased` pages are often mostly `[internal]`** — that is expected; such a
    page may legitimately be just Highlights + the single collapse line.
@@ -369,15 +384,22 @@ would tempt you to include an internal PR, rule 1 wins.
    - **Never** a bare, backticked, or `by @handle` — every handle is a `[@user](https://github.com/user)`
      link, never the sentence's subject (the raw-data `by @user` is source data, not output).
 
-6. **Community Contributors table** — Only when there is a non-maintainer, non-bot contributor.
+6. **Community Contributors table — render the roster, completely.** The raw-data block ends
+   with an authoritative **`contributors:`** roster: every external (non-maintainer, non-bot)
+   author to credit, with their PR numbers. **Render one table row per roster entry — never omit
+   one, never invent one.** (Reconstructing this list from the body prose kept silently dropping
+   real contributors whose PRs were folded into thematic bullets — the roster is the fix.) Emit
+   the table whenever the roster is non-empty:
    `## Community Contributors ❤️`, **one row per contributor, one line each**:
    `| [@user](https://github.com/user) | <short prose summary of their work> ([#N](url), [#M](url)) |`
    - Column 1 `Contributor` is a **plain `[@user](url)` — no ❤️** (the heart wraps badly here; it
      lives only on the inline bullets).
-   - Column 2 `What They Did` is a **single line**: a prose summary (Feature A, bug B, thing C),
-     then that contributor's PR links in **one** parenthetical. **Not** a bare list of `[#N]`
-     links, and **not** `[#N] — note` fragments.
-   - **Never** a row for @mattleibow or any bot.
+   - Column 2 `What They Did` is a **single line**: a prose summary (Feature A, bug B, thing C)
+     built from that contributor's PR titles in the block, then their PR links in **one**
+     parenthetical. **Not** a bare list of `[#N]` links, and **not** `[#N] — note` fragments.
+   - A contributor appears **even if their work was internal/samples-only** — the table thanks
+     everyone whose PRs shipped, so summarize whatever they did.
+   - **Never** a row for @mattleibow or any bot (the roster already excludes them).
 
 7. **Banner — themed, dated, linked.** The blockquote directly under `# Version X.Y.Z` is
    **never** a bare `> [NuGet](…)`. Write exactly one of these shapes:
@@ -423,11 +445,13 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
    section** (Breaking Changes exempt); not one per PR
    (see [`references/grouping.md`](references/grouping.md)).
 3. **Product test** — no `[internal]` PR gets a bullet; they collapse into the single
-   *"Plus various CI, documentation, and internal tooling improvements."* line.
+   *"Plus various CI, documentation, and internal tooling improvements."* line. Each `[mixed]` PR
+   is either surfaced as a shipping change or folded into that same line — never left as a raw
+   build/infra bullet.
 4. **No bare `@handle`, no bot credits** — every handle is `[@user](url)`; no `❤️`/row/"by" for
    any `*[bot]`.
-5. **Contributors table** — one line per contributor: plain `[@user](url)` · prose summary +
-   PR links, no ❤️ in the cell.
+5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
+   none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
 6. **Highlights ≤ 3 sentences**; **`## Breaking Changes` present**; raw-data comment intact.
 
 ## Parallelization

@@ -1652,20 +1652,67 @@ def determine_diff_range(branch):
     return base_sha, "origin/{}".format(branch), version
 
 
-# A PR is "product" if it touches any file that ships in a package (and thus can
-# change a consumer's compiled app); otherwise it is "internal" (repo process: CI,
-# workflows, agent skills, the docs site, tests, samples, build/meta files). Mixed
-# PRs count as product — we would rather under-drop than hide a real change (the
-# Polish AI's "one test", §4.4, is the tie-breaker). Emitting this tag on every
-# raw-data PR line lets Polish drop internal work by a lexical filter instead of
-# re-judging every PR from its title each run (the source of the leak variance).
-_PRODUCT_PATH_PREFIXES = ("binding/", "native/", "externals/", "source/")
+# Each PR is classified product / mixed / internal by the files it touched, so Polish
+# can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
+# instead of re-judging every PR from its title each run (the source of leak variance).
+#
+#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
+#              consumer can see. Companion test/benchmark/generated files are ignored.
+#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
+#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
+#              image, SDK pin). Polish guesses from the title/context in the raw-data
+#              block (it does not open the PR) — surface a behaviour change, drop pure infra.
+#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
+#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
+_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
+_BUILD_PATH_PREFIXES = ("native/",)
 
 
-def _pr_is_internal(files):
-    # type: (set) -> bool
-    """True when NONE of the touched files ship in a package (§4.4 product test)."""
-    return not any(f.startswith(_PRODUCT_PATH_PREFIXES) for f in files)
+def _pr_category(files):
+    # type: (set) -> str
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
+    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
+        return "product"
+    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
+        return "mixed"
+    return "internal"
+
+
+# Automation accounts — never credited as human contributors (§4.5). The workflow
+# already skips these when authoring, but the raw data still records them (they open
+# release-notes and bump PRs), so Polish must exclude them from the contributor table.
+_BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
+
+
+def _is_bot_login(login):
+    # type: (Optional[str]) -> bool
+    """True for automation accounts (exact match or any ``[bot]`` suffix)."""
+    if not login:
+        return False
+    low = login.lower()
+    return low in _BOT_LOGINS or low.endswith("[bot]")
+
+
+def _contributor_roster(prs):
+    # type: (list) -> list
+    """Authoritative external-contributor roster for the credits table (§4.5).
+
+    Returns ``[(login, [pr_number, ...]), ...]`` for every distinct non-maintainer,
+    non-bot author with a *linkable* login, ordered by PR count (most first) then
+    login. Polish renders EXACTLY one table row per entry and never omits one — the
+    old ad-hoc reconstruction from the body prose silently dropped real contributors
+    (e.g. a headline author whose PRs were folded into a thematic bullet). Authors
+    with no resolvable login are excluded because they cannot be safely @-linked.
+    """
+    by_login = {}  # type: dict
+    for pr in prs:
+        login = (pr.get("author") or {}).get("login")
+        if not login or login == "mattleibow" or _is_bot_login(login):
+            continue
+        by_login.setdefault(login, []).append(pr.get("number"))
+    roster = [(login, sorted(n for n in nums if n)) for login, nums in by_login.items()]
+    roster.sort(key=lambda e: (-len(e[1]), e[0].lower()))
+    return roster
 
 
 def _files_by_commit(from_ref, to_ref):
@@ -1774,7 +1821,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "body": body,
             "commit": commit_hash,
             "skiaPr": skia_pr,
-            "internal": _pr_is_internal(files_by.get(commit_hash, set())),
+            "category": _pr_category(files_by.get(commit_hash, set())),
         })
 
     return prs
@@ -1798,9 +1845,12 @@ def _format_pr_bullet(pr):
     skia_pr = pr.get("skiaPr")
     skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
     by = "by @{}".format(login) if login else "by {}".format(name)
-    # Deterministic product/internal tag (§4.4). Polish drops [internal] lines and
-    # collapses them into one trailing line; [product] lines are what it writes up.
-    tag = "[internal] " if pr.get("internal") else "[product] "
+    # Deterministic product / mixed / internal tag (§4.4). Polish writes up [product],
+    # collapses [internal] into one trailing line, and for [mixed] takes a best guess
+    # from the title/context here (no need to open the PR) — surface a behaviour change,
+    # drop pure build/infra.
+    cat = pr.get("category", "product")
+    tag = "[{}] ".format(cat)
     return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
 
 
@@ -1855,9 +1905,14 @@ def format_pr_list(prs, metadata):
         "  branch:    {}".format(metadata["branch"]),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
-        "  internal:  {} of {} PRs are [internal] — DROP them (roll into one trailing "
-        "\"Plus various … internal tooling improvements.\" line); write up only [product]".format(
-            sum(1 for p in prs if p.get("internal")), len(prs)),
+        "  tags:      {} [product] · {} [mixed] · {} [internal] of {} PRs".format(
+            sum(1 for p in prs if p.get("category") == "product"),
+            sum(1 for p in prs if p.get("category") == "mixed"),
+            sum(1 for p in prs if p.get("category") == "internal"),
+            len(prs)),
+        "  legend:    [product] = write up · [internal] = DROP (roll into one trailing "
+        "\"Plus various … internal tooling improvements.\" line) · [mixed] = build/infra: "
+        "guess from the title here — surface a behaviour change, otherwise drop",
         "  api:       {}".format(api_sig),
         "",
     ]
@@ -1916,15 +1971,36 @@ def format_pr_list(prs, metadata):
         lines.insert(insert_at, extra)
         insert_at += 1
 
+    # Authoritative contributor roster (§4.5): the exact set of external, non-bot
+    # authors to credit. Rendered here so Polish builds the credits table from a
+    # deterministic list instead of reconstructing it from body prose (which kept
+    # dropping real contributors). One table row per entry, none omitted.
+    roster = _contributor_roster(prs)
+    if roster:
+        roster_block = [
+            "  contributors: {} external contributor(s) — render EXACTLY one credits-table "
+            "row each (§4.5), never omit one; summarize each one's PRs (found by "
+            "\"by @login\" below) and link the PR numbers:".format(len(roster)),
+        ]
+        for login, nums in roster:
+            roster_block.append("    @{}  ({} PR{}): {}".format(
+                login, len(nums), "" if len(nums) == 1 else "s",
+                " ".join("#{}".format(n) for n in nums)))
+        insert_at = len(lines) - 1
+        for extra in roster_block:
+            lines.insert(insert_at, extra)
+            insert_at += 1
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
-        # Each PR line is tagged [product] or [internal] (§4.4). Remind the AI in
-        # context so the drop/keep decision is a lexical filter, not a re-judgment.
-        lines.append("  Each PR is tagged [product] (write it up, categorized) or "
-                     "[internal] (DROP — never a bullet each; roll ALL of them into one")
-        lines.append('  trailing "Plus various CI, documentation, and internal tooling '
-                     'improvements." line, or omit it when there are none).')
+        # Each PR line is tagged [product] / [mixed] / [internal] (§4.4). Remind the
+        # AI in context so keep/inspect/drop is a lexical filter, not a re-judgment.
+        lines.append("  Each PR is tagged [product] (write it up, categorized), "
+                     "[mixed] (build/infra — guess from the title: surface a behaviour")
+        lines.append('  change, otherwise drop) or [internal] (DROP — never a bullet each; '
+                     'roll ALL into one trailing "Plus various … internal tooling')
+        lines.append('  improvements." line, or omit it when there are none).')
         # When the page rolls up tagged previews, group the PRs into per-preview
         # buckets (each PR under the preview it first shipped in) so the AI can
         # write a concrete "## Preview N" section per milestone AND merge the

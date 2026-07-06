@@ -40,6 +40,8 @@ VERDICT: PASS | FAIL   (score N/12)
 5. **product-only** — No bullet describes an `[internal]` PR (CI/build, `.agents/**` skills,
    workflows, docs-site, PR-staging, milestone automation, tests, samples). The one collapse
    line *"Plus various CI, documentation, and internal tooling improvements."* is allowed once.
+   Each `[mixed]` PR (build config only) is either surfaced as a genuine shipping change or
+   folded into that collapse line — never left as a raw build/infra bullet.
 
 6. **grouping-density** — Count top-level product bullets across `##` category sections (exclude
    previews and the Contributors table). Target **8–15**, and **at most ~4 per category section**
@@ -54,11 +56,14 @@ VERDICT: PASS | FAIL   (score N/12)
    release."*). If the raw block lists a `.breaking.md` or `.notes.md` companion, the section has
    a proportional handful of summarized bullets (never a dump, never empty).
 
-9. **contributor-table-format** — If there is any non-maintainer, non-bot contributor:
-   `## Community Contributors ❤️` exists; column 1 `Contributor` is a plain `[@user](url)` with
+9. **contributor-table-complete** — The `## Community Contributors ❤️` table has **exactly one row
+   per entry in the raw-data `contributors:` roster** — none missing, none invented. Cross-check:
+   every `@login` in the roster appears as a row, and no row exists for a login absent from the
+   roster (so no `mattleibow`, no bot). Column 1 `Contributor` is a plain `[@user](url)` with
    **no ❤️**; column 2 `What They Did` is a **single line** of prose summary followed by the PR
-   links in one parenthetical. FAIL on ❤️ in the cell, a cell that is only `[#N]` links, or a row
-   for `mattleibow` or any bot.
+   links in one parenthetical. FAIL on a missing roster member, ❤️ in the cell, a cell that is
+   only `[#N]` links, or a row for `mattleibow`/any bot.
+   Grep the roster: `grep -A99 'contributors:' <version>.md | grep -oE '@[A-Za-z0-9-]+'`.
 
 10. **inline-attribution-shape** — Every inline community credit is
     `❤️ [@user](url) ([#NNN](url))` with `❤️` immediately before the PR link. FAIL on `by @user`,

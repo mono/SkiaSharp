@@ -820,13 +820,24 @@ fixed here.
    a library security fix). Native-dependency bumps and native build flags that ship in the
    binary (e.g. Spectre mitigation, new RIDs/TFMs) stay; the package's own version bump does not.
    **This decision is made deterministically in Prepare, not left to per-PR judgment in Polish:**
-   `generate-release-notes.py` tags every raw-data PR line **`[product]`** or **`[internal]`**
-   by the files it changed — a PR touching anything under `binding/`, `native/`, `externals/`, or
-   `source/` ships (`[product]`); everything else is `[internal]` (a mixed PR counts as
-   `[product]`, so we under-drop rather than hide a real change). Polish **drops `[internal]`**
-   and rolls it into the one collapse line, and writes up **`[product]`**; the prose test above
-   is only the tie-breaker for a mis-tagged line. Moving the classification out of the LLM is
-   what makes product-focus reliable run-to-run instead of a judgment loop over every PR.
+   `generate-release-notes.py` tags every raw-data PR line **`[product]`**, **`[mixed]`**, or
+   **`[internal]`** by the files it changed:
+   - **`[product]`** — touches shipped code (`binding/`, `externals/`, `source/`). Written up.
+   - **`[internal]`** — touches none of those (CI, workflows, agent skills, docs site, tests,
+     samples, build/meta). Dropped into the one collapse line.
+   - **`[mixed]`** — touches only build config (`native/`): it may change the shipped binary via a
+     compile flag (a rasteriser define, a delay-load fix) or be pure infra (a Docker image, an SDK
+     pin). Polish takes a best guess **from the title/context already in the raw-data block — it
+     does not open the PR** — surfacing it only when it plausibly changes what ships, otherwise
+     folding it into the collapse line.
+
+   `native/` is deliberately **not** treated as shipped code: it is build configuration, and the
+   thing that actually ships is `externals/skia/`. This is why a native compile-flag fix lands as
+   `[mixed]` (inspect-and-usually-surface) rather than being hidden or blindly surfaced. Polish
+   **drops `[internal]`**, writes up **`[product]`**, and inspects **`[mixed]`**; the prose test
+   above is only the tie-breaker for a mis-tagged `[product]`/`[internal]` line. Moving the
+   classification out of the LLM is what makes product-focus reliable run-to-run instead of a
+   judgment loop over every PR.
 2. **Highlights are short and impact-first — a hard cap.** At most two or three sentences, no
    matter how big the release, naming only the three or four biggest / coolest items — the
    engine jump, the headline feature, a breaking change users must know about. Highlights are a
@@ -842,7 +853,14 @@ fixed here.
    `## Community Contributors ❤️` table has two columns: the **Contributor** cell is a plain
    `[@user](url)` with no ❤️ (the heart is only on the inline bullets — in the table it wraps
    badly), and the **What They Did** cell is a short prose summary of their work, not a bare
-   list of PR numbers.
+   list of PR numbers. **The table is roster-driven, not reconstructed from the body.** Prepare
+   emits an authoritative **`contributors:`** roster in the raw-data block — every distinct
+   external (non-maintainer, non-bot) author with their PR numbers — and Polish renders **exactly
+   one row per roster entry, never omitting one**. Building the table by hand from the prose
+   silently dropped real contributors whose PRs were folded into thematic bullets (e.g. a headline
+   external author of a multi-PR feature); the deterministic roster removes that failure mode.
+   Bot accounts (`github-actions[bot]`, `Copilot`, `dependabot`, any `*[bot]`) are excluded from
+   the roster and never credited.
 
 #### API-diff link rule
 

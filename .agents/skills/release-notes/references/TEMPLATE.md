@@ -176,14 +176,18 @@ The first engine bump of the 9.x line: Skia m998 lands with variable-font suppor
 
 ## Community Contributors ❤️
 
-<!-- Only include if there are community contributors (anyone not @mattleibow, and NEVER a bot).
+<!-- Include whenever the raw-data `contributors:` roster is non-empty. That roster is
+     AUTHORITATIVE: render EXACTLY one row per entry — never omit a contributor, never invent one
+     (the roster already excludes @mattleibow and every bot). Reconstructing this table from the
+     body prose kept dropping real contributors whose PRs were folded into thematic bullets.
      ALWAYS link usernames: [@user](https://github.com/user) — never bare @user anywhere.
      TWO columns, ONE LINE per contributor:
        "Contributor"  = the PLAIN link with NO ❤️ (the heart belongs only on the inline category
                         bullets above; in this table it just wraps badly).
        "What They Did" = a SHORT PROSE summary of everything they landed (Feature A, bug B, thing
-                        C), FOLLOWED BY that contributor's PR links in one parenthetical.
-                        Never just a bare list of PR numbers with no prose. -->
+                        C), built from that contributor's PR titles in the block, FOLLOWED BY
+                        their PR links in one parenthetical. Never just a bare list of PR numbers
+                        with no prose. Credit them even if their work was internal/samples-only. -->
 
 | Contributor | What They Did |
 |-------------|--------------|
@@ -231,13 +235,18 @@ Variable font support, animated encoding, and the first engine bump of the line.
 
 <!-- FORMATTING RULES (priority order — product-focus first):
      - Product over project (RULE 1): write for people USING the library. Every raw-data PR line
-       is pre-tagged [product] or [internal] by the script (product = touches binding/ native/
-       externals/ source/; everything else = internal). DROP every [internal] line — never a
-       bullet per internal change; roll them all into ONE trailing "Plus various CI,
-       documentation, and internal tooling improvements." line (or omit it if none). Write up
-       only [product] lines. The title is not evidence (a security-audit skill change is not a
-       library security fix). Keep native-dep bumps, native build flags that ship in the binary
-       (Spectre mitigation, new RIDs/TFMs), API changes, behavior/bug fixes, packaging.
+       is pre-tagged [product], [mixed], or [internal] by the script:
+         [product]  = touches shipped code (binding/ externals/ source/) — WRITE IT UP.
+         [internal] = touches none of those (CI, workflows, .agents skills, docs site, tests,
+                      samples, build/meta) — DROP it into the ONE collapse line.
+         [mixed]    = touches only build config (native/) — GUESS FROM THE TITLE HERE (do not open
+                      the PR): surface it only if it plausibly changes what ships (a rendering or
+                      crash fix, a new platform); otherwise fold it into the collapse line.
+       Never a bullet per internal change; roll them all into ONE trailing "Plus various CI,
+       documentation, and internal tooling improvements." line (or omit it if none). The title is
+       not evidence (a security-audit skill change is not a library security fix). Keep native-dep
+       bumps, native build flags that ship in the binary (Spectre mitigation, new RIDs/TFMs), API
+       changes, behavior/bug fixes, packaging.
      - Highlights: short and impact-first — HARD CAP at 2-3 sentences, no matter how big the
        release. Name only the 3-4 biggest / coolest things; a hook, not a table of contents.
        Never enumerate dependency bumps, individual fixes, or every new API here — the bigger
