@@ -260,8 +260,6 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
@@ -286,8 +284,6 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Mac Catalyst test results
@@ -391,8 +387,6 @@ stages:
             requiredArtifacts:
               - name: nuget
                 dir: nugets
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux
