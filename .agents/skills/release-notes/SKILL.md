@@ -308,7 +308,7 @@ an empty category):
 
 > **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)    ← rule 7
 
-## Highlights            (short, impact-first — rule 2)
+## Highlights            (ALWAYS present, literal heading; ~80 words, ≤100 — rule 2)
 ## Breaking Changes      (always present; "None in this release." when none — rule 3)
 ## <Category>            (one or more: Engine, GPU & Rendering, API Surface, Text & Fonts,
                           Bug Fixes, Lifecycle & Internals, Platform, Security — rules 4-5;
@@ -349,11 +349,13 @@ would tempt you to include an internal PR, rule 1 wins.
    **Dev-cycle and `-unreleased` pages are often mostly `[internal]`** — that is expected; such a
    page may legitimately be just Highlights + the single collapse line.
 
-2. **Highlights — a hook, not a summary (HARD CAP: ≤ 80 words).** Two or three **short**
-   sentences, **maximum ~80 words total**, no matter how big the release — count them. Name only
-   the **3-4 biggest** things (the engine jump, the one headline feature, the fact that there are
-   breaking changes) in plain prose. This is the single most-violated rule, so the bans are
-   explicit — in Highlights, **do NOT**:
+2. **Highlights — a hook, not a summary (MANDATORY heading, target ~80 words, HARD CAP 100).**
+   The section is **always present**: write the literal heading **`## Highlights`** right after the
+   banner / `> **API changes**` block, then two or three **short** sentences — **aim for ~80
+   words, never exceed 100** (count them). Never drop the heading and never replace it with a
+   bare unlabelled lead paragraph. Name only the **3-4 biggest** things (the engine jump, the one
+   headline feature, the fact that there are breaking changes) in plain prose. This is the single
+   most-violated rule, so the bans are explicit — in Highlights, **do NOT**:
    - enumerate APIs, dependency bumps, or fixes (the categories below carry the full list);
    - list contributors one by one (the Community Contributors table does that) — at most name the
      *one* standout by linked handle;
@@ -371,10 +373,16 @@ would tempt you to include an internal PR, rule 1 wins.
    > work: @ramezgerges (16 PRs — …), @4Darmygeometry (…), @SimonvBez (…), @ebariche (…)…"*
    > (228 words — the whole page crammed into the hook).
    >
-   > **Right:** *"The first stable v4 release upgrades the engine to Skia m148 and lands the big
-   > v4 feature wave — variable fonts, color font palettes, and animated WebP — alongside a set
-   > of behavioural breaking changes to review before upgrading. Community work from
-   > [@ramezgerges](https://github.com/ramezgerges) anchored the release."* (~50 words.)
+   > **Right (keep the heading):**
+   > ```markdown
+   > ## Highlights
+   >
+   > The first stable v4 release upgrades the engine to Skia m148 and lands the big v4 feature
+   > wave — variable fonts, color font palettes, and animated WebP — alongside a set of
+   > behavioural breaking changes to review before upgrading. Community work from
+   > [@ramezgerges](https://github.com/ramezgerges) anchored the release.
+   > ```
+   > (~50 words, under the heading.)
 
 3. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
    release."* when there are none — never drop the heading). If the raw block lists a
@@ -471,8 +479,9 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
    any `*[bot]`.
 5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
    none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
-6. **Highlights ≤ 80 words** (count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration;
-   **`## Breaking Changes` present**; raw-data comment intact.
+6. **`## Highlights` heading present** (never a bare lead paragraph) and **≤ 100 words** (target
+   ~80 — count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration; **`## Breaking Changes`
+   present**; raw-data comment intact.
 
 ## Parallelization
 

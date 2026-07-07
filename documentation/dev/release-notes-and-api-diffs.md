@@ -838,9 +838,11 @@ fixed here.
    above is only the tie-breaker for a mis-tagged `[product]`/`[internal]` line. Moving the
    classification out of the LLM is what makes product-focus reliable run-to-run instead of a
    judgment loop over every PR.
-2. **Highlights are a hook, not a summary — a hard cap.** At most **~80 words** and two or three
-   short sentences, no matter how big the release, naming only the three or four biggest items —
-   the engine jump, the headline feature, the fact that there are breaking changes to review.
+2. **Highlights are a hook, not a summary — a hard cap, under a mandatory heading.** The section
+   always exists under the literal `## Highlights` heading (never a bare unlabelled lead
+   paragraph); its body targets **~80 words and never exceeds 100**, in two or three short
+   sentences, no matter how big the release, naming only the three or four biggest items — the
+   engine jump, the headline feature, the fact that there are breaking changes to review.
    Highlights are a hook, not a table of contents: the categories below carry the full list and
    the contributor table carries the credits, so Highlights never enumerate APIs, dependency
    bumps, or fixes, never list contributors one by one (at most one standout handle), and never

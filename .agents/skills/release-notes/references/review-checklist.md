@@ -51,10 +51,12 @@ VERDICT: PASS | FAIL   (score N/12)
    non-breaking category has > 5 bullets with obvious mergeable adjacencies (same subsystem,
    same dependency set, same overload shape). Grep: `grep -c '^- \*\*' <version>.md`.
 
-7. **highlights-length** — `## Highlights` is **≤ 80 words** AND ≤ 3 short sentences: no bullet
-   list, no PR/issue links, no per-item parentheticals, no contributor enumeration (at most one
-   standout handle), no "Compared to X: A, B, C, …" comma-run. Count it:
-   `awk '/^## Highlights/{f=1;next} /^## /{f=0} f' <version>.md | wc -w` must be ≤ 80. FAIL if a
+7. **highlights-heading-and-length** — The literal heading `## Highlights` is present (FAIL if it
+   was dropped or replaced by a bare unlabelled lead paragraph — `grep -c '^## Highlights'
+   <version>.md` must be 1). Its body is **≤ 100 words** (target ~80) AND ≤ 3 short sentences: no
+   bullet list, no PR/issue links, no per-item parentheticals, no contributor enumeration (at
+   most one standout handle), no "Compared to X: A, B, C, …" comma-run. Count it:
+   `awk '/^## Highlights/{f=1;next} /^## /{f=0} f' <version>.md | wc -w` must be ≤ 100. FAIL if a
    reader could reconstruct the category sections from Highlights alone.
 
 8. **breaking-present** — `## Breaking Changes` heading exists (body may be *"None in this
