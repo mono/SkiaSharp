@@ -70,7 +70,7 @@ Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
 
 **Manual download via Azure DevOps UI:**
 
-1. Go to: https://dev.azure.com/xamarin/public/_build?definitionId=4
+1. Go to: https://dev.azure.com/dnceng-public/public/_build?definitionId=345&_a=summary
 2. Find the build for your PR
 3. Click "Artifacts" → download the `nuget_preview` (or `nuget`) artifact
 4. Extract and use as a local NuGet source

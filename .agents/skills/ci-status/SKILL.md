@@ -38,15 +38,15 @@ this skill gives a **broad overview** of CI health across multiple branches simu
 ### Prerequisites
 
 The collector script requires:
-- **`az` CLI** — authenticated with access to `xamarin/public` and `devdiv/DevDiv` orgs
+- **`az` CLI** — authenticated with access to `dnceng-public/public` and `devdiv/DevDiv` orgs
 - **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
-### Public CI (xamarin/public org — triggers on push/PR to main, develop, release/*)
+### Public CI (dnceng-public/public org — triggers on push/PR to main, develop, release/*)
 
 | Pipeline Name | Org/Project | Definition ID | URL |
 |---------------|-------------|---------------|-----|
-| `SkiaSharp (Public)` | xamarin/public | 4 | [link](https://dev.azure.com/xamarin/public/_build?definitionId=4) |
+| `mono-SkiaSharp` | dnceng-public/public | 345 | [link](https://dev.azure.com/dnceng-public/public/_build?definitionId=345&_a=summary) |
 
 ### Internal Release Chain (devdiv/DevDiv org — triggers on release/* branches)
 

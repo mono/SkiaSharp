@@ -82,9 +82,9 @@ param(
 )
 
 # Constants
-$Script:Organization = "xamarin"
+$Script:Organization = "dnceng-public"
 $Script:Project = "public"
-$Script:PipelineId = 4  # SkiaSharp (Public) pipeline
+$Script:PipelineId = 345  # mono-SkiaSharp pipeline (dnceng-public/public)
 $Script:PreferredArtifact = "nuget_preview"  # Smaller artifact with only prerelease packages
 $Script:FallbackArtifact = "nuget"           # Full artifact (for older builds without nuget_preview)
 $Script:BaseUrl = "https://dev.azure.com/$($Script:Organization)/$($Script:Project)/_apis"
@@ -163,7 +163,7 @@ function Find-BuildForPR {
             return $latestBuild
         }
 
-        throw "No successful builds found for PR #$PRNumber. Check: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+        throw "No successful builds found for PR #$PRNumber. Check: https://dev.azure.com/dnceng-public/public/_build?definitionId=$($Script:PipelineId)"
     }
 
     # Default: find latest build regardless of status
@@ -175,7 +175,7 @@ function Find-BuildForPR {
     $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
     if (-not $prBuilds -or $prBuilds.Count -eq 0) {
-        throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+        throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/dnceng-public/public/_build?definitionId=$($Script:PipelineId)"
     }
 
     # Sort by queueTime to get truly latest (handles in-progress builds that have no finishTime)
