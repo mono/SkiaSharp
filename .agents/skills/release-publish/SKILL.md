@@ -45,7 +45,7 @@ Publish packages to NuGet.org and finalize releases.
 │  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
-│  8. Close Milestone      → Stable releases only                    │
+│  8. Close Milestone      → Close this version's milestone (all)    │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -58,7 +58,7 @@ Publish packages to NuGet.org and finalize releases.
 | 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
 | 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
-| 8. Milestone | Skip | Close milestone |
+| 8. Milestone | Close its milestone (`X.Y.Z-preview.N`) | Close its milestone (`X.Y.Z`) |
 
 ---
 
@@ -333,12 +333,31 @@ example. Process:
 
 ---
 
-## Step 8: Close Milestone (Stable only)
+## Step 8: Close Milestone (Every Release)
 
-**Skip for preview releases.**
+**Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
+GitHub milestone for every version in the cadence, so each published version has its
+own milestone that must be closed once that version ships (otherwise it lingers open
+forever). The milestone title is the **exact release version** (no `v` prefix):
+
+| Release type | Milestone to close |
+|--------------|--------------------|
+| Preview | `X.Y.Z-preview.N` (e.g. `4.151.0-preview.1`) |
+| RC | `X.Y.Z-rc.N` (e.g. `4.151.0-rc.1`) |
+| Stable | `X.Y.Z` (e.g. `4.151.0`) |
+
+⚠️ **Move still-open issues forward first.** Never silently close a milestone that
+still has open issues. Reassign any open issues to the next appropriate milestone (the
+next preview/rc, or the stable milestone), or confirm with the user, **before** closing.
 
 ```bash
+# 1. Find the milestone whose title matches the exact release version
 gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number): \(.title)"'
+
+# 2. Check for still-open issues in that milestone (should be empty before closing)
+gh issue list --repo mono/SkiaSharp --milestone "{version}" --state open
+
+# 3. After moving/confirming any open issues, close this version's milestone
 gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
 ```
 
