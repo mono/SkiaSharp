@@ -22,8 +22,11 @@ VERDICT: PASS | FAIL   (score N/12)
    - Preview: `> **<theme>** · Preview only · [NuGet](preview-url) · [GitHub Release](url)`
    - Unreleased: `> **Upcoming release** · In development · Not yet available on NuGet`
    - HarfBuzz: `> **<theme>** · Ships with SkiaSharp <X> · [NuGet](hb-url) · [GitHub Release](url)`
-   FAIL if it's a bare `> [NuGet](…)`, if `<theme>` is missing, or if a stable page has no
-   `Released <date>` or no GitHub Release link.
+   The script scaffolds the stable banner with the date + both links and a `<THEME>` token; the
+   AI must replace `<THEME>` with a real 2-4 word phrase. FAIL if a literal `<THEME>` survives
+   (`grep -c '<THEME>' <version>.md` must be 0), if it's a bare `> [NuGet](…)`, if `<theme>` is
+   missing/generic-placeholder, or if a stable page has no `Released <date>` or no GitHub Release
+   link.
 
 2. **script-owned-lines-verbatim** — The `> **API changes** · …` line, any `> **Supersedes …**`
    / `> **… Superseded by …**` line, and the whole `<!-- RAW PR DATA … -->` comment are

@@ -428,17 +428,19 @@ would tempt you to include an internal PR, rule 1 wins.
      everyone whose PRs shipped, so summarize whatever they did.
    - **Never** a row for @mattleibow or any bot (the roster already excludes them).
 
-7. **Banner — themed, dated, linked.** The blockquote directly under `# Version X.Y.Z` is
-   **never** a bare `> [NuGet](…)`. Write exactly one of these shapes:
-   - **Stable:** `> **<theme>** · Released <date> · [NuGet](https://www.nuget.org/packages/SkiaSharp/<v>) · [GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v<v>)`
-     — `<date>` is the raw-data block's `released:` field **verbatim** (e.g. *December 2, 2024*);
-     `<theme>` is a 2–4 word editorial phrase you write from the Highlights (e.g. *First stable
-     3.x release*, *Engine upgrade & API cleanup*).
-   - **Preview-only:** `> **<theme>** · Preview only · [NuGet](<preview-url>) · [GitHub Release](url)`
+7. **Banner — replace the `<THEME>` token; keep the rest.** For a **stable** page the script
+   now scaffolds the whole banner for you, deterministically:
+   `> **<THEME>** · Released <date> · [NuGet](…) · [GitHub Release](…)` — the date and both links
+   are already correct. Your ONLY job is to **replace the literal `<THEME>`** with a 2–4 word
+   editorial phrase drawn from the Highlights (e.g. *First stable v4 release*, *Engine upgrade &
+   API cleanup*). **Never leave `<THEME>` in the output, never delete the date or the links, and
+   never fall back to a bare `> [NuGet](…)`.** For the other statuses the script likewise emits a
+   themed scaffold — improve its `<theme>`/wording but keep the shape:
+   - **Preview:** `> **<theme>** · Preview only · [NuGet](<preview-url>)`
    - **Unreleased:** `> **Upcoming release** · In development · Not yet available on NuGet`
-   - **HarfBuzz:** `> **<theme>** · Ships with SkiaSharp <X> · [NuGet](<hb-url>) · [GitHub Release](url)`
-   If the existing page already has a bare banner, **replace it** — do not preserve it. The
-   script-owned `> **Supersedes …**` and `> **API changes** …` lines stay verbatim below it.
+   - **HarfBuzz:** `> Ships with [SkiaSharp <X>](…) · [NuGet](…) · [GitHub Release](…)`
+   The script-owned `> **Supersedes …**` and `> **API changes** …` lines stay verbatim below the
+   banner.
 
 8. **PR links** — Every item links to its PR.
 
@@ -465,9 +467,10 @@ Apply **[`references/review-checklist.md`](references/review-checklist.md)** to 
 wrote — it is the 12-point rubric (also runnable standalone to grade any finished page). Fix
 every FAIL and re-check once. The checks that go wrong most often, watch these first:
 
-1. **Banner shape** — `> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)`
-   on a stable page (never a bare `> [NuGet](…)`); `Preview only` / `In development` variants per
-   TEMPLATE.md. The release date comes from the raw-data `released:` line.
+1. **Banner** — the script scaffolds it; you only replace `<THEME>`. On a stable page the line
+   reads `> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)` — FAIL
+   if a literal `<THEME>` survives (`grep -c '<THEME>'` must be 0) or if it degraded to a bare
+   `> [NuGet](…)`. Preview/unreleased variants per TEMPLATE.md.
 2. **Curated, not enumerated** — 8–15 grouped product bullets total, **at most ~4 per category
    section** (Breaking Changes exempt); not one per PR
    (see [`references/grouping.md`](references/grouping.md)).
