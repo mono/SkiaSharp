@@ -378,9 +378,12 @@ namespace SkiaSharp
 
 		public class SpanIterator : SKObject, ISKSkipObjectRegistration
 		{
+			private readonly SKRegion region;
+
 			internal SpanIterator (SKRegion region, int y, int left, int right)
 				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)
 			{
+				this.region = region;
 			}
 
 			protected override void DisposeNative () =>
