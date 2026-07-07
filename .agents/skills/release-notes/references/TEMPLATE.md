@@ -45,7 +45,13 @@
 
 > **Engine upgrade & API cleanup** · Released January 15, 2026 · [NuGet](https://www.nuget.org/packages/SkiaSharp/9.990.0) · [GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v9.990.0)
 
-<!-- For preview-only versions:
+<!-- BANNER: on a stable page the script SCAFFOLDS this whole line for you as
+     `> **<THEME>** · Released <date> · [NuGet](…) · [GitHub Release](…)` — the date and both
+     links are already correct. Replace ONLY the literal `<THEME>` token with a 2-4 word editorial
+     phrase (e.g. "Engine upgrade & API cleanup", "First stable v4 release"). NEVER leave `<THEME>`
+     in the output, never delete the date or links, never degrade to a bare `> [NuGet](…)`.
+
+     For preview-only versions:
 > **{theme}** · Preview only · [NuGet](https://www.nuget.org/packages/SkiaSharp/{version}-preview.N.B) · [GitHub Release](url)
 
      For upcoming/unreleased versions:

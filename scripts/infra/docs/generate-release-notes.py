@@ -1945,11 +1945,15 @@ def format_pr_list(prs, metadata):
 
     superseded_by = metadata.get("superseded_by")
     supersedes = metadata.get("supersedes")
+    # Release date (deterministic, from the vX.Y.Z tag) — reused both in the raw-data
+    # `released:` field AND to scaffold the stable banner below, so the AI never has to
+    # supply the date itself.
+    released_display = (_release_date_display(version)
+                        if metadata.get("status") == "stable" else None)
     meta_extra = []
-    if metadata.get("status") == "stable":
-        rd = _release_date_display(version)
-        if rd:
-            meta_extra.append("  released:   {} (use verbatim in the banner)".format(rd))
+    if released_display:
+        meta_extra.append(
+            "  released:   {} (use verbatim in the banner)".format(released_display))
     if superseded_by:
         meta_extra.append(
             "  superseded: {} (preview only, never released as stable)".format(
@@ -2119,8 +2123,20 @@ def format_pr_list(prs, metadata):
             "> **Preview release** · Preview only "
             "· [NuGet]({nuget}/{ver}-preview)".format(nuget=nuget, ver=version))
     else:
+        # Stable page: scaffold the ENTIRE banner deterministically — the release
+        # date (from the tag) and both links are script-owned, so the AI only has to
+        # replace the <THEME> token with a 2-4 word editorial phrase. This is the one
+        # banner the AI used to build from scratch (theme + date + links), which made
+        # it the one that occasionally shipped as a bare "> [NuGet]" skeleton; giving
+        # it the same scaffold as every other status removes that failure mode, and a
+        # leftover literal <THEME> is a greppable self-review failure (unlike a bare
+        # but valid-looking NuGet link). See rule 7 / TEMPLATE / spec §4.4.
+        released_seg = ("Released {} · ".format(released_display)
+                        if released_display else "")
         lines.append(
-            "> [NuGet]({nuget}/{ver})".format(nuget=nuget, ver=version))
+            "> **<THEME>** · {rel}[NuGet]({nuget}/{ver}) · "
+            "[GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/"
+            "v{ver})".format(rel=released_seg, nuget=nuget, ver=version))
     lines.append("")
 
     # Back-link making the supersede relationship two-way: this release rolls up
@@ -2174,6 +2190,15 @@ def format_pr_list(prs, metadata):
         "     release notes here. Follow .agents/skills/release-notes/references/TEMPLATE.md",
         "     for structure and tone.",
     ]
+    if metadata.get("status") == "stable":
+        ai_lines.append(
+            "     BANNER: the `> **<THEME>**` line above is scaffolded with the correct")
+        ai_lines.append(
+            "     release date and both links — replace ONLY the literal <THEME> token")
+        ai_lines.append(
+            "     with a 2-4 word editorial phrase (e.g. 'First stable v4 release'). Keep")
+        ai_lines.append(
+            "     the date and the NuGet/GitHub Release links verbatim; never leave <THEME>.")
     if metadata.get("preview_milestones"):
         ai_lines.append(
             "     Render each PREVIEW MILESTONE listed above as a minimal trailing")

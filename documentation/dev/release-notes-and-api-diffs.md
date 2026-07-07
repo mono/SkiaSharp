@@ -793,8 +793,8 @@ diff is large.
 
 | Owner | Responsibility |
 |---|---|
-| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
-| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish". Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
+| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, **the stable page's dated banner scaffold** (`> **<THEME>** · Released <date> · [NuGet] · [GitHub Release]`, with only the `<THEME>` token left for the AI), preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
+| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish", **plus the banner's `<THEME>` token** (a 2-4 word editorial phrase — the only banner content that is editorial; the date and links are script-owned and kept verbatim). Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` and the page-structure example it follows,
