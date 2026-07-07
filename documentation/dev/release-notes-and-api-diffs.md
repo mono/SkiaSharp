@@ -196,6 +196,20 @@ share the resulting line set** for that family:
 Within each family the release-notes page set and the API-diff line set therefore
 cover exactly the same lines.
 
+**History floor (a performance skip, not a rule change).** The top-level
+`history_floor` block in `versions.json` optionally sets a per-family minimum line core
+(e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
+re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
+line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
+deletion: pages and API-diff folders already committed below the floor are left exactly
+as they are — the Cake engine skips *clearing* them symmetrically with skipping their
+*emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
+are unaffected: a floored line can still be downloaded as a `compare_to` baseline (e.g.
+`3.116.0` still diffs against `2.88.9`). Absent/empty block ⇒ no floor (every line is
+regenerated, the legacy behavior). Raise the floor as old lines stop needing refreshes;
+lower or remove it to rebuild history. Both engines read the same block, so their line
+sets stay identical above the floor.
+
 ### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
 SkiaSharp and HarfBuzzSharp ship together (HarfBuzz never releases on its own) but
@@ -291,9 +305,11 @@ know the individual commands:
 
 ```
 .agents/skills/release-notes/
-  SKILL.md                       the AI's polish-only instructions (§4.4)
+  SKILL.md                       the AI's polish instructions — a router (§4.4)
   references/
     TEMPLATE.md                  the page-structure/tone example the polish follows (§4.4)
+    grouping.md                  how to merge related PRs into a few thematic bullets
+    review-checklist.md          the 12-point self-review the agent runs before saving
   scripts/
     generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
                                  and writes the Files-to-polish list to a file (§2.2)
@@ -785,6 +801,73 @@ A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/references/TEMPLATE.md` (a skill reference asset,
 co-located with the skill and outside the published docs).
 
+#### Prose principles (what the AI polishes toward)
+
+The script decides *what pages exist and how they link*; these principles govern the *prose
+the AI writes inside them*. They exist so the notes read like a **product changelog, not a
+repository activity log**. The operational detail lives in `SKILL.md`; the principles are
+fixed here.
+
+1. **Write for the consumer, not the contributor — product over project.** The test for every
+   PR is whether the **shipped SkiaSharp/HarfBuzzSharp library** — its public API, runtime
+   behavior, native binary, or NuGet package — changed for a consumer. If only a **repo
+   process** changed it is **not** release-notes material and is dropped (or, when there is a lot
+   of it, collapsed into a single trailing line): CI/build pipelines and caching, GitHub
+   Actions/workflows, the project's own agent skills (`security-audit`, `ci-status`, the
+   release-notes/docs tooling), the docs website, PR-staging, sample-publishing pipelines,
+   milestone/label automation, and test-infra migrations — **even when the PR title mentions
+   security, a CVE, performance, or an API name** (a change to the `security-audit` skill is not
+   a library security fix). Native-dependency bumps and native build flags that ship in the
+   binary (e.g. Spectre mitigation, new RIDs/TFMs) stay; the package's own version bump does not.
+   **This decision is made deterministically in Prepare, not left to per-PR judgment in Polish:**
+   `generate-release-notes.py` tags every raw-data PR line **`[product]`**, **`[mixed]`**, or
+   **`[internal]`** by the files it changed:
+   - **`[product]`** — touches shipped code (`binding/`, `externals/`, `source/`). Written up.
+   - **`[internal]`** — touches none of those (CI, workflows, agent skills, docs site, tests,
+     samples, build/meta). Dropped into the one collapse line.
+   - **`[mixed]`** — touches only build config (`native/`): it may change the shipped binary via a
+     compile flag (a rasteriser define, a delay-load fix) or be pure infra (a Docker image, an SDK
+     pin). Polish takes a best guess **from the title/context already in the raw-data block — it
+     does not open the PR** — surfacing it only when it plausibly changes what ships, otherwise
+     folding it into the collapse line.
+
+   `native/` is deliberately **not** treated as shipped code: it is build configuration, and the
+   thing that actually ships is `externals/skia/`. This is why a native compile-flag fix lands as
+   `[mixed]` (inspect-and-usually-surface) rather than being hidden or blindly surfaced. Polish
+   **drops `[internal]`**, writes up **`[product]`**, and inspects **`[mixed]`**; the prose test
+   above is only the tie-breaker for a mis-tagged `[product]`/`[internal]` line. Moving the
+   classification out of the LLM is what makes product-focus reliable run-to-run instead of a
+   judgment loop over every PR.
+2. **Highlights are a hook, not a summary — a hard cap, under a mandatory heading.** The section
+   always exists under the literal `## Highlights` heading (never a bare unlabelled lead
+   paragraph); its body targets **~80 words and never exceeds 100**, in two or three short
+   sentences, no matter how big the release, naming only the three or four biggest items — the
+   engine jump, the headline feature, the fact that there are breaking changes to review.
+   Highlights are a hook, not a table of contents: the categories below carry the full list and
+   the contributor table carries the credits, so Highlights never enumerate APIs, dependency
+   bumps, or fixes, never list contributors one by one (at most one standout handle), and never
+   fall back to a "Compared to X: A, B, C, …" comma-run — that enumeration is exactly what the
+   cap exists to prevent. The bigger the release, the more *selective* Highlights get — not
+   longer. A word cap (not just a sentence count) is the enforceable form of this rule, because a
+   sentence count alone is gamed by long comma-run sentences.
+3. **Attribution is linked, and the maintainer is not credited.** Every `@handle` in the
+   rendered body is a Markdown link (`[@user](https://github.com/user)`) — never a bare
+   `@handle`, and never the raw-data block's `by @user` phrasing carried through into the
+   prose. Community contributors (anyone other than the maintainer) are credited with a
+   `❤️ [@user](url)` immediately before the PR link **on their inline category bullet**; the
+   maintainer's own PRs carry just the `([#NNN](url))` link with no attribution. The
+   `## Community Contributors ❤️` table has two columns: the **Contributor** cell is a plain
+   `[@user](url)` with no ❤️ (the heart is only on the inline bullets — in the table it wraps
+   badly), and the **What They Did** cell is a short prose summary of their work, not a bare
+   list of PR numbers. **The table is roster-driven, not reconstructed from the body.** Prepare
+   emits an authoritative **`contributors:`** roster in the raw-data block — every distinct
+   external (non-maintainer, non-bot) author with their PR numbers — and Polish renders **exactly
+   one row per roster entry, never omitting one**. Building the table by hand from the prose
+   silently dropped real contributors whose PRs were folded into thematic bullets (e.g. a headline
+   external author of a multi-PR feature); the deterministic roster removes that failure mode.
+   Bot accounts (`github-actions[bot]`, `Copilot`, `dependabot`, any `*[bot]`) are excluded from
+   the roster and never credited.
+
 #### API-diff link rule
 
 **The API-diff links are required, fixed, and non-AI.** Every emitted page **whose line has
@@ -875,6 +958,7 @@ All of this is deterministic and script-owned.
 Always the full, idempotent pass: fetch `main` + every `release/*`, regenerate each
 line's raw-data block (§4.3), prune orphaned `-unreleased` pages (§4.2), and **write only files
 whose content key changed** — the key compares PR count, diff range, the
+**raw-data format version** (the `format:` field — see below), the
 supersession metadata (`status`, `superseded_by`, `supersedes`), the **script-owned
 API-changes link** (whether this line has an API-diff folder, its HarfBuzz co-release
 mapping, and — for a HarfBuzz page — its canonical SkiaSharp back-link target, §4.4),
@@ -890,6 +974,18 @@ refresh forces no spurious re-polish. Then regenerate `TOC.yml` +
 Polish phase reads (§2.3) — names only genuinely-changed pages, so the AI never
 re-polishes an up-to-date page. When it is empty and the tree is unchanged, the workflow
 opens no PR (§2.3).
+
+**The `format:` field rolls out raw-data changes.** The content key above detects *data*
+changes (a new PR, a supersession toggle, a companion edit) but not changes to the raw-data
+block's own **structure or embedded Polish instructions** — e.g. adding a `[mixed]` tag or the
+contributor roster. Without a signal for that, a quiet line (a stable/RC page with no new PRs)
+would keep its old-format page indefinitely, re-polished on the old instructions only when its
+next PR happens to land. The `format:` field is a single integer the generator stamps into every
+raw-data block and folds into the content key: an existing page whose `format:` is missing (a
+page from before the field existed) or lower than the generator's current version is considered
+changed and rewritten, so **one `--all` run rolls a new format out to every page at once and then
+settles back to idempotent**. Bump it (`_RAWDATA_FORMAT_VERSION` in `generate-release-notes.py`)
+whenever the raw-data block's shape or its Polish directions change materially.
 
 ### 4.7 Manual additions & breaking-change summaries (companion files)
 

@@ -20,10 +20,10 @@ description: >
 # Memory Leak Fixer
 
 Proactively **find** and **fix** memory leaks in SkiaSharp — a thin managed
-wrapper over native Skia, so its recurring, high-impact leak family is **native
+wrapper over native Skia, so its recurring, high-impact class of leaks is **native
 ownership / disposal correctness** — the C# binding failing to dispose, own, pin, or root a
 native object correctly — not the managed view-retention leaks a pure-managed app framework
-worries about. This skill hunts that family and produces a validated fix.
+worries about. This skill hunts that class of leaks and produces a validated fix.
 
 **Scope: managed C# only.** Work only in the code SkiaSharp owns — the C# bindings
 (`binding/**`) and view layers (`source/**`). Everything under `externals/skia/**` is
@@ -34,10 +34,10 @@ Read [`documentation/dev/memory-management.md`](../../../documentation/dev/memor
 first — it is the authoritative model (pointer types, `owns:` flag, ref-count rules, the
 same-instance-return contract). This skill assumes that model.
 
-The leak catalogue this skill scans against — **11 real families**, each with a description,
+The leak catalogue this skill scans against — **11 real focus areas**, each with a description,
 why it's bad, a leak→fix code example, and a leak-specific anti-pattern — is in
 [`references/types-of-leaks.md`](references/types-of-leaks.md). Read it before scanning
-(Phase 1) and consult the matching family when writing a fix (Phase 3).
+(Phase 1) and consult the matching focus area when writing a fix (Phase 3).
 
 ## Golden rules (non-negotiable)
 
@@ -93,32 +93,32 @@ Run the phases in order. The skill has two entry points:
 ## Phase 1 — Scan (find ONE candidate)
 
 ### 1.1 Choose a focus area (round-robin across runs)
-A full 11-family sweep every run is wasteful and the surface is mostly hardened, so start from
-ONE focus family and widen only if it's exhausted.
+A full 11-area sweep every run is wasteful and the surface is mostly hardened, so start from
+ONE focus area and widen only if it's exhausted.
 
-**Override first.** If the run supplies an explicit focus family (a bare number 0–10 — e.g. a
-maintainer testing one family on demand), use that number directly as `FOCUS` and **skip the
-rotation below**. Otherwise rotate the *starting* family on a
-time-based **round-robin** so consecutive runs cover different families. This needs only
+**Override first.** If the run supplies an explicit focus area (a bare number 0–10 — e.g. a
+maintainer testing one area on demand), use that number directly as `FOCUS` and **skip the
+rotation below**. Otherwise rotate the *starting* area on a
+time-based **round-robin** so consecutive runs cover different areas. This needs only
 `date`, so it behaves identically locally and in CI — no `$GITHUB_RUN_NUMBER` / `$RANDOM`
 (which don't exist or aren't deterministic outside GitHub Actions):
 
 ```bash
-# Round-robin: advance one family every hour, cycling through all 11.
+# Round-robin: advance one focus area every hour, cycling through all 11.
 DOY=$(date -u +%j); HOUR=$(date -u +%H)         # day-of-year + hour, both zero-padded
 FOCUS=$(( (10#$DOY * 24 + 10#$HOUR) % 11 ))      # 10# forces base-10
-echo "focus family: $FOCUS"
+echo "focus area: $FOCUS"
 ```
 The `10#` prefix is **required**: `date` zero-pads `%j`/`%H`, and `$(( 08 ))` is an
 invalid-octal error without it. For a targeted local run, skip the rotation and just name the
-family you want.
+focus area you want.
 
-Every family is drawn from a **real, historical SkiaSharp leak fix**. Now open
-**[references/types-of-leaks.md](references/types-of-leaks.md)** and load family `#FOCUS`: its
+Every focus area is drawn from a **real, historical SkiaSharp leak fix**. Now open
+**[references/types-of-leaks.md](references/types-of-leaks.md)** and load focus area `#FOCUS`: its
 **Where to look** line gives the path + grep starting points, and the rest of the entry is the
-description, why-it's-bad, a leak→fix example, and the per-family anti-pattern. **Read that
-family before scanning.** If it's exhausted (its leaks are already open issues/PRs — see 1.3),
-advance to the next index and load that family.
+description, why-it's-bad, a leak→fix example, and the per-area anti-pattern. **Read that
+focus area before scanning.** If it's exhausted (its leaks are already open issues/PRs — see 1.3),
+advance to the next index and load that focus area.
 
 ### 1.2 Establish the retention/ownership path
 For each candidate write the precise path **with `file:line` citations**:
@@ -153,7 +153,7 @@ gh pr    list --repo "$GITHUB_REPOSITORY" --search 'Blob.FromStream in:title,bod
 A candidate is OUT only if an **open** issue/PR already covers the same
 handle / ownership path (by our prefix OR by the api/type name). A candidate whose only
 prior item is CLOSED may be re-filed. **Worked example:** the `HarfBuzzSharp.Blob.FromStream`
-`fixed`-pointer leak (family 4) is a genuine, still-present bug — but open PR #3473 "Make
+`fixed`-pointer leak (area 4) is a genuine, still-present bug — but open PR #3473 "Make
 Blob.FromStream GC safe" already fixes it, so it is OUT: stand down, do **not** open a
 duplicate PR, emit a `noop`.
 
@@ -217,9 +217,9 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj --filte
 If a test you *expected* to be red is green, your hypothesis is wrong — go back to Phase 1.
 
 ### 3.2 Implement the minimal idiomatic fix
-Apply the **Fix (✓)** for the matching family in
-[`references/types-of-leaks.md`](references/types-of-leaks.md) — every family has a worked
-before/after there. Then re-read that family's **Watch out (❌ don't):** note: it names the
+Apply the **Fix (✓)** for the matching focus area in
+[`references/types-of-leaks.md`](references/types-of-leaks.md) — every focus area has a worked
+before/after there. Then re-read that focus area's **Watch out (❌ don't):** note: it names the
 specific *wrong fix* that turns one leak into another (an unconditional `Dispose`, flipping
 `owns:` blind, nulling a field before disposing, a pinned `GCHandle` where a plain field
 suffices, …).
@@ -249,7 +249,7 @@ instead of pushed and reverted. If any box can't be ticked, **fix it or stand do
 - [ ] The fix is inside `binding/**` / `source/**` only — no `*.generated.cs`, no
       `externals/skia/**`, no native / upstream change.
 - [ ] **No public signature changed** — overloads / internals only (ABI stable).
-- [ ] The matching family's **Watch out (❌ don't):** note in
+- [ ] The matching focus area's **Watch out (❌ don't):** note in
       [`references/types-of-leaks.md`](references/types-of-leaks.md) does **not** describe
       what you just did (no unconditional same-instance `Dispose`, no blind `owns:` flip, no
       field nulled before dispose, no pinned `GCHandle` where a plain field suffices, …).
@@ -267,25 +267,35 @@ All ticked ⇒ proceed to Phase 4 (file the finding, then open the PR). Any unti
 A confirmed, managed-C#-fixable leak produces **two linked safe outputs** so the *finding* and
 the *fix* are tracked separately and the issue **auto-closes when the PR merges**.
 
+**Labels (both the issue and the PR):** a memory leak is a performance concern, so tag both
+outputs with `tenet/performance` (the quality-tenet umbrella) **and** `perf/memory-leak` (the
+performance sub-type). When this skill runs from the `memory-leak-fixer` workflow these labels
+are applied automatically by its `safe-outputs` config; when filing by hand, add them yourself.
+The `perf/*` taxonomy is defined in the issue-triage skill
+([`references/labels.md`](../issue-triage/references/labels.md)).
+
 ### 4.1 The issue — the finding
 Emit a `create_issue` that describes the **leak, not the fix**. Give it a `temporary_id`
 (format `aw_` + 3–8 alphanumeric characters — no underscores or other symbols — e.g. `aw_leak1`)
 so the PR can reference it
 before its real number exists. Body (markdown):
 - **AI-generated banner** naming this workflow + the `memory-leak-fixer` skill.
-- **Family**, and the **retention/ownership path** with `file:line` citations.
+- **Focus area**, and the **retention/ownership path** with `file:line` citations.
 - **Evidence**: the Phase 2 proof — the probe you ran and its alive/collected counts.
 - **Scope note**: framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact.
+- **Labels**: `tenet/performance` + `perf/memory-leak`.
 
 ### 4.2 The PR — the fix
 Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix, and open a
 **draft** `create_pull_request`. Body (markdown):
 - **AI-generated banner** naming this workflow + skill.
-- **The fix**: what changed and why it is the idiomatic pattern (point at the family's `Fix ✓`).
+- **The fix**: what changed and why it is the idiomatic pattern (point at the focus area's `Fix ✓`).
 - **Proof (red→green)**: the failing-then-passing test and the exact `dotnet test` commands.
 - **A closing keyword on its own line so merging auto-closes the finding:** `Fixes #<temporary_id>`
   — e.g. `Fixes #aw_leak1` (the id you gave the issue in 4.1). gh-aw rewrites it to the real issue
   number once the issue is created.
+- **Labels**: `tenet/performance` + `perf/memory-leak`.
+
 
 ### 4.3 Out of scope (native / upstream only)
 If the leak is real but the only correct fix lives under `externals/skia/**` (incl. the C
@@ -296,7 +306,7 @@ proposed native fix — so nothing is lost.
 
 ## Phase 5 — Report
 
-Write a short summary: which family, the candidate (`file:line`), the proof result, and the
+Write a short summary: which focus area, the candidate (`file:line`), the proof result, and the
 resulting issue + PR links. When run from the agentic workflow, append this to the run's step
 summary.
 

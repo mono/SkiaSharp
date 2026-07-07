@@ -477,6 +477,35 @@ JArray LoadVersionsConfig (string family = "skiasharp")
     return result;
 }
 
+// The optional per-family "history floor" (spec §1.4): a minimum line core below
+// which no API diff is emitted AND whose already-committed folders are not cleared,
+// so a full regen skips the obsolete back-catalogue (e.g. every 1.x/2.x line) it
+// would otherwise download from the feed and diff on each run. It is a performance
+// skip, not a delete — history stays committed, it is simply not rebuilt. Read from
+// the top-level "history_floor" block in versions.json, keyed by family. Returns
+// null (no floor) when unset.
+string HistoryFloor (string family = "skiasharp")
+{
+    var path = $"{ROOT_PATH}/scripts/infra/docs/versions.json";
+    if (!FileExists (path))
+        return null;
+    var doc = JObject.Parse (System.IO.File.ReadAllText (path));
+    var block = doc ["history_floor"] as JObject;
+    var val = block? [family];
+    var s = val == null ? null : (string)val;
+    return string.IsNullOrEmpty (s) ? null : s;
+}
+
+// True when a version's line core sorts below the family's history floor (spec
+// §1.4). Always false when no floor is configured, so default behavior is unchanged.
+bool IsBelowHistoryFloor (string normalizedVersion, string family = "skiasharp")
+{
+    var floor = HistoryFloor (family);
+    if (string.IsNullOrEmpty (floor))
+        return false;
+    return new NuGetVersion (normalizedVersion).CompareTo (new NuGetVersion (floor)) < 0;
+}
+
 // A "superseded" version is one that was previewed but never shipped stable
 // (e.g. 4.147 was abandoned in favour of 4.148). Its ONLY effect is on baseline
 // selection: it is excluded from acting as a *baseline* for other versions, so a

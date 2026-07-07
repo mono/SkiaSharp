@@ -84,12 +84,21 @@
 
 ## Highlights
 
-<!-- 1-3 sentences. Lead with what matters most. Mention community contributors by linked name.
-     If the manual additions sidecar (<stem>.notes.md, see §4.7) has editorial points the
-     maintainer wants brought out, weave them in here in your own words. On a supersedes
-     rollup, note in one line that the skipped preview work is included cumulatively. -->
+<!-- ALWAYS keep this `## Highlights` heading (never drop it, never replace it with a bare
+     unlabelled lead paragraph). Short and impact-first — target ~80 WORDS, HARD CAP 100, and at
+     most 2-3 short sentences, no matter how big the release (count them). Name only the 3-4
+     biggest things (the engine jump, the headline feature, the fact that there are breaking
+     changes) in plain prose. A hook, not a summary — the categories below carry the full list.
+     In Highlights, do NOT: enumerate APIs / dependency bumps / fixes; list contributors one by
+     one (the table does that — name at most one standout by linked handle); use per-item
+     parentheticals, PR/issue links, or `code` API names as a checklist; or write "Compared to X:
+     A, B, C, D, …" (that comma-run IS the banned enumeration). If a reader could rebuild the
+     category sections from Highlights, it is too long. If the manual additions sidecar
+     (<stem>.notes.md, see §4.7) has editorial points the maintainer wants brought out, weave them
+     in here in your own words. On a supersedes rollup, note in one line that the skipped preview
+     work is included cumulatively. -->
 
-SkiaSharp 9.990.0 rolls up all preview work from [9.989.0](9.989.0.md) cumulatively and completes a round of API-surface cleanup. It delivers a Skia engine upgrade, promotes long-deprecated members to compile errors, reworks singleton object lifecycles for correctness, and ships several `SKFooMap` fixes. HarfBuzz 9.9.0 ships alongside — see [HarfBuzzSharp 9.9.0](harfbuzzsharp/9.9.0.md). Notable community work from [@octocat](https://github.com/octocat), [@monalisa](https://github.com/monalisa), [@hubot](https://github.com/hubot), and [@octobot](https://github.com/octobot).
+The first engine bump of the 9.x line: Skia m998 lands with variable-font support and animated encoding, alongside a major-version API cleanup that promotes long-deprecated members to compile errors — check Breaking Changes before upgrading. HarfBuzz 9.9.0 ships too ([HarfBuzzSharp 9.9.0](harfbuzzsharp/9.9.0.md)). Standout community work from [@octocat](https://github.com/octocat) and [@monalisa](https://github.com/monalisa).
 
 ## Breaking Changes
 
@@ -169,34 +178,27 @@ SkiaSharp 9.990.0 rolls up all preview work from [9.989.0](9.989.0.md) cumulativ
 - **zlib updated to 9.9.9** ([#1221](https://github.com/mono/SkiaSharp/pull/1221))
 - **libpng updated to 9.9.9** ([#1222](https://github.com/mono/SkiaSharp/pull/1222))
 
-## Platform Support
-
-<!-- Quick at-a-glance table. One row per platform that has something new; omit rows with
-     nothing to report. Keep entries short — they mirror items already listed above. -->
-
-| Platform | What's New |
-|----------|-----------|
-| 🍎 Apple | Fixed platform TFMs for libraries vs apps |
-| 🤖 Android | Fixed `SKFooView` blank after MAUI tab switch |
-| 🌐 WebAssembly | Dropped pre-.NET 8 Emscripten builds |
-| 🐧 Linux | Linux Bionic native assets |
-| 🪟 Windows | Fixed WinUI Projection DLL for .NET 9 |
-| 📦 General | Tizen x64/arm64 native builds; C# 13 on legacy TFMs |
-
-<!-- Platform emoji reference: 🍎 Apple · 🪟 Windows · 🐧 Linux · 🤖 Android · 🌐 WebAssembly · 🎨 Core API · 🏗️ Build/CI · 📦 General -->
-
 ## Community Contributors ❤️
 
-<!-- Only include if there are community contributors (anyone not @mattleibow).
+<!-- Include whenever the raw-data `contributors:` roster is non-empty. That roster is
+     AUTHORITATIVE: render EXACTLY one row per entry — never omit a contributor, never invent one
+     (the roster already excludes @mattleibow and every bot). Reconstructing this table from the
+     body prose kept dropping real contributors whose PRs were folded into thematic bullets.
      ALWAYS link usernames: [@user](https://github.com/user) — never bare @user anywhere.
-     One row per contributor; summarize everything they landed this release. -->
+     TWO columns, ONE LINE per contributor:
+       "Contributor"  = the PLAIN link with NO ❤️ (the heart belongs only on the inline category
+                        bullets above; in this table it just wraps badly).
+       "What They Did" = a SHORT PROSE summary of everything they landed (Feature A, bug B, thing
+                        C), built from that contributor's PR titles in the block, FOLLOWED BY
+                        their PR links in one parenthetical. Never just a bare list of PR numbers
+                        with no prose. Credit them even if their work was internal/samples-only. -->
 
 | Contributor | What They Did |
 |-------------|--------------|
-| [@octocat](https://github.com/octocat) | Skia m998 bump; variable fonts; obsoletes promotion; singleton lifecycle; `SKFooPath` crash fix |
-| [@monalisa](https://github.com/monalisa) | Linux Bionic native assets; C# 13 support on legacy TFMs |
-| [@hubot](https://github.com/hubot) | Fixed Android `SKFooView` rendering after MAUI tab switch |
-| [@octobot](https://github.com/octobot) | `SKQuxOptions` overloads for `SKQux.Draw` |
+| [@octocat](https://github.com/octocat) | Skia m998 bump, variable fonts, singleton lifecycle rework, and the `SKFooPath` crash fix ([#1204](https://github.com/mono/SkiaSharp/pull/1204), [#1205](https://github.com/mono/SkiaSharp/pull/1205), [#1212](https://github.com/mono/SkiaSharp/pull/1212), [#1210](https://github.com/mono/SkiaSharp/pull/1210)) |
+| [@monalisa](https://github.com/monalisa) | Linux Bionic native assets and C# 13 support on legacy TFMs ([#1214](https://github.com/mono/SkiaSharp/pull/1214), [#1224](https://github.com/mono/SkiaSharp/pull/1224)) |
+| [@hubot](https://github.com/hubot) | Fixed Android `SKFooView` rendering after a MAUI tab switch ([#1211](https://github.com/mono/SkiaSharp/pull/1211)) |
+| [@octobot](https://github.com/octobot) | `SKQuxOptions` overloads for `SKQux.Draw` ([#1208](https://github.com/mono/SkiaSharp/pull/1208)) |
 
 ## Links
 
@@ -235,13 +237,36 @@ Variable font support, animated encoding, and the first engine bump of the line.
 
 [Full Changelog](https://github.com/mono/SkiaSharp/compare/v9.988.0...v9.989.0-preview.1.1)
 
-<!-- FORMATTING RULES:
-     - Rollup at top: aggregate ALL changes across all previews into one polished summary
+<!-- FORMATTING RULES (priority order — product-focus first):
+     - Product over project (RULE 1): write for people USING the library. Every raw-data PR line
+       is pre-tagged [product], [mixed], or [internal] by the script:
+         [product]  = touches shipped code (binding/ externals/ source/) — WRITE IT UP.
+         [internal] = touches none of those (CI, workflows, .agents skills, docs site, tests,
+                      samples, build/meta) — DROP it into the ONE collapse line.
+         [mixed]    = touches only build config (native/) — GUESS FROM THE TITLE HERE (do not open
+                      the PR): surface it only if it plausibly changes what ships (a rendering or
+                      crash fix, a new platform); otherwise fold it into the collapse line.
+       Never a bullet per internal change; roll them all into ONE trailing "Plus various CI,
+       documentation, and internal tooling improvements." line (or omit it if none). The title is
+       not evidence (a security-audit skill change is not a library security fix). Keep native-dep
+       bumps, native build flags that ship in the binary (Spectre mitigation, new RIDs/TFMs), API
+       changes, behavior/bug fixes, packaging.
+     - Highlights: a hook, not a summary. ALWAYS keep the literal `## Highlights` heading (never
+       a bare lead paragraph). Target ~80 WORDS, HARD CAP 100, ≤ 3 short sentences, no matter how
+       big the release (count them). Name only the 3-4 biggest things in plain prose. Never
+       enumerate APIs / dependency bumps / fixes, never list contributors one by one (name at most
+       one standout handle), never use per-item parentheticals or a "Compared to X: A, B, C, …"
+       comma-run — the categories and the contributor table carry the full detail.
+     - Rollup at top: aggregate ALL [product] changes across all previews into one polished summary
      - Categories are top-level `##` sections (Engine, API Surface, Bug Fixes, Platform, …),
        NOT nested under a "New Features" parent; pick the ones that fit and never force empties
      - Previews/RC are minimal: one sentence + changelog link each
-     - Omit noise: don't itemize version bumps, CI fixes, doc/skill/workflow changes
-     - Community ❤️: always credit and link anyone not @mattleibow; never bare @user
+     - Attribution: item shape is `**title** — desc. ❤️ [@user](url) ([#NNN](url))`. Credit &
+       link every community contributor (anyone not @mattleibow); the maintainer's own PRs end
+       with just the `([#NNN](url))` link (no ❤️). NEVER write `by @handle`, and never emit a
+       bare @user anywhere in the rendered body. In the Community Contributors TABLE the
+       "Contributor" cell is a plain `[@user](url)` with NO ❤️ (the heart is only on the inline
+       bullets above) and "What They Did" is a short PROSE summary, never a bare list of PRs.
      - Adapt to content: security release leads with security, feature release leads with features
      - Skia engine: if a "Bump skia" PR is in the data, list it first under Engine
      - Breaking Changes: always emit the `## Breaking Changes` heading right after Highlights

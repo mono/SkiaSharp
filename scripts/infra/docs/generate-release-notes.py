@@ -266,6 +266,46 @@ def load_support_config():
     return _SUPPORT_CONFIG
 
 
+# History floor (spec §1.4) — an optional per-family minimum line core below which
+# NO page is regenerated and NO API diff is emitted, so a full ``--all`` run skips
+# the obsolete back-catalogue (e.g. every 1.x/2.x line) it would otherwise rebuild
+# from the NuGet feed on each run. It is a PERFORMANCE floor, not a delete: pages
+# and API-diff folders already committed below the floor are left untouched (the
+# Cake engine likewise skips clearing them), so history stays intact — it is simply
+# not rebuilt. Absent/empty ``history_floor`` block => no floor (legacy behavior:
+# every line is regenerated). Read from the top-level ``history_floor`` block in
+# versions.json, keyed by family (spec §1.5): ``{"skiasharp": "3.0.0"}``.
+_HISTORY_FLOOR = None  # type: Optional[dict]
+
+
+def history_floor(family="skiasharp"):
+    # type: (str) -> Optional[str]
+    """The configured minimum line core for ``family``, or None when unset."""
+    global _HISTORY_FLOOR
+    if _HISTORY_FLOOR is None:
+        _HISTORY_FLOOR = {}
+        if VERSIONS_JSON_PATH.exists():
+            with open(VERSIONS_JSON_PATH) as f:
+                block = json.load(f).get("history_floor") or {}
+            if isinstance(block, dict):
+                _HISTORY_FLOOR = {
+                    k: v for k, v in block.items() if isinstance(v, str) and v}
+    return _HISTORY_FLOOR.get(family)
+
+
+def is_below_history_floor(version, family="skiasharp"):
+    # type: (str, str) -> bool
+    """True when ``version``'s line core sorts below the family's history floor.
+
+    Used to skip regenerating obsolete back-catalogue pages (spec §1.4). With no
+    floor configured this is always False, so every line is processed as before.
+    """
+    floor = history_floor(family)
+    if not floor:
+        return False
+    return _core_tuple(version) < _core_tuple(floor)
+
+
 def classify_support_tier(group, support=None):
     # type: (str, Optional[dict]) -> str
     """Classify a minor group ("3.119") into a TOC/index support tier (spec §3.5).
@@ -486,6 +526,15 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     if not m_prs or not m_diff:
         return False
     if int(m_prs.group(1)) != new_prs_count or m_diff.group(1) != new_diff_range:
+        return False
+
+    # format: <n> — the raw-data FORMAT VERSION (§4.6). An existing page written by
+    # an older generator either lacks this line or carries a lower number; either way
+    # its raw-data block predates the current structure/instructions, so it must be
+    # rewritten even though its PR set is unchanged. Absent => treat as 0 (mismatch).
+    m_fmt = re.search(r"^\s*format:\s*(\d+)", content, re.MULTILINE)
+    existing_fmt = int(m_fmt.group(1)) if m_fmt else 0
+    if existing_fmt != _RAWDATA_FORMAT_VERSION:
         return False
 
     # status: only compare when the caller supplies the new value.
@@ -1612,6 +1661,90 @@ def determine_diff_range(branch):
     return base_sha, "origin/{}".format(branch), version
 
 
+# Each PR is classified product / mixed / internal by the files it touched, so Polish
+# can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
+# instead of re-judging every PR from its title each run (the source of leak variance).
+#
+#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
+#              consumer can see. Companion test/benchmark/generated files are ignored.
+#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
+#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
+#              image, SDK pin). Polish guesses from the title/context in the raw-data
+#              block (it does not open the PR) — surface a behaviour change, drop pure infra.
+#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
+#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
+_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
+_BUILD_PATH_PREFIXES = ("native/",)
+
+
+def _pr_category(files):
+    # type: (set) -> str
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
+    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
+        return "product"
+    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
+        return "mixed"
+    return "internal"
+
+
+# Automation accounts — never credited as human contributors (§4.5). The workflow
+# already skips these when authoring, but the raw data still records them (they open
+# release-notes and bump PRs), so Polish must exclude them from the contributor table.
+_BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
+
+
+def _is_bot_login(login):
+    # type: (Optional[str]) -> bool
+    """True for automation accounts (exact match or any ``[bot]`` suffix)."""
+    if not login:
+        return False
+    low = login.lower()
+    return low in _BOT_LOGINS or low.endswith("[bot]")
+
+
+def _contributor_roster(prs):
+    # type: (list) -> list
+    """Authoritative external-contributor roster for the credits table (§4.5).
+
+    Returns ``[(login, [pr_number, ...]), ...]`` for every distinct non-maintainer,
+    non-bot author with a *linkable* login, ordered by PR count (most first) then
+    login. Polish renders EXACTLY one table row per entry and never omits one — the
+    old ad-hoc reconstruction from the body prose silently dropped real contributors
+    (e.g. a headline author whose PRs were folded into a thematic bullet). Authors
+    with no resolvable login are excluded because they cannot be safely @-linked.
+    """
+    by_login = {}  # type: dict
+    for pr in prs:
+        login = (pr.get("author") or {}).get("login")
+        if not login or login == "mattleibow" or _is_bot_login(login):
+            continue
+        by_login.setdefault(login, []).append(pr.get("number"))
+    roster = [(login, sorted(n for n in nums if n)) for login, nums in by_login.items()]
+    roster.sort(key=lambda e: (-len(e[1]), e[0].lower()))
+    return roster
+
+
+def _files_by_commit(from_ref, to_ref):
+    # type: (str, str) -> dict
+    """Map each commit hash in ``from_ref..to_ref`` to the set of files it touched.
+
+    One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
+    file set to classify it product vs internal). A ``\\x1e`` record separator
+    prefixes each hash line so file lines can never be mistaken for a hash.
+    """
+    out = run(["git", "log", "--no-renames", "--name-only",
+               "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
+    files_by = {}  # type: dict
+    cur = None
+    for line in out.split("\n"):
+        if line.startswith("\x1e"):
+            cur = line[1:].strip()
+            files_by[cur] = set()
+        elif line.strip() and cur is not None:
+            files_by[cur].add(line.strip())
+    return files_by
+
+
 def get_prs_from_diff(from_ref, to_ref, paths=None):
     # type: (str, str, Optional[list[str]]) -> list[dict]
     """Extract merged PRs from git log between two refs.
@@ -1635,6 +1768,11 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
         cmd.append("--")
         cmd.extend(paths)
     log = run(cmd)
+
+    # One extra git call gives every commit's full file set, used to tag each PR
+    # product vs internal (§4.4). Unfiltered by ``paths`` on purpose — a PR's
+    # classification depends on everything it changed, not the co-ship subset.
+    files_by = _files_by_commit(from_ref, to_ref)
 
     prs = []
     seen = set()  # type: set[int]
@@ -1692,6 +1830,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "body": body,
             "commit": commit_hash,
             "skiaPr": skia_pr,
+            "category": _pr_category(files_by.get(commit_hash, set())),
         })
 
     return prs
@@ -1711,11 +1850,59 @@ def _format_pr_bullet(pr):
     login = author_info.get("login")
     name = author_info.get("name") or "unknown"
     url = pr.get("url", "")
-    community_str = " [community ✨]" if login != "mattleibow" else ""
+    # The community marker invites Polish to credit the author, so it must NOT appear
+    # on bot or maintainer PRs (§4.5): the maintainer is never credited, and bots are
+    # never credited — leaving it on a bot line makes Polish emit a ❤️ @bot bullet.
+    is_community = login and login != "mattleibow" and not _is_bot_login(login)
+    community_str = " [community ✨]" if is_community else ""
     skia_pr = pr.get("skiaPr")
     skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
     by = "by @{}".format(login) if login else "by {}".format(name)
-    return "{} {} in {}{}{}".format(title, by, url, community_str, skia_str)
+    # Deterministic product / mixed / internal tag (§4.4). Polish writes up [product],
+    # collapses [internal] into one trailing line, and for [mixed] takes a best guess
+    # from the title/context here (no need to open the PR) — surface a behaviour change,
+    # drop pure build/infra.
+    cat = pr.get("category", "product")
+    tag = "[{}] ".format(cat)
+    return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
+
+
+def _release_date_display(version):
+    # type: (str) -> Optional[str]
+    """Human release date (e.g. 'December 3, 2024') from the ``vX.Y.Z`` tag, or None.
+
+    Used to fill the stable-page banner's ``Released <date>`` field deterministically
+    so Polish never has to guess it. Prefers the tag's creator date (annotated tag);
+    falls back to the tagged commit's date; returns None if the tag is not present.
+    """
+    tag = "v{}".format(version)
+    out = ""
+    try:
+        out = run(["git", "for-each-ref", "--format=%(creatordate:short)",
+                   "refs/tags/{}".format(tag)]).strip()
+    except Exception:
+        out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        try:
+            out = run(["git", "log", "-1", "--format=%cs", tag]).strip()
+        except Exception:
+            out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        return None
+    y, m, d = (int(x) for x in out.split("-"))
+    return "{} {}, {}".format(datetime(y, m, 1).strftime("%B"), d, y)
+
+
+# Raw-data block FORMAT VERSION — part of the content key (§4.6). `_is_content_unchanged`
+# compares this against the `format:` line in the existing page; a mismatch (or an older
+# page with no `format:` line) forces a rewrite even when the PR set and diff range are
+# unchanged. BUMP THIS whenever the raw-data block's structure or the Polish instructions
+# embedded in it change materially, so a single `--all` run rolls the new format out to
+# every otherwise-quiet page (e.g. a stable line with no new PRs) instead of leaving it
+# stranded on the old format until its next PR lands.
+#   1 — original (binary [product]/[internal] tag, no contributor roster)
+#   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
+_RAWDATA_FORMAT_VERSION = 2
 
 
 def format_pr_list(prs, metadata):
@@ -1741,8 +1928,17 @@ def format_pr_list(prs, metadata):
         "  version:   {}".format(version),
         "  status:    {}".format(metadata["status"]),
         "  branch:    {}".format(metadata["branch"]),
+        "  format:    {}".format(_RAWDATA_FORMAT_VERSION),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
+        "  tags:      {} [product] · {} [mixed] · {} [internal] of {} PRs".format(
+            sum(1 for p in prs if p.get("category") == "product"),
+            sum(1 for p in prs if p.get("category") == "mixed"),
+            sum(1 for p in prs if p.get("category") == "internal"),
+            len(prs)),
+        "  legend:    [product] = write up · [internal] = DROP (roll into one trailing "
+        "\"Plus various … internal tooling improvements.\" line) · [mixed] = build/infra: "
+        "guess from the title here — surface a behaviour change, otherwise drop",
         "  api:       {}".format(api_sig),
         "",
     ]
@@ -1750,6 +1946,10 @@ def format_pr_list(prs, metadata):
     superseded_by = metadata.get("superseded_by")
     supersedes = metadata.get("supersedes")
     meta_extra = []
+    if metadata.get("status") == "stable":
+        rd = _release_date_display(version)
+        if rd:
+            meta_extra.append("  released:   {} (use verbatim in the banner)".format(rd))
     if superseded_by:
         meta_extra.append(
             "  superseded: {} (preview only, never released as stable)".format(
@@ -1797,9 +1997,36 @@ def format_pr_list(prs, metadata):
         lines.insert(insert_at, extra)
         insert_at += 1
 
+    # Authoritative contributor roster (§4.5): the exact set of external, non-bot
+    # authors to credit. Rendered here so Polish builds the credits table from a
+    # deterministic list instead of reconstructing it from body prose (which kept
+    # dropping real contributors). One table row per entry, none omitted.
+    roster = _contributor_roster(prs)
+    if roster:
+        roster_block = [
+            "  contributors: {} external contributor(s) — render EXACTLY one credits-table "
+            "row each (§4.5), never omit one; summarize each one's PRs (found by "
+            "\"by @login\" below) and link the PR numbers:".format(len(roster)),
+        ]
+        for login, nums in roster:
+            roster_block.append("    @{}  ({} PR{}): {}".format(
+                login, len(nums), "" if len(nums) == 1 else "s",
+                " ".join("#{}".format(n) for n in nums)))
+        insert_at = len(lines) - 1
+        for extra in roster_block:
+            lines.insert(insert_at, extra)
+            insert_at += 1
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
+        # Each PR line is tagged [product] / [mixed] / [internal] (§4.4). Remind the
+        # AI in context so keep/inspect/drop is a lexical filter, not a re-judgment.
+        lines.append("  Each PR is tagged [product] (write it up, categorized), "
+                     "[mixed] (build/infra — guess from the title: surface a behaviour")
+        lines.append('  change, otherwise drop) or [internal] (DROP — never a bullet each; '
+                     'roll ALL into one trailing "Plus various … internal tooling')
+        lines.append('  improvements." line, or omit it when there are none).')
         # When the page rolls up tagged previews, group the PRs into per-preview
         # buckets (each PR under the preview it first shipped in) so the AI can
         # write a concrete "## Preview N" section per milestone AND merge the
@@ -2636,6 +2863,15 @@ def _write_page(branch, all_branches, verbose=False, force=False):
             branch, e), file=sys.stderr)
         return None
 
+    # History floor (spec §1.4): below the configured floor we do not regenerate
+    # the page at all. Its already-committed page (and API-diff folder) stay as
+    # they are — this is a performance skip of the obsolete back-catalogue, not a
+    # delete. No floor configured => never triggers.
+    if is_below_history_floor(version):
+        log("  Skipping {} (below history floor {}).".format(
+            version, history_floor()))
+        return None
+
     from_display = _removeprefix(from_ref, "origin/")
     to_display = _removeprefix(to_ref, "origin/")
     if re.match(r"^[0-9a-f]{7,}$", from_display):
@@ -2855,6 +3091,12 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     """
     hb_line = hb["hb_line"]
     canonical_skia = hb["canonical_skia"]
+    # History floor (spec §1.4): a HarfBuzz line whose introducing SkiaSharp
+    # release is below the SkiaSharp floor — or which is itself below a HarfBuzz
+    # floor — is left as committed and not regenerated.
+    if (is_below_history_floor(canonical_skia, "skiasharp")
+            or is_below_history_floor(hb_line, "harfbuzzsharp")):
+        return None, None
     hb_dir = RELEASES_DIR / "harfbuzzsharp"
     # A HarfBuzz line is "published" (released) exactly when the API-diff
     # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).

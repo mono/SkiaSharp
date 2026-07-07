@@ -1,30 +1,30 @@
 # SkiaSharp leak types — reference
 
-The catalogue the `memory-leak-fixer` skill scans against. **Every family below is drawn
-from a real, historical SkiaSharp fix** (issue/PR cited), so the hunt targets patterns that
-have actually shipped as bugs in this repo — not hypotheticals.
+The catalogue the `memory-leak-fixer` skill scans against, split into **focus areas**. **Every
+focus area below is drawn from a real, historical SkiaSharp fix** (issue/PR cited), so the hunt
+targets patterns that have actually shipped as bugs in this repo — not hypotheticals.
 
 **Scope: managed C# only.** This skill hunts and fixes leaks in the code SkiaSharp owns —
 the C# bindings (`binding/**`) and view layers (`source/**`). The native Skia C/C++ under
 `externals/skia/**` (including our C shim) is **out of scope**: it is upstream, cannot be
 built or validated on a standard runner, and its fixes go through a different process. Every
-family here is therefore something you can prove and fix from C#.
+focus area here is therefore something you can prove and fix from C#.
 
 Read this alongside [`documentation/dev/memory-management.md`](../../../../documentation/dev/memory-management.md),
 which is the authoritative ownership model (pointer types, `owns:` flag, ref-count rules,
-the `HandleDictionary`, and the same-instance-return contract). This file adds, per family:
+the `HandleDictionary`, and the same-instance-return contract). This file adds, per focus area:
 **where to look → what it is → why it's bad → a leaking example → the idiomatic fix → a
 watch-out.**
 
 Code samples are illustrative and trimmed to the essential lines; real wrappers add
 argument validation and `GC.KeepAlive`. `✓` = correct, `❌` = the bug.
 
-Each family ends with a **Watch out (❌ don't):** note — the leak-specific *wrong fix* that
+Each focus area ends with a **Watch out (❌ don't):** note — the leak-specific *wrong fix* that
 turns one bug into another. Re-read the matching one during the pre-PR self-review gate.
 
-Quick index (the `#` is the rotating focus index the skill uses):
+Quick index (the `#` is the rotating focus-area index the skill uses):
 
-| # | Family | One-line signature |
+| # | Focus area | One-line signature |
 |--:|---|---|
 | 0 | Undisposed native handle | owned/ref-counted `SKObject` escapes a factory/cache and is never disposed |
 | 1 | Wrong `owns:` flag | borrowed pointer wrapped `owns:true` (double-free) or owned handle `owns:false` (leak) |
@@ -73,8 +73,8 @@ foreach (var frame in frames) {
 For a cache, dispose evicted entries and clear the cache on teardown.
 
 **Watch out (❌ don't):** don't slap `using`/`Dispose` on a handle you don't actually own —
-a *borrowed getter* result (family 1), a *same-instance return* (family 2), or a
-*process-wide singleton* (family 7). Confirm the object is genuinely owned before disposing,
+a *borrowed getter* result (area 1), a *same-instance return* (area 2), or a
+*process-wide singleton* (area 7). Confirm the object is genuinely owned before disposing,
 or you convert a leak into a double-free.
 
 **Real cases:** the general class behind many reports; see `documentation/dev/memory-management.md`.
@@ -114,7 +114,7 @@ accessors return borrowed → `owns:false`. Getting this backwards just swaps a 
 crash. When the contract is genuinely unclear from the managed side, file an issue rather
 than flipping blind.
 
-**Real cases:** the counterpart of family 7 (dispose-protected singletons); verify each new
+**Real cases:** the counterpart of area 7 (dispose-protected singletons); verify each new
 getter against whether it returns a fresh ref or a borrowed pointer.
 
 ---
@@ -291,7 +291,7 @@ type DO keep such a field (e.g. one iterator/cursor stores `private readonly SKP
 another doesn't). The odd one out is the prime suspect. Prove it before believing it (Phase 2).
 
 **Watch out (❌ don't):** don't root the parent with a pinned `GCHandle` — a plain managed
-field is enough and a pinned handle is its own leak (family 9). And don't lean on
+field is enough and a pinned handle is its own leak (area 9). And don't lean on
 `GC.KeepAlive` for a *long-lived* child (an iterator you hold across calls); KeepAlive only
 covers the current method, so a stored child needs the field.
 
