@@ -34,6 +34,62 @@ This skill is used both by the `update-release-notes` agentic workflow (automati
 on push to `main`, `release/*` branches, and tags) and manually when regenerating,
 correcting, or bulk-processing the release pages.
 
+## Purpose — what these release notes are for
+
+These pages exist for **one audience: developers who consume the SkiaSharp and
+HarfBuzzSharp NuGet packages.** They open a version page to answer, in order:
+
+1. **Should I upgrade?** — Is something broken; is there a security or crash fix that hits me?
+2. **What changes if I do?** — New or changed APIs, new behavior, new platforms, new
+   native-dependency versions in the binary I ship.
+3. **What breaks if I do?** — Signature, behavioral, or platform removals.
+4. **Who do I thank?** — Community contributors.
+
+They are **not** a repository activity log, a project changelog, or a contributor timeline.
+A PR that only changes how *we* build, test, ship, or document the library is invisible from
+the consumer's side — their compiled app is byte-identical whether or not we merged it. Those
+PRs **do not appear in the notes**, however much work they were.
+
+### The one test — apply it to every PR
+
+> **Would a developer who just consumes the NuGet package notice this change without looking
+> at our repository?**
+
+- **Yes → include it**, in the right category. (New/changed API, behavior change, bug fix,
+  native-dependency bump, new RID/TFM, a native build flag that ships in the binary.)
+- **No → drop it** — or, when there is a lot of it, fold it into a single trailing
+  *"Plus various CI, documentation, and internal tooling improvements."* line (never a bullet
+  per change). (CI/build pipelines and caching, GitHub Actions/workflows, our own `.agents/**`
+  skills of any name — including `security-audit`, `ci-status`, the release-notes/docs tooling
+  — the docs website, PR-staging, sample-publishing, milestone/label automation, test-infra,
+  the package's own version bump.)
+
+**You do not have to make this call from scratch.** The Prepare script pre-tags every
+raw-data PR line **`[product]`**, **`[mixed]`**, or **`[internal]`** by the files the PR
+changed:
+
+- **`[product]`** — touches shipped code (`binding/`, `externals/`, `source/`). A real change
+  a consumer can see. **Write it up.**
+- **`[internal]`** — touches none of the above (CI, workflows, our `.agents/**` skills, the docs
+  site, tests, samples, build/meta files). **Drop it** into the single collapse line.
+- **`[mixed]`** — touches only build config (`native/`): it *might* change the shipped binary via
+  a compile flag (e.g. a rasteriser define), or it *might* be pure infra (a Docker image or SDK
+  pin). **Take a best guess from the title/context in the block — no need to open the PR.**
+  Surface it as a bullet only when it plausibly changes what ships (a rendering/behaviour fix,
+  a crash fix, a new platform); otherwise fold it into the collapse line.
+
+**Trust the tag.** The one test above is only the tie-breaker for the rare `[product]`/`[internal]`
+line the tag clearly got wrong.
+
+**The PR title is not evidence — test what shipped, not what it is called.** *"Chrome Releases
+blog integration in security-audit skill"* is an internal skill change even though it says
+"security"; *"ci-status daily CI health dashboard"* is internal even though it says "dashboard";
+*"Publish-samples workflow"* is a workflow change even though "samples" sounds product-shaped.
+
+This is the single most important thing the polish gets right or wrong: a page with a perfect
+contributors table and thirty internal-tooling bullets is **worse** than one with a small
+formatting slip and zero leaked bullets. The first buries the signal a consumer came for.
+
 ## How it works: prepare, then polish
 
 The skill runs **one of two ways**, and both end at the same place — a list of pages to
@@ -240,7 +296,8 @@ the top of the file must remain intact. Replace everything AFTER it (the skeleto
 placeholder) with polished content. When you write the polished content, start with the
 `<!-- Generated: ... -->` timestamp line, then the `# Version X.Y.Z` heading, then the rest.
 
-The final file structure should be:
+The final file structure should be (omit any section with nothing to report — never force
+an empty category):
 
 ```markdown
 <!-- RAW PR DATA — Do not remove this comment block. ... -->
@@ -249,10 +306,16 @@ The final file structure should be:
 
 # Version X.Y.Z
 
-> **theme** · status · links
+> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)    ← rule 7
 
-## Highlights
-...
+## Highlights            (ALWAYS present, literal heading; ~80 words, ≤100 — rule 2)
+## Breaking Changes      (always present; "None in this release." when none — rule 3)
+## <Category>            (one or more: Engine, GPU & Rendering, API Surface, Text & Fonts,
+                          Bug Fixes, Lifecycle & Internals, Platform, Security — rules 4-5;
+                          [product] items + surfaced [mixed] items — rule 1)
+## Community Contributors ❤️   (linked table — one row per `contributors:` roster entry — rule 6)
+## Links                 (Full Changelog + NuGet only — rule 11)
+## <Preview label> (date)      (one trailing section per preview bucket, newest first — rule 10)
 ```
 
 Each file has its own HTML comment block with version, status, branch, and diff range.
@@ -262,39 +325,125 @@ Do NOT combine data from other files. For example, if `3.119.4-unreleased.md` ha
 and `3.119.4.md` has 101 PRs, the unreleased file should only cover those 4 PRs — it is
 NOT a rollup of the version file.
 
-Follow these rules:
+Follow these rules, **in priority order — earlier rules trump later ones.** If a later rule
+would tempt you to include an internal PR, rule 1 wins.
 
-1. **Highlights** — 1-3 sentences. What's the story? Lead with the biggest changes.
-   Mention community contributors by linked name.
+> **References (read the two that carry the detail):**
+> [`references/grouping.md`](references/grouping.md) — how to merge related PRs into a few
+> thematic bullets (rule 5); [`references/review-checklist.md`](references/review-checklist.md)
+> — the 12-point self-review you run before saving; [`references/TEMPLATE.md`](references/TEMPLATE.md)
+> — the canonical page shape (banner, sections, worked example).
 
-2. **Skia engine** — If a "Bump skia" or "milestone" PR appears in the raw data,
-   list it first under an **Engine** category.
+1. **Focus on the product, not the project — drop internal work.** This is the rule that makes
+   the page useful (see the **Purpose** section above). Every raw-data
+   PR line is tagged `[product]`, `[mixed]`, or `[internal]` by the script:
+   - **`[internal]` → do not write a bullet for it.** Roll ALL internal PRs into a single
+     trailing line — *"Plus various CI, documentation, and internal tooling improvements."* — or
+     omit even that when there were none. Never one bullet per internal change.
+   - **`[product]` → keep it**, categorized below.
+   - **`[mixed]` (build config only) → guess from the title/context in the block** (no need to
+     open the PR). Give it a bullet only when it plausibly changes what ships — a rendering or
+     behaviour fix, a crash fix, a new platform/RID; otherwise fold it into the collapse line
+     with the internal work. When unsure, prefer the collapse line.
+   Apply the *one test* (see Purpose) only as a tie-breaker for a line the tag clearly got wrong.
+   **Dev-cycle and `-unreleased` pages are often mostly `[internal]`** — that is expected; such a
+   page may legitimately be just Highlights + the single collapse line.
 
-3. **Categorize features** — Group by what they affect. Use sub-headers:
-   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
+2. **Highlights — a hook, not a summary (MANDATORY heading, target ~80 words, HARD CAP 100).**
+   The section is **always present**: write the literal heading **`## Highlights`** right after the
+   banner / `> **API changes**` block, then two or three **short** sentences — **aim for ~80
+   words, never exceed 100** (count them). Never drop the heading and never replace it with a
+   bare unlabelled lead paragraph. Name only the **3-4 biggest** things (the engine jump, the one
+   headline feature, the fact that there are breaking changes) in plain prose. This is the single
+   most-violated rule, so the bans are explicit — in Highlights, **do NOT**:
+   - enumerate APIs, dependency bumps, or fixes (the categories below carry the full list);
+   - list contributors one by one (the Community Contributors table does that) — at most name the
+     *one* standout by linked handle;
+   - use per-item parentheticals, PR/issue links, or `code` API names as a checklist;
+   - write "Compared to X, v4 delivers: A, B, C, D, E, F …" — that comma-run **is** the
+     enumeration this rule forbids.
+   If a reader could reconstruct the category sections from your Highlights, it is too long —
+   cut it back to the hook. The bigger the release, the more **selective** Highlights get, never
+   longer.
 
-4. **Community contributors** — Anyone not @mattleibow. Mark with ❤️ inline AND
-   in a Contributors table. **ALWAYS** link: `[@user](https://github.com/user)`.
-   Never write bare `@user` anywhere in the file.
+   > **Too long (what not to do):** *"4.148.0 is the shipped v4 stable… Compared to 3.119.x, v4
+   > delivers: variable font support (`SKFontArguments`), color font palettes, animated WebP
+   > encoding (`SKWebpEncoder`), `SKStream.GetData()` zero-copy, `SKSamplingOptions` overloads…
+   > Behavioral hardening: default typeface resolution moves… `new SKFont()`… Standout community
+   > work: @ramezgerges (16 PRs — …), @4Darmygeometry (…), @SimonvBez (…), @ebariche (…)…"*
+   > (228 words — the whole page crammed into the hook).
+   >
+   > **Right (keep the heading):**
+   > ```markdown
+   > ## Highlights
+   >
+   > The first stable v4 release upgrades the engine to Skia m148 and lands the big v4 feature
+   > wave — variable fonts, color font palettes, and animated WebP — alongside a set of
+   > behavioural breaking changes to review before upgrading. Community work from
+   > [@ramezgerges](https://github.com/ramezgerges) anchored the release.
+   > ```
+   > (~50 words, under the heading.)
 
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
-   If many, mention as: "Plus several CI and documentation improvements."
-
-6. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
+3. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
    release."* when there are none — never drop the heading). If the raw block lists a
    `.breaking.md` and/or `.notes.md` companion, open them and **summarize the breaks as a few
    bullets**: name the affected types/areas, add a migration snippet where it helps, and link
    the API diff for the full list. Behavioral & interop breaks come only from `.notes.md`.
    Summarize, don't dump. (See [Companion files](#companion-files-open-and-read-them).)
 
-7. **PR links** — Every item links to its PR.
+4. **Skia engine first** — If a "Bump skia" or "milestone" PR appears in the raw data,
+   list it first under an **Engine** category.
 
-8. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
-   as the first line AFTER the raw data comment block (before the `# Version` heading).
-   Use the current UTC time and your model name.
+5. **Group and categorize — curate, don't enumerate.** Merge related `[product]` PRs into a few
+   **thematic bullets** (target **8–15 total across the whole page, at most ~4 per category
+   section** — count them; `## Breaking Changes` is the only exception and may list one per
+   distinct break). **Never one bullet per PR.** Read
+   **[`references/grouping.md`](references/grouping.md)** for the countable cap, the clustering
+   axes, and a worked example. Group under top-level `##` categories (Engine & native
+   dependencies, New APIs, GPU & Rendering, Text & Fonts, Views & platforms, Fixes, Lifecycle &
+   Internals, Security). Each grouped bullet:
+   `**impact-statement title** — one line on why it matters. ❤️ [@a](url), [@b](url) ([#N](url), [#M](url))`
+   - The PR link(s) come **last**, in one parenthetical.
+   - Community contributors are credited with `❤️ [@user](url)` before the PR links. The
+     maintainer (@mattleibow) and **all bot accounts** (`github-actions[bot]`, `copilot[bot]`,
+     `dependabot[bot]`, any `*[bot]`) are **never** credited — their PRs may be listed but carry
+     no `❤️` and no "by".
+   - **Never** a bare, backticked, or `by @handle` — every handle is a `[@user](https://github.com/user)`
+     link, never the sentence's subject (the raw-data `by @user` is source data, not output).
 
-9. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
+6. **Community Contributors table — render the roster, completely.** The raw-data block ends
+   with an authoritative **`contributors:`** roster: every external (non-maintainer, non-bot)
+   author to credit, with their PR numbers. **Render one table row per roster entry — never omit
+   one, never invent one.** (Reconstructing this list from the body prose kept silently dropping
+   real contributors whose PRs were folded into thematic bullets — the roster is the fix.) Emit
+   the table whenever the roster is non-empty:
+   `## Community Contributors ❤️`, **one row per contributor, one line each**:
+   `| [@user](https://github.com/user) | <short prose summary of their work> ([#N](url), [#M](url)) |`
+   - Column 1 `Contributor` is a **plain `[@user](url)` — no ❤️** (the heart wraps badly here; it
+     lives only on the inline bullets).
+   - Column 2 `What They Did` is a **single line**: a prose summary (Feature A, bug B, thing C)
+     built from that contributor's PR titles in the block, then their PR links in **one**
+     parenthetical. **Not** a bare list of `[#N]` links, and **not** `[#N] — note` fragments.
+   - A contributor appears **even if their work was internal/samples-only** — the table thanks
+     everyone whose PRs shipped, so summarize whatever they did.
+   - **Never** a row for @mattleibow or any bot (the roster already excludes them).
+
+7. **Banner — themed, dated, linked.** The blockquote directly under `# Version X.Y.Z` is
+   **never** a bare `> [NuGet](…)`. Write exactly one of these shapes:
+   - **Stable:** `> **<theme>** · Released <date> · [NuGet](https://www.nuget.org/packages/SkiaSharp/<v>) · [GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v<v>)`
+     — `<date>` is the raw-data block's `released:` field **verbatim** (e.g. *December 2, 2024*);
+     `<theme>` is a 2–4 word editorial phrase you write from the Highlights (e.g. *First stable
+     3.x release*, *Engine upgrade & API cleanup*).
+   - **Preview-only:** `> **<theme>** · Preview only · [NuGet](<preview-url>) · [GitHub Release](url)`
+   - **Unreleased:** `> **Upcoming release** · In development · Not yet available on NuGet`
+   - **HarfBuzz:** `> **<theme>** · Ships with SkiaSharp <X> · [NuGet](<hb-url>) · [GitHub Release](url)`
+   If the existing page already has a bare banner, **replace it** — do not preserve it. The
+   script-owned `> **Supersedes …**` and `> **API changes** …` lines stay verbatim below it.
+
+8. **PR links** — Every item links to its PR.
+
+9. **Rollup at top** — Aggregate ALL `[product]` changes across all previews into the main
+   sections.
 
 10. **Previews are minimal** — One sentence + Full Changelog link each, at the bottom.
     Render one trailing `## <label> (<date>)` section per entry in the data-block's
@@ -305,6 +454,34 @@ Follow these rules:
     or HarfBuzz link** — the script injects a `> **API changes**` line under the banner
     when a diff folder exists (gated on existence, so it never dangles). Keep that line
     verbatim and author no API links yourself (see TEMPLATE.md "SCRIPT-OWNED API LINKS").
+
+12. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
+    as the first line AFTER the raw data comment block (before the `# Version` heading).
+    Use the current UTC time and your model name.
+
+## Before you save each page — self-review
+
+Apply **[`references/review-checklist.md`](references/review-checklist.md)** to the page you just
+wrote — it is the 12-point rubric (also runnable standalone to grade any finished page). Fix
+every FAIL and re-check once. The checks that go wrong most often, watch these first:
+
+1. **Banner shape** — `> **<theme>** · Released <Month D, YYYY> · [NuGet](url) · [GitHub Release](url)`
+   on a stable page (never a bare `> [NuGet](…)`); `Preview only` / `In development` variants per
+   TEMPLATE.md. The release date comes from the raw-data `released:` line.
+2. **Curated, not enumerated** — 8–15 grouped product bullets total, **at most ~4 per category
+   section** (Breaking Changes exempt); not one per PR
+   (see [`references/grouping.md`](references/grouping.md)).
+3. **Product test** — no `[internal]` PR gets a bullet; they collapse into the single
+   *"Plus various CI, documentation, and internal tooling improvements."* line. Each `[mixed]` PR
+   is either surfaced as a shipping change or folded into that same line — never left as a raw
+   build/infra bullet.
+4. **No bare `@handle`, no bot credits** — every handle is `[@user](url)`; no `❤️`/row/"by" for
+   any `*[bot]`.
+5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
+   none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
+6. **`## Highlights` heading present** (never a bare lead paragraph) and **≤ 100 words** (target
+   ~80 — count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration; **`## Breaking Changes`
+   present**; raw-data comment intact.
 
 ## Parallelization
 

@@ -10,6 +10,10 @@
       "4.151"
     ]
   },
+  "history_floor": {
+    "$comment": "PERFORMANCE floor (spec §1.4), read by BOTH engines. A per-family minimum line core BELOW which no page is regenerated and no API diff is emitted, so a full '--all' run skips the obsolete back-catalogue it would otherwise rebuild from the NuGet feed every run. It is NOT a delete: pages and API-diff folders already committed below the floor are left exactly as they are (the Cake engine also skips CLEARING them), so history stays intact — it is simply not rebuilt. Baselines are unaffected: a floored line can still be downloaded as a compare_to baseline (e.g. 3.116.0 still diffs against 2.88.9). Absent/empty => no floor (legacy: every line is regenerated). Raise it over time as old lines stop needing refreshes; lower or remove it to rebuild history.",
+    "skiasharp": "3.0.0"
+  },
   "skiasharp": {
     "3.0.0": {
       "status": "superseded",
