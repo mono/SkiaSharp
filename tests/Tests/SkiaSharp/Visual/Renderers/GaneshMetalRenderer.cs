@@ -67,6 +67,18 @@ namespace SkiaSharp.Tests.Visual
 					if (queue == IntPtr.Zero)
 						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
+					// Azure DevOps macOS agents advertise Metal but only expose a
+					// virtualized/software device that lacks MTLGPUFamilyMac2 and
+					// MTLGPUFamilyApple7+. Real Intel and Apple Silicon Macs support
+					// Mac2 (and Apple Silicon adds Apple7+). GRContext.CreateMetal +
+					// Flush(sync) hangs indefinitely on the CI runner's device with no
+					// hangdump firing (native-code block), so probe before entering
+					// Ganesh's Metal init and skip cleanly if we're on the CI Metal.
+					if (!MetalHasRenderCapableFamily(device))
+						throw new RendererUnavailableException(
+							"MTLDevice does not support any MTLGPUFamily that Ganesh needs " +
+							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+
 					using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
 					using var grContext = GRContext.CreateMetal(backendContext)
 						?? throw new InvalidOperationException("GRContext.CreateMetal returned null.");
@@ -91,6 +103,30 @@ namespace SkiaSharp.Tests.Visual
 		public void Dispose()
 		{
 		}
+
+		// MTLGPUFamily values from Metal.framework (see MTLDevice.h). Modern real
+		// Macs advertise Mac2 (Intel + Apple Silicon) or Apple7+ (Apple Silicon
+		// only). The Azure DevOps macOS runner's virtualized Metal does not, so a
+		// negative probe here is a good signal that the actual rendering would
+		// hang or fatal-abort further down.
+		private const ulong MTLGPUFamilyApple7 = 1007;
+		private const ulong MTLGPUFamilyApple8 = 1008;
+		private const ulong MTLGPUFamilyApple9 = 1009;
+		private const ulong MTLGPUFamilyMac2   = 2002;
+
+		private static bool MetalHasRenderCapableFamily(IntPtr device)
+		{
+			var sel = sel_registerName("supportsFamily:");
+			foreach (var f in new[] { MTLGPUFamilyApple9, MTLGPUFamilyApple8, MTLGPUFamilyApple7, MTLGPUFamilyMac2 })
+			{
+				if (objc_msgSend_supportsFamily(device, sel, f) != 0)
+					return true;
+			}
+			return false;
+		}
+
+		[DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
+		private static extern byte objc_msgSend_supportsFamily(IntPtr receiver, IntPtr selector, ulong family);
 
 		[DllImport("/System/Library/Frameworks/Metal.framework/Metal")]
 		private static extern IntPtr MTLCreateSystemDefaultDevice();

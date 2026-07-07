@@ -77,7 +77,7 @@ void RunTests(FilePath testApp, DirectoryPath output)
             .Append("--report-trx")
             .Append("--report-trx-filename").Append("TestResults.trx")
             .Append("--hangdump")
-            .Append("--hangdump-timeout").Append("15m")
+            .Append("--hangdump-timeout").Append("5m")
             .Append("--hangdump-type").Append("Mini"),
     });
 
@@ -121,7 +121,7 @@ void RunDotNetTest(
                 .Append("--report-trx")
                 .Append("--report-trx-filename").Append("TestResults.trx")
                 .Append("--hangdump")
-                .Append("--hangdump-timeout").Append("15m")
+                .Append("--hangdump-timeout").Append("5m")
                 .Append("--hangdump-type").Append("Mini");
             return args;
         },
