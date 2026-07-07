@@ -1,462 +1,429 @@
-# Design Spec: Blazor Server / Hybrid / Auto support for SkiaSharp
+# SkiaSharp Blazor Views — Behaviour Specification
 
-Issue: [#1194 — Support SkiaSharp as a Blazor Extension](https://github.com/mono/SkiaSharp/issues/1194)
-Component: `SkiaSharp.Views.Blazor` (`SKCanvasView`, `SKGLView`)
+Component: `SkiaSharp.Views.Blazor` — `SKCanvasView`, `SKGLView`
+Related issue: [#1194 — Support SkiaSharp as a Blazor Extension](https://github.com/mono/SkiaSharp/issues/1194)
 
-> **Status:** design specification / living architectural reference. It captures the
-> architecture and the compatibility contract for multi-host Blazor rendering so we can
-> validate over time that changes do not break the model. Real tests remain the enforcement
-> mechanism; this document explains *why* the shape is what it is.
-
-> **Implementation status.** The core is implemented and verified end to end for **Blazor
-> Server** (an `SKCanvasView` renders on the server and streams frames that paint at
-> `cssSize × devicePixelRatio` and animate over the circuit). Delivered: host detection,
-> Direct/Bridged split, the shared JS presenter + host-agnostic bridge module, the
-> backpressured bridged renderer, the frame producer (PNG/JPEG/raw), transfer-format
-> resolution, the public API (`SKBlazorTransferFormat`, `SKBlazorOptions`,
-> `AddSkiaSharpViewsBlazor`, per-control `TransferFormat`/`Quality`), both `SKCanvasView` and
-> `SKGLView` wired (WebAssembly path unchanged), unit tests, and a Blazor Server sample.
-> Remaining follow-ups: a Blazor Hybrid (`BlazorWebView`) sample + device UI test; the full
-> `SkiaSharp.Tests.Blazor` web app pages (Static/Server/Auto) with bUnit + `WebApplicationFactory`
-> and a CI lane; native-asset packaging verification for server/hybrid consumers; the static-SSR
-> poster frame (the canvas is currently blank until interactive); folding the WebAssembly
-> `SKHtmlCanvas.ts` paint onto the shared presenter; and API XML docs + release notes. Note
-> `SKGLView` under a bridged host draws CPU raster and presents via a placeholder GL render
-> target — real server/native GPU drawing is a future extension.
+> This is a **normative specification** of how the SkiaSharp Blazor views behave across every
+> Blazor hosting model. It describes the system as a whole and in the absolute — not as a set
+> of changes relative to an earlier version. "MUST/SHOULD/MAY" are used in the RFC 2119 sense.
+> §14 maps every normative rule to the code that implements it.
 
 ---
 
-## 1. Summary
+## 1. Purpose and scope
 
-`SkiaSharp.Views.Blazor` today renders **only** inside Blazor WebAssembly running in the
-browser. This spec extends the existing components so the **same** `SKCanvasView` /
-`SKGLView` also work under **Blazor Server**, **Blazor Hybrid** (`BlazorWebView` in
-MAUI/WPF/WinForms), **static SSR**, and **Interactive Auto** — with no source changes for
-existing WebAssembly users.
+`SkiaSharp.Views.Blazor` provides two Razor components, `SKCanvasView` and `SKGLView`, that let
+an application draw with SkiaSharp and have the result displayed in an HTML `<canvas>`. The same
+two components MUST function under every Blazor hosting model:
 
-The core idea: keep the fast in-browser path exactly as-is, and add a second **"bridged"**
-path where SkiaSharp renders on the .NET side (server or native host), transfers the pixels
-to the browser, and a small JavaScript module paints them into the same HTML `<canvas>`. A
-single component chooses between the two at runtime based on where it is executing.
+- **Blazor WebAssembly** — the app's .NET code runs in the browser.
+- **Blazor Server** — the app's .NET code runs on the server; the browser is a thin client
+  connected over a SignalR circuit.
+- **Blazor Hybrid** — the app's .NET code runs in a native host process (`BlazorWebView` in
+  MAUI/WPF/WinForms) and the UI is a WebView.
+- **Static server-side rendering (SSR)** — the component is prerendered on the server and is
+  not (yet) interactive.
+- **Interactive Auto** — the component renders with Blazor Server on first visit and with
+  Blazor WebAssembly on subsequent visits.
 
-## 2. Goals
+The public API and the drawing contract (§3) are identical across all hosts. What differs is
+*where* drawing happens and *how* pixels reach the `<canvas>` — this is captured by the two
+**rendering strategies** in §6 and §7, selected per host in §4.
 
-- One component set (`SKCanvasView`, `SKGLView`) that runs on **every** Blazor host model.
-- **Zero breaking changes** for existing WebAssembly consumers (API + behaviour identical).
-- Basic rendering + frame streaming for Server/Hybrid at whatever frame rate the transport
-  can sustain; animation supported via the existing `EnableRenderLoop`.
-- Interactivity (pointer/wheel/etc.) using the standard Blazor event model.
-- Correct behaviour across the **Interactive Auto** transition (Server on first visit,
-  WebAssembly on later visits) with no consumer effort.
+## 2. Terminology
 
-## 3. Non-goals
+- **Host** — the Blazor hosting model a component instance executes under.
+- **Direct strategy** — SkiaSharp draws in the browser and writes pixels straight into the
+  `<canvas>` (§6). Used only in WebAssembly.
+- **Bridged strategy** — SkiaSharp draws on the .NET side; the frame is transferred to the
+  browser and a JavaScript module paints it into the `<canvas>` (§7). Used for Server, Hybrid
+  and static SSR.
+- **Present** — the act of making a rendered frame visible in the `<canvas>`.
+- **Frame** — one rendered image.
+- **CSS size** — the layout size of the `<canvas>` element in CSS pixels
+  (`clientWidth`/`clientHeight`).
+- **Backing-store size** — the pixel grid the `<canvas>` actually holds (`canvas.width` /
+  `canvas.height`).
+- **DPR** — `window.devicePixelRatio`.
 
-- GPU-accelerated *drawing* on the server (server-side drawing is CPU raster; a real
-  server/native `GRContext` is a documented future extension, not part of this work).
-- A gesture/hit-testing framework (SkiaSharp stays low-level; apps own hit-testing).
-- Changing anything under `externals/skia` or the C API — this is pure
-  managed/Razor/TypeScript/packaging work.
+## 3. Public surface and drawing contract
 
-## 4. Background: why the current component is browser-only
+### 3.1 Rendered element
 
-`SKCanvasView`/`SKGLView` are annotated `[SupportedOSPlatform("browser")]` and use
-`[JSImport]` to call an in-browser JavaScript module (`SKHtmlCanvas.js`). Rendering happens
-in the browser's own WebAssembly copy of `libSkiaSharp`:
+Each component renders exactly one element:
 
-- `SKCanvasView` renders into a pinned pixel buffer and calls `putImageData` on a 2D canvas.
-- `SKGLView` creates a WebGL context and renders through a `GRContext` (real GPU).
-
-This is optimal for WebAssembly but impossible for Server/Hybrid, where the C# runs on the
-server (or in a native host process), not in the browser. There is no in-browser
-`libSkiaSharp` to call and no `[JSImport]` runtime available to that code path.
-
-## 5. Architecture overview
-
-Two **present strategies** behind one component:
-
-| Strategy   | Where drawing happens | How pixels reach the browser | Hosts |
-|------------|----------------------|------------------------------|-------|
-| **Direct** | Browser (WASM)       | native → `<canvas>` (`JSImport`, existing) | WebAssembly |
-| **Bridged**| .NET side (server/native) | encode/copy → `IJSRuntime` → JS paints `<canvas>` | Server, Hybrid, Static |
-
-The component detects its execution location and instantiates the matching strategy. The
-public API (`OnPaintSurface`, `EnableRenderLoop`, `Invalidate`, `IgnorePixelScaling`,
-`AdditionalAttributes`, …) is identical for both strategies.
-
-```mermaid
-flowchart TD
-    A[SKCanvasView / SKGLView] --> B{Detect host<br/>RendererInfo.Name}
-    B -->|WebAssembly| D[DirectPresenter<br/>existing JSImport path]
-    B -->|Server / WebView / Static| G[BridgedPresenter]
-    D --> C1[Browser canvas]
-    G --> E[Render on .NET side<br/>SKSurface raster]
-    E --> F[Transfer bytes via IJSRuntime]
-    F --> H{JS present backend}
-    H -->|SKCanvasView| C2[Canvas2D: putImageData / drawImage]
-    H -->|SKGLView| C3[WebGL/WebGPU: texImage2D + quad]
+```razor
+<canvas @ref="..." @attributes="AdditionalAttributes" />
 ```
 
-Key insight that keeps this small: **Server and Hybrid both reach JavaScript through
-`IJSRuntime`** (over SignalR for Server, in-process for the WebView in Hybrid). The C# bridge
-code is therefore **identical** for both; only the transport cost differs. So there are only
-two strategies to build, not four.
-
-## 6. Host detection
-
-Detection uses the official Blazor API `ComponentBase.RendererInfo` (**.NET 9+**).
-`RendererInfo.Name` reports where the component executes:
-
-| `RendererInfo.Name` | Meaning | Strategy |
-|---------------------|---------|----------|
-| `WebAssembly` | In-browser CSR | **Direct** |
-| `Server`      | Interactive SSR over SignalR | **Bridged** |
-| `WebView`     | Blazor Hybrid (native host) | **Bridged** |
-| `Static`      | Prerender / static SSR (not interactive) | **Bridged (poster only)** |
-
-`RendererInfo.IsInteractive` tells us whether a render loop is even possible (false for
-`Static`, so we emit a single poster frame).
-
-**Framework support:** the bridged features require **net9.0+**. The package continues to
-target `net6.0`/`net8.0` as **WebAssembly-only** (existing behaviour, unchanged) because
-`RendererInfo` does not exist there. On those TFMs the component uses
-`OperatingSystem.IsBrowser()` and only ever takes the Direct path.
-
-## 7. Component compatibility changes
-
-- Move `[SupportedOSPlatform("browser")]` **off the component class** and onto the
-  `JSImport` interop members only. The assembly must load and run on server/native runtimes;
-  only *calling* a `JSImport` method off-browser throws, and those calls are already gated
-  behind the Direct strategy (which is chosen only when `IsBrowser()`).
-- All new members are additive (new optional parameters, new enums, new options type). No
-  existing public signature changes. ABI-safe.
-
-## 8. The bridged frame pipeline
-
-For a bridged component, one frame flows as:
-
-```mermaid
-sequenceDiagram
-    participant App as App (OnPaintSurface)
-    participant Cmp as SKCanvasView (Bridged)
-    participant Skia as SkiaSharp (.NET raster)
-    participant JS as SKHtmlCanvasBridge.js
-    participant Cv as <canvas>
-
-    Cmp->>Skia: SKSurface over pinned SKBitmap (cssSize × DPR)
-    Cmp->>App: OnPaintSurface(surface, info)
-    App-->>Cmp: draws
-    Cmp->>Cmp: produce frame bytes per TransferFormat
-    Cmp->>Cmp: skip if identical to previous frame
-    Cmp->>JS: IJSRuntime present(canvasRef, bytes, w, h, format, isGL)
-    JS->>Cv: putImageData / drawImage (2D) or texImage2D+quad (GL)
-    JS-->>Cmp: await completes (backpressure gate)
-    Cmp->>Cmp: if EnableRenderLoop, schedule next frame
-```
-
-Steps:
-
-1. **Size**: the render target is `cssSize × devicePixelRatio` so output is crisp. The client
-   CSS size and DPR are obtained from the existing `SizeWatcher`/`DpiWatcher` and reported to
-   the .NET side via a `[JSInvokable]` callback.
-2. **Draw**: the component creates an `SKSurface` over a reused, pinned `SKBitmap` and invokes
-   `OnPaintSurface` — the same callback signature as today.
-3. **Produce bytes** according to the resolved `TransferFormat` (§9).
-4. **Suppress** the send if the bytes are byte-identical to the previous frame.
-5. **Transfer** via `IJSRuntime.InvokeVoidAsync`. `byte[]` marshals as a binary `Uint8Array`
-   (not Base64) on .NET 6+; for Server there is no framework size limit on server→client
-   messages.
-6. **Backpressure**: the next frame is only scheduled after the previous transfer `await`
-   completes, and always renders the latest state (never a backlog). See §11.
-
-## 9. Frame transfer formats
-
-The bytes handed to JavaScript can be produced three ways:
-
-| `TransferFormat` | Producer (.NET) | Presenter (JS) | Notes |
-|------------------|-----------------|----------------|-------|
-| `Png`  | `SKImage.Encode(Png)`  | `createImageBitmap(blob)` → draw | lossless, keeps alpha, larger |
-| `Jpeg` | `SKImage.Encode(Jpeg, q)` | `createImageBitmap(blob)` → draw | small payload, no alpha |
-| `Put`  | raw pixels, BGRA→RGBA | `putImageData` / `texImage2D` | no encode/decode, largest payload |
-
-Configuration is layered and **orthogonal to the host**:
-
-- **Global default** via DI options (`AddSkiaSharpViewsBlazor(o => o.TransferFormat = …)` and,
-  for Hybrid, a MAUI `UseSkiaSharp` hook).
-- **Per-control override** via component parameters `TransferFormat` and `Quality`.
-
-**Host-based defaults** (used when nothing is specified):
-
-- Hybrid (`WebView`) → `Put` (in-process, latency-optimised, no encode/decode).
-- Server → `Jpeg` (network, size-optimised); use `Png` when transparency is required.
-
-Because the format is independent of the host, a Server-hosted test page can force `Put`,
-`Png`, or `Jpeg` to exercise every transfer path **without needing a real Hybrid device**.
-
-The `Put` path requires converting from SkiaSharp's little-endian BGRA8888 pixels to the RGBA
-byte order expected by `ImageData`/`texImage2D`.
-
-## 10. JavaScript module structure
-
-A central design question is how the browser-side JavaScript should be organised now that
-there are two rendering paths. The existing code is entirely WebAssembly-centric, so we must
-decide whether the bridged path is a bolt-on, an alternative file, or a refactor toward a
-shared model — and, critically, **when each module is imported**.
-
-### 10.1 What the existing JS actually does
-
-`wwwroot/SKHtmlCanvas.ts` (class `SKHtmlCanvas`) mixes three concerns:
-
-1. **WASM-only source/context** — `putImageData(ptr,…)` reads pixels directly from the
-   emscripten heap (`Module.HEAPU8.buffer` at a pointer); GL uses emscripten's
-   `GL.createContext`/`makeContextCurrent` so the in-browser native `GRContext` renders into
-   that same context. **Neither works off-browser** — a Server client browser and a Hybrid
-   WebView have DOM + WebGL but **no emscripten `Module`/`GL`** (Skia runs natively there, not
-   as WASM in the page).
-2. **Loop** — a **browser-pull** loop: `requestAnimationFrame` calls back into .NET to draw.
-3. **Paint primitives** — the pure-browser bits: sizing the canvas and the final
-   `putImageData` onto a 2D context.
-
-`SizeWatcher.ts` and `DpiWatcher.ts` are already generic (they only report size/DPR to .NET)
-and are reusable **as-is** by both paths.
-
-### 10.2 How different is the bridged path, really?
-
-Only in two small, isolated places:
-
-| Concern | Direct (WASM) | Bridged (Server/Hybrid) |
-|---------|---------------|-------------------------|
-| Pixel source | emscripten heap pointer | `Uint8Array`/blob from .NET |
-| Loop direction | browser-pull (RAF → .NET) | .NET-push (.NET → `present`) |
-| Paint onto canvas | `putImageData` / GL into emscripten ctx | **same paint ops** (`putImageData`/`drawImage`/`texImage2D`) |
-
-The *painting layer is essentially identical*; it is **not radically different**. What
-differs is where the bytes come from and who drives the frame. So the right move is a **light
-refactor toward a shared paint core**, not a duplicate bolt-on and not a rewrite.
-
-### 10.3 Target module layout
-
-```
-wwwroot/
-  SizeWatcher.ts        (unchanged, shared)      — reports element size to .NET
-  DpiWatcher.ts         (unchanged, shared)      — reports devicePixelRatio to .NET
-  SKCanvasPresenter.ts  (NEW, shared, pure-browser) — the "render steps"
-      • present2DPixels(canvas, rgba, w, h)      → putImageData
-      • present2DBitmap(canvas, imageBitmap)     → drawImage
-      • presentGLPixels(canvas, glState, rgba,…) → texImage2D + fullscreen quad
-      • presentGLBitmap(canvas, glState, bitmap) → texImage2D + fullscreen quad
-      • createPresentationGLContext(canvas)      → plain browser WebGL2 context
-      • sizeCanvas(canvas, w, h), element registry helpers
-  SKHtmlCanvas.ts       (Direct/WASM; refactored) — emscripten heap read + emscripten GL +
-                          browser-pull loop + .NET draw callback; delegates the final paint
-                          to SKCanvasPresenter. Behaviour unchanged.
-  SKHtmlCanvasBridge.ts (NEW, Bridged; thin, no emscripten)
-      • initialize(canvas, isGL)
-      • present(canvas, bytesOrBitmapSource, w, h, format, isGL)
-          – Png/Jpeg → createImageBitmap(new Blob([bytes],{type})) → present*Bitmap
-          – Put      → present*Pixels(bytes)
-        No loop logic (the .NET side pushes).
-```
-
-`SKCanvasPresenter.ts` contains **only standard browser APIs** — no emscripten, no .NET
-callbacks, no loop — so it is safe to import in every host. It is the "new render steps" the
-paint code funnels through; both the Direct module and the Bridge module call into it, which
-is what keeps the two paths thin and avoids duplicating paint logic.
-
-### 10.4 When each module is imported
-
-Modules are ES modules imported lazily in the component's `OnAfterRenderAsync(firstRender)`,
-**per strategy**:
-
-- **Direct** strategy imports `SKHtmlCanvas.js` (which internally imports
-  `SKCanvasPresenter.js`) — only ever in the browser/WASM host.
-- **Bridged** strategy imports `SKHtmlCanvasBridge.js` (which internally imports
-  `SKCanvasPresenter.js`) — used by Server/Hybrid/Static.
-- Both strategies import `SizeWatcher.js` / `DpiWatcher.js`.
-
-This separation is not just tidiness: the bridged path **must never import** `SKHtmlCanvas.js`
-because that module's methods reference emscripten globals that don't exist in a Server client
-browser or a Hybrid WebView. Splitting the emscripten-coupled source into its own file is what
-makes the server/hybrid load safe.
-
-### 10.5 Present backend chosen by view type
-
-Within the presenter, the backend is chosen by **view type** so the browser canvas keeps the
-context the app asked for:
-
-- `SKCanvasView` → Canvas2D backend (`putImageData` for `Put`, `drawImage` for `Png`/`Jpeg`).
-- `SKGLView` → WebGL/WebGPU backend (`texImage2D` + full-screen quad), so GL
-  post-processing/augmentation the app applies keeps working and the context type stays stable
-  across the Interactive Auto transition. (Server-side drawing is CPU raster this release; a
-  future server/native `GRContext` feeds the same texture-upload path unchanged.)
-
-The transfer format (§9) and the present backend (§10.5) are orthogonal: encoded or raw bytes
-can each feed either the 2D or GL backend.
-
-
-## 11. Render loop, invalidation & backpressure
-
-The bridged path reuses the existing API and semantics exactly:
-
-- `Invalidate()` renders and presents one frame.
-- `EnableRenderLoop = true` runs a continuous loop (the analogue of the WASM
-  `requestAnimationFrame` loop).
-- The app owns the frame rate. There are **no framework FPS caps**. An app that wants to run
-  slower (e.g. on a poor connection) disables the loop and drives frames with `Invalidate()`.
-
-The one behaviour that is enforced for correctness (not policy) is **backpressure**: the loop
-renders and pushes the next frame only after the previous transfer `await` has completed, and
-always draws the latest state. This means a slow link naturally self-limits the effective
-frame rate instead of building an unbounded queue of frames in memory. Two cheap,
-non-configurable optimisations round it out: skip presenting a byte-identical frame, and pause
-the loop while the tab/circuit is hidden.
-
-## 12. Input & interactivity
-
-Interactivity uses the standard Blazor event model — no new event API:
-
-- The bridged presentation `<canvas>` receives the same `AdditionalAttributes` splat the WASM
-  component already applies, so apps attach `@onpointerdown`, `@onpointermove`, `@onwheel`,
-  etc. exactly as they do on WebAssembly today.
-- Input events (from client to server) are tiny, well under the 32 KB
-  `HubOptions.MaximumReceiveMessageSize` limit that applies to client→server messages.
-
-**Coordinate mapping / DPI.** A canvas has a CSS/layout size and a backing-store size; we
-render the backing store at `cssSize × DPR` for crispness. Pointer events report
-`OffsetX/OffsetY` in **CSS pixels**, while the scene is drawn in **device pixels**, so a click
-maps to scene coordinates with a single ratio:
-
-```
-sceneX = offsetX * (canvas.width  / canvas.clientWidth)
-sceneY = offsetY * (canvas.height / canvas.clientHeight)
-```
-
-This ratio folds in both the DPR and any CSS stretching. It is exactly the mapping WASM apps
-already perform, so bridged mode introduces **no new DPI burden**. An optional DPI-aware
-mapping helper may be provided for convenience, but it is not required.
-
-## 13. Static SSR & Interactive Auto
-
-- **Static SSR** (`RendererInfo.Name == "Static"`, not interactive): the component renders one
-  frame on the server and emits it as a data-URL `<img>`/`<canvas>` in the initial markup, so
-  prerendered HTML shows the drawing immediately. No loop, no interactivity.
-- **Interactive Auto**: Blazor renders the component with Interactive Server on the first
-  visit and Interactive WebAssembly on later visits (after the WASM bundle is cached). Blazor
-  never swaps a live component's runtime, so a single component that adapts via `RendererInfo`
-  is exactly the supported pattern: the Server leg uses Bridged, the WebAssembly leg uses
-  Direct. Because the paint surface is stateless (the app redraws in `OnPaintSurface`), no
-  `PersistentComponentState` is needed across the transition.
-
-## 14. Transport facts (verified)
-
-- Server→client (hub→client) SignalR messages have **no framework size limit**, so pushing
-  frame bytes to the browser is fine.
-- `byte[]` passed to JS interop transfers as a binary `Uint8Array` (not Base64) since .NET 6;
-  extremely large payloads can use `IJSStreamReference` if ever needed.
-- The 32 KB `HubOptions.MaximumReceiveMessageSize` cap applies only to client→server messages
-  — i.e. our tiny input events — so it is a non-issue for frames.
-
-## 15. Public API surface (all additive)
-
-- `SKCanvasView` / `SKGLView`: new optional parameters
-  - `TransferFormat` (`SKBlazorTransferFormat?`, null → global/host default)
-  - `Quality` (`int?`, applies to `Jpeg`)
-- `enum SKBlazorTransferFormat { Png, Jpeg, Put }`
-- `class SKBlazorOptions` (global defaults: transfer format, quality)
-- `IServiceCollection.AddSkiaSharpViewsBlazor(Action<SKBlazorOptions>? configure = null)`
-  (optional; sensible defaults apply if not called). A MAUI `UseSkiaSharp`/host hook exposes
-  the same options for Hybrid.
-- Internal only: `ISKBlazorPresenter`, `DirectPresenter`, `BridgedPresenter`, host-detection
-  helper.
-
-Existing members — `OnPaintSurface`, `EnableRenderLoop`, `Invalidate`, `IgnorePixelScaling`,
-`Dpi`, `AdditionalAttributes` — are unchanged.
-
-## 16. Packaging
-
-- Keep everything in the **single** `SkiaSharp.Views.Blazor` package. One shared component
-  assembly is what makes Interactive Auto work (it is referenced by both the server and the
-  WASM client projects) and gives the simplest consumer story.
-- Native assets: `SkiaSharp.NativeAssets.WebAssembly` and the emcc `--js-library` `.props`
-  workaround must remain **browser-only** and must not leak into server/hybrid builds.
-  Server/Hybrid consumers get the platform native asset from their existing `SkiaSharp`
-  reference.
-- The new bridge JS ships as a static web asset (served for Server, Hybrid, and WASM alike).
-
-## 17. Testing strategy
-
-Existing harnesses (all use `DeviceRunners.VisualRunners` + xUnit v3):
-
-- `SkiaSharp.Tests.Console` — plain .NET runtime → server-side native rendering + pure logic.
-- `SkiaSharp.Tests.Wasm` — a standalone Blazor **WebAssembly** app → the in-browser (Direct)
-  suite. (It has no server, so it cannot host Static/Server/Auto — left as-is.)
-- `SkiaSharp.Tests.Devices` — a **MAUI** app with `DeviceRunners.UITesting` → device platforms.
-
-Additions:
-
-1. **Unit tests** (in `SkiaSharp.Tests.Console`) for the bridged frame producer: encode
-   `Png`/`Jpeg`, `Put` + BGRA→RGBA conversion, identical-frame suppression, size/DPI maths.
-   No browser required.
-2. **New `SkiaSharp.Tests.Blazor`** — a Blazor **Web App** (ASP.NET Core hosted, net9/net10)
-   with pages for `Static`, `InteractiveServer`, `InteractiveAuto`, and `InteractiveWebAssembly`
-   using the shared component. Coverage: **bUnit** component tests (mock `IJSRuntime`, assert a
-   frame is produced/pushed, throttling/backpressure honoured, transfer formats forced per
-   page) + a light **`WebApplicationFactory`** smoke that each page returns 200 with an initial
-   poster.
-3. **Hybrid page** added to `SkiaSharp.Tests.Devices` — a `BlazorWebView` hosting `SKCanvasView`
-   plus a `DeviceRunners.UITesting` assertion that it renders (reuses the device CI matrix).
-
-Coverage map: Console = server-native + logic; Wasm = Direct/in-browser; Tests.Blazor =
-Static/Server/Auto web hosting; Devices = Hybrid WebView.
-
-## 18. Implementation phases
-
-Recommended dependency-ordered phases:
-
-0. **dev-doc** — commit this spec to `documentation/dev/blazor-server-hybrid-rendering.md`
-   and link it from `AGENTS.md` "Further Reading" + the `documentation/dev/` index.
-1. **strategy-refactor** — introduce `ISKBlazorPresenter`; wrap the existing WASM path as
-   `DirectPresenter`; components delegate presentation to a strategy (no WASM behaviour change).
-2. **host-detection** — `RendererInfo`-based detection (net9+) with `IsBrowser()` fallback;
-   static-SSR poster frame.
-3. **js-presenter-refactor** — extract shared, pure-browser paint primitives into
-   `SKCanvasPresenter.ts` (Canvas2D + WebGL backends); refactor `SKHtmlCanvas.ts` to delegate
-   its final paint to it with **no behaviour change** (regression-safe).
-4. **bridge-js** — new `SKHtmlCanvasBridge.ts` (`initialize`/`present`, no emscripten) built on
-   `SKCanvasPresenter`; wire per-strategy lazy module imports.
-5. **bridged-renderer** — `BridgedPresenter`: raster render, transfer per format, versioned
-   frames, backpressured loop, `Invalidate()`, identical-frame suppression.
-6. **options-di** — `SKBlazorOptions`, `AddSkiaSharpViewsBlazor`, host/per-control resolution.
-7. **input-events** — `AdditionalAttributes` splat on the bridged canvas + optional coord
-   helper; DPR/size round-trip.
-8. **packaging** — browser-only native asset + emcc props; verify single-package Auto flow.
-9. **samples** — Blazor Web App sample (Static/Server/Auto) and a Hybrid sample
-   (MAUI/WPF `BlazorWebView`).
-10. **tests-unit** — bridged frame-producer unit tests in `SkiaSharp.Tests.Console`.
-11. **tests-blazor** — new `SkiaSharp.Tests.Blazor` web app + bUnit + `WebApplicationFactory`.
-12. **tests-hybrid** — `BlazorWebView` page + UI test in `SkiaSharp.Tests.Devices`.
-13. **docs** — update `SkiaSharp.Views.Blazor` API docs + release notes (supported hosts, perf
-    guidance, Auto behaviour).
-
-## 19. Risks & open implementation details
-
-- **Assembly loads off-browser** — verified fine; only *calling* `JSImport` off-browser throws,
-  and those calls are gated behind the Direct strategy.
-- **Server resource use** — each circuit renders server-side (CPU/RAM per user). Add a
-  max-canvas-size guard and dispose promptly on circuit teardown. (No FPS cap by design; a size
-  guard is still prudent.)
-- **Prerender/poster semantics** — confirm `OnPaintSurface` runs during static SSR to produce
-  the poster and what shows before interactivity attaches.
-- **CI** — the new `SkiaSharp.Tests.Blazor` web app needs a CI lane; decide bUnit +
-  `WebApplicationFactory` only vs adding Playwright e2e (pixel-sampling) if available.
-- **Back-compat** — existing WASM code and the `OnPaintSurface` signature stay byte-for-byte
-  identical; all changes additive/ABI-safe.
-- **Build** — managed/Razor/TS/packaging only; no native or C-API changes, so bootstrap via
-  `dotnet cake --target=externals-download`.
-
-## 20. References
-
-- Reference implementation studied: [`taublast/DrawnUi` → `src/Blazor/DrawnUi.Server`](https://github.com/taublast/DrawnUi/tree/main/src/Blazor/DrawnUi.Server)
-  (headless render → encode → stream bytes → present in `<img>`/`<canvas>`; pointer/resize
-  round-trip; DI + frame-format options).
-- ASP.NET Core Blazor render modes (`RendererInfo`, Interactive Auto), SignalR guidance, and
-  JS interop byte-array transfer (MS Learn).
+The component MUST splat `AdditionalAttributes` onto this `<canvas>` so that applications can
+attach standard Blazor attributes and event handlers (for example `style`, `class`,
+`@onpointerdown`, `@onwheel`) uniformly across all hosts.
+
+### 3.2 Components and parameters
+
+`SKCanvasView` (CPU/raster surface) and `SKGLView` (GPU surface) share this parameter surface:
+
+| Member | Meaning |
+|--------|---------|
+| `OnPaintSurface` | Callback invoked to paint a frame. `SKCanvasView` supplies `SKPaintSurfaceEventArgs`; `SKGLView` supplies `SKPaintGLSurfaceEventArgs`. |
+| `EnableRenderLoop` (bool) | When `true`, frames are produced continuously; when `false`, only on demand. Changing it calls `Invalidate()` (§8). |
+| `IgnorePixelScaling` (bool) | Selects the coordinate space handed to `OnPaintSurface` (§5.3). Changing it calls `Invalidate()`. |
+| `AdditionalAttributes` | Unmatched attributes, splatted onto the `<canvas>`. |
+| `Dpi` (double, get) | The device pixel ratio currently in effect (§5). |
+| `Invalidate()` | Requests that a frame be rendered (§8). |
+| `TransferFormat` (`SKBlazorTransferFormat?`) | Bridged-only frame encoding (§7.4). Ignored by the Direct strategy. |
+| `Quality` (`int?`) | JPEG quality for the bridged JPEG format (§7.4). Ignored otherwise. |
+
+`TransferFormat` and `Quality` are available on .NET 9.0 and later (see §12).
+
+### 3.3 Options and dependency injection
+
+- `enum SKBlazorTransferFormat { Png, Jpeg, Put }` — the bridged transfer encodings (§7.4).
+- `sealed class SKBlazorOptions { SKBlazorTransferFormat? TransferFormat; int Quality = 85; }` —
+  global defaults.
+- `IServiceCollection AddSkiaSharpViewsBlazor(Action<SKBlazorOptions>? configure = null)` —
+  registers global defaults. Calling it is OPTIONAL; when it is not called, `SKBlazorOptions`
+  defaults apply.
+
+All members in §3.2 and §3.3 are additive; no existing public signature changes across hosts.
+
+### 3.4 Failure and lifecycle behaviour
+
+- A component MUST NOT throw during first render on any host; it produces frames once it has a
+  positive size and DPR.
+- `IDisposable.Dispose()` MUST release the render buffer and any host-specific resources
+  (JavaScript module reference, size/DPI observers, native GL objects) and MUST be safe when
+  the underlying transport (for example a Server circuit) is already gone.
+
+## 4. Execution location and strategy selection
+
+On first interactive render, a component determines its host and selects a strategy:
+
+| Detected host | `RendererInfo.Name` | Strategy |
+|---------------|---------------------|----------|
+| WebAssembly | `WebAssembly` | **Direct** (§6) |
+| Blazor Server | `Server` | **Bridged** (§7) |
+| Blazor Hybrid | `WebView` | **Bridged** (§7) |
+| Static SSR | `Static` | **Bridged** (§7), non-interactive (§11) |
+
+Rules:
+
+1. On .NET 9.0+ the host MUST be resolved from `ComponentBase.RendererInfo.Name`.
+2. If the name is unavailable (any target framework earlier than .NET 9.0, where
+   `RendererInfo` does not exist), the component MUST fall back to
+   `OperatingSystem.IsBrowser()`: when `true` the host is WebAssembly (Direct); otherwise the
+   host is treated as unknown and the component takes no interactive action.
+3. On target frameworks earlier than .NET 9.0 the components are WebAssembly-only (§12) and
+   therefore always use the Direct strategy.
+4. Because the WebAssembly fallback keys off `OperatingSystem.IsBrowser()`, a WebAssembly host
+   ALWAYS resolves to the Direct strategy even if `RendererInfo` is unavailable.
+
+## 5. Coordinate system, sizing and DPI (all hosts)
+
+These rules are identical for the Direct and Bridged strategies.
+
+### 5.1 Size and DPR sources
+
+- The **CSS size** is observed from the `<canvas>` element's `clientWidth`/`clientHeight` and
+  is reported whenever it changes.
+- The **DPR** is `window.devicePixelRatio`, sampled on a ~1 second interval (there is no DOM
+  event for DPR changes) and reported when it changes.
+- A change to either the CSS size or the DPR MUST trigger `Invalidate()`.
+
+### 5.2 Backing-store resolution
+
+The rendered frame (and the `<canvas>` backing store) MUST be sized to `cssWidth × dpr` by
+`cssHeight × dpr` device pixels (each dimension truncated to a whole number of pixels), so
+output is crisp on high-DPI displays. A component MUST NOT render while the CSS size or DPR is
+non-positive.
+
+### 5.3 `IgnorePixelScaling`
+
+`OnPaintSurface` receives two `SKImageInfo` values: a *user-visible* info and a *raw* info.
+
+- When `IgnorePixelScaling` is `false` (default): both infos describe the device-pixel
+  backing store. The application draws in device pixels.
+- When `IgnorePixelScaling` is `true`: the drawing canvas is pre-scaled by `dpr` (via
+  `canvas.Scale(dpr)` followed by `Save`), and the user-visible info describes the CSS-pixel
+  size, so the application can draw in CSS-logical units while output remains full-resolution.
+
+### 5.4 `Dpi` property
+
+`Dpi` MUST return the DPR currently in effect for the active strategy (the value most recently
+reported by the DPI source).
+
+### 5.5 Input coordinate mapping
+
+Pointer events delivered by Blazor report `OffsetX`/`OffsetY` in CSS pixels. To map an input
+point to the coordinate space a frame was drawn in, an application multiplies by
+`canvas.width / canvas.clientWidth` (and the height equivalent); this single ratio folds in
+both the DPR and any additional CSS scaling of the element. This mapping is identical for all
+hosts and is the application's responsibility (the components expose raw events per §3.1).
+
+## 6. Direct strategy (WebAssembly)
+
+In WebAssembly the component owns an in-browser JavaScript module (`SKHtmlCanvas`, §9.2) via
+`[JSImport]`/`IJSObjectReference`, keyed to the element id `"_bl_" + ElementReference.Id`, and
+SkiaSharp draws using the browser's own WebAssembly `libSkiaSharp`.
+
+### 6.1 Render loop
+
+`Invalidate()` calls the module's `requestAnimationFrame(enableRenderLoop, deviceW, deviceH)`:
+
+- The module sets the `<canvas>` backing-store size to `deviceW × deviceH`.
+- It schedules a `requestAnimationFrame`; the callback invokes the .NET render callback, which
+  paints one frame (§6.2 / §6.3) and presents it.
+- When `EnableRenderLoop` is `true`, the callback reschedules itself each frame, producing a
+  browser-paced (display-refresh) loop; when `false`, exactly one frame is produced per
+  `Invalidate()`.
+
+### 6.2 `SKCanvasView` (raster)
+
+- The surface uses `SKImageInfo.PlatformColorType` with `SKAlphaType.Opaque`.
+- Pixels are rendered into a pinned managed buffer (reused across frames unless the size
+  changes) via `SKSurface.Create` over that buffer.
+- If `IgnorePixelScaling` is `true`, the canvas is scaled by `dpr` before `OnPaintSurface`.
+- Presenting calls the module's `putImageData`, which wraps the pinned buffer as a
+  `Uint8ClampedArray` over the emscripten heap and calls `context.putImageData` on a `2d`
+  context.
+
+### 6.3 `SKGLView` (GPU)
+
+- The module creates a WebGL context with attributes `{ alpha, depth, stencil: 8, antialias,
+  premultipliedAlpha, majorVersion: 2 }`, falling back from WebGL 2 to WebGL 1 if necessary,
+  and returns its framebuffer id, sample count, stencil count and depth.
+- The component creates a `GRContext` over the GL interface, with a 256 MB resource-cache
+  limit, and renders with `SKColorType.Rgba8888` and `GRSurfaceOrigin.BottomLeft`.
+- A `GRBackendRenderTarget` is built from the reported framebuffer id / samples / stencils and
+  is recreated whenever the size changes or it becomes invalid; the `SKSurface` is created over
+  it.
+- `OnPaintSurface` receives `SKPaintGLSurfaceEventArgs` referencing the real render target. If
+  `IgnorePixelScaling` is `true`, the canvas is scaled by `dpr`. After painting, the canvas and
+  the `GRContext` are flushed.
+
+### 6.4 Sizing / DPI / lifecycle
+
+- Size is observed with a `ResizeObserver` on the `<canvas>` (`SizeWatcher`, §9.4); DPR with a
+  ~1 second poll (`DpiWatcher`, §9.5). Both report to the component per §5.1.
+- Disposal deinitialises the module, unsubscribes the watchers and frees the pinned buffer /
+  GL objects.
+
+## 7. Bridged strategy (Server, Hybrid, static SSR)
+
+Under a bridged host, SkiaSharp draws on the .NET side and the frame is transferred to the
+browser through `IJSRuntime`. The **same** C# code serves Server and Hybrid; only the transport
+differs (SignalR for Server, in-process for the Hybrid WebView). The browser side uses a
+host-agnostic module (`SKHtmlCanvasBridge`, §9.3) that has no dependency on emscripten and MUST
+NOT be the WebAssembly module of §6.
+
+### 7.1 Initialisation and metrics
+
+On first interactive render the component imports `SKHtmlCanvasBridge` and calls its
+`initialize(canvas, dotNetRef, isGL)`, where `isGL` is `false` for `SKCanvasView` and `true`
+for `SKGLView`. The module then, and whenever they change, reports the element's CSS size and
+DPR back to .NET via `dotNetRef.invokeMethodAsync('OnMetricsChanged', width, height, dpr)`. A
+metrics report updates the component's size/DPR (§5) and calls `Invalidate()`.
+
+A component MUST be ready to receive the first metrics callback before its initialisation call
+returns (the first report is synchronous inside `initialize`); it MUST NOT drop that first
+render.
+
+### 7.2 Frame production
+
+For each frame (once size and DPR are positive):
+
+1. Compute the device backing-store info per §5.2 with `SKColorType.Rgba8888` and
+   `SKAlphaType.Premul`, into a reused pinned buffer.
+2. Create an `SKSurface` over the buffer; apply `IgnorePixelScaling` scaling per §5.3.
+3. Invoke `OnPaintSurface` (`SKCanvasView` → `SKPaintSurfaceEventArgs`; `SKGLView` → §7.6).
+4. Produce the transfer payload for the resolved format (§7.4).
+5. **Suppress** the frame if its bytes are byte-identical to the previously transferred frame.
+6. Otherwise transfer it via the module's `present(canvas, bytes, deviceW, deviceH, format,
+   isGL)`.
+
+### 7.3 Present backends (by view type)
+
+The browser `<canvas>` MUST keep the context type matching the view:
+
+- `SKCanvasView` presents through a **2D** context: `putImageData` for raw pixels, or
+  `createImageBitmap(blob)` + `drawImage` for encoded frames.
+- `SKGLView` presents through a **WebGL** context: the frame is uploaded as a texture and drawn
+  with a full-screen quad (from a raw buffer via `texImage2D`, or from a decoded `ImageBitmap`).
+  The presenter flips the texture vertically so a top-left-origin raster frame displays
+  upright.
+
+The module sets the `<canvas>` backing-store size to the frame's device size before presenting.
+
+### 7.4 Transfer formats
+
+`SKBlazorTransferFormat` selects how a frame becomes bytes:
+
+| Format | Bytes | Browser present | Notes |
+|--------|-------|-----------------|-------|
+| `Png` | `SKImage.Encode(Png)` | decode → draw/texture | lossless, keeps alpha, larger |
+| `Jpeg` | `SKImage.Encode(Jpeg, quality)` | decode → draw/texture | small; no alpha; quality clamped to 0–100 |
+| `Put` | raw RGBA (unpremultiplied) | `putImageData` / `texImage2D` | no encode/decode; largest; bytes are already RGBA and directly usable |
+
+The effective format MUST be resolved with this precedence:
+
+1. the per-control `TransferFormat` parameter, else
+2. the global `SKBlazorOptions.TransferFormat`, else
+3. a host default: `Put` for Hybrid, `Jpeg` otherwise.
+
+The effective JPEG quality is the per-control `Quality`, else `SKBlazorOptions.Quality`
+(default `85`).
+
+The transfer format is independent of the host, so any host may be configured to use any
+format (this makes every transfer path exercisable from a single host in tests).
+
+### 7.5 Render loop, invalidation and backpressure
+
+The loop semantics match §8. Additionally, a bridged component MUST apply backpressure: it MUST
+NOT begin producing the next frame until the previous `present` transfer has completed, and it
+MUST always draw the latest state rather than queueing frames. Concurrent `Invalidate()` calls
+while a frame is in flight coalesce into a single subsequent frame. As a consequence, a slow
+transport self-limits the effective frame rate without unbounded memory growth. There are no
+framework-imposed frame-rate caps.
+
+### 7.6 `SKGLView` under a bridged host
+
+Server-side drawing is CPU raster. `SKGLView` still keeps a WebGL-backed `<canvas>` (§7.3) and
+its frame is presented via the WebGL texture path. `OnPaintSurface` receives an
+`SKPaintGLSurfaceEventArgs` whose surface is the raster surface and whose `GRBackendRenderTarget`
+is a lightweight placeholder sized to the frame; applications draw through `Surface.Canvas` as
+usual. Real GPU drawing on the .NET side (a headless `GRContext`) is a permitted future
+extension that would feed the same present path unchanged.
+
+### 7.7 Lifecycle
+
+Disposal MUST stop the render loop, call the module's `deinit(canvas)` (detaching observers and
+releasing the presenter's GL state), dispose the JavaScript module reference and the
+`DotNetObjectReference`, and free the render buffer. Disposal MUST tolerate an already-closed
+transport.
+
+## 8. Render loop and invalidation (all hosts)
+
+- `Invalidate()` requests one frame; if a size/DPR is not yet known it is a no-op until one is
+  reported.
+- `EnableRenderLoop = true` produces frames continuously; `EnableRenderLoop = false` produces
+  frames only in response to `Invalidate()` (including the implicit `Invalidate()` from size,
+  DPR, `EnableRenderLoop` and `IgnorePixelScaling` changes).
+- The application owns the frame rate. To run slower, an application disables the render loop
+  and drives frames with `Invalidate()`.
+- The Direct strategy is paced by `requestAnimationFrame`; the Bridged strategy is paced by
+  transfer completion (§7.5). Both honour the same `EnableRenderLoop`/`Invalidate()` contract.
+
+## 9. JavaScript modules
+
+All modules are shipped as static web assets under
+`_content/SkiaSharp.Views.Blazor/` and are ES modules.
+
+### 9.1 Module responsibilities and import rules
+
+| Module | Responsibility | Imported by |
+|--------|----------------|-------------|
+| `SKCanvasPresenter` | Pure-browser paint primitives (2D + WebGL). No emscripten, no .NET callbacks, no loop. | The Direct and Bridged modules (internally). |
+| `SKHtmlCanvas` | WebAssembly Direct path: emscripten heap/GL access, the `requestAnimationFrame` loop and the .NET draw callback. | Direct strategy only. |
+| `SKHtmlCanvasBridge` | Host-agnostic bridged present: `initialize`/`present`/`deinit`, metrics reporting. No emscripten. | Bridged strategy only. |
+| `SizeWatcher` | `ResizeObserver` reporting CSS size. | Direct strategy. |
+| `DpiWatcher` | ~1 s DPR poll. | Direct strategy. |
+
+A bridged host MUST NOT import `SKHtmlCanvas`: it references emscripten globals (`Module`,
+`GL`) that exist only in a WebAssembly runtime, not in a Server client browser or a Hybrid
+WebView. The Bridged module MUST perform its painting through `SKCanvasPresenter` so the
+pixel-to-canvas logic is defined in one place; the Direct module SHOULD do the same, and today
+still contains equivalent paint primitives inline (folding it onto `SKCanvasPresenter` is an
+internal cleanup with no behavioural effect).
+
+### 9.2 `SKHtmlCanvas` (Direct)
+
+Provides `initGL`/`initRaster`, the `requestAnimationFrame` loop, `putImageData` (from the
+emscripten heap) and emscripten WebGL context creation, as described in §6.
+
+### 9.3 `SKHtmlCanvasBridge` (Bridged)
+
+Provides `initialize(canvas, dotNetRef, isGL)` (attach `ResizeObserver` + DPR poll, report
+metrics), `present(canvas, bytes, width, height, format, isGL)` (`format` is `"png"`, `"jpeg"`
+or `"put"`) and `deinit(canvas)`, delegating painting to `SKCanvasPresenter`.
+
+### 9.4 `SizeWatcher`
+
+Observes an element with a `ResizeObserver` and reports `clientWidth`/`clientHeight`.
+
+### 9.5 `DpiWatcher`
+
+A shared instance that samples `window.devicePixelRatio` on a ~1 second interval and reports
+changes; returns the current DPR immediately on subscribe.
+
+## 10. Interactive Auto
+
+A component MUST behave correctly across the Auto transition. Blazor renders the component with
+Interactive Server on the first visit and with Interactive WebAssembly on later visits (after
+the WebAssembly bundle is cached); it never changes the runtime of a component instance already
+on the page. Because a single component adapts by host (§4) — Bridged on the Server leg, Direct
+on the WebAssembly leg — no consumer action is required. The paint surface is stateless (the
+application redraws in `OnPaintSurface`), so no state need be persisted across the transition.
+
+## 11. Static SSR
+
+A component prerendered under static SSR is not interactive: `OnAfterRender`/JavaScript interop
+do not run, so no frames are presented and the `<canvas>` remains in its initial state until the
+component becomes interactive (for example under Interactive Server or Interactive Auto), at
+which point the Bridged strategy begins presenting. Emitting a prerendered poster frame is a
+permitted future enhancement and is not required by this specification.
+
+## 12. Framework support
+
+- The Direct strategy (WebAssembly) is supported on all target frameworks the package targets
+  (currently `net6.0`, `net9.0`, `net10.0`).
+- The Bridged strategy (Server, Hybrid, static SSR) and the `RendererInfo`-based host detection
+  require **.NET 9.0 or later**. On earlier target frameworks the components are
+  WebAssembly-only and use the Direct strategy exclusively; the bridged-only parameters
+  (`TransferFormat`, `Quality`) have no effect there.
+
+## 13. Packaging and native assets
+
+- The WebAssembly native asset (`SkiaSharp.NativeAssets.WebAssembly`) and the emscripten
+  link-flag workaround are relevant only to WebAssembly builds and MUST NOT affect
+  Server/Hybrid consumers, which obtain the platform native `libSkiaSharp` from their own
+  `SkiaSharp` reference.
+- All view code lives in the single `SkiaSharp.Views.Blazor` package so that one shared
+  component assembly satisfies both the server and client projects of an Interactive Auto app.
+
+## 14. Conformance map (spec → code)
+
+The following verifies that the current implementation satisfies this specification. Paths are
+under `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/`.
+
+| Spec | Implementation | Status |
+|------|----------------|--------|
+| §3.1 element + attribute splat | `SKCanvasView.razor`, `SKGLView.razor` | ✅ |
+| §3.2 parameters | `SKCanvasView.razor.cs`, `SKGLView.razor.cs` | ✅ |
+| §3.3 enum/options/DI | `SKBlazorTransferFormat.cs`, `SKBlazorOptions.cs`, `SKBlazorServiceCollectionExtensions.cs` | ✅ |
+| §4 host detection + fallback | `Internal/SKBlazorHost.Resolve`, both views' `OnAfterRenderAsync` (`RendererInfo.Name`, `OperatingSystem.IsBrowser()`) | ✅ |
+| §5.2 backing-store = cssSize×dpr | `CreateSize` (views) and `SKBlazorBridgedRenderer.EnsureBuffer` | ✅ |
+| §5.3 `IgnorePixelScaling` | `OnRenderFrame` (views) and `RenderAndPresentAsync` | ✅ |
+| §5.4 `Dpi` | `Dpi` property (returns bridged renderer DPR when bridged) | ✅ |
+| §6.1 RAF loop | `Internal/SKHtmlCanvasInterop`, `wwwroot/SKHtmlCanvas.ts` | ✅ |
+| §6.2 raster direct | `SKCanvasView.OnRenderFrame` (`PlatformColorType`/`Opaque`, `PutImageData`) | ✅ |
+| §6.3 GL direct | `SKGLView.OnRenderFrame` (`GRContext`, `Rgba8888`, `BottomLeft`, 256 MB, WebGL2→1) | ✅ |
+| §6.4 size/DPI watchers | `Internal/SizeWatcherInterop`, `Internal/DpiWatcherInterop`, `wwwroot/SizeWatcher.ts`, `wwwroot/DpiWatcher.ts` | ✅ |
+| §7.1 init + metrics + no dropped first frame | `SKBlazorBridgedRenderer.InitializeAsync`/`OnMetricsChanged` (`initialized` set before JS `initialize`) | ✅ |
+| §7.2 frame production (RGBA/Premul, reused buffer) | `SKBlazorBridgedRenderer.RenderAndPresentAsync`/`EnsureBuffer` | ✅ |
+| §7.3 present backends by view type | `wwwroot/SKCanvasPresenter.ts` (2D + WebGL), `wwwroot/SKHtmlCanvasBridge.ts` | ✅ |
+| §7.4 formats + resolution precedence + quality | `Internal/SKBlazorFrameProducer`, `Internal/SKBlazorHost.ResolveTransferFormat` | ✅ |
+| §7.5 backpressure + identical-frame suppression | `SKBlazorBridgedRenderer.RenderLoopAsync`/`RenderAndPresentAsync` | ✅ |
+| §7.6 `SKGLView` bridged placeholder GL target | `SKGLView.PaintBridgedFrame` | ✅ |
+| §7.7 disposal | `SKBlazorBridgedRenderer.DisposeAsync`, both views' `Dispose` | ✅ |
+| §8 loop/invalidation contract | `Invalidate` (views) + `SKBlazorBridgedRenderer` | ✅ |
+| §9.1 module import rules (bridge never imports `SKHtmlCanvas`) | `Internal/SKHtmlCanvasBridgeInterop`, `Internal/SKHtmlCanvasInterop` | ✅ |
+| §10 Auto (single adaptive component) | strategy chosen per render in `OnAfterRenderAsync` | ✅ |
+| §12 net9+ gating of bridged features | `#if NET9_0_OR_GREATER` in both views | ✅ |
+| §11 static-SSR poster frame | not implemented (blank until interactive) | ⛔ future (permitted by spec) |
+| §13 packaging non-leakage | verified at project-reference level (Server sample); NuGet-pack verification | ⚠️ pending |
+| §9.1 Direct paint folded onto `SKCanvasPresenter` | `SKHtmlCanvas.ts` still paints inline | ⚠️ internal cleanup (no behavioural effect) |
+
+Automated verification: `tests/SkiaSharp.Tests.Blazor` covers §7.4 (frame producer), §4/§7.4
+(host + format resolution) and §3.3 (DI). The Blazor Server sample
+(`samples/Basic/BlazorServer`) exercises §4/§5/§7/§8 end to end.
