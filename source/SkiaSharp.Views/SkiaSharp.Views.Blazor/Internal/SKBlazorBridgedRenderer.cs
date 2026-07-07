@@ -75,9 +75,13 @@ namespace SkiaSharp.Views.Blazor.Internal
 			await bridge.ImportAsync();
 
 			selfRef = DotNetObjectReference.Create(this);
-			await bridge.InitializeAsync(selfRef, isGL);
 
+			// Mark initialized before invoking the JS initializer: the JS side reports the initial
+			// metrics synchronously during initialize(), and that OnMetricsChanged callback can race
+			// back to .NET before this method returns. If we are not yet "initialized" the first
+			// render would be dropped and nothing would re-trigger it.
 			initialized = true;
+			await bridge.InitializeAsync(selfRef, isGL);
 		}
 
 		/// <summary>Invoked by the bridge JavaScript when the element size or DPR changes.</summary>
