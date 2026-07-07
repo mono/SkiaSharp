@@ -116,19 +116,21 @@ network:
 # -- Safe outputs ------------------------------------------------------
 # A confirmed, managed-C#-fixable optimization emits a PAIR: a [performance]
 # issue (the finding + measured numbers) + a draft fix PR that closes it on
-# merge (Fixes #<temp-id>, resolved by gh-aw to the real number). When the only
-# real win is native / upstream Skia (out of scope here), the issue is filed
-# alone. Quiet/dry runs emit a noop.
+# merge (Fixes #<temp-id>, resolved by gh-aw to the real number). Both get
+# `tenet/performance` automatically plus one agent-chosen `perf/*` category
+# label (see Step 2 guardrail 8). When the only real win is native / upstream
+# Skia (out of scope here), the issue is filed alone. Quiet/dry runs emit a noop.
 safe-outputs:
   create-pull-request:
     title-prefix: "[performance] "
-    labels: [agentic-workflows]
+    labels: [agentic-workflows, tenet/performance]
+    allowed-labels: [agentic-workflows, tenet/performance, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
     draft: true
     allowed-base-branches: [main]
   create-issue:
     title-prefix: "[performance] "
-    labels: [agentic-workflows]
-    allowed-labels: [agentic-workflows]
+    labels: [agentic-workflows, tenet/performance]
+    allowed-labels: [agentic-workflows, tenet/performance, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
     max: 1
   noop:
     report-as-issue: false
@@ -224,13 +226,33 @@ those are repo artifacts, not scratch. Each bash call is a fresh subshell — re
    workflow + the `performance-fixer` skill, and include the honest numeric scope note (the actual
    measured ns/allocations/ratio on named hardware/TFM; empirically-measured vs statically-reasoned;
    ABI impact; any TFM/runtime caveat).
+8. **Label the finding.** `tenet/performance` is applied automatically to the issue and PR. On top of
+   that, **you must add exactly ONE `perf/*` category label** (to both the issue and the PR), chosen
+   by the **dominant, measured driver of the win** — not mechanically by focus area. Include it in the
+   `labels` field of the `create-issue` and `create-pull-request` safe outputs (only the labels below
+   are allowed). Decision table:
+
+   | Add this label | When the win's dominant driver is… | Typical areas |
+   |---|---|---|
+   | `perf/interop` | removing P/Invoke / native marshalling overhead (a native-math port, batching a per-element interop loop, caching a stable native wrapper, fewer marshalled args) | geometry-math, handles-and-collections, text-and-fonts (marshalling) |
+   | `perf/allocations` | removing managed allocations / per-frame GC churn (span overload, `stackalloc`, pooling, alloc-free parse) with no interop change | color, memory-and-buffers, text-and-fonts (shaping cache) |
+   | `perf/rendering` | speeding up drawing / rendering / GPU frame submission specifically | canvas / paint / surface draw paths |
+   | `perf/throughput` | speeding a decode / encode / load / convert / pixel-copy operation | pixels-and-images, codecs |
+   | `perf/startup` | reducing initialization / first-use latency (startup parse, one-time enumeration made faster) | color (startup hydration), font-manager setup |
+   | `perf/memory-leak` | bounding previously-unbounded growth (a cache that leaked) — overlaps `memory-leak-fixer` | any cache/memoization fix |
+   | `perf/size` | reducing binary / package / output size | build/packaging |
+
+   If a fix removes both an allocation *and* a P/Invoke, pick the one the benchmark shows is the
+   **primary** driver (removing a P/Invoke transition ⇒ `perf/interop`; removing managed allocations
+   with the interop unchanged ⇒ `perf/allocations`). Pick exactly one — do not stack multiple `perf/*`.
 
 ## Step 3 — Report
 
 Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symlinked to the run's
 step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the optimization area, the candidate (with
-`file:line`), the benchmark result (New vs Old, ratio, allocations), the equivalence coverage, and
-the resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
+`file:line`), the benchmark result (New vs Old, ratio, allocations), the equivalence coverage, the
+`perf/*` label you chose (and why), and the resulting issue + PR links — or "no convincing candidate
+this run" for a quiet run.
 
 Then make sure you have emitted the safe output(s) from Step 2.1: the **issue + PR pair** (or a
 `create-issue` alone when the fix is out of scope), or — for a dry run or a quiet run — a single
