@@ -1,0 +1,339 @@
+# Issue Triage Report — #3611
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-07-07T05:35:00Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/Build (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.90 (90%)) |
+
+**Issue Summary:** MAUI Windows sample builds fail on CI with CS0016 errors because MAUI source generator output paths exceed the Windows MAX_PATH (260 character) limit when samples are staged to the 'output/samples/' directory on top of the already-deep CI workspace root.
+
+**Analysis:** The Windows CI MAUI sample build fails because MAUI source generators produce deeply nested paths under obj/ (e.g., obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/) that exceed Windows MAX_PATH (260 chars) when combined with the CI workspace root (D:\a\1\s) and the output/samples/Basic/Maui/SkiaSharpSample/ staging directory prefix created by the samples-generate cake task.
+
+**Recommendations:** **ready-to-fix** — Root cause is clearly identified (Windows MAX_PATH + deep MAUI source generator paths in staged output directory), multiple valid fix paths exist, and the recommended fix (LongPathsEnabled pipeline step) is a one-line change.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/Build |
+| Platforms | os/Windows-Classic |
+| Backends | — |
+| Tenets | — |
+| Partner | — |
+| Current labels | type/bug, os/Windows-Classic |
+
+## Evidence
+
+### Reproduction
+
+1. Run CI pipeline on Windows agent (workspace root D:\a\1\s)
+2. samples-generate cake task copies samples to output/samples/ adding extra directory depth
+3. Windows MAUI build triggers source generators (XamlGenerator, BindingSourceGenerator, WinRTAOT)
+4. Source generator output paths under obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/... exceed MAX_PATH (260 chars)
+
+**Environment:** Windows CI agent with workspace at D:\a\1\s, MAUI net10.0-windows10.0.19041.0, builds 156326/156346/156367/156384/156423
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | high |
+| Regression claimed | False |
+| Error type | build-error |
+| Error message | CSC(0,0): Error CS0016: Could not write to output file 'D:\a\1\s\output\samples\Basic\Maui\SkiaSharpSample\obj\Release\net10.0-windows10.0.19041.0\win-x64\generated\Microsoft.Maui.Controls.SourceGen\Microsoft.Maui.Controls.SourceGen.XamlGenerator\GlobalXmlns.g.cs' -- 'Could not find a part of the path ...' |
+| Repro quality | complete |
+| Target frameworks | net10.0-windows10.0.19041.0 |
+
+### Version Analysis
+
+| Field | Value |
+|-------|-------|
+| Mentioned versions | net10.0 |
+| Worked in | — |
+| Broke in | — |
+| Current relevance | likely |
+| Relevance reason | No code changes have shortened the samples staging path or enabled long paths on CI Windows agents. |
+
+## Analysis
+
+### Technical Summary
+
+The Windows CI MAUI sample build fails because MAUI source generators produce deeply nested paths under obj/ (e.g., obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/) that exceed Windows MAX_PATH (260 chars) when combined with the CI workspace root (D:\a\1\s) and the output/samples/Basic/Maui/SkiaSharpSample/ staging directory prefix created by the samples-generate cake task.
+
+### Rationale
+
+The issue is self-diagnosed with exact error messages, affected file paths, CI build IDs, and a 50% failure rate (5/10 builds). Root cause is definitively Windows MAX_PATH plus deep MAUI source generator paths. The csproj confirms net10.0-windows10.0.19041.0 is the target. The fix must shorten one path segment; the recommended approach (BaseIntermediateOutputPath redirect) is a standard MSBuild pattern requiring no CI agent changes.
+
+### Key Signals
+
+- "CSC(0,0): Error CS0016: Could not write to output file 'D:\a\1\s\output\samples\Basic\Maui\SkiaSharpSample\obj\Release\net10.0-windows10.0.19041.0\win-x64\generated\Microsoft.Maui.Controls.SourceGen\Microsoft.Maui.Controls.SourceGen.XamlGenerator\GlobalXmlns.g.cs'" — **issue body** (Path is approximately 210+ characters before reaching the deepest source generator filenames — easily over MAX_PATH for longer filenames)
+- "5/10 recent main builds have Samples stage failures on Windows due to this" — **issue body** (50% failure rate means this is a consistent, reproducible CI blocker affecting main branch health)
+- "The macOS and Linux Samples jobs pass (no path length limit)" — **issue body** (Confirms this is a Windows-only MAX_PATH issue; the build logic and sample code are otherwise correct)
+- "The samples-generate cake task copies samples to output/samples/, adding an extra directory layer" — **issue body** (The staging copy is the critical path-lengthening step unique to the CI pipeline)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `scripts/infra/samples/samples.cake` | 15-27 | direct | samples-generate task copies all sample files to {ROOT_PATH}/output/samples/ (line 21) and output/samples-preview/ (line 25) using CreateSamplesDirectory(). This adds 'output/samples/Basic/Maui/SkiaSharpSample/' prefix (~46 chars) to all generated paths, making total path lengths exceed 260 chars on Windows when combined with D:\a\1\s workspace root and deep MAUI obj/ paths. |
+| `samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj` | — | direct | MAUI project targets net10.0-windows10.0.19041.0 (line 5), which triggers MAUI source generators producing paths like obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/ — the deeply nested generator namespace creates 90+ char subdirectory chains under obj/. |
+| `scripts/azure-templates-stages-test.yml` | 406-446 | related | The samples_windows job uses $(Build.SourcesDirectory) as workspace root (D:\a\1\s on Azure DevOps hosted agents). No LongPathsEnabled registry key, BaseIntermediateOutputPath override, or workspace shortening is configured for the Windows samples job. |
+
+### Workarounds
+
+- Skip the MAUI Windows sample build on CI temporarily (not recommended — hides failures)
+- Set BaseIntermediateOutputPath in a Directory.Build.props injected by samples-generate to redirect obj/ to a shorter absolute path
+- Enable LongPathsEnabled registry key (HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled=1) on the Windows CI agent
+
+### Next Questions
+
+- Do the hosted Windows Azure DevOps agents support setting the LongPathsEnabled registry key, or is agent-level configuration required?
+- Would using D:\s or D:\b as workspace root (via agent checkout path configuration) be sufficient to stay under MAX_PATH?
+- Does the CreateSamplesDirectory function support injecting a Directory.Build.props into the output, or does that need to be added separately?
+
+### Resolution Proposals
+
+**Hypothesis:** The combined path (CI workspace D:\a\1\s + output/samples/Basic/Maui/SkiaSharpSample/ staging + MAUI source generator nested obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/... paths) exceeds Windows MAX_PATH (260 chars). Fix must shorten at least one path segment.
+
+1. **Set BaseIntermediateOutputPath in samples Directory.Build.props** — fix, confidence 0.85 (85%), cost/s, validated=yes
+   - Inject a Directory.Build.props into the output samples directory (via samples-generate or a pre-build step) that redirects intermediate output to a short absolute path on Windows. This keeps obj/ files off the deep staging path.
+
+```csharp
+<Project>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+    <BaseIntermediateOutputPath>D:\b\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>
+```
+2. **Enable LongPathsEnabled on Windows CI agents** — fix, confidence 0.80 (80%), cost/xs, validated=untested
+   - Set HKLM\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled=1 on the Windows CI agent machines, or add a pipeline step to enable it via reg.exe/PowerShell before the samples build.
+3. **Shorten the samples output directory name** — workaround, confidence 0.55 (55%), cost/xs, validated=untested
+   - Change samples-generate to output to output/s/ instead of output/samples/. Saves ~6 characters — not enough alone, but complementary to other fixes.
+
+**Recommended proposal:** Enable LongPathsEnabled on Windows CI agents
+
+**Why:** Adding a single PowerShell step to enable LongPathsEnabled in the pipeline YAML is the lowest-effort, most permanent fix — it resolves all Windows MAX_PATH issues at once without requiring MSBuild plumbing or directory structure changes.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.90 (90%) |
+| Reason | Root cause is clearly identified (Windows MAX_PATH + deep MAUI source generator paths in staged output directory), multiple valid fix paths exist, and the recommended fix (LongPathsEnabled pipeline step) is a one-line change. |
+| Suggested repro platform | windows |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/bug, area/Build, and os/Windows-Classic labels (already partially applied) | labels=type/bug, area/Build, os/Windows-Classic |
+| add-comment | medium | 0.88 (88%) | Post root cause analysis and recommended fix | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+**Root cause confirmed:** The MAUI source generators produce deeply nested paths under `obj/` (e.g., `obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/`) that exceed Windows MAX_PATH (260 chars) when combined with the CI workspace root `D:\a\1\s` and the `output/samples/Basic/Maui/SkiaSharpSample/` staging prefix added by `samples-generate`.
+
+**Recommended fix:** Add a PowerShell step to the `samples_windows` job in `scripts/azure-templates-stages-test.yml` (or the bootstrapper template) to enable long paths before the samples build:
+
+```powershell
+# Enable Windows long path support
+Set-ItemProperty -Path 'HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem' -Name LongPathsEnabled -Value 1
+```
+
+**Alternative fix:** Inject a `Directory.Build.props` into `output/samples/` via `samples-generate` that redirects `BaseIntermediateOutputPath` to a shorter path on Windows:
+
+```xml
+<Project>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('windows'))">
+    <BaseIntermediateOutputPath>D:\b\$(MSBuildProjectName)\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+</Project>
+```
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 3611,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-07T05:35:00Z",
+    "currentLabels": [
+      "type/bug",
+      "os/Windows-Classic"
+    ]
+  },
+  "summary": "MAUI Windows sample builds fail on CI with CS0016 errors because MAUI source generator output paths exceed the Windows MAX_PATH (260 character) limit when samples are staged to the 'output/samples/' directory on top of the already-deep CI workspace root.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/Build",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/Windows-Classic"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "CSC(0,0): Error CS0016: Could not write to output file 'D:\\a\\1\\s\\output\\samples\\Basic\\Maui\\SkiaSharpSample\\obj\\Release\\net10.0-windows10.0.19041.0\\win-x64\\generated\\Microsoft.Maui.Controls.SourceGen\\Microsoft.Maui.Controls.SourceGen.XamlGenerator\\GlobalXmlns.g.cs' -- 'Could not find a part of the path ...'",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net10.0-windows10.0.19041.0"
+      ]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run CI pipeline on Windows agent (workspace root D:\\a\\1\\s)",
+        "samples-generate cake task copies samples to output/samples/ adding extra directory depth",
+        "Windows MAUI build triggers source generators (XamlGenerator, BindingSourceGenerator, WinRTAOT)",
+        "Source generator output paths under obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/... exceed MAX_PATH (260 chars)"
+      ],
+      "environmentDetails": "Windows CI agent with workspace at D:\\a\\1\\s, MAUI net10.0-windows10.0.19041.0, builds 156326/156346/156367/156384/156423"
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "net10.0"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "No code changes have shortened the samples staging path or enabled long paths on CI Windows agents."
+    }
+  },
+  "analysis": {
+    "summary": "The Windows CI MAUI sample build fails because MAUI source generators produce deeply nested paths under obj/ (e.g., obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/) that exceed Windows MAX_PATH (260 chars) when combined with the CI workspace root (D:\\a\\1\\s) and the output/samples/Basic/Maui/SkiaSharpSample/ staging directory prefix created by the samples-generate cake task.",
+    "rationale": "The issue is self-diagnosed with exact error messages, affected file paths, CI build IDs, and a 50% failure rate (5/10 builds). Root cause is definitively Windows MAX_PATH plus deep MAUI source generator paths. The csproj confirms net10.0-windows10.0.19041.0 is the target. The fix must shorten one path segment; the recommended approach (BaseIntermediateOutputPath redirect) is a standard MSBuild pattern requiring no CI agent changes.",
+    "keySignals": [
+      {
+        "text": "CSC(0,0): Error CS0016: Could not write to output file 'D:\\a\\1\\s\\output\\samples\\Basic\\Maui\\SkiaSharpSample\\obj\\Release\\net10.0-windows10.0.19041.0\\win-x64\\generated\\Microsoft.Maui.Controls.SourceGen\\Microsoft.Maui.Controls.SourceGen.XamlGenerator\\GlobalXmlns.g.cs'",
+        "source": "issue body",
+        "interpretation": "Path is approximately 210+ characters before reaching the deepest source generator filenames — easily over MAX_PATH for longer filenames"
+      },
+      {
+        "text": "5/10 recent main builds have Samples stage failures on Windows due to this",
+        "source": "issue body",
+        "interpretation": "50% failure rate means this is a consistent, reproducible CI blocker affecting main branch health"
+      },
+      {
+        "text": "The macOS and Linux Samples jobs pass (no path length limit)",
+        "source": "issue body",
+        "interpretation": "Confirms this is a Windows-only MAX_PATH issue; the build logic and sample code are otherwise correct"
+      },
+      {
+        "text": "The samples-generate cake task copies samples to output/samples/, adding an extra directory layer",
+        "source": "issue body",
+        "interpretation": "The staging copy is the critical path-lengthening step unique to the CI pipeline"
+      }
+    ],
+    "codeInvestigation": [
+      {
+        "file": "scripts/infra/samples/samples.cake",
+        "lines": "15-27",
+        "finding": "samples-generate task copies all sample files to {ROOT_PATH}/output/samples/ (line 21) and output/samples-preview/ (line 25) using CreateSamplesDirectory(). This adds 'output/samples/Basic/Maui/SkiaSharpSample/' prefix (~46 chars) to all generated paths, making total path lengths exceed 260 chars on Windows when combined with D:\\a\\1\\s workspace root and deep MAUI obj/ paths.",
+        "relevance": "direct"
+      },
+      {
+        "file": "samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj",
+        "finding": "MAUI project targets net10.0-windows10.0.19041.0 (line 5), which triggers MAUI source generators producing paths like obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/ — the deeply nested generator namespace creates 90+ char subdirectory chains under obj/.",
+        "relevance": "direct"
+      },
+      {
+        "file": "scripts/azure-templates-stages-test.yml",
+        "lines": "406-446",
+        "finding": "The samples_windows job uses $(Build.SourcesDirectory) as workspace root (D:\\a\\1\\s on Azure DevOps hosted agents). No LongPathsEnabled registry key, BaseIntermediateOutputPath override, or workspace shortening is configured for the Windows samples job.",
+        "relevance": "related"
+      }
+    ],
+    "workarounds": [
+      "Skip the MAUI Windows sample build on CI temporarily (not recommended — hides failures)",
+      "Set BaseIntermediateOutputPath in a Directory.Build.props injected by samples-generate to redirect obj/ to a shorter absolute path",
+      "Enable LongPathsEnabled registry key (HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\\LongPathsEnabled=1) on the Windows CI agent"
+    ],
+    "nextQuestions": [
+      "Do the hosted Windows Azure DevOps agents support setting the LongPathsEnabled registry key, or is agent-level configuration required?",
+      "Would using D:\\s or D:\\b as workspace root (via agent checkout path configuration) be sufficient to stay under MAX_PATH?",
+      "Does the CreateSamplesDirectory function support injecting a Directory.Build.props into the output, or does that need to be added separately?"
+    ],
+    "resolution": {
+      "hypothesis": "The combined path (CI workspace D:\\a\\1\\s + output/samples/Basic/Maui/SkiaSharpSample/ staging + MAUI source generator nested obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/... paths) exceeds Windows MAX_PATH (260 chars). Fix must shorten at least one path segment.",
+      "proposals": [
+        {
+          "title": "Set BaseIntermediateOutputPath in samples Directory.Build.props",
+          "description": "Inject a Directory.Build.props into the output samples directory (via samples-generate or a pre-build step) that redirects intermediate output to a short absolute path on Windows. This keeps obj/ files off the deep staging path.",
+          "category": "fix",
+          "codeSnippet": "<Project>\n  <PropertyGroup Condition=\"$([MSBuild]::IsOSPlatform('windows'))\">\n    <BaseIntermediateOutputPath>D:\\b\\$(MSBuildProjectName)\\obj\\</BaseIntermediateOutputPath>\n  </PropertyGroup>\n</Project>",
+          "validated": "yes",
+          "confidence": 0.85,
+          "effort": "cost/s"
+        },
+        {
+          "title": "Enable LongPathsEnabled on Windows CI agents",
+          "description": "Set HKLM\\SYSTEM\\CurrentControlSet\\Control\\FileSystem\\LongPathsEnabled=1 on the Windows CI agent machines, or add a pipeline step to enable it via reg.exe/PowerShell before the samples build.",
+          "category": "fix",
+          "validated": "untested",
+          "confidence": 0.8,
+          "effort": "cost/xs"
+        },
+        {
+          "title": "Shorten the samples output directory name",
+          "description": "Change samples-generate to output to output/s/ instead of output/samples/. Saves ~6 characters — not enough alone, but complementary to other fixes.",
+          "category": "workaround",
+          "validated": "untested",
+          "confidence": 0.55,
+          "effort": "cost/xs"
+        }
+      ],
+      "recommendedProposal": "Enable LongPathsEnabled on Windows CI agents",
+      "recommendedReason": "Adding a single PowerShell step to enable LongPathsEnabled in the pipeline YAML is the lowest-effort, most permanent fix — it resolves all Windows MAX_PATH issues at once without requiring MSBuild plumbing or directory structure changes."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.9,
+      "reason": "Root cause is clearly identified (Windows MAX_PATH + deep MAUI source generator paths in staged output directory), multiple valid fix paths exist, and the recommended fix (LongPathsEnabled pipeline step) is a one-line change.",
+      "suggestedReproPlatform": "windows"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/Build, and os/Windows-Classic labels (already partially applied)",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/Build",
+          "os/Windows-Classic"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post root cause analysis and recommended fix",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "**Root cause confirmed:** The MAUI source generators produce deeply nested paths under `obj/` (e.g., `obj/Release/net10.0-windows10.0.19041.0/win-x64/generated/Microsoft.Maui.Controls.SourceGen/Microsoft.Maui.Controls.SourceGen.XamlGenerator/`) that exceed Windows MAX_PATH (260 chars) when combined with the CI workspace root `D:\\a\\1\\s` and the `output/samples/Basic/Maui/SkiaSharpSample/` staging prefix added by `samples-generate`.\n\n**Recommended fix:** Add a PowerShell step to the `samples_windows` job in `scripts/azure-templates-stages-test.yml` (or the bootstrapper template) to enable long paths before the samples build:\n\n```powershell\n# Enable Windows long path support\nSet-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' -Name LongPathsEnabled -Value 1\n```\n\n**Alternative fix:** Inject a `Directory.Build.props` into `output/samples/` via `samples-generate` that redirects `BaseIntermediateOutputPath` to a shorter path on Windows:\n\n```xml\n<Project>\n  <PropertyGroup Condition=\"$([MSBuild]::IsOSPlatform('windows'))\">\n    <BaseIntermediateOutputPath>D:\\b\\$(MSBuildProjectName)\\obj\\</BaseIntermediateOutputPath>\n  </PropertyGroup>\n</Project>\n```"
+      }
+    ]
+  }
+}
+```
+
+</details>
