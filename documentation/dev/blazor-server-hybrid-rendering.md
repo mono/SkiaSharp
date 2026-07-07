@@ -286,6 +286,12 @@ while a frame is in flight coalesce into a single subsequent frame. As a consequ
 transport self-limits the effective frame rate without unbounded memory growth. There are no
 framework-imposed frame-rate caps.
 
+The loop MUST yield to the host dispatcher on every iteration so the host remains responsive and
+the loop stays cancellable — including when a frame is suppressed (§7.2 step 5) and therefore
+performs no transfer that would otherwise provide a yield point. Without this a continuous render
+loop over a momentarily static scene would spin synchronously and starve the dispatcher,
+preventing input, metrics and even disposal from being processed.
+
 ### 7.6 `SKGLView` under a bridged host
 
 Server-side drawing is CPU raster. `SKGLView` still keeps a WebGL-backed `<canvas>` (§7.3) and

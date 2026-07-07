@@ -117,6 +117,13 @@ namespace SkiaSharp.Views.Blazor.Internal
 				{
 					requested = false;
 					await RenderAndPresentAsync();
+
+					// Always yield to the host dispatcher each iteration. Transferring a frame
+					// awaits an interop round-trip, but a suppressed (byte-identical) frame performs
+					// no transfer; without this yield a continuous render loop over a static scene
+					// would spin synchronously and starve the circuit dispatcher, preventing input,
+					// metrics and even disposal from being processed (so the loop could not stop).
+					await Task.Yield();
 				}
 				while ((EnableRenderLoop || requested) && !disposed && initialized);
 			}
