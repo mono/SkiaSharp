@@ -94,7 +94,11 @@ Run the phases in order. The skill has two entry points:
 
 ### 1.1 Choose a focus area (round-robin across runs)
 A full 11-family sweep every run is wasteful and the surface is mostly hardened, so start from
-ONE focus family and widen only if it's exhausted. Rotate the *starting* family on a
+ONE focus family and widen only if it's exhausted.
+
+**Override first.** If the run supplies an explicit focus family (a bare number 0–10 — e.g. a
+maintainer testing one family on demand), use that number directly as `FOCUS` and **skip the
+rotation below**. Otherwise rotate the *starting* family on a
 time-based **round-robin** so consecutive runs cover different families. This needs only
 `date`, so it behaves identically locally and in CI — no `$GITHUB_RUN_NUMBER` / `$RANDOM`
 (which don't exist or aren't deterministic outside GitHub Actions):

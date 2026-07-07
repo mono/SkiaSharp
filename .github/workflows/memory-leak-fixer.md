@@ -27,8 +27,9 @@ engine:
 
 # -- Triggers ----------------------------------------------------------
 # Every 12h + manual + PR-driven self-test. Every run does the same full
-# scan→prove→fix→file pipeline; the only knob is `dry_run` (do everything but
-# open nothing). A `pull_request` that edits THIS workflow or its skill re-runs
+# scan→prove→fix→file pipeline; the knobs are `dry_run` (do everything but open
+# nothing) and `focus_family` (force one leak family instead of the time-based
+# rotation — for testing a specific family on demand). A `pull_request` that edits THIS workflow or its skill re-runs
 # the whole pipeline in FORCED DRY-RUN (see Step 2.6) so we can iterate on the
 # prompt/skill and watch the run without ever opening a real PR/issue.
 on:
@@ -40,6 +41,11 @@ on:
         required: false
         default: false
         type: boolean
+      focus_family:
+        description: "Force a specific leak family 0-10 (see references/types-of-leaks.md) instead of the time-based round-robin. Leave blank to rotate."
+        required: false
+        default: ""
+        type: string
   pull_request:
     paths:
       - ".github/workflows/memory-leak-fixer.md"
@@ -158,6 +164,12 @@ Read and follow `.agents/skills/memory-leak-fixer/SKILL.md` end-to-end.
 leak, prove it, fix it, then file the finding issue + linked fix PR. There is no per-issue target
 mode. The only variation is dry-run — forced on `pull_request`, opt-in via the `dry_run` input
 (see Guardrail 6).
+
+**Focus family override:** `${{ github.event.inputs.focus_family }}` — if that shows a bare
+number **0–10**, pass it to the skill's Phase 1.1 as the focus family and **skip the round-robin**
+computation. If it is blank (schedule / PR / dispatch without the input), use the normal
+time-based round-robin. This is only a testing knob to target a specific family on demand; it
+changes nothing else about the run.
 
 Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
 Each bash call is a fresh subshell — re-`cd` as needed.
