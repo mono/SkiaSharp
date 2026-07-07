@@ -8,6 +8,22 @@ Component: `SkiaSharp.Views.Blazor` (`SKCanvasView`, `SKGLView`)
 > validate over time that changes do not break the model. Real tests remain the enforcement
 > mechanism; this document explains *why* the shape is what it is.
 
+> **Implementation status.** The core is implemented and verified end to end for **Blazor
+> Server** (an `SKCanvasView` renders on the server and streams frames that paint at
+> `cssSize × devicePixelRatio` and animate over the circuit). Delivered: host detection,
+> Direct/Bridged split, the shared JS presenter + host-agnostic bridge module, the
+> backpressured bridged renderer, the frame producer (PNG/JPEG/raw), transfer-format
+> resolution, the public API (`SKBlazorTransferFormat`, `SKBlazorOptions`,
+> `AddSkiaSharpViewsBlazor`, per-control `TransferFormat`/`Quality`), both `SKCanvasView` and
+> `SKGLView` wired (WebAssembly path unchanged), unit tests, and a Blazor Server sample.
+> Remaining follow-ups: a Blazor Hybrid (`BlazorWebView`) sample + device UI test; the full
+> `SkiaSharp.Tests.Blazor` web app pages (Static/Server/Auto) with bUnit + `WebApplicationFactory`
+> and a CI lane; native-asset packaging verification for server/hybrid consumers; the static-SSR
+> poster frame (the canvas is currently blank until interactive); folding the WebAssembly
+> `SKHtmlCanvas.ts` paint onto the shared presenter; and API XML docs + release notes. Note
+> `SKGLView` under a bridged host draws CPU raster and presents via a placeholder GL render
+> target — real server/native GPU drawing is a future extension.
+
 ---
 
 ## 1. Summary
