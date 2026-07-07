@@ -5,7 +5,7 @@
 # Periodic AI-driven workflow that SCANS the repo's managed C# for a native
 # ownership / disposal memory leak, PROVES it with a red→green regression test,
 # FIXES it, and opens a DRAFT PR. Adapted from dotnet/maui's leak scanner+fixer
-# idea to our real leak family (undisposed SKObject handles, wrong
+# idea to our real leak focus areas (undisposed SKObject handles, wrong
 # `owns:` flags, same-instance double-dispose, unremoved view/handler
 # subscriptions, `fixed`-pointer lifetime). Scope: managed C# only — the native
 # Skia under externals/skia/** is upstream and out of scope.
@@ -28,8 +28,8 @@ engine:
 # -- Triggers ----------------------------------------------------------
 # Every 12h + manual + PR-driven self-test. Every run does the same full
 # scan→prove→fix→file pipeline; the knobs are `dry_run` (do everything but open
-# nothing) and `focus_family` (force one leak family instead of the time-based
-# rotation — for testing a specific family on demand). A `pull_request` that edits THIS workflow or its skill re-runs
+# nothing) and `focus_area` (force one leak focus area instead of the time-based
+# rotation — for testing a specific focus area on demand). A `pull_request` that edits THIS workflow or its skill re-runs
 # the whole pipeline in FORCED DRY-RUN (see Step 2.6) so we can iterate on the
 # prompt/skill and watch the run without ever opening a real PR/issue.
 on:
@@ -41,8 +41,8 @@ on:
         required: false
         default: false
         type: boolean
-      focus_family:
-        description: "Force a specific leak family 0-10 (see references/types-of-leaks.md) instead of the time-based round-robin. Leave blank to rotate."
+      focus_area:
+        description: "Force a specific leak focus area 0-10 (see references/types-of-leaks.md) instead of the time-based round-robin. Leave blank to rotate."
         required: false
         default: ""
         type: string
@@ -155,7 +155,7 @@ alone. **One finding per run.**
   Everything under `externals/skia/**` (including our C shim) is upstream Skia: not checked
   out, not buildable here (native tests use pre-built packages via `externals-download`), and
   out of scope. A leak whose only correct fix is native is **issue-only** (see 2.4).
-- **Timebox the scan.** Do one focused pass over the leak families, pick the single strongest
+- **Timebox the scan.** Do one focused pass over the leak focus areas, pick the single strongest
   candidate early, and stop. If nothing clears the bar in that pass, emit the `noop` and finish
   — do not launch open-ended sub-agent explorations that may not return within the budget.
 
@@ -170,10 +170,10 @@ leak, prove it, fix it, then file the finding issue + linked fix PR. There is no
 mode. The only variation is dry-run — forced on `pull_request`, opt-in via the `dry_run` input
 (see Guardrail 6).
 
-**Focus family override:** `${{ github.event.inputs.focus_family }}` — if that shows a bare
-number **0–10**, pass it to the skill's Phase 1.1 as the focus family and **skip the round-robin**
+**Focus area override:** `${{ github.event.inputs.focus_area }}` — if that shows a bare
+number **0–10**, pass it to the skill's Phase 1.1 as the focus area and **skip the round-robin**
 computation. If it is blank (schedule / PR / dispatch without the input), use the normal
-time-based round-robin. This is only a testing knob to target a specific family on demand; it
+time-based round-robin. This is only a testing knob to target a specific focus area on demand; it
 changes nothing else about the run.
 
 Persist all intermediate state (the `/tmp/leakprobe` project, notes) under `/tmp/gh-aw/agent/`.
@@ -216,7 +216,7 @@ Each bash call is a fresh subshell — re-`cd` as needed.
 ## Step 3 — Report
 
 Append a short summary to `/tmp/gh-aw/agent/step-summary.md` (this file is symlinked to the
-run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak family, the candidate
+run's step summary — do **not** use `$GITHUB_STEP_SUMMARY`): the leak focus area, the candidate
 (with `file:line`), the proof result (alive/collected counts or red→green status), and the
 resulting issue + PR links — or "no convincing candidate this run" for a quiet run.
 
