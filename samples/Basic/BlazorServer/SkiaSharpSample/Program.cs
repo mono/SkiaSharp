@@ -1,18 +1,20 @@
-using SkiaSharp.Views.Blazor;
-using SkiaSharpSample.Components;
+using Microsoft.AspNetCore.Components;
+using MudBlazor.Services;
+using SkiaSharpSample;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
 	.AddInteractiveServerComponents();
 
-// Optional: configure global defaults for SkiaSharp Blazor views.
-builder.Services.AddSkiaSharpViewsBlazor(options =>
+// Mirror the WebAssembly sample: an HttpClient scoped to the app root (used by the Home page
+// to load the bundled font) and MudBlazor.
+builder.Services.AddScoped(sp =>
 {
-	// Server streams frames over SignalR, so JPEG keeps payloads small.
-	options.TransferFormat = SKBlazorTransferFormat.Jpeg;
-	options.Quality = 80;
+	var navigation = sp.GetRequiredService<NavigationManager>();
+	return new HttpClient { BaseAddress = new Uri(navigation.BaseUri) };
 });
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 
@@ -28,3 +30,11 @@ app.MapRazorComponents<App>()
 	.AddInteractiveServerRenderMode();
 
 app.Run();
+
+/// <summary>
+/// Partial program class exposing the <see cref="DefaultPage"/> setting.
+/// </summary>
+public partial class Program
+{
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+}
