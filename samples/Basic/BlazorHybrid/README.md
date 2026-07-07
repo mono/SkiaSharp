@@ -45,8 +45,10 @@ Only the host wiring — the shared pages, layout, scoped CSS, `FpsCounter`, `Sa
   fetch from. The font is included both as a `Resources/Raw` asset (for the C# canvas text) and
   in `wwwroot/fonts` (for the CSS `@font-face`). This is the only line that differs from the
   WebAssembly/Server `Home.razor`.
-- `Program.DefaultPage` (used by the shared `MainLayout`) is provided by a small `partial class
-  Program` that merges with the iOS/MacCatalyst platform entry points.
+- `Program.DefaultPage` (used by the shared `MainLayout`) is replaced with `App.DefaultPage`
+  in `App.xaml.cs` — the idiomatic MAUI place and the same approach as the native
+  [`samples/Basic/Maui`](../Maui) sample. This is the one line that differs in the Hybrid
+  `MainLayout.razor` from the WebAssembly/Server samples.
 - `ValidateXcodeVersion=false` lets the sample build with a newer Xcode than the Apple SDK's exact
   recommended version (as the repo's test projects do).
 

@@ -3,7 +3,7 @@ using UIKit;
 
 namespace SkiaSharpSample;
 
-public partial class Program
+public class Program
 {
 	// This is the main entry point of the application.
 	static void Main(string[] args)
