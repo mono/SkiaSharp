@@ -267,6 +267,13 @@ All ticked ⇒ proceed to Phase 4 (file the finding, then open the PR). Any unti
 A confirmed, managed-C#-fixable leak produces **two linked safe outputs** so the *finding* and
 the *fix* are tracked separately and the issue **auto-closes when the PR merges**.
 
+**Labels (both the issue and the PR):** a memory leak is a performance concern, so tag both
+outputs with `tenet/performance` (the quality-tenet umbrella) **and** `perf/memory-leak` (the
+performance sub-type). When this skill runs from the `memory-leak-fixer` workflow these labels
+are applied automatically by its `safe-outputs` config; when filing by hand, add them yourself.
+The `perf/*` taxonomy is defined in the issue-triage skill
+([`references/labels.md`](../issue-triage/references/labels.md)).
+
 ### 4.1 The issue — the finding
 Emit a `create_issue` that describes the **leak, not the fix**. Give it a `temporary_id`
 (format `aw_` + 3–8 alphanumeric characters — no underscores or other symbols — e.g. `aw_leak1`)
@@ -276,6 +283,7 @@ before its real number exists. Body (markdown):
 - **Family**, and the **retention/ownership path** with `file:line` citations.
 - **Evidence**: the Phase 2 proof — the probe you ran and its alive/collected counts.
 - **Scope note**: framework bug vs footgun; empirically-proven vs statically-reasoned; ABI impact.
+- **Labels**: `tenet/performance` + `perf/memory-leak`.
 
 ### 4.2 The PR — the fix
 Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix, and open a
@@ -286,6 +294,8 @@ Create a feature branch (`dev/memory-leak-<short-desc>`), commit the test + fix,
 - **A closing keyword on its own line so merging auto-closes the finding:** `Fixes #<temporary_id>`
   — e.g. `Fixes #aw_leak1` (the id you gave the issue in 4.1). gh-aw rewrites it to the real issue
   number once the issue is created.
+- **Labels**: `tenet/performance` + `perf/memory-leak`.
+
 
 ### 4.3 Out of scope (native / upstream only)
 If the leak is real but the only correct fix lives under `externals/skia/**` (incl. the C

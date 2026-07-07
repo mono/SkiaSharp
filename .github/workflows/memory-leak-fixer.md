@@ -113,16 +113,21 @@ network:
 # finding) + a draft fix PR that closes it on merge (Fixes #<temp-id>, resolved
 # by gh-aw to the real number). When the only correct fix is native / upstream
 # Skia (out of scope here), the issue is filed alone. Quiet/dry runs emit a noop.
+#
+# Labels: a memory leak is a performance concern, so both the issue and the PR
+# carry `tenet/performance` (the quality-tenet umbrella) + `perf/memory-leak`
+# (the performance sub-type). See the perf/* taxonomy in the issue-triage skill
+# (.agents/skills/issue-triage/references/labels.md).
 safe-outputs:
   create-pull-request:
     title-prefix: "[memory-leak] "
-    labels: [agentic-workflows]
+    labels: [tenet/performance, perf/memory-leak]
     draft: true
     allowed-base-branches: [main]
   create-issue:
     title-prefix: "[memory-leak] "
-    labels: [agentic-workflows]
-    allowed-labels: [agentic-workflows]
+    labels: [tenet/performance, perf/memory-leak]
+    allowed-labels: [tenet/performance, perf/memory-leak]
     max: 1
   noop:
     report-as-issue: false

@@ -61,7 +61,7 @@ network:
     - python
 safe-outputs:
   add-labels:
-    max: 10
+    max: 12
     target: "*"
   update-project:
     project: "https://github.com/orgs/mono/projects/1"
@@ -90,6 +90,7 @@ Read the triage JSON file and extract the classification labels. Apply each labe
 - Each entry in `classification.platforms[]` — platform labels (e.g. `os/Android`)
 - Each entry in `classification.backends[]` — backend labels (e.g. `backend/Metal`)
 - Each entry in `classification.tenets[]` — quality tenet labels (e.g. `tenet/compatibility`)
+- Each entry in `classification.perf[]` — performance sub-type labels (e.g. `perf/memory-leak`). Whenever `perf[]` is non-empty, ensure `tenet/performance` is also applied (it should already be present in `tenets[]`).
 - `classification.partner` — partner label if present (e.g. `partner/maui`)
 
 After applying classification labels, also add the `triage/triaged` label to mark the issue as processed.
