@@ -44,9 +44,14 @@ namespace SkiaSharp.Views.Blazor.Internal
 				case "Static":
 					return SKBlazorHostKind.StaticSsr;
 				default:
+					// Host detection is only consulted once a component is interactive. An
+					// interactive host that is not the browser and does not identify as Server
+					// or static SSR is a native WebView (Blazor Hybrid). Treat any unrecognized
+					// non-browser name as Hybrid so the bridged path activates regardless of the
+					// exact RendererInfo.Name reported by the host.
 					return OperatingSystem.IsBrowser()
 						? SKBlazorHostKind.WebAssembly
-						: SKBlazorHostKind.Unknown;
+						: SKBlazorHostKind.Hybrid;
 			}
 		}
 

@@ -15,8 +15,10 @@ public class SKBlazorHostTests
 		Assert.Equal(expected, SKBlazorHost.Resolve(name).ToString());
 
 	[Fact]
-	public void ResolvesUnknownRendererNameOffBrowserToUnknown() =>
-		Assert.Equal(SKBlazorHostKind.Unknown, SKBlazorHost.Resolve("something-else"));
+	public void ResolvesUnknownRendererNameOffBrowserToHybrid() =>
+		// Host detection is only consulted once interactive; an unrecognized non-browser host
+		// is treated as a native WebView (Hybrid) so the bridged path still activates.
+		Assert.Equal(SKBlazorHostKind.Hybrid, SKBlazorHost.Resolve("something-else"));
 
 	[Theory]
 	[InlineData("Server", true)]

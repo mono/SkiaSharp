@@ -109,15 +109,17 @@ On first interactive render, a component determines its host and selects a strat
 
 Rules:
 
-1. On .NET 9.0+ the host MUST be resolved from `ComponentBase.RendererInfo.Name`.
-2. If the name is unavailable (any target framework earlier than .NET 9.0, where
-   `RendererInfo` does not exist), the component MUST fall back to
-   `OperatingSystem.IsBrowser()`: when `true` the host is WebAssembly (Direct); otherwise the
-   host is treated as unknown and the component takes no interactive action.
-3. On target frameworks earlier than .NET 9.0 the components are WebAssembly-only (§12) and
-   therefore always use the Direct strategy.
-4. Because the WebAssembly fallback keys off `OperatingSystem.IsBrowser()`, a WebAssembly host
-   ALWAYS resolves to the Direct strategy even if `RendererInfo` is unavailable.
+1. On .NET 9.0+ the host MUST be resolved from `ComponentBase.RendererInfo.Name`
+   (`WebAssembly` → Direct; `Server`/`WebView`/`Static` → Bridged).
+2. Host detection is only consulted once a component is interactive. An **unrecognized**
+   host name that is **not** the browser (for example a MAUI `BlazorWebView` that does not
+   report exactly `WebView`) MUST be treated as **Hybrid (Bridged)** — a native, interactive,
+   non-browser host is a WebView. Only a browser host (`OperatingSystem.IsBrowser()`) falls
+   back to WebAssembly (Direct).
+3. On target frameworks earlier than .NET 9.0 (`RendererInfo` does not exist) the components are
+   WebAssembly-only (§12) and always use the Direct strategy; the bridged path is not compiled.
+4. Because the browser is detected via `OperatingSystem.IsBrowser()`, a WebAssembly host ALWAYS
+   resolves to the Direct strategy even if `RendererInfo` is unavailable.
 
 ## 5. Coordinate system, sizing and DPI (all hosts)
 
