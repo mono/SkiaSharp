@@ -206,11 +206,12 @@ Two linked safe outputs so the finding auto-closes on merge:
   invariant that keeps it correct), **proof faster** (benchmark table + command), **proof identical**
   (the equivalence test + what edges it covers + that it catches a wrong result), and `Fixes #aw_perf1`
   on its own line.
-- **Labels** — both the issue and PR get `tenet/performance` automatically; add **exactly one
-  `perf/*` category** label chosen by the dominant, measured driver of the win (`perf/interop` for a
-  removed P/Invoke, `perf/allocations` for removed managed allocations, `perf/rendering`,
-  `perf/throughput`, `perf/startup`, `perf/memory-leak`, or `perf/size`). When run from the agentic
-  workflow, its guardrail 8 has the decision table.
+- **Labels** — both the issue and PR carry `tenet/performance`; add the matching **`perf/*`
+  sub-type** chosen by the dominant, measured driver of the win (a removed P/Invoke → `perf/interop`,
+  removed managed allocations → `perf/allocations`, else `perf/rendering`/`perf/throughput`/
+  `perf/startup`/`perf/memory-leak`/`perf/size`). Canonical taxonomy:
+  `.agents/skills/issue-triage/references/labels.md`. Usually one sub-type. When run from the agentic
+  workflow, its guardrail 8 restates this.
 - If the only real win is native/upstream → the **issue alone** (finding + evidence + proposal).
 
 ### Phase 5 — Report
