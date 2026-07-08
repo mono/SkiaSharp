@@ -1,0 +1,246 @@
+# Issue Triage Report — #4369
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-07-08T05:20:00Z |
+| Type | type/enhancement (0.97 (97%)) |
+| Area | area/SkiaSharp (0.98 (98%)) |
+| Suggested action | ready-to-fix (0.95 (95%)) |
+
+**Issue Summary:** Performance enhancement: port the implicit SKColor → SKColorF conversion operator from a native P/Invoke (sk_color4f_from_color) to pure managed C# math, eliminating an unnecessary managed→native transition on a hot per-frame path and achieving ~2× throughput with bit-identical results.
+
+**Analysis:** The implicit SKColor → SKColorF operator calls sk_color4f_from_color P/Invoke for pure per-channel division by 255, which is an unnecessary native transition. The native math is fR=R*(1f/255f), fG=G*(1f/255f), fB=B*(1f/255f), fA=A*(1f/255f) — all integer byte values, so the managed result is bit-identical by the double-rounding theorem. Replacing with managed math and [MethodImpl(AggressiveInlining)] yields ~2× throughput gain with no allocation change. The reverse sk_color4f_to_color operator is intentionally kept native (clamp+floor operations can differ by 1 ULP under x87 extended precision).
+
+**Recommendations:** **ready-to-fix** — Root cause is clear, fix is a single-file one-liner with verified bit-identical managed math, benchmarks demonstrate the improvement, and a user community patch already exists.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/performance |
+| Perf | perf/interop |
+| Partner | — |
+| Current labels | tenet/performance, perf/interop |
+
+## Evidence
+
+### Reproduction
+
+1. Set a SKColor uniform on an animated SKRuntimeEffect shader each frame
+2. Profile P/Invoke transitions — sk_color4f_from_color is called once per frame per uniform
+3. Benchmark batch of 1024 color conversions: managed (~2.5 μs) vs native (~4.1–4.9 μs)
+
+**Environment:** BenchmarkDotNet v0.13.5, Linux AMD EPYC 7763, .NET SDK 10.0.301, .NET 10.0.9 X64 RyuJIT AVX2, TFM net10.0
+
+## Analysis
+
+### Technical Summary
+
+The implicit SKColor → SKColorF operator calls sk_color4f_from_color P/Invoke for pure per-channel division by 255, which is an unnecessary native transition. The native math is fR=R*(1f/255f), fG=G*(1f/255f), fB=B*(1f/255f), fA=A*(1f/255f) — all integer byte values, so the managed result is bit-identical by the double-rounding theorem. Replacing with managed math and [MethodImpl(AggressiveInlining)] yields ~2× throughput gain with no allocation change. The reverse sk_color4f_to_color operator is intentionally kept native (clamp+floor operations can differ by 1 ULP under x87 extended precision).
+
+### Rationale
+
+Classified as type/enhancement because the current behavior is correct but inefficient. The P/Invoke call for pure integer math is clearly an optimization opportunity — this matches the canonical perf/interop example ('remove native interop in SKMatrix'). The fix is well-scoped to a single file and operator, math is empirically verified bit-identical for all 256 byte values, and benchmarks show consistent ~2× improvement. No platforms are affected differentially — this is a cross-platform improvement. Suggested action is ready-to-fix because the root cause and fix are unambiguously clear.
+
+### Key Signals
+
+- "Porting it to managed C# removes a managed→native transition on a hot path and is ~2× faster with no allocation change and a bit-identical result." — **issue body** (Confirmed by code investigation: the conversion is pure multiply, no non-trivial numeric ops.)
+- "fR = R * (1f/255f), fG = G * (1f/255f), fB = B * (1f/255f), fA = A * (1f/255f)" — **issue body** (Native math uses exact per-channel integer-to-float multiply. Bit-identical in managed C# due to double-rounding theorem for single-step float operations.)
+- "binding/SkiaSharp/SKRuntimeEffect.cs converts SKColor → SKColorF through this operator, so an animated shader that updates a color uniform pays this conversion every frame." — **issue body** (Confirmed at SKRuntimeEffect.cs:528 — (SKColorF)value is the conversion trigger on per-frame shader uniform updates.)
+- "Run 1: New 2.506 μs / Old 4.906 μs (ratio 0.51). Run 2: New 2.496 μs / Old 4.181 μs (ratio 0.60). No allocations either way." — **issue body — benchmark table** (1024-color batch, consistent ~2× win. The managed path is also more predictable (rock-stable across runs).)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKColorF.cs` | 253-258 | direct | The implicit operator SKColorF(SKColor color) calls SkiaApi.sk_color4f_from_color((uint)color, &colorF) — a full P/Invoke with output-pointer pin for what is pure per-channel multiply by (1f/255f). |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 4183-4199 | direct | On the dynamic-load path, sk_color4f_from_color uses a cached-delegate indirection (sk_color4f_from_color_delegate ??= GetSymbol(...)). This adds an extra delegate dispatch overhead on top of the P/Invoke transition on every call. |
+| `binding/SkiaSharp/SKRuntimeEffect.cs` | 528 | related | implicit operator SKRuntimeEffectUniform(SKColor value) calls (SKColorF)value, triggering the conversion on every frame when a color uniform is set on an animated shader. This confirms the hot-path claim in the issue. |
+
+### Resolution Proposals
+
+**Hypothesis:** Replace the P/Invoke operator body with managed per-channel multiply by (1f/255f) and annotate with [MethodImpl(AggressiveInlining)]. Add bit-exact equivalence tests verifying all 256 byte values against the native oracle.
+
+1. **Replace P/Invoke with managed per-channel multiply** — fix, confidence 0.95 (95%), cost/xs, validated=untested
+   - Change the operator body to extract R, G, B, A bytes from the uint color value and multiply each by (1f/255f). Apply [MethodImpl(MethodImplOptions.AggressiveInlining)] to the operator. This is ABI-safe (operator signature unchanged). Add bit-exact equivalence unit tests covering the full 256-value range and edge inputs (0, 255, mid) to guard against future regressions.
+
+**Recommended proposal:** Replace P/Invoke with managed per-channel multiply
+
+**Why:** The root cause is unambiguous and the fix is a one-liner with well-understood semantics. The math is verified bit-identical by the reporter and confirmed by code review. Effort is cost/xs — a tiny targeted change in a single file.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.95 (95%) |
+| Reason | Root cause is clear, fix is a single-file one-liner with verified bit-identical managed math, benchmarks demonstrate the improvement, and a user community patch already exists. |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/enhancement, area/SkiaSharp, tenet/performance, perf/interop labels | labels=type/enhancement, area/SkiaSharp, tenet/performance, perf/interop |
+| add-comment | medium | 0.92 (92%) | Confirm the performance issue and outline the fix | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Thanks for the detailed analysis and benchmarks! The code investigation confirms the root cause: `binding/SkiaSharp/SKColorF.cs` line 256 calls `SkiaApi.sk_color4f_from_color` — a full P/Invoke plus cached-delegate dispatch — for pure per-channel `byte * (1f/255f)` math.
+
+The proposed fix is straightforward and safe:
+- Replace the operator body with managed math using `byte * (1f/255f)` per channel
+- Add `[MethodImpl(MethodImplOptions.AggressiveInlining)]`
+- Add bit-exact equivalence tests against the native oracle for all 256 channel values
+
+The reverse `sk_color4f_to_color` operator correctly stays native (it involves clamp+floor operations that can diverge under x87 extended precision).
+
+This is marked `ready-to-fix` — a PR implementing this change would be welcome!
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4369,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-08T05:20:00Z",
+    "currentLabels": [
+      "tenet/performance",
+      "perf/interop"
+    ]
+  },
+  "summary": "Performance enhancement: port the implicit SKColor → SKColorF conversion operator from a native P/Invoke (sk_color4f_from_color) to pure managed C# math, eliminating an unnecessary managed→native transition on a hot per-frame path and achieving ~2× throughput with bit-identical results.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.98
+    },
+    "tenets": [
+      "tenet/performance"
+    ],
+    "perf": [
+      "perf/interop"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Set a SKColor uniform on an animated SKRuntimeEffect shader each frame",
+        "Profile P/Invoke transitions — sk_color4f_from_color is called once per frame per uniform",
+        "Benchmark batch of 1024 color conversions: managed (~2.5 μs) vs native (~4.1–4.9 μs)"
+      ],
+      "environmentDetails": "BenchmarkDotNet v0.13.5, Linux AMD EPYC 7763, .NET SDK 10.0.301, .NET 10.0.9 X64 RyuJIT AVX2, TFM net10.0"
+    }
+  },
+  "analysis": {
+    "summary": "The implicit SKColor → SKColorF operator calls sk_color4f_from_color P/Invoke for pure per-channel division by 255, which is an unnecessary native transition. The native math is fR=R*(1f/255f), fG=G*(1f/255f), fB=B*(1f/255f), fA=A*(1f/255f) — all integer byte values, so the managed result is bit-identical by the double-rounding theorem. Replacing with managed math and [MethodImpl(AggressiveInlining)] yields ~2× throughput gain with no allocation change. The reverse sk_color4f_to_color operator is intentionally kept native (clamp+floor operations can differ by 1 ULP under x87 extended precision).",
+    "rationale": "Classified as type/enhancement because the current behavior is correct but inefficient. The P/Invoke call for pure integer math is clearly an optimization opportunity — this matches the canonical perf/interop example ('remove native interop in SKMatrix'). The fix is well-scoped to a single file and operator, math is empirically verified bit-identical for all 256 byte values, and benchmarks show consistent ~2× improvement. No platforms are affected differentially — this is a cross-platform improvement. Suggested action is ready-to-fix because the root cause and fix are unambiguously clear.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKColorF.cs",
+        "lines": "253-258",
+        "finding": "The implicit operator SKColorF(SKColor color) calls SkiaApi.sk_color4f_from_color((uint)color, &colorF) — a full P/Invoke with output-pointer pin for what is pure per-channel multiply by (1f/255f).",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "4183-4199",
+        "finding": "On the dynamic-load path, sk_color4f_from_color uses a cached-delegate indirection (sk_color4f_from_color_delegate ??= GetSymbol(...)). This adds an extra delegate dispatch overhead on top of the P/Invoke transition on every call.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKRuntimeEffect.cs",
+        "lines": "528",
+        "finding": "implicit operator SKRuntimeEffectUniform(SKColor value) calls (SKColorF)value, triggering the conversion on every frame when a color uniform is set on an animated shader. This confirms the hot-path claim in the issue.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "Porting it to managed C# removes a managed→native transition on a hot path and is ~2× faster with no allocation change and a bit-identical result.",
+        "source": "issue body",
+        "interpretation": "Confirmed by code investigation: the conversion is pure multiply, no non-trivial numeric ops."
+      },
+      {
+        "text": "fR = R * (1f/255f), fG = G * (1f/255f), fB = B * (1f/255f), fA = A * (1f/255f)",
+        "source": "issue body",
+        "interpretation": "Native math uses exact per-channel integer-to-float multiply. Bit-identical in managed C# due to double-rounding theorem for single-step float operations."
+      },
+      {
+        "text": "binding/SkiaSharp/SKRuntimeEffect.cs converts SKColor → SKColorF through this operator, so an animated shader that updates a color uniform pays this conversion every frame.",
+        "source": "issue body",
+        "interpretation": "Confirmed at SKRuntimeEffect.cs:528 — (SKColorF)value is the conversion trigger on per-frame shader uniform updates."
+      },
+      {
+        "text": "Run 1: New 2.506 μs / Old 4.906 μs (ratio 0.51). Run 2: New 2.496 μs / Old 4.181 μs (ratio 0.60). No allocations either way.",
+        "source": "issue body — benchmark table",
+        "interpretation": "1024-color batch, consistent ~2× win. The managed path is also more predictable (rock-stable across runs)."
+      }
+    ],
+    "resolution": {
+      "hypothesis": "Replace the P/Invoke operator body with managed per-channel multiply by (1f/255f) and annotate with [MethodImpl(AggressiveInlining)]. Add bit-exact equivalence tests verifying all 256 byte values against the native oracle.",
+      "proposals": [
+        {
+          "title": "Replace P/Invoke with managed per-channel multiply",
+          "description": "Change the operator body to extract R, G, B, A bytes from the uint color value and multiply each by (1f/255f). Apply [MethodImpl(MethodImplOptions.AggressiveInlining)] to the operator. This is ABI-safe (operator signature unchanged). Add bit-exact equivalence unit tests covering the full 256-value range and edge inputs (0, 255, mid) to guard against future regressions.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Replace P/Invoke with managed per-channel multiply",
+      "recommendedReason": "The root cause is unambiguous and the fix is a one-liner with well-understood semantics. The math is verified bit-identical by the reporter and confirmed by code review. Effort is cost/xs — a tiny targeted change in a single file."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.95,
+      "reason": "Root cause is clear, fix is a single-file one-liner with verified bit-identical managed math, benchmarks demonstrate the improvement, and a user community patch already exists.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement, area/SkiaSharp, tenet/performance, perf/interop labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/performance",
+          "perf/interop"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm the performance issue and outline the fix",
+        "risk": "medium",
+        "confidence": 0.92,
+        "comment": "Thanks for the detailed analysis and benchmarks! The code investigation confirms the root cause: `binding/SkiaSharp/SKColorF.cs` line 256 calls `SkiaApi.sk_color4f_from_color` — a full P/Invoke plus cached-delegate dispatch — for pure per-channel `byte * (1f/255f)` math.\n\nThe proposed fix is straightforward and safe:\n- Replace the operator body with managed math using `byte * (1f/255f)` per channel\n- Add `[MethodImpl(MethodImplOptions.AggressiveInlining)]`\n- Add bit-exact equivalence tests against the native oracle for all 256 channel values\n\nThe reverse `sk_color4f_to_color` operator correctly stays native (it involves clamp+floor operations that can diverge under x87 extended precision).\n\nThis is marked `ready-to-fix` — a PR implementing this change would be welcome!"
+      }
+    ]
+  }
+}
+```
+
+</details>
