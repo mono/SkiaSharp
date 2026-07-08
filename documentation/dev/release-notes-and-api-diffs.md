@@ -204,11 +204,18 @@ line) it would otherwise rebuild from the NuGet feed on every run. It is **not**
 deletion: pages and API-diff folders already committed below the floor are left exactly
 as they are — the Cake engine skips *clearing* them symmetrically with skipping their
 *emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
-are unaffected: a floored line can still be downloaded as a `compare_to` baseline (e.g.
-`3.116.0` still diffs against `2.88.9`). Absent/empty block ⇒ no floor (every line is
-regenerated, the legacy behavior). Raise the floor as old lines stop needing refreshes;
-lower or remove it to rebuild history. Both engines read the same block, so their line
-sets stay identical above the floor.
+are unaffected: a floored line can still be downloaded as a baseline (e.g. `3.116.0`
+still diffs against `2.88.9`) — both via an explicit `compare_to` override **and** as the
+*implicit predecessor* of the lowest emitted line. That lowest line (the floor line
+itself, e.g. `3.0.0`) has no emitted predecessor — its natural baseline sits below the
+floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
+it **for comparison only** (never emitting the below-floor line's own page). Without this,
+the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
+surface as "new" on every run — a large, wrong churn. It is one already-cached package (it
+is also the next line's baseline), so the floor's performance win is preserved. Absent/empty
+block ⇒ no floor (every line is regenerated, the legacy behavior). Raise the floor as old
+lines stop needing refreshes; lower or remove it to rebuild history. Both engines read the
+same block, so their line sets stay identical above the floor.
 
 ### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
@@ -793,8 +800,8 @@ diff is large.
 
 | Owner | Responsibility |
 |---|---|
-| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
-| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish". Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
+| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, **the stable page's dated banner scaffold** (`> **<THEME>** · Released <date> · [NuGet] · [GitHub Release]`, with only the `<THEME>` token left for the AI), preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
+| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish", **plus the banner's `<THEME>` token** (a 2-4 word editorial phrase — the only banner content that is editorial; the date and links are script-owned and kept verbatim). Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` and the page-structure example it follows,
