@@ -172,7 +172,27 @@ namespace HarfBuzzSharp
 			GC.KeepAlive (this);
 		}
 
-		public void AddUtf8 (string utf8text) => AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
+		public void AddUtf8 (string utf8text)
+		{
+			if (string.IsNullOrEmpty (utf8text)) {
+				// Preserve the original behaviour for edge inputs: a null string throws
+				// ArgumentNullException and an empty string adds nothing.
+				AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
+				return;
+			}
+
+			var maxByteCount = Encoding.UTF8.GetMaxByteCount (utf8text.Length);
+			var utf8bytes = ArrayPool<byte>.Shared.Rent (maxByteCount);
+			try {
+				fixed (char* chars = utf8text)
+				fixed (byte* bytes = utf8bytes) {
+					var byteCount = Encoding.UTF8.GetBytes (chars, utf8text.Length, bytes, utf8bytes.Length);
+					AddUtf8 ((IntPtr)bytes, byteCount, 0, -1);
+				}
+			} finally {
+				ArrayPool<byte>.Shared.Return (utf8bytes);
+			}
+		}
 
 		public void AddUtf8 (byte[] bytes) => AddUtf8 (new ReadOnlySpan<byte> (bytes));
 
