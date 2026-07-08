@@ -77,16 +77,16 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$Organization = "xamarin",
+    [string]$Organization = "dnceng-public",
 
     [Parameter(Mandatory = $false)]
     [string]$Project = "public",  # Leave empty for org-scoped feeds
 
     [Parameter(Mandatory = $false)]
-    [string]$SourceFeed = "SkiaSharp",
+    [string]$SourceFeed = "skiasharp",
 
     [Parameter(Mandatory = $false)]
-    [string]$DestinationFeed = "SkiaSharp-CI",
+    [string]$DestinationFeed = "skiasharp-ci",
 
     [Parameter(Mandatory = $false)]
     [string]$PAT = $env:AZURE_DEVOPS_PAT,
