@@ -33,8 +33,8 @@ VERDICT: PASS | FAIL   (score N/12)
    byte-identical to what the raw-data block declares. FAIL if any was re-authored.
 
 3. **no-bare-handles** — Every `@name` in the rendered body is a `[@name](https://github.com/name)`
-   link. FAIL on any bare `@name`, backticked `` `@name` ``, or `by @name`.
-   Grep: `grep -nE '(^|[^`[/])@[A-Za-z0-9_-]+' <version>.md | grep -v 'RAW PR DATA'`.
+   link. FAIL on any bare `@name`, backticked `` `@name` ``, `by @name`, or `contributed by @name`.
+   Grep: `grep -nE 'contributed by @|by @[A-Za-z0-9_-]+|(^|[^`[/])@[A-Za-z0-9_-]+' <version>.md | grep -v 'RAW PR DATA'`.
 
 4. **no-bot-credit** — No `❤️`, Contributors row, or "by" is given to a bot: `github-actions[bot]`,
    `Copilot` (the coding agent — links to `github.com/apps/copilot-swe-agent`), `dependabot[bot]`,
@@ -62,9 +62,12 @@ VERDICT: PASS | FAIL   (score N/12)
    `awk '/^## Highlights/{f=1;next} /^## /{f=0} f' <version>.md | wc -w` must be ≤ 100. FAIL if a
    reader could reconstruct the category sections from Highlights alone.
 
-8. **breaking-present** — `## Breaking Changes` heading exists (body may be *"None in this
-   release."*). If the raw block lists a `.breaking.md` or `.notes.md` companion, the section has
-   a proportional handful of summarized bullets (never a dump, never empty).
+8. **breaking-present** — `## Breaking Changes` heading exists (it is scaffolded into the
+   skeleton — never delete it). When there is no `.breaking.md`/`.notes.md` companion the body is
+   the scaffolded *"None in this release."* / *"None in this preview line."* line, kept verbatim.
+   When a companion is listed, the section has a proportional handful of summarized bullets (never
+   a dump, never empty) and no leftover `TODO(polish)`. FAIL if the heading was dropped or a
+   `TODO(polish)` marker remains.
 
 9. **contributor-table-complete** — The `## Community Contributors ❤️` table has **exactly one row
    per entry in the raw-data `contributors:` roster** — none missing, none invented. Cross-check:
@@ -76,14 +79,18 @@ VERDICT: PASS | FAIL   (score N/12)
    Grep the roster: `grep -A99 'contributors:' <version>.md | grep -oE '@[A-Za-z0-9-]+'`.
 
 10. **inline-attribution-shape** — Every inline community credit is
-    `❤️ [@user](url) ([#NNN](url))` with `❤️` immediately before the PR link. FAIL on `by @user`,
-    `❤️ @user` (no link), or a maintainer/bot bullet carrying `❤️`.
+    `❤️ [@user](url) ([#NNN](url))` with `❤️` immediately before the linked handle. FAIL on
+    `contributed by @user`, `by @user`, a bare `@user`, `❤️ @user` (no link), `@user ❤️` (heart
+    after the handle), or a maintainer/bot bullet carrying `❤️`.
 
-11. **previews-verbatim** — Each trailing `## <label> (<date>)` matches a raw-data `preview
+11. **no-scaffold-markers** — No `TODO(polish)` and no `<THEME>` survive anywhere.
+    Grep: `grep -nE 'TODO\(polish\)|<THEME>' <version>.md` must be empty.
+
+12. **previews-verbatim** — Each trailing `## <label> (<date>)` matches a raw-data `preview
     milestones` entry, verbatim label and date; each is one sentence + a Full Changelog link. No
     invented previews or dates.
 
-12. **links-minimal** — `## Links` on a released page has only `Full Changelog` + `NuGet Package`.
+13. **links-minimal** — `## Links` on a released page has only `Full Changelog` + `NuGet Package`.
     No hand-authored API-diff or HarfBuzz link (those are script-owned in the banner).
 
 ## Fix, don't just flag

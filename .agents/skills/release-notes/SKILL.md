@@ -331,7 +331,7 @@ would tempt you to include an internal PR, rule 1 wins.
 > **References (read the two that carry the detail):**
 > [`references/grouping.md`](references/grouping.md) — how to merge related PRs into a few
 > thematic bullets (rule 5); [`references/review-checklist.md`](references/review-checklist.md)
-> — the 12-point self-review you run before saving; [`references/TEMPLATE.md`](references/TEMPLATE.md)
+> — the 13-point self-review you run before saving; [`references/TEMPLATE.md`](references/TEMPLATE.md)
 > — the canonical page shape (banner, sections, worked example).
 
 1. **Focus on the product, not the project — drop internal work.** This is the rule that makes
@@ -384,12 +384,15 @@ would tempt you to include an internal PR, rule 1 wins.
    > ```
    > (~50 words, under the heading.)
 
-3. **Breaking changes** — Always include a `## Breaking Changes` section (*"None in this
-   release."* when there are none — never drop the heading). If the raw block lists a
-   `.breaking.md` and/or `.notes.md` companion, open them and **summarize the breaks as a few
-   bullets**: name the affected types/areas, add a migration snippet where it helps, and link
-   the API diff for the full list. Behavioral & interop breaks come only from `.notes.md`.
-   Summarize, don't dump. (See [Companion files](#companion-files-open-and-read-them).)
+3. **Breaking changes** — The `## Breaking Changes` section is **scaffolded into the skeleton**;
+   fill it in place and **never delete the heading**. When the scaffold already reads
+   *"None in this release."* / *"None in this preview line."*, the script has confirmed there is
+   no breaking companion — **keep that line verbatim** and move on. When the scaffold instead
+   holds a `TODO(polish)` marker, the raw block lists a `.breaking.md` and/or `.notes.md`
+   companion: open them and **summarize the breaks as a few bullets** (name the affected
+   types/areas, add a migration snippet where it helps, link the API diff for the full list;
+   behavioral & interop breaks come only from `.notes.md`), then delete the marker. Summarize,
+   don't dump. (See [Companion files](#companion-files-open-and-read-them).)
 
 4. **Skia engine first** — If a "Bump skia" or "milestone" PR appears in the raw data,
    list it first under an **Engine** category.
@@ -404,12 +407,15 @@ would tempt you to include an internal PR, rule 1 wins.
    Internals, Security). Each grouped bullet:
    `**impact-statement title** — one line on why it matters. ❤️ [@a](url), [@b](url) ([#N](url), [#M](url))`
    - The PR link(s) come **last**, in one parenthetical.
-   - Community contributors are credited with `❤️ [@user](url)` before the PR links. The
-     maintainer (@mattleibow) and **all bot accounts** (`github-actions[bot]`, `copilot[bot]`,
-     `dependabot[bot]`, any `*[bot]`) are **never** credited — their PRs may be listed but carry
-     no `❤️` and no "by".
-   - **Never** a bare, backticked, or `by @handle` — every handle is a `[@user](https://github.com/user)`
-     link, never the sentence's subject (the raw-data `by @user` is source data, not output).
+   - Community contributors are credited **only** as `❤️ [@user](url)` immediately before the PR
+     links. The maintainer (@mattleibow) and **all bot accounts** (`github-actions[bot]`,
+     `Copilot`/copilot-swe-agent, `dependabot[bot]`, any `*[bot]`) are **never** credited — their
+     PRs may be listed but carry no `❤️` and no attribution.
+   - **Never** write `contributed by @user`, `by @user`, a bare `@user`, a backticked `` `@user` ``,
+     or `@user ❤️` (heart after the handle). Every handle is a `[@user](https://github.com/user)`
+     link with the `❤️` **before** it, never the sentence's subject (the raw-data `by @user` is
+     source data, not output). `contributed by @maxkatz6 ❤️` is WRONG; `❤️ [@maxkatz6](https://github.com/maxkatz6)`
+     is right.
 
 6. **Community Contributors table — render the roster, completely.** The raw-data block ends
    with an authoritative **`contributors:`** roster: every external (non-maintainer, non-bot)
@@ -464,7 +470,7 @@ would tempt you to include an internal PR, rule 1 wins.
 ## Before you save each page — self-review
 
 Apply **[`references/review-checklist.md`](references/review-checklist.md)** to the page you just
-wrote — it is the 12-point rubric (also runnable standalone to grade any finished page). Fix
+wrote — it is the 13-point rubric (also runnable standalone to grade any finished page). Fix
 every FAIL and re-check once. The checks that go wrong most often, watch these first:
 
 1. **Banner** — the script scaffolds it; you only replace `<THEME>`. On a stable page the line
@@ -478,13 +484,18 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
    *"Plus various CI, documentation, and internal tooling improvements."* line. Each `[mixed]` PR
    is either surfaced as a shipping change or folded into that same line — never left as a raw
    build/infra bullet.
-4. **No bare `@handle`, no bot credits** — every handle is `[@user](url)`; no `❤️`/row/"by" for
-   any `*[bot]`.
+4. **No bare `@handle`, no bot credits** — every handle is `[@user](url)` with `❤️` **before** it;
+   FAIL on `contributed by @user`, `by @user`, a bare/backticked `@user`, or `@user ❤️`
+   (`grep -nE 'contributed by @|by @[A-Za-z0-9-]+|[^]([:word:]/]@[A-Za-z0-9-]+' <version>.md`, then
+   eyeball); no `❤️`/row/attribution for any `*[bot]`, `Copilot`, or @mattleibow.
 5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
    none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
 6. **`## Highlights` heading present** (never a bare lead paragraph) and **≤ 100 words** (target
    ~80 — count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration; **`## Breaking Changes`
-   present**; raw-data comment intact.
+   present** (kept the scaffolded heading, filled or "None in this …" verbatim); raw-data comment
+   intact.
+7. **No scaffold markers left** — `grep -c 'TODO(polish)' <version>.md` and `grep -c '<THEME>'`
+   must both be 0.
 
 ## Parallelization
 

@@ -1902,7 +1902,9 @@ def _release_date_display(version):
 # stranded on the old format until its next PR lands.
 #   1 — original (binary [product]/[internal] tag, no contributor roster)
 #   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
-_RAWDATA_FORMAT_VERSION = 2
+#   3 — scaffolded banner <THEME> token + mandatory ## Highlights / ## Breaking Changes
+#       section scaffold + inline-attribution instructions in the skeleton
+_RAWDATA_FORMAT_VERSION = 3
 
 
 def format_pr_list(prs, metadata):
@@ -2189,6 +2191,13 @@ def format_pr_list(prs, metadata):
         "<!-- AI: Use the raw PR data in the comment above to write polished",
         "     release notes here. Follow .agents/skills/release-notes/references/TEMPLATE.md",
         "     for structure and tone.",
+        "     SECTIONS: `## Highlights` and `## Breaking Changes` are scaffolded below —",
+        "     fill each in place and NEVER delete a `## ` heading. Replace every TODO(polish)",
+        "     marker; a leftover TODO(polish) is a review failure. When the Breaking section",
+        "     already reads a `None in this ...` line, keep it verbatim (there are no breaks).",
+        "     ATTRIBUTION: credit a community contributor ONLY as `\u2764\ufe0f [@user](https://github.com/user)`",
+        "     immediately before the PR link. NEVER write `contributed by @user`, a bare `@user`,",
+        "     or `@user \u2764\ufe0f`; the maintainer and bots get no credit (see the contributors roster).",
     ]
     if metadata.get("status") == "stable":
         ai_lines.append(
@@ -2237,6 +2246,32 @@ def format_pr_list(prs, metadata):
                 "     point readers at its linked page for the binding details.")
     ai_lines.append("-->")
     lines.extend(ai_lines)
+    lines.append("")
+
+    # Scaffold the two ALWAYS-PRESENT sections (§4.4) so the polish fills them in place
+    # instead of authoring the structure from scratch — the same principle as the banner
+    # scaffold above. Polish was observed silently dropping the `## Breaking Changes`
+    # heading on pages with no breaks; emitting the heading here (and, when the script
+    # KNOWS there is no breaking/notes companion, the whole "None in this ..." body)
+    # makes that impossible. A leftover `TODO(polish)` marker is a greppable self-review
+    # failure, exactly like a stray `<THEME>`.
+    comps = metadata.get("companions") or {}
+    has_break = bool(comps.get("breaking") or comps.get("notes"))
+    lines.append("## Highlights")
+    lines.append("")
+    lines.append("TODO(polish): the impact hook (rule 2 — \u2264100 words, no enumeration).")
+    lines.append("")
+    lines.append("## Breaking Changes")
+    lines.append("")
+    if has_break:
+        lines.append(
+            "TODO(polish): summarize the breaks from the companion files as a few "
+            "bullets (rule 3). Keep this heading.")
+    else:
+        # No breaking/notes companion -> the no-breaks body is deterministic; the AI
+        # keeps it verbatim and never has to decide whether the section exists.
+        lines.append("*None in this {}.*".format(
+            "preview line" if status == "preview" else "release"))
     lines.append("")
 
     return "\n".join(lines)

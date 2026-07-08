@@ -108,16 +108,18 @@ The first engine bump of the 9.x line: Skia m998 lands with variable-font suppor
 
 ## Breaking Changes
 
-<!-- ALWAYS include this heading — never drop it, and place it right after Highlights.
-     If the raw-data block lists companions (§4.7), open them and SUMMARIZE the breaks as
-     a few bullets:
-     - the API breaking diff (*.breaking.md) — open every listed file (one per broken assembly)
-       and name the affected types/areas in a few bullets, with a small migration snippet where
-       it helps. Summarize, don't dump — readers follow the API-diff link for the full list.
-     - the manual additions sidecar (<stem>.notes.md) — behavioral breaks (same signature,
-       different runtime behavior) and interop / native-struct breaks (e.g. fields removed from
-       a native backend-context struct) that never appear in a signature diff. Fold them in here.
-     If NEITHER companion has anything, write "None in this release." -->
+<!-- The `## Breaking Changes` heading is SCAFFOLDED into the skeleton — never delete it, and
+     keep it right after Highlights. Two cases:
+     - The scaffold body already reads "None in this release." / "None in this preview line."
+       -> the script confirmed there is NO breaking/notes companion; keep that line verbatim.
+     - The scaffold body is a TODO(polish) marker -> the raw-data block lists companions (§4.7);
+       open them, SUMMARIZE the breaks as a few bullets, and delete the marker:
+       - the API breaking diff (*.breaking.md) — open every listed file (one per broken assembly)
+         and name the affected types/areas in a few bullets, with a small migration snippet where
+         it helps. Summarize, don't dump — readers follow the API-diff link for the full list.
+       - the manual additions sidecar (<stem>.notes.md) — behavioral breaks (same signature,
+         different runtime behavior) and interop / native-struct breaks (e.g. fields removed from
+         a native backend-context struct) that never appear in a signature diff. Fold them in here. -->
 
 - **Legacy obsoletes are now compile errors** — Members deprecated in a previous major (including the old font-on-`SKBar` APIs) are now compile errors, and obsolete enum members are trimmed from the reference assembly. Move to `SKFoo` for text, and to the replacements flagged by the earlier obsolete warnings. See the [API diff](9.990.0/index.md) for the full list. ([#1201](https://github.com/mono/SkiaSharp/pull/1201), [#1202](https://github.com/mono/SkiaSharp/pull/1202))
 - **`new SKFoo()` default state** — A parameterless `SKFoo` now carries an empty `SKBaz` instead of the default one. Pass it explicitly when you need the default:
@@ -267,10 +269,13 @@ Variable font support, animated encoding, and the first engine bump of the line.
      - Categories are top-level `##` sections (Engine, API Surface, Bug Fixes, Platform, …),
        NOT nested under a "New Features" parent; pick the ones that fit and never force empties
      - Previews/RC are minimal: one sentence + changelog link each
-     - Attribution: item shape is `**title** — desc. ❤️ [@user](url) ([#NNN](url))`. Credit &
-       link every community contributor (anyone not @mattleibow); the maintainer's own PRs end
-       with just the `([#NNN](url))` link (no ❤️). NEVER write `by @handle`, and never emit a
-       bare @user anywhere in the rendered body. In the Community Contributors TABLE the
+     - Attribution: item shape is `**title** — desc. ❤️ [@user](url) ([#NNN](url))`, with `❤️`
+       immediately BEFORE the linked handle. Credit & link every community contributor (anyone not
+       @mattleibow); the maintainer's own PRs end with just the `([#NNN](url))` link (no ❤️). NEVER
+       write `contributed by @handle`, `by @handle`, a bare/backticked `@handle`, or `@handle ❤️`
+       (heart after the name) — `contributed by @maxkatz6 ❤️` is WRONG,
+       `❤️ [@maxkatz6](https://github.com/maxkatz6)` is right. Never emit a bare @user anywhere in
+       the rendered body. In the Community Contributors TABLE the
        "Contributor" cell is a plain `[@user](url)` with NO ❤️ (the heart is only on the inline
        bullets above) and "What They Did" is a short PROSE summary, never a bare list of PRs.
      - Adapt to content: security release leads with security, feature release leads with features
