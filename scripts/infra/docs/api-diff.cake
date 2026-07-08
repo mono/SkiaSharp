@@ -242,12 +242,16 @@ Task ("docs-api-diff-past")
         // Any other preview-only line (old, never shipped, not listed) is dropped.
         // The history floor (spec §1.4) then removes any line below the configured
         // minimum — the obsolete back-catalogue whose committed folders we keep but
-        // do not rebuild (ClearOwnedApiDiffFolders skips them symmetrically).
-        var emit = lines
+        // do not rebuild (ClearOwnedApiDiffFolders skips them symmetrically). We keep
+        // the pre-floor `emittable` set too: the floor line's baseline lives below the
+        // floor and must be resolvable from it (§1.3 "baselines are unaffected").
+        var emittable = lines
             .Where (l => !l.rep.IsPrerelease
                 || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
                 || latestStable == null
                 || l.rep.CompareTo (latestStable) > 0)
+            .ToList ();
+        var emit = emittable
             .Where (l => !IsBelowHistoryFloor (l.key, family))
             .ToList ();
 
@@ -264,10 +268,37 @@ Task ("docs-api-diff-past")
             //      is NOT itself superseded — a superseded line still gets its own
             //      page but must never serve as a baseline (spec §1.2/§1.3), so the
             //      next line diffs past it and rolls its work up.
+            //   3. The LOWEST emitted line (the history-floor line) has no emitted
+            //      predecessor: its real baseline sits BELOW the floor and was filtered
+            //      out of `emit`. Falling through with a null baseline would diff it
+            //      against an empty assembly (0.0.0.0) and re-emit its ENTIRE API as
+            //      "new" — a huge, wrong, every-run churn. A baseline may live below the
+            //      floor (spec §1.4: "baselines are unaffected"), so resolve it from the
+            //      pre-floor `emittable` set and download it FOR COMPARISON ONLY — the
+            //      below-floor line is used as a baseline, never emitted itself. This is
+            //      one already-cached package (the floor line's immediate predecessor,
+            //      also the baseline of the next line up), so the floor's perf win — not
+            //      rebuilding the whole obsolete back-catalogue — is preserved.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
             if (previous == null) {
                 for (var j = idx - 1; j >= 0; j--) {
                     var candidate = emit [j].rep.ToNormalizedString ();
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
+            if (previous == null) {
+                // No emitted predecessor -> this is the floor line. Reach below the
+                // floor in the pre-floor `emittable` set (lines that would ship a diff
+                // if the floor were absent) for the most recent non-superseded line.
+                var currentRep = emit [idx].rep;
+                var below = emittable
+                    .Where (l => l.rep.CompareTo (currentRep) < 0)
+                    .OrderByDescending (l => l.rep);
+                foreach (var l in below) {
+                    var candidate = l.rep.ToNormalizedString ();
                     if (!IsVersionSuperseded (versionsConfig, candidate)) {
                         previous = candidate;
                         break;

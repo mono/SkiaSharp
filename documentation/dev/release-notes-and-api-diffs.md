@@ -204,11 +204,18 @@ line) it would otherwise rebuild from the NuGet feed on every run. It is **not**
 deletion: pages and API-diff folders already committed below the floor are left exactly
 as they are — the Cake engine skips *clearing* them symmetrically with skipping their
 *emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
-are unaffected: a floored line can still be downloaded as a `compare_to` baseline (e.g.
-`3.116.0` still diffs against `2.88.9`). Absent/empty block ⇒ no floor (every line is
-regenerated, the legacy behavior). Raise the floor as old lines stop needing refreshes;
-lower or remove it to rebuild history. Both engines read the same block, so their line
-sets stay identical above the floor.
+are unaffected: a floored line can still be downloaded as a baseline (e.g. `3.116.0`
+still diffs against `2.88.9`) — both via an explicit `compare_to` override **and** as the
+*implicit predecessor* of the lowest emitted line. That lowest line (the floor line
+itself, e.g. `3.0.0`) has no emitted predecessor — its natural baseline sits below the
+floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
+it **for comparison only** (never emitting the below-floor line's own page). Without this,
+the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
+surface as "new" on every run — a large, wrong churn. It is one already-cached package (it
+is also the next line's baseline), so the floor's performance win is preserved. Absent/empty
+block ⇒ no floor (every line is regenerated, the legacy behavior). Raise the floor as old
+lines stop needing refreshes; lower or remove it to rebuild history. Both engines read the
+same block, so their line sets stay identical above the floor.
 
 ### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
