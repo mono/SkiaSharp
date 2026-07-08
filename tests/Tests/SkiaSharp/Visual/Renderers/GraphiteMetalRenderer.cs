@@ -34,12 +34,26 @@ namespace SkiaSharp.Tests.Visual
 			TestConfig.Current.IsMac;
 #endif
 
+		// See GaneshMetalRenderer.IsAzureDevOpsX64Host — same reasoning.
+		private static bool IsAzureDevOpsX64Host =>
+			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase) &&
+			RuntimeInformation.OSArchitecture == Architecture.X64;
+
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
+
+			// Short-circuit before touching Metal at all on the x64 Azure DevOps
+			// macOS agents: the virtualized Metal driver leaves state that hangs
+			// the test host's post-session shutdown, even when Skia never actually
+			// renders. See GaneshMetalRenderer for the full rationale.
+			if (IsAzureDevOpsX64Host)
+				throw new RendererUnavailableException(
+					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
+					"Metal driver leaves state that hangs the test host on shutdown).");
 
 			lock (GpuRenderGate.Sync)
 			{
@@ -51,19 +65,19 @@ namespace SkiaSharp.Tests.Visual
 					if (device == IntPtr.Zero)
 						throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
-					queue = ObjcSendVoid(device, "newCommandQueue");
-					if (queue == IntPtr.Zero)
-						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
-
-					// Skia's Graphite Metal init walks MTLGPUFamilyApple9..7 and Mac2, and
-					// SK_ABORTs the process if none is supported. Virtualized macOS runners
-					// (Actions VMs) advertise Metal but only support MTLGPUFamilyMac1, which
-					// makes CreateMetal fatal instead of returning null. Probe here first
-					// and skip cleanly.
+					// Probe the device BEFORE allocating a command queue. Skia's Graphite
+					// Metal init walks MTLGPUFamilyApple9..7 and Mac2 and SK_ABORTs the
+					// process if none is supported; the newCommandQueue call itself is
+					// also what leaves the dispatch-queue state that hangs shutdown on
+					// virtualized Metal, so we skip it if the probe fails.
 					if (!MetalHasGraphiteCapableFamily(device))
 						throw new RendererUnavailableException(
 							"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
 							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+
+					queue = ObjcSendVoid(device, "newCommandQueue");
+					if (queue == IntPtr.Zero)
+						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
 					var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
 					using var context = SKGraphiteContext.CreateMetal(backendContext)

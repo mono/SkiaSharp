@@ -45,6 +45,13 @@ namespace SkiaSharp.Tests.Visual
 			TestConfig.Current.IsMac;
 #endif
 
+		// Azure DevOps sets TF_BUILD=True on every agent. Apple-Silicon macOS
+		// agents run real hardware and pass through to real Metal cleanly; only
+		// the x64 macOS pool virtualizes the Metal driver.
+		private static bool IsAzureDevOpsX64Host =>
+			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase) &&
+			RuntimeInformation.OSArchitecture == Architecture.X64;
+
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
@@ -52,6 +59,21 @@ namespace SkiaSharp.Tests.Visual
 
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
+
+			// Azure DevOps macOS agents advertise Metal but only expose a
+			// virtualized/software device whose driver leaves an internal
+			// dispatch queue in the process that never signals during teardown.
+			// Even with the family probe (below) skipping the actual render, the
+			// mere act of calling MTLCreateSystemDefaultDevice + newCommandQueue
+			// on that device leaves state that hangs the test host's post-session
+			// shutdown for 2h+. Short-circuit before touching Metal at all when
+			// we can safely conclude we're on such a runner: Azure sets TF_BUILD,
+			// and only x64 CI agents virtualize Metal (Apple Silicon agents run
+			// real hardware).
+			if (IsAzureDevOpsX64Host)
+				throw new RendererUnavailableException(
+					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
+					"Metal driver leaves state that hangs the test host on shutdown).");
 
 			lock (GpuRenderGate.Sync)
 			{
@@ -63,21 +85,18 @@ namespace SkiaSharp.Tests.Visual
 					if (device == IntPtr.Zero)
 						throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
-					queue = ObjcSendVoid(device, "newCommandQueue");
-					if (queue == IntPtr.Zero)
-						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
-
-					// Azure DevOps macOS agents advertise Metal but only expose a
-					// virtualized/software device that lacks MTLGPUFamilyMac2 and
-					// MTLGPUFamilyApple7+. Real Intel and Apple Silicon Macs support
-					// Mac2 (and Apple Silicon adds Apple7+). GRContext.CreateMetal +
-					// Flush(sync) hangs indefinitely on the CI runner's device with no
-					// hangdump firing (native-code block), so probe before entering
-					// Ganesh's Metal init and skip cleanly if we're on the CI Metal.
+					// Probe the device BEFORE allocating a command queue. newCommandQueue
+					// on virtualized Metal is precisely what leaves the dispatch-queue
+					// state that hangs shutdown; if the device doesn't advertise a
+					// Graphite-capable family, we never call newCommandQueue.
 					if (!MetalHasRenderCapableFamily(device))
 						throw new RendererUnavailableException(
 							"MTLDevice does not support any MTLGPUFamily that Ganesh needs " +
 							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+
+					queue = ObjcSendVoid(device, "newCommandQueue");
+					if (queue == IntPtr.Zero)
+						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
 					using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
 					using var grContext = GRContext.CreateMetal(backendContext)

@@ -122,13 +122,7 @@ void RunDotNetTest(
                 .Append("--report-trx-filename").Append("TestResults.trx")
                 .Append("--hangdump")
                 .Append("--hangdump-timeout").Append("5m")
-                .Append("--hangdump-type").Append("Mini")
-                // Session-wide guard rail: if the test host is still alive N minutes
-                // after test discovery completed (e.g. a finalizer touching a
-                // Metal command buffer that never signals), MTP kills the process
-                // and reports the run failed instead of hanging the whole pipeline
-                // until Azure's max-timeout hits at ~2h40m.
-                .Append("--timeout").Append("30m");
+                .Append("--hangdump-type").Append("Mini");
             return args;
         },
     };
