@@ -1,5 +1,12 @@
 ---
 description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
+# ENGINE — pin the stronger model for the Polish phase. Polishing now reads the
+# companion files (manual notes sidecar + API diff + API breaking diff) and writes
+# concise summaries with migration code examples, so it benefits from Opus (same
+# rationale as auto-skia-sync.md). Recompile the .lock.yml after changing this.
+engine:
+  id: copilot
+  model: claude-opus-4.7
 # TRIGGERS — main is the single source of truth for EVERY version/branch.
 # Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
 # runs the workflow copy that lives on THAT ref, not main's, so those triggers can

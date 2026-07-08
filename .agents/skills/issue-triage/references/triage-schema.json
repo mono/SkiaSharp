@@ -91,6 +91,19 @@
       ],
       "description": "Quality tenet label. Omit tenets array entirely if no tenets apply."
     },
+    "classifiedPerf": {
+      "type": "string",
+      "enum": [
+        "perf/allocations",
+        "perf/interop",
+        "perf/memory-leak",
+        "perf/rendering",
+        "perf/size",
+        "perf/startup",
+        "perf/throughput"
+      ],
+      "description": "Performance sub-type label under the tenet/performance umbrella. perf/memory-leak=unbounded memory growth / leaked native handles / undisposed objects. perf/allocations=excessive managed allocations or per-frame GC/heap churn. perf/interop=P/Invoke marshalling or native interop overhead. perf/rendering=slow drawing/render/GPU frame performance. perf/throughput=operation slower than expected (encode/decode, file loading, pixel/format conversion, readback). perf/startup=slow initialization or first-use latency. perf/size=binary/package/output size. Any perf/* label implies tenet/performance — include tenet/performance in tenets whenever perf is non-empty. Omit perf array entirely if not a performance concern."
+    },
     "classifiedPartner": {
       "type": "string",
       "enum": [
@@ -254,7 +267,15 @@
             "$ref": "#/$defs/classifiedTenet",
             "description": "A tenet label."
           },
-          "description": "Quality tenet labels, e.g. ['tenet/reliability']. Omit if no tenets apply."
+          "description": "Quality tenet labels, e.g. ['tenet/reliability']. Omit if no tenets apply. Include 'tenet/performance' whenever the perf array is non-empty."
+        },
+        "perf": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/classifiedPerf",
+            "description": "A performance sub-type label."
+          },
+          "description": "Performance sub-type labels under the tenet/performance umbrella, e.g. ['perf/memory-leak']. Omit if not a performance concern. When non-empty, also include 'tenet/performance' in tenets."
         },
         "partner": {
           "$ref": "#/$defs/classifiedPartner",

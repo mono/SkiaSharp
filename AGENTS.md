@@ -152,7 +152,7 @@ C# Wrapper (binding/SkiaSharp/)  ->  P/Invoke  ->  C API (externals/skia/src/c/)
 | `docs/` | No | Auto-generated |
 | `documentation/dev/` | Yes | Architecture guides |
 | `documentation/docfx/releases/` | Yes | Website release notes (template-formatted) |
-| `documentation/docfx/releases/TEMPLATE.md` | Yes | Template for AI formatting |
+| `.agents/skills/release-notes/references/TEMPLATE.md` | Yes | Template for AI formatting (skill reference asset) |
 
 ---
 
@@ -349,6 +349,8 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Triage issue | `/issue-triage` | "triage #NNNN", "classify issue", "analyze issue" |
 | Reproduce bug | `/issue-repro` | "repro #NNNN", "reproduce issue", "create reproduction" |
 | Fix bug | `/issue-fix` | "investigate #NNNN", "fix issue", crash, exception, segfault, "doesn't work" |
+| Scan/fix memory leak | `/memory-leak-fixer` | "memory leak", "leak scan", "undisposed handle", "owns flag", "double free", "fix the leak" |
+| Scan/fix performance | `/performance-fixer` | "performance", "perf scan", "optimize", "make it faster", "hot path", "reduce allocations", "P/Invoke overhead", "port to managed" |
 | Bulk process issues | `/issue-bulk-process` | "triage these issues", "process issues #1 #2 #3" |
 | Add new API | `/api-add-review` | "expose", "wrap method", issue requests new functionality |
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
@@ -386,6 +388,8 @@ See [documentation/dev/issue-pipeline.md](documentation/dev/issue-pipeline.md) f
 | "triage", "classify", "analyze issue" | Triage | `/issue-triage` |
 | "repro", "reproduce", "reproduction" | Reproduction | `/issue-repro` |
 | "crash", "exception", "wrong", "fails", "broken", "segfault" | Bug | `/issue-fix` |
+| "memory leak", "not disposed", "handle leak", "owns flag", "double free" | Memory leak | `/memory-leak-fixer` |
+| "slow", "performance", "optimize", "faster", "hot path", "reduce allocations", "interop overhead" | Performance | `/performance-fixer` |
 | "add", "expose", "missing API", "feature request" | New API | `/api-add-review` |
 | "docs", "documentation", "XML", "comments" | Docs | `/api-docs` |
 | CVE, security, vulnerability | Security | `/security-audit` then `/native-dependency-update` |
@@ -398,7 +402,7 @@ Work directly for:
 - Build/test-only tasks (no reported bug)
 - Questions about code or architecture
 - Refactoring without a reported problem
-- Performance optimization (unless there's a "slow" bug report)
+- Performance optimization when the caller already knows the exact one-line change (otherwise use `/performance-fixer`, which proves the win with a benchmark + parity test)
 
 ---
 

@@ -92,6 +92,7 @@ Requirements: git, Python 3.7+
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -265,6 +266,46 @@ def load_support_config():
     return _SUPPORT_CONFIG
 
 
+# History floor (spec §1.4) — an optional per-family minimum line core below which
+# NO page is regenerated and NO API diff is emitted, so a full ``--all`` run skips
+# the obsolete back-catalogue (e.g. every 1.x/2.x line) it would otherwise rebuild
+# from the NuGet feed on each run. It is a PERFORMANCE floor, not a delete: pages
+# and API-diff folders already committed below the floor are left untouched (the
+# Cake engine likewise skips clearing them), so history stays intact — it is simply
+# not rebuilt. Absent/empty ``history_floor`` block => no floor (legacy behavior:
+# every line is regenerated). Read from the top-level ``history_floor`` block in
+# versions.json, keyed by family (spec §1.5): ``{"skiasharp": "3.0.0"}``.
+_HISTORY_FLOOR = None  # type: Optional[dict]
+
+
+def history_floor(family="skiasharp"):
+    # type: (str) -> Optional[str]
+    """The configured minimum line core for ``family``, or None when unset."""
+    global _HISTORY_FLOOR
+    if _HISTORY_FLOOR is None:
+        _HISTORY_FLOOR = {}
+        if VERSIONS_JSON_PATH.exists():
+            with open(VERSIONS_JSON_PATH) as f:
+                block = json.load(f).get("history_floor") or {}
+            if isinstance(block, dict):
+                _HISTORY_FLOOR = {
+                    k: v for k, v in block.items() if isinstance(v, str) and v}
+    return _HISTORY_FLOOR.get(family)
+
+
+def is_below_history_floor(version, family="skiasharp"):
+    # type: (str, str) -> bool
+    """True when ``version``'s line core sorts below the family's history floor.
+
+    Used to skip regenerating obsolete back-catalogue pages (spec §1.4). With no
+    floor configured this is always False, so every line is processed as before.
+    """
+    floor = history_floor(family)
+    if not floor:
+        return False
+    return _core_tuple(version) < _core_tuple(floor)
+
+
 def classify_support_tier(group, support=None):
     # type: (str, Optional[dict]) -> str
     """Classify a minor group ("3.119") into a TOC/index support tier (spec §3.5).
@@ -366,6 +407,59 @@ def harfbuzz_lines_from_map():
     return result
 
 
+def _sha256_bytes(data):
+    # type: (bytes) -> str
+    """``sha256:<hex>`` digest of raw bytes (companion-file content key, §4.7)."""
+    return "sha256:" + hashlib.sha256(data).hexdigest()
+
+
+def load_notes_sidecar(stem, base_dir):
+    # type: (str, Path) -> Optional[dict]
+    """The maintainer-authored manual additions sidecar (spec §3.7).
+
+    A ``<stem>.notes.md`` co-located with the hub page: freeform Markdown a human
+    injects to survive re-polish. Returns ``{'path': <page-relative>, 'sha256':
+    <hash>}`` when present, else None. Only the BYTES are hashed — Python never
+    parses the content (the Polish AI reads it, §4.7). The path is page-relative
+    (same directory as the hub), so the AI resolves it straight from the page.
+    """
+    notes_path = base_dir / "{}.notes.md".format(stem)
+    if not notes_path.is_file():
+        return None
+    return {"path": "{}.notes.md".format(stem),
+            "sha256": _sha256_bytes(notes_path.read_bytes())}
+
+
+def load_breaking_companions(line, base_dir):
+    # type: (str, Path) -> Optional[dict]
+    """The API breaking-diff companions for a line (spec §3.3/§4.7).
+
+    Globs ``<line>/**/<assembly>.breaking.md`` under the line's API-diff folder.
+    ``api-diff.cake`` writes a ``.breaking.md`` ONLY when real breaking changes
+    exist (it deletes an empty one, §5.2), so any match means this line broke
+    something. Returns ``{'paths': [<page-relative>, …], 'sha256': <combined
+    hash>}`` or None. The combined hash covers the sorted ``(path, bytes)`` pairs,
+    so it is order-stable and flips when any breaking file is added, removed, or
+    changed — which is what re-polishes the page (§4.6).
+    """
+    folder = base_dir / line
+    if not folder.is_dir():
+        return None
+    files = sorted(folder.glob("**/*.breaking.md"))
+    if not files:
+        return None
+    h = hashlib.sha256()
+    paths = []  # type: list[str]
+    for f in files:
+        rel = f.relative_to(base_dir).as_posix()
+        paths.append(rel)
+        h.update(rel.encode("utf-8"))
+        h.update(b"\0")
+        h.update(f.read_bytes())
+        h.update(b"\0")
+    return {"paths": paths, "sha256": "sha256:" + h.hexdigest()}
+
+
 def _api_signature(metadata):
     # type: (dict) -> str
     """Compact, deterministic signature of a page's script-owned API-changes line.
@@ -398,8 +492,9 @@ def _api_signature(metadata):
 
 def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
                           new_status=None, new_superseded_by=None,
-                          new_supersedes=None, new_api_sig=None):
-    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]], Optional[str]) -> bool
+                          new_supersedes=None, new_api_sig=None,
+                          new_notes_hash=None, new_breaking_hash=None):
+    # type: (Path, int, str, Optional[str], Optional[str], Optional[list[str]], Optional[str], Optional[str], Optional[str]) -> bool
     """Check whether the existing file already encodes identical raw data.
 
     Compares the fields the script controls: PR count, diff range, the
@@ -414,7 +509,10 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     loses) an API-diff folder, or whose HarfBuzz mapping changes, must be
     rewritten to inject (or drop) the API-changes line even when its PRs are
     identical. Returns True only when every tracked field matches, so those
-    metadata-only changes still force a rewrite.
+    metadata-only changes still force a rewrite. The companion-file hashes
+    (``notes:`` and ``breaking:``, §4.7) are compared for the same reason: editing
+    the manual additions sidecar or a change in the line's breaking diff must
+    re-polish the page even when its PR set is unchanged.
 
     Reads the metadata from the HTML comment block at the top of the file.
     """
@@ -428,6 +526,15 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
     if not m_prs or not m_diff:
         return False
     if int(m_prs.group(1)) != new_prs_count or m_diff.group(1) != new_diff_range:
+        return False
+
+    # format: <n> — the raw-data FORMAT VERSION (§4.6). An existing page written by
+    # an older generator either lacks this line or carries a lower number; either way
+    # its raw-data block predates the current structure/instructions, so it must be
+    # rewritten even though its PR set is unchanged. Absent => treat as 0 (mismatch).
+    m_fmt = re.search(r"^\s*format:\s*(\d+)", content, re.MULTILINE)
+    existing_fmt = int(m_fmt.group(1)) if m_fmt else 0
+    if existing_fmt != _RAWDATA_FORMAT_VERSION:
         return False
 
     # status: only compare when the caller supplies the new value.
@@ -460,6 +567,23 @@ def _is_content_unchanged(output_path, new_prs_count, new_diff_range,
         m_api = re.search(r"^\s*api:\s*(.*)$", content, re.MULTILINE)
         existing_api = m_api.group(1).strip() if m_api else ""
         if existing_api != (new_api_sig or ""):
+            return False
+
+    # notes: <hash> / breaking: <hash> — the companion-file content key (§4.7).
+    # These are emitted only when the companion exists, so an absent line means
+    # "no companion"; treat it as "" so a page that newly GAINS a sidecar or a
+    # breaking diff is rewritten to backfill the manifest (§4.6). NOTE: use
+    # ``[ \t]*`` (never ``\s*``) around the value — in MULTILINE mode ``\s*``
+    # would span the newline and swallow the next line for an empty value.
+    if new_notes_hash is not None:
+        m_notes = re.search(r"^[ \t]*notes:[ \t]*(\S+)", content, re.MULTILINE)
+        existing_notes = m_notes.group(1) if m_notes else ""
+        if existing_notes != (new_notes_hash or ""):
+            return False
+    if new_breaking_hash is not None:
+        m_brk = re.search(r"^[ \t]*breaking:[ \t]*(\S+)", content, re.MULTILINE)
+        existing_brk = m_brk.group(1) if m_brk else ""
+        if existing_brk != (new_breaking_hash or ""):
             return False
 
     return True
@@ -1537,6 +1661,90 @@ def determine_diff_range(branch):
     return base_sha, "origin/{}".format(branch), version
 
 
+# Each PR is classified product / mixed / internal by the files it touched, so Polish
+# can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
+# instead of re-judging every PR from its title each run (the source of leak variance).
+#
+#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
+#              consumer can see. Companion test/benchmark/generated files are ignored.
+#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
+#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
+#              image, SDK pin). Polish guesses from the title/context in the raw-data
+#              block (it does not open the PR) — surface a behaviour change, drop pure infra.
+#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
+#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
+_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
+_BUILD_PATH_PREFIXES = ("native/",)
+
+
+def _pr_category(files):
+    # type: (set) -> str
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
+    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
+        return "product"
+    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
+        return "mixed"
+    return "internal"
+
+
+# Automation accounts — never credited as human contributors (§4.5). The workflow
+# already skips these when authoring, but the raw data still records them (they open
+# release-notes and bump PRs), so Polish must exclude them from the contributor table.
+_BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
+
+
+def _is_bot_login(login):
+    # type: (Optional[str]) -> bool
+    """True for automation accounts (exact match or any ``[bot]`` suffix)."""
+    if not login:
+        return False
+    low = login.lower()
+    return low in _BOT_LOGINS or low.endswith("[bot]")
+
+
+def _contributor_roster(prs):
+    # type: (list) -> list
+    """Authoritative external-contributor roster for the credits table (§4.5).
+
+    Returns ``[(login, [pr_number, ...]), ...]`` for every distinct non-maintainer,
+    non-bot author with a *linkable* login, ordered by PR count (most first) then
+    login. Polish renders EXACTLY one table row per entry and never omits one — the
+    old ad-hoc reconstruction from the body prose silently dropped real contributors
+    (e.g. a headline author whose PRs were folded into a thematic bullet). Authors
+    with no resolvable login are excluded because they cannot be safely @-linked.
+    """
+    by_login = {}  # type: dict
+    for pr in prs:
+        login = (pr.get("author") or {}).get("login")
+        if not login or login == "mattleibow" or _is_bot_login(login):
+            continue
+        by_login.setdefault(login, []).append(pr.get("number"))
+    roster = [(login, sorted(n for n in nums if n)) for login, nums in by_login.items()]
+    roster.sort(key=lambda e: (-len(e[1]), e[0].lower()))
+    return roster
+
+
+def _files_by_commit(from_ref, to_ref):
+    # type: (str, str) -> dict
+    """Map each commit hash in ``from_ref..to_ref`` to the set of files it touched.
+
+    One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
+    file set to classify it product vs internal). A ``\\x1e`` record separator
+    prefixes each hash line so file lines can never be mistaken for a hash.
+    """
+    out = run(["git", "log", "--no-renames", "--name-only",
+               "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
+    files_by = {}  # type: dict
+    cur = None
+    for line in out.split("\n"):
+        if line.startswith("\x1e"):
+            cur = line[1:].strip()
+            files_by[cur] = set()
+        elif line.strip() and cur is not None:
+            files_by[cur].add(line.strip())
+    return files_by
+
+
 def get_prs_from_diff(from_ref, to_ref, paths=None):
     # type: (str, str, Optional[list[str]]) -> list[dict]
     """Extract merged PRs from git log between two refs.
@@ -1560,6 +1768,11 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
         cmd.append("--")
         cmd.extend(paths)
     log = run(cmd)
+
+    # One extra git call gives every commit's full file set, used to tag each PR
+    # product vs internal (§4.4). Unfiltered by ``paths`` on purpose — a PR's
+    # classification depends on everything it changed, not the co-ship subset.
+    files_by = _files_by_commit(from_ref, to_ref)
 
     prs = []
     seen = set()  # type: set[int]
@@ -1617,6 +1830,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "body": body,
             "commit": commit_hash,
             "skiaPr": skia_pr,
+            "category": _pr_category(files_by.get(commit_hash, set())),
         })
 
     return prs
@@ -1636,11 +1850,59 @@ def _format_pr_bullet(pr):
     login = author_info.get("login")
     name = author_info.get("name") or "unknown"
     url = pr.get("url", "")
-    community_str = " [community ✨]" if login != "mattleibow" else ""
+    # The community marker invites Polish to credit the author, so it must NOT appear
+    # on bot or maintainer PRs (§4.5): the maintainer is never credited, and bots are
+    # never credited — leaving it on a bot line makes Polish emit a ❤️ @bot bullet.
+    is_community = login and login != "mattleibow" and not _is_bot_login(login)
+    community_str = " [community ✨]" if is_community else ""
     skia_pr = pr.get("skiaPr")
     skia_str = " (skia: mono/skia#{})".format(skia_pr) if skia_pr else ""
     by = "by @{}".format(login) if login else "by {}".format(name)
-    return "{} {} in {}{}{}".format(title, by, url, community_str, skia_str)
+    # Deterministic product / mixed / internal tag (§4.4). Polish writes up [product],
+    # collapses [internal] into one trailing line, and for [mixed] takes a best guess
+    # from the title/context here (no need to open the PR) — surface a behaviour change,
+    # drop pure build/infra.
+    cat = pr.get("category", "product")
+    tag = "[{}] ".format(cat)
+    return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
+
+
+def _release_date_display(version):
+    # type: (str) -> Optional[str]
+    """Human release date (e.g. 'December 3, 2024') from the ``vX.Y.Z`` tag, or None.
+
+    Used to fill the stable-page banner's ``Released <date>`` field deterministically
+    so Polish never has to guess it. Prefers the tag's creator date (annotated tag);
+    falls back to the tagged commit's date; returns None if the tag is not present.
+    """
+    tag = "v{}".format(version)
+    out = ""
+    try:
+        out = run(["git", "for-each-ref", "--format=%(creatordate:short)",
+                   "refs/tags/{}".format(tag)]).strip()
+    except Exception:
+        out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        try:
+            out = run(["git", "log", "-1", "--format=%cs", tag]).strip()
+        except Exception:
+            out = ""
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", out):
+        return None
+    y, m, d = (int(x) for x in out.split("-"))
+    return "{} {}, {}".format(datetime(y, m, 1).strftime("%B"), d, y)
+
+
+# Raw-data block FORMAT VERSION — part of the content key (§4.6). `_is_content_unchanged`
+# compares this against the `format:` line in the existing page; a mismatch (or an older
+# page with no `format:` line) forces a rewrite even when the PR set and diff range are
+# unchanged. BUMP THIS whenever the raw-data block's structure or the Polish instructions
+# embedded in it change materially, so a single `--all` run rolls the new format out to
+# every otherwise-quiet page (e.g. a stable line with no new PRs) instead of leaving it
+# stranded on the old format until its next PR lands.
+#   1 — original (binary [product]/[internal] tag, no contributor roster)
+#   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
+_RAWDATA_FORMAT_VERSION = 2
 
 
 def format_pr_list(prs, metadata):
@@ -1666,15 +1928,32 @@ def format_pr_list(prs, metadata):
         "  version:   {}".format(version),
         "  status:    {}".format(metadata["status"]),
         "  branch:    {}".format(metadata["branch"]),
+        "  format:    {}".format(_RAWDATA_FORMAT_VERSION),
         "  diff:      {}..{}".format(metadata["from"], metadata["to"]),
         "  prs:       {}".format(len(prs)),
+        "  tags:      {} [product] · {} [mixed] · {} [internal] of {} PRs".format(
+            sum(1 for p in prs if p.get("category") == "product"),
+            sum(1 for p in prs if p.get("category") == "mixed"),
+            sum(1 for p in prs if p.get("category") == "internal"),
+            len(prs)),
+        "  legend:    [product] = write up · [internal] = DROP (roll into one trailing "
+        "\"Plus various … internal tooling improvements.\" line) · [mixed] = build/infra: "
+        "guess from the title here — surface a behaviour change, otherwise drop",
         "  api:       {}".format(api_sig),
         "",
     ]
 
     superseded_by = metadata.get("superseded_by")
     supersedes = metadata.get("supersedes")
+    # Release date (deterministic, from the vX.Y.Z tag) — reused both in the raw-data
+    # `released:` field AND to scaffold the stable banner below, so the AI never has to
+    # supply the date itself.
+    released_display = (_release_date_display(version)
+                        if metadata.get("status") == "stable" else None)
     meta_extra = []
+    if released_display:
+        meta_extra.append(
+            "  released:   {} (use verbatim in the banner)".format(released_display))
     if superseded_by:
         meta_extra.append(
             "  superseded: {} (preview only, never released as stable)".format(
@@ -1687,9 +1966,71 @@ def format_pr_list(prs, metadata):
     for i, extra in enumerate(meta_extra):
         lines.insert(8 + i, extra)
 
+    # Companion files (spec §4.7): record each present companion's content hash
+    # (notes/breaking — the content key, §4.6) and a human-readable manifest of
+    # page-relative paths the Polish AI opens and SUMMARIZES. Content is
+    # referenced, never embedded, so the block stays small.
+    companions = metadata.get("companions") or {}
+    notes = companions.get("notes")
+    apidiff = companions.get("apidiff")
+    breaking = companions.get("breaking")
+    comp_block = []  # type: list[str]
+    if notes:
+        comp_block.append("  notes:     {}".format(notes["sha256"]))
+    if breaking:
+        comp_block.append("  breaking:  {}".format(breaking["sha256"]))
+    if notes or apidiff or breaking:
+        comp_block.append("")
+        comp_block.append(
+            "  companions (open and read these during polish, §4.7 — "
+            "summarize, don't dump):")
+        if notes:
+            comp_block.append("    - notes:    {}  (manual additions)".format(
+                notes["path"]))
+        if apidiff:
+            comp_block.append("    - api diff: {}  (index of all per-assembly diffs; flags breaking)".format(
+                apidiff["path"]))
+        if breaking:
+            for p in breaking["paths"]:
+                comp_block.append("    - breaking: {}  (breaking signatures)".format(p))
+    # Splice just before the trailing blank separator (the last element of
+    # `lines`) so the hashes sit with the metadata and the manifest leads into
+    # the PR list.
+    insert_at = len(lines) - 1
+    for extra in comp_block:
+        lines.insert(insert_at, extra)
+        insert_at += 1
+
+    # Authoritative contributor roster (§4.5): the exact set of external, non-bot
+    # authors to credit. Rendered here so Polish builds the credits table from a
+    # deterministic list instead of reconstructing it from body prose (which kept
+    # dropping real contributors). One table row per entry, none omitted.
+    roster = _contributor_roster(prs)
+    if roster:
+        roster_block = [
+            "  contributors: {} external contributor(s) — render EXACTLY one credits-table "
+            "row each (§4.5), never omit one; summarize each one's PRs (found by "
+            "\"by @login\" below) and link the PR numbers:".format(len(roster)),
+        ]
+        for login, nums in roster:
+            roster_block.append("    @{}  ({} PR{}): {}".format(
+                login, len(nums), "" if len(nums) == 1 else "s",
+                " ".join("#{}".format(n) for n in nums)))
+        insert_at = len(lines) - 1
+        for extra in roster_block:
+            lines.insert(insert_at, extra)
+            insert_at += 1
+
     if not prs:
         lines.append("  *No changes found.*")
     else:
+        # Each PR line is tagged [product] / [mixed] / [internal] (§4.4). Remind the
+        # AI in context so keep/inspect/drop is a lexical filter, not a re-judgment.
+        lines.append("  Each PR is tagged [product] (write it up, categorized), "
+                     "[mixed] (build/infra — guess from the title: surface a behaviour")
+        lines.append('  change, otherwise drop) or [internal] (DROP — never a bullet each; '
+                     'roll ALL into one trailing "Plus various … internal tooling')
+        lines.append('  improvements." line, or omit it when there are none).')
         # When the page rolls up tagged previews, group the PRs into per-preview
         # buckets (each PR under the preview it first shipped in) so the AI can
         # write a concrete "## Preview N" section per milestone AND merge the
@@ -1782,8 +2123,20 @@ def format_pr_list(prs, metadata):
             "> **Preview release** · Preview only "
             "· [NuGet]({nuget}/{ver}-preview)".format(nuget=nuget, ver=version))
     else:
+        # Stable page: scaffold the ENTIRE banner deterministically — the release
+        # date (from the tag) and both links are script-owned, so the AI only has to
+        # replace the <THEME> token with a 2-4 word editorial phrase. This is the one
+        # banner the AI used to build from scratch (theme + date + links), which made
+        # it the one that occasionally shipped as a bare "> [NuGet]" skeleton; giving
+        # it the same scaffold as every other status removes that failure mode, and a
+        # leftover literal <THEME> is a greppable self-review failure (unlike a bare
+        # but valid-looking NuGet link). See rule 7 / TEMPLATE / spec §4.4.
+        released_seg = ("Released {} · ".format(released_display)
+                        if released_display else "")
         lines.append(
-            "> [NuGet]({nuget}/{ver})".format(nuget=nuget, ver=version))
+            "> **<THEME>** · {rel}[NuGet]({nuget}/{ver}) · "
+            "[GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/"
+            "v{ver})".format(rel=released_seg, nuget=nuget, ver=version))
     lines.append("")
 
     # Back-link making the supersede relationship two-way: this release rolls up
@@ -1834,9 +2187,18 @@ def format_pr_list(prs, metadata):
 
     ai_lines = [
         "<!-- AI: Use the raw PR data in the comment above to write polished",
-        "     release notes here. Follow documentation/docfx/releases/TEMPLATE.md",
+        "     release notes here. Follow .agents/skills/release-notes/references/TEMPLATE.md",
         "     for structure and tone.",
     ]
+    if metadata.get("status") == "stable":
+        ai_lines.append(
+            "     BANNER: the `> **<THEME>**` line above is scaffolded with the correct")
+        ai_lines.append(
+            "     release date and both links — replace ONLY the literal <THEME> token")
+        ai_lines.append(
+            "     with a 2-4 word editorial phrase (e.g. 'First stable v4 release'). Keep")
+        ai_lines.append(
+            "     the date and the NuGet/GitHub Release links verbatim; never leave <THEME>.")
     if metadata.get("preview_milestones"):
         ai_lines.append(
             "     Render each PREVIEW MILESTONE listed above as a minimal trailing")
@@ -1893,7 +2255,8 @@ def get_version_files():
     versions = []
     next_versions = []
     for f in RELEASES_DIR.iterdir():
-        if f.suffix == ".md" and f.name not in ("index.md", "TEMPLATE.md"):
+        if (f.suffix == ".md" and f.name != "index.md"
+                and not f.name.endswith(".notes.md")):
             stem = f.stem
             if stem.endswith("-unreleased"):
                 next_versions.append(stem[:-11])  # strip "-unreleased"
@@ -1918,7 +2281,8 @@ def get_harfbuzz_version_files():
     next_versions = []  # type: list[str]
     if hb_dir.is_dir():
         for f in hb_dir.iterdir():
-            if not f.is_file() or f.suffix != ".md" or f.name == "index.md":
+            if (not f.is_file() or f.suffix != ".md" or f.name == "index.md"
+                    or f.name.endswith(".notes.md")):
                 continue
             stem = f.stem
             if stem.endswith("-unreleased"):
@@ -1969,13 +2333,45 @@ def cleanup_stale_unreleased():
 
     removed = []
     for f in sorted(RELEASES_DIR.iterdir()):
-        if f.suffix != ".md" or not f.stem.endswith("-unreleased"):
+        if (f.suffix != ".md" or not f.stem.endswith("-unreleased")
+                or f.name.endswith(".notes.md")):
             continue
         version = f.stem[:-len("-unreleased")]
         if version not in live:
             f.unlink()
             removed.append(str(f))
     return removed
+
+
+def warn_orphan_notes_sidecars():
+    # type: () -> list[str]
+    """Warn about ``*.notes.md`` sidecars with no matching hub page (spec §3.7).
+
+    A manual additions sidecar attaches to a page by sharing its stem: it is
+    ``<stem>.notes.md`` beside ``<stem>.md``. A sidecar whose ``<stem>.md`` hub
+    page does not exist (neither a released ``<line>.md`` nor an in-flight
+    ``<line>-unreleased.md``, since either would be the stem) is a maintainer typo
+    — Python **warns** and ignores it, writing nothing on its behalf. Call this at
+    the end of a generation run, once every page that will exist is on disk.
+
+    Checks both families: SkiaSharp sidecars under ``releases/`` and HarfBuzz
+    sidecars under ``releases/harfbuzzsharp/``. Returns the orphan paths (for
+    tests); the side effect is the warning log.
+    """
+    orphans = []  # type: list[str]
+    for base_dir in (RELEASES_DIR, RELEASES_DIR / "harfbuzzsharp"):
+        if not base_dir.is_dir():
+            continue
+        for f in sorted(base_dir.iterdir()):
+            if not f.is_file() or not f.name.endswith(".notes.md"):
+                continue
+            stem = f.name[:-len(".notes.md")]
+            if not (base_dir / "{}.md".format(stem)).is_file():
+                log("WARNING: orphan manual notes sidecar {} has no matching "
+                    "page {}.md — ignoring it (spec §3.7). Did you mean a "
+                    "different stem?".format(f.name, stem))
+                orphans.append(str(f))
+    return orphans
 
 
 def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
@@ -2492,6 +2888,15 @@ def _write_page(branch, all_branches, verbose=False, force=False):
             branch, e), file=sys.stderr)
         return None
 
+    # History floor (spec §1.4): below the configured floor we do not regenerate
+    # the page at all. Its already-committed page (and API-diff folder) stay as
+    # they are — this is a performance skip of the obsolete back-catalogue, not a
+    # delete. No floor configured => never triggers.
+    if is_below_history_floor(version):
+        log("  Skipping {} (below history floor {}).".format(
+            version, history_floor()))
+        return None
+
     from_display = _removeprefix(from_ref, "origin/")
     to_display = _removeprefix(to_ref, "origin/")
     if re.match(r"^[0-9a-f]{7,}$", from_display):
@@ -2543,9 +2948,21 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     api_sig = _api_signature({"api_diff_link": api_diff_link,
                               "harfbuzz": harfbuzz})
 
+    # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
+    # page STEM so it attaches to this exact page) and the API breaking-diff
+    # (under the line's <version>/ folder). Their hashes join the content key so a
+    # companion-only edit re-polishes just this page (§4.6). Computed BEFORE the
+    # unchanged check for the same backfill reason as api_sig.
+    stem = _page_filename(branch, version)[:-len(".md")]
+    notes_comp = load_notes_sidecar(stem, RELEASES_DIR)
+    breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
+                     if not is_head else None)
+    notes_hash = notes_comp["sha256"] if notes_comp else ""
+    breaking_hash = breaking_comp["sha256"] if breaking_comp else ""
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
-                                           api_sig):
+                                           api_sig, notes_hash, breaking_hash):
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
@@ -2600,6 +3017,19 @@ def _write_page(branch, all_branches, verbose=False, force=False):
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+
+    # Companion-file manifest for the raw-data block (§4.7). The api-diff index is
+    # a companion the AI reads too, listed via api_diff_link (not hashed — its
+    # change signal is carried by prs/diff/api, §4.6).
+    companions = {}  # type: dict
+    if notes_comp:
+        companions["notes"] = notes_comp
+    if api_diff_link:
+        companions["apidiff"] = {"path": api_diff_link}
+    if breaking_comp:
+        companions["breaking"] = breaking_comp
+    if companions:
+        metadata["companions"] = companions
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -2686,6 +3116,12 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     """
     hb_line = hb["hb_line"]
     canonical_skia = hb["canonical_skia"]
+    # History floor (spec §1.4): a HarfBuzz line whose introducing SkiaSharp
+    # release is below the SkiaSharp floor — or which is itself below a HarfBuzz
+    # floor — is left as committed and not regenerated.
+    if (is_below_history_floor(canonical_skia, "skiasharp")
+            or is_below_history_floor(hb_line, "harfbuzzsharp")):
+        return None, None
     hb_dir = RELEASES_DIR / "harfbuzzsharp"
     # A HarfBuzz line is "published" (released) exactly when the API-diff
     # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).
@@ -2718,10 +3154,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     output_path = hb_dir / owned
     api_diff_link = "{}/index.md".format(hb_line) if published else None
 
+    # The manual additions sidecar (spec §3.7), keyed by this page's STEM. When a
+    # maintainer has written one, it OVERRIDES both No-changes short-circuits
+    # below (§4.5): the hand-written content is exactly what needs surfacing, so
+    # the line gets a real polished page instead of a prune / deterministic page.
+    stem = owned[:-len(".md")]
+    notes_comp = load_notes_sidecar(stem, hb_dir)
+
     # An in-flight HarfBuzz line earns a page ONLY when its introducing SkiaSharp
     # head actually carries HarfBuzz changes (spec §4.5). An empty delta means the
     # head merely rebuilds an already-released HarfBuzz — no page; prune a stale one.
-    if not published and not prs:
+    if not published and not prs and not notes_comp:
         if output_path.exists():
             output_path.unlink()
             log("  Removed empty {} (nothing unreleased)".format(output_path))
@@ -2729,7 +3172,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
 
     # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
     # (no AI block, never polished; spec §4.5). Idempotent by exact text equality.
-    if published and not prs:
+    if published and not prs and not notes_comp:
         text = _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link)
         if not force and output_path.exists() and output_path.read_text() == text:
             log("  Skipping {} (unchanged, no changes)".format(output_path))
@@ -2766,9 +3209,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         metadata["supersedes"] = supersedes
     api_sig = _api_signature(metadata)
 
+    # Companion files (spec §3.7/§4.7), same as the SkiaSharp path: the manual
+    # additions sidecar (resolved above) plus the API breaking-diff under this
+    # HarfBuzz line's folder. Hashes join the content key (§4.6).
+    breaking_comp = (load_breaking_companions(hb_line, hb_dir)
+                     if published else None)
+    notes_hash = notes_comp["sha256"] if notes_comp else ""
+    breaking_hash = breaking_comp["sha256"] if breaking_comp else ""
+
     if not force and _is_content_unchanged(output_path, len(prs), diff_range_str,
                                            status, superseded_by, supersedes,
-                                           api_sig):
+                                           api_sig, notes_hash, breaking_hash):
         log("  Skipping {} (unchanged)".format(output_path))
         return None, owned
 
@@ -2788,6 +3239,17 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         metadata["preview_milestones"] = preview_milestones
         metadata["pr_buckets"] = bucket_prs_by_milestone(
             prs, preview_milestones, from_ref)
+
+    # Companion-file manifest for the raw-data block (§4.7).
+    companions = {}  # type: dict
+    if notes_comp:
+        companions["notes"] = notes_comp
+    if api_diff_link:
+        companions["apidiff"] = {"path": api_diff_link}
+    if breaking_comp:
+        companions["breaking"] = breaking_comp
+    if companions:
+        metadata["companions"] = companions
 
     hb_dir.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
@@ -2844,6 +3306,8 @@ def cmd_branch(branch, force=False, polish_list_path=None):
         files_to_polish.extend(_regen_unreleased(target, all_branches, force=force))
 
     cmd_update_toc()
+
+    warn_orphan_notes_sidecars()
 
     log("")
     write_polish_list(files_to_polish, polish_list_path)
@@ -3008,6 +3472,10 @@ def cmd_all(force=False, polish_list_path=None):
 
     # Regenerate TOC and index
     cmd_update_toc()
+
+    # Every page that will exist is now on disk — flag any manual notes sidecar
+    # whose hub page is missing (a maintainer typo, spec §3.7).
+    warn_orphan_notes_sidecars()
 
     # Print summary for the AI agent
     log("")

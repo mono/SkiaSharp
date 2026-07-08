@@ -46,6 +46,11 @@ SS_SUMMARY=""
 [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
 
 # --- Determine PR titles based on sync kind (tip / same-milestone / milestone bump) ---
+# Every skia-sync PR (in both mono/skia and mono/SkiaSharp) gets the `type/milestone-sync`
+# label. The one case that advances the milestone number — i.e. changes `SK_MILESTONE` in
+# mono/skia's include/core/SkMilestone.h and the `libSkiaSharp milestone` line in
+# mono/SkiaSharp's scripts/VERSIONS.txt — additionally gets the `type/milestone-bump` label.
+IS_MILESTONE_BUMP=false
 if [ "$UPSTREAM_REF" = "main" ]; then
     SS_TITLE="[skia-sync] Merge upstream Skia main (tip)"
     SS_BODY_INTRO="Automated bleeding-edge sync from the tip of upstream Skia (google/skia main)."
@@ -55,6 +60,7 @@ elif [ "$CURRENT" = "$TARGET" ]; then
 else
     SS_TITLE="[skia-sync] Update skia to milestone ${TARGET}"
     SS_BODY_INTRO="Automated Skia milestone bump from m${CURRENT} to m${TARGET}."
+    IS_MILESTONE_BUMP=true
 fi
 if [ "$IS_RELEASE" = "true" ]; then
     SS_BODY_INTRO="${SS_BODY_INTRO} Targeting release branch \`${SS_BASE}\` (mono/skia \`${SKIA_BASE}\`)."
@@ -85,12 +91,22 @@ push_skia() {
 
     local pr
     pr=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
+    # SK_MILESTONE in include/core/SkMilestone.h) additionally carry type/milestone-bump.
+    # Both labels must already exist in the repo.
+    local skia_label_args=(--label "type/milestone-sync")
+    if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+        skia_label_args+=(--label "type/milestone-bump")
+    fi
+
     if [ -z "$pr" ]; then
         echo "Creating mono/skia PR..."
         gh pr create --repo mono/skia \
             --head "$BRANCH" --base "$SKIA_BASE" \
             --title "$SKIA_TITLE" \
             --draft \
+            "${skia_label_args[@]}" \
             --body "${SKIA_BODY_INTRO}
 
 ${SKIA_SUMMARY}
@@ -98,6 +114,11 @@ ${SKIA_SUMMARY}
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/skia PR"
     else
         echo "Updating mono/skia PR #${pr}..."
+        local skia_add_labels="type/milestone-sync"
+        if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+            skia_add_labels="type/milestone-sync,type/milestone-bump"
+        fi
+        gh pr edit "$pr" --repo mono/skia --add-label "$skia_add_labels" || true
         gh pr edit "$pr" --repo mono/skia \
             --body "${SKIA_BODY_INTRO}
 
@@ -125,12 +146,22 @@ push_skiasharp() {
     [ -n "$skia_pr" ] && skia_pr_link="**Companion skia PR:** https://github.com/mono/skia/pull/$skia_pr"
 
     ss_pr=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
+    # the milestone in scripts/VERSIONS.txt) additionally carry type/milestone-bump. Both
+    # labels must already exist in the repo.
+    local ss_label_args=(--label "type/milestone-sync")
+    if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+        ss_label_args+=(--label "type/milestone-bump")
+    fi
+
     if [ -z "$ss_pr" ]; then
         echo "Creating mono/SkiaSharp PR..."
         gh pr create --repo mono/SkiaSharp \
             --head "$BRANCH" --base "$SS_BASE" \
             --title "$SS_TITLE" \
             --draft \
+            "${ss_label_args[@]}" \
             --body "${SS_BODY_INTRO}
 
 $skia_pr_link
@@ -140,6 +171,11 @@ ${SS_SUMMARY}
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/SkiaSharp PR"
     else
         echo "Updating mono/SkiaSharp PR #${ss_pr}..."
+        local ss_add_labels="type/milestone-sync"
+        if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+            ss_add_labels="type/milestone-sync,type/milestone-bump"
+        fi
+        gh pr edit "$ss_pr" --repo mono/SkiaSharp --add-label "$ss_add_labels" || true
         gh pr edit "$ss_pr" --repo mono/SkiaSharp \
             --body "${SS_BODY_INTRO}
 

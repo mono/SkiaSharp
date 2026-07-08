@@ -54,6 +54,7 @@ thing.
   - §3.4 The HarfBuzz tree shape
   - §3.5 Ownership — who writes and clears what
   - §3.6 The co-release map sidecar (Cake → Python)
+  - §3.7 The manual additions sidecar (maintainer → Python → Polish AI)
 - **§4 — Release-notes engine (`generate-release-notes.py`)**
   - §4.1 Inputs & outputs
   - §4.2 Released vs unreleased — two coexisting pages
@@ -61,6 +62,7 @@ thing.
   - §4.4 Division of responsibility — the script structures, the AI only polishes
   - §4.5 The HarfBuzz family pages
   - §4.6 How it runs
+  - §4.7 Manual additions & breaking-change summaries (companion files)
 - **§5 — API-diff engine (`api-diff.cake`)**
   - §5.1 Inputs & outputs
   - §5.2 Behavior
@@ -194,6 +196,27 @@ share the resulting line set** for that family:
 Within each family the release-notes page set and the API-diff line set therefore
 cover exactly the same lines.
 
+**History floor (a performance skip, not a rule change).** The top-level
+`history_floor` block in `versions.json` optionally sets a per-family minimum line core
+(e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
+re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
+line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
+deletion: pages and API-diff folders already committed below the floor are left exactly
+as they are — the Cake engine skips *clearing* them symmetrically with skipping their
+*emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
+are unaffected: a floored line can still be downloaded as a baseline (e.g. `3.116.0`
+still diffs against `2.88.9`) — both via an explicit `compare_to` override **and** as the
+*implicit predecessor* of the lowest emitted line. That lowest line (the floor line
+itself, e.g. `3.0.0`) has no emitted predecessor — its natural baseline sits below the
+floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
+it **for comparison only** (never emitting the below-floor line's own page). Without this,
+the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
+surface as "new" on every run — a large, wrong churn. It is one already-cached package (it
+is also the next line's baseline), so the floor's performance win is preserved. Absent/empty
+block ⇒ no floor (every line is regenerated, the legacy behavior). Raise the floor as old
+lines stop needing refreshes; lower or remove it to rebuild history. Both engines read the
+same block, so their line sets stay identical above the floor.
+
 ### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
 SkiaSharp and HarfBuzzSharp ship together (HarfBuzz never releases on its own) but
@@ -289,7 +312,11 @@ know the individual commands:
 
 ```
 .agents/skills/release-notes/
-  SKILL.md                       the AI's polish-only instructions (§4.4)
+  SKILL.md                       the AI's polish instructions — a router (§4.4)
+  references/
+    TEMPLATE.md                  the page-structure/tone example the polish follows (§4.4)
+    grouping.md                  how to merge related PRs into a few thematic bullets
+    review-checklist.md          the 12-point self-review the agent runs before saving
   scripts/
     generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
                                  and writes the Files-to-polish list to a file (§2.2)
@@ -334,8 +361,10 @@ Polish phase reads (§2.3).
 
 **Polish.** The AI (the skill) rewrites only the *prose* of the listed human pages
 (§4.4). It never creates, renames, or deletes files, never writes structural content or
-links, and never edits either script. Polish is never part of the script — it is the AI's
-job afterwards.
+links, and never edits either script. It **may open, read-only,** the companion files a
+page's raw-data block references — the manual additions sidecar (§3.7) and the API-diff /
+breaking-diff files (§3.3) — and **summarize** them into the prose (§4.7); it never writes
+to a companion. Polish is never part of the script — it is the AI's job afterwards.
 
 So consumers see just two phases — **Prepare** (run the one script) then **Polish** (the
 AI) — and never juggle the individual generators by hand.
@@ -378,7 +407,10 @@ the working-tree changes are re-applied and the list is placed back at
 `output/files-to-polish.txt` — the **same path a manual Prepare run writes** — so the
 Polish phase reads it from one place regardless of how it was triggered. The agent then
 runs the **Polish** phase (§2.2) with **no network and no `python3`/`cake` access** — it
-reads `output/files-to-polish.txt` first and edits only the prose of the listed pages.
+reads `output/files-to-polish.txt` first and edits only the prose of the listed pages
+(it may additionally open, **read-only**, the companion files those pages reference — the
+manual additions sidecar and the API-diff / breaking-diff files, §4.7 — which are already
+present in the restored working tree).
 The `create-pull-request` safe-output captures the *combined* working-tree diff (restored
 Prepare output + agent prose edits) into the single PR, so both artifacts always ship
 together. The agent job is **gated on Prepare having produced changes**
@@ -496,6 +528,7 @@ paths and only ever clears its own:
 | `releases/harfbuzzsharp/<hb-line>/…` | Cake | Cake (generated files only, §5.2) |
 | `releases/<line>/index.md`, `releases/harfbuzzsharp/<hb-line>/index.md` (per-line diff landings, §3.3/§3.4) | Cake | Cake (marker-managed; regenerated each run, §5.2) |
 | `releases/co-release-map.json` (§3.6) | Cake | Cake (rewritten each run) |
+| `releases/<line>.notes.md`, `releases/harfbuzzsharp/<hb-line>.notes.md` (manual additions sidecar, §3.7) | **Maintainer** (hand-authored input) | **Never machine-cleared** — read (path+hash) by Python, read (content) by the Polish AI; docfx-excluded, not rendered |
 
 The Cake engine clears **only the generated API-diff files** it owns. A file is treated
 as generated — and therefore deleted before the rebuild — only when **both** of these
@@ -646,6 +679,47 @@ map to an as-yet-unpublished `hb_line` that has no folder and instead drives an 
 HarfBuzz page (§4.5). This sidecar is cross-engine; it is distinct from a page's **raw-data
 block** (§4.3), the in-page structured region Python writes for the AI to polish.
 
+### 3.7 The manual additions sidecar (maintainer → Python → Polish AI)
+
+`releases/<line>.notes.md` (SkiaSharp) or `releases/harfbuzzsharp/<hb-line>.notes.md`
+(HarfBuzz) is an **optional, maintainer-authored** companion to a hub page. It is the one
+place a human injects hand-written material — a breaking-change call-out, a migration note,
+an editorial "bring this out" highlight — that must survive regeneration and re-polish.
+Editing the final `<line>.md` directly does not survive, because Polish rewrites the body
+(§4.4); the sidecar does, because no engine ever writes it.
+
+It is **freeform Markdown, not a schema.** There is no JSON and no required structure: the
+maintainer writes natural-language notes and the Polish AI parses, understands, and weaves
+them into the page (§4.7). Not all of it is "breaking" — some is simply material to surface.
+
+#### Ownership & lifecycle
+
+- **Maintainer-owned input.** Only a human creates or edits it. Neither engine ever writes,
+  renames, clears, or reformats it — it is an *input/artifact*, like a source image, not a
+  generated file (contrast the co-release map §3.6, which Cake owns and rewrites).
+- **Co-located, never a page.** It sits beside its `<line>.md` hub and shares the stem, so
+  it is trivially discoverable and travels with the release it annotates. It is **excluded
+  from the docfx render** (`**/*.notes.md`) so it never becomes its own published page, and
+  the §4.6 version-discovery loops skip it so it is never mistaken for a release line.
+- **Read by Python (hash only), read by the AI (content).** Python records its page-relative
+  path + a `sha256` of its bytes in the hub's raw-data block **companions manifest**
+  (§4.3/§4.7) and folds that hash into the content key (§4.6), so editing it re-polishes
+  exactly that page. Python never reads its *content*. The Polish AI opens and reads it and
+  summarizes / weaves it into the prose (§4.7).
+- **Orphan handling.** A `.notes.md` with no matching hub page (neither `<line>.md` nor
+  `<line>-unreleased.md` exists for its stem) is a maintainer typo; Python **warns** and
+  ignores it, writing nothing on its behalf.
+
+#### It forces a real page
+
+A `.notes.md` present for a line makes that line's hub a **polished** page even where the
+generator would otherwise emit a deterministic *No changes* HarfBuzz page (§4.5): the manual
+content is exactly what needs surfacing, so the *No changes* short-circuit is bypassed and
+the page gets a raw-data block for the AI.
+
+This sidecar is a maintainer→engine input; it is distinct from the co-release map (§3.6,
+Cake→Python) and from a page's own **raw-data block** (§4.3), which Python writes.
+
 ---
 
 ## 4. Release-notes engine (`generate-release-notes.py`)
@@ -655,6 +729,12 @@ block** (§4.3), the in-page structured region Python writes for the AI to polis
 - **Inputs:** `git log` over a diff range (merged-PR subjects `… (#1234)`), published
   `v*` release tags (for preview milestones + dates), `versions.json`, and the §1.5
   co-release map sidecar (§3.6) written by the Cake generator.
+- **Companion files (Polish inputs).** The optional **manual additions sidecar**
+  `<line>.notes.md` (§3.7) and the API-diff / breaking-diff files (§3.3). Python records
+  each present companion's page-relative path (+ a `sha256` of the manual + breaking ones)
+  in the raw-data block companions manifest (§4.3/§4.7) and folds those hashes into the
+  content key (§4.6); it never reads their *content*. The Polish AI reads their content and
+  **summarizes** them into the prose (§4.7).
 - **Two families, one engine** (§1.5). The same machinery runs over both families. The
   SkiaSharp family discovers its lines from `release/*` branches + `v*` tags as usual.
   The **HarfBuzz** family has no tags of its own, so it discovers its lines and their git
@@ -707,17 +787,93 @@ shipped in. The buckets exhaustively partition the range (every PR in exactly on
 they *are* the full list; there is no separate flat list. Pages with no previews (an
 unreleased delta, a plain stable patch) carry one flat list instead.
 
+The raw-data block also carries a **companions manifest** (§4.7): for each companion file
+that exists — the manual additions sidecar (§3.7) and the API-diff / breaking-diff files
+(§3.3) — a page-relative path the Polish AI opens, plus content hashes (`notes:`,
+`breaking:`) folded into the content key (§4.6). Companion *content* is **referenced, never
+embedded** — the block records only paths and hashes, so it stays small even when a breaking
+diff is large.
+
 ### 4.4 Division of responsibility — the script structures, the AI only polishes
 
 **Division of responsibility:**
 
 | Owner | Responsibility |
 |---|---|
-| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
-| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish". Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
+| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, **the stable page's dated banner scaffold** (`> **<THEME>** · Released <date> · [NuGet] · [GitHub Release]`, with only the `<THEME>` token left for the AI), preview bucketing, stale-page pruning, and **all links** (including the §1.5 HarfBuzz page→folder link). |
+| **AI / skill** | Only rewrites **prose** in the files the script lists under "Files to polish", **plus the banner's `<THEME>` token** (a 2-4 word editorial phrase — the only banner content that is editorial; the date and links are script-owned and kept verbatim). Never creates, renames, or deletes pages; never writes structural content or links; never edits either script. It **may read (never write)** the companion files a page's raw-data block references — the manual additions sidecar and the API-diff / breaking-diff files — and summarize them into the prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong) it **stops and reports** instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
-`.agents/skills/release-notes/SKILL.md`.
+`.agents/skills/release-notes/SKILL.md` and the page-structure example it follows,
+`.agents/skills/release-notes/references/TEMPLATE.md` (a skill reference asset,
+co-located with the skill and outside the published docs).
+
+#### Prose principles (what the AI polishes toward)
+
+The script decides *what pages exist and how they link*; these principles govern the *prose
+the AI writes inside them*. They exist so the notes read like a **product changelog, not a
+repository activity log**. The operational detail lives in `SKILL.md`; the principles are
+fixed here.
+
+1. **Write for the consumer, not the contributor — product over project.** The test for every
+   PR is whether the **shipped SkiaSharp/HarfBuzzSharp library** — its public API, runtime
+   behavior, native binary, or NuGet package — changed for a consumer. If only a **repo
+   process** changed it is **not** release-notes material and is dropped (or, when there is a lot
+   of it, collapsed into a single trailing line): CI/build pipelines and caching, GitHub
+   Actions/workflows, the project's own agent skills (`security-audit`, `ci-status`, the
+   release-notes/docs tooling), the docs website, PR-staging, sample-publishing pipelines,
+   milestone/label automation, and test-infra migrations — **even when the PR title mentions
+   security, a CVE, performance, or an API name** (a change to the `security-audit` skill is not
+   a library security fix). Native-dependency bumps and native build flags that ship in the
+   binary (e.g. Spectre mitigation, new RIDs/TFMs) stay; the package's own version bump does not.
+   **This decision is made deterministically in Prepare, not left to per-PR judgment in Polish:**
+   `generate-release-notes.py` tags every raw-data PR line **`[product]`**, **`[mixed]`**, or
+   **`[internal]`** by the files it changed:
+   - **`[product]`** — touches shipped code (`binding/`, `externals/`, `source/`). Written up.
+   - **`[internal]`** — touches none of those (CI, workflows, agent skills, docs site, tests,
+     samples, build/meta). Dropped into the one collapse line.
+   - **`[mixed]`** — touches only build config (`native/`): it may change the shipped binary via a
+     compile flag (a rasteriser define, a delay-load fix) or be pure infra (a Docker image, an SDK
+     pin). Polish takes a best guess **from the title/context already in the raw-data block — it
+     does not open the PR** — surfacing it only when it plausibly changes what ships, otherwise
+     folding it into the collapse line.
+
+   `native/` is deliberately **not** treated as shipped code: it is build configuration, and the
+   thing that actually ships is `externals/skia/`. This is why a native compile-flag fix lands as
+   `[mixed]` (inspect-and-usually-surface) rather than being hidden or blindly surfaced. Polish
+   **drops `[internal]`**, writes up **`[product]`**, and inspects **`[mixed]`**; the prose test
+   above is only the tie-breaker for a mis-tagged `[product]`/`[internal]` line. Moving the
+   classification out of the LLM is what makes product-focus reliable run-to-run instead of a
+   judgment loop over every PR.
+2. **Highlights are a hook, not a summary — a hard cap, under a mandatory heading.** The section
+   always exists under the literal `## Highlights` heading (never a bare unlabelled lead
+   paragraph); its body targets **~80 words and never exceeds 100**, in two or three short
+   sentences, no matter how big the release, naming only the three or four biggest items — the
+   engine jump, the headline feature, the fact that there are breaking changes to review.
+   Highlights are a hook, not a table of contents: the categories below carry the full list and
+   the contributor table carries the credits, so Highlights never enumerate APIs, dependency
+   bumps, or fixes, never list contributors one by one (at most one standout handle), and never
+   fall back to a "Compared to X: A, B, C, …" comma-run — that enumeration is exactly what the
+   cap exists to prevent. The bigger the release, the more *selective* Highlights get — not
+   longer. A word cap (not just a sentence count) is the enforceable form of this rule, because a
+   sentence count alone is gamed by long comma-run sentences.
+3. **Attribution is linked, and the maintainer is not credited.** Every `@handle` in the
+   rendered body is a Markdown link (`[@user](https://github.com/user)`) — never a bare
+   `@handle`, and never the raw-data block's `by @user` phrasing carried through into the
+   prose. Community contributors (anyone other than the maintainer) are credited with a
+   `❤️ [@user](url)` immediately before the PR link **on their inline category bullet**; the
+   maintainer's own PRs carry just the `([#NNN](url))` link with no attribution. The
+   `## Community Contributors ❤️` table has two columns: the **Contributor** cell is a plain
+   `[@user](url)` with no ❤️ (the heart is only on the inline bullets — in the table it wraps
+   badly), and the **What They Did** cell is a short prose summary of their work, not a bare
+   list of PR numbers. **The table is roster-driven, not reconstructed from the body.** Prepare
+   emits an authoritative **`contributors:`** roster in the raw-data block — every distinct
+   external (non-maintainer, non-bot) author with their PR numbers — and Polish renders **exactly
+   one row per roster entry, never omitting one**. Building the table by hand from the prose
+   silently dropped real contributors whose PRs were folded into thematic bullets (e.g. a headline
+   external author of a multi-PR feature); the deterministic roster removes that failure mode.
+   Bot accounts (`github-actions[bot]`, `Copilot`, `dependabot`, any `*[bot]`) are excluded from
+   the roster and never credited.
 
 #### API-diff link rule
 
@@ -781,9 +937,11 @@ All of this is deterministic and script-owned.
   writes a deterministic *No changes* page — a stable, fully-rendered page (status banner
   + script-owned API-changes link + a short "No HarfBuzz changes in this release" body)
   with **no** AI raw-data block, so it is never listed under "Files to polish". A page
-  whose filtered set is non-empty is polished like any SkiaSharp page. (This *No changes*
-  rule is general — it just never triggers for SkiaSharp, whose lines always have
-  commits.)
+  whose filtered set is non-empty is polished like any SkiaSharp page. A **manual additions
+  sidecar** (§3.7) present for the line **overrides** this short-circuit — the hand-written
+  content is exactly what needs surfacing, so the page gets a raw-data block and is polished.
+  (This *No changes* rule is general — it just never triggers for SkiaSharp, whose lines
+  always have commits.)
 - **Released vs unreleased** (§4.2) and **content-key idempotency** (§4.6) apply
   unchanged, per family. A HarfBuzz line that shipped inside a released SkiaSharp line gets
   a permanent `<hb-line>.md`, **dated by its canonical (introducing) SkiaSharp release**
@@ -807,16 +965,130 @@ All of this is deterministic and script-owned.
 Always the full, idempotent pass: fetch `main` + every `release/*`, regenerate each
 line's raw-data block (§4.3), prune orphaned `-unreleased` pages (§4.2), and **write only files
 whose content key changed** — the key compares PR count, diff range, the
-supersession metadata (`status`, `superseded_by`, `supersedes`), **and the script-owned
+**raw-data format version** (the `format:` field — see below), the
+supersession metadata (`status`, `superseded_by`, `supersedes`), the **script-owned
 API-changes link** (whether this line has an API-diff folder, its HarfBuzz co-release
-mapping, and — for a HarfBuzz page — its canonical SkiaSharp back-link target, §4.4). Toggling a version's supersession in `versions.json` rewrites its banner
+mapping, and — for a HarfBuzz page — its canonical SkiaSharp back-link target, §4.4),
+**and the companion-file hashes** (`notes:` and `breaking:`, §4.7). Toggling a version's supersession in `versions.json` rewrites its banner
 even when the PR set is identical; likewise, a page that newly gains (or loses) an
 API-diff folder is rewritten to inject (or drop) the API-changes link — which is what
-backfills the link across historical pages on first run. Then regenerate `TOC.yml` +
+backfills the link across historical pages on first run; and editing a `.notes.md` or a
+change appearing in a line's breaking diff flips its hash and re-polishes **only** that
+page (§4.7). The full non-breaking API diff is deliberately **not** folder-hashed — its
+change signal is already carried by the PR set and the API-changes link, so a routine diff
+refresh forces no spurious re-polish. Then regenerate `TOC.yml` +
 `index.md`. The "Files to polish" list — written to the `files-to-polish.txt` file the
 Polish phase reads (§2.3) — names only genuinely-changed pages, so the AI never
 re-polishes an up-to-date page. When it is empty and the tree is unchanged, the workflow
 opens no PR (§2.3).
+
+**The `format:` field rolls out raw-data changes.** The content key above detects *data*
+changes (a new PR, a supersession toggle, a companion edit) but not changes to the raw-data
+block's own **structure or embedded Polish instructions** — e.g. adding a `[mixed]` tag or the
+contributor roster. Without a signal for that, a quiet line (a stable/RC page with no new PRs)
+would keep its old-format page indefinitely, re-polished on the old instructions only when its
+next PR happens to land. The `format:` field is a single integer the generator stamps into every
+raw-data block and folds into the content key: an existing page whose `format:` is missing (a
+page from before the field existed) or lower than the generator's current version is considered
+changed and rewritten, so **one `--all` run rolls a new format out to every page at once and then
+settles back to idempotent**. Bump it (`_RAWDATA_FORMAT_VERSION` in `generate-release-notes.py`)
+whenever the raw-data block's shape or its Polish directions change materially.
+
+### 4.7 Manual additions & breaking-change summaries (companion files)
+
+This section ties together the two problems that motivate the companion model: how a
+**breaking change** reaches the notes, and how a maintainer injects **hand-written** material
+that survives re-polish. Both are solved the same way — the raw-data block **references
+companion files by path**, and the Polish AI **reads and summarizes** them. Content is
+*referenced, never embedded*.
+
+#### The three companion files
+
+Each is a "sidecar" in this repo's terminology (like the co-release map, §3.6). For a given
+hub page the raw-data block lists whichever of these exist:
+
+| Companion | Path (page-relative) | Owner | Present when |
+|---|---|---|---|
+| **Manual additions** (§3.7) | `<line>.notes.md` | maintainer (freeform md) | a human wrote one |
+| **API diff** (§3.3) | `<line>/index.md` (+ per-assembly `<pkg>/<assembly>.md`) | Cake | the line has an API-diff folder |
+| **API breaking diff** (§3.3) | `<line>/<pkg>/<assembly>.breaking.md` | Cake | **real breaking changes exist** (Cake deletes an empty one, §5.2) |
+
+The API diff and breaking diff already exist (§3.3), and the API-diff *index* is already
+linked from the page (§4.4). What §4.7 adds is: **(a)** the maintainer-authored **manual
+additions** companion (§3.7); **(b)** teaching the Polish AI to **open and read all three**
+and summarize; **(c)** hashing the manual + breaking companions into the content key (§4.6)
+so a companion-only edit re-polishes exactly that page.
+
+Because `.breaking.md` exists **only when real breaking changes exist** (§5.2), its mere
+presence in the manifest is the signal that this line broke something, and its `###` member
+headings are the changed/removed list the AI summarizes from.
+
+#### The companions manifest (in the raw-data block)
+
+For each present companion, Python writes into the raw-data block:
+
+- a human-readable **manifest** naming the page-relative file(s) to open, e.g.
+
+  ```
+    companions (open and read these during polish, §4.7 — summarize, don't dump):
+      - notes:    4.150.0.notes.md  (manual additions)
+      - api diff: 4.150.0/index.md  (index of all per-assembly diffs; flags breaking)
+      - breaking: 4.150.0/SkiaSharp/SkiaSharp.breaking.md  (breaking signatures)
+  ```
+
+  The **api diff** is a single `index.md` entry on purpose: that landing page (§3.3)
+  already links *every* per-assembly diff and tags the breaking ones `⚠️ breaking`, so
+  it is the one door to the whole folder — the AI need not have each `<assembly>.md`
+  spelled out. **Breaking is different: one `- breaking:` line is emitted per broken
+  assembly** (a release like `3.116.0` lists all twelve), because a `.breaking.md`
+  exists only where signatures actually broke and each is worth summarizing. Every path
+  keeps its package folder prefix, so two assemblies that share a file name (e.g.
+  `SkiaSharp.Views.Windows.breaking.md` under both `SkiaSharp.Views.Uno.WinUI/` and
+  `SkiaSharp.Views.WinUI/`) stay distinct.
+
+- content-key metadata lines — `notes:  sha256:…` and `breaking:  sha256:…` (empty when the
+  companion is absent) — parsed by §4.6 exactly like the `api:` link.
+
+Python **never inlines companion content** — only the page-relative path and a `sha256` of
+the bytes. This keeps the block small even when a breaking diff is large, and removes any
+need to escape a companion's own `-->` (the loader only hashes bytes).
+
+#### What the Polish AI does with them
+
+The AI reads the page's raw-data block, then **opens and reads** each companion the manifest
+lists and writes a **short summary**, not a dump. Four rules cover it:
+
+1. **Manual notes (`.notes.md`) — merge neatly.** Read it and fold its points into the prose:
+   editorial "bring this out" notes into Highlights (kept close to the maintainer's wording
+   where it matters), behavioral and interop breaks under Breaking Changes. This sidecar is the
+   **only** channel for breaks the signature diff cannot see — **behavioral changes** (same
+   signature, different runtime behavior, e.g. `new SKPaint().Typeface` now returning `Default`
+   instead of `null`) and **interop / native structs** (e.g. removed `GRVkBackendContextNative`
+   fields).
+2. **Breaking diff (`.breaking.md`) — summarize as a few bullets.** Open **every** file the
+   manifest lists (one per broken assembly) and write a handful of bullets under
+   `## Breaking Changes` naming the affected types/areas, with a small migration example where
+   it helps. Readers follow the API-diff link (already on the page, §4.4) for the exhaustive
+   member list — a few bullets is enough, for a bulk sweep as much as a curated set.
+3. **Summarize, don't transcribe.** Never paste a diff or list every member; a short human
+   summary is the goal.
+4. **Always emit the section.** `## Breaking Changes` is always present; when neither companion
+   has anything, it reads *"None in this release."* (TEMPLATE.md).
+
+The AI still writes **no links or structure** (§4.4), **never edits a companion**, and never
+touches git or the gh API. Richer highlights may draw on the full API diff for context, but the
+PR list in the raw block remains the primary source for "what's new".
+
+#### Idempotency
+
+Reading a companion does not by itself change the page; deterministic re-polish is preserved
+by the content-key hashes (§4.6). Editing `.notes.md` flips `notes:`; a breaking change
+appearing or changing flips `breaking:`. Either re-polishes **only** the affected page. The
+full non-breaking API diff is deliberately **not** folder-hashed (§4.6): its change signal is
+already carried by the PR set (`prs:` / `diff:`) and the `api:` link, so a routine diff
+refresh does not force a spurious re-polish, while the small, stable `.breaking.md` subset is
+safe to hash and is what closes today's gap (a break that lands inside a single *Bump skia* PR
+now re-polishes the page).
 
 ---
 
@@ -1000,3 +1272,13 @@ page links straight to its API diffs.
     `ok`/`warn`/`drift` — detection only; the fix is a manual edit, never auto-written.
     An absent/empty block degrades to the legacy "every 3.x+ line is top-level" layout,
     so the grouping stays purely additive.
+
+11. **Companion files are referenced, never embedded (§4.7).** A hub page's raw-data block
+    records each present companion (manual additions sidecar §3.7, API diff §3.3, breaking
+    diff §3.3) as a page-relative **path + `sha256`**, never inlined content. The manual +
+    breaking hashes join the content key (§4.6) so a companion-only edit re-polishes exactly
+    that page; the full non-breaking diff is not folder-hashed. The `.notes.md` sidecar is a
+    **maintainer-owned freeform-Markdown input**: never machine-written, renamed, or cleared;
+    docfx-excluded; skipped by version discovery. The Polish AI may **read** the referenced
+    companions (a bounded allow-list) and summarize them, but writes only page prose — never a
+    companion, never git/gh (§2.2/§4.4).

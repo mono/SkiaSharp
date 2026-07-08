@@ -200,6 +200,7 @@ Task ("docs-api-diff-past")
 
         var isHarfBuzz = IsHarfBuzzFamily (id);
         var versionsConfig = isHarfBuzz ? hbConfig : skiaConfig;
+        var family = isHarfBuzz ? "harfbuzzsharp" : "skiasharp";
 
         Information ($"Comparing the assemblies in '{id}'...");
 
@@ -239,11 +240,19 @@ Task ("docs-api-diff-past")
         //      drop the line's own page — a shipped preview still needs its diff; or
         //   3. it is a preview-only line ahead of the last stable (active dev line).
         // Any other preview-only line (old, never shipped, not listed) is dropped.
-        var emit = lines
+        // The history floor (spec §1.4) then removes any line below the configured
+        // minimum — the obsolete back-catalogue whose committed folders we keep but
+        // do not rebuild (ClearOwnedApiDiffFolders skips them symmetrically). We keep
+        // the pre-floor `emittable` set too: the floor line's baseline lives below the
+        // floor and must be resolvable from it (§1.3 "baselines are unaffected").
+        var emittable = lines
             .Where (l => !l.rep.IsPrerelease
                 || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
                 || latestStable == null
                 || l.rep.CompareTo (latestStable) > 0)
+            .ToList ();
+        var emit = emittable
+            .Where (l => !IsBelowHistoryFloor (l.key, family))
             .ToList ();
 
         for (var idx = 0; idx < emit.Count; idx++) {
@@ -259,10 +268,37 @@ Task ("docs-api-diff-past")
             //      is NOT itself superseded — a superseded line still gets its own
             //      page but must never serve as a baseline (spec §1.2/§1.3), so the
             //      next line diffs past it and rolls its work up.
+            //   3. The LOWEST emitted line (the history-floor line) has no emitted
+            //      predecessor: its real baseline sits BELOW the floor and was filtered
+            //      out of `emit`. Falling through with a null baseline would diff it
+            //      against an empty assembly (0.0.0.0) and re-emit its ENTIRE API as
+            //      "new" — a huge, wrong, every-run churn. A baseline may live below the
+            //      floor (spec §1.4: "baselines are unaffected"), so resolve it from the
+            //      pre-floor `emittable` set and download it FOR COMPARISON ONLY — the
+            //      below-floor line is used as a baseline, never emitted itself. This is
+            //      one already-cached package (the floor line's immediate predecessor,
+            //      also the baseline of the next line up), so the floor's perf win — not
+            //      rebuilding the whole obsolete back-catalogue — is preserved.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
             if (previous == null) {
                 for (var j = idx - 1; j >= 0; j--) {
                     var candidate = emit [j].rep.ToNormalizedString ();
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
+            if (previous == null) {
+                // No emitted predecessor -> this is the floor line. Reach below the
+                // floor in the pre-floor `emittable` set (lines that would ship a diff
+                // if the floor were absent) for the most recent non-superseded line.
+                var currentRep = emit [idx].rep;
+                var below = emittable
+                    .Where (l => l.rep.CompareTo (currentRep) < 0)
+                    .OrderByDescending (l => l.rep);
+                foreach (var l in below) {
+                    var candidate = l.rep.ToNormalizedString ();
                     if (!IsVersionSuperseded (versionsConfig, candidate)) {
                         previous = candidate;
                         break;
@@ -379,7 +415,9 @@ void ClearOwnedApiDiffFolders ()
             // line folder individually.
             foreach (var lineDir in GetSubDirectories (dir)) {
                 var lineKey = lineDir.GetDirectoryName ();
-                if (lineKey.Length > 0 && char.IsDigit (lineKey [0]))
+                // History floor (spec §1.4): keep committed obsolete folders intact.
+                if (lineKey.Length > 0 && char.IsDigit (lineKey [0])
+                        && !IsBelowHistoryFloor (lineKey, "harfbuzzsharp"))
                     ClearGeneratedApiDiffsIn (lineDir.FullPath);
             }
             DeleteEmptyDirectories (dir.FullPath);
@@ -387,7 +425,11 @@ void ClearOwnedApiDiffFolders ()
         }
 
         // SkiaSharp family: a line folder is a top-level directory named by a version core.
-        if (name.Length > 0 && char.IsDigit (name [0])) {
+        // A folder below the history floor (spec §1.4) is left exactly as committed —
+        // not cleared here and not re-emitted above — so the obsolete back-catalogue
+        // survives a floored regen instead of being wiped.
+        if (name.Length > 0 && char.IsDigit (name [0])
+                && !IsBelowHistoryFloor (name, "skiasharp")) {
             ClearGeneratedApiDiffsIn (dir.FullPath);
             DeleteEmptyDirectories (dir.FullPath);
         }

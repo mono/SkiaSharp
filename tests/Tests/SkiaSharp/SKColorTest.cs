@@ -178,6 +178,107 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		[Theory]
+		[InlineData("  #ABC  ", 0xFFAABBCC)]
+		[InlineData("\t#A2C3\n", 0xAA22CC33)]
+		[InlineData("  ABCDEF  ", 0xFFABCDEF)]
+		[InlineData(" #AAABACAD ", 0xAAABACAD)]
+		public void HexWithWhitespaceIsTrimmed(string hex, uint expected)
+		{
+			Assert.True(SKColor.TryParse(hex, out var color), hex);
+			Assert.Equal((SKColor)expected, color);
+		}
+
+		[Theory]
+		[InlineData("#abc", "#ABC")]
+		[InlineData("#abcd", "#ABCD")]
+		[InlineData("#abcdef", "#ABCDEF")]
+		[InlineData("#aabbccdd", "#AABBCCDD")]
+		public void HexParsingIsCaseInsensitive(string lower, string upper)
+		{
+			Assert.True(SKColor.TryParse(lower, out var lowerColor), lower);
+			Assert.True(SKColor.TryParse(upper, out var upperColor), upper);
+			Assert.Equal(upperColor, lowerColor);
+		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData("")]
+		[InlineData("   ")]
+		[InlineData("#")]
+		public void NullOrEmptyHexFailsToParse(string hex)
+		{
+			Assert.False(SKColor.TryParse(hex, out var color));
+			Assert.Equal(SKColor.Empty, color);
+			Assert.Throws<ArgumentException>(() => SKColor.Parse(hex));
+		}
+
+		[Theory]
+		[InlineData("Red")]
+		[InlineData("Blue")]
+		[InlineData("Transparent")]
+		public void NamedColorsAreNotParsed(string name)
+		{
+			// SKColor.TryParse only understands hex strings; named colors are not supported.
+			Assert.False(SKColor.TryParse(name, out var color), name);
+			Assert.Equal(SKColor.Empty, color);
+		}
+
+		[Theory]
+		[InlineData("# 12345")]
+		[InlineData("#  ABCD")]
+		[InlineData("# 1234567")]
+		[InlineData("#12 345")]
+		public void WhitespaceInsideHexIsRejected(string hex)
+		{
+			// Only whitespace surrounding the whole value is trimmed. Whitespace between the
+			// '#' and the digits (or anywhere inside the value) is not valid hex and is rejected.
+			Assert.False(SKColor.TryParse(hex, out var color), hex);
+			Assert.Equal(SKColor.Empty, color);
+		}
+
+		[Theory]
+		[InlineData("#ABC", 0xFFAABBCC)]
+		[InlineData("ABCDEF", 0xFFABCDEF)]
+		[InlineData("#A7A8A9A0", 0xA7A8A9A0)]
+		[InlineData("  #a4C5e6  ", 0xFFA4C5E6)]
+		public void ParseSpanOverloadMatchesString(string hex, uint expected)
+		{
+			// ReadOnlySpan<char> TryParse
+			Assert.True(SKColor.TryParse(hex.AsSpan(), out var spanColor), hex);
+			Assert.Equal((SKColor)expected, spanColor);
+
+			// ReadOnlySpan<char> Parse
+			Assert.Equal((SKColor)expected, SKColor.Parse(hex.AsSpan()));
+
+			// and it agrees with the string overload
+			Assert.True(SKColor.TryParse(hex, out var stringColor), hex);
+			Assert.Equal(stringColor, spanColor);
+		}
+
+		[Fact]
+		public void ParseSpanWorksOnSliceWithoutAllocating()
+		{
+			// A color embedded in a larger buffer can be parsed from a slice, no substring needed.
+			var buffer = "color: #1a2b3c;".AsSpan();
+			var slice = buffer.Slice(7, 7); // "#1a2b3c"
+
+			Assert.True(SKColor.TryParse(slice, out var color));
+			Assert.Equal((SKColor)0xFF1A2B3C, color);
+		}
+
+		[Fact]
+		public void ParseSpanRejectsInvalidAndEmpty()
+		{
+			Assert.False(SKColor.TryParse("nope".AsSpan(), out var color));
+			Assert.Equal(SKColor.Empty, color);
+
+			Assert.False(SKColor.TryParse(ReadOnlySpan<char>.Empty, out color));
+			Assert.Equal(SKColor.Empty, color);
+
+			Assert.Throws<ArgumentException>(() => SKColor.Parse("nope".AsSpan()));
+		}
+
 		[Fact]
 		public void PremultipliedColorsHaveCorrectBitShift()
 		{
