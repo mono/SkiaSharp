@@ -361,7 +361,13 @@ would tempt you to include an internal PR, rule 1 wins.
      *one* standout by linked handle;
    - use per-item parentheticals, PR/issue links, or `code` API names as a checklist;
    - write "Compared to X, v4 delivers: A, B, C, D, E, F …" — that comma-run **is** the
-     enumeration this rule forbids.
+     enumeration this rule forbids. **Hard limit: no sentence in Highlights may list more than
+     ~4 items (≈ 5 commas). A sentence with 6+ commas is a laundry list — split the release into
+     its 3-4 biggest THEMES and name those, not every feature.** On the biggest releases this is
+     where polish fails most: a 97-word, 12-comma paragraph that re-lists Metal, WinUI, MAUI, WPF,
+     Blazor, Skottie, SKBlender, … is **wrong** even under 100 words; *"the first stable v3 — a
+     full modernization pass: Skia m116, .NET 8 baseline, and the 2.x obsolete surface removed"*
+     is right.
    If a reader could reconstruct the category sections from your Highlights, it is too long —
    cut it back to the hook. The bigger the release, the more **selective** Highlights get, never
    longer.
@@ -488,10 +494,10 @@ every FAIL and re-check once. The checks that go wrong most often, watch these f
    eyeball); no `❤️`/row/attribution for any `*[bot]`, `Copilot`, or @mattleibow.
 5. **Contributors table complete** — **one row per `contributors:` roster entry**, none missing,
    none invented; each row is plain `[@user](url)` · prose summary + PR links, no ❤️ in the cell.
-6. **`## Highlights` heading present** (never a bare lead paragraph) and **≤ 100 words** (target
-   ~80 — count with `awk`/`wc -w`), ≤ 3 short sentences, no enumeration; **`## Breaking Changes`
-   present** (kept the scaffolded heading, filled or "None in this …" verbatim); raw-data comment
-   intact.
+6. **`## Highlights` heading present** (never a bare lead paragraph), **≤ 100 words** (target
+   ~80 — count with `awk`/`wc -w`), ≤ 3 short sentences, and **no enumeration — no sentence with
+   6+ commas** (name 3-4 themes, not a feature list); **`## Breaking Changes` present** (kept the
+   scaffolded heading, filled or "None in this …" verbatim); raw-data comment intact.
 7. **No scaffold markers left** — `grep -c 'TODO(polish)' <version>.md` and `grep -c '<THEME>'`
    must both be 0.
 

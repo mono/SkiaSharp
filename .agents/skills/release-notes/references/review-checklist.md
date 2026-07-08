@@ -58,9 +58,12 @@ VERDICT: PASS | FAIL   (score N/12)
    was dropped or replaced by a bare unlabelled lead paragraph — `grep -c '^## Highlights'
    <version>.md` must be 1). Its body is **≤ 100 words** (target ~80) AND ≤ 3 short sentences: no
    bullet list, no PR/issue links, no per-item parentheticals, no contributor enumeration (at
-   most one standout handle), no "Compared to X: A, B, C, …" comma-run. Count it:
-   `awk '/^## Highlights/{f=1;next} /^## /{f=0} f' <version>.md | wc -w` must be ≤ 100. FAIL if a
-   reader could reconstruct the category sections from Highlights alone.
+   most one standout handle), no "Compared to X: A, B, C, …" comma-run. Count words:
+   `awk '/^## Highlights/{f=1;next} /^## /{f=0} f' <version>.md | wc -w` must be ≤ 100.
+   **Enumeration check (fails most on big releases):** no sentence in Highlights may list more
+   than ~4 items — a sentence with **6+ commas** is a laundry list. FAIL if the section's densest
+   sentence has ≥6 commas, or if a reader could reconstruct the category sections from Highlights
+   alone. Fix by naming the 3-4 biggest THEMES, not every feature.
 
 8. **breaking-present** — `## Breaking Changes` heading exists (it is scaffolded into the
    skeleton — never delete it). When there is no `.breaking.md`/`.notes.md` companion the body is

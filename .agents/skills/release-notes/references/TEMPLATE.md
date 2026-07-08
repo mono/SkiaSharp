@@ -98,7 +98,8 @@
      In Highlights, do NOT: enumerate APIs / dependency bumps / fixes; list contributors one by
      one (the table does that — name at most one standout by linked handle); use per-item
      parentheticals, PR/issue links, or `code` API names as a checklist; or write "Compared to X:
-     A, B, C, D, …" (that comma-run IS the banned enumeration). If a reader could rebuild the
+     A, B, C, D, …" (that comma-run IS the banned enumeration — NO sentence may have 6+ commas;
+     name 3-4 themes, not a feature list). If a reader could rebuild the
      category sections from Highlights, it is too long. If the manual additions sidecar
      (<stem>.notes.md, see §4.7) has editorial points the maintainer wants brought out, weave them
      in here in your own words. On a supersedes rollup, note in one line that the skipped preview
