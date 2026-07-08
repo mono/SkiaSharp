@@ -111,10 +111,10 @@ jobs:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
         run: |
           $params = @{
-            Organization = "xamarin"
+            Organization = "dnceng-public"
             Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
+            SourceFeed = "skiasharp"
+            DestinationFeed = "skiasharp-ci"
             PackageFilter = "${{ matrix.package.filter }}"
           }
 
@@ -161,10 +161,10 @@ jobs:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
         run: |
           $params = @{
-            Organization = "xamarin"
+            Organization = "dnceng-public"
             Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
+            SourceFeed = "skiasharp"
+            DestinationFeed = "skiasharp-ci"
             PackageFilter = "${{ matrix.package.filter }}"
             SkipMoveOperations = $true  # Regular packages don't move
           }
@@ -192,10 +192,10 @@ jobs:
           AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
         run: |
           $params = @{
-            Organization = "xamarin"
+            Organization = "dnceng-public"
             Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
+            SourceFeed = "skiasharp"
+            DestinationFeed = "skiasharp-ci"
           }
 
           # Add optional parameters (with defaults for PR triggers where inputs are empty)

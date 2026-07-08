@@ -87,7 +87,7 @@ var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
+var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng-public/public/_packaging/skiasharp-ci/nuget/v3/index.json");
 
 var PREVIEW_ONLY_NUGETS = new List<string> {};
 
