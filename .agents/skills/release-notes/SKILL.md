@@ -417,19 +417,17 @@ would tempt you to include an internal PR, rule 1 wins.
      source data, not output). `contributed by @maxkatz6 ❤️` is WRONG; `❤️ [@maxkatz6](https://github.com/maxkatz6)`
      is right.
 
-6. **Community Contributors table — render the roster, completely.** The raw-data block ends
-   with an authoritative **`contributors:`** roster: every external (non-maintainer, non-bot)
-   author to credit, with their PR numbers. **Render one table row per roster entry — never omit
-   one, never invent one.** (Reconstructing this list from the body prose kept silently dropping
-   real contributors whose PRs were folded into thematic bullets — the roster is the fix.) Emit
-   the table whenever the roster is non-empty:
-   `## Community Contributors ❤️`, **one row per contributor, one line each**:
-   `| [@user](https://github.com/user) | <short prose summary of their work> ([#N](url), [#M](url)) |`
-   - Column 1 `Contributor` is a **plain `[@user](url)` — no ❤️** (the heart wraps badly here; it
-     lives only on the inline bullets).
-   - Column 2 `What They Did` is a **single line**: a prose summary (Feature A, bug B, thing C)
-     built from that contributor's PR titles in the block, then their PR links in **one**
-     parenthetical. **Not** a bare list of `[#N]` links, and **not** `[#N] — note` fragments.
+6. **Community Contributors table — fill the scaffolded rows.** When there are community
+   contributors, the script **scaffolds the whole `## Community Contributors ❤️` table** from the
+   authoritative `contributors:` roster: the heading, the column header, and **one row per
+   contributor already filled with the correct `[@user](url)` handle and PR links**. Your only job
+   is to replace each row's `TODO(polish)` with a **one-line prose summary** of that contributor's
+   work (Feature A, bug B, thing C). **Never add, drop, reorder, or re-handle a row**, and never
+   touch the pre-filled PR links. (This scaffold exists because polish kept silently dropping rows —
+   or the whole table — even though the roster was non-empty; the row is now structural.)
+   - Column 1 `Contributor` is a **plain `[@user](url)` — no ❤️** (already correct in the scaffold).
+   - Column 2 `What They Did` is a **single line**: your prose summary, then the pre-filled PR links.
+     **Not** a bare list of `[#N]` links, and **not** `[#N] — note` fragments.
    - A contributor appears **even if their work was internal/samples-only** — the table thanks
      everyone whose PRs shipped, so summarize whatever they did.
    - **Never** a row for @mattleibow or any bot (the roster already excludes them).

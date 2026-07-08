@@ -1903,7 +1903,7 @@ def _release_date_display(version):
 #   1 — original (binary [product]/[internal] tag, no contributor roster)
 #   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
 #   3 — scaffolded banner <THEME> token + mandatory ## Highlights / ## Breaking Changes
-#       section scaffold + inline-attribution instructions in the skeleton
+#       + Community Contributors table scaffold + inline-attribution instructions
 _RAWDATA_FORMAT_VERSION = 3
 
 
@@ -2191,10 +2191,13 @@ def format_pr_list(prs, metadata):
         "<!-- AI: Use the raw PR data in the comment above to write polished",
         "     release notes here. Follow .agents/skills/release-notes/references/TEMPLATE.md",
         "     for structure and tone.",
-        "     SECTIONS: `## Highlights` and `## Breaking Changes` are scaffolded below —",
-        "     fill each in place and NEVER delete a `## ` heading. Replace every TODO(polish)",
+        "     SECTIONS: `## Highlights`, `## Breaking Changes`, and (when there are community",
+        "     contributors) `## Community Contributors` are scaffolded below — fill each in place",
+        "     and NEVER delete a `## ` heading or a scaffolded table row. Replace every TODO(polish)",
         "     marker; a leftover TODO(polish) is a review failure. When the Breaking section",
         "     already reads a `None in this ...` line, keep it verbatim (there are no breaks).",
+        "     The contributor table rows are pre-filled with the correct handle + PR links — only",
+        "     write each row's one-line 'what they did' prose; never add, drop, or reorder a row.",
         "     ATTRIBUTION: credit a community contributor ONLY as `\u2764\ufe0f [@user](https://github.com/user)`",
         "     immediately before the PR link. NEVER write `contributed by @user`, a bare `@user`,",
         "     or `@user \u2764\ufe0f`; the maintainer and bots get no credit (see the contributors roster).",
@@ -2273,6 +2276,30 @@ def format_pr_list(prs, metadata):
         lines.append("*None in this {}.*".format(
             "preview line" if status == "preview" else "release"))
     lines.append("")
+
+    # Scaffold the Community Contributors table from the deterministic roster (§4.5) —
+    # same principle again. Polish was observed dropping the whole table on some pages
+    # even though the roster was non-empty (the exact "silently lose a contributor"
+    # failure the roster exists to prevent). Emitting one row per roster entry, with the
+    # correct linked handle and PR links already filled in, makes a drop impossible and
+    # removes every chance of a bare/mis-linked handle; only the prose "what they did"
+    # summary is left as a TODO(polish) marker. Omitted entirely when the roster is empty
+    # (no community contributors -> no section), matching rule 6.
+    roster = _contributor_roster(prs)
+    if roster:
+        lines.append("## Community Contributors \u2764\ufe0f")
+        lines.append("")
+        lines.append("| Contributor | What They Did |")
+        lines.append("|-------------|---------------|")
+        for login, nums in roster:
+            pr_links = ", ".join(
+                "[#{n}](https://github.com/{repo}/pull/{n})".format(n=n, repo=REPO)
+                for n in nums)
+            lines.append(
+                "| [@{login}](https://github.com/{login}) | TODO(polish): one-line "
+                "prose summary of their work ({prs}) |".format(
+                    login=login, prs=pr_links))
+        lines.append("")
 
     return "\n".join(lines)
 
