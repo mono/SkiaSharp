@@ -239,7 +239,9 @@ For each frame (once size and DPR are positive):
    `SKAlphaType.Premul`, into a reused pinned buffer.
 2. Create an `SKSurface` over the buffer; apply `IgnorePixelScaling` scaling per §5.3.
 3. Invoke `OnPaintSurface` (`SKCanvasView` → `SKPaintSurfaceEventArgs`; `SKGLView` → §7.6).
-4. Produce the transfer payload for the resolved format (§7.4).
+4. Produce the transfer payload for the resolved format (§7.4). Payload production (encoding, or
+   the RGBA copy for `Put`) SHOULD run off the host dispatcher, because on Blazor Hybrid the
+   dispatcher is the UI thread; backpressure (§7.5) keeps the buffer stable while this happens.
 5. **Suppress** the frame if its bytes are byte-identical to the previously transferred frame.
 6. Otherwise transfer it via the module's `present(canvas, bytes, deviceW, deviceH, format,
    isGL)`.
@@ -271,7 +273,12 @@ The effective format MUST be resolved with this precedence:
 
 1. the per-control `TransferFormat` parameter, else
 2. the global `SKBlazorOptions.TransferFormat`, else
-3. a host default: `Put` for Hybrid, `Jpeg` otherwise.
+3. a host-independent default of `Jpeg`.
+
+`Jpeg` is the default for **every** bridged host, including Hybrid: the WebView bridge marshals
+the payload across the native/JS boundary rather than sharing memory, so a small encoded frame is
+much cheaper than a raw full-resolution buffer (`Put`) every frame. Apps can still opt into `Put`
+(lossless, no encode) or `Png` (lossless with alpha) per control or globally.
 
 The effective JPEG quality is the per-control `Quality`, else `SKBlazorOptions.Quality`
 (default `85`).

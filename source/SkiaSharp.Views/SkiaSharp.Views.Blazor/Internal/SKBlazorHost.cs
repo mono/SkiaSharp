@@ -79,9 +79,12 @@ namespace SkiaSharp.Views.Blazor.Internal
 			if (options.TransferFormat.HasValue)
 				return options.TransferFormat.Value;
 
-			return kind == SKBlazorHostKind.Hybrid
-				? SKBlazorTransferFormat.Put
-				: SKBlazorTransferFormat.Jpeg;
+			// JPEG by default for every bridged host. Keeping the per-frame payload small matters
+			// even for Blazor Hybrid: the WebView bridge marshals the bytes across the native/JS
+			// boundary rather than sharing memory, so pushing a raw full-resolution buffer every
+			// frame (SKBlazorTransferFormat.Put) is far heavier than a small encoded frame. Apps
+			// can still opt into Put (lossless, no encode) or Png (lossless with alpha).
+			return SKBlazorTransferFormat.Jpeg;
 		}
 	}
 }

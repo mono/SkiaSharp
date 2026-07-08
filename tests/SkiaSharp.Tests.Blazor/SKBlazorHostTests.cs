@@ -52,9 +52,9 @@ public class SKBlazorHostTests
 	}
 
 	[Fact]
-	public void HybridDefaultsToPut() =>
+	public void HybridDefaultsToJpeg() =>
 		Assert.Equal(
-			SKBlazorTransferFormat.Put,
+			SKBlazorTransferFormat.Jpeg,
 			SKBlazorHost.ResolveTransferFormat(SKBlazorHostKind.Hybrid, null, new SKBlazorOptions()));
 
 	[Fact]

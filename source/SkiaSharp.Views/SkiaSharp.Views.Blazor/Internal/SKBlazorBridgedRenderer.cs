@@ -166,11 +166,18 @@ namespace SkiaSharp.Views.Blazor.Internal
 			var format = SKBlazorHost.ResolveTransferFormat(hostKind, TransferFormat, options);
 			var quality = Quality ?? options.Quality;
 
-			byte[] frame;
-			using (var image = SKImage.FromPixels(info, pixelsHandle.AddrOfPinnedObject(), info.RowBytes))
+			// Produce the transfer payload OFF the dispatcher. On Blazor Hybrid the render loop runs
+			// on the UI thread, so encoding (or copying a raw buffer for Put) here would stutter the
+			// app. The frame buffer is stable while we do this because backpressure prevents the next
+			// frame from starting (and therefore from reallocating/overwriting the buffer) until the
+			// present below completes.
+			var bufferPtr = pixelsHandle.AddrOfPinnedObject();
+			var frameInfo = info;
+			var frame = await Task.Run(() =>
 			{
-				frame = SKBlazorFrameProducer.Produce(image, format, quality);
-			}
+				using var image = SKImage.FromPixels(frameInfo, bufferPtr, frameInfo.RowBytes);
+				return SKBlazorFrameProducer.Produce(image, format, quality);
+			});
 
 			if (frame.Length == 0)
 				return;
