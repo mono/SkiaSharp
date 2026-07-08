@@ -1,6 +1,7 @@
 #nullable disable
 
 using System;
+using System.Collections.Generic;
 
 namespace SkiaSharp
 {
@@ -8,6 +9,8 @@ namespace SkiaSharp
 	/// <remarks />
 	public class SKNWayCanvas : SKNoDrawCanvas
 	{
+		private readonly List<SKCanvas> canvases = new List<SKCanvas> ();
+
 		internal SKNWayCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -32,6 +35,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_add_canvas (Handle, canvas.Handle);
+			// The native SkNWayCanvas stores a raw, non-owning pointer to the added
+			// canvas, so root the managed SKCanvas for the lifetime of this wrapper to
+			// prevent it being finalized (and its native canvas destroyed) too early.
+			canvases.Add (canvas);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
 		}
@@ -45,6 +52,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			SkiaApi.sk_nway_canvas_remove_canvas (Handle, canvas.Handle);
+			canvases.Remove (canvas);
 			GC.KeepAlive (canvas);
 			GC.KeepAlive (this);
 		}
@@ -54,6 +62,7 @@ namespace SkiaSharp
 		public void RemoveAll ()
 		{
 			SkiaApi.sk_nway_canvas_remove_all (Handle);
+			canvases.Clear ();
 			GC.KeepAlive (this);
 		}
 	}
