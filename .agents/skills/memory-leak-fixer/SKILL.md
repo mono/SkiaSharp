@@ -252,7 +252,8 @@ instead of pushed and reverted. If any box can't be ticked, **fix it or stand do
 - [ ] The matching focus area's **Watch out (❌ don't):** note in
       [`references/types-of-leaks.md`](references/types-of-leaks.md) does **not** describe
       what you just did (no unconditional same-instance `Dispose`, no blind `owns:` flip, no
-      field nulled before dispose, no pinned `GCHandle` where a plain field suffices, …).
+      field nulled before dispose, no pinned `GCHandle` or hand-rolled keep-alive field/`List<T>`
+      where `SKObject.Referenced(...)` / `KeepAliveObjects` (or a plain field) suffices, …).
 - [ ] This is a real leak with a citable path — not hardened, documented code rationalised
       as a "decoy," and not a finding manufactured to avoid a quiet run.
 - [ ] Not already covered by an open issue/PR (§1.3).
