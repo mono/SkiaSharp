@@ -416,22 +416,22 @@ under `source/SkiaSharp.Views/SkiaSharp.Views.Blazor/`.
 | §3.1 element + attribute splat | `SKCanvasView.razor`, `SKGLView.razor` | ✅ |
 | §3.2 parameters | `SKCanvasView.razor.cs`, `SKGLView.razor.cs` | ✅ |
 | §3.3 enum/options/DI | `SKBlazorTransferFormat.cs`, `SKBlazorOptions.cs`, `SKBlazorServiceCollectionExtensions.cs` | ✅ |
-| §4 host detection + fallback | `Internal/SKBlazorHost.Resolve`, both views' `OnAfterRenderAsync` (`RendererInfo.Name`, `OperatingSystem.IsBrowser()`) | ✅ |
-| §5.2 backing-store = cssSize×dpr | `CreateSize` (views) and `SKBlazorBridgedRenderer.EnsureBuffer` | ✅ |
-| §5.3 `IgnorePixelScaling` | `OnRenderFrame` (views) and `RenderAndPresentAsync` | ✅ |
-| §5.4 `Dpi` | `Dpi` property (returns bridged renderer DPR when bridged) | ✅ |
+| §4 host detection + fallback | `Internal/Host.Resolve`, both views' `OnAfterRenderAsync` (`RendererInfo.Name`, `OperatingSystem.IsBrowser()`) | ✅ |
+| §5.2 backing-store = cssSize×dpr | `CanvasDirectRenderer`/`GLDirectRenderer.CreateSize` and `BridgedRenderer.EnsureBuffer` | ✅ |
+| §5.3 `IgnorePixelScaling` | `OnRenderFrame` (direct renderers) and `BridgedRenderer.RenderAndPresentAsync` | ✅ |
+| §5.4 `Dpi` | `Dpi` property (delegates to the active `IRenderer`) | ✅ |
 | §6.1 RAF loop | `Internal/SKHtmlCanvasInterop`, `wwwroot/SKHtmlCanvas.ts` | ✅ |
-| §6.2 raster direct | `SKCanvasView.OnRenderFrame` (`PlatformColorType`/`Opaque`, `PutImageData`) | ✅ |
-| §6.3 GL direct | `SKGLView.OnRenderFrame` (`GRContext`, `Rgba8888`, `BottomLeft`, 256 MB, WebGL2→1) | ✅ |
+| §6.2 raster direct | `Internal/CanvasDirectRenderer` (`PlatformColorType`/`Opaque`, `PutImageData`) | ✅ |
+| §6.3 GL direct | `Internal/GLDirectRenderer` (`GRContext`, `Rgba8888`, `BottomLeft`, 256 MB, WebGL2→1) | ✅ |
 | §6.4 size/DPI watchers | `Internal/SizeWatcherInterop`, `Internal/DpiWatcherInterop`, `wwwroot/SizeWatcher.ts`, `wwwroot/DpiWatcher.ts` | ✅ |
-| §7.1 init + metrics + no dropped first frame | `SKBlazorBridgedRenderer.InitializeAsync`/`OnMetricsChanged` (`initialized` set before JS `initialize`) | ✅ |
-| §7.2 frame production (RGBA/Premul, reused buffer) | `SKBlazorBridgedRenderer.RenderAndPresentAsync`/`EnsureBuffer` | ✅ |
+| §7.1 init + metrics + no dropped first frame | `BridgedRenderer.InitializeAsync`/`OnMetricsChanged` (`initialized` set before JS `initialize`) | ✅ |
+| §7.2 frame production (RGBA/Premul, reused buffer, off-thread encode) | `BridgedRenderer.RenderAndPresentAsync`/`EnsureBuffer` | ✅ |
 | §7.3 present backends by view type | `wwwroot/SKCanvasPresenter.ts` (2D + WebGL), `wwwroot/SKHtmlCanvasBridge.ts` | ✅ |
-| §7.4 formats + resolution precedence + quality | `Internal/SKBlazorFrameProducer`, `Internal/SKBlazorHost.ResolveTransferFormat` | ✅ |
-| §7.5 backpressure + identical-frame suppression | `SKBlazorBridgedRenderer.RenderLoopAsync`/`RenderAndPresentAsync` | ✅ |
-| §7.6 `SKGLView` bridged placeholder GL target | `SKGLView.PaintBridgedFrame` | ✅ |
-| §7.7 disposal | `SKBlazorBridgedRenderer.DisposeAsync`, both views' `Dispose` | ✅ |
-| §8 loop/invalidation contract | `Invalidate` (views) + `SKBlazorBridgedRenderer` | ✅ |
+| §7.4 formats + resolution precedence + quality | `Internal/FrameProducer`, `Internal/Host.ResolveTransferFormat` | ✅ |
+| §7.5 backpressure + identical-frame suppression | `BridgedRenderer.RenderLoopAsync`/`RenderAndPresentAsync` | ✅ |
+| §7.6 `SKGLView` bridged placeholder GL target | `BridgedRenderer.PaintFrame` (isGL branch) | ✅ |
+| §7.7 disposal | `BridgedRenderer.DisposeAsync`, both views' `Dispose` | ✅ |
+| §8 loop/invalidation contract | `Invalidate` (views) delegating to the active `IRenderer` | ✅ |
 | §9.1 module import rules (bridge never imports `SKHtmlCanvas`) | `Internal/SKHtmlCanvasBridgeInterop`, `Internal/SKHtmlCanvasInterop` | ✅ |
 | §10 Auto (single adaptive component) | strategy chosen per render in `OnAfterRenderAsync` | ✅ |
 | §12 net9+ gating of bridged features | `#if NET9_0_OR_GREATER` in both views | ✅ |

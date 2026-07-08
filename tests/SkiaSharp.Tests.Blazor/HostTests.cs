@@ -4,7 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests.Blazor;
 
-public class SKBlazorHostTests
+public class HostTests
 {
 	[Theory]
 	[InlineData("WebAssembly", "WebAssembly")]
@@ -12,13 +12,13 @@ public class SKBlazorHostTests
 	[InlineData("WebView", "Hybrid")]
 	[InlineData("Static", "StaticSsr")]
 	public void ResolvesKnownRendererNames(string name, string expected) =>
-		Assert.Equal(expected, SKBlazorHost.Resolve(name).ToString());
+		Assert.Equal(expected, Host.Resolve(name).ToString());
 
 	[Fact]
 	public void ResolvesUnknownRendererNameOffBrowserToHybrid() =>
 		// Host detection is only consulted once interactive; an unrecognized non-browser host
 		// is treated as a native WebView (Hybrid) so the bridged path still activates.
-		Assert.Equal(SKBlazorHostKind.Hybrid, SKBlazorHost.Resolve("something-else"));
+		Assert.Equal(HostKind.Hybrid, Host.Resolve("something-else"));
 
 	[Theory]
 	[InlineData("Server", true)]
@@ -26,15 +26,15 @@ public class SKBlazorHostTests
 	[InlineData("Static", true)]
 	[InlineData("WebAssembly", false)]
 	public void IsBridgedIsCorrect(string rendererName, bool expected) =>
-		Assert.Equal(expected, SKBlazorHost.IsBridged(SKBlazorHost.Resolve(rendererName)));
+		Assert.Equal(expected, Host.IsBridged(Host.Resolve(rendererName)));
 
 	[Fact]
 	public void PerControlFormatWinsOverGlobalAndHostDefault()
 	{
 		var options = new SKBlazorOptions { TransferFormat = SKBlazorTransferFormat.Png };
 
-		var resolved = SKBlazorHost.ResolveTransferFormat(
-			SKBlazorHostKind.Hybrid,
+		var resolved = Host.ResolveTransferFormat(
+			HostKind.Hybrid,
 			SKBlazorTransferFormat.Jpeg,
 			options);
 
@@ -46,7 +46,7 @@ public class SKBlazorHostTests
 	{
 		var options = new SKBlazorOptions { TransferFormat = SKBlazorTransferFormat.Png };
 
-		var resolved = SKBlazorHost.ResolveTransferFormat(SKBlazorHostKind.Server, null, options);
+		var resolved = Host.ResolveTransferFormat(HostKind.Server, null, options);
 
 		Assert.Equal(SKBlazorTransferFormat.Png, resolved);
 	}
@@ -55,11 +55,11 @@ public class SKBlazorHostTests
 	public void HybridDefaultsToJpeg() =>
 		Assert.Equal(
 			SKBlazorTransferFormat.Jpeg,
-			SKBlazorHost.ResolveTransferFormat(SKBlazorHostKind.Hybrid, null, new SKBlazorOptions()));
+			Host.ResolveTransferFormat(HostKind.Hybrid, null, new SKBlazorOptions()));
 
 	[Fact]
 	public void ServerDefaultsToJpeg() =>
 		Assert.Equal(
 			SKBlazorTransferFormat.Jpeg,
-			SKBlazorHost.ResolveTransferFormat(SKBlazorHostKind.Server, null, new SKBlazorOptions()));
+			Host.ResolveTransferFormat(HostKind.Server, null, new SKBlazorOptions()));
 }
