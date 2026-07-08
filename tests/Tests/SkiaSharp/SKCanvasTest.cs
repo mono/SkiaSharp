@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Xml.Linq;
 using Xunit;
 
@@ -321,6 +322,84 @@ namespace SkiaSharp.Tests
 				Assert.Equal(2, bitmap.GetPixel(25, 25).Alpha);
 				Assert.Equal(1, bitmap.GetPixel(45, 45).Alpha);
 			}
+		}
+
+		// Regression test for the SKNWayCanvas native use-after-free.
+		//
+		// The native SkNWayCanvas keeps raw, non-owning pointers to every canvas added
+		// through AddCanvas, so the managed SKNWayCanvas must root those SKCanvas objects
+		// for its whole lifetime - just like the region/path iterators root their parent.
+		// If it does not, an added canvas can be finalized while the n-way canvas is still
+		// alive, freeing the native SkCanvas it still forwards draws to -> use-after-free.
+		[Fact]
+		public void NWayCanvasKeepsAddedCanvasesAlive()
+		{
+			var nway = CreateDoomedNWayCanvas(out var weakAdded, out var bitmap);
+
+			// Finalize anything unrooted. Without the fix the added canvas has no root
+			// once the helper returns, so it is collected here even though the n-way
+			// canvas lives on.
+			CollectGarbage();
+
+			// The live n-way canvas must keep its added canvas rooted.
+			Assert.True(weakAdded.IsAlive, "The added SKCanvas was collected while its SKNWayCanvas was still alive.");
+
+			// It must also still be usable: forwarding a draw must not touch freed memory.
+			nway.Clear(SKColors.Red);
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(10, 10));
+
+			nway.Dispose();
+			bitmap.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKNWayCanvas CreateDoomedNWayCanvas(out WeakReference weakAdded, out SKBitmap bitmap)
+		{
+			bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			var added = new SKCanvas(bitmap);
+			weakAdded = new WeakReference(added);
+
+			var nway = new SKNWayCanvas(100, 100);
+			nway.AddCanvas(added);
+
+			// Only the n-way canvas can keep `added` alive from here on.
+			return nway;
+		}
+
+		// Regression test for the SKOverdrawCanvas native use-after-free.
+		//
+		// SKOverdrawCanvas wraps a borrowed SKCanvas and the native SkOverdrawCanvas keeps
+		// a raw, non-owning pointer to it, so the managed wrapper must root that SKCanvas
+		// for its whole lifetime. If it does not, the wrapped canvas can be finalized while
+		// the overdraw canvas is still alive -> use-after-free when it forwards a draw.
+		[Fact]
+		public void OverdrawCanvasKeepsWrappedCanvasAlive()
+		{
+			var overdraw = CreateDoomedOverdrawCanvas(out var weakWrapped, out var bitmap);
+
+			CollectGarbage();
+
+			Assert.True(weakWrapped.IsAlive, "The wrapped SKCanvas was collected while its SKOverdrawCanvas was still alive.");
+
+			// Still usable: forwarding a draw must not touch freed memory.
+			bitmap.Erase(SKColors.Transparent);
+			using (var paint = new SKPaint())
+				overdraw.DrawRect(SKRect.Create(10, 10, 30, 30), paint);
+			Assert.Equal(1, bitmap.GetPixel(15, 15).Alpha);
+
+			overdraw.Dispose();
+			bitmap.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKOverdrawCanvas CreateDoomedOverdrawCanvas(out WeakReference weakWrapped, out SKBitmap bitmap)
+		{
+			bitmap = new SKBitmap(new SKImageInfo(100, 100));
+			var wrapped = new SKCanvas(bitmap);
+			weakWrapped = new WeakReference(wrapped);
+
+			// Only the overdraw canvas can keep `wrapped` alive from here on.
+			return new SKOverdrawCanvas(wrapped);
 		}
 
 		[Fact]

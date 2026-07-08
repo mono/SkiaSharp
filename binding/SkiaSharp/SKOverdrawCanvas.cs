@@ -6,6 +6,8 @@ namespace SkiaSharp
 {
 	public class SKOverdrawCanvas : SKNWayCanvas
 	{
+		private readonly SKCanvas canvas;
+
 		internal SKOverdrawCanvas (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -18,6 +20,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			Handle = SkiaApi.sk_overdraw_canvas_new (canvas.Handle);
+			// The native SkOverdrawCanvas stores a raw, non-owning pointer to the wrapped
+			// canvas, so root the managed SKCanvas for the lifetime of this wrapper to
+			// prevent it being finalized (and its native canvas destroyed) too early.
+			this.canvas = canvas;
 			GC.KeepAlive (canvas);
 		}
 	}
