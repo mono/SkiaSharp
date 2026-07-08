@@ -294,9 +294,9 @@ may be used to match a class's **existing local convention** — e.g. the `SKReg
 a `private readonly SKRegion` field, so a new sibling there should follow suit rather than mix styles.
 
 For a **set** of rooted children that changes over time (e.g. `SKNWayCanvas.AddCanvas` /
-`RemoveCanvas`), use the dictionary directly instead of a hand-rolled `List<T>`: `Referenced(this,
-child)` to root, and `KeepAliveObjects.TryRemove(child.Handle, out _)` / `KeepAliveObjects.Clear()`
-to un-root.
+`RemoveCanvas`), use the helper family instead of a hand-rolled `List<T>`: `Referenced(this, child)`
+to root, `Unreferenced(this, child)` to drop one, and `UnreferencedAll(this)` to drop them all —
+never reach into `KeepAliveObjects` directly from a derived type.
 
 For a one-shot P/Invoke (no stored child), `GC.KeepAlive(parent)` after the call is enough.
 
@@ -308,7 +308,8 @@ prime suspect. Prove it before believing it (Phase 2).
 
 **Watch out (❌ don't):** don't root the parent with a pinned `GCHandle` — `Referenced(this, parent)`
 (or a plain managed field) is enough, and a pinned handle is its own leak (area 9). Don't hand-roll a
-`List<T>`/field when `KeepAliveObjects` already exists for exactly this. And don't lean on
+`List<T>`/field — or reach into `KeepAliveObjects` directly from a derived type — when
+`Referenced` / `Unreferenced` / `UnreferencedAll` already exist for exactly this. And don't lean on
 `GC.KeepAlive` for a *long-lived* child (an iterator you hold across calls); KeepAlive only covers the
 current method, so a stored child needs `Referenced(...)` (or the field).
 

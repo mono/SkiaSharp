@@ -126,6 +126,8 @@ per-object dictionaries, so the runtime manages it for you:
 | Helper | Stored in | Keeps child alive? | Disposes child with owner? | Use when |
 |--------|-----------|--------------------|-----------------------------|----------|
 | `Referenced(owner, child)` | `KeepAliveObjects` | Yes | **No** | Owner holds a raw/borrowed pointer into `child` and just needs it rooted; the caller still owns `child`. |
+| `Unreferenced(owner, child)` | `KeepAliveObjects` | — | — | Inverse of `Referenced`: drops one keep-alive root so `child` can be collected again. |
+| `UnreferencedAll(owner)` | `KeepAliveObjects` | — | — | Drops **all** keep-alive roots on `owner` (e.g. a "remove all" operation). |
 | `OwnedBy(child, owner)` | `OwnedObjects` | Yes | Yes | `child` is a native-owned sub-object (`owns:false`) that should be disposed when the owner is (e.g. a cached getter result). Returns `child`. |
 | `Owned(owner, child)` | `OwnedObjects` | Yes | Yes | `child` was created by managed code and should be disposed with the owner (e.g. a wrapped stream). Returns `owner`. |
 
@@ -148,8 +150,9 @@ internal SpanIterator(SKRegion region, int y, int left, int right)
 
 Real uses: `SKDocument` roots its output stream, `SKColorSpace` its ICC profile, `SKSVG` its
 stream — all via `Referenced(...)`. For a **mutable set** of rooted children, add with
-`Referenced(this, child)` and remove with `KeepAliveObjects.TryRemove(child.Handle, out _)` /
-`KeepAliveObjects.Clear()` — again, no hand-rolled `List<T>`.
+`Referenced(this, child)`, drop one with `Unreferenced(this, child)`, and drop them all with
+`UnreferencedAll(this)` — again, no hand-rolled `List<T>` and no reaching into the dictionaries
+from derived types.
 
 **`Owned` / `OwnedBy` — root *and* dispose.** When the owner should also dispose the child:
 
