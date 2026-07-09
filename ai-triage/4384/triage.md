@@ -1,0 +1,240 @@
+# Issue Triage Report — #4384
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-07-09T05:30:00Z |
+| Type | type/enhancement (0.95 (95%)) |
+| Area | area/SkiaSharp (0.99 (99%)) |
+| Suggested action | ready-to-fix (0.93 (93%)) |
+
+**Issue Summary:** Port single-value SKPMColor.PreMultiply and SKPMColor.UnPreMultiply from native P/Invoke to managed integer math for 23-25% per-call performance gain, as proven by BenchmarkDotNet measurements and exhaustive bit-exactness verification.
+
+**Analysis:** SKPMColor.PreMultiply(SKColor) and SKPMColor.UnPreMultiply(SKPMColor) each invoke a native P/Invoke per call even though the underlying computation is pure integer arithmetic. Porting both to managed C# yields 23-25% throughput improvement with zero allocations, confirmed by BenchmarkDotNet (two independent runs) and an exhaustive 256x256 equivalence test against the native oracle.
+
+**Recommendations:** **ready-to-fix** — Root cause is clear (P/Invoke overhead), fix path is explicitly specified, benchmarks and exhaustive bit-exactness proofs are provided, ABI safety is confirmed, and a companion draft PR already exists
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/enhancement |
+| Area | area/SkiaSharp |
+| Platforms | — |
+| Backends | — |
+| Tenets | tenet/performance |
+| Perf | perf/interop |
+| Partner | — |
+| Current labels | tenet/performance, perf/interop |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** AMD EPYC 7763, .NET 10.0.9, net10.0, BenchmarkDotNet in-process toolchain
+
+**Repository links:**
+- https://github.com/mono/SkiaSharp/actions/runs/28986588490/agentic_workflow — Performance-fixer workflow run that produced this issue
+
+## Analysis
+
+### Technical Summary
+
+SKPMColor.PreMultiply(SKColor) and SKPMColor.UnPreMultiply(SKPMColor) each invoke a native P/Invoke per call even though the underlying computation is pure integer arithmetic. Porting both to managed C# yields 23-25% throughput improvement with zero allocations, confirmed by BenchmarkDotNet (two independent runs) and an exhaustive 256x256 equivalence test against the native oracle.
+
+### Rationale
+
+This is a type/enhancement: existing API signatures are preserved, only method bodies are optimized. The area is area/SkiaSharp (binding/SkiaSharp/SKPMColor.cs). Performance tenets tenet/performance and perf/interop are confirmed by the issue's own labels and measurements. The fix is well-scoped, ABI-safe, exhaustively tested, and accompanied by a draft PR — suggestedAction is ready-to-fix.
+
+### Key Signals
+
+- "≈ 23–25 % faster for PreMultiply and ≈ 19–26 % faster for UnPreMultiply, stable across both runs with tight error bands and zero allocations on either path" — **issue body — BenchmarkDotNet measurements** (Well-measured, reproducible performance gain with no regressions)
+- "Bit-exactness is empirically verified by an exhaustive equivalence test — all 256×256 (alpha × channel) for each of the three channel positions, per operation — against the native oracle" — **issue body — scope note** (Correctness fully proven; no behavioral change)
+- "ABI: method bodies only — no public signature/return-type change; operators and array overloads untouched" — **issue body — scope note** (Change is ABI-safe and scoped; low risk)
+- "A linked draft PR with the fix and both proofs accompanies this issue" — **issue body** (Implementation is ready; companion PR exists for review)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `binding/SkiaSharp/SKPMColor.cs` | 23-24 | direct | PreMultiply(SKColor) delegates entirely to SkiaApi.sk_color_premultiply — a native P/Invoke — for a computation that is just SkMulDiv255Round integer math per channel |
+| `binding/SkiaSharp/SKPMColor.cs` | 38-39 | direct | UnPreMultiply(SKPMColor) delegates entirely to SkiaApi.sk_color_unpremultiply — a native P/Invoke — for a table-lookup computation (SkUnPreMultiply::gTable + ApplyScale) that can be replicated in managed code |
+| `binding/SkiaSharp/SKPMColor.cs` | 51-55 | related | The explicit cast operators (SKColor->SKPMColor and SKPMColor->SKColor) call PreMultiply/UnPreMultiply directly, so every cast also pays the P/Invoke cost |
+| `binding/SkiaSharp/SkiaApi.generated.cs` | 11700-11773 | context | sk_color_premultiply and sk_color_unpremultiply are generated P/Invoke declarations — keeping array overloads native is safe since they already batch one P/Invoke per array |
+
+### Resolution Proposals
+
+**Hypothesis:** The P/Invoke round-trip overhead dominates single-value premultiply/unpremultiply calls; replacing native dispatch with equivalent managed integer math eliminates that overhead.
+
+1. **Port PreMultiply to managed SkMulDiv255Round** — fix, confidence 0.95 (95%), cost/s, validated=yes
+   - Replace the SkiaApi.sk_color_premultiply P/Invoke body with: extract alpha, if alpha==255 return unchanged, otherwise compute each channel as unchecked((byte)(((c & 0xff) * a + 127) / 255)) — equivalent to Skia's SkMulDiv255Round.
+2. **Port UnPreMultiply to managed scale-table lookup** — fix, confidence 0.93 (93%), cost/s, validated=yes
+   - Build a static 256-entry scale table at type initialization (mirrors Skia's SkUnPreMultiply::gTable) and replace the SkiaApi.sk_color_unpremultiply body with a table-based ApplyScale lookup per channel. Table is built once, no per-call allocation.
+
+**Recommended proposal:** Port PreMultiply to managed SkMulDiv255Round
+
+**Why:** Both proposals are needed together; the issue and linked draft PR implement both. Start with PreMultiply as it's the simpler integer port.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.93 (93%) |
+| Reason | Root cause is clear (P/Invoke overhead), fix path is explicitly specified, benchmarks and exhaustive bit-exactness proofs are provided, ABI safety is confirmed, and a companion draft PR already exists |
+| Suggested repro platform | linux |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/enhancement and area/SkiaSharp labels; tenet/performance and perf/interop already present | labels=type/enhancement, area/SkiaSharp, tenet/performance, perf/interop |
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4384,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-09T05:30:00Z",
+    "currentLabels": [
+      "tenet/performance",
+      "perf/interop"
+    ]
+  },
+  "summary": "Port single-value SKPMColor.PreMultiply and SKPMColor.UnPreMultiply from native P/Invoke to managed integer math for 23-25% per-call performance gain, as proven by BenchmarkDotNet measurements and exhaustive bit-exactness verification.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.95
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.99
+    },
+    "tenets": [
+      "tenet/performance"
+    ],
+    "perf": [
+      "perf/interop"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "environmentDetails": "AMD EPYC 7763, .NET 10.0.9, net10.0, BenchmarkDotNet in-process toolchain",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/actions/runs/28986588490/agentic_workflow",
+          "description": "Performance-fixer workflow run that produced this issue"
+        }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "SKPMColor.PreMultiply(SKColor) and SKPMColor.UnPreMultiply(SKPMColor) each invoke a native P/Invoke per call even though the underlying computation is pure integer arithmetic. Porting both to managed C# yields 23-25% throughput improvement with zero allocations, confirmed by BenchmarkDotNet (two independent runs) and an exhaustive 256x256 equivalence test against the native oracle.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKPMColor.cs",
+        "lines": "23-24",
+        "finding": "PreMultiply(SKColor) delegates entirely to SkiaApi.sk_color_premultiply — a native P/Invoke — for a computation that is just SkMulDiv255Round integer math per channel",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPMColor.cs",
+        "lines": "38-39",
+        "finding": "UnPreMultiply(SKPMColor) delegates entirely to SkiaApi.sk_color_unpremultiply — a native P/Invoke — for a table-lookup computation (SkUnPreMultiply::gTable + ApplyScale) that can be replicated in managed code",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKPMColor.cs",
+        "lines": "51-55",
+        "finding": "The explicit cast operators (SKColor->SKPMColor and SKPMColor->SKColor) call PreMultiply/UnPreMultiply directly, so every cast also pays the P/Invoke cost",
+        "relevance": "related"
+      },
+      {
+        "file": "binding/SkiaSharp/SkiaApi.generated.cs",
+        "lines": "11700-11773",
+        "finding": "sk_color_premultiply and sk_color_unpremultiply are generated P/Invoke declarations — keeping array overloads native is safe since they already batch one P/Invoke per array",
+        "relevance": "context"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "≈ 23–25 % faster for PreMultiply and ≈ 19–26 % faster for UnPreMultiply, stable across both runs with tight error bands and zero allocations on either path",
+        "source": "issue body — BenchmarkDotNet measurements",
+        "interpretation": "Well-measured, reproducible performance gain with no regressions"
+      },
+      {
+        "text": "Bit-exactness is empirically verified by an exhaustive equivalence test — all 256×256 (alpha × channel) for each of the three channel positions, per operation — against the native oracle",
+        "source": "issue body — scope note",
+        "interpretation": "Correctness fully proven; no behavioral change"
+      },
+      {
+        "text": "ABI: method bodies only — no public signature/return-type change; operators and array overloads untouched",
+        "source": "issue body — scope note",
+        "interpretation": "Change is ABI-safe and scoped; low risk"
+      },
+      {
+        "text": "A linked draft PR with the fix and both proofs accompanies this issue",
+        "source": "issue body",
+        "interpretation": "Implementation is ready; companion PR exists for review"
+      }
+    ],
+    "rationale": "This is a type/enhancement: existing API signatures are preserved, only method bodies are optimized. The area is area/SkiaSharp (binding/SkiaSharp/SKPMColor.cs). Performance tenets tenet/performance and perf/interop are confirmed by the issue's own labels and measurements. The fix is well-scoped, ABI-safe, exhaustively tested, and accompanied by a draft PR — suggestedAction is ready-to-fix.",
+    "resolution": {
+      "hypothesis": "The P/Invoke round-trip overhead dominates single-value premultiply/unpremultiply calls; replacing native dispatch with equivalent managed integer math eliminates that overhead.",
+      "proposals": [
+        {
+          "title": "Port PreMultiply to managed SkMulDiv255Round",
+          "description": "Replace the SkiaApi.sk_color_premultiply P/Invoke body with: extract alpha, if alpha==255 return unchanged, otherwise compute each channel as unchecked((byte)(((c & 0xff) * a + 127) / 255)) — equivalent to Skia's SkMulDiv255Round.",
+          "category": "fix",
+          "confidence": 0.95,
+          "effort": "cost/s",
+          "validated": "yes"
+        },
+        {
+          "title": "Port UnPreMultiply to managed scale-table lookup",
+          "description": "Build a static 256-entry scale table at type initialization (mirrors Skia's SkUnPreMultiply::gTable) and replace the SkiaApi.sk_color_unpremultiply body with a table-based ApplyScale lookup per channel. Table is built once, no per-call allocation.",
+          "category": "fix",
+          "confidence": 0.93,
+          "effort": "cost/s",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Port PreMultiply to managed SkMulDiv255Round",
+      "recommendedReason": "Both proposals are needed together; the issue and linked draft PR implement both. Start with PreMultiply as it's the simpler integer port."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.93,
+      "reason": "Root cause is clear (P/Invoke overhead), fix path is explicitly specified, benchmarks and exhaustive bit-exactness proofs are provided, ABI safety is confirmed, and a companion draft PR already exists",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/enhancement and area/SkiaSharp labels; tenet/performance and perf/interop already present",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/performance",
+          "perf/interop"
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
