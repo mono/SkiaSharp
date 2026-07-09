@@ -310,11 +310,13 @@ never type them.
 Every input for a page `documentation/docfx/releases/<version>.md` lives in the
 `_sources/` folder beside it (`documentation/docfx/releases/_sources/<version>.*`).
 
-1. Read `output/files-to-polish.txt`. It lists exactly the pages under
-   `documentation/docfx/releases/` that changed this run (one repo-relative
-   `<version>.md` path per line).
-2. If it is **empty**, make **no edits** and exit — no PR will be created.
-3. Otherwise, for **each** listed `documentation/docfx/releases/<version>.md`:
+1. Read `output/files-to-polish.txt`. It lists the pages under
+   `documentation/docfx/releases/` that need **prose** this run (one repo-relative
+   `<version>.md` path per line). It may be **empty** — that means no page needs
+   prose, but there is still deterministic work to materialize (a rebuilt
+   no-changes HarfBuzz page, a refreshed API diff, or the TOC/index). Do **not**
+   exit early on an empty list; skip straight to step 3.
+2. For **each** listed `documentation/docfx/releases/<version>.md`:
    1. Read its `documentation/docfx/releases/_sources/<version>.data.json`.
    2. If `data.json`'s `breaking_candidates` point at companion files that exist
       on disk (a `*.breaking.md` under the version's API-diff folder, or a
@@ -328,11 +330,15 @@ Every input for a page `documentation/docfx/releases/<version>.md` lives in the
       re-run until it writes the `.md` cleanly.
    Never hand-edit the `.md`; never touch `TOC.yml`/`index.md`; never create,
    rename, or delete pages.
-4. When every page validates, run the final render once to rebuild everything
-   consistently — every page, the deterministic no-changes pages, and the
-   `TOC.yml` + `index.md` aggregates — from the committed JSON:
+3. **Always** run the final render once — even when the polish list was empty — to
+   rebuild everything consistently from the committed JSON: every page, the
+   deterministic no-changes pages, and the `TOC.yml` + `index.md` aggregates:
    `python3 .agents/skills/release-notes/scripts/render-notes.py --all`
-   This is offline (it reads `_sources/index.json` for the schedule) and fast.
+   This is offline (it reads `_sources/index.json` for the schedule) and fast. If it
+   exits non-zero (a page's prose is invalid), fix the reported prose and re-run.
+4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
+   tree is genuinely unchanged, then there was nothing to ship — make no commit and
+   exit; otherwise commit everything.
 
 ## How the PR is made
 

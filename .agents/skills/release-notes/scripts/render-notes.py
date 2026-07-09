@@ -954,6 +954,7 @@ def render_all():
 
     src_dirs = [RELEASES_DIR / "_sources", RELEASES_DIR / "harfbuzzsharp" / "_sources"]
     rendered = 0
+    invalid = []  # pages whose committed prose.json does not validate — a hard error
     for sd in src_dirs:
         if not sd.is_dir():
             continue
@@ -966,13 +967,22 @@ def render_all():
                 continue
             pp = dp.with_name(dp.name[:-len(".data.json")] + ".prose.json")
             if not pp.is_file():
-                log("  WARNING: no prose.json for {} - skipping".format(page))
+                # Missing prose is tolerated (warn + keep the committed .md): a
+                # scoped/partial run legitimately renders the whole set while only
+                # polishing a subset, so pages outside this run's scope have no
+                # fresh prose. Invalid prose, below, is NOT tolerated.
+                log("  WARNING: no prose.json for {} - keeping committed page".format(page))
                 continue
             prose = json.loads(pp.read_text())
             errs = validate(data, prose)
             if errs:
-                log("  WARNING: prose for {} failed validation: {}".format(
+                # A committed prose.json that fails validation must never ship —
+                # it would violate the page caps/roster invariant. Record it and
+                # fail the whole --all pass so CI does not commit a bad page.
+                invalid.append((page, errs))
+                log("  ERROR: prose for {} failed validation: {}".format(
                     page, "; ".join(errs)))
+                continue
             page.write_text(render(data, prose))
             rendered += 1
     log("Rendered {} pages".format(rendered))
@@ -985,7 +995,12 @@ def render_all():
     (RELEASES_DIR / "index.md").write_text(
         generate_index(versions, next_versions, hb_versions, hb_next_versions, schedule))
     log("Wrote {} and {}".format(RELEASES_DIR / "TOC.yml", RELEASES_DIR / "index.md"))
-    return rendered
+    if invalid:
+        log("PROSE VALIDATION FAILED for {} page(s); fix the prose.json and re-run "
+            "--all:".format(len(invalid)))
+        for page, errs in invalid:
+            log("  - {}: {}".format(page, "; ".join(errs)))
+    return len(invalid)
 
 
 def main(argv):
@@ -993,10 +1008,10 @@ def main(argv):
     args = [a for a in argv[1:] if not a.startswith("-")]
 
     # --all: the final Polish pass. Regenerate every page + TOC/index from the
-    # committed JSON, offline. Takes no positional args.
+    # committed JSON, offline. Takes no positional args. Returns non-zero if any
+    # committed prose.json failed validation (a bad page must never ship).
     if "--all" in flags:
-        render_all()
-        return 0
+        return 1 if render_all() else 0
 
     if not args:
         print(__doc__)

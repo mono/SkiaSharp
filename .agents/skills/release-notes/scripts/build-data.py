@@ -7,22 +7,27 @@ SPEC for this script (and the sibling API-diff cake target). Change the spec
 first, then make this code match it — do not patch new behavior in and leave the
 spec stale.
 
-This script collects raw data and OWNS the page structure. AI only polishes the
-prose — it never creates, names, or deletes pages, and never computes diff ranges.
-See "Division of responsibility" below; the formatting itself uses TEMPLATE.md.
+This script collects the per-page FACTS and writes them as JSON. It decides every
+filename, diff range, and released-vs-unreleased split, but it does NOT own the
+page's Markdown: it emits ``_sources/<version>.data.json`` and never writes a
+``.md``. ``render-notes.py`` turns data.json + the agent's prose.json into the page;
+the AI only writes prose — it never creates, names, or deletes pages, and never
+computes diff ranges. See "Division of responsibility" below.
 
 Division of responsibility
 --------------------------
 SCRIPT (here): decides every filename, diff range, released-vs-unreleased split,
-which previews roll up, supersession banners, and which stale pages to prune. All
-of this is deterministic and lives in code (see the page model below + the
-docstrings on _page_filename, determine_diff_range, and the live-head set that
+which previews roll up, supersession banners, and the facts each page is built
+from. All of this is deterministic and lives in code (see the page model below +
+the docstrings on _page_filename, determine_diff_range, and the live-head set that
 build-index.py records for render-notes.py to prune against).
 
-AI / SKILL.md: reads each file in the final "Files to polish:" list and rewrites
-its body from the embedded raw-data block. Nothing structural — it never edits this
-script. If the output looks wrong (a missing/unexpected page, a bad range), the
-Polish phase STOPS and reports; a maintainer fixes the script here.
+AI / SKILL.md: reads each file in the final "Files to polish:" list, reads that
+page's ``_sources/<version>.data.json``, and writes ``_sources/<version>.prose.json``
+(prose only — theme, highlights, breaking summaries, category bullets, contributor
+and preview summaries). Nothing structural — it never edits this script and never
+hand-writes the page. If the output looks wrong (a missing/unexpected page, a bad
+range), the Polish phase STOPS and reports; a maintainer fixes the script here.
 
 Output streams (the Prepare-phase contract)
 --------------------------------------------
@@ -31,9 +36,9 @@ PRs", "Skipping (unchanged)", warnings, errors, and the final list of pages to
 polish — stream to STDERR via ``log()``, so a CI job log shows the work (and any
 disk/timeout failure) as it happens (spec §2.2/§2.3). Nothing is printed to STDOUT.
 
-The machine-readable result the Polish phase consumes — the list of pages whose raw
-data changed — is ALWAYS written to a file: ``output/files-to-polish.txt`` by
-default, or the path given to ``--polish-list``. It is a plain list, one
+The machine-readable result the Polish phase consumes — the list of pages whose
+``data.json`` changed — is ALWAYS written to a file: ``output/files-to-polish.txt``
+by default, or the path given to ``--polish-list``. It is a plain list, one
 repo-relative path per line; an empty file means nothing changed. Because the list
 lives in a file (not a stream), verbose progress can flow freely (spec §2.3).
 
@@ -43,7 +48,7 @@ A version's "released" and "unreleased" states are orthogonal and get SEPARATE
 pages that coexist while the version is in flight:
 
   * RELEASED  ``{version}.md``            <- a VERSIONED branch (release/X.Y.Z and
-    its -rc/-preview prereleases; highest/canonical wins under --all). Full
+    its -rc/-preview prereleases; highest/canonical wins across a full run). Full
     cumulative ROLLUP from the previous-stable base, honoring versions.json
     `compare_to`, carrying preview-milestone sections + supersede banners.
 
@@ -54,10 +59,10 @@ pages that coexist while the version is in flight:
 
 So e.g. 4.150.0 has BOTH 4.150.0.md (rollup from release/4.150.0-preview.1) and
 4.150.0-unreleased.md (release/4.150.0-preview.1..main delta). They never collide;
-cleanup only prunes a `-unreleased` page once its line advances to a higher version
-in the same minor.
+the stale-head prune (build-index records the live set, render-notes --all
+deletes the rest) only removes a `-unreleased` page once its line advances higher.
 
-When a released page rolls up tagged previews, its raw-data block groups the PRs into
+When a released page rolls up tagged previews, its data.json groups the PRs into
 per-preview BUCKETS (each PR under the preview it first shipped in, via git ancestry;
 see bucket_prs_by_milestone). The buckets exhaustively partition the diff range, so the
 AI renders one "## Preview N" section per bucket and merges them for the Highlights —
@@ -854,8 +859,8 @@ def version_from_branch(branch):
 # ── Preview-milestone enumeration ───────────────────────────────────
 #
 # WHY THIS EXISTS (regression R3):
-# The original hand-authored pages (PR #3763) and TEMPLATE.md end with a list of
-# per-preview sections, e.g.:
+# The original hand-authored pages (PR #3763) ended with a list of per-preview
+# sections that render-notes.py now emits, e.g.:
 #
 #     ## Preview 3 (February 5, 2026)
 #     [Full Changelog](.../compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1)
@@ -864,11 +869,11 @@ def version_from_branch(branch):
 # one sentence + Full Changelog link each, at the bottom"). When pages were migrated
 # to the script (#4174) these sections were lost, because the script never told
 # the AI which previews existed. We restore the feature by enumerating the
-# previews DETERMINISTICALLY here and emitting them into the raw-data block.
+# previews DETERMINISTICALLY here and emitting them into data.json.
 #
 # SOURCE OF TRUTH: published git tags (vX.Y.Z-<stage>.N[.B]). That is literally
 # where previews, their dates, and their compare endpoints are published — and
-# exactly what TEMPLATE's compare links point at. This is NOT a heuristic and is
+# exactly what the rendered compare links point at. This is NOT a heuristic and is
 # unrelated to supersession (which stays config-driven in versions.json): tags
 # answer "which previews shipped and when", versions.json answers "which version
 # supersedes which".
@@ -940,8 +945,7 @@ def collect_preview_milestones(page_version, base_version):
 
     Each milestone carries a human label ("Preview 3"), the tag's commit date and
     a compare link — chained to the previous milestone, or to the diff base for
-    the earliest one — matching the trailing ``## Preview N (date)`` sections in
-    TEMPLATE.md. Tags are deduplicated to one entry per (core, stage, number),
+    the earliest one — matching the trailing ``## Preview N (date)`` sections render-notes.py emits. Tags are deduplicated to one entry per (core, stage, number),
     keeping the latest build, so re-tagged builds (preview.3.1, preview.3.2)
     collapse to a single milestone.
 
@@ -1013,7 +1017,7 @@ def collect_preview_milestones(page_version, base_version):
             "date": _tag_date(m["tag"]),
             "compare_url": compare_url,
         })
-    result.reverse()  # newest first, matching TEMPLATE ordering
+    result.reverse()  # newest first, matching the rendered page ordering
     return result
 
 
@@ -1037,7 +1041,7 @@ def bucket_prs_by_milestone(prs, milestones, from_ref):
     (``from_ref``) so base→first-preview work is captured. Anything left after the
     last tag (commits not yet in any tagged preview, e.g. the final release cut)
     falls into a trailing untagged bucket. Returns buckets NEWEST first to match
-    TEMPLATE ordering; each is ``{"milestone": <dict|None>, "prs": [...]}``.
+    rendered (newest-first) ordering; each is ``{"milestone": <dict|None>, "prs": [...]}``.
     """
     if not milestones:
         return [{"milestone": None, "prs": list(prs)}]
@@ -1338,8 +1342,8 @@ def determine_diff_range(branch):
 #              consumer can see. Companion test/benchmark/generated files are ignored.
 #   mixed    — touches only BUILD config (native/): may change the shipped binary via a
 #              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
-#              image, SDK pin). Polish guesses from the title/context in the raw-data
-#              block (it does not open the PR) — surface a behaviour change, drop pure infra.
+#              image, SDK pin). Polish guesses from the title/context in data.json
+#              (it does not open the PR) — surface a behaviour change, drop pure infra.
 #   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
 #              docs site, tests, samples, build/meta files). Dropped into the collapse line.
 _SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
@@ -1357,7 +1361,7 @@ def _pr_category(files):
 
 
 # Automation accounts — never credited as human contributors (§4.5). The workflow
-# already skips these when authoring, but the raw data still records them (they open
+# already skips these when authoring, but data.json still records them (they open
 # release-notes and bump PRs), so Polish must exclude them from the contributor table.
 _BOT_LOGINS = frozenset({"github-actions[bot]", "github-actions", "copilot", "dependabot"})
 
@@ -1541,8 +1545,8 @@ def _release_date_display(version):
 
 
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
-# (data.json + prose.json + render-notes.py) consumes this instead of parsing the
-# raw-data HTML comment. Bump when the data.json schema changes.
+# (data.json + prose.json + render-notes.py) keys change-detection on the whole
+# data.json dict. Bump when the data.json schema changes.
 _DATA_JSON_FORMAT_VERSION = 3
 
 _PREVIEW_KEY_STAGE = {
@@ -1561,7 +1565,7 @@ def _preview_key(label):
 
 def _pr_is_community(pr):
     # type: (dict) -> bool
-    """Same community test used for the raw-data marker (§4.5)."""
+    """Community test for crediting an author (§4.5)."""
     login = (pr.get("author") or {}).get("login")
     return bool(login) and login != "mattleibow" and not _is_bot_login(login)
 
@@ -1575,7 +1579,7 @@ def build_data_json(prs, metadata):
     previews, banner date, links, breaking sources). The agent reads it and
     writes only prose (`prose.json`); ``render-notes.py`` assembles the page.
 
-    Reuses the exact helpers the raw-data block uses (``_pr_category`` tags,
+    Reuses the exact helpers the data.json builder uses (``_pr_category`` tags,
     ``_contributor_roster``, ``bucket_prs_by_milestone``, ``_release_date_display``)
     so the two emitters can never disagree about the facts.
     """
@@ -1949,7 +1953,7 @@ def _page_filename(branch, version):
         prereleases) renders the RELEASED ``{version}.md`` — the full cumulative
         rollup of the shipped prerelease/stable, with preview-milestone sections
         and supersede banners. One page per version (the canonical / highest
-        versioned branch wins under --all; see _canonical_branches_by_version).
+        versioned branch wins across a full run; see _canonical_branches_by_version).
 
       * A HEAD branch (``main`` or servicing ``release/X.Y.x``) renders the
         UNRELEASED ``{version}-unreleased.md`` — a SMALL DELTA from the last
@@ -1989,14 +1993,14 @@ def _canonical_branches_by_version(all_branches):
 def _write_page(branch, all_branches, verbose=False, force=False,
                 min_core=None, max_core=None):
     # type: (str, list[str], bool, bool, Optional[str]) -> Optional[str]
-    """Generate one release page from a branch. Returns its path, or None.
+    """Generate one release page's data from a branch. Returns its page path, or None.
 
-    Single code path shared by ``--branch`` and ``--all``: resolves the diff
-    range, status and supersession links, then writes
-    ``documentation/docfx/releases/{file}`` unless the existing file already
-    encodes identical raw data (idempotent). Returns the written path, or None
-    when the page was skipped (unchanged) or the diff range could not be
-    determined.
+    Resolves the diff range, status and supersession links, then writes the page's
+    ``_sources/<stem>.data.json`` facts unless the committed data.json already
+    encodes an identical dict (idempotent — data.json is the change key, §4.6). It
+    NEVER writes the ``.md`` (render-notes.py does). Returns the page path (added to
+    the Files-to-polish list), or None when the page was skipped (unchanged), pruned
+    (empty unreleased delta), or the diff range could not be determined.
 
     ``min_core``/``max_core`` (inclusive ``(maj, min, patch, sub)`` tuples from
     ``_core_tuple``) bound the run to a version RANGE, so the back-catalogue can
@@ -2525,7 +2529,7 @@ def main():
     )
     parser.add_argument(
         "--force", action="store_true",
-        help="Rewrite pages even when the raw data is unchanged (e.g. to "
+        help="Rewrite data.json even when unchanged (e.g. to "
              "re-render the whole back-catalogue after a format or skill change)")
     parser.add_argument(
         "--polish-list", metavar="FILE", default=None,

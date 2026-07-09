@@ -144,22 +144,27 @@ case "$cmd" in
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
         docker_run_args
+        # Prepare's notes path via the skill orchestrator: build-data.py (facts)
+        # THEN build-index.py (index.json) — running build-data.sh alone would
+        # leave _sources/index.json stale so an offline render-notes.py --all could
+        # not rebuild the TOC/index.
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            .agents/skills/release-notes/scripts/build-data.sh "$@"
+            .agents/skills/release-notes/scripts/generate.sh --notes-only "$@"
         ;;
     all)
-        # Full local run: all three paths in one container, in dependency order. Path 1
-        # (API diffs) must precede Path 2 (notes) because the release-notes engine
-        # consumes the API diff trees + co-release sidecar Path 1 writes; Path 3
-        # (api-docs) is independent. Sharing one container (and one COLD cache, when set)
-        # means later paths reuse the packages the first path downloaded. Because it runs
-        # the notes path, 'all' requires a token (override with ALLOW_NO_TOKEN=1).
+        # Full local run: all three paths in one container, in dependency order. The
+        # release-notes Prepare orchestrator (generate.sh) runs Path 1 (API diffs)
+        # THEN the notes engine (build-data.py + build-index.py) because the notes
+        # engine consumes the API diff trees + co-release sidecar Path 1 writes;
+        # Path 3 (api-docs) is independent. Sharing one container (and one COLD
+        # cache, when set) means later paths reuse the packages the first path
+        # downloaded. Because it runs the notes path, 'all' requires a token
+        # (override with ALLOW_NO_TOKEN=1).
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" bash -euo pipefail -c '
-            scripts/infra/docs/generate-api-diffs.sh
-            .agents/skills/release-notes/scripts/build-data.sh
+            .agents/skills/release-notes/scripts/generate.sh
             scripts/infra/docs/generate-api-docs.sh
         '
         ;;
