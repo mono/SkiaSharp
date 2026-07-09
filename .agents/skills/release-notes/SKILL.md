@@ -67,6 +67,9 @@ What *this* release is about, shown bold in the banner. No punctuation.
 ### `highlights_headline` — one sentence, ≤20 words
 The single most important thing about the release. **Not a list.** Its only
 inputs are `landmarks` and your judgement — you are not summarising every PR here.
+`landmarks` is a short hint list: some entries are themes, some are PR titles, and
+one may be a meta note like "Behavioural or API breaking changes — see Breaking
+Changes" (that one means *populate the breaking slot*, don't headline it).
 - Good: `SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148.`
 - Bad: `This release adds WebP, SKStream.GetData, singleton lifecycle, pixel fixes, WinUI fixes, and more.` (enumeration)
 
@@ -81,9 +84,10 @@ Merge from two sources: signature removals in the `*.breaking.md` diff, and
 behavioural breaks described in `breaking_candidates` / the notes sidecar. Empty
 array is fine and renders "None in this release." Give each a `title`, a `body`
 that says what changed **and what to do**, and the `prs` it came from. Only write
-what you can substantiate — if a `breaking_candidate` points at a diff you don't
-have and lists nothing concrete, fold it into a related entry or drop it rather
-than inventing a change.
+what you can substantiate: a `breaking_candidate` carries a `hint` and sometimes
+`prs`, but when its companion file isn't on disk and it lists no concrete change,
+fall back to the `landmarks` and the PR titles in `prs` you can actually read —
+never invent a removal you can't point at.
 - Good: `{"title": "SKPaint no longer exposes legacy text state", "body": "The paint text/font members obsoleted in v3 are now compile errors — move typeface and text size onto SKFont.", "prs": [4068, 4114]}`
 - Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
 
