@@ -48,6 +48,7 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 # notes); it owns no commands of its own so nothing can drift between here and CI.
 API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
 RELEASE_NOTES_SH="$SCRIPT_DIR/build-data.sh"
+BUILD_INDEX_PY="$SCRIPT_DIR/build-index.py"
 
 run_api=1
 run_notes=1
@@ -71,7 +72,7 @@ done
 cd "$REPO_ROOT"
 
 if [ "$run_api" = 1 ]; then
-  echo "==> Prepare [1/2]: API diffs (Path 1) — verbose"
+  echo "==> Prepare [1/3]: API diffs (Path 1) — verbose"
   "$API_DIFFS_SH"
 fi
 
@@ -84,6 +85,13 @@ if [ "$run_notes" = 1 ]; then
     py_args+=(--polish-list "$polish_list")
     echo "==> Files-to-polish list -> $polish_list"
   fi
-  echo "==> Prepare [2/2]: release-notes raw data (Path 2) — verbose"
+  echo "==> Prepare [2/3]: release-notes page data (build-data.py) — verbose"
   "$RELEASE_NOTES_SH" "${py_args[@]:+${py_args[@]}}"
+
+  # Prepare [3/3]: the network-sourced index data (Chrome schedule) -> index.json,
+  # plus pruning of stale -unreleased pages. Must run here, in the network-capable
+  # Prepare phase, so the offline render (render-notes.py --all) can build the
+  # TOC/index without a network. Only relevant to the notes path.
+  echo "==> Prepare [3/3]: index data (build-index.py) — verbose"
+  python3 "$BUILD_INDEX_PY"
 fi

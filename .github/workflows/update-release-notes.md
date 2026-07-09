@@ -230,9 +230,10 @@ pre-agent-steps:
         echo "Prepare produced no changes; nothing to apply."
       fi
 tools:
-  # The agent reads the restored data.json sidecars, writes prose slots.json, and
-  # runs render-notes.py (pure stdlib, no network) to build each page, then commits
-  # and opens the PR. python3 is allowed ONLY for render-notes.py — it must NOT
+  # The agent reads the restored _sources/<version>.data.json sidecars, writes
+  # _sources/<version>.prose.json, and runs render-notes.py (pure stdlib, no
+  # network) to render each page and then `--all` to rebuild the TOC/index, then
+  # commits and opens the PR. python3 is allowed ONLY for render-notes.py — it must NOT
   # re-run the heavy generators (they already ran in the prepare job). Keep an
   # explicit allowlist: it is the only thing that stops the agent shelling out to
   # anything else. Dropping the bash block entirely makes gh-aw compile to
@@ -275,17 +276,19 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 
 1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
-2. ran **Python** (`build-data.py`) to emit, for every changed
-   version, a deterministic `<version>.data.json` sidecar (the facts the page is
-   rendered from), write the deterministic page→API-diff links, and write the
-   **"Files to polish"** list.
+2. ran **Python** to emit, for every changed version, a deterministic
+   `_sources/<version>.data.json` sidecar (the facts a page is rendered from,
+   via `build-data.py`) and write the **"Files to polish"** list, then wrote the
+   network-sourced `_sources/index.json` (the Chrome schedule the TOC/index
+   render needs) and pruned stale `-unreleased` pages (via `build-index.py`).
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
-the regenerated files (including every `<version>.data.json`) are on disk, and the
-list is at `output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet
-cake`, or `build-data.py`** — they already ran. Your job is to write the
-prose slots and render each page (below), then commit and open the PR.
+the regenerated files (including every `_sources/<version>.data.json` and
+`_sources/index.json`) are on disk, and the list is at `output/files-to-polish.txt`.
+**Do not re-run `generate.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`**
+— they already ran, and you have no network. Your job is to write the prose and
+render the pages (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something
 > (`prepare.outputs.has_changes`). A no-op run — where the deterministic
@@ -298,29 +301,38 @@ prose slots and render each page (below), then commit and open the PR.
 Use the **release-notes skill**
 ([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md)).
 The Prepare phase already emitted, for each changed version, a deterministic
-`documentation/docfx/releases/<version>.data.json` (the facts a page is built
-from). **You never hand-write a page.** For each page you write only prose
-*slots*, then a renderer assembles the page from `data.json` + your slots — so
-headings, tables, the banner, `@handles`, ❤️, and PR links cannot be dropped or
-malformed, because you never type them.
+`_sources/<version>.data.json` (the facts a page is built from). **You never
+hand-write a page.** For each page you write only prose, then `render-notes.py`
+assembles the page from `data.json` + your prose — so headings, tables, the
+banner, `@handles`, ❤️, and PR links cannot be dropped or malformed, because you
+never type them.
+
+Every input for a page `documentation/docfx/releases/<version>.md` lives in the
+`_sources/` folder beside it (`documentation/docfx/releases/_sources/<version>.*`).
 
 1. Read `output/files-to-polish.txt`. It lists exactly the pages under
    `documentation/docfx/releases/` that changed this run (one repo-relative
    `<version>.md` path per line).
 2. If it is **empty**, make **no edits** and exit — no PR will be created.
 3. Otherwise, for **each** listed `documentation/docfx/releases/<version>.md`:
-   1. Read its `documentation/docfx/releases/<version>.data.json`.
+   1. Read its `documentation/docfx/releases/_sources/<version>.data.json`.
    2. If `data.json`'s `breaking_candidates` point at companion files that exist
       on disk (a `*.breaking.md` under the version's API-diff folder, or a
-      `<version>.notes.md` sidecar), read them for breaking-change material.
-   3. Write `documentation/docfx/releases/<version>.slots.json` — prose only,
-      per the skill and `.agents/skills/release-notes/scripts/schema/slots.schema.json`.
-   4. Render the page:
-      `python3 .agents/skills/release-notes/scripts/render-notes.py documentation/docfx/releases/<version>.data.json documentation/docfx/releases/<version>.slots.json documentation/docfx/releases/<version>.md`
-      If it prints `SLOT VALIDATION FAILED`, read the errors, fix that slot, and
-      re-run until it writes the `.md` cleanly. A clean render is the bar.
+      `_sources/<version>.notes.md` sidecar), read them for breaking-change material.
+   3. Write `documentation/docfx/releases/_sources/<version>.prose.json` — prose
+      only, per the skill and
+      `.agents/skills/release-notes/scripts/schema/prose.schema.json`.
+   4. Render the page to validate your prose:
+      `python3 .agents/skills/release-notes/scripts/render-notes.py documentation/docfx/releases/_sources/<version>.data.json documentation/docfx/releases/_sources/<version>.prose.json documentation/docfx/releases/<version>.md`
+      If it prints `PROSE VALIDATION FAILED`, read the errors, fix that slot, and
+      re-run until it writes the `.md` cleanly.
    Never hand-edit the `.md`; never touch `TOC.yml`/`index.md`; never create,
    rename, or delete pages.
+4. When every page validates, run the final render once to rebuild everything
+   consistently — every page, the deterministic no-changes pages, and the
+   `TOC.yml` + `index.md` aggregates — from the committed JSON:
+   `python3 .agents/skills/release-notes/scripts/render-notes.py --all`
+   This is offline (it reads `_sources/index.json` for the schedule) and fast.
 
 ## How the PR is made
 
@@ -333,8 +345,9 @@ then create the PR:
 
 1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
-   (Cake API-diff tree + the `<version>.data.json` sidecars) **and** the
-   `<version>.slots.json` files you wrote **and** the rendered `<version>.md` pages.
+   (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
+   the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
+   **and** the regenerated `TOC.yml` + `index.md`.
 3. `git commit -m "docs: regenerate API diffs and release notes"`.
 4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
    the `bot/release-notes` branch.
