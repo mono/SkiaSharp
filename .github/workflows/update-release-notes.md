@@ -275,7 +275,7 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 
 1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
-2. ran **Python** (`generate-release-notes.py`) to emit, for every changed
+2. ran **Python** (`build-data.py`) to emit, for every changed
    version, a deterministic `<version>.data.json` sidecar (the facts the page is
    rendered from), write the deterministic page→API-diff links, and write the
    **"Files to polish"** list.
@@ -284,7 +284,7 @@ The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files (including every `<version>.data.json`) are on disk, and the
 list is at `output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet
-cake`, or `generate-release-notes.py`** — they already ran. Your job is to write the
+cake`, or `build-data.py`** — they already ran. Your job is to write the
 prose slots and render each page (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something

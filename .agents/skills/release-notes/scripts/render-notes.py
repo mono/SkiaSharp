@@ -4,7 +4,7 @@
     render-notes.py <data.json> <prose.json> [out.md]   # normal page
     render-notes.py <data.json> [out.md]                 # no-changes page (no prose)
 
-`data.json`  — facts emitted by generate-release-notes.py (PRs, roster, banner
+`data.json`  — facts emitted by build-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `prose.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).

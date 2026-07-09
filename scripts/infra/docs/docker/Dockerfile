@@ -6,7 +6,7 @@
 # code. This image just mirrors that dependency surface for the three paths:
 #
 #   1. API diffs   — dotnet cake --target=docs-api-diff-past / docs-api-diff
-#   2. Release notes      — python3 .agents/skills/release-notes/scripts/generate-release-notes.py
+#   2. Release notes      — python3 .agents/skills/release-notes/scripts/build-data.py
 #   3. mdoc XML reference docs — dotnet cake --target=update-docs
 #
 # mdoc ships as a .NET Framework executable (scripts/infra/docs/tools/mdoc.*/mdoc.exe).

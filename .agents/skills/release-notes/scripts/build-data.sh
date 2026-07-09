@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 #
-# generate-release-notes.sh — Path 2: regenerate the human release-notes prose.
+# build-data.sh — Path 2: regenerate the human release-notes prose.
 #
 # Runs the deterministic Python release-notes engine, which turns the committed
 # api diff trees + co-release sidecar (produced by Path 1) into the per-line human
 # pages and raw data under documentation/docfx/releases/. For a full refresh, run
 # generate-api-diffs.sh (Path 1) FIRST so the api diff inputs are current.
 #
-# Engine: python3 .agents/skills/release-notes/scripts/generate-release-notes.py
+# Engine: python3 .agents/skills/release-notes/scripts/build-data.py
 #   spec:  documentation/dev/release-notes-and-api-diffs.md   (read this first)
 #
 # Single source of truth for Path 2: the release-notes skill's generate.sh, CI, the
 # docs Docker wrapper (run.sh notes), and a human all call THIS.
 #
 # Usage:
-#   generate-release-notes.sh [args...]          (default: regenerate every branch)
+#   build-data.sh [args...]          (default: regenerate every branch)
 #
-#   <args> are forwarded verbatim to generate-release-notes.py, replacing the default
+#   <args> are forwarded verbatim to build-data.py, replacing the default
 #   default full regen (e.g. --force, --min-version X, --polish-list <path>, ...).
 #
 # Requires: python3. The generator uses the GitHub CLI ('gh') to resolve PR authors;
@@ -34,7 +34,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-PY_GENERATOR="$SCRIPT_DIR/generate-release-notes.py"
+PY_GENERATOR="$SCRIPT_DIR/build-data.py"
 
 if ! command -v python3 >/dev/null 2>&1; then
     echo "ERROR: 'python3' is required for the release-notes generator but was not found." >&2
@@ -47,5 +47,5 @@ if [ ! -f "$PY_GENERATOR" ]; then
 fi
 
 # No args = the generator's default (regenerate every branch, skip unchanged).
-echo "==> Path 2: release notes (generate-release-notes.py $*) — verbose"
+echo "==> Path 2: release notes (build-data.py $*) — verbose"
 python3 "$PY_GENERATOR" "$@"

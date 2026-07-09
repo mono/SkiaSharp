@@ -29,7 +29,7 @@
 #   --polish-list <path> Forwarded to the Python generator: write the "Files to
 #                        polish" list to <path> instead of the default
 #                        output/files-to-polish.txt.
-#   <extra args>         Forwarded verbatim to generate-release-notes.py, replacing
+#   <extra args>         Forwarded verbatim to build-data.py, replacing
 #                        the default full regen (e.g. `--force`, `--min-version X`, etc.).
 #
 # Exit status is non-zero (with a clear message) if a required tool is missing —
@@ -47,7 +47,7 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 # orchestrator just calls them in the required order (Path 1 api diffs -> Path 2
 # notes); it owns no commands of its own so nothing can drift between here and CI.
 API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
-RELEASE_NOTES_SH="$SCRIPT_DIR/generate-release-notes.sh"
+RELEASE_NOTES_SH="$SCRIPT_DIR/build-data.sh"
 
 run_api=1
 run_notes=1

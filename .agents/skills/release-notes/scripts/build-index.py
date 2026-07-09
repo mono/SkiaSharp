@@ -5,7 +5,7 @@
 
 The release-notes pipeline is three scripts, one job each:
 
-    generate-release-notes.py  -> <version>.data.json   (facts, per version)
+    build-data.py  -> <version>.data.json   (facts, per version)
     render-notes.py            -> <version>.md           (the pages)
     build-index.py             -> TOC.yml + index.md      (this script)
 
@@ -32,7 +32,7 @@ from collections import defaultdict
 from pathlib import Path
 
 # ── reuse the generator's shared low-level helpers (one source of truth) ─────
-_GEN = Path(__file__).with_name("generate-release-notes.py")
+_GEN = Path(__file__).with_name("build-data.py")
 _spec = importlib.util.spec_from_file_location("_rn_generate", str(_GEN))
 _gen = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_gen)

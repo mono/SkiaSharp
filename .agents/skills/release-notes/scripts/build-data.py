@@ -64,14 +64,14 @@ there is no separate flat list to drift. Pages with no previews stay a single fl
 
 Commands:
     # Regenerate every branch (main + all release/*); skip unchanged files
-    python3 generate-release-notes.py
+    python3 build-data.py
 
     # Rewrite every page, even unchanged ones (after a format/skill change)
-    python3 generate-release-notes.py --force
+    python3 build-data.py --force
 
     # Bound to a version range — or a single version when min == max
-    python3 generate-release-notes.py --min-version 4.147.0 --max-version 4.151.0
-    python3 generate-release-notes.py --min-version 4.148.0 --max-version 4.148.0
+    python3 build-data.py --min-version 4.147.0 --max-version 4.151.0
+    python3 build-data.py --min-version 4.148.0 --max-version 4.148.0
 
 The default (no scope flags) iterates every branch and emits each changed
 version's data.json + page, writing only files whose PR count or diff range has
