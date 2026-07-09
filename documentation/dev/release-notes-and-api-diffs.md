@@ -418,6 +418,49 @@ together. The agent job is **gated on Prepare having produced changes**
 the existing tree byte-for-byte, Prepare's patch is empty, and the agent **and** the PR
 are skipped — so an unchanged daily run opens no PR (§4.6 idempotency).
 
+### 2.4 The v2 rendering pipeline (migration target)
+
+> **Status: prototype, not yet the live path.** Introduced by the release-notes v2
+> redesign (branch `dev/release-notes-v2`). The sections above describe the *current*
+> raw-data-comment + single-polish-agent path, which still runs in CI. This subsection
+> records the target design spec-first; the invariants in §4.4 apply to both.
+
+The v2 pipeline removes page **structure** from the agent's job. Instead of the agent
+editing a whole `<version>.md` (owning headings, the contributor table, the banner,
+`@handles`, ❤️, and PR links along with the prose), the work is split three ways:
+
+1. **Prepare emits `<version>.data.json`** — the deterministic facts a page is built
+   from: banner date + links, the flat PR map (each with its three-way tag and a
+   `community` flag), the authoritative contributor roster, per-preview buckets, the
+   breaking-change *sources* (the API `*.breaking.md` diff and the `.notes.md` sidecar),
+   supersede/api links, tallies, and a short `landmarks` hint list. Built by
+   `build_data_json()`, reusing the same helpers as the raw-data block (§4.4) so the two
+   can never disagree.
+2. **The agent writes `<version>.slots.json`** — prose only, against
+   `slots.schema.json`: `theme`, `highlights_headline`/`highlights_body`, `breaking`,
+   `categories`, `contributor_summaries`, `preview_summaries`. It never writes a heading,
+   table, banner, handle, ❤️, or PR link.
+3. **A host step renders the page** — `render-notes.py <v>.data.json <v>.slots.json
+   <v>.md` (jinja2) assembles the page from `data.json` structure + `slots.json` prose,
+   and **mechanically enforces** the caps that used to be unreliable prose rules
+   (Highlights word cap, theme present, every rostered contributor summarised, category
+   headings from the allow-list). A violation fails the render and is surfaced to the
+   agent, never silently shipped.
+
+**Why the split.** Every failure mode that recurred under the single-agent path lived
+exactly where the agent owned structure: dropped `## Breaking Changes` headings, bare
+`@handle`s, dropped contributors, `<THEME>` left in the banner, and Highlights that
+enumerated every PR. Under v2 the template always renders the heading; the table is
+rendered *from* the roster (roster == table by construction); handle/❤️/link formatting
+is owned by the renderer from `data.json`; and Highlights is written from `landmarks`
+(a handful of items), not the full PR list — so it structurally cannot enumerate.
+
+**Migration.** Wire the workflow to add `python3` to the agent allowlist, have the agent
+emit `<version>.slots.json`, and run `render-notes.py` as a post-agent host step; keep
+the legacy path behind a mode flag; validate the `4.*` lines first, then `3.*`. When v2
+is the live path, fold this subsection into §2.2/§4.4 and delete the legacy
+`TEMPLATE.md` / `grouping.md` / `review-checklist.md` reference files.
+
 ---
 
 ## 3. Filesystem layout & naming (canonical)
@@ -807,6 +850,12 @@ A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` and the page-structure example it follows,
 `.agents/skills/release-notes/references/TEMPLATE.md` (a skill reference asset,
 co-located with the skill and outside the published docs).
+
+> **v2 migration target (§2.4).** The redesign takes this division to its logical end:
+> the script emits **all** structure as `<version>.data.json` and the AI writes **only**
+> prose slots (`<version>.slots.json`), which a jinja2 renderer assembles — so the AI no
+> longer edits the page at all, not even the banner `<THEME>` token (it becomes the
+> `theme` slot). The ownership rule below is unchanged; v2 just makes it mechanical.
 
 #### Prose principles (what the AI polishes toward)
 
