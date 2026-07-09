@@ -40,6 +40,16 @@ on:
         required: false
         default: "main"
         type: string
+      only_prefix:
+        description: "Scope generation to versions whose core starts with this prefix (e.g. '4.'). Empty = all versions. Used to roll out / validate the v2 render pipeline on 4.* before 3.*."
+        required: false
+        default: ""
+        type: string
+      notes_only:
+        description: "Skip the heavy Cake API-diff step and regenerate only the release-notes pages (much faster; for validating prose)."
+        required: false
+        default: false
+        type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: update-release-notes
@@ -125,12 +135,21 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
+          ONLY_PREFIX: ${{ inputs.only_prefix }}
+          NOTES_ONLY: ${{ inputs.notes_only }}
         run: |
           set -euo pipefail
-          # Single entry point: Cake (API diffs) then Python (raw data), both
-          # VERBOSE. No args = --all; the "Files to polish" list lands at its
-          # default location, output/files-to-polish.txt.
-          bash .agents/skills/release-notes/scripts/generate.sh
+          # Single entry point: Cake (API diffs) then Python (raw data + the
+          # per-version data.json sidecars the agent renders from), both VERBOSE.
+          # A dispatch may scope to a version family (--only) and/or skip the heavy
+          # Cake step (--notes-only) to validate prose quickly; the daily/push runs
+          # pass neither and regenerate everything. The "Files to polish" list
+          # lands at output/files-to-polish.txt.
+          gen_flags=()
+          if [ "${NOTES_ONLY:-false}" = "true" ]; then gen_flags+=(--notes-only); fi
+          notes_flags=(--all)
+          if [ -n "${ONLY_PREFIX:-}" ]; then notes_flags+=(--only "$ONLY_PREFIX"); fi
+          bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]}" "${notes_flags[@]}"
       - name: Package Prepare output
         id: package
         run: |
@@ -195,12 +214,14 @@ pre-agent-steps:
         echo "Prepare produced no changes; nothing to apply."
       fi
 tools:
-  # The agent reads the restored files, rewrites prose, then commits and opens the
-  # PR. It must NOT re-run the scripts (they already ran in the prepare job) — no
-  # python3 here on purpose. Keep an explicit allowlist: it is the only thing that
-  # stops the agent shelling out to anything else. Dropping the bash block entirely
-  # makes gh-aw compile to `--allow-all-tools` (strictly worse). No sed/awk: they
-  # rewrite files in place, bypassing the edit tool.
+  # The agent reads the restored data.json sidecars, writes prose slots.json, and
+  # runs render-notes.py (pure stdlib, no network) to build each page, then commits
+  # and opens the PR. python3 is allowed ONLY for render-notes.py — it must NOT
+  # re-run the heavy generators (they already ran in the prepare job). Keep an
+  # explicit allowlist: it is the only thing that stops the agent shelling out to
+  # anything else. Dropping the bash block entirely makes gh-aw compile to
+  # `--allow-all-tools` (strictly worse). No sed/awk: they rewrite files in place,
+  # bypassing the edit tool.
   #
   # git is REQUIRED, not optional: the create-pull-request safe-output is
   # commit-based — it errors with "No changes to commit" unless the agent has run
@@ -209,7 +230,7 @@ tools:
   # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
   # mistake: the agent created a branch but never committed, so gh-aw's patch
   # generator fell back to diffing months of history and exceeded the PR file cap.
-  bash: ["cat", "grep", "sort", "head", "tail", "git"]
+  bash: ["cat", "grep", "sort", "head", "tail", "git", "python3"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}
@@ -238,16 +259,17 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 
 1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
-2. ran **Python** (`generate-release-notes.py --all`) to regenerate every version
-   page's raw-data block, write the deterministic page→API-diff links, and write
-   the **"Files to polish"** list.
+2. ran **Python** (`generate-release-notes.py --all`) to emit, for every changed
+   version, a deterministic `<version>.data.json` sidecar (the facts the page is
+   rendered from), write the deterministic page→API-diff links, and write the
+   **"Files to polish"** list.
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
-the regenerated files are on disk, and the list is at
-`output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet cake`, or the
-Python script** — they already ran. Your job is the Polish phase, then committing
-and opening the PR.
+the regenerated files (including every `<version>.data.json`) are on disk, and the
+list is at `output/files-to-polish.txt`. **Do not re-run `generate.sh`, `dotnet
+cake`, or `generate-release-notes.py`** — they already ran. Your job is to write the
+prose slots and render each page (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something
 > (`prepare.outputs.has_changes`). A no-op run — where the deterministic
@@ -255,23 +277,34 @@ and opening the PR.
 > start, so when you are running there is always at least the regenerated Prepare
 > output on disk to commit.
 
-## Your job: the Polish phase
+## Your job: write the prose and render each page
 
 Use the **release-notes skill**
-([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
-in its **unattended** mode: the Prepare phase already ran, so skip it and go straight
-to **Polish**.
+([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md)).
+The Prepare phase already emitted, for each changed version, a deterministic
+`documentation/docfx/releases/<version>.data.json` (the facts a page is built
+from). **You never hand-write a page.** For each page you write only prose
+*slots*, then a renderer assembles the page from `data.json` + your slots — so
+headings, tables, the banner, `@handles`, ❤️, and PR links cannot be dropped or
+malformed, because you never type them.
 
 1. Read `output/files-to-polish.txt`. It lists exactly the pages under
-   `documentation/docfx/releases/` whose raw data changed this run (one
-   repo-relative path per line).
-2. If it is **empty**, make **no edits** and exit — leave any existing PR
-   untouched. No PR will be created.
-3. Otherwise, for **each** listed file, follow the skill: rewrite only the human
-   prose, keeping every script-owned region verbatim — the raw-data HTML comment
-   block, the `> **API changes**` link line, and the `## Links` entries. Never
-   hand-author API-diff or HarfBuzz links, never touch `TOC.yml`/`index.md`, and
-   never create, rename, or delete pages.
+   `documentation/docfx/releases/` that changed this run (one repo-relative
+   `<version>.md` path per line).
+2. If it is **empty**, make **no edits** and exit — no PR will be created.
+3. Otherwise, for **each** listed `documentation/docfx/releases/<version>.md`:
+   1. Read its `documentation/docfx/releases/<version>.data.json`.
+   2. If `data.json`'s `breaking_candidates` point at companion files that exist
+      on disk (a `*.breaking.md` under the version's API-diff folder, or a
+      `<version>.notes.md` sidecar), read them for breaking-change material.
+   3. Write `documentation/docfx/releases/<version>.slots.json` — prose only,
+      per the skill and `scripts/infra/docs/schema/slots.schema.json`.
+   4. Render the page:
+      `python3 scripts/infra/docs/render-notes.py documentation/docfx/releases/<version>.data.json documentation/docfx/releases/<version>.slots.json documentation/docfx/releases/<version>.md`
+      If it prints `SLOT VALIDATION FAILED`, read the errors, fix that slot, and
+      re-run until it writes the `.md` cleanly. A clean render is the bar.
+   Never hand-edit the `.md`; never touch `TOC.yml`/`index.md`; never create,
+   rename, or delete pages.
 
 ## How the PR is made
 
@@ -279,15 +312,17 @@ to **Polish**.
 the PR. It does **not** stage or commit for you. If you call it with an uncommitted
 working tree it returns *"No changes to commit"*, and gh-aw then falls back to
 diffing months of history (2000+ files, exceeding the PR file cap and failing the
-run). So once polishing is done you **must** commit everything yourself, then create
-the PR:
+run). So once every page renders cleanly you **must** commit everything yourself,
+then create the PR:
 
 1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
-   (Cake API-diff tree + Python raw data) **and** your prose edits.
-3. `git commit -m "docs: regenerate API diffs and polish release notes"`.
+   (Cake API-diff tree + the `<version>.data.json` sidecars) **and** the
+   `<version>.slots.json` files you wrote **and** the rendered `<version>.md` pages.
+3. `git commit -m "docs: regenerate API diffs and release notes"`.
 4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
    the `bot/release-notes` branch.
+
 
 Commit **once**, at the very end, after every edit is done — not incrementally.
 Because the job only starts when Prepare produced changes, the working tree is

@@ -1867,6 +1867,15 @@ def _format_pr_bullet(pr):
     return "{}{} {} in {}{}{}".format(tag, title, by, url, community_str, skia_str)
 
 
+def _friendly_date(iso):
+    # type: (Optional[str]) -> Optional[str]
+    """'2026-06-12' -> 'June 12, 2026'. Passes through anything not ISO."""
+    if not iso or not re.match(r"^\d{4}-\d{2}-\d{2}$", iso):
+        return iso
+    y, m, d = (int(x) for x in iso.split("-"))
+    return "{} {}, {}".format(datetime(y, m, 1).strftime("%B"), d, y)
+
+
 def _release_date_display(version):
     # type: (str) -> Optional[str]
     """Human release date (e.g. 'December 3, 2024') from the ``vX.Y.Z`` tag, or None.
@@ -1902,7 +1911,10 @@ def _release_date_display(version):
 # stranded on the old format until its next PR lands.
 #   1 — original (binary [product]/[internal] tag, no contributor roster)
 #   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
-_RAWDATA_FORMAT_VERSION = 2
+#   3 — v2 pipeline: page is RENDERED from <version>.data.json + <version>.slots.json
+#       by render-notes.py (no in-page raw-data block). Bumping to 3 forces every
+#       page off the legacy raw-data format onto the rendered v2 format on first run.
+_RAWDATA_FORMAT_VERSION = 3
 
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + slots.json + render-notes.py) consumes this instead of parsing the
@@ -2012,7 +2024,7 @@ def build_data_json(prs, metadata):
         previews.append({
             "key": _preview_key(label),
             "label": label,
-            "date": m.get("date"),
+            "date": _friendly_date(m.get("date")),
             "changelog_url": m.get("compare_url"),
             "prs": [pr.get("number") for pr in b.get("prs") or [] if pr.get("number")],
         })
@@ -3098,8 +3110,8 @@ def _canonical_branches_by_version(all_branches):
     return canonical
 
 
-def _write_page(branch, all_branches, verbose=False, force=False):
-    # type: (str, list[str], bool, bool) -> Optional[str]
+def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=None):
+    # type: (str, list[str], bool, bool, Optional[str]) -> Optional[str]
     """Generate one release page from a branch. Returns its path, or None.
 
     Single code path shared by ``--branch`` and ``--all``: resolves the diff
@@ -3108,12 +3120,21 @@ def _write_page(branch, all_branches, verbose=False, force=False):
     encodes identical raw data (idempotent). Returns the written path, or None
     when the page was skipped (unchanged) or the diff range could not be
     determined.
+
+    ``only_prefix`` (e.g. ``"4."``) scopes a run to one version family: a version
+    whose core does not start with the prefix is left entirely untouched (not
+    rewritten, not listed), so the v2 rollout can validate ``4.*`` first without
+    disturbing the committed ``3.*`` pages.
     """
     try:
         from_ref, to_ref, version = determine_diff_range(branch)
     except (RuntimeError, subprocess.CalledProcessError) as e:
         log("  WARNING: Could not determine diff range for {}: {}".format(
             branch, e), file=sys.stderr)
+        return None
+
+    if only_prefix and not str(version).startswith(only_prefix):
+        log("  Skipping {} (not in --only {} scope).".format(version, only_prefix))
         return None
 
     # History floor (spec §1.4): below the configured floor we do not regenerate
@@ -3624,8 +3645,8 @@ def _process_harfbuzz_family(all_branches, force=False):
     return files_to_polish, processed, skipped
 
 
-def cmd_all(force=False, polish_list_path=None):
-    # type: (bool, str) -> None
+def cmd_all(force=False, polish_list_path=None, only_prefix=None):
+    # type: (bool, str, Optional[str]) -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
     This is the idempotent "regenerate everything" mode used by the automated
@@ -3684,7 +3705,7 @@ def cmd_all(force=False, polish_list_path=None):
             continue
 
         log("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches, force=force)
+        path = _write_page(branch, all_branches, force=force, only_prefix=only_prefix)
         if path:
             files_to_polish.append(path)
             processed_count += 1
@@ -3693,9 +3714,13 @@ def cmd_all(force=False, polish_list_path=None):
 
     # HarfBuzz peer family — same pipeline, line-driven from the co-release map
     # (spec §4.5). Runs after the SkiaSharp pass so the canonical SkiaSharp pages
-    # its cross-links target already exist this run.
-    hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
-        all_branches, force=force)
+    # its cross-links target already exist this run. Skipped entirely when a run
+    # is scoped to a SkiaSharp version family via --only (HB cores never match).
+    if only_prefix:
+        hb_polish, hb_processed, hb_skipped = [], 0, 0
+    else:
+        hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
+            all_branches, force=force)
     files_to_polish.extend(hb_polish)
     processed_count += hb_processed
     skipped_count += hb_skipped
@@ -3747,6 +3772,11 @@ def main():
         help="Write the 'Files to polish' list to FILE (one repo-relative path "
              "per line; empty file = nothing changed). Defaults to "
              "output/files-to-polish.txt.")
+    parser.add_argument(
+        "--only", metavar="PREFIX", default=None,
+        help="Scope an --all run to versions whose core starts with PREFIX "
+             "(e.g. '4.'). Other versions are left entirely untouched — used to "
+             "roll out the v2 pipeline on 4.* before 3.*.")
 
     args = parser.parse_args()
 
@@ -3761,7 +3791,8 @@ def main():
     if args.update_toc:
         cmd_update_toc()
     elif args.all:
-        cmd_all(force=args.force, polish_list_path=args.polish_list)
+        cmd_all(force=args.force, polish_list_path=args.polish_list,
+                only_prefix=args.only)
     elif args.branch:
         cmd_branch(args.branch, force=args.force,
                    polish_list_path=args.polish_list)
