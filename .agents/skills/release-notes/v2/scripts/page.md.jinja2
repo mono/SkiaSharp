@@ -12,15 +12,15 @@
 <!-- RELEASE-NOTES DATA (generated, do not edit) format:{{ data.format }} version:{{ data.version }} -->
 # {{ data.title }}
 {{ banner_line(data, slots) }}
-{%- if data.supersedes %}
+{%- if data.get('supersedes') %}
 {%- for s in data.supersedes %}
 > **Supersedes [{{ s.version }}]({{ s.href }})** · {{ s.note }}
 {%- endfor %}
 {%- endif %}
-{%- if data.superseded_by %}
+{%- if data.get('superseded_by') %}
 > **Superseded by [{{ data.superseded_by.version }}]({{ data.superseded_by.href }})** · {{ data.superseded_by.note }}
 {%- endif %}
-{%- if data.api_links %}
+{%- if data.get('api_links') %}
 > **API changes** · {% for l in data.api_links %}[{{ l.label }}]({{ l.href }}){% if not loop.last %} · {% endif %}{% endfor %}
 {%- endif %}
 
@@ -42,7 +42,7 @@
 - **{{ item.lead }}** — {{ item.detail }}{{ credit(item.prs, data) }}
 {%- endfor %}
 {% endfor -%}
-{%- if data.platform_support %}
+{%- if data.get('platform_support') %}
 ## Platform Support
 
 | Platform | Minimum Version |
@@ -51,7 +51,7 @@
 | {{ row.platform }} | {{ row.version }} |
 {%- endfor %}
 {% endif -%}
-{%- if data.contributors %}
+{%- if data.get('contributors') %}
 ## Community Contributors ❤️
 
 Thank you to everyone who contributed to this release!
@@ -62,13 +62,13 @@ Thank you to everyone who contributed to this release!
 | [@{{ c.login }}]({{ c.url }}) | {{ slots.contributor_summaries[c.login] }} ({{ pr_links(c.prs, data) }}) |
 {%- endfor %}
 {% endif -%}
-{%- if data.links %}
+{%- if data.get('links') %}
 ## Links
 
 {% for l in data.links %}- [{{ l.label }}]({{ l.href }})
 {% endfor -%}
 {% endif -%}
-{%- for p in data.previews %}
+{%- for p in data.get('previews', []) %}
 
 ## {{ p.label }}{% if p.date %} ({{ p.date }}){% endif %}
 

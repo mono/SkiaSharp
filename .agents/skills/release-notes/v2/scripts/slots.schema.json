@@ -1,10 +1,17 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "release-notes slots",
-  "description": "The ONLY output of the polish agent. Prose strings that fill the deterministic page template. The agent writes no headings, tables, banners, @handles, hearts or PR links — those are rendered from data.json.",
+  "description": "The ONLY output of the polish agent. Prose strings that fill the deterministic page template. The agent writes no headings, tables, banners, @handles, hearts or PR links \u2014 those are rendered from data.json.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["theme", "highlights_headline", "breaking", "categories", "contributor_summaries", "preview_summaries"],
+  "required": [
+    "theme",
+    "highlights_headline",
+    "breaking",
+    "categories",
+    "contributor_summaries",
+    "preview_summaries"
+  ],
   "properties": {
     "theme": {
       "type": "string",
@@ -13,47 +20,84 @@
     },
     "highlights_headline": {
       "type": "string",
-      "description": "ONE sentence, <=20 words: the single most important thing about this release. Not a list.",
+      "description": "ONE sentence, <=20 WORDS (the renderer enforces the cap in words, not characters): the single most important thing about this release. Not a list.",
       "maxLength": 160
     },
     "highlights_body": {
-      "type": ["string", "null"],
-      "description": "Optional. <=60 words naming 2-3 themes in prose. No PR links, no @handles, no comma-run enumeration of every change. Null when the headline says enough.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Optional. <=60 WORDS (renderer enforces in words) naming 2-3 themes in prose. No PR links, no @handles, no comma-run enumeration of every change. Null when the headline says enough.",
       "maxLength": 420
     },
     "breaking": {
       "type": "array",
-      "description": "One entry per behavioural or signature breaking change a consumer must act on. Empty array renders 'None in this release.' Titles/bodies only — PR links are added from prs[].",
+      "description": "One entry per behavioural or signature breaking change a consumer must act on. Empty array renders 'None in this release.' Titles/bodies only \u2014 PR links are added from prs[].",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["title", "body"],
+        "required": [
+          "title",
+          "body"
+        ],
         "properties": {
-          "title": {"type": "string", "maxLength": 120},
-          "body": {"type": "string", "maxLength": 500},
-          "prs": {"type": "array", "items": {"type": "integer"}}
+          "title": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "prs": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
         }
       }
     },
     "categories": {
       "type": "array",
-      "description": "Curated product-facing sections. Only headings from data.allowed_categories. Each bullet MERGES related PRs into one theme; the agent supplies lead+detail prose and the PR numbers, the template renders links and community ❤️ credit. Aim 3-5 bullets per section — curate, don't enumerate.",
+      "description": "Curated product-facing sections. Only headings from data.allowed_categories. Each bullet MERGES related PRs into one theme; the agent supplies lead+detail prose and the PR numbers, the template renders links and community \u2764\ufe0f credit. Aim 3-5 bullets per section \u2014 curate, don't enumerate.",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["heading", "bullets"],
+        "required": [
+          "heading",
+          "bullets"
+        ],
         "properties": {
-          "heading": {"type": "string"},
+          "heading": {
+            "type": "string"
+          },
           "bullets": {
             "type": "array",
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["lead", "detail", "prs"],
+              "required": [
+                "lead",
+                "detail",
+                "prs"
+              ],
               "properties": {
-                "lead": {"type": "string", "maxLength": 120},
-                "detail": {"type": "string", "maxLength": 400},
-                "prs": {"type": "array", "items": {"type": "integer"}}
+                "lead": {
+                  "type": "string",
+                  "maxLength": 120
+                },
+                "detail": {
+                  "type": "string",
+                  "maxLength": 400
+                },
+                "prs": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
               }
             }
           }
@@ -63,12 +107,18 @@
     "contributor_summaries": {
       "type": "object",
       "description": "One entry per login in data.contributors (roster). Value = one line summarising that person's contributions in prose, e.g. 'Variable fonts, singleton lifecycle rework and the SKPath finalizer fix'. The template adds the @handle and PR links.",
-      "additionalProperties": {"type": "string", "maxLength": 300}
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 300
+      }
     },
     "preview_summaries": {
       "type": "object",
       "description": "One entry per preview/RC key in data.previews. Value = 1-2 sentences summarising what that milestone shipped. The template adds the heading, date and changelog link.",
-      "additionalProperties": {"type": "string", "maxLength": 500}
+      "additionalProperties": {
+        "type": "string",
+        "maxLength": 500
+      }
     }
   }
 }

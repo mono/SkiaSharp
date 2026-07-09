@@ -1,0 +1,99 @@
+{
+  "theme": "First stable v4 release",
+  "highlights_headline": "SkiaSharp 4.148.0 is the first stable release of the v4 line, built on Skia milestone m148.",
+  "highlights_body": "It introduces animated WebP encoding and a zero-copy stream-to-data helper, and reworks how singleton instances are torn down and re-created. This is a breaking release — review the changes below before upgrading from v3.",
+  "breaking": [
+    {
+      "title": "SKPaint no longer exposes legacy text and font state",
+      "body": "The text and font state-reading members on SKPaint that were obsoleted throughout the v3 line are now compile errors. Move typeface, text size, hinting and related state onto an SKFont, and draw through the SKCanvas.DrawText overloads that take an SKFont before upgrading.",
+      "prs": [4068, 4114]
+    },
+    {
+      "title": "Singleton instance lifecycle changed",
+      "body": "Shared singleton instances now follow a deterministic teardown-and-recreate model instead of relying on the GC to keep them alive across resets. If your code cached a reference to a singleton across an engine reset or teardown, re-fetch it after the reset — the old instance is no longer valid.",
+      "prs": [4080]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m148",
+          "detail": "The rendering engine moves to the latest Skia release, picking up upstream text, path and codec fixes.",
+          "prs": [4125]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Animated WebP encoding",
+          "detail": "SKWebpEncoder can now write animated WebP output, matching the animated decoding support that already shipped.",
+          "prs": [3771]
+        },
+        {
+          "lead": "Zero-copy stream-to-data conversion",
+          "detail": "The new SKStream.GetData() returns an SKData view over a stream's contents without allocating or copying the bytes.",
+          "prs": [3772]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Pixel span access corrected",
+          "detail": "GetPixelSpan on SKPixmap and SKBitmap now uses RowBytes for the stride and applies x/y offsets against the correct axis, so multi-row and offset reads return the intended pixels.",
+          "prs": [4148, 4128]
+        },
+        {
+          "lead": "SKPath finalizer crash fixed",
+          "detail": "An intermittent crash that happened when an SKPathBuilder was collected before the SKPath it produced no longer occurs during finalization.",
+          "prs": [3796]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Singleton lifecycle rework",
+          "detail": "Shared singleton instances now follow a deterministic teardown-and-recreate model, closing a long-standing class of resurrection bugs. See the breaking-change note above for the migration.",
+          "prs": [4080]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WinUI projection loads under .NET 9",
+          "detail": "Fixed a missing native DLL that prevented the WinUI projection from loading for .NET 9 consumers.",
+          "prs": [4084]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Expat refreshed to 2.8.1",
+          "detail": "The bundled Expat XML parser is updated to 2.8.1, picking up the latest upstream security fixes.",
+          "prs": [4079]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Singleton lifecycle rework, promoting the legacy SKPaint text and font APIs to errors, the SKPath finalizer crash fix, and Uno Platform sample updates.",
+    "ebariche": "Cut the SkiaFiddle sample's WASM download size by roughly 60%.",
+    "sasakrsmanovic": "Refreshed the Uno Platform link and description in the README."
+  },
+  "preview_summaries": {
+    "rc1": "Release Candidate 1 finalised the Skia m148 update and the Expat 2.8.1 refresh, and shipped the singleton lifecycle rework alongside the SKPaint obsolete-to-error promotion and the SKPixmap stride fix.",
+    "p2": "Preview 2 added animated WebP encoding and the zero-copy SKStream.GetData() helper, and fixed the SKPath finalizer crash reported against SKPathBuilder.",
+    "p1": "Preview 1 opened the v4.148 line and pointed the Uno Platform Gallery sample at the new binding references."
+  }
+}

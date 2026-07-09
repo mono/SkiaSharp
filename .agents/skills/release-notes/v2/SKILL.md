@@ -38,14 +38,17 @@ title.
    diff can detect.
 3. Write `slots.json` (schema: `scripts/slots.schema.json`).
 4. Run `python3 scripts/render-notes.py data.json slots.json out.md`. If it prints
-   a validation error, fix that slot and re-run. A clean render is the bar.
+   a `SLOT VALIDATION FAILED` error, fix that slot and re-run. A clean render is
+   the bar. (A raw Jinja `UndefinedError` about a `data.*` field is a
+   template/data issue, not your slots — report it rather than reworking prose.)
 
 ## The slots
 
 Each slot below lists its purpose, the cap the renderer enforces, and one good +
 one bad example. Caps are hard: the renderer rejects an over-long highlight, a
 missing contributor, or an unknown category. Stay well under and you never see an
-error.
+error. Where a slot is nullable or optional, the note says so — reach for `null`
+rather than padding.
 
 ### `theme` — 2-6 words
 What *this* release is about, shown bold in the banner. No punctuation.
@@ -68,29 +71,43 @@ comma-run "A, B, C, D, E" lists. If the headline already says enough, use `null`
 Merge from two sources: signature removals in the `*.breaking.md` diff, and
 behavioural breaks described in `breaking_candidates` / the notes sidecar. Empty
 array is fine and renders "None in this release." Give each a `title`, a `body`
-that says what changed **and what to do**, and the `prs` it came from.
+that says what changed **and what to do**, and the `prs` it came from. Only write
+what you can substantiate — if a `breaking_candidate` points at a diff you don't
+have and lists nothing concrete, fold it into a related entry or drop it rather
+than inventing a change.
 - Good: `{"title": "SKPaint no longer exposes legacy text state", "body": "The paint text/font members obsoleted in v3 are now compile errors — move typeface and text size onto SKFont.", "prs": [4068, 4114]}`
 - Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
 
 ### `categories` — array of `{heading, bullets}`
-The body of the page. Headings must come from `data.allowed_categories`. **Curate,
+The body of the page. Headings must come from `data.allowed_categories`, but you
+choose which to use — include a section only when it has a real product-facing
+bullet, and prefer fewer, denser sections over many one-bullet ones. **Curate,
 don't enumerate:** each bullet MERGES related PRs into one product theme (aim 3-5
-bullets per section), gives a `lead` (bold summary) + `detail` (what it means for
-the consumer) + the `prs`. The renderer adds the PR links and the ❤️ community
-credit — never write those yourself.
+bullets per section on a big release; 1-2 is perfectly fine on a servicing
+release — never merge distinct areas just to hit a count), gives a `lead` (bold
+summary) + `detail` (what it means for the consumer) + the `prs`. The renderer
+adds the PR links and the ❤️ community credit — never write those yourself. A
+change with a migration usually belongs in `breaking`; don't also give it its own
+thin category section unless it has independent product value. Rule of thumb for
+placement: ordinary fixes go under **Bug Fixes** even when platform-specific; use
+**Platform** for platform-support additions or removals.
 - Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
 - Bad: one bullet per PR restating its title; a section that lists 20 internal PRs.
 
 ### `contributor_summaries` — one line per roster login
 `data.contributors` is authoritative — every login there needs an entry (the
 renderer fails otherwise) and no one else gets one. Summarise that person's work
-in prose; the renderer adds their `@handle` and PR links.
+in prose; the renderer adds their `@handle` and PR links. This is the one place
+`internal` work is worth naming — a contributor's sample or CI work still deserves
+credit even though it never became a category bullet.
 - Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
 - Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
 
 ### `preview_summaries` — one line per preview key
 `data.previews` lists each preview/RC with the PRs that first shipped in it. Give
-each `key` a 1-2 sentence summary of what that milestone delivered.
+each `key` a 1-2 sentence summary of what that milestone delivered. When a preview
+only carried internal work, describe the milestone itself (e.g. "opened the line"
+or "cut the release candidate") rather than forcing a product story.
 - Good: `"p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
 - Bad: leaving a preview key out (the renderer fails), or restating every PR.
 

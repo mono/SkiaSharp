@@ -1,0 +1,35 @@
+{
+  "theme": "Skia sync and WASM fixes",
+  "highlights_headline": "SkiaSharp 3.119.5 is a servicing release that syncs upstream Skia bug fixes and restores WASM startup on .NET 10 RC.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upstream Skia bug-fix sync",
+          "detail": "Picks up the latest bug and stability fixes from Skia's chrome/m133 branch, keeping rendering behaviour aligned with upstream without moving the engine milestone.",
+          "prs": [4210]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "WASM startup restored on .NET 10 RC",
+          "detail": "Resolves a regression that prevented the SkiaSharp WASM module from initializing under the .NET 10 release candidate runtime.",
+          "prs": [4212]
+        },
+        {
+          "lead": "SKColorSpace equality corrected for named spaces",
+          "detail": "Two SKColorSpace instances that refer to the same named colour space (such as sRGB) now compare as equal, matching what callers expect.",
+          "prs": [4215]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
