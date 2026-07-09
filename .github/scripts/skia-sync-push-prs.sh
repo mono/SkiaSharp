@@ -6,7 +6,8 @@
 #   GH_TOKEN — PAT with write access to mono/skia and mono/SkiaSharp
 #
 # Expected files (written by the agent):
-#   /tmp/gh-aw/agent/skia-sync-env.sh — TARGET and CURRENT vars
+#   /tmp/gh-aw/agent/skia-sync-env.sh — TARGET, CURRENT, and (optionally) IS_RELEASE,
+#       BASE_BRANCH, SKIA_BASE_BRANCH, HEAD_BRANCH vars
 #   /tmp/gh-aw/agent/skia-sync-skia-summary.md — mono/skia PR body
 #   /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md — mono/SkiaSharp PR body
 #
@@ -17,6 +18,8 @@ if [ ! -f /tmp/gh-aw/agent/skia-sync-env.sh ]; then
     echo "No skia-sync-env.sh — agent determined no work needed"
     exit 0
 fi
+# Written by the agent at runtime; not resolvable at lint time.
+# shellcheck source=/dev/null
 source /tmp/gh-aw/agent/skia-sync-env.sh
 
 if [ -z "${TARGET:-}" ]; then
@@ -24,19 +27,52 @@ if [ -z "${TARGET:-}" ]; then
     exit 0
 fi
 
-BRANCH="skia-sync/m${TARGET}"
+# Branch targets. For a main sync these default to the historical values; for a
+# release-line sync the agent provides explicit HEAD_BRANCH / BASE_BRANCH /
+# SKIA_BASE_BRANCH that point at the matching release/<major>.<milestone>.x line.
+BRANCH="${HEAD_BRANCH:-skia-sync/m${TARGET}}"
+SS_BASE="${BASE_BRANCH:-main}"
+SKIA_BASE="${SKIA_BASE_BRANCH:-skiasharp}"
+IS_RELEASE="${IS_RELEASE:-false}"
+# UPSTREAM_REF is the google/skia ref the sync merged FROM. For a `chrome/m<N>`
+# milestone sync it defaults to that branch (backward compat with older env files);
+# `main` denotes a bleeding-edge tip sync.
+UPSTREAM_REF="${UPSTREAM_REF:-chrome/m${TARGET}}"
+echo "Sync branch: $BRANCH | SkiaSharp base: $SS_BASE | mono/skia base: $SKIA_BASE | release: $IS_RELEASE | upstream: $UPSTREAM_REF"
+
 SKIA_SUMMARY=""
 SS_SUMMARY=""
 [ -f /tmp/gh-aw/agent/skia-sync-skia-summary.md ] && SKIA_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skia-summary.md)
 [ -f /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md ] && SS_SUMMARY=$(cat /tmp/gh-aw/agent/skia-sync-skiasharp-summary.md)
 
-# --- Determine PR titles based on same-milestone or milestone bump ---
-if [ "$CURRENT" = "$TARGET" ]; then
+# --- Determine PR titles based on sync kind (tip / same-milestone / milestone bump) ---
+# Every skia-sync PR (in both mono/skia and mono/SkiaSharp) gets the `type/milestone-sync`
+# label. The one case that advances the milestone number — i.e. changes `SK_MILESTONE` in
+# mono/skia's include/core/SkMilestone.h and the `libSkiaSharp milestone` line in
+# mono/SkiaSharp's scripts/VERSIONS.txt — additionally gets the `type/milestone-bump` label.
+IS_MILESTONE_BUMP=false
+if [ "$UPSTREAM_REF" = "main" ]; then
+    SS_TITLE="[skia-sync] Merge upstream Skia main (tip)"
+    SS_BODY_INTRO="Automated bleeding-edge sync from the tip of upstream Skia (google/skia main)."
+elif [ "$CURRENT" = "$TARGET" ]; then
     SS_TITLE="[skia-sync] Merge upstream chrome/m${TARGET} bug fixes"
     SS_BODY_INTRO="Automated upstream bug-fix sync for m${TARGET}."
 else
     SS_TITLE="[skia-sync] Update skia to milestone ${TARGET}"
     SS_BODY_INTRO="Automated Skia milestone bump from m${CURRENT} to m${TARGET}."
+    IS_MILESTONE_BUMP=true
+fi
+if [ "$IS_RELEASE" = "true" ]; then
+    SS_BODY_INTRO="${SS_BODY_INTRO} Targeting release branch \`${SS_BASE}\` (mono/skia \`${SKIA_BASE}\`)."
+fi
+
+# --- mono/skia PR title + body intro (UPSTREAM_REF-aware) ---
+if [ "$UPSTREAM_REF" = "main" ]; then
+    SKIA_TITLE="[skia-sync] Merge upstream Skia main (tip)"
+    SKIA_BODY_INTRO="Automated upstream merge of google/skia main (tip)."
+else
+    SKIA_TITLE="[skia-sync] Merge upstream chrome/m${TARGET}"
+    SKIA_BODY_INTRO="Automated upstream merge of \`chrome/m${TARGET}\`."
 fi
 
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
@@ -55,21 +91,36 @@ push_skia() {
 
     local pr
     pr=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
+    # SK_MILESTONE in include/core/SkMilestone.h) additionally carry type/milestone-bump.
+    # Both labels must already exist in the repo.
+    local skia_label_args=(--label "type/milestone-sync")
+    if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+        skia_label_args+=(--label "type/milestone-bump")
+    fi
+
     if [ -z "$pr" ]; then
         echo "Creating mono/skia PR..."
         gh pr create --repo mono/skia \
-            --head "$BRANCH" --base skiasharp \
-            --title "[skia-sync] Merge upstream chrome/m${TARGET}" \
+            --head "$BRANCH" --base "$SKIA_BASE" \
+            --title "$SKIA_TITLE" \
             --draft \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            "${skia_label_args[@]}" \
+            --body "${SKIA_BODY_INTRO}
 
 ${SKIA_SUMMARY}
 
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/skia PR"
     else
         echo "Updating mono/skia PR #${pr}..."
+        local skia_add_labels="type/milestone-sync"
+        if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+            skia_add_labels="type/milestone-sync,type/milestone-bump"
+        fi
+        gh pr edit "$pr" --repo mono/skia --add-label "$skia_add_labels" || true
         gh pr edit "$pr" --repo mono/skia \
-            --body "Automated upstream merge of \`chrome/m${TARGET}\`.
+            --body "${SKIA_BODY_INTRO}
 
 ${SKIA_SUMMARY}
 
@@ -95,12 +146,22 @@ push_skiasharp() {
     [ -n "$skia_pr" ] && skia_pr_link="**Companion skia PR:** https://github.com/mono/skia/pull/$skia_pr"
 
     ss_pr=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
+    # the milestone in scripts/VERSIONS.txt) additionally carry type/milestone-bump. Both
+    # labels must already exist in the repo.
+    local ss_label_args=(--label "type/milestone-sync")
+    if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+        ss_label_args+=(--label "type/milestone-bump")
+    fi
+
     if [ -z "$ss_pr" ]; then
         echo "Creating mono/SkiaSharp PR..."
         gh pr create --repo mono/SkiaSharp \
-            --head "$BRANCH" --base main \
+            --head "$BRANCH" --base "$SS_BASE" \
             --title "$SS_TITLE" \
             --draft \
+            "${ss_label_args[@]}" \
             --body "${SS_BODY_INTRO}
 
 $skia_pr_link
@@ -110,6 +171,11 @@ ${SS_SUMMARY}
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/SkiaSharp PR"
     else
         echo "Updating mono/SkiaSharp PR #${ss_pr}..."
+        local ss_add_labels="type/milestone-sync"
+        if [ "$IS_MILESTONE_BUMP" = "true" ]; then
+            ss_add_labels="type/milestone-sync,type/milestone-bump"
+        fi
+        gh pr edit "$ss_pr" --repo mono/SkiaSharp --add-label "$ss_add_labels" || true
         gh pr edit "$ss_pr" --repo mono/SkiaSharp \
             --body "${SS_BODY_INTRO}
 

@@ -2,55 +2,65 @@
 
 using System;
 using System.ComponentModel;
+using System.Threading;
 
 namespace SkiaSharp
 {
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
-		private static readonly SKColorSpace srgb;
-		private static readonly SKColorSpace srgbLinear;
+		private static SKColorSpace srgb;
+		private static bool srgbInitialized;
+		private static object srgbLock = new object ();
 
-		static SKColorSpace ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			srgb = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb ());
-			srgbLinear = new SKColorSpaceStatic (SkiaApi.sk_colorspace_new_srgb_linear ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKColorSpace srgbLinear;
+		private static bool srgbLinearInitialized;
+		private static object srgbLinearLock = new object ();
 
 		internal SKColorSpace (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
 		}
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () =>
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+		{
 			SkiaApi.sk_colorspace_ref (Handle);
+			GC.KeepAlive (this);
+		}
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () =>
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+		{
 			SkiaApi.sk_colorspace_unref (Handle);
+			GC.KeepAlive (this);
+		}
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
 		// properties
 
-		public bool GammaIsCloseToSrgb =>
-			SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
+		public bool GammaIsCloseToSrgb {
+			get {
+				var result = SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public bool GammaIsLinear =>
-			SkiaApi.sk_colorspace_gamma_is_linear (Handle);
+		public bool GammaIsLinear {
+			get {
+				var result = SkiaApi.sk_colorspace_gamma_is_linear (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public bool IsSrgb =>
-			SkiaApi.sk_colorspace_is_srgb (Handle);
+		public bool IsSrgb {
+			get {
+				var result = SkiaApi.sk_colorspace_is_srgb (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public bool IsNumericalTransferFunction =>
 			GetNumericalTransferFunction (out _);
@@ -62,16 +72,28 @@ namespace SkiaSharp
 			if (right == null)
 				throw new ArgumentNullException (nameof (right));
 
-			return SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
+			var result = SkiaApi.sk_colorspace_equals (left.Handle, right.Handle);
+			GC.KeepAlive (left);
+			GC.KeepAlive (right);
+			return result;
 		}
 
 		// CreateSrgb
 
-		public static SKColorSpace CreateSrgb () => srgb;
+		public static SKColorSpace CreateSrgb () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgb, ref srgbInitialized, ref srgbLock,
+				// Immortal Skia singleton (sk_srgb_singleton, function-local static) — never unref it.
+				// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb (), owns: false, unrefExisting: false));
 
 		// CreateSrgbLinear
 
-		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
+		public static SKColorSpace CreateSrgbLinear () =>
+			LazyInitializer.EnsureInitialized (
+				ref srgbLinear, ref srgbLinearInitialized, ref srgbLinearLock,
+				// Immortal Skia singleton (sk_srgb_linear_singleton, function-local static) — never unref it.
+				() => GetDisposeProtectedObject (SkiaApi.sk_colorspace_new_srgb_linear (), owns: false, unrefExisting: false));
 
 		// CreateIcc
 
@@ -123,7 +145,9 @@ namespace SkiaSharp
 		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
 		{
 			fixed (SKColorSpaceTransferFn* f = &fn) {
-				return SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+				var result = SkiaApi.sk_colorspace_is_numerical_transfer_fn (Handle, f);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -133,6 +157,7 @@ namespace SkiaSharp
 		{
 			var profile = new SKColorSpaceIccProfile ();
 			SkiaApi.sk_colorspace_to_profile (Handle, profile.Handle);
+			GC.KeepAlive (this);
 			return profile;
 		}
 
@@ -141,7 +166,9 @@ namespace SkiaSharp
 		public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {
-				return SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+				var result = SkiaApi.sk_colorspace_to_xyzd50 (Handle, xyz);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -150,25 +177,29 @@ namespace SkiaSharp
 
 		// To*Gamma
 
-		public SKColorSpace ToLinearGamma () =>
-			GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+		public SKColorSpace ToLinearGamma ()
+		{
+			var result = GetObject (SkiaApi.sk_colorspace_make_linear_gamma (Handle));
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public SKColorSpace ToSrgbGamma () =>
-			GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+		public SKColorSpace ToSrgbGamma ()
+		{
+			var result = GetObject (SkiaApi.sk_colorspace_make_srgb_gamma (Handle));
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		//
 
 		internal static SKColorSpace GetObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
 			GetOrAddObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 
-		private sealed class SKColorSpaceStatic : SKColorSpace
-		{
-			internal SKColorSpaceStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
+		// Variant used by singleton accessors. The returned wrapper has IgnorePublicDispose
+		// set under HandleDictionary's critical section — atomic with the HD lookup, so
+		// no other thread can observe a non-dispose-protected state.
+		internal static SKColorSpace GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKColorSpace (h, o));
 	}
 }

@@ -37,6 +37,12 @@ stages:
       use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       enableCaching: ${{ parameters.enableCaching }}
 
+  - template: /scripts/azure-templates-stages-native-tizen.yml@self
+    parameters:
+      buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
+      enableCaching: ${{ parameters.enableCaching }}
+
   - template: /scripts/azure-templates-stages-native-merge.yml@self
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}

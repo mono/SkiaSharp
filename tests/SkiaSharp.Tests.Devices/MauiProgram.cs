@@ -29,7 +29,7 @@ namespace SkiaSharp.Tests
 					.AddCliConfiguration()
 					.AddConsoleResultChannel()
 					.AddTestAssemblies(testAssemblies)
-					.AddXunit());
+					.AddXunit3());
 
 #if WINDOWS
 			builder.Logging.AddDebug();

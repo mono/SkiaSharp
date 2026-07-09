@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void PdfFileIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
@@ -24,7 +24,7 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PdfFileWithNonASCIIPathIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + "上田雅美.pdf");
@@ -41,7 +41,7 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XpsFileIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".xps");
@@ -62,7 +62,7 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreatePdf()
 		{
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreatePdfWithMetadata()
 		{
 			var metadata = SKDocumentPdfMetadata.Default;
@@ -111,7 +111,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamDisposeOrder()
 		{
 			using (var stream = new MemoryStream())
@@ -131,7 +131,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateXps()
 		{
 			// XPS is only supported on Windows
@@ -168,7 +168,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateXpsWithOptions()
 		{
 			// XPS is only supported on Windows
@@ -208,7 +208,7 @@ namespace SkiaSharp.Tests
 		}
 
 
-		[SkippableFact]
+		[Fact]
 		public void StreamIsNotCollectedPrematurely()
 		{
 			DoWork(out var handle);

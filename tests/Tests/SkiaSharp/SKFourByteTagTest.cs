@@ -6,21 +6,21 @@ namespace SkiaSharp.Tests
 {
 	public class SKFourByteTagTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagParseProducesCorrectValue ()
 		{
 			var tag = SKFourByteTag.Parse ("wght");
 			Assert.Equal (0x77676874u, (uint)tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagToStringRoundTrips ()
 		{
 			var tag = SKFourByteTag.Parse ("wght");
 			Assert.Equal ("wght", tag.ToString ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagCharConstructorMatchesParse ()
 		{
 			var fromParse = SKFourByteTag.Parse ("wdth");
@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (fromParse, fromChars);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagImplicitConversionRoundTrips ()
 		{
 			SKFourByteTag tag = SKFourByteTag.Parse ("slnt");
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal ("slnt", back.ToString ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagEqualityWorks ()
 		{
 			var a = SKFourByteTag.Parse ("wght");
@@ -53,28 +53,28 @@ namespace SkiaSharp.Tests
 			Assert.False (a == c);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagDefaultIsZero ()
 		{
 			var tag = default(SKFourByteTag);
 			Assert.Equal (0u, (uint)tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagParseEmptyReturnsZero ()
 		{
 			var tag = SKFourByteTag.Parse ("");
 			Assert.Equal (0u, (uint)tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagParseNullReturnsZero ()
 		{
 			var tag = SKFourByteTag.Parse (null);
 			Assert.Equal (0u, (uint)tag);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagParseShortStringPadsWithSpaces ()
 		{
 			// "ab" should become "ab  " (padded with spaces)
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal ("ab  ", tag.ToString ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagParseLongStringTruncates ()
 		{
 			// Only first 4 characters used
@@ -90,7 +90,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal ("abcd", tag.ToString ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagKnownTagValues ()
 		{
 			// Well-known OpenType tag values
@@ -101,7 +101,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (0x6974616Cu, (uint)SKFourByteTag.Parse ("ital"));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagGetHashCodeConsistent ()
 		{
 			var a = SKFourByteTag.Parse ("wght");
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (a.GetHashCode (), b.GetHashCode ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagEqualsObjectWorks ()
 		{
 			var tag = SKFourByteTag.Parse ("wght");
@@ -118,7 +118,7 @@ namespace SkiaSharp.Tests
 			Assert.False (tag.Equals ("wght")); // wrong type
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FourByteTagSurvivesNativeRoundTrip ()
 		{
 			// Create a typeface, clone with a specific tag, read it back

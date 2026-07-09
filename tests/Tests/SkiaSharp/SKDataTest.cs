@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 	{
 		private readonly static byte[] OddData = new byte[] { 1, 3, 5, 7, 9 };
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyDataIsNotDisposed()
 		{
 			var empty = SKData.Empty;
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKData>(empty.Handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyAndZeroLengthSameObject()
 		{
 			var empty = SKData.Empty;
@@ -28,7 +28,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(empty, zero);
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void ValidDataProperties()
 		{
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void AsStreamReturnsCorrectStreamData()
 		{
 			var data = SKData.CreateCopy(OddData);
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanWriteToAsStream()
 		{
 			var data = SKData.Create(5);
@@ -62,7 +62,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCopyToAsStream()
 		{
 			var data = SKData.Create(5);
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(OddData, data.ToArray());
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(null, 0, 0, 0)]
 		[InlineData("", 0, 0, 0)]
 		[InlineData("H", 1, 1, 2)]
@@ -92,7 +92,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(terminatedLength, bytes.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromStream()
 		{
 			using var stream = new SKFileStream(Path.Combine(PathToImages, "baboon.jpg"));
@@ -104,7 +104,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromManagedStream()
 		{
 			using var managed = File.OpenRead(Path.Combine(PathToImages, "baboon.jpg"));
@@ -115,7 +115,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
@@ -124,7 +124,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DataCanBeCreatedFromNonASCIIFile()
 		{
 			var data = SKData.Create(Path.Combine(PathToImages, "上田雅美.jpg"));
@@ -133,7 +133,7 @@ namespace SkiaSharp.Tests
 			Assert.True(data.Size > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NoDelegateDataCanBeCreated()
 		{
 			var memory = Marshal.AllocCoTaskMem(10);
@@ -147,7 +147,7 @@ namespace SkiaSharp.Tests
 			Marshal.FreeCoTaskMem(memory);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReleaseDataWasInvoked()
 		{
 			bool released = false;
@@ -170,7 +170,7 @@ namespace SkiaSharp.Tests
 			Assert.True(released, "The SKDataReleaseDelegate was not called.");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromNonSeekable()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -180,7 +180,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(data);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromPartiallyReadStream()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -193,7 +193,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateFromPartiallyReadNonSeekable()
 		{
 			using var stream = File.OpenRead(Path.Combine(PathToImages, "baboon.png"));
@@ -206,7 +206,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(stream.Length - 10, data.Size);
 		}
 
-		[SkippableFact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
+		[Fact(Skip = "Doesn't work as it relies on memory being overwritten by an external process.")]
 		public void DataDisposedReturnsInvalidStream()
 		{
 			// create data

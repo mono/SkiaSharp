@@ -67,6 +67,27 @@ This outputs:
 | Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
 | Native ⚠️ (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
 
+### Job-Level Details (In-Progress Builds)
+
+When a pipeline is `inProgress`, the script queries the ADO timeline API and shows job-level
+breakdown below the pipeline entry:
+
+```
+┌─ SkiaSharp-Native (ID 26493) — native binaries
+│  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+│  
+│  Jobs: 35 ✅ completed | 2 ❌ failed | 8 🔄 running | 3 ⏳ pending
+│  Failed: Job_Name_1, Job_Name_2
+│  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
+│  Pending: Wasm, Linux ARM, Linux ARM64
+```
+
+**Reading job status:**
+- **Completed count** — jobs that finished successfully (or with warnings)
+- **Failed list** — jobs that failed (names shown so you can investigate)
+- **Running list** — jobs actively executing (tells you what's left)
+- **Pending list** — jobs not yet started (queued or waiting for agents)
+
 ---
 
 ## Step 3: Report to User

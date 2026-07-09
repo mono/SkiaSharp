@@ -125,7 +125,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			// Draw checkered background for transparency
 			DrawCheckerboard(canvas, destRect);
 
-			canvas.DrawBitmap(bitmap, destRect);
+			canvas.DrawBitmap(bitmap, destRect, SKSamplingOptions.Default);
 
 			if (_showInfo)
 				DrawMetadata(canvas, width, height, codec, info);
@@ -213,7 +213,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		var y = boxTop + padding + fontSize;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, boxLeft + padding, y, font, textPaint);
+			canvas.DrawText(line, boxLeft + padding, y, SKTextAlign.Left, font, textPaint);
 			y += lineHeight;
 		}
 	}

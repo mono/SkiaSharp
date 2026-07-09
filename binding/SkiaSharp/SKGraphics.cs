@@ -59,7 +59,10 @@ namespace SkiaSharp
 
 		// dump
 
-		public static void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
+		public static void DumpMemoryStatistics (SKTraceMemoryDump dump)
+		{
 			SkiaApi.sk_graphics_dump_memory_statistics (dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
+			GC.KeepAlive (dump);
+		}
 	}
 }

@@ -15,7 +15,7 @@ namespace SkiaSharp.Tests
 				"LottieLogo1_bom.json",
 			};
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("LottieLogo1.json", 0)]
 		[InlineData("LottieLogo1_bom.json", 3)]
 		public void EnsureLottieHasCorrectPreamble(string filename, int preamble)
@@ -26,7 +26,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(preamble, Utils.GetPreambleSize(data));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryParse(string filename)
 		{
@@ -40,7 +40,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Parse(string filename)
 		{
@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryCreate_From_SKData(string filename)
 		{
@@ -66,7 +66,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Create_From_SKData(string filename)
 		{
@@ -78,7 +78,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryCreate_From_SKStream(string filename)
 		{
@@ -92,7 +92,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Create_From_SKStream(string filename)
 		{
@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryCreate_From_Stream(string filename)
 		{
@@ -117,7 +117,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Create_From_Stream(string filename)
 		{
@@ -129,7 +129,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryCreate_From_NonSeekableStream(string filename)
 		{
@@ -142,7 +142,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Create_From_NonSeekableStream(string filename)
 		{
@@ -155,7 +155,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_TryCreate_From_File(string filename)
 		{
@@ -166,7 +166,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, animation?.Handle);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(DefaultLottieFiles))]
 		public void When_Default_Create_From_File(string filename)
 		{
@@ -191,7 +191,7 @@ namespace SkiaSharp.Tests
 			return animation;
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Seek_Without_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -199,7 +199,7 @@ namespace SkiaSharp.Tests
 			animation.Seek(.1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Seek_With_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -209,7 +209,7 @@ namespace SkiaSharp.Tests
 			animation.Seek(.1, controller);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrame_Without_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -217,7 +217,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrame(.1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrame_With_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -227,7 +227,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrame(.1, controller);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrameTime_Without_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -235,7 +235,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrameTime(.1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrameTime_With_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -245,7 +245,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrameTime(.1, controller);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrameTimeSpan_Without_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -253,7 +253,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrameTime(TimeSpan.FromSeconds(.1));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_SeekFrameTimeSpan_With_Controller()
 		{
 			var animation = BuildDefaultAnimation();
@@ -263,7 +263,7 @@ namespace SkiaSharp.Tests
 			animation.SeekFrameTime(TimeSpan.FromSeconds(.1), controller);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Duration()
 		{
 			var animation = BuildDefaultAnimation();
@@ -271,7 +271,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(TimeSpan.FromSeconds(5.9666666), animation.Duration);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Fps()
 		{
 			var animation = BuildDefaultAnimation();
@@ -279,7 +279,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(30, animation.Fps);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_InPoint()
 		{
 			var animation = BuildDefaultAnimation();
@@ -287,7 +287,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, animation.InPoint);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_OutPoint()
 		{
 			var animation = BuildDefaultAnimation();
@@ -295,7 +295,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(179, animation.OutPoint);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Version()
 		{
 			var animation = BuildDefaultAnimation();
@@ -303,7 +303,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal("4.4.26", animation.Version);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void When_Size()
 		{
 			var animation = BuildDefaultAnimation();
@@ -311,7 +311,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKSize(375, 667), animation.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void Can_Render()
 		{
 			var animation = BuildDefaultAnimation();
@@ -328,7 +328,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(beforePixels, afterPixels);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void Can_Not_Render_With_Base64()
 		{
 			var animation = BuildAnimation("lottie-base64_dotnet-bot.json");

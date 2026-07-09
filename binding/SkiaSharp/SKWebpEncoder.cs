@@ -12,7 +12,10 @@ public static unsafe class SKWebpEncoder
 		_ = dst ?? throw new ArgumentNullException (nameof (dst));
 		_ = src ?? throw new ArgumentNullException (nameof (src));
 
-		return SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, &options);
+		var result = SkiaApi.sk_webpencoder_encode (dst.Handle, src.Handle, &options);
+		GC.KeepAlive (dst);
+		GC.KeepAlive (src);
+		return result;
 	}
 
 	public static bool Encode (Stream dst, SKPixmap src, SKWebpEncoderOptions options)
@@ -49,7 +52,9 @@ public static unsafe class SKWebpEncoder
 		}
 
 		fixed (SKWebpEncoderFrameNative* f = nativeFrames.Span) {
-			return SkiaApi.sk_webpencoder_encode_animated (dst.Handle, f, frames.Length, &options);
+			var result = SkiaApi.sk_webpencoder_encode_animated (dst.Handle, f, frames.Length, &options);
+			GC.KeepAlive (dst);
+			return result;
 		}
 	}
 

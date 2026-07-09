@@ -48,7 +48,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (expectations.Take (bytesRead), storage.Take (bytesRead));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -76,7 +76,7 @@ namespace SkiaSharp.Tests
 			test_read (bufferedStream, gAbcs, bufferSize);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 			test_rewind (bufferedStream, false);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -134,7 +134,7 @@ namespace SkiaSharp.Tests
 			test_rewind (bufferedStream, false);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -187,7 +187,7 @@ namespace SkiaSharp.Tests
 			protected internal override bool OnHasPosition () => fHasPosition;
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData (6)]
 		[InlineData (15)]
 		[InlineData (64)]
@@ -232,7 +232,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";
@@ -243,7 +243,7 @@ namespace SkiaSharp.Tests
 			test_fully_peekable_stream (memStream, memStream.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek2 ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";
@@ -275,7 +275,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamPeek3 ()
 		{
 			var gAbcsString = "abcdefghijklmnopqrstuvwxyz";

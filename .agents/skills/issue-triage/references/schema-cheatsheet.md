@@ -22,11 +22,13 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
   "platforms": ["<classifiedPlatform>", ...],   // optional, plain strings NOT objects
   "backends": ["<classifiedBackend>", ...],     // optional, plain strings NOT objects
   "tenets": ["<classifiedTenet>", ...],         // optional, plain strings NOT objects
+  "perf": ["<classifiedPerf>", ...],            // optional, plain strings NOT objects; if non-empty add tenet/performance
   "partner": "<classifiedPartner>"              // optional, plain string NOT object
 }
 ```
 
-⚠️ `platforms`, `backends`, `tenets` are **plain string arrays** — NOT `{value, confidence}` objects.
+⚠️ `platforms`, `backends`, `tenets`, `perf` are **plain string arrays** — NOT `{value, confidence}` objects.
+⚠️ Any `perf/*` label implies `tenet/performance` — when `perf` is non-empty, include `tenet/performance` in `tenets`.
 
 ## Evidence & Analysis Fields
 
@@ -53,6 +55,8 @@ Read this BEFORE generating JSON. Full schema: `references/triage-schema.json`.
 | **classifiedArea** | `area/Build`, `area/Docs`, `area/HarfBuzzSharp`, `area/SkiaSharp`, `area/SkiaSharp.HarfBuzz`, `area/SkiaSharp.Views`, `area/SkiaSharp.Views.Blazor`, `area/SkiaSharp.Views.Forms`, `area/SkiaSharp.Views.Maui`, `area/SkiaSharp.Views.Uno`, `area/SkiaSharp.Workbooks`, `area/libHarfBuzzSharp.native`, `area/libSkiaSharp.native` |
 | **classifiedPlatform** | `os/Android`, `os/Linux`, `os/Tizen`, `os/WASM`, `os/Windows-Classic`, `os/Windows-Nano-Server`, `os/Windows-Universal-UWP`, `os/Windows-WinUI`, `os/iOS`, `os/macOS`, `os/tvOS`, `os/watchOS` |
 | **classifiedBackend** | `backend/Direct3D`, `backend/Metal`, `backend/OpenGL`, `backend/PDF`, `backend/Raster`, `backend/SVG`, `backend/Vulkan`, `backend/XPS` |
+| **classifiedTenet** | `tenet/compatibility`, `tenet/performance`, `tenet/reliability` |
+| **classifiedPerf** | `perf/allocations`, `perf/interop`, `perf/memory-leak`, `perf/rendering`, `perf/size`, `perf/startup`, `perf/throughput` — sub-type of `tenet/performance`; if any is set, also set `tenet/performance` |
 | **suggestedAction** | `needs-info`, `needs-reproduction`, `needs-investigation`, `ready-to-fix`, `keep-open`, `close-as-fixed`, `close-as-duplicate`, `close-as-not-a-bug`, `close-as-external` |
 | **errorType** | `crash`, `exception`, `memory-leak`, `build-error`, `wrong-output`, `missing-output`, `missing-api`, `performance`, `platform-specific`, `other` |
 | **severity** | `critical`, `high`, `medium`, `low` |

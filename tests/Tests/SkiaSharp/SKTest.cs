@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using Xunit.Abstractions;
 using SkiaSharp.Extended;
 
 namespace SkiaSharp.Tests
@@ -240,7 +239,8 @@ namespace SkiaSharp.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"Unable to create GL context: {ex.Message}");
+				Assert.Skip($"Unable to create GL context: {ex.Message}");
+				throw;
 			}
 		}
 

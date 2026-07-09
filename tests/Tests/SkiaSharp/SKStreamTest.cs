@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKStreamTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanWriteTextToStream()
 		{
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SupportsNonASCIICharactersInPath()
 		{
 			var path = Path.Combine(PathToImages, "上田雅美.jpg");
@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WriteableFileStreamSelectCorrectStreamForASCIIPath()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".jpg");
@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WriteableFileStreamSelectCorrectStreamForNonASCIIPath()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + "-上田雅美.jpg");
@@ -57,7 +57,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FileStreamSelectCorrectStreamForASCIIPath()
 		{
 			var path = Path.Combine(PathToImages, "baboon.jpg");
@@ -68,7 +68,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FileStreamSelectCorrectStreamForNonASCIIPath()
 		{
 			var path = Path.Combine(PathToImages, "上田雅美.jpg");
@@ -80,7 +80,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FileStreamForMissingFile()
 		{
 			var path = Path.Combine(PathToImages, "missing-image.png");
@@ -93,7 +93,7 @@ namespace SkiaSharp.Tests
 			Assert.False(stream.IsValid);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GarbageCollectionCollectsStreams()
 		{
 			SkipOnMono();
@@ -114,7 +114,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MemoryStreamCanBeDuplicated()
 		{
 			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -132,7 +132,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(3, dupe.ReadByte());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MemoryStreamCanBeForked()
 		{
 			var stream = new SKMemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -148,7 +148,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(4, stream.ReadByte());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MemoryStreamGetDataReturnsBackingData()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40, 50 };
@@ -162,7 +162,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, result.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MemoryStreamGetDataFromByteArrayReturnsData()
 		{
 			var bytes = new byte[] { 1, 2, 3 };
@@ -175,7 +175,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, result.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MemoryStreamGetDataIsZeroCopy()
 		{
 			var bytes = new byte[] { 100, 200 };
@@ -190,7 +190,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(result1.Data, result2.Data);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FileStreamGetDataReturnsNull()
 		{
 			var path = Path.Combine(PathToImages, "baboon.jpg");
@@ -201,7 +201,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyMemoryStreamGetDataReturnsEmptyData()
 		{
 			using var stream = new SKMemoryStream();
@@ -212,7 +212,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, (int)result.Size);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetDataInteropRoundTrip()
 		{
 			var bytes = new byte[] { 0xDE, 0xAD, 0xBE, 0xEF };
@@ -225,7 +225,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, result.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamGetDataReturnsNull()
 		{
 			using var memoryStream = new MemoryStream(new byte[] { 1, 2, 3 });
@@ -236,7 +236,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamGetDataReturnsNullForNonSeekableStream()
 		{
 			using var inner = new MemoryStream(new byte[] { 10, 20, 30 });
@@ -248,7 +248,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamGetDataReturnsNullEvenAfterRead()
 		{
 			using var memoryStream = new MemoryStream(new byte[] { 1, 2, 3, 4, 5 });
@@ -263,7 +263,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetDataReturnsSameManagedObject()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40 };
@@ -276,7 +276,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(data, result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetDataSurvivesStreamDisposal()
 		{
 			var bytes = new byte[] { 10, 20, 30, 40 };
@@ -293,7 +293,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bytes, data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetDataSurvivesNativeCreatedStreamDisposal()
 		{
 			var bytes = new byte[] { 0xCA, 0xFE, 0xBA, 0xBE };

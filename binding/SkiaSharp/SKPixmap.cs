@@ -56,6 +56,7 @@ namespace SkiaSharp
 		public void Reset ()
 		{
 			SkiaApi.sk_pixmap_reset (Handle);
+			GC.KeepAlive (this);
 			pixelSource = null;
 		}
 
@@ -63,6 +64,7 @@ namespace SkiaSharp
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
 			SkiaApi.sk_pixmap_reset_with_params (Handle, &cinfo, (void*)addr, (IntPtr)rowBytes);
+			GC.KeepAlive (this);
 			pixelSource = null;
 		}
 
@@ -72,6 +74,7 @@ namespace SkiaSharp
 			get {
 				SKImageInfoNative cinfo;
 				SkiaApi.sk_pixmap_get_info (Handle, &cinfo);
+				GC.KeepAlive (this);
 				return SKImageInfoNative.ToManaged (ref cinfo);
 			}
 		}
@@ -93,14 +96,25 @@ namespace SkiaSharp
 
 		public SKAlphaType AlphaType => Info.AlphaType;
 
-		public SKColorSpace? ColorSpace =>
-			SKColorSpace.GetObject (SkiaApi.sk_pixmap_get_colorspace (Handle));
+		public SKColorSpace? ColorSpace {
+			get {
+				var result = SKColorSpace.GetObject (SkiaApi.sk_pixmap_get_colorspace (Handle));
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public int BytesPerPixel => Info.BytesPerPixel;
 
 		public int BitShiftPerPixel => Info.BitShiftPerPixel;
 
-		public int RowBytes => (int)SkiaApi.sk_pixmap_get_row_bytes (Handle);
+		public int RowBytes {
+			get {
+				var result = (int)SkiaApi.sk_pixmap_get_row_bytes (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public int BytesSize => Info.BytesSize;
 
@@ -108,11 +122,19 @@ namespace SkiaSharp
 
 		// pixels
 
-		public IntPtr GetPixels () =>
-			(IntPtr)SkiaApi.sk_pixmap_get_writable_addr (Handle);
+		public IntPtr GetPixels ()
+		{
+			var result = (IntPtr)SkiaApi.sk_pixmap_get_writable_addr (Handle);
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public IntPtr GetPixels (int x, int y) =>
-			(IntPtr)SkiaApi.sk_pixmap_get_writeable_addr_with_xy (Handle, x, y);
+		public IntPtr GetPixels (int x, int y)
+		{
+			var result = (IntPtr)SkiaApi.sk_pixmap_get_writeable_addr_with_xy (Handle, x, y);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public Span<byte> GetPixelSpan () =>
 			GetPixelSpan<byte> (0, 0);
@@ -137,16 +159,27 @@ namespace SkiaSharp
 			if (bpp <= 0)
 				return null;
 
-			var spanLength = 0;
-			var spanOffset = 0;
+			if (x < 0 || x >= info.Width)
+				throw new ArgumentOutOfRangeException (nameof (x));
+			if (y < 0 || y >= info.Height)
+				throw new ArgumentOutOfRangeException (nameof (y));
+
+			// use the actual stride of the pixmap as it may differ from
+			// (Width * BytesPerPixel) when the pixmap is a subset of a larger one
+			var rowBytes = RowBytes;
+
+			int spanLength;
+			int spanOffset;
 			if (typeof (T) == typeof (byte))
 			{
-				// byte is always valid
+				// byte is always valid, so work in bytes
 
-				spanLength = info.BytesSize;
-
-				if (x != 0 || y != 0)
-					spanOffset = info.GetPixelBytesOffset (x, y);
+				// the span covers from the first pixel up to and including the
+				// last valid pixel of the last row, accounting for row padding
+				spanLength = checked((info.Height - 1) * rowBytes + info.Width * bpp);
+				spanOffset = (x != 0 || y != 0)
+					? info.GetPixelBytesOffset (x, y, rowBytes)
+					: 0;
 			}
 			else
 			{
@@ -156,13 +189,25 @@ namespace SkiaSharp
 				if (bpp != size)
 					throw new ArgumentException ($"Size of T ({size}) is not the same as the size of each pixel ({bpp}).", nameof (T));
 
-				spanLength = info.Width * info.Height;
+				// a typed span cannot represent a row stride that is not a whole
+				// number of T elements, but only when the span actually spans
+				// multiple rows; a single-row pixmap never crosses the stride so
+				// any stride is fine (the byte overload supports any stride too)
+				if (info.Height > 1 && rowBytes % size != 0)
+					throw new ArgumentException ($"The row stride ({rowBytes}) is not a multiple of the size of each pixel ({size}).");
 
-				if (x != 0 || y != 0)
-					spanOffset = y * info.Height + x;
+				// work in T elements: since each pixel is exactly one T, the only
+				// unit conversion is the stride from bytes to elements
+				var rowLength = rowBytes / size;
+
+				spanLength = checked((info.Height - 1) * rowLength + info.Width);
+				spanOffset = (x != 0 || y != 0)
+					? checked(y * rowLength + x)
+					: 0;
 			}
 
 			var addr = SkiaApi.sk_pixmap_get_writable_addr (Handle);
+			GC.KeepAlive (this);
 			var span = new Span<T> (addr, spanLength);
 
 			if (spanOffset != 0)
@@ -171,22 +216,31 @@ namespace SkiaSharp
 			return span;
 		}
 
-		public SKColor GetPixelColor (int x, int y) =>
-			SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+		public SKColor GetPixelColor (int x, int y)
+		{
+			var result = SkiaApi.sk_pixmap_get_pixel_color (Handle, x, y);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public SKColorF GetPixelColorF (int x, int y)
 		{
 			SKColorF color;
 			SkiaApi.sk_pixmap_get_pixel_color4f (Handle, x, y, &color);
+			GC.KeepAlive (this);
 			return color;
 		}
 
-		public float GetPixelAlpha (int x, int y) =>
-			SkiaApi.sk_pixmap_get_pixel_alphaf (Handle, x, y);
+		public float GetPixelAlpha (int x, int y)
+		{
+			var result = SkiaApi.sk_pixmap_get_pixel_alphaf (Handle, x, y);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		// ScalePixels
 
-		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
+		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.", error: true)]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
 
@@ -196,7 +250,10 @@ namespace SkiaSharp
 		public bool ScalePixels (SKPixmap destination, SKSamplingOptions sampling)
 		{
 			_ = destination ?? throw new ArgumentNullException (nameof (destination));
-			return SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, &sampling);
+			var result = SkiaApi.sk_pixmap_scale_pixels (Handle, destination.Handle, &sampling);
+			GC.KeepAlive (this);
+			GC.KeepAlive (destination);
+			return result;
 		}
 
 		// ReadPixels
@@ -204,7 +261,9 @@ namespace SkiaSharp
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
-			return SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			var result = SkiaApi.sk_pixmap_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes) =>
@@ -264,7 +323,10 @@ namespace SkiaSharp
 		public bool Encode (SKWStream dst, SKWebpEncoderOptions options)
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
+			var result = SkiaApi.sk_webpencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
+			GC.KeepAlive (dst);
+			return result;
 		}
 
 		// Encode (jpeg)
@@ -286,7 +348,10 @@ namespace SkiaSharp
 		public bool Encode (SKWStream dst, SKJpegEncoderOptions options)
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
+			var result = SkiaApi.sk_jpegencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
+			GC.KeepAlive (dst);
+			return result;
 		}
 
 		// Encode (png)
@@ -308,7 +373,10 @@ namespace SkiaSharp
 		public bool Encode (SKWStream dst, SKPngEncoderOptions options)
 		{
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
+			var result = SkiaApi.sk_pngencoder_encode (dst.Handle, Handle, &options);
+			GC.KeepAlive (this);
+			GC.KeepAlive (dst);
+			return result;
 		}
 
 		// ExtractSubset
@@ -326,7 +394,10 @@ namespace SkiaSharp
 		public bool ExtractSubset (SKPixmap result, SKRectI subset)
 		{
 			_ = result ?? throw new ArgumentNullException (nameof (result));
-			return SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
+			var extracted = SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
+			GC.KeepAlive (this);
+			GC.KeepAlive (result);
+			return extracted;
 		}
 
 		// Erase
@@ -334,19 +405,31 @@ namespace SkiaSharp
 		public bool Erase (SKColor color) =>
 			Erase (color, Rect);
 
-		public bool Erase (SKColor color, SKRectI subset) =>
-			SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
+		public bool Erase (SKColor color, SKRectI subset)
+		{
+			var result = SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public bool Erase (SKColorF color) =>
 			Erase (color, Rect);
 
-		public bool Erase (SKColorF color, SKRectI subset) =>
-			SkiaApi.sk_pixmap_erase_color4f (Handle, &color, &subset);
+		public bool Erase (SKColorF color, SKRectI subset)
+		{
+			var result = SkiaApi.sk_pixmap_erase_color4f (Handle, &color, &subset);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		// ComputeIsOpaque
 
-		public bool ComputeIsOpaque () =>
-			SkiaApi.sk_pixmap_compute_is_opaque (Handle);
+		public bool ComputeIsOpaque ()
+		{
+			var result = SkiaApi.sk_pixmap_compute_is_opaque (Handle);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		// With*
 

@@ -4,6 +4,12 @@
     <namespace fullname="System" preserve="all" />
     <namespace fullname="System.Collections.Generic" preserve="all" />
     <namespace fullname="System.Linq" preserve="all" />
+    <!-- Snippets are compiled by the in-browser Roslyn against the trimmed runtime
+         metadata (see RoslynFiddleCompiler.GetReferences). The C# compiler lowers every
+         formatted/aligned interpolated string ($"{x:F2}", $"{x,8}") to calls on this
+         handler, so its AppendFormatted overloads must survive trimming or such snippets
+         fail to compile with CS1739. -->
+    <type fullname="System.Runtime.CompilerServices.DefaultInterpolatedStringHandler" preserve="all" />
   </assembly>
   <assembly fullname="System.Collections.Immutable" preserve="all" />
   <assembly fullname="System.Reflection.Metadata" preserve="all" />

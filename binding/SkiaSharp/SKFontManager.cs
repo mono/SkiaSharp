@@ -5,28 +5,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace SkiaSharp
 {
 	public unsafe class SKFontManager : SKObject, ISKReferenceCounted
 	{
-		private static readonly SKFontManager defaultManager;
-
-		static SKFontManager ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			defaultManager = new SKFontManagerStatic (SkiaApi.sk_fontmgr_create_default ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKFontManager defaultManager;
+		private static bool defaultManagerInitialized;
+		private static object defaultManagerLock = new object ();
 
 		internal SKFontManager (IntPtr handle, bool owns)
 			: base (handle, owns)
@@ -36,9 +23,18 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public static SKFontManager Default => defaultManager;
+		public static SKFontManager Default =>
+			LazyInitializer.EnsureInitialized (
+				ref defaultManager, ref defaultManagerInitialized, ref defaultManagerLock,
+				() => GetDisposeProtectedObject (SkiaApi.sk_fontmgr_create_default ()));
 
-		public int FontFamilyCount => SkiaApi.sk_fontmgr_count_families (Handle);
+		public int FontFamilyCount {
+			get {
+				var r = SkiaApi.sk_fontmgr_count_families (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		public IEnumerable<string> FontFamilies {
 			get {
@@ -53,6 +49,7 @@ namespace SkiaSharp
 		{
 			using var str = new SKString ();
 			SkiaApi.sk_fontmgr_get_family_name (Handle, index, str.Handle);
+			GC.KeepAlive (this);
 			return (string)str;
 		}
 
@@ -60,14 +57,18 @@ namespace SkiaSharp
 
 		public SKFontStyleSet GetFontStyles (int index)
 		{
-			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+			var styleSet = SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
+			GC.KeepAlive (this);
+			return styleSet;
 		}
 
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr (familyNamePointer)));
+				var styleSet = SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_match_family (Handle, new IntPtr (familyNamePointer)));
+				GC.KeepAlive (this);
+				return styleSet;
 			}
 		}
 
@@ -80,9 +81,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (style));
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style (Handle, new IntPtr (familyNamePointer), style.Handle));
-				tf?.PreventPublicDisposal ();
-				return tf;
+				var typeface = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style (Handle, new IntPtr (familyNamePointer), style.Handle));
+				GC.KeepAlive (style);
+				GC.KeepAlive (this);
+				return typeface;
 			}
 		}
 
@@ -93,7 +95,9 @@ namespace SkiaSharp
 
 			var utf8path = StringUtilities.GetEncodedText (path, SKTextEncoding.Utf8, true);
 			fixed (byte* u = utf8path) {
-				return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+				var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_file (Handle, u, index));
+				GC.KeepAlive (this);
+				return typeface;
 			}
 		}
 
@@ -116,6 +120,7 @@ namespace SkiaSharp
 			}
 
 			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_stream (Handle, stream.Handle, index));
+			GC.KeepAlive (this);
 			stream.RevokeOwnership (typeface);
 			return typeface;
 		}
@@ -125,7 +130,10 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 
-			return SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
+			var typeface = SKTypeface.GetObject (SkiaApi.sk_fontmgr_create_from_data (Handle, data.Handle, index));
+			GC.KeepAlive (data);
+			GC.KeepAlive (this);
+			return typeface;
 		}
 
 		public SKTypeface MatchCharacter (char character)
@@ -184,9 +192,10 @@ namespace SkiaSharp
 
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
 			fixed (byte* familyNamePointer = familyNameUtf8ByteList) {
-				var tf = SKTypeface.GetObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, new IntPtr (familyNamePointer), style.Handle, bcp47, bcp47?.Length ?? 0, character));
-				tf?.PreventPublicDisposal ();
-				return tf;
+				var typeface = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontmgr_match_family_style_character (Handle, new IntPtr (familyNamePointer), style.Handle, bcp47, bcp47?.Length ?? 0, character));
+				GC.KeepAlive (style);
+				GC.KeepAlive (this);
+				return typeface;
 			}
 		}
 
@@ -200,16 +209,8 @@ namespace SkiaSharp
 		internal static SKFontManager GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKFontManager (h, o));
 
-		//
+		internal static SKFontManager GetDisposeProtectedObject (IntPtr handle) =>
+			GetOrAddDisposeProtectedObject (handle, owns: true, unrefExisting: true, (h, o) => new SKFontManager (h, o));
 
-		private sealed class SKFontManagerStatic : SKFontManager
-		{
-			internal SKFontManagerStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }

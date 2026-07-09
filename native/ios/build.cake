@@ -56,6 +56,7 @@ Task("libSkiaSharp")
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
             $"skia_use_metal=true " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_libjpeg_turbo=false " +
@@ -63,7 +64,7 @@ Task("libSkiaSharp")
             $"skia_use_system_libwebp=false " +
             $"skia_use_system_zlib=false " +
             $"skia_enable_skottie=true " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_ARC4RANDOM_BUF' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DHAVE_ARC4RANDOM_BUF' ] " +
             ADDITIONAL_GN_ARGS);
 
         RunXCodeBuild("libSkiaSharp/libSkiaSharp.xcodeproj", "libSkiaSharp", sdk, xcodeArch, properties: new Dictionary<string, string> {

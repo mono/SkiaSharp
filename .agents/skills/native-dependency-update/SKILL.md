@@ -34,7 +34,7 @@ You MUST complete ALL phases in order. Do not skip phases to save time.
 
 Before starting, confirm you will:
 - [ ] Complete Phase 0-8 in order
-- [ ] Update DEPS, `externals/skia` submodule, AND `cgmanifest.json`
+- [ ] Update DEPS, `externals/skia` submodule, `cgmanifest.json`, AND `scripts/VERSIONS.txt` (for independently-versioned deps — e.g. harfbuzz)
 - [ ] Build and test locally before any PR
 - [ ] Create PRs (never push directly to protected branches)
 - [ ] Stop and ask at every 🛑 checkpoint
@@ -90,6 +90,7 @@ All dependency updates are assumed security-sensitive. These rules apply to EVER
 | Skip native build phase | CI is too slow; must verify locally first |
 | Manually close issues | Breaks audit trail; PR merge auto-closes |
 | Skip `cgmanifest.json` update | Security compliance requires it |
+| Skip `scripts/VERSIONS.txt` for an independently-versioned dep (harfbuzz) | Native soname, DLL FileVersion, and NuGet version drift out of sync with the actual binary |
 | Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
 | Revert/undo pushed commits | Fix forward with new commit instead |
 | **Merge both PRs without updating submodule in between** | **Squash-merge creates new SHA; submodule points to orphaned commit; BREAKS USERS** |
@@ -163,9 +164,23 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 1. Edit `externals/skia/DEPS` with new commit hash
 2. Update BUILD.gn if needed (rare)
 3. **Update `cgmanifest.json`** with new version (required for CVE detection)
-4. Checkout new version in dependency directory
+4. **Update `scripts/VERSIONS.txt`** — only for deps that ship their own native library / NuGet package. Among the bumpable deps this is currently **only harfbuzz** (libpng, zlib, expat, libwebp, freetype, libjpeg-turbo are statically linked into `libSkiaSharp` and have NO `VERSIONS.txt` entry — skip this step for them). See [VERSIONS.txt updates](#versionstxt-updates-harfbuzz) below.
+5. Checkout new version in dependency directory
 
 👉 See [documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md#cgmanifestjson) for the cgmanifest format.
+
+#### VERSIONS.txt updates (harfbuzz)
+
+When bumping **harfbuzz** to `{major}.{minor}.{micro}`, update ALL of these lines in `scripts/VERSIONS.txt` (they otherwise drift out of sync with the binary — the soname/file lines drive the actual native `.so` soname and DLL `FileVersion`):
+
+| Entry | Line format | Value for `X.Y.Z` |
+|-------|-------------|-------------------|
+| `harfbuzz` | `release` | `X.Y.Z` |
+| `HarfBuzz` | `soname` | `0.<60000 + X*100 + Y*10 + Z>.0` (e.g. 14.2.1 → `0.61421.0`) |
+| `HarfBuzzSharp` | `file` | `X.Y.Z` |
+| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z` (≈10 lines) |
+
+The soname formula is documented in a comment directly above the `HarfBuzz soname` line. Verify your result with `grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt` — no stale version should remain.
 
 ### Phase 4: Build & Test
 
@@ -267,6 +282,7 @@ Before proceeding, verify ALL of these:
 - [ ] mono/SkiaSharp PR targets `{skiasharp_target_branch}` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (check with `git submodule status`)
 - [ ] `cgmanifest.json` updated with new version
+- [ ] `scripts/VERSIONS.txt` updated for independently-versioned deps (harfbuzz: `release`, `soname`, `file`, all `nuget` lines) — N/A for statically-linked deps
 - [ ] Both PRs cross-reference each other
 - [ ] **No security details in any public artifact** (see Security Rules above)
 

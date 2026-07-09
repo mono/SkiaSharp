@@ -274,7 +274,7 @@ public class HeroImageSample : CanvasSampleBase
 			Shader = titleShader,
 			IsAntialias = true,
 		};
-		canvas.DrawText(titleText, titleX, titleY, titleFont, titlePaint);
+		canvas.DrawText(titleText, titleX, titleY, SKTextAlign.Left, titleFont, titlePaint);
 	}
 
 	private static void DrawFrostedCard(SKCanvas canvas, SKImage bgSnapshot, SKRect cardRect)
@@ -290,7 +290,7 @@ public class HeroImageSample : CanvasSampleBase
 			ImageFilter = SKImageFilter.CreateBlur(20, 20),
 			IsAntialias = true,
 		};
-		canvas.DrawImage(bgSnapshot, 0, 0, blurPaint);
+		canvas.DrawImage(bgSnapshot, 0, 0, SKSamplingOptions.Default, blurPaint);
 
 		using var glassPaint = new SKPaint
 		{

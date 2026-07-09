@@ -30,8 +30,11 @@ namespace SkiaSharp
 
 		public static SKImageFilter CreateMatrix (in SKMatrix matrix, SKSamplingOptions sampling, SKImageFilter? input)
 		{
-			fixed (SKMatrix* m = &matrix)
-				return GetObject (SkiaApi.sk_imagefilter_new_matrix_transform (m, &sampling, input?.Handle ?? IntPtr.Zero));
+			fixed (SKMatrix* m = &matrix) {
+				var filter = GetObject (SkiaApi.sk_imagefilter_new_matrix_transform (m, &sampling, input?.Handle ?? IntPtr.Zero));
+				GC.KeepAlive (input);
+				return filter;
+			}
 		}
 
 		// CreateBlur
@@ -54,8 +57,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter? input, SKRect cropRect) =>
 			CreateBlur (sigmaX, sigmaY, tileMode, input, &cropRect);
 
-		private static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_blur (sigmaX, sigmaY, tileMode, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateBlur (float sigmaX, float sigmaY, SKShaderTileMode tileMode, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_blur (sigmaX, sigmaY, tileMode, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateColorFilter
 
@@ -71,7 +78,10 @@ namespace SkiaSharp
 		private static SKImageFilter CreateColorFilter (SKColorFilter cf, SKImageFilter? input, SKRect* cropRect)
 		{
 			_ = cf ?? throw new ArgumentNullException (nameof (cf));
-			return GetObject (SkiaApi.sk_imagefilter_new_color_filter (cf.Handle, input?.Handle ?? IntPtr.Zero, cropRect));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_color_filter (cf.Handle, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (cf);
+			GC.KeepAlive (input);
+			return filter;
 		}
 
 		// CreateCompose
@@ -80,7 +90,25 @@ namespace SkiaSharp
 		{
 			_ = outer ?? throw new ArgumentNullException (nameof (outer));
 			_ = inner ?? throw new ArgumentNullException (nameof (inner));
-			return GetObject (SkiaApi.sk_imagefilter_new_compose (outer.Handle, inner.Handle));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_compose (outer.Handle, inner.Handle));
+			GC.KeepAlive (outer);
+			GC.KeepAlive (inner);
+			return filter;
+		}
+
+		// CreateCrop
+
+		public static SKImageFilter CreateCrop (SKRect rect) =>
+			CreateCrop (rect, SKShaderTileMode.Decal, null);
+
+		public static SKImageFilter CreateCrop (SKRect rect, SKShaderTileMode tileMode) =>
+			CreateCrop (rect, tileMode, null);
+
+		public static SKImageFilter CreateCrop (SKRect rect, SKShaderTileMode tileMode, SKImageFilter? input)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_crop (&rect, tileMode, input?.Handle ?? IntPtr.Zero));
+			GC.KeepAlive (input);
+			return filter;
 		}
 
 		// CreateDisplacementMapEffect
@@ -97,7 +125,10 @@ namespace SkiaSharp
 		private static SKImageFilter CreateDisplacementMapEffect (SKColorChannel xChannelSelector, SKColorChannel yChannelSelector, float scale, SKImageFilter displacement, SKImageFilter? input, SKRect* cropRect)
 		{
 			_ = displacement ?? throw new ArgumentNullException (nameof (displacement));
-			return GetObject (SkiaApi.sk_imagefilter_new_displacement_map_effect (xChannelSelector, yChannelSelector, scale, displacement.Handle, input?.Handle ?? IntPtr.Zero, cropRect));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_displacement_map_effect (xChannelSelector, yChannelSelector, scale, displacement.Handle, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (displacement);
+			GC.KeepAlive (input);
+			return filter;
 		}
 
 		// CreateDropShadow
@@ -111,8 +142,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect cropRect) =>
 			CreateDropShadow (dx, dy, sigmaX, sigmaY, color, input, &cropRect);
 
-		private static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_drop_shadow (dx, dy, sigmaX, sigmaY, (uint)color, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateDropShadow (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_drop_shadow (dx, dy, sigmaX, sigmaY, (uint)color, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateDropShadowOnly
 
@@ -125,8 +160,17 @@ namespace SkiaSharp
 		public static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect cropRect) =>
 			CreateDropShadowOnly (dx, dy, sigmaX, sigmaY, color, input, &cropRect);
 
-		private static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_drop_shadow_only (dx, dy, sigmaX, sigmaY, (uint)color, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateDropShadowOnly (float dx, float dy, float sigmaX, float sigmaY, SKColor color, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_drop_shadow_only (dx, dy, sigmaX, sigmaY, (uint)color, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
+
+		// CreateEmpty
+
+		public static SKImageFilter CreateEmpty () =>
+			GetObject (SkiaApi.sk_imagefilter_new_empty ());
 
 		// CreateDistantLitDiffuse
 
@@ -139,8 +183,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect cropRect) =>
 			CreateDistantLitDiffuse (direction, lightColor, surfaceScale, kd, input, &cropRect);
 
-		private static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_distant_lit_diffuse (&direction, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateDistantLitDiffuse (SKPoint3 direction, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_distant_lit_diffuse (&direction, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreatePointLitDiffuse
 
@@ -153,8 +201,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreatePointLitDiffuse (SKPoint3 location, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect cropRect) =>
 			CreatePointLitDiffuse (location, lightColor, surfaceScale, kd, input, &cropRect);
 
-		private static SKImageFilter CreatePointLitDiffuse (SKPoint3 location, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_point_lit_diffuse (&location, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreatePointLitDiffuse (SKPoint3 location, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_point_lit_diffuse (&location, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateSpotLitDiffuse
 
@@ -167,8 +219,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateSpotLitDiffuse (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect cropRect) =>
 			CreateSpotLitDiffuse (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, kd, input, &cropRect);
 
-		private static SKImageFilter CreateSpotLitDiffuse (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_spot_lit_diffuse (&location, &target, specularExponent, cutoffAngle, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateSpotLitDiffuse (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float kd, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_spot_lit_diffuse (&location, &target, specularExponent, cutoffAngle, (uint)lightColor, surfaceScale, kd, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateDistantLitSpecular
 
@@ -181,8 +237,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateDistantLitSpecular (SKPoint3 direction, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect cropRect) =>
 			CreateDistantLitSpecular (direction, lightColor, surfaceScale, ks, shininess, input, &cropRect);
 
-		private static SKImageFilter CreateDistantLitSpecular (SKPoint3 direction, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_distant_lit_specular (&direction, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateDistantLitSpecular (SKPoint3 direction, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_distant_lit_specular (&direction, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreatePointLitSpecular
 
@@ -195,8 +255,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreatePointLitSpecular (SKPoint3 location, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect cropRect) =>
 			CreatePointLitSpecular (location, lightColor, surfaceScale, ks, shininess, input, &cropRect);
 
-		private static SKImageFilter CreatePointLitSpecular (SKPoint3 location, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_point_lit_specular (&location, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreatePointLitSpecular (SKPoint3 location, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_point_lit_specular (&location, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateSpotLitSpecular
 
@@ -209,8 +273,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateSpotLitSpecular (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect cropRect) =>
 			CreateSpotLitSpecular (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, ks, shininess, input, &cropRect);
 
-		private static SKImageFilter CreateSpotLitSpecular (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_spot_lit_specular (&location, &target, specularExponent, cutoffAngle, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateSpotLitSpecular (SKPoint3 location, SKPoint3 target, float specularExponent, float cutoffAngle, SKColor lightColor, float surfaceScale, float ks, float shininess, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_spot_lit_specular (&location, &target, specularExponent, cutoffAngle, (uint)lightColor, surfaceScale, ks, shininess, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateMatrixConvolution
 
@@ -228,7 +296,9 @@ namespace SkiaSharp
 			if (kernel.Length != kernelSize.Width * kernelSize.Height)
 				throw new ArgumentException ("Kernel length must match the dimensions of the kernel size (Width * Height).", nameof (kernel));
 			fixed (float* k = kernel) {
-				return GetObject (SkiaApi.sk_imagefilter_new_matrix_convolution (&kernelSize, k, gain, bias, &kernelOffset, tileMode, convolveAlpha, input?.Handle ?? IntPtr.Zero, cropRect));
+				var filter = GetObject (SkiaApi.sk_imagefilter_new_matrix_convolution (&kernelSize, k, gain, bias, &kernelOffset, tileMode, convolveAlpha, input?.Handle ?? IntPtr.Zero, cropRect));
+				GC.KeepAlive (input);
+				return filter;
 			}
 		}
 
@@ -240,8 +310,13 @@ namespace SkiaSharp
 		public static SKImageFilter CreateMerge (SKImageFilter? first, SKImageFilter? second, SKRect cropRect) =>
 			CreateMerge (first, second, &cropRect);
 
-		private static SKImageFilter CreateMerge (SKImageFilter? first, SKImageFilter? second, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_merge_simple (first?.Handle ?? IntPtr.Zero, second?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateMerge (SKImageFilter? first, SKImageFilter? second, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_merge_simple (first?.Handle ?? IntPtr.Zero, second?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (first);
+			GC.KeepAlive (second);
+			return filter;
+		}
 
 		public static SKImageFilter CreateMerge (ReadOnlySpan<SKImageFilter> filters) =>
 			CreateMerge (filters, null);
@@ -271,8 +346,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter? input, SKRect cropRect) =>
 			CreateDilate (radiusX, radiusY, input, &cropRect);
 
-		private static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_dilate (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateDilate (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_dilate (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateErode
 
@@ -285,8 +364,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter? input, SKRect cropRect) =>
 			CreateErode (radiusX, radiusY, input, &cropRect);
 
-		private static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_erode (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateErode (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_erode (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreateOffset
 
@@ -299,21 +382,29 @@ namespace SkiaSharp
 		public static SKImageFilter CreateOffset (float radiusX, float radiusY, SKImageFilter? input, SKRect cropRect) =>
 			CreateOffset (radiusX, radiusY, input, &cropRect);
 
-		private static SKImageFilter CreateOffset (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_offset (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateOffset (float radiusX, float radiusY, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_offset (radiusX, radiusY, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreatePicture
 
 		public static SKImageFilter CreatePicture (SKPicture picture)
 		{
 			_ = picture ?? throw new ArgumentNullException (nameof (picture));
-			return GetObject (SkiaApi.sk_imagefilter_new_picture (picture.Handle));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_picture (picture.Handle));
+			GC.KeepAlive (picture);
+			return filter;
 		}
 
 		public static SKImageFilter CreatePicture (SKPicture picture, SKRect cropRect)
 		{
 			_ = picture ?? throw new ArgumentNullException (nameof (picture));
-			return GetObject (SkiaApi.sk_imagefilter_new_picture_with_rect (picture.Handle, &cropRect));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_picture_with_rect (picture.Handle, &cropRect));
+			GC.KeepAlive (picture);
+			return filter;
 		}
 
 		// CreateTile
@@ -324,7 +415,9 @@ namespace SkiaSharp
 		public static SKImageFilter CreateTile (SKRect src, SKRect dst, SKImageFilter? input)
 		{
 			_ = input ?? throw new ArgumentNullException (nameof (input));
-			return GetObject (SkiaApi.sk_imagefilter_new_tile (&src, &dst, input.Handle));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_tile (&src, &dst, input.Handle));
+			GC.KeepAlive (input);
+			return filter;
 		}
 
 		// CreateBlendMode
@@ -338,8 +431,13 @@ namespace SkiaSharp
 		public static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter? background, SKImageFilter? foreground, SKRect cropRect) =>
 			CreateBlendMode (mode, background, foreground, &cropRect);
 
-		private static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_blend (mode, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateBlendMode (SKBlendMode mode, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_blend (mode, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (background);
+			GC.KeepAlive (foreground);
+			return filter;
+		}
 
 		// CreateBlendMode (Blender)
 
@@ -355,7 +453,11 @@ namespace SkiaSharp
 		private static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect)
 		{
 			_ = blender ?? throw new ArgumentNullException (nameof (blender));
-			return GetObject (SkiaApi.sk_imagefilter_new_blender (blender.Handle, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_blender (blender.Handle, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (blender);
+			GC.KeepAlive (background);
+			GC.KeepAlive (foreground);
+			return filter;
 		}
 
 		// CreateArithmetic
@@ -369,8 +471,13 @@ namespace SkiaSharp
 		public static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter? background, SKImageFilter? foreground, SKRect cropRect) =>
 			CreateArithmetic (k1, k2, k3, k4, enforcePMColor, background, foreground, &cropRect);
 
-		private static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_arithmetic (k1, k2, k3, k4, enforcePMColor, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor, SKImageFilter? background, SKImageFilter? foreground, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_arithmetic (k1, k2, k3, k4, enforcePMColor, background?.Handle ?? IntPtr.Zero, foreground?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (background);
+			GC.KeepAlive (foreground);
+			return filter;
+		}
 
 		// CreateImage
 
@@ -380,13 +487,17 @@ namespace SkiaSharp
 		public static SKImageFilter CreateImage (SKImage image, SKSamplingOptions sampling)
 		{
 			_ = image ?? throw new ArgumentNullException (nameof (image));
-			return GetObject (SkiaApi.sk_imagefilter_new_image_simple (image.Handle, &sampling));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_image_simple (image.Handle, &sampling));
+			GC.KeepAlive (image);
+			return filter;
 		}
 
 		public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKSamplingOptions sampling)
 		{
 			_ = image ?? throw new ArgumentNullException (nameof (image));
-			return GetObject (SkiaApi.sk_imagefilter_new_image (image.Handle, &src, &dst, &sampling));
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_image (image.Handle, &src, &dst, &sampling));
+			GC.KeepAlive (image);
+			return filter;
 		}
 
 		[Obsolete("Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.", true)]
@@ -404,8 +515,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect cropRect) =>
 			CreateMagnifier (lensBounds, zoomAmount, inset, sampling, input, &cropRect);
 
-		private static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_magnifier (&lensBounds, zoomAmount, inset, &sampling, input?.Handle ?? IntPtr.Zero, cropRect));
+		private static SKImageFilter CreateMagnifier (SKRect lensBounds, float zoomAmount, float inset, SKSamplingOptions sampling, SKImageFilter? input, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_magnifier (&lensBounds, zoomAmount, inset, &sampling, input?.Handle ?? IntPtr.Zero, cropRect));
+			GC.KeepAlive (input);
+			return filter;
+		}
 
 		// CreatePaint
 
@@ -434,8 +549,12 @@ namespace SkiaSharp
 		public static SKImageFilter CreateShader (SKShader? shader, bool dither, SKRect cropRect) =>
 			CreateShader (shader, dither, &cropRect);
 
-		private static SKImageFilter CreateShader (SKShader? shader, bool dither, SKRect* cropRect) =>
-			GetObject (SkiaApi.sk_imagefilter_new_shader (shader?.Handle ?? IntPtr.Zero, dither, cropRect));
+		private static SKImageFilter CreateShader (SKShader? shader, bool dither, SKRect* cropRect)
+		{
+			var filter = GetObject (SkiaApi.sk_imagefilter_new_shader (shader?.Handle ?? IntPtr.Zero, dither, cropRect));
+			GC.KeepAlive (shader);
+			return filter;
+		}
 
 		//
 

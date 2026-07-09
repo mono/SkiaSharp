@@ -34,27 +34,55 @@ namespace HarfBuzzSharp
 
 		public UnicodeFunctions Parent { get; }
 
-		public bool IsImmutable => HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
+		public bool IsImmutable {
+			get {
+				var r = HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public void MakeImmutable () => HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
+		public void MakeImmutable ()
+		{
+			HarfBuzzApi.hb_unicode_funcs_make_immutable (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public UnicodeCombiningClass GetCombiningClass (int unicode) => GetCombiningClass ((uint)unicode);
 
-		public UnicodeCombiningClass GetCombiningClass (uint unicode) =>
-			HarfBuzzApi.hb_unicode_combining_class (Handle, unicode);
+		public UnicodeCombiningClass GetCombiningClass (uint unicode)
+		{
+			var r = HarfBuzzApi.hb_unicode_combining_class (Handle, unicode);
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		public UnicodeGeneralCategory GetGeneralCategory (int unicode) => GetGeneralCategory ((uint)unicode);
 
-		public UnicodeGeneralCategory GetGeneralCategory (uint unicode) =>
-			HarfBuzzApi.hb_unicode_general_category (Handle, unicode);
+		public UnicodeGeneralCategory GetGeneralCategory (uint unicode)
+		{
+			var r = HarfBuzzApi.hb_unicode_general_category (Handle, unicode);
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		public int GetMirroring (int unicode) => (int)GetMirroring ((uint)unicode);
 
-		public uint GetMirroring (uint unicode) => HarfBuzzApi.hb_unicode_mirroring (Handle, unicode);
+		public uint GetMirroring (uint unicode)
+		{
+			var r = HarfBuzzApi.hb_unicode_mirroring (Handle, unicode);
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		public Script GetScript (int unicode) => GetScript ((uint)unicode);
 
-		public Script GetScript (uint unicode) => HarfBuzzApi.hb_unicode_script (Handle, unicode);
+		public Script GetScript (uint unicode)
+		{
+			var r = HarfBuzzApi.hb_unicode_script (Handle, unicode);
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		public bool TryCompose (int a, int b, out int ab)
 		{
@@ -68,7 +96,9 @@ namespace HarfBuzzSharp
 		public bool TryCompose (uint a, uint b, out uint ab)
 		{
 			fixed (uint* abPtr = &ab) {
-				return HarfBuzzApi.hb_unicode_compose (Handle, a, b, abPtr);
+				var r = HarfBuzzApi.hb_unicode_compose (Handle, a, b, abPtr);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -87,7 +117,9 @@ namespace HarfBuzzSharp
 		{
 			fixed (uint* aPtr = &a)
 			fixed (uint* bPtr = &b) {
-				return HarfBuzzApi.hb_unicode_decompose (Handle, ab, aPtr, bPtr);
+				var r = HarfBuzzApi.hb_unicode_decompose (Handle, ab, aPtr, bPtr);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -98,6 +130,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_combining_class_func (
 				Handle, DelegateProxies.UnicodeCombiningClassProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetGeneralCategoryDelegate (GeneralCategoryDelegate del, ReleaseDelegate destroy = null)
@@ -107,6 +140,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_general_category_func (
 				Handle, DelegateProxies.UnicodeGeneralCategoryProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetMirroringDelegate (MirroringDelegate del, ReleaseDelegate destroy = null)
@@ -116,6 +150,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_mirroring_func (
 				Handle, DelegateProxies.UnicodeMirroringProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetScriptDelegate (ScriptDelegate del, ReleaseDelegate destroy = null)
@@ -125,6 +160,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_script_func (
 				Handle, DelegateProxies.UnicodeScriptProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetComposeDelegate (ComposeDelegate del, ReleaseDelegate destroy = null)
@@ -134,6 +170,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_compose_func (
 				Handle, DelegateProxies.UnicodeComposeProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetDecomposeDelegate (DecomposeDelegate del, ReleaseDelegate destroy = null)
@@ -143,6 +180,7 @@ namespace HarfBuzzSharp
 			var ctx = DelegateProxies.CreateMultiUserData (del, destroy, this);
 			HarfBuzzApi.hb_unicode_funcs_set_decompose_func (
 				Handle, DelegateProxies.UnicodeDecomposeProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		private void VerifyParameters (Delegate del)

@@ -106,6 +106,7 @@ Task("libSkiaSharp")
             $"skia_enable_ganesh={(SUPPORT_GPU ? "true" : "false")} " +
             $"skia_use_harfbuzz=false " +
             $"skia_use_icu=false " +
+            $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
             $"skia_use_system_freetype2=false " +
@@ -117,7 +118,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
@@ -153,6 +154,7 @@ Task("libHarfBuzzSharp")
             $"target_os='linux' " +
             $"target_cpu='{skiaArch}' " +
             $"visibility_hidden=false " +
+            $"skia_use_partition_alloc=false " +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-stdlib=libc++'{bionicDefineHB} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxxHB}, '-Wl,--version-script={map}' ] " +

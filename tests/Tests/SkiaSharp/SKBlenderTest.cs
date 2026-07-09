@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests;
 
 public class SKBlenderTest
 {
-	[SkippableFact]
+	[Fact]
 	[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 	public void SameBlendModeReturnsSameBlenderInstance()
 	{
@@ -16,7 +16,7 @@ public class SKBlenderTest
 		Assert.Same(blender1, blender2);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void BlendModeBlenderIsNotDisposed()
 	{
 		var blender = SKBlender.CreateBlendMode(SKBlendMode.Src);
@@ -26,7 +26,7 @@ public class SKBlenderTest
 		Assert.True(SKObject.GetInstance<SKBlender>(blender.Handle, out _));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void ArithmeticBlendModeBlenderIsBlendModeBlender()
 	{
 		var blendmode = SKBlender.CreateBlendMode(SKBlendMode.Src);
@@ -36,13 +36,13 @@ public class SKBlenderTest
 		Assert.Same(blendmode, arithmetic);
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void InvalidBlendModeThrowsArgumentException()
 	{
 		Assert.Throws<ArgumentOutOfRangeException>(() => SKBlender.CreateBlendMode((SKBlendMode)100));
 	}
 
-	[SkippableFact]
+	[Fact]
 	public void AllValidBlendModesCreateBlender()
 	{
 		// Verify that all valid blend mode enum values can create blenders
@@ -63,7 +63,7 @@ public class SKBlenderTest
 
 		protected abstract void CreateSurface(int width, int height);
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingOpaqueColor(SKBlendMode mode)
 		{
@@ -72,7 +72,7 @@ public class SKBlenderTest
 			Assert.Equal(blendModeColor, blenderColor);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingransparentColor(SKBlendMode mode)
 		{
@@ -81,7 +81,7 @@ public class SKBlenderTest
 			Assert.Equal(blendModeColor, blenderColor);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingOpaqueShader(SKBlendMode mode)
 		{
@@ -90,7 +90,7 @@ public class SKBlenderTest
 			Assert.Equal(blendModeColor, blenderColor);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingransparentShader(SKBlendMode mode)
 		{

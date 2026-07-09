@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using Microsoft.Playwright;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 
@@ -23,8 +22,10 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
         var projectName = $"Blazor{canvasView}";
         var projectDir = Path.Combine(TestDir, projectName);
         
-        // Run from TestDir (which has global.json) using relative paths
-        await Run("dotnet", $"new blazorwasm -n {projectName} -o {projectName} --no-https");
+        // Run from TestDir (which has global.json) using relative paths. Pin the template
+        // framework to keep the generated TFM aligned with the .NET 10 SDK band even when a
+        // newer (e.g. net11.0) SDK is installed on the machine.
+        await Run("dotnet", $"new blazorwasm -n {projectName} -o {projectName} -f {BaseFramework} --no-https");
         await Run("dotnet", $"add {projectName} package SkiaSharp.Views.Blazor --version {SkiaVersion}");
         
         await File.WriteAllTextAsync(Path.Combine(projectDir, "Pages", "Home.razor"), $$"""

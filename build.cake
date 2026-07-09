@@ -156,18 +156,18 @@ Task ("docs-download-output")
 
 Task ("docs-api-diff")
     .Description ("Generate API diffs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff"));
+    .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
 
 Task ("docs-api-diff-past")
     .Description ("Generate historical API diffs.")
-    .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-api-diff-past"));
+    .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff-past"));
 
 Task ("docs-update-frameworks")
     .Description ("Update doc frameworks.")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-update-frameworks"));
 
 Task ("docs-format-docs")
-    .Description ("Format doc XML files.")
+    .Description ("Format doc XML files and run the deterministic content checks (warns on quality/missing docs, fails on broken XML).")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-format-docs"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

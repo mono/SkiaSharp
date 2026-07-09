@@ -113,13 +113,13 @@ public class WideGamutP3Sample : CanvasSampleBase
 
 			// Labels
 			var labelW = labelFont.MeasureText(swatch.Label);
-			canvas.DrawText(swatch.Label, x + swatchW / 2f - labelW / 2f, headerH + swatchH + 12, labelFont, labelPaint);
+			canvas.DrawText(swatch.Label, x + swatchW / 2f - labelW / 2f, headerH + swatchH + 12, SKTextAlign.Left, labelFont, labelPaint);
 		}
 
 		// Row labels
 		labelPaint.Color = new SKColor(180, 180, 180);
-		canvas.DrawText("sRGB", margin, headerH - 6, smallFont, labelPaint);
-		canvas.DrawText("Display P3", margin, headerH + swatchH + 32, smallFont, labelPaint);
+		canvas.DrawText("sRGB", margin, headerH - 6, SKTextAlign.Left, smallFont, labelPaint);
+		canvas.DrawText("Display P3", margin, headerH + swatchH + 32, SKTextAlign.Left, smallFont, labelPaint);
 	}
 
 	private void DrawGradientComparison(SKCanvas canvas, int width, int height)
@@ -145,7 +145,7 @@ public class WideGamutP3Sample : CanvasSampleBase
 	{
 		using var labelFont = new SKFont { Size = 13 };
 		using var labelPaint = new SKPaint { Color = new SKColor(180, 180, 180), IsAntialias = true };
-		canvas.DrawText(label, x, y - 6, labelFont, labelPaint);
+		canvas.DrawText(label, x, y - 6, SKTextAlign.Left, labelFont, labelPaint);
 
 		var rect = new SKRect(x, y, x + w, y + h);
 
@@ -184,7 +184,7 @@ public class WideGamutP3Sample : CanvasSampleBase
 		offCanvas.DrawRect(0, 0, w, h, paint);
 
 		using var image = surface.Snapshot();
-		canvas.DrawImage(image, rect);
+		canvas.DrawImage(image, rect, SKSamplingOptions.Default);
 
 		// Border
 		using var borderPaint = new SKPaint
@@ -278,29 +278,29 @@ public class WideGamutP3Sample : CanvasSampleBase
 		using var vertPaint = new SKPaint { IsAntialias = true };
 
 		vertPaint.Color = new SKColor(0xFFE74C3C);
-		canvas.DrawText("sRGB R", srgbR.X + 6, srgbR.Y + 4, vertFont, vertPaint);
-		canvas.DrawText("G", srgbG.X - 4, srgbG.Y - 8, vertFont, vertPaint);
-		canvas.DrawText("B", srgbB.X - 14, srgbB.Y + 16, vertFont, vertPaint);
+		canvas.DrawText("sRGB R", srgbR.X + 6, srgbR.Y + 4, SKTextAlign.Left, vertFont, vertPaint);
+		canvas.DrawText("G", srgbG.X - 4, srgbG.Y - 8, SKTextAlign.Left, vertFont, vertPaint);
+		canvas.DrawText("B", srgbB.X - 14, srgbB.Y + 16, SKTextAlign.Left, vertFont, vertPaint);
 
 		vertPaint.Color = new SKColor(0xFF5DADE2);
-		canvas.DrawText("P3 R", p3R.X + 6, p3R.Y - 8, vertFont, vertPaint);
-		canvas.DrawText("G", p3G.X + 8, p3G.Y - 4, vertFont, vertPaint);
+		canvas.DrawText("P3 R", p3R.X + 6, p3R.Y - 8, SKTextAlign.Left, vertFont, vertPaint);
+		canvas.DrawText("G", p3G.X + 8, p3G.Y - 4, SKTextAlign.Left, vertFont, vertPaint);
 
 		// White point
 		var wp = MapChromaticity(0.3127f, 0.3290f, cx, cy, size);
 		using (var wpPaint = new SKPaint { Color = SKColors.White, IsAntialias = true })
 			canvas.DrawCircle(wp, 4, wpPaint);
-		canvas.DrawText("D65", wp.X + 6, wp.Y - 4, vertFont, new SKPaint { Color = SKColors.White, IsAntialias = true });
+		canvas.DrawText("D65", wp.X + 6, wp.Y - 4, SKTextAlign.Left, vertFont, new SKPaint { Color = SKColors.White, IsAntialias = true });
 
 		// Legend
 		var legendY = height - 40f;
 		using var legendFont = new SKFont { Size = 12 };
 
 		using (var legendPaint = new SKPaint { Color = new SKColor(0xFFE74C3C), IsAntialias = true })
-			canvas.DrawText("— — sRGB", 20, legendY, legendFont, legendPaint);
+			canvas.DrawText("— — sRGB", 20, legendY, SKTextAlign.Left, legendFont, legendPaint);
 
 		using (var legendPaint = new SKPaint { Color = new SKColor(0xFF5DADE2), IsAntialias = true })
-			canvas.DrawText("——— Display P3", 120, legendY, legendFont, legendPaint);
+			canvas.DrawText("——— Display P3", 120, legendY, SKTextAlign.Left, legendFont, legendPaint);
 	}
 
 	private static void DrawCIEBackground(SKCanvas canvas, float cx, float cy, float size)
@@ -356,6 +356,6 @@ public class WideGamutP3Sample : CanvasSampleBase
 		using var titleFont = new SKFont { Size = 16 };
 		using var titlePaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
 		var tw = titleFont.MeasureText(text);
-		canvas.DrawText(text, (width - tw) / 2f, 30, titleFont, titlePaint);
+		canvas.DrawText(text, (width - tw) / 2f, 30, SKTextAlign.Left, titleFont, titlePaint);
 	}
 }

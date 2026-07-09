@@ -27,6 +27,7 @@ Task ("Default")
         var tfm = "net48";
         var testAssemblies = new List<string> {
             "SkiaSharp.Tests.Console",
+            "SkiaSharp.Tests.SingletonInit.Console",
             "SkiaSharp.Vulkan.Tests.Console",
             "SkiaSharp.Direct3D.Tests.Console",
         };
@@ -43,7 +44,7 @@ Task ("Default")
             var assName = testAssembly.Replace (".Console", "");
             EnsureDirectoryExists (results);
             try {
-                RunTests ($"{ROOT_PATH}/tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.dll", results, arch == "x86");
+                RunTests ($"{ROOT_PATH}/tests/{testAssembly}/bin/{arch}/{CONFIGURATION}/{tfm}/{assName}.exe", results);
             } catch {
                 failedTests++;
                 if (THROW_ON_FIRST_TEST_FAILURE)

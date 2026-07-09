@@ -79,21 +79,3 @@ stages:
           target: externals-tvos
           cacheJob: native/tvos
           enableCaching: ${{ parameters.enableCaching }}
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x64 (macOS)
-        parameters:
-          name: native_tizen_x64_macos
-          displayName: Tizen x64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm64 (macOS)
-        parameters:
-          name: native_tizen_arm64_macos
-          displayName: Tizen arm64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64

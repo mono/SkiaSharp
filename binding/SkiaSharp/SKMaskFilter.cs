@@ -67,7 +67,9 @@ namespace SkiaSharp
 			if (shader == null)
 				throw new ArgumentNullException (nameof (shader));
 
-			return GetObject (SkiaApi.sk_maskfilter_new_shader (shader.Handle));
+			var maskFilter = GetObject (SkiaApi.sk_maskfilter_new_shader (shader.Handle));
+			GC.KeepAlive (shader);
+			return maskFilter;
 		}
 
 		internal static SKMaskFilter GetObject (IntPtr handle) =>
