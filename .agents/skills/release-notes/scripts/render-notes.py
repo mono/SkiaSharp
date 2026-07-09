@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Render a release-notes page from deterministic data + agent prose.
 
-    render-notes.py <data.json> <slots.json> [out.md]   # normal page
+    render-notes.py <data.json> <prose.json> [out.md]   # normal page
     render-notes.py <data.json> [out.md]                 # no-changes page (no prose)
 
 `data.json`  — facts emitted by generate-release-notes.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
-`slots.json` — prose the polish agent produced (theme, highlights, breaking,
+`prose.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).
 
 A page whose data.json is flagged `no_changes` (a rebuild-only HarfBuzz line,
@@ -114,13 +114,13 @@ def credit(nums, data):
     return ""
 
 
-def banner_line(data, slots):
+def banner_line(data, prose):
     """The one-line status banner. Shape is fixed here; the agent supplies the
-    theme words only (`slots.theme`)."""
+    theme words only (`prose.theme`)."""
     b = data.get("banner") or {}
     if b.get("kind") == "harfbuzz" or data.get("family") == "harfbuzzsharp":
         return _harfbuzz_banner_line(data)
-    theme = (slots.get("theme") or "").strip()
+    theme = (prose.get("theme") or "").strip()
     date = b.get("date")
     parts = []
     if theme:
@@ -160,13 +160,13 @@ def _harfbuzz_banner_line(data):
 
 # ── page assembly (the single source of layout truth) ────────────────────────
 
-def render(data, slots):
+def render(data, prose):
     L = []  # lines
 
     L.append("<!-- RELEASE-NOTES DATA (generated, do not edit) format:{} version:{} -->"
              .format(data.get("format"), data.get("version")))
     L.append("# {}".format(page_title(data)))
-    L.append(banner_line(data, slots))
+    L.append(banner_line(data, prose))
     for s in data.get("supersedes") or []:
         L.append("> **Supersedes [{}]({})** · {}".format(s["version"], s["href"], s.get("note", "")))
     sb = data.get("superseded_by")
@@ -188,20 +188,20 @@ def render(data, slots):
     L.append("")
     L.append("## Highlights")
     L.append("")
-    hl = slots.get("highlights_headline") or ""
-    body = slots.get("highlights_body")
+    hl = prose.get("highlights_headline") or ""
+    body = prose.get("highlights_body")
     L.append(hl + (" " + body if body else ""))
 
     L.append("")
     L.append("## Breaking Changes")
     L.append("")
-    if slots.get("breaking"):
-        for b in slots["breaking"]:
+    if prose.get("breaking"):
+        for b in prose["breaking"]:
             L.append("- **{}** — {}{}".format(b["title"], b["body"], pr_refs(b.get("prs"), data)))
     else:
         L.append(breaking_none_text(data))
 
-    for cat in slots.get("categories") or []:
+    for cat in prose.get("categories") or []:
         L.append("")
         L.append("## {}".format(cat["heading"]))
         L.append("")
@@ -218,7 +218,7 @@ def render(data, slots):
             L.append("| {} | {} |".format(row["platform"], row["version"]))
 
     if data.get("contributors"):
-        summaries = slots.get("contributor_summaries") or {}
+        summaries = prose.get("contributor_summaries") or {}
         L.append("")
         L.append("## Community Contributors ❤️")
         L.append("")
@@ -237,7 +237,7 @@ def render(data, slots):
         for l in data["links"]:
             L.append("- [{}]({})".format(l["label"], l["href"]))
 
-    prev_summaries = slots.get("preview_summaries") or {}
+    prev_summaries = prose.get("preview_summaries") or {}
     for p in data.get("previews") or []:
         L.append("")
         head = "## {}".format(p["label"])
@@ -277,17 +277,17 @@ def _words(text):
 HIGHLIGHTS_TOTAL_WORD_CAP = 100
 
 
-def validate(data, slots):
+def validate(data, prose):
     errors = []
 
-    theme = (slots.get("theme") or "").strip()
+    theme = (prose.get("theme") or "").strip()
     if (data.get("banner", {}) or {}).get("kind") != "harfbuzz" and not theme:
-        errors.append("slots.theme is empty — the banner needs a short human theme.")
+        errors.append("prose.theme is empty — the banner needs a short human theme.")
 
-    hl = slots.get("highlights_headline") or ""
-    body = slots.get("highlights_body")
+    hl = prose.get("highlights_headline") or ""
+    body = prose.get("highlights_body")
     if not hl.strip():
-        errors.append("slots.highlights_headline is required.")
+        errors.append("prose.highlights_headline is required.")
     elif _words(hl) > HEADLINE_WORD_CAP:
         errors.append(
             "highlights_headline is {} words (cap {}). "
@@ -304,12 +304,12 @@ def validate(data, slots):
             "Highlights is {} words total (cap {}). It's a lead-in, not the changelog — "
             "trim to the few things that matter most.".format(total, HIGHLIGHTS_TOTAL_WORD_CAP))
 
-    return _finish_validate(errors, data, slots)
+    return _finish_validate(errors, data, prose)
 
 
-def _finish_validate(errors, data, slots):
+def _finish_validate(errors, data, prose):
     roster = {c["login"] for c in data.get("contributors", [])}
-    summaries = slots.get("contributor_summaries") or {}
+    summaries = prose.get("contributor_summaries") or {}
     missing = sorted(roster - set(summaries))
     if missing:
         errors.append(
@@ -322,14 +322,14 @@ def _finish_validate(errors, data, slots):
 
     allowed = set(RELEASE_CATEGORIES)
     if allowed:
-        for cat in slots.get("categories", []):
+        for cat in prose.get("categories", []):
             if cat.get("heading") not in allowed:
                 errors.append(
                     "category heading '{}' is not one of the allowed sections: {}"
                     .format(cat.get("heading"), ", ".join(sorted(allowed))))
 
     prev_keys = {p["key"] for p in data.get("previews", [])}
-    prev_sum = slots.get("preview_summaries") or {}
+    prev_sum = prose.get("preview_summaries") or {}
     missing_prev = sorted(prev_keys - set(prev_sum))
     if missing_prev:
         errors.append("every preview/RC needs a one-line summary; missing: "
@@ -360,14 +360,14 @@ def main(argv):
     if len(args) < 2:
         print(__doc__)
         return 2
-    slots = json.loads(Path(args[1]).read_text())
-    errors = validate(data, slots)
+    prose = json.loads(Path(args[1]).read_text())
+    errors = validate(data, prose)
     if errors:
-        print("SLOT VALIDATION FAILED:", file=sys.stderr)
+        print("PROSE VALIDATION FAILED:", file=sys.stderr)
         for e in errors:
             print("  - {}".format(e), file=sys.stderr)
         return 1
-    text = render(data, slots)
+    text = render(data, prose)
     out = args[2] if len(args) >= 3 else None
     if out:
         Path(out).write_text(text)

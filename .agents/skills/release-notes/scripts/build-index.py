@@ -97,7 +97,7 @@ def cleanup_stale_unreleased():
             continue
         version = f.stem[:-len("-unreleased")]
         if version not in live:
-            f.unlink()
+            _gen._prune_page_and_sources(f)
             removed.append(str(f))
     return removed
 

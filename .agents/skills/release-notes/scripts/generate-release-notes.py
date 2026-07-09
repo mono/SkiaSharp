@@ -313,16 +313,17 @@ def load_notes_sidecar(stem, base_dir):
     # type: (str, Path) -> Optional[dict]
     """The maintainer-authored manual additions sidecar (spec §3.7).
 
-    A ``<stem>.notes.md`` co-located with the hub page: freeform Markdown a human
-    injects to survive re-polish. Returns ``{'path': <page-relative>, 'sha256':
-    <hash>}`` when present, else None. Only the BYTES are hashed — Python never
-    parses the content (the Polish AI reads it, §4.7). The path is page-relative
-    (same directory as the hub), so the AI resolves it straight from the page.
+    A ``_sources/<stem>.notes.md`` beside the page's other inputs: freeform
+    Markdown a human injects to survive re-polish. Returns ``{'path':
+    <page-relative>, 'sha256': <hash>}`` when present, else None. Only the BYTES
+    are hashed — Python never parses the content (the Polish AI reads it, §4.7).
+    The path is page-relative (``_sources/<stem>.notes.md``), so the AI resolves
+    it straight from the page.
     """
-    notes_path = base_dir / "{}.notes.md".format(stem)
+    notes_path = base_dir / "_sources" / "{}.notes.md".format(stem)
     if not notes_path.is_file():
         return None
-    return {"path": "{}.notes.md".format(stem),
+    return {"path": "_sources/{}.notes.md".format(stem),
             "sha256": _sha256_bytes(notes_path.read_bytes())}
 
 
@@ -1571,7 +1572,7 @@ def build_data_json(prs, metadata):
     This is the machine-owned half of the split introduced to stop the polish
     agent owning page structure: everything here is fact (PRs, tags, roster,
     previews, banner date, links, breaking sources). The agent reads it and
-    writes only prose (`slots.json`); ``render-notes.py`` assembles the page.
+    writes only prose (`prose.json`); ``render-notes.py`` assembles the page.
 
     Reuses the exact helpers the raw-data block uses (``_pr_category`` tags,
     ``_contributor_roster``, ``bucket_prs_by_milestone``, ``_release_date_display``)
@@ -1724,10 +1725,48 @@ def build_data_json(prs, metadata):
     }
 
 
+def _sources_dir(page_path):
+    # type: (object) -> Path
+    """The ``_sources/`` folder holding a page's inputs (spec §4.6).
+
+    Rendered pages sit at the top of their family dir (``releases/<v>.md`` or
+    ``releases/harfbuzzsharp/<v>.md``); everything the maintainer or the pipeline
+    *feeds* the renderer — data.json, prose.json, and the manual notes.md sidecar
+    — lives one level down in a sibling ``_sources/`` so the page list stays clean
+    and every input for a page is in one place. Non-page files never collide with
+    the ``*.md`` page globs, which are all non-recursive.
+    """
+    return Path(str(page_path)).parent / "_sources"
+
+
 def _data_json_path(page_path):
     # type: (object) -> Path
-    """The committed data.json for a page: ``releases/<stem>.data.json``."""
-    return Path(str(page_path)).with_suffix(".data.json")
+    """The committed data.json for a page: ``_sources/<stem>.data.json``."""
+    p = Path(str(page_path))
+    return _sources_dir(p) / (p.stem + ".data.json")
+
+
+def _prose_json_path(page_path):
+    # type: (object) -> Path
+    """The agent-authored prose for a page: ``_sources/<stem>.prose.json``."""
+    p = Path(str(page_path))
+    return _sources_dir(p) / (p.stem + ".prose.json")
+
+
+def _prune_page_and_sources(page_path):
+    # type: (Path) -> None
+    """Remove a page and the generated inputs it owns in ``_sources/``.
+
+    Called when a page is pruned (an in-flight line stopped being a head). The
+    manual ``notes.md`` sidecar is deliberately left in place — it is human-owned,
+    and an orphan is surfaced by ``warn_orphan_notes_sidecars`` rather than deleted.
+    """
+    page_path = Path(str(page_path))
+    if page_path.exists():
+        page_path.unlink()
+    for gen in (_data_json_path(page_path), _prose_json_path(page_path)):
+        if gen.exists():
+            gen.unlink()
 
 
 def _data_json_unchanged(data_path, new_data):
@@ -1756,21 +1795,24 @@ def warn_orphan_notes_sidecars():
     """Warn about ``*.notes.md`` sidecars with no matching hub page (spec §3.7).
 
     A manual additions sidecar attaches to a page by sharing its stem: it is
-    ``<stem>.notes.md`` beside ``<stem>.md``. A sidecar whose ``<stem>.md`` hub
-    page does not exist (neither a released ``<line>.md`` nor an in-flight
+    ``_sources/<stem>.notes.md`` beside the page's other inputs, one level down
+    from the ``<stem>.md`` hub page. A sidecar whose ``<stem>.md`` hub page does
+    not exist (neither a released ``<line>.md`` nor an in-flight
     ``<line>-unreleased.md``, since either would be the stem) is a maintainer typo
     — Python **warns** and ignores it, writing nothing on its behalf. Call this at
     the end of a generation run, once every page that will exist is on disk.
 
-    Checks both families: SkiaSharp sidecars under ``releases/`` and HarfBuzz
-    sidecars under ``releases/harfbuzzsharp/``. Returns the orphan paths (for
-    tests); the side effect is the warning log.
+    Checks both families: SkiaSharp sidecars under ``releases/_sources/`` and
+    HarfBuzz sidecars under ``releases/harfbuzzsharp/_sources/``. The hub page
+    lives one directory UP from the sidecar. Returns the orphan paths (for tests);
+    the side effect is the warning log.
     """
     orphans = []  # type: list[str]
     for base_dir in (RELEASES_DIR, RELEASES_DIR / "harfbuzzsharp"):
-        if not base_dir.is_dir():
+        src_dir = base_dir / "_sources"
+        if not src_dir.is_dir():
             continue
-        for f in sorted(base_dir.iterdir()):
+        for f in sorted(src_dir.iterdir()):
             if not f.is_file() or not f.name.endswith(".notes.md"):
                 continue
             stem = f.name[:-len(".notes.md")]
@@ -1942,7 +1984,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     is_head = (branch == "main") or branch.endswith(".x")
     if is_head and not prs:
         if output_path.exists():
-            output_path.unlink()
+            _prune_page_and_sources(output_path)
             log("  Removed empty {} (nothing unreleased)".format(output_path))
         return None
 
@@ -2140,7 +2182,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     # head merely rebuilds an already-released HarfBuzz — no page; prune a stale one.
     if not published and not prs and not notes_comp:
         if output_path.exists():
-            output_path.unlink()
+            _prune_page_and_sources(output_path)
             log("  Removed empty {} (nothing unreleased)".format(output_path))
         return None, None
 
@@ -2166,7 +2208,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         if not force and _data_json_unchanged(nc_path, nc_data):
             log("  Skipping {} (unchanged, no changes)".format(output_path))
             return None, owned
-        hb_dir.mkdir(parents=True, exist_ok=True)
+        nc_path.parent.mkdir(parents=True, exist_ok=True)
         nc_path.write_text(json.dumps(nc_data, indent=2) + "\n")
         log("  Wrote {} (no HarfBuzz changes)".format(nc_path))
         return None, owned
@@ -2286,7 +2328,7 @@ def _process_harfbuzz_family(all_branches, force=False):
     if hb_dir.is_dir():
         for f in sorted(hb_dir.glob("*-unreleased.md")):
             if f.name not in valid_unreleased:
-                f.unlink()
+                _prune_page_and_sources(f)
                 log("Removed stale {}".format(f))
 
     return files_to_polish, processed, skipped

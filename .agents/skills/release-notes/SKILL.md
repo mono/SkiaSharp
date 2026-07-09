@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`slots.json`); a deterministic renderer builds the page.
+description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/_sources/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`prose.json`); a deterministic renderer builds the page.
 ---
 
 # Release notes — writing the prose
@@ -29,27 +29,33 @@ title.
 ## How to work
 
 You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
-`documentation/docfx/releases/<version>.md` path per line). For **each** page:
+`documentation/docfx/releases/<version>.md` path per line). Every input for a
+page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
+the inputs are `releases/_sources/<version>.data.json`,
+`releases/_sources/<version>.prose.json` (what you write), and an optional
+`releases/_sources/<version>.notes.md`. (HarfBuzz pages follow the same rule
+under `releases/harfbuzzsharp/`.) For **each** page:
 
-1. Read its `documentation/docfx/releases/<version>.data.json`. It has:
+1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
    and the banner/link facts.
 2. Read the breaking sources it points at, if present: the version's
-   `*.breaking.md` API diff and any `<version>.notes.md` sidecar. These
+   `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
    are your material for the `breaking` slot — the API diff gives signature
    removals, the notes sidecar gives *behavioural* breaks (same signature, new
    runtime behaviour) that no diff can detect.
-3. Write `documentation/docfx/releases/<version>.slots.json`
-   (schema: `.agents/skills/release-notes/scripts/schema/slots.schema.json`).
+3. Write `documentation/docfx/releases/_sources/<version>.prose.json`
+   (schema: `.agents/skills/release-notes/scripts/schema/prose.schema.json`).
 4. Render the page:
-   `python3 .agents/skills/release-notes/scripts/render-notes.py <version>.data.json <version>.slots.json <version>.md`
+   `python3 .agents/skills/release-notes/scripts/render-notes.py _sources/<version>.data.json _sources/<version>.prose.json <version>.md`
    (use the full `documentation/docfx/releases/` paths). If it prints
-   `SLOT VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
+   `PROSE VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
    render — the `.md` written — is the bar.
 
-You never hand-edit the `.md`. Commit the `.slots.json` and the rendered `.md`
-together (the `.data.json` is already committed by the Prepare phase).
+You never hand-edit the `.md`. Commit the `_sources/<version>.prose.json` and the
+rendered `.md` together (the `_sources/<version>.data.json` is already committed
+by the Prepare phase).
 
 ## The slots
 
