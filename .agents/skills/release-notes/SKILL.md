@@ -93,20 +93,32 @@ you can't point at.
 - Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
 
 ### `categories` — array of `{heading, bullets}`
-The body of the page. Headings must come from `data.allowed_categories`, but you
-choose which to use — include a section only when it has a real product-facing
-bullet, and prefer fewer, denser sections over many one-bullet ones. **Curate,
-don't enumerate:** each bullet MERGES related PRs into one product theme (aim 3-5
-bullets per section on a big release; 1-2 is perfectly fine on a servicing
-release — never merge distinct areas just to hit a count), gives a `lead` (bold
-summary) + `detail` (what it means for the consumer) + the `prs`. The renderer
-adds the PR links and the ❤️ community credit — never write those yourself. A
-change with a migration usually belongs in `breaking`; don't also give it its own
-thin category section unless it has independent product value. Rule of thumb for
-placement: ordinary fixes go under **Bug Fixes** even when platform-specific; use
-**Platform** for platform-support additions or removals.
+The body of the page. **`heading` must be exactly one of these six** (the renderer
+rejects anything else — this is the closed list, in the order they render):
+
+| Heading | What belongs here |
+|---|---|
+| `Engine` | The Skia milestone bump and upstream engine syncs; bundled-engine changes a consumer would feel. |
+| `API Surface` | New or changed public APIs — added types, methods, overloads, options. |
+| `Bug Fixes` | Corrected behaviour, crashes, wrong output — even when platform-specific. |
+| `Lifecycle & Internals` | Disposal, finalizers, initialization, singleton/handle lifecycle — consumer-visible runtime behaviour, not build plumbing. |
+| `Platform` | Platform-**support** changes: a target added or dropped, new native assets, TFM realignment. |
+| `Security` | Bundled native-dependency refreshes and security fixes. |
+
+You choose which of the six to include — a section appears only when it has a real
+product-facing bullet, and you may use as few as one. Prefer fewer, denser
+sections over many one-bullet ones. **Curate, don't enumerate:** each bullet
+MERGES related PRs into one product theme (aim 3-5 bullets per section on a big
+release; 1-2 is perfectly fine on a servicing release — never merge distinct areas
+just to hit a count), with a `lead` (bold summary) + `detail` (what it means for
+the consumer) + the `prs`. The renderer adds the PR links and the ❤️ community
+credit — never write those yourself. A change with a migration usually belongs in
+`breaking`; don't also give it its own thin category section unless it has
+independent product value. Placement rule of thumb: ordinary fixes go under **Bug
+Fixes** even when platform-specific; use **Platform** only for platform-support
+additions or removals.
 - Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
-- Bad: one bullet per PR restating its title; a section that lists 20 internal PRs.
+- Bad: `{"heading": "Bugfixes", …}` (not one of the six) · one bullet per PR restating its title · a section that lists 20 internal PRs.
 
 ### `contributor_summaries` — one line per roster login
 `data.contributors` is authoritative — every login there needs an entry (the

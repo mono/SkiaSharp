@@ -30,10 +30,11 @@ from pathlib import Path
 HEADLINE_WORD_CAP = 20
 BODY_WORD_CAP = 60
 
-# The canonical, closed set of category headings a page may use. The renderer
-# owns this (it's identical for every version — presentation, not per-version
-# data). validate() rejects any prose.json category heading not in this set; the
-# agent learns the list from SKILL.md.
+# The canonical, closed set of category headings a page may use, in render order.
+# The renderer owns this (identical for every version — presentation, not
+# per-version data). validate() rejects any prose.json heading not in this set.
+# KEEP IN SYNC with the category table in SKILL.md, which is where the agent
+# learns the list and what each section is for.
 RELEASE_CATEGORIES = [
     "Engine", "API Surface", "Bug Fixes",
     "Lifecycle & Internals", "Platform", "Security",
