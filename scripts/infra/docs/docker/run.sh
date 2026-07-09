@@ -159,7 +159,7 @@ case "$cmd" in
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" bash -euo pipefail -c '
             scripts/infra/docs/generate-api-diffs.sh
-            scripts/infra/docs/generate-release-notes.sh
+            .agents/skills/release-notes/scripts/generate-release-notes.sh
             scripts/infra/docs/generate-api-docs.sh
         '
         ;;
