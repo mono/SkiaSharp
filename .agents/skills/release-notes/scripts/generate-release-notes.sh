@@ -7,7 +7,7 @@
 # pages and raw data under documentation/docfx/releases/. For a full refresh, run
 # generate-api-diffs.sh (Path 1) FIRST so the api diff inputs are current.
 #
-# Engine: python3 scripts/infra/docs/generate-release-notes.py
+# Engine: python3 .agents/skills/release-notes/scripts/generate-release-notes.py
 #   spec:  documentation/dev/release-notes-and-api-diffs.md   (read this first)
 #
 # Single source of truth for Path 2: the release-notes skill's generate.sh, CI, the
@@ -23,7 +23,7 @@
 # export GITHUB_TOKEN or GH_TOKEN so it can authenticate (CI passes one through).
 set -euo pipefail
 
-# Repo root is a fixed three levels up from scripts/infra/docs/. Derive it from the
+# Repo root is a fixed four levels up from .agents/skills/release-notes/scripts/. Derive it from the
 # script's own location rather than `git rev-parse` so this works everywhere the tree
 # is checked out — including a git WORKTREE bind-mounted into the docs Docker image,
 # where the repo's .git is a pointer file to a gitdir outside the mount. The Python
@@ -31,7 +31,7 @@ set -euo pipefail
 # reachable when this path is run for real; deriving the root this way just removes a
 # hard dependency on `git rev-parse` for locating the tree.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
 PY_GENERATOR="$SCRIPT_DIR/generate-release-notes.py"

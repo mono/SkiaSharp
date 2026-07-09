@@ -41,9 +41,9 @@ You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
    notes sidecar gives *behavioural* breaks (same signature, new runtime
    behaviour) that no diff can detect.
 3. Write `documentation/docfx/releases/<version>.slots.json`
-   (schema: `scripts/infra/docs/schema/slots.schema.json`).
+   (schema: `.agents/skills/release-notes/scripts/schema/slots.schema.json`).
 4. Render the page:
-   `python3 scripts/infra/docs/render-notes.py <version>.data.json <version>.slots.json <version>.md`
+   `python3 .agents/skills/release-notes/scripts/render-notes.py <version>.data.json <version>.slots.json <version>.md`
    (use the full `documentation/docfx/releases/` paths). If it prints
    `SLOT VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
    render — the `.md` written — is the bar.

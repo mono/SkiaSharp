@@ -221,7 +221,7 @@ meant to be committed.
 ### Relationship to release notes
 
 The API diffs (Cake) and the website release notes
-([`generate-release-notes.py`](../../scripts/infra/docs/generate-release-notes.py))
+([`generate-release-notes.py`](../../.agents/skills/release-notes/scripts/generate-release-notes.py))
 are **separate systems** that deliberately share only one thing:
 [`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json). That file is the single
 source of truth for two decisions, and both systems honour it identically:

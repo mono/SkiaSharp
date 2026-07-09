@@ -285,54 +285,51 @@ in-flight line may name an as-yet-unpublished HarfBuzz line, which emits an in-f
 
 ## 2. Skill layout & orchestration
 
-### 2.1 Engines live in `scripts/infra/docs/`; the skill just calls them
+### 2.1 Where the engines live; the skill owns the release-notes engine
 
-All the doc-generation engines and their per-path runner scripts live together under
-`scripts/infra/docs/`, so local runs, CI, and the docs Docker image all share one copy
-and nothing can drift:
+The doc-generation engines are split by concern. The **API-diff engine** and the
+shared Cake machinery stay under `scripts/infra/docs/` (local runs, CI, and the
+docs Docker image share one copy). The **release-notes engine is owned entirely by
+the release-notes skill** — since the skill is the only thing that produces release
+notes, its engine, renderer, schema, and author cache live *with* it, not scattered
+under `scripts/infra/docs/`:
 
 ```
-scripts/infra/docs/
+scripts/infra/docs/                (shared / API-diff engine)
   api-diff.cake                API-diff engine (§5)
-  generate-release-notes.py    release-notes engine (§4)
   api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
                                #loaded by api-diff.cake AND docs.cake
   docs.cake                    mdoc-based docs/ XML generators (a different concern)
-  generate-api-diffs.sh       Path 1 runner: cake docs-api-diff-past
-  generate-release-notes.sh    Path 2 runner: python generate-release-notes.py
+  generate-api-diffs.sh        Path 1 runner: cake docs-api-diff-past
   generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
-  versions.json                supersession + baseline config (§1), used by both engines
-  pr-authors.json              PR-author cache for the release-notes engine (§4)
+  versions.json                supersession + baseline config (§1); shared repo-wide
   docker/                      reproducible image + run.sh wrapper for every path
-```
 
-The release-notes **skill** stays thin: it owns only the AI polish instructions and a
-single orchestrator that calls the runner scripts in order, so the skill never has to
-know the individual commands:
-
-```
-.agents/skills/release-notes/
-  SKILL.md                       the AI's polish instructions — a router (§4.4)
-  references/
-    TEMPLATE.md                  the page-structure/tone example the polish follows (§4.4)
-    grouping.md                  how to merge related PRs into a few thematic bullets
-    review-checklist.md          the 12-point self-review the agent runs before saving
+.agents/skills/release-notes/      (the release-notes engine + skill, all together)
+  SKILL.md                     the AI's per-slot prose instructions (§4.4)
   scripts/
-    generate.sh                  wrapper: runs Path 1 then Path 2 in order, verbose,
-                                 and writes the Files-to-polish list to a file (§2.2)
+    generate.sh                orchestrator: Path 1 (api diffs) then Path 2, verbose,
+                               writes the Files-to-polish list (§2.2)
+    generate-release-notes.sh  Path 2 runner: python generate-release-notes.py
+    generate-release-notes.py  release-notes engine (§4) — emits <version>.data.json
+    render-notes.py            deterministic page renderer (data.json + slots.json → .md)
+    schema/slots.schema.json   the prose-slot contract the agent fills
+    pr-authors.json            PR-author cache for the release-notes engine (§4)
 ```
 
-`generate.sh` owns no commands of its own — it delegates to
-`scripts/infra/docs/generate-api-diffs.sh` then `…/generate-release-notes.sh` — so the
-skill, the update-release-notes workflow, the Docker wrapper, and a human running it by
-hand all execute the exact same code.
+`generate.sh` owns no commands of its own — it delegates to the shared
+`scripts/infra/docs/generate-api-diffs.sh` (Path 1) then its sibling
+`generate-release-notes.sh` (Path 2) — so the skill, the update-release-notes
+workflow, the Docker wrapper, and a human running it by hand all execute the exact
+same code. `versions.json` stays under `scripts/infra/docs/` because it is shared
+config (the API-diff engine, security-audit, skia-sync and nuget-feed all read it),
+not release-notes-private.
 
 The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
 `scripts/infra/shared/` and is `#load`ed by the engines. `api-diff-tools.cake` (the
-NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json` loading)
-is used by *only* the two doc engines (`api-diff.cake` and the mdoc generators in
-`docs.cake`), so it sits next to them in `scripts/infra/docs/` rather than under
-`shared/`.
+NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json`
+loading) is used by *only* the two doc engines (`api-diff.cake` and the mdoc
+generators in `docs.cake`), so it sits next to them in `scripts/infra/docs/`.
 
 ### 2.2 Two phases: Prepare → Polish
 

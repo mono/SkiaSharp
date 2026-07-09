@@ -25,7 +25,7 @@ on:
       # prepare run). Ignore it: a change to ONLY the cache never needs a docs run,
       # and the daily cron still picks the cache up. A push that also touches real
       # sources still triggers (paths-ignore skips only when ALL files match).
-      - "scripts/infra/docs/pr-authors.json"
+      - ".agents/skills/release-notes/scripts/pr-authors.json"
   schedule:
     # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
     # release-branch commits (unreleased deltas), and newly published NuGets
@@ -298,9 +298,9 @@ malformed, because you never type them.
       on disk (a `*.breaking.md` under the version's API-diff folder, or a
       `<version>.notes.md` sidecar), read them for breaking-change material.
    3. Write `documentation/docfx/releases/<version>.slots.json` — prose only,
-      per the skill and `scripts/infra/docs/schema/slots.schema.json`.
+      per the skill and `.agents/skills/release-notes/scripts/schema/slots.schema.json`.
    4. Render the page:
-      `python3 scripts/infra/docs/render-notes.py documentation/docfx/releases/<version>.data.json documentation/docfx/releases/<version>.slots.json documentation/docfx/releases/<version>.md`
+      `python3 .agents/skills/release-notes/scripts/render-notes.py documentation/docfx/releases/<version>.data.json documentation/docfx/releases/<version>.slots.json documentation/docfx/releases/<version>.md`
       If it prints `SLOT VALIDATION FAILED`, read the errors, fix that slot, and
       re-run until it writes the `.md` cleanly. A clean render is the bar.
    Never hand-edit the `.md`; never touch `TOC.yml`/`index.md`; never create,

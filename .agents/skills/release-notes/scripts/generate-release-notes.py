@@ -899,13 +899,13 @@ def _login_from_email(email):
 
 # ── GitHub author resolution ─────────────────────────────────────────
 
-_AUTHOR_CACHE_PATH = Path("scripts/infra/docs/pr-authors.json")
+_AUTHOR_CACHE_PATH = Path(".agents/skills/release-notes/scripts/pr-authors.json")
 _GRAPHQL_BATCH = 50
 
 
 def load_author_cache():
     # type: () -> dict
-    """Load the PR-number -> GitHub-login cache (scripts/infra/docs/pr-authors.json).
+    """Load the PR-number -> GitHub-login cache ((.agents/skills/release-notes/scripts/pr-authors.json).
 
     This cache is the durable record of every author resolved from the GitHub
     API, so ordinary regenerations stay fully offline: a warm cache means
@@ -975,7 +975,7 @@ def resolve_pr_authors(prs):
 
     Confidence order:
       1. noreply login — already set by get_prs_from_diff, always correct.
-      2. cache (scripts/infra/docs/pr-authors.json) — previously resolved from the API.
+      2. cache ((.agents/skills/release-notes/scripts/pr-authors.json) — previously resolved from the API.
       3. GitHub GraphQL — the authoritative PR author, batched then cached.
 
     PRs that still cannot be resolved keep ``login=None``; format_pr_list then

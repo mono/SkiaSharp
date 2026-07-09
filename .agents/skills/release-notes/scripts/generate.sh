@@ -47,7 +47,7 @@ REPO_ROOT="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel)"
 # orchestrator just calls them in the required order (Path 1 api diffs -> Path 2
 # notes); it owns no commands of its own so nothing can drift between here and CI.
 API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
-RELEASE_NOTES_SH="$REPO_ROOT/scripts/infra/docs/generate-release-notes.sh"
+RELEASE_NOTES_SH="$SCRIPT_DIR/generate-release-notes.sh"
 
 run_api=1
 run_notes=1

@@ -145,7 +145,7 @@ case "$cmd" in
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-release-notes.sh "$@"
+            .agents/skills/release-notes/scripts/generate-release-notes.sh "$@"
         ;;
     all)
         # Full local run: all three paths in one container, in dependency order. Path 1
