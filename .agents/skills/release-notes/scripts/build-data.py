@@ -16,7 +16,8 @@ Division of responsibility
 SCRIPT (here): decides every filename, diff range, released-vs-unreleased split,
 which previews roll up, supersession banners, and which stale pages to prune. All
 of this is deterministic and lives in code (see the page model below + the
-docstrings on _page_filename, determine_diff_range, cleanup_stale_unreleased).
+docstrings on _page_filename, determine_diff_range, and the live-head set that
+build-index.py records for render-notes.py to prune against).
 
 AI / SKILL.md: reads each file in the final "Files to polish:" list and rewrites
 its body from the embedded raw-data block. Nothing structural — it never edits this
@@ -1956,7 +1957,8 @@ def _page_filename(branch, version):
 
     The two coexist for an in-flight version (e.g. 4.150.0.md from
     release/4.150.0-preview.1 AND 4.150.0-unreleased.md from main). They never
-    collide (distinct filenames); cleanup_stale_unreleased only prunes an
+    collide (distinct filenames); the stale-head prune (build-index.py records the
+    live-head set, render-notes.py --all deletes the rest) only removes an
     unreleased page once its line advances to a higher version.
     """
     if branch == "main" or branch.endswith(".x"):
