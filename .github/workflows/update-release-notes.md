@@ -50,6 +50,11 @@ on:
         required: false
         default: false
         type: boolean
+      force:
+        description: "Force a total regeneration: rewrite every page even when its raw data is unchanged (passes --force to the notes generator). Use to re-render the whole back-catalogue after a format/skill change."
+        required: false
+        default: false
+        type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
   group: update-release-notes
@@ -137,18 +142,22 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           ONLY_PREFIX: ${{ inputs.only_prefix }}
           NOTES_ONLY: ${{ inputs.notes_only }}
+          FORCE_REGEN: ${{ inputs.force }}
         run: |
           set -euo pipefail
           # Single entry point: Cake (API diffs) then Python (raw data + the
           # per-version data.json sidecars the agent renders from), both VERBOSE.
-          # A dispatch may scope to a version family (--only) and/or skip the heavy
-          # Cake step (--notes-only) to validate prose quickly; the daily/push runs
-          # pass neither and regenerate everything. The "Files to polish" list
-          # lands at output/files-to-polish.txt.
+          # A dispatch may scope to a version family (--only), skip the heavy Cake
+          # step (--notes-only), and/or force a total rewrite (--force, ignores the
+          # unchanged-page skip) to re-render the whole back-catalogue after a
+          # format or skill change; the daily/push runs pass none and regenerate
+          # only what changed. The "Files to polish" list lands at
+          # output/files-to-polish.txt.
           gen_flags=()
           if [ "${NOTES_ONLY:-false}" = "true" ]; then gen_flags+=(--notes-only); fi
           notes_flags=(--all)
           if [ -n "${ONLY_PREFIX:-}" ]; then notes_flags+=(--only "$ONLY_PREFIX"); fi
+          if [ "${FORCE_REGEN:-false}" = "true" ]; then notes_flags+=(--force); fi
           bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]}" "${notes_flags[@]}"
       - name: Package Prepare output
         id: package
