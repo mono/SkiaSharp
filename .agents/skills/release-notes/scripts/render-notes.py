@@ -910,16 +910,48 @@ def _page_for_data(data_path):
     return data_path.parent.parent / (stem + ".md")
 
 
+def _prune_stale_unreleased(live):
+    # type: (set) -> int
+    """Delete SkiaSharp ``<v>-unreleased.md`` pages whose line is no longer live.
+
+    ``live`` is the set of live-head version cores that build-index recorded in
+    index.json (it needed the remote branch list — a network the render does not
+    have). We delete the page and its generated inputs (data.json, prose.json);
+    the human-owned notes.md is left for the orphan warning. Released ``<v>.md``
+    pages are never touched, and only the SkiaSharp family is pruned here —
+    HarfBuzz ``-unreleased`` ownership is decided during generation from the
+    co-release map. An empty ``live`` means "unknown" -> prune nothing.
+    """
+    if not live or not RELEASES_DIR.is_dir():
+        return 0
+    pruned = 0
+    for f in sorted(RELEASES_DIR.glob("*-unreleased.md")):  # non-recursive: skips _sources/ + hb/
+        version = f.stem[:-len("-unreleased")]
+        if version in live:
+            continue
+        f.unlink()
+        for extra in (_data_json_path(f), _prose_json_path(f)):
+            if extra.exists():
+                extra.unlink()
+        pruned += 1
+        log("  Pruned stale {}".format(f))
+    return pruned
+
+
 def render_all():
     # type: () -> int
     """Regenerate EVERY page and the TOC/index from committed JSON (offline).
 
     The final Polish step: after the agent has written each page's prose.json,
-    one --all pass re-renders every ``<version>.md`` from its data.json +
-    prose.json (and the deterministic no-changes pages from data.json alone),
-    then builds TOC.yml + index.md from the finished page set and the committed
-    Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
+    one --all pass prunes any now-stale ``-unreleased`` page (per the live-head set
+    build-index recorded in index.json), re-renders every ``<version>.md`` from its
+    data.json + prose.json (and the deterministic no-changes pages from data.json
+    alone), then builds TOC.yml + index.md from the finished page set and the
+    committed Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
     """
+    index = load_index_json()
+    _prune_stale_unreleased(set(index.get("live_unreleased") or []))
+
     src_dirs = [RELEASES_DIR / "_sources", RELEASES_DIR / "harfbuzzsharp" / "_sources"]
     rendered = 0
     for sd in src_dirs:
@@ -947,7 +979,7 @@ def render_all():
 
     versions, next_versions = get_version_files()
     hb_versions, hb_next_versions = get_harfbuzz_version_files()
-    schedule = load_index_json().get("chrome_schedule") or {}
+    schedule = index.get("chrome_schedule") or {}
     (RELEASES_DIR / "TOC.yml").write_text(
         generate_toc(versions, next_versions, hb_versions, hb_next_versions))
     (RELEASES_DIR / "index.md").write_text(

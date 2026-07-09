@@ -47,29 +47,28 @@ list_remote_release_branches = _gen.list_remote_release_branches
 cadence_milestones = _gen.cadence_milestones
 
 
-def cleanup_stale_unreleased():
-    # type: () -> list[str]
-    """Delete ``{version}-unreleased.md`` pages whose line is no longer a head.
+def live_unreleased_versions():
+    # type: () -> set[str]
+    """The version cores whose ``{version}-unreleased.md`` page is still a live head.
 
     An unreleased page models "what may ship next" for an in-flight LINE, and a
     line is in-flight only while it is the version of an active HEAD — either
-    ``main`` (the upcoming version) or a servicing ``release/X.Y.x`` branch. Any
-    ``-unreleased`` page whose version is not one of those live heads is an
-    orphan and is removed (spec §4.2). This prunes BOTH a page left behind in the
-    same minor and one left behind across minors — e.g. once the head advances
-    4.148 → 4.150 and no ``release/4.148.x`` servicing branch exists, the stale
-    ``4.148.0-unreleased.md`` is removed; if that servicing branch DOES exist the
-    page is kept, because 4.148 is still a live (serviced) head.
+    ``main`` (the upcoming version) or a servicing ``release/X.Y.x`` branch.
+    Determining that needs the remote branch list, so it is computed HERE, in the
+    network-capable Prepare phase, and recorded in index.json. render-notes.py
+    (offline) then deletes any ``-unreleased`` page whose version is not in this
+    set — e.g. once the head advances 4.148 → 4.150 and no ``release/4.148.x``
+    servicing branch exists, ``4.148.0-unreleased.md`` is stale and removed; if
+    that servicing branch DOES exist the page is kept, because 4.148 is still a
+    live (serviced) head. This script writes NO Markdown and deletes nothing.
 
-    Released ``{version}.md`` pages are never touched here — only the unreleased
-    deltas. Returns the removed file paths. To avoid clobbering on a degenerate
-    checkout, nothing is deleted when no release branches can be enumerated.
+    An empty set (no release branches enumerable) means "unknown" — render-notes.py
+    treats that as "prune nothing" to avoid clobbering on a degenerate checkout.
     """
     all_branches = list_remote_release_branches()
     if not all_branches:
-        return []
+        return set()
 
-    # Live in-flight lines = main's upcoming version + every servicing .x head.
     live = set()  # type: set[str]
     main_version = get_upcoming_version()
     if main_version:
@@ -83,17 +82,7 @@ def cleanup_stale_unreleased():
         svc_version = (get_version_from_remote_branch(b)
                        or "{}.{}.0".format(m.group(1), m.group(2)))
         live.add(svc_version)
-
-    removed = []
-    for f in sorted(RELEASES_DIR.iterdir()):
-        if (f.suffix != ".md" or not f.stem.endswith("-unreleased")
-                or f.name.endswith(".notes.md")):
-            continue
-        version = f.stem[:-len("-unreleased")]
-        if version not in live:
-            _gen._prune_page_and_sources(f)
-            removed.append(str(f))
-    return removed
+    return live
 
 
 def fetch_chrome_schedule(milestone, timeout=8):
@@ -147,11 +136,19 @@ def _index_json_path():
 
 def build_index_json():
     # type: () -> dict
-    """The network-sourced index data render-notes.py needs to lay out index.md.
+    """The network-sourced index data render-notes.py needs, offline.
 
-    Currently just the live Chrome schedule for the two milestones in flight (the
-    release-cadence timeline). Timestamp-free so an identical run yields an
-    identical file and there is no git churn (mirrors data.json, spec §4.6).
+    Two things that need a network and that the offline render cannot recompute:
+
+      * ``chrome_schedule`` — the live Chrome schedule for the two milestones in
+        flight, for the release-cadence timeline in index.md.
+      * ``live_unreleased`` — the version cores whose ``-unreleased`` page is still
+        a live head (from the remote branch list). render-notes.py deletes any
+        ``-unreleased`` page not in this set; build-index writes NO Markdown and
+        deletes nothing itself.
+
+    Timestamp-free so an identical run yields an identical file and there is no git
+    churn (mirrors data.json, spec §4.6).
     """
     _, cur_ms, next_ms = cadence_milestones()
     return {
@@ -159,6 +156,7 @@ def build_index_json():
             str(cur_ms): fetch_chrome_schedule(cur_ms),
             str(next_ms): fetch_chrome_schedule(next_ms),
         },
+        "live_unreleased": sorted(live_unreleased_versions()),
     }
 
 
@@ -166,8 +164,6 @@ def main():
     if not RELEASES_DIR.is_dir():
         log("Error: {} does not exist".format(RELEASES_DIR), file=sys.stderr)
         sys.exit(1)
-    for removed in cleanup_stale_unreleased():
-        log("Removed stale {}".format(removed))
     data = build_index_json()
     path = _index_json_path()
     path.parent.mkdir(parents=True, exist_ok=True)
