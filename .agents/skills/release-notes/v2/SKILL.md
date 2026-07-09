@@ -1,0 +1,102 @@
+---
+name: release-notes
+description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`slots.json`); a deterministic renderer builds the page.
+---
+
+# Release notes — writing the prose
+
+You are writing the human prose for one release-notes page. **You do not build the
+page.** A script (`render-notes.py`) owns every heading, table, banner, `@handle`,
+❤️, and PR link. Your entire job is to fill a small set of prose *slots*, and the
+renderer assembles the page from those plus the facts in `data.json`.
+
+This split exists on purpose: the parts that used to break — dropped headings,
+bare handles, missing contributors, malformed links — are now impossible because
+you never type them. Spend your effort on the one thing only a human-quality
+writer can do: turn a raw activity log into a changelog a **NuGet consumer** wants
+to read.
+
+## The one test for everything you write
+
+> Would a consumer notice this change without looking inside our repo?
+
+If yes, write about it. If no (CI tweaks, internal refactors, doc/workflow
+plumbing, test infra), leave it out — the renderer already collapses that noise.
+`data.json` tags every PR `product` / `mixed` / `internal`; treat `internal` as
+invisible unless it changed shipped behaviour, and for `mixed` judge from the
+title.
+
+## How to work
+
+1. Read `data.json` for the version. It has: `landmarks`, `prs` (title, author,
+   community, tag), `previews` (each with its PR list), `contributors` (the
+   authoritative roster), `breaking_candidates`, and the banner/link facts.
+2. Read the breaking sources if present: the version's `*.breaking.md` API diff
+   and any `<version>.notes.md` sidecar. These are your material for the
+   `breaking` slot — the API diff gives signature removals, the notes sidecar
+   gives *behavioural* breaks (same signature, new runtime behaviour) that no
+   diff can detect.
+3. Write `slots.json` (schema: `scripts/slots.schema.json`).
+4. Run `python3 scripts/render-notes.py data.json slots.json out.md`. If it prints
+   a validation error, fix that slot and re-run. A clean render is the bar.
+
+## The slots
+
+Each slot below lists its purpose, the cap the renderer enforces, and one good +
+one bad example. Caps are hard: the renderer rejects an over-long highlight, a
+missing contributor, or an unknown category. Stay well under and you never see an
+error.
+
+### `theme` — 2-6 words
+What *this* release is about, shown bold in the banner. No punctuation.
+- Good: `First stable v4 release`
+- Bad: `Version 4.148.0` (that's the title, not a theme) · `Lots of fixes and new APIs` (vague)
+
+### `highlights_headline` — one sentence, ≤20 words
+The single most important thing about the release. **Not a list.** Its only
+inputs are `landmarks` and your judgement — you are not summarising every PR here.
+- Good: `SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148.`
+- Bad: `This release adds WebP, SKStream.GetData, singleton lifecycle, pixel fixes, WinUI fixes, and more.` (enumeration)
+
+### `highlights_body` — optional, ≤60 words, or `null`
+Name 2-3 themes in prose to draw the reader in. No PR links, no `@handles`, no
+comma-run "A, B, C, D, E" lists. If the headline already says enough, use `null`.
+- Good: `It adds variable fonts and animated WebP, and reworks the singleton lifecycle. This is a breaking release — check the changes below before upgrading.`
+- Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles + list)
+
+### `breaking` — array, one entry per change a consumer must act on
+Merge from two sources: signature removals in the `*.breaking.md` diff, and
+behavioural breaks described in `breaking_candidates` / the notes sidecar. Empty
+array is fine and renders "None in this release." Give each a `title`, a `body`
+that says what changed **and what to do**, and the `prs` it came from.
+- Good: `{"title": "SKPaint no longer exposes legacy text state", "body": "The paint text/font members obsoleted in v3 are now compile errors — move typeface and text size onto SKFont.", "prs": [4068, 4114]}`
+- Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
+
+### `categories` — array of `{heading, bullets}`
+The body of the page. Headings must come from `data.allowed_categories`. **Curate,
+don't enumerate:** each bullet MERGES related PRs into one product theme (aim 3-5
+bullets per section), gives a `lead` (bold summary) + `detail` (what it means for
+the consumer) + the `prs`. The renderer adds the PR links and the ❤️ community
+credit — never write those yourself.
+- Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
+- Bad: one bullet per PR restating its title; a section that lists 20 internal PRs.
+
+### `contributor_summaries` — one line per roster login
+`data.contributors` is authoritative — every login there needs an entry (the
+renderer fails otherwise) and no one else gets one. Summarise that person's work
+in prose; the renderer adds their `@handle` and PR links.
+- Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
+- Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
+
+### `preview_summaries` — one line per preview key
+`data.previews` lists each preview/RC with the PRs that first shipped in it. Give
+each `key` a 1-2 sentence summary of what that milestone delivered.
+- Good: `"p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
+- Bad: leaving a preview key out (the renderer fails), or restating every PR.
+
+## Why this is short
+
+There is no separate template, grouping guide, or checklist to reconcile — the
+renderer is the checklist, and this file is the only instructions. If a rule
+isn't here, it's because the renderer already guarantees it. Write the prose;
+let the script build the page.
