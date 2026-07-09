@@ -23,14 +23,14 @@
 #               [extra args for the Python script...]
 #
 #   (no scope args)      Full regeneration of everything: API diffs (Cake)
-#                        then release-notes raw data for every branch (Python --all).
+#                        then release-notes raw data for every branch (Python default).
 #   --api-only           Run only the Cake API-diff generator.
 #   --notes-only         Run only the Python release-notes generator.
 #   --polish-list <path> Forwarded to the Python generator: write the "Files to
 #                        polish" list to <path> instead of the default
 #                        output/files-to-polish.txt.
 #   <extra args>         Forwarded verbatim to generate-release-notes.py, replacing
-#                        the default `--all` (e.g. `--branch main`, a version, etc.).
+#                        the default full regen (e.g. `--force`, `--min-version X`, etc.).
 #
 # Exit status is non-zero (with a clear message) if a required tool is missing —
 # the skill must then stop and ask the user to install it, never work around it.
@@ -65,11 +65,9 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# Default scope: regenerate every branch.
-if [ "${#notes_args[@]}" -eq 0 ]; then
-  notes_args=(--all)
-fi
-
+# Default scope: regenerate every branch (the generator's default when passed no
+# scope flags). Any extra args collected above (e.g. --force, --min-version) are
+# forwarded verbatim.
 cd "$REPO_ROOT"
 
 if [ "$run_api" = 1 ]; then
@@ -78,11 +76,14 @@ if [ "$run_api" = 1 ]; then
 fi
 
 if [ "$run_notes" = 1 ]; then
-  py_args=("${notes_args[@]}")
+  # Build the python arg list. Guard every array expansion with ":+}" so an empty
+  # array is safe under `set -u` on bash 3.2 (macOS) — with no scope flags the
+  # generator regenerates every branch by default.
+  py_args=("${notes_args[@]:+${notes_args[@]}}")
   if [ -n "$polish_list" ]; then
     py_args+=(--polish-list "$polish_list")
     echo "==> Files-to-polish list -> $polish_list"
   fi
   echo "==> Prepare [2/2]: release-notes raw data (Path 2) — verbose"
-  "$RELEASE_NOTES_SH" "${py_args[@]}"
+  "$RELEASE_NOTES_SH" "${py_args[@]:+${py_args[@]}}"
 fi

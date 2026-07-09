@@ -63,24 +63,24 @@ AI renders one "## Preview N" section per bucket and merges them for the Highlig
 there is no separate flat list to drift. Pages with no previews stay a single flat list.
 
 Commands:
-    # Diff a branch and write raw PR data to documentation/docfx/releases/{version}.md
-    python3 generate-release-notes.py --branch main
-    python3 generate-release-notes.py --branch release/3.119.x
-    python3 generate-release-notes.py --branch release/4.147.0-preview.1
+    # Regenerate every branch (main + all release/*); skip unchanged files
+    python3 generate-release-notes.py
 
-    # Process ALL branches (main + all release/*), skip unchanged files
-    python3 generate-release-notes.py --all
+    # Rewrite every page, even unchanged ones (after a format/skill change)
+    python3 generate-release-notes.py --force
 
-    # Regenerate TOC.yml and index.md from files on disk + create upcoming version file
+    # Bound to a version range — or a single version when min == max
+    python3 generate-release-notes.py --min-version 4.147.0 --max-version 4.151.0
+    python3 generate-release-notes.py --min-version 4.148.0 --max-version 4.148.0
+
+    # Regenerate TOC.yml and index.md only
     python3 generate-release-notes.py --update-toc
 
-The --branch command writes directly to documentation/docfx/releases/{version}.md
-with a YAML front-matter header containing metadata (branch, version, status, diff
-range, PR count) followed by the raw PR list. AI then rewrites this file with
-polished content. TOC and index are regenerated automatically.
-
-The --all command iterates every branch and only writes files whose PR count or
-diff range has changed (idempotent). Use this for automated workflows.
+The default (no scope flags) iterates every branch and emits each changed
+version's data.json + page, writing only files whose PR count or diff range has
+changed (idempotent) — this is what the automated workflow runs.
+``--min-version``/``--max-version`` bound the walk to a version range (set both
+equal to regenerate one version); ``--force`` rewrites even unchanged pages.
 
 Reads scripts/infra/docs/versions.json (if present) for comparison overrides and
 supersession markers. versions.json is the single source of truth: only the
@@ -3110,7 +3110,7 @@ def _canonical_branches_by_version(all_branches):
     return canonical
 
 
-def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=None,
+def _write_page(branch, all_branches, verbose=False, force=False,
                 min_core=None, max_core=None):
     # type: (str, list[str], bool, bool, Optional[str]) -> Optional[str]
     """Generate one release page from a branch. Returns its path, or None.
@@ -3122,12 +3122,9 @@ def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=No
     when the page was skipped (unchanged) or the diff range could not be
     determined.
 
-    ``only_prefix`` (e.g. ``"4."``) scopes a run to one version family: a version
-    whose core does not start with the prefix is left entirely untouched (not
-    rewritten, not listed), so the v2 rollout can validate ``4.*`` first without
-    disturbing the committed ``3.*`` pages. ``min_core``/``max_core`` (inclusive
-    ``(maj, min, patch, sub)`` tuples from ``_core_tuple``) further bound the run
-    to a version RANGE, so the back-catalogue can be regenerated in chunks.
+    ``min_core``/``max_core`` (inclusive ``(maj, min, patch, sub)`` tuples from
+    ``_core_tuple``) bound the run to a version RANGE, so the back-catalogue can
+    be regenerated in chunks (or a single version when they are equal).
     """
     try:
         from_ref, to_ref, version = determine_diff_range(branch)
@@ -3136,9 +3133,6 @@ def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=No
             branch, e), file=sys.stderr)
         return None
 
-    if only_prefix and not str(version).startswith(only_prefix):
-        log("  Skipping {} (not in --only {} scope).".format(version, only_prefix))
-        return None
     if min_core is not None or max_core is not None:
         vc = _core_tuple(version)
         if min_core is not None and vc < min_core:
@@ -3519,95 +3513,6 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
     return str(output_path), owned
 
 
-def cmd_branch(branch, force=False, polish_list_path=None):
-    # type: (str, bool, str) -> None
-    """Diff a branch against its predecessor and write raw data to the version file."""
-    branch = _removeprefix(branch, "origin/")
-
-    log("Fetching remote branches...")
-    try:
-        # Unshallow if needed (CI runners use shallow clones)
-        run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
-        # Fetch all release branches and main explicitly
-        run(["git", "fetch", "origin",
-             "refs/heads/release/*:refs/remotes/origin/release/*",
-             "refs/heads/main:refs/remotes/origin/main",
-             "--quiet"], check=True)
-    except subprocess.CalledProcessError:
-        log("ERROR: git fetch failed. Cannot determine branch diff range.")
-        sys.exit(1)
-
-    all_branches = list_remote_release_branches()
-    if not all_branches:
-        log("ERROR: No release branches found after fetch.")
-        sys.exit(1)
-
-    # Resolve a versioned branch to the canonical branch for its version so a
-    # manual --branch on a preview never clobbers the stable {version}.md page,
-    # and the result matches exactly what --all would produce. main and
-    # servicing (.x) branches are keyed by branch (not version) and processed
-    # as-is.
-    target = branch
-    if branch != "main" and not branch.endswith(".x"):
-        version = version_from_branch(branch)
-        canonical = _canonical_branches_by_version(all_branches).get(version)
-        if canonical and canonical != branch:
-            log("Note: {} is not the canonical branch for {}; "
-                  "processing {} instead.".format(branch, version, canonical))
-            target = canonical
-
-    files_to_polish = []
-    path = _write_page(target, all_branches, verbose=True, force=force)
-    if path:
-        files_to_polish.append(path)
-
-    # When a versioned branch is pushed, also regenerate the unreleased file(s)
-    # — the diff range for main or the servicing .x branch may have changed now
-    # that a new release branch exists.
-    if target != "main" and not target.endswith(".x"):
-        files_to_polish.extend(_regen_unreleased(target, all_branches, force=force))
-
-    cmd_update_toc()
-
-    warn_orphan_notes_sidecars()
-
-    log("")
-    write_polish_list(files_to_polish, polish_list_path)
-
-def _regen_unreleased(trigger_branch, all_branches, force=False):
-    # type: (str, list[str], bool) -> list[str]
-    """Regenerate unreleased pages after a versioned branch push.
-
-    When a new release/X.Y.Z branch appears, the diff ranges for main and/or the
-    servicing release/X.Y.x branch may have moved. Regenerates whichever
-    unreleased pages are affected and returns the paths actually written.
-    """
-    m = re.match(r"release/(\d+)\.(\d+)\.\d+", trigger_branch)
-    if not m:
-        return []
-    minor = "{}.{}".format(m.group(1), m.group(2))
-    written = []  # type: list[str]
-
-    # Servicing (.x) line for the same minor, if it exists.
-    svc_branch = "release/{}.x".format(minor)
-    if svc_branch in all_branches:
-        log("\nRegenerating unreleased for {}...".format(svc_branch))
-        path = _write_page(svc_branch, all_branches, force=force)
-        if path:
-            written.append(path)
-
-    # main — only when its upcoming version is in the same minor as the trigger
-    # (a push to a 3.119.x preview doesn't move main's range if main is on 4.x).
-    main_version = get_upcoming_version()
-    if main_version and minor_group(main_version) == minor:
-        log("\nRegenerating unreleased for main...")
-        path = _write_page("main", all_branches, force=force)
-        if path:
-            written.append(path)
-
-    return written
-
-
 # ── Main ─────────────────────────────────────────────────────────────
 
 
@@ -3656,17 +3561,18 @@ def _process_harfbuzz_family(all_branches, force=False):
     return files_to_polish, processed, skipped
 
 
-def cmd_all(force=False, polish_list_path=None, only_prefix=None,
-            min_core=None, max_core=None):
-    # type: (bool, str, Optional[str]) -> None
-    """Process all branches (main + all release/*). Skip unchanged files.
+def cmd_generate(force=False, polish_list_path=None,
+                 min_core=None, max_core=None):
+    # type: (bool, str, Optional[tuple], Optional[tuple]) -> None
+    """Regenerate release pages for every branch (main + all release/*).
 
-    This is the idempotent "regenerate everything" mode used by the automated
-    workflow. It iterates over every known branch and regenerates its raw PR
-    data, but only WRITES files whose content actually changed (same PR count
-    AND same diff range == no write). The "Files to polish" output therefore
-    only lists files that genuinely changed, so the AI never re-polishes pages
-    that are already up to date.
+    The default (and only) generation mode: it iterates over every known branch
+    and regenerates its raw PR data, but only WRITES files whose content actually
+    changed (same PR count AND same diff range == no write), so the "Files to
+    polish" output lists only files that genuinely changed and the AI never
+    re-polishes pages that are already up to date. ``--force`` overrides the skip;
+    ``min_core``/``max_core`` bound the run to a version range (set them equal to
+    regenerate a single version).
 
     Superseded versions (e.g. 4.147, which was skipped for 4.148) are still
     generated — they keep their own page with a "superseded by" label. The
@@ -3717,7 +3623,7 @@ def cmd_all(force=False, polish_list_path=None, only_prefix=None,
             continue
 
         log("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches, force=force, only_prefix=only_prefix,
+        path = _write_page(branch, all_branches, force=force,
                            min_core=min_core, max_core=max_core)
         if path:
             files_to_polish.append(path)
@@ -3728,9 +3634,9 @@ def cmd_all(force=False, polish_list_path=None, only_prefix=None,
     # HarfBuzz peer family — same pipeline, line-driven from the co-release map
     # (spec §4.5). Runs after the SkiaSharp pass so the canonical SkiaSharp pages
     # its cross-links target already exist this run. Skipped entirely when a run
-    # is scoped to a SkiaSharp version subset via --only or --min/--max-version
+    # is scoped to a SkiaSharp version subset via --min/--max-version
     # (a scoped validation run wants only the SkiaSharp pages in range).
-    if only_prefix or min_core is not None or max_core is not None:
+    if min_core is not None or max_core is not None:
         hb_polish, hb_processed, hb_skipped = [], 0, 0
     else:
         hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
@@ -3754,73 +3660,54 @@ def cmd_all(force=False, polish_list_path=None, only_prefix=None,
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Fetch SkiaSharp release data for the website",
+        description="Fetch SkiaSharp release data for the website and emit each "
+                    "changed version's data.json + page.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  %(prog)s --branch main                       "
-            "Raw PR data -> releases/4.147.0.md\n"
-            "  %(prog)s --branch release/3.119.x            "
-            "Raw PR data -> releases/3.119.5.md\n"
-            "  %(prog)s --all                               "
-            "Process all branches (skip unchanged)\n"
+            "  %(prog)s                                     "
+            "Regenerate every version (skip unchanged)\n"
+            "  %(prog)s --force                             "
+            "Rewrite every version, even unchanged ones\n"
+            "  %(prog)s --min-version 4.147.0 --max-version 4.151.0   "
+            "Only the 4.x range\n"
+            "  %(prog)s --min-version 4.148.0 --max-version 4.148.0   "
+            "Just one version\n"
             "  %(prog)s --update-toc                        "
-            "Regenerate TOC + index\n"
+            "Only regenerate TOC + index\n"
         ),
     )
     parser.add_argument(
-        "--branch",
-        help="Diff branch against its predecessor and write raw PR data")
-    parser.add_argument(
-        "--all", action="store_true",
-        help="Process all branches (main + release/*), skip unchanged files")
-    parser.add_argument(
         "--update-toc", action="store_true",
-        help="Regenerate TOC.yml + index.md")
+        help="Only regenerate TOC.yml + index.md (nothing else)")
     parser.add_argument(
         "--force", action="store_true",
-        help="Rewrite pages even when the raw data is unchanged "
-             "(use with --all or --branch to re-resolve author handles)")
+        help="Rewrite pages even when the raw data is unchanged (e.g. to "
+             "re-render the whole back-catalogue after a format or skill change)")
     parser.add_argument(
         "--polish-list", metavar="FILE", default=None,
         help="Write the 'Files to polish' list to FILE (one repo-relative path "
              "per line; empty file = nothing changed). Defaults to "
              "output/files-to-polish.txt.")
     parser.add_argument(
-        "--only", metavar="PREFIX", default=None,
-        help="Scope an --all run to versions whose core starts with PREFIX "
-             "(e.g. '4.'). Other versions are left entirely untouched — used to "
-             "roll out the v2 pipeline on 4.* before 3.*.")
-    parser.add_argument(
         "--min-version", metavar="CORE", default=None,
-        help="Lower bound (inclusive) for an --all run, e.g. '3.116.0'. Versions "
-             "below it are left untouched. Combine with --max-version to "
-             "regenerate the back-catalogue in chunks.")
+        help="Lower bound (inclusive), e.g. '3.116.0'. Versions below it are left "
+             "untouched. Combine with --max-version to regenerate a range, or set "
+             "both equal to regenerate a single version.")
     parser.add_argument(
         "--max-version", metavar="CORE", default=None,
-        help="Upper bound (inclusive) for an --all run, e.g. '4.148.0'. Versions "
-             "above it are left untouched.")
+        help="Upper bound (inclusive), e.g. '4.148.0'. Versions above it are left "
+             "untouched.")
 
     args = parser.parse_args()
 
-    if not args.branch and not args.update_toc and not args.all:
-        parser.print_help()
-        sys.exit(1)
-
-    num_modes = sum([bool(args.branch), args.update_toc, args.all])
-    if num_modes > 1:
-        parser.error("Specify only one of --branch, --all, or --update-toc")
-
     if args.update_toc:
         cmd_update_toc()
-    elif args.all:
+    else:
         min_core = _core_tuple(args.min_version) if args.min_version else None
         max_core = _core_tuple(args.max_version) if args.max_version else None
-        cmd_all(force=args.force, polish_list_path=args.polish_list,
-                only_prefix=args.only, min_core=min_core, max_core=max_core)
-    elif args.branch:
-        cmd_branch(args.branch, force=args.force,
-                   polish_list_path=args.polish_list)
+        cmd_generate(force=args.force, polish_list_path=args.polish_list,
+                     min_core=min_core, max_core=max_core)
 
 
 if __name__ == "__main__":

@@ -40,13 +40,8 @@ on:
         required: false
         default: "main"
         type: string
-      only_prefix:
-        description: "Scope generation to versions whose core starts with this prefix (e.g. '4.'). Empty = all versions. Used to roll out / validate the v2 render pipeline on 4.* before 3.*."
-        required: false
-        default: ""
-        type: string
       min_version:
-        description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate the back-catalogue in chunks."
+        description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate a range, or set both equal to regenerate a single version."
         required: false
         default: ""
         type: string
@@ -150,7 +145,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
-          ONLY_PREFIX: ${{ inputs.only_prefix }}
           NOTES_ONLY: ${{ inputs.notes_only }}
           FORCE_REGEN: ${{ inputs.force }}
           MIN_VERSION: ${{ inputs.min_version }}
@@ -159,20 +153,19 @@ jobs:
           set -euo pipefail
           # Single entry point: Cake (API diffs) then Python (raw data + the
           # per-version data.json sidecars the agent renders from), both VERBOSE.
-          # A dispatch may scope to a version family (--only), a version RANGE
-          # (--min-version/--max-version, for chunked back-catalogue regens), skip
-          # the heavy Cake step (--notes-only), and/or force a total rewrite
-          # (--force, ignores the unchanged-page skip); the daily/push runs pass
-          # none and regenerate only what changed. The "Files to polish" list
-          # lands at output/files-to-polish.txt.
+          # A dispatch may bound to a version RANGE (--min-version/--max-version,
+          # for chunked back-catalogue regens or a single version), skip the heavy
+          # Cake step (--notes-only), and/or force a total rewrite (--force,
+          # ignores the unchanged-page skip); the daily/push runs pass none and
+          # regenerate only what changed. The "Files to polish" list lands at
+          # output/files-to-polish.txt.
           gen_flags=()
           if [ "${NOTES_ONLY:-false}" = "true" ]; then gen_flags+=(--notes-only); fi
-          notes_flags=(--all)
-          if [ -n "${ONLY_PREFIX:-}" ]; then notes_flags+=(--only "$ONLY_PREFIX"); fi
+          notes_flags=()
           if [ -n "${MIN_VERSION:-}" ]; then notes_flags+=(--min-version "$MIN_VERSION"); fi
           if [ -n "${MAX_VERSION:-}" ]; then notes_flags+=(--max-version "$MAX_VERSION"); fi
           if [ "${FORCE_REGEN:-false}" = "true" ]; then notes_flags+=(--force); fi
-          bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]}" "${notes_flags[@]}"
+          bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]:+${gen_flags[@]}}" "${notes_flags[@]:+${notes_flags[@]}}"
       - name: Package Prepare output
         id: package
         run: |
@@ -282,7 +275,7 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 
 1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
-2. ran **Python** (`generate-release-notes.py --all`) to emit, for every changed
+2. ran **Python** (`generate-release-notes.py`) to emit, for every changed
    version, a deterministic `<version>.data.json` sidecar (the facts the page is
    rendered from), write the deterministic page→API-diff links, and write the
    **"Files to polish"** list.

@@ -14,10 +14,10 @@
 # docs Docker wrapper (run.sh notes), and a human all call THIS.
 #
 # Usage:
-#   generate-release-notes.sh [args...]          (default scope: --all)
+#   generate-release-notes.sh [args...]          (default: regenerate every branch)
 #
 #   <args> are forwarded verbatim to generate-release-notes.py, replacing the default
-#   --all (e.g. --branch main, a version, --polish-list <path>, ...).
+#   default full regen (e.g. --force, --min-version X, --polish-list <path>, ...).
 #
 # Requires: python3. The generator uses the GitHub CLI ('gh') to resolve PR authors;
 # export GITHUB_TOKEN or GH_TOKEN so it can authenticate (CI passes one through).
@@ -46,10 +46,6 @@ if [ ! -f "$PY_GENERATOR" ]; then
     exit 1
 fi
 
-# Default scope: regenerate every branch.
-if [ "$#" -eq 0 ]; then
-    set -- --all
-fi
-
+# No args = the generator's default (regenerate every branch, skip unchanged).
 echo "==> Path 2: release notes (generate-release-notes.py $*) — verbose"
 python3 "$PY_GENERATOR" "$@"
