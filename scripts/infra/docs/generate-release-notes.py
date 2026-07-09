@@ -1904,6 +1904,234 @@ def _release_date_display(version):
 #   2 — three-way [product]/[mixed]/[internal] tag + authoritative contributor roster
 _RAWDATA_FORMAT_VERSION = 2
 
+# Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
+# (data.json + slots.json + render-notes.py) consumes this instead of parsing the
+# raw-data HTML comment. Bump when the data.json schema changes.
+_DATA_JSON_FORMAT_VERSION = 3
+
+# The canonical, closed set of category headings a page may use. The renderer
+# (render-notes.py) enforces that every slots.json category heading is one of
+# these, so the section taxonomy is owned here (data) not in prose.
+RELEASE_CATEGORIES = [
+    "Engine", "API Surface", "Bug Fixes",
+    "Lifecycle & Internals", "Platform", "Security",
+]
+
+_PREVIEW_KEY_STAGE = {
+    "Release Candidate": "rc", "Preview": "p", "Alpha": "a", "Beta": "b",
+}
+
+
+def _preview_key(label):
+    # type: (str) -> str
+    """Stable short key for a preview/RC label ('Release Candidate 1' -> 'rc1')."""
+    parts = (label or "").rsplit(" ", 1)
+    stem = parts[0] if len(parts) == 2 else label
+    num = parts[1] if len(parts) == 2 else ""
+    return "{}{}".format(_PREVIEW_KEY_STAGE.get(stem, "m"), num).strip().lower()
+
+
+def _pr_is_community(pr):
+    # type: (dict) -> bool
+    """Same community test used for the raw-data marker (§4.5)."""
+    login = (pr.get("author") or {}).get("login")
+    return bool(login) and login != "mattleibow" and not _is_bot_login(login)
+
+
+def build_data_json(prs, metadata):
+    # type: (list[dict], dict) -> dict
+    """Emit the deterministic facts a release page is built from (v2 pipeline).
+
+    This is the machine-owned half of the split introduced to stop the polish
+    agent owning page structure: everything here is fact (PRs, tags, roster,
+    previews, banner date, links, breaking sources). The agent reads it and
+    writes only prose (`slots.json`); ``render-notes.py`` assembles the page.
+
+    Reuses the exact helpers the raw-data block uses (``_pr_category`` tags,
+    ``_contributor_roster``, ``bucket_prs_by_milestone``, ``_release_date_display``)
+    so the two emitters can never disagree about the facts.
+    """
+    version = metadata["version"]
+    status = metadata["status"]
+    family = metadata.get("family", "skiasharp")
+    pkg = metadata.get("package", "SkiaSharp")
+    nuget = "https://www.nuget.org/packages/{}".format(pkg)
+
+    released = _release_date_display(version) if status == "stable" else None
+
+    # Banner facts — the renderer owns the shape, we own date + links.
+    if status == "stable":
+        kind, nuget_url = "stable", "{}/{}".format(nuget, version)
+        preview_nuget = None
+    elif status == "preview" or metadata.get("superseded_by"):
+        kind, nuget_url = "preview", None
+        preview_nuget = "{}/{}-preview".format(nuget, version)
+    elif status == "unreleased":
+        kind, nuget_url, preview_nuget = "unreleased", None, None
+    else:
+        kind, nuget_url, preview_nuget = status, "{}/{}".format(nuget, version), None
+    if family == "harfbuzzsharp":
+        kind = "harfbuzz"
+    banner = {
+        "kind": kind,
+        "date": released,
+        "nuget_url": nuget_url,
+        "preview_nuget_url": preview_nuget,
+        "github_release_url": (
+            "https://github.com/mono/SkiaSharp/releases/tag/v{}".format(version)
+            if status == "stable" else None),
+    }
+
+    # Flat PR map + community flag (renderer derives ❤️ credit from this).
+    pr_map = {}
+    for pr in prs:
+        num = pr.get("number")
+        if not num:
+            continue
+        pr_map[str(num)] = {
+            "url": pr.get("url", ""),
+            "title": pr.get("title", ""),
+            "author": (pr.get("author") or {}).get("login"),
+            "community": _pr_is_community(pr),
+            "tag": pr.get("category", "product"),
+        }
+
+    contributors = [
+        {"login": login,
+         "url": "https://github.com/{}".format(login),
+         "prs": nums}
+        for login, nums in _contributor_roster(prs)
+    ]
+
+    previews = []
+    for b in metadata.get("pr_buckets") or []:
+        m = b.get("milestone") or {}
+        label = m.get("label")
+        if not label or not m.get("tag"):
+            continue  # skip the synthetic leftover/unreleased bucket
+        previews.append({
+            "key": _preview_key(label),
+            "label": label,
+            "date": m.get("date"),
+            "changelog_url": m.get("compare_url"),
+            "prs": [pr.get("number") for pr in b.get("prs") or [] if pr.get("number")],
+        })
+
+    # Breaking-change *sources* the agent turns into prose: the API breaking diff
+    # (signature removals) and the manual notes sidecar (behavioural breaks that
+    # no diff can detect). We point at them; the agent reads and summarises.
+    companions = metadata.get("companions") or {}
+    breaking_candidates = []
+    if companions.get("breaking"):
+        for p in companions["breaking"].get("paths", []):
+            breaking_candidates.append(
+                {"source": "api-breaking-diff", "path": p, "prs": []})
+    if companions.get("notes"):
+        breaking_candidates.append(
+            {"source": "notes-sidecar", "path": companions["notes"].get("path"),
+             "prs": []})
+
+    supersedes = []
+    for s in metadata.get("supersedes") or []:
+        supersedes.append({
+            "version": s,
+            "href": "{}.md".format(s),
+            "note": "Rolls up preview-only work that was never released as "
+                    "stable — those changes are included cumulatively below.",
+        })
+    superseded_by = None
+    if metadata.get("superseded_by"):
+        sb = metadata["superseded_by"]
+        superseded_by = {
+            "version": sb, "href": "{}.md".format(sb),
+            "note": "Never released as stable — these changes rolled up into {}.".format(sb),
+        }
+
+    api_links = []
+    if metadata.get("api_diff_link"):
+        api_links.append({"label": "SkiaSharp API diff",
+                          "href": metadata["api_diff_link"]})
+    hb = metadata.get("harfbuzz")
+    if hb and hb.get("link"):
+        api_links.append({"label": "HarfBuzzSharp {}".format(hb.get("version", "")),
+                          "href": hb["link"]})
+
+    landmarks = _derive_landmarks(prs, bool(companions.get("breaking")), status)
+
+    tallies = {
+        "product": sum(1 for p in prs if p.get("category") == "product"),
+        "mixed": sum(1 for p in prs if p.get("category") == "mixed"),
+        "internal": sum(1 for p in prs if p.get("category") == "internal"),
+    }
+
+    return {
+        "format": _DATA_JSON_FORMAT_VERSION,
+        "version": version,
+        "family": family,
+        "package": pkg,
+        "title": ("HarfBuzzSharp {}".format(version)
+                  if family == "harfbuzzsharp" else "Version {}".format(version)),
+        "status": status,
+        "banner": banner,
+        "supersedes": supersedes,
+        "superseded_by": superseded_by,
+        "api_links": api_links,
+        "breaking_none_text": ("*None in this preview line.*"
+                               if status in ("preview", "unreleased")
+                               else "*None in this release.*"),
+        "allowed_categories": RELEASE_CATEGORIES,
+        "landmarks": landmarks,
+        "tallies": tallies,
+        "breaking_candidates": breaking_candidates,
+        "contributors": contributors,
+        "previews": previews,
+        "prs": pr_map,
+    }
+
+
+def _derive_landmarks(prs, has_breaking, status):
+    # type: (list[dict], bool, str) -> list[str]
+    """A short, deterministic hint list for the Highlights slot.
+
+    Deliberately NOT the full PR list — Highlights is written from these
+    landmarks, so the agent structurally cannot enumerate every change.
+    """
+    marks = []
+    for pr in prs:
+        title = pr.get("title", "")
+        if re.search(r"[Uu]pdate to Skia milestone|\[skia\].*milestone", title):
+            marks.append(title.replace("[skia] ", "").strip())
+            break
+    if has_breaking:
+        marks.append("Behavioural or API breaking changes — see Breaking Changes")
+    # A couple of the biggest product PRs by title as generic seeds.
+    for pr in prs:
+        if pr.get("category") == "product" and len(marks) < 5:
+            t = pr.get("title", "")
+            if t and not t.startswith("[skia]") and t not in marks:
+                marks.append(t)
+    return marks[:5]
+
+
+def _write_data_json_sidecar(page_path, prs, metadata):
+    # type: (object, list[dict], dict) -> None
+    """Write the deterministic ``<version>.data.json`` next to the page.
+
+    Additive: does not change the page itself. The v2 render pipeline
+    (render-notes.py) consumes this; the legacy raw-data block still ships in the
+    page for the current polish path until the workflow is switched over.
+    """
+    try:
+        data = build_data_json(prs, metadata)
+    except Exception as exc:  # never let the sidecar break page generation
+        log("  WARN: data.json sidecar skipped ({})".format(exc))
+        return
+    from pathlib import Path as _P
+    p = _P(str(page_path))
+    sidecar = p.with_suffix(".data.json")
+    sidecar.write_text(json.dumps(data, indent=2) + "\n")
+    log("  Wrote {}".format(sidecar))
+
 
 def format_pr_list(prs, metadata):
     # type: (list[dict], dict) -> str
@@ -3033,6 +3261,7 @@ def _write_page(branch, all_branches, verbose=False, force=False):
 
     RELEASES_DIR.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
+    _write_data_json_sidecar(output_path, prs, metadata)
     log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
     return str(output_path)
 
@@ -3253,6 +3482,7 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
 
     hb_dir.mkdir(parents=True, exist_ok=True)
     output_path.write_text(format_pr_list(prs, metadata))
+    _write_data_json_sidecar(output_path, prs, metadata)
     log("  Wrote {} ({} PRs)".format(output_path, len(prs)))
     return str(output_path), owned
 
