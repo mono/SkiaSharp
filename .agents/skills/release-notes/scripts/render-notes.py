@@ -197,18 +197,12 @@ def _words(text):
     return len(re.findall(r"\S+", text or ""))
 
 
-def _max_commas_in_a_sentence(text):
-    # A comma-run enumeration ("A, B, C, D, and E") reads as a list, not a hook.
-    # Count commas per sentence; the worst sentence is the enumeration signal.
-    sentences = re.split(r"(?<=[.!?])\s", text or "")
-    return max((s.count(",") for s in sentences), default=0)
-
-
-# Highlights is a hook, not a list. A sentence with this many commas is an
-# enumeration — the failure mode the whole redesign exists to prevent — so the
-# renderer rejects it mechanically (same as the word caps) rather than relying
-# on a prose rule the model may not honour.
-HIGHLIGHTS_MAX_COMMAS = 4
+# Highlights is capped by LENGTH, not by comma count: a feature-rich major
+# release legitimately reads as a short list, and an arbitrary comma limit just
+# punishes those. Keeping the whole block well under ~100 words (headline + body)
+# is what keeps it a lead-in rather than a dump — the full detail is in the
+# sections below.
+HIGHLIGHTS_TOTAL_WORD_CAP = 100
 
 
 def validate(data, slots):
@@ -219,26 +213,24 @@ def validate(data, slots):
         errors.append("slots.theme is empty — the banner needs a short human theme.")
 
     hl = slots.get("highlights_headline") or ""
+    body = slots.get("highlights_body")
     if not hl.strip():
         errors.append("slots.highlights_headline is required.")
     elif _words(hl) > HEADLINE_WORD_CAP:
         errors.append(
             "highlights_headline is {} words (cap {}). "
-            "State the single most important thing; don't enumerate."
+            "State the single most important thing; don't dump the whole changelog."
             .format(_words(hl), HEADLINE_WORD_CAP))
-    body = slots.get("highlights_body")
     if body and _words(body) > BODY_WORD_CAP:
         errors.append(
             "highlights_body is {} words (cap {}). "
-            "Name 2-3 themes in prose; the full detail lives in the sections below."
+            "Name the biggest themes in prose; the full detail lives in the sections below."
             .format(_words(body), BODY_WORD_CAP))
-
-    worst = max(_max_commas_in_a_sentence(hl), _max_commas_in_a_sentence(body or ""))
-    if worst > HIGHLIGHTS_MAX_COMMAS:
+    total = _words(hl) + _words(body or "")
+    if total > HIGHLIGHTS_TOTAL_WORD_CAP:
         errors.append(
-            "a Highlights sentence has {} commas — that's a list, not a hook. "
-            "Pick the 2-3 biggest things and write them as prose; the full set of "
-            "changes is already in the sections below.".format(worst))
+            "Highlights is {} words total (cap {}). It's a lead-in, not the changelog — "
+            "trim to the few things that matter most.".format(total, HIGHLIGHTS_TOTAL_WORD_CAP))
 
     return _finish_validate(errors, data, slots)
 

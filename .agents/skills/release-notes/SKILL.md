@@ -74,10 +74,12 @@ Changes" (that one means *populate the breaking slot*, don't headline it).
 - Bad: `This release adds WebP, SKStream.GetData, singleton lifecycle, pixel fixes, WinUI fixes, and more.` (enumeration)
 
 ### `highlights_body` — optional, ≤60 words, or `null`
-Name 2-3 themes in prose to draw the reader in. No PR links, no `@handles`, no
-comma-run "A, B, C, D, E" lists. If the headline already says enough, use `null`.
+Name the biggest themes to draw the reader in. Prose is best, but a short feature
+list is fine for a big release — just keep the whole Highlights block (headline +
+body) under ~100 words so it stays a lead-in, not the changelog. No PR links, no
+`@handles`. If the headline already says enough, use `null`.
 - Good: `It adds variable fonts and animated WebP, and reworks the singleton lifecycle. This is a breaking release — check the changes below before upgrading.`
-- Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles + list)
+- Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles, and it's just PR numbers, not themes)
 
 ### `breaking` — array, one entry per change a consumer must act on
 Merge from two sources: signature removals in the `*.breaking.md` diff, and
