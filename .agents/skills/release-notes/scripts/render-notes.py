@@ -197,6 +197,20 @@ def _words(text):
     return len(re.findall(r"\S+", text or ""))
 
 
+def _max_commas_in_a_sentence(text):
+    # A comma-run enumeration ("A, B, C, D, and E") reads as a list, not a hook.
+    # Count commas per sentence; the worst sentence is the enumeration signal.
+    sentences = re.split(r"(?<=[.!?])\s", text or "")
+    return max((s.count(",") for s in sentences), default=0)
+
+
+# Highlights is a hook, not a list. A sentence with this many commas is an
+# enumeration — the failure mode the whole redesign exists to prevent — so the
+# renderer rejects it mechanically (same as the word caps) rather than relying
+# on a prose rule the model may not honour.
+HIGHLIGHTS_MAX_COMMAS = 4
+
+
 def validate(data, slots):
     errors = []
 
@@ -219,6 +233,17 @@ def validate(data, slots):
             "Name 2-3 themes in prose; the full detail lives in the sections below."
             .format(_words(body), BODY_WORD_CAP))
 
+    worst = max(_max_commas_in_a_sentence(hl), _max_commas_in_a_sentence(body or ""))
+    if worst > HIGHLIGHTS_MAX_COMMAS:
+        errors.append(
+            "a Highlights sentence has {} commas — that's a list, not a hook. "
+            "Pick the 2-3 biggest things and write them as prose; the full set of "
+            "changes is already in the sections below.".format(worst))
+
+    return _finish_validate(errors, data, slots)
+
+
+def _finish_validate(errors, data, slots):
     roster = {c["login"] for c in data.get("contributors", [])}
     summaries = slots.get("contributor_summaries") or {}
     missing = sorted(roster - set(summaries))
