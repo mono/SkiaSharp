@@ -1917,17 +1917,9 @@ def _release_date_display(version):
 _RAWDATA_FORMAT_VERSION = 3
 
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
-# (data.json + slots.json + render-notes.py) consumes this instead of parsing the
+# (data.json + prose.json + render-notes.py) consumes this instead of parsing the
 # raw-data HTML comment. Bump when the data.json schema changes.
 _DATA_JSON_FORMAT_VERSION = 3
-
-# The canonical, closed set of category headings a page may use. The renderer
-# (render-notes.py) enforces that every slots.json category heading is one of
-# these, so the section taxonomy is owned here (data) not in prose.
-RELEASE_CATEGORIES = [
-    "Engine", "API Surface", "Bug Fixes",
-    "Lifecycle & Internals", "Platform", "Security",
-]
 
 _PREVIEW_KEY_STAGE = {
     "Release Candidate": "rc", "Preview": "p", "Alpha": "a", "Beta": "b",
@@ -2068,8 +2060,6 @@ def build_data_json(prs, metadata):
         api_links.append({"label": "HarfBuzzSharp {}".format(hb.get("version", "")),
                           "href": hb["link"]})
 
-    landmarks = _derive_landmarks(prs, bool(companions.get("breaking")), status)
-
     tallies = {
         "product": sum(1 for p in prs if p.get("category") == "product"),
         "mixed": sum(1 for p in prs if p.get("category") == "mixed"),
@@ -2080,49 +2070,17 @@ def build_data_json(prs, metadata):
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
         "family": family,
-        "package": pkg,
-        "title": ("HarfBuzzSharp {}".format(version)
-                  if family == "harfbuzzsharp" else "Version {}".format(version)),
         "status": status,
         "banner": banner,
         "supersedes": supersedes,
         "superseded_by": superseded_by,
         "api_links": api_links,
-        "breaking_none_text": ("*None in this preview line.*"
-                               if status in ("preview", "unreleased")
-                               else "*None in this release.*"),
-        "allowed_categories": RELEASE_CATEGORIES,
-        "landmarks": landmarks,
         "tallies": tallies,
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
         "previews": previews,
         "prs": pr_map,
     }
-
-
-def _derive_landmarks(prs, has_breaking, status):
-    # type: (list[dict], bool, str) -> list[str]
-    """A short, deterministic hint list for the Highlights slot.
-
-    Deliberately NOT the full PR list — Highlights is written from these
-    landmarks, so the agent structurally cannot enumerate every change.
-    """
-    marks = []
-    for pr in prs:
-        title = pr.get("title", "")
-        if re.search(r"[Uu]pdate to Skia milestone|\[skia\].*milestone", title):
-            marks.append(title.replace("[skia] ", "").strip())
-            break
-    if has_breaking:
-        marks.append("Behavioural or API breaking changes — see Breaking Changes")
-    # A couple of the biggest product PRs by title as generic seeds.
-    for pr in prs:
-        if pr.get("category") == "product" and len(marks) < 5:
-            t = pr.get("title", "")
-            if t and not t.startswith("[skia]") and t not in marks:
-                marks.append(t)
-    return marks[:5]
 
 
 def _write_data_json_sidecar(page_path, prs, metadata):

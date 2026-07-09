@@ -30,6 +30,30 @@ from pathlib import Path
 HEADLINE_WORD_CAP = 20
 BODY_WORD_CAP = 60
 
+# The canonical, closed set of category headings a page may use. The renderer
+# owns this (it's identical for every version — presentation, not per-version
+# data). validate() rejects any prose.json category heading not in this set; the
+# agent learns the list from SKILL.md.
+RELEASE_CATEGORIES = [
+    "Engine", "API Surface", "Bug Fixes",
+    "Lifecycle & Internals", "Platform", "Security",
+]
+
+
+def page_title(data):
+    """The H1 — built from version + family (not stored per-version)."""
+    version = data.get("version", "")
+    if data.get("family") == "harfbuzzsharp":
+        return "HarfBuzzSharp {}".format(version)
+    return "Version {}".format(version)
+
+
+def breaking_none_text(data):
+    """The 'no breaking changes' line — derived from status, not stored."""
+    if data.get("status") in ("preview", "unreleased"):
+        return "*None in this preview line.*"
+    return "*None in this release.*"
+
 
 # ── formatting helpers (structure the agent must never hand-write) ───────────
 
@@ -108,7 +132,7 @@ def render(data, slots):
 
     L.append("<!-- RELEASE-NOTES DATA (generated, do not edit) format:{} version:{} -->"
              .format(data.get("format"), data.get("version")))
-    L.append("# {}".format(data.get("title")))
+    L.append("# {}".format(page_title(data)))
     L.append(banner_line(data, slots))
     for s in data.get("supersedes") or []:
         L.append("> **Supersedes [{}]({})** · {}".format(s["version"], s["href"], s.get("note", "")))
@@ -133,7 +157,7 @@ def render(data, slots):
         for b in slots["breaking"]:
             L.append("- **{}** — {}{}".format(b["title"], b["body"], pr_refs(b.get("prs"), data)))
     else:
-        L.append(data.get("breaking_none_text", "*None in this release.*"))
+        L.append(breaking_none_text(data))
 
     for cat in slots.get("categories") or []:
         L.append("")
@@ -248,7 +272,7 @@ def _finish_validate(errors, data, slots):
         errors.append("these contributor summaries are blank: "
                       + ", ".join("@" + m for m in empty))
 
-    allowed = set(data.get("allowed_categories", []))
+    allowed = set(RELEASE_CATEGORIES)
     if allowed:
         for cat in slots.get("categories", []):
             if cat.get("heading") not in allowed:
