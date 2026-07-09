@@ -3,6 +3,7 @@
 
     render-notes.py <data.json> <prose.json> [out.md]   # normal page
     render-notes.py <data.json> [out.md]                 # no-changes page (no prose)
+    render-notes.py --all                                # regenerate every page + TOC.yml + index.md
 
 `data.json`  — facts emitted by build-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
@@ -26,10 +27,38 @@ The page structure below is the single source of truth for the layout.
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import re
 import sys
+from collections import defaultdict
 from pathlib import Path
+
+# ── reuse build-data.py's shared low-level helpers (one source of truth) ─────
+# render-notes.py owns ALL Markdown: the per-page bodies AND the TOC.yml/index.md
+# aggregates. Those aggregates need version parsing, the page-set discovery, and
+# the support config — all of which live in build-data.py. Importing it is
+# offline-safe (module load does no network); the network-sourced Chrome schedule
+# arrives via _sources/index.json, which build-index.py wrote in Prepare.
+_GEN = Path(__file__).with_name("build-data.py")
+_spec = importlib.util.spec_from_file_location("_rn_build_data", str(_GEN))
+_gen = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_gen)
+
+log = _gen.log
+version_key = _gen.version_key
+minor_group = _gen.minor_group
+RELEASES_DIR = _gen.RELEASES_DIR
+VERSIONS_JSON_PATH = _gen.VERSIONS_JSON_PATH
+_MONTH_ABBR = _gen._MONTH_ABBR
+get_version_files = _gen.get_version_files
+get_harfbuzz_version_files = _gen.get_harfbuzz_version_files
+cadence_milestones = _gen.cadence_milestones
+_data_json_path = _gen._data_json_path
+_prose_json_path = _gen._prose_json_path
+
+# Module-level cache for load_support_config (its own, not the generator's).
+_SUPPORT_CONFIG = None
 
 HEADLINE_WORD_CAP = 20
 BODY_WORD_CAP = 60
@@ -338,8 +367,605 @@ def _finish_validate(errors, data, prose):
     return errors
 
 
+
+def load_support_config():
+    # type: () -> dict
+    """Load the SkiaSharp support config from versions.json (spec §3.5).
+
+    SkiaSharp ships NuGet packages on two release paths (not a multi-tier channel
+    product), so the top-level ``support`` block is two lists of ``major.minor``
+    line cores (the SkiaSharp minor IS the Chrome/Skia milestone):
+
+      * ``stable``  — the supported stable line(s): the current Chrome Stable
+        milestone, or the Chrome Extended-stable milestone during the promotion
+        gap (a preview about to go stable).
+      * ``preview`` — the in-flight preview/RC line(s): the Chrome Beta milestone,
+        or newer when previewing ahead in Dev/Canary.
+
+    Either field may be given as a single string or a list. Returns a normalized
+    dict carrying the raw lists plus a derived ``supported`` set (their union) and
+    a ``channels`` map (line -> "Stable"/"Preview" label). A missing/empty block
+    yields an empty ``supported`` set, so callers fall back to the legacy "every
+    3.x+ line is top-level/supported" behavior.
+    """
+    global _SUPPORT_CONFIG
+    if _SUPPORT_CONFIG is not None:
+        return _SUPPORT_CONFIG
+
+    def _as_lines(value):
+        # type: (object) -> list[str]
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [str(v) for v in value]
+        raise ValueError(
+            "versions.json: 'support' list fields must be a string or array "
+            "(spec §3.5); got %s" % type(value).__name__)
+
+    stable = []  # type: list[str]
+    preview = []  # type: list[str]
+    if VERSIONS_JSON_PATH.exists():
+        with open(VERSIONS_JSON_PATH) as f:
+            data = json.load(f)
+        block = data.get("support", {}) or {}
+        if not isinstance(block, dict):
+            raise ValueError(
+                "versions.json: 'support' must be an object (spec §3.5); got %s"
+                % type(block).__name__)
+        stable = _as_lines(block.get("stable"))
+        preview = _as_lines(block.get("preview"))
+    supported = set()  # type: set[str]
+    channels = {}  # type: dict[str, str]
+    for line in stable:
+        supported.add(line)
+        channels.setdefault(line, "Stable")
+    for line in preview:
+        supported.add(line)
+        channels.setdefault(line, "Preview")
+    _SUPPORT_CONFIG = {
+        "stable": stable,
+        "preview": preview,
+        "supported": supported,
+        "channels": channels,
+    }
+    return _SUPPORT_CONFIG
+
+
+def classify_support_tier(group, support=None):
+    # type: (str, Optional[dict]) -> str
+    """Classify a minor group ("3.119") into a TOC/index support tier (spec §3.5).
+
+    Returns one of:
+
+      * ``"supported"`` — a stable or preview line (spec §3.5), rendered
+        prominently at the top level.
+      * ``"obsolete"`` — a 1.x or 2.x line, folded into "Obsolete Versions".
+      * ``"unsupported"`` — every other 3.x+ line, folded into "Out of Support
+        Versions".
+
+    With no ``support`` block configured (empty ``supported`` set) every 3.x+ line
+    is treated as supported, preserving the legacy flat layout.
+    """
+    if support is None:
+        support = load_support_config()
+    if int(group.split(".")[0]) < 3:
+        return "obsolete"
+    supported = support.get("supported") or set()
+    if not supported:
+        return "supported"
+    return "supported" if group in supported else "unsupported"
+
+
+def format_schedule_date(iso):
+    # type: (str) -> str
+    """``2026-06-03T00:00:00`` -> ``Jun 3`` (no leading zero)."""
+    _, month, day = iso[:10].split("-")
+    return "{} {}".format(_MONTH_ABBR[int(month) - 1], int(day))
+
+
+def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
+    # type: (str, list[str], dict, dict) -> list[str]
+    """Render a collapsed parent TOC node nesting its minor groups (spec §3.5).
+
+    Used for the "Out of Support Versions" and "Obsolete Versions" folds: each
+    minor group becomes a child node, a single-release minor collapsing to one
+    node while a multi-release minor nests its individual patch releases. This
+    mirrors the supported top-level layout one level deeper so the sidebar fold
+    stays tidy instead of degrading into a flat wall of patch links. Returns the
+    YAML lines (empty when ``groups`` is empty).
+    """
+    out = []  # type: list[str]
+    if not groups:
+        return out
+    head_members = stable_groups.get(groups[0]) or unreleased_groups.get(groups[0])
+    head = ("{}.md".format(head_members[0]) if groups[0] in stable_groups
+            else "{}-unreleased.md".format(head_members[0]))
+    out.append("- name: {}".format(title))
+    out.append("  href: {}".format(head))
+    out.append("  items:")
+    for g in groups:
+        stable = stable_groups.get(g, [])
+        unreleased = unreleased_groups.get(g, [])
+        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        if not entries:
+            continue
+        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+        g_header = ("{}.md".format(stable[0]) if stable
+                    else "{}-unreleased.md".format(unreleased[0]))
+        out.append("    - name: Version {}.x".format(g))
+        out.append("      href: {}".format(g_header))
+        if len(entries) > 1:
+            out.append("      items:")
+            for v, is_unrel in entries:
+                if is_unrel:
+                    out.append("        - name: Version {} (Unreleased)".format(v))
+                    out.append("          href: {}-unreleased.md".format(v))
+                else:
+                    out.append("        - name: Version {}".format(v))
+                    out.append("          href: {}.md".format(v))
+    return out
+
+
+def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=None):
+    # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
+    """Generate TOC.yml grouped by major.minor and support tier (spec §3.5).
+
+    SkiaSharp minor groups are split into three tiers by their support status
+    (``classify_support_tier``): supported lines (stable / preview) render at the
+    top level, while the remaining 3.x+ lines fold under "Out of Support Versions"
+    and 1.x/2.x lines fold under "Obsolete Versions".
+
+    Unreleased pages are listed in their minor group even when no stable page
+    of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
+    ships, or 4.148.0-unreleased before 4.148.0 ships).
+
+    ``hb_versions``/``hb_next_versions`` are the HarfBuzz peer-family lines
+    (released and in-flight); when present they render as a sibling "HarfBuzz"
+    node whose emitted HarfBuzz lines are grouped into ``HarfBuzzSharp X.Y.x``
+    minor subgroups, mirroring the SkiaSharp version groups (spec §3.5).
+    """
+    stable_groups = defaultdict(list)
+    unreleased_groups = defaultdict(list)
+    for v in versions:
+        stable_groups[minor_group(v)].append(v)
+    for v in next_versions:
+        unreleased_groups[minor_group(v)].append(v)
+
+    support = load_support_config()
+    supported = []
+    unsupported = []
+    obsolete = []
+    for g in sorted(set(stable_groups) | set(unreleased_groups),
+                    key=lambda x: version_key(x), reverse=True):
+        tier = classify_support_tier(g, support)
+        if tier == "obsolete":
+            obsolete.append(g)
+        elif tier == "unsupported":
+            unsupported.append(g)
+        else:
+            supported.append(g)
+
+    lines = ["- name: Overview", "  href: index.md"]
+
+    for g in supported:
+        stable = stable_groups.get(g, [])
+        unreleased = unreleased_groups.get(g, [])
+        header = "{}.md".format(stable[0]) if stable \
+            else "{}-unreleased.md".format(unreleased[0])
+        lines.append("- name: Version {}.x".format(g))
+        lines.append("  href: {}".format(header))
+        lines.append("  items:")
+        entries = [(v, True) for v in unreleased] + [(v, False) for v in stable]
+        entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+        for v, is_unrel in entries:
+            if is_unrel:
+                lines.append("    - name: Version {} (Unreleased)".format(v))
+                lines.append("      href: {}-unreleased.md".format(v))
+            else:
+                lines.append("    - name: Version {}".format(v))
+                lines.append("      href: {}.md".format(v))
+
+    lines.extend(_toc_folded_section(
+        "Out of Support Versions", unsupported, stable_groups, unreleased_groups))
+    lines.extend(_toc_folded_section(
+        "Obsolete Versions", obsolete, stable_groups, unreleased_groups))
+
+    # HarfBuzz peer family — sibling node grouping HarfBuzz lines by minor
+    # (spec §3.5), mirroring the SkiaSharp version groups so the node is a tidy
+    # set of "HarfBuzzSharp X.Y.x" subgroups instead of one flat list. Hub pages
+    # live under harfbuzzsharp/<hb>.md.
+    hb_versions = hb_versions or []
+    hb_next_versions = hb_next_versions or []
+    if hb_versions or hb_next_versions:
+        hb_header = ("harfbuzzsharp/{}.md".format(hb_versions[0]) if hb_versions
+                     else "harfbuzzsharp/{}-unreleased.md".format(hb_next_versions[0]))
+        lines.append("- name: HarfBuzz")
+        lines.append("  href: {}".format(hb_header))
+        lines.append("  items:")
+
+        hb_stable_groups = defaultdict(list)
+        hb_unrel_groups = defaultdict(list)
+        for v in hb_versions:
+            hb_stable_groups[minor_group(v)].append(v)
+        for v in hb_next_versions:
+            hb_unrel_groups[minor_group(v)].append(v)
+
+        for g in sorted(set(hb_stable_groups) | set(hb_unrel_groups),
+                        key=lambda x: version_key(x), reverse=True):
+            g_stable = hb_stable_groups.get(g, [])
+            g_unrel = hb_unrel_groups.get(g, [])
+            g_header = ("harfbuzzsharp/{}.md".format(g_stable[0]) if g_stable
+                        else "harfbuzzsharp/{}-unreleased.md".format(g_unrel[0]))
+            lines.append("    - name: HarfBuzzSharp {}.x".format(g))
+            lines.append("      href: {}".format(g_header))
+            lines.append("      items:")
+            g_entries = ([(v, True) for v in g_unrel]
+                         + [(v, False) for v in g_stable])
+            g_entries.sort(key=lambda t: version_key(t[0]), reverse=True)
+            for v, is_unrel in g_entries:
+                if is_unrel:
+                    lines.append("        - name: HarfBuzzSharp {} (Unreleased)".format(v))
+                    lines.append("          href: harfbuzzsharp/{}-unreleased.md".format(v))
+                else:
+                    lines.append("        - name: HarfBuzzSharp {}".format(v))
+                    lines.append("          href: harfbuzzsharp/{}.md".format(v))
+
+    return "\n".join(lines) + "\n"
+
+
+def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=None,
+                   schedule_by_ms=None):
+    # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
+    """Generate index.md grouped by support tier (spec §3.5).
+
+    When a ``support`` block is configured the page opens with a "Release
+    cadence" section (how the 4.x line tracks Chrome's release cycle, the
+    versioning scheme, and the schedule reference) followed by a "Support
+    overview" — a short lifecycle legend (stable / preview / out of support /
+    obsolete) and a table of the currently-supported lines and their latest
+    release — so a reader sees what to use at a glance. SkiaSharp lines are then
+    split by their support status (``classify_support_tier``): the supported
+    lines (stable / preview) are listed prominently, each tagged with its path,
+    while the remaining 3.x+ lines and the obsolete 1.x/2.x lines fold into
+    collapsed ``<details>`` blocks so the page leads with what is supported.
+
+    Unreleased pages are listed even when no stable page of that exact version
+    exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
+    "HarfBuzzSharp" section linking the peer-family hub pages (spec §3.5).
+    """
+    support = load_support_config()
+    channels = support.get("channels", {})
+
+    entries = [(v, False) for v in versions] + [(v, True) for v in next_versions]
+    minor_map = defaultdict(list)
+    for v, is_unrel in entries:
+        minor_map[minor_group(v)].append((v, is_unrel))
+
+    supported_groups = []
+    unsupported_groups = []
+    obsolete_groups = []
+    for g in sorted(minor_map.keys(), key=lambda x: version_key(x), reverse=True):
+        tier = classify_support_tier(g, support)
+        if tier == "obsolete":
+            obsolete_groups.append(g)
+        elif tier == "unsupported":
+            unsupported_groups.append(g)
+        else:
+            supported_groups.append(g)
+
+    def render_group(g, with_label):
+        # type: (str, bool) -> list[str]
+        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        label = channels.get(g)
+        if with_label and label:
+            out = ["- **Version {}.x** — {}".format(g, label)]
+        else:
+            out = ["- **Version {}.x**".format(g)]
+        for v, is_unrel in members:
+            if is_unrel:
+                out.append("  - [Version {} (Unreleased)]({}-unreleased.md)".format(v, v))
+            else:
+                out.append("  - [Version {}]({}.md)".format(v, v))
+        return out
+
+    def details(summary, body):
+        # type: (str, list[str]) -> list[str]
+        return ["<details>", "<summary>{}</summary>".format(summary), ""] \
+            + body + ["", "</details>", ""]
+
+    def latest_link(g):
+        # type: (str) -> str
+        """Markdown link to the newest page in line ``g`` for the overview table.
+
+        Prefers the newest *released* page; falls back to the newest unreleased
+        page when a line has shipped no stable page yet (spec §3.5).
+        """
+        members = sorted(minor_map[g], key=lambda t: version_key(t[0]), reverse=True)
+        released = [(v, u) for v, u in members if not u]
+        v, is_unrel = released[0] if released else members[0]
+        if is_unrel:
+            return "[{} (Unreleased)]({}-unreleased.md)".format(v, v)
+        return "[{}]({}.md)".format(v, v)
+
+    # The support block drives the top "what is supported right now" overview.
+    # Without it (legacy/empty config) the page keeps the plain flat layout.
+    configured = bool(support.get("supported"))
+
+    if configured:
+        intro = (
+            "Release notes for SkiaSharp. SkiaSharp ships as NuGet packages whose "
+            "minor version is the Chrome/Skia milestone it builds on. Two release "
+            "lines are supported at a time — a **stable** line for production and a "
+            "**preview** line for the milestone currently being stabilized — "
+            "mirroring "
+            "[Chrome's release channels](https://developer.chrome.com/docs/web-platform/chrome-release-channels) "
+            "(stable / extended-stable and beta). Everything else stays published "
+            "for reference but is no longer serviced.")
+    else:
+        intro = "Release notes for all SkiaSharp versions."
+
+    lines = ["# Release Notes", "", intro, ""]
+
+    if configured:
+        # Forward-looking version examples derived from what is on disk: the
+        # current milestone is the highest one in the major line, and the next is
+        # current + 1 (the one we will cut next). Used for both the example
+        # timeline (N / N+1) and the "Versioning" examples so they stay ahead of
+        # what has already shipped instead of being pinned to a fixed milestone.
+        next_major, cur_ms, next_ms = cadence_milestones()
+        cur_base = "{}.{}".format(next_major, cur_ms)    # e.g. "4.150"
+        next_base = "{}.{}".format(next_major, next_ms)  # e.g. "4.151"
+        next_ver = next_base + ".0"
+        scheme = "`" + str(next_major) + ".{chrome_milestone}.{patch}`"
+        lines.extend([
+            "## Release cadence",
+            "",
+            "SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor "
+            "version corresponds to a Chrome/Skia milestone and progresses through "
+            "four phases:",
+            "",
+            "| Chrome Event | SkiaSharp Release | Purpose |",
+            "|---|---|---|",
+            "| Beta Promotion | Preview 1 | Merge upstream Skia, ship initial preview |",
+            "| Early Stable | Preview 2 | Bug fixes and API additions from preview feedback |",
+            "| Stable Cut | RC | Critical bug fixes only, no new features |",
+            "| Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |",
+            "",
+        ])
+        lines.extend(render_cadence_timeline(
+            cur_ms, next_ms, cur_base, next_base, schedule_by_ms))
+        lines.extend([
+            "",
+            "Two milestones are always in flight — as one enters its RC/stable "
+            "phase, the next begins its preview phase.",
+            "",
+            "> [!NOTE]",
+            "> Starting with Chrome 153 (September 2026), Chrome moves from a "
+            "4-week to a 3-week release cycle. Because SkiaSharp's cadence is "
+            "driven by Chrome's actual schedule events, the phases above will "
+            "naturally compress — preview through stable will complete in ~3 weeks "
+            "instead of ~4.",
+            "",
+            "### Versioning",
+            "",
+            "Packages follow the scheme " + scheme + " — the "
+            "middle number **is** the Chrome milestone number. For example, "
+            "`" + next_ver + "` ships alongside Chrome " + str(next_ms) + "'s "
+            "stable release.",
+            "",
+            "- Preview: `" + next_ver + "-preview.1`, `" + next_ver + "-preview.2`",
+            "- Release candidate: `" + next_ver + "-rc.1`",
+            "- Stable: `" + next_ver + "`",
+            "",
+            "Prerelease suffixes follow "
+            "[NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).",
+            "",
+            "### Schedule reference",
+            "",
+            "The full Chrome release calendar is published at "
+            "[Chromium's release schedule](https://chromiumdash.appspot.com/schedule). "
+            "SkiaSharp milestones are synced automatically from this schedule — "
+            "check the [GitHub milestones](https://github.com/mono/SkiaSharp/milestones) "
+            "for upcoming release dates.",
+            "",
+        ])
+        lines.extend([
+            "## Support overview",
+            "",
+            "- **Stable** — the line we recommend for production apps. Tracks "
+            "Chrome's Stable / Extended Stable channel.",
+            "- **Preview** — prerelease NuGets for the next milestone, so you can "
+            "test ahead of its stable release. Tracks Chrome's Beta channel.",
+            "- **Out of support** — older 3.x / 4.x lines, still listed below for "
+            "reference but no longer serviced.",
+            "- **Obsolete** — SkiaSharp 1.x and 2.x, no longer maintained.",
+            "",
+        ])
+        # Currently-supported table: Stable rows first, then Preview; newest line
+        # first within each (supported_groups is already version-descending and the
+        # sort below is stable).
+        channel_order = {"Stable": 0, "Preview": 1}
+        table_groups = sorted(
+            supported_groups,
+            key=lambda g: channel_order.get(channels.get(g), 9))
+        lines.append("| Path | Version line | Latest release |")
+        lines.append("|------|--------------|----------------|")
+        for g in table_groups:
+            lines.append("| {} | {}.x | {} |".format(
+                channels.get(g, "Supported"), g, latest_link(g)))
+        lines.append("")
+
+    if supported_groups:
+        lines.extend(["## Supported versions", ""])
+        for g in supported_groups:
+            lines.extend(render_group(g, with_label=True))
+        lines.append("")
+
+    if unsupported_groups:
+        lines.extend(["## Out of support", ""])
+        lines.append(
+            "These SkiaSharp 3.x and 4.x lines are no longer supported. They "
+            "remain available for reference.")
+        lines.append("")
+        body = []  # type: list[str]
+        for g in unsupported_groups:
+            body.extend(render_group(g, with_label=False))
+        lines.extend(details("Show out-of-support releases", body))
+
+    if obsolete_groups:
+        lines.extend(["## Obsolete versions", ""])
+        lines.append("SkiaSharp 1.x and 2.x are obsolete and no longer maintained.")
+        lines.append("")
+        body = []
+        for g in obsolete_groups:
+            body.extend(render_group(g, with_label=False))
+        lines.extend(details("Show obsolete releases", body))
+
+    # HarfBuzz peer family (spec §3.5) — its own section, grouped by HB minor.
+    hb_versions = hb_versions or []
+    hb_next_versions = hb_next_versions or []
+    if hb_versions or hb_next_versions:
+        lines.extend(["## HarfBuzzSharp", ""])
+        hb_entries = ([(v, False) for v in hb_versions]
+                      + [(v, True) for v in hb_next_versions])
+        hb_minor_map = defaultdict(list)
+        for v, is_unrel in hb_entries:
+            hb_minor_map[minor_group(v)].append((v, is_unrel))
+        for g in sorted(hb_minor_map.keys(),
+                        key=lambda x: version_key(x), reverse=True):
+            members = sorted(hb_minor_map[g],
+                             key=lambda t: version_key(t[0]), reverse=True)
+            lines.append("- **HarfBuzzSharp {}.x**".format(g))
+            for v, is_unrel in members:
+                if is_unrel:
+                    lines.append("  - [HarfBuzzSharp {} (Unreleased)](harfbuzzsharp/{}-unreleased.md)".format(v, v))
+                else:
+                    lines.append("  - [HarfBuzzSharp {}](harfbuzzsharp/{}.md)".format(v, v))
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms):
+    # type: (int, int, str, str, dict) -> list[str]
+    """Schedule-timeline table for the release-cadence section (offline).
+
+    The two Chrome schedules were fetched by build-index.py in the Prepare phase
+    and committed in _sources/index.json, so this runs with no network. A missing
+    schedule is a hard error — re-run build-index.py to refresh index.json.
+    """
+    phases = [
+        ("Beta Promotion", "beta", ".0-preview.1"),
+        ("Early Stable", "early_stable", ".0-preview.2"),
+        ("Stable Cut", "stable_cut", ".0-rc.1"),
+        ("Stable Release", "stable", ".0"),
+    ]
+    schedule_by_ms = schedule_by_ms or {}
+    cur_sched = schedule_by_ms.get(str(cur_ms))
+    next_sched = schedule_by_ms.get(str(next_ms))
+    if not cur_sched or not next_sched:
+        raise RuntimeError(
+            "index.json is missing the Chrome schedule for m{} or m{} - re-run "
+            "build-index.py (the network Prepare step) to refresh "
+            "_sources/index.json.".format(cur_ms, next_ms))
+    events = []  # type: list[tuple[str, str, str]]
+    for ms_num, base, sched in (
+            (cur_ms, cur_base, cur_sched), (next_ms, next_base, next_sched)):
+        for label, key, suffix in phases:
+            iso = sched[key]
+            events.append((iso,
+                           "m{} {}".format(ms_num, label),
+                           "`{}{}`".format(base, suffix)))
+    events.sort(key=lambda e: e[0])
+    header = (
+        "**Schedule for the two milestones currently in flight "
+        "(m{} and m{}), from the "
+        "[Chromium release schedule](https://chromiumdash.appspot.com/schedule):**"
+        .format(cur_ms, next_ms))
+    rows = ["| Date | Event | Package |", "|------|-------|---------|"]
+    rows += ["| {} | {} | {} |".format(format_schedule_date(iso), ev, pkg)
+             for iso, ev, pkg in events]
+    return [header, ""] + rows
+
+
+def load_index_json():
+    # type: () -> dict
+    """The committed network-sourced index data (Chrome schedule); {} if absent."""
+    path = RELEASES_DIR / "_sources" / "index.json"
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text())
+    except (ValueError, OSError):
+        return {}
+
+
+def _page_for_data(data_path):
+    # type: (Path) -> Path
+    """``<dir>/_sources/<stem>.data.json`` -> ``<dir>/<stem>.md``."""
+    data_path = Path(data_path)
+    stem = data_path.name[:-len(".data.json")]
+    return data_path.parent.parent / (stem + ".md")
+
+
+def render_all():
+    # type: () -> int
+    """Regenerate EVERY page and the TOC/index from committed JSON (offline).
+
+    The final Polish step: after the agent has written each page's prose.json,
+    one --all pass re-renders every ``<version>.md`` from its data.json +
+    prose.json (and the deterministic no-changes pages from data.json alone),
+    then builds TOC.yml + index.md from the finished page set and the committed
+    Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
+    """
+    src_dirs = [RELEASES_DIR / "_sources", RELEASES_DIR / "harfbuzzsharp" / "_sources"]
+    rendered = 0
+    for sd in src_dirs:
+        if not sd.is_dir():
+            continue
+        for dp in sorted(sd.glob("*.data.json")):
+            data = json.loads(dp.read_text())
+            page = _page_for_data(dp)
+            if data.get("no_changes"):
+                page.write_text(render(data, {}))
+                rendered += 1
+                continue
+            pp = dp.with_name(dp.name[:-len(".data.json")] + ".prose.json")
+            if not pp.is_file():
+                log("  WARNING: no prose.json for {} - skipping".format(page))
+                continue
+            prose = json.loads(pp.read_text())
+            errs = validate(data, prose)
+            if errs:
+                log("  WARNING: prose for {} failed validation: {}".format(
+                    page, "; ".join(errs)))
+            page.write_text(render(data, prose))
+            rendered += 1
+    log("Rendered {} pages".format(rendered))
+
+    versions, next_versions = get_version_files()
+    hb_versions, hb_next_versions = get_harfbuzz_version_files()
+    schedule = load_index_json().get("chrome_schedule") or {}
+    (RELEASES_DIR / "TOC.yml").write_text(
+        generate_toc(versions, next_versions, hb_versions, hb_next_versions))
+    (RELEASES_DIR / "index.md").write_text(
+        generate_index(versions, next_versions, hb_versions, hb_next_versions, schedule))
+    log("Wrote {} and {}".format(RELEASES_DIR / "TOC.yml", RELEASES_DIR / "index.md"))
+    return rendered
+
+
 def main(argv):
+    flags = [a for a in argv[1:] if a.startswith("-")]
     args = [a for a in argv[1:] if not a.startswith("-")]
+
+    # --all: the final Polish pass. Regenerate every page + TOC/index from the
+    # committed JSON, offline. Takes no positional args.
+    if "--all" in flags:
+        render_all()
+        return 0
+
     if not args:
         print(__doc__)
         return 2

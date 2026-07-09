@@ -1787,7 +1787,78 @@ def _data_json_unchanged(data_path, new_data):
     return old == new_data
 
 
-# ── TOC and index generation ────────────────────────────────────────
+# ── page-set discovery (shared by build-index + render-notes) ──────
+
+
+def get_version_files():
+    # type: () -> tuple[list[str], list[str]]
+    """List version strings from existing markdown files.
+    
+    Returns (versions, next_versions) where next_versions are the
+    base versions that have a -unreleased.md file.
+    """
+    versions = []
+    next_versions = []
+    for f in RELEASES_DIR.iterdir():
+        if (f.suffix == ".md" and f.name != "index.md"
+                and not f.name.endswith(".notes.md")):
+            stem = f.stem
+            if stem.endswith("-unreleased"):
+                next_versions.append(stem[:-11])  # strip "-unreleased"
+            else:
+                versions.append(stem)
+    versions.sort(key=version_key, reverse=True)
+    next_versions.sort(key=version_key, reverse=True)
+    return versions, next_versions
+
+
+def get_harfbuzz_version_files():
+    # type: () -> tuple[list[str], list[str]]
+    """List HarfBuzz hub-page lines under releases/harfbuzzsharp/ (spec §3.4).
+
+    Returns ``(versions, next_versions)``: released ``<hb>.md`` lines and
+    in-flight ``<hb>-unreleased.md`` lines, newest-first. Ignores the per-line
+    API-diff subfolders and any generated index.md, so only the human hub pages
+    feed the TOC/index HarfBuzz section.
+    """
+    hb_dir = RELEASES_DIR / "harfbuzzsharp"
+    versions = []  # type: list[str]
+    next_versions = []  # type: list[str]
+    if hb_dir.is_dir():
+        for f in hb_dir.iterdir():
+            if (not f.is_file() or f.suffix != ".md" or f.name == "index.md"
+                    or f.name.endswith(".notes.md")):
+                continue
+            stem = f.stem
+            if stem.endswith("-unreleased"):
+                next_versions.append(stem[:-len("-unreleased")])
+            else:
+                versions.append(stem)
+    versions.sort(key=version_key, reverse=True)
+    next_versions.sort(key=version_key, reverse=True)
+    return versions, next_versions
+
+
+def cadence_milestones():
+    # type: () -> tuple[int, int, int]
+    """(next_major, current_milestone, next_milestone) for the release cadence.
+
+    The SkiaSharp minor number IS the Chrome/Skia milestone. The current
+    milestone is the highest one on the newest major line present on disk; the
+    next is current + 1 (the one we cut next). build-index (to fetch the two
+    Chrome schedules into index.json) and render-notes (to lay out the cadence
+    timeline offline) both derive the pair from the same page set, so they agree.
+    """
+    versions, next_versions = get_version_files()
+    keys = [version_key(v) for v in list(versions) + list(next_versions)
+            if v and len(version_key(v)) >= 2]
+    next_major = max((k[0] for k in keys), default=4)
+    line_ms = [k[1] for k in keys if k[0] == next_major]
+    cur_ms = max(line_ms) if line_ms else 1
+    return next_major, cur_ms, cur_ms + 1
+
+
+# ── orphan-sidecar warnings ─────────────────────────────────────────
 
 
 def warn_orphan_notes_sidecars():
