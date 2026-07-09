@@ -45,6 +45,16 @@ on:
         required: false
         default: ""
         type: string
+      min_version:
+        description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate the back-catalogue in chunks."
+        required: false
+        default: ""
+        type: string
+      max_version:
+        description: "Upper bound (inclusive) for generation, e.g. '4.148.0'. Empty = no upper bound."
+        required: false
+        default: ""
+        type: string
       notes_only:
         description: "Skip the heavy Cake API-diff step and regenerate only the release-notes pages (much faster; for validating prose)."
         required: false
@@ -143,20 +153,24 @@ jobs:
           ONLY_PREFIX: ${{ inputs.only_prefix }}
           NOTES_ONLY: ${{ inputs.notes_only }}
           FORCE_REGEN: ${{ inputs.force }}
+          MIN_VERSION: ${{ inputs.min_version }}
+          MAX_VERSION: ${{ inputs.max_version }}
         run: |
           set -euo pipefail
           # Single entry point: Cake (API diffs) then Python (raw data + the
           # per-version data.json sidecars the agent renders from), both VERBOSE.
-          # A dispatch may scope to a version family (--only), skip the heavy Cake
-          # step (--notes-only), and/or force a total rewrite (--force, ignores the
-          # unchanged-page skip) to re-render the whole back-catalogue after a
-          # format or skill change; the daily/push runs pass none and regenerate
-          # only what changed. The "Files to polish" list lands at
-          # output/files-to-polish.txt.
+          # A dispatch may scope to a version family (--only), a version RANGE
+          # (--min-version/--max-version, for chunked back-catalogue regens), skip
+          # the heavy Cake step (--notes-only), and/or force a total rewrite
+          # (--force, ignores the unchanged-page skip); the daily/push runs pass
+          # none and regenerate only what changed. The "Files to polish" list
+          # lands at output/files-to-polish.txt.
           gen_flags=()
           if [ "${NOTES_ONLY:-false}" = "true" ]; then gen_flags+=(--notes-only); fi
           notes_flags=(--all)
           if [ -n "${ONLY_PREFIX:-}" ]; then notes_flags+=(--only "$ONLY_PREFIX"); fi
+          if [ -n "${MIN_VERSION:-}" ]; then notes_flags+=(--min-version "$MIN_VERSION"); fi
+          if [ -n "${MAX_VERSION:-}" ]; then notes_flags+=(--max-version "$MAX_VERSION"); fi
           if [ "${FORCE_REGEN:-false}" = "true" ]; then notes_flags+=(--force); fi
           bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]}" "${notes_flags[@]}"
       - name: Package Prepare output

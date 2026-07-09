@@ -3110,7 +3110,8 @@ def _canonical_branches_by_version(all_branches):
     return canonical
 
 
-def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=None):
+def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=None,
+                min_core=None, max_core=None):
     # type: (str, list[str], bool, bool, Optional[str]) -> Optional[str]
     """Generate one release page from a branch. Returns its path, or None.
 
@@ -3124,7 +3125,9 @@ def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=No
     ``only_prefix`` (e.g. ``"4."``) scopes a run to one version family: a version
     whose core does not start with the prefix is left entirely untouched (not
     rewritten, not listed), so the v2 rollout can validate ``4.*`` first without
-    disturbing the committed ``3.*`` pages.
+    disturbing the committed ``3.*`` pages. ``min_core``/``max_core`` (inclusive
+    ``(maj, min, patch, sub)`` tuples from ``_core_tuple``) further bound the run
+    to a version RANGE, so the back-catalogue can be regenerated in chunks.
     """
     try:
         from_ref, to_ref, version = determine_diff_range(branch)
@@ -3136,6 +3139,14 @@ def _write_page(branch, all_branches, verbose=False, force=False, only_prefix=No
     if only_prefix and not str(version).startswith(only_prefix):
         log("  Skipping {} (not in --only {} scope).".format(version, only_prefix))
         return None
+    if min_core is not None or max_core is not None:
+        vc = _core_tuple(version)
+        if min_core is not None and vc < min_core:
+            log("  Skipping {} (below --min-version).".format(version))
+            return None
+        if max_core is not None and vc > max_core:
+            log("  Skipping {} (above --max-version).".format(version))
+            return None
 
     # History floor (spec §1.4): below the configured floor we do not regenerate
     # the page at all. Its already-committed page (and API-diff folder) stay as
@@ -3645,7 +3656,8 @@ def _process_harfbuzz_family(all_branches, force=False):
     return files_to_polish, processed, skipped
 
 
-def cmd_all(force=False, polish_list_path=None, only_prefix=None):
+def cmd_all(force=False, polish_list_path=None, only_prefix=None,
+            min_core=None, max_core=None):
     # type: (bool, str, Optional[str]) -> None
     """Process all branches (main + all release/*). Skip unchanged files.
 
@@ -3705,7 +3717,8 @@ def cmd_all(force=False, polish_list_path=None, only_prefix=None):
             continue
 
         log("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches, force=force, only_prefix=only_prefix)
+        path = _write_page(branch, all_branches, force=force, only_prefix=only_prefix,
+                           min_core=min_core, max_core=max_core)
         if path:
             files_to_polish.append(path)
             processed_count += 1
@@ -3715,8 +3728,9 @@ def cmd_all(force=False, polish_list_path=None, only_prefix=None):
     # HarfBuzz peer family — same pipeline, line-driven from the co-release map
     # (spec §4.5). Runs after the SkiaSharp pass so the canonical SkiaSharp pages
     # its cross-links target already exist this run. Skipped entirely when a run
-    # is scoped to a SkiaSharp version family via --only (HB cores never match).
-    if only_prefix:
+    # is scoped to a SkiaSharp version subset via --only or --min/--max-version
+    # (a scoped validation run wants only the SkiaSharp pages in range).
+    if only_prefix or min_core is not None or max_core is not None:
         hb_polish, hb_processed, hb_skipped = [], 0, 0
     else:
         hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
@@ -3777,6 +3791,15 @@ def main():
         help="Scope an --all run to versions whose core starts with PREFIX "
              "(e.g. '4.'). Other versions are left entirely untouched — used to "
              "roll out the v2 pipeline on 4.* before 3.*.")
+    parser.add_argument(
+        "--min-version", metavar="CORE", default=None,
+        help="Lower bound (inclusive) for an --all run, e.g. '3.116.0'. Versions "
+             "below it are left untouched. Combine with --max-version to "
+             "regenerate the back-catalogue in chunks.")
+    parser.add_argument(
+        "--max-version", metavar="CORE", default=None,
+        help="Upper bound (inclusive) for an --all run, e.g. '4.148.0'. Versions "
+             "above it are left untouched.")
 
     args = parser.parse_args()
 
@@ -3791,8 +3814,10 @@ def main():
     if args.update_toc:
         cmd_update_toc()
     elif args.all:
+        min_core = _core_tuple(args.min_version) if args.min_version else None
+        max_core = _core_tuple(args.max_version) if args.max_version else None
         cmd_all(force=args.force, polish_list_path=args.polish_list,
-                only_prefix=args.only)
+                only_prefix=args.only, min_core=min_core, max_core=max_core)
     elif args.branch:
         cmd_branch(args.branch, force=args.force,
                    polish_list_path=args.polish_list)
