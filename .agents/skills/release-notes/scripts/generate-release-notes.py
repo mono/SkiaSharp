@@ -1607,6 +1607,17 @@ def build_data_json(prs, metadata):
             "https://github.com/mono/SkiaSharp/releases/tag/v{}".format(version)
             if status == "stable" else None),
     }
+    # HarfBuzz never releases on its own — it ships inside a SkiaSharp release
+    # (spec §1.5), so it has no date or tag of its own. Anchor the banner to the
+    # introducing SkiaSharp release: carry `ships_with` (for the "Ships with
+    # SkiaSharp X" banner) and point the GitHub-release link at the SkiaSharp tag.
+    if family == "harfbuzzsharp":
+        ships = metadata.get("ships_with") or {}
+        banner["date"] = None
+        banner["ships_with"] = ships
+        banner["github_release_url"] = (
+            "https://github.com/mono/SkiaSharp/releases/tag/v{}".format(ships["version"])
+            if ships.get("version") and status == "stable" else None)
 
     # Flat PR map + community flag (renderer derives ❤️ credit from this).
     pr_map = {}
@@ -1680,7 +1691,9 @@ def build_data_json(prs, metadata):
 
     api_links = []
     if metadata.get("api_diff_link"):
-        api_links.append({"label": "SkiaSharp API diff",
+        api_links.append({"label": ("HarfBuzzSharp API diff"
+                                    if family == "harfbuzzsharp"
+                                    else "SkiaSharp API diff"),
                           "href": metadata["api_diff_link"]})
     hb = metadata.get("harfbuzz")
     if hb and hb.get("link"):
@@ -1698,6 +1711,7 @@ def build_data_json(prs, metadata):
         "version": version,
         "family": family,
         "status": status,
+        "no_changes": bool(metadata.get("no_changes")),
         "banner": banner,
         "supersedes": supersedes,
         "superseded_by": superseded_by,
@@ -2058,37 +2072,6 @@ def _skia_branch_for_line(skia_line, all_branches):
     return None
 
 
-def _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link):
-    # type: (str, str, Optional[str]) -> str
-    """Deterministic *No changes* HarfBuzz page (no AI raw-data block; spec §4.5).
-
-    A published HarfBuzz line whose SkiaSharp window has no HarfBuzz-touching PRs
-    (a rebuild, or a bump with no notable PR) still gets a permanent, fully
-    rendered page so the line set has no gaps. It is timestamp-free so it stays
-    byte-stable across runs (idempotent by text equality) and carries no raw-data
-    block, so it is never listed under "Files to polish".
-    """
-    skia_link = "../{}.md".format(canonical_skia)
-    lines = ["# HarfBuzzSharp {}".format(hb_line), ""]
-    lines.append(
-        "> Ships with [SkiaSharp {s}]({l}) · "
-        "[NuGet](https://www.nuget.org/packages/HarfBuzzSharp/{hb}) · "
-        "[GitHub Release](https://github.com/mono/SkiaSharp/releases/tag/v{s})"
-        .format(s=canonical_skia, l=skia_link, hb=hb_line))
-    lines.append("")
-    if api_diff_link:
-        lines.append(
-            "> **API changes** · [HarfBuzzSharp API diff]({a}) · "
-            "Ships with [SkiaSharp {s}]({l})".format(
-                a=api_diff_link, s=canonical_skia, l=skia_link))
-        lines.append("")
-    lines.append(
-        "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
-        "the same HarfBuzz as the previous line.")
-    lines.append("")
-    return "\n".join(lines)
-
-
 def _write_harfbuzz_page(hb, all_branches, force=False):
     # type: (dict, list[str], bool) -> Tuple[Optional[str], Optional[str]]
     """Generate one HarfBuzz family page from a co-release-map line group (§4.5).
@@ -2162,15 +2145,30 @@ def _write_harfbuzz_page(hb, all_branches, force=False):
         return None, None
 
     # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
-    # (no AI block, never polished; spec §4.5). Idempotent by exact text equality.
+    # (spec §4.5). No prose is needed, so the generator writes only a data.json
+    # flagged `no_changes` and the host renders the fixed page from it (never the
+    # agent). data.json is the change-detection key, so it stays idempotent.
     if published and not prs and not notes_comp:
-        text = _render_harfbuzz_no_changes(hb_line, canonical_skia, api_diff_link)
-        if not force and output_path.exists() and output_path.read_text() == text:
+        nc_meta = {
+            "branch": skia_branch,
+            "version": hb_line,
+            "status": "stable",
+            "family": "harfbuzzsharp",
+            "package": "HarfBuzzSharp",
+            "no_changes": True,
+            "ships_with": {"version": canonical_skia,
+                           "link": "../{}.md".format(canonical_skia)},
+        }
+        if api_diff_link:
+            nc_meta["api_diff_link"] = api_diff_link
+        nc_data = build_data_json([], nc_meta)
+        nc_path = _data_json_path(output_path)
+        if not force and _data_json_unchanged(nc_path, nc_data):
             log("  Skipping {} (unchanged, no changes)".format(output_path))
             return None, owned
         hb_dir.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(text)
-        log("  Wrote {} (no HarfBuzz changes)".format(output_path))
+        nc_path.write_text(json.dumps(nc_data, indent=2) + "\n")
+        log("  Wrote {} (no HarfBuzz changes)".format(nc_path))
         return None, owned
 
     status = "stable" if published else "unreleased"

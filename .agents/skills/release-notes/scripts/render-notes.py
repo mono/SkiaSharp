@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """Render a release-notes page from deterministic data + agent prose.
 
-    render-notes.py <data.json> <slots.json> [out.md]
+    render-notes.py <data.json> <slots.json> [out.md]   # normal page
+    render-notes.py <data.json> [out.md]                 # no-changes page (no prose)
 
 `data.json`  — facts emitted by generate-release-notes.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `slots.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).
+
+A page whose data.json is flagged `no_changes` (a rebuild-only HarfBuzz line,
+spec §4.5) carries no prose: the host renders it from data.json alone.
 
 Structure — headings, tables, the banner shape, @handles, ❤️, and PR links —
 lives entirely in this file, so the agent cannot drop a heading or malform a
@@ -39,6 +43,11 @@ RELEASE_CATEGORIES = [
     "Engine", "API Surface", "Bug Fixes",
     "Lifecycle & Internals", "Platform", "Security",
 ]
+
+# The one fixed line a "no changes" HarfBuzz page carries as its whole body.
+NO_CHANGES_BODY = (
+    "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
+    "the same HarfBuzz as the previous line.")
 
 
 def page_title(data):
@@ -109,6 +118,8 @@ def banner_line(data, slots):
     """The one-line status banner. Shape is fixed here; the agent supplies the
     theme words only (`slots.theme`)."""
     b = data.get("banner") or {}
+    if b.get("kind") == "harfbuzz" or data.get("family") == "harfbuzzsharp":
+        return _harfbuzz_banner_line(data)
     theme = (slots.get("theme") or "").strip()
     date = b.get("date")
     parts = []
@@ -124,6 +135,27 @@ def banner_line(data, slots):
     if b.get("github_release_url"):
         links.append("[GitHub Release]({})".format(b["github_release_url"]))
     return "> " + " · ".join(parts + links)
+
+
+def _harfbuzz_banner_line(data):
+    """HarfBuzz banner. HarfBuzz never ships on its own — it rides a SkiaSharp
+    release (spec §1.5) — so instead of a theme + date the banner anchors to the
+    introducing SkiaSharp version. No theme word is needed or expected."""
+    b = data.get("banner") or {}
+    ships = b.get("ships_with") or {}
+    parts = []
+    if data.get("status") in ("unreleased", "preview"):
+        parts.append("Upcoming release")
+    if ships.get("version"):
+        parts.append("Ships with [SkiaSharp {}]({})".format(
+            ships["version"], ships.get("link", "")))
+    if b.get("nuget_url"):
+        parts.append("[NuGet]({})".format(b["nuget_url"]))
+    if b.get("preview_nuget_url"):
+        parts.append("[NuGet (prerelease)]({})".format(b["preview_nuget_url"]))
+    if b.get("github_release_url"):
+        parts.append("[GitHub Release]({})".format(b["github_release_url"]))
+    return "> " + " · ".join(parts)
 
 
 # ── page assembly (the single source of layout truth) ────────────────────────
@@ -143,6 +175,15 @@ def render(data, slots):
     if data.get("api_links"):
         api = " · ".join("[{}]({})".format(l["label"], l["href"]) for l in data["api_links"])
         L.append("> **API changes** · {}".format(api))
+
+    # A "no changes" page (a published HarfBuzz line whose SkiaSharp window had no
+    # HarfBuzz-touching PRs — a rebuild) needs no prose at all: the banner + API
+    # link above, then one fixed sentence. It is fully deterministic, so it is
+    # rendered by the host from data.json alone, never handed to the agent (§4.5).
+    if data.get("no_changes"):
+        L.append("")
+        L.append(NO_CHANGES_BODY)
+        return _finish_text(L)
 
     L.append("")
     L.append("## Highlights")
@@ -209,6 +250,12 @@ def render(data, slots):
             L.append("")
             L.append("[Full changelog]({})".format(p["changelog_url"]))
 
+    return _finish_text(L)
+
+
+def _finish_text(L):
+    """Join the assembled lines into the final page text (collapse blank runs,
+    ensure a trailing newline). Shared by the full and the no-changes paths."""
     text = "\n".join(L)
     text = re.sub(r"\n{3,}", "\n\n", text)
     if not text.endswith("\n"):
@@ -292,11 +339,28 @@ def _finish_validate(errors, data, slots):
 
 
 def main(argv):
-    if len(argv) < 3:
+    args = [a for a in argv[1:] if not a.startswith("-")]
+    if not args:
         print(__doc__)
         return 2
-    data = json.loads(Path(argv[1]).read_text())
-    slots = json.loads(Path(argv[2]).read_text())
+    data = json.loads(Path(args[0]).read_text())
+
+    # A "no changes" page is fully deterministic: render it from data alone (no
+    # prose, no validation). Usage: `render-notes.py <data.json> [out.md]`.
+    if data.get("no_changes"):
+        text = render(data, {})
+        out = args[1] if len(args) >= 2 else None
+        if out:
+            Path(out).write_text(text)
+            print("wrote {} (no changes, {} words)".format(out, _words(text)))
+        else:
+            sys.stdout.write(text)
+        return 0
+
+    if len(args) < 2:
+        print(__doc__)
+        return 2
+    slots = json.loads(Path(args[1]).read_text())
     errors = validate(data, slots)
     if errors:
         print("SLOT VALIDATION FAILED:", file=sys.stderr)
@@ -304,9 +368,10 @@ def main(argv):
             print("  - {}".format(e), file=sys.stderr)
         return 1
     text = render(data, slots)
-    if len(argv) >= 4:
-        Path(argv[3]).write_text(text)
-        print("wrote {} ({} words)".format(argv[3], _words(text)))
+    out = args[2] if len(args) >= 3 else None
+    if out:
+        Path(out).write_text(text)
+        print("wrote {} ({} words)".format(out, _words(text)))
     else:
         sys.stdout.write(text)
     return 0
