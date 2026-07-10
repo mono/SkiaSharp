@@ -1,0 +1,102 @@
+{
+  "theme": "New filters and perf work",
+  "highlights_headline": "SkiaSharp 4.150.0 adds fast-bounds culling, three new image/color filters, and lands on Skia m150.",
+  "highlights_body": "SKPaint.GetFastBounds() gives cheap quick-reject bounds, SKImageFilter picks up Crop and Empty, and SKColorFilter gains an overdraw visualizer. A small-sigma raster blur regression is fixed and SKSurface.Canvas is now cached across calls to cut per-frame allocations.",
+  "breaking": [
+    {
+      "title": "Remaining pre-v4 obsolete enum members removed",
+      "body": "Enum members and types that were `[Obsolete]` before v4 are removed from the reference assembly. If you get a `CS0117` or `CS0619` on an enum value that was previously deprecated, use the replacement documented on the type.",
+      "prs": [
+        4195
+      ]
+    },
+    {
+      "title": ".NET Interactive (Polyglot Notebooks) support removed",
+      "body": "The `SkiaSharp.Extensions.DotNetInteractive` integration is removed; the underlying .NET Interactive extensibility surface it depended on is no longer maintained. Consumers rendering SkiaSharp images in notebooks should encode to a byte[] and use a generic image display cell instead.",
+      "prs": [
+        4186
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m150",
+          "detail": "The bundled engine moves to m150 and folds in a follow-up upstream chrome/m150 bug-fix sync.",
+          "prs": [
+            4146,
+            4190
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKPaint.GetFastBounds() for quick-reject culling",
+          "detail": "A cheap conservative bounds computation for a paint (stroke + effects) \u2014 use it to skip draws that fall outside the clip without building a full bounds pipeline.",
+          "prs": [
+            4271
+          ]
+        },
+        {
+          "lead": "New SKImageFilter and SKColorFilter factories",
+          "detail": "`SKImageFilter.CreateCrop`, `SKImageFilter.CreateEmpty` and `SKColorFilter.CreateOverdraw` fill in commonly-needed filters (bounds cropping, no-op filter, overdraw visualization).",
+          "prs": [
+            4227,
+            4228,
+            4229
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Small-sigma raster blur regression fixed",
+          "detail": "Defining `SK_AVOID_SLOW_RASTER_PIPELINE_BLURS` restores the fast blur path for very small sigmas that had regressed to the slow pipeline (visible as blurry-but-noisy output on tight shadows).",
+          "prs": [
+            4269
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKSurface.Canvas cached across calls",
+          "detail": "The `Canvas` property no longer allocates a new wrapper on every access \u2014 the same managed wrapper is returned for a given surface, cutting per-frame allocations in draw loops.",
+          "prs": [
+            4247
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "HarfBuzz updated to 14.2.1",
+          "detail": "Picks up the upstream 14.2.1 bug-fix release.",
+          "prs": [
+            4167
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "The trim of remaining pre-v4 obsoletes from the reference assembly, the SKSurface Canvas caching, and the small-sigma raster blur regression fix"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 cut the line on the Skia m150 bump.",
+    "p2": "Preview 2 removed .NET Interactive support, trimmed the last pre-v4 obsoletes from the reference assembly, and picked up harfbuzz 14.2.1.",
+    "rc1": "The release candidate added `SKPaint.GetFastBounds()`, the new SKImageFilter/SKColorFilter factories, the SKSurface Canvas cache, the small-sigma raster blur fix, and folded in an upstream chrome/m150 bug-fix sync."
+  },
+  "harfbuzz_summary": "The bundled HarfBuzz refreshes to 14.2.1; the binding's test suite also migrates to xUnit v3 alongside SkiaSharp's."
+}
