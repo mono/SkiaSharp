@@ -26,8 +26,9 @@ public readonly struct SKFourByteTag : IEquatable<SKFourByteTag>
 
 		// Take up to the first four characters, padding any missing trailing
 		// slots with spaces — matching the original char[4]-scratch behaviour
-		// without allocating the scratch array.
-		var c1 = tag.Length > 0 ? tag[0] : ' ';
+		// without allocating the scratch array. The first character always
+		// exists here because empty input was handled by the guard above.
+		var c1 = tag[0];
 		var c2 = tag.Length > 1 ? tag[1] : ' ';
 		var c3 = tag.Length > 2 ? tag[2] : ' ';
 		var c4 = tag.Length > 3 ? tag[3] : ' ';
