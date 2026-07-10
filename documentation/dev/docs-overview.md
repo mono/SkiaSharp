@@ -98,7 +98,7 @@ a single canonical entry point.
 | *(in the skill)* `build-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
 | *(in the skill)* `build-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
 | *(in the skill)* `render-notes.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
-| *(in the skill)* `pr-authors.json` | PR-author cache for the release-notes engine |
+| *(committed under `releases/_sources/`)* `pr-authors.json` | PR-author cache for the release-notes engine (offline author resolution) |
 
 Each path's **entry point** is its single source of truth: a developer, the CI
 workflows, and the Docker wrapper all invoke the same target or script, so a

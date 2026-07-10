@@ -347,7 +347,6 @@ scripts/infra/docs/                (shared / API-diff engine)
     render-notes.py            Polish renderer (§4) — all Markdown: pages + TOC.yml + index.md,
                                prunes stale -unreleased pages and retires HarfBuzz hub pages
     schema/prose.schema.json   the prose contract the agent fills
-    pr-authors.json            PR-author cache for build-data.py (§4)
 ```
 
 The release-notes scripts are split by phase and artifact. `prepare.sh` owns no
@@ -557,6 +556,7 @@ documentation/docfx/releases/
     3.119.0.notes.md         ← optional manual additions sidecar          [Maintainer] §3.7
     co-release-map.json      ← Cake→build-data HarfBuzz co-ship input     [Cake]   §3.6
     index.json               ← network-sourced index data                 [build-index] §3.5
+    pr-authors.json          ← PR-number → GitHub-login cache (offline author resolution) [build-data] §4
   3.119.0/                   ← API diffs for the SkiaSharp package bucket [Cake]   §3.3
     index.md                (per-line diff landing — the SkiaSharp API-diff link target, §3.3)
     SkiaSharp/SkiaSharp.md  (+ SkiaSharp.breaking.md)
