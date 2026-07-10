@@ -1,0 +1,188 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4303,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-10T05:35:00Z",
+    "currentLabels": ["type/bug"]
+  },
+  "summary": "SKTypeface.FromFamilyName and SKFontManager.Default return empty/non-functional results on Linux after PR #3730 changed default font manager creation from sk_fontmgr_ref_default to sk_fontmgr_create_default, breaking font family resolution and causing downstream ArgumentNullException in SKShaper.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.97 },
+    "area": { "value": "area/SkiaSharp", "confidence": 0.93 },
+    "platforms": ["os/Linux"],
+    "tenets": ["tenet/reliability", "tenet/compatibility"]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": true,
+      "errorType": "exception",
+      "errorMessage": "System.ArgumentNullException : Value cannot be null. (Parameter 'asset')",
+      "stackTrace": "at SkiaSharp.HarfBuzz.BlobExtensions.ToHarfBuzzBlob(SKStreamAsset asset)\nat SkiaSharp.HarfBuzz.SKShaper..ctor(SKTypeface typeface)",
+      "reproQuality": "partial",
+      "targetFrameworks": ["net9.0"]
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Run on Linux (including WSL) with system fonts installed under /usr/share/fonts/",
+        "Call SKTypeface.FromFamilyName(\"Arial\") — or any family name",
+        "Observe IsEmpty = True in SkiaSharp 4.150.0",
+        "Observe SKFontManager.Default.FontFamilyCount == 1 with empty family name",
+        "Compare with 3.119.4 where FromFamilyName(\"Arial\") returns DejaVu Sans Mono as a fallback"
+      ],
+      "environmentDetails": "Linux / WSL, Visual Studio (Windows for IDE), SkiaSharp 4.148.0 and 4.150.0",
+      "relatedIssues": [3693],
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/pull/3730", "description": "PR #3730: Fix #3693 — moved default typeface resolution to managed layer, changed sk_fontmgr_ref_default to sk_fontmgr_create_default" },
+        { "url": "https://github.com/mono/skia/pull/195", "description": "Companion native Skia PR that changed the C API for font manager creation" }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": ["3.119.4", "4.148.0", "4.150.0"],
+      "workedIn": "3.119.4",
+      "brokeIn": "4.148.0",
+      "currentRelevance": "likely",
+      "relevanceReason": "The change was introduced by PR #3730 merged for 4.147.0-preview.1 and the issue persists in 4.150.0 (current). Code confirms the new path using sk_fontmgr_create_default is still in place."
+    },
+    "regression": {
+      "isRegression": true,
+      "confidence": 0.97,
+      "reason": "PR #3730 explicitly changed font manager initialization from sk_fontmgr_ref_default (Skia global singleton that properly discovers system fonts on Linux via fontconfig) to sk_fontmgr_create_default (fresh allocation whose behavior on Linux may differ). The reporter identifies PR #3730 as the cause and confirms 3.119.4 works correctly.",
+      "workedInVersion": "3.119.4",
+      "brokeInVersion": "4.148.0"
+    }
+  },
+  "analysis": {
+    "summary": "SKFontManager.Default is created via sk_fontmgr_create_default (introduced in PR #3730 to fix an Android 16 SIGSEGV) but on Linux this call returns a font manager that does not discover system fonts — FontFamilyCount returns 1 with an empty family name. Consequently, MatchFamily returns null for any family name, FromFamilyName falls back to SKTypeface.Default, but Default itself is created via sk_fontmgr_legacy_create_typeface(Default.Handle, null, Normal) which also fails (returns IntPtr.Zero) on this broken font manager, so Default resolves to SKTypeface.Empty. The empty typeface then propagates downstream into SKShaper causing ArgumentNullException.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "75-76",
+        "finding": "FromFamilyName(familyName, style) delegates to SKFontManager.Default.MatchFamily(familyName, style) ?? Default. If both MatchFamily and Default return Empty, the caller receives an empty typeface.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "lines": "36-43",
+        "finding": "SKTypeface.Default uses sk_fontmgr_legacy_create_typeface(SKFontManager.Default.Handle, IntPtr.Zero, Normal.Handle). If SKFontManager.Default is a non-functional/empty manager, this returns IntPtr.Zero and Default resolves to SKTypeface.Empty.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "27-29",
+        "finding": "SKFontManager.Default is initialized with sk_fontmgr_create_default(). This replaces the old sk_fontmgr_ref_default (which reused the Skia-global singleton). On Linux the new allocator may not enumerate system fonts via fontconfig the same way as the old global singleton.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/SKFontManager.cs",
+        "lines": "78-89",
+        "finding": "MatchFamily calls sk_fontmgr_match_family_style via GetDisposeProtectedObject — returns null SKTypeface when handle is zero, which is the expected case for unrecognized family names when the font manager has no fonts.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SKFontManager.FontFamilyCount return 1, but SKFontManager.GetFontFamilies() return empty data (\"No message provided\" on ToString())",
+        "source": "issue body",
+        "interpretation": "Font manager is returning 1 family but the family name itself is empty, indicating the font manager loaded but found no named font families — fontconfig integration broken"
+      },
+      {
+        "text": "In 3.119.4 method return exists font on any familyName (correct or not). In 4.150.0 method return \"something\" empty, not null.",
+        "source": "issue body",
+        "interpretation": "Old behavior: SKTypeface.FromFamilyName with any name returned a usable fallback font. New behavior: returns SKTypeface.Empty (IsEmpty=True) which is a zero-glyph empty typeface"
+      },
+      {
+        "text": "Problem changes: #3730",
+        "source": "issue body",
+        "interpretation": "Reporter correctly identified PR #3730 as the regression source — the managed font manager refactor"
+      },
+      {
+        "text": "SKFontManager.Default.FontFamilyCount = 1, The single family name is empty (\"\"), Text does not render when relying on default/family-based font resolution",
+        "source": "comment by jswolf19",
+        "interpretation": "Second reporter confirms same symptoms in 4.148.0 on Linux container environment"
+      },
+      {
+        "text": "Method SKTypeface.FromFile working good if set full path to font",
+        "source": "issue body",
+        "interpretation": "CreateTypeface path still works — only family-name lookup and default resolution are broken. Confirms issue is in font manager enumeration/matching, not native binary loading"
+      }
+    ],
+    "rationale": "Classified as type/bug with high severity because PR #3730 introduced a regression on Linux where the new sk_fontmgr_create_default call produces a non-functional font manager that fails to discover system fonts. The old sk_fontmgr_ref_default (a reference-counted alias to Skia's global default singleton) correctly used fontconfig; the new fresh allocation apparently does not in some Linux configurations. The bug affects all Linux users relying on font-family-name resolution and causes downstream exceptions in SKShaper. Severity is high because: (1) it's a core text rendering API, (2) both reporters are affected without unusual configurations, and (3) workaround requires changing all call sites to use FromFile with absolute paths.",
+    "workarounds": [
+      "Use SKTypeface.FromFile(\"/full/path/to/font.ttf\") instead of SKTypeface.FromFamilyName() — requires knowing the absolute path to the font file",
+      "Use SKFontManager.CreateCustomManager() and manually add font directories if supported",
+      "On Linux, enumerate fonts with fc-list and build a name→path mapping, then load via FromFile"
+    ],
+    "nextQuestions": [
+      "Does sk_fontmgr_create_default in the native library behave differently from sk_fontmgr_ref_default on Linux — specifically regarding fontconfig initialization?",
+      "Does the issue reproduce in a Docker container with standard fonts installed (to isolate WSL-specific behavior)?",
+      "Does adding a call to fc-cache before creating the font manager affect the count?",
+      "Was sk_fontmgr_create_default correctly implemented in mono/skia#195 to match the prior behavior of the global Skia default manager?"
+    ],
+    "errorFingerprint": "SKFontManager.Default::sk_fontmgr_create_default::linux-no-fonts",
+    "resolution": {
+      "hypothesis": "sk_fontmgr_create_default in the companion mono/skia#195 change does not properly initialize fontconfig on Linux, returning a font manager with no families. The fix likely involves ensuring sk_fontmgr_create_default invokes the same fontconfig/system-fonts initialization path as the former Skia global singleton (formerly exposed via sk_fontmgr_ref_default).",
+      "proposals": [
+        {
+          "title": "Investigate native sk_fontmgr_create_default on Linux",
+          "category": "investigation",
+          "description": "Reproduce on Linux, confirm FontFamilyCount==1 with empty name, then trace whether the Skia C++ SkFontMgr_New_Custom_Empty or SkFontMgr_New_FontConfig is being invoked by sk_fontmgr_create_default. Compare with the old path.",
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Workaround: use FromFile with absolute font path",
+          "category": "workaround",
+          "description": "Until fixed, callers can use SKTypeface.FromFile(\"/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf\") to load a specific font. A helper that enumerates /usr/share/fonts/ via fc-list can build a name-to-path dictionary.",
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Investigate native sk_fontmgr_create_default on Linux",
+      "recommendedReason": "The workaround is disruptive (requires absolute paths and knowledge of font locations). The root cause is a native layer regression that should be fixed at the source."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.93,
+      "reason": "The regression is clearly identified and reproducible on Linux. The root cause points to the native sk_fontmgr_create_default not properly initializing fontconfig on Linux. Needs native investigation and a targeted fix in the mono/skia companion code.",
+      "suggestedReproPlatform": "linux"
+    },
+    "missingInfo": [
+      "Minimal reproducible project or exact .NET target framework / distro version",
+      "Confirmation whether the issue is Docker-container-specific or all Linux"
+    ],
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": ["type/bug", "area/SkiaSharp", "os/Linux", "tenet/reliability", "tenet/compatibility"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge regression, confirm root cause hypothesis, provide workaround",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thank you for the detailed report and for pinpointing PR #3730 as the regression source.\n\nThis is a confirmed regression on Linux. The change in #3730 moved `SKFontManager.Default` from using `sk_fontmgr_ref_default` (the Skia-global singleton that properly initializes fontconfig on Linux) to `sk_fontmgr_create_default` (a fresh allocation). On Linux, this new allocation appears to return a font manager that discovers only 1 family with an empty name — fontconfig integration isn't being invoked correctly in the new native code path.\n\nBecause `SKFontManager.Default` is broken, `SKTypeface.Default` (which relies on it) also resolves to `SKTypeface.Empty`, and `SKTypeface.FromFamilyName()` returns an empty typeface instead of a platform fallback.\n\n**Workaround (until fixed):**\n\nUse `SKTypeface.FromFile()` with the absolute path to the font:\n```csharp\n// Instead of:\nvar typeface = SKTypeface.FromFamilyName(\"Arial\");\n\n// Use:\nvar typeface = SKTypeface.FromFile(\"/usr/share/fonts/truetype/ubuntu/Ubuntu-R.ttf\");\n```\n\nYou can discover available font paths on Linux using `fc-list` in a terminal.\n\nWe will investigate the `sk_fontmgr_create_default` implementation in the native layer to ensure it correctly initializes fontconfig."
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the PR that introduced the regression",
+        "risk": "low",
+        "confidence": 0.98,
+        "linkedIssue": 3730
+      },
+      {
+        "type": "link-related",
+        "description": "Link to the original Android bug that PR #3730 was fixing",
+        "risk": "low",
+        "confidence": 0.95,
+        "linkedIssue": 3693
+      }
+    ]
+  }
+}
