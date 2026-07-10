@@ -1,0 +1,136 @@
+{
+  "theme": "Platform refresh and stability",
+  "highlights_headline": "SkiaSharp 3.119.4 stabilises Tizen, tvOS and GTK4, refreshes native dependencies, and lands the redesigned Gallery.",
+  "highlights_body": "This servicing release adds Linux Bionic and Tizen x64/arm64 native assets, fixes long-standing tvOS and GTK4 crashes, hardens AoT and stream handling, and refreshes libpng, libwebp, brotli and libexpat. The developer sample suite is rebuilt end-to-end and the docs move to an interactive Blazor Gallery.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "New GTK4 view",
+          "detail": "Adds SkiaSharp.Views.Gtk4 built on GirCore.Gtk-4.0 so GTK4 apps get a first-class SkiaSharp surface.",
+          "prs": [
+            3527
+          ]
+        },
+        {
+          "lead": "SKManagedStream reworked around SKData",
+          "detail": "SKManagedStream now snapshots into SKData instead of maintaining a parent/child chain, removing a class of ownership crashes when streams outlive their owner.",
+          "prs": [
+            3589
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "AoT crash fixed",
+          "detail": "SkiaSharp no longer crashes at startup when the app is published with IlcDisableReflection=true.",
+          "prs": [
+            3485
+          ]
+        },
+        {
+          "lead": "GTK4 drawing crash fixed",
+          "detail": "SKDrawingArea no longer hits a Cairo assertion when the widget is realised.",
+          "prs": [
+            3562
+          ]
+        },
+        {
+          "lead": "tvOS builds stop mixing simulator and device frameworks",
+          "detail": "The tvOS NativeReference targets now split device and simulator frameworks the same way iOS does, so builds pick the right binary.",
+          "prs": [
+            3561,
+            3563
+          ]
+        },
+        {
+          "lead": "Android MAUI tab rendering",
+          "detail": "SKGLView now redraws after switching tabs in a MAUI TabBar on Android.",
+          "prs": [
+            3076
+          ]
+        },
+        {
+          "lead": "WindowsForms design-time",
+          "detail": "The WindowsForms controls read DesignMode directly instead of walking the component tree, which fixes designer-only misbehaviour.",
+          "prs": [
+            3614
+          ]
+        },
+        {
+          "lead": "D3D12 delay-loaded",
+          "detail": "D3D12 DLLs are now delay-loaded so Windows machines without DirectX 12 no longer crash on startup.",
+          "prs": [
+            3633
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Linux Bionic natives",
+          "detail": "Adds a Linux Bionic (Android libc) native asset alongside the existing glibc build.",
+          "prs": [
+            3217
+          ]
+        },
+        {
+          "lead": "Tizen x64 and arm64",
+          "detail": "Adds Tizen x64 and arm64 native builds and moves Tizen to Studio 6.1 with corrected TFMs.",
+          "prs": [
+            3620,
+            3619
+          ]
+        },
+        {
+          "lead": ".NET 10 SDK",
+          "detail": "Moves the build to the .NET 10 SDK with workload-set pinning, and adds a net48 target used for Windows validation.",
+          "prs": [
+            3514,
+            3631
+          ]
+        },
+        {
+          "lead": "Linker hardening",
+          "detail": "Linux and Android native builds now enforce -Wl,--no-undefined so missing symbols fail the build instead of the runtime.",
+          "prs": [
+            3629
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Bundled native dependencies refreshed",
+          "detail": "libpng, libwebp, brotli and libexpat are all updated in the bundled Skia to pick up the current upstream fixes.",
+          "prs": [
+            3723,
+            3478,
+            3469,
+            3452,
+            3463
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "4Darmygeometry": "Linux Bionic native assets, a net48 validation target, and PolySharp for C# 13 on legacy TFMs.",
+    "sshumakov": "Spectre-mitigation build flags for the Windows and Linux native binaries.",
+    "ramezgerges": "Moved the AI agent configuration to a shared location for Claude Code and GitHub Copilot.",
+    "SimonvBez": "Fixed SKGLView not redrawing after switching tabs in a MAUI Android TabBar."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 opened the 3.119.4 servicing line, gathering the tvOS, GTK4 and AoT fixes and refreshing the samples and docs."
+  },
+  "harfbuzz_summary": "Picks up the tvOS device/simulator split, the Tizen native additions and the .NET 10 SDK move that also apply to the HarfBuzzSharp binding."
+}

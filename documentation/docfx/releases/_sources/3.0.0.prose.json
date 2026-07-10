@@ -1,0 +1,160 @@
+{
+  "theme": "Rolled up into 3.116.0",
+  "highlights_headline": "Preview 3.0.0 was the v3 line that never shipped stable \u2014 its work was renumbered and released as 3.116.0.",
+  "highlights_body": null,
+  "breaking": [
+    {
+      "title": "Obsolete v2 APIs removed",
+      "body": "Every member marked [Obsolete] in SkiaSharp 2 was removed on this line \u2014 the legacy GRContext.Create/GRGlInterface.Assemble* factories, SKBitmap.GetAddr*/Index8 helpers, the InstallPixels overload that took an SKColorTable, and GetRecommendedSampleCount/SetResourceCacheLimits. Migrate to the replacement each obsolete attribute pointed at (CreateGl/CreateOpenGl/GetPixel/GetResourceCacheLimit).",
+      "prs": [
+        2539
+      ]
+    },
+    {
+      "title": "SKFilterQuality replaced by SKSamplingOptions",
+      "body": "The v2 SKFilterQuality drawing paths were replaced with SKSamplingOptions in v3, with compatibility overloads that keep SKFilterQuality-based calls compiling.",
+      "prs": [
+        2963,
+        2924
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia milestone 116",
+          "detail": "Bumps the bundled Skia through milestones 115 and 116.",
+          "prs": [
+            2829,
+            2885,
+            3026
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKBlender, richer SKPicture, Skottie",
+          "detail": "Exposes SKBlender, the R-tree BeginRecording overload, additional SKPicture APIs, SKImage.ToRawShader, and binds the Skottie Animation.Builder.",
+          "prs": [
+            2830,
+            2889,
+            2883,
+            2748,
+            2630
+          ]
+        },
+        {
+          "lead": "Span overloads and platform views",
+          "detail": "Adds Span<T> overloads across color filters, SetRectRadii and GetPixelSpan, and lands new views: SKGLElement for WPF, SKGLView for MAUI, WinUI accelerated views and DPI on the Blazor components.",
+          "prs": [
+            2879,
+            2949,
+            2609,
+            2317,
+            2598,
+            2733,
+            1832
+          ]
+        },
+        {
+          "lead": "Function pointers and LibraryImport",
+          "detail": "Rewrites the interop layer around function pointers and LibraryImport for AOT and trimming.",
+          "prs": [
+            2917
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Xaml, Uno and Metal fixes",
+          "detail": "Fixes the SKXamlCanvas XamlRoot lifetime, the Uno Bgra8888 canvas, the WASM canvas lookup, Mac Catalyst Metal and Apple Metal Snapshot returning magenta.",
+          "prs": [
+            2854,
+            2918,
+            2559,
+            2747,
+            2804
+          ]
+        },
+        {
+          "lead": "Memory and API correctness",
+          "detail": "Fixes MAUI view memory leaks, the cloned SKPaint AVE, and the GetKerningPairAdjustments API, and restores the v2.88.8 SKBitmap.Encode PNG behaviour.",
+          "prs": [
+            2955,
+            2904,
+            2858,
+            3014
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 9 and modern workloads",
+          "detail": "Adds .NET 9 support alongside .NET 8, updates SDK/workloads/projects, and refreshes the WinForms GLControl packages.",
+          "prs": [
+            3010,
+            2927,
+            2971,
+            2989
+          ]
+        },
+        {
+          "lead": "Metal on a common TFM and AOT hardening",
+          "detail": "Brings the Metal APIs onto a common .NET TFM, updates IBufferByteAccess for AOT, and marks PlatformConfiguration properties trimmable.",
+          "prs": [
+            2788,
+            2920,
+            2717
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Bundled native dependencies refreshed",
+          "detail": "Updates HarfBuzz to 8.3.0, libwebp to 1.3.2, and libjpeg-turbo to 3.0.0.",
+          "prs": [
+            2624,
+            2622,
+            2583
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": ".NET 9 support, the SKXamlCanvas XamlRoot fix, and the Uno canvas context/WASM canvas fixes.",
+    "maxkatz6": "Function pointers and LibraryImport interop rewrite, common Metal TFM, and trimmable PlatformConfiguration properties.",
+    "Youssef1313": "SKFilterQuality compatibility overloads, SetRectRadii Span overload, and the Uno Skia Bgra8888 fix.",
+    "beto-rodriguez": "Exposed DPI on the Blazor components.",
+    "Fxplorer": "Fixed a typo in the README.",
+    "gmurray81": "Added SKGLElement to SkiaSharp.Views.WPF.",
+    "jeremy-visionaid": "Fixed the access-violation when disposing a cloned SKPaint.",
+    "lindexi": "Removed async void from SKXamlCanvas.",
+    "pdjonov": "Fixed the GetKerningPairAdjustments API.",
+    "Redth": "Bumped the bundled Skia.",
+    "sungaila": "Restored the v2.88.8 SKBitmap.Encode PNG behaviour.",
+    "taublast": "Fixed the magenta Snapshot result on Apple Metal."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 modernised the repository, removed the [Obsolete] v2 surface, and refreshed the packaging.",
+    "p2": "Preview 2 bound the Skottie Animation.Builder, added SKImage.ToRawShader, and switched Mac Catalyst to Metal.",
+    "p3": "Preview 3 brought the Metal APIs onto a common TFM, added SKGLElement for WPF and DPI on the Blazor components.",
+    "p4": "Preview 4 added SKBlender, the R-tree BeginRecording overload, more SKPicture APIs, the color-filter Span overloads, and fixed the AVE in cloned SKPaint dispose.",
+    "p5": "Preview 5 added .NET 9 support, .NET 8 workload updates, the SKFilterQuality compatibility overloads, and fixed MAUI view memory leaks."
+  },
+  "harfbuzz_summary": "Refreshes HarfBuzz to 8.3.0 and picks up the .NET 9 support and function-pointer interop rewrite in the HarfBuzzSharp binding."
+}

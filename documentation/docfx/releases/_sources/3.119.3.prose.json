@@ -1,0 +1,57 @@
+{
+  "theme": "Rolled up into 3.119.4",
+  "highlights_headline": "Preview 3.119.3 collected native-dependency refreshes and AoT fixes that shipped as 3.119.4.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "AoT crash with reflection disabled",
+          "detail": "Fixes a startup crash when consumers publish with IlcDisableReflection=true.",
+          "prs": [
+            3485
+          ]
+        },
+        {
+          "lead": "Linux ARM64 fontconfig",
+          "detail": "Adds fontconfig runtime library to the cross-compile sysroot so Linux ARM64 no longer crashes at first font use.",
+          "prs": [
+            3494
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Spectre mitigation on native binaries",
+          "detail": "Enables the /Qspectre-style flag on the bundled Windows and Linux native libraries.",
+          "prs": [
+            3496,
+            3502
+          ]
+        },
+        {
+          "lead": "Native dependency refresh",
+          "detail": "Updates libpng, libwebp, brotli and libexpat in the bundled Skia.",
+          "prs": [
+            3452,
+            3478,
+            3469,
+            3458,
+            3463
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "sshumakov": "Spectre-mitigation build flags for the Windows and Linux native binaries."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 cut the 3.119.3 line with the AoT crash fix, the Linux ARM64 fontconfig fix, and refreshed native dependencies."
+  }
+}

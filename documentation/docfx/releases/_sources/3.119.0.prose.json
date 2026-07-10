@@ -1,0 +1,165 @@
+{
+  "theme": "Skia m119 and broader Linux",
+  "highlights_headline": "SkiaSharp 3.119.0 bumps to Skia milestone 119 and dramatically widens the Linux and Windows platform matrix.",
+  "highlights_body": "This release adds LoongArch64, RISC-V 64, Alpine and Windows ARM builds, brings Direct3D on Windows, expands Metal to tvOS, and refreshes libpng and vulkanmemoryallocator. It also lands several long-standing SKCanvas, SKColorFilter and .NET Framework fixes.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia milestone 119",
+          "detail": "Bumps the bundled Skia to milestone 119, picking up the upstream renderer and text improvements.",
+          "prs": [
+            3062
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SaveLayerRec on SKCanvas",
+          "detail": "Implements SkCanvas::SaveLayerRec so consumers can save layers with a backdrop filter, image filter and flags in one call.",
+          "prs": [
+            2962
+          ]
+        },
+        {
+          "lead": "Missing SKColorFilter types",
+          "detail": "Adds the SKColorFilter types that had been missing from the managed surface.",
+          "prs": [
+            2882
+          ]
+        },
+        {
+          "lead": "Metal render targets everywhere",
+          "detail": "The GRBackendRenderTarget Metal APIs are now available on every Apple platform.",
+          "prs": [
+            3070
+          ]
+        },
+        {
+          "lead": "tvOS Metal view",
+          "detail": "Adds SKMetalView support on tvOS.",
+          "prs": [
+            3114
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKImage.FromPicture",
+          "detail": "Corrects the SKImage.FromPicture implementation so pictures render as expected.",
+          "prs": [
+            3231
+          ]
+        },
+        {
+          "lead": ".NET Framework + packages.config",
+          "detail": "Fixes a regression that broke projects using .NET Framework or Mono with packages.config.",
+          "prs": [
+            3112
+          ]
+        },
+        {
+          "lead": "iOS Simulator Metal performance",
+          "detail": "Restores acceptable frame times when rendering with Metal in the iOS Simulator.",
+          "prs": [
+            3156
+          ]
+        },
+        {
+          "lead": "Blazor and WASM plumbing",
+          "detail": "Fixes .NET 9 ASP.NET Blazor issues and moves the earlier WASM workaround into SkiaSharp itself so consumers don't have to.",
+          "prs": [
+            3064,
+            3088,
+            3082,
+            3092
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "New Linux architectures",
+          "detail": "Adds LoongArch64 and RISC-V 64 native builds, extends the cross-compiler to Alpine, and generally widens Linux support.",
+          "prs": [
+            3198,
+            3192,
+            3200,
+            3209
+          ]
+        },
+        {
+          "lead": "Windows ARM and Direct3D",
+          "detail": "Enables GL on Windows ARM, fixes ARM build targets, and compiles Skia with Direct3D on Windows.",
+          "prs": [
+            3189,
+            3190,
+            2823
+          ]
+        },
+        {
+          "lead": "Skia milestone 118 catch-up",
+          "detail": "Also rolls in the never-released 3.118.0 preview line \u2014 the milestone 117 and 118 bumps, the fontconfig update, WinUI SDK version pinning, and the Blazor/WASM base-path fix.",
+          "prs": [
+            3048,
+            3047,
+            3221,
+            3085,
+            3092
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "CVE-2024-30105",
+          "detail": "Addresses CVE-2024-30105 in the build.",
+          "prs": [
+            3166
+          ]
+        },
+        {
+          "lead": "Native dependency refresh",
+          "detail": "Updates libpng, vulkanmemoryallocator, freetype2, libexpat, libjpeg-turbo and HarfBuzz.",
+          "prs": [
+            3059,
+            3196,
+            3061,
+            3056,
+            3060,
+            3052
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "kasperk81": "Vulkan Memory Allocator update, RISC-V 64 build, Linux test fixes, and the Alpine cross-compiler extension.",
+    "4Darmygeometry": "Added LoongArch64 native build support.",
+    "ahmed605": "Implemented SkCanvas::SaveLayerRec.",
+    "Kation": "Compiled Skia with Direct3D on Windows.",
+    "kkwpsv": "Fixed an incorrect native call in the bindings.",
+    "MartinZikmund": "Added SKMetalView support on tvOS.",
+    "pjcollins": "Addressed CVE-2024-30105 in the build.",
+    "spouliot": "Made the GRBackendRenderTarget Metal APIs available on every Apple platform.",
+    "sungaila": "Fixed a regression affecting .NET Framework and Mono projects using packages.config.",
+    "taublast": "Fixed iOS Simulator Metal rendering performance."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 opened the 3.119.0 line, widening the Linux and Windows platform matrix, adding SaveLayerRec, and rolling in the milestone 117/118 catch-up work.",
+    "p2": "Preview 2 collected the Blazor/WASM fixes, the Metal APIs everywhere, and the freetype/libexpat/libjpeg-turbo refreshes."
+  },
+  "harfbuzz_summary": "Refreshes HarfBuzz to 8.3.1.1 and picks up the LoongArch64, RISC-V 64, Alpine and Windows ARM native builds for the HarfBuzzSharp binding."
+}

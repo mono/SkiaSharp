@@ -1,0 +1,55 @@
+{
+  "theme": "Servicing and hardening",
+  "highlights_headline": "SkiaSharp 3.119.2 hardens the Windows and Android native binaries and fills small API gaps on tvOS.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Missing tvOS SKSurface overloads",
+          "detail": "Adds the SKSurface.Create overloads that were present on iOS but missing on tvOS.",
+          "prs": [
+            3342
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android symbols preserved and packed",
+          "detail": "The Android native symbols are preserved and shipped in the symbol package for better crash triage.",
+          "prs": [
+            3374
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Windows binaries hardened",
+          "detail": "Enables Control Flow Guard and BufferSecurityCheck on the bundled Windows native DLLs to satisfy BinSkim BA2007 and related checks.",
+          "prs": [
+            3397,
+            3404
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "Aguilex": "Enabled Control Flow Guard and BufferSecurityCheck on the Windows native DLLs.",
+    "MartinZikmund": "Added the missing tvOS SKSurface.Create overloads."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 collected the tvOS SKSurface fix, packed Android symbols, and improved the generator.",
+    "p2": "Preview 2 enabled Control Flow Guard and BufferSecurityCheck on the Windows native DLLs.",
+    "p3": "Preview 3 extended the Spectre-mitigation flag to the Linux native binary and cut the release candidate."
+  },
+  "harfbuzz_summary": "Picks up the Android symbol preservation and Windows hardening flags that also cover the HarfBuzzSharp binding."
+}

@@ -1,0 +1,65 @@
+{
+  "theme": "Metal and Xaml fixes",
+  "highlights_headline": "SkiaSharp 3.119.1 fixes Metal disposal and canvas hosting on iOS, tvOS and Mac Catalyst.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "PostScriptName on SKTypeface",
+          "detail": "Adds a PostScriptName property to SKTypeface, matching what Skia already exposes.",
+          "prs": [
+            3263
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Metal disposal on iOS 15 and Mac Catalyst",
+          "detail": "Disposing a GRContext on the Metal backend no longer crashes, SKMetalView is no longer initialised twice, and the iOS 15 Metal hotfix is applied.",
+          "prs": [
+            3258,
+            3256,
+            3293
+          ]
+        },
+        {
+          "lead": "SKXamlCanvas transparency on Mac Catalyst",
+          "detail": "SKXamlCanvas is no longer forced opaque on Mac Catalyst, matching iOS behaviour.",
+          "prs": [
+            3236
+          ]
+        },
+        {
+          "lead": "Safer SKAutoCanvasRestore",
+          "detail": "SKAutoCanvasRestore no longer crashes on Dispose when the canvas was already disposed.",
+          "prs": [
+            3291
+          ]
+        },
+        {
+          "lead": "UTC DateTime handling",
+          "detail": "Corrects UTC DateTime conversion in the type helpers.",
+          "prs": [
+            3333
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeremy-visionaid": "Metal GRContext disposal test, SKMetalView single-init fix, and UTC DateTime conversion fix.",
+    "taublast": "iOS 15 Metal hotfix and the SKAutoCanvasRestore double-dispose guard.",
+    "jonlipsky": "Added PostScriptName to SKTypeface.",
+    "pjcollins": "Added CI triggers for primary branches on the native pipeline.",
+    "spouliot": "Fixed SKXamlCanvas being forced opaque on Mac Catalyst."
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 cut the 3.119.1 line with the Metal disposal fixes, the Mac Catalyst SKXamlCanvas fix and the new PostScriptName property."
+  }
+}
