@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -116,6 +117,75 @@ namespace SkiaSharp.Tests
 			Assert.True (tag.Equals ((object)SKFourByteTag.Parse ("wght")));
 			Assert.False (tag.Equals ((object)SKFourByteTag.Parse ("wdth")));
 			Assert.False (tag.Equals ("wght")); // wrong type
+		}
+
+		// Reference implementation: the ORIGINAL char[4]-scratch algorithm, kept verbatim as the
+		// equivalence oracle so the managed rewrite is proven bit-for-bit identical.
+		private static uint ReferenceParse (string tag)
+		{
+			if (string.IsNullOrEmpty (tag))
+				return 0;
+
+			var realTag = new char[4];
+			var len = Math.Min (4, tag.Length);
+			var i = 0;
+			for (; i < len; i++)
+				realTag[i] = tag[i];
+			for (; i < 4; i++)
+				realTag[i] = ' ';
+
+			return (uint)(((byte)realTag[0] << 24) | ((byte)realTag[1] << 16) | ((byte)realTag[2] << 8) | (byte)realTag[3]);
+		}
+
+		public static IEnumerable<object[]> EquivalenceInputs ()
+		{
+			var inputs = new[]
+			{
+				null, "", " ", "a", "ab", "abc", "abcd", "abcde", "abcdef",
+				"wght", "wdth", "slnt", "opsz", "ital", "GSUB", "GPOS", "OS/2",
+				"    ", "\0\0\0\0", "\t\r\n ",
+				// characters above 0xFF: only the low byte is kept, exactly like the old code
+				"\u0100\u0141\u2764\uFFFF", "é\u00e9\u00ffz", "\uABCDwght"[..4],
+				// surrogate-ish high code units (still just char code units to the algorithm)
+				"\uD83D\uDE00xy",
+			};
+			foreach (var s in inputs)
+				yield return new object[] { s };
+		}
+
+		[Theory]
+		[MemberData (nameof (EquivalenceInputs))]
+		public void FourByteTagParseMatchesReference (string input)
+		{
+			var expected = ReferenceParse (input);
+			var actual = (uint)SKFourByteTag.Parse (input);
+			Assert.Equal (expected, actual);
+		}
+
+		[Theory]
+		[MemberData (nameof (EquivalenceInputs))]
+		public void FourByteTagParseSpanOverloadMatchesStringOverload (string input)
+		{
+			var fromString = (uint)SKFourByteTag.Parse (input);
+			var fromSpan = (uint)SKFourByteTag.Parse (input.AsSpan ());
+			Assert.Equal (fromString, fromSpan);
+		}
+
+		[Fact]
+		public void FourByteTagParseSpanFromSlicedStringMatches ()
+		{
+			// A span carved out of a larger string (no substring allocation) must parse the same
+			// as the equivalent standalone string.
+			const string source = "xxwghtyy";
+			var slice = source.AsSpan (2, 4);
+			Assert.Equal ((uint)SKFourByteTag.Parse ("wght"), (uint)SKFourByteTag.Parse (slice));
+		}
+
+		[Fact]
+		public void FourByteTagParseEmptySpanReturnsZero ()
+		{
+			Assert.Equal (0u, (uint)SKFourByteTag.Parse (ReadOnlySpan<char>.Empty));
+			Assert.Equal (0u, (uint)SKFourByteTag.Parse (default (ReadOnlySpan<char>)));
 		}
 
 		[Fact]
