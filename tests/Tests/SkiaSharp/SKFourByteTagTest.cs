@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Xunit;
 
@@ -119,56 +118,43 @@ namespace SkiaSharp.Tests
 			Assert.False (tag.Equals ("wght")); // wrong type
 		}
 
-		// Reference implementation: the ORIGINAL char[4]-scratch algorithm, kept verbatim as the
-		// equivalence oracle so the managed rewrite is proven bit-for-bit identical.
-		private static uint ReferenceParse (string tag)
-		{
-			if (string.IsNullOrEmpty (tag))
-				return 0;
-
-			var realTag = new char[4];
-			var len = Math.Min (4, tag.Length);
-			var i = 0;
-			for (; i < len; i++)
-				realTag[i] = tag[i];
-			for (; i < 4; i++)
-				realTag[i] = ' ';
-
-			return (uint)(((byte)realTag[0] << 24) | ((byte)realTag[1] << 16) | ((byte)realTag[2] << 8) | (byte)realTag[3]);
-		}
-
-		public static IEnumerable<object[]> EquivalenceInputs ()
-		{
-			var inputs = new[]
-			{
-				null, "", " ", "a", "ab", "abc", "abcd", "abcde", "abcdef",
-				"wght", "wdth", "slnt", "opsz", "ital", "GSUB", "GPOS", "OS/2",
-				"    ", "\0\0\0\0", "\t\r\n ",
-				// characters above 0xFF: only the low byte is kept, exactly like the old code
-				"\u0100\u0141\u2764\uFFFF", "é\u00e9\u00ffz", "\uABCDwght"[..4],
-				// surrogate-ish high code units (still just char code units to the algorithm)
-				"\uD83D\uDE00xy",
-			};
-			foreach (var s in inputs)
-				yield return new object[] { s };
-		}
-
+		// Expected values are precomputed constants rather than the output of a runtime reference
+		// implementation, so the oracle can never silently drift along with the code under test.
+		// Each expected value is the big-endian packing of the low byte of the first four UTF-16
+		// code units, padding any missing trailing slots with spaces (0x20) and treating
+		// null/empty as zero.
 		[Theory]
-		[MemberData (nameof (EquivalenceInputs))]
-		public void FourByteTagParseMatchesReference (string input)
+		[InlineData (null, 0x00000000u)]
+		[InlineData ("", 0x00000000u)]
+		[InlineData (" ", 0x20202020u)]
+		[InlineData ("a", 0x61202020u)]
+		[InlineData ("ab", 0x61622020u)]
+		[InlineData ("abc", 0x61626320u)]
+		[InlineData ("abcd", 0x61626364u)]
+		[InlineData ("abcde", 0x61626364u)]
+		[InlineData ("abcdef", 0x61626364u)]
+		[InlineData ("wght", 0x77676874u)]
+		[InlineData ("wdth", 0x77647468u)]
+		[InlineData ("slnt", 0x736C6E74u)]
+		[InlineData ("opsz", 0x6F70737Au)]
+		[InlineData ("ital", 0x6974616Cu)]
+		[InlineData ("GSUB", 0x47535542u)]
+		[InlineData ("GPOS", 0x47504F53u)]
+		[InlineData ("OS/2", 0x4F532F32u)]
+		[InlineData ("    ", 0x20202020u)]
+		[InlineData ("\0\0\0\0", 0x00000000u)]
+		[InlineData ("\t\r\n ", 0x090D0A20u)]
+		// characters above 0xFF: only the low byte is kept
+		[InlineData ("\u0100\u0141\u2764\uFFFF", 0x004164FFu)]
+		[InlineData ("\u00e9\u00e9\u00ffz", 0xE9E9FF7Au)]
+		[InlineData ("\uABCDwgh", 0xCD776768u)]
+		// surrogate code units are still just char code units to the algorithm
+		[InlineData ("\uD83D\uDE00xy", 0x3D007879u)]
+		public void FourByteTagParseProducesExpectedValue (string input, uint expected)
 		{
-			var expected = ReferenceParse (input);
-			var actual = (uint)SKFourByteTag.Parse (input);
-			Assert.Equal (expected, actual);
-		}
-
-		[Theory]
-		[MemberData (nameof (EquivalenceInputs))]
-		public void FourByteTagParseSpanOverloadMatchesStringOverload (string input)
-		{
-			var fromString = (uint)SKFourByteTag.Parse (input);
-			var fromSpan = (uint)SKFourByteTag.Parse (input.AsSpan ());
-			Assert.Equal (fromString, fromSpan);
+			// Both the string overload and the span overload must produce the same constant.
+			Assert.Equal (expected, (uint)SKFourByteTag.Parse (input));
+			Assert.Equal (expected, (uint)SKFourByteTag.Parse (input.AsSpan ()));
 		}
 
 		[Fact]
