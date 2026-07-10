@@ -2,16 +2,12 @@
 """Render a release-notes page from deterministic data + agent prose.
 
     render-notes.py <data.json> <prose.json> [out.md]   # normal page
-    render-notes.py <data.json> [out.md]                 # no-changes page (no prose)
     render-notes.py --all                                # regenerate every page + TOC.yml + index.md
 
 `data.json`  — facts emitted by build-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `prose.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).
-
-A page whose data.json is flagged `no_changes` (a rebuild-only HarfBuzz line,
-spec §4.5) carries no prose: the host renders it from data.json alone.
 
 Structure — headings, tables, the banner shape, @handles, ❤️, and PR links —
 lives entirely in this file, so the agent cannot drop a heading or malform a
@@ -79,10 +75,12 @@ NO_CHANGES_BODY = (
 
 
 def page_title(data):
-    """The H1 — built from version + family (not stored per-version)."""
+    """The H1 — built from version + status (not stored per-version)."""
     version = data.get("version", "")
-    if data.get("family") == "harfbuzzsharp":
-        return "HarfBuzzSharp {}".format(version)
+    # An unreleased head page ("what may ship next") shares its version core with
+    # the released page of the same line, so mark it so the two H1s don't collide.
+    if data.get("status") == "unreleased":
+        return "Version {} (Unreleased)".format(version)
     return "Version {}".format(version)
 
 
@@ -146,8 +144,6 @@ def banner_line(data, prose):
     """The one-line status banner. Shape is fixed here; the agent supplies the
     theme words only (`prose.theme`)."""
     b = data.get("banner") or {}
-    if b.get("kind") == "harfbuzz" or data.get("family") == "harfbuzzsharp":
-        return _harfbuzz_banner_line(data)
     theme = (prose.get("theme") or "").strip()
     date = b.get("date")
     parts = []
@@ -163,27 +159,6 @@ def banner_line(data, prose):
     if b.get("github_release_url"):
         links.append("[GitHub Release]({})".format(b["github_release_url"]))
     return "> " + " · ".join(parts + links)
-
-
-def _harfbuzz_banner_line(data):
-    """HarfBuzz banner. HarfBuzz never ships on its own — it rides a SkiaSharp
-    release (spec §1.5) — so instead of a theme + date the banner anchors to the
-    introducing SkiaSharp version. No theme word is needed or expected."""
-    b = data.get("banner") or {}
-    ships = b.get("ships_with") or {}
-    parts = []
-    if data.get("status") in ("unreleased", "preview"):
-        parts.append("Upcoming release")
-    if ships.get("version"):
-        parts.append("Ships with [SkiaSharp {}]({})".format(
-            ships["version"], ships.get("link", "")))
-    if b.get("nuget_url"):
-        parts.append("[NuGet]({})".format(b["nuget_url"]))
-    if b.get("preview_nuget_url"):
-        parts.append("[NuGet (prerelease)]({})".format(b["preview_nuget_url"]))
-    if b.get("github_release_url"):
-        parts.append("[GitHub Release]({})".format(b["github_release_url"]))
-    return "> " + " · ".join(parts)
 
 
 # ── page assembly (the single source of layout truth) ────────────────────────
@@ -213,15 +188,6 @@ def render(data, prose):
         if i:
             L.append("")
         L.append(blk)
-
-    # A "no changes" page (a published HarfBuzz line whose SkiaSharp window had no
-    # HarfBuzz-touching PRs — a rebuild) needs no prose at all: the banner + API
-    # link above, then one fixed sentence. It is fully deterministic, so it is
-    # rendered by the host from data.json alone, never handed to the agent (§4.5).
-    if data.get("no_changes"):
-        L.append("")
-        L.append(NO_CHANGES_BODY)
-        return _finish_text(L)
 
     L.append("")
     L.append("## Highlights")
@@ -256,10 +222,11 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        hb_prs = hb.get("prs") or []
-        if hb_prs:
-            summary = (prose.get("harfbuzz_summary") or "").strip()
-            L.append(summary + credit(hb_prs, data))
+        if hb.get("prs"):
+            # Summary only: the API diff is in the banner and the community credit
+            # is in the contributor table, so this section stays a clean narrative
+            # instead of dumping every HarfBuzz-touching build PR.
+            L.append((prose.get("harfbuzz_summary") or "").strip())
         else:
             L.append(NO_CHANGES_BODY)
 
@@ -336,7 +303,7 @@ def validate(data, prose):
     errors = []
 
     theme = (prose.get("theme") or "").strip()
-    if (data.get("banner", {}) or {}).get("kind") != "harfbuzz" and not theme:
+    if not theme:
         errors.append("prose.theme is empty — the banner needs a short human theme.")
 
     hl = prose.get("highlights_headline") or ""
@@ -540,7 +507,7 @@ def _toc_folded_section(title, groups, stable_groups, unreleased_groups):
     return out
 
 
-def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=None):
+def generate_toc(versions, next_versions):
     # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
     """Generate TOC.yml grouped by major.minor and support tier (spec §3.5).
 
@@ -553,10 +520,6 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
     of that exact version exists yet (e.g. 3.119.5-unreleased before 3.119.5
     ships, or 4.148.0-unreleased before 4.148.0 ships).
 
-    ``hb_versions``/``hb_next_versions`` are the HarfBuzz peer-family lines
-    (released and in-flight); when present they render as a sibling "HarfBuzz"
-    node whose emitted HarfBuzz lines are grouped into ``HarfBuzzSharp X.Y.x``
-    minor subgroups, mirroring the SkiaSharp version groups (spec §3.5).
     """
     stable_groups = defaultdict(list)
     unreleased_groups = defaultdict(list)
@@ -604,52 +567,11 @@ def generate_toc(versions, next_versions, hb_versions=None, hb_next_versions=Non
     lines.extend(_toc_folded_section(
         "Obsolete Versions", obsolete, stable_groups, unreleased_groups))
 
-    # HarfBuzz peer family — sibling node grouping HarfBuzz lines by minor
-    # (spec §3.5), mirroring the SkiaSharp version groups so the node is a tidy
-    # set of "HarfBuzzSharp X.Y.x" subgroups instead of one flat list. Hub pages
-    # live under harfbuzzsharp/<hb>.md.
-    hb_versions = hb_versions or []
-    hb_next_versions = hb_next_versions or []
-    if hb_versions or hb_next_versions:
-        hb_header = ("harfbuzzsharp/{}.md".format(hb_versions[0]) if hb_versions
-                     else "harfbuzzsharp/{}-unreleased.md".format(hb_next_versions[0]))
-        lines.append("- name: HarfBuzz")
-        lines.append("  href: {}".format(hb_header))
-        lines.append("  items:")
-
-        hb_stable_groups = defaultdict(list)
-        hb_unrel_groups = defaultdict(list)
-        for v in hb_versions:
-            hb_stable_groups[minor_group(v)].append(v)
-        for v in hb_next_versions:
-            hb_unrel_groups[minor_group(v)].append(v)
-
-        for g in sorted(set(hb_stable_groups) | set(hb_unrel_groups),
-                        key=lambda x: version_key(x), reverse=True):
-            g_stable = hb_stable_groups.get(g, [])
-            g_unrel = hb_unrel_groups.get(g, [])
-            g_header = ("harfbuzzsharp/{}.md".format(g_stable[0]) if g_stable
-                        else "harfbuzzsharp/{}-unreleased.md".format(g_unrel[0]))
-            lines.append("    - name: HarfBuzzSharp {}.x".format(g))
-            lines.append("      href: {}".format(g_header))
-            lines.append("      items:")
-            g_entries = ([(v, True) for v in g_unrel]
-                         + [(v, False) for v in g_stable])
-            g_entries.sort(key=lambda t: version_key(t[0]), reverse=True)
-            for v, is_unrel in g_entries:
-                if is_unrel:
-                    lines.append("        - name: HarfBuzzSharp {} (Unreleased)".format(v))
-                    lines.append("          href: harfbuzzsharp/{}-unreleased.md".format(v))
-                else:
-                    lines.append("        - name: HarfBuzzSharp {}".format(v))
-                    lines.append("          href: harfbuzzsharp/{}.md".format(v))
-
     return "\n".join(lines) + "\n"
 
 
-def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=None,
-                   schedule_by_ms=None):
-    # type: (list[str], list[str], Optional[list[str]], Optional[list[str]]) -> str
+def generate_index(versions, next_versions, schedule_by_ms=None):
+    # type: (list[str], list[str], Optional[dict]) -> str
     """Generate index.md grouped by support tier (spec §3.5).
 
     When a ``support`` block is configured the page opens with a "Release
@@ -664,8 +586,7 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
     collapsed ``<details>`` blocks so the page leads with what is supported.
 
     Unreleased pages are listed even when no stable page of that exact version
-    exists yet. ``hb_versions``/``hb_next_versions`` render a trailing
-    "HarfBuzzSharp" section linking the peer-family hub pages (spec §3.5).
+    exists yet.
     """
     support = load_support_config()
     channels = support.get("channels", {})
@@ -855,28 +776,6 @@ def generate_index(versions, next_versions, hb_versions=None, hb_next_versions=N
             body.extend(render_group(g, with_label=False))
         lines.extend(details("Show obsolete releases", body))
 
-    # HarfBuzz peer family (spec §3.5) — its own section, grouped by HB minor.
-    hb_versions = hb_versions or []
-    hb_next_versions = hb_next_versions or []
-    if hb_versions or hb_next_versions:
-        lines.extend(["## HarfBuzzSharp", ""])
-        hb_entries = ([(v, False) for v in hb_versions]
-                      + [(v, True) for v in hb_next_versions])
-        hb_minor_map = defaultdict(list)
-        for v, is_unrel in hb_entries:
-            hb_minor_map[minor_group(v)].append((v, is_unrel))
-        for g in sorted(hb_minor_map.keys(),
-                        key=lambda x: version_key(x), reverse=True):
-            members = sorted(hb_minor_map[g],
-                             key=lambda t: version_key(t[0]), reverse=True)
-            lines.append("- **HarfBuzzSharp {}.x**".format(g))
-            for v, is_unrel in members:
-                if is_unrel:
-                    lines.append("  - [HarfBuzzSharp {} (Unreleased)](harfbuzzsharp/{}-unreleased.md)".format(v, v))
-                else:
-                    lines.append("  - [HarfBuzzSharp {}](harfbuzzsharp/{}.md)".format(v, v))
-        lines.append("")
-
     return "\n".join(lines)
 
 
@@ -1019,10 +918,6 @@ def render_all():
         for dp in sorted(sd.glob("*.data.json")):
             data = json.loads(dp.read_text())
             page = _page_for_data(dp)
-            if data.get("no_changes"):
-                page.write_text(render(data, {}))
-                rendered += 1
-                continue
             pp = dp.with_name(dp.name[:-len(".data.json")] + ".prose.json")
             if not pp.is_file():
                 # Missing prose is tolerated (warn + keep the committed .md): a
@@ -1073,18 +968,6 @@ def main(argv):
         print(__doc__)
         return 2
     data = json.loads(Path(args[0]).read_text())
-
-    # A "no changes" page is fully deterministic: render it from data alone (no
-    # prose, no validation). Usage: `render-notes.py <data.json> [out.md]`.
-    if data.get("no_changes"):
-        text = render(data, {})
-        out = args[1] if len(args) >= 2 else None
-        if out:
-            Path(out).write_text(text)
-            print("wrote {} (no changes, {} words)".format(out, _words(text)))
-        else:
-            sys.stdout.write(text)
-        return 0
 
     if len(args) < 2:
         print(__doc__)

@@ -1689,7 +1689,6 @@ def build_data_json(prs, metadata):
         "version": version,
         "family": family,
         "status": status,
-        "no_changes": bool(metadata.get("no_changes")),
         "banner": banner,
         "harfbuzz": metadata.get("harfbuzz"),
         "supersedes": supersedes,
@@ -2029,7 +2028,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # page's PRs, so their details already live in the shared PR map).
     harfbuzz = None
     hb = load_co_release_map().get(version)
-    if hb and hb.get("hb_line"):
+    if not is_head and hb and hb.get("hb_line"):
         hb_prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
         harfbuzz = {
             "version": hb["hb_line"],
