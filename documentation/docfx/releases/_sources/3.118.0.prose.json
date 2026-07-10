@@ -1,0 +1,56 @@
+{
+  "theme": "3.118 servicing preview",
+  "highlights_headline": "A small preview line: .NET 9 Blazor fixes, Metal APIs for GRBackendRenderTarget, and refreshed native codecs.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Metal GRBackendRenderTarget on all Apple platforms",
+          "detail": "Exposes the Metal GRBackendRenderTarget APIs on every Apple platform so custom hosts can share render targets between Skia and their own Metal code.",
+          "prs": [3070]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": ".NET 9 Blazor and WASM fixes",
+          "detail": "Corrects the SkiaSharp import path for Blazor apps with a non-root base path and moves the WASM Blazor workaround into SkiaSharp so consumers no longer need to patch it themselves.",
+          "prs": [3092, 3088, 3082, 3064]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WinUI SDK version pin",
+          "detail": "Uses WindowsSdkPackageVersion to pin the Windows SDK version consistently across the WinUI packages.",
+          "prs": [3085]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native dependency refresh",
+          "detail": "Updates the bundled FreeType to 2.13.3+ and libexpat to 2.6.4, and rolls libjpeg-turbo to a fresher 2.1.5.1+commits snapshot.",
+          "prs": [3061, 3056, 3060]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "spouliot": "Added the Metal GRBackendRenderTarget APIs to every Apple platform"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 opened the 3.118 line with the .NET 9 Blazor import fix and the refreshed FreeType/libexpat/libjpeg-turbo dependencies.",
+    "p2": "Preview 2 added the Metal GRBackendRenderTarget APIs, moved the Blazor WASM workaround into SkiaSharp and pinned the WinUI SDK version."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 8.3.1 tracks the HarfBuzz 8.3.1 upstream and picks up the same packaging and WASM Blazor workaround fixes."
+}

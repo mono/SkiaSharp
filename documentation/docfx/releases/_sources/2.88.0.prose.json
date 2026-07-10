@@ -1,0 +1,143 @@
+{
+  "theme": "MAUI, .NET 6 and Mac Catalyst",
+  "highlights_headline": "SkiaSharp 2.88.0 adds .NET 6, .NET MAUI, Mac Catalyst, WinUI and Blazor WebAssembly support.",
+  "highlights_body": "This is the first stable release built for the .NET 6 era. It ships new views for .NET MAUI (both compat and handlers), first-class Mac Catalyst binaries, an ASP.NET Blazor WebAssembly component, and refreshes HarfBuzz to 2.8.2. Native lifecycle and packaging were reworked to fit the new TFMs.",
+  "breaking": [
+    {
+      "title": "iOS and tvOS ToUIImage overloads that used nfloat were removed",
+      "body": "The `nfloat` overloads of `ToUIImage` on `SKBitmap`, `SKPixmap` and `SKPicture` in `SkiaSharp.Views.iOS` and `SkiaSharp.Views.tvOS` were removed as part of the .NET 6 unification. Pass the scale as `float` and the orientation on the remaining overloads instead.",
+      "prs": []
+    },
+    {
+      "title": "GRContext now derives from GRRecordingContext",
+      "body": "`GRContext` was reparented from `SKObject` onto the new `GRRecordingContext` base type to match upstream Skia. Existing code that uses `GRContext` continues to work; code that reflected on the base type or cast to `SKObject` needs to update.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 6 and .NET MAUI targets",
+          "detail": "The binding, views and HarfBuzz projects gained `net6.0-*` TFMs, and shipping .NET MAUI views (both the compat layer and the new handlers) are included.",
+          "prs": [1740, 1707, 1678, 1749, 1782, 1932, 1965, 1967, 1986, 2004, 2029]
+        },
+        {
+          "lead": "Mac Catalyst is a first-class target",
+          "detail": "Mac Catalyst native binaries are built and packaged, with the frameworks reorganised through the gn files.",
+          "prs": [1681, 1760, 1865]
+        },
+        {
+          "lead": "WinUI, Windows App SDK and Xamarin.Forms on .NET Core 3.1",
+          "detail": "The Windows story was refreshed to target the Windows App SDK, and Xamarin.Forms views now light up on `netcoreapp3.1`.",
+          "prs": [1800, 1774]
+        },
+        {
+          "lead": "ASP.NET Blazor WebAssembly components",
+          "detail": "A new `SKCanvasView` component targets ASP.NET Blazor WebAssembly, with an infinite-loop guard on invalidation.",
+          "prs": [1811, 1889]
+        }
+      ]
+    },
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "HarfBuzz refreshed to 2.8.2",
+          "detail": "The bundled HarfBuzz shaping engine is updated to 2.8.2.",
+          "prs": [1766]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "New APIs added across the surface",
+          "detail": "A batch of new APIs from upstream Skia is now exposed on the managed surface.",
+          "prs": [1828]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "IgnorePixelScaling now works as expected",
+          "detail": "The `IgnorePixelScaling` property on the canvas views produces the intended coordinate space instead of double-scaling.",
+          "prs": [1804]
+        },
+        {
+          "lead": ".NET MAUI SKCanvasView null-reference fix",
+          "detail": "The .NET MAUI `SKCanvasView` no longer throws a `NullReferenceException` in certain lifecycle paths.",
+          "prs": [1734]
+        },
+        {
+          "lead": "Windows handle lookup is faster and safer",
+          "detail": "The internal `HandleDictionary` lock was replaced with a critical section on Windows to reduce contention under load.",
+          "prs": [1817]
+        },
+        {
+          "lead": "iOS views paint an opaque background",
+          "detail": "The iOS view now has a background set, so first-frame content is not lost on some devices.",
+          "prs": [1730]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Static native objects are no longer disposed",
+          "detail": "Statically-cached native handles skip disposal, avoiding double-free on shutdown.",
+          "prs": [1863]
+        },
+        {
+          "lead": "Enum marshalling workaround",
+          "detail": "A workaround was added for enums not being treated as blittable in some scenarios, keeping interop stable.",
+          "prs": [1857]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native tooling refreshed",
+          "detail": "The native build moved to Python 3, Clang 12 and a newer gcc/llvm pair for reproducible modern builds.",
+          "prs": [1959, 1806]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": "Bumped Uno to 4.0 so the Uno-hosted views keep pace with the SDK",
+    "jonathanpeppers": "Android packaging fixes — kept `.so` files out of class libraries and trimmed generated `Resource.designer.cs` fields",
+    "akoeplinger": "Made the Linux native loader try `libdl.so.2` before `libdl.so` so newer distributions resolve",
+    "JensKrumsieck": "Fixed an infinite invalidation loop in the Blazor `SKCanvasView`",
+    "jsuarezruiz": "Guarded against a `NullReferenceException` in the .NET MAUI `SKCanvasView`",
+    "mjbond-msft": "Contributed to the .NET 6 / MAUI enablement work landing in this release",
+    "toptensoftware": "Replaced the Windows `HandleDictionary` lock with a critical section to cut contention"
+  },
+  "preview_summaries": {
+    "p266": "Preview 266 finished the .NET MAUI RC 3 line-up and picked up the last packaging fixes before stable.",
+    "p256": "Preview 256 moved to .NET MAUI RC 2.",
+    "p254": "Preview 254 moved to .NET MAUI RC 1 and switched CI to macOS Monterey.",
+    "p232": "Preview 232 refreshed native tooling to Python 3 and Clang 12, and picked up more upstream Skia fixes.",
+    "p209": "Preview 209 rolled up Skia and interop fixes, and refreshed the Mac Catalyst build inputs.",
+    "p187": "Preview 187 moved to .NET MAUI Preview 12 and tightened Android packaging.",
+    "p179": "Preview 179 bumped Uno to 4.0.",
+    "p178": "Preview 178 moved to .NET MAUI Preview 11 and added the Blazor SKCanvasView infinite-loop guard, the Windows lock rework and the enum-blittability workaround.",
+    "p155": "Preview 155 rolled up upstream updates.",
+    "p152": "Preview 152 refreshed a batch of dependencies and picked up new APIs.",
+    "p150": "Preview 150 added the ASP.NET Blazor WebAssembly SKCanvasView component.",
+    "p145": "Preview 145 tuned Android packaging and moved to .NET MAUI Preview 7.",
+    "p140": "Preview 140 was a plumbing-only cut.",
+    "p139": "Preview 139 fixed IgnorePixelScaling, added main PDBs to the packages and moved to Windows App SDK.",
+    "p127": "Preview 127 updated HarfBuzz to 2.8.2 and added Xamarin.Forms support on netcoreapp3.1.",
+    "p120": "Preview 120 moved to .NET 6, guarded the .NET MAUI SKCanvasView and set the iOS view background.",
+    "p61": "Preview 61 opened the 2.88 line with .NET 6 TFMs, Mac Catalyst binaries and the first .NET MAUI views."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 2.8.2 refreshes the bundled HarfBuzz shaping engine, adds Mac Catalyst binaries and gains `net6.0-*` TFMs alongside its SkiaSharp counterpart."
+}

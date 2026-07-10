@@ -1,0 +1,117 @@
+{
+  "theme": "First 2.88 servicing release",
+  "highlights_headline": "SkiaSharp 2.88.1 adds WinUI, Skottie, AVIF and tvOS/Tizen TFMs on top of the 2.88 native stack.",
+  "highlights_body": "The first servicing release for 2.88 refreshes bundled native libraries (libjpeg-turbo, libwebp, libexpat, zlib), splits Skottie and SceneGraph into their own packages, and rounds out the .NET 6 target matrix with WinUI, Tizen, iOS/Android/macOS TFMs for Skottie, and nullable attributes across the API.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Skottie graduates from experimental",
+          "detail": "Skottie and SceneGraph move out of the core `SkiaSharp.dll` into their own packages, gain `net6.0` TFMs for iOS/Android/Catalyst/macOS/tvOS/Tizen, and pick up `TimeSpan` overloads, nullable attributes and non-seekable stream support.",
+          "prs": [2091, 2119, 1987, 2126]
+        },
+        {
+          "lead": "AVIF encoding",
+          "detail": "The `SKEncodedImageFormat` surface now exposes AVIF so images can be encoded to AVIF where the underlying decoder supports it.",
+          "prs": [2154]
+        },
+        {
+          "lead": "WinUI support",
+          "detail": "SkiaSharp views now light up on WinUI, and the Uno WinUI target ships the missing JavaScript support file.",
+          "prs": [2042, 2086]
+        },
+        {
+          "lead": "Writable SKDataStream and animations with a BOM",
+          "detail": "`SKDataStream` is now writable like `SKData`, and animation loaders tolerate a leading byte-order mark.",
+          "prs": [2128, 2167]
+        },
+        {
+          "lead": "Nullable attributes and new TFMs on the binding",
+          "detail": "The binding project adds nullable annotations plus newer TFMs, and the `net6.0-tizen` TFM is added.",
+          "prs": [2120, 2099]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "PNG decoding regressions fixed",
+          "detail": "The bundled zlib was updated to pick up upstream decode fixes that resolved PNG loading failures.",
+          "prs": [2045]
+        },
+        {
+          "lead": "Fonts with Unicode filenames load correctly",
+          "detail": "Font loaders no longer fail when the font's file name contains Unicode characters.",
+          "prs": [2146]
+        },
+        {
+          "lead": "GLView reshapes on scale change",
+          "detail": "`SKGLView` on macOS now reshapes when the window's backing scale factor changes so content stays crisp on scale transitions.",
+          "prs": [1854]
+        },
+        {
+          "lead": "Finalized locks no longer throw",
+          "detail": "Internal critical sections now check whether the lock has been finalized before entering, avoiding rare shutdown exceptions.",
+          "prs": [2195]
+        },
+        {
+          "lead": "SKShaper honours SKPaint.TextAlign",
+          "detail": "`SKShaper` now respects the `TextAlign` on the supplied `SKPaint` when laying out shaped text.",
+          "prs": [1910]
+        },
+        {
+          "lead": "Resize returns null on invalid bounds",
+          "detail": "`Resize` now returns `null` instead of asserting when called with a zero or negative dimension.",
+          "prs": [2054]
+        },
+        {
+          "lead": "Linux libc resolution",
+          "detail": "The Linux native loader uses the full library name of libc so it resolves on more distributions.",
+          "prs": [2213]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Bundled native libraries refreshed",
+          "detail": "libjpeg-turbo bumped to 2.1.3, libwebp to 1.2.3, and libexpat to 2.4.8 — all pull in upstream security and correctness fixes.",
+          "prs": [2206, 2193, 2189]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "C API version incremented",
+          "detail": "The C API version was incremented to mark the surface changes in this release for downstream consumers of the native library.",
+          "prs": [2137]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": "Landed the initial Skottie support, the WinUI target, and the missing Uno WinUI JavaScript support file",
+    "mgood7123": "Exposed the AVIF image encode format",
+    "HarlanHugh": "Fixed `SKGLView` reshape when the macOS window's backing scale factor changes",
+    "koolkdev": "Made `SKShaper` honour `SKPaint.TextAlign` when shaping text",
+    "lindexi": "Fixed font loading for fonts whose file names contain Unicode text",
+    "RichardD2": "Guarded the internal critical section against being entered after finalization"
+  },
+  "preview_summaries": {
+    "p108": "Preview 108 finished the .NET 6 TFM matrix and picked up the last fixes before stable.",
+    "p104": "Preview 104 rolled up the native-library refreshes — libjpeg-turbo, libwebp, libexpat — and the finalized-lock guard.",
+    "p91": "Preview 91 added Unicode font-file support, non-seekable Skottie streams and BOM-tolerant animations, and incremented the C API.",
+    "p79": "Preview 79 rounded out the Skottie API with nullable attributes and `TimeSpan` overloads and the writable `SKDataStream`.",
+    "p75": "Preview 75 landed the `SKGLView` macOS reshape fix.",
+    "p71": "Preview 71 added the `net6.0-tizen` TFM and the Skottie/SceneGraph package split.",
+    "p63": "Preview 63 was the big cut — WinUI support, Skottie, `SKShaper` text alignment, and the initial nullable/TFM refresh.",
+    "p1": "Preview 1 opened the 2.88.1 line with documentation and CI fixes and the zlib update that resolved PNG loading."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 2.8.2.1 picks up the merged \"classic\" project layout, refreshed generator and the missing macOS/iOS feature implementation alongside the SkiaSharp packaging changes."
+}

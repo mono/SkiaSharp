@@ -1,0 +1,64 @@
+{
+  "theme": "3.119.1 servicing release",
+  "highlights_headline": "A focused servicing release with Metal disposal fixes, iOS 15 hotfix, zlib refresh and the new PostScriptName API.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKTypeface.PostScriptName",
+          "detail": "Exposes the PostScript name of a typeface, matching the SkTypeface upstream API.",
+          "prs": [3263]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Metal backend stability",
+          "detail": "Disposing GRContext no longer crashes on the Metal backend, and a hotfix restores rendering on iOS 15 and lower.",
+          "prs": [3258, 3293]
+        },
+        {
+          "lead": "UTC DateTime and Mac Catalyst opacity",
+          "detail": "Fixes an incorrect UTC DateTime conversion in the metadata helpers and stops SKXamlCanvas being forced opaque on Mac Catalyst.",
+          "prs": [3333, 3236]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WinUI native build hardening",
+          "detail": "Builds the WinUI interop as /MT and rebuilds EGL as win32 and GLESv2 as WASDK for compatibility with modern Windows App SDK consumers.",
+          "prs": [3341, 3338]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "zlib refreshed to 1.3.0.1+",
+          "detail": "Updates the bundled zlib to 1.3.0.1+ to pick up upstream fixes.",
+          "prs": [3058]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeremy-visionaid": "Avoided initializing SKMetalView twice, added the GRContext disposal test on Metal, and fixed the UTC DateTime conversion",
+    "taublast": "Hotfixed Metal on iOS 15 and lower and prevented SKAutoCanvasRestore from crashing when the canvas was already disposed",
+    "jonlipsky": "Added SKTypeface.PostScriptName",
+    "pjcollins": "Added CI triggers for the primary branches to azure-pipelines-native",
+    "spouliot": "Fixed SKXamlCanvas being forced opaque on Mac Catalyst"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 collected the Metal disposal fixes, the iOS 15 hotfix, the PostScriptName API, the zlib refresh and the WinUI native build hardening."
+  },
+  "harfbuzz_summary": null
+}

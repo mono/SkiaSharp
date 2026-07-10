@@ -1,0 +1,100 @@
+{
+  "theme": "Skia m119 and new architectures",
+  "highlights_headline": "SkiaSharp 3.119.0 rebases on Skia milestone 119 and adds LoongArch64, riscv64, Alpine and Windows-ARM builds.",
+  "highlights_body": "It also lands Direct3D on Windows, tvOS Metal support, SkCanvas::SaveLayerRec, the missing color-filter types, and a stack of Metal, Blazor and .NET Framework fixes.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia rebased on milestone 119",
+          "detail": "The bundled engine moves through m117 and m118 to Chrome/Skia m119, picking up the corresponding rendering, text and codec fixes.",
+          "prs": [3062, 3048, 3047]
+        },
+        {
+          "lead": "Native dependency refresh",
+          "detail": "Updates libpng to 1.6.44, HarfBuzz to 8.3.1 and vulkanmemoryallocator to 3.2.1.",
+          "prs": [3059, 3052, 3196]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SaveLayerRec, missing color filters and Metal render targets",
+          "detail": "Implements SkCanvas::SaveLayerRec, exposes the previously missing SKColorFilter types, and lands the Metal GRBackendRenderTarget APIs on every Apple platform.",
+          "prs": [2962, 2882, 3070]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKImage.FromPicture regression fixed",
+          "detail": "SKImage.FromPicture now renders correctly again after a regression in the picture handling code.",
+          "prs": [3231]
+        },
+        {
+          "lead": "Apple Metal fixes",
+          "detail": "Fixes iOS Simulator performance on the Metal backend and adds SKMetalView support on tvOS.",
+          "prs": [3156, 3114]
+        },
+        {
+          "lead": ".NET Framework / packages.config compatibility",
+          "detail": "Restores compatibility with .NET Framework and Mono projects that consume SkiaSharp via packages.config.",
+          "prs": [3112]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "New architectures — LoongArch64, riscv64, Alpine, Windows ARM",
+          "detail": "Adds native builds for LoongArch64 and riscv64 Linux, extends the clang cross-toolchain to Alpine, and turns on GL on Windows ARM. Fixes ARM machine targets in the process.",
+          "prs": [3198, 3192, 3200, 3189, 3190, 3209]
+        },
+        {
+          "lead": "Direct3D backend on Windows",
+          "detail": "Compiles Skia with Direct3D on the Windows platform so consumers can opt into the D3D backend.",
+          "prs": [2823]
+        },
+        {
+          "lead": "16 KB-aligned Android NDK r27c",
+          "detail": "Rebuilds the Android natives with NDK r27c and 16 KB page-size alignment to keep working on newer Android devices.",
+          "prs": [3096]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "CVE-2024-30105 addressed",
+          "detail": "Picks up the fix for CVE-2024-30105 in the build so shipped packages are no longer exposed.",
+          "prs": [3166]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "kasperk81": "Enabled riscv64 builds, extended the clang cross toolchain to Alpine, bumped vulkanmemoryallocator and fixed the Linux tests",
+    "4Darmygeometry": "Added LoongArch64 native build support",
+    "ahmed605": "Implemented SkCanvas::SaveLayerRec",
+    "Kation": "Added Direct3D compilation of Skia on Windows",
+    "kkwpsv": "Fixed an incorrect call in the bindings",
+    "MartinZikmund": "Added SKMetalView support on tvOS",
+    "pjcollins": "Addressed CVE-2024-30105 in the build",
+    "spouliot": "Added Metal GRBackendRenderTarget APIs to every Apple platform",
+    "sungaila": "Fixed the regression breaking .NET Framework/Mono projects using packages.config",
+    "taublast": "Fixed iOS Simulator performance on the Metal backend"
+  },
+  "preview_summaries": {
+    "p1": "3.119.0 Preview 1 landed the m119 rebase, the new architectures and the Direct3D-on-Windows work; earlier 3.118 previews carried the initial Skia rebases and codec updates.",
+    "p2": "The 3.118 Preview 2 lineage fed forward the Blazor and WinUI fixes plus the Metal GRBackendRenderTarget APIs that now ship as part of 3.119."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.1 tracks HarfBuzz 8.3.1 and picks up the new-architecture packaging (LoongArch64, riscv64, Alpine, Windows-ARM, Android NDK r27c)."
+}

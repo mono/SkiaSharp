@@ -1,0 +1,48 @@
+{
+  "theme": "Windows hardening and tvOS API fill",
+  "highlights_headline": "3.119.2 hardens the Windows native DLLs (CFG, /GS, Spectre) and fills in the missing tvOS SKSurface.Create overloads.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Missing tvOS SKSurface.Create overloads",
+          "detail": "Adds the SKSurface.Create overloads that were missing on tvOS so Metal-backed surfaces have the same entry points as the other Apple platforms.",
+          "prs": [3342]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android debug symbols packaged",
+          "detail": "Preserves and packs the Android native symbols so consumers get usable stacks when debugging crashes.",
+          "prs": [3374]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Windows native DLLs hardened",
+          "detail": "Turns on Control Flow Guard, BufferSecurityCheck (/GS) and Spectre mitigations on the Windows native DLLs, clearing BinSkim BA2007 and matching the platform's security baseline.",
+          "prs": [3397, 3404, 3496]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "Aguilex": "Enabled Control Flow Guard and BufferSecurityCheck on the Windows native DLLs",
+    "MartinZikmund": "Added the missing tvOS SKSurface.Create overloads"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 opened the 3.119.2 line with the tvOS SKSurface.Create overloads and preserved Android symbols.",
+    "p2": "Preview 2 landed the Windows hardening — Control Flow Guard, /GS and the Spectre DLL mitigation.",
+    "p3": "Preview 3 rounded off the Spectre mitigation on the Linux native library ahead of the stable release."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.3 picks up the same Windows hardening (CFG, /GS, Spectre) as the SkiaSharp natives."
+}

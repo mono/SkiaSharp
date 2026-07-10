@@ -1,0 +1,29 @@
+{
+  "theme": "First public release",
+  "highlights_headline": "SkiaSharp 1.54.0 is the first public NuGet release, wrapping Skia with GPU and SVG support.",
+  "highlights_body": "This debut ships the SkiaSharp binding for Skia together with initial GPU and SVG previews. Expect API churn as the surface is still being shaped \u2014 SKImageInfo, SKRect, SKRectI and SKCodecOptions all had their public fields turned into properties.",
+  "breaking": [
+    {
+      "title": "Value-type fields converted to properties",
+      "body": "SKImageInfo, SKRect, SKRectI and SKCodecOptions replaced their public fields (Width/Height, Left/Top/Right/Bottom, HasSubset/Subset/ZeroInitialized, and the AlphaType/ColorType fields) with properties, and SKImageInfo.Size now returns SKSizeI instead of SKPointI. Rebuild against the new signatures.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Initial SkiaSharp API surface",
+          "detail": "Ships the first public SkiaSharp binding covering canvases, paints, paths, codecs and image info, alongside early GPU and SVG previews.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {
+    "m2": "The second GPU preview iterated on the GPU-backed rendering pipeline ahead of the stable cut.",
+    "m1": "The first SVG preview introduced the SVG surface used to author SVG documents from SkiaSharp."
+  }
+}

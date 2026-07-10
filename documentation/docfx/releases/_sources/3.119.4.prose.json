@@ -1,0 +1,98 @@
+{
+  "theme": "GTK4, Tizen and platform reach",
+  "highlights_headline": "3.119.4 adds SkiaSharp.Views.Gtk4, Tizen x64/arm64 natives, Linux Bionic assets, and refreshes the AoT/Windows/Apple story.",
+  "highlights_body": "It ships on the .NET 10 SDK, hardens Windows and Linux natives, fixes an AoT crash and a MAUI Android tab-switch regression, and rebuilds libpng, libwebp and brotli.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "New SkiaSharp.Views.Gtk4 package",
+          "detail": "Adds SkiaSharp.Views.Gtk4 built on the GirCore Gtk-4.0 bindings, giving GTK4 apps a first-class SKDrawingArea/SKGLArea host.",
+          "prs": [3527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "MAUI Android SKGLView survives tab switches",
+          "detail": "SKGLView now re-renders correctly after a MAUI TabBar switch on Android.",
+          "prs": [3076]
+        },
+        {
+          "lead": "AoT and Linux ARM64 crashes fixed",
+          "detail": "SkiaSharp no longer crashes at startup on NativeAOT builds compiled with IlcDisableReflection=true, and the Linux ARM64 native library now bundles fontconfig correctly.",
+          "prs": [3485, 3494]
+        },
+        {
+          "lead": "GTK4 and WindowsForms fixes",
+          "detail": "Fixes a Cairo assertion crash in the GTK4 SKDrawingArea, and switches the WindowsForms controls to use the DesignMode property directly.",
+          "prs": [3562, 3614]
+        },
+        {
+          "lead": "Direct3D 12 delay-load",
+          "detail": "D3D12 DLLs are now delay-loaded so the library keeps starting on systems without DirectX 12 installed.",
+          "prs": [3633]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Tizen and Linux Bionic",
+          "detail": "Adds Tizen x64 and arm64 native builds (Studio 6.1) and Linux Bionic native assets, and splits the Tizen native CI into per-architecture jobs.",
+          "prs": [3620, 3619, 3217, 3672]
+        },
+        {
+          "lead": "tvOS device/simulator split",
+          "detail": "Splits the tvOS native builds and NativeReference targets into separate device and simulator frameworks, matching the iOS packaging.",
+          "prs": [3561, 3563]
+        },
+        {
+          "lead": ".NET 10 SDK and net48",
+          "detail": "Builds on the .NET 10 SDK with workload version-set pinning, and adds a net48 full-framework target for Windows validation via PolySharp.",
+          "prs": [3514, 3631, 3642]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKManagedStream refactor",
+          "detail": "SKManagedStream now uses an SKData snapshot instead of a parent/child chain, simplifying its lifetime and fixing subtle disposal ordering issues.",
+          "prs": [3589]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native dependency refresh",
+          "detail": "Updates libpng to 1.6.58 (via 1.6.54), libwebp to 1.6.0 and brotli to 1.2.0, and enforces -Wl,--no-undefined on Linux and Android native builds to catch missing symbols at link time.",
+          "prs": [3723, 3452, 3478, 3469, 3629]
+        },
+        {
+          "lead": "Windows and Linux native hardening",
+          "detail": "Enables the Spectre mitigation flag on both libSkiaSharp.dll and libSkiaSharp.so.",
+          "prs": [3496, 3502]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "4Darmygeometry": "Linux Bionic native assets, PolySharp-based C# 13 support on legacy TFMs, and the new net48 validation target",
+    "sshumakov": "Enabled the Spectre mitigation flag on both libSkiaSharp.dll and libSkiaSharp.so",
+    "ramezgerges": "Moved the AI agent configuration to a shared location for Claude Code and GitHub Copilot",
+    "SimonvBez": "Fixed SKGLView not rendering after a MAUI TabBar switch on Android"
+  },
+  "preview_summaries": {
+    "p1": "The 3.119.4 preview line collected the SkiaSharp.Views.Gtk4 package, Tizen x64/arm64 support, Linux Bionic assets, the .NET 10 SDK move, the SKManagedStream refactor, the AoT/ARM64 fixes and the libpng/libwebp/brotli refresh."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.5 picks up the same Tizen, Linux Bionic and .NET 10 packaging work, plus the Spectre mitigation on both Windows and Linux natives."
+}

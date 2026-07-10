@@ -1,0 +1,49 @@
+{
+  "theme": "Trimming and compatibility overloads",
+  "highlights_headline": "SkiaSharp 2.88.8 adds compat overloads for SKImageFilter and makes SKXamlCanvas trim-friendly.",
+  "highlights_body": null,
+  "breaking": [
+    {
+      "title": "Default arguments removed from SKImageFilter.Create* methods",
+      "body": "Optional trailing arguments on `SKImageFilter.CreateAlphaThreshold`, `CreateArithmetic`, `CreateBlendMode`, `CreateBlur`, `CreateColorFilter`, `CreateDilate`, `CreateDisplacementMapEffect`, `CreateDistantLitDiffuse/Specular`, `CreateDropShadow`, `CreateDropShadowOnly`, `CreateErode`, `CreateMagnifier`, `CreateMatrixConvolution`, `CreateMerge`, `CreateOffset`, `CreatePaint`, `CreatePointLitDiffuse/Specular` and `CreateSpotLitDiffuse/Specular` no longer have C# default values. Companion overloads without those optional parameters were added (#2810) so calls made through the compiler continue to work, but any code that reflected on the signature or dispatched dynamically may need to be updated.",
+      "prs": [2810]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "New SKImageFilter compatibility overloads",
+          "detail": "New overloads on the `SKImageFilter.Create*` factory methods keep existing source-level callers working now that the default arguments have been removed.",
+          "prs": [2810]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Trim-friendly PlatformConfiguration",
+          "detail": "The `PlatformConfiguration` properties are now annotated so the trimmer can preserve them, avoiding runtime failures in trimmed apps.",
+          "prs": [2734]
+        },
+        {
+          "lead": "SKXamlCanvas removes async void",
+          "detail": "`SKXamlCanvas` no longer uses `async void`, so exceptions surface where callers can observe them.",
+          "prs": [2731]
+        },
+        {
+          "lead": "Invalid externs no longer emitted",
+          "detail": "The native binding no longer declares extern functions for entry points that don't exist, so the DLL loads cleanly on tighter loaders.",
+          "prs": [2710]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {
+    "p1": "Preview 1 landed the SKImageFilter compatibility overloads, the trim annotations on `PlatformConfiguration`, the SKXamlCanvas async void fix and the invalid-extern cleanup."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 7.3.0.2 picks up the APIScan and compliance YAML clean-up alongside the SkiaSharp maintenance."
+}
