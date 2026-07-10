@@ -43,7 +43,7 @@ thing.
   - §1.2 `versions.json` — the only override surface
   - §1.3 Default comparison: the previous emitted line
   - §1.4 Which lines get an artifact (emission)
-  - §1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
+  - §1.5 HarfBuzzSharp co-ships inside SkiaSharp pages
 - **§2 — Skill layout & orchestration**
   - §2.1 Where the engines live; the skill owns the release-notes engine
   - §2.2 Two phases: Prepare → Polish
@@ -53,7 +53,7 @@ thing.
   - §3.1 The `releases/` tree at a glance
   - §3.2 Human pages (release-notes engine owns)
   - §3.3 API-diff folders (API-diff engine owns)
-  - §3.4 The HarfBuzz tree shape
+  - §3.4 The HarfBuzz API-diff tree
   - §3.5 Ownership — who writes and clears what
   - §3.6 The co-release map sidecar (Cake → build-data.py)
   - §3.7 The manual additions sidecar (maintainer → build-data.py → Polish AI)
@@ -62,7 +62,7 @@ thing.
   - §4.2 Released vs unreleased — two coexisting pages
   - §4.3 Per-preview PR buckets
   - §4.4 Division of responsibility — the script structures, the AI only polishes
-  - §4.5 The HarfBuzz family pages
+  - §4.5 The HarfBuzz section on a SkiaSharp page
   - §4.6 How it runs
   - §4.7 Manual additions & breaking-change summaries (companion files)
 - **§5 — API-diff engine (`api-diff.cake`)**
@@ -79,8 +79,10 @@ thing.
 
 ## 1. The shared versioning model (the rules)
 
-This is the hard-won core. Both engines implement exactly these rules; they differ
-only in the *content* they diff and the *file layout* they emit (§3).
+This is the hard-won core. Both engines share these rules for SkiaSharp
+release lines; the API-diff engine also applies the same bucket rules to
+HarfBuzzSharp-versioned API-diff folders (§3.4). They differ only in the *content*
+they diff and the *file layout* they emit (§3).
 
 ### 1.1 One artifact per release *line*, keyed by the version core
 
@@ -93,50 +95,57 @@ only the prerelease suffix is stripped.)
 Throughout this doc, the path placeholder **`<line>`** means exactly this version
 core.
 
+
 ### 1.2 `versions.json` — the only override surface
 
 `scripts/infra/docs/versions.json` is the single place that deviates from the
-defaults. It has **two distinct roles**, and a version may use either or both:
+defaults. It has **three distinct roles**, and a line may use any combination:
 
 - **Emission opt-in** — listing a line makes it emit (§1.4), even if it never shipped
   stable.
 - **Comparison/status override** — changing how a line is diffed or marked.
+- **Navigation support tiers** — the top-level `support` block drives only the
+  release-notes TOC/index grouping (§3.5).
 
-**File shape — one bucket per family (§1.5).** Because SkiaSharp and HarfBuzz are
-independent families with possibly-colliding version cores, the file is keyed by
-family at the top level, then by line within each family:
+**File shape — override buckets plus non-family site config.** The two package
+version schemes still need separate override buckets because the API-diff engine
+emits both SkiaSharp-versioned and HarfBuzzSharp-versioned diff folders (§3.3/§3.4):
 
 ```json
 {
   "skiasharp":      { "4.147.0": { "status": "superseded", "superseded_by": "4.148.0" },
                       "4.148.0": { "compare_to": "3.119.4" } },
-  "harfbuzzsharp":  { }
+  "harfbuzzsharp":  { },
+  "support":        { "stable": ["4.148"], "preview": ["4.150"] },
+  "history_floor":  { "skiasharp": "3.0.0" }
 }
 ```
 
-Each engine looks up overrides only inside its own family's bucket; an absent or empty
-bucket means "no overrides — pure defaults" for that family. (HarfBuzz has no entries
-today; the empty bucket is its override surface for the day it needs one.)
+`skiasharp` is the only bucket that can create or compare **release-notes pages**:
+there are no standalone HarfBuzzSharp release-notes pages anymore (§1.5/§4.5).
+`harfbuzzsharp` remains the override surface for the HarfBuzzSharp **API-diff**
+folders, whose package versions can differ from SkiaSharp's. An absent or empty
+bucket means "no overrides — pure defaults" for that bucket.
 
-Alongside the family buckets the file carries one **non-family** top-level key,
-**`support`**, which declares the navigation support tiers consumed only by the
-release-notes TOC/index (§3.5 "Support tiers"). It is read solely by the release-notes
-engine — the API-diff engine ignores everything outside its own family bucket — so it
-never affects comparison or emission.
+Alongside the override buckets the file carries non-family top-level keys:
 
-The recognised fields:
+- **`support`** — navigation support tiers consumed only by the release-notes
+  TOC/index (§3.5). It never affects comparison or emission.
+- **`history_floor`** — the per-bucket regeneration floor (§1.4).
+
+The recognised per-line fields are:
 
 - **`compare_to: "X.Y.Z"`** — diff this line against an explicit baseline instead of
   the §1.3 default. **`compare_to` always wins when present**; the §1.3 skip rule
   applies only in its absence. (It may even point at a `superseded` line if that is
   deliberately wanted.)
 - **`status: "superseded"`** — *this field* is what excludes a line from being used
-  as a baseline (§1.3) **within its own family (§1.5)**. A superseded line shipped
+  as a baseline (§1.3) **inside the same override bucket**. A superseded line shipped
   previews but was abandoned and never went stable; it is not deleted, and it still
-  gets its own artifact, but no other line in that family will diff against it.
+  gets its own artifact, but no other line in that bucket will diff against it.
 - **`superseded_by: "X.Y.Z"`** — the forward link used only to render the "superseded
-  by" banner on the superseded page and the inverse `supersedes` back-link on the
-  successor. It does **not** by itself affect baseline selection; pair it with
+  by" banner on the superseded SkiaSharp page and the inverse `supersedes` back-link
+  on the successor. It does **not** by itself affect baseline selection; pair it with
   `status: "superseded"` to actually exclude the line. Chains are single-hop: each
   line points only at its immediate successor.
 
@@ -147,15 +156,23 @@ not add it to `versions.json` by hand.
 There is intentionally **no** heuristic that infers any of this from git/NuGet. If a
 release needs special handling, it gets an entry here. Nothing else.
 
+
 ### 1.3 Default comparison: the previous emitted line
 
 With no `compare_to` override, a line is diffed against **the most recent line before
 it that was itself emitted** (§1.4), **skipping** any `status: "superseded"` line
 (§1.2). Superseded/abandoned lines are therefore transparent: the next emitted line
-diffs past them and rolls their work up. Each engine resolves the baseline this way
-**within its own version family** (§1.5). If there is **no prior emitted line at all**
-(the first line a family ever emits), the baseline is **empty**: the API diff is the
-full public surface and the release notes list every PR in the range.
+diffs past them and rolls their work up.
+
+Release notes resolve this rule for **SkiaSharp lines only**. The API-diff engine
+resolves the same rule inside each package-version bucket it emits (`skiasharp` and
+`harfbuzzsharp`), because HarfBuzzSharp API diffs still have their own package version
+scheme (§3.4). There is no HarfBuzzSharp release-notes baseline: its notes are a
+section of the co-shipping SkiaSharp page (§1.5/§4.5).
+
+If there is **no prior emitted line at all** (the first line a bucket ever emits), the
+baseline is **empty**: the API diff is the full public surface and the release notes
+list every PR in the range.
 
 Worked examples (today's SkiaSharp versions):
 
@@ -168,10 +185,11 @@ Worked examples (today's SkiaSharp versions):
 
 There is no "previous *stable* only" rule and no other heuristic.
 
+
 ### 1.4 Which lines get an artifact (emission)
 
-A line is **emitted** (gets its own artifact in *both* systems) when any of the
-following holds — and **not otherwise**:
+A line is **emitted** (gets its own artifact) when any of the following holds — and
+**not otherwise**:
 
 1. **It shipped a stable** — the permanent record of a released line.
 2. **It is listed in `versions.json`** — an intentional line the team tracks (e.g. a
@@ -179,27 +197,25 @@ following holds — and **not otherwise**:
 3. **It is an in-flight line ahead of the latest stable** — the active development
    line(s) showing what is coming next (e.g. `4.148`, `4.150`).
 
+For **release notes**, these signals are read only for SkiaSharp lines: shipped-stable
+`v*` tags, the `versions.json` `skiasharp` bucket, and the latest-stable boundary.
+A released SkiaSharp page may carry a folded HarfBuzzSharp section, but that section
+does not make a second emitted release-notes line (§1.5/§4.5).
+
+For **API diffs**, the same emission rule is applied to each package-version bucket
+(`skiasharp` and `harfbuzzsharp`). The SkiaSharp API-diff folders and SkiaSharp
+release-note pages therefore stay aligned above the history floor. HarfBuzzSharp
+API-diff folders remain under `releases/harfbuzzsharp/<hb-line>/` and are linked from
+the co-shipping SkiaSharp pages; they are reference artifacts, not standalone
+release-note hubs (§3.4/§4.5).
+
 Emission is governed solely by these three signals, never by the incidental existence
 of a `release/<ver>` branch: a stale or abandoned preview branch that is not listed in
-`versions.json` and is not ahead of the latest stable produces **no** artifact. Each
-family (§1.5) reads the three signals from **its own** evidence, and **both engines
-share the resulting line set** for that family:
-
-- **SkiaSharp** reads them from its own git: shipped-stable `v*` tags, the `versions.json`
-  `skiasharp` bucket, and the latest-stable boundary.
-- **HarfBuzz** has no tags of its own, so the equivalent evidence is the **co-release map**
-  (§3.6): the set of distinct `hb_line` values it records *is* the HarfBuzz emission set
-  (each ships inside an emitted SkiaSharp line), together with the `harfbuzzsharp`
-  `versions.json` bucket. An in-flight HarfBuzz line — one an in-flight SkiaSharp line
-  newly declares but that has **not** published yet — counts as "ahead of the latest
-  stable" exactly like rule 3; its version is read from source (§5.1) and it emits an
-  in-flight page (§4.5).
-
-Within each family the release-notes page set and the API-diff line set therefore
-cover exactly the same lines.
+`versions.json` and is not ahead of the latest stable produces **no** SkiaSharp release
+page.
 
 **History floor (a performance skip, not a rule change).** The top-level
-`history_floor` block in `versions.json` optionally sets a per-family minimum line core
+`history_floor` block in `versions.json` optionally sets a per-bucket minimum line core
 (e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
 re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
 line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
@@ -216,78 +232,83 @@ the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its 
 surface as "new" on every run — a large, wrong churn. It is one already-cached package (it
 is also the next line's baseline), so the floor's performance win is preserved. Absent/empty
 block ⇒ no floor (every line is regenerated, the legacy behavior). Raise the floor as old
-lines stop needing refreshes; lower or remove it to rebuild history. Both engines read the
-same block, so their line sets stay identical above the floor.
+lines stop needing refreshes; lower or remove it to rebuild history.
 
-### 1.5 Two parallel version families (SkiaSharp & HarfBuzzSharp)
 
-SkiaSharp and HarfBuzzSharp ship together (HarfBuzz never releases on its own) but
-carry **different version numbers** (SkiaSharp `3.119.0`, HarfBuzz `8.3.0`). Rather
-than fold one into the other, each **family** keeps its own identity and applies the
-§1.1–§1.4 rules independently:
+### 1.5 HarfBuzzSharp co-ships inside SkiaSharp pages
 
-#### Family = the package's own version scheme
+SkiaSharp and HarfBuzzSharp ship together (HarfBuzzSharp never releases on its own),
+but they carry **different package version numbers** (SkiaSharp `3.119.0`,
+HarfBuzzSharp `8.3.0`). The release-notes model is therefore:
 
-*Every* `SkiaSharp.*` package belongs to the **SkiaSharp** family — `SkiaSharp`,
-`SkiaSharp.Views.*`, `SkiaSharp.Skottie`, …, and crucially `SkiaSharp.HarfBuzz` (the
-*managed shaper binding*, which carries the SkiaSharp version, **not** a HarfBuzz
-version). The **HarfBuzz** family is *only* the HarfBuzzSharp-versioned packages:
-`HarfBuzzSharp` (the native binding) and `HarfBuzzSharp.NativeAssets.*`.
+- **SkiaSharp is the release-note page family.** Every human release-notes page is a
+  SkiaSharp page at the `releases/` root (§3.2).
+- **HarfBuzzSharp is folded into the co-shipping SkiaSharp page.** Every released
+  SkiaSharp page carries exactly one HarfBuzzSharp version in `data.harfbuzz` and
+  renders it as a `## HarfBuzzSharp X.Y.Z` section (§4.5).
+- **HarfBuzzSharp still has API-diff folders.** The Cake API-diff engine emits
+  HarfBuzzSharp-versioned folders under `releases/harfbuzzsharp/<hb-line>/` (§3.4),
+  and the SkiaSharp page's banner links to them (§4.4).
 
-#### Both families are first-class and identical in structure
+There are **no standalone HarfBuzzSharp release-notes hub pages**, no
+`harfbuzzsharp/_sources/*.data.json` / `*.prose.json`, no HarfBuzz TOC node, and no
+HarfBuzz section in the releases index. `render-notes.py --all` actively retires old
+`releases/harfbuzzsharp/<hb-line>.md` and `<hb-line>-unreleased.md` hub pages while
+leaving the Cake-generated API-diff folders in place (§3.5/§4.6).
 
-Each applies §1.1–§1.4 entirely within its own version scheme: the same emission rules
-(§1.4), the same previous-emitted-line baselines (§1.3) and `versions.json` bucket
-(§1.2), the same human release-notes pages (§4) **and** API diffs (§5), and the same
-released/unreleased split, preview buckets, supersession, and AI polish. Neither is
-folded into or subordinate to the other, and there are **no cross-family baselines**.
-SkiaSharp lives at the `releases/` root and HarfBuzz under `releases/harfbuzzsharp/`
-(§3) — identical shapes, one level deeper.
+#### Package-version schemes still matter for API diffs
 
-#### The one difference: HarfBuzz is processed through SkiaSharp's branches and tags
+*Every* `SkiaSharp.*` package belongs to the SkiaSharp-versioned bucket — `SkiaSharp`,
+`SkiaSharp.Views.*`, `SkiaSharp.Skottie`, and crucially `SkiaSharp.HarfBuzz` (the
+managed shaper binding, which carries the SkiaSharp version, **not** a HarfBuzzSharp
+version). The HarfBuzzSharp-versioned API-diff bucket is only `HarfBuzzSharp` and
+`HarfBuzzSharp.NativeAssets.*`.
 
-HarfBuzz never releases on its own — every HarfBuzz version ships *inside* a SkiaSharp
-release (usually via a *Bump HarfBuzz* PR), so it has no `release/*` branches or `v*`
-tags of its own. So everything the engines otherwise read from a family's own git refs
-— commit ranges, preview-milestone boundaries, release dates — the HarfBuzz family
-takes from the **SkiaSharp** refs of its co-shipping release (via the co-release map
-below), then **filters the commits to HarfBuzz-owned files** so the page shows
-HarfBuzz's own changes instead of SkiaSharp's. That commit filter is the *only* content
-difference; the engine mechanics are in §4.5. Specifically:
+That distinction is for API diffs and dependency resolution; it does **not** create a
+second release-notes page family. A PR that touches both SkiaSharp and HarfBuzzSharp
+can be covered by the normal SkiaSharp prose and also contribute to the folded
+HarfBuzz section, but it does not appear on a separate HarfBuzz page.
 
-- **HarfBuzz-owned files** are the HarfBuzz packages, native build, and tests — **never**
-  any `SkiaSharp.*` source (`SkiaSharp.HarfBuzz` is SkiaSharp-versioned and stays on the
-  SkiaSharp page). §4.5 holds the canonical path list.
-- A PR that touches *both* families appears on *both* pages — that duplication is
-  intended.
-- Every HarfBuzz line gets a page (a published line beside its API-diff folder, §3.4; an
-  in-flight line without one yet, §4.5); when a published line's filtered commit set is
-  empty, `build-data.py` marks the data sidecar `no_changes` and `render-notes.py`
-  renders a deterministic **No changes** page (§4.5), so the page set still equals the
-  line set.
+#### HarfBuzz-specific content is a filtered subset of the SkiaSharp range
 
-#### The co-release map is the bridge
+HarfBuzzSharp cannot ship without SkiaSharp. The exact HarfBuzzSharp version that
+ships with SkiaSharp line *L* is read from `SkiaSharp.HarfBuzz@L`'s `HarfBuzzSharp`
+package dependency (e.g. `SkiaSharp.HarfBuzz 2.88.0 → HarfBuzzSharp 2.8.2`) — from
+the published package for an emitted SkiaSharp line, or from the **working tree** for
+an in-flight line the API-diff engine records in the co-release map (§5.1). The value
+is kept at full §1.1 line granularity so it names a real HarfBuzzSharp API-diff folder
+(never truncated to `Major.Minor.Patch`).
 
-The bridge is deterministic and script-owned. The exact HarfBuzz version that ships with
-SkiaSharp line *L* is read from `SkiaSharp.HarfBuzz@L`'s `HarfBuzzSharp` package
-dependency (e.g. `SkiaSharp.HarfBuzz 2.88.0 → HarfBuzzSharp 2.8.2`) — from the published
-package for an emitted SkiaSharp line, or from the **working tree** for an in-flight line
-not yet on the feed (§5.1) — kept at **full §1.1 line granularity** so it names a real
-HarfBuzz line/folder (never truncated to `Major.Minor.Patch`). The Cake engine — which
-already reads the packages — records this `L ↔ hb` mapping in the **co-release map
-sidecar** (§3.6); `build-data.py` consumes it both ways (§4.5): to give each HarfBuzz
-line its SkiaSharp git range and to record the SkiaSharp↔HarfBuzz cross-links that
-`render-notes.py` emits (§4.4). When a single HarfBuzz line ships across several
-SkiaSharp lines, the **earliest (introducing)** one — whose *Bump HarfBuzz* PR created
-the line — is its canonical co-ship release: the one its banner and back-link name
-(§4.4/§4.5). A HarfBuzz dependency
-of a *published* SkiaSharp line always resolves to a released HarfBuzz folder; an
-in-flight line may name an as-yet-unpublished HarfBuzz line, which emits an in-flight page
-(§4.5) rather than a folder. The mapping is **never** computed by the AI.
+`build-data.py` reads the co-release map by SkiaSharp line and, on **released**
+SkiaSharp pages only, writes:
+
+```json
+"harfbuzz": {
+  "version": "<hb-line>",
+  "api_diff_link": "harfbuzzsharp/<hb-line>/index.md",
+  "prs": [1234, 5678]
+}
+```
+
+The `prs` list is the same SkiaSharp release window filtered to HarfBuzz-owned paths:
+
+- `binding/HarfBuzzSharp/**`
+- `binding/HarfBuzzSharp.NativeAssets.*/**`
+- `binding/libHarfBuzzSharp.json`
+- `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
+- `native/*/libHarfBuzzSharp/**`
+- `tests/Tests/HarfBuzzSharp/**`
+
+It deliberately excludes `SkiaSharp.*` source (`SkiaSharp.HarfBuzz` is
+SkiaSharp-versioned and stays with the normal SkiaSharp page content). Multiple
+SkiaSharp lines may share one HarfBuzzSharp version; each SkiaSharp page still records
+its own co-shipped version and its own filtered PRs for that release window. The mapping
+is deterministic and script-owned — the AI never computes it.
 
 ---
 
 ## 2. Skill layout & orchestration
+
 
 ### 2.1 Where the engines live; the skill owns the release-notes engine
 
@@ -320,7 +341,7 @@ scripts/infra/docs/                (shared / API-diff engine)
     build-index.py             Prepare index-data engine (§4) — emits _sources/index.json
                                (Chrome schedule + live-head set); writes no Markdown
     render-notes.py            Polish renderer (§4) — all Markdown: pages + TOC.yml + index.md,
-                               and prunes stale -unreleased pages (§4.2)
+                               prunes stale -unreleased pages and retires HarfBuzz hub pages
     schema/prose.schema.json   the prose contract the agent fills
     pr-authors.json            PR-author cache for build-data.py (§4)
 ```
@@ -333,9 +354,8 @@ then `build-index.py` — so the skill, the update-release-notes workflow, the D
 wrapper, and a human running it by hand all execute the exact same Prepare phase.
 `render-notes.py` imports `build-data.py` with `importlib` for shared version
 parsing and page-set helpers (`version_key`, `minor_group`, `get_version_files`,
-`get_harfbuzz_version_files`, `cadence_milestones`, and the `versions.json` path);
-module load is offline-safe, and all network data it needs arrives through
-`_sources/index.json`.
+`cadence_milestones`, and the `versions.json` path); module load is offline-safe,
+and all network data it needs arrives through `_sources/index.json`.
 `versions.json` stays under `scripts/infra/docs/` because it is shared config (the
 API-diff engine, security-audit, skia-sync and nuget-feed all read it), not
 release-notes-private.
@@ -345,6 +365,7 @@ The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
 NuGet-diff comparer factory, the breaking/full-diff runner, and `versions.json`
 loading) is used by *only* the two doc engines (`api-diff.cake` and the mdoc
 generators in `docs.cake`), so it sits next to them in `scripts/infra/docs/`.
+
 
 ### 2.2 Two phases: Prepare → Polish
 
@@ -358,12 +379,14 @@ so the run order lives in one place:
 
 1. **Cake (`api-diff.cake`)** regenerates the complete API-diff tree under
    `releases/` (§3.3/§3.4) from the published feed, and writes the §1.5
-   **co-release map sidecar** (§3.6). Deterministic, no AI.
-2. **`build-data.py`** regenerates each changed page's deterministic facts into
-   `_sources/<version>.data.json` (§3.2/§4.1), using git history, tags,
-   `versions.json`, the co-release map, and companion-file hashes. It also writes
-   the machine-readable **Files to polish** list to `output/files-to-polish.txt`
-   (or `--polish-list`).
+   **co-release map sidecar** to `releases/_sources/co-release-map.json` (§3.6).
+   Deterministic, no AI.
+2. **`build-data.py`** regenerates each changed SkiaSharp page's deterministic facts
+   into `_sources/<version>.data.json` (§3.2/§4.1), using git history, tags,
+   `versions.json`, the co-release map, and companion-file hashes. On released pages
+   it folds the co-shipped HarfBuzzSharp version/API-diff link/filtered PR list into
+   the page's `harfbuzz` block (§4.5). It also writes the machine-readable **Files to
+   polish** list to `output/files-to-polish.txt` (or `--polish-list`).
 3. **`build-index.py`** writes the network-sourced aggregate data to
    `releases/_sources/index.json` (§3.5/§4.1) — the live Chrome schedule for the
    two milestones in flight, plus `live_unreleased`, the set of version cores whose
@@ -382,20 +405,21 @@ network** and no permission to re-run Cake, `generate.sh`, `build-data.py`, or
 `build-index.py`. For each path in `output/files-to-polish.txt`, it reads that
 page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), writes
-`_sources/<version>.prose.json` (schema: `schema/prose.schema.json`), and runs
+`_sources/<version>.prose.json` (schema: `schema/prose.schema.json`, including
+`harfbuzz_summary` when required), and runs
 `render-notes.py <data.json> <prose.json> <out.md>` to validate the prose. A render
 that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
 never hand-edited.
 
 After every changed page validates, Polish runs `render-notes.py --all` **once**.
 That final offline pass prunes any now-stale `-unreleased` page (per the
-`live_unreleased` set `build-index.py` recorded in `index.json`), regenerates every
-page from committed `_sources/*.data.json` + `_sources/*.prose.json` (and
-deterministic no-changes pages from data alone), then rebuilds `TOC.yml` +
-`index.md` from the finished page set and the committed Chrome
-schedule in `_sources/index.json`. So consumers see just two phases — **Prepare**
-(run one script) then **Polish** (write prose, render) — and never juggle the
-individual generators by hand.
+`live_unreleased` set `build-index.py` recorded in `index.json`), retires legacy
+standalone HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates every
+SkiaSharp page from committed `_sources/*.data.json` + `_sources/*.prose.json` (with
+folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` from the
+finished page set and the committed Chrome schedule in `_sources/index.json`. So
+consumers see just two phases — **Prepare** (run one script) then **Polish** (write
+prose, render) — and never juggle the individual generators by hand.
 
 ### 2.3 One workflow, one PR
 
@@ -422,7 +446,7 @@ daily run is undesirable (e.g. right after tagging). (Walking a `release/*` ref 
 (the `generate.sh` script — Cake, `build-data.py`, then `build-index.py`, §2.2) runs
 in its **own dedicated job** (`prepare`), separate from the agent job. It uses an
 ordinary GitHub-Actions runner with the .NET SDK and full network, and — because the
-historical API diff downloads *every* published package of *both* families — it owns
+historical API diff downloads *every* published package from both version buckets — it owns
 a **free-disk-space step** and its **own `timeout-minutes`** so the heavy generation
 can't exhaust the agent runner's disk or clock. Giving Prepare its own machine is
 the whole point of the split: a download, disk, or timeout failure fails *Prepare*
@@ -430,7 +454,7 @@ loudly and in isolation, not the agent mid-polish.
 
 The two jobs hand off through a **workflow artifact**, never a shared runner. The
 `prepare` job uploads (a) all of its working-tree changes (the regenerated
-`releases/` tree — API-diff folders, co-release-map sidecar, `_sources/*.data.json`,
+`releases/` tree — API-diff folders, `_sources/co-release-map.json`, `_sources/*.data.json`,
 `_sources/index.json`, author cache, and any deletions/pruning) and (b) the
 `files-to-polish.txt` list. The agent job declares `needs: prepare`, downloads the
 artifact, and restores those changes into a clean checkout *before* the agent starts:
@@ -449,6 +473,7 @@ a no-op run the deterministic generators reproduce the existing tree byte-for-by
 Prepare's patch is empty, and the agent **and** the PR are skipped — so an unchanged
 daily run opens no PR (§4.6 idempotency).
 
+
 ### 2.4 The rendering pipeline
 
 The live release-notes pipeline removes page **structure** from the agent's job.
@@ -457,12 +482,13 @@ contributor table, the banner, `@handles`, ❤️, and PR links along with the p
 the work is split by artifact:
 
 1. **`build-data.py` emits `_sources/<version>.data.json`** — the deterministic facts
-   a page is built from: banner facts + links, the flat PR map (each with its
+   a SkiaSharp page is built from: banner facts + links, the flat PR map (each with its
    three-way tag and `community` flag), the authoritative contributor roster,
    per-preview buckets, breaking-change *sources* (`*.breaking.md` and
-   `_sources/<version>.notes.md`), supersede/API links, tallies, and family status.
-   It contains the shared low-level helpers, the page-set discovery helpers
-   `get_version_files` / `get_harfbuzz_version_files`, and `cadence_milestones()`.
+   `_sources/<version>.notes.md`), supersede/API links, tallies, family status, and —
+   on released pages — the folded `harfbuzz` block (`version`, `api_diff_link`, and
+   HarfBuzz-path PR numbers). It contains the shared low-level helpers, the page-set
+   discovery helper `get_version_files`, and `cadence_milestones()`.
 2. **`build-index.py` emits `_sources/index.json`** — network-sourced aggregate data
    the offline render cannot recompute: the live Chrome schedule for the two
    milestones in flight, plus `live_unreleased` (the version cores whose
@@ -471,15 +497,16 @@ the work is split by artifact:
    `render-notes.py --all` (§4.2).
 3. **The agent writes `_sources/<version>.prose.json`** — prose only, against
    `schema/prose.schema.json`: `theme`, `highlights_headline`/`highlights_body`,
-   `breaking`, `categories`, `contributor_summaries`, and `preview_summaries`. It
-   never writes a heading, table, banner, handle, ❤️, or PR link.
+   `breaking`, `categories`, `contributor_summaries`, `preview_summaries`, and
+   `harfbuzz_summary` when `data.harfbuzz.prs` is non-empty. It never writes a
+   heading, table, banner, handle, ❤️, or PR link.
 4. **`render-notes.py` renders Markdown** — per-page validation with
-   `render-notes.py <data.json> <prose.json> [out.md]`, deterministic no-changes
-   HarfBuzz pages with `render-notes.py <data.json> [out.md]`, and the final
+   `render-notes.py <data.json> <prose.json> [out.md]`, and the final
    `render-notes.py --all` pass that prunes stale `-unreleased` pages (per
-   `index.json`'s `live_unreleased`), then rebuilds every page plus `TOC.yml` and
-   `index.md` from committed JSON. It is pure stdlib, dependency-free, and offline;
-   the release-cadence timeline reads the schedule from `_sources/index.json`.
+   `index.json`'s `live_unreleased`), retires old HarfBuzz hub pages, then rebuilds
+   every SkiaSharp page plus `TOC.yml` and `index.md` from committed JSON. It is pure
+   stdlib, dependency-free, and offline; the release-cadence timeline reads the
+   schedule from `_sources/index.json`.
 
 **Why the split.** Every failure mode that recurred under the single-agent path lived
 exactly where the agent owned structure: dropped `## Breaking Changes` headings, bare
@@ -494,64 +521,67 @@ render instead of shipping.
 
 **This section is the single source of truth for every path.** Engine sections (§4,
 §5) reference these names; if you need a new path, define it here first. The `<line>`
-placeholder is the §1.1 version core; `<hb-line>` is the HarfBuzz family's core.
+placeholder is the §1.1 version core; `<hb-line>` is the HarfBuzzSharp API-diff line core.
 
 Everything lives **inside the docfx site**, under `documentation/docfx/releases/`, so
 docfx renders it and the human pages can link to the API diffs with internal links.
 Elsewhere in this doc the short form `releases/…` is used for the same location.
 
+
 ### 3.1 The `releases/` tree at a glance
 
 ```
 documentation/docfx/releases/
-  3.119.0.md                 ← rendered human landing page (the hub)   [render-notes] §3.2
-  3.119.0-unreleased.md      ← rendered human unreleased delta         [render-notes] §3.2
-  _sources/                  ← inputs for root-family pages + site index
-    3.119.0.data.json        ← deterministic page facts                [build-data] §4.1
-    3.119.0.prose.json       ← AI prose payload                         [Polish AI] §4.4
-    3.119.0.notes.md         ← optional manual additions sidecar        [Maintainer] §3.7
-    index.json               ← network-sourced index data               [build-index] §3.5
-  3.119.0/                   ← API diffs for the SkiaSharp family      [Cake]   §3.3
-    index.md                (per-line diff landing — the link target, §3.3)
+  3.119.0.md                 ← rendered SkiaSharp landing page (the hub) [render-notes] §3.2
+  3.119.0-unreleased.md      ← rendered SkiaSharp unreleased delta       [render-notes] §3.2
+  _sources/                  ← inputs for SkiaSharp pages + site index
+    3.119.0.data.json        ← deterministic page facts (+ harfbuzz block on released pages) [build-data] §4.1
+    3.119.0.prose.json       ← AI prose payload (+ harfbuzz_summary)      [Polish AI] §4.4
+    3.119.0.notes.md         ← optional manual additions sidecar          [Maintainer] §3.7
+    co-release-map.json      ← Cake→build-data HarfBuzz co-ship input     [Cake]   §3.6
+    index.json               ← network-sourced index data                 [build-index] §3.5
+  3.119.0/                   ← API diffs for the SkiaSharp package bucket [Cake]   §3.3
+    index.md                (per-line diff landing — the SkiaSharp API-diff link target, §3.3)
     SkiaSharp/SkiaSharp.md  (+ SkiaSharp.breaking.md)
     SkiaSharp.Views/SkiaSharp.Views.Android.md  (+ iOS/Mac/Tizen/tvOS …)
     SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.md
     …
-  harfbuzzsharp/             ← HarfBuzz family (its own version scheme)   §3.4
-    8.3.0.md                ← rendered human landing page (the hub)   [render-notes] §3.2
-    8.3.0-unreleased.md     ← rendered human unreleased delta         [render-notes] §3.2
-    _sources/
-      8.3.0.data.json       ← deterministic page facts                [build-data] §4.1
-      8.3.0.prose.json      ← AI prose payload                         [Polish AI] §4.4
-      8.3.0.notes.md        ← optional manual additions sidecar        [Maintainer] §3.7
-    8.3.0/                  ← API diffs for the HarfBuzz family        [Cake]  §3.4
-      index.md              (per-line diff landing — the link target, §3.4)
+  harfbuzzsharp/             ← HarfBuzzSharp API-diff folders only        [Cake]   §3.4
+    8.3.0/
+      index.md              (per-line diff landing — the HarfBuzz API-diff link target, §3.4)
       HarfBuzzSharp/HarfBuzzSharp.md  (+ .breaking.md)
       HarfBuzzSharp.NativeAssets.Android/…  …
-  co-release-map.json        ← Cake→build-data sidecar (not rendered)   [Cake]   §3.6
-  TOC.yml, index.md          ← rendered aggregates                      [render-notes] §3.5
+  TOC.yml, index.md          ← rendered aggregates over SkiaSharp pages    [render-notes] §3.5
 ```
+
+The `harfbuzzsharp/<hb-line>/` folders are kept because SkiaSharp release pages link
+them. The old `harfbuzzsharp/<hb-line>.md` hub pages and `harfbuzzsharp/_sources/`
+inputs are retired by `render-notes.py --all` (§3.5/§4.6).
+
 
 ### 3.2 Human pages (release-notes engine owns)
 
-Both families get human pages (§1.5). The SkiaSharp family lives at the `releases/`
-root; the HarfBuzz family lives under `releases/harfbuzzsharp/` with the same shapes:
+Only SkiaSharp lines get human release-notes pages (§1.5). They live at the
+`releases/` root:
 
-- **Landing / released page:** `releases/<line>.md` (SkiaSharp) or
-  `releases/harfbuzzsharp/<hb-line>.md` (HarfBuzz) — the rendered "what's new" hub
-  built from `_sources/<line>.data.json` + `_sources/<line>.prose.json`
-  (semantics in §4.2; HarfBuzz specifics in §4.5).
-- **Unreleased page:** `releases/<line>-unreleased.md` or
-  `releases/harfbuzzsharp/<hb-line>-unreleased.md` — the small head delta; omitted when
-  empty (semantics in §4.2).
+- **Landing / released page:** `releases/<line>.md` — the rendered "what's new" hub
+  built from `_sources/<line>.data.json` + `_sources/<line>.prose.json` (semantics in
+  §4.2). When the line is released, its data includes a folded `harfbuzz` block and
+  the page renders a `## HarfBuzzSharp X.Y.Z` section (§4.5).
+- **Unreleased page:** `releases/<line>-unreleased.md` — the small head delta; omitted
+  when empty (semantics in §4.2). It has no `harfbuzz` block because there is no
+  co-shipped HarfBuzzSharp version until the SkiaSharp line is released.
 - The flat `<line>.md` name is kept deliberately: the same-named `<line>/` API-diff
   folder (§3.3) coexists beside it, so adding API diffs requires **no rename** of
-  existing pages and **no TOC href churn**. The HarfBuzz tree mirrors this exactly.
+  existing pages and **no TOC href churn**.
 - Every page's inputs live one level down in the sibling `_sources/` folder:
   `_sources/<stem>.data.json` from `build-data.py`, `_sources/<stem>.prose.json`
   from the Polish AI, and optional `_sources/<stem>.notes.md` from a maintainer.
-  Rendered pages stay at the top of their family directory so page discovery remains
-  a non-recursive `*.md` walk.
+  Rendered pages stay at the root so page discovery remains a non-recursive `*.md`
+  walk.
+
+There are no HarfBuzzSharp human page paths. `releases/harfbuzzsharp/` is reserved for
+Cake-generated API-diff folders (§3.4).
 
 ### 3.3 API-diff folders (API-diff engine owns)
 
@@ -577,26 +607,28 @@ hub. It carries the `# API diff:` marker like every other generated file, so the
 wipe regenerates it each run. Linking the hub at `<line>/index.md` (not the bare folder)
 gives docfx a concrete page to resolve, so the link never dangles.
 
-### 3.4 The HarfBuzz tree shape
 
-The HarfBuzz family (rules in §1.5) lives in the parallel `releases/harfbuzzsharp/`
-tree, keyed by its **own** version (the folder name is deliberately lowercase
-`harfbuzzsharp/` to mark the *family-tree root*, distinct from the `HarfBuzzSharp`
-package id one level down). It mirrors the SkiaSharp root exactly, just one level
-deeper:
+### 3.4 The HarfBuzz API-diff tree
 
-- **Human pages** (`render-notes.py`, §3.2): `releases/harfbuzzsharp/<hb-line>.md`
-  and `…/<hb-line>-unreleased.md`, beside the API-diff folder of the same name,
-  with inputs under `releases/harfbuzzsharp/_sources/`.
-- **API-diff folders** (Cake): `releases/harfbuzzsharp/<hb-line>/<package>/<assembly>.md`
-  (+ `.breaking.md`), using the same package-namespaced, per-assembly shape as §3.3.
-- **One page — and, once published, one folder — per distinct HarfBuzz line.** Repeated
-  SkiaSharp releases shipping the *same* HarfBuzz line reuse the same folder/page (they just
-  point at it via the co-release map, §3.6); they do not create empty duplicates. An
-  in-flight line that has not published yet has its page but no folder (§4.5).
-- Each HarfBuzz folder also gets a generated **`index.md`** (same shape as §3.3),
-  including a back-link to its `../<hb-line>.md` hub. It otherwise follows §3.3's index
-  rules and is the target of that hub page's API-changes link (§4.4).
+The `releases/harfbuzzsharp/` tree is **not** a release-notes family. It contains only
+Cake-generated API-diff folders for HarfBuzzSharp-versioned packages, keyed by their
+own version core. The lowercase folder name marks the API-diff tree root and is
+distinct from the `HarfBuzzSharp` package id one level down.
+
+- **API-diff folders** (Cake):
+  `releases/harfbuzzsharp/<hb-line>/<package>/<assembly>.md` (+ `.breaking.md`), using
+  the same package-namespaced, per-assembly shape as §3.3.
+- Each folder also gets a generated **`index.md`** (same package list shape as §3.3).
+  This is the target of the SkiaSharp page banner's `[HarfBuzzSharp API diff]` link
+  (§4.4/§4.5).
+- Repeated SkiaSharp releases may ship the *same* HarfBuzzSharp line. They all point to
+  the same `harfbuzzsharp/<hb-line>/index.md` API-diff landing through their own
+  `data.harfbuzz` blocks; no duplicate human HarfBuzz pages are created.
+
+`render-notes.py --all` deletes old `releases/harfbuzzsharp/<hb-line>.md` and
+`<hb-line>-unreleased.md` hub pages and any `harfbuzzsharp/_sources/` JSON/prose left
+from the retired model, but it does not delete the API-diff folders.
+
 
 ### 3.5 Ownership — who writes and clears what
 
@@ -607,17 +639,16 @@ paths and only ever clears its own:
 |---|---|---|
 | `releases/<line>.md` | `render-notes.py` | permanent once shipped stable — never pruned; `render-notes.py --all` only rewrites its content (§4.2) |
 | `releases/<line>-unreleased.md` | `render-notes.py` | `build-data.py` removes empty head deltas during generation; `render-notes.py --all` prunes stale live-head pages per `index.json`'s `live_unreleased` (§4.2) |
-| `releases/harfbuzzsharp/<hb-line>.md` | `render-notes.py` | same rules as the SkiaSharp hub, per family (§4.2/§4.5) |
-| `releases/harfbuzzsharp/<hb-line>-unreleased.md` | `render-notes.py` | `build-data.py` removes empty/orphaned HarfBuzz unreleased deltas during generation, from the co-release map (§4.5) |
-| `releases/_sources/<stem>.data.json`, `releases/harfbuzzsharp/_sources/<stem>.data.json` | `build-data.py` | `build-data.py` (empty deltas) / `render-notes.py --all` (stale -unreleased) with the owning page |
-| `releases/_sources/<stem>.prose.json`, `releases/harfbuzzsharp/_sources/<stem>.prose.json` | **Polish AI** | with the owning page (`build-data.py` empty deltas, `render-notes.py --all` stale -unreleased); otherwise never script-rewritten |
+| `releases/_sources/<stem>.data.json` | `build-data.py` | with the owning SkiaSharp page (`build-data.py` empty deltas, `render-notes.py --all` stale -unreleased) |
+| `releases/_sources/<stem>.prose.json` | **Polish AI** | with the owning SkiaSharp page; otherwise never script-rewritten |
 | `releases/_sources/index.json` | `build-index.py` | `build-index.py` (rewritten each Prepare run) |
-| `releases/TOC.yml`, `releases/index.md` | `render-notes.py --all` | `render-notes.py --all` (regenerated from the finished page set) |
-| `releases/<line>/<package>/…` (SkiaSharp family) | Cake | Cake (generated files only, §5.2) |
-| `releases/harfbuzzsharp/<hb-line>/…` | Cake | Cake (generated files only, §5.2) |
+| `releases/_sources/co-release-map.json` (§3.6) | Cake | Cake (rewritten each Prepare run) |
+| `releases/TOC.yml`, `releases/index.md` | `render-notes.py --all` | `render-notes.py --all` (regenerated from the finished SkiaSharp page set) |
+| `releases/<line>/<package>/…` (SkiaSharp API diffs) | Cake | Cake (generated files only, §5.2) |
+| `releases/harfbuzzsharp/<hb-line>/…` (HarfBuzzSharp API diffs) | Cake | Cake (generated files only, §5.2) |
 | `releases/<line>/index.md`, `releases/harfbuzzsharp/<hb-line>/index.md` (per-line diff landings, §3.3/§3.4) | Cake | Cake (marker-managed; regenerated each run, §5.2) |
-| `releases/co-release-map.json` (§3.6) | Cake | Cake (rewritten each run) |
-| `releases/_sources/<stem>.notes.md`, `releases/harfbuzzsharp/_sources/<stem>.notes.md` (manual additions sidecar, §3.7) | **Maintainer** (hand-authored input) | **Never machine-cleared** — read (path+hash) by `build-data.py`, read (content) by the Polish AI; docfx-excluded, not rendered |
+| `releases/harfbuzzsharp/<hb-line>.md`, `releases/harfbuzzsharp/<hb-line>-unreleased.md`, `releases/harfbuzzsharp/_sources/*` | retired legacy HarfBuzz hub artifacts | `render-notes.py --all` deletes them; Cake-owned API-diff folders are kept |
+| `releases/_sources/<stem>.notes.md` (manual additions sidecar, §3.7) | **Maintainer** (hand-authored input) | **Never machine-cleared** — read (path+hash) by `build-data.py`, read (content) by the Polish AI; docfx-excluded, not rendered |
 
 The Cake engine clears **only the generated API-diff files** it owns. A file is treated
 as generated — and therefore deleted before the rebuild — only when **both** of these
@@ -638,20 +669,17 @@ the AI.
 
 #### TOC / index representation
 
-`TOC.yml` groups SkiaSharp lines into `Version X.Y.x`
-minor nodes (each nesting its patch releases), plus a **HarfBuzz** section that mirrors
-the same shape — `HarfBuzzSharp X.Y.x` minor subgroups, each nesting its emitted HarfBuzz
-lines pointing at their `harfbuzzsharp/<hb-line>.md` hubs (an intentional navigation
-grouping — the lone place the family subfolder surfaces in the TOC; it groups the equally
-first-class HarfBuzz hubs, it does not subordinate them). Grouping by minor keeps the node
-from degrading into one flat list as HarfBuzz lines accumulate. The `<line>/` and
-`harfbuzzsharp/<hb-line>/` API-diff folders are **reached through the hub page's
-script-owned API-changes link** (§4.4) — which targets each folder's generated
-`index.md` (§3.3/§3.4) — not surfaced as independent top-level TOC nodes; they are
-reference material for a release, not separate browsing destinations. From a hub page it
-is one click to the line's diff index and one more to a specific assembly. `index.md`
-(at the `releases/` root) is the top-level list of release lines. Both aggregates are
-assembled by `render-notes.py --all` from the finished page set; the release-cadence
+`TOC.yml` groups **SkiaSharp** lines into `Version X.Y.x` minor nodes (each nesting its
+patch releases), split into support tiers below. There is no HarfBuzzSharp TOC node:
+HarfBuzzSharp notes live as sections inside each SkiaSharp page (§4.5), and the
+HarfBuzzSharp API-diff folders are reached through the SkiaSharp page's script-owned
+API-changes link (§4.4), not surfaced as independent navigation destinations. From a
+SkiaSharp page it is one click to the line's SkiaSharp diff index and, for released
+pages, one click to the co-shipped HarfBuzzSharp diff index.
+
+`index.md` (at the `releases/` root) is the top-level list of SkiaSharp release lines,
+not a HarfBuzzSharp release index. Both aggregates are assembled by
+`render-notes.py --all` from the finished SkiaSharp page set; the release-cadence
 timeline reads the Chrome schedule from the committed `releases/_sources/index.json`
 that `build-index.py` wrote during Prepare.
 
@@ -675,9 +703,9 @@ paths (it is *not* a multi-tier channel product), so the tiers are:
 
 The tier of a line is **not** inferred from git or NuGet — it is read from the
 top-level **`support`** block in `versions.json` (a sibling of the `skiasharp` /
-`harfbuzzsharp` family buckets, consumed only by the release-notes engine; the API-diff
-engine ignores it). It is **two lists** of `major.minor` line cores (the SkiaSharp minor
-*is* the Chrome/Skia milestone):
+`harfbuzzsharp` override buckets, consumed only by the release-notes engine; the
+API-diff engine ignores it). It is **two lists** of `major.minor` line cores (the
+SkiaSharp minor *is* the Chrome/Skia milestone):
 
 ```json
 "support": {
@@ -728,20 +756,20 @@ Extended/Stable/Beta and `stable*`/`preview*` = our newest stable/preview milest
 A `drift` verdict is an audit **finding**; the fix is always a manual edit of this block
 (never auto-written — see the manual-by-design note above).
 
+
 ### 3.6 The co-release map sidecar (Cake → build-data.py)
 
-`releases/co-release-map.json` is the **inter-engine contract** that carries the §1.5
-deterministic SkiaSharp↔HarfBuzz mapping across the engine boundary. It is **written by
-Cake** (which already reads the package dependencies) and **read by `build-data.py`**
-(which records the page→folder link facts in data JSON for `render-notes.py` to
-emit). It is *not* a rendered page (no `.md`), it is not edited by the AI, and it is
-the **only** thing that crosses from the API-diff engine into the release-notes
-engine.
+`releases/_sources/co-release-map.json` is the **inter-engine contract** that carries
+the deterministic SkiaSharp→HarfBuzzSharp co-ship mapping across the engine boundary.
+It is **written by Cake** (which already reads package dependencies) and **read by
+`build-data.py`** (which folds the HarfBuzz facts into each released SkiaSharp page's
+`data.json`). It is a pure input sidecar: not rendered, not edited by the AI, and no
+longer inverted into a separate HarfBuzzSharp release-notes family.
 
 #### Shape
 
-**One entry per emitted SkiaSharp line** (including in-flight lines), each mapping
-that SkiaSharp line to the single HarfBuzz line it ships:
+**One entry per emitted SkiaSharp line** (including the in-flight line Cake can see),
+each mapping that SkiaSharp line to the single HarfBuzzSharp line it ships:
 
 ```json
 [
@@ -752,44 +780,42 @@ that SkiaSharp line to the single HarfBuzz line it ships:
 
 #### Field meanings
 
-- **`hb_line` is authoritative.** It is the HarfBuzz family line at **full §1.1 granularity**
+- **`hb_line` is authoritative.** It is the HarfBuzzSharp line at **full §1.1 granularity**
   (never truncated to `Major.Minor.Patch`, so a 4-part stable like `8.3.1.5` is preserved).
-  `build-data.py` derives everything else from it: the API-diff index path
-  `harfbuzzsharp/<hb-line>/index.md` *and* the **hub page** path
-  `harfbuzzsharp/<hb-line>.md`.
+  `build-data.py` copies it to `data.harfbuzz.version`.
 - **`hb_link` is a convenience mirror**, equal to `harfbuzzsharp/<hb-line>/index.md`;
-  `build-data.py` may use it verbatim or re-derive it from `hb_line`. It is never a
-  second source of truth.
-- **Each SkiaSharp line maps to exactly one HarfBuzz line** — its *representative* package's
-  (§5.2) HarfBuzz dependency. An intermediate HarfBuzz bump within a single SkiaSharp line's
-  previews is attributed to that line's final HarfBuzz version; the map records no
-  finer-grained history.
+  `build-data.py` copies it to `data.harfbuzz.api_diff_link`. It is never a second
+  source of truth and never names a human hub page.
+- **Each SkiaSharp line maps to exactly one HarfBuzzSharp line** — its representative
+  `SkiaSharp.HarfBuzz` package's (§5.2) `HarfBuzzSharp` dependency. An intermediate
+  HarfBuzz bump within a single SkiaSharp line's previews is attributed to that line's
+  final HarfBuzzSharp version; the map records no finer-grained history.
 
 #### How `build-data.py` consumes it
 
-`build-data.py` consumes the map **both ways** (§1.5/§4.5): it groups `skia_line`s
-by `hb_line` to give each HarfBuzz line its SkiaSharp git range and its canonical
-(earliest) co-ship release, and it records the cross-family links in each page's
-data JSON. A `hb_line` of a *published* SkiaSharp line always resolves to a released
-HarfBuzz folder; an in-flight SkiaSharp line may map to an as-yet-unpublished
-`hb_line` that has no folder and instead drives an in-flight HarfBuzz page (§4.5).
-This sidecar is cross-engine; it is distinct from a page's own **data sidecar**
-(§4.3), the deterministic facts `build-data.py` writes for the renderer and the AI.
+`build-data.py` reads the sidecar by `skia_line`. For a **released** SkiaSharp page, it
+adds a `harfbuzz` block containing the version, API-diff link, and the PR numbers in
+that same SkiaSharp git window that touched HarfBuzz-owned paths (§1.5/§4.5). For an
+`-unreleased` head page, it writes no `harfbuzz` block: the head has not co-shipped a
+HarfBuzzSharp version yet.
+
+The sidecar is cross-engine; it is distinct from a page's own **data sidecar** (§4.3),
+the deterministic facts `build-data.py` writes for the renderer and the AI.
+
 
 ### 3.7 The manual additions sidecar (maintainer → build-data.py → Polish AI)
 
-`releases/_sources/<line>.notes.md` (SkiaSharp) or
-`releases/harfbuzzsharp/_sources/<hb-line>.notes.md` (HarfBuzz) is an **optional,
-maintainer-authored** companion to a hub page. It is the one place a human injects
-hand-written material — a breaking-change call-out, a migration note, an editorial
-"bring this out" highlight — that must survive regeneration and re-polish. Editing
-the final `<line>.md` directly does not survive, because `render-notes.py --all`
-rewrites it from JSON (§4.4); the sidecar does, because no engine ever writes it.
+`releases/_sources/<line>.notes.md` is an **optional, maintainer-authored** companion
+to a SkiaSharp release page. It is the one place a human injects hand-written material
+— a breaking-change call-out, a migration note, an editorial "bring this out" highlight
+— that must survive regeneration and re-polish. Editing the final `<line>.md` directly
+does not survive, because `render-notes.py --all` rewrites it from JSON (§4.4); the
+sidecar does, because no engine ever writes it.
 
-It is **freeform Markdown, not a schema.** There is no JSON and no required
-structure: the maintainer writes natural-language notes and the Polish AI parses,
-understands, and weaves them into `prose.json` (§4.7). Not all of it is "breaking" —
-some is simply material to surface.
+It is **freeform Markdown, not a schema.** There is no JSON and no required structure:
+the maintainer writes natural-language notes and the Polish AI parses, understands, and
+weaves them into `prose.json` (§4.7). Not all of it is "breaking" — some is simply
+material to surface.
 
 #### Ownership & lifecycle
 
@@ -807,18 +833,10 @@ some is simply material to surface.
   timestamp-free data sidecar (§4.6) and re-polishes exactly that page. `build-data.py`
   never parses its *content*. The Polish AI opens and reads it and summarizes / weaves
   it into the prose (§4.7).
-- **Orphan handling.** A `_sources/<stem>.notes.md` with no matching hub page one
-  directory up (neither `<stem>.md` nor `<stem>-unreleased.md` exists for its stem)
-  is a maintainer typo; `build-data.py` **warns** and ignores it, writing nothing on
-  its behalf.
-
-#### It forces a real page
-
-A `.notes.md` present for a line makes that line's hub a **polished** page even where
-`build-data.py` would otherwise emit a deterministic `no_changes` HarfBuzz data
-sidecar (§4.5): the manual content is exactly what needs surfacing, so the
-*No changes* short-circuit is bypassed and the page gets a normal `data.json` for the
-AI.
+- **Orphan handling.** A `_sources/<stem>.notes.md` with no matching SkiaSharp page one
+  directory up (neither `<stem>.md` nor `<stem>-unreleased.md` exists for its stem) is a
+  maintainer typo; `build-data.py` **warns** and ignores it, writing nothing on its
+  behalf.
 
 This sidecar is a maintainer→engine input; it is distinct from the co-release map
 (§3.6, Cake→build-data.py) and from a page's own **data sidecar** (§4.3), which
@@ -828,6 +846,7 @@ This sidecar is a maintainer→engine input; it is distinct from the co-release 
 
 ## 4. Release-notes pipeline (`build-data.py`, `build-index.py`, `render-notes.py`)
 
+
 ### 4.1 Inputs & outputs
 
 The release-notes pipeline has three script-owned producers, split by artifact:
@@ -836,10 +855,11 @@ The release-notes pipeline has three script-owned producers, split by artifact:
   `git log` over a diff range (merged-PR subjects `… (#1234)`), published `v*`
   release tags (for preview milestones + dates), `versions.json`, the §1.5
   co-release map sidecar (§3.6) written by Cake, and companion-file hashes
-  (§4.7). It emits `_sources/<stem>.data.json` for each changed page and writes the
-  Files-to-polish list to `output/files-to-polish.txt` (or `--polish-list`). It
-  owns the shared low-level helpers (git/version parsing), the page-set discovery
-  helpers `get_version_files` / `get_harfbuzz_version_files`, and
+  (§4.7). It emits `_sources/<stem>.data.json` for each changed SkiaSharp page and
+  writes the Files-to-polish list to `output/files-to-polish.txt` (or
+  `--polish-list`). On released pages it adds `data.harfbuzz` from the co-release map
+  and the HarfBuzz-owned path filter (§4.5). It owns the shared low-level helpers
+  (git/version parsing), the page-set discovery helper `get_version_files`, and
   `cadence_milestones()`.
 - **`build-index.py` (Prepare, network-capable) — aggregate index data.** Inputs are
   the remote branch list and the live Chromium Dash schedule. It emits only
@@ -850,41 +870,45 @@ The release-notes pipeline has three script-owned producers, split by artifact:
   set `render-notes.py --all` prunes against, §4.2). It writes no Markdown, deletes
   nothing, and emits no timestamps.
 - **`render-notes.py` (Polish, offline) — all Markdown.** Inputs are committed
-  `_sources/*.data.json`, agent-authored `_sources/*.prose.json`, deterministic
-  no-changes data, and `_sources/index.json`. It renders every human page,
-  `TOC.yml`, and `index.md`. It is pure stdlib: no network and no install-time
-  dependencies.
+  `_sources/*.data.json`, agent-authored `_sources/*.prose.json`, and
+  `_sources/index.json`. It renders every SkiaSharp human page (including folded
+  HarfBuzz sections), `TOC.yml`, and `index.md`, and retires legacy HarfBuzz hub
+  pages. It is pure stdlib: no network and no install-time dependencies.
 
 The **Polish AI** is not a script producer. It reads a page's data sidecar and its
 bounded companion files, writes `_sources/<stem>.prose.json` (schema:
 `schema/prose.schema.json`), and runs `render-notes.py` to validate / render. It
 never creates, names, prunes, or links pages.
 
-Both families use the same machinery (§1.5). The SkiaSharp family discovers its
-lines from `release/*` branches + `v*` tags as usual. The **HarfBuzz** family has no
-tags of its own, so it discovers its lines and git ranges from the co-release map
-(§4.5) and filters every range to HarfBuzz-owned files.
+There is no separate HarfBuzz release-notes pass. `cmd_generate` iterates SkiaSharp
+branches only; a version-scoped run (`--min-version` / `--max-version`) naturally
+covers the folded HarfBuzz section for those SkiaSharp pages because the HarfBuzz facts
+are stored in the same `data.json`.
 
 **No GitHub API for content** — PRs come from commit messages. A cached, best-effort
 GraphQL lookup only upgrades author *handles*; it never affects which PRs or pages
 exist.
 
+
 ### 4.2 Released vs unreleased — two coexisting pages
 
-A version's *released* and *unreleased* states are **orthogonal** and get **separate
-pages** (§3.2) that coexist while the version is in flight:
+A SkiaSharp version's *released* and *unreleased* states are **orthogonal** and get
+**separate pages** (§3.2) that coexist while the version is in flight:
 
 - **Released `<line>.md`** — the full cumulative **rollup** of a line's shipped
   prerelease/stable from its baseline (§1.3), carrying preview-milestone sections
-  (§4.3) and supersede banners. Its milestones come from the line's `v*` **tags**
-  (§4.1) while the commit range comes from the matching `release/X.Y.Z` **branch**
-  checkout (§4.6) — tags name the previews, the branch supplies the commits.
+  (§4.3), supersede banners, API-diff links, and (when the co-release map has an entry)
+  the folded HarfBuzzSharp section (§4.5). Its milestones come from the line's `v*`
+  **tags** (§4.1) while the commit range comes from the matching `release/X.Y.Z`
+  **branch** checkout (§4.6) — tags name the previews, the branch supplies the commits.
 - **Unreleased `<line>-unreleased.md`** — a **small delta** from the **last release on
   that same line** to the head branch (`main`, or a servicing `release/X.Y.x`) —
   "what may ship next". It is **not** a rollup: it ignores `compare_to`, never
   reaches across minors for its base, and therefore **lists no preview milestones and
   no buckets** — just a flat list of the head-only PRs. **Omitted** when the delta is
-  empty.
+  empty. Its H1 is `Version X (Unreleased)` so it is distinguishable from the released
+  page of the same version core. It has no `harfbuzz` block because there is no
+  co-shipped HarfBuzzSharp version yet.
 
   *Invariant:* the base of an unreleased page is always the latest release of its
   own line, so its milestone window is empty by construction. A non-empty window is
@@ -906,6 +930,7 @@ never-stable line dropped from `versions.json` and no longer ahead of the latest
 stable. A line that shipped a stable is emitted forever (§1.4.1), so its released
 page is **permanent** and never pruned.
 
+
 ### 4.3 Per-preview PR buckets and the data sidecar
 
 When a released page rolls up several prerelease tags, `build-data.py` groups the PRs
@@ -918,10 +943,11 @@ delta, a plain stable patch) carry one flat list instead.
 The committed `_sources/<stem>.data.json` is the deterministic fact model the page is
 built from. It is timestamp-free and includes, at minimum:
 
-- `format` (`_DATA_JSON_FORMAT_VERSION`), `version`, `family`, `status`, and
-  `no_changes`.
+- `format` (`_DATA_JSON_FORMAT_VERSION`), `version`, `family`, and `status`.
 - `banner`, `supersedes`, `superseded_by`, and `api_links` — all script-owned link /
   banner facts.
+- `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
+  co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
   deterministic `tag` (`product`, `mixed`, `internal`).
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
@@ -935,18 +961,20 @@ page-relative paths and `sha256` values for the manual notes sidecar and breakin
 API-diff files, so the data sidecar stays small and a companion edit flips the
 whole-file change key (§4.6).
 
+
 ### 4.4 Division of responsibility — scripts structure, the AI writes prose JSON
 
 | Owner | Responsibility |
 |---|---|
-| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, every link (including API-diff and HarfBuzz cross-family links), every heading, table, banner shape, `@handle`, ❤️, PR link, `TOC.yml`, and `index.md`. `build-data.py` computes facts; `build-index.py` computes network index data; `render-notes.py` assembles Markdown and validates prose caps. |
-| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, and preview summaries. It may read (never write) the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarize them into prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
+| **Scripts** | Everything structural and deterministic: every filename, diff range, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, every link (including both API-diff links and the HarfBuzz section placement), every heading, table, banner shape, `@handle`, ❤️, PR link, `TOC.yml`, and `index.md`. `build-data.py` computes facts; `build-index.py` computes network index data; `render-notes.py` assembles Markdown and validates prose caps. |
+| **AI / skill** | Only writes `_sources/<stem>.prose.json`: `theme`, Highlights prose, breaking summaries, category bullets, contributor summaries, preview summaries, and `harfbuzz_summary` when required. It may read (never write) the companion files named in data JSON — `_sources/<stem>.notes.md` and `*.breaking.md` — and summarize them into prose (§4.7). On any anomaly (a missing/unexpected page, data that looks wrong, a renderer validation error it cannot fix) it stops and reports instead of working around it. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` for the prose contract. The renderer is the
 checklist: per-page render mode owns page layout and mechanically rejects violations
 such as a missing theme, Highlights over the word cap, an unrecognized category
-heading, a missing contributor summary, or a missing preview summary.
+heading, a missing contributor summary, a missing preview summary, or a missing
+`harfbuzz_summary` when the data says HarfBuzz-specific PRs shipped.
 
 #### Prose principles (what the AI writes toward)
 
@@ -985,70 +1013,93 @@ principles are fixed here.
    `SKILL.md` (`Engine`, `API Surface`, `Bug Fixes`, `Lifecycle & Internals`,
    `Platform`, `Security`) and renders them in that order. The AI chooses which apply;
    it does not invent headings.
+5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty, the AI
+   writes one short `harfbuzz_summary` paragraph. It does not dump every HarfBuzz PR:
+   the API-diff link is in the banner, and community credit is in the page's contributor
+   table. When `data.harfbuzz.prs` is empty, the AI sets the field to `null`/omits it and
+   the renderer emits the fixed no-changes line (§4.5).
 
 #### API-diff link rule
 
-**The API-diff links are required, fixed, and non-AI.** Every emitted page **whose
-line has an API-diff folder** carries the script-owned `> **API changes** · …` line
-in its structural header (above the prose).
+**The API-diff links are required, fixed, and non-AI.** Every emitted **released**
+SkiaSharp page whose line has an API-diff folder carries the script-owned
+`> **API changes** · …` line in its structural header (above the prose). Each banner
+row is its own blockquote, separated by a blank line, so Markdown renders the rows as
+stacked blocks rather than one lazy-continuation paragraph.
 
-- On a **SkiaSharp** page it points at this line's `<line>/index.md` (§3.3) and, when
-  HarfBuzz co-ships, at the co-shipped **HarfBuzz hub page**
-  `harfbuzzsharp/<hb-line>.md` (§1.5/§3.6) — which carries HarfBuzz's own notes and
-  its own API-diff link.
-- On a **HarfBuzz** page it points at this HarfBuzz line's
-  `harfbuzzsharp/<hb-line>/index.md` (§3.4) and back at its **canonical (introducing)
-  SkiaSharp release** (§1.5).
+- On a released **SkiaSharp** page it points at this line's `<line>/index.md` (§3.3)
+  and, when `data.harfbuzz` is present, at the co-shipped HarfBuzzSharp API diff
+  `harfbuzzsharp/<hb-line>/index.md` (§3.4):
+  `[SkiaSharp API diff](<line>/index.md) · [HarfBuzzSharp API diff](harfbuzzsharp/<hb-line>/index.md)`.
+- A page with **no** API-diff folder — typically an `-unreleased` head delta, whose
+  commits are not yet in any published line's folder — carries **no** such line; the
+  folder's presence drives the SkiaSharp link, and the co-release map drives the
+  HarfBuzz link for released pages. The AI does **not** decide whether to include it,
+  where to put it, how to word it, or what it links to.
 
-A page with **no** API-diff folder — typically an `-unreleased` head delta, whose
-commits are not yet in any published line's folder — carries **no** such line; the
-folder's presence drives the link, and the link's presence is part of `data.json`, so
-it is backfilled the moment a folder appears. The AI does **not** decide whether to
-include it, where to put it, how to word it, or what it links to.
 
-### 4.5 The HarfBuzz family pages
+### 4.5 The HarfBuzz section on a SkiaSharp page
 
-The engine processes the HarfBuzz family with the **same** code paths as SkiaSharp
-(§4.2–§4.4, §4.6); only line discovery, range resolution, and the commit filter
-differ. All of this is deterministic and script-owned.
+HarfBuzzSharp release notes are **not** a separate pass and **not** separate pages.
+`build-data.py` folds them into each released SkiaSharp page as deterministic data, and
+`render-notes.py` turns that data into one section.
 
-- **Lines come from the co-release map** (§3.6), not from branches or tags.
-  `build-data.py` inverts the map (groups `skia_line`s by `hb_line`) to get the set
-  of HarfBuzz lines and their order. Every HarfBuzz line therefore gets a page, so
-  the page set equals the line set, exactly as for SkiaSharp: a published line pairs
-  1:1 with its API-diff folder (§3.4), while an in-flight line has a page but no
-  folder yet.
-- **Ranges come from the co-shipping SkiaSharp releases** (§1.5), resolved with the
-  same `release/*` branch + `v*` tag machinery the SkiaSharp family uses. A
-  HarfBuzz line's commit window is the SkiaSharp range(s) of the SkiaSharp line(s)
-  that ship it (the `skia_line`s mapping to it), then filtered to HarfBuzz files.
-  Preview milestones (§4.3), when present, are the SkiaSharp previews in that window
-  where HarfBuzz work landed, ordered by their SkiaSharp release.
-- **Commits are filtered to HarfBuzz-owned files** (§1.5): the `HarfBuzzSharp` /
-  `HarfBuzzSharp.NativeAssets.*` projects, the native `libHarfBuzzSharp` definition
-  and its native harfbuzz build, and HarfBuzz tests — **never** any `SkiaSharp.*`
-  source. A PR touching both families lands on both pages (intended duplication).
-- **A page for every line; `no_changes` when empty.** Every HarfBuzz line gets a
-  data sidecar. If a published line's filtered commit set is empty (a SkiaSharp
-  release that merely rebuilds the same HarfBuzz), `build-data.py` writes only a
-  deterministic `_sources/<hb-line>.data.json` with `"no_changes": true`. It is not
-  listed under Files to polish; `render-notes.py <data.json> [out.md]` and
-  `render-notes.py --all` render the fixed *No changes* page from data alone. A
-  **manual additions sidecar** (§3.7) present for the line overrides this
-  short-circuit — the hand-written content is exactly what needs surfacing, so the
-  page gets a normal data sidecar and is polished.
-- **Released vs unreleased** (§4.2) and **data-json idempotency** (§4.6) apply
-  unchanged, per family. A HarfBuzz line that shipped inside a released SkiaSharp
-  line gets a permanent `<hb-line>.md`, anchored to its canonical (introducing)
-  SkiaSharp release. An **in-flight HarfBuzz line** — one an in-flight SkiaSharp line
-  newly declares but that has **not** published — gets a `<hb-line>-unreleased.md`
-  only when the in-flight SkiaSharp window contains HarfBuzz changes (or a notes
-  sidecar forces it). It has no API-diff folder and no API-changes link, and is
-  pruned by the same stale-head rule once it ships or stops being live.
-- **Range resolution here is for the release-notes git window only.** The Cake
-  API-diff **baseline** for a HarfBuzz line is the previous emitted HarfBuzz line on
-  the HarfBuzz feed (§1.3/§5.2, per family) — it does **not** use the co-release
-  ranges; only the release-notes git window does.
+#### Data shape
+
+For a released SkiaSharp page, `_write_page` looks up the page's SkiaSharp line in
+`releases/_sources/co-release-map.json` (§3.6). When it finds an entry, it writes:
+
+```json
+"harfbuzz": {
+  "version": "<hb-line>",
+  "api_diff_link": "harfbuzzsharp/<hb-line>/index.md",
+  "prs": [1234, 5678]
+}
+```
+
+The `prs` list is the page's own SkiaSharp git window filtered to HarfBuzz-owned paths
+(§1.5). Those PR numbers refer back into the same `data.prs` map as the rest of the
+page; the section does not have its own PR records.
+
+`harfbuzz` is **absent** from `-unreleased` head pages. A head page has no co-shipped
+HarfBuzzSharp version yet, even if Cake recorded the working-tree dependency in the
+co-release map for the next released page.
+
+#### Render shape
+
+When `data.harfbuzz.version` exists, `render-notes.py` emits:
+
+```markdown
+## HarfBuzzSharp <hb-line>
+```
+
+Then it renders exactly one paragraph:
+
+- If `data.harfbuzz.prs` is non-empty, the paragraph is the AI-authored
+  `prose.harfbuzz_summary`. The prose schema allows `harfbuzz_summary` to be a string
+  or `null`, and validation requires a non-empty string only in this case.
+- If `data.harfbuzz.prs` is empty, the renderer emits the fixed line:
+  *No HarfBuzzSharp binding changes shipped in this release — it rebuilds the same
+  HarfBuzz as the previous line.*
+
+This section is intentionally **summary-only**. It does not dump each HarfBuzz PR, does
+not duplicate the API-diff link, and does not render a separate contributor table. The
+HarfBuzz version and API-diff link are already in the page banner's API changes line
+(§4.4), and community credit remains in the page's single `## Community Contributors ❤️`
+table.
+
+#### Generation and retirement
+
+`cmd_generate` has no HarfBuzz family pass. It iterates SkiaSharp branches only, so a
+version-scoped run (`--min-version` / `--max-version`) covers HarfBuzz automatically for
+those SkiaSharp pages. The old helpers that inverted the co-release map into a
+HarfBuzz page set were removed; the map is now only an input to the SkiaSharp page data.
+
+`render-notes.py --all` retires old standalone HarfBuzz hub pages under
+`releases/harfbuzzsharp/` and deletes their retired `_sources` JSON/prose inputs. It
+keeps the Cake-generated `releases/harfbuzzsharp/<hb-line>/` API-diff folders, because
+SkiaSharp pages still link them.
+
 
 ### 4.6 How it runs
 
@@ -1056,19 +1107,20 @@ Always the full, idempotent pass:
 
 1. **Prepare fetches refs and regenerates data.** `generate.sh` runs Cake API diffs,
    then `build-data.py`, then `build-index.py` (§2.2). `build-data.py` fetches `main`
-   + every `release/*`, regenerates each line's data JSON (§4.3), and writes only
-   pages whose **whole `data.json` dict** changed. `build-index.py` writes
-   timestamp-free `_sources/index.json` (the Chrome schedule + the `live_unreleased`
-   set that `render-notes.py --all` prunes against, §4.2).
+   + every `release/*`, regenerates each SkiaSharp line's data JSON (§4.3), folds in
+   the HarfBuzz block for released pages (§4.5), and writes only pages whose **whole
+   `data.json` dict** changed. `build-index.py` writes timestamp-free
+   `_sources/index.json` (the Chrome schedule + the `live_unreleased` set that
+   `render-notes.py --all` prunes against, §4.2).
 2. **`data.json` is the change-detection key.** It has no timestamp, so an identical
    run yields an identical dict and the page is skipped. Any change to the PR map,
    diff range, preview buckets, contributor roster, supersession metadata, API-link
-   facts, or a companion's folded `sha256` changes the dict and lists the page in
-   `output/files-to-polish.txt`. Editing `_sources/<stem>.notes.md` or changing a
-   `*.breaking.md` file flips the relevant `breaking_candidates[].sha256` and
-   re-polishes exactly that page (§4.7). The full non-breaking API diff is
-   deliberately **not** folder-hashed — its change signal is already carried by the
-   PR set and the API-changes link.
+   facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes the dict
+   and lists the page in `output/files-to-polish.txt`. Editing
+   `_sources/<stem>.notes.md` or changing a `*.breaking.md` file flips the relevant
+   `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
+   non-breaking API diff is deliberately **not** folder-hashed — its change signal is
+   already carried by the PR set and the API-changes link.
 3. **The `format` field rolls out data-shape changes.** The content key detects data
    changes but not a schema/instruction change that leaves the facts identical. The
    `format` field is a single integer stamped into every data sidecar and compared as
@@ -1080,9 +1132,14 @@ Always the full, idempotent pass:
    genuinely changed pages, so the AI never rewrites an up-to-date page. After the AI
    writes each `_sources/<stem>.prose.json` and validates the page with
    `render-notes.py <data.json> <prose.json> [out.md]`, it runs `render-notes.py --all`
-   once to regenerate every page, every deterministic no-changes page, `TOC.yml`, and
-   `index.md` from committed JSON. When Prepare's patch is empty, the workflow skips
-   Polish and opens no PR (§2.3).
+   once to regenerate every SkiaSharp page, retire old HarfBuzz hub pages, `TOC.yml`,
+   and `index.md` from committed JSON. When Prepare's patch is empty, the workflow
+   skips Polish and opens no PR (§2.3).
+
+A ranged run (`--min-version` / `--max-version`) is scoped by SkiaSharp version core and
+therefore includes HarfBuzz automatically through the selected pages' `harfbuzz` blocks;
+there is no separate HarfBuzz range or skipped HarfBuzz family.
+
 
 ### 4.7 Manual additions & breaking-change summaries (companion files)
 
@@ -1094,18 +1151,19 @@ them into `prose.json`. Content is *referenced, never embedded*.
 
 #### The companion sources
 
-For a given hub page, `build-data.py` records whichever of these exist:
+For a given SkiaSharp release page, `build-data.py` records whichever of these exist:
 
 | Companion source | Path (page-relative) | Owner | Present when |
 |---|---|---|---|
 | **Manual additions** (§3.7) | `_sources/<stem>.notes.md` | maintainer (freeform md) | a human wrote one |
 | **API breaking diff** (§3.3) | `<line>/<pkg>/<assembly>.breaking.md` | Cake | **real breaking changes exist** (Cake deletes an empty one, §5.2) |
 
-The full API diff folder is already linked from the page (§4.4). What §4.7 adds is:
-**(a)** the maintainer-authored manual additions companion (§3.7); **(b)** teaching
-the Polish AI to open and summarize the manual notes and every breaking diff named
-by `data.json`; **(c)** hashing those companions into `data.json` (§4.6) so a
-companion-only edit re-polishes exactly that page.
+The full SkiaSharp API diff folder and the co-shipped HarfBuzzSharp API diff folder are
+already linked from the page (§4.4). What §4.7 adds is: **(a)** the maintainer-authored
+manual additions companion (§3.7); **(b)** teaching the Polish AI to open and summarize
+the manual notes and every breaking diff named by `data.json`; **(c)** hashing those
+companions into `data.json` (§4.6) so a companion-only edit re-polishes exactly that
+page.
 
 Because `.breaking.md` exists **only when real breaking changes exist** (§5.2), its
 mere presence in `breaking_candidates` is the signal that this line broke something,
@@ -1178,10 +1236,11 @@ folder-hashed (§4.6): its change signal is already carried by the PR set and th
   in `scripts/infra/shared/shared.cake`; add a package by adding it there) from
   nuget.org, prereleases included, diffed with `Mono.ApiTools.NuGetDiff`, `versions.json`,
   and — for the co-release map's in-flight entries (§3.6) — the **working-tree**
-  `SkiaSharp.HarfBuzz` → `HarfBuzzSharp` dependency of each in-flight SkiaSharp line, so an
-  in-flight HarfBuzz line is recorded even before it publishes (§4.5).
-- **Outputs:** the per-family API-diff trees defined in §3.3 / §3.4, and the §1.5
-  co-release map sidecar (§3.6) for `build-data.py`.
+  `SkiaSharp.HarfBuzz` → `HarfBuzzSharp` dependency of each in-flight SkiaSharp line, so
+  the next released SkiaSharp page can carry the right HarfBuzzSharp version (§4.5).
+- **Outputs:** the API-diff trees defined in §3.3 / §3.4, and the §1.5
+  co-release map sidecar under `releases/_sources/co-release-map.json` (§3.6) for
+  `build-data.py`.
 
 ### 5.2 Behavior
 
@@ -1189,12 +1248,12 @@ The historical target rebuilds the **complete** set authoritatively: it clears t
 generated API-diff files it owns first (§3.5) so anything that should no longer exist (a
 stale `*.breaking.md`, a package dropped from `TRACKED_NUGETS`, a baseline changed in
 `versions.json`) is pruned rather than left to drift. It removes only `# API diff:`-marked
-files (preserving any hand-authored extras) and never touches the human pages.
+files (preserving any hand-authored extras) and never touches the SkiaSharp human pages.
 
-It applies the §1 model **per family** (§1.5): collapse each family's feed into lines,
-emit exactly the lines §1.4 selects, and diff each emitted line against its baseline
-(§1.2/§1.3). A line's *representative* package is the newest stable if it shipped,
-otherwise the newest prerelease.
+It applies the §1 model **per API-diff package bucket** (§1.5): collapse each bucket's
+feed into lines, emit exactly the lines §1.4 selects, and diff each emitted line
+against its baseline (§1.2/§1.3). A line's *representative* package is the newest stable
+if it shipped, otherwise the newest prerelease.
 
 #### Deterministic reference resolution
 
@@ -1282,8 +1341,10 @@ equivalence.
 ## 6. Differences at a glance
 
 Everything in §1 — line collapsing, the previous-emitted-line baseline,
-`compare_to`/supersession overrides, per-family handling, and which lines emit — is
-**identical** across both engines. They differ only here:
+`compare_to`/supersession overrides, and which SkiaSharp lines emit — is shared by both
+engines. The API-diff engine additionally applies the same bucket rules to
+HarfBuzzSharp-versioned packages, whose release notes are folded into SkiaSharp pages.
+They differ only here:
 
 | Concern | Release notes | API diffs |
 |---|---|---|
@@ -1292,12 +1353,13 @@ Everything in §1 — line collapsing, the previous-emitted-line baseline,
 | Released + unreleased split | **yes** (two-file, §4.2) | no (one set per line) |
 | Per-preview buckets | **yes** (§4.3) | no |
 | AI post-processing | **yes** — writes prose JSON only; renderer owns Markdown (§4.4) | no |
-| HarfBuzz family | first-class hub pages under `harfbuzzsharp/` (§4.5) | first-class diff tree under `harfbuzzsharp/` (§3.4) |
+| HarfBuzzSharp | folded `## HarfBuzzSharp X.Y.Z` section on each released SkiaSharp page; no hub pages/TOC node (§4.5) | API-diff folders under `harfbuzzsharp/<hb-line>/` (§3.4) |
 
 The split exists because release notes are read by humans tracking "what's shipped vs
 what's coming", whereas an API diff is a mechanical record of a released
-package's surface. Both live in the docfx site under `releases/` (§3), so a release
-page links straight to its API diffs.
+package's surface. Both live in the docfx site under `releases/` (§3), so a SkiaSharp
+release page links straight to its SkiaSharp API diff and, when co-shipped, its
+HarfBuzzSharp API diff.
 
 ---
 
