@@ -26,6 +26,50 @@ plumbing, test infra), leave it out — the renderer already collapses that nois
 invisible unless it changed shipped behaviour, and for `mixed` judge from the
 title.
 
+## Running the full pipeline (prepare → write prose → render)
+
+Producing release notes is three steps. Two are scripts you run; the middle one is
+the writing this skill is about.
+
+```
+prepare.sh   →   (you write prose.json per page)   →   render.sh
+ (network)              (this skill)                     (offline)
+```
+
+1. **`.agents/skills/release-notes/scripts/prepare.sh`** — regenerates the API diffs
+   (Cake), the per-page `_sources/<version>.data.json` facts, and `_sources/index.json`,
+   and writes the list of pages needing prose to `output/files-to-polish.txt`.
+2. **You** read each listed page's `data.json` and write its `prose.json` (below).
+3. **`.agents/skills/release-notes/scripts/render.sh`** — renders every page from
+   `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It fails loudly on
+   invalid prose.
+
+Both scripts take the **same three flags** — `--force`, `--min-version`, `--max-version`
+— and nothing else. Choose them from what was asked:
+- "regenerate the release notes **for 4.151.0**" → `--min-version 4.151.0 --max-version 4.151.0`
+- "regenerate the release notes" (everything) → no flags
+- after changing the **api-diff tools or the page format** → add `--force` (rebuilds even
+  cached api diffs / unchanged pages)
+
+Everything is incremental: an unforced run skips work whose output already exists (a
+shipped version's api diff never changes), so a routine run is cheap — there is no
+"notes-only" mode to reach for.
+
+**Running locally** (needs `dotnet`, `python3`, `git`, `gh`):
+```bash
+# one version, end to end
+.agents/skills/release-notes/scripts/prepare.sh --min-version 4.151.0 --max-version 4.151.0
+#   … you write documentation/docfx/releases/_sources/4.151.0.prose.json …
+.agents/skills/release-notes/scripts/render.sh  --min-version 4.151.0 --max-version 4.151.0
+
+# everything
+.agents/skills/release-notes/scripts/prepare.sh
+.agents/skills/release-notes/scripts/render.sh
+```
+
+**In CI** a separate `prepare` job runs step 1 and the harness runs step 3 for you —
+your job there is only step 2 (write the prose for each page in `files-to-polish.txt`).
+
 ## How to work
 
 You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
@@ -54,9 +98,11 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
    `PROSE VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
    render — the `.md` written — is the bar.
 
-You never hand-edit the `.md`. Commit the `_sources/<version>.prose.json` and the
-rendered `.md` together (the `_sources/<version>.data.json` is already committed
-by the Prepare phase).
+You never hand-edit the `.md`. The per-page render above is just to validate your
+prose as you go; **`render.sh` does the authoritative final pass** — it re-renders
+every page and rebuilds `TOC.yml` + `index.md` from the committed JSON. Commit the
+`_sources/<version>.prose.json` and the rendered `.md` together (the
+`_sources/<version>.data.json` is already produced by the Prepare phase).
 
 ## The slots
 

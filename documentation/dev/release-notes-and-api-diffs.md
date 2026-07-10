@@ -28,11 +28,14 @@ produced by one self-contained skill (§2). A full feature comparison is in §6.
 > artifacts, the engines, the skills, and the cross-repo CI — start at
 > [docs-overview.md](docs-overview.md).
 
-Both are **agent/CI tooling, not human-facing CLIs.** They take no "fancy" toggles.
-They always regenerate the complete set and rely on being idempotent (unchanged
-outputs are skipped or rewritten identically). If you find yourself adding a flag
-"for convenience", stop — the correct behavior is to always do the full, correct
-thing.
+Both are **agent/CI tooling, not human-facing CLIs.** The public entrypoints keep
+a deliberately small, uniform interface: `--force`, `--min-version`, and
+`--max-version` for the shell orchestrators (§2.2), translated to Cake's
+`--force=true`, `--minVersion`, and `--maxVersion` where needed (§5.3). A normal
+unforced run is cheap because every deterministic engine is incremental; it skips
+work whose committed output already exists or whose data sidecar is unchanged. If
+you find yourself adding a mode flag "for convenience", stop — the correct
+behavior is to do the same full pipeline and let the engines skip safely.
 
 ---
 
@@ -68,7 +71,7 @@ thing.
 - **§5 — API-diff engine (`api-diff.cake`)**
   - §5.1 Inputs & outputs
   - §5.2 Behavior
-  - §5.3 The "current" CI variant
+  - §5.3 Incremental, scoped, and clearing behavior
   - §5.4 How it runs
 - **§6 — Differences at a glance**
 - **§7 — Editing rules**
@@ -321,11 +324,11 @@ scattered under `scripts/infra/docs/`:
 
 ```
 scripts/infra/docs/                (shared / API-diff engine)
-  api-diff.cake                API-diff engine (§5)
+  api-diff.cake                API-diff engine (§5) — single `docs-api-diff` target
   api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
                                #loaded by api-diff.cake AND docs.cake
   docs.cake                    mdoc-based docs/ XML generators (a different concern)
-  generate-api-diffs.sh        Path 1 runner: cake docs-api-diff-past
+  generate-api-diffs.sh        Path 1 runner: cake docs-api-diff
   generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
   versions.json                supersession + baseline config (§1); shared repo-wide
   docker/                      reproducible image + run.sh wrapper for every path
@@ -333,9 +336,9 @@ scripts/infra/docs/                (shared / API-diff engine)
 .agents/skills/release-notes/      (the release-notes engine + skill, all together)
   SKILL.md                     the AI's prose instructions (§4.4)
   scripts/
-    generate.sh                Prepare orchestrator: API diffs → build-data → build-index,
+    prepare.sh                 Prepare orchestrator: API diffs → build-data → build-index,
                                writes the Files-to-polish list (§2.2)
-    build-data.sh              Path 2 runner: python build-data.py
+    render.sh                  Polish-Finalize orchestrator: offline render-notes --all (§2.2)
     build-data.py              Prepare data engine (§4) — emits _sources/<version>.data.json,
                                owns shared git/version helpers and page-set discovery
     build-index.py             Prepare index-data engine (§4) — emits _sources/index.json
@@ -346,19 +349,19 @@ scripts/infra/docs/                (shared / API-diff engine)
     pr-authors.json            PR-author cache for build-data.py (§4)
 ```
 
-The release-notes scripts are split by what they **produce**: `build-*` scripts
-make committed JSON, while `render-notes.py` makes **all Markdown**. `generate.sh`
-owns no generation logic of its own — it delegates to the shared
-`scripts/infra/docs/generate-api-diffs.sh` (Path 1), then `build-data.sh` (Path 2),
-then `build-index.py` — so the skill, the update-release-notes workflow, the Docker
-wrapper, and a human running it by hand all execute the exact same Prepare phase.
-`render-notes.py` imports `build-data.py` with `importlib` for shared version
-parsing and page-set helpers (`version_key`, `minor_group`, `get_version_files`,
-`cadence_milestones`, and the `versions.json` path); module load is offline-safe,
-and all network data it needs arrives through `_sources/index.json`.
-`versions.json` stays under `scripts/infra/docs/` because it is shared config (the
-API-diff engine, security-audit, skia-sync and nuget-feed all read it), not
-release-notes-private.
+The release-notes scripts are split by phase and artifact. `prepare.sh` owns no
+generation logic of its own — it delegates, in order, to the shared
+`scripts/infra/docs/generate-api-diffs.sh` (Path 1), then to `build-data.py`, then
+to `build-index.py`. `render.sh` is the corresponding offline finalizer: it wraps
+`render-notes.py --all` under the same narrow flag surface so the skill, the
+update-release-notes workflow, the Docker wrapper, and a human running locally all
+execute the same phase commands. `render-notes.py` imports `build-data.py` with
+`importlib` for shared version parsing and page-set helpers (`version_key`,
+`minor_group`, `get_version_files`, `cadence_milestones`, and the `versions.json`
+path); module load is offline-safe, and all network data it needs arrives through
+`_sources/index.json`. `versions.json` stays under `scripts/infra/docs/` because it
+is shared config (the API-diff engine, security-audit, skia-sync and nuget-feed all
+read it), not release-notes-private.
 
 The general-purpose Cake machinery (`shared.cake`, `download.cake`) stays under
 `scripts/infra/shared/` and is `#load`ed by the engines. `api-diff-tools.cake` (the
@@ -372,14 +375,19 @@ generators in `docs.cake`), so it sits next to them in `scripts/infra/docs/`.
 A full regeneration always runs in **two phases** — the deterministic,
 network-capable **Prepare** phase first, the offline AI **Polish** phase last:
 
-**Prepare.** One wrapper script, `scripts/generate.sh`, runs the deterministic
-producers in a fixed order (forwarding any scope arguments to `build-data.py`). The
-skill and the workflow call that single script rather than the individual producers,
-so the run order lives in one place:
+**Prepare.** One wrapper script,
+`.agents/skills/release-notes/scripts/prepare.sh`, runs the deterministic
+producers in a fixed order. It accepts only `--force`, `--min-version`, and
+`--max-version` and forwards those flags to the engines that can use them: Cake
+receives `--force=true`, `--minVersion=X`, and `--maxVersion=Y`; `build-data.py`
+receives `--force`, `--min-version X`, and `--max-version Y`; `build-index.py` is
+repo-global and always runs unscoped. The skill and the workflow call this single
+script rather than the individual producers, so the run order and flag translation
+live in one place:
 
-1. **Cake (`api-diff.cake`)** regenerates the complete API-diff tree under
-   `releases/` (§3.3/§3.4) from the published feed, and writes the §1.5
-   **co-release map sidecar** to `releases/_sources/co-release-map.json` (§3.6).
+1. **Cake (`api-diff.cake`)** incrementally regenerates the required API-diff folders
+   under `releases/` (§3.3/§3.4) from the published feed, and updates the §1.5
+   **co-release map sidecar** at `releases/_sources/co-release-map.json` (§3.6).
    Deterministic, no AI.
 2. **`build-data.py`** regenerates each changed SkiaSharp page's deterministic facts
    into `_sources/<version>.data.json` (§3.2/§4.1), using git history, tags,
@@ -388,20 +396,22 @@ so the run order lives in one place:
    the page's `harfbuzz` block (§4.5). It also writes the machine-readable **Files to
    polish** list to `output/files-to-polish.txt` (or `--polish-list`).
 3. **`build-index.py`** writes the network-sourced aggregate data to
-   `releases/_sources/index.json` (§3.5/§4.1) — the live Chrome schedule for the
-   two milestones in flight, plus `live_unreleased`, the set of version cores whose
-   `-unreleased` page is still a live head (from the remote branch list). It writes
-   no Markdown and deletes nothing; the stale-page pruning it *informs* happens
-   offline in `render-notes.py --all` (§4.2).
+   `releases/_sources/index.json` (§3.5/§4.1) — the live Chrome schedule for the two
+   milestones in flight, plus `live_unreleased`, the set of version cores whose
+   `-unreleased` page is still a live head (from the remote branch list). It writes no
+   Markdown and deletes nothing; the stale-page pruning it *informs* happens offline
+   in `render-notes.py --all` (§4.2).
 
 All three producers run **verbose**: Cake and Python stream progress to the job log
 so a long download or a disk/timeout failure is visible as it happens. The
 machine-readable Files-to-polish list is therefore *not* on stdout; it is always a
 file the Polish phase reads (§2.3). The JSON files are timestamp-free and committed
-with the rendered pages.
+with the rendered pages. A normal unforced run is incremental: Cake skips lines whose
+API-diff folder already exists (§5.3), and `build-data.py` skips pages whose
+`data.json` dict is unchanged (§4.6).
 
 **Polish.** The AI (the skill) works only from already-produced files, with **no
-network** and no permission to re-run Cake, `generate.sh`, `build-data.py`, or
+network** and no permission to re-run Cake, `prepare.sh`, `build-data.py`, or
 `build-index.py`. For each path in `output/files-to-polish.txt`, it reads that
 page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), writes
@@ -411,13 +421,17 @@ page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
 never hand-edited.
 
-After every changed page validates, Polish runs `render-notes.py --all` **once**.
-That final offline pass prunes any now-stale `-unreleased` page (per the
-`live_unreleased` set `build-index.py` recorded in `index.json`), retires legacy
-standalone HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates every
+After every changed page validates, Polish runs the offline finalizer once — either
+`.agents/skills/release-notes/scripts/render.sh` or its core command,
+`render-notes.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
+a uniform interface; `--force` is a no-op because rendering is idempotent, and scoped
+runs first validate in-range pages individually before the authoritative `--all` pass.
+That final pass prunes any now-stale `-unreleased` page (per the `live_unreleased`
+set `build-index.py` recorded in `index.json`), retires legacy standalone
+HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates every
 SkiaSharp page from committed `_sources/*.data.json` + `_sources/*.prose.json` (with
-folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` from the
-finished page set and the committed Chrome schedule in `_sources/index.json`. So
+folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` from
+the finished page set and the committed Chrome schedule in `_sources/index.json`. So
 consumers see just two phases — **Prepare** (run one script) then **Polish** (write
 prose, render) — and never juggle the individual generators by hand.
 
@@ -443,10 +457,10 @@ daily run is undesirable (e.g. right after tagging). (Walking a `release/*` ref 
 §1.4.)
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
-(the `generate.sh` script — Cake, `build-data.py`, then `build-index.py`, §2.2) runs
-in its **own dedicated job** (`prepare`), separate from the agent job. It uses an
+(`prepare.sh` — Cake, `build-data.py`, then `build-index.py`, §2.2) runs in its
+**own dedicated job** (`prepare`), separate from the agent job. It uses an
 ordinary GitHub-Actions runner with the .NET SDK and full network, and — because the
-historical API diff downloads *every* published package from both version buckets — it owns
+feed-based API diff may download published packages from both version buckets — it owns
 a **free-disk-space step** and its **own `timeout-minutes`** so the heavy generation
 can't exhaust the agent runner's disk or clock. Giving Prepare its own machine is
 the whole point of the split: a download, disk, or timeout failure fails *Prepare*
@@ -642,11 +656,11 @@ paths and only ever clears its own:
 | `releases/_sources/<stem>.data.json` | `build-data.py` | with the owning SkiaSharp page (`build-data.py` empty deltas, `render-notes.py --all` stale -unreleased) |
 | `releases/_sources/<stem>.prose.json` | **Polish AI** | with the owning SkiaSharp page; otherwise never script-rewritten |
 | `releases/_sources/index.json` | `build-index.py` | `build-index.py` (rewritten each Prepare run) |
-| `releases/_sources/co-release-map.json` (§3.6) | Cake | Cake (rewritten each Prepare run) |
+| `releases/_sources/co-release-map.json` (§3.6) | Cake | Cake (merged/updated each Prepare run; a full forced run recomputes the whole map) |
 | `releases/TOC.yml`, `releases/index.md` | `render-notes.py --all` | `render-notes.py --all` (regenerated from the finished SkiaSharp page set) |
 | `releases/<line>/<package>/…` (SkiaSharp API diffs) | Cake | Cake (generated files only, §5.2) |
 | `releases/harfbuzzsharp/<hb-line>/…` (HarfBuzzSharp API diffs) | Cake | Cake (generated files only, §5.2) |
-| `releases/<line>/index.md`, `releases/harfbuzzsharp/<hb-line>/index.md` (per-line diff landings, §3.3/§3.4) | Cake | Cake (marker-managed; regenerated each run, §5.2) |
+| `releases/<line>/index.md`, `releases/harfbuzzsharp/<hb-line>/index.md` (per-line diff landings, §3.3/§3.4) | Cake | Cake (marker-managed; regenerated when that line is rebuilt, preserved when skipped, §5.2/§5.3) |
 | `releases/harfbuzzsharp/<hb-line>.md`, `releases/harfbuzzsharp/<hb-line>-unreleased.md`, `releases/harfbuzzsharp/_sources/*` | retired legacy HarfBuzz hub artifacts | `render-notes.py --all` deletes them; Cake-owned API-diff folders are kept |
 | `releases/_sources/<stem>.notes.md` (manual additions sidecar, §3.7) | **Maintainer** (hand-authored input) | **Never machine-cleared** — read (path+hash) by `build-data.py`, read (content) by the Polish AI; docfx-excluded, not rendered |
 
@@ -763,41 +777,57 @@ A `drift` verdict is an audit **finding**; the fix is always a manual edit of th
 the deterministic SkiaSharp→HarfBuzzSharp co-ship mapping across the engine boundary.
 It is **written by Cake** (which already reads package dependencies) and **read by
 `build-data.py`** (which folds the HarfBuzz facts into each released SkiaSharp page's
-`data.json`). It is a pure input sidecar: not rendered, not edited by the AI, and no
-longer inverted into a separate HarfBuzzSharp release-notes family.
+`data.json`). It is a pure input sidecar: not rendered, not edited by the AI, and not
+inverted into a separate HarfBuzzSharp release-notes family.
 
 #### Shape
 
-**One entry per emitted SkiaSharp line** (including the in-flight line Cake can see),
-each mapping that SkiaSharp line to the single HarfBuzzSharp line it ships:
+The current format is a plain JSON object: one property per SkiaSharp line, whose value
+is the single HarfBuzzSharp line it ships.
 
 ```json
-[
-  { "skia_line": "3.119.0", "hb_line": "8.3.0",  "hb_link": "harfbuzzsharp/8.3.0/index.md" },
-  { "skia_line": "4.148.0", "hb_line": "14.2.0", "hb_link": "harfbuzzsharp/14.2.0/index.md" }
-]
+{
+  "3.119.0": "8.3.0",
+  "4.148.0": "14.2.0"
+}
 ```
 
 #### Field meanings
 
-- **`hb_line` is authoritative.** It is the HarfBuzzSharp line at **full §1.1 granularity**
-  (never truncated to `Major.Minor.Patch`, so a 4-part stable like `8.3.1.5` is preserved).
-  `build-data.py` copies it to `data.harfbuzz.version`.
-- **`hb_link` is a convenience mirror**, equal to `harfbuzzsharp/<hb-line>/index.md`;
-  `build-data.py` copies it to `data.harfbuzz.api_diff_link`. It is never a second
-  source of truth and never names a human hub page.
+- **The object key is the SkiaSharp line** at §1.1 core granularity.
+- **The object value is the authoritative HarfBuzzSharp line** at full §1.1 granularity
+  (never truncated to `Major.Minor.Patch`, so a 4-part stable like `8.3.1.5` is
+  preserved). `build-data.py` copies it to `data.harfbuzz.version`.
+- **The API-diff link is derived, not stored.** `build-data.py` builds
+  `data.harfbuzz.api_diff_link` as `harfbuzzsharp/<hb-line>/index.md`, so the map
+  contains only the dependency fact and never a duplicate link string.
 - **Each SkiaSharp line maps to exactly one HarfBuzzSharp line** — its representative
   `SkiaSharp.HarfBuzz` package's (§5.2) `HarfBuzzSharp` dependency. An intermediate
   HarfBuzz bump within a single SkiaSharp line's previews is attributed to that line's
   final HarfBuzzSharp version; the map records no finer-grained history.
 
+#### Data source and merge behavior
+
+The source of truth stays in Cake: for published lines, Cake reads the
+`HarfBuzzSharp` dependency from each emitted `SkiaSharp.HarfBuzz` package's nuspec; for
+the in-flight unpublished line, it falls back to the working tree's `scripts/VERSIONS.txt`
+values so the next page can link the HarfBuzz API-diff folder before the package is on
+the feed.
+
+Cake **merges** the sidecar instead of overwriting it blindly. A scoped or incremental
+run only recomputes the lines it actually processed, so it loads the committed object,
+overlays the newly discovered entries, and preserves the rest. That is safe because a
+shipped `SkiaSharp.HarfBuzz` package's HarfBuzz dependency is immutable. A full forced
+run (`--force` with no version scope) processes the whole back-catalogue, so the merged
+result is effectively a full authoritative refresh.
+
 #### How `build-data.py` consumes it
 
-`build-data.py` reads the sidecar by `skia_line`. For a **released** SkiaSharp page, it
-adds a `harfbuzz` block containing the version, API-diff link, and the PR numbers in
-that same SkiaSharp git window that touched HarfBuzz-owned paths (§1.5/§4.5). For an
-`-unreleased` head page, it writes no `harfbuzz` block: the head has not co-shipped a
-HarfBuzzSharp version yet.
+`build-data.py` reads the sidecar by SkiaSharp line. For a **released** SkiaSharp page,
+it adds a `harfbuzz` block containing the version, derived API-diff link, and the PR
+numbers in that same SkiaSharp git window that touched HarfBuzz-owned paths
+(§1.5/§4.5). For an `-unreleased` head page, it writes no `harfbuzz` block: the head
+has not co-shipped a HarfBuzzSharp version yet.
 
 The sidecar is cross-engine; it is distinct from a page's own **data sidecar** (§4.3),
 the deterministic facts `build-data.py` writes for the renderer and the AI.
@@ -1103,20 +1133,22 @@ SkiaSharp pages still link them.
 
 ### 4.6 How it runs
 
-Always the full, idempotent pass:
+Always the same incremental Prepare + offline Polish sequence:
 
-1. **Prepare fetches refs and regenerates data.** `generate.sh` runs Cake API diffs,
-   then `build-data.py`, then `build-index.py` (§2.2). `build-data.py` fetches `main`
-   + every `release/*`, regenerates each SkiaSharp line's data JSON (§4.3), folds in
-   the HarfBuzz block for released pages (§4.5), and writes only pages whose **whole
-   `data.json` dict** changed. `build-index.py` writes timestamp-free
-   `_sources/index.json` (the Chrome schedule + the `live_unreleased` set that
-   `render-notes.py --all` prunes against, §4.2).
-2. **`data.json` is the change-detection key.** It has no timestamp, so an identical
-   run yields an identical dict and the page is skipped. Any change to the PR map,
-   diff range, preview buckets, contributor roster, supersession metadata, API-link
-   facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes the dict
-   and lists the page in `output/files-to-polish.txt`. Editing
+1. **Prepare fetches refs and regenerates deterministic inputs.** `prepare.sh` runs
+   Cake API diffs, then `build-data.py`, then `build-index.py` (§2.2). It accepts only
+   `--force`, `--min-version`, and `--max-version`; those flags are passed through to
+   Cake and `build-data.py`, while `build-index.py` always refreshes its repo-global
+   index data. `build-data.py` fetches `main` + every `release/*`, regenerates each
+   selected SkiaSharp line's data JSON (§4.3), folds in the HarfBuzz block for released
+   pages (§4.5), and writes only pages whose **whole `data.json` dict** changed.
+   `build-index.py` writes timestamp-free `_sources/index.json` (the Chrome schedule +
+   the `live_unreleased` set that `render-notes.py --all` prunes against, §4.2).
+2. **`data.json` is the release-notes change-detection key.** It has no timestamp, so
+   an identical run yields an identical dict and the page is skipped. Any change to the
+   PR map, diff range, preview buckets, contributor roster, supersession metadata,
+   API-link facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes
+   the dict and lists the page in `output/files-to-polish.txt`. Editing
    `_sources/<stem>.notes.md` or changing a `*.breaking.md` file flips the relevant
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
    non-breaking API diff is deliberately **not** folder-hashed — its change signal is
@@ -1125,20 +1157,19 @@ Always the full, idempotent pass:
    changes but not a schema/instruction change that leaves the facts identical. The
    `format` field is a single integer stamped into every data sidecar and compared as
    part of the dict. Bump `_DATA_JSON_FORMAT_VERSION` in `build-data.py` whenever the
-   data JSON shape or its Polish contract changes materially; one forced/full run
-   rewrites the pages to the new format, then the pipeline settles back to
-   idempotent.
+   data JSON shape or its Polish contract changes materially; a forced run rewrites the
+   pages to the new format, then the pipeline settles back to idempotent.
 4. **Polish writes prose and renders offline.** The Files-to-polish list names only
    genuinely changed pages, so the AI never rewrites an up-to-date page. After the AI
    writes each `_sources/<stem>.prose.json` and validates the page with
-   `render-notes.py <data.json> <prose.json> [out.md]`, it runs `render-notes.py --all`
-   once to regenerate every SkiaSharp page, retire old HarfBuzz hub pages, `TOC.yml`,
-   and `index.md` from committed JSON. When Prepare's patch is empty, the workflow
-   skips Polish and opens no PR (§2.3).
+   `render-notes.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
+   equivalent `render-notes.py --all`) once to regenerate every SkiaSharp page, retire
+   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. When Prepare's
+   patch is empty, the workflow skips Polish and opens no PR (§2.3).
 
-A ranged run (`--min-version` / `--max-version`) is scoped by SkiaSharp version core and
-therefore includes HarfBuzz automatically through the selected pages' `harfbuzz` blocks;
-there is no separate HarfBuzz range or skipped HarfBuzz family.
+A ranged run (`--min-version` / `--max-version`) is scoped by SkiaSharp version core
+and therefore includes HarfBuzz automatically through the selected pages' `harfbuzz`
+blocks; there is no separate HarfBuzz range or skipped HarfBuzz family.
 
 
 ### 4.7 Manual additions & breaking-change summaries (companion files)
@@ -1230,38 +1261,47 @@ folder-hashed (§4.6): its change signal is already carried by the PR set and th
 
 ## 5. API-diff engine (`api-diff.cake`)
 
+There is exactly one API-diff target: **`docs-api-diff`**. It is the committed
+release-notes/API-diff engine that reads the published NuGet feed and writes the
+`releases/<line>/` and `releases/harfbuzzsharp/<hb-line>/` trees. It is incremental
+and scoped; it is also the Cake step that `prepare.sh` runs before `build-data.py`.
+
+The former unpublished-package validation path was removed. The build/test pipeline no
+longer runs an API-diff stage, and `build.cake` exposes only this single target.
+
 ### 5.1 Inputs & outputs
 
 - **Inputs:** every published version of each package in **`TRACKED_NUGETS`** (defined
   in `scripts/infra/shared/shared.cake`; add a package by adding it there) from
-  nuget.org, prereleases included, diffed with `Mono.ApiTools.NuGetDiff`, `versions.json`,
-  and — for the co-release map's in-flight entries (§3.6) — the **working-tree**
-  `SkiaSharp.HarfBuzz` → `HarfBuzzSharp` dependency of each in-flight SkiaSharp line, so
-  the next released SkiaSharp page can carry the right HarfBuzzSharp version (§4.5).
-- **Outputs:** the API-diff trees defined in §3.3 / §3.4, and the §1.5
-  co-release map sidecar under `releases/_sources/co-release-map.json` (§3.6) for
-  `build-data.py`.
+  nuget.org, prereleases included, diffed with `Mono.ApiTools.NuGetDiff`;
+  `versions.json`; and — for the co-release map's in-flight entry (§3.6) — the
+  **working-tree** `scripts/VERSIONS.txt` SkiaSharp/HarfBuzzSharp versions, so the
+  next released SkiaSharp page can carry the right HarfBuzzSharp version (§4.5) before
+  that package is published.
+- **Outputs:** the API-diff trees defined in §3.3 / §3.4, per-line `index.md` landing
+  pages, transient log copies under `output/logs/api-diffs/`, and the §1.5 co-release
+  map sidecar under `releases/_sources/co-release-map.json` (§3.6) for `build-data.py`.
 
 ### 5.2 Behavior
 
-The historical target rebuilds the **complete** set authoritatively: it clears the
-generated API-diff files it owns first (§3.5) so anything that should no longer exist (a
-stale `*.breaking.md`, a package dropped from `TRACKED_NUGETS`, a baseline changed in
-`versions.json`) is pruned rather than left to drift. It removes only `# API diff:`-marked
-files (preserving any hand-authored extras) and never touches the SkiaSharp human pages.
+The target applies the §1 model **per API-diff package bucket** (§1.5): collapse each
+bucket's feed into lines, emit exactly the lines §1.4 selects, and diff each emitted
+line against its baseline (§1.2/§1.3). A line's *representative* package is the newest
+stable if it shipped, otherwise the newest prerelease.
 
-It applies the §1 model **per API-diff package bucket** (§1.5): collapse each bucket's
-feed into lines, emit exactly the lines §1.4 selects, and diff each emitted line
-against its baseline (§1.2/§1.3). A line's *representative* package is the newest stable
-if it shipped, otherwise the newest prerelease.
+For every line it actually rebuilds, the engine runs the standard two-pass diff:
+breaking-only first, then full/non-breaking, copying the resulting Markdown into the
+package-namespaced line folder (§3.3/§3.4). Empty breaking diffs are deleted; the
+per-line `index.md` is regenerated from the folder contents and marks assemblies with a
+`*.breaking.md` sibling as breaking.
 
 #### Deterministic reference resolution
 
 **The problem.** The comparer must resolve *every* referenced assembly: an unresolved
 reference makes `Mono.ApiTools` silently degrade type matching into spurious "New Type"
-dumps whose shape depends on what is installed on the build host, so the output stops being
-deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`) therefore
-adds every real dependency explicitly.
+dumps whose shape depends on what is installed on the build host, so the output stops
+being deterministic. `CreateNuGetDiffAsync` (`scripts/infra/docs/api-diff-tools.cake`)
+therefore adds every real dependency explicitly.
 
 **Third-party references** come from packages pinned in `scripts/VERSIONS.txt` via
 `AddDep`/`AddPackageDir` — covering the framework/reference packs, the GTK/GIR and Maui
@@ -1304,37 +1344,74 @@ cross-platform netstandard `SkiaSharp.Views.Forms` assembly is emitted as an api
 obsoleted per-platform builds are diffed only so the run completes, and their output is
 discarded.)
 
-### 5.3 The "current" CI variant
+### 5.3 Incremental, scoped, and clearing behavior
 
-Alongside the historical regeneration, a lighter **current** variant diffs the freshly
-built, *unpublished* CI packages against the feed during a release, as a build-pipeline
-validation gate. It shares the same baseline logic and the same shared diff machinery
-(§2.1) and lives in the same `api-diff.cake`, but it is invoked from the build/test
-pipeline, **not** from the §2.2 regeneration sequence, and writes only transient CI
-artifacts — never the committed `releases/` tree.
+`docs-api-diff` mirrors `build-data.py`'s operational controls. It accepts Cake
+arguments `--force`, `--minVersion`, and `--maxVersion`; `prepare.sh` translates its
+shell flags to those names.
+
+- **Default incremental run.** If a line's API-diff folder already has an `index.md`,
+  the target skips the diff work for that line. A shipped version's public API diff is
+  immutable, so the committed folder is a cache. Missing folders are computed.
+- **Scoped run.** `--minVersion` / `--maxVersion` restrict which line cores are
+  rebuilt, inclusive. Out-of-range lines are skipped as outputs but remain in the full
+  emit list for baseline resolution, so a selected line can still roll up past a
+  skipped/out-of-range predecessor correctly.
+- **Forced line rebuild.** `--force` rebuilds selected lines even when their folder
+  already exists.
+- **Full forced rebuild.** `--force` with no version scope is authoritative: it clears
+  all owned generated API-diff files up front (respecting the history floor) and
+  rebuilds the whole back-catalogue. This is the only way to force old committed API
+  diffs to regenerate after the diff tooling itself changes.
+- **Incremental/scoped clearing.** Any run that is not a full forced rebuild leaves
+  cached lines untouched. For each line it does rebuild, it clears that line's generated
+  files immediately before copying the new diff, so stale `*.breaking.md` files cannot
+  survive while unrelated cached lines remain intact.
+
+The target clears **only** generated API-diff files as defined in §3.5 — files whose
+first line starts with `# API diff:` and that are not retired `*.humanreadable.md` files.
+Human release pages, `TOC.yml`, root `index.md`, maintainer sidecars, and hand-authored
+files nested in old line folders are preserved.
+
+The co-release map uses the same incremental principle (§3.6): Cake loads the committed
+object, overlays the SkiaSharp→HarfBuzzSharp entries discovered during this run, and
+writes the merged object back. A scoped run therefore does not drop mappings for lines it
+did not process; a full forced run recomputes and overlays the whole catalogue.
 
 ### 5.4 How it runs
 
-`dotnet cake … --target=…` for `api-diff.cake`, as the Cake generator of the §2.2
-**Prepare** phase, which runs in the workflow's dedicated `prepare` job (§2.3). There is
-no AI polish on the diffs
-themselves — the generated diff *is* the artifact; the human pages merely link to it
-(§1.5/§4.4).
+`generate-api-diffs.sh` is the Path 1 entry script and invokes:
+
+```bash
+dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true [cake args...]
+```
+
+`--nugetDiffPrerelease=true` is required so preview/RC packages are available as
+representatives for active lines; emission is still collapsed to one folder per line
+inside the target. For the unified release-notes workflow, `prepare.sh` calls
+`generate-api-diffs.sh` first and forwards the shared flags as Cake arguments:
+
+```bash
+.agents/skills/release-notes/scripts/prepare.sh --force --min-version 4.148.0 --max-version 4.150.0
+# forwards to Cake as: --force=true --minVersion=4.148.0 --maxVersion=4.150.0
+```
+
+There is no AI polish on the diffs themselves — the generated diff *is* the artifact;
+the human pages merely link to it (§1.5/§4.4).
 
 #### Package cache — cache once, run many
 
-Every package the run needs (each
-representative + baseline body and their declared dependencies) is fetched once into
-`externals/package_cache` and reused on every subsequent run. `Mono.ApiTools.NuGetDiff`
-downloads a package's *declared nuspec dependencies* on demand during the compare, not
-during the initial extract, so there is no separate "fully offline" pre-warm step — the
-on-demand path is itself idempotent (a warm cache is a no-op; only genuinely new
-packages are downloaded). Because resolution is now deterministic (§5.2), a warm and a
-cold cache produce byte-identical output, so the cache never needs to be wiped to get a
-correct result — wiping only forces a slow re-download. The docs Docker image
-(`scripts/infra/docs/docker/`) bind-mounts the host cache for warm runs and a separate
-host-owned empty dir for an explicit `--cold` run when you want to re-prove that
-equivalence.
+Every package the run needs (each representative + baseline body and their declared
+dependencies) is fetched once into `externals/package_cache` and reused on every
+subsequent run. `Mono.ApiTools.NuGetDiff` downloads a package's *declared nuspec
+dependencies* on demand during the compare, not during the initial extract, so there is
+no separate "fully offline" pre-warm step — the on-demand path is itself idempotent (a
+warm cache is a no-op; only genuinely new packages are downloaded). Because resolution
+is now deterministic (§5.2), a warm and a cold cache produce byte-identical output, so
+the cache never needs to be wiped to get a correct result — wiping only forces a slow
+re-download. The docs Docker image (`scripts/infra/docs/docker/`) bind-mounts the host
+cache for warm runs and a separate host-owned empty dir for an explicit `--cold` run
+when you want to re-prove that equivalence.
 
 ---
 
@@ -1376,8 +1453,11 @@ HarfBuzzSharp API diff.
 
 ### 7.2 Behavioral invariants the code must uphold
 
-4. **No human toggles.** These are agent/CI tools. They always do the full, correct,
-   idempotent thing. Don't add convenience flags or per-item modes.
+4. **No mode toggles.** These are agent/CI tools with one uniform control surface
+   (`--force`, `--min-version`, `--max-version` on the shell orchestrators; Cake's
+   camel-case equivalents underneath). They always run the same Prepare/Polish
+   sequence and rely on incremental engines to skip safe work. Don't add convenience
+   modes or per-item switches.
 5. **`versions.json` is the only override surface** (§1.2). No new auto-detection
    magic.
 6. **Respect ownership (§3.5).** Each producer clears only the paths it owns;

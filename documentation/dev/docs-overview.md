@@ -91,20 +91,21 @@ has a single canonical script.
 | `api-diff.cake` | API-diff engine (artifact **4**) |
 | `api-diff-tools.cake` | shared NuGet-diff comparer + layout helpers, `#load`ed by both `api-diff.cake` and `docs.cake` |
 | `versions.json` | the **only** override surface — supersession + comparison baselines, honored identically by the Cake and Python engines |
-| `generate-api-diffs.sh` | **Path 1** runner → `cake docs-api-diff-past` |
+| `generate-api-diffs.sh` | **Path 1** runner → `cake docs-api-diff` (single incremental committed-diff target) |
 | `generate-api-docs.sh` | **Path 3** runner → `cake update-docs` (mdoc under mono) |
 | `docker/` | the local reproducibility image + `run.sh` wrapper |
-| *(in the `release-notes` skill)* `build-data.py` | **Path 2** release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts |
+| *(in the `release-notes` skill)* `prepare.sh` | Prepare orchestrator: API diffs → `build-data.py` → `build-index.py`; accepts `--force` / `--min-version` / `--max-version` |
+| *(in the skill)* `render.sh` | Polish-Finalize orchestrator: offline `render-notes.py --all` (same three flags for a uniform interface) |
+| *(in the skill)* `build-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
 | *(in the skill)* `build-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
 | *(in the skill)* `render-notes.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
-| *(in the skill)* `build-data.sh` / `generate.sh` | Path 2 runner / Prepare orchestrator |
 | *(in the skill)* `pr-authors.json` | PR-author cache for the release-notes engine |
 
 Each path's **entry script** is its single source of truth: a developer, the CI
 workflows, and the Docker wrapper all invoke the same script, so a command can
-never drift between local and CI. Paths 1 and 3 run from `generate-*.sh` under
-`scripts/infra/docs/`; Path 2 runs from the release-notes skill's own
-`scripts/generate.sh`. The shared, general-purpose Cake machinery (`shared.cake`,
+never drift between local and CI. Path 1 runs from `generate-api-diffs.sh`; Path 2
+runs from the release-notes skill's `prepare.sh` and `render.sh`; Path 3 runs from
+`generate-api-docs.sh`. The shared, general-purpose Cake machinery (`shared.cake`,
 `download.cake`) stays under `scripts/infra/shared/`.
 
 ### The three generation paths
@@ -112,7 +113,7 @@ never drift between local and CI. Paths 1 and 3 run from `generate-*.sh` under
 | Path | Produces | Entry script | Needs |
 |------|----------|--------------|-------|
 | **1 — API diffs** | artifact 4 | `generate-api-diffs.sh` | dotnet (+ NuGet feed) |
-| **2 — Release notes** | artifact 3 | `.agents/skills/release-notes/scripts/generate.sh` | dotnet, python3, **git history**, **gh** (PR authors) |
+| **2 — Release notes** | artifact 3 | `.agents/skills/release-notes/scripts/prepare.sh` + `render.sh` | dotnet, python3, **git history**, **gh** (PR authors); render is offline |
 | **3 — API reference (mdoc)** | artifact 2 | `generate-api-docs.sh` | dotnet, **mono** (to run `mdoc.exe`) |
 
 `mdoc.exe` is a .NET Framework executable. `docs.cake` invokes it under **mono** when
@@ -127,14 +128,15 @@ Three Copilot skills drive or assist these paths (`.agents/skills/`):
 
 | Skill | Owns | Phase it performs |
 |-------|------|-------------------|
-| **`release-notes`** | artifacts 3 + 4 | Runs **Prepare** (the deterministic engines, via `scripts/generate.sh`) then **Polish** (AI rewrites only the prose of the listed release-notes pages). See spec §2.2/§4.4. |
+| **`release-notes`** | artifacts 3 + 4 | Runs **Prepare** (the deterministic engines, via `scripts/prepare.sh`) then **Polish** and **Finalize** (AI rewrites only prose JSON, then `scripts/render.sh` renders offline). See spec §2.2/§4.4. |
 | **`api-docs`** | artifact 2 | Fills the `"To be added."` placeholders mdoc leaves in the XML with real prose, following the .NET doc guidelines. |
 | **`skia-analyst`** | analysis | Diffs versions / surfaces what changed and what's missing; used for release announcements and gap analysis, not for writing the committed artifacts. |
 
 The `release-notes` skill owns the whole Path 2 engine under its own
-`scripts/`: `scripts/generate.sh` is the Prepare orchestrator — it calls
+`scripts/`: `scripts/prepare.sh` is the Prepare orchestrator — it calls
 `generate-api-diffs.sh` (the Cake API diffs, still under `scripts/infra/docs/`)
-then the skill's own `build-data.py` and `build-index.py`. The API-diff and mdoc
+then the skill's own `build-data.py` and `build-index.py`; `scripts/render.sh` is
+the offline finalizer around `render-notes.py --all`. The API-diff and mdoc
 engines live under `scripts/infra/docs/`; the shared, general-purpose Cake
 machinery (`shared.cake`, `download.cake`) stays under `scripts/infra/shared/`.
 
@@ -175,13 +177,13 @@ Key points:
 
 ## Local generation & Docker
 
-Everything CI does can be reproduced locally by calling the **same**
-`generate-*.sh` scripts. The only host requirement beyond the .NET SDK is **mono**
-for Path 3, and **gh** for Path 2's PR-author lookup.
+Everything CI does can be reproduced locally by calling the **same** entry scripts.
+The only host requirement beyond the .NET SDK is **mono** for Path 3, and **gh** for
+Path 2's PR-author lookup.
 
 | Mode | What it is | When to use |
 |---|---|---|
-| **Native** | Install the deps yourself and call the `generate-*.sh` scripts (or the underlying Cake targets in [writing-docs.md](writing-docs.md)). | When you've installed the deps yourself. |
+| **Native** | Install the deps yourself and call the entry scripts (`generate-api-diffs.sh`, `prepare.sh`/`render.sh`, `generate-api-docs.sh`) or the underlying Cake targets in [writing-docs.md](writing-docs.md). | When you've installed the deps yourself. |
 | **Docker** (`scripts/infra/docs/docker/run.sh`) | A **local-only** convenience image that pre-installs dotnet + mono + python + gh and runs the same scripts against a bind-mounted checkout, so a local run reproduces what CI produces. | A one-command reproducible run without installing the deps yourself. |
 
 > **Docker is for local reproducibility only — CI does not use it.** The CI runners
