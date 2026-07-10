@@ -33,8 +33,9 @@ You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
 page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
 the inputs are `releases/_sources/<version>.data.json`,
 `releases/_sources/<version>.prose.json` (what you write), and an optional
-`releases/_sources/<version>.notes.md`. (HarfBuzz pages follow the same rule
-under `releases/harfbuzzsharp/`.) For **each** page:
+`releases/_sources/<version>.notes.md`. HarfBuzzSharp is not a separate page — it
+ships inside each SkiaSharp release, so it renders as a `## HarfBuzzSharp X.Y.Z`
+section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
 1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `previews` (each with its PR list),
@@ -142,6 +143,19 @@ only carried internal work, describe the milestone itself (e.g. "opened the line
 or "cut the release candidate") rather than forcing a product story.
 - Good: `"p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
 - Bad: leaving a preview key out (the renderer fails), or restating every PR.
+
+### `harfbuzz_summary` — one short paragraph, or `null`
+HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
+`## HarfBuzzSharp X.Y.Z` section on this page, not a separate page. `data.harfbuzz`
+gives the version and `prs` — the PRs in this release that touched the HarfBuzz
+binding (a subset of the page's PRs, so you have already written about most of them
+above). Summarise the HarfBuzz-facing story in 1-2 sentences; the renderer adds the
+heading, the ❤️ credit and the PR links.
+- Required only when `data.harfbuzz.prs` is non-empty. When it is empty the renderer
+  writes "No HarfBuzzSharp binding changes shipped…" itself — set `harfbuzz_summary`
+  to `null`. When `data.harfbuzz` is absent (e.g. an unreleased head), omit it.
+- Good: `"Adds variable-font shaping and an HBColor value type, and refreshes the bundled HarfBuzz to 8.3.0."`
+- Bad: re-listing every PR, or repeating the SkiaSharp highlights verbatim.
 
 ## Why this is short
 

@@ -239,7 +239,7 @@ def is_below_history_floor(version, family="skiasharp"):
 # Co-release map cache + path (spec §3.6). The map crosses from the API-diff engine
 # into this engine to emit the deterministic SkiaSharp-page -> HarfBuzz-folder link.
 _CO_RELEASE_MAP = None  # type: Optional[dict]
-CO_RELEASE_MAP_PATH = RELEASES_DIR / "co-release-map.json"
+CO_RELEASE_MAP_PATH = RELEASES_DIR / "_sources" / "co-release-map.json"
 
 
 def load_co_release_map():
@@ -267,46 +267,6 @@ def load_co_release_map():
                 mapping[line] = entry
     _CO_RELEASE_MAP = mapping
     return _CO_RELEASE_MAP
-
-
-def harfbuzz_lines_from_map():
-    # type: () -> list[dict]
-    """Invert the co-release map into the HarfBuzz family line set (spec §4.5).
-
-    The map records, per SkiaSharp line, the HarfBuzz line it co-ships (§3.6).
-    The HarfBuzz family is line-driven exactly as the SkiaSharp family is
-    branch-driven: grouping the SkiaSharp lines by their ``hb_line`` yields one
-    entry per HarfBuzz line — so the page set equals the line set, just like
-    SkiaSharp. Each entry carries:
-
-      * ``hb_line``        — the HarfBuzz line (full granularity); its page/folder key.
-      * ``skia_lines``     — every SkiaSharp line that co-ships it, ascending.
-      * ``canonical_skia`` — the EARLIEST (introducing) SkiaSharp line; the page is
-                             dated/back-linked by that release and its SkiaSharp
-                             range is the HarfBuzz git window (§1.5/§4.5).
-      * ``hb_link``        — the folder-index link recorded by the map (§3.6).
-
-    Ordered by ``hb_line`` ascending. Empty when the sidecar is absent — no map,
-    no HarfBuzz pages (the engine simply has nothing to emit for that family).
-    """
-    groups = {}  # type: dict[str, dict]
-    for skia_line, entry in load_co_release_map().items():
-        hb_line = entry.get("hb_line")
-        if not hb_line:
-            continue
-        g = groups.setdefault(hb_line, {
-            "hb_line": hb_line,
-            "skia_lines": [],
-            "hb_link": entry.get("hb_link"),
-        })
-        g["skia_lines"].append(skia_line)
-    result = []  # type: list[dict]
-    for hb_line in sorted(groups, key=version_key):
-        g = groups[hb_line]
-        g["skia_lines"].sort(key=version_key)
-        g["canonical_skia"] = g["skia_lines"][0]
-        result.append(g)
-    return result
 
 
 def _sha256_bytes(data):
@@ -760,7 +720,6 @@ def resolve_skia_links(prs):
                 pr["skiaPr"] = int(m.group(1))
                 break
     return prs
-
 
 
 # ── Branch diffing ──────────────────────────────────────────────────
@@ -1715,9 +1674,9 @@ def build_data_json(prs, metadata):
             api_links.append({"label": "SkiaSharp API diff",
                               "href": metadata["api_diff_link"]})
         hb = metadata.get("harfbuzz")
-        if hb and hb.get("hb_link"):
+        if hb and hb.get("api_diff_link"):
             api_links.append({"label": "HarfBuzzSharp API diff",
-                              "href": hb["hb_link"]})
+                              "href": hb["api_diff_link"]})
 
     tallies = {
         "product": sum(1 for p in prs if p.get("category") == "product"),
@@ -1732,6 +1691,7 @@ def build_data_json(prs, metadata):
         "status": status,
         "no_changes": bool(metadata.get("no_changes")),
         "banner": banner,
+        "harfbuzz": metadata.get("harfbuzz"),
         "supersedes": supersedes,
         "superseded_by": superseded_by,
         "api_links": api_links,
@@ -1823,33 +1783,6 @@ def get_version_files():
             stem = f.stem
             if stem.endswith("-unreleased"):
                 next_versions.append(stem[:-11])  # strip "-unreleased"
-            else:
-                versions.append(stem)
-    versions.sort(key=version_key, reverse=True)
-    next_versions.sort(key=version_key, reverse=True)
-    return versions, next_versions
-
-
-def get_harfbuzz_version_files():
-    # type: () -> tuple[list[str], list[str]]
-    """List HarfBuzz hub-page lines under releases/harfbuzzsharp/ (spec §3.4).
-
-    Returns ``(versions, next_versions)``: released ``<hb>.md`` lines and
-    in-flight ``<hb>-unreleased.md`` lines, newest-first. Ignores the per-line
-    API-diff subfolders and any generated index.md, so only the human hub pages
-    feed the TOC/index HarfBuzz section.
-    """
-    hb_dir = RELEASES_DIR / "harfbuzzsharp"
-    versions = []  # type: list[str]
-    next_versions = []  # type: list[str]
-    if hb_dir.is_dir():
-        for f in hb_dir.iterdir():
-            if (not f.is_file() or f.suffix != ".md" or f.name == "index.md"
-                    or f.name.endswith(".notes.md")):
-                continue
-            stem = f.stem
-            if stem.endswith("-unreleased"):
-                next_versions.append(stem[:-len("-unreleased")])
             else:
                 versions.append(stem)
     versions.sort(key=version_key, reverse=True)
@@ -2088,10 +2021,21 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     api_diff_link = None
     if not is_head and (RELEASES_DIR / version).is_dir():
         api_diff_link = "{}/index.md".format(version)
+    # HarfBuzzSharp ships INSIDE this SkiaSharp release (spec §1.5): fold its
+    # co-release info into this page's data.json so it renders as a "HarfBuzzSharp
+    # X.Y.Z" section here — there is no separate HarfBuzz family/page. The version
+    # + API-diff link come from the co-release map; the HarfBuzz-specific changes
+    # are the PRs in this same window that touched HarfBuzz paths (a subset of the
+    # page's PRs, so their details already live in the shared PR map).
     harfbuzz = None
     hb = load_co_release_map().get(version)
     if hb and hb.get("hb_line"):
-        harfbuzz = hb
+        hb_prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
+        harfbuzz = {
+            "version": hb["hb_line"],
+            "api_diff_link": hb.get("hb_link"),
+            "prs": [p["number"] for p in hb_prs if p.get("number")],
+        }
 
     # Companion files (spec §3.7/§4.7): the manual additions sidecar (keyed by the
     # page STEM) and the API breaking-diff (under the line's <version>/ folder).
@@ -2175,253 +2119,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     return str(output_path)
 
 
-def _skia_branch_for_line(skia_line, all_branches):
-    # type: (str, list[str]) -> Optional[str]
-    """Resolve a SkiaSharp line core to the branch that defines its diff range.
-
-    Prefers the canonical versioned branch (the SkiaSharp released page's
-    source). When the line is still in-flight — no versioned branch, it exists
-    only as a head — falls back to the head carrying it: ``main`` for the
-    upcoming version, else the servicing ``release/X.Y.x`` whose version matches.
-    Returns None when no branch defines the line. Used by the HarfBuzz family to
-    find the SkiaSharp range that introduced a HarfBuzz line (spec §4.5).
-    """
-    canonical = _canonical_branches_by_version(all_branches).get(skia_line)
-    if canonical:
-        return canonical
-    if skia_line == get_upcoming_version():
-        return "main"
-    for b in all_branches:
-        if not b.endswith(".x"):
-            continue
-        m = re.match(r"release/(\d+)\.(\d+)\.x$", b)
-        if not m:
-            continue
-        svc = (get_version_from_remote_branch(b)
-               or "{}.{}.0".format(m.group(1), m.group(2)))
-        if svc == skia_line:
-            return b
-    return None
-
-
-def _write_harfbuzz_page(hb, all_branches, force=False):
-    # type: (dict, list[str], bool) -> Tuple[Optional[str], Optional[str]]
-    """Generate one HarfBuzz family page from a co-release-map line group (§4.5).
-
-    Mirrors ``_write_page`` (the SkiaSharp path) — same diff/PR/milestone/format
-    machinery — differing only in line discovery (the inverted map), range
-    resolution (the canonical SkiaSharp release's range, filtered to HarfBuzz
-    files), and family metadata. All deterministic and script-owned.
-
-    Returns ``(polish_path, owned_filename)``:
-      * ``polish_path``    — the page to hand the AI, or None when skipped,
-                             written as a deterministic *No changes* page (no AI
-                             block), or pruned.
-      * ``owned_filename`` — the file this line owns this run (``<hb>.md`` or
-                             ``<hb>-unreleased.md``), or None when it owns none
-                             (lets the caller prune orphaned ``-unreleased`` pages).
-    """
-    hb_line = hb["hb_line"]
-    canonical_skia = hb["canonical_skia"]
-    # History floor (spec §1.4): a HarfBuzz line whose introducing SkiaSharp
-    # release is below the SkiaSharp floor — or which is itself below a HarfBuzz
-    # floor — is left as committed and not regenerated.
-    if (is_below_history_floor(canonical_skia, "skiasharp")
-            or is_below_history_floor(hb_line, "harfbuzzsharp")):
-        return None, None
-    hb_dir = RELEASES_DIR / "harfbuzzsharp"
-    # A HarfBuzz line is "published" (released) exactly when the API-diff
-    # engine emitted its diff folder; otherwise it is in-flight (spec §3.4/§4.5).
-    published = (hb_dir / hb_line).is_dir()
-
-    skia_branch = _skia_branch_for_line(canonical_skia, all_branches)
-    if not skia_branch:
-        log("  WARNING: no SkiaSharp branch for HarfBuzz {} (introducing line "
-              "{}); skipping".format(hb_line, canonical_skia), file=sys.stderr)
-        return None, None
-
-    try:
-        from_ref, to_ref, _ = determine_diff_range(skia_branch)
-    except (RuntimeError, subprocess.CalledProcessError) as e:
-        log("  WARNING: could not resolve range for HarfBuzz {} via {}: {}"
-              .format(hb_line, skia_branch, e), file=sys.stderr)
-        return None, None
-
-    from_display = _removeprefix(from_ref, "origin/")
-    to_display = _removeprefix(to_ref, "origin/")
-    if re.match(r"^[0-9a-f]{7,}$", from_display):
-        from_display = from_display[:12]
-
-    # Filter the SkiaSharp range down to HarfBuzz-owned commits (spec §1.5/§4.5).
-    prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
-
-    owned = ("{}.md".format(hb_line) if published
-             else "{}-unreleased.md".format(hb_line))
-    output_path = hb_dir / owned
-    api_diff_link = "{}/index.md".format(hb_line) if published else None
-
-    # The manual additions sidecar (spec §3.7), keyed by this page's STEM. When a
-    # maintainer has written one, it OVERRIDES both No-changes short-circuits
-    # below (§4.5): the hand-written content is exactly what needs surfacing, so
-    # the line gets a real polished page instead of a prune / deterministic page.
-    stem = owned[:-len(".md")]
-    notes_comp = load_notes_sidecar(stem, hb_dir)
-
-    # An in-flight HarfBuzz line earns a page ONLY when its introducing SkiaSharp
-    # head actually carries HarfBuzz changes (spec §4.5). An empty delta means the
-    # head merely rebuilds an already-released HarfBuzz — no page; prune a stale one.
-    if not published and not prs and not notes_comp:
-        if output_path.exists():
-            _prune_page_and_sources(output_path)
-            log("  Removed empty {} (nothing unreleased)".format(output_path))
-        return None, None
-
-    # Published line, no HarfBuzz-touching PRs -> deterministic *No changes* page
-    # (spec §4.5). No prose is needed, so the generator writes only a data.json
-    # flagged `no_changes` and the host renders the fixed page from it (never the
-    # agent). data.json is the change-detection key, so it stays idempotent.
-    if published and not prs and not notes_comp:
-        nc_meta = {
-            "branch": skia_branch,
-            "version": hb_line,
-            "status": "stable",
-            "family": "harfbuzzsharp",
-            "package": "HarfBuzzSharp",
-            "no_changes": True,
-            "ships_with": {"version": canonical_skia,
-                           "link": "../{}.md".format(canonical_skia)},
-        }
-        if api_diff_link:
-            nc_meta["api_diff_link"] = api_diff_link
-        nc_data = build_data_json([], nc_meta)
-        nc_path = _data_json_path(output_path)
-        if not force and _data_json_unchanged(nc_path, nc_data):
-            log("  Skipping {} (unchanged, no changes)".format(output_path))
-            return None, owned
-        nc_path.parent.mkdir(parents=True, exist_ok=True)
-        nc_path.write_text(json.dumps(nc_data, indent=2) + "\n")
-        log("  Wrote {} (no HarfBuzz changes)".format(nc_path))
-        return None, owned
-
-    status = "stable" if published else "unreleased"
-    superseded_by = resolve_superseded_by(hb_line, "harfbuzzsharp")
-    if superseded_by:
-        status = "preview"
-    supersedes = detect_supersedes(hb_line, "harfbuzzsharp")
-
-    metadata = {
-        "branch": skia_branch,
-        "version": hb_line,
-        "status": status,
-        "from": from_display,
-        "to": to_display,
-        "family": "harfbuzzsharp",
-        "package": "HarfBuzzSharp",
-        # HarfBuzz has no release date of its own — it is anchored to the
-        # canonical (introducing) SkiaSharp release (spec §1.5).
-        "ships_with": {"version": canonical_skia,
-                       "link": "../{}.md".format(canonical_skia)},
-    }
-    if api_diff_link:
-        metadata["api_diff_link"] = api_diff_link
-    if superseded_by:
-        metadata["superseded_by"] = superseded_by
-    if supersedes:
-        metadata["supersedes"] = supersedes
-
-    # Companion files (spec §3.7/§4.7), same as the SkiaSharp path: the manual
-    # additions sidecar (resolved above) plus the API breaking-diff under this
-    # HarfBuzz line's folder. Their hashes are folded into data.json.
-    breaking_comp = (load_breaking_companions(hb_line, hb_dir)
-                     if published else None)
-
-    resolve_pr_authors(prs)
-    resolve_skia_links(prs)
-
-    # Preview milestones are the SkiaSharp previews in the window where HarfBuzz
-    # work landed (spec §4.5): reuse the SkiaSharp machinery keyed on the
-    # canonical SkiaSharp line, then bucket the HarfBuzz-filtered PRs into them.
-    base_version = None
-    if from_display.startswith("release/"):
-        base_version = version_from_branch(from_display)
-    elif re.match(r"^\d+\.\d+\.\d+", from_display):
-        base_version = from_display
-    preview_milestones = collect_preview_milestones(canonical_skia, base_version)
-    if preview_milestones:
-        metadata["preview_milestones"] = preview_milestones
-        metadata["pr_buckets"] = bucket_prs_by_milestone(
-            prs, preview_milestones, from_ref)
-
-    companions = {}  # type: dict
-    if notes_comp:
-        companions["notes"] = notes_comp
-    if api_diff_link:
-        companions["apidiff"] = {"path": api_diff_link}
-    if breaking_comp:
-        companions["breaking"] = breaking_comp
-    if companions:
-        metadata["companions"] = companions
-
-    # data.json is the change-detection key; the generator never writes the .md
-    # (render-notes.py does, during Polish).
-    data = build_data_json(prs, metadata)
-    data_path = _data_json_path(output_path)
-    if not force and _data_json_unchanged(data_path, data):
-        log("  Skipping {} (unchanged)".format(output_path))
-        return None, owned
-
-    data_path.parent.mkdir(parents=True, exist_ok=True)
-    data_path.write_text(json.dumps(data, indent=2) + "\n")
-    log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    return str(output_path), owned
-
-
 # ── Main ─────────────────────────────────────────────────────────────
-
-
-def _process_harfbuzz_family(all_branches, force=False):
-    # type: (list[str], bool) -> Tuple[list[str], int, int]
-    """Generate the HarfBuzz peer-family pages (spec §4.5) and prune orphans.
-
-    Drives one page per HarfBuzz line discovered from the co-release map
-    (``harfbuzz_lines_from_map``), with the same machinery as the SkiaSharp
-    family. Returns ``(files_to_polish, processed, skipped)``. Released
-    ``<hb>.md`` pages are cumulative and never pruned (like SkiaSharp); orphaned
-    in-flight ``<hb>-unreleased.md`` pages — a line that has since shipped, or
-    whose introducing head moved on — are removed.
-    """
-    hb_groups = harfbuzz_lines_from_map()
-    if not hb_groups:
-        return [], 0, 0
-
-    hb_dir = RELEASES_DIR / "harfbuzzsharp"
-    files_to_polish = []  # type: list[str]
-    processed = 0
-    skipped = 0
-    valid_unreleased = set()  # type: set[str]
-
-    for hb in hb_groups:
-        log("\n--- Processing HarfBuzz: {} (ships with {}) ---".format(
-            hb["hb_line"], hb["canonical_skia"]))
-        path, owned = _write_harfbuzz_page(hb, all_branches, force=force)
-        if owned and owned.endswith("-unreleased.md"):
-            valid_unreleased.add(owned)
-        if path:
-            files_to_polish.append(path)
-            processed += 1
-        else:
-            skipped += 1
-
-    # Prune orphaned in-flight pages: any harfbuzzsharp/<x>-unreleased.md not
-    # owned by a current in-flight line (it shipped -> now <x>.md, or its head
-    # moved on). Released pages are cumulative and kept (spec §4.5).
-    if hb_dir.is_dir():
-        for f in sorted(hb_dir.glob("*-unreleased.md")):
-            if f.name not in valid_unreleased:
-                _prune_page_and_sources(f)
-                log("Removed stale {}".format(f))
-
-    return files_to_polish, processed, skipped
 
 
 def cmd_generate(force=False, polish_list_path=None,
@@ -2494,24 +2192,10 @@ def cmd_generate(force=False, polish_list_path=None,
         else:
             skipped_count += 1
 
-    # HarfBuzz peer family — same pipeline, line-driven from the co-release map
-    # (spec §4.5). Runs after the SkiaSharp pass so the canonical SkiaSharp pages
-    # its cross-links target already exist this run. Skipped entirely when a run
-    # is scoped to a SkiaSharp version subset via --min/--max-version
-    # (a scoped validation run wants only the SkiaSharp pages in range).
-    if min_core is not None or max_core is not None:
-        hb_polish, hb_processed, hb_skipped = [], 0, 0
-    else:
-        hb_polish, hb_processed, hb_skipped = _process_harfbuzz_family(
-            all_branches, force=force)
-    files_to_polish.extend(hb_polish)
-    processed_count += hb_processed
-    skipped_count += hb_skipped
-
-    # TOC.yml / index.md are NOT built here — they are aggregates of the final
-    # rendered pages, so build-index.py builds them as the last pipeline step
-    # after render-notes.py has written every <version>.md (this is why a
-    # brand-new version can't go missing from the TOC).
+    # HarfBuzzSharp is NOT a separate family: it ships inside its SkiaSharp release
+    # (spec §1.5), so each SkiaSharp page's data.json carries a `harfbuzz` block and
+    # renders a "HarfBuzzSharp X.Y.Z" section. There is no separate HarfBuzz pass,
+    # so a version-scoped run naturally covers HarfBuzz too.
 
     # Flag any manual notes sidecar whose hub page is missing (a maintainer
     # typo, spec §3.7).

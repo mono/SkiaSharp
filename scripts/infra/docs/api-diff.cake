@@ -510,7 +510,9 @@ string ReadHarfBuzzDependencyLine (string packageRoot)
 void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps)
 {
     EnsureDirectoryExists (RELEASES_PATH);
-    var sidecar = RELEASES_PATH.CombineWithFilePath ("co-release-map.json");
+    var sourcesDir = RELEASES_PATH.Combine ("_sources");
+    EnsureDirectoryExists (sourcesDir);
+    var sidecar = sourcesDir.CombineWithFilePath ("co-release-map.json");
 
     var entries = new JArray ();
     foreach (var kvp in skiaHarfBuzzDeps.OrderBy (k => k.Key)) {

@@ -52,7 +52,6 @@ RELEASES_DIR = _gen.RELEASES_DIR
 VERSIONS_JSON_PATH = _gen.VERSIONS_JSON_PATH
 _MONTH_ABBR = _gen._MONTH_ABBR
 get_version_files = _gen.get_version_files
-get_harfbuzz_version_files = _gen.get_harfbuzz_version_files
 cadence_milestones = _gen.cadence_milestones
 _data_json_path = _gen._data_json_path
 _prose_json_path = _gen._prose_json_path
@@ -247,6 +246,23 @@ def render(data, prose):
         for item in cat.get("bullets") or []:
             L.append("- **{}** — {}{}".format(item["lead"], item["detail"], credit(item.get("prs"), data)))
 
+    # HarfBuzzSharp ships inside this SkiaSharp release (spec §1.5), so its notes
+    # are a section here rather than a separate page. The version + API diff are in
+    # the banner; this section is the agent's summary of the HarfBuzz-specific
+    # changes (crediting the PRs that touched HarfBuzz), or the fixed no-changes
+    # line when the binding was only rebuilt.
+    hb = data.get("harfbuzz")
+    if hb and hb.get("version"):
+        L.append("")
+        L.append("## HarfBuzzSharp {}".format(hb["version"]))
+        L.append("")
+        hb_prs = hb.get("prs") or []
+        if hb_prs:
+            summary = (prose.get("harfbuzz_summary") or "").strip()
+            L.append(summary + credit(hb_prs, data))
+        else:
+            L.append(NO_CHANGES_BODY)
+
     if data.get("platform_support"):
         L.append("")
         L.append("## Platform Support")
@@ -373,6 +389,12 @@ def _finish_validate(errors, data, prose):
     if missing_prev:
         errors.append("every preview/RC needs a one-line summary; missing: "
                       + ", ".join(missing_prev))
+
+    hb = data.get("harfbuzz") or {}
+    if hb.get("prs") and not (prose.get("harfbuzz_summary") or "").strip():
+        errors.append(
+            "this release has HarfBuzz-specific changes, so prose.harfbuzz_summary is "
+            "required — summarise what changed in the HarfBuzzSharp binding (1-2 sentences).")
 
     return errors
 
@@ -948,6 +970,31 @@ def _prune_stale_unreleased(live):
     return pruned
 
 
+def _retire_harfbuzz_pages():
+    # type: () -> None
+    """Remove the standalone HarfBuzz hub pages (now folded into SkiaSharp pages).
+
+    HarfBuzzSharp release notes render as a "HarfBuzzSharp X.Y.Z" section inside each
+    SkiaSharp page (spec §1.5), so the old ``releases/harfbuzzsharp/<v>.md`` hub pages
+    and their ``_sources`` JSON are retired. The Cake-generated per-line API-diff
+    folders (``harfbuzzsharp/<v>/``) are KEPT — the SkiaSharp pages still link them.
+    """
+    hb_dir = RELEASES_DIR / "harfbuzzsharp"
+    if not hb_dir.is_dir():
+        return
+    for f in sorted(hb_dir.glob("*.md")):  # hub pages + family index.md (non-recursive)
+        f.unlink()
+    src = hb_dir / "_sources"
+    if src.is_dir():
+        for f in sorted(src.glob("*")):
+            if f.is_file():
+                f.unlink()
+        try:
+            src.rmdir()
+        except OSError:
+            pass
+
+
 def render_all():
     # type: () -> int
     """Regenerate EVERY page and the TOC/index from committed JSON (offline).
@@ -961,8 +1008,9 @@ def render_all():
     """
     index = load_index_json()
     _prune_stale_unreleased(set(index.get("live_unreleased") or []))
+    _retire_harfbuzz_pages()
 
-    src_dirs = [RELEASES_DIR / "_sources", RELEASES_DIR / "harfbuzzsharp" / "_sources"]
+    src_dirs = [RELEASES_DIR / "_sources"]
     rendered = 0
     invalid = []  # pages whose committed prose.json does not validate — a hard error
     for sd in src_dirs:
@@ -998,12 +1046,10 @@ def render_all():
     log("Rendered {} pages".format(rendered))
 
     versions, next_versions = get_version_files()
-    hb_versions, hb_next_versions = get_harfbuzz_version_files()
     schedule = index.get("chrome_schedule") or {}
-    (RELEASES_DIR / "TOC.yml").write_text(
-        generate_toc(versions, next_versions, hb_versions, hb_next_versions))
+    (RELEASES_DIR / "TOC.yml").write_text(generate_toc(versions, next_versions))
     (RELEASES_DIR / "index.md").write_text(
-        generate_index(versions, next_versions, hb_versions, hb_next_versions, schedule))
+        generate_index(versions, next_versions, schedule_by_ms=schedule))
     log("Wrote {} and {}".format(RELEASES_DIR / "TOC.yml", RELEASES_DIR / "index.md"))
     if invalid:
         log("PROSE VALIDATION FAILED for {} page(s); fix the prose.json and re-run "
