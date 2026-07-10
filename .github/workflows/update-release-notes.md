@@ -257,23 +257,18 @@ and **one** pull request ships everything.
 
 Before you (the agent) started, a **separate `prepare` job** ran the skill's
 **Prepare** phase on its own disk-managed runner — the single script
-`.agents/skills/release-notes/scripts/prepare.sh`, which in turn:
-
-1. ran **Cake** (`docs-api-diff`, incremental) to regenerate the API-diff tree and
-   `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
-2. ran **Python** to emit, for every changed version, a deterministic
-   `_sources/<version>.data.json` sidecar (the facts a page is rendered from,
-   via `build-data.py`) and write the **"Files to polish"** list, then wrote the
-   network-sourced `_sources/index.json` (the Chrome schedule the TOC/index
-   render needs) and pruned stale `-unreleased` pages (via `build-index.py`).
+`.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then the
+per-page `_sources/<version>.data.json` facts, then the network-sourced
+`_sources/index.json` and the **"Files to polish"** list). See the skill's "Running
+the full pipeline" section and `documentation/dev/release-notes-and-api-diffs.md` §2
+for exactly what it produces.
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
-the regenerated files (including every `_sources/<version>.data.json` and
-`_sources/index.json`) are on disk, and the list is at `output/files-to-polish.txt`.
-**Do not re-run `prepare.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`**
-— they already ran, and you have no network. Your job is to write the prose and
-render the pages (below), then commit and open the PR.
+the regenerated files (every `_sources/<version>.data.json` and `_sources/index.json`)
+are on disk, and the list is at `output/files-to-polish.txt`. **You have no network —
+do not re-run `prepare.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`.**
+Your job is to write the prose and render the pages (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something
 > (`prepare.outputs.has_changes`). A no-op run — where the deterministic
@@ -283,47 +278,30 @@ render the pages (below), then commit and open the PR.
 
 ## Your job: write the prose and render each page
 
-Use the **release-notes skill**
-([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md)).
-The Prepare phase already emitted, for each changed version, a deterministic
-`_sources/<version>.data.json` (the facts a page is built from). **You never
-hand-write a page.** For each page you write only prose, then `render-notes.py`
-assembles the page from `data.json` + your prose — so headings, tables, the
-banner, `@handles`, ❤️, and PR links cannot be dropped or malformed, because you
-never type them.
+Follow the **release-notes skill**
+([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
+for **how** to write each page's prose and render it — the prose slots, the six
+categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
+the per-page `render-notes.py` validation, and the "never hand-edit the page" rules all
+live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
+so you only ever write prose.
 
-Every input for a page `documentation/docfx/releases/<version>.md` lives in the
-`_sources/` folder beside it (`documentation/docfx/releases/_sources/<version>.*`).
+This run's **CI-specific deltas** on top of the skill:
 
-1. Read `output/files-to-polish.txt`. It lists the pages under
-   `documentation/docfx/releases/` that need **prose** this run (one repo-relative
-   `<version>.md` path per line). It may be **empty** — that means no page needs
-   prose, but there is still deterministic work to materialize (a rebuilt
-   no-changes HarfBuzz page, a refreshed API diff, or the TOC/index). Do **not**
-   exit early on an empty list; skip straight to step 3.
-2. For **each** listed `documentation/docfx/releases/<version>.md`:
-   1. Read its `documentation/docfx/releases/_sources/<version>.data.json`.
-   2. If `data.json`'s `breaking_candidates` point at companion files that exist
-      on disk (a `*.breaking.md` under the version's API-diff folder, or a
-      `_sources/<version>.notes.md` sidecar), read them for breaking-change material.
-   3. Write `documentation/docfx/releases/_sources/<version>.prose.json` — prose
-      only, per the skill and
-      `.agents/skills/release-notes/scripts/schema/prose.schema.json`.
-   4. Render the page to validate your prose:
-      `python3 .agents/skills/release-notes/scripts/render-notes.py documentation/docfx/releases/_sources/<version>.data.json documentation/docfx/releases/_sources/<version>.prose.json documentation/docfx/releases/<version>.md`
-      If it prints `PROSE VALIDATION FAILED`, read the errors, fix that slot, and
-      re-run until it writes the `.md` cleanly.
-   Never hand-edit the `.md`; never touch `TOC.yml`/`index.md`; never create,
-   rename, or delete pages.
-3. **Always** run the final render once — even when the polish list was empty — to
-   rebuild everything consistently from the committed JSON: every page, the
-   deterministic no-changes pages, and the `TOC.yml` + `index.md` aggregates:
+1. Your page list is `output/files-to-polish.txt` (one repo-relative
+   `documentation/docfx/releases/<version>.md` per line). It **may be empty** — that
+   means no page needs prose, but there is still deterministic work to materialize
+   (a rebuilt no-changes HarfBuzz section, a refreshed API diff, or the TOC/index), so
+   do **not** exit early; go straight to the final render.
+2. You have **no network**, and Prepare already ran — never re-run it (above).
+3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
+   running the renderer directly: `render-notes.py` per page to validate as you go
+   (per the skill), then **once** at the end
    `python3 .agents/skills/release-notes/scripts/render-notes.py --all`
-   This is offline (it reads `_sources/index.json` for the schedule) and fast. If it
-   exits non-zero (a page's prose is invalid), fix the reported prose and re-run.
+   to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
+   committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
-   tree is genuinely unchanged, then there was nothing to ship — make no commit and
-   exit; otherwise commit everything.
+   tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 
 ## How the PR is made
 

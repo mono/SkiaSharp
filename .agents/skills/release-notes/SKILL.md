@@ -74,7 +74,10 @@ tool allowlist permits `python3` for exactly this).
 ## How to work
 
 You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
-`documentation/docfx/releases/<version>.md` path per line). Every input for a
+`documentation/docfx/releases/<version>.md` path per line). The list **may be
+empty** — that just means no page needs new prose this run, but you must still run
+the final render (`render.sh`, or `render-notes.py --all` in CI) to materialize the
+deterministic pages and rebuild the TOC/index; don't exit early. Every input for a
 page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
 the inputs are `releases/_sources/<version>.data.json`,
 `releases/_sources/<version>.prose.json` (what you write), and an optional
@@ -99,7 +102,9 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
    `PROSE VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
    render — the `.md` written — is the bar.
 
-You never hand-edit the `.md`. The per-page render above is just to validate your
+You never hand-edit the `.md`, `TOC.yml`, or `index.md`, and you never create,
+rename, or delete pages — `render-notes.py --all` (which `render.sh` runs) owns page
+creation and pruning. The per-page render above is just to validate your
 prose as you go; **`render.sh` does the authoritative final pass** — it re-renders
 every page and rebuilds `TOC.yml` + `index.md` from the committed JSON. Commit the
 `_sources/<version>.prose.json` and the rendered `.md` together (the
