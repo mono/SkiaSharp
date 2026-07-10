@@ -149,8 +149,8 @@ case "$cmd" in
         ensure_image
         docker_run_args
         # The release-notes Prepare phase (prepare.sh): API diffs (Cake, incremental —
-        # skips lines whose folder already exists) THEN build-data.py (facts) THEN
-        # build-index.py (index.json). Pass --force/--min-version/--max-version through.
+        # skips lines whose folder already exists) THEN release-notes-data.py (facts) THEN
+        # release-notes-index.py (index.json). Pass --force/--min-version/--max-version through.
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
             .agents/skills/release-notes/scripts/prepare.sh "$@"
         ;;

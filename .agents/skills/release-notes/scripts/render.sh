@@ -10,7 +10,7 @@
 # It fails loudly (non-zero) if any committed prose.json is invalid, so a bad page can
 # never ship.
 #
-# This is just render-notes.py --all under one banner — the single command the AI (and
+# This is just release-notes-render.py --all under one banner — the single command the AI (and
 # a human) run to finalize. The three flags are accepted for a uniform interface with
 # prepare.sh; --min-version/--max-version additionally render those pages individually
 # first (targeted validation output), and --force is a no-op (the render is idempotent —
@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-RENDER_PY="$SCRIPT_DIR/render-notes.py"
+RENDER_PY="$REPO_ROOT/scripts/infra/docs/release-notes-render.py"
 RELEASES_DIR="documentation/docfx/releases"
 
 MIN=""

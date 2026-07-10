@@ -10,7 +10,7 @@ spec stale.
 This script collects the per-page FACTS and writes them as JSON. It decides every
 filename, diff range, and released-vs-unreleased split, but it does NOT own the
 page's Markdown: it emits ``_sources/<version>.data.json`` and never writes a
-``.md``. ``render-notes.py`` turns data.json + the agent's prose.json into the page;
+``.md``. ``release-notes-render.py`` turns data.json + the agent's prose.json into the page;
 the AI only writes prose — it never creates, names, or deletes pages, and never
 computes diff ranges. See "Division of responsibility" below.
 
@@ -20,7 +20,7 @@ SCRIPT (here): decides every filename, diff range, released-vs-unreleased split,
 which previews roll up, supersession banners, and the facts each page is built
 from. All of this is deterministic and lives in code (see the page model below +
 the docstrings on _page_filename, determine_diff_range, and the live-head set that
-build-index.py records for render-notes.py to prune against).
+release-notes-index.py records for release-notes-render.py to prune against).
 
 AI / SKILL.md: reads each file in the final "Files to polish:" list, reads that
 page's ``_sources/<version>.data.json``, and writes ``_sources/<version>.prose.json``
@@ -70,14 +70,14 @@ there is no separate flat list to drift. Pages with no previews stay a single fl
 
 Commands:
     # Regenerate every branch (main + all release/*); skip unchanged files
-    python3 build-data.py
+    python3 release-notes-data.py
 
     # Rewrite every page, even unchanged ones (after a format/skill change)
-    python3 build-data.py --force
+    python3 release-notes-data.py --force
 
     # Bound to a version range — or a single version when min == max
-    python3 build-data.py --min-version 4.147.0 --max-version 4.151.0
-    python3 build-data.py --min-version 4.148.0 --max-version 4.148.0
+    python3 release-notes-data.py --min-version 4.147.0 --max-version 4.151.0
+    python3 release-notes-data.py --min-version 4.148.0 --max-version 4.148.0
 
 The default (no scope flags) iterates every branch and emits each changed
 version's data.json + page, writing only files whose PR count or diff range has
@@ -827,7 +827,7 @@ def version_from_branch(branch):
 #
 # WHY THIS EXISTS (regression R3):
 # The original hand-authored pages (PR #3763) ended with a list of per-preview
-# sections that render-notes.py now emits, e.g.:
+# sections that release-notes-render.py now emits, e.g.:
 #
 #     ## Preview 3 (February 5, 2026)
 #     [Full Changelog](.../compare/v3.119.2-preview.2.3...v3.119.2-preview.3.1)
@@ -912,7 +912,7 @@ def collect_preview_milestones(page_version, base_version):
 
     Each milestone carries a human label ("Preview 3"), the tag's commit date and
     a compare link — chained to the previous milestone, or to the diff base for
-    the earliest one — matching the trailing ``## Preview N (date)`` sections render-notes.py emits. Tags are deduplicated to one entry per (core, stage, number),
+    the earliest one — matching the trailing ``## Preview N (date)`` sections release-notes-render.py emits. Tags are deduplicated to one entry per (core, stage, number),
     keeping the latest build, so re-tagged builds (preview.3.1, preview.3.2)
     collapse to a single milestone.
 
@@ -1512,7 +1512,7 @@ def _release_date_display(version):
 
 
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
-# (data.json + prose.json + render-notes.py) keys change-detection on the whole
+# (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
 _DATA_JSON_FORMAT_VERSION = 3
 
@@ -1558,7 +1558,7 @@ def build_data_json(prs, metadata):
     This is the machine-owned half of the split introduced to stop the polish
     agent owning page structure: everything here is fact (PRs, tags, roster,
     previews, banner date, links, breaking sources). The agent reads it and
-    writes only prose (`prose.json`); ``render-notes.py`` assembles the page.
+    writes only prose (`prose.json`); ``release-notes-render.py`` assembles the page.
 
     Reuses the exact helpers the data.json builder uses (``_pr_category`` tags,
     ``_contributor_roster``, ``bucket_prs_by_milestone``, ``_release_date_display``)
@@ -1939,8 +1939,8 @@ def _page_filename(branch, version):
 
     The two coexist for an in-flight version (e.g. 4.150.0.md from
     release/4.150.0-preview.1 AND 4.150.0-unreleased.md from main). They never
-    collide (distinct filenames); the stale-head prune (build-index.py records the
-    live-head set, render-notes.py --all deletes the rest) only removes an
+    collide (distinct filenames); the stale-head prune (release-notes-index.py records the
+    live-head set, release-notes-render.py --all deletes the rest) only removes an
     unreleased page once its line advances to a higher version.
     """
     if branch == "main" or branch.endswith(".x"):
@@ -1976,7 +1976,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     Resolves the diff range, status and supersession links, then writes the page's
     ``_sources/<stem>.data.json`` facts unless the committed data.json already
     encodes an identical dict (idempotent — data.json is the change key, §4.6). It
-    NEVER writes the ``.md`` (render-notes.py does). Returns the page path (added to
+    NEVER writes the ``.md`` (release-notes-render.py does). Returns the page path (added to
     the Files-to-polish list), or None when the page was skipped (unchanged), pruned
     (empty unreleased delta), or the diff range could not be determined.
 
@@ -2137,7 +2137,7 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # Build the deterministic facts and compare to the committed data.json — that
     # IS the change-detection key (§4.6). data.json carries no timestamp, so an
     # identical run produces a byte-identical dict and the page is skipped. The
-    # generator NEVER writes the .md — render-notes.py produces it from
+    # generator NEVER writes the .md — release-notes-render.py produces it from
     # data.json + prose.json during Polish.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)

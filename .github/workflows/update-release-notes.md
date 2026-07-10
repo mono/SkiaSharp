@@ -44,7 +44,7 @@ on:
         default: ""
         type: string
       force:
-        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + build-data.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
+        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + release-notes-data.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
         required: false
         default: false
         type: boolean
@@ -139,7 +139,7 @@ jobs:
         run: |
           set -euo pipefail
           # Single entry point: prepare.sh runs the API diffs (Cake) then the release-
-          # notes data (build-data.py) then the index (build-index.py), all VERBOSE.
+          # notes data (release-notes-data.py) then the index (release-notes-index.py), all VERBOSE.
           # Every engine is incremental — an unforced run skips work whose output is
           # already current (a shipped api diff never changes), so a daily run is cheap
           # without any "notes-only" flag. A dispatch may bound to a version RANGE
@@ -216,9 +216,9 @@ pre-agent-steps:
       fi
 tools:
   # The agent reads the restored _sources/<version>.data.json sidecars, writes
-  # _sources/<version>.prose.json, and runs render-notes.py (pure stdlib, no
+  # _sources/<version>.prose.json, and runs release-notes-render.py (pure stdlib, no
   # network) to render each page and then `--all` to rebuild the TOC/index, then
-  # commits and opens the PR. python3 is allowed ONLY for render-notes.py — it must NOT
+  # commits and opens the PR. python3 is allowed ONLY for release-notes-render.py — it must NOT
   # re-run the heavy generators (they already ran in the prepare job). Keep an
   # explicit allowlist: it is the only thing that stops the agent shelling out to
   # anything else. Dropping the bash block entirely makes gh-aw compile to
@@ -267,7 +267,7 @@ The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files (every `_sources/<version>.data.json` and `_sources/index.json`)
 are on disk, and the list is at `output/files-to-polish.txt`. **You have no network —
-do not re-run `prepare.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`.**
+do not re-run `prepare.sh`, `dotnet cake`, `release-notes-data.py`, or `release-notes-index.py`.**
 Your job is to write the prose and render the pages (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something
@@ -282,7 +282,7 @@ Follow the **release-notes skill**
 ([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
 for **how** to write each page's prose and render it — the prose slots, the six
 categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
-the per-page `render-notes.py` validation, and the "never hand-edit the page" rules all
+the per-page `release-notes-render.py` validation, and the "never hand-edit the page" rules all
 live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
 so you only ever write prose.
 
@@ -295,9 +295,9 @@ This run's **CI-specific deltas** on top of the skill:
    do **not** exit early; go straight to the final render.
 2. You have **no network**, and Prepare already ran — never re-run it (above).
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
-   running the renderer directly: `render-notes.py` per page to validate as you go
+   running the renderer directly: `release-notes-render.py` per page to validate as you go
    (per the skill), then **once** at the end
-   `python3 .agents/skills/release-notes/scripts/render-notes.py --all`
+   `python3 scripts/infra/docs/release-notes-render.py --all`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working

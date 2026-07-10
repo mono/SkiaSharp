@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 """Gather the network-sourced index data into _sources/index.json.
 
-    build-index.py   ->  documentation/docfx/releases/_sources/index.json
+    release-notes-index.py   ->  documentation/docfx/releases/_sources/index.json
 
 The release-notes pipeline is three scripts, split by what they PRODUCE:
 
-    build-data.py   ->  _sources/<version>.data.json          (per-page facts)
-    build-index.py  ->  _sources/index.json                   (index data, THIS)
-    render-notes.py ->  <version>.md + TOC.yml + index.md     (all Markdown)
+    release-notes-data.py   ->  _sources/<version>.data.json          (per-page facts)
+    release-notes-index.py  ->  _sources/index.json                   (index data, THIS)
+    release-notes-render.py ->  <version>.md + TOC.yml + index.md     (all Markdown)
 
-TOC.yml and index.md are AGGREGATES that render-notes.py builds from the committed
+TOC.yml and index.md are AGGREGATES that release-notes-render.py builds from the committed
 JSON, entirely offline. The one thing that aggregate needs but cannot get without
 a network — the live Chrome release schedule for the two milestones in flight (the
 release-cadence timeline) — is fetched HERE, in the network-capable Prepare phase,
@@ -17,11 +17,11 @@ and committed as _sources/index.json so the render stays offline and re-runnable
 
 This script does the two things that need a network: it enumerates the remote
 release branches to record which ``-unreleased`` pages are still live heads (the
-``live_unreleased`` set that render-notes.py ``--all`` later uses to prune stale
+``live_unreleased`` set that release-notes-render.py ``--all`` later uses to prune stale
 ones — the pruning itself is done there, offline), and it fetches the Chrome
 schedule. It writes NO Markdown.
 
-It reuses build-data.py's shared low-level helpers so there is one source of truth
+It reuses release-notes-data.py's shared low-level helpers so there is one source of truth
 for git/version parsing.
 """
 
@@ -34,8 +34,8 @@ import sys
 import urllib.request
 from pathlib import Path
 
-# ── reuse build-data.py's shared low-level helpers (one source of truth) ─────
-_GEN = Path(__file__).with_name("build-data.py")
+# ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
+_GEN = Path(__file__).with_name("release-notes-data.py")
 _spec = importlib.util.spec_from_file_location("_rn_build_data", str(_GEN))
 _gen = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_gen)
@@ -57,14 +57,14 @@ def live_unreleased_versions():
     line is in-flight only while it is the version of an active HEAD — either
     ``main`` (the upcoming version) or a servicing ``release/X.Y.x`` branch.
     Determining that needs the remote branch list, so it is computed HERE, in the
-    network-capable Prepare phase, and recorded in index.json. render-notes.py
+    network-capable Prepare phase, and recorded in index.json. release-notes-render.py
     (offline) then deletes any ``-unreleased`` page whose version is not in this
     set — e.g. once the head advances 4.148 → 4.150 and no ``release/4.148.x``
     servicing branch exists, ``4.148.0-unreleased.md`` is stale and removed; if
     that servicing branch DOES exist the page is kept, because 4.148 is still a
     live (serviced) head. This script writes NO Markdown and deletes nothing.
 
-    An empty set (no release branches enumerable) means "unknown" — render-notes.py
+    An empty set (no release branches enumerable) means "unknown" — release-notes-render.py
     treats that as "prune nothing" to avoid clobbering on a degenerate checkout.
     """
     all_branches = list_remote_release_branches()
@@ -138,14 +138,14 @@ def _index_json_path():
 
 def build_index_json():
     # type: () -> dict
-    """The network-sourced index data render-notes.py needs, offline.
+    """The network-sourced index data release-notes-render.py needs, offline.
 
     Two things that need a network and that the offline render cannot recompute:
 
       * ``chrome_schedule`` — the live Chrome schedule for the two milestones in
         flight, for the release-cadence timeline in index.md.
       * ``live_unreleased`` — the version cores whose ``-unreleased`` page is still
-        a live head (from the remote branch list). render-notes.py deletes any
+        a live head (from the remote branch list). release-notes-render.py deletes any
         ``-unreleased`` page not in this set; build-index writes NO Markdown and
         deletes nothing itself.
 

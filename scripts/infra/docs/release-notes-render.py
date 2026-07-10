@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Render a release-notes page from deterministic data + agent prose.
 
-    render-notes.py <data.json> <prose.json> [out.md]   # normal page
-    render-notes.py --all                                # regenerate every page + TOC.yml + index.md
+    release-notes-render.py <data.json> <prose.json> [out.md]   # normal page
+    release-notes-render.py --all                                # regenerate every page + TOC.yml + index.md
 
-`data.json`  — facts emitted by build-data.py (PRs, roster, banner
+`data.json`  — facts emitted by release-notes-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `prose.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).
@@ -30,13 +30,13 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-# ── reuse build-data.py's shared low-level helpers (one source of truth) ─────
-# render-notes.py owns ALL Markdown: the per-page bodies AND the TOC.yml/index.md
+# ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
+# release-notes-render.py owns ALL Markdown: the per-page bodies AND the TOC.yml/index.md
 # aggregates. Those aggregates need version parsing, the page-set discovery, and
-# the support config — all of which live in build-data.py. Importing it is
+# the support config — all of which live in release-notes-data.py. Importing it is
 # offline-safe (module load does no network); the network-sourced Chrome schedule
-# arrives via _sources/index.json, which build-index.py wrote in Prepare.
-_GEN = Path(__file__).with_name("build-data.py")
+# arrives via _sources/index.json, which release-notes-index.py wrote in Prepare.
+_GEN = Path(__file__).with_name("release-notes-data.py")
 _spec = importlib.util.spec_from_file_location("_rn_build_data", str(_GEN))
 _gen = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_gen)
@@ -787,9 +787,9 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     # type: (int, int, str, str, dict) -> list[str]
     """Schedule-timeline table for the release-cadence section (offline).
 
-    The two Chrome schedules were fetched by build-index.py in the Prepare phase
+    The two Chrome schedules were fetched by release-notes-index.py in the Prepare phase
     and committed in _sources/index.json, so this runs with no network. A missing
-    schedule is a hard error — re-run build-index.py to refresh index.json.
+    schedule is a hard error — re-run release-notes-index.py to refresh index.json.
     """
     phases = [
         ("Beta Promotion", "beta", ".0-preview.1"),
@@ -803,7 +803,7 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     if not cur_sched or not next_sched:
         raise RuntimeError(
             "index.json is missing the Chrome schedule for m{} or m{} - re-run "
-            "build-index.py (the network Prepare step) to refresh "
+            "release-notes-index.py (the network Prepare step) to refresh "
             "_sources/index.json.".format(cur_ms, next_ms))
     events = []  # type: list[tuple[str, str, str]]
     for ms_num, base, sched in (

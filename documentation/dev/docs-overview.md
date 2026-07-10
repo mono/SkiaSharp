@@ -33,7 +33,7 @@ feel sprawling — this table is the whole story on one screen:
 
 | # | Artifact | What it is | Source of truth | Engine |
 |---|----------|------------|-----------------|--------|
-| 1 | **Conceptual docs** | Hand-written guides & tutorials on the docs site | `documentation/conceptual/` (this repo) | docfx ([site.md](site.md)) |
+| 1 | **Conceptual docs** | Hand-written guides & tutorials on the docs site | `documentation/docfx/guides/` (this repo) | docfx ([site.md](site.md)) |
 | 2 | **API reference docs** | Per-type/per-member XML reference (→ learn.microsoft.com) | `docs/SkiaSharpAPI/` (the **docs submodule**) | `docs.cake` (mdoc) |
 | 3 | **Release notes** | Human "what's new" pages, AI-polished | `documentation/docfx/releases/` (this repo) | `release-notes` skill (`prepare.sh` → `render.sh`) |
 | 4 | **API diffs** | Machine-generated public-API diffs, no AI | `documentation/docfx/releases/` (this repo) | `api-diff.cake` |
@@ -51,7 +51,7 @@ concern (mdoc), but it shares the same NuGet-diff plumbing
 ```mermaid
 flowchart LR
   subgraph A["mono/SkiaSharp (this repo)"]
-    conceptual["documentation/conceptual/ — concept docs"]
+    conceptual["documentation/docfx/guides/ — concept docs"]
     releases["documentation/docfx/releases/ — release notes + API diffs"]
     engines["scripts/infra/docs/ — the engines"]
     submodule["docs/ (git submodule)"]
@@ -79,11 +79,11 @@ path is inherently **cross-repo** — see the automation section below.
 
 ## The engines (`scripts/infra/docs/`)
 
-All generation code lives in two places: the **API-diff + mdoc engines** under
-`scripts/infra/docs/` (shared by local runs, CI, and the Docker image), and the
-**release-notes engine**, which lives inside the `release-notes` skill at
-`.agents/skills/release-notes/scripts/`. Nothing can drift because each path has
-a single canonical entry point.
+All generation code lives together under `scripts/infra/docs/` — the **API-diff +
+mdoc engines** (Cake) and the **release-notes engine** (Python) side by side. The
+`release-notes` skill keeps only the thin, stable **entrypoints** (`prepare.sh`,
+`render.sh`) that redirect to that engine, plus the AI's instructions. Nothing can
+drift because each path has a single canonical entry point.
 
 | File | Role |
 |------|------|
@@ -92,12 +92,13 @@ a single canonical entry point.
 | `api-diff-tools.cake` | shared NuGet-diff comparer + layout helpers, `#load`ed by both `api-diff.cake` and `docs.cake` |
 | `versions.json` | the **only** override surface — supersession + comparison baselines, honored identically by the Cake and Python engines |
 | `generate-api-docs.sh` | **Path 3** runner → `cake update-docs` (mdoc under mono) |
+| `release-notes-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
+| `release-notes-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
+| `release-notes-render.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
+| `release-notes-schema/prose.schema.json` | the prose contract the Polish agent fills |
 | `docker/` | the local reproducibility image + `run.sh` wrapper; its `api-diffs` subcommand invokes `docs-api-diff` directly |
-| *(in the `release-notes` skill)* `prepare.sh` | Prepare orchestrator: `docs-api-diff` → `build-data.py` → `build-index.py`; accepts `--force` / `--min-version` / `--max-version` |
-| *(in the skill)* `render.sh` | Polish-Finalize orchestrator: offline `render-notes.py --all` (same three flags for a uniform interface) |
-| *(in the skill)* `build-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
-| *(in the skill)* `build-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
-| *(in the skill)* `render-notes.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
+| *(in the `release-notes` skill)* `prepare.sh` | Prepare entrypoint → `docs-api-diff` → `release-notes-data.py` → `release-notes-index.py`; accepts `--force` / `--min-version` / `--max-version` |
+| *(in the skill)* `render.sh` | Polish-Finalize entrypoint: offline `release-notes-render.py --all` (same three flags for a uniform interface) |
 | *(committed under `releases/_sources/`)* `pr-authors.json` | PR-author cache for the release-notes engine (offline author resolution) |
 
 Each path's **entry point** is its single source of truth: a developer, the CI
@@ -133,12 +134,14 @@ Three Copilot skills drive or assist these paths (`.agents/skills/`):
 | **`api-docs`** | artifact 2 | Fills the `"To be added."` placeholders mdoc leaves in the XML with real prose, following the .NET doc guidelines. |
 | **`skia-analyst`** | analysis | Diffs versions / surfaces what changed and what's missing; used for release announcements and gap analysis, not for writing the committed artifacts. |
 
-The `release-notes` skill owns the whole Path 2 engine under its own
-`scripts/`: `scripts/prepare.sh` is the Prepare orchestrator — it calls
-the `docs-api-diff` Cake target directly, then the skill's own `build-data.py`
-and `build-index.py`; `scripts/render.sh` is the offline finalizer around
-`render-notes.py --all`. The API-diff and mdoc engines live under
-`scripts/infra/docs/`; the shared, general-purpose Cake machinery (`shared.cake`,
+The `release-notes` skill exposes the whole Path 2 engine through two thin
+entrypoints under its own `scripts/`: `scripts/prepare.sh` is the Prepare
+orchestrator — it calls the `docs-api-diff` Cake target directly, then the engine's
+`release-notes-data.py` and `release-notes-index.py`; `scripts/render.sh` is the
+offline finalizer around `release-notes-render.py --all`. The engine those
+entrypoints run — `release-notes-data.py`, `release-notes-index.py`,
+`release-notes-render.py` — lives under `scripts/infra/docs/` alongside the API-diff
+and mdoc engines; the shared, general-purpose Cake machinery (`shared.cake`,
 `download.cake`) stays under `scripts/infra/shared/`.
 
 ---

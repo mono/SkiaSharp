@@ -2,13 +2,18 @@
 #
 # prepare.sh — the release-notes PREPARE phase (network).
 #
+# This is a thin ENTRYPOINT that lives with the skill; the real engine code lives in
+# scripts/infra/docs/ (release-notes-data.py / release-notes-index.py, beside the Cake
+# api-diff engine they run with). The skill always calls this stable path; edit the
+# engine under scripts/infra/docs/ and this keeps working.
+#
 # One entrypoint that produces every deterministic input the Polish AI needs, in the
 # required order:
 #   1. API diffs        (Cake docs-api-diff)  — the committed releases/<line>/ trees
 #                                                + the co-release map sidecar.
-#   2. Page facts        (build-data.py)      — _sources/<version>.data.json + the
+#   2. Page facts        (release-notes-data.py)   — _sources/<version>.data.json + the
 #                                                "Files to polish" list.
-#   3. Index data        (build-index.py)     — _sources/index.json (Chrome schedule
+#   3. Index data        (release-notes-index.py)  — _sources/index.json (Chrome schedule
 #                                                + live-head set) for the offline render.
 #
 # All three engines are INCREMENTAL: with no flags they skip work whose output is
@@ -33,8 +38,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-BUILD_DATA_PY="$SCRIPT_DIR/build-data.py"
-BUILD_INDEX_PY="$SCRIPT_DIR/build-index.py"
+# The engine scripts live under scripts/infra/docs/ (next to the Cake api-diff engine);
+# this entrypoint stays in the skill and points at them.
+ENGINE_DIR="$REPO_ROOT/scripts/infra/docs"
+BUILD_DATA_PY="$ENGINE_DIR/release-notes-data.py"
+BUILD_INDEX_PY="$ENGINE_DIR/release-notes-index.py"
 
 FORCE=""
 MIN=""
@@ -63,16 +71,16 @@ echo "==> Prepare [1/3]: API diffs (Cake docs-api-diff) — verbose"
 dotnet tool restore
 dotnet cake "${cake_args[@]}"
 
-# --- 2. Page facts (build-data.py). Same flags, Python syntax. ---
+# --- 2. Page facts (release-notes-data.py). Same flags, Python syntax. ---
 py_args=()
 [ -n "$FORCE" ] && py_args+=(--force)
 [ -n "$MIN" ]   && py_args+=(--min-version "$MIN")
 [ -n "$MAX" ]   && py_args+=(--max-version "$MAX")
-echo "==> Prepare [2/3]: page facts (build-data.py) — verbose"
+echo "==> Prepare [2/3]: page facts (release-notes-data.py) — verbose"
 python3 "$BUILD_DATA_PY" "${py_args[@]:+${py_args[@]}}" --polish-list output/files-to-polish.txt
 
-# --- 3. Index data (build-index.py). Network-sourced; no scope (it is repo-global). ---
-echo "==> Prepare [3/3]: index data (build-index.py) — verbose"
+# --- 3. Index data (release-notes-index.py). Network-sourced; no scope (it is repo-global). ---
+echo "==> Prepare [3/3]: index data (release-notes-index.py) — verbose"
 python3 "$BUILD_INDEX_PY"
 
 echo "==> Prepare complete. Files to polish:"

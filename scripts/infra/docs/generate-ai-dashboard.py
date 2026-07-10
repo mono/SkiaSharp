@@ -22,7 +22,7 @@ Design goals (see documentation/site/ai/index.html):
     last-known values and its existing ``asOf`` date; the page shows "as of <date>".
     A failure never produces a broken file or a non-zero exit that breaks the build.
 
-Sources, mirroring the conventions already used in build-data.py:
+Sources, mirroring the conventions already used in release-notes-data.py:
 
   * NuGet   — https://azuresearch-usnc.nuget.org/query (totals + per-version counts)
   * Chrome  — https://chromiumdash.appspot.com/fetch_milestone_schedule (branch/stable)
@@ -57,7 +57,7 @@ NUGET_HOSTS = [
     "https://azuresearch-ussc.nuget.org/query",
 ]
 
-# Same Chromium Dashboard endpoint that build-data.py already uses.
+# Same Chromium Dashboard endpoint that release-notes-data.py already uses.
 CHROME_SCHEDULE_URL = (
     "https://chromiumdash.appspot.com/fetch_milestone_schedule?mstone={}")
 

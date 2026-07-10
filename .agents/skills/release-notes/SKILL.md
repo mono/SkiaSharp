@@ -6,7 +6,7 @@ description: Write the polished prose for a SkiaSharp release-notes page. Use wh
 # Release notes — writing the prose
 
 You are writing the human prose for one release-notes page. **You do not build the
-page.** A script (`render-notes.py`) owns every heading, table, banner, `@handle`,
+page.** A script (`release-notes-render.py`) owns every heading, table, banner, `@handle`,
 ❤️, and PR link. Your entire job is to fill a small set of prose *slots*, and the
 renderer assembles the page from those plus the facts in `data.json`.
 
@@ -68,7 +68,7 @@ shipped version's api diff never changes), so a routine run is cheap — there i
 ```
 
 **In CI** a separate `prepare` job runs step 1, and you (the agent) do steps 2 and 3 —
-write each page's prose, then run `render-notes.py --all` to finalize (the workflow's
+write each page's prose, then run `release-notes-render.py --all` to finalize (the workflow's
 tool allowlist permits `python3` for exactly this).
 
 ## How to work
@@ -76,7 +76,7 @@ tool allowlist permits `python3` for exactly this).
 You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
 `documentation/docfx/releases/<version>.md` path per line). The list **may be
 empty** — that just means no page needs new prose this run, but you must still run
-the final render (`render.sh`, or `render-notes.py --all` in CI) to materialize the
+the final render (`render.sh`, or `release-notes-render.py --all` in CI) to materialize the
 deterministic pages and rebuild the TOC/index; don't exit early. Every input for a
 page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
 the inputs are `releases/_sources/<version>.data.json`,
@@ -95,15 +95,15 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
    removals, the notes sidecar gives *behavioural* breaks (same signature, new
    runtime behaviour) that no diff can detect.
 3. Write `documentation/docfx/releases/_sources/<version>.prose.json`
-   (schema: `.agents/skills/release-notes/scripts/schema/prose.schema.json`).
+   (schema: `scripts/infra/docs/release-notes-schema/prose.schema.json`).
 4. Render the page:
-   `python3 .agents/skills/release-notes/scripts/render-notes.py _sources/<version>.data.json _sources/<version>.prose.json <version>.md`
+   `python3 scripts/infra/docs/release-notes-render.py _sources/<version>.data.json _sources/<version>.prose.json <version>.md`
    (use the full `documentation/docfx/releases/` paths). If it prints
    `PROSE VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
    render — the `.md` written — is the bar.
 
 You never hand-edit the `.md`, `TOC.yml`, or `index.md`, and you never create,
-rename, or delete pages — `render-notes.py --all` (which `render.sh` runs) owns page
+rename, or delete pages — `release-notes-render.py --all` (which `render.sh` runs) owns page
 creation and pruning. The per-page render above is just to validate your
 prose as you go; **`render.sh` does the authoritative final pass** — it re-renders
 every page and rebuilds `TOC.yml` + `index.md` from the committed JSON. Commit the
