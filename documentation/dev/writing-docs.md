@@ -152,7 +152,8 @@ For detailed XML documentation patterns and review criteria, see:
 
 > The single `docs-api-diff` target lives alongside the other doc engines at
 > [`scripts/infra/docs/api-diff.cake`](../../scripts/infra/docs/api-diff.cake);
-> the wrapper in `build.cake` just forwards to it. The behavior is specified in
+> `build.cake` exposes the target and uses `RunCake` to isolate the heavy
+> API-diff addins there. The behavior is specified in
 > [`release-notes-and-api-diffs.md`](release-notes-and-api-diffs.md) — read it
 > before changing the engine.
 
@@ -182,14 +183,14 @@ dotnet tool restore
 git diff documentation/docfx/releases/
 ```
 
-To regenerate only the API-diff tree while working on the Cake engine, call its entry
-script directly and pass Cake-style flags:
+To regenerate only the API-diff tree while working on the Cake engine, call the
+Cake target directly and pass Cake-style flags:
 
 ```bash
 dotnet tool restore
-scripts/infra/docs/generate-api-diffs.sh --force=true
+dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true --force=true
 # optional scope:
-# scripts/infra/docs/generate-api-diffs.sh --minVersion=4.148.0 --maxVersion=4.150.0
+# dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true --minVersion=4.148.0 --maxVersion=4.150.0
 ```
 
 Without `--force`, `docs-api-diff` skips any line whose committed API-diff folder

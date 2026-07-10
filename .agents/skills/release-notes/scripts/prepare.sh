@@ -33,7 +33,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-API_DIFFS_SH="$REPO_ROOT/scripts/infra/docs/generate-api-diffs.sh"
 BUILD_DATA_PY="$SCRIPT_DIR/build-data.py"
 BUILD_INDEX_PY="$SCRIPT_DIR/build-index.py"
 
@@ -51,13 +50,18 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-# --- 1. API diffs (Cake). Translate the shared flags to Cake's argument syntax. ---
-cake_args=()
+# --- 1. API diffs (Cake). The shared contract is the `docs-api-diff` Cake target
+#        (in build.cake, which isolates the heavy api-diff addins via RunCake).
+#        --nugetDiffPrerelease=true enumerates prereleases so active dev lines that
+#        ship only as previews/rcs can be diffed. Translate the shared flags to
+#        Cake's argument syntax. ---
+cake_args=(--target=docs-api-diff --nugetDiffPrerelease=true)
 [ -n "$FORCE" ] && cake_args+=(--force=true)
 [ -n "$MIN" ]   && cake_args+=(--minVersion="$MIN")
 [ -n "$MAX" ]   && cake_args+=(--maxVersion="$MAX")
 echo "==> Prepare [1/3]: API diffs (Cake docs-api-diff) — verbose"
-"$API_DIFFS_SH" "${cake_args[@]:+${cake_args[@]}}"
+dotnet tool restore
+dotnet cake "${cake_args[@]}"
 
 # --- 2. Page facts (build-data.py). Same flags, Python syntax. ---
 py_args=()

@@ -23,7 +23,7 @@
 #
 #   The three documentation-generation paths, each a single canonical script under
 #   scripts/infra/docs/ that local runs, CI, and this wrapper all share:
-#   run.sh api-diffs [args...]         Path 1: API diffs (generate-api-diffs.sh).
+#   run.sh api-diffs [args...]         Path 1: API diffs (cake docs-api-diff).
 #   run.sh notes [args...]             Path 2: release notes (needs a token).
 #   run.sh api-docs [args...]          Path 3: mdoc XML docs (generate-api-docs.sh).
 #   run.sh all                         All three paths, in order (needs a token).
@@ -131,8 +131,10 @@ case "$cmd" in
     api-diffs)
         ensure_image
         docker_run_args
+        # Path 1: the release-notes API diffs. The shared contract is the
+        # `docs-api-diff` Cake target (same one prepare.sh runs).
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-api-diffs.sh "$@"
+            bash -lc 'dotnet tool restore && dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true "$@"' _ "$@"
         ;;
     api-docs)
         ensure_image

@@ -324,19 +324,20 @@ scattered under `scripts/infra/docs/`:
 
 ```
 scripts/infra/docs/                (shared / API-diff engine)
-  api-diff.cake                API-diff engine (§5) — single `docs-api-diff` target
+  api-diff.cake                API-diff engine (§5), used by the single
+                               top-level `docs-api-diff` target
   api-diff-tools.cake          shared NuGet-diff comparer + layout helpers (§5),
                                #loaded by api-diff.cake AND docs.cake
   docs.cake                    mdoc-based docs/ XML generators (a different concern)
-  generate-api-diffs.sh        Path 1 runner: cake docs-api-diff
   generate-api-docs.sh         Path 3 runner: cake update-docs (mdoc under mono)
   versions.json                supersession + baseline config (§1); shared repo-wide
-  docker/                      reproducible image + run.sh wrapper for every path
+  docker/                      reproducible image + run.sh wrapper; `api-diffs`
+                               invokes the `docs-api-diff` target directly
 
 .agents/skills/release-notes/      (the release-notes engine + skill, all together)
   SKILL.md                     the AI's prose instructions (§4.4)
   scripts/
-    prepare.sh                 Prepare orchestrator: API diffs → build-data → build-index,
+    prepare.sh                 Prepare orchestrator: docs-api-diff → build-data → build-index,
                                writes the Files-to-polish list (§2.2)
     render.sh                  Polish-Finalize orchestrator: offline render-notes --all (§2.2)
     build-data.py              Prepare data engine (§4) — emits _sources/<version>.data.json,
@@ -351,8 +352,9 @@ scripts/infra/docs/                (shared / API-diff engine)
 
 The release-notes scripts are split by phase and artifact. `prepare.sh` owns no
 generation logic of its own — it delegates, in order, to the shared
-`scripts/infra/docs/generate-api-diffs.sh` (Path 1), then to `build-data.py`, then
-to `build-index.py`. `render.sh` is the corresponding offline finalizer: it wraps
+`docs-api-diff` Cake target (Path 1), then to `build-data.py`, then to
+`build-index.py`. The Docker `api-diffs` subcommand also invokes that Cake target
+directly. `render.sh` is the corresponding offline finalizer: it wraps
 `render-notes.py --all` under the same narrow flag surface so the skill, the
 update-release-notes workflow, the Docker wrapper, and a human running locally all
 execute the same phase commands. `render-notes.py` imports `build-data.py` with
@@ -385,8 +387,9 @@ repo-global and always runs unscoped. The skill and the workflow call this singl
 script rather than the individual producers, so the run order and flag translation
 live in one place:
 
-1. **Cake (`api-diff.cake`)** incrementally regenerates the required API-diff folders
-   under `releases/` (§3.3/§3.4) from the published feed, and updates the §1.5
+1. **Cake (`docs-api-diff` → `api-diff.cake`)** incrementally regenerates the
+   required API-diff folders under `releases/` (§3.3/§3.4) from the published feed,
+   and updates the §1.5
    **co-release map sidecar** at `releases/_sources/co-release-map.json` (§3.6).
    Deterministic, no AI.
 2. **`build-data.py`** regenerates each changed SkiaSharp page's deterministic facts
@@ -1265,6 +1268,9 @@ There is exactly one API-diff target: **`docs-api-diff`**. It is the committed
 release-notes/API-diff engine that reads the published NuGet feed and writes the
 `releases/<line>/` and `releases/harfbuzzsharp/<hb-line>/` trees. It is incremental
 and scoped; it is also the Cake step that `prepare.sh` runs before `build-data.py`.
+This target, defined in `build.cake`, is the shared Path 1 contract and uses
+`RunCake` to isolate the heavy API-diff addins in
+`scripts/infra/docs/api-diff.cake`.
 
 The former unpublished-package validation path was removed. The build/test pipeline no
 longer runs an API-diff stage, and `build.cake` exposes only this single target.
@@ -1380,7 +1386,7 @@ did not process; a full forced run recomputes and overlays the whole catalogue.
 
 ### 5.4 How it runs
 
-`generate-api-diffs.sh` is the Path 1 entry script and invokes:
+Path 1's shared entry point is the Cake target itself:
 
 ```bash
 dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true [cake args...]
@@ -1388,8 +1394,10 @@ dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true [cake args...]
 
 `--nugetDiffPrerelease=true` is required so preview/RC packages are available as
 representatives for active lines; emission is still collapsed to one folder per line
-inside the target. For the unified release-notes workflow, `prepare.sh` calls
-`generate-api-diffs.sh` first and forwards the shared flags as Cake arguments:
+inside the target. For the unified release-notes workflow, `prepare.sh` runs
+`dotnet tool restore`, invokes this Cake target directly as its first step, and
+forwards the shared flags as Cake arguments. The Docker `api-diffs` subcommand does
+the same target invocation for local reproducibility:
 
 ```bash
 .agents/skills/release-notes/scripts/prepare.sh --force --min-version 4.148.0 --max-version 4.150.0
