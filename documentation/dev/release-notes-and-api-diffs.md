@@ -319,7 +319,9 @@ The doc-generation engines are split by concern. The **API-diff engine** and the
 shared Cake machinery stay under `scripts/infra/docs/` (local runs, CI, and the
 docs Docker image share one copy). The **release-notes engine is owned entirely by
 the release-notes skill** — since the skill is the only thing that produces release
-notes, its data builders, renderer, schema, and author cache live *with* it, not
+notes, its data builders, renderer and schema live *with* it (the committed page
+inputs — `_sources/*.data.json`, `*.prose.json`, `co-release-map.json`, `index.json`,
+and the `pr-authors.json` author cache — live under `releases/_sources/`), not
 scattered under `scripts/infra/docs/`:
 
 ```
@@ -960,7 +962,7 @@ a higher version (in the same minor **or** a higher minor), unless a servicing
 `release/X.Y.x` branch still makes that line live. A released `<line>.md` is never
 pruned this way — only when the line stops being emitted under §1.4, e.g. a
 never-stable line dropped from `versions.json` and no longer ahead of the latest
-stable. A line that shipped a stable is emitted forever (§1.4.1), so its released
+stable. A line that shipped a stable is emitted forever (§1.4), so its released
 page is **permanent** and never pruned.
 
 
@@ -1353,8 +1355,8 @@ discarded.)
 ### 5.3 Incremental, scoped, and clearing behavior
 
 `docs-api-diff` mirrors `build-data.py`'s operational controls. It accepts Cake
-arguments `--force`, `--minVersion`, and `--maxVersion`; `prepare.sh` translates its
-shell flags to those names.
+arguments `--force=true`, `--minVersion`, and `--maxVersion` (Cake's `--force` is a
+boolean argument); `prepare.sh` translates its shell flags to those names.
 
 - **Default incremental run.** If a line's API-diff folder already has an `index.md`,
   the target skips the diff work for that line. A shipped version's public API diff is
@@ -1418,7 +1420,7 @@ warm cache is a no-op; only genuinely new packages are downloaded). Because reso
 is now deterministic (§5.2), a warm and a cold cache produce byte-identical output, so
 the cache never needs to be wiped to get a correct result — wiping only forces a slow
 re-download. The docs Docker image (`scripts/infra/docs/docker/`) bind-mounts the host
-cache for warm runs and a separate host-owned empty dir for an explicit `--cold` run
+cache for warm runs and a separate host-owned empty dir for an explicit `COLD=1` run
 when you want to re-prove that equivalence.
 
 ---

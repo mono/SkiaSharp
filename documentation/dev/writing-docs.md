@@ -218,11 +218,12 @@ feature branch; it still uses the feed-based committed-diff engine described abo
 
 ### Relationship to release notes
 
-The API diffs (Cake) and the website release notes
+The API-diff engine (Cake) and the release-notes prose engine
 ([`build-data.py`](../../.agents/skills/release-notes/scripts/build-data.py) + [`render-notes.py`](../../.agents/skills/release-notes/scripts/render-notes.py))
-are **separate systems** that deliberately share only one thing:
-[`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json). That file is the single
-source of truth for two decisions, and both systems honour it identically:
+are distinct engines — orchestrated together by `prepare.sh` — that share two
+inter-engine contracts. The first is
+[`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json), the single
+source of truth for two decisions both systems honour identically:
 
 - **Supersession** — only a version with an explicit `status: superseded` entry
   is treated as superseded (Cake's `IsVersionSuperseded`, Python's
@@ -230,6 +231,13 @@ source of truth for two decisions, and both systems honour it identically:
   everywhere, add it to `versions.json`.
 - **`compare_to` baselines** — when present, both sides diff against the same
   baseline version (e.g. `4.148.0` → `3.119.4`).
+
+The second shared contract is
+[`co-release-map.json`](../../documentation/docfx/releases/_sources/co-release-map.json):
+the Cake api-diff engine writes the `{skia_line: harfbuzz_line}` pairing it computed
+(from the nuspec / `VERSIONS.txt`), and `build-data.py` reads it to fold the matching
+HarfBuzzSharp api-diff link into each SkiaSharp page. It is a one-way Cake→Python
+hand-off, merged (never overwritten) so scoped runs keep prior lines.
 
 For any version *not* carrying a `compare_to` override, each system picks the
 default baseline (the previous version) on its own, and the two can differ

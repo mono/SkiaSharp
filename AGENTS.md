@@ -101,8 +101,8 @@ Single source of truth for all commands:
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
-| **Regenerate release-notes data (facts)** | `python3 .agents/skills/release-notes/scripts/build-data.py [--min-version X --max-version Y]` |
-| **Rebuild all pages + TOC/index (offline, from committed JSON)** | `python3 .agents/skills/release-notes/scripts/render-notes.py --all` |
+| **Regenerate release-notes (Prepare: api diffs + facts + index)** | `.agents/skills/release-notes/scripts/prepare.sh [--force] [--min-version X --max-version Y]` |
+| **Render all pages + TOC/index (offline, from committed JSON)** | `.agents/skills/release-notes/scripts/render.sh [--min-version X --max-version Y]` |
 
 ### When to Use Which Bootstrap
 

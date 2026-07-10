@@ -67,8 +67,9 @@ shipped version's api diff never changes), so a routine run is cheap — there i
 .agents/skills/release-notes/scripts/render.sh
 ```
 
-**In CI** a separate `prepare` job runs step 1 and the harness runs step 3 for you —
-your job there is only step 2 (write the prose for each page in `files-to-polish.txt`).
+**In CI** a separate `prepare` job runs step 1, and you (the agent) do steps 2 and 3 —
+write each page's prose, then run `render-notes.py --all` to finalize (the workflow's
+tool allowlist permits `python3` for exactly this).
 
 ## How to work
 

@@ -35,7 +35,7 @@ feel sprawling — this table is the whole story on one screen:
 |---|----------|------------|-----------------|--------|
 | 1 | **Conceptual docs** | Hand-written guides & tutorials on the docs site | `documentation/conceptual/` (this repo) | docfx ([site.md](site.md)) |
 | 2 | **API reference docs** | Per-type/per-member XML reference (→ learn.microsoft.com) | `docs/SkiaSharpAPI/` (the **docs submodule**) | `docs.cake` (mdoc) |
-| 3 | **Release notes** | Human "what's new" pages, AI-polished | `documentation/docfx/releases/` (this repo) | `release-notes` skill (`build-data.py` → `render-notes.py`) |
+| 3 | **Release notes** | Human "what's new" pages, AI-polished | `documentation/docfx/releases/` (this repo) | `release-notes` skill (`prepare.sh` → `render.sh`) |
 | 4 | **API diffs** | Machine-generated public-API diffs, no AI | `documentation/docfx/releases/` (this repo) | `api-diff.cake` |
 
 Artifacts **3** and **4** share one versioning model and one config file

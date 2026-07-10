@@ -2,12 +2,12 @@
 # so a developer can reproduce on any machine exactly what CI produces, without
 # installing mono/python/etc. on the host. CI does NOT use this image: the workflows
 # install the same dependencies natively on their Linux runners and call the very same
-# per-path scripts (scripts/infra/docs/generate-*.sh), so Docker and CI run identical
-# code. This image just mirrors that dependency surface for the three paths:
+# per-path entrypoints, so Docker and CI run identical code. This image just mirrors
+# that dependency surface for the three paths:
 #
-#   1. API diffs   — dotnet cake --target=docs-api-diff
-#   2. Release notes      — python3 .agents/skills/release-notes/scripts/build-data.py
-#   3. mdoc XML reference docs — dotnet cake --target=update-docs
+#   1. API diffs   — dotnet cake --target=docs-api-diff (run by the release-notes Prepare)
+#   2. Release notes      — .agents/skills/release-notes/scripts/prepare.sh (+ render.sh)
+#   3. mdoc XML reference docs — scripts/infra/docs/generate-api-docs.sh
 #
 # mdoc ships as a .NET Framework executable (scripts/infra/docs/tools/mdoc.*/mdoc.exe).
 # docs.cake runs it under mono on non-Windows hosts, so the mdoc step runs on Linux:

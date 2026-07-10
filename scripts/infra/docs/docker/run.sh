@@ -14,8 +14,9 @@
 #
 # GitHub auth: GITHUB_TOKEN and GH_TOKEN are forwarded from the host environment.
 # The release-notes generator REQUIRES gh for PR author resolution — it must never
-# silently degrade — so this script errors out for the release-notes path when no
-# token is present (override with ALLOW_NO_TOKEN=1 for the API-only / docs paths).
+# silently degrade — so this script errors out for the release-notes paths (notes / all)
+# when no token is present. Set ALLOW_NO_TOKEN=1 to bypass that pre-flight check and let
+# those paths run token-less anyway (the api-diffs / api-docs paths never need a token).
 #
 # Usage:
 #   run.sh build                       Build (or rebuild) the docker image.
@@ -34,7 +35,8 @@
 # Environment:
 #   COLD=1            Mount a fresh empty package cache (cold run).
 #   IMAGE=<name>      Override the image tag (default: skiasharp-docs).
-#   ALLOW_NO_TOKEN=1  Permit running without a GitHub token (non-notes paths only).
+#   ALLOW_NO_TOKEN=1  Bypass the token pre-flight check for the notes / all paths
+#                     (the api-diffs / api-docs paths never require a token).
 #
 set -euo pipefail
 
@@ -172,7 +174,7 @@ case "$cmd" in
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" "$@"
         ;;
     ""|-h|--help|help)
-        sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,39p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         ;;
     *)
         die "unknown command '$cmd' (try: build | shell | api-diffs | notes | api-docs | all | cake | exec | help)"

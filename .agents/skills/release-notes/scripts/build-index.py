@@ -15,9 +15,11 @@ a network — the live Chrome release schedule for the two milestones in flight 
 release-cadence timeline) — is fetched HERE, in the network-capable Prepare phase,
 and committed as _sources/index.json so the render stays offline and re-runnable.
 
-This script does the two things that need a network: it prunes ``-unreleased``
-pages whose line is no longer a live head (it must enumerate the remote release
-branches to know), and it fetches the Chrome schedule. It writes NO Markdown.
+This script does the two things that need a network: it enumerates the remote
+release branches to record which ``-unreleased`` pages are still live heads (the
+``live_unreleased`` set that render-notes.py ``--all`` later uses to prune stale
+ones — the pruning itself is done there, offline), and it fetches the Chrome
+schedule. It writes NO Markdown.
 
 It reuses build-data.py's shared low-level helpers so there is one source of truth
 for git/version parsing.
