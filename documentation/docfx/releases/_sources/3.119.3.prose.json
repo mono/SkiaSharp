@@ -1,0 +1,54 @@
+{
+  "theme": "Native dependency refresh preview",
+  "highlights_headline": "SkiaSharp 3.119.3 previewed a broad native-dependency refresh and a NativeAOT crash fix.",
+  "highlights_body": "The preview rolled the bundled libpng, libwebp and brotli, added Spectre mitigation to the Linux native, and fixed a NativeAOT crash when reflection is disabled. This line was never released as stable — everything here rolled up into 3.119.4.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Native dependencies refreshed",
+          "detail": "Bumps libpng to 1.6.54, libwebp to 1.6.0 and brotli to 1.2.0, and removes a few unused externals so the surface stays lean.",
+          "prs": [3452, 3469, 3478, 3463]
+        },
+        {
+          "lead": "Skia submodule re-pointed at the squashed commit",
+          "detail": "Repoints the Skia submodule at the squashed upstream commit so the merge history is clean going into 3.119.4.",
+          "prs": [3474]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "NativeAOT crash with `IlcDisableReflection=true` fixed",
+          "detail": "Fixes a crash when SkiaSharp is consumed from a NativeAOT app that has reflection disabled via `IlcDisableReflection=true`.",
+          "prs": [3485]
+        },
+        {
+          "lead": "Linux ARM64 no longer crashes on missing fontconfig",
+          "detail": "Adds the fontconfig runtime library to the cross-compile sysroot so Linux ARM64 builds locate fontconfig at runtime and no longer crash on first text draw.",
+          "prs": [3494]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Spectre mitigation on libSkiaSharp for Linux and Windows",
+          "detail": "Enables the Spectre mitigation compiler flag for `libSkiaSharp.dll` on Windows and `libSkiaSharp.so` on Linux to reduce the impact of speculative-execution side-channel attacks.",
+          "prs": [3496, 3502]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "sshumakov": "Added the Spectre mitigation compiler flag to `libSkiaSharp.dll` and `libSkiaSharp.so`"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 rolled libpng, libwebp and brotli, pruned unused externals, fixed the NativeAOT `IlcDisableReflection` crash and the Linux ARM64 fontconfig crash, and enabled Spectre mitigation on the Windows and Linux native binaries."
+  }
+}

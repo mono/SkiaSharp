@@ -1,0 +1,65 @@
+{
+  "theme": "Skia m118 preview line",
+  "highlights_headline": "SkiaSharp 3.118.0 previewed the Skia m117/m118 bump alongside a broad refresh of the bundled native dependencies.",
+  "highlights_body": "Preview 2 also added Metal APIs to GRBackendRenderTarget on every platform and untangled the .NET 9 ASP.NET Blazor hosting story. This line was never released as stable — everything here rolled up into 3.119.0.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia bumped through milestone 117 and 118",
+          "detail": "Two upstream engine bumps land the m117 and m118 baselines for the v3.118 preview line.",
+          "prs": [3047, 3048]
+        },
+        {
+          "lead": "Native dependencies refreshed",
+          "detail": "Refreshes HarfBuzz to 8.3.1, libexpat to 2.6.4, libjpeg-turbo to 2.1.5.1+commits and FreeType to 2.13.3+ to pick up upstream fixes.",
+          "prs": [3052, 3056, 3060, 3061]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Metal APIs on GRBackendRenderTarget across all platforms",
+          "detail": "Exposes the Metal-backed `GRBackendRenderTarget` constructors on every Apple TFM so Metal render targets can be created uniformly from iOS, tvOS, macOS and Mac Catalyst code.",
+          "prs": [3070]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "ASP.NET Blazor on .NET 9 works again",
+          "detail": "Fixes the WASM import path so SkiaSharp loads correctly from Blazor apps hosted under a base path, and moves the workaround into the SkiaSharp WASM assets themselves.",
+          "prs": [3064, 3082, 3088, 3092]
+        },
+        {
+          "lead": "Windows SDK version is pinned explicitly",
+          "detail": "Uses `<WindowsSdkPackageVersion>` so the Windows SDK version resolves deterministically across consuming projects.",
+          "prs": [3085]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android NDK bumped to r27c with 16 KB page alignment",
+          "detail": "Rebuilds the Android natives on NDK r27c so SkiaSharp keeps loading on Android 15+ devices that use 16 KB memory pages.",
+          "prs": [3099]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "spouliot": "Added the Metal `GRBackendRenderTarget` overloads across every Apple platform"
+  },
+  "preview_summaries": {
+    "p2": "Preview 2 stacked the second engine bump (m118), rolled the native dependencies (HarfBuzz, libexpat, libjpeg-turbo, FreeType) and delivered the Metal `GRBackendRenderTarget` APIs plus the .NET 9 Blazor hosting fixes.",
+    "p1": "Preview 1 opened the line with the Skia m117 baseline bump and the version rev to 3.118."
+  }
+}

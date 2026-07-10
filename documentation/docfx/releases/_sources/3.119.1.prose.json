@@ -1,0 +1,78 @@
+{
+  "theme": "Servicing update with Metal and Xaml canvas fixes",
+  "highlights_headline": "SkiaSharp 3.119.1 is a servicing release fixing Metal disposal, iOS 15 compatibility, SKXamlCanvas issues and adding SKTypeface.PostScriptName.",
+  "highlights_body": "It also lands zlib 1.3.0.1+, hardens the Windows binaries by splitting EGL and building the WinUI interop with static CRT, and picks up a handful of community fixes.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "zlib bumped to 1.3.0.1+",
+          "detail": "Refreshes the bundled zlib to pick up upstream fixes.",
+          "prs": [3058]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKTypeface.PostScriptName",
+          "detail": "Exposes the underlying PostScript font name so callers can identify the exact font instance a typeface resolves to.",
+          "prs": [3263]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Metal on iOS 15 and lower no longer crashes",
+          "detail": "Hotfix for a Metal backend regression that broke rendering on iOS versions before iOS 16.",
+          "prs": [3293]
+        },
+        {
+          "lead": "Metal SKMetalView disposal and re-initialization corrected",
+          "detail": "Avoids initializing `SKMetalView` twice and confirms that disposing `GRContext` on the Metal backend no longer crashes.",
+          "prs": [3256, 3258]
+        },
+        {
+          "lead": "SKAutoCanvasRestore survives a disposed canvas",
+          "detail": "`SKAutoCanvasRestore.Dispose` no longer crashes when the underlying canvas has already been disposed.",
+          "prs": [3291]
+        },
+        {
+          "lead": "SKXamlCanvas is transparent on Mac Catalyst",
+          "detail": "Ensures `SKXamlCanvas` is not opaque on Mac Catalyst so overlays and translucent content render correctly.",
+          "prs": [3236]
+        },
+        {
+          "lead": "UTC DateTime conversion corrected",
+          "detail": "Fixes a UTC/local time-zone bug in date-time conversion inside the bindings.",
+          "prs": [3333]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Windows native binaries hardened",
+          "detail": "Builds EGL as Win32 and GLESv2 for the Windows App SDK, and builds the WinUI interop with `/MT` (static CRT) so the binaries have fewer runtime dependencies.",
+          "prs": [3338, 3341]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeremy-visionaid": "Fixed the double-init of `SKMetalView`, added the Metal `GRContext` dispose regression test and the UTC `DateTime` conversion fix",
+    "taublast": "Hotfixed Metal on iOS 15 and lower and made `SKAutoCanvasRestore.Dispose` safe on an already-disposed canvas",
+    "jonlipsky": "Added `SKTypeface.PostScriptName`",
+    "pjcollins": "Added CI triggers for the primary branches on `azure-pipelines-native`",
+    "spouliot": "Fixed `SKXamlCanvas` being opaque on Mac Catalyst"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 rolled up every 3.119.1 change — the Metal disposal and iOS 15 hotfixes, the `SKAutoCanvasRestore`, `SKXamlCanvas` Mac Catalyst and UTC `DateTime` fixes, the new `SKTypeface.PostScriptName` API, and the zlib and Windows binary hardening — and cut the release candidate."
+  }
+}

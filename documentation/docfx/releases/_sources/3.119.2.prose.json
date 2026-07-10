@@ -1,0 +1,52 @@
+{
+  "theme": "Windows security hardening and tvOS SKSurface fixes",
+  "highlights_headline": "SkiaSharp 3.119.2 hardens the Windows and Linux native binaries with Control Flow Guard, BufferSecurityCheck and Spectre mitigation.",
+  "highlights_body": "It also fills in missing `SKSurface.Create` overloads for tvOS and preserves Android symbols in the packages so crash reports remain useful.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "tvOS `SKSurface.Create` overloads restored",
+          "detail": "Adds the missing `SKSurface.Create` overloads that had been dropping from the tvOS target so callers no longer have to reach through a workaround to create surfaces on tvOS.",
+          "prs": [3342]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android debug symbols packed with the package",
+          "detail": "Preserves and packs the Android native symbols so crash dumps and profilers get real function names instead of stripped stubs.",
+          "prs": [3374]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Windows DLLs built with Control Flow Guard and BufferSecurityCheck",
+          "detail": "All Windows native DLLs now ship with Control Flow Guard (`/guard:cf`) and buffer-security checks (`/GS`) enabled, resolving BinSkim BA2007 and hardening indirect calls at runtime.",
+          "prs": [3397, 3404]
+        },
+        {
+          "lead": "Spectre mitigation on libSkiaSharp",
+          "detail": "The Windows `libSkiaSharp.dll` is now compiled with the Spectre mitigation flag to reduce the impact of speculative-execution side-channel attacks on consuming apps.",
+          "prs": [3497]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "Aguilex": "Enabled Control Flow Guard and BufferSecurityCheck on the Windows native DLLs",
+    "MartinZikmund": "Added the missing tvOS `SKSurface.Create` overloads"
+  },
+  "preview_summaries": {
+    "p3": "Preview 3 added the Spectre mitigation compiler flag to `libSkiaSharp.dll` on Windows.",
+    "p2": "Preview 2 enabled Control Flow Guard and BufferSecurityCheck for every Windows native DLL and folded in the docs and release-skills work.",
+    "p1": "Preview 1 cut the 3.119.2 line, restored the missing tvOS `SKSurface.Create` overloads and preserved the Android native symbols in the package."
+  }
+}

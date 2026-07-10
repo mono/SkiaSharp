@@ -1,0 +1,149 @@
+{
+  "theme": "First SkiaSharp 3.x stable release",
+  "highlights_headline": "SkiaSharp 3.119.0 is the first stable 3.x release, built on Skia m119 with new architectures, D3D on Windows and SkCanvas.SaveLayerRec.",
+  "highlights_body": "It rolls up the 3.118.0 previews (Skia m117/m118, HarfBuzz 8.3.1, libexpat 2.6.4, libjpeg-turbo, FreeType) and then bumps to Skia m119, adds Direct3D on Windows, `SkCanvas.SaveLayerRec` and the missing `SKColorFilter` types, extends Linux support with riscv64 and LoongArch64, and lands a stack of Metal, tvOS and Windows ARM fixes.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia bumped through m117, m118 and m119",
+          "detail": "Three upstream engine bumps land the m117 baseline, m118 preview and the m119 stable milestone that names the release.",
+          "prs": [3047, 3048, 3062]
+        },
+        {
+          "lead": "Native dependencies refreshed",
+          "detail": "Bumps HarfBuzz to 8.3.1, libexpat to 2.6.4, libpng to 1.6.44, libjpeg-turbo to the 2.1.5.1+commits snapshot and FreeType to 2.13.3+ to pick up upstream fixes.",
+          "prs": [3052, 3056, 3059, 3060, 3061]
+        },
+        {
+          "lead": "Vulkan Memory Allocator updated to 3.2.1",
+          "detail": "Refreshes the bundled Vulkan Memory Allocator so the Vulkan backend picks up the latest fixes.",
+          "prs": [3196]
+        },
+        {
+          "lead": "Unused externals pruned and CVE-2024-30105 addressed",
+          "detail": "Disables and removes a set of unused or problematic externals so the shipping surface stays lean, and rolls dependencies to address CVE-2024-30105.",
+          "prs": [3150, 3171, 3180, 3166]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Direct3D on Windows",
+          "detail": "Compiles Skia with the Direct3D backend on Windows so applications can render through D3D in addition to OpenGL and ANGLE.",
+          "prs": [2823]
+        },
+        {
+          "lead": "SkCanvas.SaveLayerRec",
+          "detail": "Exposes `SkCanvas::SaveLayerRec` so callers can create save layers with the full set of `SkRect`, backdrop filter, image filter and layer-flag options.",
+          "prs": [2962]
+        },
+        {
+          "lead": "Missing SKColorFilter types filled in",
+          "detail": "Adds the color-filter types that were still missing from the managed surface so the color-filter API matches upstream Skia.",
+          "prs": [2882]
+        },
+        {
+          "lead": "Metal APIs on GRBackendRenderTarget across all platforms",
+          "detail": "Exposes the Metal-backed `GRBackendRenderTarget` constructors on every Apple TFM so Metal render targets can be created uniformly from iOS, tvOS, macOS and Mac Catalyst.",
+          "prs": [3070]
+        },
+        {
+          "lead": "SKMetalView on tvOS",
+          "detail": "Extends the Metal `SKMetalView` control to tvOS so tvOS apps get the same accelerated view as iOS and Mac Catalyst.",
+          "prs": [3114]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKImage.FromPicture implementation corrected",
+          "detail": "Fixes `SKImage.FromPicture` so pictures rasterize into images correctly instead of silently returning wrong content.",
+          "prs": [3231]
+        },
+        {
+          "lead": ".NET Framework/Mono `packages.config` regression fixed",
+          "detail": "Fixes a regression that broke projects consuming SkiaSharp via `packages.config` on .NET Framework and Mono.",
+          "prs": [3112]
+        },
+        {
+          "lead": "iOS Simulator Metal performance restored",
+          "detail": "Restores Metal performance on the iOS Simulator that had regressed with the earlier Metal backend changes.",
+          "prs": [3156]
+        },
+        {
+          "lead": "ASP.NET Blazor on .NET 9 works again",
+          "detail": "Fixes the WASM import path so SkiaSharp loads correctly from Blazor apps hosted under a base path, moves the workaround into the SkiaSharp WASM assets and pins the Windows SDK version deterministically.",
+          "prs": [3064, 3082, 3088, 3092, 3085]
+        },
+        {
+          "lead": "tvOS targets corrected and Apple-only code fenced",
+          "detail": "Sets the correct target for tvOS, ships the tvOS external fixes and excludes code that will never run on Apple platforms from the Apple builds.",
+          "prs": [3186, 3187, 3199]
+        },
+        {
+          "lead": "PackagePath attribute corrected",
+          "detail": "Uses the correct `PackagePath` attribute so the packaged assets land in the expected NuGet layout.",
+          "prs": [3100]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "riscv64 and LoongArch64 Linux support",
+          "detail": "Adds native build support for `linux-riscv64` and `linux-loongarch64`, and extends `clang-cross` to support Alpine so the Linux binaries cover more architectures.",
+          "prs": [3192, 3198, 3200, 3209]
+        },
+        {
+          "lead": "Windows ARM native support",
+          "detail": "Enables OpenGL on Windows ARM and fixes the build targets so SkiaSharp runs on ARM64 Windows machines.",
+          "prs": [3189, 3190]
+        },
+        {
+          "lead": "Android NDK bumped to r27c with 16 KB page alignment",
+          "detail": "Rebuilds the Android natives on NDK r27c so SkiaSharp keeps loading on Android 15+ devices that use 16 KB memory pages.",
+          "prs": [3096]
+        },
+        {
+          "lead": "Linux Alpine cross-compile",
+          "detail": "Extends the `clang-cross` support to Alpine so the Alpine (musl) Linux builds share the same toolchain path.",
+          "prs": [3200]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Incorrect internal call fixed",
+          "detail": "Fixes an incorrect internal call in the bindings that could invoke the wrong native entry point in certain code paths.",
+          "prs": [3143]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "kasperk81": "Added `riscv64` build support, fixed the Linux tests, updated the Vulkan Memory Allocator to 3.2.1 and extended `clang-cross` to Alpine",
+    "4Darmygeometry": "Added `linux-loongarch64` build support",
+    "ahmed605": "Implemented `SkCanvas::SaveLayerRec`",
+    "Kation": "Compiled Skia with the Direct3D backend on Windows",
+    "kkwpsv": "Fixed an incorrect internal call in the bindings",
+    "MartinZikmund": "Added `SKMetalView` support on tvOS",
+    "pjcollins": "Addressed CVE-2024-30105 in the build inputs",
+    "spouliot": "Added the Metal `GRBackendRenderTarget` overloads across every Apple platform",
+    "sungaila": "Fixed the regression that broke projects using .NET Framework/Mono and `packages.config`",
+    "taublast": "Restored iOS Simulator performance with the Metal backend"
+  },
+  "preview_summaries": {
+    "p1": "Preview 1 rolled up the entire 3.118 preview line and added the m119 engine bump, Direct3D on Windows, `SkCanvas.SaveLayerRec`, the missing `SKColorFilter` types, `SKMetalView` on tvOS, riscv64/LoongArch64/Alpine Linux support, Windows ARM support and the CI/CVE hardening that turned the line into a stable release.",
+    "p2": "Preview 2 (from the 3.118 line) stacked the m118 engine bump, rolled HarfBuzz, libexpat, libjpeg-turbo and FreeType, added the Metal `GRBackendRenderTarget` overloads across Apple platforms and fixed the .NET 9 Blazor hosting story."
+  }
+}
