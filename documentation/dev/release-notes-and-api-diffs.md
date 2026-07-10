@@ -987,7 +987,16 @@ built from. It is timestamp-free and includes, at minimum:
   deterministic `tag` (`product`, `mixed`, `internal`).
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
-- `previews` — per-preview/RC buckets, when present.
+- `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
+  `label`, `date`, `changelog_url`, and its `prs`. The `key` is the stable handle the
+  prose file's `preview_summaries` maps a summary onto, so it MUST be unique within a
+  page: it is **core-qualified** as `<core>-<stage><num>` (e.g. `4.148.0-rc1`,
+  `3.118.0-p1`, `1.53.2-gpu1`). Core-qualifying keeps a rolled-up predecessor's preview
+  distinct from this line's own, and keying on the label's own stem keeps parallel
+  experimental trains (an `svg` and a `gpu` preview of one core) from colliding.
+  `build-data.py` raises if two buckets ever produce the same key, and `render-notes.py`
+  validates one summary **per preview** (not per unique key), so a collision can never
+  silently ship a shared or missing summary.
 - `tallies` and `breaking_candidates` — companion source paths and hashes the AI reads
   for breaking-change prose (§4.7).
 

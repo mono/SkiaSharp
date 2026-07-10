@@ -350,9 +350,13 @@ def _finish_validate(errors, data, prose):
                     "category heading '{}' is not one of the allowed sections: {}"
                     .format(cat.get("heading"), ", ".join(sorted(allowed))))
 
-    prev_keys = {p["key"] for p in data.get("previews", [])}
+    prev_list = [p["key"] for p in data.get("previews", [])]
+    prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})
+    if prev_dups:
+        errors.append("duplicate preview keys (data.json bug — keys must be unique "
+                      "per preview): " + ", ".join(prev_dups))
     prev_sum = prose.get("preview_summaries") or {}
-    missing_prev = sorted(prev_keys - set(prev_sum))
+    missing_prev = sorted({k for k in prev_list if k not in prev_sum})
     if missing_prev:
         errors.append("every preview/RC needs a one-line summary; missing: "
                       + ", ".join(missing_prev))

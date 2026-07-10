@@ -193,7 +193,7 @@ credit even though it never became a category bullet.
 each `key` a 1-2 sentence summary of what that milestone delivered. When a preview
 only carried internal work, describe the milestone itself (e.g. "opened the line"
 or "cut the release candidate") rather than forcing a product story.
-- Good: `"p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
+- Good: `"4.148.0-p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
 - Bad: leaving a preview key out (the renderer fails), or restating every PR.
 
 ### `harfbuzz_summary` — one short paragraph, or `null`

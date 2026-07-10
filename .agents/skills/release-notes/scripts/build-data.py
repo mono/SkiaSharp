@@ -1521,13 +1521,27 @@ _PREVIEW_KEY_STAGE = {
 }
 
 
-def _preview_key(label):
-    # type: (str) -> str
-    """Stable short key for a preview/RC label ('Release Candidate 1' -> 'rc1')."""
+def _preview_key(core, label):
+    # type: (str, str) -> str
+    """Unique, stable short key for a preview/RC milestone.
+
+    Core-qualified so previews rolled up from different lines never collide, and
+    keyed on the label's own stem so parallel experimental trains (an ``svg`` and a
+    ``gpu`` preview of the same core) stay distinct:
+
+        ('4.148.0', 'Release Candidate 1') -> '4.148.0-rc1'
+        ('3.118.0', 'Preview 1')           -> '3.118.0-p1'
+        ('1.53.2',  'Gpu 1')               -> '1.53.2-gpu1'
+        ('1.53.2',  'Svg 1')               -> '1.53.2-svg1'
+
+    Known stages get a short abbreviation (rc/p/a/b); any other stem uses a slug of
+    itself rather than a shared fallback, so distinct nonstandard stems never merge.
+    """
     parts = (label or "").rsplit(" ", 1)
-    stem = parts[0] if len(parts) == 2 else label
+    stem = parts[0] if len(parts) == 2 else (label or "")
     num = parts[1] if len(parts) == 2 else ""
-    return "{}{}".format(_PREVIEW_KEY_STAGE.get(stem, "m"), num).strip().lower()
+    abbrev = _PREVIEW_KEY_STAGE.get(stem) or re.sub(r"[^a-z0-9]", "", stem.lower()) or "m"
+    return "{}-{}{}".format(core, abbrev, num).strip().lower()
 
 
 def _pr_is_community(pr):
@@ -1619,13 +1633,24 @@ def build_data_json(prs, metadata):
         label = m.get("label")
         if not label or not m.get("tag"):
             continue  # skip the synthetic leftover/unreleased bucket
+        core = m.get("version") or ((_parse_tag(m.get("tag")) or {}).get("core") or "")
         previews.append({
-            "key": _preview_key(label),
+            "key": _preview_key(core, label),
             "label": label,
             "date": _friendly_date(m.get("date")),
             "changelog_url": m.get("compare_url"),
             "prs": [pr.get("number") for pr in b.get("prs") or [] if pr.get("number")],
         })
+    # Preview keys are the handle prose maps summaries onto, so they must be unique
+    # within a page. Fail loudly rather than let two previews collide and silently
+    # share (or drop) a summary — see the `previews` data.json field in the spec.
+    _pk = [p["key"] for p in previews]
+    _dup = sorted({k for k in _pk if _pk.count(k) > 1})
+    if _dup:
+        raise ValueError(
+            "duplicate preview keys for {}: {} — previews {}".format(
+                metadata.get("version"), _dup,
+                [(p["label"], p["key"]) for p in previews]))
 
     # Breaking-change *sources* the agent turns into prose: the API breaking diff
     # (signature removals) and the manual notes sidecar (behavioural breaks that
