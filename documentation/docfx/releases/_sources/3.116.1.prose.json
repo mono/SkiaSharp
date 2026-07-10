@@ -1,0 +1,30 @@
+{
+  "theme": "Android 16 KB alignment servicing",
+  "highlights_headline": "SkiaSharp 3.116.1 is a servicing release that updates the Android NDK and fixes NuGet packaging.",
+  "highlights_body": "The native Android build moves to NDK r27c with 16 KB page-size alignment so SkiaSharp keeps loading on the next generation of Android devices. A packaging fix ensures the referenced assets land at the correct path inside the NuGet.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Android NDK r27c with 16 KB page alignment",
+          "detail": "The libSkiaSharp shared library for Android is now built with NDK r27c and linked with 16 KB page-size alignment, which is required by Google Play for devices shipping 16 KB pages in Android 15+.",
+          "prs": [3098]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Correct PackagePath in the NuGet",
+          "detail": "Restores the PackagePath attribute that was inadvertently dropped in 3.116.0, so referenced files are placed at the expected path inside consuming projects.",
+          "prs": [3102]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}
