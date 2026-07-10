@@ -50,13 +50,8 @@ on:
         required: false
         default: ""
         type: string
-      notes_only:
-        description: "Skip the heavy Cake API-diff step and regenerate only the release-notes pages (much faster; for validating prose)."
-        required: false
-        default: false
-        type: boolean
       force:
-        description: "Force a total regeneration: rewrite every page even when its raw data is unchanged (passes --force to the notes generator). Use to re-render the whole back-catalogue after a format/skill change."
+        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + build-data.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
         required: false
         default: false
         type: boolean
@@ -145,27 +140,24 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
-          NOTES_ONLY: ${{ inputs.notes_only }}
           FORCE_REGEN: ${{ inputs.force }}
           MIN_VERSION: ${{ inputs.min_version }}
           MAX_VERSION: ${{ inputs.max_version }}
         run: |
           set -euo pipefail
-          # Single entry point: Cake (API diffs) then Python (raw data + the
-          # per-version data.json sidecars the agent renders from), both VERBOSE.
-          # A dispatch may bound to a version RANGE (--min-version/--max-version,
-          # for chunked back-catalogue regens or a single version), skip the heavy
-          # Cake step (--notes-only), and/or force a total rewrite (--force,
-          # ignores the unchanged-page skip); the daily/push runs pass none and
-          # regenerate only what changed. The "Files to polish" list lands at
+          # Single entry point: prepare.sh runs the API diffs (Cake) then the release-
+          # notes data (build-data.py) then the index (build-index.py), all VERBOSE.
+          # Every engine is incremental — an unforced run skips work whose output is
+          # already current (a shipped api diff never changes), so a daily run is cheap
+          # without any "notes-only" flag. A dispatch may bound to a version RANGE
+          # (--min-version/--max-version, for a single version or a chunk) and/or force
+          # a total rewrite (--force). The "Files to polish" list lands at
           # output/files-to-polish.txt.
-          gen_flags=()
-          if [ "${NOTES_ONLY:-false}" = "true" ]; then gen_flags+=(--notes-only); fi
-          notes_flags=()
-          if [ -n "${MIN_VERSION:-}" ]; then notes_flags+=(--min-version "$MIN_VERSION"); fi
-          if [ -n "${MAX_VERSION:-}" ]; then notes_flags+=(--max-version "$MAX_VERSION"); fi
-          if [ "${FORCE_REGEN:-false}" = "true" ]; then notes_flags+=(--force); fi
-          bash .agents/skills/release-notes/scripts/generate.sh "${gen_flags[@]:+${gen_flags[@]}}" "${notes_flags[@]:+${notes_flags[@]}}"
+          flags=()
+          if [ "${FORCE_REGEN:-false}" = "true" ]; then flags+=(--force); fi
+          if [ -n "${MIN_VERSION:-}" ]; then flags+=(--min-version "$MIN_VERSION"); fi
+          if [ -n "${MAX_VERSION:-}" ]; then flags+=(--max-version "$MAX_VERSION"); fi
+          bash .agents/skills/release-notes/scripts/prepare.sh "${flags[@]:+${flags[@]}}"
       - name: Package Prepare output
         id: package
         run: |
@@ -272,9 +264,9 @@ and **one** pull request ships everything.
 
 Before you (the agent) started, a **separate `prepare` job** ran the skill's
 **Prepare** phase on its own disk-managed runner — the single script
-`.agents/skills/release-notes/scripts/generate.sh`, which in turn:
+`.agents/skills/release-notes/scripts/prepare.sh`, which in turn:
 
-1. ran **Cake** (`docs-api-diff-past`) to regenerate the complete API-diff tree and
+1. ran **Cake** (`docs-api-diff`, incremental) to regenerate the API-diff tree and
    `co-release-map.json` sidecar under `documentation/docfx/releases/`, then
 2. ran **Python** to emit, for every changed version, a deterministic
    `_sources/<version>.data.json` sidecar (the facts a page is rendered from,
@@ -286,7 +278,7 @@ The `prepare` job uploaded its complete working-tree change as a patch plus that
 list as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files (including every `_sources/<version>.data.json` and
 `_sources/index.json`) are on disk, and the list is at `output/files-to-polish.txt`.
-**Do not re-run `generate.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`**
+**Do not re-run `prepare.sh`, `dotnet cake`, `build-data.py`, or `build-index.py`**
 — they already ran, and you have no network. Your job is to write the prose and
 render the pages (below), then commit and open the PR.
 

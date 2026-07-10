@@ -155,12 +155,8 @@ Task ("docs-download-output")
     .Does (() => RunCake ("./scripts/infra/docs/docs.cake", "docs-download-output"));
 
 Task ("docs-api-diff")
-    .Description ("Generate API diffs.")
+    .Description ("Generate the committed API diffs (incremental; --force/--minVersion/--maxVersion).")
     .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff"));
-
-Task ("docs-api-diff-past")
-    .Description ("Generate historical API diffs.")
-    .Does (() => RunCake ("./scripts/infra/docs/api-diff.cake", "docs-api-diff-past"));
 
 Task ("docs-update-frameworks")
     .Description ("Update doc frameworks.")

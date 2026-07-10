@@ -244,11 +244,13 @@ CO_RELEASE_MAP_PATH = RELEASES_DIR / "_sources" / "co-release-map.json"
 
 def load_co_release_map():
     # type: () -> dict
-    """Load the co-release map sidecar (cached) as ``{skia_line: entry}``.
+    """Load the co-release map sidecar (cached) as ``{skia_line: hb_line}``.
 
-    Each entry carries ``hb_line`` and ``hb_link`` (spec §3.6). Returns an empty
-    map when the sidecar is missing — the HarfBuzz link is simply omitted in that
-    case (the script owns the link, never the AI; spec §4.4).
+    The sidecar is a plain ``{ "skia_line": "hb_line" }`` object (spec §3.6). The
+    api-diff LINK is derived here (``harfbuzzsharp/<hb_line>/index.md``), not stored.
+    A legacy array-of-objects format (``{skia_line, hb_line, hb_link}``) is tolerated
+    for back-compat. Returns an empty map when the sidecar is missing — the HarfBuzz
+    link is simply omitted then (the script owns the link, never the AI; spec §4.4).
     """
     global _CO_RELEASE_MAP
     if _CO_RELEASE_MAP is not None:
@@ -257,14 +259,20 @@ def load_co_release_map():
     if CO_RELEASE_MAP_PATH.exists():
         with open(CO_RELEASE_MAP_PATH) as f:
             data = json.load(f)
-        if not isinstance(data, list):
+        if isinstance(data, dict):
+            for line, hb in data.items():
+                if line and hb:
+                    mapping[line] = hb
+        elif isinstance(data, list):  # legacy array format
+            for entry in data:
+                line = entry.get("skia_line")
+                hb = entry.get("hb_line")
+                if line and hb:
+                    mapping[line] = hb
+        else:
             raise ValueError(
-                "co-release-map.json: expected a JSON array (spec §3.6); got %s"
+                "co-release-map.json: expected a JSON object (spec §3.6); got %s"
                 % type(data).__name__)
-        for entry in data:
-            line = entry.get("skia_line")
-            if line:
-                mapping[line] = entry
     _CO_RELEASE_MAP = mapping
     return _CO_RELEASE_MAP
 
@@ -2027,12 +2035,12 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # are the PRs in this same window that touched HarfBuzz paths (a subset of the
     # page's PRs, so their details already live in the shared PR map).
     harfbuzz = None
-    hb = load_co_release_map().get(version)
-    if not is_head and hb and hb.get("hb_line"):
+    hb_line = load_co_release_map().get(version)
+    if not is_head and hb_line:
         hb_prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
         harfbuzz = {
-            "version": hb["hb_line"],
-            "api_diff_link": hb.get("hb_link"),
+            "version": hb_line,
+            "api_diff_link": "harfbuzzsharp/{}/index.md".format(hb_line),
             "prs": [p["number"] for p in hb_prs if p.get("number")],
         }
 

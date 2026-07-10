@@ -7,7 +7,7 @@
 # documentation/docfx/releases/<line>/<pkg>/*.md (+ the harfbuzzsharp/ tree and the
 # co-release sidecar the release-notes engine consumes).
 #
-# Engine: dotnet cake --target=docs-api-diff-past
+# Engine: dotnet cake --target=docs-api-diff
 #   code:  scripts/infra/docs/api-diff.cake
 #   spec:  documentation/dev/release-notes-and-api-diffs.md   (read this first)
 #
@@ -37,9 +37,9 @@ if ! command -v dotnet >/dev/null 2>&1; then
     exit 1
 fi
 
-echo "==> Path 1: API diffs (cake docs-api-diff-past) — verbose"
+echo "==> Path 1: API diffs (cake docs-api-diff) — verbose"
 dotnet tool restore
 # --nugetDiffPrerelease=true: enumerate prerelease packages so active dev lines that
 # ship only as previews/rcs (e.g. 4.148/4.150) can be diffed (spec §5.1). Emission is
 # still collapsed to one api diff per release line inside the target.
-dotnet cake --target=docs-api-diff-past --nugetDiffPrerelease=true "$@"
+dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true "$@"
