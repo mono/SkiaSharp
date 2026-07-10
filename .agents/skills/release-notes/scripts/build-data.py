@@ -1695,16 +1695,29 @@ def build_data_json(prs, metadata):
             "note": "Never released as stable — these changes rolled up into {}.".format(sb),
         }
 
+    # The "API changes" banner links BOTH families' diffs for the co-release: a
+    # SkiaSharp page shows its own diff + the co-shipped HarfBuzz diff (from the
+    # co-release map), and a HarfBuzz page shows its own diff + the SkiaSharp
+    # release it ships within. Own-family first.
     api_links = []
-    if metadata.get("api_diff_link"):
-        api_links.append({"label": ("HarfBuzzSharp API diff"
-                                    if family == "harfbuzzsharp"
-                                    else "SkiaSharp API diff"),
-                          "href": metadata["api_diff_link"]})
-    hb = metadata.get("harfbuzz")
-    if hb and hb.get("link"):
-        api_links.append({"label": "HarfBuzzSharp {}".format(hb.get("version", "")),
-                          "href": hb["link"]})
+    if family == "harfbuzzsharp":
+        if metadata.get("api_diff_link"):
+            api_links.append({"label": "HarfBuzzSharp API diff",
+                              "href": metadata["api_diff_link"]})
+        ships = metadata.get("ships_with") or {}
+        # Only when this HarfBuzz line is published (its own diff exists) does the
+        # canonical SkiaSharp release's diff folder exist too.
+        if metadata.get("api_diff_link") and ships.get("version"):
+            api_links.append({"label": "SkiaSharp API diff",
+                              "href": "../{}/index.md".format(ships["version"])})
+    else:
+        if metadata.get("api_diff_link"):
+            api_links.append({"label": "SkiaSharp API diff",
+                              "href": metadata["api_diff_link"]})
+        hb = metadata.get("harfbuzz")
+        if hb and hb.get("hb_link"):
+            api_links.append({"label": "HarfBuzzSharp API diff",
+                              "href": hb["hb_link"]})
 
     tallies = {
         "product": sum(1 for p in prs if p.get("category") == "product"),

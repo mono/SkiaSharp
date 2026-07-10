@@ -195,15 +195,25 @@ def render(data, prose):
     L.append("<!-- RELEASE-NOTES DATA (generated, do not edit) format:{} version:{} -->"
              .format(data.get("format"), data.get("version")))
     L.append("# {}".format(page_title(data)))
-    L.append(banner_line(data, prose))
+
+    # Each banner row is its own blockquote. They must be separated by a blank
+    # line, otherwise Markdown's lazy continuation folds consecutive `> ` lines
+    # into ONE paragraph ("A B" instead of stacked "A" / "B").
+    banner_blocks = [banner_line(data, prose)]
     for s in data.get("supersedes") or []:
-        L.append("> **Supersedes [{}]({})** · {}".format(s["version"], s["href"], s.get("note", "")))
+        banner_blocks.append("> **Supersedes [{}]({})** · {}".format(
+            s["version"], s["href"], s.get("note", "")))
     sb = data.get("superseded_by")
     if sb:
-        L.append("> **Superseded by [{}]({})** · {}".format(sb["version"], sb["href"], sb.get("note", "")))
+        banner_blocks.append("> **Superseded by [{}]({})** · {}".format(
+            sb["version"], sb["href"], sb.get("note", "")))
     if data.get("api_links"):
         api = " · ".join("[{}]({})".format(l["label"], l["href"]) for l in data["api_links"])
-        L.append("> **API changes** · {}".format(api))
+        banner_blocks.append("> **API changes** · {}".format(api))
+    for i, blk in enumerate(banner_blocks):
+        if i:
+            L.append("")
+        L.append(blk)
 
     # A "no changes" page (a published HarfBuzz line whose SkiaSharp window had no
     # HarfBuzz-touching PRs — a rebuild) needs no prose at all: the banner + API
