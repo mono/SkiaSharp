@@ -1,9 +1,22 @@
 {
-  "theme": "Color parsing and stability",
-  "highlights_headline": "The unreleased 4.151.0 line adds faster color parsing and an upstream GPU text stability fix.",
-  "highlights_body": "It also removes the unnecessary unsafe marker from GRContextOptions, making GPU context configuration easier to use in projects that do not enable unsafe code.",
+  "theme": "Performance and stability",
+  "highlights_headline": "SkiaSharp 4.151.0 brings allocation-free hot paths, span-friendly APIs, and m151 stability fixes.",
+  "highlights_body": "Two performance improvements eliminate per-call allocations in `SKFourByteTag.Parse` and `SKColor` hex parsing. The bundled engine folds in two rounds of Skia m151 upstream bug fixes, and `GRContextOptions` drops its unnecessary unsafe modifier.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m151 upstream bug fixes (two syncs)",
+          "detail": "Two rounds of upstream chrome/m151 bug-fix merges land in this line, including the SubRunAllocator use-after-free fix that improves GPU text rendering stability.",
+          "prs": [
+            4312,
+            4382
+          ]
+        }
+      ]
+    },
     {
       "heading": "API Surface",
       "bullets": [
@@ -27,10 +40,10 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU text allocator stability fix",
-          "detail": "Pulls in Skia's m151 SubRunAllocator use-after-free fix, improving stability for text rendering paths backed by the bundled engine.",
+          "lead": "Allocation eliminated in SKFourByteTag.Parse",
+          "detail": "The per-call char[4] allocation in SKFourByteTag.Parse is removed, reducing pressure in hot parsing paths.",
           "prs": [
-            4382
+            4396
           ]
         }
       ]
