@@ -1,0 +1,130 @@
+{
+  "theme": ".NET 8, Apple Silicon and WASM refresh",
+  "highlights_headline": "SkiaSharp 2.88.4 adds .NET 8 and Apple Silicon macOS support and refreshes bundled native libraries.",
+  "highlights_body": "This release adds native ARM64 macOS binaries, .NET 8 WASM assets for Blazor, and moves the WinUI target onto `JSImport` on `net7.0`. It refreshes libpng, libexpat and zlib, ships the Android `.aar` inside the NuGet, and picks up Uno WASM improvements including EH+SIMD.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Apple Silicon macOS",
+          "detail": "Native binaries are now produced for ARM64 macOS machines, so `.NET on macOS-arm64` no longer runs SkiaSharp under Rosetta.",
+          "prs": [2468]
+        },
+        {
+          "lead": ".NET 8 WASM assets for Blazor",
+          "detail": "The new WebAssembly assets shipped with .NET 8 are now included so Blazor apps on .NET 8 pick up the right native.",
+          "prs": [2497]
+        },
+        {
+          "lead": ".NET iOS and Mac Catalyst samples",
+          "detail": "New .NET iOS and Mac Catalyst samples plus a .NET \"Core\" sample host demonstrate the modern-platform bindings.",
+          "prs": [2491]
+        },
+        {
+          "lead": "Android .aar shipped in the NuGet",
+          "detail": "The Android `.aar` is now included in the NuGet package so consumers no longer have to source it separately.",
+          "prs": [2465]
+        },
+        {
+          "lead": ".NET 5 SDK requirement dropped",
+          "detail": "All build-time requirements on the .NET 5 SDK have been removed.",
+          "prs": [2266]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "WinUI moves to JSImport on net7.0",
+          "detail": "The WinUI target now uses `JSImport` on `net7.0`, aligning with the modern WinUI/Uno interop model.",
+          "prs": [2428]
+        },
+        {
+          "lead": "Faster hex-string parsing on SKColor",
+          "detail": "`SKColor` hex-string parsing was rewritten to avoid the per-character allocations and lookups it used to do.",
+          "prs": [2467]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKCanvasView dispose race fixed",
+          "detail": "`SKCanvasView` no longer throws when the view is disposed before it has been rendered for the first time.",
+          "prs": [2472]
+        },
+        {
+          "lead": "WASM canvas resilience",
+          "detail": "`SKXamlCanvas` on WASM tolerates a missing canvas element, updates the bitmap `SKAlphaType` correctly, and disambiguates `SKGLView` between Uno and MAUI targets.",
+          "prs": [2443, 2529]
+        },
+        {
+          "lead": "Uno Opaque defaults on Apple platforms",
+          "detail": "`SKXamlCanvas` on Uno now defaults `Opaque` to `false` on macOS and iOS to match the platform expectation, and `SKSwapChainPanel` was updated for Android and iOS.",
+          "prs": [2398, 2400, 2401, 2477]
+        },
+        {
+          "lead": "Tizen canvas sizing corrected",
+          "detail": "The Tizen views now compute canvas size correctly on high-DPI displays.",
+          "prs": [2322]
+        },
+        {
+          "lead": "ToRect extension fixed",
+          "detail": "The `ToRect` extension no longer returns wrong bounds in an edge case.",
+          "prs": [2392]
+        },
+        {
+          "lead": "Guard against a race in the view lifecycle",
+          "detail": "An additional check avoids an exception in a lifecycle race path.",
+          "prs": [2313]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Bundled native libraries refreshed",
+          "detail": "libpng bumped to 1.6.40, libexpat to 2.5.0, and zlib to 1.2.13 — pulling in the latest upstream security and correctness fixes.",
+          "prs": [2510, 2484]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Cleaner using scopes",
+          "detail": "Several internal blocks were rewritten with C# 8 block-scoped `using` statements to reduce nesting.",
+          "prs": [2528]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": "Moved WinUI to `JSImport` on net7.0, disambiguated `SKGLView`, and enabled WASM EH+SIMD in all configurations for net8+",
+    "roubachof": "Fixed the Uno `SKXamlCanvas` Alpha type on WASM, defaulted `Opaque` on Apple platforms, and updated the Android and iOS `SKSwapChainPanel`",
+    "pjcollins": "Contributed to the modern-platform enablement work landing in this release",
+    "dellis1972": "Made the Android `.aar` ship inside the NuGet package",
+    "FoggyFinder": "Added a defensive check to avoid an exception in a lifecycle race path",
+    "JamieMagee": "Contributed dependency and infrastructure improvements",
+    "jjzhang12": "Fixed the `SKCanvasView` dispose exception when the view is disposed before it has been rendered",
+    "jwikberg": "Rewrote hex-string parsing in `SKColor` for a large performance win",
+    "Lehonti": "Removed nesting by adopting block-scoped `using` statements",
+    "myroot": "Fixed Tizen canvas-size calculation on high-DPI displays",
+    "niza93": "Fixed the `ToRect` extension method",
+    "Redth": "Contributed to the modern-platform enablement work landing in this release"
+  },
+  "preview_summaries": {
+    "2.88.4-p96": "Preview 96 shipped the final Hot Restart native reference.",
+    "2.88.4-p95": "Preview 95 landed the libpng/libexpat refresh, WinUI JSImport move, the SKCanvasView disambiguation and the `using`-scope cleanup.",
+    "2.88.4-p82": "Preview 82 added the .NET 8 WASM assets and the ToRect fix.",
+    "2.88.4-p76": "Preview 76 added the .NET iOS/Catalyst samples, faster SKColor hex parsing and ARM64 macOS binaries.",
+    "2.88.4-p70": "Preview 70 opened the line with zlib 1.2.13, Uno Opaque and swap-chain fixes, and the drop of the .NET 5 SDK requirement."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 2.8.2.4 adds native binaries for Apple Silicon macOS, ships the Hot Restart native reference, and enables WASM multi-threading and SIMD alongside SkiaSharp."
+}
