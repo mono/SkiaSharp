@@ -849,7 +849,7 @@ def _prune_stale_unreleased(live):
     # type: (set) -> int
     """Delete SkiaSharp ``<v>-unreleased.md`` pages whose line is no longer live.
 
-    ``live`` is the set of live-head version cores that build-index recorded in
+    ``live`` is the set of live-head version cores that release-notes-index.py recorded in
     index.json (it needed the remote branch list — a network the render does not
     have). We delete the page and its generated inputs (data.json, prose.json);
     the human-owned notes.md is left for the orphan warning. Released ``<v>.md``
@@ -904,7 +904,7 @@ def render_all():
 
     The final Polish step: after the agent has written each page's prose.json,
     one --all pass prunes any now-stale ``-unreleased`` page (per the live-head set
-    build-index recorded in index.json), re-renders every ``<version>.md`` from its
+    release-notes-index.py recorded in index.json), re-renders every ``<version>.md`` from its
     data.json + prose.json (and the deterministic no-changes pages from data.json
     alone), then builds TOC.yml + index.md from the finished page set and the
     committed Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.

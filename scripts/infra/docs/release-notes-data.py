@@ -59,7 +59,7 @@ pages that coexist while the version is in flight:
 
 So e.g. 4.150.0 has BOTH 4.150.0.md (rollup from release/4.150.0-preview.1) and
 4.150.0-unreleased.md (release/4.150.0-preview.1..main delta). They never collide;
-the stale-head prune (build-index records the live set, render-notes --all
+the stale-head prune (release-notes-index.py records the live set, release-notes-render.py --all
 deletes the rest) only removes a `-unreleased` page once its line advances higher.
 
 When a released page rolls up tagged previews, its data.json groups the PRs into
@@ -1797,7 +1797,7 @@ def _data_json_unchanged(data_path, new_data):
     return old == new_data
 
 
-# ── page-set discovery (shared by build-index + render-notes) ──────
+# ── page-set discovery (shared by release-notes-index.py + release-notes-render.py) ──────
 
 
 def get_version_files():
@@ -1831,14 +1831,14 @@ def cadence_milestones():
     current + 1 (the one we cut next).
 
     Derived from the ``_sources/*.data.json`` files, NOT the rendered ``.md``:
-    build-index (which fetches the two Chrome schedules into index.json) runs in
-    the Prepare phase *before* render-notes creates the ``.md`` pages, while
-    render-notes (which lays out the cadence timeline offline and asserts both
+    release-notes-index.py (which fetches the two Chrome schedules into index.json) runs in
+    the Prepare phase *before* release-notes-render.py creates the ``.md`` pages, while
+    release-notes-render.py (which lays out the cadence timeline offline and asserts both
     schedules are present) runs after. A ``.md``-based set would make the two
-    phases disagree during a scoped regen — build-index would fetch m(N-1)/mN
+    phases disagree during a scoped regen — release-notes-index.py would fetch m(N-1)/mN
     while the just-regenerated page needs m(N+1) — leaving index.json missing a
     schedule the render then demands (the old "run prepare twice" symptom). The
-    data.json set is written by build-data *before* build-index and is identical
+    data.json set is written by release-notes-data.py *before* release-notes-index.py and is identical
     in both phases, so both sides always agree on the in-flight pair.
     """
     src = RELEASES_DIR / "_sources"

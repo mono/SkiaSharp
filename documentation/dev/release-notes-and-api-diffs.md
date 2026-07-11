@@ -422,7 +422,7 @@ network** and no permission to re-run Cake, `prepare.sh`, `release-notes-data.py
 `release-notes-index.py`. For each path in `output/files-to-polish.txt`, it reads that
 page's `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), writes
-`_sources/<version>.prose.json` (schema: `schema/prose.schema.json`, including
+`_sources/<version>.prose.json` (schema: `release-notes-schema/prose.schema.json`, including
 `harfbuzz_summary` when required), and runs
 `release-notes-render.py <data.json> <prose.json> <out.md>` to validate the prose. A render
 that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
@@ -517,7 +517,7 @@ the work is split by artifact:
    **no Markdown** and deletes nothing — the pruning it informs runs in
    `release-notes-render.py --all` (§4.2).
 3. **The agent writes `_sources/<version>.prose.json`** — prose only, against
-   `schema/prose.schema.json`: `theme`, `highlights_headline`/`highlights_body`,
+   `release-notes-schema/prose.schema.json`: `theme`, `highlights_headline`/`highlights_body`,
    `breaking`, `categories`, `contributor_summaries`, `preview_summaries`, and
    `harfbuzz_summary` when `data.harfbuzz.prs` is non-empty. It never writes a
    heading, table, banner, handle, ❤️, or PR link.
@@ -553,15 +553,15 @@ Elsewhere in this doc the short form `releases/…` is used for the same locatio
 
 ```
 documentation/docfx/releases/
-  3.119.0.md                 ← rendered SkiaSharp landing page (the hub) [render-notes] §3.2
-  3.119.0-unreleased.md      ← rendered SkiaSharp unreleased delta       [render-notes] §3.2
+  3.119.0.md                 ← rendered SkiaSharp landing page (the hub) [release-notes-render.py] §3.2
+  3.119.0-unreleased.md      ← rendered SkiaSharp unreleased delta       [release-notes-render.py] §3.2
   _sources/                  ← inputs for SkiaSharp pages + site index
-    3.119.0.data.json        ← deterministic page facts (+ harfbuzz block on released pages) [build-data] §4.1
+    3.119.0.data.json        ← deterministic page facts (+ harfbuzz block on released pages) [release-notes-data.py] §4.1
     3.119.0.prose.json       ← AI prose payload (+ harfbuzz_summary)      [Polish AI] §4.4
     3.119.0.notes.md         ← optional manual additions sidecar          [Maintainer] §3.7
-    co-release-map.json      ← Cake→build-data HarfBuzz co-ship input     [Cake]   §3.6
-    index.json               ← network-sourced index data                 [build-index] §3.5
-    pr-authors.json          ← PR-number → GitHub-login cache (offline author resolution) [build-data] §4
+    co-release-map.json      ← Cake→release-notes-data.py HarfBuzz co-ship input     [Cake]   §3.6
+    index.json               ← network-sourced index data                 [release-notes-index.py] §3.5
+    pr-authors.json          ← PR-number → GitHub-login cache (offline author resolution) [release-notes-data.py] §4
   3.119.0/                   ← API diffs for the SkiaSharp package bucket [Cake]   §3.3
     index.md                (per-line diff landing — the SkiaSharp API-diff link target, §3.3)
     SkiaSharp/SkiaSharp.md  (+ SkiaSharp.breaking.md)
@@ -573,7 +573,7 @@ documentation/docfx/releases/
       index.md              (per-line diff landing — the HarfBuzz API-diff link target, §3.4)
       HarfBuzzSharp/HarfBuzzSharp.md  (+ .breaking.md)
       HarfBuzzSharp.NativeAssets.Android/…  …
-  TOC.yml, index.md          ← rendered aggregates over SkiaSharp pages    [render-notes] §3.5
+  TOC.yml, index.md          ← rendered aggregates over SkiaSharp pages    [release-notes-render.py] §3.5
 ```
 
 The `harfbuzzsharp/<hb-line>/` folders are kept because SkiaSharp release pages link
@@ -915,7 +915,7 @@ The release-notes pipeline has three script-owned producers, split by artifact:
 
 The **Polish AI** is not a script producer. It reads a page's data sidecar and its
 bounded companion files, writes `_sources/<stem>.prose.json` (schema:
-`schema/prose.schema.json`), and runs `release-notes-render.py` to validate / render. It
+`release-notes-schema/prose.schema.json`), and runs `release-notes-render.py` to validate / render. It
 never creates, names, prunes, or links pages.
 
 There is no separate HarfBuzz release-notes pass. `cmd_generate` iterates SkiaSharp
@@ -1483,7 +1483,7 @@ HarfBuzzSharp API diff.
 5. **`versions.json` is the only override surface** (§1.2). No new auto-detection
    magic.
 6. **Respect ownership (§3.5).** Each producer clears only the paths it owns;
-   `build-*` scripts own JSON, `release-notes-render.py` owns all Markdown and links, and the
+   `release-notes-data.py` and `release-notes-index.py` own JSON, `release-notes-render.py` owns all Markdown and links, and the
    AI only writes prose JSON (§4.4). Neither engine edits the other's files.
 7. **Prove no regression.** Both engines are idempotent: run before/after on a clean
    tree and diff the generated outputs; intended changes only.

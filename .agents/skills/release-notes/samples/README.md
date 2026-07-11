@@ -6,10 +6,10 @@ heavy one.
 
 - **`4.148.0`** — the first stable v4 release: a deliberately *rich* case that rolls
   up several previews, has real **breaking changes**, and credits multiple community
-  contributors (1423-word page).
+  contributors (1180-word page).
 - **`4.151.0`** — a *light* preview: 15 PRs, **no breaking changes** (so the page
   shows the `*None in this preview line.*` fallback), a couple of category bullets,
-  and one contributor (155-word page).
+  and one contributor (217-word page).
 
 Each example is three files:
 

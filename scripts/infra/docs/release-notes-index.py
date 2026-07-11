@@ -146,7 +146,7 @@ def build_index_json():
         flight, for the release-cadence timeline in index.md.
       * ``live_unreleased`` — the version cores whose ``-unreleased`` page is still
         a live head (from the remote branch list). release-notes-render.py deletes any
-        ``-unreleased`` page not in this set; build-index writes NO Markdown and
+        ``-unreleased`` page not in this set; release-notes-index.py writes NO Markdown and
         deletes nothing itself.
 
     Timestamp-free so an identical run yields an identical file and there is no git
