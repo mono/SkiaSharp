@@ -1,0 +1,89 @@
+{
+  "theme": "Uno, WASM, and platform polish",
+  "highlights_headline": "SkiaSharp 2.80.2 finishes Uno Platform support, wires WASM + GL for Uno, and fixes stream, text, and platform bugs.",
+  "highlights_body": "Uno Platform gets GPU views, WASM support, and refreshed package versions. Alongside that, the release fixes non-seekable stream handling for SKData, several text-rendering regressions, and platform-specific issues on macOS, UWP, and ASP.NET.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Uno Platform coverage expanded",
+          "detail": "Adds GPU views for Uno, WASM support for Uno, and refreshes the Uno package versions and samples.",
+          "prs": [1429, 1333, 1426, 1420]
+        },
+        {
+          "lead": "SKGraphics exposed for debugging",
+          "detail": "The SKGraphics diagnostics surface (font cache limits, purge, memory dump) is now available from managed code, alongside a few additional GPU debugging members.",
+          "prs": [1473, 1478]
+        },
+        {
+          "lead": "SKColorF extensions",
+          "detail": "New extension methods make it easier to convert to and work with SKColorF values.",
+          "prs": [1469]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKData from non-seekable streams",
+          "detail": "Creating SKData from a stream that can't seek no longer fails, and SKSurface.Create honours the origin parameter that was previously ignored.",
+          "prs": [1411, 1404]
+        },
+        {
+          "lead": "Text rendering fixes",
+          "detail": "Uses linear metrics for backwards compatibility, handles invalid text without crashing, and fixes an iOS NullReferenceException in SKCanvas.DrawTextOnPath.",
+          "prs": [1439, 1438, 1410]
+        },
+        {
+          "lead": "WASM + GL uses the correct natives",
+          "detail": "The WASM build now picks up the correct native code for GL rendering.",
+          "prs": [1445]
+        },
+        {
+          "lead": "Pixel and matrix correctness",
+          "detail": "Overwrites the underlying pixel where it should, reverts a bad SetScaleTranslate path, and adjusts a float-return signature that couldn't be used everywhere.",
+          "prs": [1457, 1452, 1453]
+        },
+        {
+          "lead": "Native library discovery under ASP.NET",
+          "detail": "SkiaSharp now checks the correct directory for its native libraries when hosted under ASP.NET.",
+          "prs": [1483]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "macOS uses NeedsDisplay",
+          "detail": "The macOS view now invalidates via NeedsDisplay instead of the eager Display call, matching platform expectations.",
+          "prs": [1475]
+        },
+        {
+          "lead": "UWP no longer blocks the UI thread on invalidate",
+          "detail": "UWP invalidation is now non-blocking, removing a source of hangs when redrawing frequently.",
+          "prs": [1468]
+        },
+        {
+          "lead": "Skia updated",
+          "detail": "Bundled Skia is updated to pick up an upstream fix for issue #465.",
+          "prs": [1436]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ziriax": "Fixed the iOS NullReferenceException in SKCanvas.DrawTextOnPath and the ignored origin parameter in SKSurface.Create"
+  },
+  "preview_summaries": {
+    "2.80.2-p36": "Preview 36 fixed ASP.NET native library discovery, macOS NeedsDisplay behaviour, and added GPU debugging APIs.",
+    "2.80.2-p33": "Preview 33 exposed SKGraphics, unblocked the UWP UI thread on invalidate, and added SKColorF extensions.",
+    "2.80.2-p19": "Preview 19 reverted a bad SetScaleTranslate and corrected pixel writes.",
+    "2.80.2-p18": "Preview 18 fixed WASM + GL native selection and shipped text-rendering fixes (linear metrics, invalid text).",
+    "2.80.2-p9": "Preview 9 landed the Uno Platform expansion — GPU views, WASM support, and refreshed package versions."
+  },
+  "harfbuzz_summary": null
+}

@@ -1,5 +1,5 @@
 // This script holds the mdoc-based docs/ XML generators (docs-update-frameworks,
-// docs-format-docs). The API-diff engine (docs-api-diff / docs-api-diff-past)
+// docs-format-docs). The API-diff engine (docs-api-diff)
 // lives alongside this file at
 // scripts/infra/docs/api-diff.cake; its behavior spec is
 // documentation/dev/release-notes-and-api-diffs.md. The two only share the

@@ -1,0 +1,47 @@
+{
+  "theme": "1.68.1 stable",
+  "highlights_headline": "SkiaSharp 1.68.1 ships the long-running 1.68.1 line as stable with a broad wave of API, view and HarfBuzz work.",
+  "highlights_body": "This is a large servicing release built from six release candidates over four months. It expands the managed API with Span-based buffers, an SKPictureShader binding and new SKTypeface members, reworks the managed/native type layer for stability, splits the desktop view packages, and refreshes HarfBuzzSharp to 2.6.1.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {"lead": "Span-based data, bitmap and text APIs", "detail": "Adds Span<T> overloads for data buffers, bitmap pixels and text blobs so callers can hand SkiaSharp existing memory without copying through byte arrays.", "prs": [865]},
+        {"lead": "SKPictureShader and typeface additions", "detail": "Binds SkPictureShader for tiling and transforming recorded pictures, adds SKTypeface.IsFixedPitch, and lands int-unicode overloads for consistency across the text APIs.", "prs": [973, 1019, 972]},
+        {"lead": "Managed/native type layer reworked", "detail": "Reworks how managed wrappers own and reference native objects so shared instances such as colour spaces stop being disposed out from under callers.", "prs": [900, 922]},
+        {"lead": "HarfBuzzSharp font funcs and table loading", "detail": "Adds font-funcs bindings on the HarfBuzzSharp side and lets faces be loaded directly from table data, alongside general HarfBuzz binding polish.", "prs": [881, 862, 915]}
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {"lead": "iOS canvas and raster view corrections", "detail": "Fixes the iOS canvas implementation and stops raster views allocating zero-byte buffers when the surface has no size yet.", "prs": [879, 761, 863]},
+        {"lead": "Memory and stability fixes", "detail": "Frees native memory when a view is detached, plugs an SKRoundRect leak, and improves UWP GPU view stability under teardown.", "prs": [1005, 995, 1024, 1023, 1000]}
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {"lead": "Desktop view packages split; WPF Forms backend added", "detail": "Splits the desktop view projects and NuGet packages so consumers can pull only the framework they need, and adds a WPF backend for Xamarin.Forms.", "prs": [899, 917]},
+        {"lead": "watchOS and tvOS bitcode, arm64_32 for watchOS", "detail": "Enables bitcode for watchOS and tvOS and adds the watchOS arm64_32 slice so SkiaSharp keeps working on modern Apple wearables.", "prs": [971, 967]},
+        {"lead": "Optional fontconfig on Linux", "detail": "Lets SkiaSharp be built without fontconfig for stripped-down Linux containers and images that do not ship the library.", "prs": [821]}
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "Gillibald": "HarfBuzzSharp 2.6.1 bump, HarfBuzz font funcs, int-unicode overloads, and additional HarfBuzz updates",
+    "alexandrvslv": "SKPictureShader binding",
+    "danien": "Contributed a fix landing in this release",
+    "newky2k": "Contributed a fix landing in this release",
+    "Odirb": "Fixed ToSKPixmap display artifacts with transparent bitmaps (#849)"
+  },
+  "preview_summaries": {
+    "1.68.1-rc172": "Release Candidate 172 was the final RC before stable, folding in the last UWP GPU view stability fixes and colour corrections.",
+    "1.68.1-rc170": "Release Candidate 170 added the SKTypeface.IsFixedPitch binding and prepared for the stable cut.",
+    "1.68.1-rc169": "Release Candidate 169 landed the SKRoundRect leak fix and view teardown corrections.",
+    "1.68.1-rc165": "Release Candidate 165 brought in the SKPictureShader binding and further HarfBuzz updates.",
+    "1.68.1-rc153": "Release Candidate 153 shipped the managed/native type rework and bitcode support for watchOS/tvOS.",
+    "1.68.1-rc147": "Release Candidate 147 opened the 1.68.1 line with the Span<T> APIs, the desktop package split, and the WPF Xamarin.Forms backend."
+  }
+}

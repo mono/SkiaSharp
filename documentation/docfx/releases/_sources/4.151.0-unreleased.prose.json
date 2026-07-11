@@ -1,0 +1,44 @@
+{
+  "theme": "Color parsing and stability",
+  "highlights_headline": "The unreleased 4.151.0 line adds faster color parsing and an upstream GPU text stability fix.",
+  "highlights_body": "It also removes the unnecessary unsafe marker from GRContextOptions, making GPU context configuration easier to use in projects that do not enable unsafe code.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKColor parsing is faster and span-friendly",
+          "detail": "Parse and TryParse now use an allocation-free hex parser and add ReadOnlySpan<char> overloads, so callers can parse colors from larger buffers without slicing strings.",
+          "prs": [
+            4345
+          ]
+        },
+        {
+          "lead": "GRContextOptions no longer requires unsafe context",
+          "detail": "The type no longer carries an unsafe modifier, allowing projects to configure GPU contexts without enabling unsafe code just to reference the options class.",
+          "prs": [
+            3991
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GPU text allocator stability fix",
+          "detail": "Pulls in Skia's m151 SubRunAllocator use-after-free fix, improving stability for text rendering paths backed by the bundled engine.",
+          "prs": [
+            4382
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Added the cross-backend golden-image visual regression test harness"
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": null
+}
