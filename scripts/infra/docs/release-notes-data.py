@@ -1371,17 +1371,31 @@ def _files_by_commit(from_ref, to_ref):
     One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
     file set to classify it product vs internal). A ``\\x1e`` record separator
     prefixes each hash line so file lines can never be mistaken for a hash.
+
+    We SPLIT on ``\\x1e`` rather than matching a leading ``\\x1e`` per line: git
+    lists commits newest-first, and ``run()`` returns ``stdout.strip()`` — and
+    ``\\x1e`` is whitespace to Python's ``str.strip()``, so the FIRST (newest)
+    record loses its leading separator. A ``startswith("\\x1e")`` scan would then
+    silently drop that newest commit's file list, tagging it ``internal`` — which
+    is exactly how the latest automated ``[skia-sync]`` submodule bump (usually the
+    newest commit in the range) kept getting mis-tagged. Splitting recovers every
+    record whether or not its leading separator survived.
     """
     out = run(["git", "log", "--no-renames", "--name-only",
                "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
     files_by = {}  # type: dict
-    cur = None
-    for line in out.split("\n"):
-        if line.startswith("\x1e"):
-            cur = line[1:].strip()
-            files_by[cur] = set()
-        elif line.strip() and cur is not None:
-            files_by[cur].add(line.strip())
+    for record in out.split("\x1e"):
+        record = record.strip()
+        if not record:
+            continue
+        # First line is the commit hash; the rest (past the blank line git emits
+        # before --name-only output) are the touched paths. Merge commits have no
+        # --name-only output, so they map to an empty set (still `internal`).
+        lines = record.split("\n")
+        commit = lines[0].strip()
+        if not commit:
+            continue
+        files_by[commit] = {ln.strip() for ln in lines[1:] if ln.strip()}
     return files_by
 
 
