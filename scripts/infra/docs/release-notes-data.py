@@ -1827,14 +1827,32 @@ def cadence_milestones():
     """(next_major, current_milestone, next_milestone) for the release cadence.
 
     The SkiaSharp minor number IS the Chrome/Skia milestone. The current
-    milestone is the highest one on the newest major line present on disk; the
-    next is current + 1 (the one we cut next). build-index (to fetch the two
-    Chrome schedules into index.json) and render-notes (to lay out the cadence
-    timeline offline) both derive the pair from the same page set, so they agree.
+    milestone is the highest one on the newest major line; the next is
+    current + 1 (the one we cut next).
+
+    Derived from the ``_sources/*.data.json`` files, NOT the rendered ``.md``:
+    build-index (which fetches the two Chrome schedules into index.json) runs in
+    the Prepare phase *before* render-notes creates the ``.md`` pages, while
+    render-notes (which lays out the cadence timeline offline and asserts both
+    schedules are present) runs after. A ``.md``-based set would make the two
+    phases disagree during a scoped regen — build-index would fetch m(N-1)/mN
+    while the just-regenerated page needs m(N+1) — leaving index.json missing a
+    schedule the render then demands (the old "run prepare twice" symptom). The
+    data.json set is written by build-data *before* build-index and is identical
+    in both phases, so both sides always agree on the in-flight pair.
     """
-    versions, next_versions = get_version_files()
-    keys = [version_key(v) for v in list(versions) + list(next_versions)
-            if v and len(version_key(v)) >= 2]
+    src = RELEASES_DIR / "_sources"
+    keys = []  # type: list[tuple]
+    if src.is_dir():
+        for f in src.iterdir():
+            if not f.name.endswith(".data.json"):
+                continue
+            stem = f.name[:-len(".data.json")]
+            if stem.endswith("-unreleased"):
+                stem = stem[:-len("-unreleased")]
+            k = version_key(stem)
+            if len(k) >= 2:
+                keys.append(k)
     next_major = max((k[0] for k in keys), default=4)
     line_ms = [k[1] for k in keys if k[0] == next_major]
     cur_ms = max(line_ms) if line_ms else 1

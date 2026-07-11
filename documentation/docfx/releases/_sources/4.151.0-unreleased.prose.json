@@ -1,37 +1,44 @@
 {
-  "theme": "Perf and hex-parse work",
-  "highlights_headline": "SkiaSharp 4.151.0 (unreleased) speeds up SKColor hex parsing and folds in an upstream m151 bug-fix sync.",
-  "highlights_body": null,
+  "theme": "Color parsing and stability",
+  "highlights_headline": "The unreleased 4.151.0 line adds faster color parsing and an upstream GPU text stability fix.",
+  "highlights_body": "It also removes the unnecessary unsafe marker from GRContextOptions, making GPU context configuration easier to use in projects that do not enable unsafe code.",
   "breaking": [],
   "categories": [
-    {
-      "heading": "Engine",
-      "bullets": [
-        {
-          "lead": "Upstream chrome/m151 bug-fix sync",
-          "detail": "The bundled engine picks up the latest upstream chrome/m151 fixes.",
-          "prs": [4312]
-        }
-      ]
-    },
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Faster SKColor hex parsing with ReadOnlySpan<char> overloads",
-          "detail": "`SKColor.Parse`/`TryParse` gain `ReadOnlySpan<char>` overloads and skip allocations on the hot path, so slicing a color out of a larger string no longer needs a substring.",
-          "prs": [4345]
+          "lead": "SKColor parsing is faster and span-friendly",
+          "detail": "Parse and TryParse now use an allocation-free hex parser and add ReadOnlySpan<char> overloads, so callers can parse colors from larger buffers without slicing strings.",
+          "prs": [
+            4345
+          ]
         },
         {
-          "lead": "GRContextOptions cleanup",
-          "detail": "The `unsafe` modifier on `GRContextOptions` is dropped — it wasn't needed for the fields it declared, so consumers can now use the type from `/unsafe`-disabled projects without a workaround.",
-          "prs": [3991]
+          "lead": "GRContextOptions no longer requires unsafe context",
+          "detail": "The type no longer carries an unsafe modifier, allowing projects to configure GPU contexts without enabling unsafe code just to reference the options class.",
+          "prs": [
+            3991
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GPU text allocator stability fix",
+          "detail": "Pulls in Skia's m151 SubRunAllocator use-after-free fix, improving stability for text rendering paths backed by the bundled engine.",
+          "prs": [
+            4382
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Cross-backend golden-image visual regression test harness (test infrastructure powering later releases)"
+    "ramezgerges": "Added the cross-backend golden-image visual regression test harness"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
