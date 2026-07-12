@@ -1,0 +1,72 @@
+{
+  "theme": "1.68.2 stable",
+  "highlights_headline": "SkiaSharp 1.68.2 lands after nine previews with view lifecycle fixes, new APIs and platform work across the board.",
+  "highlights_body": "This release tightens view lifetime and disposal on every UI backend, adds writable pixel spans, SKColorF/SKColorSpace overloads, more SKImage/SKRegion members and improved Perlin noise shaders, and brings in community fixes for WPF, UWP, macOS and Android views. HarfBuzzSharp is refreshed to 2.6.1.2.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {"lead": "Writable pixel spans and SKColorF overloads", "detail": "Exposes a generic, writable Span<T> over pixel memory and adds SKColorF variants (with SKColorSpace) across the paint and canvas APIs for wide-gamut work.", "prs": [1242, 1116]},
+        {"lead": "More SKImage, SKRegion and SKCanvas members bound", "detail": "Rounds out SKImage, SKRegion and SKCanvas by binding members that were previously missing from the managed surface.", "prs": [1126, 1125, 1090]},
+        {"lead": "Improved Perlin noise shader", "detail": "Adds an SKShader factory for the improved Perlin noise variant, matching Skia's newer noise generator.", "prs": [1056]},
+        {"lead": ".NET-style method renames", "detail": "Renames a handful of methods to follow .NET conventions so the managed surface reads more naturally.", "prs": [1255]},
+        {"lead": "Merge-filter factories accept nulls", "detail": "The merge image-filter factory overloads now accept null arguments, matching the semantics of the underlying Skia API.", "prs": [1185]}
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {"lead": "View lifecycle and disposal reworked", "detail": "Reworks the view classes across UI stacks to avoid incorrect disposal, releases Skia objects when views unload, and fixes queued-redraw and double-load issues.", "prs": [1180, 1213, 1135, 1133]},
+        {"lead": "UWP, Android, macOS and WPF fixes", "detail": "Fixes broken antialiasing on the UWP SKSwapChainPanel, refreshes the Android surface when recreated, corrects macOS SKGLView issues, and adds mouse-wheel touch events to WPF.", "prs": [1086, 1234, 1083, 1079]},
+        {"lead": "SKTouchHandler crash and disposal fixes", "detail": "Fixes a touch-handler crash caused by an incorrect parameter (also adding pressure and eraser handling) and corrects SKGLViewRenderer disposal.", "prs": [1212, 1095]},
+        {"lead": "Concurrency and system-font handling", "detail": "Resolves several concurrency issues in shared object caches and stops system fonts from being disposed by the managed layer.", "prs": [1200, 1224]},
+        {"lead": "GL and rendering corrections", "detail": "Makes sure GL contexts are made current before drawing, fixes text-encoding handling in paint, and adds a text-alignment regression test.", "prs": [1141, 1152, 1207, 1143]}
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {"lead": "Reflection removed from SKObject creation", "detail": "Replaces reflection-based construction of SKObject wrappers with direct instantiation, reducing startup cost and helping AOT scenarios.", "prs": [1209]},
+        {"lead": "Preserve attribute dropped; GC-safety hardened", "detail": "Removes the linker-only [Preserve] attribute and pins 'this' and pixel buffers during native calls so the GC cannot move them mid-draw.", "prs": [1229, 1258, 1256, 1257]}
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {"lead": "GTK views for Xamarin.Forms and Tizen overload", "detail": "Adds GTK view backends for Xamarin.Forms and the overload that newer versions of XF.Tizen expect.", "prs": [1089, 1117]},
+        {"lead": "Windows Forms multi-targeting and ANGLE via vcpkg", "detail": "Multi-targets SkiaSharp.Views.Windows.Forms and moves the ANGLE native build to vcpkg for a more reliable Windows toolchain.", "prs": [1082, 1158]},
+        {"lead": "Xamarin.Forms 4.2 and always-referenced netstandard", "detail": "Updates the bundled Xamarin.Forms baseline to 4.2.0.910310 and always references netstandard so downstream targets resolve consistently.", "prs": [1109, 1250]}
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {"lead": "Bundled expat updated to 2.2.9", "detail": "Refreshes the bundled expat native library to 2.2.9, picking up the security fixes shipped by upstream.", "prs": [1214]}
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "bender2k14": "Sample cleanups carried over from 1.68.1.1 — dropped an unused TaskScheduler argument and simplified the rotation matrix initialisation",
+    "mscherotter": "Fixed an SKTouchHandler crash and added touch-device type (touch, mouse, pen) with pressure and eraser handling",
+    "alexandrvslv": "Added mouse-wheel touch events on WPF",
+    "daltonks": "Cleaned up WeakReference tracking so TryRemove clears the stored reference",
+    "Gillibald": "Removed reflection usage in SKObject creation",
+    "terrajobst": "Contributed an improvement that landed in this release",
+    "validvoid": "Fixed broken antialiasing on the UWP SKSwapChainPanel",
+    "zbyszekpy": "Corrected SKGLViewRenderer disposal",
+    "ziriax": "Made the merge image-filter factory overloads accept null arguments"
+  },
+  "preview_summaries": {
+    "1.68.2-p60": "Preview 60 was the final preview before stable, folding in the GC-safety pinning fixes and last view lifecycle corrections.",
+    "1.68.2-p50": "Preview 50 finished the view lifetime rework and added the writable pixel Span and .NET-style renames.",
+    "1.68.2-p45": "Preview 45 landed the Android surface-recreate fix and further Xamarin.Forms/WPF corrections.",
+    "1.68.2-p43": "Preview 43 removed reflection from SKObject creation and dropped the [Preserve] attribute.",
+    "1.68.2-p39": "Preview 39 added the expat 2.2.9 refresh, touch-handler improvements and the WPF mouse-wheel touch event.",
+    "1.68.2-p29": "Preview 29 brought the GTK Xamarin.Forms views, macOS SKGLView fixes and Windows Forms multi-targeting.",
+    "1.68.2-p21": "Preview 21 added the SKColorF/SKColorSpace overloads and more SKImage, SKRegion and SKCanvas members.",
+    "1.68.2-p17": "Preview 17 shipped the improved Perlin noise shader and moved ANGLE to vcpkg.",
+    "1.68.1.1-p9": "Preview 9 opened the 1.68.2 line and also formed the basis of 1.68.1.1 with the image-decoding and HarfBuzz string fixes."
+  },
+  "harfbuzz_summary": "Refreshes HarfBuzzSharp to 2.6.1.2 with the native build modernisation, buffer-overflow cherry-picks and general binding polish carried into 1.68.2."
+}

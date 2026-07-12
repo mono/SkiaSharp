@@ -1,0 +1,36 @@
+{
+  "theme": "1.68.1 servicing",
+  "highlights_headline": "SkiaSharp 1.68.1.1 is a servicing patch on 1.68.1 with image decoding, HarfBuzz string and native build fixes.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {"lead": "Image decoding corrected", "detail": "Fixes cases where images were decoded with the wrong colour or pixel handling, restoring correct output for common formats.", "prs": [1055]},
+        {"lead": "HarfBuzz string handling and buffer overflows", "detail": "Corrects string marshalling in the HarfBuzz binding and cherry-picks upstream fixes for buffer-overflow bugs.", "prs": [1034, 1037]},
+        {"lead": "Sample renderer picks a supported sample count", "detail": "Stops the sample surfaces asking for the maximum MSAA sample count, which some drivers refused.", "prs": [1060]}
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {"lead": "Weak-reference tracking cleaned up on removal", "detail": "TryRemove now clears the tracked WeakReference so long-lived object caches do not keep stale entries around.", "prs": [1039]}
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {"lead": "Native build modernised; Nano Server added", "detail": "Reworks the native build process and adds a Nano Server target so SkiaSharp runs in stripped-down Windows containers.", "prs": [1040]}
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "bender2k14": "Sample cleanups — dropped an unused TaskScheduler argument and simplified the rotation matrix initialisation",
+    "daltonks": "Cleaned up WeakReference tracking so TryRemove clears the stored reference"
+  },
+  "preview_summaries": {
+    "1.68.1.1-p9": "Preview 9 was the only preview cut for 1.68.1.1, bundling the image-decoding correction, HarfBuzz string fixes, buffer-overflow cherry-picks and the Nano Server build work."
+  },
+  "harfbuzz_summary": "Rolls the bundled HarfBuzz build forward to 2.6.1.1 with the native build-process modernisation."
+}
