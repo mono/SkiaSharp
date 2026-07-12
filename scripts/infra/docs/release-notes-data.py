@@ -1305,16 +1305,33 @@ def determine_diff_range(branch):
 # can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
 # instead of re-judging every PR from its title each run (the source of leak variance).
 #
-#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
-#              consumer can see. Companion test/benchmark/generated files are ignored.
-#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
-#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
-#              image, SDK pin). Polish guesses from the title/context in data.json
-#              (it does not open the PR) — surface a behaviour change, drop pure infra.
-#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
-#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
-_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
-_BUILD_PATH_PREFIXES = ("native/",)
+#   product  — touches SHIPPED code: a real API / behaviour / native change a consumer
+#              can see. Companion test/benchmark/generated files are ignored.
+#                binding/       — managed SkiaSharp/HarfBuzzSharp API + NativeAssets packages
+#                source/        — the Views / integration packages
+#                externals/skia — the native Skia submodule (with its vendored HarfBuzz):
+#                                 THE native product. A bump shows up in the parent as the
+#                                 bare `externals/skia` gitlink, so the prefix is exact —
+#                                 `externals/` alone would wrongly sweep in the sibling
+#                                 build-tooling submodule and `externals/.gitignore`.
+#   mixed    — affects the shipped PACKAGE but is not itself an API/behaviour change, so
+#              Polish judges from the title/context in data.json (it does not open the PR)
+#              — surface a real behaviour change, drop pure infra / doc churn:
+#                native/    — the per-platform build config (compile flags / gn args). It
+#                             shapes the shipped native binaries (so not internal), but a
+#                             native/-only PR is usually infra, not a consumer-facing change.
+#                docs       — the SkiaSharp-API-docs submodule (mdoc XML) that ships as the
+#                             packages' IntelliSense docs: shipped content, but a doc-text
+#                             change, not an API/behaviour change. It is a submodule, so a
+#                             bump shows up as the bare `docs` gitlink — hence the slash-less
+#                             prefix (a `docs/` prefix would miss it, and `docs` does not
+#                             collide with `documentation/`).
+#   internal — touches none of the above: a pure repository process (CI, workflows, agent
+#              skills, docs *site*, tests, samples, build/meta files, and the
+#              `externals/depot_tools` build-toolchain submodule). Dropped into the
+#              collapse line.
+_SHIP_PATH_PREFIXES = ("binding/", "externals/skia", "source/")
+_BUILD_PATH_PREFIXES = ("docs", "native/")
 
 
 def _pr_category(files):

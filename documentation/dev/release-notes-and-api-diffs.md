@@ -987,7 +987,7 @@ built from. It is timestamp-free and includes, at minimum:
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, `internal`).
+  deterministic `tag` (`product`, `mixed`, or `internal`).
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
 - `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
@@ -1035,17 +1035,27 @@ principles are fixed here.
    API, runtime behavior, native binary, or NuGet package — changed for a consumer.
    Prepare makes this deterministic: `release-notes-data.py` tags every PR in `data.json` as
    **`product`**, **`mixed`**, or **`internal`** by the files it changed.
-   - **`product`** — touches shipped code (`binding/`, `externals/`, `source/`). Written up.
-   - **`internal`** — touches none of those (CI, workflows, agent skills, docs site,
-     tests, samples, build/meta). Dropped into the one collapse line.
-   - **`mixed`** — touches only build config (`native/`): it may change the shipped
-     binary via a compile flag or be pure infra. Polish judges from the title/context
-     already in `data.json`; it does not open the PR.
+   - **`product`** — touches shipped code with a real API / behaviour / native change:
+     `binding/` + `source/` (managed API & Views) and `externals/skia` (the native Skia
+     submodule, with its vendored HarfBuzz). Written up.
+   - **`mixed`** — affects the shipped package but is not itself an API/behaviour change, so
+     Polish judges from the title: `native/` (per-platform build config — compile flags/gn
+     args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
+     submodule that ships as IntelliSense XML — doc content, not behaviour).
+   - **`internal`** — touches none of those (CI, workflows, agent skills, docs *site*,
+     tests, samples, build/meta, and the `externals/depot_tools` build-toolchain submodule).
+     Dropped into the one collapse line.
 
-   `native/` is deliberately **not** treated as shipped code: it is build
-   configuration, and the thing that actually ships is `externals/skia/`. Polish drops
-   `internal`, writes up `product`, and inspects `mixed`; moving the classification out
-   of the LLM makes product-focus reliable run-to-run.
+   `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
+   `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
+   from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
+   in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
+   prefixes match those exactly — the `externals/skia` prefix is deliberately not just
+   `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
+   submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
+   the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
+   `product`, and inspects `mixed`; moving the classification out of the LLM makes
+   product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the
