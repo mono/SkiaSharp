@@ -94,6 +94,7 @@ Requirements: git, Python 3.7+
 
 from __future__ import annotations
 
+import argparse
 import fnmatch
 import hashlib
 import json
