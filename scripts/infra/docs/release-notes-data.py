@@ -94,7 +94,7 @@ Requirements: git, Python 3.7+
 
 from __future__ import annotations
 
-import argparse
+import fnmatch
 import hashlib
 import json
 import re
@@ -140,6 +140,12 @@ _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 _VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
 
 VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
+
+# PR path-classification config (loaded lazily from
+# scripts/infra/docs/release-notes-paths.json). The single deterministic place that
+# owns which touched paths map to which release-note tag — see _pr_category().
+PATH_TAGS_JSON_PATH = Path("scripts/infra/docs/release-notes-paths.json")
+_PATH_TAGS_CONFIG = None  # type: Optional[tuple]
 
 # HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
 # commits touching these — the HarfBuzzSharp binding + its native assets, the
@@ -1305,43 +1311,61 @@ def determine_diff_range(branch):
 # can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
 # instead of re-judging every PR from its title each run (the source of leak variance).
 #
-#   product  — touches SHIPPED code: a real API / behaviour / native change a consumer
-#              can see. Companion test/benchmark/generated files are ignored.
-#                binding/       — managed SkiaSharp/HarfBuzzSharp API + NativeAssets packages
-#                source/        — the Views / integration packages
-#                externals/skia — the native Skia submodule (with its vendored HarfBuzz):
-#                                 THE native product. A bump shows up in the parent as the
-#                                 bare `externals/skia` gitlink, so the prefix is exact —
-#                                 `externals/` alone would wrongly sweep in the sibling
-#                                 build-tooling submodule and `externals/.gitignore`.
-#   mixed    — affects the shipped PACKAGE but is not itself an API/behaviour change, so
-#              Polish judges from the title/context in data.json (it does not open the PR)
-#              — surface a real behaviour change, drop pure infra / doc churn:
-#                native/    — the per-platform build config (compile flags / gn args). It
-#                             shapes the shipped native binaries (so not internal), but a
-#                             native/-only PR is usually infra, not a consumer-facing change.
-#                docs       — the SkiaSharp-API-docs submodule (mdoc XML) that ships as the
-#                             packages' IntelliSense docs: shipped content, but a doc-text
-#                             change, not an API/behaviour change. It is a submodule, so a
-#                             bump shows up as the bare `docs` gitlink — hence the slash-less
-#                             prefix (a `docs/` prefix would miss it, and `docs` does not
-#                             collide with `documentation/`).
-#   internal — touches none of the above: a pure repository process (CI, workflows, agent
-#              skills, docs *site*, tests, samples, build/meta files, and the
-#              `externals/depot_tools` build-toolchain submodule). Dropped into the
-#              collapse line.
-_SHIP_PATH_PREFIXES = ("binding/", "externals/skia", "source/")
-_BUILD_PATH_PREFIXES = ("docs", "native/")
+# The path→tag mapping is NOT hardcoded here: it lives in the committed
+# scripts/infra/docs/release-notes-paths.json, the single deterministic place to edit it
+# (ordered tiers of prefixes/globs + a default). See that file's `description`/`notes`
+# and spec §4.4 for the rationale (why `externals/skia` is exact, why `docs` is
+# slash-less, why `native/` is mixed, etc.).
+
+
+def _load_path_tags():
+    # type: () -> tuple
+    """Load release-notes-paths.json as ``([(tag, patterns), ...], default)`` (cached).
+
+    Ordered tiers + a default tag — the deterministic PR path-classification config
+    (spec §4.4). Read once and memoised; a missing/malformed file is a hard error (the
+    file is committed and required — do not silently fall back to a guessed mapping).
+    """
+    global _PATH_TAGS_CONFIG
+    if _PATH_TAGS_CONFIG is None:
+        if not PATH_TAGS_JSON_PATH.exists():
+            raise FileNotFoundError(
+                "Missing %s — the PR path-classification config (spec §4.4)."
+                % PATH_TAGS_JSON_PATH)
+        with open(PATH_TAGS_JSON_PATH) as f:
+            cfg = json.load(f)
+        tiers = [(t["tag"], tuple(t.get("patterns", [])))
+                 for t in cfg.get("tiers", [])]
+        _PATH_TAGS_CONFIG = (tiers, cfg.get("default", "internal"))
+    return _PATH_TAGS_CONFIG
+
+
+def _path_matches(path, pattern):
+    # type: (str, str) -> bool
+    """Does a file ``path`` match a config ``pattern``?
+
+    Plain patterns are PREFIXES (``str.startswith`` — so ``binding/`` catches everything
+    under it and a bare submodule gitlink like ``externals/skia`` / ``docs`` matches
+    itself). A pattern containing a glob metacharacter (``* ? [``) is matched with
+    ``fnmatch.fnmatchcase`` (case-sensitive, platform-independent) instead.
+    """
+    if any(c in pattern for c in "*?["):
+        return fnmatch.fnmatchcase(path, pattern)
+    return path.startswith(pattern)
 
 
 def _pr_category(files):
     # type: (set) -> str
-    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
-    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
-        return "product"
-    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
-        return "mixed"
-    return "internal"
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4).
+
+    Tiers from release-notes-paths.json are tried in order; the first tier with any
+    matching file wins, else the configured default.
+    """
+    tiers, default = _load_path_tags()
+    for tag, patterns in tiers:
+        if any(_path_matches(f, p) for f in files for p in patterns):
+            return tag
+    return default
 
 
 # Automation accounts — never credited as human contributors (§4.5). The workflow

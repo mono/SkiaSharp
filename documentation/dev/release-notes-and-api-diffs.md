@@ -342,6 +342,8 @@ scripts/infra/docs/                (all doc engines, together)
                                prunes stale -unreleased pages and retires HarfBuzz hub pages
   release-notes-schema/prose.schema.json   the prose contract the agent fills
   versions.json                supersession + baseline config (§1); shared repo-wide
+  release-notes-paths.json     PR path→tag classification (§4.4): the deterministic,
+                               editable product/mixed/internal path map read by release-notes-data.py
   docker/                      reproducible image + run.sh wrapper; `api-diffs`
                                invokes the `docs-api-diff` target directly
 
@@ -1034,7 +1036,12 @@ principles are fixed here.
    every PR is whether the **shipped SkiaSharp/HarfBuzzSharp library** — its public
    API, runtime behavior, native binary, or NuGet package — changed for a consumer.
    Prepare makes this deterministic: `release-notes-data.py` tags every PR in `data.json` as
-   **`product`**, **`mixed`**, or **`internal`** by the files it changed.
+   **`product`**, **`mixed`**, or **`internal`** by the files it changed. The path→tag
+   mapping is **not** hardcoded in the script — it lives in
+   [`scripts/infra/docs/release-notes-paths.json`](../../scripts/infra/docs/release-notes-paths.json),
+   the single deterministic place to edit it. It is a short list of ordered tiers (each a
+   `tag` + `patterns`) plus a `default`; the first tier with a matching file wins. A pattern
+   matches by prefix (`str.startswith`), or as a glob if it contains `* ? [`.
    - **`product`** — touches shipped code with a real API / behaviour / native change:
      `binding/` + `source/` (managed API & Views) and `externals/skia` (the native Skia
      submodule, with its vendored HarfBuzz). Written up.
@@ -1042,9 +1049,9 @@ principles are fixed here.
      Polish judges from the title: `native/` (per-platform build config — compile flags/gn
      args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
      submodule that ships as IntelliSense XML — doc content, not behaviour).
-   - **`internal`** — touches none of those (CI, workflows, agent skills, docs *site*,
-     tests, samples, build/meta, and the `externals/depot_tools` build-toolchain submodule).
-     Dropped into the one collapse line.
+   - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
+     *site*, tests, samples, build/meta, and the `externals/depot_tools` build-toolchain
+     submodule). Dropped into the one collapse line.
 
    `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
    `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
@@ -1054,8 +1061,8 @@ principles are fixed here.
    `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
    submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
    the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
-   `product`, and inspects `mixed`; moving the classification out of the LLM makes
-   product-focus reliable run-to-run.
+   `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
+   JSON) makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the

@@ -1,0 +1,30 @@
+{
+  "description": "Path-based PR classification for the release notes. release-notes-data.py reads this file to tag every merged PR by the files it touched (behaviour spec: documentation/dev/release-notes-and-api-diffs.md, section 4.4). This JSON is the single deterministic place to edit the mapping - the script does not hardcode which paths are product/mixed/internal.",
+  "matching": "Tiers are evaluated top-to-bottom; the FIRST tier with any file matching any of its patterns wins, otherwise `default`. A pattern matches a file path by PREFIX (str.startswith) - so `binding/` catches everything under it, and a bare submodule gitlink such as `externals/skia` or `docs` matches itself. A pattern that contains a glob metacharacter (* ? [) is matched with fnmatch instead (e.g. `native/*/libHarfBuzzSharp/**`).",
+  "tiers": [
+    {
+      "tag": "product",
+      "why": "Shipped code - a real API / behaviour / native change a consumer can see. Written up in the notes.",
+      "patterns": [
+        "binding/",
+        "source/",
+        "externals/skia"
+      ]
+    },
+    {
+      "tag": "mixed",
+      "why": "Affects the shipped package but is not itself an API/behaviour change; Polish judges from the PR title/context and surfaces only a real behaviour change, dropping pure infra / doc churn.",
+      "patterns": [
+        "native/",
+        "docs"
+      ]
+    }
+  ],
+  "default": "internal",
+  "notes": [
+    "`externals/skia` is intentionally exact, NOT `externals/`: the sibling `externals/depot_tools` (build toolchain) and `externals/.gitignore` are build infra and must stay `default` (internal).",
+    "`docs` is the mono/SkiaSharp-API-docs submodule (mdoc XML that ships as the packages' IntelliSense docs). It is slash-less so it matches the bare `docs` gitlink and does not collide with `documentation/` - the docs site, which stays internal.",
+    "`native/` covers the per-platform build config (gn args / compile flags) and the shipped WinUI native subtree under `native/winui/`.",
+    "Anything not matched (CI, workflows, agent skills, the `documentation/` docs site, tests, samples, build/meta files, and `externals/depot_tools`) falls through to `default`."
+  ]
+}
