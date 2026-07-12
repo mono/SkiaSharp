@@ -1,7 +1,7 @@
 {
-  "theme": "Color parsing and stability",
-  "highlights_headline": "The unreleased 4.151.0 line adds faster color parsing and an upstream GPU text stability fix.",
-  "highlights_body": "It also removes the unnecessary unsafe marker from GRContextOptions, making GPU context configuration easier to use in projects that do not enable unsafe code.",
+  "theme": "Performance and API improvements",
+  "highlights_headline": "SkiaSharp 4.151.0 eliminates hot-path allocations in HarfBuzz and SKShaper, and adds span-friendly SKColor parsing overloads.",
+  "highlights_body": "Three allocation-free performance improvements land: HarfBuzzSharp.Tag.Parse, SKFourByteTag.Parse, and SKShaper glyph results all drop per-call heap allocations. This line also adds ReadOnlySpan<char> overloads to SKColor parsing, removes the unnecessary unsafe modifier from GRContextOptions, and pulls in two rounds of upstream Skia m151 bug fixes.",
   "breaking": [],
   "categories": [
     {
@@ -10,16 +10,12 @@
         {
           "lead": "SKColor parsing is faster and span-friendly",
           "detail": "Parse and TryParse now use an allocation-free hex parser and add ReadOnlySpan<char> overloads, so callers can parse colors from larger buffers without slicing strings.",
-          "prs": [
-            4345
-          ]
+          "prs": [4345]
         },
         {
           "lead": "GRContextOptions no longer requires unsafe context",
-          "detail": "The type no longer carries an unsafe modifier, allowing projects to configure GPU contexts without enabling unsafe code just to reference the options class.",
-          "prs": [
-            3991
-          ]
+          "detail": "The unnecessary unsafe modifier has been removed from GRContextOptions, allowing projects to configure GPU contexts without enabling unsafe code.",
+          "prs": [3991]
         }
       ]
     },
@@ -27,11 +23,19 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU text allocator stability fix",
-          "detail": "Pulls in Skia's m151 SubRunAllocator use-after-free fix, improving stability for text rendering paths backed by the bundled engine.",
-          "prs": [
-            4382
-          ]
+          "lead": "Upstream Skia m151 bug fixes",
+          "detail": "Pulls in two rounds of Skia m151 upstream fixes, including the SubRunAllocator use-after-free that caused GPU text rendering instability.",
+          "prs": [4312, 4382]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Allocation-free parsing in HarfBuzz and Skia tag types",
+          "detail": "HarfBuzzSharp.Tag.Parse and SKFourByteTag.Parse no longer allocate a char[4] on every call. SKShaper now reads glyph results through zero-copy spans, reducing GC pressure in text layout loops.",
+          "prs": [4408, 4396, 4388]
         }
       ]
     }
