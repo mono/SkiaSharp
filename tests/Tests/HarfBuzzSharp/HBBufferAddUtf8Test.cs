@@ -71,23 +71,39 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[Fact]
-		public void EmptyStringAddsNothing()
+		public void EmptyStringIsANoOp()
 		{
-			var (codepoints, clusters) = AddViaString("");
+			// main's behaviour: an empty string adds nothing. The empty string now
+			// flows through the pooled path (no ArgumentNullException, Length stays 0),
+			// matching a fresh buffer.
+			using var buffer = new Buffer();
+			Assert.Equal(0, buffer.Length);
 
-			Assert.Empty(codepoints);
-			Assert.Empty(clusters);
+			buffer.AddUtf8("");
+
+			Assert.Equal(0, buffer.Length);
+			Assert.Empty(buffer.GlyphInfos);
 		}
 
 		[Fact]
-		public void NullStringThrowsLikeOriginalPath()
+		public void NullStringThrowsArgumentNullException()
 		{
-			// Original path: AddUtf8(Encoding.UTF8.GetBytes((string)null), 0, -1)
-			// which throws ArgumentNullException before adding anything.
-			Assert.Throws<ArgumentNullException>(() => Encoding.UTF8.GetBytes((string)null));
-
+			// main's behaviour: a null string throws ArgumentNullException before
+			// adding anything (originally from Encoding.UTF8.GetBytes((string)null)).
 			using var buffer = new Buffer();
 			Assert.Throws<ArgumentNullException>(() => buffer.AddUtf8((string)null));
+		}
+
+		[Fact]
+		public void RealStringProducesExpectedGlyphInfos()
+		{
+			// "Teeth" guard: proves the equivalence/shaping tests are not vacuously
+			// comparing empty output. Pre-shape, HarfBuzz adds one item per Unicode
+			// scalar carrying the raw codepoint, with clusters as UTF-8 byte offsets.
+			var (codepoints, clusters) = AddViaString("Hello");
+
+			Assert.Equal(new uint[] { 'H', 'e', 'l', 'l', 'o' }, codepoints);
+			Assert.Equal(new uint[] { 0, 1, 2, 3, 4 }, clusters);
 		}
 
 		private static (uint[] Codepoints, uint[] Clusters) AddViaString(string text)

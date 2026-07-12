@@ -174,13 +174,12 @@ namespace HarfBuzzSharp
 
 		public void AddUtf8 (string utf8text)
 		{
-			if (string.IsNullOrEmpty (utf8text)) {
-				// Preserve the original behaviour for edge inputs: a null string throws
-				// ArgumentNullException and an empty string adds nothing.
-				AddUtf8 (Encoding.UTF8.GetBytes (utf8text), 0, -1);
-				return;
-			}
+			if (utf8text == null)
+				throw new ArgumentNullException (nameof (utf8text));
 
+			// An empty string flows through the pooled path as a no-op:
+			// GetMaxByteCount(0) rents a small buffer, GetBytes writes 0 bytes,
+			// and AddUtf8(ptr, 0, ...) adds nothing (mirrors AddUtf16(string)).
 			var maxByteCount = Encoding.UTF8.GetMaxByteCount (utf8text.Length);
 			var utf8bytes = ArrayPool<byte>.Shared.Rent (maxByteCount);
 			try {
