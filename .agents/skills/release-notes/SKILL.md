@@ -23,8 +23,8 @@ to read.
 If yes, write about it. If no (CI tweaks, internal refactors, doc/workflow
 plumbing, test infra), leave it out — the renderer already collapses that noise.
 `data.json` tags every PR `product` / `mixed` / `internal`; treat `internal` as
-invisible unless it changed shipped behaviour, and for `mixed` judge from the
-title.
+invisible unless it changed shipped behaviour, and for `mixed` (build config in
+`native/`, or a `docs` API-docs bump) judge from the title.
 
 ## Running the full pipeline (prepare → write prose → render)
 

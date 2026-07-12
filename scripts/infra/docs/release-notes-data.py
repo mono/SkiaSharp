@@ -94,7 +94,7 @@ Requirements: git, Python 3.7+
 
 from __future__ import annotations
 
-import argparse
+import fnmatch
 import hashlib
 import json
 import re
@@ -140,6 +140,12 @@ _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 _VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
 
 VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
+
+# PR path-classification config (loaded lazily from
+# scripts/infra/docs/release-notes-paths.json). The single deterministic place that
+# owns which touched paths map to which release-note tag — see _pr_category().
+PATH_TAGS_JSON_PATH = Path("scripts/infra/docs/release-notes-paths.json")
+_PATH_TAGS_CONFIG = None  # type: Optional[tuple]
 
 # HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
 # commits touching these — the HarfBuzzSharp binding + its native assets, the
@@ -1305,26 +1311,61 @@ def determine_diff_range(branch):
 # can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
 # instead of re-judging every PR from its title each run (the source of leak variance).
 #
-#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
-#              consumer can see. Companion test/benchmark/generated files are ignored.
-#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
-#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
-#              image, SDK pin). Polish guesses from the title/context in data.json
-#              (it does not open the PR) — surface a behaviour change, drop pure infra.
-#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
-#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
-_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
-_BUILD_PATH_PREFIXES = ("native/",)
+# The path→tag mapping is NOT hardcoded here: it lives in the committed
+# scripts/infra/docs/release-notes-paths.json, the single deterministic place to edit it
+# (ordered tiers of prefixes/globs + a default). See that file's `description`/`notes`
+# and spec §4.4 for the rationale (why `externals/skia` is exact, why `docs` is
+# slash-less, why `native/` is mixed, etc.).
+
+
+def _load_path_tags():
+    # type: () -> tuple
+    """Load release-notes-paths.json as ``([(tag, patterns), ...], default)`` (cached).
+
+    Ordered tiers + a default tag — the deterministic PR path-classification config
+    (spec §4.4). Read once and memoised; a missing/malformed file is a hard error (the
+    file is committed and required — do not silently fall back to a guessed mapping).
+    """
+    global _PATH_TAGS_CONFIG
+    if _PATH_TAGS_CONFIG is None:
+        if not PATH_TAGS_JSON_PATH.exists():
+            raise FileNotFoundError(
+                "Missing %s — the PR path-classification config (spec §4.4)."
+                % PATH_TAGS_JSON_PATH)
+        with open(PATH_TAGS_JSON_PATH) as f:
+            cfg = json.load(f)
+        tiers = [(t["tag"], tuple(t.get("patterns", [])))
+                 for t in cfg.get("tiers", [])]
+        _PATH_TAGS_CONFIG = (tiers, cfg.get("default", "internal"))
+    return _PATH_TAGS_CONFIG
+
+
+def _path_matches(path, pattern):
+    # type: (str, str) -> bool
+    """Does a file ``path`` match a config ``pattern``?
+
+    Plain patterns are PREFIXES (``str.startswith`` — so ``binding/`` catches everything
+    under it and a bare submodule gitlink like ``externals/skia`` / ``docs`` matches
+    itself). A pattern containing a glob metacharacter (``* ? [``) is matched with
+    ``fnmatch.fnmatchcase`` (case-sensitive, platform-independent) instead.
+    """
+    if any(c in pattern for c in "*?["):
+        return fnmatch.fnmatchcase(path, pattern)
+    return path.startswith(pattern)
 
 
 def _pr_category(files):
     # type: (set) -> str
-    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
-    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
-        return "product"
-    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
-        return "mixed"
-    return "internal"
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4).
+
+    Tiers from release-notes-paths.json are tried in order; the first tier with any
+    matching file wins, else the configured default.
+    """
+    tiers, default = _load_path_tags()
+    for tag, patterns in tiers:
+        if any(_path_matches(f, p) for f in files for p in patterns):
+            return tag
+    return default
 
 
 # Automation accounts — never credited as human contributors (§4.5). The workflow
@@ -1371,17 +1412,31 @@ def _files_by_commit(from_ref, to_ref):
     One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
     file set to classify it product vs internal). A ``\\x1e`` record separator
     prefixes each hash line so file lines can never be mistaken for a hash.
+
+    We SPLIT on ``\\x1e`` rather than matching a leading ``\\x1e`` per line: git
+    lists commits newest-first, and ``run()`` returns ``stdout.strip()`` — and
+    ``\\x1e`` is whitespace to Python's ``str.strip()``, so the FIRST (newest)
+    record loses its leading separator. A ``startswith("\\x1e")`` scan would then
+    silently drop that newest commit's file list, tagging it ``internal`` — which
+    is exactly how the latest automated ``[skia-sync]`` submodule bump (usually the
+    newest commit in the range) kept getting mis-tagged. Splitting recovers every
+    record whether or not its leading separator survived.
     """
     out = run(["git", "log", "--no-renames", "--name-only",
                "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
     files_by = {}  # type: dict
-    cur = None
-    for line in out.split("\n"):
-        if line.startswith("\x1e"):
-            cur = line[1:].strip()
-            files_by[cur] = set()
-        elif line.strip() and cur is not None:
-            files_by[cur].add(line.strip())
+    for record in out.split("\x1e"):
+        record = record.strip()
+        if not record:
+            continue
+        # First line is the commit hash; the rest (past the blank line git emits
+        # before --name-only output) are the touched paths. Merge commits have no
+        # --name-only output, so they map to an empty set (still `internal`).
+        lines = record.split("\n")
+        commit = lines[0].strip()
+        if not commit:
+            continue
+        files_by[commit] = {ln.strip() for ln in lines[1:] if ln.strip()}
     return files_by
 
 
