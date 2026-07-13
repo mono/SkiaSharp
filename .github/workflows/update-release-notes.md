@@ -17,8 +17,18 @@ engine:
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "documentation/docfx/releases/**"
+    # Ignore the generated release-notes tree so the workflow never triggers on its
+    # OWN committed output (the <version>.data.json / prose.json inputs and the
+    # rendered <version>.md pages) — EXCEPT for the human-editable *.notes.md manual
+    # additions sidecars. A maintainer can add or edit a sidecar in a standalone PR;
+    # merging it must kick off a fresh run (the sidecar's sha256 folds into data.json,
+    # which invalidates the page and forces a re-polish). Expressed as negated `paths`
+    # (order matters — the last matching pattern wins) rather than `paths-ignore`,
+    # because GitHub cannot re-include a subpath out of a `paths-ignore` rule.
+    paths:
+      - "**"
+      - "!documentation/docfx/releases/**"
+      - "documentation/docfx/releases/**/*.notes.md"
   schedule:
     # Daily. Catches new stable tags (vX.Y.Z → page flips to "stable"), new
     # release-branch commits (unreleased deltas), and newly published NuGets
