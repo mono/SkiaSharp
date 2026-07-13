@@ -94,7 +94,9 @@ namespace SkiaSharp.Tests.Visual
 					if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
 						throw new InvalidOperationException("Submit(Sync=true) returned false.");
 
-					return Task.FromResult(RendererPixels.ReadRgba(surface, info));
+					// Graphite surfaces don't support synchronous SKSurface.ReadPixels in shipping
+					// builds; read back through the async rescale-and-read path instead.
+					return Task.FromResult(RendererPixels.ReadRgbaGraphite(context, surface, info));
 				}
 				finally
 				{
