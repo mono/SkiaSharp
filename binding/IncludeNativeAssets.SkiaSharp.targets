@@ -79,11 +79,16 @@
     <!--
       .NET-9+ (emsdk 3.1.56+) uses Dawn's emdawnwebgpu port. `-sUSE_WEBGPU=1`
       was deprecated in emsdk 4.0.10 and removed in 4.0.18; only the .NET-8
-      matrix (emsdk 3.1.34) still needs the built-in port. TargetFrameworkVersion
-      isn't populated when this PropertyGroup evaluates, so branch on the
-      SkiaSharp native binary version marker instead.
+      matrix (emsdk 3.1.34) still needs the built-in port.
+
+      Discriminate on $(TargetFramework) directly — it's set as soon as the
+      csproj is loaded, whereas $(TargetFrameworkVersion) is populated by a
+      later SDK import so it's still empty when this PropertyGroup evaluates
+      (which is why the ItemGroup below carries its own != '' guard). Anything
+      that isn't net8.x (net9.0, net10.0, net10.0-browserwasm, future) gets
+      the port; net8.0 alone stays on the legacy built-in.
     -->
-    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '9.0'))">true</_SkiaSharpUseEmdawnwebgpu>
+    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
     <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)..\externals\emdawnwebgpu_pkg\emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
     <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>

@@ -28,8 +28,13 @@
       4.0.18. The .NET-8 static lib is built against the old port and still
       needs `-sUSE_WEBGPU=1`. The emdawnwebgpu port ships in this NuGet at
       buildTransitive/netstandard1.0/emdawnwebgpu_pkg/.
+
+      Discriminate on $(TargetFramework) directly — $(TargetFrameworkVersion)
+      is set by a later SDK import so it's still empty when this PropertyGroup
+      evaluates. Anything that isn't net8.x gets the port; net8.0 alone stays
+      on the legacy built-in.
     -->
-    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '9.0'))">true</_SkiaSharpUseEmdawnwebgpu>
+    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
     <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg/emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
     <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>
