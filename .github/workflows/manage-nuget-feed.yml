@@ -74,7 +74,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Gate — should this feed run, and is this an opted-in push?
+      - name: Gate — should this feed run, and is this an opted-in real copy?
         id: gate
         shell: bash
         run: |
@@ -85,19 +85,15 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "Skipping ${{ matrix.feed }} (feed input = $selected)"
           fi
-          # A push is only ever performed on a manual dispatch that explicitly
-          # opts in AND runs from the protected default branch (main). A dispatch
-          # from any other branch, or without opting in, never needs a secret, so
-          # we never expose one to those runs.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
-             && [ "${{ github.event.inputs.push }}" = "true" ] \
-             && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          # A real copy (write) happens only on a manual dispatch that explicitly
+          # opts in via push=true. The workflow is manual-only and dispatch is
+          # restricted to users with write access, so it may be run from any
+          # branch (e.g. to populate the feeds before this migration merges).
+          # A dry run never opts in and never needs the secret.
+          if [ "${{ github.event.inputs.push }}" = "true" ]; then
             echo "push=true" >> "$GITHUB_OUTPUT"
           else
             echo "push=false" >> "$GITHUB_OUTPUT"
-            if [ "${{ github.event.inputs.push }}" = "true" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
-              echo "::warning::Push requested from '${{ github.ref }}' — pushes are only allowed from refs/heads/main. Running as DRY RUN."
-            fi
           fi
 
       # The credential provider + PAT are only set up for a real, opted-in push.
