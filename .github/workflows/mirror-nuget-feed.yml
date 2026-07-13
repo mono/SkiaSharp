@@ -72,10 +72,15 @@ jobs:
       fail-fast: false
       matrix:
         pair:
+          # Public feed: exclude the internal underscore-prefixed CI wrapper
+          # packages so the public feed only ever contains real packages.
           - source: SkiaSharp
             dest: skiasharp
+            exclude: '^_'
+          # Internal CI feed: the underscore wrapper/artifact packages live here.
           - source: SkiaSharp-CI
             dest: skiasharp-ci
+            exclude: ''
 
     name: "${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}"
 
@@ -127,6 +132,9 @@ jobs:
             MaxDurationMinutes = [int]"${{ github.event.inputs.max_duration_minutes || '330' }}"
             SummaryFile        = $env:GITHUB_STEP_SUMMARY
           }
+
+          $exclude = "${{ matrix.pair.exclude }}"
+          if ($exclude) { $params.ExcludePackageRegex = $exclude }
 
           if ("${{ steps.gate.outputs.push }}" -eq "true") {
             $params.Push = $true

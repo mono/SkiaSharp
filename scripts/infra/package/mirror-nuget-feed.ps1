@@ -72,6 +72,11 @@
 .PARAMETER PackageFilter
     Optional regex to limit which package ids are mirrored (e.g. '^SkiaSharp$').
 
+.PARAMETER ExcludePackageRegex
+    Optional regex of package ids to EXCLUDE. Useful for keeping a public feed
+    clean of internal CI plumbing, e.g. '^_' drops the underscore-prefixed
+    wrapper packages (_NativeAssets, _NuGets, _Symbols, ...).
+
 .PARAMETER IncludeUnlisted
     Also mirror versions that are unlisted in the source. Default: off.
 
@@ -103,6 +108,11 @@
 .EXAMPLE
     # Mirror only real releases (skip -pr.* and malformed -preview-* build artifacts)
     ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp -GoodVersionsOnly -Push
+
+.EXAMPLE
+    # Keep the PUBLIC feed clean: mirror real packages only, excluding the
+    # internal underscore-prefixed CI wrapper packages (_NativeAssets, _NuGets…).
+    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp -ExcludePackageRegex '^_' -Push
 
 .EXAMPLE
     # Strictest scope: mirror ONLY recognized releases, dropping 0.0.0-commit.* /
@@ -138,6 +148,7 @@ param(
 
     [int]$MaxDurationMinutes = 50,
     [string]$PackageFilter = "",
+    [string]$ExcludePackageRegex = "",
     [switch]$IncludeUnlisted,
 
     # Migration-scope control. By default EVERYTHING is mirrored. -GoodVersionsOnly
@@ -524,6 +535,7 @@ Write-Info "  Destination : $DestOrg/$DestProject  feed '$DestFeed'"
 Write-Info "  Mode        : $(if ($Push) { 'PUSH (writes enabled)' } else { 'DRY RUN (no writes)' })"
 Write-Info "  Time budget : $MaxDurationMinutes min"
 if ($PackageFilter) { Write-Warn2 "  Filter      : $PackageFilter" }
+if ($ExcludePackageRegex) { Write-Warn2 "  Exclude pkgs: $ExcludePackageRegex" }
 Write-Host ""
 
 if ($Push -and [string]::IsNullOrWhiteSpace($Pat)) {
@@ -556,6 +568,9 @@ catch {
 }
 if ($PackageFilter) {
     $srcInv = @($srcInv | Where-Object { $_.Id -match $PackageFilter })
+}
+if ($ExcludePackageRegex) {
+    $srcInv = @($srcInv | Where-Object { $_.Id -notmatch $ExcludePackageRegex })
 }
 Write-Good "  Source versions: $($srcInv.Count)"
 
@@ -682,14 +697,8 @@ Add-Summary "### Selected scope: **$selectedLabel** → $($missing.Count) versio
 Add-Summary ""
 Add-Summary "| Package | Versions to copy |"
 Add-Summary "|---|---:|"
-$topN = [Math]::Min(25, $byPkg.Count)
-for ($i = 0; $i -lt $topN; $i++) {
-    Add-Summary "| $($byPkg[$i].Name) | $($byPkg[$i].Count) |"
-}
-if ($byPkg.Count -gt $topN) {
-    $restPkgs = $byPkg.Count - $topN
-    $restVers = ($byPkg | Select-Object -Skip $topN | Measure-Object -Property Count -Sum).Sum
-    Add-Summary "| _…and $restPkgs more package(s)_ | $restVers |"
+foreach ($g in $byPkg) {
+    Add-Summary "| $($g.Name) | $($g.Count) |"
 }
 Add-Summary ""
 
