@@ -29,7 +29,7 @@
       needs `-sUSE_WEBGPU=1`. The emdawnwebgpu port ships in this NuGet at
       buildTransitive/netstandard1.0/emdawnwebgpu_pkg/.
     -->
-    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '9.0'))">true</_SkiaSharpUseEmdawnwebgpu>
+    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFrameworkVersion)' != '' and $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '9.0'))">true</_SkiaSharpUseEmdawnwebgpu>
     <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg/emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
     <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>
