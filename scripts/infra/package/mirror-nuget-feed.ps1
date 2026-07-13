@@ -152,11 +152,10 @@ param(
     [switch]$IncludeUnlisted,
 
     # Migration-scope control. By default EVERYTHING is mirrored. -GoodVersionsOnly
-    # skips ephemeral build artifacts (-pr.* and malformed -preview-* versions),
-    # matching the retention policy of manage-nuget-feed.ps1. -ReleasesOnly is
-    # stricter still: it keeps ONLY recognized releases (stable / -preview. / -rc.
-    # / -nightly. / -stable. / -alpha.) and drops everything else, including the
-    # 0.0.0-commit.* / 0.0.0-branch.* per-build CI artifacts.
+    # skips ephemeral build artifacts (-pr.* and malformed -preview-* versions).
+    # -ReleasesOnly is stricter still: it keeps ONLY recognized releases (stable /
+    # -preview. / -rc. / -nightly. / -stable. / -alpha.) and drops everything else,
+    # including the 0.0.0-commit.* / 0.0.0-branch.* per-build CI artifacts.
     [switch]$GoodVersionsOnly,
     [switch]$ReleasesOnly,
     [string]$ExcludeVersionRegex = "",
@@ -172,7 +171,8 @@ $ErrorActionPreference = "Stop"
 
 #region Helpers
 
-# --- Version classification (mirrors manage-nuget-feed.ps1 retention policy) ----
+# --- Version classification: which package versions are "real releases" vs
+# --- ephemeral CI build artifacts. Used by -GoodVersionsOnly / -ReleasesOnly.
 $script:MainVersionPattern = '\d+\.\d+(?:\.\d+)?(?:\.\d+)?'
 $script:AllowedPrereleaseSuffixes = @(
     '-alpha\.\d+(?:\.\d+)?'
