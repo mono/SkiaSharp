@@ -77,28 +77,36 @@ jobs:
       - name: Gate — should this feed run, and is this an opted-in real copy?
         id: gate
         shell: bash
+        # Inputs are passed via env (never interpolated into the script body) and
+        # strictly validated, so a dispatch input can never inject shell commands.
+        env:
+          FEED_INPUT: ${{ github.event.inputs.feed }}
+          PUSH_INPUT: ${{ github.event.inputs.push }}
+          MATRIX_FEED: ${{ matrix.feed }}
         run: |
-          selected="${{ github.event.inputs.feed }}"
-          if [ -z "$selected" ] || [ "$selected" = "both" ] || [ "$selected" = "${{ matrix.feed }}" ]; then
+          set -euo pipefail
+          case "$FEED_INPUT" in both|skiasharp|skiasharp-ci|"") ;; *) echo "Invalid feed input"; exit 2 ;; esac
+          case "$PUSH_INPUT" in true|false|"") ;; *) echo "Invalid push input"; exit 2 ;; esac
+
+          if [ -z "$FEED_INPUT" ] || [ "$FEED_INPUT" = "both" ] || [ "$FEED_INPUT" = "$MATRIX_FEED" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping ${{ matrix.feed }} (feed input = $selected)"
+            echo "Skipping $MATRIX_FEED (feed input = $FEED_INPUT)"
           fi
           # A real copy (write) happens only on a manual dispatch that explicitly
           # opts in via push=true. The workflow is manual-only and dispatch is
           # restricted to users with write access, so it may be run from any
           # branch (e.g. to populate the feeds before this migration merges).
           # A dry run never opts in and never needs the secret.
-          if [ "${{ github.event.inputs.push }}" = "true" ]; then
+          if [ "$PUSH_INPUT" = "true" ]; then
             echo "push=true" >> "$GITHUB_OUTPUT"
           else
             echo "push=false" >> "$GITHUB_OUTPUT"
           fi
 
       # The credential provider + PAT are only set up for a real, opted-in push.
-      # Dry runs (PR / push / dispatch without push) never install it and never
-      # receive the secret.
+      # Dry runs never install it and never receive the secret.
       - name: Install Azure Artifacts Credential Provider
         if: steps.gate.outputs.run == 'true' && steps.gate.outputs.push == 'true'
         shell: bash
@@ -112,10 +120,15 @@ jobs:
           # this evaluates to an empty string, so the token is never present in
           # the job environment (and therefore cannot appear in logs, even masked).
           AZURE_DEVOPS_PAT: ${{ steps.gate.outputs.push == 'true' && secrets.AZURE_DEVOPS_PAT || '' }}
+          # matrix.feed is a fixed, workflow-controlled value (skiasharp | skiasharp-ci)
+          # and gate.outputs.push is a validated 'true'/'false' — passed via env and
+          # never interpolated into the script body.
+          MIRROR_FEED: ${{ matrix.feed }}
+          MIRROR_PUSH: ${{ steps.gate.outputs.push }}
         run: |
           $params = @{
-            Feed        = "${{ matrix.feed }}"
+            Feed        = $env:MIRROR_FEED
             SummaryFile = $env:GITHUB_STEP_SUMMARY
           }
-          if ("${{ steps.gate.outputs.push }}" -eq "true") { $params.Push = $true }
+          if ($env:MIRROR_PUSH -eq "true") { $params.Push = $true }
           ./scripts/infra/package/manage-nuget-feed.ps1 @params
