@@ -258,6 +258,30 @@ function Invoke-AzDoApi {
     }
 }
 
+# Determine working read auth for a feed: try ANONYMOUS first (public feeds work
+# without a token, and an expired/misscoped PAT must not break a read-only dry
+# run), then fall back to the PAT only if anonymous is denied.
+function Resolve-ReadHeaders {
+    param(
+        [string]$FeedsBaseUrl,
+        [string]$FeedId,
+        [string]$Pat
+    )
+    $probe = "${FeedsBaseUrl}/_apis/packaging/Feeds/${FeedId}/packages?api-version=7.1&protocolType=NuGet&`$top=1"
+    try {
+        $null = Invoke-RestMethod -Uri $probe -Method GET
+        return @{}   # anonymous works
+    }
+    catch {
+        if (-not [string]::IsNullOrWhiteSpace($Pat)) {
+            $h = New-AuthHeaders -TokenPat $Pat
+            $null = Invoke-RestMethod -Uri $probe -Method GET -Headers $h  # throws if this also fails
+            return $h
+        }
+        throw
+    }
+}
+
 # Inventory a feed: returns a list of @{ Id; Version; NVer } for all (non-deleted)
 # package versions. Metadata only — no package downloads.
 function Get-FeedInventory {
@@ -472,9 +496,11 @@ $dstFeedsUrl = Get-FeedBaseUrl -Org $DestOrg -Proj $DestProject -UrlType "feeds"
 $dstPkgsUrl  = Get-FeedBaseUrl -Org $DestOrg -Proj $DestProject -UrlType "pkgs"
 $dstIndexUrl = "${dstPkgsUrl}/_packaging/${DestFeed}/nuget/v3/index.json"
 
-# Source read is anonymous unless a source PAT is supplied. Fall back to -Pat.
-$effectiveSourcePat = if (-not [string]::IsNullOrWhiteSpace($SourcePat)) { $SourcePat } else { $Pat }
-$srcHeaders = New-AuthHeaders -TokenPat $effectiveSourcePat
+# Read auth is resolved lazily (anonymous first) so an expired/misscoped PAT
+# never breaks a read-only dry run of public feeds. The PAT is only truly
+# required for the push. -SourcePat (or its env var) is used only if the source
+# is not anonymously readable.
+$srcReadPat = if (-not [string]::IsNullOrWhiteSpace($SourcePat)) { $SourcePat } else { $Pat }
 $dstHeaders = New-AuthHeaders -TokenPat $Pat
 
 Write-Head "Configuration"
@@ -498,6 +524,7 @@ function Test-BudgetExceeded { return (Get-ElapsedMinutes) -ge $MaxDurationMinut
 
 Write-Head "Inventorying source feed (metadata only)..."
 try {
+    $srcHeaders = Resolve-ReadHeaders -FeedsBaseUrl $srcFeedsUrl -FeedId $SourceFeed -Pat $srcReadPat
     $srcInv = Get-FeedInventory -FeedsBaseUrl $srcFeedsUrl -FeedId $SourceFeed -Headers $srcHeaders -BatchSize $BatchSize -IncludeUnlisted:$IncludeUnlisted
 }
 catch {
@@ -520,6 +547,7 @@ Write-Good "  Source versions: $($srcInv.Count)"
 Write-Head "Inventorying destination feed (metadata only)..."
 $dstIndex = [System.Collections.Generic.HashSet[string]]::new()
 try {
+    $dstHeaders = Resolve-ReadHeaders -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Pat $Pat
     $dstInv = Get-FeedInventory -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Headers $dstHeaders -BatchSize $BatchSize -IncludeUnlisted
     foreach ($e in $dstInv) { [void]$dstIndex.Add((Get-EntryKey -Id $e.Id -NVer $e.NVer)) }
     Write-Good "  Destination versions: $($dstInv.Count)"
