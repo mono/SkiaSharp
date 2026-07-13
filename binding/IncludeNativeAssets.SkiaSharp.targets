@@ -91,15 +91,16 @@
     <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
     <_SkiaSharpEmdawnwebgpuPkg>$(MSBuildThisFileDirectory)..\externals\emdawnwebgpu_pkg</_SkiaSharpEmdawnwebgpuPkg>
     <!--
-      Inline the port's inputs instead of `--use-port=emdawnwebgpu.port.py`.
-      Emcc's ports mechanism compiles libemdawnwebgpu-<hash>.a into its
-      cache at link time, which requires FROZEN_CACHE=0. The .NET WASM
-      SDK's parallel-compile path around a non-frozen cache races on
-      sysroot_install.stamp and crashes. Passing the port's include paths,
-      JS libraries, and webgpu.cpp source directly to emcc replicates the
-      port's effect (see emdawnwebgpu.port.py process_args + linker_setup)
-      without touching the cache. -sDEFAULT_TO_CXX=1 keeps LINK_AS_CXX on
-      like the port itself asserts.
+      Inline the port's inputs instead of using emcc's ports mechanism.
+      That mechanism compiles libemdawnwebgpu-<hash>.a into emcc's cache
+      at link time, which requires FROZEN_CACHE=0. The .NET WASM SDK
+      ships FROZEN_CACHE=1 by default; unfreezing it exposes a preexisting
+      SDK race on sysroot_install.stamp during parallel compile. Passing
+      the port's include paths, JS libraries, and webgpu.cpp source
+      directly to emcc replicates the port's effect (see
+      emdawnwebgpu.port.py process_args and linker_setup) without ever
+      touching the cache. -sDEFAULT_TO_CXX=1 keeps LINK_AS_CXX on like
+      the port itself asserts.
     -->
     <_SkiaSharpEmdawnwebgpuFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">-s DEFAULT_TO_CXX=1 -isystem $(_SkiaSharpEmdawnwebgpuPkg)/webgpu/include -isystem $(_SkiaSharpEmdawnwebgpuPkg)/webgpu_cpp/include --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_enum_tables.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_struct_info.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_sig_info.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu.js $(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/webgpu.cpp</_SkiaSharpEmdawnwebgpuFlags>
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 $(_SkiaSharpEmdawnwebgpuFlags)</EmccExtraLDFlags>
