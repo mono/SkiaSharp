@@ -41,6 +41,11 @@ ROLE_LABELS = {
 TREND_SMALLER = "🟢"
 TREND_LARGER = "🔴"
 
+# Size changes smaller than this are treated as noise and left unmarked, so
+# tiny byte-level churn (e.g. non-deterministic rebuilds) doesn't paint the
+# table red/green. 50 KB ≈ 0.05 MB, about half the display's rounding bucket.
+TREND_MIN_DELTA_BYTES = 50 * 1024
+
 
 # --------------------------------------------------------------------------- #
 # Formatting helpers
@@ -65,11 +70,15 @@ def trend_marker(curr: int | None, older: int | None) -> str:
     """Coloured dot comparing a cell to the next-older column (to its right).
 
     🟢 = smaller than the older version (improvement), 🔴 = larger (regression).
-    Empty when there is no older value or the size is unchanged.
+    Empty when there is no older value, the size is unchanged, or the change is
+    below ``TREND_MIN_DELTA_BYTES`` (treated as noise).
     """
-    if curr is None or older is None or curr == older:
+    if curr is None or older is None:
         return ""
-    return f" {TREND_LARGER}" if curr > older else f" {TREND_SMALLER}"
+    diff = curr - older
+    if abs(diff) < TREND_MIN_DELTA_BYTES:
+        return ""
+    return f" {TREND_LARGER}" if diff > 0 else f" {TREND_SMALLER}"
 
 
 def row_cells(values: list[int | None]) -> list[str]:
@@ -209,7 +218,8 @@ def _legend() -> list[str]:
         "released reference versions `latest → curr-stable → prev-stable → "
         "prev-major` from NuGet.org. "
         f"Each dot compares a cell to the older column on its right: "
-        f"{TREND_SMALLER} smaller (improvement) · {TREND_LARGER} larger (regression).",
+        f"{TREND_SMALLER} smaller (improvement) · {TREND_LARGER} larger (regression); "
+        "changes under 50 KB are treated as noise and left unmarked.",
         "",
     ]
 
@@ -346,7 +356,7 @@ def _render_movers(history: dict, nights: dict[str, dict]) -> list[str]:
     for pid in all_package_ids(history):
         curr = (newest.get("packages", {}).get(pid) or {}).get("nupkg")
         was = (prev.get("packages", {}).get(pid) or {}).get("nupkg")
-        if curr is not None and was is not None and curr != was:
+        if curr is not None and was is not None and abs(curr - was) >= TREND_MIN_DELTA_BYTES:
             movers.append((abs(curr - was), curr - was, pid))
     if not movers:
         return []
