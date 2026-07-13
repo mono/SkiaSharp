@@ -1,12 +1,12 @@
-# Feed mirror — copies packages from a source Azure DevOps Artifacts feed to a
-# destination feed, driven by scripts/infra/package/mirror-nuget-feed.ps1.
+# Manage NuGet Feed — mirrors packages from a source Azure DevOps Artifacts feed
+# to a destination feed, driven by scripts/infra/package/manage-nuget-feed.ps1.
 #
-# This replaces the old in-place "manage-nuget-feed" cleanup approach: instead of
-# deleting junk from a live feed, we mirror ONLY the packages/versions that pass
-# the rules into a clean destination. It is currently configured for the
-# xamarin -> dnceng migration, and keeps the destination feeds clean via per-feed
-# rules (the public 'skiasharp' feed excludes the internal '_'-prefixed CI
-# wrapper packages; the internal 'skiasharp-ci' feed keeps them).
+# Rather than deleting junk in place from a live feed, we mirror ONLY the
+# packages/versions that pass the rules into a clean destination. Currently
+# configured for the xamarin -> dnceng migration, and keeps the destination
+# feeds clean via per-feed rules (the public 'skiasharp' feed excludes the
+# internal '_'-prefixed CI wrapper packages; the internal 'skiasharp-ci' keeps
+# them).
 #
 #   * On PR / push that touches the script or this workflow  -> DRY RUN only
 #     (inventory + diff + plan, read anonymously, no writes, NO secret in scope).
@@ -21,17 +21,17 @@
 # The script is idempotent and timeout-safe, so a real mirror can be re-run as
 # many times as needed; each run only transfers what is still missing.
 
-name: Mirror NuGet Feeds
+name: Manage NuGet Feed
 
 on:
   pull_request:
     paths:
-      - 'scripts/infra/package/mirror-nuget-feed.ps1'
-      - '.github/workflows/mirror-nuget-feed.yml'
+      - 'scripts/infra/package/manage-nuget-feed.ps1'
+      - '.github/workflows/manage-nuget-feed.yml'
   push:
     paths:
-      - 'scripts/infra/package/mirror-nuget-feed.ps1'
-      - '.github/workflows/mirror-nuget-feed.yml'
+      - 'scripts/infra/package/manage-nuget-feed.ps1'
+      - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
       feed:
@@ -67,7 +67,7 @@ jobs:
 
     # Serialize real mirrors of the same feed across runs.
     concurrency:
-      group: mirror-nuget-feed-${{ matrix.feed }}
+      group: manage-nuget-feed-${{ matrix.feed }}
       cancel-in-progress: false
 
     name: "${{ matrix.feed }}"
@@ -126,4 +126,4 @@ jobs:
             SummaryFile = $env:GITHUB_STEP_SUMMARY
           }
           if ("${{ steps.gate.outputs.push }}" -eq "true") { $params.Push = $true }
-          ./scripts/infra/package/mirror-nuget-feed.ps1 @params
+          ./scripts/infra/package/manage-nuget-feed.ps1 @params

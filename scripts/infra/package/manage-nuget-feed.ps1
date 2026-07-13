@@ -99,20 +99,20 @@
 
 .EXAMPLE
     # Dry run — see exactly what WOULD be copied to the public feed (safe)
-    ./mirror-nuget-feed.ps1 -Feed skiasharp
+    ./manage-nuget-feed.ps1 -Feed skiasharp
 
 .EXAMPLE
     # Real mirror of the public feed
     $env:AZURE_DEVOPS_PAT = '<pat>'
-    ./mirror-nuget-feed.ps1 -Feed skiasharp -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp -Push
 
 .EXAMPLE
     # Real mirror of the internal CI artifact feed
-    ./mirror-nuget-feed.ps1 -Feed skiasharp-ci -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp-ci -Push
 
 .EXAMPLE
     # Smoke-test the push path end to end on a single package first
-    ./mirror-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
 
 .NOTES
     Exit codes:
