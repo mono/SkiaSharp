@@ -1,22 +1,35 @@
 {
-  "theme": "Color parsing and stability",
-  "highlights_headline": "The unreleased 4.151.0 line adds faster color parsing and an upstream GPU text stability fix.",
-  "highlights_body": "It also removes the unnecessary unsafe marker from GRContextOptions, making GPU context configuration easier to use in projects that do not enable unsafe code.",
+  "theme": "Performance and engine sync",
+  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance gains and upstream Skia m151 bug fixes.",
+  "highlights_body": "Hot paths in SKColor parsing, SKFourByteTag, HarfBuzzSharp.Tag, and SKShaper glyph reads have been optimized. The release also removes an unnecessary `unsafe` modifier from GRContextOptions and adds ReadOnlySpan<char> overloads for SKColor.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upstream m151 bug fixes merged",
+          "detail": "Two rounds of cherry-picked fixes from the Skia chrome/m151 branch improve rendering stability.",
+          "prs": [
+            4312,
+            4382
+          ]
+        }
+      ]
+    },
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKColor parsing is faster and span-friendly",
-          "detail": "Parse and TryParse now use an allocation-free hex parser and add ReadOnlySpan<char> overloads, so callers can parse colors from larger buffers without slicing strings.",
+          "lead": "ReadOnlySpan<char> overloads added to SKColor parsing",
+          "detail": "SKColor hex parsing is now faster and allocation-free with new ReadOnlySpan<char> overloads.",
           "prs": [
             4345
           ]
         },
         {
           "lead": "GRContextOptions no longer requires unsafe context",
-          "detail": "The type no longer carries an unsafe modifier, allowing projects to configure GPU contexts without enabling unsafe code just to reference the options class.",
+          "detail": "The unnecessary `unsafe` modifier on GRContextOptions has been removed, simplifying usage in safe-only projects.",
           "prs": [
             3991
           ]
@@ -27,18 +40,19 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "GPU text allocator stability fix",
-          "detail": "Pulls in Skia's m151 SubRunAllocator use-after-free fix, improving stability for text rendering paths backed by the bundled engine.",
+          "lead": "Performance improvements across hot interop paths",
+          "detail": "Per-call char[4] allocations eliminated in HarfBuzzSharp.Tag.Parse and SKFourByteTag.Parse; SKShaper glyph results are now read via zero-copy spans.",
           "prs": [
-            4382
+            4408,
+            4396,
+            4388
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Added the cross-backend golden-image visual regression test harness"
+    "ramezgerges": "Added a cross-backend golden-image visual regression test harness"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }

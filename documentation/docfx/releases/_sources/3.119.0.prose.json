@@ -1,21 +1,32 @@
 {
-  "theme": "Skia m119 and new architectures",
-  "highlights_headline": "SkiaSharp 3.119.0 rebases on Skia milestone 119 and adds LoongArch64, riscv64, Alpine and Windows-ARM builds.",
-  "highlights_body": "It also lands Direct3D on Windows, tvOS Metal support, SkCanvas::SaveLayerRec, the missing color-filter types, and a stack of Metal, Blazor and .NET Framework fixes.",
+  "theme": "New platforms and Skia m119",
+  "highlights_headline": "SkiaSharp 3.119.0 advances the engine to Skia m119 and adds LoongArch64, RISC-V64, and Alpine Linux support.",
+  "highlights_body": "This release adds Direct3D rendering on Windows, iOS Simulator Metal performance gains, tvOS Metal view support, LoongArch64 and RISC-V64 Linux builds, Alpine Linux cross-compilation, and SKColorFilter additions. It also fixes a .NET Framework packages.config regression.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia rebased on milestone 119",
-          "detail": "The bundled engine moves through m117 and m118 to Chrome/Skia m119, picking up the corresponding rendering, text and codec fixes.",
-          "prs": [3062, 3048, 3047]
+          "lead": "Skia advanced to milestone m119",
+          "detail": "The bundled Skia engine moves to m119, bringing upstream rendering improvements and bug fixes.",
+          "prs": [
+            3062
+          ]
         },
         {
-          "lead": "Native dependency refresh",
-          "detail": "Updates libpng to 1.6.44, HarfBuzz to 8.3.1 and vulkanmemoryallocator to 3.2.1.",
-          "prs": [3059, 3052, 3196]
+          "lead": "Direct3D rendering enabled on Windows",
+          "detail": "Skia is now compiled with Direct3D backend support on Windows, unlocking hardware-accelerated GPU rendering via D3D12.",
+          "prs": [
+            2823
+          ]
+        },
+        {
+          "lead": "Vulkan Memory Allocator updated",
+          "detail": "vulkanmemoryallocator has been updated to 3.2.1.",
+          "prs": [
+            3196
+          ]
         }
       ]
     },
@@ -23,9 +34,18 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SaveLayerRec, missing color filters and Metal render targets",
-          "detail": "Implements SkCanvas::SaveLayerRec, exposes the previously missing SKColorFilter types, and lands the Metal GRBackendRenderTarget APIs on every Apple platform.",
-          "prs": [2962, 2882, 3070]
+          "lead": "Missing SKColorFilter types added",
+          "detail": "Several SKColorFilter factory methods that were present in Skia but missing from the binding have been exposed.",
+          "prs": [
+            2882
+          ]
+        },
+        {
+          "lead": "SaveLayerRec support added to SKCanvas",
+          "detail": "SKCanvas now exposes the SaveLayerRec overload of SaveLayer, enabling fine-grained control over layer compositing parameters.",
+          "prs": [
+            2962
+          ]
         }
       ]
     },
@@ -33,19 +53,32 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKImage.FromPicture regression fixed",
-          "detail": "SKImage.FromPicture now renders correctly again after a regression in the picture handling code.",
-          "prs": [3231]
+          "lead": "packages.config regression fixed",
+          "detail": "A regression in 3.116.0 that broke .NET Framework and Mono projects using packages.config has been corrected.",
+          "prs": [
+            3112
+          ]
         },
         {
-          "lead": "Apple Metal fixes",
-          "detail": "Fixes iOS Simulator performance on the Metal backend and adds SKMetalView support on tvOS.",
-          "prs": [3156, 3114]
+          "lead": "iOS Simulator Metal performance restored",
+          "detail": "The iOS Simulator was incorrectly bypassing Metal; this fix restores proper GPU-accelerated rendering in the simulator.",
+          "prs": [
+            3156
+          ]
         },
         {
-          "lead": ".NET Framework / packages.config compatibility",
-          "detail": "Restores compatibility with .NET Framework and Mono projects that consume SkiaSharp via packages.config.",
-          "prs": [3112]
+          "lead": "SKImage.FromPicture implementation corrected",
+          "detail": "SKImage.FromPicture was producing incorrect output; the implementation has been fixed to match the expected behaviour.",
+          "prs": [
+            3231
+          ]
+        },
+        {
+          "lead": "SKCanvas incorrect call fixed",
+          "detail": "An incorrect native call in SKCanvas has been corrected.",
+          "prs": [
+            3143
+          ]
         }
       ]
     },
@@ -53,19 +86,41 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "New architectures — LoongArch64, riscv64, Alpine, Windows ARM",
-          "detail": "Adds native builds for LoongArch64 and riscv64 Linux, extends the clang cross-toolchain to Alpine, and turns on GL on Windows ARM. Fixes ARM machine targets in the process.",
-          "prs": [3198, 3192, 3200, 3189, 3190, 3209]
+          "lead": "LoongArch64 and RISC-V64 Linux builds added",
+          "detail": "Native assets are now produced for LoongArch64 and RISC-V64 Linux targets, expanding the set of supported architectures.",
+          "prs": [
+            3198,
+            3192
+          ]
         },
         {
-          "lead": "Direct3D backend on Windows",
-          "detail": "Compiles Skia with Direct3D on the Windows platform so consumers can opt into the D3D backend.",
-          "prs": [2823]
+          "lead": "Alpine Linux cross-compilation support added",
+          "detail": "The clang-cross toolchain has been extended to support Alpine Linux, enabling musl-based Linux builds.",
+          "prs": [
+            3200
+          ]
         },
         {
-          "lead": "16 KB-aligned Android NDK r27c",
-          "detail": "Rebuilds the Android natives with NDK r27c and 16 KB page-size alignment to keep working on newer Android devices.",
-          "prs": [3096]
+          "lead": "tvOS Metal view support added",
+          "detail": "SKMetalView is now available on tvOS, bringing hardware-accelerated rendering to the tvOS platform.",
+          "prs": [
+            3114
+          ]
+        },
+        {
+          "lead": "Metal API available for GRBackendRenderTarget on all platforms",
+          "detail": "Metal-specific constructors and accessors for GRBackendRenderTarget are now available on all supported Apple platforms including tvOS.",
+          "prs": [
+            3070
+          ]
+        },
+        {
+          "lead": "Windows ARM GL and tvOS targets corrected",
+          "detail": "GL rendering is now enabled on Windows ARM, and tvOS deployment targets have been corrected.",
+          "prs": [
+            3189,
+            3199
+          ]
         }
       ]
     },
@@ -73,29 +128,35 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "CVE-2024-30105 addressed",
-          "detail": "Picks up the fix for CVE-2024-30105 in the build so shipped packages are no longer exposed.",
-          "prs": [3166]
+          "lead": "Native dependencies updated",
+          "detail": "libpng has been updated to 1.6.44, freetype2 to 2.13.3+, libexpat to 2.6.4, libjpeg-turbo to 2.1.5.1+, and HarfBuzz to 8.3.1.",
+          "prs": [
+            3059,
+            3061,
+            3056,
+            3060,
+            3052
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "kasperk81": "Enabled riscv64 builds, extended the clang cross toolchain to Alpine, bumped vulkanmemoryallocator and fixed the Linux tests",
+    "kasperk81": "Added RISC-V64 and LoongArch64 build support and fixed Linux tests",
     "4Darmygeometry": "Added LoongArch64 native build support",
-    "ahmed605": "Implemented SkCanvas::SaveLayerRec",
-    "Kation": "Added Direct3D compilation of Skia on Windows",
-    "kkwpsv": "Fixed an incorrect call in the bindings",
-    "MartinZikmund": "Added SKMetalView support on tvOS",
-    "pjcollins": "Addressed CVE-2024-30105 in the build",
-    "spouliot": "Added Metal GRBackendRenderTarget APIs to every Apple platform",
-    "sungaila": "Fixed the regression breaking .NET Framework/Mono projects using packages.config",
-    "taublast": "Fixed iOS Simulator performance on the Metal backend"
+    "ahmed605": "Implemented SaveLayerRec support for SKCanvas",
+    "Kation": "Added Direct3D rendering support on Windows",
+    "kkwpsv": "Fixed an incorrect native call in SKCanvas",
+    "MartinZikmund": "Improved tvOS Metal view support",
+    "pjcollins": "Resolved the CVE-2024-30105 vulnerability",
+    "spouliot": "Added Metal API for GRBackendRenderTarget",
+    "sungaila": "Fixed the packages.config regression for .NET Framework and Mono projects",
+    "taublast": "Improved iOS Simulator Metal performance"
   },
   "preview_summaries": {
-    "3.119.0-p1": "3.119.0 Preview 1 landed the m119 rebase, the new architectures and the Direct3D-on-Windows work; earlier 3.118 previews carried the initial Skia rebases and codec updates.",
-    "3.118.0-p2": "The 3.118 Preview 2 lineage fed forward the Blazor and WinUI fixes plus the Metal GRBackendRenderTarget APIs that now ship as part of 3.119.",
-    "3.118.0-p1": "The first 3.118 preview began the Skia m117 to m118 rebase and refreshed HarfBuzz, kicking off the work that fed into 3.119."
+    "3.119.0-p1": "Preview 1 introduced LoongArch64 and RISC-V64 Linux support, Direct3D on Windows, tvOS Metal view, Alpine Linux cross-compilation, SaveLayerRec, missing SKColorFilter types, and fixes for packages.config, iOS Simulator Metal, and the SKImage.FromPicture implementation.",
+    "3.118.0-p2": "Preview 2 of 3.118.0 added Metal GRBackendRenderTarget APIs, fixed .NET 9 Blazor rendering, updated the Android NDK to r27c, and resolved the NuGet PackagePath issue.",
+    "3.118.0-p1": "Preview 1 of 3.118.0 advanced the bundled Skia engine through milestones m117 and m118 and updated HarfBuzz to 8.3.1."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.1 tracks HarfBuzz 8.3.1 and picks up the new-architecture packaging (LoongArch64, riscv64, Alpine, Windows-ARM, Android NDK r27c)."
+  "harfbuzz_summary": "Ships HarfBuzzSharp 8.3.1.1 with extended platform coverage for LoongArch64, RISC-V64, Alpine Linux, and corrected ARM and Blazor targets."
 }

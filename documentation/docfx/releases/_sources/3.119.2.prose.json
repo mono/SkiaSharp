@@ -1,6 +1,6 @@
 {
-  "theme": "Windows hardening and tvOS API fill",
-  "highlights_headline": "3.119.2 hardens the Windows native DLLs (CFG, /GS, Spectre) and fills in the missing tvOS SKSurface.Create overloads.",
+  "theme": "Security hardening and platform fixes",
+  "highlights_headline": "SkiaSharp 3.119.2 adds Windows Spectre mitigations, security hardening flags, and missing tvOS API overloads.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,19 +8,18 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Missing tvOS SKSurface.Create overloads",
-          "detail": "Adds the SKSurface.Create overloads that were missing on tvOS so Metal-backed surfaces have the same entry points as the other Apple platforms.",
-          "prs": [3342]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
+          "lead": "Missing tvOS SKSurface.Create overloads added",
+          "detail": "Several SKSurface.Create overloads that were available on other Apple platforms were missing on tvOS; they are now included.",
+          "prs": [
+            3342
+          ]
+        },
         {
-          "lead": "Android debug symbols packaged",
-          "detail": "Preserves and packs the Android native symbols so consumers get usable stacks when debugging crashes.",
-          "prs": [3374]
+          "lead": "Android debug symbols preserved and packaged",
+          "detail": "Android native debug symbols are now preserved and included in the symbol packages, improving crash diagnostics.",
+          "prs": [
+            3374
+          ]
         }
       ]
     },
@@ -28,21 +27,32 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Windows native DLLs hardened",
-          "detail": "Turns on Control Flow Guard, BufferSecurityCheck (/GS) and Spectre mitigations on the Windows native DLLs, clearing BinSkim BA2007 and matching the platform's security baseline.",
-          "prs": [3397, 3404, 3496]
+          "lead": "Spectre mitigations enabled for Windows native binaries",
+          "detail": "Spectre v1 mitigation flags (/Qspectre) are now enabled for both libSkiaSharp.dll and libSkiaSharp.so on Windows.",
+          "prs": [
+            3497,
+            3503
+          ]
+        },
+        {
+          "lead": "Control Flow Guard and BufferSecurityCheck enabled",
+          "detail": "All Windows native DLLs now build with Control Flow Guard (/guard:cf) and BufferSecurityCheck (/GS) flags, satisfying BinSkim BA2007 and improving exploit resistance.",
+          "prs": [
+            3397,
+            3404
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "Aguilex": "Enabled Control Flow Guard and BufferSecurityCheck on the Windows native DLLs",
-    "MartinZikmund": "Added the missing tvOS SKSurface.Create overloads"
+    "Aguilex": "Enabled Spectre mitigations and security hardening flags for Windows native binaries",
+    "MartinZikmund": "Added missing tvOS SKSurface.Create overloads"
   },
   "preview_summaries": {
-    "3.119.2-p1": "Preview 1 opened the 3.119.2 line with the tvOS SKSurface.Create overloads and preserved Android symbols.",
-    "3.119.2-p2": "Preview 2 landed the Windows hardening — Control Flow Guard, /GS and the Spectre DLL mitigation.",
-    "3.119.2-p3": "Preview 3 rounded off the Spectre mitigation on the Linux native library ahead of the stable release."
+    "3.119.2-p3": "Preview 3 added the Spectre mitigation flag for libSkiaSharp.dll on Windows.",
+    "3.119.2-p2": "Preview 2 enabled Control Flow Guard and BufferSecurityCheck on Windows native DLLs to satisfy BinSkim security requirements.",
+    "3.119.2-p1": "Preview 1 introduced the missing tvOS SKSurface.Create overloads and Android symbol packaging."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 8.3.1.3 picks up the same Windows hardening (CFG, /GS, Spectre) as the SkiaSharp natives."
+  "harfbuzz_summary": "Ships HarfBuzzSharp 8.3.1.3 with the Windows security hardening and tvOS packaging improvements from this release."
 }
