@@ -57,20 +57,18 @@
     OPT IN. Actually download+push missing packages. Without this flag the
     script runs a DRY RUN (inventory + diff + plan only).
 
-.PARAMETER Pat
-    Personal Access Token with Packaging read/write on the DESTINATION org.
-    Required only when -Push is set. Read from $env:AZURE_DEVOPS_PAT by default.
+    AUTH (environment variables only — never command-line arguments):
+      AZURE_DEVOPS_PAT        Packaging read/write on the DESTINATION org.
+                              Required only for -Push.
+      AZURE_DEVOPS_SOURCE_PAT Optional; only if the SOURCE feed is not public.
 
     SECURITY: the PAT is never passed on a command line, never written to a
     nuget.config, and never printed. For the push it is handed to the Azure
     Artifacts Credential Provider via the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
-    process env var; for REST reads (only if the source feed is private) it goes
-    in an Authorization header. It is also registered with the GitHub Actions log
-    masker. Dry runs need no PAT at all (public feeds are read anonymously).
-
-.PARAMETER SourcePat
-    Optional PAT for the source feed if it is not anonymously readable.
-    Falls back to $env:AZURE_DEVOPS_SOURCE_PAT, then to -Pat, then anonymous.
+    process env var (with the on-disk session-token cache disabled); for REST
+    reads (only if the source feed is private) it goes in an Authorization
+    header. It is also registered with the GitHub Actions log masker. Dry runs
+    need no PAT at all (public feeds are read anonymously).
 
 .PARAMETER MaxDurationMinutes
     Wall-clock budget. The script stops starting new work once this is reached
@@ -132,21 +130,27 @@ param(
 
     [switch]$Push,
 
-    [string]$Pat = $env:AZURE_DEVOPS_PAT,
-    [string]$SourcePat = $env:AZURE_DEVOPS_SOURCE_PAT,
-
     [int]$MaxDurationMinutes = 330,
     [string]$PackageFilter = "",
     [switch]$IncludeUnlisted,
 
+    [ValidateRange(1, 10)]
     [int]$MaxPushRetries = 3,
     [string]$CacheDir = "",
+    [ValidateRange(1, 1000)]
     [int]$BatchSize = 100,
     [string]$SummaryFile = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Secrets come ONLY from the environment — never as a command-line argument (so a
+# PAT can never end up in shell history or the process command line).
+#   AZURE_DEVOPS_PAT        - packaging read/write on the destination org (push).
+#   AZURE_DEVOPS_SOURCE_PAT - optional, only if the SOURCE feed is not public.
+$Pat = $env:AZURE_DEVOPS_PAT
+$SourcePat = $env:AZURE_DEVOPS_SOURCE_PAT
 
 #region Helpers
 
@@ -162,7 +166,7 @@ $script:AllowedPrereleaseSuffixes = @(
     '-stable\.\d+(?:\.\d+)?'
 )
 $script:DeletePrereleaseSuffixes = @(
-    '-pr\.\d+(?:\.\d+)?'
+    '-pr\..*'       # any per-PR build (e.g. -pr.1234.5, -pr.1.2.3, -pr.anything)
     '-preview-.*'   # malformed: -preview- instead of -preview.
 )
 $script:StableRegex = "^$($script:MainVersionPattern)$"
@@ -387,10 +391,25 @@ function Save-Package {
 
 function Test-IsValidZip {
     param([string]$Path)
+    # Validate the whole archive, not just the central directory: decompress every
+    # entry so a truncated/corrupt payload (bad CRC, short read) is caught before
+    # the package is ever pushed.
     try {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
         $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
-        $zip.Dispose()
+        try {
+            $buffer = New-Object byte[] 65536
+            foreach ($entry in $zip.Entries) {
+                # Directory entries have no content.
+                if ($entry.FullName.EndsWith('/')) { continue }
+                $stream = $entry.Open()
+                try {
+                    while ($stream.Read($buffer, 0, $buffer.Length) -gt 0) { }
+                }
+                finally { $stream.Dispose() }
+            }
+        }
+        finally { $zip.Dispose() }
         return $true
     }
     catch { return $false }
@@ -408,7 +427,14 @@ function Test-NupkgMatches {
         Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
         $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
         try {
-            $nuspec = $zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Select-Object -First 1
+            # The package manifest is the root-level .nuspec (no directory in its
+            # FullName). Avoid matching a nested *.nuspec bundled as content.
+            $nuspec = $zip.Entries |
+                Where-Object { $_.Name -like "*.nuspec" -and $_.FullName -eq $_.Name } |
+                Select-Object -First 1
+            if (-not $nuspec) {
+                $nuspec = $zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Select-Object -First 1
+            }
             if (-not $nuspec) { return @{ Ok = $false; Reason = "no .nuspec in package" } }
             $reader = New-Object System.IO.StreamReader($nuspec.Open())
             $content = $reader.ReadToEnd()
@@ -460,28 +486,34 @@ function Set-PushCredentials {
     # -Compress keeps it single-line; this value is consumed only by the credential
     # provider plugin and is never printed by this script.
     $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS = ($endpoints | ConvertTo-Json -Depth 5 -Compress)
+
+    # Do NOT let the Azure Artifacts Credential Provider persist session tokens to
+    # disk — the credential should live only in this process's memory.
+    $env:NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED = "false"
 }
 
 function Clear-PushCredentials {
     Remove-Item Env:\VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ErrorAction SilentlyContinue
 }
 
-# Push a single package. 409 / already-exists is treated as success (idempotent).
-# Auth comes from the credential provider (see Set-PushCredentials) — no secret is
-# passed here. Output is scrubbed of the PAT before it is ever returned/logged.
+# Push a single package. Auth comes from the credential provider (see
+# Set-PushCredentials) — no secret is passed here. Output is scrubbed of the PAT
+# before it is ever returned/logged. Exit 0 = success; because --skip-duplicate
+# makes a genuine duplicate exit 0, a NON-zero exit is always treated as a real
+# failure (never masked as "already present").
 function Push-Package {
     param(
         [string]$NupkgPath,
         [string]$IndexUrl,
         [string]$ScrubValue = ""
     )
-    $out = & dotnet nuget push $NupkgPath --source $IndexUrl --api-key az --skip-duplicate 2>&1 | Out-String
+    $out = & dotnet nuget push $NupkgPath --source $IndexUrl --api-key az --skip-duplicate --timeout 300 2>&1 | Out-String
     if (-not [string]::IsNullOrEmpty($ScrubValue)) {
         $out = $out.Replace($ScrubValue, "***")
     }
-    if ($LASTEXITCODE -eq 0) { return @{ Ok = $true; Skipped = $false; Out = $out } }
-    if ($out -match "already exists|409|Conflict|Skipping|duplicate") {
-        return @{ Ok = $true; Skipped = $true; Out = $out }
+    if ($LASTEXITCODE -eq 0) {
+        $skipped = ($out -match "already exists|Conflict|Skipping|duplicate")
+        return @{ Ok = $true; Skipped = $skipped; Out = $out }
     }
     return @{ Ok = $false; Skipped = $false; Out = $out }
 }
@@ -491,20 +523,31 @@ function Push-Package {
 #region Main
 
 # --- Feed profiles: intrinsic source/destination + per-feed cleanliness rules ---
+# VersionPolicy:
+#   'ReleasesOnly' — ALLOWLIST: push only recognized releases (KEEP). Anything
+#                    not recognized as a release is refused. Used for the PUBLIC
+#                    feed so nothing unexpected can ever land there.
+#   'ExcludeBad'   — DENYLIST: push everything EXCEPT known-bad versions
+#                    (-pr.* / malformed -preview-*). Keeps the 0.0.0-commit.* /
+#                    0.0.0-branch.* build artifacts. Used for the INTERNAL feed.
 $FeedProfiles = @{
     'skiasharp' = @{
         Kind                = 'public release feed'
         SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp'
         DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp'
-        # Public feed: drop the internal underscore-prefixed CI wrapper packages.
+        # Public feed: drop the internal underscore-prefixed CI wrapper packages,
+        # and only ever publish recognized releases (allowlist).
         ExcludePackageRegex = '^_'
+        VersionPolicy       = 'ReleasesOnly'
     }
     'skiasharp-ci' = @{
         Kind                = 'internal CI artifact feed'
         SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp-CI'
         DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp-ci'
-        # Internal feed: keep the underscore wrapper/artifact packages.
+        # Internal feed: keep the underscore wrapper/artifact packages and the
+        # commit/branch build versions; only drop the known-bad ones.
         ExcludePackageRegex = ''
+        VersionPolicy       = 'ExcludeBad'
     }
 }
 $feedProfile = $FeedProfiles[$Feed]
@@ -516,6 +559,7 @@ $DestOrg       = $feedProfile.DestOrg
 $DestProject   = $feedProfile.DestProject
 $DestFeed      = $feedProfile.DestFeed
 $ExcludePackageRegex = $feedProfile.ExcludePackageRegex
+$VersionPolicy = $feedProfile.VersionPolicy
 
 Write-Host ""
 Write-Head "=================================================="
@@ -530,30 +574,28 @@ $dstPkgsUrl  = Get-FeedBaseUrl -Org $DestOrg -Proj $DestProject -UrlType "pkgs"
 $dstIndexUrl = "${dstPkgsUrl}/_packaging/${DestFeed}/nuget/v3/index.json"
 
 # Read auth is resolved lazily (anonymous first) so an expired/misscoped PAT
-# never breaks a read-only dry run of public feeds. The PAT is only truly
-# required for the push. -SourcePat (or its env var) is used only if the source
-# is not anonymously readable.
-$srcReadPat = if (-not [string]::IsNullOrWhiteSpace($SourcePat)) { $SourcePat } else { $Pat }
-$dstHeaders = New-AuthHeaders -TokenPat $Pat
+# never breaks a read-only dry run of public feeds. Source reads use ONLY the
+# dedicated source token (AZURE_DEVOPS_SOURCE_PAT) — never the destination PAT —
+# so a destination write token is never sent to the source org.
+$srcReadPat = $SourcePat
 
 Write-Head "Configuration"
 Write-Info "  Source      : $SourceOrg/$SourceProject  feed '$SourceFeed'"
 Write-Info "  Destination : $DestOrg/$DestProject  feed '$DestFeed'"
 Write-Info "  Mode        : $(if ($Push) { 'PUSH (writes enabled)' } else { 'DRY RUN (no writes)' })"
-Write-Info "  Bad versions: skipped (-pr.* / malformed -preview-*)"
+Write-Info "  Version rule: $(if ($VersionPolicy -eq 'ReleasesOnly') { 'releases only (allowlist)' } else { 'exclude bad -pr.* / malformed -preview-* (denylist)' })"
 if ($ExcludePackageRegex) { Write-Info "  Exclude pkgs: $ExcludePackageRegex" }
 Write-Info "  Time budget : $MaxDurationMinutes min"
 if ($PackageFilter) { Write-Warn2 "  Filter      : $PackageFilter" }
 Write-Host ""
 
 if ($Push -and [string]::IsNullOrWhiteSpace($Pat)) {
-    Write-Err2 "ERROR: -Push requires a PAT (set -Pat or `$env:AZURE_DEVOPS_PAT) with packaging read/write on '$DestOrg'."
+    Write-Err2 "ERROR: -Push requires the AZURE_DEVOPS_PAT environment variable (packaging read/write on '$DestOrg')."
     exit 2
 }
 
 $startTime = Get-Date
 function Get-ElapsedMinutes { return ((Get-Date) - $startTime).TotalMinutes }
-function Test-BudgetExceeded { return (Get-ElapsedMinutes) -ge $MaxDurationMinutes }
 
 # --- Fast phase: inventory both feeds (metadata only) --------------------------
 
@@ -576,6 +618,18 @@ catch {
 }
 $srcTotal = $srcInv.Count
 
+# Safety: a migration tool must never treat an unexpectedly empty source read as
+# "nothing to do". A populated feed returning zero versions means something is
+# wrong (auth, wrong feed, API change) — fail loudly instead of silently.
+if ($srcTotal -eq 0) {
+    Write-Err2 "ERROR: source feed '$SourceFeed' returned 0 versions — refusing to proceed (unexpected empty read)."
+    Add-Summary "## ❌ Feed mirror aborted"
+    Add-Summary ""
+    Add-Summary "Source feed ``$SourceOrg/$SourceProject/$SourceFeed`` returned **0 versions**. Refusing to proceed."
+    Save-Summary -Path $SummaryFile
+    exit 2
+}
+
 # --- Apply intrinsic rules to the source set -----------------------------------
 # 1. Optional smoke-test include filter.
 if ($PackageFilter) {
@@ -588,14 +642,33 @@ if ($ExcludePackageRegex) {
     $srcInv = @($srcInv | Where-Object { $_.Id -notmatch $ExcludePackageRegex })
     $excludedByPackage = $before - $srcInv.Count
 }
-# 3. Never copy known-bad versions ('-pr.*' / malformed '-preview-*').
+# 3. Per-feed version policy.
+#    - ReleasesOnly (public): ALLOWLIST — keep only recognized releases (KEEP).
+#      Anything unrecognized is refused so junk can never reach the public feed.
+#    - ExcludeBad  (internal): DENYLIST — keep everything except known-bad
+#      (-pr.* / malformed -preview-*); commit/branch build versions are kept.
+$excludedBadVersions = 0
+$excludedUnknown = 0
 $before = $srcInv.Count
-$srcInv = @($srcInv | Where-Object { (Get-VersionAction -Version $_.Version) -ne 'DELETE' })
-$excludedBadVersions = $before - $srcInv.Count
+if ($VersionPolicy -eq 'ReleasesOnly') {
+    $kept = [System.Collections.Generic.List[object]]::new()
+    foreach ($e in $srcInv) {
+        $action = Get-VersionAction -Version $e.Version
+        if ($action -eq 'KEEP') { $kept.Add($e) }
+        elseif ($action -eq 'DELETE') { $excludedBadVersions++ }
+        else { $excludedUnknown++ }
+    }
+    $srcInv = @($kept)
+}
+else {
+    $srcInv = @($srcInv | Where-Object { (Get-VersionAction -Version $_.Version) -ne 'DELETE' })
+    $excludedBadVersions = $before - $srcInv.Count
+}
 
 Write-Good "  Source versions: $srcTotal total; $($srcInv.Count) eligible after rules"
 if ($excludedByPackage -gt 0)   { Write-Info "    - excluded $excludedByPackage version(s) on '$ExcludePackageRegex' packages" }
 if ($excludedBadVersions -gt 0) { Write-Info "    - excluded $excludedBadVersions bad version(s) (-pr.* / malformed -preview-*)" }
+if ($excludedUnknown -gt 0)     { Write-Warn2 "    - excluded $excludedUnknown unrecognized version(s) (allowlist: releases only)" }
 
 Write-Head "Inventorying destination feed (metadata only)..."
 $dstIndex = [System.Collections.Generic.HashSet[string]]::new()
@@ -649,7 +722,11 @@ if ($ExcludePackageRegex) {
 } else {
     Add-Summary "- keep all packages (internal ``_`` wrapper packages included)"
 }
-Add-Summary "- skip known-bad versions ``-pr.*`` / malformed ``-preview-*`` (dropped $excludedBadVersions version(s))"
+if ($VersionPolicy -eq 'ReleasesOnly') {
+    Add-Summary "- allowlist: publish recognized **releases only** — dropped $excludedBadVersions bad + $excludedUnknown unrecognized version(s)"
+} else {
+    Add-Summary "- skip known-bad versions ``-pr.*`` / malformed ``-preview-*`` (dropped $excludedBadVersions version(s)); commit/branch builds kept"
+}
 Add-Summary ""
 Add-Summary "| Metric | Count |"
 Add-Summary "|---|---:|"
@@ -715,9 +792,10 @@ $failedList = [System.Collections.Generic.List[string]]::new()
 $timedOut = $false
 
 foreach ($item in $missing) {
-    # Graceful, between-package timeout. Reserve ~3 min so an in-flight download
-    # is unlikely to be cut off mid-transfer.
-    if ((Get-ElapsedMinutes) -ge ($MaxDurationMinutes - 3)) {
+    # Graceful, between-package timeout. Reserve enough headroom for one worst-case
+    # package (large native asset download + push --timeout 300s + retry backoff)
+    # so we always stop cleanly BETWEEN packages and never mid-push.
+    if ((Get-ElapsedMinutes) -ge ($MaxDurationMinutes - 12)) {
         $timedOut = $true
         Write-Warn2 "Time budget reached after $processed item(s) — stopping gracefully."
         break
@@ -823,9 +901,50 @@ if ($timedOut) {
     exit 0
 }
 
-Write-Good "All missing packages processed successfully."
+# --- End-of-run verification ---------------------------------------------------
+# Independently confirm the push actually landed: re-inventory the destination and
+# assert that every version we set out to copy is now present. This catches any
+# push that reported success but did not commit (e.g. a masked/soft failure).
+Write-Head "Verifying destination now contains every copied version..."
+try {
+    $verifyHeaders = Resolve-ReadHeaders -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Pat $Pat
+    $verifyInv = Get-FeedInventory -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Headers $verifyHeaders -BatchSize $BatchSize -IncludeUnlisted
+    $verifyIndex = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($e in $verifyInv) { [void]$verifyIndex.Add((Get-EntryKey -Id $e.Id -NVer $e.NVer)) }
+
+    $stillMissing = [System.Collections.Generic.List[string]]::new()
+    foreach ($item in $missing) {
+        if (-not $verifyIndex.Contains((Get-EntryKey -Id $item.Id -NVer $item.NVer))) {
+            $stillMissing.Add("$($item.Id) $($item.Version)")
+        }
+    }
+
+    if ($stillMissing.Count -gt 0) {
+        Write-Err2 "VERIFICATION FAILED: $($stillMissing.Count) version(s) reported pushed but are NOT in the destination."
+        Add-Summary ""
+        Add-Summary "### ❌ Verification failed"
+        Add-Summary ""
+        Add-Summary "$($stillMissing.Count) version(s) were reported as pushed but are not present in the destination on re-inventory. Re-run to retry."
+        Add-Summary ""
+        foreach ($m in ($stillMissing | Select-Object -First 50)) { Add-Summary "- ``$m``" }
+        Save-Summary -Path $SummaryFile
+        exit 1
+    }
+    Write-Good "  Verified: all $($missing.Count) version(s) are present in the destination."
+}
+catch {
+    Write-Err2 "VERIFICATION could not complete (could not re-read destination): $_"
+    Add-Summary ""
+    Add-Summary "### ⚠️ Could not verify"
+    Add-Summary ""
+    Add-Summary "The push loop completed but the destination re-inventory failed, so the result is unconfirmed. Re-run to verify (idempotent)."
+    Save-Summary -Path $SummaryFile
+    exit 1
+}
+
+Write-Good "All missing packages processed and verified successfully."
 Add-Summary ""
-Add-Summary "✅ All missing packages processed successfully."
+Add-Summary "✅ All missing packages processed and verified present in the destination."
 Save-Summary -Path $SummaryFile
 exit 0
 

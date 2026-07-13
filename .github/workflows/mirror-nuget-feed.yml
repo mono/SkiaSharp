@@ -49,10 +49,9 @@ on:
         required: true
         default: false
 
-# Never let two real mirrors of the same feed run concurrently.
-concurrency:
-  group: mirror-nuget-feed-${{ github.event.inputs.feed || 'dryrun' }}
-  cancel-in-progress: false
+# Least privilege. This workflow never needs to write to the GitHub repo.
+permissions:
+  contents: read
 
 jobs:
   mirror:
@@ -66,11 +65,18 @@ jobs:
         # and rules like excluding the internal '_' packages) lives in the script.
         feed: [skiasharp, skiasharp-ci]
 
+    # Serialize real mirrors of the same feed across runs.
+    concurrency:
+      group: mirror-nuget-feed-${{ matrix.feed }}
+      cancel-in-progress: false
+
     name: "${{ matrix.feed }}"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Gate — should this feed run, and is this an opted-in push?
         id: gate
@@ -84,12 +90,18 @@ jobs:
             echo "Skipping ${{ matrix.feed }} (feed input = $selected)"
           fi
           # A push is only ever performed on a manual dispatch that explicitly
-          # opts in. Everything else (PR, push, dispatch dry run) never needs a
+          # opts in AND runs from the protected default branch (main). Everything
+          # else (PR, push, dispatch dry run, non-main branch) never needs a
           # secret, so we never expose one to those runs.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.push }}" = "true" ]; then
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
+             && [ "${{ github.event.inputs.push }}" = "true" ] \
+             && [ "${{ github.ref }}" = "refs/heads/main" ]; then
             echo "push=true" >> "$GITHUB_OUTPUT"
           else
             echo "push=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ github.event.inputs.push }}" = "true" ] && [ "${{ github.ref }}" != "refs/heads/main" ]; then
+              echo "::warning::Push requested from '${{ github.ref }}' — pushes are only allowed from refs/heads/main. Running as DRY RUN."
+            fi
           fi
 
       # The credential provider + PAT are only set up for a real, opted-in push.
