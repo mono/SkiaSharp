@@ -1,22 +1,14 @@
 {
-  "theme": "First stable v3 release",
-  "highlights_headline": "SkiaSharp 3.0.0 is the first stable v3, built on Skia m116 with .NET 8 support and obsolete APIs removed.",
-  "highlights_body": "The line modernises the whole stack: LibraryImport-based P/Invokes, refreshed native dependencies (HarfBuzz, libjpeg-turbo, libwebp), new accelerated views on WinUI and WPF, Metal on Mac Catalyst, and dozens of MAUI/Uno/Blazor fixes.",
+  "theme": "SkiaSharp v3 preview series",
+  "highlights_headline": "SkiaSharp 3.0.0 is the first v3 preview, removing all v2 obsoletes and modernizing the cross-platform foundation.",
+  "highlights_body": "The entire v2 deprecated API surface has been removed. This series adds WinUI, WPF GL, and Blazor DPI support; introduces LibraryImport/function pointers for faster P/Invoke; brings SKBlender, Skottie animation builder, and new picture APIs; and updates to .NET 8 with broad MAUI and Uno improvements.",
   "breaking": [
     {
-      "title": "All v2 [Obsolete] members removed",
-      "body": "Everything marked [Obsolete] during the v2 line — including the legacy SKPaint text/font members — is gone. Move text to SKFont, use the modern sampling and encoder overloads, and re-generate against the 3.0 APIs.",
-      "prs": [2539, 2789, 2775]
-    },
-    {
-      "title": ".NET Framework and workload targets modernised",
-      "body": "The libraries now target .NET 8 and its MAUI/Uno/WinUI workloads. Projects still on older TFMs may need to update SDKs, workloads or PackageReferences to consume the new packages.",
-      "prs": [2927, 2971, 2788, 2917]
-    },
-    {
-      "title": "Metal is the default backend on Mac Catalyst",
-      "body": "SkiaSharp.Views on Mac Catalyst now renders through Metal instead of the deprecated GL path. Custom hosts that assumed GL should switch to the Metal APIs or the shared SKCanvasView.",
-      "prs": [2747, 3070]
+      "title": "All v2 obsolete API members removed",
+      "body": "Every member marked [Obsolete] in SkiaSharp 2.x has been removed. Migrate to the v3 replacements before upgrading — the compilation errors will guide you to the new APIs.",
+      "prs": [
+        2539
+      ]
     }
   ],
   "categories": [
@@ -24,14 +16,13 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia rebased on milestone 116",
-          "detail": "The bundled engine is Chrome/Skia m116, bringing years of upstream rendering, text and codec fixes into a stable release.",
-          "prs": [2829, 2885, 3026]
-        },
-        {
-          "lead": "Native dependencies refreshed",
-          "detail": "HarfBuzz moved to 8.3.0, libjpeg-turbo to 3.0.0 (then rolled to 2.1.5.1 for stability), libwebp to 1.3.2, plus the usual codec and font engine bumps.",
-          "prs": [2624, 2582, 2583, 2699, 2622]
+          "lead": "Skia updated to m116",
+          "detail": "The bundled Skia engine advances to milestone m116, bringing upstream rendering improvements and bug fixes.",
+          "prs": [
+            2829,
+            2885,
+            3026
+          ]
         }
       ]
     },
@@ -39,24 +30,63 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKBlender, extended color filters and picture APIs",
-          "detail": "Exposes SKBlender, adds the missing color-filter constructors, more SKPicture entry points and an R-Tree overload of BeginRecording for faster hit-testing.",
-          "prs": [2830, 2879, 2883, 2889]
+          "lead": "SKBlender and custom blend modes exposed",
+          "detail": "SKBlender is now part of the public API, allowing custom blending with SkSL shaders and enabling advanced compositing effects.",
+          "prs": [
+            2830
+          ]
         },
         {
-          "lead": "Span overloads for hot paths",
-          "detail": "SetRectRadii, color filters and GetPixelSpan with offsets now accept Span<T>, so callers can avoid array allocations in tight rendering loops.",
-          "prs": [2949, 2879, 2609]
+          "lead": "Skottie animation builder bound",
+          "detail": "The Skottie animation builder API is now available, enabling Lottie-format animation loading and playback via Skia's Skottie library.",
+          "prs": [
+            2630
+          ]
         },
         {
-          "lead": "Skottie animation builder and raw shaders",
-          "detail": "Binds Skottie's Animation Builder and adds SKImage.ToRawShader for advanced compositing scenarios.",
-          "prs": [2630, 2748]
+          "lead": "New SKPicture, SKImage, and color filter APIs",
+          "detail": "SKPicture gains additional recording and playback APIs; SKImage.ToRawShader is added; and spans are added to color filter factory methods.",
+          "prs": [
+            2883,
+            2748,
+            2879
+          ]
         },
         {
-          "lead": "Metal backend surfaced cross-platform",
-          "detail": "Adds the Metal GRBackendRenderTarget APIs on every Apple platform and unifies GRMtlTextureInfo with readonly getters.",
-          "prs": [3070, 2833, 2788]
+          "lead": "SKColorFilter compatibility overloads for SKFilterQuality",
+          "detail": "Compatibility overloads for SKFilterQuality are added so existing code compiles cleanly during migration.",
+          "prs": [
+            2963
+          ]
+        },
+        {
+          "lead": "Span and ReadOnlySpan overloads added",
+          "detail": "SetRectRadii gains Span overloads for working with rounded-rect radii without allocations.",
+          "prs": [
+            2949
+          ]
+        },
+        {
+          "lead": "SKTextBlobBuilder and SKRunBuffer APIs cleaned up",
+          "detail": "SKTextBlobBuilder and SKRunBuffer have been modernized, removing legacy text-based blob APIs where only glyph-ID paths remain.",
+          "prs": [
+            2775,
+            2545
+          ]
+        },
+        {
+          "lead": "GetPixelSpan() overloads with offsets added",
+          "detail": "SKBitmap.GetPixelSpan gains offset parameters for accessing pixel data at a specific location.",
+          "prs": [
+            2609
+          ]
+        },
+        {
+          "lead": "SKRectI floor-outwards conversion corrected",
+          "detail": "Converting a floating-point rect to integer now floors outwards in all four directions as expected.",
+          "prs": [
+            2568
+          ]
         }
       ]
     },
@@ -64,39 +94,55 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Cloned SKPaint no longer crashes on dispose",
-          "detail": "Fixes an AccessViolationException when disposing a paint cloned from another paint.",
-          "prs": [2904]
+          "lead": "AccessViolationException when disposing cloned SKPaint fixed",
+          "detail": "Disposing a cloned SKPaint was causing an access violation; the native ownership tracking is now correct.",
+          "prs": [
+            2904
+          ]
         },
         {
-          "lead": "Metal snapshot returns real pixels",
-          "detail": "Snapshot on the Metal backend no longer returns a magenta image on Apple platforms.",
-          "prs": [2804]
+          "lead": "Memory leaks in MAUI views fixed",
+          "detail": "Several native handle leaks in the MAUI SKCanvasView and SKGLView have been resolved.",
+          "prs": [
+            2955
+          ]
         },
         {
-          "lead": "PNG encoder options behaviour restored",
-          "detail": "SKBitmap.Encode with SKPngEncoderOptions now matches the 2.88.8 behaviour that had regressed during the m11x work.",
-          "prs": [3014]
+          "lead": "Metal Snapshot returning magenta on Apple platforms fixed",
+          "detail": "SKSurface.Snapshot was returning a magenta image when the Metal backend was in use; the colour space handling is now correct.",
+          "prs": [
+            2804
+          ]
         },
         {
-          "lead": "MAUI, WinUI and Uno view fixes",
-          "detail": "Fixes memory leaks in MAUI views, WinUI XamlRoot handling, Uno canvas context activation, and background stretching in SKXamlCanvas.",
-          "prs": [2955, 2854, 2559, 2922, 2918]
-        }
-      ]
-    },
-    {
-      "heading": "Platform",
-      "bullets": [
-        {
-          "lead": "New accelerated views for WinUI and WPF",
-          "detail": "Adds SKSwapChainPanel-backed WinUI views and a real SKGLElement for WPF, plus the SKGLView for MAUI on Windows.",
-          "prs": [2733, 2317, 2598]
+          "lead": "GetKerningPairAdjustments API fixed",
+          "detail": "SKTypeface.GetKerningPairAdjustments was returning incorrect values due to a wrong native call signature; this is now corrected.",
+          "prs": [
+            2858
+          ]
         },
         {
-          "lead": "Metal-first Apple stack",
-          "detail": "Mac Catalyst renders with Metal by default, and iOS/tvOS/macOS all share the Metal backend APIs.",
-          "prs": [2747, 3070]
+          "lead": "Uno and WASM canvas rendering fixes",
+          "detail": "The Uno Skia canvas now ensures its GL context is active when rendering, the WASM canvas handles missing elements gracefully, and XamlCanvas on Uno uses the correct Bgra8888 format.",
+          "prs": [
+            2559,
+            2563,
+            2918
+          ]
+        },
+        {
+          "lead": "SKXamlCanvas XamlRoot null reference fixed",
+          "detail": "SKXamlCanvas no longer throws a NullReferenceException when XamlRoot is null during unload.",
+          "prs": [
+            2854
+          ]
+        },
+        {
+          "lead": "SKBitmap.Encode with SKPngEncoderOptions reverted to 2.88.8 behaviour",
+          "detail": "A behaviour change introduced in early v3 previews for SKBitmap.Encode with SKPngEncoderOptions has been reverted to match the 2.88.x behaviour.",
+          "prs": [
+            3014
+          ]
         }
       ]
     },
@@ -104,33 +150,125 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "LibraryImport-based interop",
-          "detail": "The P/Invoke layer moves to LibraryImport and function pointers for AOT-friendly, trim-safe interop, and PlatformConfiguration is trimmable.",
-          "prs": [2917, 2717, 2920]
+          "lead": "LibraryImport and function pointers for faster P/Invoke",
+          "detail": "The native interop layer switches to LibraryImport source generators and function pointers, reducing managed-to-native call overhead and improving AoT compatibility.",
+          "prs": [
+            2917
+          ]
+        },
+        {
+          "lead": "IBufferByteAccess updated for AoT",
+          "detail": "The IBufferByteAccess COM interface implementation is updated to work correctly under Native AoT compilation.",
+          "prs": [
+            2920
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WinUI accelerated views added",
+          "detail": "Hardware-accelerated SKCanvasView and SKGLView are now available for WinUI 3 (Windows App SDK) applications.",
+          "prs": [
+            2733
+          ]
+        },
+        {
+          "lead": "WPF GPU-accelerated view added",
+          "detail": "SKGLElement provides an OpenGL-accelerated canvas for WPF applications.",
+          "prs": [
+            2317
+          ]
+        },
+        {
+          "lead": "Blazor DPI support added",
+          "detail": "Blazor canvas components now expose the device pixel ratio, enabling correct high-DPI rendering in browser applications.",
+          "prs": [
+            1832
+          ]
+        },
+        {
+          "lead": "Metal backend used on Mac Catalyst",
+          "detail": "Mac Catalyst applications now use the Metal rendering backend by default for better performance and compatibility.",
+          "prs": [
+            2747
+          ]
+        },
+        {
+          "lead": "ANGLE support for Windows",
+          "detail": "ANGLE (Almost Native Graphics Layer Engine) is now available in NuGet packages for Windows platforms.",
+          "prs": [
+            2970
+          ]
+        },
+        {
+          "lead": "PlatformConfiguration properties made trimmable",
+          "detail": "Platform configuration APIs are now compatible with .NET trimming, reducing app size for published applications.",
+          "prs": [
+            2717
+          ]
+        },
+        {
+          "lead": "async void avoided in SKXamlCanvas",
+          "detail": "SKXamlCanvas no longer uses async void for event handlers, preventing unobserved exception swallowing.",
+          "prs": [
+            2720
+          ]
+        },
+        {
+          "lead": "WinForms updated to new GLControl packages",
+          "detail": "SkiaSharp.Views.WindowsForms is updated to use the current OpenTK GLControl NuGet packages.",
+          "prs": [
+            2989
+          ]
+        },
+        {
+          "lead": "nosimd WASM builds restored",
+          "detail": "Non-SIMD WebAssembly builds are restored for environments requiring edge-enhanced security or Safari compatibility.",
+          "prs": [
+            2612
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Native dependencies updated",
+          "detail": "HarfBuzz updated to 8.3.0 (from 7.3.0), WebP to 1.3.2, libjpeg-turbo to 3.0.0 (later rolled back to 2.1.5.1), and .NET updated to 8.0.",
+          "prs": [
+            2624,
+            2622,
+            2583,
+            2927
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeromelaban": "A run of Uno and Blazor fixes — canvas context activation, XamlRoot handling, WASM fallback safety and the nosimd build restoration",
-    "maxkatz6": "Modernised the interop layer with function pointers and LibraryImport, unified the Metal TFM and made PlatformConfiguration trimmable",
-    "Youssef1313": "Uno Skia BGRA8888 fix, the SetRectRadii Span overload and the SKFilterQuality compatibility overloads",
-    "beto-rodriguez": "Exposed the DPI properties on the Blazor components",
-    "Fxplorer": "README typo fix",
-    "gmurray81": "Added the SKGLElement control to SkiaSharp.Views.WPF",
+    "jeromelaban": "Uno platform rendering fixes including canvas context activation, XamlRoot null handling, and WASM canvas stability",
+    "maxkatz6": "PlatformConfiguration trimming support, async void removal from SKXamlCanvas, and HarfBuzz function-pointer P/Invoke",
+    "Youssef1313": "SKFilterQuality compatibility overloads, Span overloads for SetRectRadii, and Bgra8888 fix for Uno Skia",
+    "beto-rodriguez": "Blazor DPI support for canvas components",
+    "Fxplorer": "Enabled MSVC build configuration",
+    "gmurray81": "Added SKGLElement for WPF",
     "jeremy-visionaid": "Fixed the AccessViolationException when disposing a cloned SKPaint",
-    "lindexi": "Removed the async void pattern from SKXamlCanvas",
+    "lindexi": "Avoided async void in SKXamlCanvas event handlers",
     "pdjonov": "Fixed the GetKerningPairAdjustments API",
-    "Redth": "Landed a Skia externals refresh",
-    "sungaila": "Restored SKBitmap.Encode with SKPngEncoderOptions to its 2.88.8 behaviour",
-    "taublast": "Fixed the magenta snapshot on the Apple Metal backend"
+    "Redth": "Skia m116 milestone update",
+    "sungaila": "Reverted SKBitmap.Encode with SKPngEncoderOptions to 2.88.8 behaviour",
+    "taublast": "Fixed SKXamlCanvas when XamlRoot is null during unload"
   },
   "preview_summaries": {
-    "3.0.0-p1": "Preview 1 modernised the repository, brought the .NET 8 target family online and started deleting the v2 [Obsolete] surface.",
-    "3.0.0-p2": "Preview 2 landed the codec dependency refresh (libjpeg-turbo, libwebp, HarfBuzz).",
-    "3.0.0-p3": "Preview 3 focused on APIs — SKBlender, more SKPicture entry points and the R-Tree overload.",
-    "3.0.0-p4": "Preview 4 landed the accelerated WinUI and WPF views, more Skottie bindings and a raft of MAUI/Uno fixes.",
-    "3.0.0-p5": "Preview 5 rebased on Skia m116, cut the remaining v2 shims and moved to LibraryImport."
+    "3.0.0-p5": "Preview 5 stabilized the release with SKBitmap.Encode revert, LibraryImport/function pointers, SKFilterQuality compat overloads, .NET 8 update, ANGLE support, and Span overloads.",
+    "3.0.0-p4": "Preview 4 fixed the SKPaint dispose AVE, MAUI memory leaks, Uno/WASM canvas bugs, XamlRoot null reference, and added SKBlender and expanded SKPicture APIs.",
+    "3.0.0-p3": "Preview 3 added Metal Mac Catalyst backend, WPF SKGLElement, and Metal Snapshot colour correction.",
+    "3.0.0-p2": "Preview 2 introduced the Skottie animation builder, Metal on Mac Catalyst, SKImage.ToRawShader, and MSVC build support.",
+    "3.0.0-p1": "Preview 1 established the v3 foundation: WinUI and WPF views, SKGLView, Blazor DPI, LibraryImport groundwork, HarfBuzz 8.3.0, WebP 1.3.2, and removal of all v2 obsoletes."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 8.3.0 lands as part of the stable v3 line, tracking the HarfBuzz 8.3.0 upstream and getting the same LibraryImport/interop modernisation as SkiaSharp."
+  "harfbuzz_summary": "Ships HarfBuzzSharp 8.3.0 with the v3 foundation updates including LibraryImport P/Invoke, .NET 8 upgrade, and the new platform support from this series."
 }
