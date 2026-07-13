@@ -1,0 +1,74 @@
+name: Track - Artifact Sizes
+
+# Measures the on-disk size of every SkiaSharp / HarfBuzzSharp NuGet package and
+# its native binaries (per os/arch), and renders a dashboard to the run summary.
+#
+# Data is collected from:
+#   * the latest `-nightly.*` build on the official SkiaSharp EAP feed
+#     (https://aka.ms/skiasharp-eap/index.json), and
+#   * four released reference versions per package, resolved from NuGet.org.
+#
+# The rolling JSON history is persisted between runs via the Actions cache using
+# the standard "unique key + restore-keys prefix" pattern, so each run restores
+# the most recent history and saves an updated copy.
+
+on:
+  schedule:
+    - cron: "0 7 * * *"  # Daily at 07:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: track-artifact-sizes
+  cancel-in-progress: false
+
+jobs:
+  track:
+    if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore size history
+        uses: actions/cache/restore@v4
+        with:
+          path: artifact-sizes.json
+          key: artifact-sizes-v1-${{ github.run_id }}
+          restore-keys: |
+            artifact-sizes-v1-
+
+      - name: Collect artifact sizes
+        run: |
+          python3 .github/scripts/track-artifact-sizes.py \
+            --history artifact-sizes.json \
+            --max-nightly 10
+
+      - name: Render dashboard
+        run: |
+          python3 .github/scripts/render-artifact-sizes.py \
+            --history artifact-sizes.json
+
+      - name: Save size history
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: artifact-sizes.json
+          key: artifact-sizes-v1-${{ github.run_id }}
+
+      - name: Upload size history
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: artifact-sizes
+          path: artifact-sizes.json
+          if-no-files-found: warn
