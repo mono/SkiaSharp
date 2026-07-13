@@ -36,6 +36,16 @@
     -->
     <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
     <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg/emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
+    <!--
+      emdawnwebgpu compiles a libemdawnwebgpu-<hash>.a at link time via
+      emcc's ports mechanism. The .NET WASM SDK ships EM_FROZEN_CACHE=1 by
+      default (WasmCachePath defaults to the emsdk-shipped cache), which
+      makes emcc refuse to write anything new to the cache. Redirect
+      WasmCachePath to a project-local dir so the SDK sets FROZEN_CACHE=0
+      and the port lib can build on demand. Consumer-supplied WasmCachePath
+      wins if set.
+    -->
+    <WasmCachePath Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true' and '$(WasmCachePath)' == ''">$(IntermediateOutputPath)wasm-emcache/</WasmCachePath>
     <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' != 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1</EmccExtraLDFlags>
