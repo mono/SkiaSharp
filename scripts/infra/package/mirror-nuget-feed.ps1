@@ -1,12 +1,19 @@
 <#
 .SYNOPSIS
-    Mirror (copy) NuGet packages from a SOURCE Azure DevOps Artifacts feed to a
-    DESTINATION feed — designed for the xamarin -> dnceng feed migration.
+    Mirror (copy) SkiaSharp NuGet packages from the old xamarin Azure DevOps
+    feeds to the new dnceng feeds. Pick a feed with -Feed; the script knows the
+    source, destination, and the per-feed rules intrinsically.
 
 .DESCRIPTION
-    TEMPORARY MIGRATION TOOL. Copies every package version that exists in the
-    source feed but is missing from the destination feed. It is:
+    Copies every GOOD package version that exists in the source feed but is
+    missing from the destination feed. It is:
 
+      * Rules-driven — you only choose the feed (-Feed skiasharp | skiasharp-ci).
+                      The script encodes each feed's source, destination and
+                      cleanliness rules (see FEED PROFILES below).
+      * Clean by default — known-bad versions (per-PR '-pr.*' builds and
+                      malformed '-preview-*') are NEVER copied. We do not mirror
+                      junk.
       * Diff-first  — it inventories both feeds (metadata only, no downloads)
                       and computes exactly what is missing BEFORE transferring
                       anything. This is the fast "what is already there" check.
@@ -25,26 +32,26 @@
                       pushed. Existing destination packages are never overwritten
                       (409/"already exists" is treated as success).
 
+    FEED PROFILES (intrinsic — this is "the difference" between the feeds):
+
+      skiasharp     PUBLIC release feed.
+                    xamarin/public/SkiaSharp  ->  dnceng/public/skiasharp
+                    Excludes the internal underscore-prefixed CI wrapper packages
+                    (_NativeAssets, _NuGets, _Symbols, ...) so the public feed only
+                    ever contains real, user-facing packages.
+
+      skiasharp-ci  INTERNAL CI artifact feed.
+                    xamarin/public/SkiaSharp-CI  ->  dnceng/public/skiasharp-ci
+                    Keeps the underscore wrapper/artifact packages (used by the
+                    build pipeline and externals-download). Still drops the bad
+                    '-pr.*' / malformed versions like every feed.
+
     Read access to the (public) source feed is anonymous; only the PUSH to the
     destination needs a PAT (packaging read/write on the destination org).
 
-.PARAMETER SourceOrg
-    Source Azure DevOps organization. Default: xamarin
-
-.PARAMETER SourceProject
-    Source project (empty for org-scoped feeds). Default: public
-
-.PARAMETER SourceFeed
-    Source feed name or id. Default: SkiaSharp
-
-.PARAMETER DestOrg
-    Destination Azure DevOps organization. Default: dnceng
-
-.PARAMETER DestProject
-    Destination project (empty for org-scoped feeds). Default: public
-
-.PARAMETER DestFeed
-    Destination feed name or id. Default: skiasharp
+.PARAMETER Feed
+    Which feed to mirror: 'skiasharp' (public) or 'skiasharp-ci' (internal).
+    This selects the source, destination and per-feed rules. Required.
 
 .PARAMETER Push
     OPT IN. Actually download+push missing packages. Without this flag the
@@ -67,15 +74,11 @@
 
 .PARAMETER MaxDurationMinutes
     Wall-clock budget. The script stops starting new work once this is reached
-    and exits cleanly. Default: 50 (leaves headroom under a 60-min CI timeout).
+    and exits cleanly. Default: 330 (leaves headroom under a ~350-min CI timeout).
 
 .PARAMETER PackageFilter
-    Optional regex to limit which package ids are mirrored (e.g. '^SkiaSharp$').
-
-.PARAMETER ExcludePackageRegex
-    Optional regex of package ids to EXCLUDE. Useful for keeping a public feed
-    clean of internal CI plumbing, e.g. '^_' drops the underscore-prefixed
-    wrapper packages (_NativeAssets, _NuGets, _Symbols, ...).
+    Advanced. Optional regex to limit which package ids are considered
+    (e.g. '^SkiaSharp$' to smoke-test the push path on one package).
 
 .PARAMETER IncludeUnlisted
     Also mirror versions that are unlisted in the source. Default: off.
@@ -93,35 +96,25 @@
 
 .PARAMETER SummaryFile
     Optional path to append a GitHub-flavoured Markdown summary of the diff and
-    plan (what would be copied, broken down by scope). In CI, point this at
-    $env:GITHUB_STEP_SUMMARY so the result shows up in the PR check summary.
+    plan (what would be copied). In CI, point this at $env:GITHUB_STEP_SUMMARY so
+    the result shows up in the PR check summary.
 
 .EXAMPLE
-    # Dry run — see exactly what WOULD be copied (safe, no writes)
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp
+    # Dry run — see exactly what WOULD be copied to the public feed (safe)
+    ./mirror-nuget-feed.ps1 -Feed skiasharp
 
 .EXAMPLE
-    # Real mirror of the CI feed, with a 45-minute budget
+    # Real mirror of the public feed
     $env:AZURE_DEVOPS_PAT = '<pat>'
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp-CI -DestFeed skiasharp-ci -Push -MaxDurationMinutes 45
+    ./mirror-nuget-feed.ps1 -Feed skiasharp -Push
 
 .EXAMPLE
-    # Mirror only real releases (skip -pr.* and malformed -preview-* build artifacts)
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp -GoodVersionsOnly -Push
-
-.EXAMPLE
-    # Keep the PUBLIC feed clean: mirror real packages only, excluding the
-    # internal underscore-prefixed CI wrapper packages (_NativeAssets, _NuGets…).
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp -ExcludePackageRegex '^_' -Push
-
-.EXAMPLE
-    # Strictest scope: mirror ONLY recognized releases, dropping 0.0.0-commit.* /
-    # 0.0.0-branch.* per-build CI artifacts as well.
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp-CI -DestFeed skiasharp-ci -ReleasesOnly -Push
+    # Real mirror of the internal CI artifact feed
+    ./mirror-nuget-feed.ps1 -Feed skiasharp-ci -Push
 
 .EXAMPLE
     # Smoke-test the push path end to end on a single package first
-    ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp -PackageFilter '^SkiaSharp$' -Push
+    ./mirror-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
 
 .NOTES
     Exit codes:
@@ -133,32 +126,18 @@
 
 [CmdletBinding()]
 param(
-    [string]$SourceOrg = "xamarin",
-    [string]$SourceProject = "public",
-    [string]$SourceFeed = "SkiaSharp",
-
-    [string]$DestOrg = "dnceng",
-    [string]$DestProject = "public",
-    [string]$DestFeed = "skiasharp",
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("skiasharp", "skiasharp-ci")]
+    [string]$Feed,
 
     [switch]$Push,
 
     [string]$Pat = $env:AZURE_DEVOPS_PAT,
     [string]$SourcePat = $env:AZURE_DEVOPS_SOURCE_PAT,
 
-    [int]$MaxDurationMinutes = 50,
+    [int]$MaxDurationMinutes = 330,
     [string]$PackageFilter = "",
-    [string]$ExcludePackageRegex = "",
     [switch]$IncludeUnlisted,
-
-    # Migration-scope control. By default EVERYTHING is mirrored. -GoodVersionsOnly
-    # skips ephemeral build artifacts (-pr.* and malformed -preview-* versions).
-    # -ReleasesOnly is stricter still: it keeps ONLY recognized releases (stable /
-    # -preview. / -rc. / -nightly. / -stable. / -alpha.) and drops everything else,
-    # including the 0.0.0-commit.* / 0.0.0-branch.* per-build CI artifacts.
-    [switch]$GoodVersionsOnly,
-    [switch]$ReleasesOnly,
-    [string]$ExcludeVersionRegex = "",
 
     [int]$MaxPushRetries = 3,
     [string]$CacheDir = "",
@@ -172,7 +151,8 @@ $ErrorActionPreference = "Stop"
 #region Helpers
 
 # --- Version classification: which package versions are "real releases" vs
-# --- ephemeral CI build artifacts. Used by -GoodVersionsOnly / -ReleasesOnly.
+# --- ephemeral CI build artifacts. Bad ones ('-pr.*', malformed '-preview-*')
+# --- are never copied.
 $script:MainVersionPattern = '\d+\.\d+(?:\.\d+)?(?:\.\d+)?'
 $script:AllowedPrereleaseSuffixes = @(
     '-alpha\.\d+(?:\.\d+)?'
@@ -510,9 +490,36 @@ function Push-Package {
 
 #region Main
 
+# --- Feed profiles: intrinsic source/destination + per-feed cleanliness rules ---
+$FeedProfiles = @{
+    'skiasharp' = @{
+        Kind                = 'public release feed'
+        SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp'
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp'
+        # Public feed: drop the internal underscore-prefixed CI wrapper packages.
+        ExcludePackageRegex = '^_'
+    }
+    'skiasharp-ci' = @{
+        Kind                = 'internal CI artifact feed'
+        SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp-CI'
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp-ci'
+        # Internal feed: keep the underscore wrapper/artifact packages.
+        ExcludePackageRegex = ''
+    }
+}
+$feedProfile = $FeedProfiles[$Feed]
+
+$SourceOrg     = $feedProfile.SourceOrg
+$SourceProject = $feedProfile.SourceProject
+$SourceFeed    = $feedProfile.SourceFeed
+$DestOrg       = $feedProfile.DestOrg
+$DestProject   = $feedProfile.DestProject
+$DestFeed      = $feedProfile.DestFeed
+$ExcludePackageRegex = $feedProfile.ExcludePackageRegex
+
 Write-Host ""
 Write-Head "=================================================="
-Write-Head " NuGet Feed Mirror (source -> destination)"
+Write-Head " NuGet Feed Mirror — $Feed ($($feedProfile.Kind))"
 Write-Head "=================================================="
 Write-Host ""
 
@@ -533,9 +540,10 @@ Write-Head "Configuration"
 Write-Info "  Source      : $SourceOrg/$SourceProject  feed '$SourceFeed'"
 Write-Info "  Destination : $DestOrg/$DestProject  feed '$DestFeed'"
 Write-Info "  Mode        : $(if ($Push) { 'PUSH (writes enabled)' } else { 'DRY RUN (no writes)' })"
+Write-Info "  Bad versions: skipped (-pr.* / malformed -preview-*)"
+if ($ExcludePackageRegex) { Write-Info "  Exclude pkgs: $ExcludePackageRegex" }
 Write-Info "  Time budget : $MaxDurationMinutes min"
 if ($PackageFilter) { Write-Warn2 "  Filter      : $PackageFilter" }
-if ($ExcludePackageRegex) { Write-Warn2 "  Exclude pkgs: $ExcludePackageRegex" }
 Write-Host ""
 
 if ($Push -and [string]::IsNullOrWhiteSpace($Pat)) {
@@ -566,13 +574,28 @@ catch {
     Save-Summary -Path $SummaryFile
     exit 2
 }
+$srcTotal = $srcInv.Count
+
+# --- Apply intrinsic rules to the source set -----------------------------------
+# 1. Optional smoke-test include filter.
 if ($PackageFilter) {
     $srcInv = @($srcInv | Where-Object { $_.Id -match $PackageFilter })
 }
+# 2. Per-feed package exclusion (e.g. drop internal '_' packages from public).
+$excludedByPackage = 0
 if ($ExcludePackageRegex) {
+    $before = $srcInv.Count
     $srcInv = @($srcInv | Where-Object { $_.Id -notmatch $ExcludePackageRegex })
+    $excludedByPackage = $before - $srcInv.Count
 }
-Write-Good "  Source versions: $($srcInv.Count)"
+# 3. Never copy known-bad versions ('-pr.*' / malformed '-preview-*').
+$before = $srcInv.Count
+$srcInv = @($srcInv | Where-Object { (Get-VersionAction -Version $_.Version) -ne 'DELETE' })
+$excludedBadVersions = $before - $srcInv.Count
+
+Write-Good "  Source versions: $srcTotal total; $($srcInv.Count) eligible after rules"
+if ($excludedByPackage -gt 0)   { Write-Info "    - excluded $excludedByPackage version(s) on '$ExcludePackageRegex' packages" }
+if ($excludedBadVersions -gt 0) { Write-Info "    - excluded $excludedBadVersions bad version(s) (-pr.* / malformed -preview-*)" }
 
 Write-Head "Inventorying destination feed (metadata only)..."
 $dstIndex = [System.Collections.Generic.HashSet[string]]::new()
@@ -606,94 +629,46 @@ foreach ($e in $srcInv) {
 
 $alreadyThere = $srcInv.Count - $missing.Count
 
-# Classify the missing set so the operator can see (and skip) ephemeral builds.
-$breakdownKeep = 0; $breakdownDelete = 0; $breakdownUnknown = 0
-foreach ($e in $missing) {
-    switch (Get-VersionAction -Version $e.Version) {
-        "KEEP"    { $breakdownKeep++ }
-        "DELETE"  { $breakdownDelete++ }
-        default   { $breakdownUnknown++ }
-    }
-}
-
 Write-Host ""
 Write-Head "Diff"
-Write-Info  "  In source            : $($srcInv.Count)"
+Write-Info  "  Eligible to mirror   : $($srcInv.Count)"
 Write-Good  "  Already in dest      : $alreadyThere"
 Write-Warn2 "  Missing (to copy)    : $($missing.Count)"
 Write-Host ""
-Write-Head "Missing breakdown by version policy"
-Write-Good  "  Releases to keep     : $breakdownKeep  (stable / -preview. / -rc. / -nightly. / -stable. / -alpha.)"
-Write-Warn2 "  Ephemeral builds     : $breakdownDelete  (-pr.* and malformed -preview-*)"
-Write-Info  "  Unrecognized         : $breakdownUnknown"
-Write-Host ""
 
 # --- Build the Markdown summary (shown in CI as the PR check step summary) ------
-$scopeAll      = $breakdownKeep + $breakdownDelete + $breakdownUnknown
-$scopeGood     = $breakdownKeep + $breakdownUnknown
-$scopeReleases = $breakdownKeep
-Add-Summary "## Feed mirror — ``$SourceOrg/$SourceProject/$SourceFeed`` → ``$DestOrg/$DestProject/$DestFeed``"
+Add-Summary "## Feed mirror — ``$Feed`` ($($feedProfile.Kind))"
+Add-Summary ""
+Add-Summary "``$SourceOrg/$SourceProject/$SourceFeed`` → ``$DestOrg/$DestProject/$DestFeed``"
 Add-Summary ""
 Add-Summary "**Mode:** $(if ($Push) { 'PUSH (writes enabled)' } else { '🔍 DRY RUN — no packages are downloaded or pushed' })"
 Add-Summary ""
+Add-Summary "**Rules applied:**"
+if ($ExcludePackageRegex) {
+    Add-Summary "- exclude internal packages matching ``$ExcludePackageRegex`` (dropped $excludedByPackage version(s))"
+} else {
+    Add-Summary "- keep all packages (internal ``_`` wrapper packages included)"
+}
+Add-Summary "- skip known-bad versions ``-pr.*`` / malformed ``-preview-*`` (dropped $excludedBadVersions version(s))"
+Add-Summary ""
 Add-Summary "| Metric | Count |"
 Add-Summary "|---|---:|"
-Add-Summary "| In source feed | $($srcInv.Count) |"
+Add-Summary "| In source feed (all) | $srcTotal |"
+Add-Summary "| Eligible after rules | $($srcInv.Count) |"
 Add-Summary "| Already in destination | $alreadyThere |"
-Add-Summary "| **Missing (all versions)** | **$($missing.Count)** |"
+Add-Summary "| **Missing (to copy)** | **$($missing.Count)** |"
 Add-Summary ""
-Add-Summary "### What each scope would copy"
-Add-Summary ""
-Add-Summary "| Scope | Flag | Would copy |"
-Add-Summary "|---|---|---:|"
-Add-Summary "| Everything | _(default)_ | $scopeAll |"
-Add-Summary "| Good versions | ``-GoodVersionsOnly`` | $scopeGood |"
-Add-Summary "| Releases only | ``-ReleasesOnly`` | $scopeReleases |"
-Add-Summary ""
-Add-Summary "<sub>releases = $breakdownKeep (stable / -preview. / -rc. / -nightly. / -stable. / -alpha.) · ephemeral = $breakdownDelete (``-pr.*`` / malformed ``-preview-*``) · unrecognized = $breakdownUnknown (e.g. ``0.0.0-commit.*`` / ``0.0.0-branch.*``)</sub>"
-Add-Summary ""
-
-# Apply migration-scope filters.
-if ($ReleasesOnly) {
-    $before = $missing.Count
-    $filtered = [System.Collections.Generic.List[object]]::new()
-    foreach ($e in $missing) {
-        if ((Get-VersionAction -Version $e.Version) -eq "KEEP") { $filtered.Add($e) }
-    }
-    $missing = $filtered
-    Write-Warn2 "  -ReleasesOnly: keeping recognized releases only -> $($missing.Count) of $before will be mirrored"
-}
-elseif ($GoodVersionsOnly) {
-    $before = $missing.Count
-    $filtered = [System.Collections.Generic.List[object]]::new()
-    foreach ($e in $missing) {
-        if ((Get-VersionAction -Version $e.Version) -ne "DELETE") { $filtered.Add($e) }
-    }
-    $missing = $filtered
-    Write-Warn2 "  -GoodVersionsOnly: excluding ephemeral builds -> $($missing.Count) of $before will be mirrored"
-}
-if ($ExcludeVersionRegex) {
-    $before = $missing.Count
-    $filtered = [System.Collections.Generic.List[object]]::new()
-    foreach ($e in $missing) {
-        if ($e.Version -notmatch $ExcludeVersionRegex) { $filtered.Add($e) }
-    }
-    $missing = $filtered
-    Write-Warn2 "  -ExcludeVersionRegex '$ExcludeVersionRegex': -> $($missing.Count) of $before will be mirrored"
-}
-if ($ReleasesOnly -or $GoodVersionsOnly -or $ExcludeVersionRegex) { Write-Host "" }
 
 if ($missing.Count -eq 0) {
-    Write-Good "Destination is already in sync (for the selected scope). Nothing to do."
+    Write-Good "Destination is already in sync. Nothing to do."
     Add-Summary "### ✅ Result: destination already in sync — nothing to copy."
     Save-Summary -Path $SummaryFile
     exit 0
 }
 
-# Per-package grouping (what would actually be copied for the selected scope).
-$selectedLabel = if ($ReleasesOnly) { 'releases only' } elseif ($GoodVersionsOnly) { 'good versions' } else { 'everything' }
+# Per-package grouping (all package ids that will be copied — no truncation).
 $byPkg = @($missing | Group-Object Id | Sort-Object Count -Descending)
-Add-Summary "### Selected scope: **$selectedLabel** → $($missing.Count) version(s) across $($byPkg.Count) package(s)"
+Add-Summary "### To copy: $($missing.Count) version(s) across $($byPkg.Count) package(s)"
 Add-Summary ""
 Add-Summary "| Package | Versions to copy |"
 Add-Summary "|---|---:|"
