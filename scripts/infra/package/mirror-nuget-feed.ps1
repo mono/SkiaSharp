@@ -52,7 +52,14 @@
 
 .PARAMETER Pat
     Personal Access Token with Packaging read/write on the DESTINATION org.
-    Required only when -Push is set. Falls back to $env:AZURE_DEVOPS_PAT.
+    Required only when -Push is set. Read from $env:AZURE_DEVOPS_PAT by default.
+
+    SECURITY: the PAT is never passed on a command line, never written to a
+    nuget.config, and never printed. For the push it is handed to the Azure
+    Artifacts Credential Provider via the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
+    process env var; for REST reads (only if the source feed is private) it goes
+    in an Authorization header. It is also registered with the GitHub Actions log
+    masker. Dry runs need no PAT at all (public feeds are read anonymously).
 
 .PARAMETER SourcePat
     Optional PAT for the source feed if it is not anonymously readable.
@@ -435,44 +442,52 @@ function Test-NupkgMatches {
     }
 }
 
-# Write a temp nuget.config with credentials for the destination feed so
-# `dotnet nuget push` can authenticate without touching global config.
-function New-DestNuGetConfig {
+# Configure destination push credentials WITHOUT writing the PAT to disk or to
+# any command line. Uses the Azure Artifacts Credential Provider, which reads the
+# VSS_NUGET_EXTERNAL_FEED_ENDPOINTS process environment variable. The PAT lives
+# only in this process's memory/env for the duration of the run — never in a
+# nuget.config, never as a `dotnet` argument, never echoed. We also register it
+# with the GitHub log masker as belt-and-suspenders.
+function Set-PushCredentials {
     param(
         [string]$IndexUrl,
-        [string]$Pat,
-        [string]$Dir
+        [string]$Pat
     )
-    if (-not (Test-Path $Dir)) { New-Item -ItemType Directory -Path $Dir -Force | Out-Null }
-    $cfg = Join-Path $Dir "mirror.nuget.config"
-    $escUrl = [System.Security.SecurityElement]::Escape($IndexUrl)
-    $escPat = [System.Security.SecurityElement]::Escape($Pat)
-    $xml = @"
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="mirror-dest" value="$escUrl" />
-  </packageSources>
-  <packageSourceCredentials>
-    <mirror-dest>
-      <add key="Username" value="az" />
-      <add key="ClearTextPassword" value="$escPat" />
-    </mirror-dest>
-  </packageSourceCredentials>
-</configuration>
-"@
-    Set-Content -Path $cfg -Value $xml -Encoding UTF8
-    return $cfg
+    if ([string]::IsNullOrWhiteSpace($Pat)) { return }
+
+    # Defensive masking. GitHub already masks configured secrets; this also covers
+    # a -SourcePat / -Pat supplied by other means so it can never surface in logs.
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        Write-Host ("::add-mask::{0}" -f $Pat)
+    }
+
+    $endpoints = @{
+        endpointCredentials = @(
+            @{ endpoint = $IndexUrl; username = "az"; password = $Pat }
+        )
+    }
+    # -Compress keeps it single-line; this value is consumed only by the credential
+    # provider plugin and is never printed by this script.
+    $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS = ($endpoints | ConvertTo-Json -Depth 5 -Compress)
+}
+
+function Clear-PushCredentials {
+    Remove-Item Env:\VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ErrorAction SilentlyContinue
 }
 
 # Push a single package. 409 / already-exists is treated as success (idempotent).
+# Auth comes from the credential provider (see Set-PushCredentials) — no secret is
+# passed here. Output is scrubbed of the PAT before it is ever returned/logged.
 function Push-Package {
     param(
         [string]$NupkgPath,
         [string]$IndexUrl,
-        [string]$ConfigFile
+        [string]$ScrubValue = ""
     )
-    $out = & dotnet nuget push $NupkgPath --source $IndexUrl --api-key az --configfile $ConfigFile --skip-duplicate 2>&1 | Out-String
+    $out = & dotnet nuget push $NupkgPath --source $IndexUrl --api-key az --skip-duplicate 2>&1 | Out-String
+    if (-not [string]::IsNullOrEmpty($ScrubValue)) {
+        $out = $out.Replace($ScrubValue, "***")
+    }
     if ($LASTEXITCODE -eq 0) { return @{ Ok = $true; Skipped = $false; Out = $out } }
     if ($out -match "already exists|409|Conflict|Skipping|duplicate") {
         return @{ Ok = $true; Skipped = $true; Out = $out }
@@ -700,8 +715,9 @@ if (-not $Push) {
 if ([string]::IsNullOrWhiteSpace($CacheDir)) {
     $CacheDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-feed-mirror"
 }
-$configDir = Join-Path $CacheDir "_config"
-$destConfig = New-DestNuGetConfig -IndexUrl $dstIndexUrl -Pat $Pat -Dir $configDir
+
+# Configure push auth via the credential provider (no secret on disk or CLI).
+Set-PushCredentials -IndexUrl $dstIndexUrl -Pat $Pat
 
 Write-Head "Pushing $($missing.Count) missing package(s) to '$DestFeed'..."
 Write-Info  "  Cache: $CacheDir"
@@ -746,7 +762,7 @@ foreach ($item in $missing) {
                 continue
             }
 
-            $push = Push-Package -NupkgPath $path -IndexUrl $dstIndexUrl -ConfigFile $destConfig
+            $push = Push-Package -NupkgPath $path -IndexUrl $dstIndexUrl -ScrubValue $Pat
             if ($push.Ok) {
                 if ($push.Skipped) {
                     $skippedExisting++
