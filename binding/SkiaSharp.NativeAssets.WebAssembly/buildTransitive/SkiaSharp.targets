@@ -35,19 +35,20 @@
       on the legacy built-in.
     -->
     <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
-    <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg/emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
+    <_SkiaSharpEmdawnwebgpuPkg>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg</_SkiaSharpEmdawnwebgpuPkg>
     <!--
-      emdawnwebgpu compiles a libemdawnwebgpu-<hash>.a at link time via
-      emcc's ports mechanism. The .NET WASM SDK ships EM_FROZEN_CACHE=1 by
-      default (WasmCachePath defaults to the emsdk-shipped cache), which
-      makes emcc refuse to write anything new to the cache. Redirect
-      WasmCachePath to a project-local dir so the SDK sets FROZEN_CACHE=0
-      and the port lib can build on demand. Consumer-supplied WasmCachePath
-      wins if set.
+      Inline the port's inputs instead of `--use-port=emdawnwebgpu.port.py`.
+      Emcc's ports mechanism compiles libemdawnwebgpu-<hash>.a into its
+      cache at link time, which requires FROZEN_CACHE=0. The .NET WASM
+      SDK's parallel-compile path around a non-frozen cache races on
+      sysroot_install.stamp and crashes. Passing the port's include paths,
+      JS libraries, and webgpu.cpp source directly to emcc replicates the
+      port's effect (see emdawnwebgpu.port.py process_args + linker_setup)
+      without touching the cache. -sDEFAULT_TO_CXX=1 keeps LINK_AS_CXX on
+      like the port itself asserts.
     -->
-    <WasmCachePath Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true' and '$(WasmCachePath)' == ''">$(IntermediateOutputPath)wasm-emcache/</WasmCachePath>
-    <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
-    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>
+    <_SkiaSharpEmdawnwebgpuFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">-s DEFAULT_TO_CXX=1 -isystem $(_SkiaSharpEmdawnwebgpuPkg)/webgpu/include -isystem $(_SkiaSharpEmdawnwebgpuPkg)/webgpu_cpp/include --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_enum_tables.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_struct_info.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu_generated_sig_info.js --js-library=$(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/library_webgpu.js $(_SkiaSharpEmdawnwebgpuPkg)/webgpu/src/webgpu.cpp</_SkiaSharpEmdawnwebgpuFlags>
+    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 $(_SkiaSharpEmdawnwebgpuFlags)</EmccExtraLDFlags>
     <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' != 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1</EmccExtraLDFlags>
     <!-- Pick the threading type: 'mt' for multi-threading or 'st' for single-threading -->
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
