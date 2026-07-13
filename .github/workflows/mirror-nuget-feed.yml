@@ -34,20 +34,6 @@ on:
       - '.github/workflows/mirror-nuget-feed.yml'
   workflow_dispatch:
     inputs:
-      push:
-        description: 'Actually push packages (opt in). Unchecked = dry run.'
-        type: boolean
-        required: true
-        default: false
-      scope:
-        description: 'Which versions to mirror'
-        type: choice
-        required: false
-        default: all
-        options:
-          - all         # mirror every version (true 1:1)
-          - good        # skip -pr.* / malformed -preview-* build artifacts
-          - releases    # keep ONLY recognized releases (drops 0.0.0-commit.* etc.)
       feed:
         description: 'Which feed to mirror'
         type: choice
@@ -57,11 +43,11 @@ on:
           - both
           - skiasharp
           - skiasharp-ci
-      max_duration_minutes:
-        description: 'Wall-clock budget per feed (stops gracefully, re-run to continue)'
-        type: string
-        required: false
-        default: '330'
+      push:
+        description: 'Actually push packages (opt in). Unchecked = dry run.'
+        type: boolean
+        required: true
+        default: false
 
 # Never let two real mirrors of the same feed run concurrently.
 concurrency:
@@ -76,34 +62,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        pair:
-          # Public feed: exclude the internal underscore-prefixed CI wrapper
-          # packages so the public feed only ever contains real packages.
-          - source: SkiaSharp
-            dest: skiasharp
-            exclude: '^_'
-          # Internal CI feed: the underscore wrapper/artifact packages live here.
-          - source: SkiaSharp-CI
-            dest: skiasharp-ci
-            exclude: ''
+        # Both feeds run in parallel. All per-feed behaviour (source, destination,
+        # and rules like excluding the internal '_' packages) lives in the script.
+        feed: [skiasharp, skiasharp-ci]
 
-    name: "${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}"
+    name: "${{ matrix.feed }}"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Should this feed run?
+      - name: Gate — should this feed run, and is this an opted-in push?
         id: gate
         shell: bash
         run: |
           selected="${{ github.event.inputs.feed }}"
-          dest="${{ matrix.pair.dest }}"
-          if [ -z "$selected" ] || [ "$selected" = "both" ] || [ "$selected" = "$dest" ]; then
+          if [ -z "$selected" ] || [ "$selected" = "both" ] || [ "$selected" = "${{ matrix.feed }}" ]; then
             echo "run=true" >> "$GITHUB_OUTPUT"
           else
             echo "run=false" >> "$GITHUB_OUTPUT"
-            echo "Skipping $dest (feed input = $selected)"
+            echo "Skipping ${{ matrix.feed }} (feed input = $selected)"
           fi
           # A push is only ever performed on a manual dispatch that explicitly
           # opts in. Everything else (PR, push, dispatch dry run) never needs a
@@ -122,7 +100,7 @@ jobs:
         shell: bash
         run: sh -c "$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)"
 
-      - name: Mirror ${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}
+      - name: Mirror ${{ matrix.feed }}
         if: steps.gate.outputs.run == 'true'
         shell: pwsh
         env:
@@ -132,26 +110,8 @@ jobs:
           AZURE_DEVOPS_PAT: ${{ steps.gate.outputs.push == 'true' && secrets.AZURE_DEVOPS_PAT || '' }}
         run: |
           $params = @{
-            SourceFeed         = "${{ matrix.pair.source }}"
-            DestFeed           = "${{ matrix.pair.dest }}"
-            MaxDurationMinutes = [int]"${{ github.event.inputs.max_duration_minutes || '330' }}"
-            SummaryFile        = $env:GITHUB_STEP_SUMMARY
+            Feed        = "${{ matrix.feed }}"
+            SummaryFile = $env:GITHUB_STEP_SUMMARY
           }
-
-          $exclude = "${{ matrix.pair.exclude }}"
-          if ($exclude) { $params.ExcludePackageRegex = $exclude }
-
-          if ("${{ steps.gate.outputs.push }}" -eq "true") {
-            $params.Push = $true
-            Write-Host "Mode: PUSH (writes enabled)"
-          } else {
-            Write-Host "Mode: DRY RUN"
-          }
-
-          if ("${{ github.event.inputs.scope }}" -eq "good") {
-            $params.GoodVersionsOnly = $true
-          } elseif ("${{ github.event.inputs.scope }}" -eq "releases") {
-            $params.ReleasesOnly = $true
-          }
-
+          if ("${{ steps.gate.outputs.push }}" -eq "true") { $params.Push = $true }
           ./scripts/infra/package/mirror-nuget-feed.ps1 @params
