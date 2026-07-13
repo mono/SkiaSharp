@@ -1176,6 +1176,11 @@ Always the same incremental Prepare + offline Polish sequence:
    index data. `release-notes-data.py` fetches `main` + every `release/*`, regenerates each
    selected SkiaSharp line's data JSON (§4.3), folds in the HarfBuzz block for released
    pages (§4.5), and writes only pages whose **whole `data.json` dict** changed.
+   **When a page's `data.json` changes, `release-notes-data.py` also DELETES that page's
+   `_sources/<stem>.prose.json`** (the human-owned `<stem>.notes.md` sidecar is left in
+   place): the facts moved, so the committed prose is stale by definition and there must
+   be nothing for Polish to keep or judge as "still matching" (§4.6 point 4). This is
+   scoped to a genuine data change — a bare `--force` re-render does not discard prose.
    `release-notes-index.py` writes timestamp-free `_sources/index.json` (the Chrome schedule +
    the `live_unreleased` set that `release-notes-render.py --all` prunes against, §4.2).
 2. **`data.json` is the release-notes change-detection key.** It has no timestamp, so
@@ -1194,12 +1199,17 @@ Always the same incremental Prepare + offline Polish sequence:
    data JSON shape or its Polish contract changes materially; a forced run rewrites the
    pages to the new format, then the pipeline settles back to idempotent.
 4. **Polish writes prose and renders offline.** The Files-to-polish list names only
-   genuinely changed pages, so the AI never rewrites an up-to-date page. After the AI
-   writes each `_sources/<stem>.prose.json` and validates the page with
+   genuinely changed pages, and each of them has had its `prose.json` **deleted** by
+   Prepare (point 1), so the AI **re-authors that page from scratch** against the fresh
+   `data.json` — it never inspects an old prose file to decide whether it "still matches"
+   (that soft judgment silently dropped brand-new product PRs). After the AI writes each
+   `_sources/<stem>.prose.json` and validates the page with
    `release-notes-render.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
    equivalent `release-notes-render.py --all`) once to regenerate every SkiaSharp page, retire
-   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. When Prepare's
-   patch is empty, the workflow skips Polish and opens no PR (§2.3).
+   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. **`--all`
+   hard-fails** if any `data.json` has no matching `prose.json` — i.e. a changed/new page
+   the AI forgot to author — so a changed page can never ship with stale (or missing)
+   prose. When Prepare's patch is empty, the workflow skips Polish and opens no PR (§2.3).
 
 A ranged run (`--min-version` / `--max-version`) is scoped by SkiaSharp version core
 and therefore includes HarfBuzz automatically through the selected pages' `harfbuzz`
