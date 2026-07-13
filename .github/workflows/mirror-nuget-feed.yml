@@ -1,0 +1,122 @@
+# TEMPORARY workflow — remove after the xamarin -> dnceng feed migration is done.
+#
+# Mirrors the public SkiaSharp NuGet feeds from the old xamarin org to the new
+# dnceng org before the xamarin org is deleted. Driven by mirror-nuget-feed.ps1.
+#
+#   * On PR / push that touches the script or this workflow  -> DRY RUN only
+#     (inventory + diff + plan, no writes, no secret needed).
+#   * On manual dispatch with `push: true`                   -> real mirror
+#     (requires the AZURE_DEVOPS_PAT secret with packaging read/write on dnceng).
+#
+# The script is idempotent and timeout-safe, so a real mirror can be re-run as
+# many times as needed; each run only transfers what is still missing.
+
+name: Mirror NuGet Feeds (temporary)
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/infra/package/mirror-nuget-feed.ps1'
+      - '.github/workflows/mirror-nuget-feed.yml'
+  push:
+    paths:
+      - 'scripts/infra/package/mirror-nuget-feed.ps1'
+      - '.github/workflows/mirror-nuget-feed.yml'
+  workflow_dispatch:
+    inputs:
+      push:
+        description: 'Actually push packages (opt in). Unchecked = dry run.'
+        type: boolean
+        required: true
+        default: false
+      scope:
+        description: 'Which versions to mirror'
+        type: choice
+        required: false
+        default: all
+        options:
+          - all         # mirror every version (true 1:1)
+          - good        # skip -pr.* / malformed -preview-* build artifacts
+          - releases    # keep ONLY recognized releases (drops 0.0.0-commit.* etc.)
+      feed:
+        description: 'Which feed to mirror'
+        type: choice
+        required: true
+        default: both
+        options:
+          - both
+          - skiasharp
+          - skiasharp-ci
+      max_duration_minutes:
+        description: 'Wall-clock budget per feed (stops gracefully, re-run to continue)'
+        type: string
+        required: false
+        default: '330'
+
+# Never let two real mirrors of the same feed run concurrently.
+concurrency:
+  group: mirror-nuget-feed-${{ github.event.inputs.feed || 'dryrun' }}
+  cancel-in-progress: false
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    # A little under the 360-min hard cap; the script's own budget stops earlier.
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        pair:
+          - source: SkiaSharp
+            dest: skiasharp
+          - source: SkiaSharp-CI
+            dest: skiasharp-ci
+
+    name: "${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Should this feed run?
+        id: gate
+        shell: bash
+        run: |
+          selected="${{ github.event.inputs.feed }}"
+          dest="${{ matrix.pair.dest }}"
+          if [ -z "$selected" ] || [ "$selected" = "both" ] || [ "$selected" = "$dest" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping $dest (feed input = $selected)"
+          fi
+
+      - name: Mirror ${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}
+        if: steps.gate.outputs.run == 'true'
+        shell: pwsh
+        env:
+          # Only used when actually pushing. Reading the public source feed and
+          # diffing the public destination feed both work anonymously.
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            SourceFeed         = "${{ matrix.pair.source }}"
+            DestFeed           = "${{ matrix.pair.dest }}"
+            MaxDurationMinutes = [int]"${{ github.event.inputs.max_duration_minutes || '330' }}"
+          }
+
+          # Push is opt-in and only possible on manual dispatch.
+          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ github.event.inputs.push }}" -eq "true") {
+            $params.Push = $true
+            Write-Host "Mode: PUSH (writes enabled)"
+          } else {
+            Write-Host "Mode: DRY RUN"
+          }
+
+          if ("${{ github.event.inputs.scope }}" -eq "good") {
+            $params.GoodVersionsOnly = $true
+          } elseif ("${{ github.event.inputs.scope }}" -eq "releases") {
+            $params.ReleasesOnly = $true
+          }
+
+          ./scripts/infra/package/mirror-nuget-feed.ps1 @params
