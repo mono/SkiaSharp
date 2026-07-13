@@ -1,15 +1,15 @@
 {
   "theme": "Performance and engine fixes",
-  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance wins and upstream Skia m151 bug fixes.",
-  "highlights_body": "Hot paths in tag parsing and glyph shaping have been optimized with zero-copy spans and allocation-free overloads, and two rounds of upstream Skia m151 engine fixes have been merged.",
+  "highlights_headline": "This unreleased build brings significant P/Invoke hot-path optimisations and upstream Skia m151 bug fixes.",
+  "highlights_body": "Four allocation-free interop improvements cut per-call heap pressure in HarfBuzzSharp and SKShaper, while two upstream Skia sync merges carry engine-level bug fixes from Chrome m151.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m151 upstream bug fixes merged",
-          "detail": "Two rounds of upstream Chrome m151 engine fixes have been pulled in, keeping the bundled renderer current with the latest Skia servicing patches.",
+          "lead": "Upstream Skia m151 bug fixes merged",
+          "detail": "Two rounds of upstream Chrome/m151 patches have been pulled in, bringing rendering correctness and stability improvements from the Skia project.",
           "prs": [4312, 4382]
         }
       ]
@@ -18,29 +18,24 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKColor hex parsing optimized with ReadOnlySpan overloads",
-          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char> directly, eliminating string allocations in hot color-parsing paths.",
+          "lead": "SKColor hex parsing optimised with ReadOnlySpan overloads",
+          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char>, avoiding string allocations on hot paths and improving throughput for colour-lookup-heavy workloads.",
           "prs": [4345]
         },
         {
           "lead": "GRContextOptions unsafe modifier removed",
-          "detail": "The unnecessary unsafe modifier on GRContextOptions has been removed, making the type usable in projects that do not allow unsafe code.",
+          "detail": "The unnecessary unsafe keyword on GRContextOptions has been dropped; consuming code no longer needs to allow unsafe blocks to reference this type.",
           "prs": [3991]
         }
       ]
     },
     {
-      "heading": "Bug Fixes",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "SKShaper glyph results read via zero-copy spans",
-          "detail": "Reading shaping glyph results now uses Span-based access instead of element-by-element P/Invoke calls, eliminating per-glyph interop overhead.",
-          "prs": [4388]
-        },
-        {
-          "lead": "Per-call allocations removed from tag parsing",
-          "detail": "SKFourByteTag.Parse and HarfBuzzSharp.Tag.Parse no longer allocate a char[4] on every call, reducing GC pressure in layout-heavy workloads.",
-          "prs": [4396, 4408]
+          "lead": "HarfBuzzSharp and SKShaper interop made allocation-free",
+          "detail": "Buffer.AddUtf8(string) now uses a pooled UTF-8 encode instead of allocating, Tag.Parse and SKFourByteTag.Parse drop their per-call char[4] allocations, and SKShaper glyph results are read via zero-copy spans — reducing GC pressure on text-shaping hot paths.",
+          "prs": [4376, 4408, 4396, 4388]
         }
       ]
     }
