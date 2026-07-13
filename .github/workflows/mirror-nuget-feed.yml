@@ -4,9 +4,14 @@
 # dnceng org before the xamarin org is deleted. Driven by mirror-nuget-feed.ps1.
 #
 #   * On PR / push that touches the script or this workflow  -> DRY RUN only
-#     (inventory + diff + plan, no writes, no secret needed).
+#     (inventory + diff + plan, read anonymously, no writes, NO secret in scope).
 #   * On manual dispatch with `push: true`                   -> real mirror
 #     (requires the AZURE_DEVOPS_PAT secret with packaging read/write on dnceng).
+#
+# Secret handling: the PAT is injected into the job ONLY for an opted-in push, so
+# dry-run logs never contain it (not even masked). For the push, auth goes through
+# the Azure Artifacts Credential Provider (VSS_NUGET_EXTERNAL_FEED_ENDPOINTS) — the
+# token is never written to a nuget.config or passed on any command line.
 #
 # The script is idempotent and timeout-safe, so a real mirror can be re-run as
 # many times as needed; each run only transfers what is still missing.
@@ -90,14 +95,31 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
             echo "Skipping $dest (feed input = $selected)"
           fi
+          # A push is only ever performed on a manual dispatch that explicitly
+          # opts in. Everything else (PR, push, dispatch dry run) never needs a
+          # secret, so we never expose one to those runs.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ github.event.inputs.push }}" = "true" ]; then
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The credential provider + PAT are only set up for a real, opted-in push.
+      # Dry runs (PR / push / dispatch without push) never install it and never
+      # receive the secret.
+      - name: Install Azure Artifacts Credential Provider
+        if: steps.gate.outputs.run == 'true' && steps.gate.outputs.push == 'true'
+        shell: bash
+        run: sh -c "$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)"
 
       - name: Mirror ${{ matrix.pair.source }} -> ${{ matrix.pair.dest }}
         if: steps.gate.outputs.run == 'true'
         shell: pwsh
         env:
-          # Only used when actually pushing. Reading the public source feed and
-          # diffing the public destination feed both work anonymously.
-          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          # The secret is injected ONLY for an opted-in push. On every other run
+          # this evaluates to an empty string, so the token is never present in
+          # the job environment (and therefore cannot appear in logs, even masked).
+          AZURE_DEVOPS_PAT: ${{ steps.gate.outputs.push == 'true' && secrets.AZURE_DEVOPS_PAT || '' }}
         run: |
           $params = @{
             SourceFeed         = "${{ matrix.pair.source }}"
@@ -106,8 +128,7 @@ jobs:
             SummaryFile        = $env:GITHUB_STEP_SUMMARY
           }
 
-          # Push is opt-in and only possible on manual dispatch.
-          if ("${{ github.event_name }}" -eq "workflow_dispatch" -and "${{ github.event.inputs.push }}" -eq "true") {
+          if ("${{ steps.gate.outputs.push }}" -eq "true") {
             $params.Push = $true
             Write-Host "Mode: PUSH (writes enabled)"
           } else {
