@@ -77,7 +77,7 @@
 [CmdletBinding(SupportsShouldProcess)]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$Organization = "dnceng-public",
+    [string]$Organization = "dnceng",
 
     [Parameter(Mandatory = $false)]
     [string]$Project = "public",  # Leave empty for org-scoped feeds
