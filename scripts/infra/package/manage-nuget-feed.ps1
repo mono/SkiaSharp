@@ -336,7 +336,7 @@ function Get-EntryKey {
 
 # Download a package version (follows AzDO 303 -> blob redirect) and verify it is
 # a real zip. Returns the local path, or throws.
-function Save-Package {
+function Save-FeedPackage {
     param(
         [string]$PkgsBaseUrl,
         [string]$FeedId,
@@ -501,7 +501,7 @@ function Clear-PushCredentials {
 # before it is ever returned/logged. Exit 0 = success; because --skip-duplicate
 # makes a genuine duplicate exit 0, a NON-zero exit is always treated as a real
 # failure (never masked as "already present").
-function Push-Package {
+function Publish-FeedPackage {
     param(
         [string]$NupkgPath,
         [string]$IndexUrl,
@@ -809,7 +809,7 @@ foreach ($item in $missing) {
     while (-not $done -and $attempt -lt $MaxPushRetries) {
         $attempt++
         try {
-            $path = Save-Package -PkgsBaseUrl $srcPkgsUrl -FeedId $SourceFeed -Id $item.Id -Version $item.Version -Headers $srcHeaders -CacheDir $CacheDir
+            $path = Save-FeedPackage -PkgsBaseUrl $srcPkgsUrl -FeedId $SourceFeed -Id $item.Id -Version $item.Version -Headers $srcHeaders -CacheDir $CacheDir
 
             $check = Test-NupkgMatches -Path $path -ExpectId $item.Id -ExpectVersion $item.Version
             if (-not $check.Ok) {
@@ -824,9 +824,9 @@ foreach ($item in $missing) {
                 continue
             }
 
-            $push = Push-Package -NupkgPath $path -IndexUrl $dstIndexUrl -ScrubValue $Pat
-            if ($push.Ok) {
-                if ($push.Skipped) {
+            $pushResult = Publish-FeedPackage -NupkgPath $path -IndexUrl $dstIndexUrl -ScrubValue $Pat
+            if ($pushResult.Ok) {
+                if ($pushResult.Skipped) {
                     $skippedExisting++
                     Write-Good "  $label — already present (skipped)"
                 } else {
@@ -837,7 +837,7 @@ foreach ($item in $missing) {
             }
             else {
                 if ($attempt -ge $MaxPushRetries) {
-                    throw "push failed: $($push.Out.Trim())"
+                    throw "push failed: $($pushResult.Out.Trim())"
                 }
                 Write-Warn2 "  $label — push failed (attempt $attempt/$MaxPushRetries); retrying"
                 Start-Sleep -Seconds ([Math]::Pow(2, $attempt))
