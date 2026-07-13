@@ -99,7 +99,7 @@ class Column:
 def build_columns(history: dict) -> list[Column]:
     columns: list[Column] = []
     for entry in history.get("nightly", []):
-        # Header: MM-DD over the short build number.
+        # Header: MM-DD observation date.
         date = entry.get("date", "")
         short_date = date[5:] if len(date) >= 10 else date
         columns.append(Column(date, f"{short_date}", "nightly"))
@@ -290,7 +290,7 @@ def render_header(history: dict, nights: dict[str, dict]) -> list[str]:
     newest = nightly[-1]
     lines += [
         f"**Latest nightly:** `{newest.get('version', '?')}` "
-        f"(build {newest.get('buildId', '?')}, {newest.get('date', '?')}) &middot; "
+        f"(observed {newest.get('date', '?')}) &middot; "
         f"{len(newest.get('packages', {}))} packages &middot; "
         f"tracking {len(nightly)} day(s) + {len(ROLES)} released refs",
         f"_Updated {history.get('updatedUtc', 'unknown')}._",

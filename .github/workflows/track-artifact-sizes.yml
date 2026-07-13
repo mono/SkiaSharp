@@ -4,8 +4,8 @@ name: Track - Artifact Sizes
 # its native binaries (per os/arch), and renders a dashboard to the run summary.
 #
 # Data is collected from:
-#   * the latest succeeded `main` nightly build (Azure DevOps pipeline 4), read
-#     from its `nuget_preview` artifact, and
+#   * the latest `-nightly.*` build on the official SkiaSharp EAP feed
+#     (https://aka.ms/skiasharp-eap/index.json), and
 #   * four released reference versions per package, resolved from NuGet.org.
 #
 # The rolling JSON history is persisted between runs via the Actions cache using
@@ -16,11 +16,6 @@ on:
   schedule:
     - cron: "0 7 * * *"  # Daily at 07:00 UTC
   workflow_dispatch:
-    inputs:
-      build_id:
-        description: "Azure DevOps build id to sample (default: latest main build)"
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -53,15 +48,10 @@ jobs:
             artifact-sizes-v1-
 
       - name: Collect artifact sizes
-        env:
-          # Passed via env (never interpolated into the shell) to avoid any
-          # template-injection from the free-form dispatch input.
-          BUILD_ID: ${{ github.event.inputs.build_id }}
         run: |
           python3 .github/scripts/track-artifact-sizes.py \
             --history artifact-sizes.json \
-            --max-nightly 10 \
-            ${BUILD_ID:+--build-id "$BUILD_ID"}
+            --max-nightly 10
 
       - name: Render dashboard
         run: |

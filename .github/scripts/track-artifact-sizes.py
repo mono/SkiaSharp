@@ -9,9 +9,11 @@ This script builds/updates a JSON "history" document that records:
 
 Two kinds of data points ("columns") are collected:
 
-  * ``nightly`` -- the latest *succeeded* ``main`` build of the Azure DevOps
-    ``xamarin/public`` pipeline (definitionId 4). Packages are read from the
-    ``nuget_preview`` build artifact. The newest ``--max-nightly`` days are kept.
+  * ``nightly`` -- the latest ``-nightly.*`` build from the official SkiaSharp
+    Early Access Preview feed (https://aka.ms/skiasharp-eap/index.json). Every
+    package is measured at its family's headline nightly version (SkiaSharp and
+    HarfBuzzSharp version independently), keyed by the observation date. The
+    newest ``--max-nightly`` days are kept.
   * ``released`` -- reference versions resolved from NuGet.org. For every package
     four roles are resolved from that package's *own* version line
     (SkiaSharp and HarfBuzzSharp version independently):
@@ -48,16 +50,13 @@ import zipfile
 
 SCHEMA_VERSION = 1
 
-AZDO_ORG = "xamarin"
-AZDO_PROJECT = "public"
-AZDO_PIPELINE_ID = 4
-AZDO_API = f"https://dev.azure.com/{AZDO_ORG}/{AZDO_PROJECT}/_apis"
+# The official SkiaSharp Early Access Preview (EAP) feed. This aka.ms link
+# redirects to a standard NuGet v3 feed on Azure DevOps Artifacts (anonymous)
+# and hosts the daily ``-nightly.*`` builds we sample.
+EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"
 
+# NuGet.org flat container, used for the released reference versions.
 NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"
-
-# The build artifact that contains the preview-versioned packages produced by
-# every main build.
-NIGHTLY_ARTIFACT = "nuget_preview"
 
 ROLES = ("prev-major", "prev-stable", "curr-stable", "latest")
 
@@ -117,24 +116,6 @@ def http_download(url: str, dest: str, *, retries: int = 4, timeout: int = 600) 
 # --------------------------------------------------------------------------- #
 # NuGet package measurement
 # --------------------------------------------------------------------------- #
-
-_NUPKG_RE = re.compile(r"^(?P<id>.+?)\.(?P<ver>\d+\.\d+.*?)\.nupkg$", re.IGNORECASE)
-
-
-def split_nupkg_name(filename: str) -> tuple[str, str] | None:
-    """Split ``SkiaSharp.NativeAssets.Win32.4.151.0-preview.1.1.nupkg`` into
-    ``("SkiaSharp.NativeAssets.Win32", "4.151.0-preview.1.1")``.
-
-    Symbol packages are ignored (returns ``None``).
-    """
-    low = filename.lower()
-    if low.endswith(".snupkg") or ".symbols." in low:
-        return None
-    m = _NUPKG_RE.match(filename)
-    if not m:
-        return None
-    return m.group("id"), m.group("ver")
-
 
 def _is_native_entry(name: str) -> bool:
     """Return True if a zip entry is an actual native binary payload.
@@ -203,120 +184,144 @@ def measure_nupkg(path: str) -> dict:
     return {"nupkg": file_size, "natives": natives}
 
 
-def measure_nupkg_dir(directory: str) -> dict:
-    """Measure every ``.nupkg`` found under ``directory`` (recursively).
+# --------------------------------------------------------------------------- #
+# NuGet feed helpers (flat container)
+# --------------------------------------------------------------------------- #
 
-    Returns ``{packageId: {"version": v, **measurement}}``. When the same
-    package id appears more than once the first occurrence wins.
+def resolve_eap_feed() -> dict:
+    """Resolve the EAP feed's service URLs from its v3 index.
+
+    Returns ``{"flat": <PackageBaseAddress>, "search": <SearchQueryService>}``.
     """
-    packages: dict[str, dict] = {}
-    for root, _dirs, files in os.walk(directory):
-        for fn in sorted(files):
-            if not fn.lower().endswith(".nupkg"):
-                continue
-            split = split_nupkg_name(fn)
-            if not split:
-                continue
-            pkg_id, version = split
-            if pkg_id in packages:
-                continue
-            measurement = measure_nupkg(os.path.join(root, fn))
-            measurement["version"] = version
-            packages[pkg_id] = measurement
-    return packages
+    index = http_get_json(EAP_INDEX_URL)
+    resources = index.get("resources", [])
+    flat = _find_resource(resources, "PackageBaseAddress/")
+    search = _find_resource(resources, "SearchQueryService")
+    if not flat:
+        raise RuntimeError("EAP feed index has no PackageBaseAddress resource.")
+    return {"flat": flat, "search": search}
 
 
-# --------------------------------------------------------------------------- #
-# Azure DevOps (nightly) helpers
-# --------------------------------------------------------------------------- #
+def _find_resource(resources: list[dict], type_prefix: str) -> str | None:
+    for res in resources:
+        if str(res.get("@type", "")).startswith(type_prefix):
+            return res["@id"]
+    return None
 
-def resolve_nightly_build(build_id: int | None) -> dict:
-    """Return metadata for the nightly build to sample.
 
-    When ``build_id`` is given it is used directly; otherwise the latest
-    succeeded ``main`` build of the pipeline is chosen.
+def get_versions(flat_base: str, package_id: str) -> list[str]:
+    """Return the versions of a package from a flat-container base URL.
+
+    The returned list is not guaranteed to be sorted (Azure DevOps feeds are
+    not), so callers must sort with ``_semver_key`` when order matters.
     """
-    if build_id is not None:
-        data = http_get_json(f"{AZDO_API}/build/builds/{build_id}?api-version=7.1")
-        return _build_meta(data)
-
-    url = (
-        f"{AZDO_API}/build/builds?api-version=7.1&definitions={AZDO_PIPELINE_ID}"
-        "&$top=25&queryOrder=finishTimeDescending"
-        "&reasonFilter=individualCI,batchedCI,schedule,manual"
-        "&statusFilter=completed&resultFilter=succeeded"
-    )
-    data = http_get_json(url)
-    for build in data.get("value", []):
-        if build.get("sourceBranch") == "refs/heads/main":
-            return _build_meta(build)
-    raise RuntimeError("No succeeded main build found for pipeline 4.")
-
-
-def _build_meta(build: dict) -> dict:
-    version = _clean_build_version(build.get("buildNumber", ""))
-    finish = build.get("finishTime") or build.get("queueTime") or ""
-    date = finish[:10] if finish else dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    return {
-        "buildId": int(build["id"]),
-        "version": version,
-        "date": date,
-        "buildNumber": build.get("buildNumber", ""),
-    }
-
-
-def _clean_build_version(build_number: str) -> str:
-    """``4.151.0-preview.0.38+main`` -> ``4.151.0-preview.0.38``."""
-    return build_number.split("+", 1)[0].strip()
-
-
-def get_artifact_download_url(build_id: int, artifact_name: str) -> str:
-    data = http_get_json(f"{AZDO_API}/build/builds/{build_id}/artifacts?api-version=7.1")
-    for artifact in data.get("value", []):
-        if artifact.get("name") == artifact_name:
-            url = artifact.get("resource", {}).get("downloadUrl")
-            if not url:
-                raise RuntimeError(f"Artifact '{artifact_name}' has no downloadUrl.")
-            return url
-    available = ", ".join(a.get("name", "?") for a in data.get("value", []))
-    raise RuntimeError(
-        f"Artifact '{artifact_name}' not found on build {build_id}. Available: {available}"
-    )
-
-
-def measure_nightly(build_meta: dict, work_dir: str) -> dict[str, dict]:
-    """Download + extract the nightly artifact and measure every package."""
-    build_id = build_meta["buildId"]
-    _log(f"  resolving artifact '{NIGHTLY_ARTIFACT}' on build {build_id} "
-         f"({build_meta['buildNumber']})")
-    url = get_artifact_download_url(build_id, NIGHTLY_ARTIFACT)
-
-    zip_path = os.path.join(work_dir, f"{NIGHTLY_ARTIFACT}.zip")
-    extract_dir = os.path.join(work_dir, NIGHTLY_ARTIFACT)
-    _log(f"  downloading artifact (this is ~0.5 GB)...")
-    http_download(url, zip_path)
-    _log(f"  extracting {os.path.getsize(zip_path) / 1e6:.0f} MB archive...")
-    with zipfile.ZipFile(zip_path) as zf:
-        zf.extractall(extract_dir)
-    os.remove(zip_path)
-
-    packages = measure_nupkg_dir(extract_dir)
-    shutil.rmtree(extract_dir, ignore_errors=True)
-    _log(f"  measured {len(packages)} packages "
-         f"({sum(1 for p in packages.values() if p['natives'])} native)")
-    return packages
-
-
-# --------------------------------------------------------------------------- #
-# NuGet.org (released reference) helpers
-# --------------------------------------------------------------------------- #
-
-def get_nuget_versions(package_id: str) -> list[str]:
-    url = f"{NUGET_FLATCONTAINER}/{package_id.lower()}/index.json"
+    url = f"{flat_base.rstrip('/')}/{package_id.lower()}/index.json"
     try:
         return list(http_get_json(url).get("versions", []))
     except RuntimeError:
         return []
+
+
+def download_nupkg(flat_base: str, package_id: str, version: str, work_dir: str) -> str | None:
+    """Download a single ``.nupkg`` from a flat-container feed to ``work_dir``."""
+    lower = package_id.lower()
+    url = f"{flat_base.rstrip('/')}/{lower}/{version}/{lower}.{version}.nupkg"
+    dest = os.path.join(work_dir, f"{lower}.{version}.nupkg")
+    try:
+        http_download(url, dest)
+    except RuntimeError:
+        return None
+    return dest
+
+
+def enumerate_feed_packages(search_base: str) -> list[str]:
+    """List SkiaSharp/HarfBuzzSharp package ids published to the feed.
+
+    Internal ``_``-prefixed packages (``_NuGets``, ``_NativeAssets*`` ...) are
+    excluded. Returns an empty list if the search service is unavailable.
+    """
+    if not search_base:
+        return []
+    url = f"{search_base.rstrip('/')}/?q=&prerelease=true&take=1000&semVerLevel=2.0.0"
+    try:
+        data = http_get_json(url)
+    except RuntimeError:
+        return []
+    ids = []
+    for item in data.get("data", []):
+        pid = item.get("id", "")
+        if pid.startswith("_"):
+            continue
+        if pid.startswith("SkiaSharp") or pid.startswith("HarfBuzzSharp"):
+            ids.append(pid)
+    return sorted(set(ids))
+
+
+# --------------------------------------------------------------------------- #
+# Nightly collection (EAP feed)
+# --------------------------------------------------------------------------- #
+
+def latest_nightly(versions: list[str]) -> str | None:
+    """Newest ``-nightly.*`` version (by SemVer) from a version list."""
+    nightlies = [v for v in versions if "-nightly." in v.lower()]
+    if not nightlies:
+        return None
+    return sorted(nightlies, key=_semver_key)[-1]
+
+
+def _nightly_family(package_id: str) -> str:
+    """The version-line a package belongs to."""
+    return "harfbuzz" if package_id.startswith("HarfBuzzSharp") else "skia"
+
+
+def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | None]:
+    """Measure every package at its family's headline nightly version.
+
+    All SkiaSharp-family packages share one nightly version and all
+    HarfBuzzSharp-family packages share another. Packages that do not publish
+    the headline nightly (e.g. deprecated ones) are skipped, keeping the
+    snapshot coherent. Returns ``(packages, skia_headline_version)``.
+    """
+    flat = feed["flat"]
+    package_ids = enumerate_feed_packages(feed["search"])
+    if not package_ids:
+        raise RuntimeError("Could not enumerate any packages from the EAP feed.")
+
+    headlines = {
+        "skia": latest_nightly(get_versions(flat, "SkiaSharp")),
+        "harfbuzz": latest_nightly(get_versions(flat, "HarfBuzzSharp")),
+    }
+    _log(f"  headline nightly: SkiaSharp={headlines['skia']} "
+         f"HarfBuzzSharp={headlines['harfbuzz']}")
+
+    packages: dict[str, dict] = {}
+    for pkg_id in package_ids:
+        target = headlines[_nightly_family(pkg_id)]
+        if not target:
+            continue
+        versions = get_versions(flat, pkg_id)
+        if target not in versions:
+            continue  # package does not ship this nightly (deprecated / not built)
+        dest = download_nupkg(flat, pkg_id, target, work_dir)
+        if dest is None:
+            _log(f"    ! could not download {pkg_id} {target}; skipping")
+            continue
+        measurement = measure_nupkg(dest)
+        measurement["version"] = target
+        os.remove(dest)
+        packages[pkg_id] = measurement
+
+    _log(f"  measured {len(packages)} packages "
+         f"({sum(1 for p in packages.values() if p['natives'])} native)")
+    return packages, headlines["skia"]
+
+
+# --------------------------------------------------------------------------- #
+# Released reference helpers (NuGet.org)
+# --------------------------------------------------------------------------- #
+
+def get_nuget_versions(package_id: str) -> list[str]:
+    return get_versions(NUGET_FLATCONTAINER, package_id)
 
 
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
@@ -380,12 +385,8 @@ def resolve_roles(versions: list[str]) -> dict[str, str | None]:
 
 def measure_released_version(package_id: str, version: str, work_dir: str) -> dict | None:
     """Download a single released nupkg from NuGet.org and measure it."""
-    lower = package_id.lower()
-    url = f"{NUGET_FLATCONTAINER}/{lower}/{version}/{lower}.{version}.nupkg"
-    dest = os.path.join(work_dir, f"{lower}.{version}.nupkg")
-    try:
-        http_download(url, dest)
-    except RuntimeError:
+    dest = download_nupkg(NUGET_FLATCONTAINER, package_id, version, work_dir)
+    if dest is None:
         _log(f"    ! could not download {package_id} {version}; skipping")
         return None
     measurement = measure_nupkg(dest)
@@ -472,8 +473,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--history", default="artifact-sizes.json",
                    help="Path to the JSON history document (read + written).")
-    p.add_argument("--build-id", type=int, default=None,
-                   help="Sample a specific AzDO build id instead of the latest main build.")
+    p.add_argument("--date", default=None,
+                   help="Observation date for the nightly entry (YYYY-MM-DD; default: today UTC).")
     p.add_argument("--max-nightly", type=int, default=10,
                    help="Number of nightly days to retain (default: 10).")
     p.add_argument("--nightly-only", action="store_true",
@@ -498,22 +499,18 @@ def main(argv: list[str]) -> int:
     try:
         # ---- Nightly -----------------------------------------------------
         if not args.released_only:
-            _log("Collecting nightly build...")
-            build_meta = resolve_nightly_build(args.build_id)
-            existing = next((n for n in history.get("nightly", [])
-                             if n.get("date") == build_meta["date"]), None)
-            if existing and existing.get("buildId") == build_meta["buildId"] and not args.force:
-                _log(f"  already have build {build_meta['buildId']} "
-                     f"for {build_meta['date']}; skipping download")
+            _log("Collecting nightly from the EAP feed...")
+            today = args.date or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+            feed = resolve_eap_feed()
+            packages, headline = collect_nightly(feed, work_dir)
+            if packages:
+                upsert_nightly(history, {
+                    "date": today,
+                    "version": headline,
+                    "packages": packages,
+                }, args.max_nightly)
             else:
-                packages = measure_nightly(build_meta, work_dir)
-                if packages:
-                    upsert_nightly(history, {
-                        "date": build_meta["date"],
-                        "buildId": build_meta["buildId"],
-                        "version": build_meta["version"],
-                        "packages": packages,
-                    }, args.max_nightly)
+                _log("  no nightly packages measured; leaving history unchanged")
 
         # ---- Released reference versions ---------------------------------
         if not args.nightly_only:
