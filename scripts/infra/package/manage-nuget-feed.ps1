@@ -130,6 +130,7 @@ param(
 
     [switch]$Push,
 
+    [ValidateRange(13, 1440)]
     [int]$MaxDurationMinutes = 330,
     [string]$PackageFilter = "",
     [switch]$IncludeUnlisted,
@@ -776,6 +777,10 @@ if (-not $Push) {
 if ([string]::IsNullOrWhiteSpace($CacheDir)) {
     $CacheDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-feed-mirror"
 }
+# Per-feed cache subdirectory so a cached download for one feed can never be
+# reused for a different feed. (CI runners start clean; this matters for local
+# re-runs across feeds.)
+$CacheDir = Join-Path $CacheDir $Feed
 
 # Configure push auth via the credential provider (no secret on disk or CLI).
 Set-PushCredentials -IndexUrl $dstIndexUrl -Pat $Pat
