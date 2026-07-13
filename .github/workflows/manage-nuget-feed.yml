@@ -8,10 +8,12 @@
 # internal '_'-prefixed CI wrapper packages; the internal 'skiasharp-ci' keeps
 # them).
 #
-#   * On PR / push that touches the script or this workflow  -> DRY RUN only
+#   * Manual dispatch (push unchecked)      -> DRY RUN only
 #     (inventory + diff + plan, read anonymously, no writes, NO secret in scope).
-#   * On manual dispatch with `push: true`                   -> real mirror
+#   * Manual dispatch with `push: true`     -> real mirror
 #     (requires the AZURE_DEVOPS_PAT secret with packaging read/write on dnceng).
+#
+# This workflow never runs automatically — there is no PR/push trigger.
 #
 # Secret handling: the PAT is injected into the job ONLY for an opted-in push, so
 # dry-run logs never contain it (not even masked). For the push, auth goes through
@@ -23,15 +25,9 @@
 
 name: Manage NuGet Feed
 
+# Manual only — this workflow is never triggered automatically. Run it from the
+# Actions tab (or `gh workflow run`) with the feed + push inputs below.
 on:
-  pull_request:
-    paths:
-      - 'scripts/infra/package/manage-nuget-feed.ps1'
-      - '.github/workflows/manage-nuget-feed.yml'
-  push:
-    paths:
-      - 'scripts/infra/package/manage-nuget-feed.ps1'
-      - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
       feed:
@@ -90,9 +86,9 @@ jobs:
             echo "Skipping ${{ matrix.feed }} (feed input = $selected)"
           fi
           # A push is only ever performed on a manual dispatch that explicitly
-          # opts in AND runs from the protected default branch (main). Everything
-          # else (PR, push, dispatch dry run, non-main branch) never needs a
-          # secret, so we never expose one to those runs.
+          # opts in AND runs from the protected default branch (main). A dispatch
+          # from any other branch, or without opting in, never needs a secret, so
+          # we never expose one to those runs.
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] \
              && [ "${{ github.event.inputs.push }}" = "true" ] \
              && [ "${{ github.ref }}" = "refs/heads/main" ]; then
