@@ -2215,13 +2215,29 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # data.json + prose.json during Polish.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
-    if not force and _data_json_unchanged(data_path, data):
+    changed = not _data_json_unchanged(data_path, data)
+    if not force and not changed:
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
     log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
+    if changed:
+        # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
+        # prose is stale by definition. DELETE it to FORCE the Polish agent to
+        # re-author the page from the fresh data.json — instead of letting it judge
+        # whether the old prose still "matches", which silently dropped brand-new
+        # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
+        # place. render --all then hard-fails until fresh prose exists, so a changed
+        # page can never ship with stale prose. Scoped to a genuine change (not a bare
+        # --force re-render) so re-rendering after a format/skill tweak does not throw
+        # away good prose. The .md itself is not deleted — render overwrites it wholesale
+        # from the new prose.
+        prose_path = _prose_json_path(output_path)
+        if prose_path.exists():
+            prose_path.unlink()
+            log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
     return str(output_path)
 
 
