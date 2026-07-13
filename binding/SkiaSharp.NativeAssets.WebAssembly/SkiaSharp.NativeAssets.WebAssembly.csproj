@@ -8,5 +8,13 @@
     <PackageFile Include="..\..\output\native\wasm\**\libSkiaSharp*.a" PackagePath="buildTransitive\netstandard1.0" />
     <PackageFile Include="buildTransitive\SkiaSharp.props" PackagePath="buildTransitive\netstandard1.0\$(PackageId).props" />
     <PackageFile Include="buildTransitive\SkiaSharp.targets" PackagePath="buildTransitive\netstandard1.0\$(PackageId).targets" />
+    <!--
+      Ship Dawn's emdawnwebgpu port next to the static libs. Emsdk 4.0.18
+      removed the built-in `-sUSE_WEBGPU=1` port, so consumers on emsdk 3.1.56+
+      (net9.0+) forward `--use-port=<path>/emdawnwebgpu.port.py` at link time
+      through SkiaSharp.targets. The port dir is populated on-demand by the
+      cake `externals-emdawnwebgpu` task and is gitignored in-source.
+    -->
+    <PackageFile Include="..\..\externals\emdawnwebgpu_pkg\**\*" PackagePath="buildTransitive\netstandard1.0\emdawnwebgpu_pkg" />
   </ItemGroup>
 </Project>

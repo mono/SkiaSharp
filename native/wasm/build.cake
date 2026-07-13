@@ -18,36 +18,127 @@ bool SUPPORT_GRAPHITE = SUPPORT_GPU &&
     (string.IsNullOrEmpty(EMSCRIPTEN_VERSION) ||
      string.CompareOrdinal(EMSCRIPTEN_VERSION, "3.1.51") >= 0);
 
+// Dawn's WebGPU-C++ interface has diverged from Emscripten's built-in
+// `-sUSE_WEBGPU=1` port (deprecated in emsdk 4.0.10, removed in 4.0.18). Skia
+// m151+'s Graphite backend targets the newer interface and needs Dawn's own
+// `emdawnwebgpu` port instead. We fetch a pinned release tarball on demand so
+// (a) the source tree stays lean, (b) the port lives next to `externals/skia`
+// like all other native inputs, and (c) NuGet consumers get exactly the same
+// build inputs offline. The SHA512 pin turns any tampering / upstream retag
+// into a build failure rather than a silently-wrong link.
+string EMDAWN_TAG = "v20260624.223603";
+string EMDAWN_SHA512 = "615257384ad7df17174c5733c17d8ac0473dfdcddeac69e334d7109501954dc42e77ed54deb666bf44581fcf8e69c2365311626786cd267e52a3d48d7a9441c5";
+DirectoryPath EMDAWN_ROOT = ROOT_PATH.Combine("externals/emdawnwebgpu_pkg");
+
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
 string COMPILERS = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
+// Sync Dawn's emdawnwebgpu port into externals/emdawnwebgpu_pkg. Idempotent:
+// re-runs are no-ops when VERSION.txt already matches EMDAWN_TAG. Runs
+// unconditionally (not gated on SUPPORT_GRAPHITE) so downstream targets that
+// reference EMDAWN_ROOT — libSkiaSharp *and* SkiaSharp.targets consumers linking
+// managed WASM — don't have to re-derive the version gate.
+Task("externals-emdawnwebgpu")
+    .Does(() =>
+{
+    // The port ships its own VERSION.txt containing a natural-language string:
+    //   "Dawn release v<tag> at revision <sha>."
+    // Reusing it as our up-to-date probe keeps the working tree byte-identical
+    // to the upstream release (no marker files of ours to `git status`-noise).
+    var versionFile = EMDAWN_ROOT.CombineWithFilePath("VERSION.txt");
+    if (FileExists(versionFile) &&
+        System.IO.File.ReadAllText(versionFile.FullPath).Contains(EMDAWN_TAG)) {
+        Information($"emdawnwebgpu port already at {EMDAWN_TAG}, skipping sync.");
+        return;
+    }
+
+    var zipName = $"emdawnwebgpu_pkg-{EMDAWN_TAG}.zip";
+    var zipUrl = $"https://github.com/google/dawn/releases/download/{EMDAWN_TAG}/{zipName}";
+    var cacheDir = ROOT_PATH.Combine("externals/package_cache/emdawnwebgpu");
+    EnsureDirectoryExists(cacheDir);
+    var zipPath = cacheDir.CombineWithFilePath(zipName);
+
+    if (!FileExists(zipPath)) {
+        Information($"Downloading {zipUrl}");
+        DownloadFile(zipUrl, zipPath);
+    }
+
+    // Verify SHA512 before touching the working tree — a corrupted / tampered
+    // zip must never overwrite a good port on disk.
+    string actualSha512;
+    using (var stream = System.IO.File.OpenRead(zipPath.FullPath))
+    using (var sha = System.Security.Cryptography.SHA512.Create()) {
+        var hash = sha.ComputeHash(stream);
+        var sb = new System.Text.StringBuilder(hash.Length * 2);
+        foreach (var b in hash) sb.Append(b.ToString("x2"));
+        actualSha512 = sb.ToString();
+    }
+    if (!string.Equals(actualSha512, EMDAWN_SHA512, StringComparison.OrdinalIgnoreCase)) {
+        DeleteFile(zipPath);
+        throw new Exception(
+            $"emdawnwebgpu port {EMDAWN_TAG} SHA512 mismatch.\n" +
+            $"  expected: {EMDAWN_SHA512}\n" +
+            $"  actual:   {actualSha512}\n" +
+            $"Downloaded zip was deleted; re-run to retry.");
+    }
+
+    if (DirectoryExists(EMDAWN_ROOT))
+        CleanDirectories(EMDAWN_ROOT.FullPath);
+    EnsureDirectoryExists(EMDAWN_ROOT);
+    // The zip unpacks with `emdawnwebgpu_pkg/` at its root, so extracting to
+    // `externals/` lands the contents directly at EMDAWN_ROOT — VERSION.txt
+    // included.
+    Unzip(zipPath, ROOT_PATH.Combine("externals"));
+});
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
+    .IsDependentOn("externals-emdawnwebgpu")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
-    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
         .Where(f => !f.StartsWith("_"))
         .ToArray();
 
+    // Skia's Dawn-on-WebGPU sources include <webgpu/webgpu.h> and
+    // <webgpu/webgpu_cpp.h>. Historically Emscripten's `-sUSE_WEBGPU=1` port
+    // dropped those into `emsdk/system/include/webgpu/`, so a static-archive
+    // build like this one got them "for free" without ever passing -sUSE_WEBGPU
+    // at compile time. That port was deprecated in emsdk 4.0.10 and removed in
+    // 4.0.18, so we forward `--use-port=<emdawnwebgpu.port.py>` to emcc, which
+    // registers the same include paths + link-time JS glue via Dawn's own port.
+    // Kept out of extra_cflags_cc because emcc reads it from extra_cflags too
+    // (and duplicating triggers "port already loaded" diagnostics).
+    // Skia's Graphite Dawn sources are riddled with `#if defined(__EMSCRIPTEN__)`
+    // branches that assume Emscripten's *old* -sUSE_WEBGPU=1 headers
+    // (ShaderModuleWGSLDescriptor, VertexBufferNotUsed, ComputePassTimestampWrites,
+    // legacy OnSubmittedWorkDone). emdawnwebgpu delivers the *native* Dawn API
+    // through the Emscripten toolchain, so we need Skia to take its native-Dawn
+    // `#else` branches. The mono/skia carry-patch on this submodule redirects
+    // every such gate to also check `!defined(SKIA_USING_EMDAWNWEBGPU)`;
+    // defining it here activates that override. Only meaningful under the port.
+    string emdawnPortArg = SUPPORT_GRAPHITE
+        ? $", '--use-port={EMDAWN_ROOT.CombineWithFilePath("emdawnwebgpu.port.py")}'"
+          + ", '-DSKIA_USING_EMDAWNWEBGPU=1'"
+        : "";
+
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         // is_canvaskit is the Skia switch that makes :graphite's Dawn-backed
-        // sources resolve <webgpu/webgpu_cpp.h> via Emscripten's bundled headers
-        // (added by -sUSE_WEBGPU=1 at the final link) instead of trying to
-        // include the native-Dawn-generated webgpu_cpp.h that doesn't exist on
-        // Emscripten. Tracks SUPPORT_GRAPHITE so a Graphite-less build stays a
-        // clean ganesh-or-raster WASM bundle.
+        // sources resolve <webgpu/webgpu_cpp.h> via the Emscripten-style
+        // bindings header layout (as opposed to native-Dawn generated headers
+        // that only exist off-tree). emdawnwebgpu ships that same layout, so
+        // we keep is_canvaskit tracking SUPPORT_GRAPHITE.
         $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
@@ -79,16 +170,16 @@ Task("libSkiaSharp")
         $"skia_use_dawn={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_use_webgpu={SUPPORT_GRAPHITE} ".ToLower() +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
+        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"  { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } " +
-        $"  { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } " +
+        $"  {emdawnPortArg} " +
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
@@ -151,7 +242,6 @@ Task("libHarfBuzzSharp")
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
-    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
@@ -164,8 +254,8 @@ Task("libHarfBuzzSharp")
         $"is_static_skiasharp=true " +
         // See libSkiaSharp target above.
         $"skia_use_partition_alloc=false " +
-        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
+        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);

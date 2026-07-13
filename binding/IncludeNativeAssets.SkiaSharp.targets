@@ -76,13 +76,27 @@
 
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
-    <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1</EmccExtraLDFlags>
+    <!--
+      .NET-9+ (emsdk 3.1.56+) uses Dawn's emdawnwebgpu port. `-sUSE_WEBGPU=1`
+      was deprecated in emsdk 4.0.10 and removed in 4.0.18; only the .NET-8
+      matrix (emsdk 3.1.34) still needs the built-in port. TargetFrameworkVersion
+      isn't populated when this PropertyGroup evaluates, so branch on the
+      SkiaSharp native binary version marker instead.
+    -->
+    <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and $([MSBuild]::VersionGreaterThanOrEquals('$(TargetFrameworkVersion)', '9.0'))">true</_SkiaSharpUseEmdawnwebgpu>
+    <_SkiaSharpEmdawnwebgpuPort>$(MSBuildThisFileDirectory)..\externals\emdawnwebgpu_pkg\emdawnwebgpu.port.py</_SkiaSharpEmdawnwebgpuPort>
+    <!-- emdawnwebgpu's linker_setup errors if LINK_AS_CXX is false; force it via -sDEFAULT_TO_CXX. -->
+    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s DEFAULT_TO_CXX=1 --use-port=$(_SkiaSharpEmdawnwebgpuPort)</EmccExtraLDFlags>
+    <EmccExtraLDFlags Condition="'$(_SkiaSharpUseEmdawnwebgpu)' != 'true'">$(EmccExtraLDFlags) -s USE_WEBGL2=1 -s USE_WEBGPU=1</EmccExtraLDFlags>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' == 'True'">$(_SkiaSharpNativeBinaryType),simd</_SkiaSharpNativeBinaryType>
     <_SkiaSharpNativeBinaryType Condition="'$(WasmEnableSIMD)' != 'True'">$(_SkiaSharpNativeBinaryType)</_SkiaSharpNativeBinaryType>
   </PropertyGroup>
   <ItemGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true') and '$(TargetFrameworkVersion)' != ''">
+    <!-- Both -sUSE_WEBGPU=1 and emdawnwebgpu keep the WebGPU utility on Module.
+         SkiaSharp's managed interop reads Module.WebGPU.{mgr*,importJs*}, so
+         the runtime-method export is required on either path. -->
     <EmccExportedRuntimeMethod Include="WebGPU" />
     <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.34\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
     <NativeFileReference Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
