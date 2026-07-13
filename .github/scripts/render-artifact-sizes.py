@@ -23,12 +23,23 @@ import re
 import sys
 
 ROLES = ("prev-major", "prev-stable", "curr-stable", "latest")
+
+# Column display order for the released reference roles: newest → oldest, so
+# that (together with the nightly days) the table reads newest on the left and
+# oldest on the right.
+COLUMN_ROLE_ORDER = ("latest", "curr-stable", "prev-stable", "prev-major")
+
 ROLE_LABELS = {
     "prev-major": "prev&#8209;major",
     "prev-stable": "prev&#8209;stable",
     "curr-stable": "curr&#8209;stable",
     "latest": "latest",
 }
+
+# Trend dots comparing a cell to the next-older column (to its right):
+# green = smaller (improvement), red = larger (regression).
+TREND_SMALLER = "🟢"
+TREND_LARGER = "🔴"
 
 
 # --------------------------------------------------------------------------- #
@@ -50,13 +61,29 @@ def human(size: int | None) -> str:
     return f"{value:.1f} GB"
 
 
-def delta_marker(curr: int | None, prev: int | None) -> str:
-    """Return a small ▲/▼ marker (with signed human delta) or empty string."""
-    if curr is None or prev is None or curr == prev:
+def trend_marker(curr: int | None, older: int | None) -> str:
+    """Coloured dot comparing a cell to the next-older column (to its right).
+
+    🟢 = smaller than the older version (improvement), 🔴 = larger (regression).
+    Empty when there is no older value or the size is unchanged.
+    """
+    if curr is None or older is None or curr == older:
         return ""
-    diff = curr - prev
-    arrow = "🔺" if diff > 0 else "🔻"
-    return f" {arrow}{'+' if diff > 0 else '-'}{human(abs(diff))}"
+    return f" {TREND_LARGER}" if curr > older else f" {TREND_SMALLER}"
+
+
+def row_cells(values: list[int | None]) -> list[str]:
+    """Render a row of size cells. Columns run newest → oldest (left → right),
+    so each cell is compared to the nearest non-empty cell to its *right* (the
+    older version) and tagged 🟢 (smaller) / 🔴 (larger)."""
+    cells: list[str] = [""] * len(values)
+    older: int | None = None
+    for i in range(len(values) - 1, -1, -1):
+        val = values[i]
+        cells[i] = human(val) + trend_marker(val, older)
+        if val is not None:
+            older = val
+    return cells
 
 
 def friendly_native_label(path: str) -> str:
@@ -97,13 +124,19 @@ class Column:
 
 
 def build_columns(history: dict) -> list[Column]:
+    """Columns run newest → oldest, left → right:
+
+        [ nightly today ... nightly oldest ] [ latest ] [ curr-stable ]
+        [ prev-stable ] [ prev-major ]
+    """
     columns: list[Column] = []
-    for entry in history.get("nightly", []):
-        # Header: MM-DD observation date.
+    # Nightly days, newest first (history is stored oldest -> newest).
+    for entry in reversed(history.get("nightly", [])):
         date = entry.get("date", "")
         short_date = date[5:] if len(date) >= 10 else date
-        columns.append(Column(date, f"{short_date}", "nightly"))
-    for role in ROLES:
+        columns.append(Column(date, f"🌙 {short_date}", "nightly"))
+    # Released reference roles, newest -> oldest.
+    for role in COLUMN_ROLE_ORDER:
         columns.append(Column(role, ROLE_LABELS[role], "released"))
     return columns
 
@@ -169,27 +202,29 @@ def is_native_package(history: dict, package_id: str) -> bool:
 # Table rendering
 # --------------------------------------------------------------------------- #
 
+def _legend() -> list[str]:
+    return [
+        "> Columns run newest → oldest (left → right): 🌙 daily nightlies from "
+        "the [EAP feed](https://aka.ms/skiasharp-eap/index.json), then the "
+        "released reference versions `latest → curr-stable → prev-stable → "
+        "prev-major` from NuGet.org. "
+        f"Each dot compares a cell to the older column on its right: "
+        f"{TREND_SMALLER} smaller (improvement) · {TREND_LARGER} larger (regression).",
+        "",
+    ]
+
+
 def render_all_packages_table(history: dict, columns: list[Column],
                               nights: dict[str, dict]) -> list[str]:
     lines = ["### 📦 All packages — `.nupkg` size", ""]
+    lines += _legend()
     header = "| Package | " + " | ".join(c.header for c in columns) + " |"
     sep = "|:--|" + "|".join(["--:"] * len(columns)) + "|"
     lines += [header, sep]
 
     for pid in all_package_ids(history):
-        cells = []
-        prev_val: int | None = None
-        newest_nightly_idx = _last_nightly_index(columns)
-        for i, col in enumerate(columns):
-            val = package_nupkg(history, col, pid, nights)
-            text = human(val)
-            # Show a delta marker only on the newest nightly column to keep the
-            # wide table readable.
-            if i == newest_nightly_idx:
-                text += delta_marker(val, prev_val)
-            if col.kind == "nightly":
-                prev_val = val if val is not None else prev_val
-            cells.append(text)
+        values = [package_nupkg(history, col, pid, nights) for col in columns]
+        cells = row_cells(values)
         lines.append(f"| `{pid}` | " + " | ".join(cells) + " |")
     lines.append("")
     return lines
@@ -198,6 +233,7 @@ def render_all_packages_table(history: dict, columns: list[Column],
 def render_native_tables(history: dict, columns: list[Column],
                          nights: dict[str, dict]) -> list[str]:
     lines = ["### 🧬 Native packages — per os/arch binary size", ""]
+    lines += _legend()
     native_ids = [p for p in all_package_ids(history) if is_native_package(history, p)]
     if not native_ids:
         return lines + ["_No native packages recorded yet._", ""]
@@ -236,22 +272,12 @@ def _render_one_native_table(history: dict, columns: list[Column], pid: str,
     rows = [f"#### `{pid}`", "", header, sep]
 
     changed = False
-    newest_nightly_idx = _last_nightly_index(columns)
     for path in ordered_paths:
-        cells = []
-        prev_val: int | None = None
-        nightly_values: list[int | None] = []
-        for i, col in enumerate(columns):
-            val = package_natives(history, col, pid, nights).get(path)
-            text = human(val)
-            if i == newest_nightly_idx:
-                text += delta_marker(val, prev_val)
-            if col.kind == "nightly":
-                nightly_values.append(val)
-                prev_val = val if val is not None else prev_val
-            cells.append(text)
+        values = [package_natives(history, col, pid, nights).get(path) for col in columns]
+        nightly_values = [v for v, col in zip(values, columns) if col.kind == "nightly"]
         if _row_changed(nightly_values):
             changed = True
+        cells = row_cells(values)
         rows.append(f"| {friendly_native_label(path)} | " + " | ".join(cells) + " |")
     rows.append("")
     return rows, changed
@@ -267,14 +293,6 @@ def _row_changed(nightly_values: list[int | None]) -> bool:
     if present and any(v is None for v in nightly_values):
         return True
     return False
-
-
-def _last_nightly_index(columns: list[Column]) -> int:
-    idx = -1
-    for i, col in enumerate(columns):
-        if col.kind == "nightly":
-            idx = i
-    return idx
 
 
 # --------------------------------------------------------------------------- #
@@ -302,15 +320,15 @@ def render_header(history: dict, nights: dict[str, dict]) -> list[str]:
     legend_pkgs = [("SkiaSharp", "SkiaSharp"), ("HarfBuzzSharp", "HarfBuzzSharp")]
     legend_rows = []
     for label, pid in legend_pkgs:
-        cols = [roles.get(role, {}).get(pid, "&middot;") for role in ROLES]
+        cols = [roles.get(role, {}).get(pid, "&middot;") for role in COLUMN_ROLE_ORDER]
         if any(c != "&middot;" for c in cols):
             legend_rows.append(f"| {label} | " + " | ".join(f"`{c}`" for c in cols) + " |")
     if legend_rows:
         lines += [
-            "**Released reference versions**",
+            "**Released reference versions** (from NuGet.org)",
             "",
-            "| line | " + " | ".join(ROLE_LABELS[r] for r in ROLES) + " |",
-            "|:--|" + "|".join([":--"] * len(ROLES)) + "|",
+            "| line | " + " | ".join(ROLE_LABELS[r] for r in COLUMN_ROLE_ORDER) + " |",
+            "|:--|" + "|".join([":--"] * len(COLUMN_ROLE_ORDER)) + "|",
             *legend_rows,
             "",
         ]
@@ -338,8 +356,8 @@ def _render_movers(history: dict, nights: dict[str, dict]) -> list[str]:
         "",
     ]
     for _mag, diff, pid in movers[:5]:
-        arrow = "🔺" if diff > 0 else "🔻"
-        lines.append(f"- {arrow} `{pid}` {'+' if diff > 0 else '-'}{human(abs(diff))}")
+        dot = TREND_LARGER if diff > 0 else TREND_SMALLER
+        lines.append(f"- {dot} `{pid}` {'+' if diff > 0 else '-'}{human(abs(diff))}")
     lines.append("")
     return lines
 
