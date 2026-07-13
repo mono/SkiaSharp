@@ -1,15 +1,15 @@
 {
-  "theme": "Performance and engine fixes",
-  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance wins and upstream Skia m151 bug fixes.",
-  "highlights_body": "Hot paths in tag parsing and glyph shaping have been optimized with zero-copy spans and allocation-free overloads, and two rounds of upstream Skia m151 engine fixes have been merged.",
+  "theme": "Performance and pipeline improvements",
+  "highlights_headline": "SkiaSharp 4.151.0 delivers allocation-free hot paths in HarfBuzzSharp and SKColor, plus upstream Skia m151 bug fixes.",
+  "highlights_body": "This release focuses on managed-layer performance: zero-allocation UTF-8 encoding in HarfBuzzSharp.Buffer, pooled char arrays in tag parsing, zero-copy shaper glyph spans, and a ReadOnlySpan<char> SKColor hex parser. It also merges two rounds of upstream Skia m151 fixes.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia m151 upstream bug fixes merged",
-          "detail": "Two rounds of upstream Chrome m151 engine fixes have been pulled in, keeping the bundled renderer current with the latest Skia servicing patches.",
+          "lead": "Upstream Skia m151 bug-fix merges",
+          "detail": "Two rounds of upstream chrome/m151 fixes were merged, bringing stability and rendering improvements from the Skia team.",
           "prs": [4312, 4382]
         }
       ]
@@ -18,13 +18,13 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKColor hex parsing optimized with ReadOnlySpan overloads",
-          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char> directly, eliminating string allocations in hot color-parsing paths.",
+          "lead": "SKColor hex parsing gains ReadOnlySpan<char> overloads",
+          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char>, avoiding string allocations when parsing hex color strings from sliced input.",
           "prs": [4345]
         },
         {
           "lead": "GRContextOptions unsafe modifier removed",
-          "detail": "The unnecessary unsafe modifier on GRContextOptions has been removed, making the type usable in projects that do not allow unsafe code.",
+          "detail": "The unnecessary unsafe modifier has been removed from GRContextOptions, reducing noise for consumers building with -warnaserror.",
           "prs": [3991]
         }
       ]
@@ -33,21 +33,25 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKShaper glyph results read via zero-copy spans",
-          "detail": "Reading shaping glyph results now uses Span-based access instead of element-by-element P/Invoke calls, eliminating per-glyph interop overhead.",
-          "prs": [4388]
+          "lead": "HarfBuzzSharp.Buffer.AddUtf8(string) is now allocation-free",
+          "detail": "The per-call UTF-8 encoding previously allocated a temporary byte array on every call. It now uses a pooled ArrayPool<byte> buffer, eliminating allocations on hot text-shaping paths.",
+          "prs": [4376]
         },
         {
-          "lead": "Per-call allocations removed from tag parsing",
-          "detail": "SKFourByteTag.Parse and HarfBuzzSharp.Tag.Parse no longer allocate a char[4] on every call, reducing GC pressure in layout-heavy workloads.",
-          "prs": [4396, 4408]
+          "lead": "Tag parsing no longer allocates a char[4] per call",
+          "detail": "HarfBuzzSharp.Tag.Parse and SKFourByteTag.Parse previously allocated a small char array on every parse. Both now use stack-allocated spans.",
+          "prs": [4408, 4396]
+        },
+        {
+          "lead": "SKShaper glyph results read via zero-copy spans",
+          "detail": "The SKShaper result retrieval path previously copied glyph data into managed arrays. It now uses Span-based reads directly over the native buffer.",
+          "prs": [4388]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Added a cross-backend golden-image visual regression test harness to the test suite"
+    "ramezgerges": "Cross-backend golden-image visual regression test harness"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
