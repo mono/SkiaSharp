@@ -79,6 +79,11 @@
 .PARAMETER BatchSize
     Page size for feed inventory listing. Default: 100.
 
+.PARAMETER SummaryFile
+    Optional path to append a GitHub-flavoured Markdown summary of the diff and
+    plan (what would be copied, broken down by scope). In CI, point this at
+    $env:GITHUB_STEP_SUMMARY so the result shows up in the PR check summary.
+
 .EXAMPLE
     # Dry run — see exactly what WOULD be copied (safe, no writes)
     ./mirror-nuget-feed.ps1 -SourceFeed SkiaSharp -DestFeed skiasharp
@@ -140,7 +145,8 @@ param(
 
     [int]$MaxPushRetries = 3,
     [string]$CacheDir = "",
-    [int]$BatchSize = 100
+    [int]$BatchSize = 100,
+    [string]$SummaryFile = ""
 )
 
 Set-StrictMode -Version Latest
@@ -183,6 +189,16 @@ function Write-Head { param([string]$M) Write-Host $M -ForegroundColor Cyan }
 function Write-Good { param([string]$M) Write-Host $M -ForegroundColor Green }
 function Write-Warn2 { param([string]$M) Write-Host $M -ForegroundColor Yellow }
 function Write-Err2 { param([string]$M) Write-Host $M -ForegroundColor Red }
+
+# Markdown summary accumulator (flushed to -SummaryFile / $GITHUB_STEP_SUMMARY).
+$script:SummaryLines = [System.Collections.Generic.List[string]]::new()
+function Add-Summary { param([string]$Line = "") $script:SummaryLines.Add($Line) }
+function Save-Summary {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return }
+    try { Add-Content -Path $Path -Value ($script:SummaryLines -join "`n") -Encoding UTF8 }
+    catch { Write-Warn2 "  (could not write summary file '$Path': $_)" }
+}
 
 function New-AuthHeaders {
     param([string]$TokenPat)
@@ -486,6 +502,14 @@ try {
 }
 catch {
     Write-Err2 "ERROR: could not read source feed '$SourceFeed' in $SourceOrg/$SourceProject : $_"
+    Add-Summary "## ❌ Feed mirror failed"
+    Add-Summary ""
+    Add-Summary "Could not read **source** feed ``$SourceOrg/$SourceProject/$SourceFeed``:"
+    Add-Summary ""
+    Add-Summary "``````"
+    Add-Summary "$_"
+    Add-Summary "``````"
+    Save-Summary -Path $SummaryFile
     exit 2
 }
 if ($PackageFilter) {
@@ -503,6 +527,14 @@ try {
 catch {
     Write-Err2 "ERROR: could not read destination feed '$DestFeed' in $DestOrg/$DestProject : $_"
     Write-Warn2 "  (The destination feed must exist. Create it before mirroring.)"
+    Add-Summary "## ❌ Feed mirror failed"
+    Add-Summary ""
+    Add-Summary "Could not read **destination** feed ``$DestOrg/$DestProject/$DestFeed`` — it must exist before mirroring."
+    Add-Summary ""
+    Add-Summary "``````"
+    Add-Summary "$_"
+    Add-Summary "``````"
+    Save-Summary -Path $SummaryFile
     exit 2
 }
 
@@ -538,6 +570,31 @@ Write-Warn2 "  Ephemeral builds     : $breakdownDelete  (-pr.* and malformed -pr
 Write-Info  "  Unrecognized         : $breakdownUnknown"
 Write-Host ""
 
+# --- Build the Markdown summary (shown in CI as the PR check step summary) ------
+$scopeAll      = $breakdownKeep + $breakdownDelete + $breakdownUnknown
+$scopeGood     = $breakdownKeep + $breakdownUnknown
+$scopeReleases = $breakdownKeep
+Add-Summary "## Feed mirror — ``$SourceOrg/$SourceProject/$SourceFeed`` → ``$DestOrg/$DestProject/$DestFeed``"
+Add-Summary ""
+Add-Summary "**Mode:** $(if ($Push) { 'PUSH (writes enabled)' } else { '🔍 DRY RUN — no packages are downloaded or pushed' })"
+Add-Summary ""
+Add-Summary "| Metric | Count |"
+Add-Summary "|---|---:|"
+Add-Summary "| In source feed | $($srcInv.Count) |"
+Add-Summary "| Already in destination | $alreadyThere |"
+Add-Summary "| **Missing (all versions)** | **$($missing.Count)** |"
+Add-Summary ""
+Add-Summary "### What each scope would copy"
+Add-Summary ""
+Add-Summary "| Scope | Flag | Would copy |"
+Add-Summary "|---|---|---:|"
+Add-Summary "| Everything | _(default)_ | $scopeAll |"
+Add-Summary "| Good versions | ``-GoodVersionsOnly`` | $scopeGood |"
+Add-Summary "| Releases only | ``-ReleasesOnly`` | $scopeReleases |"
+Add-Summary ""
+Add-Summary "<sub>releases = $breakdownKeep (stable / -preview. / -rc. / -nightly. / -stable. / -alpha.) · ephemeral = $breakdownDelete (``-pr.*`` / malformed ``-preview-*``) · unrecognized = $breakdownUnknown (e.g. ``0.0.0-commit.*`` / ``0.0.0-branch.*``)</sub>"
+Add-Summary ""
+
 # Apply migration-scope filters.
 if ($ReleasesOnly) {
     $before = $missing.Count
@@ -570,8 +627,28 @@ if ($ReleasesOnly -or $GoodVersionsOnly -or $ExcludeVersionRegex) { Write-Host "
 
 if ($missing.Count -eq 0) {
     Write-Good "Destination is already in sync (for the selected scope). Nothing to do."
+    Add-Summary "### ✅ Result: destination already in sync — nothing to copy."
+    Save-Summary -Path $SummaryFile
     exit 0
 }
+
+# Per-package grouping (what would actually be copied for the selected scope).
+$selectedLabel = if ($ReleasesOnly) { 'releases only' } elseif ($GoodVersionsOnly) { 'good versions' } else { 'everything' }
+$byPkg = @($missing | Group-Object Id | Sort-Object Count -Descending)
+Add-Summary "### Selected scope: **$selectedLabel** → $($missing.Count) version(s) across $($byPkg.Count) package(s)"
+Add-Summary ""
+Add-Summary "| Package | Versions to copy |"
+Add-Summary "|---|---:|"
+$topN = [Math]::Min(25, $byPkg.Count)
+for ($i = 0; $i -lt $topN; $i++) {
+    Add-Summary "| $($byPkg[$i].Name) | $($byPkg[$i].Count) |"
+}
+if ($byPkg.Count -gt $topN) {
+    $restPkgs = $byPkg.Count - $topN
+    $restVers = ($byPkg | Select-Object -Skip $topN | Measure-Object -Property Count -Sum).Sum
+    Add-Summary "| _…and $restPkgs more package(s)_ | $restVers |"
+}
+Add-Summary ""
 
 # Preview a sample of what would be copied.
 $previewN = [Math]::Min(15, $missing.Count)
@@ -585,6 +662,8 @@ Write-Host ""
 if (-not $Push) {
     Write-Warn2 "DRY RUN complete — no packages were transferred."
     Write-Warn2 "Re-run with -Push (and a PAT) to copy the $($missing.Count) missing package(s)."
+    Add-Summary "> 🔍 **DRY RUN** — nothing was downloaded or pushed. Re-run the workflow manually with **push: true** to copy the $($missing.Count) missing version(s)."
+    Save-Summary -Path $SummaryFile
     exit 0
 }
 
@@ -687,18 +766,39 @@ if ($timedOut) { Write-Warn2 "  Not yet attempted: $remaining (timed out — re-
 Write-Info  "  Elapsed          : $([Math]::Round((Get-ElapsedMinutes), 1)) min"
 Write-Host ""
 
+# Push results into the Markdown summary.
+Add-Summary "### Push results"
+Add-Summary ""
+Add-Summary "| Result | Count |"
+Add-Summary "|---|---:|"
+Add-Summary "| ✅ Copied | $copied |"
+Add-Summary "| ⏭️ Already present | $skippedExisting |"
+Add-Summary "| ❌ Failed | $failed |"
+if ($timedOut) { Add-Summary "| ⏳ Not yet attempted | $remaining |" }
+Add-Summary ""
+if ($timedOut) { Add-Summary "> ⏳ Stopped on the time budget with progress and no errors — re-run to continue (idempotent)." }
+
 if ($failed -gt 0) {
     Write-Err2 "The following package(s) failed — re-run to retry just these:"
     foreach ($f in $failedList) { Write-Err2 "   - $f" }
+    Add-Summary ""
+    Add-Summary "#### ❌ Failed package(s) (re-run to retry just these)"
+    Add-Summary ""
+    foreach ($f in $failedList) { Add-Summary "- ``$f``" }
+    Save-Summary -Path $SummaryFile
     exit 1
 }
 
 if ($timedOut) {
     Write-Warn2 "Stopped on time budget with progress and no errors. Re-run to continue (idempotent)."
+    Save-Summary -Path $SummaryFile
     exit 0
 }
 
 Write-Good "All missing packages processed successfully."
+Add-Summary ""
+Add-Summary "✅ All missing packages processed successfully."
+Save-Summary -Path $SummaryFile
 exit 0
 
 #endregion

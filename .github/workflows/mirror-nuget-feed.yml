@@ -103,6 +103,7 @@ jobs:
             SourceFeed         = "${{ matrix.pair.source }}"
             DestFeed           = "${{ matrix.pair.dest }}"
             MaxDurationMinutes = [int]"${{ github.event.inputs.max_duration_minutes || '330' }}"
+            SummaryFile        = $env:GITHUB_STEP_SUMMARY
           }
 
           # Push is opt-in and only possible on manual dispatch.
