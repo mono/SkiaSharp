@@ -239,7 +239,7 @@ network: {}
 safe-outputs:
   create-pull-request:
     title-prefix: "[docs] "
-    labels: [documentation, partner/agentic-workflows]
+    labels: [area/Docs, partner/agentic-workflows]
     draft: false
     allowed-base-branches: [main]
     preserve-branch-name: true
