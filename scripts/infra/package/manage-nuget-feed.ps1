@@ -851,8 +851,11 @@ foreach ($item in $missing) {
         catch {
             if ($attempt -ge $MaxPushRetries) {
                 $failed++
-                $failedList.Add("$($item.Id) $($item.Version) :: $_")
-                Write-Err2 "  $label — FAILED after $MaxPushRetries attempt(s): $_"
+                # Flatten the (often multi-line) error to a single line so it
+                # renders cleanly in the console list and the Markdown summary.
+                $errText = ([string]$_ -replace '\s+', ' ').Trim()
+                $failedList.Add("$($item.Id) $($item.Version) :: $errText")
+                Write-Err2 "  $label — FAILED after $MaxPushRetries attempt(s): $errText"
                 $done = $true
             }
             else {
