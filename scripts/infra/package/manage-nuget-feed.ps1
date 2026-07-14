@@ -81,6 +81,11 @@
 .PARAMETER IncludeUnlisted
     Also mirror versions that are unlisted in the source. Default: off.
 
+.PARAMETER Limit
+    Copy at most this many missing versions in one run (0 = no limit). Great for
+    a quick test on a huge feed, or to migrate in controlled, resumable batches —
+    the tool is idempotent, so re-running continues from where it stopped.
+
 .PARAMETER MaxPushRetries
     Per-package download+push attempts before giving up on that package and
     moving on. Default: 3.
@@ -114,6 +119,10 @@
     # Smoke-test the push path end to end on a single package first
     ./manage-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
 
+.EXAMPLE
+    # Quick CI-feed test: copy just 3 versions, then re-run to continue
+    ./manage-nuget-feed.ps1 -Feed skiasharp-ci -Limit 3 -Push
+
 .NOTES
     Exit codes:
       0  success — everything synced, dry run completed, or gracefully timed out
@@ -134,6 +143,12 @@ param(
     [int]$MaxDurationMinutes = 330,
     [string]$PackageFilter = "",
     [switch]$IncludeUnlisted,
+
+    # Cap how many missing versions to copy in this run (0 = no limit). Handy for
+    # a quick test on a huge feed, or to migrate in controlled, resumable batches
+    # (the tool is idempotent, so re-running continues where it left off).
+    [ValidateRange(0, 2147483647)]
+    [int]$Limit = 0,
 
     [ValidateRange(1, 10)]
     [int]$MaxPushRetries = 3,
@@ -795,8 +810,17 @@ $skippedExisting = 0
 $processed = 0
 $failedList = [System.Collections.Generic.List[string]]::new()
 $timedOut = $false
+$limitReached = $false
 
 foreach ($item in $missing) {
+    # Stop after -Limit successfully-processed items (0 = no limit). Used for a
+    # quick test or a controlled batch; re-run to continue (idempotent).
+    if ($Limit -gt 0 -and $processed -ge $Limit) {
+        $limitReached = $true
+        Write-Warn2 "Limit of $Limit reached — stopping (re-run to continue)."
+        break
+    }
+
     # Graceful, between-package timeout. Reserve enough headroom for one worst-case
     # package (large native asset download + push --timeout 300s + retry backoff)
     # so we always stop cleanly BETWEEN packages and never mid-push.
@@ -876,7 +900,8 @@ Write-Head "=================================================="
 Write-Good  "  Copied           : $copied"
 Write-Info  "  Already present  : $skippedExisting"
 Write-Err2  "  Failed           : $failed"
-if ($timedOut) { Write-Warn2 "  Not yet attempted: $remaining (timed out — re-run to continue)" }
+if ($timedOut)     { Write-Warn2 "  Not yet attempted: $remaining (timed out — re-run to continue)" }
+if ($limitReached) { Write-Warn2 "  Not yet attempted: $remaining (-Limit $Limit reached — re-run to continue)" }
 Write-Info  "  Elapsed          : $([Math]::Round((Get-ElapsedMinutes), 1)) min"
 Write-Host ""
 
@@ -888,9 +913,10 @@ Add-Summary "|---|---:|"
 Add-Summary "| ✅ Copied | $copied |"
 Add-Summary "| ⏭️ Already present | $skippedExisting |"
 Add-Summary "| ❌ Failed | $failed |"
-if ($timedOut) { Add-Summary "| ⏳ Not yet attempted | $remaining |" }
+if ($timedOut -or $limitReached) { Add-Summary "| ⏳ Not yet attempted | $remaining |" }
 Add-Summary ""
-if ($timedOut) { Add-Summary "> ⏳ Stopped on the time budget with progress and no errors — re-run to continue (idempotent)." }
+if ($timedOut)     { Add-Summary "> ⏳ Stopped on the time budget with progress and no errors — re-run to continue (idempotent)." }
+if ($limitReached) { Add-Summary "> ⏹️ Stopped at -Limit $Limit with no errors — re-run to continue (idempotent)." }
 
 if ($failed -gt 0) {
     Write-Err2 "The following package(s) failed — re-run to retry just these:"
@@ -903,8 +929,9 @@ if ($failed -gt 0) {
     exit 1
 }
 
-if ($timedOut) {
-    Write-Warn2 "Stopped on time budget with progress and no errors. Re-run to continue (idempotent)."
+if ($timedOut -or $limitReached) {
+    $why = if ($timedOut) { "time budget" } else { "-Limit $Limit" }
+    Write-Warn2 "Stopped on $why with progress and no errors. Re-run to continue (idempotent)."
     Save-Summary -Path $SummaryFile
     exit 0
 }
