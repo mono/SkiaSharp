@@ -2,6 +2,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
+#load "../shared/emdawnwebgpu.cake"
 #load "test-shared.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -15,6 +16,12 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 Task ("Default")
     .Does (() =>
 {
+    // SkiaSharp.Tests.Wasm.csproj imports binding/IncludeNativeAssets.SkiaSharp.targets,
+    // which forwards the emdawnwebgpu port at emcc link time under net9.0+. The
+    // test agent runs a fresh checkout with no native-build stage, so the port
+    // dir (gitignored) isn't populated — sync it now before the emcc link fires.
+    SyncEmdawnwebgpuPort();
+
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj";
 
     var previewTfm = Argument("previewtfm", false);
