@@ -7,8 +7,14 @@ name: Track - Benchmarks
 #   * prev-major     /
 #
 # Each (OS, role) leg appends to its own rolling history (kept ~60 days, 10 shown) and
-# a report job renders a per-OS dashboard (nightly trend + baseline columns). Runs on a
-# schedule, on PRs and on pushes to main, so every CI produces a benchmark run.
+# a report job renders a per-OS dashboard. Runs on a schedule, on PRs and on pushes to
+# main, so every CI produces a benchmark run.
+#
+# A leg is SKIPPED when its "fingerprint" (pinned version + hash of the benchmark
+# source) matches the last recorded one — released baselines don't change unless a new
+# release bumps the role or the benchmark code changes, so there's no point re-running
+# old code on old versions every day. The nightly role runs whenever a new nightly
+# publishes (its version changes).
 #
 # Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
 # Released baselines whose exact version is not on dotnet-public are restored by
@@ -30,6 +36,10 @@ concurrency:
   # Per-ref so PRs/branches run independently; a new commit cancels the in-flight run.
   group: track-benchmarks-${{ github.ref }}
   cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
 
 jobs:
   resolve:
@@ -104,18 +114,36 @@ jobs:
           restore-keys: |
             benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-
 
+      - name: Check freshness (skip unchanged baselines)
+        id: check
+        run: |
+          hash=$(git ls-files "$PROJECT" | grep -E '\.(cs|csproj)$' | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
+          fp="$VERSION|$hash"
+          echo "FINGERPRINT=$fp" >> "$GITHUB_ENV"
+          last=$(python3 .github/scripts/track-benchmarks.py --history "$HISTORY" --print-fingerprint)
+          if [ -n "$last" ] && [ "$fp" = "$last" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Unchanged ($fp) — skipping benchmark run for ${{ runner.os }}/${{ matrix.role }}."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Running ${{ runner.os }}/${{ matrix.role }} (fingerprint=$fp, last=$last)."
+          fi
+
       - name: Run benchmarks
+        if: steps.check.outputs.skip != 'true'
         working-directory: ${{ env.PROJECT }}
         run: dotnet run -c Release -- --filter '*'
 
       - name: Record results
+        if: steps.check.outputs.skip != 'true'
         run: |
           python3 .github/scripts/track-benchmarks.py \
             --results "$PROJECT/BenchmarkDotNet.Artifacts/results" \
             --history "$HISTORY" \
             --os "$LABEL" \
             --role "${{ matrix.role }}" \
-            --version "$VERSION"
+            --version "$VERSION" \
+            --fingerprint "$FINGERPRINT"
 
       - name: Save history
         if: always()

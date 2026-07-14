@@ -141,16 +141,21 @@ def upsert_day(history: dict, entry: dict, max_days: int) -> None:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--results", required=True,
+    p.add_argument("--results", default=None,
                    help="BenchmarkDotNet results directory (contains *-report-full.json).")
     p.add_argument("--history", required=True,
                    help="Path to the per-OS JSON history document (read + written).")
-    p.add_argument("--os", required=True,
+    p.add_argument("--os", default="?",
                    help="Operating system label for this run (e.g. Linux/Windows/macOS).")
     p.add_argument("--role", default="nightly",
                    help="Version role this run measures (nightly/curr-stable/prev-stable/prev-major).")
     p.add_argument("--version", default="unknown",
                    help="SkiaSharp package version that was benchmarked (metadata).")
+    p.add_argument("--fingerprint", default=None,
+                   help="Opaque fingerprint (version + benchmark source hash) stored with the "
+                        "day entry; lets CI skip re-running an unchanged baseline.")
+    p.add_argument("--print-fingerprint", action="store_true",
+                   help="Print the most recent day's fingerprint (or empty) and exit.")
     p.add_argument("--date", default=None,
                    help="Observation date (YYYY-MM-DD; default: today UTC).")
     p.add_argument("--max-days", type=int, default=60,
@@ -161,6 +166,21 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
 
+    if args.print_fingerprint:
+        if os.path.exists(args.history):
+            try:
+                with open(args.history, "r", encoding="utf-8") as fh:
+                    days = (json.load(fh) or {}).get("days") or []
+                if days:
+                    print(days[-1].get("fingerprint", ""))
+            except (json.JSONDecodeError, OSError):
+                pass
+        return 0
+
+    if not args.results:
+        _log("--results is required unless --print-fingerprint is used")
+        return 2
+
     _log(f"Collecting benchmark results for {args.os}...")
     benchmarks = parse_results(args.results)
     if not benchmarks:
@@ -169,11 +189,10 @@ def main(argv: list[str]) -> int:
 
     history = load_history(args.history, args.os, args.role)
     today = args.date or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    upsert_day(history, {
-        "date": today,
-        "version": args.version,
-        "benchmarks": benchmarks,
-    }, args.max_days)
+    entry = {"date": today, "version": args.version, "benchmarks": benchmarks}
+    if args.fingerprint:
+        entry["fingerprint"] = args.fingerprint
+    upsert_day(history, entry, args.max_days)
     save_history(args.history, history)
     return 0
 
