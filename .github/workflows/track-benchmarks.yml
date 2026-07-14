@@ -1,0 +1,150 @@
+name: Track - Benchmarks
+
+# Daily BenchmarkDotNet run on Linux/Windows/macOS, per version role:
+#   * nightly       -> newest -nightly.* from the EAP feed (daily trend)
+#   * curr-stable    \
+#   * prev-stable     >  released baselines, resolved from nuget.org (size-tracker roles)
+#   * prev-major     /
+#
+# Each (OS, role) leg appends to its own rolling history (kept ~60 days, 10 shown) and
+# a report job renders a per-OS dashboard (nightly trend + baseline columns).
+#
+# Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
+# Released baselines whose exact version is not on dotnet-public are restored by
+# injecting nuget.org into a RUNTIME-ONLY nuget.config on the released legs (never
+# committed), so the internal build system's config scan stays clean.
+
+on:
+  schedule:
+    - cron: "0 8 * * *"  # Daily at 08:00 UTC (offset from the 07:00 size tracker)
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per-ref so PRs/branches run independently; a new commit cancels the in-flight run.
+  group: track-benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  resolve:
+    if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.resolve.outputs.versions }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve version roles
+        id: resolve
+        run: |
+          echo "versions=$(python3 .github/scripts/resolve-skiasharp-version.py --roles)" >> "$GITHUB_OUTPUT"
+
+  benchmark:
+    needs: resolve
+    if: github.repository_owner == 'mono'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        role: [nightly, curr-stable, prev-stable, prev-major]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking
+      HISTORY: benchmarks-${{ runner.os }}-${{ matrix.role }}.json
+      VERSION: ${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Linux native dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - name: Inject nuget.org for released baseline (runtime-only)
+        if: matrix.role != 'nightly'
+        run: |
+          cat > "$PROJECT/nuget.config" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          EOF
+
+      - name: Pin version ${{ matrix.role }} = ${{ env.VERSION }}
+        run: |
+          python3 .github/scripts/resolve-skiasharp-version.py --pin "$VERSION" --write-props "$PROJECT/version.props"
+
+      - name: Restore history (${{ runner.os }} / ${{ matrix.role }})
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ env.HISTORY }}
+          key: benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-${{ github.run_id }}
+          restore-keys: |
+            benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-
+
+      - name: Run benchmarks
+        working-directory: ${{ env.PROJECT }}
+        run: dotnet run -c Release -- --filter '*'
+
+      - name: Record results
+        run: |
+          python3 .github/scripts/track-benchmarks.py \
+            --results "$PROJECT/BenchmarkDotNet.Artifacts/results" \
+            --history "$HISTORY" \
+            --os "${{ runner.os }}" \
+            --role "${{ matrix.role }}" \
+            --version "$VERSION"
+
+      - name: Save history
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ env.HISTORY }}
+          key: benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-${{ github.run_id }}
+
+      - name: Upload history artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ runner.os }}-${{ matrix.role }}
+          path: ${{ env.HISTORY }}
+          if-no-files-found: warn
+
+  report:
+    needs: benchmark
+    if: always() && github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download all histories
+        uses: actions/download-artifact@v4
+        with:
+          path: histories
+          pattern: benchmarks-*
+          merge-multiple: true
+      - name: Render dashboard
+        run: python3 .github/scripts/render-benchmarks.py --input histories
