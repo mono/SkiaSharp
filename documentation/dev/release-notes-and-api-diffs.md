@@ -989,19 +989,28 @@ built from. It is timestamp-free and includes, at minimum:
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, or `internal`).
+  deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
+  `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
+  non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
+  GitHub's linked-issue graph (`closingIssuesReferences`, the source of truth, batched
+  and cached in `_sources/pr-fixed-issues.json`) and the `Fixes/Closes/Resolves #NNN`
+  keywords in the PR body (the offline fallback). Downstream post-release tooling reads
+  `fixes` to apply the release milestone to the closed issues; the renderer ignores it.
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
 - `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
-  `label`, `date`, `changelog_url`, and its `prs`. The `key` is the stable handle the
-  prose file's `preview_summaries` maps a summary onto, so it MUST be unique within a
-  page: it is **core-qualified** as `<core>-<stage><num>` (e.g. `4.148.0-rc1`,
-  `3.118.0-p1`, `1.53.2-gpu1`). Core-qualifying keeps a rolled-up predecessor's preview
-  distinct from this line's own, and keying on the label's own stem keeps parallel
-  experimental trains (an `svg` and a `gpu` preview of one core) from colliding.
+  `label`, `date`, `changelog_url`, and its `prs`. The `key` is the milestone's **real
+  git tag name** (e.g. `v4.150.0-rc.1.1`, `v3.118.0-preview.1.1`), used verbatim incl.
+  the leading `v`. git guarantees tag names are globally unique, so a key never collides
+  across rolled-up lines, and downstream tooling can map a preview straight to its exact
+  milestone/release with no key-parsing. It is also the stable handle the prose file's
+  `preview_summaries` maps a summary onto, so it MUST be unique within a page.
   `release-notes-data.py` raises if two buckets ever produce the same key, and `release-notes-render.py`
   validates one summary **per preview** (not per unique key), so a collision can never
-  silently ship a shared or missing summary.
+  silently ship a shared or missing summary. (Historically the key was a synthetic
+  core-qualified `<core>-<stage><num>` value such as `4.148.0-rc1`; the one-shot
+  `release-notes-data.py --migrate-preview-keys` remapped every committed page to the
+  real tag. A preview with no backing git tag is left on its legacy key with a warning.)
 - `tallies` and `breaking_candidates` — companion source paths and hashes the AI reads
   for breaking-change prose (§4.7).
 

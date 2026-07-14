@@ -658,6 +658,134 @@ def resolve_pr_authors(prs):
     return prs
 
 
+# ── GitHub fixed-issue resolution ────────────────────────────────────
+
+_FIXED_ISSUES_CACHE_PATH = RELEASES_DIR / "_sources" / "pr-fixed-issues.json"
+
+# GitHub's issue-closing keywords (any case): close/closes/closed,
+# fix/fixes/fixed, resolve/resolves/resolved, each followed by ``#NNN``
+# (optionally after a colon). Mirrors the body regex GitHub itself honours; the
+# GraphQL graph below is the source of truth and this is the offline fallback.
+_FIXES_RE = re.compile(
+    r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b\s*:?\s+#(\d+)", re.IGNORECASE)
+
+
+def load_fixed_issues_cache():
+    # type: () -> dict
+    """Load the PR-number -> [issue numbers] cache (releases/_sources/pr-fixed-issues.json).
+
+    Like the author cache, this makes ordinary regenerations fully offline: a
+    warm cache means resolve_fixed_issues makes zero network calls. Each value is
+    the list of issue numbers GitHub's linked-issue graph reports the PR closes
+    (possibly empty). Delete an entry to force a re-query.
+    """
+    try:
+        return json.loads(_FIXED_ISSUES_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def save_fixed_issues_cache(cache):
+    # type: (dict) -> None
+    """Persist the PR-number -> fixed-issue-numbers cache, sorted for stable diffs."""
+    try:
+        ordered = {k: cache[k] for k in sorted(cache, key=lambda n: int(n))}
+    except ValueError:
+        ordered = cache
+    _FIXED_ISSUES_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _FIXED_ISSUES_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def _graphql_pr_fixed_issues(numbers):
+    # type: (list[int]) -> dict
+    """Resolve each PR's linked closing issues via one batched GraphQL query.
+
+    Returns ``{pr_number: [issue_number, ...]}`` for every number the API
+    answered for; PRs that error or are missing are omitted so a transient
+    failure is never cached. ``closingIssuesReferences`` is GitHub's own
+    linked-issue graph — the edges a ``Fixes #N`` in the body auto-creates, plus
+    any linked through the UI — so it is the source of truth. Requires an
+    installed, authenticated ``gh`` CLI; any failure yields an empty dict and the
+    caller falls back to the PR-body keyword regex.
+    """
+    owner, name = REPO.split("/")
+    aliases = "\n".join(
+        "p{n}: pullRequest(number: {n}) {{ closingIssuesReferences(first: 50) "
+        "{{ nodes {{ number }} }} }}".format(n=n)
+        for n in numbers)
+    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
+        owner, name, aliases)
+    try:
+        # check=False: as with authors, a single blocked PR fails the batch exit
+        # code but gh still prints valid ``data`` for the rest — keep that.
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}  # gh not installed
+    try:
+        repo = json.loads(out)["data"]["repository"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}  # type: dict
+    for n in numbers:
+        node = repo.get("p{}".format(n))
+        if node is None:
+            continue  # PR not found / errored — leave uncached for retry
+        refs = (node.get("closingIssuesReferences") or {}).get("nodes") or []
+        resolved[n] = sorted({
+            r.get("number") for r in refs
+            if isinstance(r.get("number"), int)})
+    return resolved
+
+
+def _body_fixed_issues(body):
+    # type: (str) -> set
+    """Issue numbers named by a close/fix/resolve keyword in a PR body."""
+    return {int(n) for n in _FIXES_RE.findall(body or "")}
+
+
+def resolve_fixed_issues(prs):
+    # type: (list[dict]) -> list[dict]
+    """Attach the issues each PR closes to ``pr['fixes']`` (a sorted number list).
+
+    Two sources are unioned:
+      1. GitHub's ``closingIssuesReferences`` graph — the source of truth,
+         batched then cached in releases/_sources/pr-fixed-issues.json.
+      2. ``Fixes/Closes/Resolves #NNN`` keywords in the PR body — the fallback
+         that also covers the API being unavailable.
+
+    Fully offline-safe: a warm cache, or a missing/unauthenticated ``gh``, simply
+    skips the API and relies on the body regex. Downstream post-release tooling
+    uses ``fixes`` to apply milestones to the closed issues. Mutates and returns
+    ``prs``.
+    """
+    nums = sorted({pr["number"] for pr in prs if pr.get("number")})
+    if not nums:
+        return prs
+
+    cache = load_fixed_issues_cache()
+    to_query = [n for n in nums if str(n) not in cache]
+    if to_query:
+        log("  Resolving linked issues for {} PR(s) via GitHub API...".format(
+            len(to_query)))
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_pr_fixed_issues(to_query[i:i + _GRAPHQL_BATCH])
+            for num, issues in resolved.items():
+                cache[str(num)] = issues
+                dirty = True
+        if dirty:
+            save_fixed_issues_cache(cache)
+
+    for pr in prs:
+        num = pr.get("number")
+        if not num:
+            continue
+        issues = set(cache.get(str(num)) or [])
+        issues |= _body_fixed_issues(pr.get("body"))
+        pr["fixes"] = sorted(issues)
+    return prs
+
+
 def _ensure_skia_repo():
     # type: () -> bool
     """Make ``externals/skia`` usable as a local object store for ``git log``.
@@ -1579,7 +1707,13 @@ _PREVIEW_KEY_STAGE = {
 
 def _preview_key(core, label):
     # type: (str, str) -> str
-    """Unique, stable short key for a preview/RC milestone.
+    """Legacy synthetic preview key — retained only for the migration path.
+
+    As of the real-git-tag key change, ``previews[].key`` in a freshly generated
+    data.json is the milestone's real git tag (build_data_json), so this helper is
+    NO LONGER used by generation. It survives solely so ``migrate-preview-keys``
+    can reconstruct the OLD keys of already-committed pages in order to rewrite
+    them to real tags. Do not reintroduce it into the generator.
 
     Core-qualified so previews rolled up from different lines never collide, and
     keyed on the label's own stem so parallel experimental trains (an ``svg`` and a
@@ -1668,13 +1802,21 @@ def build_data_json(prs, metadata):
         num = pr.get("number")
         if not num:
             continue
-        pr_map[str(num)] = {
+        entry = {
             "url": pr.get("url", ""),
             "title": pr.get("title", ""),
             "author": (pr.get("author") or {}).get("login"),
             "community": _pr_is_community(pr),
             "tag": pr.get("category", "product"),
         }
+        # The issues this PR closes (GitHub's linked-issue graph ∪ body keywords;
+        # see resolve_fixed_issues). Emitted only when non-empty so pages with no
+        # issue-closing PRs stay byte-identical and old pages are untouched until
+        # they are genuinely regenerated. Downstream milestone tooling reads it.
+        fixes = pr.get("fixes") or []
+        if fixes:
+            entry["fixes"] = fixes
+        pr_map[str(num)] = entry
 
     contributors = [
         {"login": login,
@@ -1689,9 +1831,14 @@ def build_data_json(prs, metadata):
         label = m.get("label")
         if not label or not m.get("tag"):
             continue  # skip the synthetic leftover/unreleased bucket
-        core = m.get("version") or ((_parse_tag(m.get("tag")) or {}).get("core") or "")
         previews.append({
-            "key": _preview_key(core, label),
+            # The milestone's real git tag (e.g. "v4.150.0-rc.1.1") IS the key:
+            # git guarantees it is globally unique, so it never collides across
+            # rolled-up lines, and it lets downstream tooling map PRs → the exact
+            # milestone/release with no key-parsing. It is also the handle
+            # prose.json.preview_summaries is keyed on. m["tag"] is guaranteed
+            # present by the guard above.
+            "key": m.get("tag"),
             "label": label,
             "date": _friendly_date(m.get("date")),
             "changelog_url": m.get("compare_url"),
@@ -2157,6 +2304,10 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # new PRs miss the cache and hit the network; every old version is a cache hit.
     resolve_pr_authors(prs)
     resolve_skia_links(prs)
+    # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
+    # cached in pr-fixed-issues.json) so data.json records them for downstream
+    # milestone tooling. Same steady-state cost profile as author resolution.
+    resolve_fixed_issues(prs)
 
     # Enumerate the preview/rc milestones this page rolls up (regression R3), so
     # the trailing "## Preview N (date)" sections render. The lower bound is the
@@ -2329,6 +2480,147 @@ def cmd_generate(force=False, polish_list_path=None,
         processed_count, skipped_count))
     write_polish_list(files_to_polish, polish_list_path)
 
+
+def _build_preview_keymap():
+    # type: () -> dict
+    """Map every legacy synthetic preview key to the milestone's real git tag.
+
+    Reconstructs the OLD ``_preview_key(core, label)`` for every published
+    prerelease tag — feeding it the exact core + friendly label
+    ``collect_preview_milestones`` used — and pairs it with that tag. This is the
+    lookup ``migrate-preview-keys`` uses to rewrite already-committed pages from
+    the synthetic form (``4.150.0-rc1``) to the real tag (``v4.150.0-rc.1.1``).
+
+    Tags are deduped per ``(core, stage, number)`` keeping the latest build,
+    mirroring ``collect_preview_milestones`` exactly, so the reconstructed keys
+    match what was originally stored. A milestone with no backing prerelease tag
+    (a legacy orphan) simply never appears here, so the migration leaves it be.
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    parsed = []
+    for t in raw.splitlines():
+        t = t.strip()
+        if not t:
+            continue
+        p = _parse_tag(t)
+        if p and p["stage"]:  # skip stable tags — not preview milestones
+            parsed.append(p)
+
+    milestones = {}  # type: dict
+    for p in parsed:
+        ident = (p["core_tuple"], p["stage"], p["num"])
+        cur = milestones.get(ident)
+        if cur is None or p["key"] > cur["key"]:
+            milestones[ident] = p
+
+    keymap = {}  # type: dict
+    for p in milestones.values():
+        label = "{} {}".format(
+            _FRIENDLY_STAGE.get(p["stage"], (p["stage"] or "").title()),
+            p["num"])
+        keymap[_preview_key(p["core"], label)] = p["tag"]
+    return keymap
+
+
+def cmd_migrate_preview_keys(dry_run=False):
+    # type: (bool) -> None
+    """One-shot: rewrite committed preview keys from the synthetic form to real tags.
+
+    For every ``_sources/<stem>.data.json`` that carries previews, replace each
+    ``previews[].key`` with the milestone's real git tag, and apply the SAME remap
+    to the paired ``<stem>.prose.json``'s ``preview_summaries`` keys so the prose
+    join still resolves (release-notes-render.py) and the rendered ``.md`` stays
+    byte-identical. Edits are surgical text replacements of the key tokens ONLY, so
+    every other byte — including each prose file's own committed formatting — is
+    preserved untouched.
+
+    Idempotent: once a page holds real tags the synthetic keys are gone and
+    re-running is a no-op. A milestone with no backing prerelease tag (the legacy
+    ``1.49.1-p1`` orphan) is left unchanged, with a warning.
+    """
+    keymap = _build_preview_keymap()
+    real_tags = set(keymap.values())
+    src = RELEASES_DIR / "_sources"
+    changed = 0
+    orphans = set()  # type: set
+
+    for data_path in sorted(src.glob("*.data.json")):
+        raw = data_path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        previews = data.get("previews") or []
+        if not previews:
+            continue
+
+        remap = {}  # type: dict  # old_key -> new_key, only keys present on THIS page
+        for pv in previews:
+            old = pv.get("key")
+            if not old:
+                continue
+            new = keymap.get(old)
+            if new is None:
+                # Already a real tag (idempotent re-run) — leave it, not an orphan.
+                if old in real_tags or _parse_tag(old) is not None:
+                    continue
+                orphans.add(old)
+                continue
+            if new != old:
+                remap[old] = new
+        if not remap:
+            continue
+
+        # data.json: only previews[] use a "key" field, and each synthetic key is a
+        # distinct, fully-anchored token, so replacing the exact `"key": "OLD"` token
+        # touches nothing else.
+        new_raw = raw
+        for old, new in remap.items():
+            new_raw = new_raw.replace(
+                '"key": "{}"'.format(old), '"key": "{}"'.format(new))
+        check = json.loads(new_raw)  # must still parse
+        got = {pv.get("key") for pv in check.get("previews") or []}
+        for old, new in remap.items():
+            if new not in got or old in got:
+                raise ValueError(
+                    "migration of {} did not cleanly rewrite {} -> {}".format(
+                        data_path.name, old, new))
+
+        # prose.json: preview_summaries is keyed by the same handle. Replace the
+        # `"OLD":` object-key token (quote + colon anchored) — a summary value can
+        # never contain that exact token, and no other top-level key equals a
+        # preview key.
+        stem = data_path.name[:-len(".data.json")]
+        prose_path = src / (stem + ".prose.json")
+        prose_raw = prose_new = None
+        if prose_path.exists():
+            prose_raw = prose_path.read_text(encoding="utf-8")
+            prose_new = prose_raw
+            for old, new in remap.items():
+                prose_new = prose_new.replace(
+                    '"{}":'.format(old), '"{}":'.format(new))
+            pcheck = json.loads(prose_new)  # must still parse
+            psum = pcheck.get("preview_summaries") or {}
+            for old in remap:
+                if old in psum:
+                    raise ValueError(
+                        "prose migration of {} left stale key {}".format(
+                            prose_path.name, old))
+
+        log("{}{}: {}".format(
+            "[dry-run] " if dry_run else "", data_path.name,
+            ", ".join("{} -> {}".format(o, n)
+                      for o, n in sorted(remap.items()))))
+        if not dry_run:
+            data_path.write_text(new_raw, encoding="utf-8")
+            if prose_new is not None and prose_new != prose_raw:
+                prose_path.write_text(prose_new, encoding="utf-8")
+        changed += 1
+
+    if orphans:
+        log("WARNING: {} preview key(s) have no backing git tag and were left "
+            "unchanged: {}".format(len(orphans), ", ".join(sorted(orphans))))
+    log("{}migrated {} page(s).".format(
+        "[dry-run] " if dry_run else "", changed))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Fetch SkiaSharp release data for the website and emit each "
@@ -2364,8 +2656,22 @@ def main():
         "--max-version", metavar="CORE", default=None,
         help="Upper bound (inclusive), e.g. '4.148.0'. Versions above it are left "
              "untouched.")
+    parser.add_argument(
+        "--migrate-preview-keys", action="store_true",
+        help="One-shot maintenance: rewrite committed preview keys in "
+             "_sources/*.data.json and their paired *.prose.json from the legacy "
+             "synthetic form (4.150.0-rc1) to the milestone's real git tag "
+             "(v4.150.0-rc.1.1), then exit. Surgical, idempotent, and leaves the "
+             "rendered pages byte-identical.")
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="With --migrate-preview-keys, report the rewrites without writing.")
 
     args = parser.parse_args()
+
+    if args.migrate_preview_keys:
+        cmd_migrate_preview_keys(dry_run=args.dry_run)
+        return
 
     min_core = _core_tuple(args.min_version) if args.min_version else None
     max_core = _core_tuple(args.max_version) if args.max_version else None
