@@ -7,7 +7,8 @@ name: Track - Benchmarks
 #   * prev-major     /
 #
 # Each (OS, role) leg appends to its own rolling history (kept ~60 days, 10 shown) and
-# a report job renders a per-OS dashboard (nightly trend + baseline columns).
+# a report job renders a per-OS dashboard (nightly trend + baseline columns). Runs on a
+# schedule, on PRs and on pushes to main, so every CI produces a benchmark run.
 #
 # Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
 # Released baselines whose exact version is not on dotnet-public are restored by
@@ -29,10 +30,6 @@ concurrency:
   # Per-ref so PRs/branches run independently; a new commit cancels the in-flight run.
   group: track-benchmarks-${{ github.ref }}
   cancel-in-progress: true
-
-defaults:
-  run:
-    shell: bash
 
 jobs:
   resolve:
@@ -62,8 +59,6 @@ jobs:
     timeout-minutes: 90
     env:
       PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking
-      HISTORY: benchmarks-${{ runner.os }}-${{ matrix.role }}.json
-      VERSION: ${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
@@ -72,6 +67,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Set leg variables
+        run: |
+          echo "LABEL=${{ runner.os }}" >> "$GITHUB_ENV"
+          echo "HISTORY=benchmarks-${{ runner.os }}-${{ matrix.role }}.json" >> "$GITHUB_ENV"
+          echo "VERSION=${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}" >> "$GITHUB_ENV"
 
       - name: Install Linux native dependencies
         if: runner.os == 'Linux'
@@ -91,11 +92,11 @@ jobs:
           </configuration>
           EOF
 
-      - name: Pin version ${{ matrix.role }} = ${{ env.VERSION }}
+      - name: Pin version
         run: |
           python3 .github/scripts/resolve-skiasharp-version.py --pin "$VERSION" --write-props "$PROJECT/version.props"
 
-      - name: Restore history (${{ runner.os }} / ${{ matrix.role }})
+      - name: Restore history
         uses: actions/cache/restore@v4
         with:
           path: ${{ env.HISTORY }}
@@ -112,7 +113,7 @@ jobs:
           python3 .github/scripts/track-benchmarks.py \
             --results "$PROJECT/BenchmarkDotNet.Artifacts/results" \
             --history "$HISTORY" \
-            --os "${{ runner.os }}" \
+            --os "$LABEL" \
             --role "${{ matrix.role }}" \
             --version "$VERSION"
 
