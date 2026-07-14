@@ -18,7 +18,6 @@ Only the Python standard library is used.
 
 from __future__ import annotations
 
-import argparse
 import glob
 import json
 import os
@@ -224,22 +223,17 @@ def render(histories):
     return "\n".join(lines) + "\n"
 
 
-def parse_args(argv):
-    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--input", required=True, help="Directory containing benchmarks-<OS>-<role>.json files.")
-    p.add_argument("--output", default=None, help="Write Markdown here (default: $GITHUB_STEP_SUMMARY, else stdout).")
-    return p.parse_args(argv)
-
-
 def main(argv):
-    args = parse_args(argv)
-    histories = load_histories(args.input)
+    if len(argv) != 1:
+        print("usage: render-benchmarks.py <input-dir>", file=sys.stderr)
+        return 2
+    histories = load_histories(argv[0])
     if not histories:
-        print(f"No benchmarks-*.json files found under {args.input!r}", file=sys.stderr)
+        print(f"No benchmarks-*.json files found under {argv[0]!r}", file=sys.stderr)
         return 1
     md = render(histories)
     print(md)
-    target = args.output or os.environ.get("GITHUB_STEP_SUMMARY")
+    target = os.environ.get("GITHUB_STEP_SUMMARY")
     if target:
         with open(target, "a", encoding="utf-8") as fh:
             fh.write(md)

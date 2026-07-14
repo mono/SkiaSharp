@@ -55,7 +55,7 @@ jobs:
       - name: Resolve version roles
         id: resolve
         run: |
-          echo "versions=$(python3 .github/scripts/resolve-skiasharp-version.py --roles)" >> "$GITHUB_OUTPUT"
+          echo "versions=$(python3 .github/scripts/resolve-versions.py)" >> "$GITHUB_OUTPUT"
 
   benchmark:
     needs: resolve
@@ -104,7 +104,7 @@ jobs:
 
       - name: Pin version
         run: |
-          python3 .github/scripts/resolve-skiasharp-version.py --pin "$VERSION" --write-props "$PROJECT/version.props"
+          python3 .github/scripts/write-version-props.py "$VERSION" "$PROJECT/version.props"
 
       - name: Restore history
         uses: actions/cache/restore@v4
@@ -176,4 +176,4 @@ jobs:
           pattern: benchmarks-*
           merge-multiple: true
       - name: Render dashboard
-        run: python3 .github/scripts/render-benchmarks.py --input histories
+        run: python3 .github/scripts/render-benchmarks.py histories

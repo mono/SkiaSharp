@@ -32,6 +32,7 @@ import os
 import sys
 
 SCHEMA_VERSION = 1
+MAX_DAYS = 60  # days of history retained on disk (dashboard displays fewer)
 
 
 # --------------------------------------------------------------------------- #
@@ -156,10 +157,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                         "day entry; lets CI skip re-running an unchanged baseline.")
     p.add_argument("--print-fingerprint", action="store_true",
                    help="Print the most recent day's fingerprint (or empty) and exit.")
-    p.add_argument("--date", default=None,
-                   help="Observation date (YYYY-MM-DD; default: today UTC).")
-    p.add_argument("--max-days", type=int, default=60,
-                   help="Number of days to retain in history (default: 60).")
     return p.parse_args(argv)
 
 
@@ -188,11 +185,11 @@ def main(argv: list[str]) -> int:
         return 1
 
     history = load_history(args.history, args.os, args.role)
-    today = args.date or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
     entry = {"date": today, "version": args.version, "benchmarks": benchmarks}
     if args.fingerprint:
         entry["fingerprint"] = args.fingerprint
-    upsert_day(history, entry, args.max_days)
+    upsert_day(history, entry, MAX_DAYS)
     save_history(args.history, history)
     return 0
 
