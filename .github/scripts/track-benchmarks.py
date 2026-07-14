@@ -13,9 +13,11 @@ Design notes
 * A benchmark is keyed by its BenchmarkDotNet ``FullName``
   (``Namespace.Type.Method(Param: value)``). That name is the primary key of the
   time series -- renaming a benchmark starts a new series (by design).
-* History is retained for ``--max-days`` days (default 60) even though the
-  dashboard only displays the most recent 10. Keeping more lets us look back
-  further later without re-running anything.
+* History is retained for ``MAX_DAYS`` days even though the dashboard only shows
+  the most recent 10. Keeping more lets us look back further without re-running.
+* A leg is skipped (``--check`` prints ``skip``) when its fingerprint -- the pinned
+  version plus a hash of the benchmark source -- matches the last recorded one, so
+  unchanged baselines aren't re-run every day.
 
 Only the Python standard library is used so the script runs on a clean runner.
 The history document is persisted between runs via the GitHub Actions cache; see
@@ -27,12 +29,39 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import glob
+import hashlib
 import json
 import os
+import pathlib
 import sys
 
 SCHEMA_VERSION = 1
 MAX_DAYS = 60  # days of history retained on disk (dashboard displays fewer)
+
+# This tracker is specific to the tracking project, so its locations are constants.
+PROJECT_DIR = pathlib.Path(__file__).resolve().parents[2] / "benchmarks" / "SkiaSharp.Benchmarks.Tracking"
+RESULTS_DIR = PROJECT_DIR / "BenchmarkDotNet.Artifacts" / "results"
+
+
+def _source_hash() -> str:
+    """Short hash of the benchmark source (.cs + .csproj) — changes when a
+    benchmark is edited, so an unchanged baseline can be detected and skipped."""
+    root = PROJECT_DIR
+    files = sorted(p for p in root.rglob("*")
+                   if p.suffix in (".cs", ".csproj")
+                   and "bin" not in p.parts and "obj" not in p.parts)
+    h = hashlib.sha256()
+    for p in files:
+        h.update(p.relative_to(root).as_posix().encode())
+        h.update(b"\0")
+        h.update(p.read_bytes())
+    return h.hexdigest()[:16]
+
+
+def fingerprint(version: str) -> str:
+    """A leg is unchanged when its pinned version and benchmark source are unchanged."""
+    return f"{version}|{_source_hash()}"
+
 
 
 # --------------------------------------------------------------------------- #
@@ -142,54 +171,52 @@ def upsert_day(history: dict, entry: dict, max_days: int) -> None:
 def parse_args(argv: list[str]) -> argparse.Namespace:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--results", default=None,
-                   help="BenchmarkDotNet results directory (contains *-report-full.json).")
     p.add_argument("--history", required=True,
-                   help="Path to the per-OS JSON history document (read + written).")
-    p.add_argument("--os", default="?",
-                   help="Operating system label for this run (e.g. Linux/Windows/macOS).")
-    p.add_argument("--role", default="nightly",
-                   help="Version role this run measures (nightly/curr-stable/prev-stable/prev-major).")
-    p.add_argument("--version", default="unknown",
-                   help="SkiaSharp package version that was benchmarked (metadata).")
-    p.add_argument("--fingerprint", default=None,
-                   help="Opaque fingerprint (version + benchmark source hash) stored with the "
-                        "day entry; lets CI skip re-running an unchanged baseline.")
-    p.add_argument("--print-fingerprint", action="store_true",
-                   help="Print the most recent day's fingerprint (or empty) and exit.")
+                   help="Path to the per-(OS, role) JSON history document.")
+    p.add_argument("--version", required=True,
+                   help="SkiaSharp package version being benchmarked.")
+    p.add_argument("--os", default="?", help="OS label (stored for the dashboard).")
+    p.add_argument("--role", default="nightly", help="Version role (stored for the dashboard).")
+    p.add_argument("--check", action="store_true",
+                   help="Print 'skip' if this leg's fingerprint matches the last recorded "
+                        "one (unchanged version + benchmark source), else 'run'. Records nothing.")
     return p.parse_args(argv)
+
+
+def _last_fingerprint(history_path: str) -> str:
+    if not os.path.exists(history_path):
+        return ""
+    try:
+        with open(history_path, "r", encoding="utf-8") as fh:
+            days = (json.load(fh) or {}).get("days") or []
+        return days[-1].get("fingerprint", "") if days else ""
+    except (json.JSONDecodeError, OSError):
+        return ""
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    fp = fingerprint(args.version)
 
-    if args.print_fingerprint:
-        if os.path.exists(args.history):
-            try:
-                with open(args.history, "r", encoding="utf-8") as fh:
-                    days = (json.load(fh) or {}).get("days") or []
-                if days:
-                    print(days[-1].get("fingerprint", ""))
-            except (json.JSONDecodeError, OSError):
-                pass
+    if args.check:
+        last = _last_fingerprint(args.history)
+        print("skip" if (last and fp == last) else "run")
         return 0
 
-    if not args.results:
-        _log("--results is required unless --print-fingerprint is used")
-        return 2
-
     _log(f"Collecting benchmark results for {args.os}...")
-    benchmarks = parse_results(args.results)
+    benchmarks = parse_results(str(RESULTS_DIR))
     if not benchmarks:
         _log("  no benchmarks parsed; leaving history unchanged")
         return 1
 
     history = load_history(args.history, args.os, args.role)
     today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    entry = {"date": today, "version": args.version, "benchmarks": benchmarks}
-    if args.fingerprint:
-        entry["fingerprint"] = args.fingerprint
-    upsert_day(history, entry, MAX_DAYS)
+    upsert_day(history, {
+        "date": today,
+        "version": args.version,
+        "fingerprint": fp,
+        "benchmarks": benchmarks,
+    }, MAX_DAYS)
     save_history(args.history, history)
     return 0
 

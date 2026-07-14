@@ -117,17 +117,9 @@ jobs:
       - name: Check freshness (skip unchanged baselines)
         id: check
         run: |
-          hash=$(git ls-files "$PROJECT" | grep -E '\.(cs|csproj)$' | sort | xargs sha256sum | sha256sum | cut -d' ' -f1)
-          fp="$VERSION|$hash"
-          echo "FINGERPRINT=$fp" >> "$GITHUB_ENV"
-          last=$(python3 .github/scripts/track-benchmarks.py --history "$HISTORY" --print-fingerprint)
-          if [ -n "$last" ] && [ "$fp" = "$last" ]; then
-            echo "skip=true" >> "$GITHUB_OUTPUT"
-            echo "::notice::Unchanged ($fp) — skipping benchmark run for ${{ runner.os }}/${{ matrix.role }}."
-          else
-            echo "skip=false" >> "$GITHUB_OUTPUT"
-            echo "Running ${{ runner.os }}/${{ matrix.role }} (fingerprint=$fp, last=$last)."
-          fi
+          decision=$(python3 .github/scripts/track-benchmarks.py --history "$HISTORY" --version "$VERSION" --check)
+          echo "skip=$([ "$decision" = skip ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "$decision: ${{ runner.os }}/${{ matrix.role }} ($VERSION)"
 
       - name: Run benchmarks
         if: steps.check.outputs.skip != 'true'
@@ -138,12 +130,10 @@ jobs:
         if: steps.check.outputs.skip != 'true'
         run: |
           python3 .github/scripts/track-benchmarks.py \
-            --results "$PROJECT/BenchmarkDotNet.Artifacts/results" \
             --history "$HISTORY" \
             --os "$LABEL" \
             --role "${{ matrix.role }}" \
-            --version "$VERSION" \
-            --fingerprint "$FINGERPRINT"
+            --version "$VERSION"
 
       - name: Save history
         if: always()
