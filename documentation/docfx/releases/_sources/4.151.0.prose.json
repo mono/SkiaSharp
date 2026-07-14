@@ -1,7 +1,7 @@
 {
-  "theme": "Skia m151 preview",
-  "highlights_headline": "SkiaSharp 4.151.0 previews the Skia m151 engine update ahead of the stable release.",
-  "highlights_body": "It brings the current upstream renderer into the 4.151 line and keeps WebAssembly builds clean without changing the managed API surface.",
+  "theme": "Skia m151 and performance gains",
+  "highlights_headline": "SkiaSharp 4.151.0 updates to Skia milestone m151 and ships a series of allocation-reducing performance improvements.",
+  "highlights_body": "This preview advances the bundled Skia engine to m151 and delivers zero-allocation or low-allocation paths for SKColor hex parsing, SKShaper glyph result access, and HarfBuzz UTF-8 encoding. A long-standing WASM build issue is resolved, and an unnecessary `unsafe` block in GRContextOptions is cleaned up.",
   "breaking": [],
   "categories": [
     {
@@ -9,26 +9,57 @@
       "bullets": [
         {
           "lead": "Skia updated to milestone m151",
-          "detail": "Aligns the bundled renderer with Chrome milestone 151, giving preview consumers the latest upstream engine while preserving SkiaSharp's managed API surface.",
-          "prs": [
-            4294
-          ]
+          "detail": "The bundled Skia engine advances to m151, bringing upstream rendering improvements, bug fixes, and platform support updates.",
+          "prs": [4294]
         },
         {
-          "lead": "WebAssembly build warnings removed",
-          "detail": "Drops the duplicate SK_BUILD_FOR_WASM define from the Skia submodule so Emscripten builds no longer report macro redefinition noise.",
-          "prs": [
-            3788
-          ]
+          "lead": "Upstream m151 bug fixes merged",
+          "detail": "Additional cherry-picked fixes from the Skia chrome/m151 branch have been merged for improved stability.",
+          "prs": [4312, 4382]
+        },
+        {
+          "lead": "WASM build fixed by correcting SK_BUILD_FOR_WASM redefinition",
+          "detail": "A preprocessor redefinition of SK_BUILD_FOR_WASM in the Skia submodule was causing WASM builds to fail; the submodule bump eliminates the conflict.",
+          "prs": [3788]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKColor hex parsing is faster with ReadOnlySpan<char> overloads",
+          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char>, and the internal hex decoder is rewritten to avoid allocations on the hot path.",
+          "prs": [4345]
+        },
+        {
+          "lead": "GRContextOptions no longer requires an unsafe block",
+          "detail": "An unnecessary unsafe modifier has been removed from GRContextOptions, making the type safe to use without enabling unsafe code.",
+          "prs": [3991]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKShaper glyph results read via zero-copy spans",
+          "detail": "SKShaper now reads back glyph IDs, advances, and cluster data through Span-based P/Invoke, eliminating the per-call managed array copies.",
+          "prs": [4388]
+        },
+        {
+          "lead": "SKFourByteTag.Parse allocation removed",
+          "detail": "SKFourByteTag.Parse no longer allocates a temporary char[4] on every call; the conversion is now done in-place.",
+          "prs": [4396]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Cleaned up the WebAssembly Skia build by removing the redundant SK_BUILD_FOR_WASM define upstream"
+    "ramezgerges": "Fixed the WASM SK_BUILD_FOR_WASM redefinition build issue and added a cross-backend golden-image visual regression test harness"
   },
   "preview_summaries": {
-    "4.151.0-p1": "Preview 1 opened the 4.151 line with the Skia m151 engine update and the WebAssembly build cleanup."
+    "4.151.0-p1": "Preview 1 updated the Skia engine to milestone m151, fixed the WASM submodule build issue, added SKColor span overloads, removed the GRContextOptions unsafe block, and included the initial set of m151 upstream cherry-picks."
   },
-  "harfbuzz_summary": null
+  "harfbuzz_summary": "Delivers two allocation-removing performance improvements to HarfBuzzSharp: Buffer.AddUtf8(string) is now allocation-free using a pooled UTF-8 encoder, and Tag.Parse no longer allocates a temporary char[4] per call."
 }
