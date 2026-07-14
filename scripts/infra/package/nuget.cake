@@ -4,6 +4,7 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
+#load "../shared/emdawnwebgpu.cake"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET — pack NuGet packages
@@ -13,6 +14,14 @@ Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
+    // SkiaSharp.NativeAssets.WebAssembly.csproj packs externals/emdawnwebgpu_pkg
+    // into buildTransitive/netstandard1.0/emdawnwebgpu_pkg/. The package job
+    // agent has a fresh checkout with no native-build stage, so the source
+    // dir (gitignored) is empty — sync it now or the resulting NuGet ships an
+    // empty port and downstream WASM samples fail to link with 'file not
+    // found: emdawnwebgpu_pkg/webgpu/src/library_webgpu_enum_tables.js'.
+    SyncEmdawnwebgpuPort();
+
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
