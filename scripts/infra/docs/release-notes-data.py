@@ -1700,39 +1700,6 @@ def _release_date_display(version):
 # data.json dict. Bump when the data.json schema changes.
 _DATA_JSON_FORMAT_VERSION = 3
 
-_PREVIEW_KEY_STAGE = {
-    "Release Candidate": "rc", "Preview": "p", "Alpha": "a", "Beta": "b",
-}
-
-
-def _preview_key(core, label):
-    # type: (str, str) -> str
-    """Legacy synthetic preview key — retained only for the migration path.
-
-    As of the real-git-tag key change, ``previews[].key`` in a freshly generated
-    data.json is the milestone's real git tag (build_data_json), so this helper is
-    NO LONGER used by generation. It survives solely so ``migrate-preview-keys``
-    can reconstruct the OLD keys of already-committed pages in order to rewrite
-    them to real tags. Do not reintroduce it into the generator.
-
-    Core-qualified so previews rolled up from different lines never collide, and
-    keyed on the label's own stem so parallel experimental trains (an ``svg`` and a
-    ``gpu`` preview of the same core) stay distinct:
-
-        ('4.148.0', 'Release Candidate 1') -> '4.148.0-rc1'
-        ('3.118.0', 'Preview 1')           -> '3.118.0-p1'
-        ('1.53.2',  'Gpu 1')               -> '1.53.2-gpu1'
-        ('1.53.2',  'Svg 1')               -> '1.53.2-svg1'
-
-    Known stages get a short abbreviation (rc/p/a/b); any other stem uses a slug of
-    itself rather than a shared fallback, so distinct nonstandard stems never merge.
-    """
-    parts = (label or "").rsplit(" ", 1)
-    stem = parts[0] if len(parts) == 2 else (label or "")
-    num = parts[1] if len(parts) == 2 else ""
-    abbrev = _PREVIEW_KEY_STAGE.get(stem) or re.sub(r"[^a-z0-9]", "", stem.lower()) or "m"
-    return "{}-{}{}".format(core, abbrev, num).strip().lower()
-
 
 def _pr_is_community(pr):
     # type: (dict) -> bool
@@ -2481,146 +2448,6 @@ def cmd_generate(force=False, polish_list_path=None,
     write_polish_list(files_to_polish, polish_list_path)
 
 
-def _build_preview_keymap():
-    # type: () -> dict
-    """Map every legacy synthetic preview key to the milestone's real git tag.
-
-    Reconstructs the OLD ``_preview_key(core, label)`` for every published
-    prerelease tag — feeding it the exact core + friendly label
-    ``collect_preview_milestones`` used — and pairs it with that tag. This is the
-    lookup ``migrate-preview-keys`` uses to rewrite already-committed pages from
-    the synthetic form (``4.150.0-rc1``) to the real tag (``v4.150.0-rc.1.1``).
-
-    Tags are deduped per ``(core, stage, number)`` keeping the latest build,
-    mirroring ``collect_preview_milestones`` exactly, so the reconstructed keys
-    match what was originally stored. A milestone with no backing prerelease tag
-    (a legacy orphan) simply never appears here, so the migration leaves it be.
-    """
-    raw = run(["git", "tag", "-l", "v*"], check=False)
-    parsed = []
-    for t in raw.splitlines():
-        t = t.strip()
-        if not t:
-            continue
-        p = _parse_tag(t)
-        if p and p["stage"]:  # skip stable tags — not preview milestones
-            parsed.append(p)
-
-    milestones = {}  # type: dict
-    for p in parsed:
-        ident = (p["core_tuple"], p["stage"], p["num"])
-        cur = milestones.get(ident)
-        if cur is None or p["key"] > cur["key"]:
-            milestones[ident] = p
-
-    keymap = {}  # type: dict
-    for p in milestones.values():
-        label = "{} {}".format(
-            _FRIENDLY_STAGE.get(p["stage"], (p["stage"] or "").title()),
-            p["num"])
-        keymap[_preview_key(p["core"], label)] = p["tag"]
-    return keymap
-
-
-def cmd_migrate_preview_keys(dry_run=False):
-    # type: (bool) -> None
-    """One-shot: rewrite committed preview keys from the synthetic form to real tags.
-
-    For every ``_sources/<stem>.data.json`` that carries previews, replace each
-    ``previews[].key`` with the milestone's real git tag, and apply the SAME remap
-    to the paired ``<stem>.prose.json``'s ``preview_summaries`` keys so the prose
-    join still resolves (release-notes-render.py) and the rendered ``.md`` stays
-    byte-identical. Edits are surgical text replacements of the key tokens ONLY, so
-    every other byte — including each prose file's own committed formatting — is
-    preserved untouched.
-
-    Idempotent: once a page holds real tags the synthetic keys are gone and
-    re-running is a no-op. A milestone with no backing prerelease tag (the legacy
-    ``1.49.1-p1`` orphan) is left unchanged, with a warning.
-    """
-    keymap = _build_preview_keymap()
-    real_tags = set(keymap.values())
-    src = RELEASES_DIR / "_sources"
-    changed = 0
-    orphans = set()  # type: set
-
-    for data_path in sorted(src.glob("*.data.json")):
-        raw = data_path.read_text(encoding="utf-8")
-        data = json.loads(raw)
-        previews = data.get("previews") or []
-        if not previews:
-            continue
-
-        remap = {}  # type: dict  # old_key -> new_key, only keys present on THIS page
-        for pv in previews:
-            old = pv.get("key")
-            if not old:
-                continue
-            new = keymap.get(old)
-            if new is None:
-                # Already a real tag (idempotent re-run) — leave it, not an orphan.
-                if old in real_tags or _parse_tag(old) is not None:
-                    continue
-                orphans.add(old)
-                continue
-            if new != old:
-                remap[old] = new
-        if not remap:
-            continue
-
-        # data.json: only previews[] use a "key" field, and each synthetic key is a
-        # distinct, fully-anchored token, so replacing the exact `"key": "OLD"` token
-        # touches nothing else.
-        new_raw = raw
-        for old, new in remap.items():
-            new_raw = new_raw.replace(
-                '"key": "{}"'.format(old), '"key": "{}"'.format(new))
-        check = json.loads(new_raw)  # must still parse
-        got = {pv.get("key") for pv in check.get("previews") or []}
-        for old, new in remap.items():
-            if new not in got or old in got:
-                raise ValueError(
-                    "migration of {} did not cleanly rewrite {} -> {}".format(
-                        data_path.name, old, new))
-
-        # prose.json: preview_summaries is keyed by the same handle. Replace the
-        # `"OLD":` object-key token (quote + colon anchored) — a summary value can
-        # never contain that exact token, and no other top-level key equals a
-        # preview key.
-        stem = data_path.name[:-len(".data.json")]
-        prose_path = src / (stem + ".prose.json")
-        prose_raw = prose_new = None
-        if prose_path.exists():
-            prose_raw = prose_path.read_text(encoding="utf-8")
-            prose_new = prose_raw
-            for old, new in remap.items():
-                prose_new = prose_new.replace(
-                    '"{}":'.format(old), '"{}":'.format(new))
-            pcheck = json.loads(prose_new)  # must still parse
-            psum = pcheck.get("preview_summaries") or {}
-            for old in remap:
-                if old in psum:
-                    raise ValueError(
-                        "prose migration of {} left stale key {}".format(
-                            prose_path.name, old))
-
-        log("{}{}: {}".format(
-            "[dry-run] " if dry_run else "", data_path.name,
-            ", ".join("{} -> {}".format(o, n)
-                      for o, n in sorted(remap.items()))))
-        if not dry_run:
-            data_path.write_text(new_raw, encoding="utf-8")
-            if prose_new is not None and prose_new != prose_raw:
-                prose_path.write_text(prose_new, encoding="utf-8")
-        changed += 1
-
-    if orphans:
-        log("WARNING: {} preview key(s) have no backing git tag and were left "
-            "unchanged: {}".format(len(orphans), ", ".join(sorted(orphans))))
-    log("{}migrated {} page(s).".format(
-        "[dry-run] " if dry_run else "", changed))
-
-
 def main():
     parser = argparse.ArgumentParser(
         description="Fetch SkiaSharp release data for the website and emit each "
@@ -2656,22 +2483,8 @@ def main():
         "--max-version", metavar="CORE", default=None,
         help="Upper bound (inclusive), e.g. '4.148.0'. Versions above it are left "
              "untouched.")
-    parser.add_argument(
-        "--migrate-preview-keys", action="store_true",
-        help="One-shot maintenance: rewrite committed preview keys in "
-             "_sources/*.data.json and their paired *.prose.json from the legacy "
-             "synthetic form (4.150.0-rc1) to the milestone's real git tag "
-             "(v4.150.0-rc.1.1), then exit. Surgical, idempotent, and leaves the "
-             "rendered pages byte-identical.")
-    parser.add_argument(
-        "--dry-run", action="store_true",
-        help="With --migrate-preview-keys, report the rewrites without writing.")
 
     args = parser.parse_args()
-
-    if args.migrate_preview_keys:
-        cmd_migrate_preview_keys(dry_run=args.dry_run)
-        return
 
     min_core = _core_tuple(args.min_version) if args.min_version else None
     max_core = _core_tuple(args.max_version) if args.max_version else None

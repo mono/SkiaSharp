@@ -1007,10 +1007,9 @@ built from. It is timestamp-free and includes, at minimum:
   `preview_summaries` maps a summary onto, so it MUST be unique within a page.
   `release-notes-data.py` raises if two buckets ever produce the same key, and `release-notes-render.py`
   validates one summary **per preview** (not per unique key), so a collision can never
-  silently ship a shared or missing summary. (Historically the key was a synthetic
-  core-qualified `<core>-<stage><num>` value such as `4.148.0-rc1`; the one-shot
-  `release-notes-data.py --migrate-preview-keys` remapped every committed page to the
-  real tag. A preview with no backing git tag is left on its legacy key with a warning.)
+  silently ship a shared or missing summary. (A handful of very old committed pages
+  predate git-tagging their previews and therefore keep a synthetic
+  `<core>-<stage><num>` key such as `1.49.1-p1`; new pages always use the real tag.)
 - `tallies` and `breaking_candidates` — companion source paths and hashes the AI reads
   for breaking-change prose (§4.7).
 
