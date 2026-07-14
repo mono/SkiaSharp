@@ -35,7 +35,12 @@
       on the legacy built-in.
     -->
     <_SkiaSharpUseEmdawnwebgpu Condition="'$(_SkiaSharpUseEmdawnwebgpu)' == '' and '$(TargetFramework)' != '' and !$(TargetFramework.StartsWith('net8.'))">true</_SkiaSharpUseEmdawnwebgpu>
-    <_SkiaSharpEmdawnwebgpuPkg>$(MSBuildThisFileDirectory)emdawnwebgpu_pkg</_SkiaSharpEmdawnwebgpuPkg>
+    <!-- Emcc / emcc.py parses `-isystem <abs-path>` as a single shell arg and
+         swallows backslashes on Windows (the raw path arrives without any
+         separators). Normalize to forward slashes so the trailing `/webgpu/…`
+         concatenation stays consistent and the resulting path resolves on
+         both platforms. -->
+    <_SkiaSharpEmdawnwebgpuPkg>$([System.String]::Copy('$(MSBuildThisFileDirectory)emdawnwebgpu_pkg').Replace('\','/'))</_SkiaSharpEmdawnwebgpuPkg>
     <!--
       Inline the port's inputs instead of using emcc's ports mechanism.
       That mechanism compiles libemdawnwebgpu-<hash>.a into emcc's cache
