@@ -1,58 +1,20 @@
 {
-  "theme": "Performance and engine improvements",
-  "highlights_headline": "SkiaSharp 4.151.0 brings zero-allocation hot paths across HarfBuzzSharp and SKShaper, Skia m151 engine fixes, and new ReadOnlySpan overloads for SKColor.",
-  "highlights_body": "Several hot-path allocations eliminated in text shaping (HarfBuzzSharp.Buffer.AddUtf8, Tag.Parse, SKFourByteTag.Parse, SKShaper glyph reads). The bundled Skia engine picks up upstream m151 bug fixes, and SKColor gains ReadOnlySpan<char> parsing overloads.",
+  "theme": "Native resource leak fix",
+  "highlights_headline": "SkiaSharp 4.151.0 fixes a native resource leak in SKImage.FromEncodedData.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Skia m151 upstream bug fixes merged",
-          "detail": "Two successive upstream cherry-pick passes pull in Skia chrome/m151 engine corrections, keeping the bundled renderer current with upstream stability fixes.",
-          "prs": [4312, 4382]
-        }
-      ]
-    },
-    {
-      "heading": "API Surface",
-      "bullets": [
-        {
-          "lead": "SKColor gains ReadOnlySpan<char> parsing overloads",
-          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char>, avoiding a string allocation when parsing hex colours from spans or stack-allocated buffers.",
-          "prs": [4345]
-        },
-        {
-          "lead": "GRContextOptions no longer requires an unsafe context",
-          "detail": "The unnecessary unsafe modifier on GRContextOptions has been removed. Projects that interact with GPU context options no longer need to enable unsafe code for this type.",
-          "prs": [3991]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
-        {
-          "lead": "HarfBuzzSharp hot paths made allocation-free",
-          "detail": "Buffer.AddUtf8(string) now uses a pooled encoder instead of allocating per call, and Tag.Parse no longer allocates a char[4] on every invocation — both reduce GC pressure in tight text-shaping loops.",
-          "prs": [4376, 4408]
-        },
-        {
-          "lead": "SKShaper glyph reads use zero-copy spans",
-          "detail": "Glyph result data from the native shaper is now read directly via spans rather than intermediate copies, reducing per-run allocations in shaping pipelines.",
-          "prs": [4388]
-        },
-        {
-          "lead": "SKFourByteTag.Parse no longer allocates per call",
-          "detail": "Eliminates a per-call char[4] heap allocation in SKFourByteTag.Parse, matching the same fix applied to the HarfBuzz Tag type.",
-          "prs": [4396]
+          "lead": "Native resource leak in SKImage.FromEncodedData fixed",
+          "detail": "SKImage.FromEncodedData(SKData, SKRectI) no longer leaks the intermediate decoded image handle when a subset is requested.",
+          "prs": [3997]
         }
       ]
     }
   ],
-  "contributor_summaries": {
-    "ramezgerges": "Built the cross-backend golden-image visual regression test harness, enabling pixel-level rendering comparisons across GPU backends"
-  },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "contributor_summaries": {},
+  "preview_summaries": {}
 }
