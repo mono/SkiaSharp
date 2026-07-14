@@ -43,6 +43,23 @@
     <EmbeddedResource Include="Platforms\WebAssembly\WasmScripts\MonacoFocusGuard.js" />
   </ItemGroup>
   <ItemGroup>
+    <!-- Preloaded at startup and exposed to snippets as the `image` and `typeface`
+         variables. Embedded (not Content) because the trimmed WASM build removes
+         HttpClient download methods, so runtime fetching fails. -->
+    <EmbeddedResource Include="Media\*.png" />
+    <EmbeddedResource Include="Media\*.ttf" />
+  </ItemGroup>
+  <!-- The Media assets are embedded (above), not shipped as loose files. Uno's default
+       item globs still add **\*.png to Content (which is published by default), and in
+       Release builds Uno resets $(DefaultItemExcludes), so a project-level exclude does
+       not stick. Strip Media from Content at build time, after the SDK globs have run, so
+       the assets ship embedded-only and are not duplicated into the publish output. -->
+  <Target Name="RemoveEmbeddedMediaFromContent" BeforeTargets="AssignTargetPaths">
+    <ItemGroup>
+      <Content Remove="Media\**" />
+    </ItemGroup>
+  </Target>
+  <ItemGroup>
     <TrimmerRootDescriptor Include="ILLink.Descriptors.xml" />
   </ItemGroup>
   <ItemGroup>
