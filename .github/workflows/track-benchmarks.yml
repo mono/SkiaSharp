@@ -7,7 +7,7 @@ name: Track - Benchmarks
 #   * curr-stable    \
 #   * prev-stable     >  released stable baselines, resolved from nuget.org
 #   * prev-major     /
-#   * pr             -> a FULL source build of THIS checkout (unreleased; PR / dispatch only)
+#   * pr             -> a FULL source build of THIS checkout (unreleased; PRs only)
 #
 # History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
 # indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg
@@ -200,12 +200,13 @@ jobs:
   benchmark-source:
     needs: resolve
     # The ⭐ source column is only meaningful for pre-merge comparison, and it is dropped
-    # from persisted history (--drop-role pr), so run it only on PRs (+ manual dispatch) —
-    # never on the nightly schedule, where the published "nightly" baseline already tracks
-    # main's source one build behind.
+    # from persisted history (--drop-role pr), so run it on PRs only — never on the nightly
+    # schedule (the published "nightly" baseline already tracks main's source one build
+    # behind) and never on manual dispatch, so `workflow_dispatch` behaves exactly like the
+    # cron: an on-demand nightly run, just the persisted baselines.
     if: >
       github.repository_owner == 'mono' &&
-      (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
+      github.event_name == 'pull_request'
     strategy:
       fail-fast: false
       matrix:
