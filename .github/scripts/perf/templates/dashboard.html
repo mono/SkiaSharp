@@ -49,10 +49,6 @@
   .seg button:last-child { border-right:0; }
   .seg button.on { background:var(--accent); color:#fff; }
   .lab { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
-  .chips { display:flex; flex-wrap:wrap; gap:6px; max-width:520px; }
-  .chip { background:var(--chip); border:1px solid var(--border); color:var(--text); border-radius:14px;
-    padding:4px 11px; font-size:12px; cursor:pointer; user-select:none; }
-  .chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
   .picker { min-width:260px; }
   .filter { width:100%; background:var(--panel); color:var(--text); border:1px solid var(--border);
     border-radius:6px; padding:6px 9px; font-size:13px; margin-bottom:6px; }
@@ -102,7 +98,10 @@
     </div>
   </div>
   <div class="row">
-    <div class="picker"><div class="lab" id="group-label">OS</div><div class="chips" id="groups"></div></div>
+    <div class="picker"><div class="lab" id="group-label">OS</div>
+      <input class="filter" id="group-filter" placeholder="filter…" />
+      <div class="checklist" id="groups"></div>
+    </div>
     <div class="picker"><div class="lab" id="item-label">Benchmark</div>
       <input class="filter" id="item-filter" placeholder="filter…" />
       <div class="checklist" id="items"></div>
@@ -132,7 +131,7 @@
   };
 
   const state = { data:{benchmarks:{}, sizes:{}}, metric:"time", scale:"absolute",
-                  groups:new Set(), items:new Set(), itemFilter:"", chart:null };
+                  groups:new Set(), items:new Set(), groupFilter:"", itemFilter:"", chart:null };
 
   // ---------- formatting ----------
   const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs":
@@ -228,9 +227,12 @@
     const { groups, items } = pickerUniverse(series);
     document.getElementById("group-label").textContent = state.metric==="size" ? "Package" : "OS";
     document.getElementById("item-label").textContent  = state.metric==="size" ? "Artifact / native" : "Benchmark";
+    const gf = state.groupFilter.toLowerCase();
     const gEl = document.getElementById("groups");
-    gEl.innerHTML = groups.map(g=>`<span class="chip ${state.groups.has(g)?"on":""}" data-g="${esc(g)}">${esc(g)}</span>`).join("");
-    gEl.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ const g=c.dataset.g; state.groups.has(g)?state.groups.delete(g):state.groups.add(g); render(); });
+    gEl.innerHTML = groups.filter(g=>!gf||g.toLowerCase().includes(gf)).map(g=>
+      `<label class="checkitem"><input type="checkbox" data-g="${esc(g)}" ${state.groups.has(g)?"checked":""}><code>${esc(g)}</code></label>`).join("")
+      || `<div class="msg" style="padding:12px">no matches</div>`;
+    gEl.querySelectorAll("input").forEach(c=>c.onchange=()=>{ const g=c.dataset.g; c.checked?state.groups.add(g):state.groups.delete(g); render(); });
     const f = state.itemFilter.toLowerCase();
     const iEl = document.getElementById("items");
     iEl.innerHTML = items.filter(it=>!f||it.toLowerCase().includes(f)).map(it=>
@@ -335,6 +337,7 @@
     const items = [], is = new Set();
     for (const s of series) if (state.groups.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
     state.items = new Set(items.slice(0, 1));
+    state.groupFilter = ""; const gf = document.getElementById("group-filter"); if (gf) gf.value = "";
     state.itemFilter = ""; const f = document.getElementById("item-filter"); if (f) f.value = "";
   }
 
@@ -360,6 +363,7 @@
       resetSelection(allSeries()); render(); });
     document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s;
       document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
+    document.getElementById("group-filter").oninput = e => { state.groupFilter=e.target.value; renderPickers(allSeries()); };
     document.getElementById("item-filter").oninput = e => { state.itemFilter=e.target.value; renderPickers(allSeries()); };
     window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
     render();
