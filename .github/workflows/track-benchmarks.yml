@@ -164,18 +164,26 @@ jobs:
           path: ${{ env.HISTORY }}
           if-no-files-found: warn
 
+      - name: Upload raw BDN reports
+        # The full BenchmarkDotNet report(s) for this leg — archived per day by the
+        # report job (raw/<date>/<OS>-<role>/), so we can re-summarise later. Only on
+        # persisting runs (main/schedule); PR runs don't persist, so don't bother.
+        if: steps.check.outputs.skip != 'true' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawbench-${{ runner.os }}-${{ matrix.role }}
+          path: ${{ env.PROJECT }}/BenchmarkDotNet.Artifacts/results/*-report-full.json
+          if-no-files-found: ignore
+
   # "this PR / this branch" column: a source build of SkiaSharp benchmarked against the
   # baselines on ALL THREE desktop OSes, so this branch's changes show up in the ⭐ column.
   #
-  # PR_NATIVE_SOURCE_BUILD toggles how the native libSkiaSharp is obtained:
-  #   * "false" (fast, default while iterating) — download the prebuilt nightly natives
-  #     via `externals-download`, then build only the MANAGED SkiaSharp.dll from source.
-  #     ~10 min/leg; reflects MANAGED changes on the branch (native = nightly).
-  #   * "true" (full) — build libSkiaSharp FROM SOURCE per host (Linux Docker, macOS
-  #     Xcode+Ninja, Windows VS+LLVM+Ninja), so native/C-API changes (e.g. #4421) are
-  #     reflected too. ~30-40 min on Windows.
-  # Each leg is isolated + best-effort so it can never turn the run red. PR data is fresh
-  # each run (single day, labelled by PR/branch) and is NOT persisted to the data branch.
+  # PR_NATIVE_SOURCE_BUILD (see the job env below) selects how the native is obtained:
+  # "auto" (default) builds libSkiaSharp from source only when the native inputs changed
+  # vs main (per repo-deps.py), otherwise downloads the prebuilt nightly natives; "true"
+  # always builds from source; "false" always downloads. Each leg is isolated + best-effort
+  # so it can never turn the run red. PR data is fresh each run (single day, labelled by
+  # PR/branch) and is NOT persisted to the data branch.
   benchmark-source:
     needs: resolve
     if: github.repository_owner == 'mono'
@@ -346,6 +354,13 @@ jobs:
           pattern: benchmarks-*
           merge-multiple: true
 
+      - name: Download raw BDN reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: rawreports
+          pattern: rawbench-*
+
       - name: Render Markdown dashboard (run summary)
         run: python3 .github/scripts/perf/benchmarks/render_md.py histories
 
@@ -386,6 +401,18 @@ jobs:
             cp "$f" aw-upload/agent/benchmarks/
           done
           cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/benchmarks/dashboard.html
+          # Archive the full raw BDN reports per day (additive; gzipped) under
+          # raw/<date>/<OS>-<role>/, so the summary can be regenerated/enriched later.
+          date="$(date -u +%F)"
+          for d in rawreports/rawbench-*; do
+            [ -d "$d" ] || continue
+            leg="${d##*/rawbench-}"
+            mkdir -p "aw-upload/agent/benchmarks/raw/$date/$leg"
+            for f in "$d"/*.json; do
+              [ -f "$f" ] || continue
+              gzip -c "$f" > "aw-upload/agent/benchmarks/raw/$date/$leg/$(basename "$f").gz"
+            done
+          done
           python3 - <<'PY'
           import glob, os, json, datetime
           d = "aw-upload/agent/benchmarks"

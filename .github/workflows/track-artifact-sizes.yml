@@ -54,7 +54,8 @@ jobs:
         run: |
           python3 .github/scripts/perf/sizes/track.py \
             --history artifact-sizes.json \
-            --max-nightly 365
+            --max-nightly 365 \
+            --raw raw-sizes.json
 
       - name: Render Markdown summary (run summary)
         run: |
@@ -86,15 +87,20 @@ jobs:
 
       - name: Assemble data for the aw-data branch
         # Persist only from main/schedule/dispatch on main — never from PRs. Stages the
-        # size history, the live dashboard page, and a manifest under agent/sizes/ so
-        # persist-aw-data.yml commits them. The sentinel keeps the artifact's
-        # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
+        # size history, the live dashboard page, a manifest, and today's raw per-file
+        # snapshot (gzipped, additive) under agent/sizes/ so persist-aw-data.yml commits
+        # them. The sentinel keeps the artifact's least-common-ancestor at aw-upload/,
+        # preserving the required agent/ prefix.
         if: github.ref == 'refs/heads/main'
         run: |
-          mkdir -p aw-upload/agent/sizes
+          mkdir -p aw-upload/agent/sizes/raw
           touch aw-upload/.artifact-root
           cp artifact-sizes.json aw-upload/agent/sizes/
           cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/sizes/dashboard.html
+          # Archive the full per-file snapshot, keyed by date (additive; kept forever).
+          if [ -f raw-sizes.json ]; then
+            gzip -c raw-sizes.json > "aw-upload/agent/sizes/raw/$(date -u +%F).json.gz"
+          fi
           python3 - <<'PY'
           import json, datetime
           json.dump({"generatedUtc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

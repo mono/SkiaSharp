@@ -150,20 +150,26 @@ def _is_native_entry(name: str) -> bool:
 def measure_nupkg(path: str) -> dict:
     """Measure a single ``.nupkg``.
 
-    Returns ``{"nupkg": <compressed file size>, "natives": {<path>: <size>, ...}}``
-    where ``natives`` is empty for managed-only packages.
+    Returns ``{"nupkg": <compressed file size>, "natives": {<path>: <size>},
+    "files": {<path>: <uncompressed size>}}``. ``natives`` is the subset the summary
+    keeps; ``files`` is EVERY entry, kept only for the raw snapshot (callers that build
+    the summary drop it).
     """
     file_size = os.path.getsize(path)
     natives: dict[str, int] = {}
+    files: dict[str, int] = {}
     try:
         with zipfile.ZipFile(path) as zf:
             for zi in zf.infolist():
+                if zi.is_dir():
+                    continue
+                files[zi.filename] = zi.file_size
                 if _is_native_entry(zi.filename):
                     natives[zi.filename] = zi.file_size
     except zipfile.BadZipFile:
         _log(f"  ! not a valid zip, skipping: {path}")
-        return {"nupkg": file_size, "natives": {}}
-    return {"nupkg": file_size, "natives": natives}
+        return {"nupkg": file_size, "natives": {}, "files": {}}
+    return {"nupkg": file_size, "natives": natives, "files": files}
 
 
 # --------------------------------------------------------------------------- #
@@ -414,6 +420,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="Re-measure even when data is already cached.")
     p.add_argument("--work-dir", default=None,
                    help="Directory for temporary downloads (default: a temp dir).")
+    p.add_argument("--raw", default=None,
+                   help="Also write today's nightly measurement, WITH a full per-file size "
+                        "breakdown per package, to this path (the workflow archives it under "
+                        "sizes/raw/<date>.json.gz). The summary keeps only nupkg + natives.")
     return p.parse_args(argv)
 
 
@@ -433,10 +443,23 @@ def main(argv: list[str]) -> int:
             feed = resolve_eap_feed()
             packages, headline = collect_nightly(feed, work_dir)
             if packages:
+                # Raw snapshot (optional): full per-file breakdown, archived per day.
+                if args.raw:
+                    raw_pkgs = {pid: {"version": m["version"], "nupkg": m["nupkg"],
+                                      "files": m.get("files", {})}
+                                for pid, m in packages.items()}
+                    with open(args.raw, "w", encoding="utf-8") as fh:
+                        json.dump({"date": today, "version": headline, "packages": raw_pkgs}, fh)
+                    _log(f"  wrote raw size snapshot -> {args.raw} "
+                         f"({sum(len(p['files']) for p in raw_pkgs.values())} files)")
+                # Summary keeps only nupkg + natives (drop the full file list).
+                summary_pkgs = {pid: {"version": m["version"], "nupkg": m["nupkg"],
+                                      "natives": m.get("natives", {})}
+                                for pid, m in packages.items()}
                 upsert_nightly(history, {
                     "date": today,
                     "version": headline,
-                    "packages": packages,
+                    "packages": summary_pkgs,
                 }, args.max_nightly)
             else:
                 _log("  no nightly packages measured; leaving history unchanged")
@@ -453,6 +476,12 @@ def main(argv: list[str]) -> int:
                 history["roles"] = resolved
                 total = len(history["releasedCache"])
                 _log(f"  released cache now holds {total} package/version entries")
+
+        # Keep the summary lean: released measurements gain a 'files' map from
+        # measure_nupkg, but the summary only needs nupkg + natives (raw lives elsewhere).
+        for m in history.get("releasedCache", {}).values():
+            if isinstance(m, dict):
+                m.pop("files", None)
 
         save_history(args.history, history)
     finally:
