@@ -25,70 +25,127 @@
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <style>
   :root {
-    --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e;
-    --accent:#58a6ff; --pr:#d2a8ff; --chip:#21262d; --up:#f85149; --down:#3fb950;
+    --bg:#0a0d13; --bg2:#0d1117; --panel:#141a23; --panel2:#1a212c;
+    --border:#242c38; --border2:#333d4d; --text:#e9eef5; --muted:#93a0b1; --faint:#6b7686;
+    --accent:#5aa2ff; --accent2:#8ad0ff; --pr:#d6acff; --chip:#1e2632;
+    --up:#ff6b6b; --down:#4ad991; --shadow:0 8px 30px rgba(0,0,0,.40);
+    --grad:linear-gradient(135deg,#5aa2ff,#8a7bff);
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg:#fff; --panel:#f6f8fa; --border:#d0d7de; --text:#1f2328; --muted:#636c76;
-      --accent:#0969da; --pr:#8250df; --chip:#eaeef2; --up:#cf222e; --down:#1a7f37;
+      --bg:#eef1f6; --bg2:#fff; --panel:#fff; --panel2:#f5f7fa;
+      --border:#e0e5ec; --border2:#cbd3de; --text:#1a1f27; --muted:#5a6675; --faint:#8a95a3;
+      --accent:#2563eb; --accent2:#0ea5b7; --pr:#7c3aed; --chip:#eef2f7;
+      --up:#dc2626; --down:#16a34a; --shadow:0 8px 26px rgba(90,105,140,.14);
+      --grad:linear-gradient(135deg,#2563eb,#7c3aed);
     }
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--text);
-    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
-  header { padding:18px 22px 4px; }
-  h1 { font-size:19px; margin:0 0 3px; }
-  .sub { color:var(--muted); font-size:13px; }
-  .wrap { padding:10px 22px 48px; max-width:1220px; }
-  .row { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; margin:10px 0; }
-  .seg { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
-  .seg button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--border);
-    padding:6px 12px; font-size:13px; cursor:pointer; }
-  .seg button:last-child { border-right:0; }
-  .seg button.on { background:var(--accent); color:#fff; }
-  .lab { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
-  .picker { min-width:260px; }
-  .filter { width:100%; background:var(--panel); color:var(--text); border:1px solid var(--border);
-    border-radius:6px; padding:6px 9px; font-size:13px; margin-bottom:6px; }
-  .checklist { max-height:190px; overflow:auto; border:1px solid var(--border); border-radius:6px;
-    background:var(--panel); padding:4px; min-width:320px; }
-  .checkitem { display:flex; align-items:center; gap:8px; padding:3px 6px; font-size:12.5px; cursor:pointer;
-    border-radius:4px; white-space:nowrap; }
+  html,body { margin:0; }
+  body {
+    background:
+      radial-gradient(1100px 560px at 100% -8%, rgba(90,162,255,.12), transparent 58%),
+      radial-gradient(900px 480px at -6% -4%, rgba(214,172,255,.10), transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    color:var(--text); min-height:100vh;
+    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  }
+  /* ---- top bar ---- */
+  .topbar {
+    position:sticky; top:0; z-index:30;
+    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
+    padding:13px 26px; border-bottom:1px solid var(--border);
+    background:color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter:blur(12px) saturate(1.3);
+  }
+  .brand { display:flex; align-items:center; gap:12px; margin-right:auto; min-width:0; }
+  .brand .logo { width:34px; height:34px; border-radius:10px; background:var(--grad); flex:none;
+    display:grid; place-items:center; font-size:18px; box-shadow:0 4px 14px rgba(90,123,255,.45); }
+  .brand .txt { min-width:0; }
+  .brand h1 { font-size:16px; margin:0; font-weight:680; letter-spacing:-.01em; }
+  .brand .sub { color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .brand .sub code { background:var(--chip); padding:0 5px; border-radius:5px; }
+  .toolbar { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  .ctl { display:flex; flex-direction:column; gap:6px; }
+  .lab { color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.07em; font-weight:700; }
+  .seg { display:inline-flex; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:3px; gap:2px; }
+  .seg button { background:transparent; color:var(--muted); border:0; border-radius:7px;
+    padding:6px 14px; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .15s,color .15s,box-shadow .15s; }
+  .seg button:hover { color:var(--text); }
+  .seg button.on { background:var(--accent); color:#fff; box-shadow:0 2px 10px rgba(90,162,255,.45); }
+  /* ---- layout ---- */
+  .layout { display:grid; grid-template-columns:310px minmax(0,1fr); gap:20px; padding:22px 26px 60px; align-items:start; }
+  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
+  .sidebar { display:flex; flex-direction:column; gap:16px; position:sticky; top:78px; }
+  @media (max-width:960px){ .sidebar{ position:static; } }
+  .content { display:flex; flex-direction:column; gap:20px; min-width:0; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
+  .card-h { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 17px; border-bottom:1px solid var(--border); }
+  .card-h h2 { font-size:11.5px; margin:0; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .card-h .count { font-size:11px; color:var(--faint); background:var(--chip); border-radius:20px; padding:2px 9px; font-weight:600; }
+  .card-b { padding:15px 17px; }
+  /* ---- pickers ---- */
+  .actions { display:flex; gap:6px; }
+  .minibtn { background:var(--chip); color:var(--muted); border:1px solid var(--border); border-radius:7px; padding:3px 10px; font-size:11px; font-weight:600; cursor:pointer; transition:.12s; }
+  .minibtn:hover { color:var(--text); border-color:var(--border2); background:var(--panel2); }
+  .filter { width:100%; background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:9px;
+    padding:8px 11px; font-size:12.5px; margin-bottom:9px; transition:border-color .15s,box-shadow .15s; }
+  .filter::placeholder { color:var(--faint); }
+  .filter:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent); }
+  .checklist { max-height:300px; overflow:auto; display:flex; flex-direction:column; gap:1px; margin:-3px; padding:3px; }
+  .checkitem { display:flex; align-items:center; gap:10px; padding:6px 8px; font-size:12.5px; cursor:pointer; border-radius:8px; transition:background .1s; }
   .checkitem:hover { background:var(--chip); }
-  .checkitem input { margin:0; }
-  .checkitem code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px; margin:14px 0; }
-  .card h2 { font-size:13px; margin:0 0 8px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
-  #chart { width:100%; height:460px; }
-  .warn { color:var(--up); font-size:12px; margin:6px 0 0; }
-  table { border-collapse:collapse; width:100%; font-size:12.5px; }
-  th,td { border-bottom:1px solid var(--border); padding:5px 9px; text-align:right; white-space:nowrap; }
-  th:first-child,td:first-child { text-align:left; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
-  th { color:var(--muted); font-weight:600; }
+  .checkitem input { appearance:none; -webkit-appearance:none; width:16px; height:16px; flex:none; margin:0; cursor:pointer;
+    border:1.5px solid var(--border2); border-radius:5px; background:var(--bg2); position:relative; transition:.12s; }
+  .checkitem input:checked { background:var(--accent); border-color:var(--accent); }
+  .checkitem input:checked::after { content:""; position:absolute; left:4.5px; top:1.5px; width:4px; height:8px;
+    border:solid #fff; border-width:0 2px 2px 0; transform:rotate(42deg); }
+  .checkitem code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--text);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* ---- chart ---- */
+  #chart { width:100%; height:540px; }
+  .warn { color:#f0b429; font-size:12px; padding:10px 17px 0; display:flex; gap:7px; align-items:center; }
+  /* ---- table ---- */
+  .tbl-wrap { overflow:auto; max-height:70vh; }
+  table { border-collapse:separate; border-spacing:0; width:100%; font-size:12.5px; }
+  thead th { position:sticky; top:0; z-index:2; background:var(--panel2); }
+  th,td { border-bottom:1px solid var(--border); padding:9px 13px; text-align:right; white-space:nowrap; }
+  th:first-child,td:first-child { text-align:left; position:sticky; left:0; background:var(--panel);
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; z-index:1; }
+  thead th:first-child { z-index:3; background:var(--panel2); }
+  th { color:var(--muted); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; }
+  tbody tr:hover td { background:var(--chip); }
+  tbody tr:hover td:first-child { background:var(--panel2); }
   .pr { color:var(--pr); }
-  .up { color:var(--up); } .down { color:var(--down); }
-  .sw { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:middle; }
-  .msg { color:var(--muted); padding:36px 0; text-align:center; }
-  code { background:var(--chip); padding:1px 5px; border-radius:4px; font-size:12px; }
+  .up { color:var(--up); font-weight:600; } .down { color:var(--down); font-weight:600; }
+  .sw { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:9px; vertical-align:middle; box-shadow:0 0 0 2px color-mix(in srgb,currentColor 25%,transparent); }
+  .msg { color:var(--muted); padding:48px 0; text-align:center; }
+  code { background:var(--chip); padding:1px 6px; border-radius:5px; font-size:12px; }
   a { color:var(--accent); }
+  ::-webkit-scrollbar { width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:6px; border:2px solid transparent; background-clip:content-box; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--faint); background-clip:content-box; }
 </style>
 </head>
 <body>
-<header>
-  <h1>📊 SkiaSharp perf tracker</h1>
-  <div class="sub" id="subtitle">Loading…</div>
-</header>
-<div class="wrap" id="wrap">
-  <div class="row">
-    <div><div class="lab">Metric</div>
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">📊</div>
+    <div class="txt">
+      <h1>SkiaSharp perf tracker</h1>
+      <div class="sub" id="subtitle">Loading…</div>
+    </div>
+  </div>
+  <div class="toolbar">
+    <div class="ctl"><span class="lab">Metric</span>
       <div class="seg" id="metric">
         <button data-m="time" class="on">Time</button>
         <button data-m="alloc">Allocations</button>
         <button data-m="size">Size</button>
       </div>
     </div>
-    <div><div class="lab">Scale</div>
+    <div class="ctl"><span class="lab">Scale</span>
       <div class="seg" id="scale">
         <button data-s="absolute" class="on">Absolute</button>
         <button data-s="relative">Relative %</button>
@@ -96,19 +153,41 @@
       </div>
     </div>
   </div>
-  <div class="row">
-    <div class="picker"><div class="lab" id="group-label">OS</div>
-      <input class="filter" id="group-filter" placeholder="filter…" />
-      <div class="checklist" id="groups"></div>
+</div>
+<div class="layout" id="wrap">
+  <aside class="sidebar">
+    <div class="card">
+      <div class="card-h">
+        <h2 id="group-label">OS</h2>
+        <div class="actions"><button class="minibtn" id="group-all">All</button><button class="minibtn" id="group-none">None</button></div>
+      </div>
+      <div class="card-b">
+        <input class="filter" id="group-filter" placeholder="filter…" />
+        <div class="checklist" id="groups"></div>
+      </div>
     </div>
-    <div class="picker"><div class="lab" id="item-label">Benchmark</div>
-      <input class="filter" id="item-filter" placeholder="filter…" />
-      <div class="checklist" id="items"></div>
+    <div class="card">
+      <div class="card-h">
+        <h2 id="item-label">Benchmark</h2>
+        <div class="actions"><button class="minibtn" id="item-all">All</button><button class="minibtn" id="item-none">None</button></div>
+      </div>
+      <div class="card-b">
+        <input class="filter" id="item-filter" placeholder="filter…" />
+        <div class="checklist" id="items"></div>
+      </div>
     </div>
-  </div>
-  <div class="warn" id="warn" style="display:none"></div>
-  <div class="card"><h2 id="chart-title">Trend</h2><div id="chart"></div></div>
-  <div class="card"><h2>Latest comparison</h2><div id="table"></div></div>
+  </aside>
+  <section class="content">
+    <div class="card">
+      <div class="card-h"><h2 id="chart-title">Trend</h2><span class="count" id="chart-count"></span></div>
+      <div class="warn" id="warn" style="display:none"></div>
+      <div class="card-b"><div id="chart"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h2>Latest comparison</h2><span class="count" id="table-count"></span></div>
+      <div class="tbl-wrap" id="table"></div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -121,10 +200,12 @@
   // then the stable references. The nightly/CI trend is the chart line, not a baseline.
   const BASELINE_ROLES = ["latest"].concat(ROLE_ORDER);
   const OS_ORDER = ["Linux", "Windows", "macOS"];
-  const MAX_SERIES = 16;
-  // ECharts categorical palette (Okabe-Ito-ish, colour-blind friendly).
+  // Chart caps series for readability; the comparison table always shows the full selection.
+  const MAX_SERIES = 36;
+  // Categorical palette (extended, colour-blind-leaning) so many series stay distinguishable.
   const PALETTE = ["#58a6ff","#3fb950","#f0883e","#d2a8ff","#f85149","#56d4dd","#e3b341","#db61a2",
-                   "#a5d6ff","#7ee787","#ffab70","#e2c5ff"];
+                   "#a5d6ff","#7ee787","#ffab70","#e2c5ff","#ff9492","#6ee7d6","#f2cc60","#ffa8cc",
+                   "#79c0ff","#56d364","#e09b3a","#b083f0"];
 
   const METRICS = {
     time:  { label:"Time",        unit:"ns",    domain:"benchmarks", key:"meanNs" },
@@ -282,17 +363,29 @@
       }
       return ser;
     });
-    const yLabel = rel ? "% of curr-stable / first" : m.unit;
+    const yLabel = rel ? "% of curr-stable" : m.unit;
+    const many = sel.length > 8;
     const opt = {
       color: PALETTE,
-      grid: { left:64, right:26, top:16, bottom:64 },
-      tooltip: { trigger:"axis", valueFormatter:(v)=> rel ? (v==null?"·":v.toFixed(1)+"%") : fmtVal(v, m.unit) },
-      legend: { type:"scroll", top:0, right:0, left:0, textStyle:{ color:getCss("--text") } },
-      xAxis: { type:"time", axisLabel:{ color:getCss("--muted") }, axisLine:{ lineStyle:{ color:getCss("--border") } } },
-      yAxis: { type: state.scale==="log" ? "log" : "value", name:yLabel, nameTextStyle:{ color:getCss("--muted") },
+      grid: { left:70, right:24, top:22, bottom:66 },
+      tooltip: many
+        ? { trigger:"item", confine:true, backgroundColor:getCss("--panel2"), borderColor:getCss("--border"),
+            textStyle:{ color:getCss("--text") },
+            formatter:(p)=> `${esc(p.seriesName)}<br/><b>${rel?(p.value[1]==null?"·":p.value[1].toFixed(1)+"%"):fmtVal(p.value[1],m.unit)}</b>` }
+        : { trigger:"axis", confine:true, backgroundColor:getCss("--panel2"), borderColor:getCss("--border"),
+            textStyle:{ color:getCss("--text") },
+            valueFormatter:(v)=> rel ? (v==null?"·":v.toFixed(1)+"%") : fmtVal(v, m.unit) },
+      legend: { show:false },   // the comparison table is the legend (matching colour swatches)
+      xAxis: { type:"time", boundaryGap:false, axisLabel:{ color:getCss("--muted") },
+               axisLine:{ lineStyle:{ color:getCss("--border") } }, splitLine:{ show:false } },
+      yAxis: { type: state.scale==="log" ? "log" : "value", name:yLabel, nameGap:14,
+               nameTextStyle:{ color:getCss("--faint"), align:"left", fontSize:11 },
                axisLabel:{ color:getCss("--muted"), formatter:(v)=> rel ? v+"%" : fmtVal(v, m.unit) },
-               splitLine:{ lineStyle:{ color:getCss("--border"), opacity:.4 } } },
-      dataZoom: [ { type:"inside" }, { type:"slider", height:18, bottom:24 } ],
+               axisLine:{ show:false }, axisTick:{ show:false },
+               splitLine:{ lineStyle:{ color:getCss("--border"), opacity:.35 } } },
+      dataZoom: [ { type:"inside" }, { type:"slider", height:18, bottom:20, borderColor:"transparent",
+                   fillerColor:"rgba(90,162,255,.15)", handleStyle:{ color:getCss("--accent") },
+                   textStyle:{ color:getCss("--faint") } } ],
       series: echSeries,
     };
     state.chart.clear();
@@ -323,24 +416,26 @@
   function render() {
     const series = allSeries();
     renderPickers(series);
-    let sel = selected(series);
+    const sel = selected(series);
     const warn = document.getElementById("warn");
-    if (sel.length > MAX_SERIES) { warn.style.display=""; warn.textContent = `Showing ${MAX_SERIES} of ${sel.length} selected series — narrow your selection (or use Relative % to compare).`; sel = sel.slice(0, MAX_SERIES); }
+    const chartSel = sel.length > MAX_SERIES ? sel.slice(0, MAX_SERIES) : sel;
+    if (sel.length > MAX_SERIES) { warn.style.display=""; warn.textContent = `⚠ Chart shows the first ${MAX_SERIES} of ${sel.length} selected series — narrow the selection to compare. The table below lists all ${sel.length}.`; }
     else warn.style.display="none";
     document.getElementById("chart-title").textContent =
       METRICS[state.metric].label + (state.scale==="relative"?" — relative %":state.scale==="log"?" — log":"");
-    renderChart(sel);
+    document.getElementById("chart-count").textContent = chartSel.length ? `${chartSel.length} series` : "";
+    document.getElementById("table-count").textContent = sel.length ? `${sel.length} row${sel.length>1?"s":""}` : "";
+    renderChart(chartSel);
     renderTable(sel);
   }
 
   function resetSelection(series) {
     const groups = [], gs = new Set();
     for (const s of series) if (!gs.has(s.group)) { gs.add(s.group); groups.push(s.group); }
-    // all OS for benchmarks (nice cross-OS default); one package for size (avoid overload)
-    state.groups = new Set(state.metric === "size" ? groups.slice(0, 1) : groups);
+    state.groups = new Set(groups);              // all groups selected by default
     const items = [], is = new Set();
     for (const s of series) if (state.groups.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
-    state.items = new Set(items.slice(0, 1));
+    state.items = new Set(items);                // all items selected by default
     state.groupFilter = ""; const gf = document.getElementById("group-filter"); if (gf) gf.value = "";
     state.itemFilter = ""; const f = document.getElementById("item-filter"); if (f) f.value = "";
   }
@@ -370,6 +465,13 @@
       document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
     document.getElementById("group-filter").oninput = e => { state.groupFilter=e.target.value; renderPickers(allSeries()); };
     document.getElementById("item-filter").oninput = e => { state.itemFilter=e.target.value; renderPickers(allSeries()); };
+    const bulk = (kind, on) => { const uni = pickerUniverse(allSeries());
+      const list = kind==="group" ? uni.groups : uni.items; const set = kind==="group" ? state.groups : state.items;
+      set.clear(); if (on) list.forEach(x=>set.add(x)); render(); };
+    document.getElementById("group-all").onclick  = ()=>bulk("group", true);
+    document.getElementById("group-none").onclick = ()=>bulk("group", false);
+    document.getElementById("item-all").onclick   = ()=>bulk("item", true);
+    document.getElementById("item-none").onclick  = ()=>bulk("item", false);
     window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
     render();
   }
