@@ -25,7 +25,7 @@ Two kinds of data points ("columns") are collected:
 
 Only the Python standard library is used so the script runs on a clean runner.
 
-The history document is persisted between runs via the GitHub Actions cache; see
+The history document is persisted between runs on the ``aw-data`` branch; see
 ``.github/workflows/track-artifact-sizes.yml``.
 """
 
@@ -35,7 +35,6 @@ import argparse
 import datetime as dt
 import json
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -43,6 +42,9 @@ import time
 import urllib.error
 import urllib.request
 import zipfile
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
+from _common import http_get_json, latest_nightly, released_roles, semver_key  # noqa: E402
 
 # --------------------------------------------------------------------------- #
 # Constants
@@ -72,26 +74,6 @@ _NATIVE_EXTS = (".so", ".dylib", ".dll", ".a")
 
 def _log(msg: str) -> None:
     print(msg, flush=True)
-
-
-def http_get(url: str, *, retries: int = 4, timeout: int = 120) -> bytes:
-    """GET a URL returning the raw bytes, with simple exponential backoff."""
-    last_err: Exception | None = None
-    for attempt in range(1, retries + 1):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read()
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
-            last_err = err
-            wait = min(30, 2 ** attempt)
-            _log(f"  ! request failed ({err}); retry {attempt}/{retries} in {wait}s")
-            time.sleep(wait)
-    raise RuntimeError(f"GET failed after {retries} attempts: {url}\n  {last_err}")
-
-
-def http_get_json(url: str, **kwargs) -> dict:
-    return json.loads(http_get(url, **kwargs).decode("utf-8"))
 
 
 def http_download(url: str, dest: str, *, retries: int = 4, timeout: int = 600) -> None:
@@ -261,14 +243,6 @@ def enumerate_feed_packages(search_base: str) -> list[str]:
 # Nightly collection (EAP feed)
 # --------------------------------------------------------------------------- #
 
-def latest_nightly(versions: list[str]) -> str | None:
-    """Newest ``-nightly.*`` version (by SemVer) from a version list."""
-    nightlies = [v for v in versions if "-nightly." in v.lower()]
-    if not nightlies:
-        return None
-    return sorted(nightlies, key=_semver_key)[-1]
-
-
 def _nightly_family(package_id: str) -> str:
     """The version-line a package belongs to."""
     return "harfbuzz" if package_id.startswith("HarfBuzzSharp") else "skia"
@@ -324,62 +298,17 @@ def get_nuget_versions(package_id: str) -> list[str]:
     return get_versions(NUGET_FLATCONTAINER, package_id)
 
 
-_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
-
-
-def _semver_key(version: str) -> tuple:
-    """Return a sortable key for a NuGet SemVer2 version string.
-
-    Release versions sort after their pre-releases (per SemVer precedence).
-    """
-    m = _SEMVER_RE.match(version)
-    if not m:
-        return ((0, 0, 0, 0), (1,))
-    major, minor, patch, rev, pre = m.groups()
-    core = (int(major), int(minor), int(patch), int(rev or 0))
-    if pre is None:
-        # A release sorts after all of its pre-releases: flag 1 > flag 0.
-        return (core, (1,))
-    ids: list[tuple] = []
-    for part in pre.split("."):
-        if part.isdigit():
-            ids.append((0, int(part)))  # numeric identifiers compare numerically
-        else:
-            ids.append((1, part))       # ... and lower than alphanumeric ones
-    # flag 0 marks a pre-release; the nested tuple only ever compares within
-    # pre-releases, so its (int, int|str) items never clash across positions.
-    return (core, (0, tuple(ids)))
-
-
-def _is_stable(version: str) -> bool:
-    return "-" not in version
-
-
 def resolve_roles(versions: list[str]) -> dict[str, str | None]:
-    """Resolve the four reference roles from a package's version list."""
+    """Resolve the four reference roles from a package's version list.
+
+    ``latest`` is the newest version overall (incl. prereleases); the released stable
+    roles come from the shared ``released_roles``. Absent roles are ``None``.
+    """
     roles: dict[str, str | None] = {r: None for r in ROLES}
     if not versions:
         return roles
-
-    ordered = sorted(versions, key=_semver_key)
-    roles["latest"] = ordered[-1]
-
-    stables = [v for v in ordered if _is_stable(v)]
-    if not stables:
-        return roles
-
-    curr = stables[-1]
-    roles["curr-stable"] = curr
-    curr_major = _semver_key(curr)[0][0]
-
-    same_major = [v for v in stables if _semver_key(v)[0][0] == curr_major]
-    if len(same_major) >= 2:
-        roles["prev-stable"] = same_major[-2]
-
-    lower_major = [v for v in stables if _semver_key(v)[0][0] < curr_major]
-    if lower_major:
-        roles["prev-major"] = lower_major[-1]
-
+    roles["latest"] = sorted(versions, key=semver_key)[-1]
+    roles.update(released_roles(versions))
     return roles
 
 
