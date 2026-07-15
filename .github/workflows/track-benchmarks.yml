@@ -189,7 +189,10 @@ jobs:
         run: python3 .github/scripts/fetch-native.py Linux "$NIGHTLY"
 
       - name: Build SkiaSharp (managed, net10 only)
-        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -f net10.0
+        # Override AllTargetFrameworks so SkiaSharp builds only net10.0 — its default
+        # TFM set includes net10.0-android, which would demand the Android workload on
+        # the runner. A single net10.0 build is workload-free.
+        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0
 
       - name: Build source benchmarks
         run: dotnet build "$PROJECT" -c Release
