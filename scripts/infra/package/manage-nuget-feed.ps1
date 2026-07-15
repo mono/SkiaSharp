@@ -835,6 +835,7 @@ foreach ($item in $missing) {
 
     $attempt = 0
     $done = $false
+    $path = $null
     while (-not $done -and $attempt -lt $MaxPushRetries) {
         $attempt++
         try {
@@ -888,6 +889,13 @@ foreach ($item in $missing) {
             }
         }
     }
+
+    # Reclaim disk between packages. A single run can stream tens of GB of large
+    # native-asset packages (the CI feed's _NativeAssets* are ~23 MB each), and the
+    # runner has only ~14 GB free — so a successfully-processed .nupkg must NOT be
+    # left in the cache, or the disk fills and the runner process is killed mid-run.
+    # Safe: this only removes the local download, never anything already pushed.
+    if ($path -and (Test-Path $path)) { Remove-Item $path -Force -ErrorAction SilentlyContinue }
 }
 
 # --- Summary -------------------------------------------------------------------
