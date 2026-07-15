@@ -52,30 +52,28 @@ jobs:
 
       - name: Collect artifact sizes
         run: |
-          python3 .github/scripts/perf/sizes/track.py \
+          python3 scripts/infra/perf/sizes/track.py \
             --history artifact-sizes.json \
             --max-nightly 365 \
             --raw raw-sizes.json
 
       - name: Render Markdown summary (run summary)
         run: |
-          python3 .github/scripts/perf/sizes/render_md.py \
+          python3 scripts/infra/perf/sizes/render_md.py \
             --history artifact-sizes.json
 
       - name: Fetch benchmarks from data branch (for the unified dashboard)
         run: |
-          python3 .github/scripts/perf/fetch_branch_data.py \
-            "https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}" \
-            benchmarks branch-benchmarks
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/benchmarks/index.json"
+          curl -fsSL "$url" -o branch-benchmarks.json || echo "{}" > branch-benchmarks.json
 
       - name: Build interactive HTML dashboard
         # Sizes embedded fresh; benchmarks come from the branch -> the same unified page.
         run: |
-          mkdir -p out sizes-data
-          cp artifact-sizes.json sizes-data/
-          python3 .github/scripts/perf/render_html.py \
-            .github/scripts/perf/templates/dashboard.html out/dashboard.html \
-            branch-benchmarks sizes-data
+          mkdir -p out
+          python3 scripts/infra/perf/render_html.py \
+            scripts/infra/perf/templates/dashboard.html out/dashboard.html \
+            branch-benchmarks.json artifact-sizes.json
 
       - name: Upload HTML dashboard artifact
         if: always()
@@ -86,26 +84,16 @@ jobs:
           if-no-files-found: warn
 
       - name: Assemble data for the aw-data branch
-        # Persist only from main/schedule/dispatch on main — never from PRs. Stages the
-        # size history, the live dashboard page, a manifest, and today's raw per-file
-        # snapshot (gzipped, additive) under agent/sizes/ so persist-aw-data.yml commits
-        # them. The sentinel keeps the artifact's least-common-ancestor at aw-upload/,
-        # preserving the required agent/ prefix.
+        # Persist only from main/schedule/dispatch on main — never from PRs. Writes the
+        # size summary (index.json) and today's raw per-file snapshot (plain JSON,
+        # additive) under agent/sizes/. The sentinel keeps the artifact's
+        # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
         if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p aw-upload/agent/sizes/raw
           touch aw-upload/.artifact-root
-          cp artifact-sizes.json aw-upload/agent/sizes/
-          cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/sizes/dashboard.html
-          # Archive the full per-file snapshot, keyed by date (additive; kept forever).
-          if [ -f raw-sizes.json ]; then
-            gzip -c raw-sizes.json > "aw-upload/agent/sizes/raw/$(date -u +%F).json.gz"
-          fi
-          python3 - <<'PY'
-          import json, datetime
-          json.dump({"generatedUtc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                     "files": ["artifact-sizes.json"]}, open("aw-upload/agent/sizes/index.json", "w"), indent=2)
-          PY
+          cp artifact-sizes.json aw-upload/agent/sizes/index.json
+          [ -f raw-sizes.json ] && cp raw-sizes.json "aw-upload/agent/sizes/raw/$(date -u +%F).json" || true
 
       - name: Upload aw-data payload (agent)
         if: github.ref == 'refs/heads/main'

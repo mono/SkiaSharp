@@ -68,7 +68,7 @@ jobs:
       - name: Resolve version roles
         id: resolve
         run: |
-          versions=$(python3 .github/scripts/perf/benchmarks/resolve_versions.py)
+          versions=$(python3 scripts/infra/perf/benchmarks/resolve_versions.py)
           echo "versions=$versions" >> "$GITHUB_OUTPUT"
           # Only schedule the roles that actually resolved (a brand-new major may have no
           # prev-stable/prev-major yet), so no leg ever runs with an empty version.
@@ -102,16 +102,27 @@ jobs:
           echo "VERSION=${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}" >> "$GITHUB_ENV"
 
       - name: Restore history from data branch
-        # Read this leg's existing history from the aw-data branch (public raw URL, no
-        # auth). Missing (first run) is fine — the freshness check then decides to run.
+        # Extract this leg's slice from the merged summary on the aw-data branch (public
+        # raw URL, no auth). Missing (first run / new leg) is fine — the freshness check
+        # then decides to run.
         run: |
-          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/benchmarks/${HISTORY}"
-          if curl -fsSL "$url" -o "$HISTORY"; then
-            echo "restored $HISTORY from $DATA_BRANCH"
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/benchmarks/index.json"
+          if curl -fsSL "$url" -o merged-index.json; then
+            LEG="${{ runner.os }}|${{ matrix.role }}" python3 - <<'PY'
+          import json, os
+          leg = os.environ["LEG"]
+          idx = json.load(open("merged-index.json"))
+          doc = (idx.get("legs") or {}).get(leg)
+          if doc:
+              json.dump(doc, open(os.environ["HISTORY"], "w"))
+              print(f"restored slice {leg}")
+          else:
+              print(f"no slice {leg} in index.json (fresh start)")
+          PY
           else
-            echo "no existing $HISTORY on $DATA_BRANCH (fresh start)"
-            rm -f "$HISTORY"
+            echo "no index.json on $DATA_BRANCH (fresh start)"
           fi
+          [ -f "$HISTORY" ] || echo "(starting fresh)"
 
       - name: Install Linux native dependencies
         if: runner.os == 'Linux'
@@ -133,12 +144,12 @@ jobs:
 
       - name: Pin version
         run: |
-          python3 .github/scripts/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
+          python3 scripts/infra/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
 
       - name: Check freshness (skip unchanged baselines)
         id: check
         run: |
-          decision=$(python3 .github/scripts/perf/benchmarks/track.py --history "$HISTORY" --version "$VERSION" --check)
+          decision=$(python3 scripts/infra/perf/benchmarks/track.py --history "$HISTORY" --version "$VERSION" --check)
           echo "skip=$([ "$decision" = skip ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "$decision: ${{ runner.os }}/${{ matrix.role }} ($VERSION)"
 
@@ -150,7 +161,7 @@ jobs:
       - name: Record results
         if: steps.check.outputs.skip != 'true'
         run: |
-          python3 .github/scripts/perf/benchmarks/track.py \
+          python3 scripts/infra/perf/benchmarks/track.py \
             --history "$HISTORY" \
             --os "$LABEL" \
             --role "${{ matrix.role }}" \
@@ -323,7 +334,7 @@ jobs:
 
       - name: Record results (pr)
         run: |
-          python3 .github/scripts/perf/benchmarks/track.py \
+          python3 scripts/infra/perf/benchmarks/track.py \
             --history "benchmarks-${{ matrix.label }}-pr.json" \
             --os "${{ matrix.label }}" \
             --role pr \
@@ -362,21 +373,22 @@ jobs:
           pattern: rawbench-*
 
       - name: Render Markdown dashboard (run summary)
-        run: python3 .github/scripts/perf/benchmarks/render_md.py histories
+        run: python3 scripts/infra/perf/benchmarks/render_md.py histories
 
       - name: Fetch sizes from data branch (for the unified dashboard)
         run: |
-          python3 .github/scripts/perf/fetch_branch_data.py \
-            "https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}" \
-            sizes branch-sizes
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes/index.json"
+          curl -fsSL "$url" -o branch-sizes.json || echo "{}" > branch-sizes.json
 
       - name: Build interactive HTML dashboard
-        # Self-contained page: benchmarks (incl. the PR column) embedded fresh, sizes
+        # Self-contained snapshot: benchmarks (incl. the PR column) merged fresh, sizes
         # pulled from the branch -> the same unified perf dashboard, for download.
         run: |
           mkdir -p out
-          python3 .github/scripts/perf/render_html.py \
-            .github/scripts/perf/templates/dashboard.html out/dashboard.html histories branch-sizes
+          python3 scripts/infra/perf/merge_summaries.py histories out/benchmarks.json
+          python3 scripts/infra/perf/render_html.py \
+            scripts/infra/perf/templates/dashboard.html out/dashboard.html \
+            out/benchmarks.json branch-sizes.json
 
       - name: Upload HTML dashboard artifact
         if: always()
@@ -387,40 +399,26 @@ jobs:
           if-no-files-found: warn
 
       - name: Assemble data for the aw-data branch
-        # Only persist from main/schedule/dispatch on main — never from PRs. Stages the
-        # persisted set (baseline + nightly histories, NOT the ephemeral pr files), the
-        # live dashboard page, and a manifest under agent/benchmarks/ so persist-aw-data.yml
-        # commits them to the aw-data branch. The sentinel file keeps the artifact's
-        # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
+        # Persist only from main/schedule/dispatch on main — never from PRs. Writes the
+        # merged summary (index.json, WITHOUT the ephemeral pr legs) and archives today's
+        # raw BDN reports (plain JSON, additive) under raw/<date>/<OS>-<role>/. The
+        # sentinel keeps the artifact's least-common-ancestor at aw-upload/, preserving
+        # the required agent/ prefix.
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p aw-upload/agent/benchmarks
           touch aw-upload/.artifact-root
-          for f in histories/benchmarks-*.json; do
-            case "$f" in *-pr.json) continue ;; esac
-            cp "$f" aw-upload/agent/benchmarks/
-          done
-          cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/benchmarks/dashboard.html
-          # Archive the full raw BDN reports per day (additive; gzipped) under
-          # raw/<date>/<OS>-<role>/, so the summary can be regenerated/enriched later.
+          python3 scripts/infra/perf/merge_summaries.py histories \
+            aw-upload/agent/benchmarks/index.json --drop-role pr
           date="$(date -u +%F)"
           for d in rawreports/rawbench-*; do
             [ -d "$d" ] || continue
             leg="${d##*/rawbench-}"
             mkdir -p "aw-upload/agent/benchmarks/raw/$date/$leg"
             for f in "$d"/*.json; do
-              [ -f "$f" ] || continue
-              gzip -c "$f" > "aw-upload/agent/benchmarks/raw/$date/$leg/$(basename "$f").gz"
+              [ -f "$f" ] && cp "$f" "aw-upload/agent/benchmarks/raw/$date/$leg/"
             done
           done
-          python3 - <<'PY'
-          import glob, os, json, datetime
-          d = "aw-upload/agent/benchmarks"
-          files = sorted(os.path.basename(p) for p in glob.glob(f"{d}/benchmarks-*.json"))
-          json.dump({"generatedUtc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                     "files": files}, open(f"{d}/index.json", "w"), indent=2)
-          print("persisting:", files)
-          PY
 
       - name: Upload aw-data payload (agent)
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

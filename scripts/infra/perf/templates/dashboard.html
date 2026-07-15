@@ -16,11 +16,10 @@
 
   Charting uses ECharts from a CDN (dynamic zoom / legend / tooltips). The data is
   embedded so the file is self-contained, but rendering the chart needs internet to
-  load ECharts. Back-compat: a legacy `window.__BENCH_DATA__` blob is treated as
-  `{benchmarks: <blob>}`.
+  load ECharts.
 
-  Data producers: .github/scripts/perf/benchmarks/track.py (time+alloc) and
-  .github/scripts/perf/sizes/track.py (size). See the track-benchmarks /
+  Data producers: scripts/infra/perf/benchmarks/track.py (time+alloc) and
+  scripts/infra/perf/sizes/track.py (size). See the track-benchmarks /
   track-artifact-sizes workflows.
 -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
@@ -150,9 +149,11 @@
     return h;
   }
   const latestDay = doc => (doc && doc.days && doc.days.length) ? doc.days[doc.days.length-1] : null;
+  // The benchmark data is the merged {legs:{...}} document (benchmarks/index.json).
+  const benchLegs = () => (state.data.benchmarks && state.data.benchmarks.legs) || {};
 
   function seriesBenchmarks(key, unit) {
-    const h = normBench(state.data.benchmarks || {});
+    const h = normBench(benchLegs());
     const out = [];
     const oses = OS_ORDER.filter(o=>h[o]).concat(Object.keys(h).filter(o=>!OS_ORDER.includes(o)).sort());
     for (const os of oses) {
@@ -175,7 +176,7 @@
   }
 
   function seriesSizes() {
-    const doc = (state.data.sizes||{})["artifact-sizes.json"];
+    const doc = state.data.sizes;
     if (!doc) return [];
     const nightly = doc.nightly || [];
     const roles = doc.roles || {};
@@ -342,17 +343,18 @@
   }
 
   function boot(data) {
-    state.data = { benchmarks:data.benchmarks||{}, sizes:data.sizes||{} };
-    const hasBench = Object.keys(state.data.benchmarks).length>0;
-    const hasSize = !!(state.data.sizes && state.data.sizes["artifact-sizes.json"]);
+    state.data = { benchmarks: data.benchmarks || {}, sizes: data.sizes || null };
+    const legs = benchLegs();
+    const hasBench = Object.keys(legs).length > 0;
+    const hasSize = !!(state.data.sizes && (state.data.sizes.nightly || []).length);
     if (!hasBench && !hasSize) { document.getElementById("subtitle").textContent="No data found.";
       document.getElementById("wrap").innerHTML = `<div class="msg">No perf data available yet.</div>`; return; }
     if (!hasBench && hasSize) { state.metric="size"; document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m==="size")); }
 
     // subtitle
-    const h = normBench(state.data.benchmarks);
+    const h = normBench(legs);
     const parts = Object.keys(h).map(o=>{ const d=latestDay(h[o].nightly); return d?`${o} <code>${d.version}</code>`:null; }).filter(Boolean);
-    const sz = hasSize ? (state.data.sizes["artifact-sizes.json"].nightly.slice(-1)[0]||{}).version : null;
+    const sz = hasSize ? (state.data.sizes.nightly.slice(-1)[0]||{}).version : null;
     document.getElementById("subtitle").innerHTML =
       (parts.length?"Nightly "+parts.join(" · "):"") + (sz?`  ·  sizes <code>${sz}</code>`:"") || "Ready.";
 
@@ -371,21 +373,18 @@
 
   // ---------- data loading ----------
   async function fetchJson(url){ try{ const r=await fetch(url,{cache:"no-cache"}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
-  async function fetchDir(base){ // returns {file: doc} using index.json manifest
-    const idx = await fetchJson(base+"index.json"); if(!idx||!idx.files) return {};
-    const out={}; await Promise.all(idx.files.map(async f=>{ const d=await fetchJson(base+f); if(d) out[f]=d; })); return out;
-  }
   async function fetchLive() {
     const base = new URLSearchParams(location.search).get("data") || RAW_BASE;
     const b = base.endsWith("/")?base:base+"/";
     document.getElementById("subtitle").textContent="Loading live data…";
-    const [benchmarks, sizes] = await Promise.all([ fetchDir(b+"benchmarks/"), fetchDir(b+"sizes/") ]);
-    boot({ benchmarks, sizes });
+    // Single merged file per dimension on the aw-data branch.
+    const [benchmarks, sizes] = await Promise.all([
+      fetchJson(b+"benchmarks/index.json"), fetchJson(b+"sizes/index.json") ]);
+    boot({ benchmarks: benchmarks || {}, sizes });
   }
 
   const start = () => {
     if (window.__PERF_DATA__) boot(window.__PERF_DATA__);
-    else if (window.__BENCH_DATA__) boot({ benchmarks:window.__BENCH_DATA__, sizes:{} }); // legacy
     else fetchLive();
   };
   if (document.readyState==="loading") document.addEventListener("DOMContentLoaded", start); else start();

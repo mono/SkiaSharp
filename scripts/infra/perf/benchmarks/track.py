@@ -39,7 +39,7 @@ SCHEMA_VERSION = 1
 MAX_DAYS = 365  # days of history retained on disk (dashboard zooms across all of it)
 
 # This tracker is specific to the tracking projects, so its locations are constants.
-# From .github/scripts/perf/benchmarks/track.py, the repo root is parents[4].
+# From scripts/infra/perf/benchmarks/track.py, the repo root is parents[4].
 BENCH_ROOT = pathlib.Path(__file__).resolve().parents[4] / "benchmarks"
 PROJECT_DIR = BENCH_ROOT / "SkiaSharp.Benchmarks.Tracking"
 SOURCE_PROJECT_DIR = BENCH_ROOT / "SkiaSharp.Benchmarks.Tracking.Source"
