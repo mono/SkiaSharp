@@ -197,25 +197,52 @@ jobs:
       # Skip the emscripten activation git-sync-deps does by default — the desktop
       # native builds don't need it (Linux runs in Docker and is unaffected).
       GIT_SYNC_DEPS_SKIP_EMSDK: "1"
-      # Flip to "true" for the real native/C-API PR signal; keep "false" for fast
-      # iteration (prebuilt natives + managed-only source build).
-      PR_NATIVE_SOURCE_BUILD: "false"
+      # How to obtain the native for the PR column:
+      #   auto  (default) — build from source ONLY if the native inputs changed vs main
+      #          (externals/skia SHA or native scripts, per scripts/infra/caching/repo-deps.py);
+      #          otherwise download the prebuilt nightly natives. Fast when native is unchanged.
+      #   true   — always build from source.  false — always download.
+      PR_NATIVE_SOURCE_BUILD: "auto"
     steps:
-      # Full native build needs the externals/skia submodule; fast mode does not.
-      - name: Checkout (with submodules for native source build)
-        if: env.PR_NATIVE_SOURCE_BUILD == 'true'
+      # Always check out the superproject without submodules (fast); the native submodules
+      # are initialized later only when we decide to build from source.
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Checkout (fast, no submodules)
-        if: env.PR_NATIVE_SOURCE_BUILD != 'true'
-        uses: actions/checkout@v4
+
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
+      - name: Decide native build mode
+        # In "auto" mode, compare the repo-deps.py native cache-key (native sources +
+        # externals/skia + depot_tools submodule SHAs) at HEAD vs main. Equal keys mean the
+        # native the download provides is byte-identical to what a source build would produce,
+        # so we skip the (expensive) native build. Reads submodule SHAs from git — no submodule
+        # checkout needed here.
+        run: |
+          mode="$PR_NATIVE_SOURCE_BUILD"
+          build=false
+          if [ "$mode" = "true" ]; then
+            build=true
+          elif [ "$mode" = "auto" ]; then
+            git fetch --no-tags --depth=1 origin main
+            keyhead=$(python3 scripts/infra/caching/repo-deps.py cache-key --job native --name k | sed -n 's/^Key:[[:space:]]*//p')
+            git worktree add -q --detach "$RUNNER_TEMP/native-base" FETCH_HEAD
+            keybase=$(cd "$RUNNER_TEMP/native-base" && python3 scripts/infra/caching/repo-deps.py cache-key --job native --name k | sed -n 's/^Key:[[:space:]]*//p')
+            git worktree remove --force "$RUNNER_TEMP/native-base"
+            echo "native key HEAD: $keyhead"
+            echo "native key main: $keybase"
+            [ -n "$keybase" ] && [ "$keyhead" != "$keybase" ] && build=true
+          fi
+          echo "NATIVE_BUILD=$build" >> "$GITHUB_ENV"
+          echo "native source build: $build (mode=$mode)"
+
+      - name: Initialize native submodules
+        if: env.NATIVE_BUILD == 'true'
+        run: git submodule update --init --recursive externals/skia externals/depot_tools
 
       - name: Label this run
         env:
@@ -228,8 +255,8 @@ jobs:
             echo "PR_LABEL=$REF_NAME" >> "$GITHUB_ENV"
           fi
 
-      - name: Download prebuilt natives (fast mode)
-        if: env.PR_NATIVE_SOURCE_BUILD != 'true'
+      - name: Download prebuilt natives (fast path)
+        if: env.NATIVE_BUILD != 'true'
         # C#-only bootstrap: pulls the current-milestone (nightly) natives into
         # output/native so the managed build + benchmarks can run without a native compile.
         run: |
@@ -237,7 +264,7 @@ jobs:
           dotnet cake --target=externals-download
 
       - name: Build libSkiaSharp from source (Linux x64, Docker)
-        if: runner.os == 'Linux' && env.PR_NATIVE_SOURCE_BUILD == 'true'
+        if: runner.os == 'Linux' && env.NATIVE_BUILD == 'true'
         # Docker + cake, same pattern as build-site.yml's WASM build. Produces
         # output/native/linux/x64/libSkiaSharp.so from THIS source.
         run: |
@@ -246,7 +273,7 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" output
 
       - name: Build libSkiaSharp from source (macOS)
-        if: runner.os == 'macOS' && env.PR_NATIVE_SOURCE_BUILD == 'true'
+        if: runner.os == 'macOS' && env.NATIVE_BUILD == 'true'
         # Xcode (preinstalled) + Ninja. Ad-hoc codesigned; no identity needed.
         # Produces output/native/osx/libSkiaSharp.dylib for the host arch.
         run: |
@@ -256,7 +283,7 @@ jobs:
           dotnet cake --target=externals-macos --configuration=Release --arch=$arch
 
       - name: Build libSkiaSharp from source (Windows x64)
-        if: runner.os == 'Windows' && env.PR_NATIVE_SOURCE_BUILD == 'true'
+        if: runner.os == 'Windows' && env.NATIVE_BUILD == 'true'
         shell: pwsh
         # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
         # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
