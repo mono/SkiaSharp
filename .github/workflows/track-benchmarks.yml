@@ -5,13 +5,13 @@ name: Track - Benchmarks
 #   * curr-stable    \
 #   * prev-stable     >  released baselines, resolved from nuget.org (size-tracker roles)
 #   * prev-major     /
-#   * pr             -> a FULL source build (native + managed) of THIS checkout
+#   * pr             -> a FULL source build of THIS checkout (PR / manual dispatch only)
 #
 # History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
 # indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg
 # reads its existing history from that branch, appends today's point, and uploads it as
-# an artifact; the `report` job aggregates everything, and — only on main/schedule — the
-# `persist-aw-data.yml` workflow commits the updated JSON back to the branch.
+# an artifact; the `report` job aggregates everything, and — only for runs on main (the
+# nightly schedule) — the `persist-aw-data.yml` workflow commits the updated JSON back.
 #
 # A leg is SKIPPED when its "fingerprint" (pinned version + hash of the benchmark
 # source) matches the last recorded one — released baselines don't change unless a new
@@ -20,10 +20,11 @@ name: Track - Benchmarks
 #
 # Outputs of the report job:
 #   * a Markdown dashboard in the run summary (time + allocations, per OS);
-#   * `benchmark-dashboard` artifact: a self-contained interactive HTML page with the
-#     data embedded — download it (incl. from a PR run) and open in a browser;
-#   * on main/schedule, the `agent` artifact that persist-aw-data commits to `aw-data`,
-#     which the live dashboard page (aw-data branch: benchmarks/dashboard.html) reads.
+#   * `perf-dashboard` artifact: a self-contained interactive HTML page (time + alloc +
+#     size) with the data embedded — download it (incl. from any PR run) and open it;
+#   * the `agent` artifact (uploaded on every run for preview) that persist-aw-data
+#     commits to `aw-data` — but only for runs on main — as benchmarks/index.json, which
+#     the live dashboard template loads directly.
 #
 # Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
 # Released baselines whose exact version is not on dotnet-public are restored by
@@ -35,8 +36,6 @@ on:
     - cron: "0 8 * * *"  # Daily at 08:00 UTC (offset from the 07:00 size tracker)
   workflow_dispatch:
   pull_request:
-  push:
-    branches: [main]
 
 permissions:
   contents: read
@@ -198,7 +197,13 @@ jobs:
   # PR/branch) and is NOT persisted to the data branch.
   benchmark-source:
     needs: resolve
-    if: github.repository_owner == 'mono'
+    # The ⭐ source column is only meaningful for pre-merge comparison, and it is dropped
+    # from persisted history (--drop-role pr), so run it only on PRs (+ manual dispatch) —
+    # never on the nightly schedule, where the published "nightly" baseline already tracks
+    # main's source one build behind.
+    if: >
+      github.repository_owner == 'mono' &&
+      (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
     strategy:
       fail-fast: false
       matrix:
