@@ -1,11 +1,13 @@
 name: Track - Benchmarks
 
-# Daily BenchmarkDotNet run on Linux/Windows/macOS, per version role:
-#   * nightly       -> newest -nightly.* from the EAP feed (daily trend)
+# Daily BenchmarkDotNet run on Linux/Windows/macOS, per version role. Roles split into
+# RELEASED (on nuget.org, must not regress) and UNRELEASED (CI-only):
+#   * nightly       -> newest -nightly.* from the EAP/CI feed (unreleased; daily trend)
+#   * latest        -> newest on nuget.org incl. preview/rc (released; less vital, still shipped)
 #   * curr-stable    \
-#   * prev-stable     >  released baselines, resolved from nuget.org (size-tracker roles)
+#   * prev-stable     >  released stable baselines, resolved from nuget.org
 #   * prev-major     /
-#   * pr             -> a FULL source build of THIS checkout (PR / manual dispatch only)
+#   * pr             -> a FULL source build of THIS checkout (unreleased; PR / dispatch only)
 #
 # History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
 # indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg

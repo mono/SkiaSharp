@@ -126,7 +126,15 @@ def nuget_versions(package: str = "SkiaSharp") -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
-# Version-role resolution (turn a version list / package into tracked roles)
+# Version-role resolution
+#
+# Roles split into RELEASED (published to nuget.org) and UNRELEASED (never shipped):
+#   released:    latest (newest overall, may be a preview/rc) + curr-stable +
+#                prev-stable + prev-major
+#   unreleased:  nightly (EAP/CI daily build)  and  pr (a branch source build)
+# `latest` is a preview so it is less vital than the stables (which can still be patched),
+# but it is a *shipped* release we must not regress. Only `pr` is ephemeral / per-branch
+# (dropped from persisted history); `nightly` is unreleased but tracked as the CI trend.
 # --------------------------------------------------------------------------- #
 
 def latest_nightly(versions: list[str]) -> str | None:
@@ -135,13 +143,13 @@ def latest_nightly(versions: list[str]) -> str | None:
     return sorted(nightlies, key=semver_key)[-1] if nightlies else None
 
 
-def released_roles(versions: list[str]) -> dict[str, str]:
-    """The released *stable* reference roles present in a version list.
+def stable_roles(versions: list[str]) -> dict[str, str]:
+    """The *stable* released reference roles present in a version list.
 
     Returns only the roles that exist (a brand-new major may have no prev-stable /
     prev-major): ``curr-stable`` (newest stable), ``prev-stable`` (2nd-newest in the
     current major), ``prev-major`` (newest stable of a lower major). Prereleases are
-    excluded — for the newest overall version (incl. preview/rc) use ``nuget_roles``.
+    excluded — for all released versions incl. the newest preview/rc use ``released_roles``.
     """
     stables = sorted((v for v in versions if is_stable(v)), key=semver_key)
     roles: dict[str, str] = {}
@@ -159,31 +167,32 @@ def released_roles(versions: list[str]) -> dict[str, str]:
     return roles
 
 
-def nuget_roles(versions: list[str]) -> dict[str, str]:
-    """Roles derivable from a single package's version *list*.
+def released_roles(versions: list[str]) -> dict[str, str]:
+    """All *released* roles from a package's nuget.org version list.
 
-    ``latest`` is the newest version overall (incl. preview / rc); ``curr-stable`` /
-    ``prev-stable`` / ``prev-major`` are the released stable baselines. Only the roles
-    that actually exist are returned.
+    Everything on nuget.org counts as released: ``latest`` (the newest version overall,
+    which may be a preview/rc) plus the stable baselines from ``stable_roles``
+    (``curr-stable`` / ``prev-stable`` / ``prev-major``). Only ``nightly`` (EAP/CI) and the
+    per-branch ``pr`` build are unreleased. Only the roles that actually exist are returned.
     """
     if not versions:
         return {}
     roles = {"latest": sorted(versions, key=semver_key)[-1]}
-    roles.update(released_roles(versions))
+    roles.update(stable_roles(versions))
     return roles
 
 
 def resolve_roles(package: str = "SkiaSharp") -> dict[str, str]:
     """Resolve the version roles to track for ``package``.
 
-    ``nightly`` is the newest ``-nightly.*`` on the EAP/CI feed; ``latest`` is the newest
-    version on nuget.org (incl. preview/rc); ``curr-stable`` / ``prev-stable`` /
-    ``prev-major`` are the released stable baselines from nuget.org. Only the roles that
-    actually exist are returned (a brand-new major may lack prev-*).
+    ``nightly`` is the newest ``-nightly.*`` on the EAP/CI feed (unreleased); the released
+    roles come from nuget.org via ``released_roles`` — ``latest`` (newest, incl. preview/rc)
+    plus ``curr-stable`` / ``prev-stable`` / ``prev-major``. Only roles that exist are
+    returned (a brand-new major may lack prev-*).
     """
     nightly = latest_nightly(eap_versions(package))
     if not nightly:
         raise RuntimeError("No -nightly.* versions on the EAP feed")
     roles = {"nightly": nightly}
-    roles.update(nuget_roles(nuget_versions(package)))
+    roles.update(released_roles(nuget_versions(package)))
     return roles

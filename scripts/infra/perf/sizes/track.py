@@ -50,8 +50,8 @@ from _common import (  # noqa: E402
     feed_versions,
     http_get_json,
     latest_nightly,
-    nuget_roles,
     pick_resource,
+    released_roles,
 )
 
 # --------------------------------------------------------------------------- #
@@ -287,10 +287,10 @@ def resolve_roles(versions: list[str]) -> dict[str, str | None]:
     """Resolve the four reference roles from a package's version list.
 
     ``latest`` is the newest version overall (incl. prereleases); the released stable
-    roles come from the shared ``nuget_roles``. Absent roles are ``None``.
+    roles come from the shared ``released_roles``. Absent roles are ``None``.
     """
     roles: dict[str, str | None] = {r: None for r in ROLES}
-    roles.update(nuget_roles(versions))
+    roles.update(released_roles(versions))
     return roles
 
 
