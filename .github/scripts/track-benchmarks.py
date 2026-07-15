@@ -38,9 +38,16 @@ import sys
 SCHEMA_VERSION = 1
 MAX_DAYS = 60  # days of history retained on disk (dashboard displays fewer)
 
-# This tracker is specific to the tracking project, so its locations are constants.
-PROJECT_DIR = pathlib.Path(__file__).resolve().parents[2] / "benchmarks" / "SkiaSharp.Benchmarks.Tracking"
-RESULTS_DIR = PROJECT_DIR / "BenchmarkDotNet.Artifacts" / "results"
+# This tracker is specific to the tracking projects, so its locations are constants.
+BENCH_ROOT = pathlib.Path(__file__).resolve().parents[2] / "benchmarks"
+PROJECT_DIR = BENCH_ROOT / "SkiaSharp.Benchmarks.Tracking"
+SOURCE_PROJECT_DIR = BENCH_ROOT / "SkiaSharp.Benchmarks.Tracking.Source"
+
+
+def _results_dir(role: str) -> pathlib.Path:
+    # The "pr" role runs the source-build project, which writes to its own artifacts dir.
+    base = SOURCE_PROJECT_DIR if role == "pr" else PROJECT_DIR
+    return base / "BenchmarkDotNet.Artifacts" / "results"
 
 
 def _source_hash() -> str:
@@ -204,7 +211,7 @@ def main(argv: list[str]) -> int:
         return 0
 
     _log(f"Collecting benchmark results for {args.os}...")
-    benchmarks = parse_results(str(RESULTS_DIR))
+    benchmarks = parse_results(str(_results_dir(args.role)))
     if not benchmarks:
         _log("  no benchmarks parsed; leaving history unchanged")
         return 1

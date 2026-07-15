@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    SOURCE-mode sibling of SkiaSharp.Benchmarks.Tracking. It runs the EXACT same
+    benchmark classes (linked below, same namespace so the FullName keys match the
+    package project) but against SkiaSharp built from THIS checkout instead of a
+    published package. That's what powers the "pr" column: it reflects the managed
+    changes on this branch.
+
+    It lives under benchmarks/ so it inherits the repo build props (TFMCurrent, etc.)
+    and, like benchmarks/SkiaSharp.Benchmarks, pulls native binaries from
+    output/native via IncludeNativeAssets.SkiaSharp.targets (populated in CI from the
+    nightly package, or a source build when available).
+  -->
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(TFMCurrent)</TargetFramework>
+    <RootNamespace>SkiaSharp.Benchmarks.Tracking</RootNamespace>
+    <AssemblyName>SkiaSharp.Benchmarks.Tracking.Source</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <!-- The classic SKPath API is [Obsolete] in 4.x; suppress since a benchmark uses it. -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <!-- HEAD is always the newest SkiaSharp, so the newest-API branch of every #if. -->
+    <DefineConstants>$(DefineConstants);SKIASHARP_3_OR_GREATER;SKIASHARP_4_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <!-- Share the exact benchmark classes with the package-mode project. -->
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Benchmarks.Tracking\Benchmarks\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+
+</Project>

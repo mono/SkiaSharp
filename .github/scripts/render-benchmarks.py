@@ -127,6 +127,11 @@ class Column:
 
 def build_columns(roles):
     cols = []
+    # "pr" (this branch, source build) goes first when present.
+    pr = roles.get("pr")
+    if pr:
+        label = (latest_day(pr) or {}).get("version", "pr")
+        cols.append(Column(("pr", None), f"⭐ this PR<br>`{label}`", "role"))
     nightly = roles.get("nightly")
     for day in reversed((nightly or {}).get("days", [])[-DISPLAY_DAYS:]):
         cols.append(Column(("nightly", day["date"]), f"🌙 {day['date'][5:]}", "nightly"))
@@ -149,7 +154,7 @@ def column_value(roles, col, name):
 
 def benchmark_universe(roles):
     names = set()
-    for role in ("nightly",) + ROLE_ORDER:
+    for role in ("pr", "nightly") + ROLE_ORDER:
         names.update((latest_day(roles.get(role)) or {}).get("benchmarks", {}).keys())
     return sorted(names)
 
@@ -173,10 +178,13 @@ def render_header(histories, oses):
     if not rows:
         return lines + ["_No data collected yet._", ""]
     lines += ["| OS | nightly | released baselines |", "|:--|:--|:--|", *rows, "",
-              f"> Columns run newest → oldest: 🌙 last {DISPLAY_DAYS} nightlies from the "
-              f"[EAP feed](https://aka.ms/skiasharp-eap/index.json), then released baselines "
-              f"(from nuget.org). Each dot compares a cell to the older column on its right: "
-              f"{TREND_FASTER} faster · {TREND_SLOWER} slower; < {TREND_PCT:.0%} is noise.", ""]
+              f"> Columns run newest → oldest. When present, **⭐ this PR** (SkiaSharp "
+              f"built from the branch) is leftmost, then 🌙 the last {DISPLAY_DAYS} nightlies "
+              f"from the [EAP feed](https://aka.ms/skiasharp-eap/index.json), then released "
+              f"baselines (from nuget.org). Each dot compares a cell to the older column on its "
+              f"right: {TREND_FASTER} faster · {TREND_SLOWER} slower; < {TREND_PCT:.0%} is noise. "
+              f"The ⭐ column reflects the branch's **managed** changes; native C++ changes are "
+              f"not rebuilt here.", ""]
     return lines
 
 
