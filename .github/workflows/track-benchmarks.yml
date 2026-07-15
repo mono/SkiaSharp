@@ -221,18 +221,24 @@ jobs:
         shell: pwsh
         # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
         # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
+        # We invoke the native cake with target=libSkiaSharp (not externals-windows,
+        # which also builds libHarfBuzzSharp via a vcxproj pinned to an older Windows
+        # SDK that isn't on the runner). We only need libSkiaSharp here.
         run: |
           dotnet tool restore
           ./scripts/infra/native/shared/install-ninja.ps1
           ./scripts/infra/native/windows/select-vs.ps1
           ./scripts/infra/native/windows/install-7zip.ps1
           ./scripts/infra/native/windows/install-llvm.ps1
-          dotnet cake --target=externals-windows --configuration=Release --buildarch=x64
+          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64
 
       - name: Build SkiaSharp (managed, net10 only)
-        # Override AllTargetFrameworks so SkiaSharp builds only net10.0 — its default
-        # TFM set includes platform TFMs (android/ios/windows) that would demand workloads.
-        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0
+        # AllTargetFrameworks=net10.0 drops SkiaSharp's platform TFMs (android/ios/...).
+        # BuildingInsideVisualStudio=true drops the SkiaSharp.NativeAssets.* project
+        # references, which on non-Linux hosts add -macos TFMs that would demand the
+        # 'macos' workload. We only need the managed SkiaSharp.dll here (native comes
+        # from output/native), so excluding those packaging projects is correct.
+        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
 
       - name: Build source benchmarks
         run: dotnet build "$PROJECT" -c Release
