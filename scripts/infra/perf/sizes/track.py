@@ -44,21 +44,21 @@ import urllib.request
 import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
-from _common import http_get_json, latest_nightly, released_roles, semver_key  # noqa: E402
+from _common import (  # noqa: E402
+    EAP_INDEX_URL,
+    NUGET_FLATCONTAINER,
+    feed_versions,
+    http_get_json,
+    latest_nightly,
+    nuget_roles,
+    pick_resource,
+)
 
 # --------------------------------------------------------------------------- #
 # Constants
 # --------------------------------------------------------------------------- #
 
 SCHEMA_VERSION = 1
-
-# The official SkiaSharp Early Access Preview (EAP) feed. This aka.ms link
-# redirects to a standard NuGet v3 feed on Azure DevOps Artifacts (anonymous)
-# and hosts the daily ``-nightly.*`` builds we sample.
-EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"
-
-# NuGet.org flat container, used for the released reference versions.
-NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"
 
 ROLES = ("prev-major", "prev-stable", "curr-stable", "latest")
 
@@ -181,33 +181,12 @@ def resolve_eap_feed() -> dict:
 
     Returns ``{"flat": <PackageBaseAddress>, "search": <SearchQueryService>}``.
     """
-    index = http_get_json(EAP_INDEX_URL)
-    resources = index.get("resources", [])
-    flat = _find_resource(resources, "PackageBaseAddress/")
-    search = _find_resource(resources, "SearchQueryService")
+    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
+    flat = pick_resource(resources, "PackageBaseAddress/")
+    search = pick_resource(resources, "SearchQueryService")
     if not flat:
         raise RuntimeError("EAP feed index has no PackageBaseAddress resource.")
     return {"flat": flat, "search": search}
-
-
-def _find_resource(resources: list[dict], type_prefix: str) -> str | None:
-    for res in resources:
-        if str(res.get("@type", "")).startswith(type_prefix):
-            return res["@id"]
-    return None
-
-
-def get_versions(flat_base: str, package_id: str) -> list[str]:
-    """Return the versions of a package from a flat-container base URL.
-
-    The returned list is not guaranteed to be sorted (Azure DevOps feeds are
-    not), so callers must sort with ``_semver_key`` when order matters.
-    """
-    url = f"{flat_base.rstrip('/')}/{package_id.lower()}/index.json"
-    try:
-        return list(http_get_json(url).get("versions", []))
-    except RuntimeError:
-        return []
 
 
 def download_nupkg(flat_base: str, package_id: str, version: str, work_dir: str) -> str | None:
@@ -268,8 +247,8 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
         raise RuntimeError("Could not enumerate any packages from the EAP feed.")
 
     headlines = {
-        "skia": latest_nightly(get_versions(flat, "SkiaSharp")),
-        "harfbuzz": latest_nightly(get_versions(flat, "HarfBuzzSharp")),
+        "skia": latest_nightly(feed_versions(flat, "SkiaSharp")),
+        "harfbuzz": latest_nightly(feed_versions(flat, "HarfBuzzSharp")),
     }
     _log(f"  headline nightly: SkiaSharp={headlines['skia']} "
          f"HarfBuzzSharp={headlines['harfbuzz']}")
@@ -279,7 +258,7 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
         target = headlines[_nightly_family(pkg_id)]
         if not target:
             continue
-        versions = get_versions(flat, pkg_id)
+        versions = feed_versions(flat, pkg_id)
         if target not in versions:
             continue  # package does not ship this nightly (deprecated / not built)
         dest = download_nupkg(flat, pkg_id, target, work_dir)
@@ -301,20 +280,17 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
 # --------------------------------------------------------------------------- #
 
 def get_nuget_versions(package_id: str) -> list[str]:
-    return get_versions(NUGET_FLATCONTAINER, package_id)
+    return feed_versions(NUGET_FLATCONTAINER, package_id)
 
 
 def resolve_roles(versions: list[str]) -> dict[str, str | None]:
     """Resolve the four reference roles from a package's version list.
 
     ``latest`` is the newest version overall (incl. prereleases); the released stable
-    roles come from the shared ``released_roles``. Absent roles are ``None``.
+    roles come from the shared ``nuget_roles``. Absent roles are ``None``.
     """
     roles: dict[str, str | None] = {r: None for r in ROLES}
-    if not versions:
-        return roles
-    roles["latest"] = sorted(versions, key=semver_key)[-1]
-    roles.update(released_roles(versions))
+    roles.update(nuget_roles(versions))
     return roles
 
 

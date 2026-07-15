@@ -117,6 +117,9 @@
   const RAW_BASE = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/";
   const BENCH_PREFIX = "SkiaSharp.Benchmarks.Tracking.";
   const ROLE_ORDER = ["curr-stable", "prev-stable", "prev-major"];
+  // Roles rendered as comparison baselines: the newest nuget.org release (incl. preview),
+  // then the stable references. The nightly/CI trend is the chart line, not a baseline.
+  const BASELINE_ROLES = ["latest"].concat(ROLE_ORDER);
   const OS_ORDER = ["Linux", "Windows", "macOS"];
   const MAX_SERIES = 16;
   // ECharts categorical palette (Okabe-Ito-ish, colour-blind friendly).
@@ -159,13 +162,13 @@
     for (const os of oses) {
       const roles = h[os];
       const names = new Set();
-      ["pr","nightly"].concat(ROLE_ORDER).forEach(r => { const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
+      ["pr","nightly"].concat(BASELINE_ROLES).forEach(r => { const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
       for (const name of [...names].sort()) {
         const trend = ((roles.nightly&&roles.nightly.days)||[])
           .map(d => [dateMs(d.date), (d.benchmarks[name]||{})[key]])
           .filter(p => p[1]!=null);
         const baselines = {};
-        for (const r of ROLE_ORDER) { const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
+        for (const r of BASELINE_ROLES) { const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
         const prd = latestDay(roles.pr); const pr = prd ? (prd.benchmarks[name]||{})[key] : null;
         if (!trend.length && !Object.keys(baselines).length && pr==null) continue;
         out.push({ id:os+"|"+name, group:os, item:shortBench(name), label:shortBench(name)+" · "+os,
@@ -193,7 +196,7 @@
         const getv = day => { const p=(day.packages||{})[pkg]; if(!p) return null; return tg.t==="nupkg" ? p.nupkg : (p.natives||{})[tg.t]; };
         const trend = nightly.map(d => [dateMs(d.date), getv(d)]).filter(p=>p[1]!=null);
         const baselines = {};
-        for (const r of ROLE_ORDER) {
+        for (const r of BASELINE_ROLES) {
           const ver = (roles[r]||{})[pkg]; if(!ver) continue;
           const ent = cache[pkg+"@"+ver]; if(!ent) continue;
           const v = tg.t==="nupkg" ? ent.nupkg : (ent.natives||{})[tg.t];
@@ -266,7 +269,7 @@
       const ser = { name:s.label, type:"line", showSymbol:s.trend.length<=40, symbolSize:5,
                     smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color}, data };
       if (single) {
-        const ml = ROLE_ORDER.filter(r=>s.baselines[r]!=null).map(r=>({
+        const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({
           yAxis: rel && ref ? 100*s.baselines[r]/ref : s.baselines[r],
           label:{ formatter:r, position:"insideEndTop", color:getCss("--muted"), fontSize:10 },
           lineStyle:{ color:getCss("--muted"), type:"dashed", width:1 } }));
@@ -302,15 +305,15 @@
     const el = document.getElementById("table");
     if (!sel.length) { el.innerHTML = `<div class="msg" style="padding:12px">Nothing selected.</div>`; return; }
     const m = METRICS[state.metric];
-    const cols = [{k:"pr",h:"★ PR",cls:"pr"},{k:"latest",h:"latest"}].concat(ROLE_ORDER.map(r=>({k:r,h:r})));
-    const val = (s,k)=> k==="pr"?s.pr : k==="latest"?(s.trend.length?s.trend[s.trend.length-1][1]:null) : (s.baselines[k]!=null?s.baselines[k]:null);
+    const cols = [{k:"pr",h:"★ PR",cls:"pr"},{k:"nightly",h:"nightly"},{k:"latest",h:"latest"}].concat(ROLE_ORDER.map(r=>({k:r,h:r})));
+    const val = (s,k)=> k==="pr"?s.pr : k==="nightly"?(s.trend.length?s.trend[s.trend.length-1][1]:null) : (s.baselines[k]!=null?s.baselines[k]:null);
     let h = "<table><thead><tr><th>Series</th>"+cols.map((c,i)=>`<th class="${c.cls||""}">${c.h}</th>`).join("")+"</tr></thead><tbody>";
     for (let i=0;i<sel.length;i++){
       const s=sel[i]; const color=PALETTE[i%PALETTE.length];
       const ref = s.baselines["prev-major"]!=null?s.baselines["prev-major"]:(s.baselines["prev-stable"]!=null?s.baselines["prev-stable"]:s.baselines["curr-stable"]);
       h += `<tr><td><span class="sw" style="background:${color}"></span>${esc(s.label)}</td>`+
         cols.map(c=>{ const v=val(s,c.k); let a="";
-          if(ref!=null&&v!=null&&ref!==0&&(c.k==="pr"||c.k==="latest")){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) a=d>0?` <span class="up">▲${(d*100).toFixed(0)}%</span>`:` <span class="down">▼${(-d*100).toFixed(0)}%</span>`; }
+          if(ref!=null&&v!=null&&ref!==0&&(c.k==="pr"||c.k==="nightly"||c.k==="latest")){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) a=d>0?` <span class="up">▲${(d*100).toFixed(0)}%</span>`:` <span class="down">▼${(-d*100).toFixed(0)}%</span>`; }
           return `<td class="${c.cls||""}">${fmtVal(v, m.unit)}${a}</td>`; }).join("")+"</tr>";
     }
     el.innerHTML = h+"</tbody></table>";

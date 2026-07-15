@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Shared primitives for the perf trackers (benchmarks + sizes).
 
-Both trackers independently resolve the same version roles from NuGet feeds and both
-hand-rolled identical SemVer sorting + HTTP-with-retries helpers. Those live here now so
-there is one implementation. Domain-specific things (per-package role resolution in the
-size tracker, the time/byte formatters in each Markdown renderer) stay in their own
-scripts — this module is just the common version/HTTP layer.
+Both trackers independently resolve the same version roles from the same NuGet feeds and
+both hand-rolled identical SemVer sorting + HTTP-with-retries helpers. Those live here now
+so there is one implementation: the HTTP layer, SemVer sorting, the EAP/nuget feed helpers,
+and role resolution (``nightly`` + ``latest`` + released baselines). Domain-specific things
+(per-package size resolution, the time/byte Markdown formatters) stay in their own scripts.
 
 Consumers add the ``perf/`` folder to ``sys.path`` and ``import _common`` (they are run
 by path from CI, not as a package). Only the standard library is used.
@@ -22,8 +22,9 @@ import urllib.request
 
 USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 
-# Stable/prerelease reference roles, oldest -> newest software.
-RELEASED_ROLES = ("prev-major", "prev-stable", "curr-stable")
+# SkiaSharp package feeds.
+EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"       # daily -nightly.* builds
+NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"  # released stables
 
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
 
@@ -85,6 +86,49 @@ def is_stable(version: str) -> bool:
     return "-" not in version
 
 
+# --------------------------------------------------------------------------- #
+# NuGet feed access (EAP nightly feed + nuget.org)
+# --------------------------------------------------------------------------- #
+
+def pick_resource(resources: list[dict], type_prefix: str) -> str | None:
+    """First v3 service-index resource whose ``@type`` starts with ``type_prefix``."""
+    for res in resources:
+        if str(res.get("@type", "")).startswith(type_prefix):
+            return res["@id"]
+    return None
+
+
+def feed_versions(flat_base: str, package: str) -> list[str]:
+    """Versions of ``package`` from a flat-container (PackageBaseAddress) base URL.
+
+    Order is not guaranteed (Azure DevOps feeds aren't sorted), so callers sort with
+    ``semver_key`` when order matters. Returns ``[]`` if the package/feed is absent.
+    """
+    url = f"{flat_base.rstrip('/')}/{package.lower()}/index.json"
+    try:
+        return list(http_get_json(url).get("versions", []))
+    except RuntimeError:
+        return []
+
+
+def eap_versions(package: str = "SkiaSharp") -> list[str]:
+    """All versions of ``package`` on the SkiaSharp EAP feed (hosts the -nightly.* builds)."""
+    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
+    flat = pick_resource(resources, "PackageBaseAddress/")
+    if not flat:
+        raise RuntimeError("No PackageBaseAddress resource in the EAP service index")
+    return feed_versions(flat, package)
+
+
+def nuget_versions(package: str = "SkiaSharp") -> list[str]:
+    """All versions of ``package`` on nuget.org (flat container)."""
+    return feed_versions(NUGET_FLATCONTAINER, package)
+
+
+# --------------------------------------------------------------------------- #
+# Version-role resolution (turn a version list / package into tracked roles)
+# --------------------------------------------------------------------------- #
+
 def latest_nightly(versions: list[str]) -> str | None:
     """Newest ``-nightly.*`` version (by SemVer) from a version list, or None."""
     nightlies = [v for v in versions if "-nightly." in v.lower()]
@@ -92,11 +136,12 @@ def latest_nightly(versions: list[str]) -> str | None:
 
 
 def released_roles(versions: list[str]) -> dict[str, str]:
-    """Resolve the released reference roles present in a version list.
+    """The released *stable* reference roles present in a version list.
 
     Returns only the roles that exist (a brand-new major may have no prev-stable /
     prev-major): ``curr-stable`` (newest stable), ``prev-stable`` (2nd-newest in the
-    current major), ``prev-major`` (newest stable of a lower major).
+    current major), ``prev-major`` (newest stable of a lower major). Prereleases are
+    excluded — for the newest overall version (incl. preview/rc) use ``nuget_roles``.
     """
     stables = sorted((v for v in versions if is_stable(v)), key=semver_key)
     roles: dict[str, str] = {}
@@ -111,4 +156,34 @@ def released_roles(versions: list[str]) -> dict[str, str]:
     lower_major = [v for v in stables if semver_key(v)[0][0] < curr_major]
     if lower_major:
         roles["prev-major"] = lower_major[-1]
+    return roles
+
+
+def nuget_roles(versions: list[str]) -> dict[str, str]:
+    """Roles derivable from a single package's version *list*.
+
+    ``latest`` is the newest version overall (incl. preview / rc); ``curr-stable`` /
+    ``prev-stable`` / ``prev-major`` are the released stable baselines. Only the roles
+    that actually exist are returned.
+    """
+    if not versions:
+        return {}
+    roles = {"latest": sorted(versions, key=semver_key)[-1]}
+    roles.update(released_roles(versions))
+    return roles
+
+
+def resolve_roles(package: str = "SkiaSharp") -> dict[str, str]:
+    """Resolve the version roles to track for ``package``.
+
+    ``nightly`` is the newest ``-nightly.*`` on the EAP/CI feed; ``latest`` is the newest
+    version on nuget.org (incl. preview/rc); ``curr-stable`` / ``prev-stable`` /
+    ``prev-major`` are the released stable baselines from nuget.org. Only the roles that
+    actually exist are returned (a brand-new major may lack prev-*).
+    """
+    nightly = latest_nightly(eap_versions(package))
+    if not nightly:
+        raise RuntimeError("No -nightly.* versions on the EAP feed")
+    roles = {"nightly": nightly}
+    roles.update(nuget_roles(nuget_versions(package)))
     return roles
