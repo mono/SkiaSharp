@@ -84,11 +84,12 @@ jobs:
           if-no-files-found: warn
 
       - name: Assemble data for the aw-data branch
-        # Persist only from main/schedule/dispatch on main — never from PRs. Writes the
-        # size summary (index.json) and today's raw per-file snapshot (plain JSON,
+        # Always build the payload (so dispatch/PR runs can download the exact `agent`
+        # artifact and preview what would be persisted); the actual COMMIT to aw-data is
+        # gated to main in persist-aw-data.yml (workflow_run head_branch == main). Writes
+        # the size summary (index.json) and today's raw per-file snapshot (plain JSON,
         # additive) under agent/sizes/. The sentinel keeps the artifact's
         # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
-        if: github.ref == 'refs/heads/main'
         run: |
           mkdir -p aw-upload/agent/sizes/raw
           touch aw-upload/.artifact-root
@@ -96,7 +97,7 @@ jobs:
           [ -f raw-sizes.json ] && cp raw-sizes.json "aw-upload/agent/sizes/raw/$(date -u +%F).json" || true
 
       - name: Upload aw-data payload (agent)
-        if: github.ref == 'refs/heads/main'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: agent

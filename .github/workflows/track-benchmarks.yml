@@ -177,8 +177,9 @@ jobs:
 
       - name: Upload raw BDN reports
         # The full BenchmarkDotNet report(s) for this leg — archived per day by the
-        # report job (raw/<date>/<OS>-<role>/), so we can re-summarise later. Only on
-        # persisting runs (main/schedule); PR runs don't persist, so don't bother.
+        # report job (raw/<date>/<OS>-<role>/) so we can re-summarise later. The raw
+        # archive is a persistence concern, so keep it main-only; PR `agent` artifacts
+        # carry just the summary index.json (the raw loop simply finds nothing).
         if: steps.check.outputs.skip != 'true' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
@@ -399,12 +400,13 @@ jobs:
           if-no-files-found: warn
 
       - name: Assemble data for the aw-data branch
-        # Persist only from main/schedule/dispatch on main — never from PRs. Writes the
-        # merged summary (index.json, WITHOUT the ephemeral pr legs) and archives today's
-        # raw BDN reports (plain JSON, additive) under raw/<date>/<OS>-<role>/. The
-        # sentinel keeps the artifact's least-common-ancestor at aw-upload/, preserving
-        # the required agent/ prefix.
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        # Always build the payload (so PR runs can download the exact `agent` artifact and
+        # preview what would be persisted); the actual COMMIT to aw-data is gated to main
+        # in persist-aw-data.yml (workflow_run head_branch == main). Writes the merged
+        # summary (index.json, WITHOUT the ephemeral pr legs) and archives today's raw BDN
+        # reports (plain JSON, additive) under raw/<date>/<OS>-<role>/ — raw is only
+        # uploaded by the legs on main, so on PRs this is just index.json. The sentinel
+        # keeps the artifact's least-common-ancestor at aw-upload/, preserving the agent/ prefix.
         run: |
           mkdir -p aw-upload/agent/benchmarks
           touch aw-upload/.artifact-root
@@ -421,7 +423,7 @@ jobs:
           done
 
       - name: Upload aw-data payload (agent)
-        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: agent
