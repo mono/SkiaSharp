@@ -164,14 +164,18 @@ jobs:
           path: ${{ env.HISTORY }}
           if-no-files-found: warn
 
-  # "this PR / this branch" column: a FULL source build of SkiaSharp (native + managed)
-  # from the checkout, benchmarked against the baselines, on ALL THREE desktop OSes.
-  # The native libSkiaSharp is built from source per host — Linux via Docker (same
-  # mechanism as the WASM gallery build in build-site.yml), macOS via Xcode+Ninja,
-  # Windows via VS+LLVM+Ninja — mirroring the AzDO native pipelines. So native C++ /
-  # C-API changes (e.g. #4421) ARE reflected in the ⭐ column on every OS. Each leg is
-  # isolated + best-effort so it can never turn the run red. PR data is fresh each run
-  # (single day, labelled by PR/branch) and is NOT persisted to the data branch.
+  # "this PR / this branch" column: a source build of SkiaSharp benchmarked against the
+  # baselines on ALL THREE desktop OSes, so this branch's changes show up in the ⭐ column.
+  #
+  # PR_NATIVE_SOURCE_BUILD toggles how the native libSkiaSharp is obtained:
+  #   * "false" (fast, default while iterating) — download the prebuilt nightly natives
+  #     via `externals-download`, then build only the MANAGED SkiaSharp.dll from source.
+  #     ~10 min/leg; reflects MANAGED changes on the branch (native = nightly).
+  #   * "true" (full) — build libSkiaSharp FROM SOURCE per host (Linux Docker, macOS
+  #     Xcode+Ninja, Windows VS+LLVM+Ninja), so native/C-API changes (e.g. #4421) are
+  #     reflected too. ~30-40 min on Windows.
+  # Each leg is isolated + best-effort so it can never turn the run red. PR data is fresh
+  # each run (single day, labelled by PR/branch) and is NOT persisted to the data branch.
   benchmark-source:
     needs: resolve
     if: github.repository_owner == 'mono'
@@ -193,10 +197,19 @@ jobs:
       # Skip the emscripten activation git-sync-deps does by default — the desktop
       # native builds don't need it (Linux runs in Docker and is unaffected).
       GIT_SYNC_DEPS_SKIP_EMSDK: "1"
+      # Flip to "true" for the real native/C-API PR signal; keep "false" for fast
+      # iteration (prebuilt natives + managed-only source build).
+      PR_NATIVE_SOURCE_BUILD: "false"
     steps:
-      - uses: actions/checkout@v4
+      # Full native build needs the externals/skia submodule; fast mode does not.
+      - name: Checkout (with submodules for native source build)
+        if: env.PR_NATIVE_SOURCE_BUILD == 'true'
+        uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: Checkout (fast, no submodules)
+        if: env.PR_NATIVE_SOURCE_BUILD != 'true'
+        uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -215,8 +228,16 @@ jobs:
             echo "PR_LABEL=$REF_NAME" >> "$GITHUB_ENV"
           fi
 
+      - name: Download prebuilt natives (fast mode)
+        if: env.PR_NATIVE_SOURCE_BUILD != 'true'
+        # C#-only bootstrap: pulls the current-milestone (nightly) natives into
+        # output/native so the managed build + benchmarks can run without a native compile.
+        run: |
+          dotnet tool restore
+          dotnet cake --target=externals-download
+
       - name: Build libSkiaSharp from source (Linux x64, Docker)
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && env.PR_NATIVE_SOURCE_BUILD == 'true'
         # Docker + cake, same pattern as build-site.yml's WASM build. Produces
         # output/native/linux/x64/libSkiaSharp.so from THIS source.
         run: |
@@ -225,7 +246,7 @@ jobs:
           sudo chown -R "$(id -u):$(id -g)" output
 
       - name: Build libSkiaSharp from source (macOS)
-        if: runner.os == 'macOS'
+        if: runner.os == 'macOS' && env.PR_NATIVE_SOURCE_BUILD == 'true'
         # Xcode (preinstalled) + Ninja. Ad-hoc codesigned; no identity needed.
         # Produces output/native/osx/libSkiaSharp.dylib for the host arch.
         run: |
@@ -235,7 +256,7 @@ jobs:
           dotnet cake --target=externals-macos --configuration=Release --arch=$arch
 
       - name: Build libSkiaSharp from source (Windows x64)
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && env.PR_NATIVE_SOURCE_BUILD == 'true'
         shell: pwsh
         # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
         # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
