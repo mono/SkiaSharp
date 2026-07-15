@@ -1,69 +1,69 @@
 #!/usr/bin/env python3
-"""Produce the self-contained HTML dashboard and the index.json manifest.
+"""Produce the self-contained unified perf dashboard (time + allocations + size).
 
-Usage: render-benchmarks-html.py <histories-dir> <template-html> <out-html> <out-index-json>
+Usage:
+    render_html.py <template-html> <out-html> <benchmarks-dir> [<sizes-dir>]
 
-* Reads every ``benchmarks-*.json`` in ``<histories-dir>``.
-* Injects them as ``window.__BENCH_DATA__`` into a copy of ``<template-html>`` so the
-  result is an OFFLINE single file (download from a run artifact, open in a browser).
-* Writes ``<out-index-json>`` — the manifest the *live* (non-embedded) page fetches
-  from the ``aw-data`` branch to discover the history files.
+* Reads every ``benchmarks-*.json`` in ``<benchmarks-dir>`` and, when given, every
+  ``*.json`` in ``<sizes-dir>`` (i.e. ``artifact-sizes.json``).
+* Injects them as ``window.__PERF_DATA__ = {benchmarks:{...}, sizes:{...}}`` into a
+  copy of ``<template-html>`` so the result is an OFFLINE single file (download it from
+  a run artifact and open in a browser). The chart lib (ECharts) still loads from a CDN,
+  so rendering needs internet, but the data travels in the file.
 
-Only the standard library is used.
+Either dataset may be empty — the dashboard degrades gracefully (e.g. the Size tab shows
+"no data yet" until the size tracker persists to the branch). Only the standard library
+is used.
 """
 
 from __future__ import annotations
 
-import datetime as dt
 import glob
 import json
 import os
 import sys
 
 
+def _load_dir(path: str | None, pattern: str) -> dict[str, dict]:
+    out: dict[str, dict] = {}
+    if not path or not os.path.isdir(path):
+        return out
+    for p in sorted(glob.glob(os.path.join(path, pattern))):
+        try:
+            with open(p, "r", encoding="utf-8") as fh:
+                out[os.path.basename(p)] = json.load(fh)
+        except (json.JSONDecodeError, OSError) as err:
+            print(f"  ! skipping {p}: {err}", file=sys.stderr)
+    return out
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) != 4:
-        print("usage: render-benchmarks-html.py <histories-dir> <template-html> <out-html> <out-index-json>",
+    if len(argv) not in (3, 4):
+        print("usage: render_html.py <template-html> <out-html> <benchmarks-dir> [<sizes-dir>]",
               file=sys.stderr)
         return 2
-    hist_dir, template, out_html, out_index = argv
+    template, out_html, bench_dir = argv[0], argv[1], argv[2]
+    sizes_dir = argv[3] if len(argv) == 4 else None
 
-    files = sorted(glob.glob(os.path.join(hist_dir, "benchmarks-*.json")))
-    data: dict[str, dict] = {}
-    for path in files:
-        try:
-            with open(path, "r", encoding="utf-8") as fh:
-                data[os.path.basename(path)] = json.load(fh)
-        except (json.JSONDecodeError, OSError) as err:
-            print(f"  ! skipping {path}: {err}", file=sys.stderr)
+    data = {
+        "benchmarks": _load_dir(bench_dir, "benchmarks-*.json"),
+        "sizes": _load_dir(sizes_dir, "*.json"),
+    }
 
     with open(template, "r", encoding="utf-8") as fh:
         html = fh.read()
 
-    # Inject the embedded data blob right before the final </body>. json.dumps is
-    # HTML-safe here (numbers/strings from our own tooling); still escape </ in case a
-    # benchmark name ever contains it. We target the LAST </body> so a literal "</body>"
-    # elsewhere (e.g. a comment) can't be matched by mistake.
+    # Inject before the LAST </body> so a literal "</body>" in a comment can't match.
     blob = json.dumps(data, separators=(",", ":")).replace("</", "<\\/")
-    inject = f"<script>window.__BENCH_DATA__ = {blob};</script>\n</body>"
+    inject = f"<script>window.__PERF_DATA__ = {blob};</script>\n</body>"
     idx = html.rfind("</body>")
-    if idx == -1:
-        print("  ! template has no </body>; appending data at end", file=sys.stderr)
-        html += inject
-    else:
-        html = html[:idx] + inject + html[idx + len("</body>"):]
+    html = html + inject if idx == -1 else html[:idx] + inject + html[idx + len("</body>"):]
+
     with open(out_html, "w", encoding="utf-8") as fh:
         fh.write(html)
 
-    manifest = {
-        "generatedUtc": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "files": [os.path.basename(p) for p in files],
-    }
-    with open(out_index, "w", encoding="utf-8") as fh:
-        json.dump(manifest, fh, indent=2)
-
-    print(f"  wrote {out_html} ({os.path.getsize(out_html) // 1024} KB, {len(data)} histories) "
-          f"and {out_index} ({len(manifest['files'])} files)")
+    print(f"  wrote {out_html} ({os.path.getsize(out_html) // 1024} KB; "
+          f"{len(data['benchmarks'])} benchmark + {len(data['sizes'])} size file(s))")
     return 0
 
 

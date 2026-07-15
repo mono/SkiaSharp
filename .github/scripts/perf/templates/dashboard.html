@@ -3,322 +3,388 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SkiaSharp benchmark tracker</title>
+<title>SkiaSharp perf tracker</title>
 <!--
-  Self-contained, dependency-free benchmark dashboard.
+  Unified SkiaSharp perf dashboard — time, allocations, AND package/native size.
 
-  Two data modes (no code difference):
-    * Embedded  — CI injects an embedded data script just before the closing body tag,
-      producing an OFFLINE single file you can download from a run artifact and open directly in a browser (this is how PR runs are viewed).
+  Data modes (no code difference):
+    * Embedded  — CI injects `window.__PERF_DATA__ = {benchmarks:{...}, sizes:{...}}`
+      just before the closing body tag, producing an OFFLINE single file you download
+      from a run artifact and open in a browser (this is how a PR run is viewed).
     * Live      — with no embedded data, the page fetches the JSON histories from the
-      `aw-data` branch (or any `?data=<base-url>`), so a hosted copy always shows the
-      newest persisted data.
+      `aw-data` branch (benchmarks/ + sizes/), or any `?data=<base-url>`.
 
-  The histories are the same `benchmarks-<OS>-<role>.json` documents produced by
-  .github/scripts/perf/benchmarks/track.py. See .github/workflows/track-benchmarks.yml.
+  Charting uses ECharts from a CDN (dynamic zoom / legend / tooltips). The data is
+  embedded so the file is self-contained, but rendering the chart needs internet to
+  load ECharts. Back-compat: a legacy `window.__BENCH_DATA__` blob is treated as
+  `{benchmarks: <blob>}`.
+
+  Data producers: .github/scripts/perf/benchmarks/track.py (time+alloc) and
+  .github/scripts/perf/sizes/track.py (size). See the track-benchmarks /
+  track-artifact-sizes workflows.
 -->
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <style>
   :root {
-    --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #e6edf3;
-    --muted: #8b949e; --accent: #58a6ff; --pr: #d2a8ff; --grid: #21262d;
-    --faster: #3fb950; --slower: #f85149;
+    --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e;
+    --accent:#58a6ff; --pr:#d2a8ff; --chip:#21262d; --up:#f85149; --down:#3fb950;
   }
   @media (prefers-color-scheme: light) {
     :root {
-      --bg: #ffffff; --panel: #f6f8fa; --border: #d0d7de; --text: #1f2328;
-      --muted: #636c76; --accent: #0969da; --pr: #8250df; --grid: #eaeef2;
-      --faster: #1a7f37; --slower: #cf222e;
+      --bg:#fff; --panel:#f6f8fa; --border:#d0d7de; --text:#1f2328; --muted:#636c76;
+      --accent:#0969da; --pr:#8250df; --chip:#eaeef2; --up:#cf222e; --down:#1a7f37;
     }
   }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--bg); color: var(--text);
-    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-  }
-  header { padding: 20px 24px 8px; }
-  h1 { font-size: 20px; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: 13px; }
-  .wrap { padding: 12px 24px 48px; max-width: 1200px; }
-  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0 16px; }
-  .controls label { color: var(--muted); font-size: 12px; margin-right: 4px; }
-  select, .seg button {
-    background: var(--panel); color: var(--text); border: 1px solid var(--border);
-    border-radius: 6px; padding: 6px 10px; font-size: 13px;
-  }
-  select { min-width: 260px; }
-  .seg { display: inline-flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
-  .seg button { border: 0; border-right: 1px solid var(--border); cursor: pointer; }
-  .seg button:last-child { border-right: 0; }
-  .seg button.on { background: var(--accent); color: #fff; }
-  .tabs { display: flex; gap: 6px; margin: 8px 0 0; }
-  .tabs button {
-    background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent;
-    padding: 6px 12px; cursor: pointer; font-size: 14px;
-  }
-  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
-  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 14px 0; }
-  .card h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; }
-  svg { width: 100%; height: auto; display: block; }
-  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; color: var(--muted); font-size: 12px; }
-  .legend span { display: inline-flex; align-items: center; gap: 6px; }
-  .swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
-  table { border-collapse: collapse; width: 100%; font-size: 13px; }
-  th, td { border-bottom: 1px solid var(--border); padding: 6px 10px; text-align: right; white-space: nowrap; }
-  th:first-child, td:first-child { text-align: left; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
-  th { color: var(--muted); font-weight: 600; }
-  .pr-col { color: var(--pr); }
-  .up { color: var(--slower); } .down { color: var(--faster); }
-  .msg { color: var(--muted); padding: 40px 0; text-align: center; }
-  code { background: var(--grid); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
-  a { color: var(--accent); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; }
+  header { padding:18px 22px 4px; }
+  h1 { font-size:19px; margin:0 0 3px; }
+  .sub { color:var(--muted); font-size:13px; }
+  .wrap { padding:10px 22px 48px; max-width:1220px; }
+  .row { display:flex; flex-wrap:wrap; gap:16px; align-items:flex-start; margin:10px 0; }
+  .seg { display:inline-flex; border:1px solid var(--border); border-radius:7px; overflow:hidden; }
+  .seg button { background:var(--panel); color:var(--text); border:0; border-right:1px solid var(--border);
+    padding:6px 12px; font-size:13px; cursor:pointer; }
+  .seg button:last-child { border-right:0; }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .lab { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; margin-bottom:5px; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; max-width:520px; }
+  .chip { background:var(--chip); border:1px solid var(--border); color:var(--text); border-radius:14px;
+    padding:4px 11px; font-size:12px; cursor:pointer; user-select:none; }
+  .chip.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .picker { min-width:260px; }
+  .filter { width:100%; background:var(--panel); color:var(--text); border:1px solid var(--border);
+    border-radius:6px; padding:6px 9px; font-size:13px; margin-bottom:6px; }
+  .checklist { max-height:190px; overflow:auto; border:1px solid var(--border); border-radius:6px;
+    background:var(--panel); padding:4px; min-width:320px; }
+  .checkitem { display:flex; align-items:center; gap:8px; padding:3px 6px; font-size:12.5px; cursor:pointer;
+    border-radius:4px; white-space:nowrap; }
+  .checkitem:hover { background:var(--chip); }
+  .checkitem input { margin:0; }
+  .checkitem code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:14px; margin:14px 0; }
+  .card h2 { font-size:13px; margin:0 0 8px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  #chart { width:100%; height:460px; }
+  .warn { color:var(--up); font-size:12px; margin:6px 0 0; }
+  table { border-collapse:collapse; width:100%; font-size:12.5px; }
+  th,td { border-bottom:1px solid var(--border); padding:5px 9px; text-align:right; white-space:nowrap; }
+  th:first-child,td:first-child { text-align:left; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; }
+  th { color:var(--muted); font-weight:600; }
+  .pr { color:var(--pr); }
+  .up { color:var(--up); } .down { color:var(--down); }
+  .sw { display:inline-block; width:9px; height:9px; border-radius:2px; margin-right:6px; vertical-align:middle; }
+  .msg { color:var(--muted); padding:36px 0; text-align:center; }
+  code { background:var(--chip); padding:1px 5px; border-radius:4px; font-size:12px; }
+  a { color:var(--accent); }
 </style>
 </head>
 <body>
 <header>
-  <h1>📊 SkiaSharp benchmark tracker</h1>
+  <h1>📊 SkiaSharp perf tracker</h1>
   <div class="sub" id="subtitle">Loading…</div>
 </header>
-<div class="wrap">
-  <div class="tabs" id="os-tabs"></div>
-  <div class="controls">
-    <span><label for="bench">Benchmark</label><select id="bench"></select></span>
-    <span class="seg" id="metric">
-      <button data-k="meanNs" class="on">Time</button>
-      <button data-k="allocatedBytes">Allocations</button>
-    </span>
+<div class="wrap" id="wrap">
+  <div class="row">
+    <div><div class="lab">Metric</div>
+      <div class="seg" id="metric">
+        <button data-m="time" class="on">Time</button>
+        <button data-m="alloc">Allocations</button>
+        <button data-m="size">Size</button>
+      </div>
+    </div>
+    <div><div class="lab">Scale</div>
+      <div class="seg" id="scale">
+        <button data-s="absolute" class="on">Absolute</button>
+        <button data-s="relative">Relative %</button>
+        <button data-s="log">Log</button>
+      </div>
+    </div>
   </div>
-  <div class="card">
-    <h2 id="chart-title">Trend</h2>
-    <div id="chart"></div>
-    <div class="legend" id="legend"></div>
+  <div class="row">
+    <div class="picker"><div class="lab" id="group-label">OS</div><div class="chips" id="groups"></div></div>
+    <div class="picker"><div class="lab" id="item-label">Benchmark</div>
+      <input class="filter" id="item-filter" placeholder="filter…" />
+      <div class="checklist" id="items"></div>
+    </div>
   </div>
-  <div class="card">
-    <h2>Latest comparison (this OS)</h2>
-    <div id="table"></div>
-  </div>
+  <div class="warn" id="warn" style="display:none"></div>
+  <div class="card"><h2 id="chart-title">Trend</h2><div id="chart"></div></div>
+  <div class="card"><h2>Latest comparison</h2><div id="table"></div></div>
 </div>
 
 <script>
 "use strict";
 (function () {
-  const RAW_BASE_DEFAULT = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/benchmarks/";
+  const RAW_BASE = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/";
+  const BENCH_PREFIX = "SkiaSharp.Benchmarks.Tracking.";
   const ROLE_ORDER = ["curr-stable", "prev-stable", "prev-major"];
-  const ROLE_LABEL = { "curr-stable": "curr-stable", "prev-stable": "prev-stable", "prev-major": "prev-major" };
   const OS_ORDER = ["Linux", "Windows", "macOS"];
-  const DISPLAY_DAYS = 14;
-  const COLORS = { nightly: "#58a6ff", "curr-stable": "#8b949e", "prev-stable": "#3fb950", "prev-major": "#f0883e", pr: "#d2a8ff" };
+  const MAX_SERIES = 16;
+  // ECharts categorical palette (Okabe-Ito-ish, colour-blind friendly).
+  const PALETTE = ["#58a6ff","#3fb950","#f0883e","#d2a8ff","#f85149","#56d4dd","#e3b341","#db61a2",
+                   "#a5d6ff","#7ee787","#ffab70","#e2c5ff"];
 
-  const state = { histories: {}, os: null, bench: null, metric: "meanNs" };
+  const METRICS = {
+    time:  { label:"Time",        unit:"ns",    domain:"benchmarks", key:"meanNs" },
+    alloc: { label:"Allocations", unit:"bytes", domain:"benchmarks", key:"allocatedBytes" },
+    size:  { label:"Size",        unit:"bytes", domain:"sizes" },
+  };
 
-  // ---- data helpers ----
-  const latestDay = h => (h && h.days && h.days.length) ? h.days[h.days.length - 1] : null;
-  const metric = (day, name, key) => (day && day.benchmarks && day.benchmarks[name]) ? day.benchmarks[name][key] : null;
-  const shortName = n => n.replace(/^SkiaSharp\.Benchmarks\.Tracking\./, "");
+  const state = { data:{benchmarks:{}, sizes:{}}, metric:"time", scale:"absolute",
+                  groups:new Set(), items:new Set(), itemFilter:"", chart:null };
 
-  function normalize(raw) {
-    const h = {};
-    for (const key in raw) {
-      const doc = raw[key];
-      if (!doc || !doc.os) continue;
-      (h[doc.os] || (h[doc.os] = {}))[doc.role || "nightly"] = doc;
-    }
+  // ---------- formatting ----------
+  const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs":
+                        ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
+  const fmtBytes = b => { if(b==null)return"·"; if(b<1024)return Math.round(b)+" B";
+                          const k=b/1024; return k<1024?k.toFixed(1)+" KB":(k/1024).toFixed(2)+" MB"; };
+  const fmtVal = (v, unit) => unit==="ns" ? fmtTime(v) : fmtBytes(v);
+  const shortBench = n => n.startsWith(BENCH_PREFIX) ? n.slice(BENCH_PREFIX.length) : n;
+  const dateMs = d => new Date(d + "T00:00:00Z").getTime();
+
+  // ---------- adapters: raw docs -> flat Series list ----------
+  // Series = {id, group, item, label, unit, trend:[[ms,val]], baselines:{role:val}, pr:val|null}
+  function normBench(files) {
+    const h = {}; // os -> role -> doc
+    for (const k in files) { const d = files[k]; if (d && d.os) (h[d.os] || (h[d.os]={}))[d.role||"nightly"] = d; }
     return h;
   }
-  function orderedOses(h) {
-    const known = OS_ORDER.filter(o => h[o]);
-    return known.concat(Object.keys(h).filter(o => !OS_ORDER.includes(o)).sort());
-  }
-  function benchUniverse(roles) {
-    const s = new Set();
-    ["pr", "nightly"].concat(ROLE_ORDER).forEach(r => {
-      const d = latestDay(roles[r]);
-      if (d) Object.keys(d.benchmarks || {}).forEach(n => s.add(n));
-    });
-    return Array.from(s).sort();
-  }
+  const latestDay = doc => (doc && doc.days && doc.days.length) ? doc.days[doc.days.length-1] : null;
 
-  function fmtTime(ns) {
-    if (ns == null) return "·";
-    if (ns < 1e3) return ns.toFixed(1) + " ns";
-    if (ns < 1e6) return (ns / 1e3).toFixed(2) + " µs";
-    if (ns < 1e9) return (ns / 1e6).toFixed(2) + " ms";
-    return (ns / 1e9).toFixed(2) + " s";
-  }
-  function fmtBytes(b) {
-    if (b == null) return "·";
-    if (b < 1024) return Math.round(b) + " B";
-    const kb = b / 1024;
-    return kb < 1024 ? kb.toFixed(1) + " KB" : (kb / 1024).toFixed(1) + " MB";
-  }
-  const fmt = (v, key) => key === "allocatedBytes" ? fmtBytes(v) : fmtTime(v);
-
-  // ---- SVG line chart ----
-  function chart(roles, name, key) {
-    const el = document.getElementById("chart");
-    const nightly = roles.nightly;
-    const days = ((nightly && nightly.days) || []).slice(-DISPLAY_DAYS)
-      .map(d => ({ date: d.date, v: metric(d, name, key) }))
-      .filter(p => p.v != null);
-    const baselines = ROLE_ORDER.map(r => ({ role: r, v: metric(latestDay(roles[r]), name, key) })).filter(p => p.v != null);
-    const prVal = metric(latestDay(roles.pr), name, key);
-
-    const all = days.map(d => d.v).concat(baselines.map(b => b.v));
-    if (prVal != null) all.push(prVal);
-    if (!all.length) { el.innerHTML = '<div class="msg">No data for this benchmark.</div>'; return; }
-
-    const W = 1120, H = 320, P = { t: 16, r: 120, b: 40, l: 66 };
-    let min = Math.min.apply(null, all), max = Math.max.apply(null, all);
-    if (min === max) { min *= 0.98; max *= 1.02 || 1; }
-    const pad = (max - min) * 0.08; min = Math.max(0, min - pad); max += pad;
-    const n = Math.max(days.length, 1);
-    const x = i => P.l + (n === 1 ? (W - P.l - P.r) / 2 : (i * (W - P.l - P.r) / (n - 1)));
-    const y = v => P.t + (H - P.t - P.b) * (1 - (v - min) / (max - min || 1));
-
-    const S = "http://www.w3.org/2000/svg";
-    const svg = document.createElementNS(S, "svg");
-    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-    const add = (tag, attrs, txt) => {
-      const e = document.createElementNS(S, tag);
-      for (const k in attrs) e.setAttribute(k, attrs[k]);
-      if (txt != null) e.textContent = txt;
-      svg.appendChild(e); return e;
-    };
-    const css = getComputedStyle(document.documentElement);
-    const gridC = css.getPropertyValue("--grid").trim();
-    const mutedC = css.getPropertyValue("--muted").trim();
-
-    // y grid + labels
-    for (let i = 0; i <= 4; i++) {
-      const v = min + (max - min) * i / 4, yy = y(v);
-      add("line", { x1: P.l, y1: yy, x2: W - P.r, y2: yy, stroke: gridC, "stroke-width": 1 });
-      add("text", { x: P.l - 8, y: yy + 4, "text-anchor": "end", fill: mutedC, "font-size": 11 }, fmt(v, key));
+  function seriesBenchmarks(key, unit) {
+    const h = normBench(state.data.benchmarks || {});
+    const out = [];
+    const oses = OS_ORDER.filter(o=>h[o]).concat(Object.keys(h).filter(o=>!OS_ORDER.includes(o)).sort());
+    for (const os of oses) {
+      const roles = h[os];
+      const names = new Set();
+      ["pr","nightly"].concat(ROLE_ORDER).forEach(r => { const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
+      for (const name of [...names].sort()) {
+        const trend = ((roles.nightly&&roles.nightly.days)||[])
+          .map(d => [dateMs(d.date), (d.benchmarks[name]||{})[key]])
+          .filter(p => p[1]!=null);
+        const baselines = {};
+        for (const r of ROLE_ORDER) { const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
+        const prd = latestDay(roles.pr); const pr = prd ? (prd.benchmarks[name]||{})[key] : null;
+        if (!trend.length && !Object.keys(baselines).length && pr==null) continue;
+        out.push({ id:os+"|"+name, group:os, item:shortBench(name), label:shortBench(name)+" · "+os,
+                   unit, trend, baselines, pr:pr==null?null:pr });
+      }
     }
-    // baseline reference lines
-    baselines.forEach(b => {
-      const yy = y(b.v);
-      add("line", { x1: P.l, y1: yy, x2: W - P.r, y2: yy, stroke: COLORS[b.role], "stroke-width": 1.4, "stroke-dasharray": "5 4", opacity: 0.9 });
-      add("text", { x: W - P.r + 6, y: yy + 4, fill: COLORS[b.role], "font-size": 11 }, ROLE_LABEL[b.role]);
-    });
-    // nightly line + points
-    if (days.length) {
-      const d = days.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
-      add("path", { d, fill: "none", stroke: COLORS.nightly, "stroke-width": 2 });
-      days.forEach((p, i) => {
-        const c = add("circle", { cx: x(i), cy: y(p.v), r: 3.5, fill: COLORS.nightly });
-        const t = document.createElementNS(S, "title"); t.textContent = `nightly ${p.date}: ${fmt(p.v, key)}`; c.appendChild(t);
-        if (i % Math.ceil(n / 8) === 0 || i === n - 1)
-          add("text", { x: x(i), y: H - P.b + 16, "text-anchor": "middle", fill: mutedC, "font-size": 10 }, p.date.slice(5));
-      });
-    }
-    // PR star at far right
-    if (prVal != null) {
-      const px = W - P.r - 8, py = y(prVal);
-      const st = add("text", { x: px, y: py + 6, "text-anchor": "middle", fill: COLORS.pr, "font-size": 20 }, "★");
-      const t = document.createElementNS(S, "title"); t.textContent = `this PR: ${fmt(prVal, key)}`; st.appendChild(t);
-    }
-    el.innerHTML = ""; el.appendChild(svg);
-
-    const leg = document.getElementById("legend");
-    let html = `<span><span class="swatch" style="background:${COLORS.nightly}"></span>nightly trend</span>`;
-    if (prVal != null) html += `<span><span style="color:${COLORS.pr}">★</span> this PR</span>`;
-    baselines.forEach(b => html += `<span><span class="swatch" style="background:${COLORS[b.role]}"></span>${ROLE_LABEL[b.role]}</span>`);
-    leg.innerHTML = html;
+    return out;
   }
 
-  // ---- comparison table ----
-  function table(roles, key) {
-    const cols = [];
-    if (roles.pr) cols.push({ id: "pr", label: "★ this PR", cls: "pr-col" });
-    if (roles.nightly) cols.push({ id: "nightly", label: "🌙 latest" });
-    ROLE_ORDER.forEach(r => { if (roles[r]) cols.push({ id: r, label: ROLE_LABEL[r] }); });
-    const val = (id, name) => metric(latestDay(roles[id]), name, key);
-
-    let h = "<table><thead><tr><th>Benchmark</th>" + cols.map(c => `<th class="${c.cls || ""}">${c.label}</th>`).join("") + "</tr></thead><tbody>";
-    benchUniverse(roles).forEach(name => {
-      // reference = the oldest baseline present, for a simple delta arrow
-      const refId = ["prev-major", "prev-stable", "curr-stable"].find(r => roles[r]);
-      const ref = refId ? val(refId, name) : null;
-      h += `<tr><td>${shortName(name)}</td>` + cols.map(c => {
-        const v = val(c.id, name);
-        let arrow = "";
-        if (ref != null && v != null && ref !== 0 && (c.id === "pr" || c.id === "nightly")) {
-          const diff = (v - ref) / ref;
-          if (Math.abs(diff) >= 0.05) arrow = diff > 0 ? ` <span class="up">▲${(diff * 100).toFixed(0)}%</span>` : ` <span class="down">▼${(-diff * 100).toFixed(0)}%</span>`;
+  function seriesSizes() {
+    const doc = (state.data.sizes||{})["artifact-sizes.json"];
+    if (!doc) return [];
+    const nightly = doc.nightly || [];
+    const roles = doc.roles || {};
+    const cache = doc.releasedCache || {};
+    // discover (package, target) universe from the latest nightly day
+    const last = nightly[nightly.length-1];
+    if (!last) return [];
+    const out = [];
+    for (const pkg of Object.keys(last.packages||{}).sort()) {
+      const targets = [];
+      if (last.packages[pkg].nupkg!=null) targets.push({t:"nupkg", label:"nupkg"});
+      for (const np of Object.keys(last.packages[pkg].natives||{})) targets.push({t:np, label:np.replace(/^runtimes\//,"").replace(/\/native\//," · ")});
+      for (const tg of targets) {
+        const getv = day => { const p=(day.packages||{})[pkg]; if(!p) return null; return tg.t==="nupkg" ? p.nupkg : (p.natives||{})[tg.t]; };
+        const trend = nightly.map(d => [dateMs(d.date), getv(d)]).filter(p=>p[1]!=null);
+        const baselines = {};
+        for (const r of ROLE_ORDER) {
+          const ver = (roles[r]||{})[pkg]; if(!ver) continue;
+          const ent = cache[pkg+"@"+ver]; if(!ent) continue;
+          const v = tg.t==="nupkg" ? ent.nupkg : (ent.natives||{})[tg.t];
+          if (v!=null) baselines[r]=v;
         }
-        return `<td class="${c.cls || ""}">${fmt(v, key)}${arrow}</td>`;
-      }).join("") + "</tr>";
-    });
-    document.getElementById("table").innerHTML = h + "</tbody></table>";
-  }
-
-  // ---- rendering / wiring ----
-  function renderOsTabs() {
-    const el = document.getElementById("os-tabs");
-    const oses = orderedOses(state.histories);
-    el.innerHTML = oses.map(o => `<button data-os="${o}" class="${o === state.os ? "on" : ""}">${o}</button>`).join("");
-    el.querySelectorAll("button").forEach(b => b.onclick = () => { state.os = b.dataset.os; syncBenchList(); renderTabsAndBody(); });
-  }
-  function syncBenchList() {
-    const roles = state.histories[state.os] || {};
-    const names = benchUniverse(roles);
-    if (!names.includes(state.bench)) state.bench = names[0] || null;
-    const sel = document.getElementById("bench");
-    sel.innerHTML = names.map(n => `<option value="${n}" ${n === state.bench ? "selected" : ""}>${shortName(n)}</option>`).join("");
-  }
-  function renderTabsAndBody() {
-    renderOsTabs();
-    const roles = state.histories[state.os] || {};
-    document.getElementById("chart-title").textContent = (state.metric === "allocatedBytes" ? "Allocations" : "Time") + " — " + (state.bench ? shortName(state.bench) : "");
-    if (!state.bench) { document.getElementById("chart").innerHTML = '<div class="msg">No benchmarks.</div>'; document.getElementById("table").innerHTML = ""; return; }
-    chart(roles, state.bench, state.metric);
-    table(roles, state.metric);
-  }
-
-  function boot(raw) {
-    state.histories = normalize(raw);
-    const oses = orderedOses(state.histories);
-    if (!oses.length) { document.getElementById("subtitle").textContent = "No data found."; document.getElementById("os-tabs").innerHTML = '<div class="msg">No benchmark histories available yet.</div>'; return; }
-    state.os = oses[0];
-    syncBenchList();
-
-    // subtitle: nightly versions per OS
-    const parts = oses.map(o => { const d = latestDay((state.histories[o] || {}).nightly); return d ? `${o} <code>${d.version}</code>` : null; }).filter(Boolean);
-    document.getElementById("subtitle").innerHTML = parts.length ? "Latest nightly: " + parts.join(" · ") : "Ready.";
-
-    document.getElementById("bench").onchange = e => { state.bench = e.target.value; renderTabsAndBody(); };
-    document.querySelectorAll("#metric button").forEach(b => b.onclick = () => {
-      state.metric = b.dataset.k;
-      document.querySelectorAll("#metric button").forEach(x => x.classList.toggle("on", x === b));
-      renderTabsAndBody();
-    });
-    renderTabsAndBody();
-  }
-
-  async function fetchLive() {
-    const base = new URLSearchParams(location.search).get("data") || RAW_BASE_DEFAULT;
-    const b = base.endsWith("/") ? base : base + "/";
-    document.getElementById("subtitle").textContent = "Loading live data…";
-    try {
-      const idx = await (await fetch(b + "index.json", { cache: "no-cache" })).json();
-      const files = idx.files || [];
-      const raw = {};
-      await Promise.all(files.map(async f => {
-        try { raw[f] = await (await fetch(b + f, { cache: "no-cache" })).json(); } catch (e) { /* skip */ }
-      }));
-      boot(raw);
-    } catch (e) {
-      document.getElementById("subtitle").textContent = "Could not load data from " + b;
-      document.getElementById("os-tabs").innerHTML = '<div class="msg">No data. This page reads the <code>aw-data</code> branch; pass <code>?data=&lt;url&gt;</code> to point elsewhere.</div>';
+        if (!trend.length && !Object.keys(baselines).length) continue;
+        out.push({ id:pkg+"|"+tg.t, group:pkg, item:tg.label, label:pkg+" · "+tg.label,
+                   unit:"bytes", trend, baselines, pr:null });
+      }
     }
+    return out;
   }
 
-  // The embedded-data blob (when present) is injected just before </body>, i.e. AFTER
-  // this script executes during parsing. Wait until the document is parsed before
-  // choosing embedded vs live mode, otherwise embedded data would be missed.
-  const start = () => window.__BENCH_DATA__ ? boot(window.__BENCH_DATA__) : fetchLive();
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
-  else start();
+  function allSeries() {
+    const m = METRICS[state.metric];
+    return m.domain==="sizes" ? seriesSizes() : seriesBenchmarks(m.key, m.unit);
+  }
+
+  // ---------- selection UI ----------
+  function pickerUniverse(series) {
+    const groups = [], gs = new Set();
+    for (const s of series) if (!gs.has(s.group)) { gs.add(s.group); groups.push(s.group); }
+    // Scope the item list to the selected groups (so picking a size package shows only
+    // its own targets); fall back to all groups when nothing is selected yet.
+    const active = state.groups.size ? state.groups : gs;
+    const items = [], is = new Set();
+    for (const s of series) if (active.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
+    return { groups, items };
+  }
+
+  function renderPickers(series) {
+    const { groups, items } = pickerUniverse(series);
+    document.getElementById("group-label").textContent = state.metric==="size" ? "Package" : "OS";
+    document.getElementById("item-label").textContent  = state.metric==="size" ? "Artifact / native" : "Benchmark";
+    const gEl = document.getElementById("groups");
+    gEl.innerHTML = groups.map(g=>`<span class="chip ${state.groups.has(g)?"on":""}" data-g="${esc(g)}">${esc(g)}</span>`).join("");
+    gEl.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{ const g=c.dataset.g; state.groups.has(g)?state.groups.delete(g):state.groups.add(g); render(); });
+    const f = state.itemFilter.toLowerCase();
+    const iEl = document.getElementById("items");
+    iEl.innerHTML = items.filter(it=>!f||it.toLowerCase().includes(f)).map(it=>
+      `<label class="checkitem"><input type="checkbox" data-i="${esc(it)}" ${state.items.has(it)?"checked":""}><code>${esc(it)}</code></label>`).join("")
+      || `<div class="msg" style="padding:12px">no matches</div>`;
+    iEl.querySelectorAll("input").forEach(c=>c.onchange=()=>{ const it=c.dataset.i; c.checked?state.items.add(it):state.items.delete(it); render(); });
+  }
+  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+  function selected(series) {
+    return series.filter(s => state.groups.has(s.group) && state.items.has(s.item));
+  }
+
+  // ---------- chart ----------
+  function refValue(s) {
+    if (s.baselines["curr-stable"]!=null) return s.baselines["curr-stable"];
+    return s.trend.length ? s.trend[0][1] : null;
+  }
+  function renderChart(sel) {
+    const el = document.getElementById("chart");
+    if (!state.chart) state.chart = echarts.init(el, null, { renderer:"canvas" });
+    const m = METRICS[state.metric];
+    if (!sel.length) { state.chart.clear(); state.chart.setOption({ title:{ text:"Select a group and item to plot", left:"center", top:"middle", textStyle:{color:getCss("--muted"),fontSize:13,fontWeight:"normal"} } }); return; }
+    const rel = state.scale==="relative";
+    const single = sel.length===1;
+    const echSeries = sel.map((s,idx) => {
+      const color = PALETTE[idx % PALETTE.length];
+      const ref = rel ? refValue(s) : null;
+      const data = s.trend.map(([t,v]) => [t, rel && ref ? 100*v/ref : v]);
+      const ser = { name:s.label, type:"line", showSymbol:s.trend.length<=40, symbolSize:5,
+                    smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color}, data };
+      if (single) {
+        const ml = ROLE_ORDER.filter(r=>s.baselines[r]!=null).map(r=>({
+          yAxis: rel && ref ? 100*s.baselines[r]/ref : s.baselines[r],
+          label:{ formatter:r, position:"insideEndTop", color:getCss("--muted"), fontSize:10 },
+          lineStyle:{ color:getCss("--muted"), type:"dashed", width:1 } }));
+        if (ml.length) ser.markLine = { symbol:"none", data:ml };
+        if (s.pr!=null && s.trend.length) {
+          const py = rel && ref ? 100*s.pr/ref : s.pr;
+          ser.markPoint = { symbol:"pin", symbolSize:42, data:[{ coord:[s.trend[s.trend.length-1][0], py], value:"PR",
+            itemStyle:{ color:getCss("--pr") }, label:{ formatter:"PR", color:"#fff", fontSize:10 } }] };
+        }
+      }
+      return ser;
+    });
+    const yLabel = rel ? "% of curr-stable / first" : m.unit;
+    const opt = {
+      color: PALETTE,
+      grid: { left:64, right:26, top:16, bottom:64 },
+      tooltip: { trigger:"axis", valueFormatter:(v)=> rel ? (v==null?"·":v.toFixed(1)+"%") : fmtVal(v, m.unit) },
+      legend: { type:"scroll", top:0, right:0, left:0, textStyle:{ color:getCss("--text") } },
+      xAxis: { type:"time", axisLabel:{ color:getCss("--muted") }, axisLine:{ lineStyle:{ color:getCss("--border") } } },
+      yAxis: { type: state.scale==="log" ? "log" : "value", name:yLabel, nameTextStyle:{ color:getCss("--muted") },
+               axisLabel:{ color:getCss("--muted"), formatter:(v)=> rel ? v+"%" : fmtVal(v, m.unit) },
+               splitLine:{ lineStyle:{ color:getCss("--border"), opacity:.4 } } },
+      dataZoom: [ { type:"inside" }, { type:"slider", height:18, bottom:24 } ],
+      series: echSeries,
+    };
+    state.chart.clear();
+    state.chart.setOption(opt);
+  }
+  const getCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
+
+  // ---------- table ----------
+  function renderTable(sel) {
+    const el = document.getElementById("table");
+    if (!sel.length) { el.innerHTML = `<div class="msg" style="padding:12px">Nothing selected.</div>`; return; }
+    const m = METRICS[state.metric];
+    const cols = [{k:"pr",h:"★ PR",cls:"pr"},{k:"latest",h:"latest"}].concat(ROLE_ORDER.map(r=>({k:r,h:r})));
+    const val = (s,k)=> k==="pr"?s.pr : k==="latest"?(s.trend.length?s.trend[s.trend.length-1][1]:null) : (s.baselines[k]!=null?s.baselines[k]:null);
+    let h = "<table><thead><tr><th>Series</th>"+cols.map((c,i)=>`<th class="${c.cls||""}">${c.h}</th>`).join("")+"</tr></thead><tbody>";
+    for (let i=0;i<sel.length;i++){
+      const s=sel[i]; const color=PALETTE[i%PALETTE.length];
+      const ref = s.baselines["prev-major"]!=null?s.baselines["prev-major"]:(s.baselines["prev-stable"]!=null?s.baselines["prev-stable"]:s.baselines["curr-stable"]);
+      h += `<tr><td><span class="sw" style="background:${color}"></span>${esc(s.label)}</td>`+
+        cols.map(c=>{ const v=val(s,c.k); let a="";
+          if(ref!=null&&v!=null&&ref!==0&&(c.k==="pr"||c.k==="latest")){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) a=d>0?` <span class="up">▲${(d*100).toFixed(0)}%</span>`:` <span class="down">▼${(-d*100).toFixed(0)}%</span>`; }
+          return `<td class="${c.cls||""}">${fmtVal(v, m.unit)}${a}</td>`; }).join("")+"</tr>";
+    }
+    el.innerHTML = h+"</tbody></table>";
+  }
+
+  // ---------- orchestration ----------
+  function render() {
+    const series = allSeries();
+    renderPickers(series);
+    let sel = selected(series);
+    const warn = document.getElementById("warn");
+    if (sel.length > MAX_SERIES) { warn.style.display=""; warn.textContent = `Showing ${MAX_SERIES} of ${sel.length} selected series — narrow your selection (or use Relative % to compare).`; sel = sel.slice(0, MAX_SERIES); }
+    else warn.style.display="none";
+    document.getElementById("chart-title").textContent =
+      METRICS[state.metric].label + (state.scale==="relative"?" — relative %":state.scale==="log"?" — log":"");
+    renderChart(sel);
+    renderTable(sel);
+  }
+
+  function resetSelection(series) {
+    const groups = [], gs = new Set();
+    for (const s of series) if (!gs.has(s.group)) { gs.add(s.group); groups.push(s.group); }
+    // all OS for benchmarks (nice cross-OS default); one package for size (avoid overload)
+    state.groups = new Set(state.metric === "size" ? groups.slice(0, 1) : groups);
+    const items = [], is = new Set();
+    for (const s of series) if (state.groups.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
+    state.items = new Set(items.slice(0, 1));
+    state.itemFilter = ""; const f = document.getElementById("item-filter"); if (f) f.value = "";
+  }
+
+  function boot(data) {
+    state.data = { benchmarks:data.benchmarks||{}, sizes:data.sizes||{} };
+    const hasBench = Object.keys(state.data.benchmarks).length>0;
+    const hasSize = !!(state.data.sizes && state.data.sizes["artifact-sizes.json"]);
+    if (!hasBench && !hasSize) { document.getElementById("subtitle").textContent="No data found.";
+      document.getElementById("wrap").innerHTML = `<div class="msg">No perf data available yet.</div>`; return; }
+    if (!hasBench && hasSize) { state.metric="size"; document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m==="size")); }
+
+    // subtitle
+    const h = normBench(state.data.benchmarks);
+    const parts = Object.keys(h).map(o=>{ const d=latestDay(h[o].nightly); return d?`${o} <code>${d.version}</code>`:null; }).filter(Boolean);
+    const sz = hasSize ? (state.data.sizes["artifact-sizes.json"].nightly.slice(-1)[0]||{}).version : null;
+    document.getElementById("subtitle").innerHTML =
+      (parts.length?"Nightly "+parts.join(" · "):"") + (sz?`  ·  sizes <code>${sz}</code>`:"") || "Ready.";
+
+    resetSelection(allSeries());
+    // wire controls
+    document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>{ state.metric=b.dataset.m;
+      document.querySelectorAll("#metric button").forEach(x=>x.classList.toggle("on",x===b));
+      resetSelection(allSeries()); render(); });
+    document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s;
+      document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
+    document.getElementById("item-filter").oninput = e => { state.itemFilter=e.target.value; renderPickers(allSeries()); };
+    window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
+    render();
+  }
+
+  // ---------- data loading ----------
+  async function fetchJson(url){ try{ const r=await fetch(url,{cache:"no-cache"}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+  async function fetchDir(base){ // returns {file: doc} using index.json manifest
+    const idx = await fetchJson(base+"index.json"); if(!idx||!idx.files) return {};
+    const out={}; await Promise.all(idx.files.map(async f=>{ const d=await fetchJson(base+f); if(d) out[f]=d; })); return out;
+  }
+  async function fetchLive() {
+    const base = new URLSearchParams(location.search).get("data") || RAW_BASE;
+    const b = base.endsWith("/")?base:base+"/";
+    document.getElementById("subtitle").textContent="Loading live data…";
+    const [benchmarks, sizes] = await Promise.all([ fetchDir(b+"benchmarks/"), fetchDir(b+"sizes/") ]);
+    boot({ benchmarks, sizes });
+  }
+
+  const start = () => {
+    if (window.__PERF_DATA__) boot(window.__PERF_DATA__);
+    else if (window.__BENCH_DATA__) boot({ benchmarks:window.__BENCH_DATA__, sizes:{} }); // legacy
+    else fetchLive();
+  };
+  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded", start); else start();
 })();
 </script>
 </body>
