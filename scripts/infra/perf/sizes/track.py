@@ -25,7 +25,7 @@ Two kinds of data points ("columns") are collected:
 
 Only the Python standard library is used so the script runs on a clean runner.
 
-The history document is persisted between runs via the GitHub Actions cache; see
+The history document is persisted between runs on the ``aw-data`` branch; see
 ``.github/workflows/track-artifact-sizes.yml``.
 """
 
@@ -35,7 +35,6 @@ import argparse
 import datetime as dt
 import json
 import os
-import re
 import shutil
 import sys
 import tempfile
@@ -44,19 +43,22 @@ import urllib.error
 import urllib.request
 import zipfile
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
+from _common import (  # noqa: E402
+    EAP_INDEX_URL,
+    NUGET_FLATCONTAINER,
+    feed_versions,
+    http_get_json,
+    latest_nightly,
+    pick_resource,
+    released_roles,
+)
+
 # --------------------------------------------------------------------------- #
 # Constants
 # --------------------------------------------------------------------------- #
 
 SCHEMA_VERSION = 1
-
-# The official SkiaSharp Early Access Preview (EAP) feed. This aka.ms link
-# redirects to a standard NuGet v3 feed on Azure DevOps Artifacts (anonymous)
-# and hosts the daily ``-nightly.*`` builds we sample.
-EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"
-
-# NuGet.org flat container, used for the released reference versions.
-NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"
 
 ROLES = ("prev-major", "prev-stable", "curr-stable", "latest")
 
@@ -72,26 +74,6 @@ _NATIVE_EXTS = (".so", ".dylib", ".dll", ".a")
 
 def _log(msg: str) -> None:
     print(msg, flush=True)
-
-
-def http_get(url: str, *, retries: int = 4, timeout: int = 120) -> bytes:
-    """GET a URL returning the raw bytes, with simple exponential backoff."""
-    last_err: Exception | None = None
-    for attempt in range(1, retries + 1):
-        try:
-            req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
-            with urllib.request.urlopen(req, timeout=timeout) as resp:
-                return resp.read()
-        except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
-            last_err = err
-            wait = min(30, 2 ** attempt)
-            _log(f"  ! request failed ({err}); retry {attempt}/{retries} in {wait}s")
-            time.sleep(wait)
-    raise RuntimeError(f"GET failed after {retries} attempts: {url}\n  {last_err}")
-
-
-def http_get_json(url: str, **kwargs) -> dict:
-    return json.loads(http_get(url, **kwargs).decode("utf-8"))
 
 
 def http_download(url: str, dest: str, *, retries: int = 4, timeout: int = 600) -> None:
@@ -168,20 +150,26 @@ def _is_native_entry(name: str) -> bool:
 def measure_nupkg(path: str) -> dict:
     """Measure a single ``.nupkg``.
 
-    Returns ``{"nupkg": <compressed file size>, "natives": {<path>: <size>, ...}}``
-    where ``natives`` is empty for managed-only packages.
+    Returns ``{"nupkg": <compressed file size>, "natives": {<path>: <size>},
+    "files": {<path>: <uncompressed size>}}``. ``natives`` is the subset the summary
+    keeps; ``files`` is EVERY entry, kept only for the raw snapshot (callers that build
+    the summary drop it).
     """
     file_size = os.path.getsize(path)
     natives: dict[str, int] = {}
+    files: dict[str, int] = {}
     try:
         with zipfile.ZipFile(path) as zf:
             for zi in zf.infolist():
+                if zi.is_dir():
+                    continue
+                files[zi.filename] = zi.file_size
                 if _is_native_entry(zi.filename):
                     natives[zi.filename] = zi.file_size
     except zipfile.BadZipFile:
         _log(f"  ! not a valid zip, skipping: {path}")
-        return {"nupkg": file_size, "natives": {}}
-    return {"nupkg": file_size, "natives": natives}
+        return {"nupkg": file_size, "natives": {}, "files": {}}
+    return {"nupkg": file_size, "natives": natives, "files": files}
 
 
 # --------------------------------------------------------------------------- #
@@ -193,33 +181,12 @@ def resolve_eap_feed() -> dict:
 
     Returns ``{"flat": <PackageBaseAddress>, "search": <SearchQueryService>}``.
     """
-    index = http_get_json(EAP_INDEX_URL)
-    resources = index.get("resources", [])
-    flat = _find_resource(resources, "PackageBaseAddress/")
-    search = _find_resource(resources, "SearchQueryService")
+    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
+    flat = pick_resource(resources, "PackageBaseAddress/")
+    search = pick_resource(resources, "SearchQueryService")
     if not flat:
         raise RuntimeError("EAP feed index has no PackageBaseAddress resource.")
     return {"flat": flat, "search": search}
-
-
-def _find_resource(resources: list[dict], type_prefix: str) -> str | None:
-    for res in resources:
-        if str(res.get("@type", "")).startswith(type_prefix):
-            return res["@id"]
-    return None
-
-
-def get_versions(flat_base: str, package_id: str) -> list[str]:
-    """Return the versions of a package from a flat-container base URL.
-
-    The returned list is not guaranteed to be sorted (Azure DevOps feeds are
-    not), so callers must sort with ``_semver_key`` when order matters.
-    """
-    url = f"{flat_base.rstrip('/')}/{package_id.lower()}/index.json"
-    try:
-        return list(http_get_json(url).get("versions", []))
-    except RuntimeError:
-        return []
 
 
 def download_nupkg(flat_base: str, package_id: str, version: str, work_dir: str) -> str | None:
@@ -261,14 +228,6 @@ def enumerate_feed_packages(search_base: str) -> list[str]:
 # Nightly collection (EAP feed)
 # --------------------------------------------------------------------------- #
 
-def latest_nightly(versions: list[str]) -> str | None:
-    """Newest ``-nightly.*`` version (by SemVer) from a version list."""
-    nightlies = [v for v in versions if "-nightly." in v.lower()]
-    if not nightlies:
-        return None
-    return sorted(nightlies, key=_semver_key)[-1]
-
-
 def _nightly_family(package_id: str) -> str:
     """The version-line a package belongs to."""
     return "harfbuzz" if package_id.startswith("HarfBuzzSharp") else "skia"
@@ -288,8 +247,8 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
         raise RuntimeError("Could not enumerate any packages from the EAP feed.")
 
     headlines = {
-        "skia": latest_nightly(get_versions(flat, "SkiaSharp")),
-        "harfbuzz": latest_nightly(get_versions(flat, "HarfBuzzSharp")),
+        "skia": latest_nightly(feed_versions(flat, "SkiaSharp")),
+        "harfbuzz": latest_nightly(feed_versions(flat, "HarfBuzzSharp")),
     }
     _log(f"  headline nightly: SkiaSharp={headlines['skia']} "
          f"HarfBuzzSharp={headlines['harfbuzz']}")
@@ -299,7 +258,7 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
         target = headlines[_nightly_family(pkg_id)]
         if not target:
             continue
-        versions = get_versions(flat, pkg_id)
+        versions = feed_versions(flat, pkg_id)
         if target not in versions:
             continue  # package does not ship this nightly (deprecated / not built)
         dest = download_nupkg(flat, pkg_id, target, work_dir)
@@ -321,65 +280,17 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
 # --------------------------------------------------------------------------- #
 
 def get_nuget_versions(package_id: str) -> list[str]:
-    return get_versions(NUGET_FLATCONTAINER, package_id)
-
-
-_SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
-
-
-def _semver_key(version: str) -> tuple:
-    """Return a sortable key for a NuGet SemVer2 version string.
-
-    Release versions sort after their pre-releases (per SemVer precedence).
-    """
-    m = _SEMVER_RE.match(version)
-    if not m:
-        return ((0, 0, 0, 0), (1,))
-    major, minor, patch, rev, pre = m.groups()
-    core = (int(major), int(minor), int(patch), int(rev or 0))
-    if pre is None:
-        # A release sorts after all of its pre-releases: flag 1 > flag 0.
-        return (core, (1,))
-    ids: list[tuple] = []
-    for part in pre.split("."):
-        if part.isdigit():
-            ids.append((0, int(part)))  # numeric identifiers compare numerically
-        else:
-            ids.append((1, part))       # ... and lower than alphanumeric ones
-    # flag 0 marks a pre-release; the nested tuple only ever compares within
-    # pre-releases, so its (int, int|str) items never clash across positions.
-    return (core, (0, tuple(ids)))
-
-
-def _is_stable(version: str) -> bool:
-    return "-" not in version
+    return feed_versions(NUGET_FLATCONTAINER, package_id)
 
 
 def resolve_roles(versions: list[str]) -> dict[str, str | None]:
-    """Resolve the four reference roles from a package's version list."""
+    """Resolve the four reference roles from a package's version list.
+
+    ``latest`` is the newest version overall (incl. prereleases); the released stable
+    roles come from the shared ``released_roles``. Absent roles are ``None``.
+    """
     roles: dict[str, str | None] = {r: None for r in ROLES}
-    if not versions:
-        return roles
-
-    ordered = sorted(versions, key=_semver_key)
-    roles["latest"] = ordered[-1]
-
-    stables = [v for v in ordered if _is_stable(v)]
-    if not stables:
-        return roles
-
-    curr = stables[-1]
-    roles["curr-stable"] = curr
-    curr_major = _semver_key(curr)[0][0]
-
-    same_major = [v for v in stables if _semver_key(v)[0][0] == curr_major]
-    if len(same_major) >= 2:
-        roles["prev-stable"] = same_major[-2]
-
-    lower_major = [v for v in stables if _semver_key(v)[0][0] < curr_major]
-    if lower_major:
-        roles["prev-major"] = lower_major[-1]
-
+    roles.update(released_roles(versions))
     return roles
 
 
@@ -485,6 +396,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="Re-measure even when data is already cached.")
     p.add_argument("--work-dir", default=None,
                    help="Directory for temporary downloads (default: a temp dir).")
+    p.add_argument("--raw", default=None,
+                   help="Also write today's nightly measurement, WITH a full per-file size "
+                        "breakdown per package, to this path (the workflow archives it under "
+                        "sizes/raw/<date>.json.gz). The summary keeps only nupkg + natives.")
     return p.parse_args(argv)
 
 
@@ -504,10 +419,23 @@ def main(argv: list[str]) -> int:
             feed = resolve_eap_feed()
             packages, headline = collect_nightly(feed, work_dir)
             if packages:
+                # Raw snapshot (optional): full per-file breakdown, archived per day.
+                if args.raw:
+                    raw_pkgs = {pid: {"version": m["version"], "nupkg": m["nupkg"],
+                                      "files": m.get("files", {})}
+                                for pid, m in packages.items()}
+                    with open(args.raw, "w", encoding="utf-8") as fh:
+                        json.dump({"date": today, "version": headline, "packages": raw_pkgs}, fh)
+                    _log(f"  wrote raw size snapshot -> {args.raw} "
+                         f"({sum(len(p['files']) for p in raw_pkgs.values())} files)")
+                # Summary keeps only nupkg + natives (drop the full file list).
+                summary_pkgs = {pid: {"version": m["version"], "nupkg": m["nupkg"],
+                                      "natives": m.get("natives", {})}
+                                for pid, m in packages.items()}
                 upsert_nightly(history, {
                     "date": today,
                     "version": headline,
-                    "packages": packages,
+                    "packages": summary_pkgs,
                 }, args.max_nightly)
             else:
                 _log("  no nightly packages measured; leaving history unchanged")
@@ -524,6 +452,12 @@ def main(argv: list[str]) -> int:
                 history["roles"] = resolved
                 total = len(history["releasedCache"])
                 _log(f"  released cache now holds {total} package/version entries")
+
+        # Keep the summary lean: released measurements gain a 'files' map from
+        # measure_nupkg, but the summary only needs nupkg + natives (raw lives elsewhere).
+        for m in history.get("releasedCache", {}).values():
+            if isinstance(m, dict):
+                m.pop("files", None)
 
         save_history(args.history, history)
     finally:
