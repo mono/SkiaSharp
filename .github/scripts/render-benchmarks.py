@@ -178,13 +178,12 @@ def render_header(histories, oses):
     if not rows:
         return lines + ["_No data collected yet._", ""]
     lines += ["| OS | nightly | released baselines |", "|:--|:--|:--|", *rows, "",
-              f"> Columns run newest → oldest. When present, **⭐ this PR** (SkiaSharp "
-              f"built from the branch) is leftmost, then 🌙 the last {DISPLAY_DAYS} nightlies "
-              f"from the [EAP feed](https://aka.ms/skiasharp-eap/index.json), then released "
-              f"baselines (from nuget.org). Each dot compares a cell to the older column on its "
-              f"right: {TREND_FASTER} faster · {TREND_SLOWER} slower; < {TREND_PCT:.0%} is noise. "
-              f"The ⭐ column reflects the branch's **managed** changes; native C++ changes are "
-              f"not rebuilt here.", ""]
+              f"> Columns run newest → oldest. When present, **⭐ this PR** (a full source "
+              f"build of SkiaSharp — native + managed — from the branch) is leftmost, then "
+              f"🌙 the last {DISPLAY_DAYS} nightlies from the "
+              f"[EAP feed](https://aka.ms/skiasharp-eap/index.json), then released baselines "
+              f"(from nuget.org). Each dot compares a cell to the older column on its right: "
+              f"{TREND_FASTER} faster · {TREND_SLOWER} slower; < {TREND_PCT:.0%} is noise.", ""]
     return lines
 
 

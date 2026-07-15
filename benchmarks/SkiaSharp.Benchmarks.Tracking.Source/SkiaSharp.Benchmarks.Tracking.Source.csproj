@@ -41,8 +41,9 @@
     Reference the SkiaSharp.dll built from source (net10.0 only), NOT a ProjectReference.
     A ProjectReference restores every TFM SkiaSharp declares — including net10.0-android,
     which needs the Android workload that hosted runners don't have. The workflow builds
-    `binding/SkiaSharp/SkiaSharp.csproj -f net10.0` first (workload-free), then this picks
-    up the output. The native binary comes from output/native via the import below.
+    `binding/SkiaSharp/SkiaSharp.csproj -p:AllTargetFrameworks=net10.0` first (workload-free),
+    then this picks up the output. The native libSkiaSharp comes from output/native (built
+    from source in Docker by the workflow) via the IncludeNativeAssets import below.
   -->
   <ItemGroup>
     <Reference Include="SkiaSharp">

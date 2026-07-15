@@ -150,23 +150,24 @@ jobs:
           path: ${{ env.HISTORY }}
           if-no-files-found: warn
 
-  # "this PR / this branch" column: build SkiaSharp MANAGED from the checkout and
-  # benchmark it against the nightly's native binaries. Reflects the branch's managed
-  # changes (marshalling / allocations / wrapper hot paths). A from-scratch native
-  # Skia build is intentionally NOT done here (too heavy for hosted runners); native
-  # C++ changes are therefore not reflected in this column. Isolated + best-effort so
-  # it can never turn the run red.
+  # "this PR / this branch" column: a FULL source build of SkiaSharp (native + managed)
+  # from the checkout, benchmarked against the baselines. The native libSkiaSharp.so is
+  # built from source in Docker — the same mechanism the WASM gallery build uses
+  # (build-site.yml) — so native C++ / C-API changes (e.g. #4421) ARE reflected here.
+  # Linux x64 (the runner's host arch) only. Isolated + best-effort so it can never
+  # turn the run red.
   benchmark-source:
     needs: resolve
     if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     continue-on-error: true
     env:
       PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking.Source
-      NIGHTLY: ${{ fromJSON(needs.resolve.outputs.versions).nightly }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
@@ -185,13 +186,17 @@ jobs:
             echo "PR_LABEL=${{ github.ref_name }}" >> "$GITHUB_ENV"
           fi
 
-      - name: Stage nightly native
-        run: python3 .github/scripts/fetch-native.py Linux "$NIGHTLY"
+      - name: Build libSkiaSharp from source (Linux x64, Docker)
+        # Builds Skia + libSkiaSharp from THIS checkout into output/native/linux/x64,
+        # exactly what benchmarks/.../IncludeNativeAssets picks up. Same Docker+cake
+        # pattern as the WASM build in build-site.yml.
+        run: |
+          bash scripts/infra/native/linux/docker/glibc/build-local.sh x64
+          sudo chown -R "$(id -u):$(id -g)" output
 
       - name: Build SkiaSharp (managed, net10 only)
         # Override AllTargetFrameworks so SkiaSharp builds only net10.0 — its default
-        # TFM set includes net10.0-android, which would demand the Android workload on
-        # the runner. A single net10.0 build is workload-free.
+        # TFM set includes net10.0-android, which would demand the Android workload.
         run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0
 
       - name: Build source benchmarks
