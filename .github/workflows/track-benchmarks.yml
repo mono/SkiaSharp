@@ -151,19 +151,33 @@ jobs:
           if-no-files-found: warn
 
   # "this PR / this branch" column: a FULL source build of SkiaSharp (native + managed)
-  # from the checkout, benchmarked against the baselines. The native libSkiaSharp.so is
-  # built from source in Docker — the same mechanism the WASM gallery build uses
-  # (build-site.yml) — so native C++ / C-API changes (e.g. #4421) ARE reflected here.
-  # Linux x64 (the runner's host arch) only. Isolated + best-effort so it can never
-  # turn the run red.
+  # from the checkout, benchmarked against the baselines, on ALL THREE desktop OSes.
+  # The native libSkiaSharp is built from source per host — Linux via Docker (same
+  # mechanism as the WASM gallery build in build-site.yml), macOS via Xcode+Ninja,
+  # Windows via VS+LLVM+Ninja — mirroring the AzDO native pipelines. So native C++ /
+  # C-API changes (e.g. #4421) ARE reflected in the ⭐ column on every OS. Each leg is
+  # isolated + best-effort so it can never turn the run red.
   benchmark-source:
     needs: resolve
     if: github.repository_owner == 'mono'
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+          - os: macos-latest
+            label: macOS
+          - os: windows-latest
+            label: Windows
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 150
     continue-on-error: true
     env:
       PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking.Source
+      # Skip the emscripten activation git-sync-deps does by default — the desktop
+      # native builds don't need it (Linux runs in Docker and is unaffected).
+      GIT_SYNC_DEPS_SKIP_EMSDK: "1"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -175,9 +189,6 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install Linux native dependencies
-        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
-
       - name: Label this run
         run: |
           if [ -n "${{ github.event.pull_request.number }}" ]; then
@@ -187,16 +198,40 @@ jobs:
           fi
 
       - name: Build libSkiaSharp from source (Linux x64, Docker)
-        # Builds Skia + libSkiaSharp from THIS checkout into output/native/linux/x64,
-        # exactly what benchmarks/.../IncludeNativeAssets picks up. Same Docker+cake
-        # pattern as the WASM build in build-site.yml.
+        if: runner.os == 'Linux'
+        # Docker + cake, same pattern as build-site.yml's WASM build. Produces
+        # output/native/linux/x64/libSkiaSharp.so from THIS source.
         run: |
+          sudo apt-get update && sudo apt-get install -y libfontconfig1
           bash scripts/infra/native/linux/docker/glibc/build-local.sh x64
           sudo chown -R "$(id -u):$(id -g)" output
 
+      - name: Build libSkiaSharp from source (macOS)
+        if: runner.os == 'macOS'
+        # Xcode (preinstalled) + Ninja. Ad-hoc codesigned; no identity needed.
+        # Produces output/native/osx/libSkiaSharp.dylib for the host arch.
+        run: |
+          dotnet tool restore
+          pwsh ./scripts/infra/native/shared/install-ninja.ps1
+          arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+          dotnet cake --target=externals-macos --configuration=Release --arch=$arch
+
+      - name: Build libSkiaSharp from source (Windows x64)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
+        # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
+        run: |
+          dotnet tool restore
+          ./scripts/infra/native/shared/install-ninja.ps1
+          ./scripts/infra/native/windows/select-vs.ps1
+          ./scripts/infra/native/windows/install-7zip.ps1
+          ./scripts/infra/native/windows/install-llvm.ps1
+          dotnet cake --target=externals-windows --configuration=Release --buildarch=x64
+
       - name: Build SkiaSharp (managed, net10 only)
         # Override AllTargetFrameworks so SkiaSharp builds only net10.0 — its default
-        # TFM set includes net10.0-android, which would demand the Android workload.
+        # TFM set includes platform TFMs (android/ios/windows) that would demand workloads.
         run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0
 
       - name: Build source benchmarks
@@ -209,8 +244,8 @@ jobs:
       - name: Record results (pr)
         run: |
           python3 .github/scripts/track-benchmarks.py \
-            --history "benchmarks-Linux-pr.json" \
-            --os Linux \
+            --history "benchmarks-${{ matrix.label }}-pr.json" \
+            --os "${{ matrix.label }}" \
             --role pr \
             --version "$PR_LABEL"
 
@@ -218,8 +253,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmarks-Linux-pr
-          path: benchmarks-Linux-pr.json
+          name: benchmarks-${{ matrix.label }}-pr
+          path: benchmarks-${{ matrix.label }}-pr.json
           if-no-files-found: warn
 
   report:
