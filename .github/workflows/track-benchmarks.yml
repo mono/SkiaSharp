@@ -188,6 +188,9 @@ jobs:
       - name: Stage nightly native
         run: python3 .github/scripts/fetch-native.py Linux "$NIGHTLY"
 
+      - name: Build SkiaSharp (managed, net10 only)
+        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -f net10.0
+
       - name: Build source benchmarks
         run: dotnet build "$PROJECT" -c Release
 

@@ -37,10 +37,21 @@
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
   </ItemGroup>
 
+  <!--
+    Reference the SkiaSharp.dll built from source (net10.0 only), NOT a ProjectReference.
+    A ProjectReference restores every TFM SkiaSharp declares — including net10.0-android,
+    which needs the Android workload that hosted runners don't have. The workflow builds
+    `binding/SkiaSharp/SkiaSharp.csproj -f net10.0` first (workload-free), then this picks
+    up the output. The native binary comes from output/native via the import below.
+  -->
   <ItemGroup>
-    <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <Reference Include="SkiaSharp">
+      <HintPath>..\..\binding\SkiaSharp\bin\$(Configuration)\net10.0\SkiaSharp.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
 
 </Project>
+
