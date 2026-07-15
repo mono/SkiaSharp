@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SkiaSharp benchmark tracker</title>
+<!--
+  Self-contained, dependency-free benchmark dashboard.
+
+  Two data modes (no code difference):
+    * Embedded  — CI injects an embedded data script just before the closing body tag,
+      producing an OFFLINE single file you can download from a run artifact and open directly in a browser (this is how PR runs are viewed).
+    * Live      — with no embedded data, the page fetches the JSON histories from the
+      `aw-data` branch (or any `?data=<base-url>`), so a hosted copy always shows the
+      newest persisted data.
+
+  The histories are the same `benchmarks-<OS>-<role>.json` documents produced by
+  .github/scripts/track-benchmarks.py. See .github/workflows/track-benchmarks.yml.
+-->
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d; --text: #e6edf3;
+    --muted: #8b949e; --accent: #58a6ff; --pr: #d2a8ff; --grid: #21262d;
+    --faster: #3fb950; --slower: #f85149;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #ffffff; --panel: #f6f8fa; --border: #d0d7de; --text: #1f2328;
+      --muted: #636c76; --accent: #0969da; --pr: #8250df; --grid: #eaeef2;
+      --faster: #1a7f37; --slower: #cf222e;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  }
+  header { padding: 20px 24px 8px; }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; }
+  .wrap { padding: 12px 24px 48px; max-width: 1200px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 12px 0 16px; }
+  .controls label { color: var(--muted); font-size: 12px; margin-right: 4px; }
+  select, .seg button {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 6px 10px; font-size: 13px;
+  }
+  select { min-width: 260px; }
+  .seg { display: inline-flex; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  .seg button { border: 0; border-right: 1px solid var(--border); cursor: pointer; }
+  .seg button:last-child { border-right: 0; }
+  .seg button.on { background: var(--accent); color: #fff; }
+  .tabs { display: flex; gap: 6px; margin: 8px 0 0; }
+  .tabs button {
+    background: transparent; color: var(--muted); border: 0; border-bottom: 2px solid transparent;
+    padding: 6px 12px; cursor: pointer; font-size: 14px;
+  }
+  .tabs button.on { color: var(--text); border-bottom-color: var(--accent); }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 14px 0; }
+  .card h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; }
+  svg { width: 100%; height: auto; display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; color: var(--muted); font-size: 12px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 3px; border-radius: 2px; display: inline-block; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { border-bottom: 1px solid var(--border); padding: 6px 10px; text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  th { color: var(--muted); font-weight: 600; }
+  .pr-col { color: var(--pr); }
+  .up { color: var(--slower); } .down { color: var(--faster); }
+  .msg { color: var(--muted); padding: 40px 0; text-align: center; }
+  code { background: var(--grid); padding: 1px 5px; border-radius: 4px; font-size: 12px; }
+  a { color: var(--accent); }
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 SkiaSharp benchmark tracker</h1>
+  <div class="sub" id="subtitle">Loading…</div>
+</header>
+<div class="wrap">
+  <div class="tabs" id="os-tabs"></div>
+  <div class="controls">
+    <span><label for="bench">Benchmark</label><select id="bench"></select></span>
+    <span class="seg" id="metric">
+      <button data-k="meanNs" class="on">Time</button>
+      <button data-k="allocatedBytes">Allocations</button>
+    </span>
+  </div>
+  <div class="card">
+    <h2 id="chart-title">Trend</h2>
+    <div id="chart"></div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="card">
+    <h2>Latest comparison (this OS)</h2>
+    <div id="table"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+(function () {
+  const RAW_BASE_DEFAULT = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/benchmarks/";
+  const ROLE_ORDER = ["curr-stable", "prev-stable", "prev-major"];
+  const ROLE_LABEL = { "curr-stable": "curr-stable", "prev-stable": "prev-stable", "prev-major": "prev-major" };
+  const OS_ORDER = ["Linux", "Windows", "macOS"];
+  const DISPLAY_DAYS = 14;
+  const COLORS = { nightly: "#58a6ff", "curr-stable": "#8b949e", "prev-stable": "#3fb950", "prev-major": "#f0883e", pr: "#d2a8ff" };
+
+  const state = { histories: {}, os: null, bench: null, metric: "meanNs" };
+
+  // ---- data helpers ----
+  const latestDay = h => (h && h.days && h.days.length) ? h.days[h.days.length - 1] : null;
+  const metric = (day, name, key) => (day && day.benchmarks && day.benchmarks[name]) ? day.benchmarks[name][key] : null;
+  const shortName = n => n.replace(/^SkiaSharp\.Benchmarks\.Tracking\./, "");
+
+  function normalize(raw) {
+    const h = {};
+    for (const key in raw) {
+      const doc = raw[key];
+      if (!doc || !doc.os) continue;
+      (h[doc.os] || (h[doc.os] = {}))[doc.role || "nightly"] = doc;
+    }
+    return h;
+  }
+  function orderedOses(h) {
+    const known = OS_ORDER.filter(o => h[o]);
+    return known.concat(Object.keys(h).filter(o => !OS_ORDER.includes(o)).sort());
+  }
+  function benchUniverse(roles) {
+    const s = new Set();
+    ["pr", "nightly"].concat(ROLE_ORDER).forEach(r => {
+      const d = latestDay(roles[r]);
+      if (d) Object.keys(d.benchmarks || {}).forEach(n => s.add(n));
+    });
+    return Array.from(s).sort();
+  }
+
+  function fmtTime(ns) {
+    if (ns == null) return "·";
+    if (ns < 1e3) return ns.toFixed(1) + " ns";
+    if (ns < 1e6) return (ns / 1e3).toFixed(2) + " µs";
+    if (ns < 1e9) return (ns / 1e6).toFixed(2) + " ms";
+    return (ns / 1e9).toFixed(2) + " s";
+  }
+  function fmtBytes(b) {
+    if (b == null) return "·";
+    if (b < 1024) return Math.round(b) + " B";
+    const kb = b / 1024;
+    return kb < 1024 ? kb.toFixed(1) + " KB" : (kb / 1024).toFixed(1) + " MB";
+  }
+  const fmt = (v, key) => key === "allocatedBytes" ? fmtBytes(v) : fmtTime(v);
+
+  // ---- SVG line chart ----
+  function chart(roles, name, key) {
+    const el = document.getElementById("chart");
+    const nightly = roles.nightly;
+    const days = ((nightly && nightly.days) || []).slice(-DISPLAY_DAYS)
+      .map(d => ({ date: d.date, v: metric(d, name, key) }))
+      .filter(p => p.v != null);
+    const baselines = ROLE_ORDER.map(r => ({ role: r, v: metric(latestDay(roles[r]), name, key) })).filter(p => p.v != null);
+    const prVal = metric(latestDay(roles.pr), name, key);
+
+    const all = days.map(d => d.v).concat(baselines.map(b => b.v));
+    if (prVal != null) all.push(prVal);
+    if (!all.length) { el.innerHTML = '<div class="msg">No data for this benchmark.</div>'; return; }
+
+    const W = 1120, H = 320, P = { t: 16, r: 120, b: 40, l: 66 };
+    let min = Math.min.apply(null, all), max = Math.max.apply(null, all);
+    if (min === max) { min *= 0.98; max *= 1.02 || 1; }
+    const pad = (max - min) * 0.08; min = Math.max(0, min - pad); max += pad;
+    const n = Math.max(days.length, 1);
+    const x = i => P.l + (n === 1 ? (W - P.l - P.r) / 2 : (i * (W - P.l - P.r) / (n - 1)));
+    const y = v => P.t + (H - P.t - P.b) * (1 - (v - min) / (max - min || 1));
+
+    const S = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(S, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const add = (tag, attrs, txt) => {
+      const e = document.createElementNS(S, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      if (txt != null) e.textContent = txt;
+      svg.appendChild(e); return e;
+    };
+    const css = getComputedStyle(document.documentElement);
+    const gridC = css.getPropertyValue("--grid").trim();
+    const mutedC = css.getPropertyValue("--muted").trim();
+
+    // y grid + labels
+    for (let i = 0; i <= 4; i++) {
+      const v = min + (max - min) * i / 4, yy = y(v);
+      add("line", { x1: P.l, y1: yy, x2: W - P.r, y2: yy, stroke: gridC, "stroke-width": 1 });
+      add("text", { x: P.l - 8, y: yy + 4, "text-anchor": "end", fill: mutedC, "font-size": 11 }, fmt(v, key));
+    }
+    // baseline reference lines
+    baselines.forEach(b => {
+      const yy = y(b.v);
+      add("line", { x1: P.l, y1: yy, x2: W - P.r, y2: yy, stroke: COLORS[b.role], "stroke-width": 1.4, "stroke-dasharray": "5 4", opacity: 0.9 });
+      add("text", { x: W - P.r + 6, y: yy + 4, fill: COLORS[b.role], "font-size": 11 }, ROLE_LABEL[b.role]);
+    });
+    // nightly line + points
+    if (days.length) {
+      const d = days.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+      add("path", { d, fill: "none", stroke: COLORS.nightly, "stroke-width": 2 });
+      days.forEach((p, i) => {
+        const c = add("circle", { cx: x(i), cy: y(p.v), r: 3.5, fill: COLORS.nightly });
+        const t = document.createElementNS(S, "title"); t.textContent = `nightly ${p.date}: ${fmt(p.v, key)}`; c.appendChild(t);
+        if (i % Math.ceil(n / 8) === 0 || i === n - 1)
+          add("text", { x: x(i), y: H - P.b + 16, "text-anchor": "middle", fill: mutedC, "font-size": 10 }, p.date.slice(5));
+      });
+    }
+    // PR star at far right
+    if (prVal != null) {
+      const px = W - P.r - 8, py = y(prVal);
+      const st = add("text", { x: px, y: py + 6, "text-anchor": "middle", fill: COLORS.pr, "font-size": 20 }, "★");
+      const t = document.createElementNS(S, "title"); t.textContent = `this PR: ${fmt(prVal, key)}`; st.appendChild(t);
+    }
+    el.innerHTML = ""; el.appendChild(svg);
+
+    const leg = document.getElementById("legend");
+    let html = `<span><span class="swatch" style="background:${COLORS.nightly}"></span>nightly trend</span>`;
+    if (prVal != null) html += `<span><span style="color:${COLORS.pr}">★</span> this PR</span>`;
+    baselines.forEach(b => html += `<span><span class="swatch" style="background:${COLORS[b.role]}"></span>${ROLE_LABEL[b.role]}</span>`);
+    leg.innerHTML = html;
+  }
+
+  // ---- comparison table ----
+  function table(roles, key) {
+    const cols = [];
+    if (roles.pr) cols.push({ id: "pr", label: "★ this PR", cls: "pr-col" });
+    if (roles.nightly) cols.push({ id: "nightly", label: "🌙 latest" });
+    ROLE_ORDER.forEach(r => { if (roles[r]) cols.push({ id: r, label: ROLE_LABEL[r] }); });
+    const val = (id, name) => metric(latestDay(roles[id]), name, key);
+
+    let h = "<table><thead><tr><th>Benchmark</th>" + cols.map(c => `<th class="${c.cls || ""}">${c.label}</th>`).join("") + "</tr></thead><tbody>";
+    benchUniverse(roles).forEach(name => {
+      // reference = the oldest baseline present, for a simple delta arrow
+      const refId = ["prev-major", "prev-stable", "curr-stable"].find(r => roles[r]);
+      const ref = refId ? val(refId, name) : null;
+      h += `<tr><td>${shortName(name)}</td>` + cols.map(c => {
+        const v = val(c.id, name);
+        let arrow = "";
+        if (ref != null && v != null && ref !== 0 && (c.id === "pr" || c.id === "nightly")) {
+          const diff = (v - ref) / ref;
+          if (Math.abs(diff) >= 0.05) arrow = diff > 0 ? ` <span class="up">▲${(diff * 100).toFixed(0)}%</span>` : ` <span class="down">▼${(-diff * 100).toFixed(0)}%</span>`;
+        }
+        return `<td class="${c.cls || ""}">${fmt(v, key)}${arrow}</td>`;
+      }).join("") + "</tr>";
+    });
+    document.getElementById("table").innerHTML = h + "</tbody></table>";
+  }
+
+  // ---- rendering / wiring ----
+  function renderOsTabs() {
+    const el = document.getElementById("os-tabs");
+    const oses = orderedOses(state.histories);
+    el.innerHTML = oses.map(o => `<button data-os="${o}" class="${o === state.os ? "on" : ""}">${o}</button>`).join("");
+    el.querySelectorAll("button").forEach(b => b.onclick = () => { state.os = b.dataset.os; syncBenchList(); renderTabsAndBody(); });
+  }
+  function syncBenchList() {
+    const roles = state.histories[state.os] || {};
+    const names = benchUniverse(roles);
+    if (!names.includes(state.bench)) state.bench = names[0] || null;
+    const sel = document.getElementById("bench");
+    sel.innerHTML = names.map(n => `<option value="${n}" ${n === state.bench ? "selected" : ""}>${shortName(n)}</option>`).join("");
+  }
+  function renderTabsAndBody() {
+    renderOsTabs();
+    const roles = state.histories[state.os] || {};
+    document.getElementById("chart-title").textContent = (state.metric === "allocatedBytes" ? "Allocations" : "Time") + " — " + (state.bench ? shortName(state.bench) : "");
+    if (!state.bench) { document.getElementById("chart").innerHTML = '<div class="msg">No benchmarks.</div>'; document.getElementById("table").innerHTML = ""; return; }
+    chart(roles, state.bench, state.metric);
+    table(roles, state.metric);
+  }
+
+  function boot(raw) {
+    state.histories = normalize(raw);
+    const oses = orderedOses(state.histories);
+    if (!oses.length) { document.getElementById("subtitle").textContent = "No data found."; document.getElementById("os-tabs").innerHTML = '<div class="msg">No benchmark histories available yet.</div>'; return; }
+    state.os = oses[0];
+    syncBenchList();
+
+    // subtitle: nightly versions per OS
+    const parts = oses.map(o => { const d = latestDay((state.histories[o] || {}).nightly); return d ? `${o} <code>${d.version}</code>` : null; }).filter(Boolean);
+    document.getElementById("subtitle").innerHTML = parts.length ? "Latest nightly: " + parts.join(" · ") : "Ready.";
+
+    document.getElementById("bench").onchange = e => { state.bench = e.target.value; renderTabsAndBody(); };
+    document.querySelectorAll("#metric button").forEach(b => b.onclick = () => {
+      state.metric = b.dataset.k;
+      document.querySelectorAll("#metric button").forEach(x => x.classList.toggle("on", x === b));
+      renderTabsAndBody();
+    });
+    renderTabsAndBody();
+  }
+
+  async function fetchLive() {
+    const base = new URLSearchParams(location.search).get("data") || RAW_BASE_DEFAULT;
+    const b = base.endsWith("/") ? base : base + "/";
+    document.getElementById("subtitle").textContent = "Loading live data…";
+    try {
+      const idx = await (await fetch(b + "index.json", { cache: "no-cache" })).json();
+      const files = idx.files || [];
+      const raw = {};
+      await Promise.all(files.map(async f => {
+        try { raw[f] = await (await fetch(b + f, { cache: "no-cache" })).json(); } catch (e) { /* skip */ }
+      }));
+      boot(raw);
+    } catch (e) {
+      document.getElementById("subtitle").textContent = "Could not load data from " + b;
+      document.getElementById("os-tabs").innerHTML = '<div class="msg">No data. This page reads the <code>aw-data</code> branch; pass <code>?data=&lt;url&gt;</code> to point elsewhere.</div>';
+    }
+  }
+
+  // The embedded-data blob (when present) is injected just before </body>, i.e. AFTER
+  // this script executes during parsing. Wait until the document is parsed before
+  // choosing embedded vs live mode, otherwise embedded data would be missed.
+  const start = () => window.__BENCH_DATA__ ? boot(window.__BENCH_DATA__) : fetchLive();
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start);
+  else start();
+})();
+</script>
+</body>
+</html>

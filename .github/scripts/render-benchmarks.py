@@ -71,13 +71,13 @@ def _trend(curr, older):
     return f" {TREND_SLOWER}" if diff > 0 else f" {TREND_FASTER}"
 
 
-def row_cells(values):
+def row_cells(values, fmt=human_time):
     """Columns newest -> oldest; compare each cell to the nearest non-empty cell to its right."""
     cells = [""] * len(values)
     older = None
     for i in range(len(values) - 1, -1, -1):
         v = values[i]
-        cells[i] = human_time(v) + _trend(v, older)
+        cells[i] = fmt(v) + _trend(v, older)
         if v is not None:
             older = v
     return cells
@@ -143,13 +143,13 @@ def build_columns(roles):
     return cols
 
 
-def column_value(roles, col, name):
+def column_value(roles, col, name, key="meanNs"):
     if col.kind == "nightly":
         for day in (roles.get("nightly") or {}).get("days", []):
             if day["date"] == col.key[1]:
-                return metric(day, name)
+                return metric(day, name, key)
         return None
-    return metric(latest_day(roles.get(col.key[0])), name)
+    return metric(latest_day(roles.get(col.key[0])), name, key)
 
 
 def benchmark_universe(roles):
@@ -204,7 +204,7 @@ def render_cross_os_snapshot(histories, oses):
     return lines
 
 
-def render_os_table(roles, os_name):
+def render_os_table(roles, os_name, key="meanNs", fmt=human_time):
     cols = build_columns(roles)
     if not cols:
         return [f"### {os_name}", "", "_No data yet._", ""]
@@ -212,8 +212,8 @@ def render_os_table(roles, os_name):
              "| Benchmark | " + " | ".join(c.header for c in cols) + " |",
              "|:--|" + "|".join(["--:"] * len(cols)) + "|"]
     for name in benchmark_universe(roles):
-        values = [column_value(roles, c, name) for c in cols]
-        lines.append(f"| `{short_name(name)}` | " + " | ".join(row_cells(values)) + " |")
+        values = [column_value(roles, c, name, key) for c in cols]
+        lines.append(f"| `{short_name(name)}` | " + " | ".join(row_cells(values, fmt)) + " |")
     lines.append("")
     return lines
 
@@ -224,9 +224,14 @@ def render(histories):
     if not any(latest_day(histories[o].get("nightly")) for o in oses):
         return "\n".join(lines) + "\n"
     lines += render_cross_os_snapshot(histories, oses)
-    lines += ["### 📈 Per-OS: nightly trend + released baselines", ""]
+    lines += ["### 📈 Per-OS: time — nightly trend + released baselines", ""]
     for o in oses:
         lines += render_os_table(histories[o], o)
+    # Allocations are deterministic and hardware-independent — the signal we gate hardest
+    # on — so surface them with the same column model. A red dot here is a real regression.
+    lines += ["### 📦 Per-OS: allocations (bytes/op)", ""]
+    for o in oses:
+        lines += render_os_table(histories[o], o, key="allocatedBytes", fmt=human_bytes)
     return "\n".join(lines) + "\n"
 
 

@@ -5,16 +5,25 @@ name: Track - Benchmarks
 #   * curr-stable    \
 #   * prev-stable     >  released baselines, resolved from nuget.org (size-tracker roles)
 #   * prev-major     /
+#   * pr             -> a FULL source build (native + managed) of THIS checkout
 #
-# Each (OS, role) leg appends to its own rolling history (kept ~60 days, 10 shown) and
-# a report job renders a per-OS dashboard. Runs on a schedule, on PRs and on pushes to
-# main, so every CI produces a benchmark run.
+# History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
+# indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg
+# reads its existing history from that branch, appends today's point, and uploads it as
+# an artifact; the `report` job aggregates everything, and — only on main/schedule — the
+# `persist-aw-data.yml` workflow commits the updated JSON back to the branch.
 #
 # A leg is SKIPPED when its "fingerprint" (pinned version + hash of the benchmark
 # source) matches the last recorded one — released baselines don't change unless a new
-# release bumps the role or the benchmark code changes, so there's no point re-running
-# old code on old versions every day. The nightly role runs whenever a new nightly
-# publishes (its version changes).
+# release bumps the role or the benchmark code changes. The nightly role runs whenever a
+# new nightly publishes (its version changes).
+#
+# Outputs of the report job:
+#   * a Markdown dashboard in the run summary (time + allocations, per OS);
+#   * `benchmark-dashboard` artifact: a self-contained interactive HTML page with the
+#     data embedded — download it (incl. from a PR run) and open in a browser;
+#   * on main/schedule, the `agent` artifact that persist-aw-data commits to `aw-data`,
+#     which the live page (benchmarks/dashboard.html) reads.
 #
 # Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
 # Released baselines whose exact version is not on dotnet-public are restored by
@@ -41,12 +50,16 @@ defaults:
   run:
     shell: bash
 
+env:
+  DATA_BRANCH: aw-data
+
 jobs:
   resolve:
     if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.resolve.outputs.versions }}
+      roles: ${{ steps.resolve.outputs.roles }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -55,7 +68,11 @@ jobs:
       - name: Resolve version roles
         id: resolve
         run: |
-          echo "versions=$(python3 .github/scripts/resolve-versions.py)" >> "$GITHUB_OUTPUT"
+          versions=$(python3 .github/scripts/resolve-versions.py)
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          # Only schedule the roles that actually resolved (a brand-new major may have no
+          # prev-stable/prev-major yet), so no leg ever runs with an empty version.
+          echo "roles=$(echo "$versions" | jq -c 'keys')" >> "$GITHUB_OUTPUT"
 
   benchmark:
     needs: resolve
@@ -64,7 +81,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        role: [nightly, curr-stable, prev-stable, prev-major]
+        role: ${{ fromJSON(needs.resolve.outputs.roles) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     env:
@@ -83,6 +100,18 @@ jobs:
           echo "LABEL=${{ runner.os }}" >> "$GITHUB_ENV"
           echo "HISTORY=benchmarks-${{ runner.os }}-${{ matrix.role }}.json" >> "$GITHUB_ENV"
           echo "VERSION=${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}" >> "$GITHUB_ENV"
+
+      - name: Restore history from data branch
+        # Read this leg's existing history from the aw-data branch (public raw URL, no
+        # auth). Missing (first run) is fine — the freshness check then decides to run.
+        run: |
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/benchmarks/${HISTORY}"
+          if curl -fsSL "$url" -o "$HISTORY"; then
+            echo "restored $HISTORY from $DATA_BRANCH"
+          else
+            echo "no existing $HISTORY on $DATA_BRANCH (fresh start)"
+            rm -f "$HISTORY"
+          fi
 
       - name: Install Linux native dependencies
         if: runner.os == 'Linux'
@@ -106,14 +135,6 @@ jobs:
         run: |
           python3 .github/scripts/write-version-props.py "$VERSION" "$PROJECT/version.props"
 
-      - name: Restore history
-        uses: actions/cache/restore@v4
-        with:
-          path: ${{ env.HISTORY }}
-          key: benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-${{ github.run_id }}
-          restore-keys: |
-            benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-
-
       - name: Check freshness (skip unchanged baselines)
         id: check
         run: |
@@ -135,13 +156,6 @@ jobs:
             --role "${{ matrix.role }}" \
             --version "$VERSION"
 
-      - name: Save history
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: ${{ env.HISTORY }}
-          key: benchmarks-${{ runner.os }}-${{ matrix.role }}-v1-${{ github.run_id }}
-
       - name: Upload history artifact
         if: always()
         uses: actions/upload-artifact@v4
@@ -156,7 +170,8 @@ jobs:
   # mechanism as the WASM gallery build in build-site.yml), macOS via Xcode+Ninja,
   # Windows via VS+LLVM+Ninja — mirroring the AzDO native pipelines. So native C++ /
   # C-API changes (e.g. #4421) ARE reflected in the ⭐ column on every OS. Each leg is
-  # isolated + best-effort so it can never turn the run red.
+  # isolated + best-effort so it can never turn the run red. PR data is fresh each run
+  # (single day, labelled by PR/branch) and is NOT persisted to the data branch.
   benchmark-source:
     needs: resolve
     if: github.repository_owner == 'mono'
@@ -190,11 +205,14 @@ jobs:
           python-version: "3.12"
 
       - name: Label this run
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if [ -n "${{ github.event.pull_request.number }}" ]; then
-            echo "PR_LABEL=pr/${{ github.event.pull_request.number }}" >> "$GITHUB_ENV"
+          if [ -n "$PR_NUMBER" ]; then
+            echo "PR_LABEL=pr/$PR_NUMBER" >> "$GITHUB_ENV"
           else
-            echo "PR_LABEL=${{ github.ref_name }}" >> "$GITHUB_ENV"
+            echo "PR_LABEL=$REF_NAME" >> "$GITHUB_ENV"
           fi
 
       - name: Build libSkiaSharp from source (Linux x64, Docker)
@@ -272,11 +290,60 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+
       - name: Download all histories
         uses: actions/download-artifact@v4
         with:
           path: histories
           pattern: benchmarks-*
           merge-multiple: true
-      - name: Render dashboard
+
+      - name: Render Markdown dashboard (run summary)
         run: python3 .github/scripts/render-benchmarks.py histories
+
+      - name: Build interactive HTML dashboard
+        # Self-contained page with all data (incl. the PR column) embedded, for download.
+        run: |
+          mkdir -p out
+          python3 .github/scripts/render-benchmarks-html.py \
+            histories benchmarks/dashboard.html out/dashboard.html out/index.json
+
+      - name: Upload HTML dashboard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-dashboard
+          path: out/dashboard.html
+          if-no-files-found: warn
+
+      - name: Assemble data for the aw-data branch
+        # Only persist from main/schedule/dispatch on main — never from PRs. Stages the
+        # persisted set (baseline + nightly histories, NOT the ephemeral pr files), the
+        # live dashboard page, and a manifest under agent/benchmarks/ so persist-aw-data.yml
+        # commits them to the aw-data branch. The sentinel file keeps the artifact's
+        # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p aw-upload/agent/benchmarks
+          touch aw-upload/.artifact-root
+          for f in histories/benchmarks-*.json; do
+            case "$f" in *-pr.json) continue ;; esac
+            cp "$f" aw-upload/agent/benchmarks/
+          done
+          cp benchmarks/dashboard.html aw-upload/agent/benchmarks/dashboard.html
+          python3 - <<'PY'
+          import glob, os, json, datetime
+          d = "aw-upload/agent/benchmarks"
+          files = sorted(os.path.basename(p) for p in glob.glob(f"{d}/benchmarks-*.json"))
+          json.dump({"generatedUtc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     "files": files}, open(f"{d}/index.json", "w"), indent=2)
+          print("persisting:", files)
+          PY
+
+      - name: Upload aw-data payload (agent)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent
+          path: aw-upload
+          if-no-files-found: warn

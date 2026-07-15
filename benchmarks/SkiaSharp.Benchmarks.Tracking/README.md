@@ -41,8 +41,28 @@ CI workflow (`.github/workflows/track-benchmarks.yml`) parses via
 
 ## CI
 
-`track-benchmarks.yml` runs daily on Linux, Windows and macOS, appends each run to
-a per-OS rolling history (kept ~60 days, 10 displayed), and renders a dashboard to
-the workflow run summary. It benchmarks the newest `-nightly.*` build from the
-[EAP feed](https://aka.ms/skiasharp-eap/index.json), the same source the artifact
-size tracker uses.
+`track-benchmarks.yml` runs daily (and on every PR/push) on Linux, Windows and macOS.
+For each OS it benchmarks several **version roles**:
+
+- `nightly` — the newest `-nightly.*` build from the [EAP feed](https://aka.ms/skiasharp-eap/index.json) (the daily trend);
+- `curr-stable` / `prev-stable` / `prev-major` — released baselines (same roles as the artifact-size tracker);
+- `pr` — a **full source build** (native + managed) of the checkout, so native/C-API
+  changes show up in the ⭐ "this PR" column. See the sibling
+  `SkiaSharp.Benchmarks.Tracking.Source` project.
+
+History is **persisted to the `aw-data` branch** (via `persist-aw-data.yml`, only on
+main/schedule) rather than the Actions cache, so the time-series survives indefinitely.
+Each leg reads its existing history from that branch, appends today's point, and
+re-uploads it; unchanged released baselines are skipped by a fingerprint check.
+
+Every run produces:
+
+- a Markdown dashboard (time **and** allocations, per OS) in the run summary;
+- a `benchmark-dashboard` artifact — a **self-contained interactive HTML page**
+  (`benchmarks/dashboard.html` with the data embedded) you can download from any run,
+  including a PR run, and open in a browser;
+- the live `benchmarks/dashboard.html` page reads the latest data straight from the
+  `aw-data` branch.
+
+Results land in `BenchmarkDotNet.Artifacts/results/*-report-full.json`, which
+`.github/scripts/track-benchmarks.py` parses.
