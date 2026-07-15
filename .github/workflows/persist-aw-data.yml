@@ -9,6 +9,7 @@ on:
     workflows:
       - "Sync - Issue Triage"
       - "Track - Benchmarks"
+      - "Track - Artifact Sizes"
     types: [completed]
 
   workflow_dispatch:
@@ -52,6 +53,7 @@ jobs:
             case "$1" in
               "Sync - Issue Triage") echo "ai-triage" ;;
               "Track - Benchmarks") echo "benchmarks" ;;
+              "Track - Artifact Sizes") echo "sizes" ;;
               # Add future mappings here:
               # "Auto-Repro SkiaSharp Issue") echo "ai-repro" ;;
               *) echo "" ;;

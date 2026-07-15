@@ -1,20 +1,20 @@
 name: Track - Artifact Sizes
 
-# Measures the on-disk size of every SkiaSharp / HarfBuzzSharp NuGet package and
-# its native binaries (per os/arch), and renders a dashboard to the run summary.
+# Measures the on-disk size of every SkiaSharp / HarfBuzzSharp NuGet package and its
+# native binaries (per os/arch), for the latest nightly + released reference versions.
 #
-# Data is collected from:
-#   * the latest `-nightly.*` build on the official SkiaSharp EAP feed
-#     (https://aka.ms/skiasharp-eap/index.json), and
-#   * four released reference versions per package, resolved from NuGet.org.
+# History is PERSISTED to the `aw-data` branch (sizes/artifact-sizes.json), not the
+# Actions cache — same model as the benchmark tracker, so the time-series survives
+# indefinitely. Each run restores the existing history from the branch, appends today,
+# and (only on main/schedule) hands the updated file to persist-aw-data.yml to commit.
 #
-# The rolling JSON history is persisted between runs via the Actions cache using
-# the standard "unique key + restore-keys prefix" pattern, so each run restores
-# the most recent history and saves an updated copy.
+# It also emits the shared interactive dashboard: sizes are embedded fresh and the
+# benchmark dimension is fetched from the branch, so the artifact is the SAME unified
+# perf dashboard the benchmark workflow produces (time + allocations + size).
 
 on:
   schedule:
-    - cron: "0 7 * * *"  # Daily at 07:00 UTC
+    - cron: "0 7 * * *"  # Daily at 07:00 UTC (offset from the 08:00 benchmark tracker)
   workflow_dispatch:
 
 permissions:
@@ -24,51 +24,87 @@ concurrency:
   group: track-artifact-sizes
   cancel-in-progress: false
 
+env:
+  DATA_BRANCH: aw-data
+
 jobs:
   track:
     if: github.repository_owner == 'mono'
     runs-on: ubuntu-latest
     timeout-minutes: 120
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Restore size history
-        uses: actions/cache/restore@v4
-        with:
-          path: artifact-sizes.json
-          key: artifact-sizes-v1-${{ github.run_id }}
-          restore-keys: |
-            artifact-sizes-v1-
+      - name: Restore size history from data branch
+        # Read the existing history from the aw-data branch (public raw URL, no auth).
+        # Missing (first run) is fine — track.py then starts a fresh document.
+        run: |
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes/artifact-sizes.json"
+          if curl -fsSL "$url" -o artifact-sizes.json; then
+            echo "restored artifact-sizes.json from $DATA_BRANCH"
+          else
+            echo "no existing artifact-sizes.json on $DATA_BRANCH (fresh start)"
+            rm -f artifact-sizes.json
+          fi
 
       - name: Collect artifact sizes
         run: |
           python3 .github/scripts/perf/sizes/track.py \
             --history artifact-sizes.json \
-            --max-nightly 10
+            --max-nightly 365
 
-      - name: Render dashboard
+      - name: Render Markdown summary (run summary)
         run: |
           python3 .github/scripts/perf/sizes/render_md.py \
             --history artifact-sizes.json
 
-      - name: Save size history
-        if: always()
-        uses: actions/cache/save@v4
-        with:
-          path: artifact-sizes.json
-          key: artifact-sizes-v1-${{ github.run_id }}
+      - name: Fetch benchmarks from data branch (for the unified dashboard)
+        run: |
+          python3 .github/scripts/perf/fetch_branch_data.py \
+            "https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}" \
+            benchmarks branch-benchmarks
 
-      - name: Upload size history
+      - name: Build interactive HTML dashboard
+        # Sizes embedded fresh; benchmarks come from the branch -> the same unified page.
+        run: |
+          mkdir -p out sizes-data
+          cp artifact-sizes.json sizes-data/
+          python3 .github/scripts/perf/render_html.py \
+            .github/scripts/perf/templates/dashboard.html out/dashboard.html \
+            branch-benchmarks sizes-data
+
+      - name: Upload HTML dashboard artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: artifact-sizes
-          path: artifact-sizes.json
+          name: perf-dashboard
+          path: out/dashboard.html
+          if-no-files-found: warn
+
+      - name: Assemble data for the aw-data branch
+        # Persist only from main/schedule/dispatch on main — never from PRs. Stages the
+        # size history, the live dashboard page, and a manifest under agent/sizes/ so
+        # persist-aw-data.yml commits them. The sentinel keeps the artifact's
+        # least-common-ancestor at aw-upload/, preserving the required agent/ prefix.
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p aw-upload/agent/sizes
+          touch aw-upload/.artifact-root
+          cp artifact-sizes.json aw-upload/agent/sizes/
+          cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/sizes/dashboard.html
+          python3 - <<'PY'
+          import json, datetime
+          json.dump({"generatedUtc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                     "files": ["artifact-sizes.json"]}, open("aw-upload/agent/sizes/index.json", "w"), indent=2)
+          PY
+
+      - name: Upload aw-data payload (agent)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent
+          path: aw-upload
           if-no-files-found: warn

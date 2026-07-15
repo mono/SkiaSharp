@@ -58,7 +58,7 @@ re-uploads it; unchanged released baselines are skipped by a fingerprint check.
 Every run produces:
 
 - a Markdown dashboard (time **and** allocations, per OS) in the run summary;
-- a `benchmark-dashboard` artifact — a **self-contained interactive HTML page**
+- a `perf-dashboard` artifact — a **self-contained interactive HTML page**
   (rendered from `.github/scripts/perf/templates/dashboard.html` with the data
   embedded) you can download from any run, including a PR run, and open in a browser;
 - the same page, committed to the `aw-data` branch, serves as a **live** dashboard

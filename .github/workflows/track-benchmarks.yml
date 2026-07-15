@@ -301,18 +301,25 @@ jobs:
       - name: Render Markdown dashboard (run summary)
         run: python3 .github/scripts/perf/benchmarks/render_md.py histories
 
+      - name: Fetch sizes from data branch (for the unified dashboard)
+        run: |
+          python3 .github/scripts/perf/fetch_branch_data.py \
+            "https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}" \
+            sizes branch-sizes
+
       - name: Build interactive HTML dashboard
-        # Self-contained page with all data (incl. the PR column) embedded, for download.
+        # Self-contained page: benchmarks (incl. the PR column) embedded fresh, sizes
+        # pulled from the branch -> the same unified perf dashboard, for download.
         run: |
           mkdir -p out
           python3 .github/scripts/perf/render_html.py \
-            .github/scripts/perf/templates/dashboard.html out/dashboard.html histories
+            .github/scripts/perf/templates/dashboard.html out/dashboard.html histories branch-sizes
 
       - name: Upload HTML dashboard artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: benchmark-dashboard
+          name: perf-dashboard
           path: out/dashboard.html
           if-no-files-found: warn
 

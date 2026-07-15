@@ -36,7 +36,7 @@ import pathlib
 import sys
 
 SCHEMA_VERSION = 1
-MAX_DAYS = 60  # days of history retained on disk (dashboard displays fewer)
+MAX_DAYS = 365  # days of history retained on disk (dashboard zooms across all of it)
 
 # This tracker is specific to the tracking projects, so its locations are constants.
 # From .github/scripts/perf/benchmarks/track.py, the repo root is parents[4].
