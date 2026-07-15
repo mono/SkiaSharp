@@ -23,7 +23,7 @@ name: Track - Benchmarks
 #   * `benchmark-dashboard` artifact: a self-contained interactive HTML page with the
 #     data embedded — download it (incl. from a PR run) and open in a browser;
 #   * on main/schedule, the `agent` artifact that persist-aw-data commits to `aw-data`,
-#     which the live page (benchmarks/dashboard.html) reads.
+#     which the live dashboard page (aw-data branch: benchmarks/dashboard.html) reads.
 #
 # Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
 # Released baselines whose exact version is not on dotnet-public are restored by
@@ -68,7 +68,7 @@ jobs:
       - name: Resolve version roles
         id: resolve
         run: |
-          versions=$(python3 .github/scripts/resolve-versions.py)
+          versions=$(python3 .github/scripts/perf/benchmarks/resolve_versions.py)
           echo "versions=$versions" >> "$GITHUB_OUTPUT"
           # Only schedule the roles that actually resolved (a brand-new major may have no
           # prev-stable/prev-major yet), so no leg ever runs with an empty version.
@@ -133,12 +133,12 @@ jobs:
 
       - name: Pin version
         run: |
-          python3 .github/scripts/write-version-props.py "$VERSION" "$PROJECT/version.props"
+          python3 .github/scripts/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
 
       - name: Check freshness (skip unchanged baselines)
         id: check
         run: |
-          decision=$(python3 .github/scripts/track-benchmarks.py --history "$HISTORY" --version "$VERSION" --check)
+          decision=$(python3 .github/scripts/perf/benchmarks/track.py --history "$HISTORY" --version "$VERSION" --check)
           echo "skip=$([ "$decision" = skip ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
           echo "$decision: ${{ runner.os }}/${{ matrix.role }} ($VERSION)"
 
@@ -150,7 +150,7 @@ jobs:
       - name: Record results
         if: steps.check.outputs.skip != 'true'
         run: |
-          python3 .github/scripts/track-benchmarks.py \
+          python3 .github/scripts/perf/benchmarks/track.py \
             --history "$HISTORY" \
             --os "$LABEL" \
             --role "${{ matrix.role }}" \
@@ -267,7 +267,7 @@ jobs:
 
       - name: Record results (pr)
         run: |
-          python3 .github/scripts/track-benchmarks.py \
+          python3 .github/scripts/perf/benchmarks/track.py \
             --history "benchmarks-${{ matrix.label }}-pr.json" \
             --os "${{ matrix.label }}" \
             --role pr \
@@ -299,14 +299,14 @@ jobs:
           merge-multiple: true
 
       - name: Render Markdown dashboard (run summary)
-        run: python3 .github/scripts/render-benchmarks.py histories
+        run: python3 .github/scripts/perf/benchmarks/render_md.py histories
 
       - name: Build interactive HTML dashboard
         # Self-contained page with all data (incl. the PR column) embedded, for download.
         run: |
           mkdir -p out
-          python3 .github/scripts/render-benchmarks-html.py \
-            histories benchmarks/dashboard.html out/dashboard.html out/index.json
+          python3 .github/scripts/perf/render_html.py \
+            histories .github/scripts/perf/templates/dashboard.html out/dashboard.html out/index.json
 
       - name: Upload HTML dashboard artifact
         if: always()
@@ -330,7 +330,7 @@ jobs:
             case "$f" in *-pr.json) continue ;; esac
             cp "$f" aw-upload/agent/benchmarks/
           done
-          cp benchmarks/dashboard.html aw-upload/agent/benchmarks/dashboard.html
+          cp .github/scripts/perf/templates/dashboard.html aw-upload/agent/benchmarks/dashboard.html
           python3 - <<'PY'
           import glob, os, json, datetime
           d = "aw-upload/agent/benchmarks"

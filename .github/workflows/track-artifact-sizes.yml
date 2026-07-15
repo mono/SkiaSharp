@@ -49,13 +49,13 @@ jobs:
 
       - name: Collect artifact sizes
         run: |
-          python3 .github/scripts/track-artifact-sizes.py \
+          python3 .github/scripts/perf/sizes/track.py \
             --history artifact-sizes.json \
             --max-nightly 10
 
       - name: Render dashboard
         run: |
-          python3 .github/scripts/render-artifact-sizes.py \
+          python3 .github/scripts/perf/sizes/render_md.py \
             --history artifact-sizes.json
 
       - name: Save size history

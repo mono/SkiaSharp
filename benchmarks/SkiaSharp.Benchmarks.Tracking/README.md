@@ -37,7 +37,7 @@ dotnet run -c Release --project benchmarks/SkiaSharp.Benchmarks.Tracking -- --fi
 
 Results land in `BenchmarkDotNet.Artifacts/results/*-report-full.json`, which the
 CI workflow (`.github/workflows/track-benchmarks.yml`) parses via
-`.github/scripts/track-benchmarks.py`.
+`.github/scripts/perf/benchmarks/track.py`.
 
 ## CI
 
@@ -59,10 +59,10 @@ Every run produces:
 
 - a Markdown dashboard (time **and** allocations, per OS) in the run summary;
 - a `benchmark-dashboard` artifact — a **self-contained interactive HTML page**
-  (`benchmarks/dashboard.html` with the data embedded) you can download from any run,
-  including a PR run, and open in a browser;
-- the live `benchmarks/dashboard.html` page reads the latest data straight from the
-  `aw-data` branch.
+  (rendered from `.github/scripts/perf/templates/dashboard.html` with the data
+  embedded) you can download from any run, including a PR run, and open in a browser;
+- the same page, committed to the `aw-data` branch, serves as a **live** dashboard
+  that reads the latest persisted data straight from that branch.
 
 Results land in `BenchmarkDotNet.Artifacts/results/*-report-full.json`, which
-`.github/scripts/track-benchmarks.py` parses.
+`.github/scripts/perf/benchmarks/track.py` parses.

@@ -14,7 +14,7 @@ public static class Program
 		//   * MemoryDiagnoser  -> allocated bytes + GC counts (the deterministic,
 		//     machine-independent signal we gate hardest on).
 		//   * JsonExporter.Full -> BenchmarkDotNet.Artifacts/results/*-report-full.json,
-		//     which the tracker (.github/scripts/track-benchmarks.py) parses for both
+		//     which the tracker (.github/scripts/perf/benchmarks/track.py) parses for both
 		//     Statistics.Mean (ns) and Memory.BytesAllocatedPerOperation.
 		//
 		// CLI args are still honoured and merged, e.g. `--filter *`, `--job short`,
