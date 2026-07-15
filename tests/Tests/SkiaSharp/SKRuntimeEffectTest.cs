@@ -332,6 +332,37 @@ namespace SkiaSharp.Tests
 			}
 
 			[Fact]
+			public void UniformsResetDisposesPreviousData()
+			{
+				var src = $"""
+					uniform float uniform_float;
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				using var uniforms = new SKRuntimeEffectUniforms(effect);
+
+				var dataField = typeof(SKRuntimeEffectUniforms).GetField(
+					"data",
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+
+				var oldData = (SKData)dataField.GetValue(uniforms);
+				Assert.NotNull(oldData);
+				Assert.NotEqual(IntPtr.Zero, oldData.Handle);
+
+				uniforms.Reset();
+
+				var newData = (SKData)dataField.GetValue(uniforms);
+
+				// Reset must allocate a fresh buffer and deterministically dispose the old one.
+				Assert.NotSame(oldData, newData);
+				Assert.Equal(IntPtr.Zero, oldData.Handle);
+				Assert.NotEqual(IntPtr.Zero, newData.Handle);
+			}
+
+			[Fact]
 			public void ChildrenWorksCorrectly()
 			{
 				using var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, "blue-shirt.jpg"));
