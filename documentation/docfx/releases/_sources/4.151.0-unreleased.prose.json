@@ -1,6 +1,6 @@
 {
-  "theme": "Unreleased work in progress",
-  "highlights_headline": "SkiaSharp 4.151.0 (next) is unreleased; work shown here has not yet shipped.",
+  "theme": "Native memory leak fix",
+  "highlights_headline": "SkiaSharp 4.151.0 fixes a native resource leak in SKImage.FromEncodedData.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,8 +8,8 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native resource leak in SKImage.FromEncodedData(SKData, SKRectI) fixed",
-          "detail": "A native Skia image object was not being released when the crop rectangle overload of FromEncodedData returned a result, causing a memory leak on every call.",
+          "lead": "Native resource leak in SKImage.FromEncodedData fixed",
+          "detail": "Calling SKImage.FromEncodedData(SKData, SKRectI) leaked a native image handle when a subset was requested. The handle is now correctly released.",
           "prs": [3997]
         }
       ]
