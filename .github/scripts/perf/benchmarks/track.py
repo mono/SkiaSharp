@@ -97,7 +97,10 @@ def _num(value) -> float | None:
 def parse_results(results_dir: str) -> dict[str, dict]:
     """Merge every ``*-report-full.json`` in ``results_dir`` into one map.
 
-    Returns ``{ fullName: { meanNs, medianNs, stdDevNs, allocatedBytes } }``.
+    Records a superset of BenchmarkDotNet statistics so future dashboard work stays
+    HTML-only (no re-collection): mean/median/min/max/p95/stdDev nanoseconds, allocated
+    bytes, and GC gen-0/1/2 collection counts. The dashboard reads whichever it needs and
+    ignores the rest.
     """
     pattern = os.path.join(results_dir, "*-report-full.json")
     files = sorted(glob.glob(pattern))
@@ -121,12 +124,19 @@ def parse_results(results_dir: str) -> dict[str, dict]:
             if not name:
                 continue
             stats = bench.get("Statistics") or {}
+            pct = stats.get("Percentiles") or {}
             memory = bench.get("Memory") or {}
             merged[name] = {
                 "meanNs": _num(stats.get("Mean")),
                 "medianNs": _num(stats.get("Median")),
+                "minNs": _num(stats.get("Min")),
+                "maxNs": _num(stats.get("Max")),
+                "p95Ns": _num(pct.get("P95")),
                 "stdDevNs": _num(stats.get("StandardDeviation")),
                 "allocatedBytes": _num(memory.get("BytesAllocatedPerOperation")),
+                "gen0": _num(memory.get("Gen0Collections")),
+                "gen1": _num(memory.get("Gen1Collections")),
+                "gen2": _num(memory.get("Gen2Collections")),
             }
 
     _log(f"  parsed {len(merged)} benchmark(s) from {len(files)} report file(s)")
