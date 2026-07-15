@@ -1,7 +1,7 @@
 {
-  "theme": "Native resource leak fix",
-  "highlights_headline": "SkiaSharp 4.151.0 fixes a native resource leak in SKImage.FromEncodedData.",
-  "highlights_body": null,
+  "theme": "Unreleased work in progress",
+  "highlights_headline": "SkiaSharp 4.151.0 (next) includes a native resource leak fix in SKImage.",
+  "highlights_body": "This unreleased branch corrects a native handle leak in SKImage.FromEncodedData(SKData, SKRectI) and adds a cross-platform performance tracker.",
   "breaking": [],
   "categories": [
     {
@@ -9,7 +9,7 @@
       "bullets": [
         {
           "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was leaking a native image handle on every call. The handle is now correctly released.",
+          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was leaking the native handle when the subset was applied. The handle is now correctly disposed in all code paths.",
           "prs": [3997]
         }
       ]
