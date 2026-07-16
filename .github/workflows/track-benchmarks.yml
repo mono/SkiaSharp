@@ -213,10 +213,13 @@ jobs:
         include:
           - os: ubuntu-latest
             label: Linux
+            nativeJob: native/linux
           - os: macos-latest
             label: macOS
+            nativeJob: native/macos
           - os: windows-latest
             label: Windows
+            nativeJob: native/windows
     runs-on: ${{ matrix.os }}
     timeout-minutes: 150
     continue-on-error: true
@@ -250,6 +253,18 @@ jobs:
         # native the download provides is byte-identical to what a source build would produce,
         # so we skip the (expensive) native build. Reads submodule SHAs from git — no submodule
         # checkout needed here.
+        #
+        # Use this leg's PER-PLATFORM child job (native/linux|macos|windows, from matrix.nativeJob)
+        # rather than the coarse parent `native`. The parent job's key only hashes
+        # scripts/infra/native/shared/** + the submodule SHAs; the per-platform build.cake files
+        # (native/<plat>/**, which hold extra_cflags) live in its CHILDREN and are invisible to
+        # the parent key. Using the parent key made a flag-only native change (e.g. adding a
+        # -D define to extra_cflags) look "unchanged", so the -pr column silently DOWNLOADED the
+        # define-OFF nightly instead of building this branch — a meaningless A/B. The child key is
+        # a strict superset of the parent (same shared files + submodules, plus native/<plat>/**),
+        # so flag-only native changes now correctly trigger the source build.
+        env:
+          NATIVE_JOB: ${{ matrix.nativeJob }}
         run: |
           mode="$PR_NATIVE_SOURCE_BUILD"
           build=false
@@ -257,10 +272,11 @@ jobs:
             build=true
           elif [ "$mode" = "auto" ]; then
             git fetch --no-tags --depth=1 origin main
-            keyhead=$(python3 scripts/infra/caching/repo-deps.py cache-key --job native --name k | sed -n 's/^Key:[[:space:]]*//p')
+            keyhead=$(python3 scripts/infra/caching/repo-deps.py cache-key --job "$NATIVE_JOB" --name k | sed -n 's/^Key:[[:space:]]*//p')
             git worktree add -q --detach "$RUNNER_TEMP/native-base" FETCH_HEAD
-            keybase=$(cd "$RUNNER_TEMP/native-base" && python3 scripts/infra/caching/repo-deps.py cache-key --job native --name k | sed -n 's/^Key:[[:space:]]*//p')
+            keybase=$(cd "$RUNNER_TEMP/native-base" && python3 scripts/infra/caching/repo-deps.py cache-key --job "$NATIVE_JOB" --name k | sed -n 's/^Key:[[:space:]]*//p')
             git worktree remove --force "$RUNNER_TEMP/native-base"
+            echo "native job: $NATIVE_JOB"
             echo "native key HEAD: $keyhead"
             echo "native key main: $keybase"
             [ -n "$keybase" ] && [ "$keyhead" != "$keybase" ] && build=true
