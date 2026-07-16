@@ -125,6 +125,35 @@ def nuget_versions(package: str = "SkiaSharp") -> list[str]:
     return feed_versions(NUGET_FLATCONTAINER, package)
 
 
+def published_dates(package: str = "SkiaSharp") -> dict[str, str]:
+    """Map ``version -> published ISO-8601 timestamp`` for ``package`` on the EAP feed.
+
+    Reads the feed's ``RegistrationsBaseUrl/3.6.0`` (SemVer2) registration index, which
+    carries a ``published`` timestamp per version — the authoritative publish date used to
+    place a *backfilled* data point on the timeline (the flat container exposes no dates).
+    A single registration index fetch (the EAP feed returns every version inline), with each
+    registration *page* fetched by ``@id`` only if the feed paginated it. Versions without a
+    catalog entry/timestamp are omitted. Returns ``{}`` if the feed lacks a registration
+    resource.
+    """
+    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
+    reg_base = pick_resource(resources, "RegistrationsBaseUrl/3.6.0")
+    if not reg_base:
+        return {}
+    index = http_get_json(f"{reg_base.rstrip('/')}/{package.lower()}/index.json")
+    dates: dict[str, str] = {}
+    for page in index.get("items", []):
+        items = page.get("items")
+        if items is None:  # paginated: the page body lives at its @id
+            items = http_get_json(page["@id"]).get("items", [])
+        for item in items:
+            entry = item.get("catalogEntry") or {}
+            version, published = entry.get("version"), entry.get("published")
+            if version and published:
+                dates[version] = published
+    return dates
+
+
 # --------------------------------------------------------------------------- #
 # Version-role resolution
 #

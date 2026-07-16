@@ -1,0 +1,119 @@
+name: Backfill - Benchmarks
+
+# ONE-OFF, manually-dispatched backfill of historical `nightly` benchmark points, to seed
+# the perf dashboard's trend line with ~2-3 weeks of data before enough daily runs accrue.
+#
+# It mirrors the `nightly` leg of `track-benchmarks.yml` (the daily tracker), but instead of
+# one point for today it fans out over the newest N nightlies (one per calendar day, resolved
+# by `backfill_dates.py`) x Linux/Windows/macOS, benchmarking each OLD nightly and dating the
+# point by that nightly's real PUBLISH DATE (`track.py --date`). Each leg uploads its own
+# single-day history artifact; the workflow deliberately does NOT commit anything. A maintainer
+# then downloads the artifacts, merges them with `combine_histories.py` (seeded from the current
+# aw-data index.json so nothing is lost), and pushes a SCRATCH data branch for review via the
+# dashboard's `?data=<raw-base>` before any promotion to `aw-data`.
+#
+# Caveat: every backfilled point is measured on TODAY's runners. That makes the whole nightly
+# line internally consistent version-over-version, but a different hardware baseline than the
+# pre-existing/going-forward daily points — expected for a visual trend seed.
+#
+# This workflow is NOT mapped in persist-aw-data.yml and holds only `contents: read`, so it can
+# never write to `aw-data` — the daily green workflows are untouched.
+
+on:
+  workflow_dispatch:
+    inputs:
+      count:
+        description: "How many recent nightlies (one per calendar day) to backfill."
+        required: false
+        default: "19"
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backfill-benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  plan:
+    if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    outputs:
+      points: ${{ steps.plan.outputs.points }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve nightlies to backfill
+        id: plan
+        run: |
+          points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py --count "${{ inputs.count }}")
+          echo "points=$points" >> "$GITHUB_OUTPUT"
+          echo "$points" | python3 -m json.tool
+
+  benchmark:
+    needs: plan
+    if: github.repository_owner == 'mono'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        point: ${{ fromJSON(needs.plan.outputs.points) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    # Best-effort per leg: a single flaky (version, OS) must not fail the others or the run.
+    continue-on-error: true
+    env:
+      PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set leg variables
+        run: |
+          echo "LABEL=${{ runner.os }}" >> "$GITHUB_ENV"
+          echo "VERSION=${{ matrix.point.version }}" >> "$GITHUB_ENV"
+          echo "DATE=${{ matrix.point.date }}" >> "$GITHUB_ENV"
+          echo "HISTORY=benchmarks-${{ runner.os }}-nightly-${{ matrix.point.version }}.json" >> "$GITHUB_ENV"
+
+      - name: Install Linux native dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - name: Pin version
+        # The nightly role restores from the committed nuget.config (EAP feed hosts every
+        # -nightly.*), so no runtime nuget.org injection is needed here.
+        run: |
+          python3 scripts/infra/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
+
+      - name: Run benchmarks
+        working-directory: ${{ env.PROJECT }}
+        run: dotnet run -c Release -- --filter '*'
+
+      - name: Record results (dated by publish date)
+        run: |
+          python3 scripts/infra/perf/benchmarks/track.py \
+            --history "$HISTORY" \
+            --os "$LABEL" \
+            --role nightly \
+            --version "$VERSION" \
+            --date "$DATE"
+
+      - name: Upload history artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ runner.os }}-nightly-${{ matrix.point.version }}
+          path: ${{ env.HISTORY }}
+          if-no-files-found: warn

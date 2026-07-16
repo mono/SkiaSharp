@@ -195,6 +195,10 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="SkiaSharp package version being benchmarked.")
     p.add_argument("--os", default="?", help="OS label (stored for the dashboard).")
     p.add_argument("--role", default="nightly", help="Version role (stored for the dashboard).")
+    p.add_argument("--date", default=None,
+                   help="Override the data point's date (YYYY-MM-DD, UTC). Defaults to today. "
+                        "Used to BACKFILL a historical point dated by the version's publish date; "
+                        "the normal daily path omits it and gets today.")
     p.add_argument("--check", action="store_true",
                    help="Print 'skip' if this leg's fingerprint matches the last recorded "
                         "one (unchanged version + benchmark source), else 'run'. Records nothing.")
@@ -228,9 +232,16 @@ def main(argv: list[str]) -> int:
         return 1
 
     history = load_history(args.history, args.os, args.role)
-    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    if args.date is not None:
+        try:
+            day = dt.datetime.strptime(args.date, "%Y-%m-%d").strftime("%Y-%m-%d")
+        except ValueError:
+            _log(f"  invalid --date {args.date!r}; expected YYYY-MM-DD")
+            return 2
+    else:
+        day = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
     upsert_day(history, {
-        "date": today,
+        "date": day,
         "version": args.version,
         "fingerprint": fp,
         "benchmarks": benchmarks,
