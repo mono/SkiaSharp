@@ -1,7 +1,7 @@
 {
-  "theme": "Engine bug fixes and leak fix",
-  "highlights_headline": "SkiaSharp 4.151.0 merges upstream Skia m151 bug fixes and patches a native resource leak.",
-  "highlights_body": "The bundled Skia engine receives another round of upstream chrome/m151 bug fixes, and a native handle leak in SKImage.FromEncodedData is now corrected.",
+  "theme": "Engine sync and leak fix",
+  "highlights_headline": "SkiaSharp 4.151.0 syncs upstream Skia m151 bug fixes and patches a native resource leak.",
+  "highlights_body": null,
   "breaking": [],
   "categories": [
     {
@@ -9,7 +9,7 @@
       "bullets": [
         {
           "lead": "Upstream Skia m151 bug fixes merged",
-          "detail": "A second sync from the chrome/m151 upstream branch brings additional rendering bug fixes and stability improvements across all platforms.",
+          "detail": "Cherry-picked bug fixes from the Chrome/m151 Skia branch keep the bundled engine current with upstream stability improvements.",
           "prs": [4443]
         }
       ]
@@ -19,7 +19,7 @@
       "bullets": [
         {
           "lead": "Native resource leak in SKImage.FromEncodedData fixed",
-          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was not releasing the underlying native image handle when the subset decode produced a new object, causing a handle leak. This is now corrected.",
+          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was leaking a native handle; the extra reference is now released correctly.",
           "prs": [3997]
         }
       ]
