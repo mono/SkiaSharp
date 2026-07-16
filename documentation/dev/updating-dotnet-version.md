@@ -88,6 +88,16 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] `scripts/azure-templates-stages-native-wasm.yml` — Add new .NET emscripten entry
 - [ ] `scripts/azure-templates-jobs-bootstrapper.yml` — Review workload install step
 
+> **WASM emsdk mapping (do this whenever the new SDK bundles a new Emscripten version).** The .NET WASM SDK links apps with a specific Emscripten toolchain, and a static library built with one Emscripten version cannot be linked by a different one (the wasm object format is incompatible → link failure). Check the new SDK's bundled version (e.g. `dotnet workload list` / the `Microsoft.NET.Runtime.Emscripten.*` pack). Known mapping so far: **.NET 8 → 3.1.34, .NET 9/10 → 3.1.56, .NET 11 → 5.0.6**. When it changes for the new SDK, you must:
+> 1. Add a build matrix block (all 4 `st`/`mt`/`simd`/`simd+mt` variants) for the new Emscripten version in `scripts/azure-templates-stages-native-wasm.yml` so the packages ship a static library for it.
+> 2. Add a version-bounded `NativeFileReference` entry for the new TFM in **all four** WASM targets files, keeping each `netX.0` on the Emscripten version its SDK actually uses:
+>    - `binding/SkiaSharp.NativeAssets.WebAssembly/buildTransitive/SkiaSharp.targets`
+>    - `binding/HarfBuzzSharp.NativeAssets.WebAssembly/buildTransitive/HarfBuzzSharp.targets`
+>    - `binding/IncludeNativeAssets.SkiaSharp.targets`
+>    - `binding/IncludeNativeAssets.HarfBuzzSharp.targets`
+>
+> Use a bounded range (`VersionGreaterThanOrEquals(TFV, 'A') and VersionLessThan(TFV, 'B')`) rather than an open-ended `>=` so the *next* SDK's Emscripten change surfaces as a clear "no library selected" rather than silently linking a stale library. The packaging globs (`**`/`*` over the version folder) pick up new version directories automatically — no nuspec/csproj change needed.
+
 ### 10. Docker Images
 
 - [ ] All Dockerfiles in `scripts/infra/native/linux/docker/*/Dockerfile` — Update `FROM mcr.microsoft.com/dotnet/sdk:X.0` to new version
@@ -144,7 +154,6 @@ These use MSBuild properties from `SkiaSharp.Build.props`:
 ## Files That Are Safe (no changes needed)
 
 - `IsTargetFrameworkCompatible('net7.0')` conditions in binding csproj files — floor check
-- `IncludeNativeAssets.*.targets` — `VersionGreaterThanOrEquals('9.0')` covers future versions
 - `.sln` / `.slnf` files — don't encode TFMs
 - `samples/Gallery/` — Legacy samples, not updated
 
