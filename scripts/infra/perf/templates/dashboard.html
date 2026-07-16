@@ -217,7 +217,7 @@
       const roles = h[os]; const names = new Set();
       ["pr","nightly"].concat(BASELINE_ROLES).forEach(r=>{ const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
       for (const name of [...names].sort()) {
-        const trend = ((roles.nightly&&roles.nightly.days)||[]).map(d=>[dateMs(d.date),(d.benchmarks[name]||{})[key]]).filter(p=>p[1]!=null);
+        const trend = ((roles.nightly&&roles.nightly.days)||[]).map(d=>[dateMs(d.date),(d.benchmarks[name]||{})[key],d.version]).filter(p=>p[1]!=null);
         const baselines={}; for(const r of BASELINE_ROLES){ const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
         const prd=latestDay(roles.pr); const pr=prd?(prd.benchmarks[name]||{})[key]:null;
         if(!trend.length && !Object.keys(baselines).length && pr==null) continue;
@@ -239,7 +239,7 @@
       for(const np of Object.keys(last.packages[pkg].natives||{})) targets.push({t:np,label:np.replace(/^runtimes\//,"").replace(/\/native\//," · ")});
       for (const tg of targets) {
         const getv=day=>{ const p=(day.packages||{})[pkg]; if(!p)return null; return tg.t==="nupkg"?p.nupkg:(p.natives||{})[tg.t]; };
-        const trend=nightly.map(d=>[dateMs(d.date),getv(d)]).filter(p=>p[1]!=null);
+        const trend=nightly.map(d=>[dateMs(d.date),getv(d),d.version]).filter(p=>p[1]!=null);
         const baselines={}; for(const r of BASELINE_ROLES){ const ver=(roles[r]||{})[pkg]; if(!ver)continue; const ent=cache[pkg+"@"+ver]; if(!ent)continue; const v=tg.t==="nupkg"?ent.nupkg:(ent.natives||{})[tg.t]; if(v!=null) baselines[r]=v; }
         if(!trend.length && !Object.keys(baselines).length) continue;
         out.push({ id:pkg+"|"+tg.t, dims:{package:pkg, target:tg.label}, label:pkg+" · "+tg.label,
@@ -329,7 +329,7 @@
     const rel=state.scale==="relative", single=sel.length===1;
     const echSeries = sel.map(s=>{
       const ref = rel?refValue(s):null;
-      const data = s.trend.map(([t,v])=>[t, rel&&ref?100*v/ref:v]);
+      const data = s.trend.map(p=>[p[0], rel&&ref?100*p[1]/ref:p[1], p[2]]);
       const ser = { name:s.label, type:"line", showSymbol:s.trend.length<=60, symbolSize:5, smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color:s.color}, data };
       if(single){
         const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({ yAxis: rel&&ref?100*s.baselines[r]/ref:s.baselines[r], label:{formatter:r,position:"insideEndTop",color:getCss("--muted"),fontSize:10}, lineStyle:{color:getCss("--muted"),type:"dashed",width:1} }));
@@ -339,10 +339,17 @@
       return ser;
     });
     const many=sel.length>8;
+    const fmtY = v => rel?(v==null?"·":v.toFixed(1)+"%"):fmtVal(v,m.unit);
+    const dstr = t => new Date(t).toISOString().slice(0,10);
     state.chart.setOption({
       color:PALETTE, animation:false, grid:{left:66,right:20,top:14,bottom:52},
-      tooltip: many ? {trigger:"item",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},formatter:(p)=>`${esc(p.seriesName)}<br/><b>${rel?(p.value[1]==null?"·":p.value[1].toFixed(1)+"%"):fmtVal(p.value[1],m.unit)}</b>`}
-                      : {trigger:"axis",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},valueFormatter:(v)=>rel?(v==null?"·":v.toFixed(1)+"%"):fmtVal(v,m.unit)},
+      tooltip: many
+        ? {trigger:"item",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},
+           formatter:(p)=>`${esc(p.seriesName)}<br/><span style="color:${getCss('--muted')};font-size:11px">${dstr(p.value[0])}${p.value[2]?" · "+esc(p.value[2]):""}</span><br/><b>${fmtY(p.value[1])}</b>`}
+        : {trigger:"axis",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},
+           formatter:(ps)=>{ if(!ps.length) return ""; const ver=ps[0].value[2];
+             let h=`<div style="font-size:11px;color:${getCss('--muted')};margin-bottom:4px">${dstr(ps[0].value[0])}${ver?` · <b style="color:${getCss('--text')}">${esc(ver)}</b>`:""}</div>`;
+             ps.forEach(p=>{ h+=`<div>${p.marker} ${esc(p.seriesName)} &nbsp;<b>${fmtY(p.value[1])}</b></div>`; }); return h; }},
       legend:{show:false},
       xAxis:{type:"time",boundaryGap:false,axisLabel:{color:getCss("--muted")},axisLine:{lineStyle:{color:getCss("--border")}},splitLine:{show:false}},
       yAxis:{type:state.scale==="log"?"log":"value",name:rel?"% of curr-stable":m.unit,nameGap:12,nameTextStyle:{color:getCss("--faint"),align:"left",fontSize:10},axisLabel:{color:getCss("--muted"),formatter:(v)=>rel?v+"%":fmtVal(v,m.unit)},axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:getCss("--border"),opacity:.35}}},
