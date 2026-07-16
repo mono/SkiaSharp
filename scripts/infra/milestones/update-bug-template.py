@@ -27,7 +27,7 @@ ship.
 
 Usage::
 
-    python3 scripts/infra/issue-templates/update-bug-template.py [--dry-run]
+    python3 scripts/infra/milestones/update-bug-template.py [--dry-run]
         [--repo mono/SkiaSharp] [--file .github/ISSUE_TEMPLATE/bug-report.yml]
 
 Requires the ``gh`` CLI (authenticated) to read releases. PyYAML is used only to
