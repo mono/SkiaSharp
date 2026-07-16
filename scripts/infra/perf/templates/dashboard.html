@@ -59,6 +59,9 @@
   .seg button.on { background:var(--accent); color:#fff; }
   .chips button.on { background:var(--chip); color:var(--text); box-shadow:inset 0 0 0 1px var(--border2); }
   .chips button .ord { font-size:9px; opacity:.7; margin-left:3px; }
+  .search { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:9px; padding:6px 11px; font-size:12px; width:190px; }
+  .search::placeholder { color:var(--faint); }
+  .search:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 20%,transparent); }
   /* ---- panes ---- */
   .grid-pane { flex:1 1 auto; min-height:120px; position:relative; }
   #grid { position:absolute; inset:0; }
@@ -128,6 +131,16 @@
       </div>
     </div>
     <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
+    <div class="ctl"><span class="lab">Δ ≥</span>
+      <div class="seg" id="threshold">
+        <button data-t="0">0%</button>
+        <button data-t="0.0001">0.01%</button>
+        <button data-t="0.001">0.1%</button>
+        <button data-t="0.01">1%</button>
+        <button data-t="0.05" class="on">5%</button>
+      </div>
+    </div>
+    <div class="ctl"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" /></div>
   </div>
   <div class="grid-pane"><div id="grid"></div></div>
   <div class="splitter" id="splitter"></div>
@@ -171,7 +184,7 @@
   const ROLE_TITLE = { pr:"★ PR", nightly:"nightly", latest:"latest", "curr-stable":"curr-stable", "prev-stable":"prev-stable", "prev-major":"prev-major" };
   const WITH_DELTA = new Set(["pr","nightly","latest"]);
 
-  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", groupBy:[], table:null, chart:null };
+  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", threshold:0.05, groupBy:[], table:null, chart:null };
 
   // ---------- formatting ----------
   const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
@@ -260,12 +273,18 @@
     return `<svg width="${w}" height="${h}" style="vertical-align:middle">${line}<circle cx="${lx}" cy="${ly}" r="2.2" fill="${color}"/></svg>`;
   }
   const refOf = r => r["curr-stable"]!=null?r["curr-stable"]:(r["prev-stable"]!=null?r["prev-stable"]:r["prev-major"]);
+  function pctStr(d){ const p=Math.abs(d*100), dp=p>=10?0:p>=1?1:2; return (d>0?"▲":"▼")+p.toFixed(dp)+"%"; }
   function cellVal(cell, unit, withDelta) {
     const v=cell.getValue(); if(v==null) return `<span class="dim">·</span>`;
     let s=fmtVal(v,unit);
-    if(withDelta){ const ref=refOf(cell.getRow().getData()); if(ref!=null&&ref!==0){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) s+=` <span class="${d>0?'up':'down'}">${d>0?'▲':'▼'}${Math.abs(d*100).toFixed(0)}%</span>`; } }
+    if(withDelta){ const ref=refOf(cell.getRow().getData());
+      if(ref!=null && ref!==0){ const d=(v-ref)/ref; if(d!==0 && Math.abs(d)>=state.threshold) s+=` <span class="${d>0?'up':'down'}">${pctStr(d)}</span>`; } }
     return s;
   }
+  // grid-only search filter (does not touch selection / chart)
+  function gridFilter(data, params){ const q=(params.q||"").toLowerCase(); if(!q) return true;
+    return DIMS[METRICS[state.metric].domain].some(d=>String(data[d.key]==null?"":data[d.key]).toLowerCase().includes(q)); }
+  function applyFilter(q){ if(!state.table) return; if(q&&q.trim()) state.table.setFilter(gridFilter,{q:q.trim()}); else state.table.clearFilter(); }
   function columns() {
     const m=METRICS[state.metric], dims=DIMS[m.domain], roles=ROLES[m.domain];
     const cols=[{ formatter:"rowSelection", titleFormatter:"rowSelection", titleFormatterParams:{rowRange:"active"}, headerSort:false, resizable:false, frozen:true, width:40, hozAlign:"center", cssClass:"col-sel" }];
@@ -348,6 +367,7 @@
     state.metric = mk;
     document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===mk));
     state.groupBy = [ DIMS[METRICS[mk].domain][0].key ];   // default: group by first dim
+    const s=document.getElementById("gridsearch"); if(s) s.value="";
     refreshSeries(); renderGroupby(); buildTable();
   }
 
@@ -368,6 +388,8 @@
     // controls
     document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>switchMetric(b.dataset.m));
     document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s; document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
+    document.querySelectorAll("#threshold button").forEach(b=>b.onclick=()=>{ state.threshold=parseFloat(b.dataset.t); document.querySelectorAll("#threshold button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); });
+    document.getElementById("gridsearch").oninput = e => applyFilter(e.target.value);
     document.getElementById("clearsel").onclick=()=>{ if(state.table) state.table.deselectRow(); };
     initSplitter();
     window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
