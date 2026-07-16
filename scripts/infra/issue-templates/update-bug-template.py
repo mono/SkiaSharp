@@ -17,9 +17,10 @@ dropdowns whose options need to track the shipped SkiaSharp releases:
 
 Both option lists are generated from the published GitHub Releases (the source
 of truth for what a user can actually install), so running this weekly keeps the
-"Current Pre-release / Previous Pre-release / Current / Previous / Deprecated"
-labels accurate as new packages ship. Pre-release covers both preview and rc
-builds, since the in-flight release moves through preview -> rc -> stable.
+"Pre-release / Current / Previous / Deprecated" labels accurate as new packages
+ship. A single "Pre-release" entry covers the in-flight release (preview *and* rc
+builds of the same upcoming version) — only the newest build is listed, since the
+triage answer for an older pre-release build is always "update to the latest".
 
 Usage::
 
@@ -152,18 +153,16 @@ def build_supported_block(versions: list[dict], major: int):
 
     current_base = current["base"] if current else (0, 0, 0)
     # Pre-releases (previews *and* rcs) for a version newer than the current
-    # stable — i.e. the in-flight release moving preview -> rc -> stable. The
-    # newest published one is the "current" pre-release, not the "next": it has
-    # already shipped. Newest first.
+    # stable — i.e. the in-flight release moving preview -> rc -> stable. Only
+    # the newest published one matters: preview.1/preview.2/rc.1 are all builds
+    # of the *same* upcoming version, and the triage answer for an older build
+    # is always "update to the latest pre-release". Newest first.
     upcoming = [p for p in prereleases if p["base"] > current_base]
-    current_pre = upcoming[0] if upcoming else None
-    previous_pre = upcoming[1] if len(upcoming) > 1 else None
+    latest_pre = upcoming[0] if upcoming else None
 
     block: list[str] = []
-    if current_pre:
-        block.append(f"{current_pre['display']} (Current Pre-release)")
-    if previous_pre:
-        block.append(f"{previous_pre['display']} (Previous Pre-release)")
+    if latest_pre:
+        block.append(f"{latest_pre['display']} (Pre-release)")
 
     current_index = 0
     if current:

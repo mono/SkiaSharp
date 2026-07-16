@@ -7,12 +7,14 @@ Regenerates the two SkiaSharp version dropdowns in
 
 | Dropdown | Contents |
 |----------|----------|
-| **Version of SkiaSharp** (`version`) | A `Nightly / CI build` option (people testing the CI feed), then concrete builds of the currently-supported major only (`Current Pre-release` / `Previous Pre-release` / `Current` / `Previous` / `Deprecated`). Every older major collapses to a single `N.x (Obsolete)` entry, because those lines are unmaintained and the triage response is simply "please update". |
+| **Version of SkiaSharp** (`version`) | A `Nightly / CI build` option (people testing the CI feed), then concrete builds of the currently-supported major only (`Pre-release` / `Current` / `Previous` / `Deprecated`). Every older major collapses to a single `N.x (Obsolete)` entry, because those lines are unmaintained and the triage response is simply "please update". |
 | **Last Known Good Version** (`goodversion`) | The same supported-major builds, **plus** every stable release of the previous major listed individually (last-known-good matters for triage even on retired lines), then the remaining older majors collapsed to `N.x (Obsolete)`. |
 
-"Pre-release" covers both preview and rc builds — the in-flight release moves
-`preview -> rc -> stable`, and the newest **published** pre-release is labelled
-the *current* one (it has already shipped), not the "next".
+The single `Pre-release` entry is the newest published pre-release. It covers both
+preview and rc builds — the in-flight release moves `preview -> rc -> stable`, and
+`preview.1` / `preview.2` / `rc.1` are all builds of the *same* upcoming version,
+so only the latest one is listed (the triage answer for an older build is always
+"update to the latest pre-release").
 
 The option lists are generated from the **published GitHub Releases** (the source
 of truth for what a user can actually install), and the supported major is read
