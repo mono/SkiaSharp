@@ -1,20 +1,31 @@
 {
-  "theme": "Native resource leak fix",
-  "highlights_headline": "SkiaSharp 4.151.0 fixes a native resource leak in SKImage.FromEncodedData.",
+  "theme": "Engine sync and bug fixes",
+  "highlights_headline": "SkiaSharp 4.151.0 merges upstream Skia m151 bug fixes and resolves a native resource leak in image decoding.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upstream Skia m151 bug fixes merged",
+          "detail": "Brings in the latest chrome/m151 patch-level fixes from upstream Skia.",
+          "prs": [4443]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
           "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was leaking a native image handle on every call. The handle is now correctly released.",
+          "detail": "Calling SKImage.FromEncodedData(SKData, SKRectI) no longer leaks the underlying native image handle.",
           "prs": [3997]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
