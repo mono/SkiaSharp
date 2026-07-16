@@ -23,8 +23,14 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))  # perf/
 from _common import eap_versions, log, published_dates, semver_key  # noqa: E402
 
 
-def select(count: int, package: str = "SkiaSharp") -> list[dict[str, str]]:
-    """Newest ``count`` nightlies, one per calendar day, with their publish dates."""
+def select(count: int, package: str = "SkiaSharp",
+           since: str | None = None, until: str | None = None) -> list[dict[str, str]]:
+    """Newest ``count`` nightlies, one per calendar day, with their publish dates.
+
+    ``since`` / ``until`` (inclusive ``YYYY-MM-DD``) restrict the calendar-day window before
+    the ``count`` cap is applied — e.g. ``until=2026-06-22`` backfills an older stretch without
+    re-measuring days already recorded. ``count <= 0`` means "all days in the window".
+    """
     dates = published_dates(package)
     nightlies = [v for v in eap_versions(package) if "-nightly." in v.lower() and v in dates]
 
@@ -33,7 +39,9 @@ def select(count: int, package: str = "SkiaSharp") -> list[dict[str, str]]:
     for v in sorted(nightlies, key=semver_key):  # ascending -> last write per day wins
         by_day[dates[v][:10]] = v
 
-    chosen_days = sorted(by_day)[-count:] if count > 0 else sorted(by_day)
+    days = sorted(d for d in by_day
+                  if (since is None or d >= since) and (until is None or d <= until))
+    chosen_days = days[-count:] if count > 0 else days
     return [{"version": by_day[d], "date": d} for d in chosen_days]
 
 
@@ -41,11 +49,14 @@ def main(argv: list[str]) -> int:
     p = argparse.ArgumentParser(description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--count", type=int, default=19,
-                   help="How many recent nightlies (one per calendar day) to backfill. Default 19.")
+                   help="How many recent nightlies (one per calendar day) to backfill. "
+                        "Default 19; <=0 means all days in the window.")
+    p.add_argument("--since", default=None, help="Only include days on/after this YYYY-MM-DD.")
+    p.add_argument("--until", default=None, help="Only include days on/before this YYYY-MM-DD.")
     p.add_argument("--package", default="SkiaSharp", help="Package to resolve (default SkiaSharp).")
     args = p.parse_args(argv)
 
-    points = select(args.count, args.package)
+    points = select(args.count, args.package, args.since, args.until)
     if not points:
         log("  no nightly versions with publish dates resolved")
         return 1

@@ -27,6 +27,16 @@ on:
         required: false
         default: "19"
         type: string
+      since:
+        description: "Only include nightlies published on/after this date (YYYY-MM-DD)."
+        required: false
+        default: ""
+        type: string
+      until:
+        description: "Only include nightlies published on/before this date (YYYY-MM-DD)."
+        required: false
+        default: ""
+        type: string
   # On-demand escape hatch: also run on a PR that carries the 'run-backfill' label.
   # workflow_dispatch requires the workflow to already exist on the default branch, so
   # this lets the backfill be exercised from a PR before it lands on main. Normal PRs are
@@ -61,8 +71,22 @@ jobs:
           python-version: "3.12"
       - name: Resolve nightlies to backfill
         id: plan
+        env:
+          IN_COUNT: ${{ inputs.count }}
+          IN_SINCE: ${{ inputs.since }}
+          IN_UNTIL: ${{ inputs.until }}
         run: |
-          points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py --count "${{ inputs.count || '19' }}")
+          # workflow_dispatch drives the selection via inputs. On the label-triggered PR
+          # path inputs are empty, so fall back to the newest 19 (one per calendar day).
+          # TEMP (early-v4 one-off): PR-path fallback targets the older 4.133..4.150 stretch.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ARGS="--count ${IN_COUNT:-19}"
+            [ -n "$IN_SINCE" ] && ARGS="$ARGS --since $IN_SINCE"
+            [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
+          else
+            ARGS="--count 0 --since 2026-04-27 --until 2026-06-22"
+          fi
+          points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py $ARGS)
           echo "points=$points" >> "$GITHUB_OUTPUT"
           echo "$points" | python3 -m json.tool
 
