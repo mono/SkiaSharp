@@ -25,8 +25,8 @@
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.34\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
     <!-- net9.0 - net10.0 -->
     <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\3.1.56\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
-    <!-- net11.0+ -->
-    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\5.0.6\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
+    <!-- net11.0 -->
+    <NativeFileReference Include="$(HarfBuzzSharpStaticLibraryPath)\5.0.6\$(_HarfBuzzSharpNativeBinaryType)\*.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '12.0'))" />
   </ItemGroup>
 
   <!-- Error when targeting unsupported WASM TFMs -->
