@@ -7,14 +7,16 @@ Regenerates the two SkiaSharp version dropdowns in
 
 | Dropdown | Contents |
 |----------|----------|
-| **Version of SkiaSharp** (`version`) | A `Nightly / CI build` option (people testing the CI feed), then concrete builds of the currently-supported major only (`Pre-release` / `Current` / `Previous` / `Deprecated`). Every older major collapses to a single `N.x (Obsolete)` entry, because those lines are unmaintained and the triage response is simply "please update". |
-| **Last Known Good Version** (`goodversion`) | The same supported-major builds, **plus** every stable release of the previous major listed individually (last-known-good matters for triage even on retired lines), then the remaining older majors collapsed to `N.x (Obsolete)`. |
+| **Version of SkiaSharp** (`version`) | A `Nightly / CI build` option (people testing the CI feed), then concrete builds of the currently-supported major only (`Pre-release` / `Current` / `Previous` / `Deprecated`). Only the newest in-flight build gets a single `Pre-release` entry — when asking what you're on *now*, the triage answer for an older pre-release build is always "update to the latest". Every older major collapses to a single `N.x (Obsolete)` entry, because those lines are unmaintained and the triage response is simply "please update". |
+| **Last Known Good Version** (`goodversion`) | **Every** in-flight pre-release build listed individually (`preview.1`, `preview.2`, `rc.1`, …), then the same supported-major stables, **plus** every stable release of the previous major listed individually (last-known-good matters for triage even on retired lines), then the remaining older majors collapsed to `N.x (Obsolete)`. |
 
-The single `Pre-release` entry is the newest published pre-release. It covers both
-preview and rc builds — the in-flight release moves `preview -> rc -> stable`, and
-`preview.1` / `preview.2` / `rc.1` are all builds of the *same* upcoming version,
-so only the latest one is listed (the triage answer for an older build is always
-"update to the latest pre-release").
+The two dropdowns treat pre-releases differently on purpose. The in-flight release
+moves `preview -> rc -> stable`, and `preview.1` / `preview.2` / `rc.1` are all
+builds of the *same* upcoming version. For **Version** only the newest build is
+listed (a single `Pre-release` entry), since that is the one to reproduce against.
+For **Last Known Good** every build is listed: a reporter may have been fine on
+`preview.1` but hit a regression in `preview.2`, and pinpointing that boundary is
+exactly what last-known-good is meant to capture.
 
 The option lists are generated from the **published GitHub Releases** (the source
 of truth for what a user can actually install), and the supported major is read

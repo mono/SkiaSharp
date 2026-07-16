@@ -9,18 +9,22 @@ dropdowns whose options need to track the shipped SkiaSharp releases:
                      listed as concrete builds; every older major collapses to a
                      single ``N.x (Obsolete)`` entry because those lines are no
                      longer maintained and the triage response is simply "update".
+                     A single "Pre-release" entry covers the in-flight release —
+                     only the newest build matters when asking what you're on now.
 * ``goodversion``  — "Last Known Good Version of SkiaSharp". The last-known-good
                      version matters for triage even on retired lines, so this
                      keeps the supported major's builds *and* lists every stable
                      release of the previous major individually, then collapses
-                     the rest to ``N.x (Obsolete)``.
+                     the rest to ``N.x (Obsolete)``. Unlike ``version`` it lists
+                     *every* in-flight pre-release build individually (preview.1,
+                     preview.2, rc.1, …): someone may have been fine on preview.1
+                     but hit a regression in preview.2, and that is exactly what
+                     last-known-good is meant to capture.
 
 Both option lists are generated from the published GitHub Releases (the source
 of truth for what a user can actually install), so running this weekly keeps the
 "Pre-release / Current / Previous / Deprecated" labels accurate as new packages
-ship. A single "Pre-release" entry covers the in-flight release (preview *and* rc
-builds of the same upcoming version) — only the newest build is listed, since the
-triage answer for an older pre-release build is always "update to the latest".
+ship.
 
 Usage::
 
@@ -142,7 +146,15 @@ _NIGHTLY = "Nightly / CI build"
 
 
 def build_supported_block(versions: list[dict], major: int):
-    """Build the shared 4.x option lines and the index of the Current entry."""
+    """Build the supported-major option lines.
+
+    Returns ``(stable_lines, upcoming)`` where ``stable_lines`` are the shared
+    ``(Current)`` / ``(Previous)`` / ``(Deprecated)`` entries and ``upcoming`` is
+    the list of in-flight pre-release versions (previews *and* rcs of a base
+    newer than the current stable), newest first. The two dropdowns treat the
+    pre-releases differently, so they are returned separately rather than baked
+    into a single block.
+    """
     supported = [v for v in versions if v["major"] == major]
     stables = [v for v in supported if not v["is_pre"]]
     prereleases = [v for v in supported if v["is_pre"]]
@@ -153,27 +165,19 @@ def build_supported_block(versions: list[dict], major: int):
 
     current_base = current["base"] if current else (0, 0, 0)
     # Pre-releases (previews *and* rcs) for a version newer than the current
-    # stable — i.e. the in-flight release moving preview -> rc -> stable. Only
-    # the newest published one matters: preview.1/preview.2/rc.1 are all builds
-    # of the *same* upcoming version, and the triage answer for an older build
-    # is always "update to the latest pre-release". Newest first.
+    # stable — i.e. the in-flight release moving preview -> rc -> stable.
+    # Newest first.
     upcoming = [p for p in prereleases if p["base"] > current_base]
-    latest_pre = upcoming[0] if upcoming else None
 
-    block: list[str] = []
-    if latest_pre:
-        block.append(f"{latest_pre['display']} (Pre-release)")
-
-    current_index = 0
+    stable_lines: list[str] = []
     if current:
-        current_index = len(block)
-        block.append(f"{current['display']} (Current)")
+        stable_lines.append(f"{current['display']} (Current)")
     if previous:
-        block.append(f"{previous['display']} (Previous)")
+        stable_lines.append(f"{previous['display']} (Previous)")
     for d in deprecated:
-        block.append(f"{d['display']} (Deprecated)")
+        stable_lines.append(f"{d['display']} (Deprecated)")
 
-    return block, current_index
+    return stable_lines, upcoming
 
 
 def obsolete_majors(versions: list[dict], major: int, exclude: set[int]):
@@ -187,20 +191,30 @@ def obsolete_majors(versions: list[dict], major: int, exclude: set[int]):
 
 def build_options(versions: list[dict], major: int):
     """Return (version_options, goodversion_options, version_default, goodversion_default)."""
-    block, current_index = build_supported_block(versions, major)
+    stable_lines, upcoming = build_supported_block(versions, major)
 
     # "Version" dropdown: a Nightly / CI option (people testing the CI feed),
-    # the supported builds, then every older major collapsed to N.x (Obsolete).
+    # a single "Pre-release" entry for the newest in-flight build (only the
+    # newest matters when asking "what are you on now" — the triage answer for
+    # an older pre-release build is always "update to the latest"), the
+    # supported stables, then every older major collapsed to N.x (Obsolete).
+    version_pre = [f"{upcoming[0]['display']} (Pre-release)"] if upcoming else []
     version_options = (
         [_NIGHTLY]
-        + block
+        + version_pre
+        + stable_lines
         + obsolete_majors(versions, major, exclude=set())
         + [_OTHER]
     )
-    version_default = current_index + 1  # +1 for the leading Nightly entry
+    # Default lands on (Current): after Nightly + the pre-release entries.
+    version_default = 1 + len(version_pre)
 
-    # "Last known good" dropdown: supported builds, then each stable of the
+    # "Last known good" dropdown: every in-flight pre-release listed
+    # individually — a reporter may have been fine on preview.1 but hit a
+    # regression in preview.2, and that distinction is exactly what
+    # last-known-good captures. Then the supported stables, each stable of the
     # previous major individually, then remaining older majors collapsed.
+    good_pre = [f"{p['display']} (Pre-release)" for p in upcoming]
     prev_major = major - 1
     prev_major_stables = [
         v["display"]
@@ -208,12 +222,14 @@ def build_options(versions: list[dict], major: int):
         if v["major"] == prev_major and not v["is_pre"]
     ]
     goodversion_options = (
-        block
+        good_pre
+        + stable_lines
         + prev_major_stables
         + obsolete_majors(versions, major, exclude={prev_major})
         + [_OTHER]
     )
-    goodversion_default = current_index
+    # Default lands on (Current): after the pre-release entries.
+    goodversion_default = len(good_pre)
 
     return version_options, goodversion_options, version_default, goodversion_default
 
