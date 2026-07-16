@@ -44,10 +44,11 @@
     font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
   .app { display:flex; flex-direction:column; height:100vh; }
   /* ---- top bar ---- */
-  .topbar { display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:9px 16px;
+  .topbar { display:flex; flex-direction:column; gap:8px; padding:9px 16px 10px;
     border-bottom:1px solid var(--border); background:var(--bg2); z-index:5; }
-  .brand { display:flex; align-items:center; gap:9px; margin-right:auto; min-width:0; }
-  .brand .logo { width:28px; height:28px; border-radius:8px; background:var(--grad); display:grid; place-items:center; font-size:15px; flex:none; }
+  .topbar-row { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:baseline; gap:10px; min-width:0; }
+  .brand .logo { width:26px; height:26px; border-radius:7px; background:var(--grad); display:grid; place-items:center; font-size:14px; flex:none; align-self:center; }
   .brand h1 { font-size:14px; margin:0; font-weight:680; white-space:nowrap; }
   .brand .sub { color:var(--muted); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .brand .sub code { background:var(--chip); padding:0 5px; border-radius:4px; }
@@ -116,31 +117,33 @@
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="brand">
-      <div class="logo">📊</div>
-      <div style="min-width:0">
+    <div class="topbar-row">
+      <div class="brand">
+        <div class="logo">📊</div>
         <h1>SkiaSharp perf</h1>
         <div class="sub" id="subtitle">Loading…</div>
       </div>
     </div>
-    <div class="ctl"><span class="lab">Metric</span>
-      <div class="seg" id="metric">
-        <button data-m="time" class="on">Time</button>
-        <button data-m="alloc">Allocations</button>
-        <button data-m="size">Size</button>
+    <div class="topbar-row">
+      <div class="ctl"><span class="lab">Metric</span>
+        <div class="seg" id="metric">
+          <button data-m="time" class="on">Time</button>
+          <button data-m="alloc">Allocations</button>
+          <button data-m="size">Size</button>
+        </div>
       </div>
-    </div>
-    <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
-    <div class="ctl"><span class="lab">Δ ≥</span>
-      <div class="seg" id="threshold">
-        <button data-t="0">0%</button>
-        <button data-t="0.0001">0.01%</button>
-        <button data-t="0.001">0.1%</button>
-        <button data-t="0.01">1%</button>
-        <button data-t="0.05" class="on">5%</button>
+      <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
+      <div class="ctl"><span class="lab">Δ ≥</span>
+        <div class="seg" id="threshold">
+          <button data-t="0">0%</button>
+          <button data-t="0.0001">0.01%</button>
+          <button data-t="0.001">0.1%</button>
+          <button data-t="0.01">1%</button>
+          <button data-t="0.05" class="on">5%</button>
+        </div>
       </div>
+      <div class="ctl" style="margin-left:auto"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" /></div>
     </div>
-    <div class="ctl"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" /></div>
   </div>
   <div class="grid-pane"><div id="grid"></div></div>
   <div class="splitter" id="splitter"></div>
