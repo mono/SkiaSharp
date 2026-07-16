@@ -27,6 +27,12 @@ on:
         required: false
         default: "19"
         type: string
+  # On-demand escape hatch: also run on a PR that carries the 'run-backfill' label.
+  # workflow_dispatch requires the workflow to already exist on the default branch, so
+  # this lets the backfill be exercised from a PR before it lands on main. Normal PRs are
+  # unaffected — both jobs are gated on the label below, so nothing runs unless labelled.
+  pull_request:
+    types: [labeled]
 
 permissions:
   contents: read
@@ -41,7 +47,10 @@ defaults:
 
 jobs:
   plan:
-    if: github.repository_owner == 'mono'
+    if: >
+      github.repository_owner == 'mono' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.pull_request.labels.*.name, 'run-backfill'))
     runs-on: ubuntu-latest
     outputs:
       points: ${{ steps.plan.outputs.points }}
@@ -53,13 +62,16 @@ jobs:
       - name: Resolve nightlies to backfill
         id: plan
         run: |
-          points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py --count "${{ inputs.count }}")
+          points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py --count "${{ inputs.count || '19' }}")
           echo "points=$points" >> "$GITHUB_OUTPUT"
           echo "$points" | python3 -m json.tool
 
   benchmark:
     needs: plan
-    if: github.repository_owner == 'mono'
+    if: >
+      github.repository_owner == 'mono' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.pull_request.labels.*.name, 'run-backfill'))
     strategy:
       fail-fast: false
       matrix:
