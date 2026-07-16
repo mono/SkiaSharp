@@ -17,8 +17,9 @@ dropdowns whose options need to track the shipped SkiaSharp releases:
 
 Both option lists are generated from the published GitHub Releases (the source
 of truth for what a user can actually install), so running this weekly keeps the
-"Next Preview / Previous Preview / Current / Previous / Deprecated" labels
-accurate as new packages ship.
+"Current Pre-release / Previous Pre-release / Current / Previous / Deprecated"
+labels accurate as new packages ship. Pre-release covers both preview and rc
+builds, since the in-flight release moves through preview -> rc -> stable.
 
 Usage::
 
@@ -136,28 +137,33 @@ def current_major(repo_root: str) -> int:
 # ---------------------------------------------------------------------------
 
 _OTHER = "Other (Please indicate in the description)"
+_NIGHTLY = "Nightly / CI build"
 
 
 def build_supported_block(versions: list[dict], major: int):
     """Build the shared 4.x option lines and the index of the Current entry."""
     supported = [v for v in versions if v["major"] == major]
     stables = [v for v in supported if not v["is_pre"]]
-    previews = [v for v in supported if v["is_pre"]]
+    prereleases = [v for v in supported if v["is_pre"]]
 
     current = stables[0] if stables else None
     previous = stables[1] if len(stables) > 1 else None
     deprecated = stables[2:]
 
     current_base = current["base"] if current else (0, 0, 0)
-    newer_previews = [p for p in previews if p["base"] > current_base]
-    next_pre = newer_previews[0] if newer_previews else None
-    prev_pre = newer_previews[1] if len(newer_previews) > 1 else None
+    # Pre-releases (previews *and* rcs) for a version newer than the current
+    # stable — i.e. the in-flight release moving preview -> rc -> stable. The
+    # newest published one is the "current" pre-release, not the "next": it has
+    # already shipped. Newest first.
+    upcoming = [p for p in prereleases if p["base"] > current_base]
+    current_pre = upcoming[0] if upcoming else None
+    previous_pre = upcoming[1] if len(upcoming) > 1 else None
 
     block: list[str] = []
-    if next_pre:
-        block.append(f"{next_pre['display']} (Next Preview)")
-    if prev_pre:
-        block.append(f"{prev_pre['display']} (Previous Preview)")
+    if current_pre:
+        block.append(f"{current_pre['display']} (Current Pre-release)")
+    if previous_pre:
+        block.append(f"{previous_pre['display']} (Previous Pre-release)")
 
     current_index = 0
     if current:
@@ -181,11 +187,18 @@ def obsolete_majors(versions: list[dict], major: int, exclude: set[int]):
 
 
 def build_options(versions: list[dict], major: int):
-    """Return (version_options, goodversion_options, default_index)."""
+    """Return (version_options, goodversion_options, version_default, goodversion_default)."""
     block, current_index = build_supported_block(versions, major)
 
-    # "Version" dropdown: supported builds + every older major collapsed.
-    version_options = block + obsolete_majors(versions, major, exclude=set()) + [_OTHER]
+    # "Version" dropdown: a Nightly / CI option (people testing the CI feed),
+    # the supported builds, then every older major collapsed to N.x (Obsolete).
+    version_options = (
+        [_NIGHTLY]
+        + block
+        + obsolete_majors(versions, major, exclude=set())
+        + [_OTHER]
+    )
+    version_default = current_index + 1  # +1 for the leading Nightly entry
 
     # "Last known good" dropdown: supported builds, then each stable of the
     # previous major individually, then remaining older majors collapsed.
@@ -201,8 +214,9 @@ def build_options(versions: list[dict], major: int):
         + obsolete_majors(versions, major, exclude={prev_major})
         + [_OTHER]
     )
+    goodversion_default = current_index
 
-    return version_options, goodversion_options, current_index
+    return version_options, goodversion_options, version_default, goodversion_default
 
 
 # ---------------------------------------------------------------------------
@@ -287,23 +301,26 @@ def main(argv=None):
     if not versions:
         raise SystemExit("No releases found — is the gh CLI authenticated?")
 
-    version_options, goodversion_options, default_index = build_options(versions, major)
+    version_options, goodversion_options, version_default, goodversion_default = build_options(
+        versions, major
+    )
 
     print(f"Supported major: {major}.x")
     print("version options:")
     for o in version_options:
         print(f"  - {o}")
+    print(f"  default index: {version_default}")
     print("goodversion options:")
     for o in goodversion_options:
         print(f"  - {o}")
-    print(f"default index: {default_index}")
+    print(f"  default index: {goodversion_default}")
 
     with open(path, encoding="utf-8") as f:
         lines = f.readlines()
     original = list(lines)
 
-    lines = replace_dropdown(lines, "version", version_options, default_index)
-    lines = replace_dropdown(lines, "goodversion", goodversion_options, default_index)
+    lines = replace_dropdown(lines, "version", version_options, version_default)
+    lines = replace_dropdown(lines, "goodversion", goodversion_options, goodversion_default)
 
     if lines == original:
         print("\nNo changes needed — dropdowns already up to date.")
