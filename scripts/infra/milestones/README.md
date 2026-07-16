@@ -12,7 +12,7 @@ All three read the shared source of truth in
 |--------|----------|-----------------|------------|
 | [`sync-chrome-milestones.ps1`](sync-chrome-milestones.ps1) | PowerShell | Creates/updates the *upcoming* GitHub milestones from the Chromium release schedule. | No — run manually. |
 | [`audit-milestones.ps1`](audit-milestones.ps1) | PowerShell | Fixes the milestone assigned to already-shipped PRs and their linked issues. | No — run manually. |
-| [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — weekly workflow. |
+| [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily workflow. |
 
 ---
 
@@ -90,7 +90,7 @@ used to validate the result.
 ### Automation
 
 The [`Sync - Issue Template Versions`](../../../.github/workflows/auto-update-issue-template-versions.yml)
-workflow runs `update-bug-template.py` weekly (Mondays 09:00 UTC) and
+workflow runs `update-bug-template.py` daily (09:00 UTC) and
 opens/updates a PR when the dropdowns drift. It can also be triggered manually
 via **workflow_dispatch**. The milestone scripts above have no such workflow —
 run them by hand when preparing releases.
