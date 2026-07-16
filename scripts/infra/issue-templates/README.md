@@ -8,7 +8,7 @@ Regenerates the two SkiaSharp version dropdowns in
 | Dropdown | Contents |
 |----------|----------|
 | **Version of SkiaSharp** (`version`) | A `Nightly / CI build` option (people testing the CI feed), then concrete builds of the currently-supported major only (`Pre-release` / `Current` / `Previous` / `Deprecated`). Only the newest in-flight build gets a single `Pre-release` entry — when asking what you're on *now*, the triage answer for an older pre-release build is always "update to the latest". Every older major collapses to a single `N.x (Obsolete)` entry, because those lines are unmaintained and the triage response is simply "please update". |
-| **Last Known Good Version** (`goodversion`) | **Every** in-flight pre-release build listed individually (`preview.1`, `preview.2`, `rc.1`, …), then the same supported-major stables, **plus** every stable release of the previous major listed individually (last-known-good matters for triage even on retired lines), then the remaining older majors collapsed to `N.x (Obsolete)`. |
+| **Last Known Good Version** (`goodversion`) | **Every** in-flight pre-release build listed individually (`preview.1`, `preview.2`, `rc.1`, …), then the same supported-major stables, then every older major collapsed to a single `N.x (Obsolete)` entry. Last-known-good matters for triage, but the exact retired build does not — "somewhere in 3.x" is a good enough answer once a line is unmaintained. |
 
 The two dropdowns treat pre-releases differently on purpose. The in-flight release
 moves `preview -> rc -> stable`, and `preview.1` / `preview.2` / `rc.1` are all

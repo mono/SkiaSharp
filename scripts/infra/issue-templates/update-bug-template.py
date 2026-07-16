@@ -13,13 +13,12 @@ dropdowns whose options need to track the shipped SkiaSharp releases:
                      only the newest build matters when asking what you're on now.
 * ``goodversion``  — "Last Known Good Version of SkiaSharp". The last-known-good
                      version matters for triage even on retired lines, so this
-                     keeps the supported major's builds *and* lists every stable
-                     release of the previous major individually, then collapses
-                     the rest to ``N.x (Obsolete)``. Unlike ``version`` it lists
-                     *every* in-flight pre-release build individually (preview.1,
-                     preview.2, rc.1, …): someone may have been fine on preview.1
-                     but hit a regression in preview.2, and that is exactly what
-                     last-known-good is meant to capture.
+                     lists *every* in-flight pre-release build individually
+                     (preview.1, preview.2, rc.1, …): someone may have been fine
+                     on preview.1 but hit a regression in preview.2, and that is
+                     exactly what last-known-good is meant to capture. Older
+                     majors still collapse to ``N.x (Obsolete)`` — those lines
+                     are retired, so "somewhere in 3.x" is a good enough answer.
 
 Both option lists are generated from the published GitHub Releases (the source
 of truth for what a user can actually install), so running this weekly keeps the
@@ -180,10 +179,10 @@ def build_supported_block(versions: list[dict], major: int):
     return stable_lines, upcoming
 
 
-def obsolete_majors(versions: list[dict], major: int, exclude: set[int]):
+def obsolete_majors(versions: list[dict], major: int):
     """Collapsed ``N.x (Obsolete)`` lines for every older major, newest first."""
     majors = sorted(
-        {v["major"] for v in versions if v["major"] < major and v["major"] not in exclude},
+        {v["major"] for v in versions if v["major"] < major},
         reverse=True,
     )
     return [f"{m}.x (Obsolete)" for m in majors]
@@ -203,7 +202,7 @@ def build_options(versions: list[dict], major: int):
         [_NIGHTLY]
         + version_pre
         + stable_lines
-        + obsolete_majors(versions, major, exclude=set())
+        + obsolete_majors(versions, major)
         + [_OTHER]
     )
     # Default lands on (Current): after Nightly + the pre-release entries.
@@ -212,20 +211,14 @@ def build_options(versions: list[dict], major: int):
     # "Last known good" dropdown: every in-flight pre-release listed
     # individually — a reporter may have been fine on preview.1 but hit a
     # regression in preview.2, and that distinction is exactly what
-    # last-known-good captures. Then the supported stables, each stable of the
-    # previous major individually, then remaining older majors collapsed.
+    # last-known-good captures. Then the supported stables, then every older
+    # major collapsed to N.x (Obsolete): those lines are retired, so knowing it
+    # last worked "somewhere in 3.x" is enough — the exact build doesn't matter.
     good_pre = [f"{p['display']} (Pre-release)" for p in upcoming]
-    prev_major = major - 1
-    prev_major_stables = [
-        v["display"]
-        for v in versions
-        if v["major"] == prev_major and not v["is_pre"]
-    ]
     goodversion_options = (
         good_pre
         + stable_lines
-        + prev_major_stables
-        + obsolete_majors(versions, major, exclude={prev_major})
+        + obsolete_majors(versions, major)
         + [_OTHER]
     )
     # Default lands on (Current): after the pre-release entries.
