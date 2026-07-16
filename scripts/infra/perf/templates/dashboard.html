@@ -71,6 +71,8 @@
   .chart-head .selinfo { color:var(--faint); font-size:11px; margin-left:auto; }
   .chart-head .minibtn { background:var(--chip); color:var(--muted); border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer; }
   .chart-head .minibtn:hover { color:var(--text); }
+  .chart-head .seg { padding:2px; }
+  .chart-head .seg button { padding:3px 9px; font-size:11px; }
   #chart { flex:1; min-height:0; }
   .hint { color:var(--faint); display:grid; place-items:center; height:100%; font-size:12.5px; text-align:center; padding:0 20px; }
   /* ---- value cells ---- */
@@ -126,19 +128,17 @@
       </div>
     </div>
     <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
-    <div class="ctl"><span class="lab">Scale</span>
-      <div class="seg" id="scale">
-        <button data-s="absolute" class="on">Abs</button>
-        <button data-s="relative">Rel %</button>
-        <button data-s="log">Log</button>
-      </div>
-    </div>
   </div>
   <div class="grid-pane"><div id="grid"></div></div>
   <div class="splitter" id="splitter"></div>
   <div class="chart-pane">
     <div class="chart-head">
       <h2 id="chart-title">Trend</h2>
+      <div class="seg" id="scale">
+        <button data-s="absolute" class="on">Abs</button>
+        <button data-s="relative">Rel %</button>
+        <button data-s="log">Log</button>
+      </div>
       <span class="selinfo" id="selinfo"></span>
       <button class="minibtn" id="clearsel">Clear</button>
     </div>
@@ -259,7 +259,7 @@
     const line = n>1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/>` : `<circle cx="${x(0).toFixed(1)}" cy="${y(vals[0]).toFixed(1)}" r="2.4" fill="${color}"/>`;
     return `<svg width="${w}" height="${h}" style="vertical-align:middle">${line}<circle cx="${lx}" cy="${ly}" r="2.2" fill="${color}"/></svg>`;
   }
-  const refOf = r => r["prev-major"]!=null?r["prev-major"]:(r["prev-stable"]!=null?r["prev-stable"]:r["curr-stable"]);
+  const refOf = r => r["curr-stable"]!=null?r["curr-stable"]:(r["prev-stable"]!=null?r["prev-stable"]:r["prev-major"]);
   function cellVal(cell, unit, withDelta) {
     const v=cell.getValue(); if(v==null) return `<span class="dim">·</span>`;
     let s=fmtVal(v,unit);
@@ -279,7 +279,7 @@
   function buildTable() {
     if(state.table){ try{ state.table.destroy(); }catch(e){} state.table=null; }
     state.table = new Tabulator("#grid", {
-      data: rows(), columns: columns(), index:"id", height:"100%", layout:"fitDataStretch",
+      data: rows(), columns: columns(), index:"id", height:"100%", layout:"fitData",
       groupBy: state.groupBy, groupStartOpen:true, movableColumns:true, selectableRows:true, reactiveData:false,
       groupHeader:(value,count)=>`${esc(value===""||value==null?"—":value)} <span class="gcount">${count}</span>`,
       placeholder:"No data.",
