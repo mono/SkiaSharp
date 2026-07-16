@@ -5,139 +5,119 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>SkiaSharp perf tracker</title>
 <!--
-  Unified SkiaSharp perf dashboard — time, allocations, AND package/native size.
+  Unified SkiaSharp perf dashboard — time, allocations, and package/native size.
+
+  Grid-first: a Tabulator data grid is the primary surface. Each row is a benchmark
+  "feature" (class.method + parameters + OS, or package + target for size), grouped
+  and sorted however you like. Ticking rows plots their trends in the chart below.
 
   Data modes (no code difference):
-    * Embedded  — CI injects `window.__PERF_DATA__ = {benchmarks:{...}, sizes:{...}}`
-      just before the closing body tag, producing an OFFLINE single file you download
-      from a run artifact and open in a browser (this is how a PR run is viewed).
-    * Live      — with no embedded data, the page fetches the JSON histories from the
-      `aw-data` branch (benchmarks/ + sizes/), or any `?data=<base-url>`.
+    * Embedded — CI injects `window.__PERF_DATA__ = {benchmarks:{...}, sizes:{...}}`
+      before </body>, producing an offline file you download from a run artifact.
+    * Live     — with no embedded data, fetch the JSON histories from the `aw-data`
+      branch (benchmarks/index.json + sizes/index.json), or any `?data=<base-url>`.
 
-  Charting uses ECharts from a CDN (dynamic zoom / legend / tooltips). The data is
-  embedded so the file is self-contained, but rendering the chart needs internet to
-  load ECharts.
-
-  Data producers: scripts/infra/perf/benchmarks/track.py (time+alloc) and
-  scripts/infra/perf/sizes/track.py (size). See the track-benchmarks /
-  track-artifact-sizes workflows.
+  Libraries (CDN, need internet to render): ECharts (chart) + Tabulator (grid).
+  Producers: scripts/infra/perf/benchmarks/track.py and .../sizes/track.py.
 -->
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.1/dist/css/tabulator.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/tabulator-tables@6.3.1/dist/js/tabulator.min.js"></script>
 <style>
   :root {
-    --bg:#0a0d13; --bg2:#0d1117; --panel:#141a23; --panel2:#1a212c;
+    --bg:#0a0d13; --bg2:#0d1117; --panel:#141a23; --panel2:#1a2130;
     --border:#242c38; --border2:#333d4d; --text:#e9eef5; --muted:#93a0b1; --faint:#6b7686;
-    --accent:#5aa2ff; --accent2:#8ad0ff; --pr:#d6acff; --chip:#1e2632;
-    --up:#ff6b6b; --down:#4ad991; --shadow:0 8px 30px rgba(0,0,0,.40);
-    --grad:linear-gradient(135deg,#5aa2ff,#8a7bff);
+    --accent:#5aa2ff; --pr:#d6acff; --chip:#1e2632; --sel:#1b2942;
+    --up:#ff6b6b; --down:#4ad991; --shadow:0 8px 30px rgba(0,0,0,.40); --grad:linear-gradient(135deg,#5aa2ff,#8a7bff);
   }
   @media (prefers-color-scheme: light) {
     :root {
       --bg:#eef1f6; --bg2:#fff; --panel:#fff; --panel2:#f5f7fa;
-      --border:#e0e5ec; --border2:#cbd3de; --text:#1a1f27; --muted:#5a6675; --faint:#8a95a3;
-      --accent:#2563eb; --accent2:#0ea5b7; --pr:#7c3aed; --chip:#eef2f7;
-      --up:#dc2626; --down:#16a34a; --shadow:0 8px 26px rgba(90,105,140,.14);
-      --grad:linear-gradient(135deg,#2563eb,#7c3aed);
+      --border:#e0e5ec; --border2:#c4ccd6; --text:#1a1f27; --muted:#59636e; --faint:#818b96;
+      --accent:#2563eb; --pr:#7c3aed; --chip:#eef2f7; --sel:#dbe8fc;
+      --up:#dc2626; --down:#16a34a; --shadow:0 8px 26px rgba(90,105,140,.14); --grad:linear-gradient(135deg,#2563eb,#7c3aed);
     }
   }
   * { box-sizing:border-box; }
-  html,body { margin:0; }
-  body {
-    background:
-      radial-gradient(1100px 560px at 100% -8%, rgba(90,162,255,.12), transparent 58%),
-      radial-gradient(900px 480px at -6% -4%, rgba(214,172,255,.10), transparent 55%),
-      var(--bg);
-    background-attachment:fixed;
-    color:var(--text); min-height:100vh;
-    font:14px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
-    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
-  }
+  html,body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--text); overflow:hidden;
+    font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  .app { display:flex; flex-direction:column; height:100vh; }
   /* ---- top bar ---- */
-  .topbar {
-    position:sticky; top:0; z-index:30;
-    display:flex; align-items:center; gap:22px; flex-wrap:wrap;
-    padding:13px 26px; border-bottom:1px solid var(--border);
-    background:color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter:blur(12px) saturate(1.3);
-  }
-  .brand { display:flex; align-items:center; gap:12px; margin-right:auto; min-width:0; }
-  .brand .logo { width:34px; height:34px; border-radius:10px; background:var(--grad); flex:none;
-    display:grid; place-items:center; font-size:18px; box-shadow:0 4px 14px rgba(90,123,255,.45); }
-  .brand .txt { min-width:0; }
-  .brand h1 { font-size:16px; margin:0; font-weight:680; letter-spacing:-.01em; }
-  .brand .sub { color:var(--muted); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .brand .sub code { background:var(--chip); padding:0 5px; border-radius:5px; }
-  .toolbar { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
-  .ctl { display:flex; flex-direction:column; gap:6px; }
-  .lab { color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.07em; font-weight:700; }
-  .seg { display:inline-flex; background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:3px; gap:2px; }
-  .seg button { background:transparent; color:var(--muted); border:0; border-radius:7px;
-    padding:6px 14px; font-size:12.5px; font-weight:600; cursor:pointer; transition:background .15s,color .15s,box-shadow .15s; }
-  .seg button:hover { color:var(--text); }
-  .seg button.on { background:var(--accent); color:#fff; box-shadow:0 2px 10px rgba(90,162,255,.45); }
-  /* ---- layout ---- */
-  .layout { display:grid; grid-template-columns:310px minmax(0,1fr); gap:20px; padding:22px 26px 60px; align-items:start; }
-  @media (max-width:960px){ .layout{ grid-template-columns:1fr; } }
-  .sidebar { display:flex; flex-direction:column; gap:16px; position:sticky; top:78px; }
-  @media (max-width:960px){ .sidebar{ position:static; } }
-  .content { display:flex; flex-direction:column; gap:20px; min-width:0; }
-  .card { background:var(--panel); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow); overflow:hidden; }
-  .card-h { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 17px; border-bottom:1px solid var(--border); }
-  .card-h h2 { font-size:11.5px; margin:0; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
-  .card-h .count { font-size:11px; color:var(--faint); background:var(--chip); border-radius:20px; padding:2px 9px; font-weight:600; }
-  .card-b { padding:15px 17px; }
-  /* ---- pickers ---- */
-  .actions { display:flex; gap:6px; }
-  .minibtn { background:var(--chip); color:var(--muted); border:1px solid var(--border); border-radius:7px; padding:3px 10px; font-size:11px; font-weight:600; cursor:pointer; transition:.12s; }
-  .minibtn:hover { color:var(--text); border-color:var(--border2); background:var(--panel2); }
-  .filter { width:100%; background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:9px;
-    padding:8px 11px; font-size:12.5px; margin-bottom:9px; transition:border-color .15s,box-shadow .15s; }
-  .filter::placeholder { color:var(--faint); }
-  .filter:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 22%,transparent); }
-  .checklist { max-height:300px; overflow:auto; display:flex; flex-direction:column; gap:1px; margin:-3px; padding:3px; }
-  .checkitem { display:flex; align-items:center; gap:10px; padding:6px 8px; font-size:12.5px; cursor:pointer; border-radius:8px; transition:background .1s; }
-  .checkitem:hover { background:var(--chip); }
-  .checkitem input { appearance:none; -webkit-appearance:none; width:16px; height:16px; flex:none; margin:0; cursor:pointer;
-    border:1.5px solid var(--border2); border-radius:5px; background:var(--bg2); position:relative; transition:.12s; }
-  .checkitem input:checked { background:var(--accent); border-color:var(--accent); }
-  .checkitem input:checked::after { content:""; position:absolute; left:4.5px; top:1.5px; width:4px; height:8px;
-    border:solid #fff; border-width:0 2px 2px 0; transform:rotate(42deg); }
-  .checkitem code { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; color:var(--text);
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  /* ---- chart ---- */
-  #chart { width:100%; height:540px; }
-  .warn { color:#f0b429; font-size:12px; padding:10px 17px 0; display:flex; gap:7px; align-items:center; }
-  /* ---- table ---- */
-  .tbl-wrap { overflow:auto; max-height:70vh; }
-  table { border-collapse:separate; border-spacing:0; width:100%; font-size:12.5px; }
-  thead th { position:sticky; top:0; z-index:2; background:var(--panel2); }
-  th,td { border-bottom:1px solid var(--border); padding:9px 13px; text-align:right; white-space:nowrap; }
-  th:first-child,td:first-child { text-align:left; position:sticky; left:0; background:var(--panel);
-    font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; z-index:1; }
-  thead th:first-child { z-index:3; background:var(--panel2); }
-  th { color:var(--muted); font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; }
-  tbody tr:hover td { background:var(--chip); }
-  tbody tr:hover td:first-child { background:var(--panel2); }
-  .pr { color:var(--pr); }
-  .up { color:var(--up); font-weight:600; } .down { color:var(--down); font-weight:600; }
-  .sw { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:9px; vertical-align:middle; box-shadow:0 0 0 2px color-mix(in srgb,currentColor 25%,transparent); }
-  .msg { color:var(--muted); padding:48px 0; text-align:center; }
-  code { background:var(--chip); padding:1px 6px; border-radius:5px; font-size:12px; }
-  a { color:var(--accent); }
-  ::-webkit-scrollbar { width:10px; height:10px; }
+  .topbar { display:flex; align-items:center; gap:18px; flex-wrap:wrap; padding:9px 16px;
+    border-bottom:1px solid var(--border); background:var(--bg2); z-index:5; }
+  .brand { display:flex; align-items:center; gap:9px; margin-right:auto; min-width:0; }
+  .brand .logo { width:28px; height:28px; border-radius:8px; background:var(--grad); display:grid; place-items:center; font-size:15px; flex:none; }
+  .brand h1 { font-size:14px; margin:0; font-weight:680; white-space:nowrap; }
+  .brand .sub { color:var(--muted); font-size:11.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .brand .sub code { background:var(--chip); padding:0 5px; border-radius:4px; }
+  .ctl { display:flex; align-items:center; gap:8px; }
+  .lab { color:var(--faint); font-size:10px; text-transform:uppercase; letter-spacing:.06em; font-weight:700; }
+  .seg,.chips { display:inline-flex; background:var(--panel); border:1px solid var(--border); border-radius:9px; padding:3px; gap:2px; }
+  .seg button,.chips button { background:transparent; color:var(--muted); border:0; border-radius:6px; padding:5px 11px; font-size:12px; font-weight:600; cursor:pointer; transition:.14s; white-space:nowrap; }
+  .seg button:hover,.chips button:hover { color:var(--text); }
+  .seg button.on { background:var(--accent); color:#fff; }
+  .chips button.on { background:var(--chip); color:var(--text); box-shadow:inset 0 0 0 1px var(--border2); }
+  .chips button .ord { font-size:9px; opacity:.7; margin-left:3px; }
+  /* ---- panes ---- */
+  .grid-pane { flex:1 1 auto; min-height:120px; position:relative; }
+  #grid { position:absolute; inset:0; }
+  .splitter { height:7px; background:var(--bg2); cursor:row-resize; flex:none; position:relative; border-top:1px solid var(--border); }
+  .splitter::after { content:""; position:absolute; left:50%; top:2px; width:38px; height:3px; transform:translateX(-50%); background:var(--border2); border-radius:2px; }
+  .splitter:hover::after { background:var(--accent); }
+  .chart-pane { flex:none; height:320px; min-height:0; display:flex; flex-direction:column; background:var(--panel); border-top:1px solid var(--border); }
+  .chart-head { display:flex; align-items:center; gap:12px; padding:7px 14px; border-bottom:1px solid var(--border); }
+  .chart-head h2 { font-size:11px; margin:0; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+  .chart-head .selinfo { color:var(--faint); font-size:11px; margin-left:auto; }
+  .chart-head .minibtn { background:var(--chip); color:var(--muted); border:1px solid var(--border); border-radius:6px; padding:3px 9px; font-size:11px; font-weight:600; cursor:pointer; }
+  .chart-head .minibtn:hover { color:var(--text); }
+  #chart { flex:1; min-height:0; }
+  .hint { color:var(--faint); display:grid; place-items:center; height:100%; font-size:12.5px; text-align:center; padding:0 20px; }
+  /* ---- value cells ---- */
+  .up { color:var(--up); font-weight:600; } .down { color:var(--down); font-weight:600; } .dim { color:var(--faint); }
+  .sw2 { display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:8px; vertical-align:middle; box-shadow:0 0 0 2px color-mix(in srgb,currentColor 22%,transparent); }
+  .gcount { color:var(--faint); font-weight:500; font-size:11px; margin-left:6px; }
+  /* ---- Tabulator theming ---- */
+  .tabulator { background:transparent; border:0; font-size:12.5px; }
+  .tabulator .tabulator-header, .tabulator .tabulator-col { background:var(--panel2); border-color:var(--border); color:var(--muted); }
+  .tabulator .tabulator-header { border-bottom:2px solid var(--border); }
+  .tabulator .tabulator-col .tabulator-col-title { color:var(--muted); text-transform:uppercase; font-size:10px; letter-spacing:.04em; font-weight:700; }
+  .tabulator .tabulator-col.tabulator-sortable:hover { background:var(--chip); }
+  .tabulator .tabulator-col .tabulator-header-filter input { background:var(--bg2); color:var(--text); border:1px solid var(--border); border-radius:6px; font-size:11px; padding:3px 6px; }
+  .tabulator .tabulator-row { background:var(--panel); border-bottom:1px solid var(--border); color:var(--text); }
+  .tabulator .tabulator-row.tabulator-row-even { background:var(--panel); }
+  .tabulator .tabulator-row:hover { background:var(--chip)!important; }
+  .tabulator .tabulator-row.tabulator-selected, .tabulator .tabulator-row.tabulator-selected:hover { background:var(--sel)!important; }
+  .tabulator .tabulator-row .tabulator-cell { border-right:1px solid transparent; padding:5px 10px; }
+  .tabulator .tabulator-row .tabulator-cell.col-pr { color:var(--pr); }
+  .tabulator .tabulator-tableholder { background:var(--panel); }
+  .tabulator .tabulator-table { background:transparent; }
+  .tabulator-row .tabulator-cell.tabulator-frozen { background:var(--panel); }
+  .tabulator .tabulator-header .tabulator-col.tabulator-frozen { background:var(--panel2); }
+  .tabulator .tabulator-row.tabulator-selected .tabulator-cell.tabulator-frozen { background:var(--sel); }
+  .tabulator .tabulator-group { background:var(--panel2); color:var(--text); font-weight:650; border-bottom:1px solid var(--border); border-top:1px solid var(--border); }
+  .tabulator .tabulator-group.tabulator-group-level-1 { padding-left:26px; }
+  .tabulator .tabulator-group .tabulator-arrow { border-left-color:var(--accent); }
+  .tabulator .tabulator-tableholder { background:var(--panel); }
+  .tabulator .tabulator-header .tabulator-col .tabulator-col-content .tabulator-col-sorter .tabulator-arrow { border-bottom-color:var(--muted); border-top-color:var(--muted); }
+  .tabulator .tabulator-cell .tabulator-responsive-collapse-toggle, .tabulator .tabulator-row .tabulator-cell input[type=checkbox] { accent-color:var(--accent); }
+  .tabulator-edit-select-list { background:var(--panel); border:1px solid var(--border); }
+  .tabulator .tabulator-footer { background:var(--panel2); border-top:1px solid var(--border); color:var(--muted); }
+  ::-webkit-scrollbar { width:11px; height:11px; }
   ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:6px; border:2px solid transparent; background-clip:content-box; }
   ::-webkit-scrollbar-thumb:hover { background:var(--faint); background-clip:content-box; }
 </style>
 </head>
 <body>
-<div class="topbar">
-  <div class="brand">
-    <div class="logo">📊</div>
-    <div class="txt">
-      <h1>SkiaSharp perf tracker</h1>
-      <div class="sub" id="subtitle">Loading…</div>
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">📊</div>
+      <div style="min-width:0">
+        <h1>SkiaSharp perf</h1>
+        <div class="sub" id="subtitle">Loading…</div>
+      </div>
     </div>
-  </div>
-  <div class="toolbar">
     <div class="ctl"><span class="lab">Metric</span>
       <div class="seg" id="metric">
         <button data-m="time" class="on">Time</button>
@@ -145,147 +125,109 @@
         <button data-m="size">Size</button>
       </div>
     </div>
+    <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
     <div class="ctl"><span class="lab">Scale</span>
       <div class="seg" id="scale">
-        <button data-s="absolute" class="on">Absolute</button>
-        <button data-s="relative">Relative %</button>
+        <button data-s="absolute" class="on">Abs</button>
+        <button data-s="relative">Rel %</button>
         <button data-s="log">Log</button>
       </div>
     </div>
   </div>
+  <div class="grid-pane"><div id="grid"></div></div>
+  <div class="splitter" id="splitter"></div>
+  <div class="chart-pane">
+    <div class="chart-head">
+      <h2 id="chart-title">Trend</h2>
+      <span class="selinfo" id="selinfo"></span>
+      <button class="minibtn" id="clearsel">Clear</button>
+    </div>
+    <div id="chart"><div class="hint">Tick rows in the grid to plot their trends here.</div></div>
+  </div>
 </div>
-<div class="layout" id="wrap">
-  <aside class="sidebar">
-    <div class="card">
-      <div class="card-h">
-        <h2 id="group-label">OS</h2>
-        <div class="actions"><button class="minibtn" id="group-all">All</button><button class="minibtn" id="group-none">None</button></div>
-      </div>
-      <div class="card-b">
-        <input class="filter" id="group-filter" placeholder="filter…" />
-        <div class="checklist" id="groups"></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-h">
-        <h2 id="item-label">Benchmark</h2>
-        <div class="actions"><button class="minibtn" id="item-all">All</button><button class="minibtn" id="item-none">None</button></div>
-      </div>
-      <div class="card-b">
-        <input class="filter" id="item-filter" placeholder="filter…" />
-        <div class="checklist" id="items"></div>
-      </div>
-    </div>
-  </aside>
-  <section class="content">
-    <div class="card">
-      <div class="card-h"><h2 id="chart-title">Trend</h2><span class="count" id="chart-count"></span></div>
-      <div class="warn" id="warn" style="display:none"></div>
-      <div class="card-b"><div id="chart"></div></div>
-    </div>
-    <div class="card">
-      <div class="card-h"><h2>Latest comparison</h2><span class="count" id="table-count"></span></div>
-      <div class="tbl-wrap" id="table"></div>
-    </div>
-  </section>
-</div>
-
 <script>
 "use strict";
 (function () {
   const RAW_BASE = "https://raw.githubusercontent.com/mono/SkiaSharp/aw-data/";
   const BENCH_PREFIX = "SkiaSharp.Benchmarks.Tracking.";
-  const ROLE_ORDER = ["curr-stable", "prev-stable", "prev-major"];
-  // Roles rendered as comparison baselines: the newest nuget.org release (incl. preview),
-  // then the stable references. The nightly/CI trend is the chart line, not a baseline.
-  const BASELINE_ROLES = ["latest"].concat(ROLE_ORDER);
-  const OS_ORDER = ["Linux", "Windows", "macOS"];
-  // Chart caps series for readability; the comparison table always shows the full selection.
-  const MAX_SERIES = 36;
-  // Categorical palette (extended, colour-blind-leaning) so many series stay distinguishable.
+  const BASELINE_ROLES = ["latest","curr-stable","prev-stable","prev-major"];
+  const OS_ORDER = ["Linux","Windows","macOS"];
   const PALETTE = ["#58a6ff","#3fb950","#f0883e","#d2a8ff","#f85149","#56d4dd","#e3b341","#db61a2",
                    "#a5d6ff","#7ee787","#ffab70","#e2c5ff","#ff9492","#6ee7d6","#f2cc60","#ffa8cc",
                    "#79c0ff","#56d364","#e09b3a","#b083f0"];
-
   const METRICS = {
-    time:  { label:"Time",        unit:"ns",    domain:"benchmarks", key:"meanNs" },
+    time:  { label:"Time", unit:"ns", domain:"benchmarks", key:"meanNs" },
     alloc: { label:"Allocations", unit:"bytes", domain:"benchmarks", key:"allocatedBytes" },
-    size:  { label:"Size",        unit:"bytes", domain:"sizes" },
+    size:  { label:"Size", unit:"bytes", domain:"sizes" },
   };
+  const DIMS = {
+    benchmarks: [ {key:"benchmark",label:"Benchmark"}, {key:"param",label:"Param"}, {key:"os",label:"OS"} ],
+    sizes:      [ {key:"package",label:"Package"}, {key:"target",label:"Target"} ],
+  };
+  const ROLES = {
+    benchmarks: ["pr","nightly","latest","curr-stable","prev-stable","prev-major"],
+    sizes:      ["nightly","latest","curr-stable","prev-stable","prev-major"],
+  };
+  const ROLE_TITLE = { pr:"★ PR", nightly:"nightly", latest:"latest", "curr-stable":"curr-stable", "prev-stable":"prev-stable", "prev-major":"prev-major" };
+  const WITH_DELTA = new Set(["pr","nightly","latest"]);
 
-  const state = { data:{benchmarks:{}, sizes:{}}, metric:"time", scale:"absolute",
-                  groups:new Set(), items:new Set(), groupFilter:"", itemFilter:"", chart:null };
+  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", groupBy:[], table:null, chart:null };
 
   // ---------- formatting ----------
-  const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs":
-                        ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
-  const fmtBytes = b => { if(b==null)return"·"; if(b<1024)return Math.round(b)+" B";
-                          const k=b/1024; return k<1024?k.toFixed(1)+" KB":(k/1024).toFixed(2)+" MB"; };
-  const fmtVal = (v, unit) => unit==="ns" ? fmtTime(v) : fmtBytes(v);
-  const shortBench = n => n.startsWith(BENCH_PREFIX) ? n.slice(BENCH_PREFIX.length) : n;
-  const dateMs = d => new Date(d + "T00:00:00Z").getTime();
+  const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
+  const fmtBytes = b => { if(b==null)return"·"; if(b<1024)return Math.round(b)+" B"; const k=b/1024; return k<1024?k.toFixed(1)+" KB":(k/1024).toFixed(2)+" MB"; };
+  const fmtVal = (v,unit) => unit==="ns"?fmtTime(v):fmtBytes(v);
+  const dateMs = d => new Date(d+"T00:00:00Z").getTime();
+  const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+  const getCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
 
-  // ---------- adapters: raw docs -> flat Series list ----------
-  // Series = {id, group, item, label, unit, trend:[[ms,val]], baselines:{role:val}, pr:val|null}
-  function normBench(files) {
-    const h = {}; // os -> role -> doc
-    for (const k in files) { const d = files[k]; if (d && d.os) (h[d.os] || (h[d.os]={}))[d.role||"nightly"] = d; }
-    return h;
+  // parse "BitmapDrawBenchmark.DrawScaledTiles(Tiles: 256)" -> {benchmark, param}
+  function parseBench(full) {
+    let n = full.startsWith(BENCH_PREFIX) ? full.slice(BENCH_PREFIX.length) : full;
+    let param = ""; const m = n.match(/^(.*?)\((.*)\)$/);
+    if (m) { n = m[1]; param = m[2]; }
+    return { benchmark:n, param };
   }
+
+  // ---------- adapters -> flat Series [{id,color,dims,label,unit,trend,baselines,pr,nightly}] ----------
   const latestDay = doc => (doc && doc.days && doc.days.length) ? doc.days[doc.days.length-1] : null;
-  // The benchmark data is the merged {legs:{...}} document (benchmarks/index.json).
   const benchLegs = () => (state.data.benchmarks && state.data.benchmarks.legs) || {};
+  function normBench(files){ const h={}; for(const k in files){ const d=files[k]; if(d&&d.os)(h[d.os]||(h[d.os]={}))[d.role||"nightly"]=d; } return h; }
 
   function seriesBenchmarks(key, unit) {
-    const h = normBench(benchLegs());
-    const out = [];
+    const h = normBench(benchLegs()); const out=[];
     const oses = OS_ORDER.filter(o=>h[o]).concat(Object.keys(h).filter(o=>!OS_ORDER.includes(o)).sort());
     for (const os of oses) {
-      const roles = h[os];
-      const names = new Set();
-      ["pr","nightly"].concat(BASELINE_ROLES).forEach(r => { const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
+      const roles = h[os]; const names = new Set();
+      ["pr","nightly"].concat(BASELINE_ROLES).forEach(r=>{ const d=latestDay(roles[r]); if(d) Object.keys(d.benchmarks||{}).forEach(n=>names.add(n)); });
       for (const name of [...names].sort()) {
-        const trend = ((roles.nightly&&roles.nightly.days)||[])
-          .map(d => [dateMs(d.date), (d.benchmarks[name]||{})[key]])
-          .filter(p => p[1]!=null);
-        const baselines = {};
-        for (const r of BASELINE_ROLES) { const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
-        const prd = latestDay(roles.pr); const pr = prd ? (prd.benchmarks[name]||{})[key] : null;
-        if (!trend.length && !Object.keys(baselines).length && pr==null) continue;
-        out.push({ id:os+"|"+name, group:os, item:shortBench(name), label:shortBench(name)+" · "+os,
-                   unit, trend, baselines, pr:pr==null?null:pr });
+        const trend = ((roles.nightly&&roles.nightly.days)||[]).map(d=>[dateMs(d.date),(d.benchmarks[name]||{})[key]]).filter(p=>p[1]!=null);
+        const baselines={}; for(const r of BASELINE_ROLES){ const d=latestDay(roles[r]); const v=d&&(d.benchmarks[name]||{})[key]; if(v!=null) baselines[r]=v; }
+        const prd=latestDay(roles.pr); const pr=prd?(prd.benchmarks[name]||{})[key]:null;
+        if(!trend.length && !Object.keys(baselines).length && pr==null) continue;
+        const pb = parseBench(name);
+        out.push({ id:os+"|"+name, dims:{benchmark:pb.benchmark, param:pb.param||"—", os}, label:pb.benchmark+(pb.param?" ("+pb.param+")":"")+" · "+os,
+                   unit, trend, baselines, pr, nightly: trend.length?trend[trend.length-1][1]:null });
       }
     }
     return out;
   }
 
   function seriesSizes() {
-    const doc = state.data.sizes;
-    if (!doc) return [];
-    const nightly = doc.nightly || [];
-    const roles = doc.roles || {};
-    const cache = doc.releasedCache || {};
-    // discover (package, target) universe from the latest nightly day
-    const last = nightly[nightly.length-1];
-    if (!last) return [];
-    const out = [];
+    const doc=state.data.sizes; if(!doc) return [];
+    const nightly=doc.nightly||[], roles=doc.roles||{}, cache=doc.releasedCache||{};
+    const last=nightly[nightly.length-1]; if(!last) return [];
+    const out=[];
     for (const pkg of Object.keys(last.packages||{}).sort()) {
-      const targets = [];
-      if (last.packages[pkg].nupkg!=null) targets.push({t:"nupkg", label:"nupkg"});
-      for (const np of Object.keys(last.packages[pkg].natives||{})) targets.push({t:np, label:np.replace(/^runtimes\//,"").replace(/\/native\//," · ")});
+      const targets=[]; if(last.packages[pkg].nupkg!=null) targets.push({t:"nupkg",label:"nupkg"});
+      for(const np of Object.keys(last.packages[pkg].natives||{})) targets.push({t:np,label:np.replace(/^runtimes\//,"").replace(/\/native\//," · ")});
       for (const tg of targets) {
-        const getv = day => { const p=(day.packages||{})[pkg]; if(!p) return null; return tg.t==="nupkg" ? p.nupkg : (p.natives||{})[tg.t]; };
-        const trend = nightly.map(d => [dateMs(d.date), getv(d)]).filter(p=>p[1]!=null);
-        const baselines = {};
-        for (const r of BASELINE_ROLES) {
-          const ver = (roles[r]||{})[pkg]; if(!ver) continue;
-          const ent = cache[pkg+"@"+ver]; if(!ent) continue;
-          const v = tg.t==="nupkg" ? ent.nupkg : (ent.natives||{})[tg.t];
-          if (v!=null) baselines[r]=v;
-        }
-        if (!trend.length && !Object.keys(baselines).length) continue;
-        out.push({ id:pkg+"|"+tg.t, group:pkg, item:tg.label, label:pkg+" · "+tg.label,
-                   unit:"bytes", trend, baselines, pr:null });
+        const getv=day=>{ const p=(day.packages||{})[pkg]; if(!p)return null; return tg.t==="nupkg"?p.nupkg:(p.natives||{})[tg.t]; };
+        const trend=nightly.map(d=>[dateMs(d.date),getv(d)]).filter(p=>p[1]!=null);
+        const baselines={}; for(const r of BASELINE_ROLES){ const ver=(roles[r]||{})[pkg]; if(!ver)continue; const ent=cache[pkg+"@"+ver]; if(!ent)continue; const v=tg.t==="nupkg"?ent.nupkg:(ent.natives||{})[tg.t]; if(v!=null) baselines[r]=v; }
+        if(!trend.length && !Object.keys(baselines).length) continue;
+        out.push({ id:pkg+"|"+tg.t, dims:{package:pkg, target:tg.label}, label:pkg+" · "+tg.label,
+                   unit:"bytes", trend, baselines, pr:null, nightly: trend.length?trend[trend.length-1][1]:null });
       }
     }
     return out;
@@ -293,206 +235,161 @@
 
   function allSeries() {
     const m = METRICS[state.metric];
-    return m.domain==="sizes" ? seriesSizes() : seriesBenchmarks(m.key, m.unit);
+    const list = m.domain==="sizes" ? seriesSizes() : seriesBenchmarks(m.key, m.unit);
+    list.forEach((s,i)=> s.color = PALETTE[i % PALETTE.length]);
+    return list;
+  }
+  let SERIES = [], SBYID = {};
+  function refreshSeries(){ SERIES = allSeries(); SBYID = {}; SERIES.forEach(s=>SBYID[s.id]=s); }
+
+  // ---------- grid ----------
+  function rows() {
+    const roles = ROLES[METRICS[state.metric].domain];
+    return SERIES.map(s => { const r={ id:s.id, color:s.color, trend:s.trend }; Object.assign(r, s.dims);
+      for(const role of roles) r[role] = role==="pr" ? s.pr : role==="nightly" ? s.nightly : (s.baselines[role]!=null?s.baselines[role]:null);
+      return r; });
+  }
+  function spark(trend, color) {
+    if(!trend||!trend.length) return "";
+    const vals=trend.map(p=>p[1]).filter(v=>v!=null); if(!vals.length) return "";
+    const w=84,h=22,pad=3,n=trend.length,min=Math.min(...vals),max=Math.max(...vals),span=(max-min)||1;
+    const x=i=> n<=1?w/2:pad+i*(w-2*pad)/(n-1), y=v=>h-pad-(v-min)/span*(h-2*pad);
+    const pts=trend.map((p,i)=>p[1]==null?null:`${x(i).toFixed(1)},${y(p[1]).toFixed(1)}`).filter(Boolean).join(" ");
+    const lx=x(n-1).toFixed(1), ly=y(vals[vals.length-1]).toFixed(1);
+    const line = n>1 ? `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5"/>` : `<circle cx="${x(0).toFixed(1)}" cy="${y(vals[0]).toFixed(1)}" r="2.4" fill="${color}"/>`;
+    return `<svg width="${w}" height="${h}" style="vertical-align:middle">${line}<circle cx="${lx}" cy="${ly}" r="2.2" fill="${color}"/></svg>`;
+  }
+  const refOf = r => r["prev-major"]!=null?r["prev-major"]:(r["prev-stable"]!=null?r["prev-stable"]:r["curr-stable"]);
+  function cellVal(cell, unit, withDelta) {
+    const v=cell.getValue(); if(v==null) return `<span class="dim">·</span>`;
+    let s=fmtVal(v,unit);
+    if(withDelta){ const ref=refOf(cell.getRow().getData()); if(ref!=null&&ref!==0){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) s+=` <span class="${d>0?'up':'down'}">${d>0?'▲':'▼'}${Math.abs(d*100).toFixed(0)}%</span>`; } }
+    return s;
+  }
+  function columns() {
+    const m=METRICS[state.metric], dims=DIMS[m.domain], roles=ROLES[m.domain];
+    const cols=[{ formatter:"rowSelection", titleFormatter:"rowSelection", titleFormatterParams:{rowRange:"active"}, headerSort:false, resizable:false, frozen:true, width:40, hozAlign:"center", cssClass:"col-sel" }];
+    dims.forEach((d,i)=> cols.push({ title:d.label, field:d.key, frozen:i===0, resizable:true, minWidth:i===0?150:80,
+      formatter: i===0 ? (c)=>`<span class="sw2" style="background:${c.getRow().getData().color}"></span>${esc(c.getValue())}` : (c)=>esc(c.getValue()) }));
+    cols.push({ title:"Trend", field:"trend", headerSort:false, resizable:true, width:100, hozAlign:"center", formatter:(c)=>spark(c.getValue(), c.getRow().getData().color) });
+    roles.forEach(role=> cols.push({ title:ROLE_TITLE[role], field:role, hozAlign:"right", sorter:"number", resizable:true, width:120,
+      cssClass: role==="pr"?"col-pr":"", formatter:(c)=>cellVal(c, m.unit, WITH_DELTA.has(role)) }));
+    return cols;
+  }
+  function buildTable() {
+    if(state.table){ try{ state.table.destroy(); }catch(e){} state.table=null; }
+    state.table = new Tabulator("#grid", {
+      data: rows(), columns: columns(), index:"id", height:"100%", layout:"fitDataStretch",
+      groupBy: state.groupBy, groupStartOpen:true, movableColumns:true, selectableRows:true, reactiveData:false,
+      groupHeader:(value,count)=>`${esc(value===""||value==null?"—":value)} <span class="gcount">${count}</span>`,
+      placeholder:"No data.",
+    });
+    state.table.on("rowSelectionChanged", updateChart);
+    state.table.on("tableBuilt", ()=>{ selectDefault(); });
+  }
+  function selectDefault() {
+    const gk = DIMS[METRICS[state.metric].domain][0].key;
+    const first = SERIES.length ? SERIES[0].dims[gk] : null;
+    const ids = SERIES.filter(s=>s.dims[gk]===first).map(s=>s.id);
+    if(ids.length) state.table.selectRow(ids);
   }
 
-  // ---------- selection UI ----------
-  function pickerUniverse(series) {
-    const groups = [], gs = new Set();
-    for (const s of series) if (!gs.has(s.group)) { gs.add(s.group); groups.push(s.group); }
-    // Scope the item list to the selected groups (so picking a size package shows only
-    // its own targets); fall back to all groups when nothing is selected yet.
-    const active = state.groups.size ? state.groups : gs;
-    const items = [], is = new Set();
-    for (const s of series) if (active.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
-    return { groups, items };
-  }
-
-  function renderPickers(series) {
-    const { groups, items } = pickerUniverse(series);
-    document.getElementById("group-label").textContent = state.metric==="size" ? "Package" : "OS";
-    document.getElementById("item-label").textContent  = state.metric==="size" ? "Artifact / native" : "Benchmark";
-    const gf = state.groupFilter.toLowerCase();
-    const gEl = document.getElementById("groups");
-    gEl.innerHTML = groups.filter(g=>!gf||g.toLowerCase().includes(gf)).map(g=>
-      `<label class="checkitem"><input type="checkbox" data-g="${esc(g)}" ${state.groups.has(g)?"checked":""}><code>${esc(g)}</code></label>`).join("")
-      || `<div class="msg" style="padding:12px">no matches</div>`;
-    gEl.querySelectorAll("input").forEach(c=>c.onchange=()=>{ const g=c.dataset.g; c.checked?state.groups.add(g):state.groups.delete(g); render(); });
-    const f = state.itemFilter.toLowerCase();
-    const iEl = document.getElementById("items");
-    iEl.innerHTML = items.filter(it=>!f||it.toLowerCase().includes(f)).map(it=>
-      `<label class="checkitem"><input type="checkbox" data-i="${esc(it)}" ${state.items.has(it)?"checked":""}><code>${esc(it)}</code></label>`).join("")
-      || `<div class="msg" style="padding:12px">no matches</div>`;
-    iEl.querySelectorAll("input").forEach(c=>c.onchange=()=>{ const it=c.dataset.i; c.checked?state.items.add(it):state.items.delete(it); render(); });
-  }
-  const esc = s => String(s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-  function selected(series) {
-    return series.filter(s => state.groups.has(s.group) && state.items.has(s.item));
-  }
-
-  // ---------- chart ----------
-  function refValue(s) {
-    if (s.baselines["curr-stable"]!=null) return s.baselines["curr-stable"];
-    return s.trend.length ? s.trend[0][1] : null;
-  }
-  function renderChart(sel) {
+  // ---------- chart (driven by grid selection) ----------
+  function refValue(s){ if(s.baselines["curr-stable"]!=null) return s.baselines["curr-stable"]; return s.trend.length?s.trend[0][1]:null; }
+  function updateChart() {
+    const sel = (state.table? state.table.getSelectedData():[]).map(r=>SBYID[r.id]).filter(Boolean);
+    document.getElementById("selinfo").textContent = sel.length ? `${sel.length} selected` : "";
     const el = document.getElementById("chart");
-    if (!state.chart) state.chart = echarts.init(el, null, { renderer:"canvas" });
     const m = METRICS[state.metric];
-    if (!sel.length) { state.chart.clear(); state.chart.setOption({ title:{ text:"Select a group and item to plot", left:"center", top:"middle", textStyle:{color:getCss("--muted"),fontSize:13,fontWeight:"normal"} } }); return; }
-    const rel = state.scale==="relative";
-    const single = sel.length===1;
-    const echSeries = sel.map((s,idx) => {
-      const color = PALETTE[idx % PALETTE.length];
-      const ref = rel ? refValue(s) : null;
-      const data = s.trend.map(([t,v]) => [t, rel && ref ? 100*v/ref : v]);
-      const ser = { name:s.label, type:"line", showSymbol:s.trend.length<=40, symbolSize:5,
-                    smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color}, data };
-      if (single) {
-        const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({
-          yAxis: rel && ref ? 100*s.baselines[r]/ref : s.baselines[r],
-          label:{ formatter:r, position:"insideEndTop", color:getCss("--muted"), fontSize:10 },
-          lineStyle:{ color:getCss("--muted"), type:"dashed", width:1 } }));
-        if (ml.length) ser.markLine = { symbol:"none", data:ml };
-        if (s.pr!=null && s.trend.length) {
-          const py = rel && ref ? 100*s.pr/ref : s.pr;
-          ser.markPoint = { symbol:"pin", symbolSize:42, data:[{ coord:[s.trend[s.trend.length-1][0], py], value:"PR",
-            itemStyle:{ color:getCss("--pr") }, label:{ formatter:"PR", color:"#fff", fontSize:10 } }] };
-        }
+    document.getElementById("chart-title").textContent = m.label + (state.scale==="relative"?" — relative %":state.scale==="log"?" — log":"");
+    if(!sel.length){ if(state.chart){ state.chart.dispose(); state.chart=null; } el.innerHTML=`<div class="hint">Tick rows in the grid to plot their trends here.</div>`; return; }
+    if(!state.chart || el.querySelector(".hint")){ el.innerHTML=""; state.chart = echarts.init(el, null, {renderer:"canvas"}); }
+    const rel=state.scale==="relative", single=sel.length===1;
+    const echSeries = sel.map(s=>{
+      const ref = rel?refValue(s):null;
+      const data = s.trend.map(([t,v])=>[t, rel&&ref?100*v/ref:v]);
+      const ser = { name:s.label, type:"line", showSymbol:s.trend.length<=60, symbolSize:5, smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color:s.color}, data };
+      if(single){
+        const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({ yAxis: rel&&ref?100*s.baselines[r]/ref:s.baselines[r], label:{formatter:r,position:"insideEndTop",color:getCss("--muted"),fontSize:10}, lineStyle:{color:getCss("--muted"),type:"dashed",width:1} }));
+        if(ml.length) ser.markLine={symbol:"none",data:ml};
+        if(s.pr!=null && s.trend.length){ const py=rel&&ref?100*s.pr/ref:s.pr; ser.markPoint={symbol:"pin",symbolSize:40,data:[{coord:[s.trend[s.trend.length-1][0],py],value:"PR",itemStyle:{color:getCss("--pr")},label:{formatter:"PR",color:"#fff",fontSize:10}}]}; }
       }
       return ser;
     });
-    const yLabel = rel ? "% of curr-stable" : m.unit;
-    const many = sel.length > 8;
-    const opt = {
-      color: PALETTE,
-      grid: { left:70, right:24, top:22, bottom:66 },
-      tooltip: many
-        ? { trigger:"item", confine:true, backgroundColor:getCss("--panel2"), borderColor:getCss("--border"),
-            textStyle:{ color:getCss("--text") },
-            formatter:(p)=> `${esc(p.seriesName)}<br/><b>${rel?(p.value[1]==null?"·":p.value[1].toFixed(1)+"%"):fmtVal(p.value[1],m.unit)}</b>` }
-        : { trigger:"axis", confine:true, backgroundColor:getCss("--panel2"), borderColor:getCss("--border"),
-            textStyle:{ color:getCss("--text") },
-            valueFormatter:(v)=> rel ? (v==null?"·":v.toFixed(1)+"%") : fmtVal(v, m.unit) },
-      legend: { show:false },   // the comparison table is the legend (matching colour swatches)
-      xAxis: { type:"time", boundaryGap:false, axisLabel:{ color:getCss("--muted") },
-               axisLine:{ lineStyle:{ color:getCss("--border") } }, splitLine:{ show:false } },
-      yAxis: { type: state.scale==="log" ? "log" : "value", name:yLabel, nameGap:14,
-               nameTextStyle:{ color:getCss("--faint"), align:"left", fontSize:11 },
-               axisLabel:{ color:getCss("--muted"), formatter:(v)=> rel ? v+"%" : fmtVal(v, m.unit) },
-               axisLine:{ show:false }, axisTick:{ show:false },
-               splitLine:{ lineStyle:{ color:getCss("--border"), opacity:.35 } } },
-      dataZoom: [ { type:"inside" }, { type:"slider", height:18, bottom:20, borderColor:"transparent",
-                   fillerColor:"rgba(90,162,255,.15)", handleStyle:{ color:getCss("--accent") },
-                   textStyle:{ color:getCss("--faint") } } ],
+    const many=sel.length>8;
+    state.chart.setOption({
+      color:PALETTE, animation:false, grid:{left:66,right:20,top:14,bottom:52},
+      tooltip: many ? {trigger:"item",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},formatter:(p)=>`${esc(p.seriesName)}<br/><b>${rel?(p.value[1]==null?"·":p.value[1].toFixed(1)+"%"):fmtVal(p.value[1],m.unit)}</b>`}
+                      : {trigger:"axis",confine:true,backgroundColor:getCss("--panel2"),borderColor:getCss("--border"),textStyle:{color:getCss("--text")},valueFormatter:(v)=>rel?(v==null?"·":v.toFixed(1)+"%"):fmtVal(v,m.unit)},
+      legend:{show:false},
+      xAxis:{type:"time",boundaryGap:false,axisLabel:{color:getCss("--muted")},axisLine:{lineStyle:{color:getCss("--border")}},splitLine:{show:false}},
+      yAxis:{type:state.scale==="log"?"log":"value",name:rel?"% of curr-stable":m.unit,nameGap:12,nameTextStyle:{color:getCss("--faint"),align:"left",fontSize:10},axisLabel:{color:getCss("--muted"),formatter:(v)=>rel?v+"%":fmtVal(v,m.unit)},axisLine:{show:false},axisTick:{show:false},splitLine:{lineStyle:{color:getCss("--border"),opacity:.35}}},
+      dataZoom:[{type:"inside"},{type:"slider",height:16,bottom:14,borderColor:"transparent",fillerColor:"rgba(90,162,255,.15)",handleStyle:{color:getCss("--accent")},textStyle:{color:getCss("--faint")}}],
       series: echSeries,
-    };
-    state.chart.clear();
-    state.chart.setOption(opt);
-  }
-  const getCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
-
-  // ---------- table ----------
-  function renderTable(sel) {
-    const el = document.getElementById("table");
-    if (!sel.length) { el.innerHTML = `<div class="msg" style="padding:12px">Nothing selected.</div>`; return; }
-    const m = METRICS[state.metric];
-    const cols = [{k:"pr",h:"★ PR",cls:"pr"},{k:"nightly",h:"nightly"},{k:"latest",h:"latest"}].concat(ROLE_ORDER.map(r=>({k:r,h:r})));
-    const val = (s,k)=> k==="pr"?s.pr : k==="nightly"?(s.trend.length?s.trend[s.trend.length-1][1]:null) : (s.baselines[k]!=null?s.baselines[k]:null);
-    let h = "<table><thead><tr><th>Series</th>"+cols.map((c,i)=>`<th class="${c.cls||""}">${c.h}</th>`).join("")+"</tr></thead><tbody>";
-    for (let i=0;i<sel.length;i++){
-      const s=sel[i]; const color=PALETTE[i%PALETTE.length];
-      const ref = s.baselines["prev-major"]!=null?s.baselines["prev-major"]:(s.baselines["prev-stable"]!=null?s.baselines["prev-stable"]:s.baselines["curr-stable"]);
-      h += `<tr><td><span class="sw" style="background:${color}"></span>${esc(s.label)}</td>`+
-        cols.map(c=>{ const v=val(s,c.k); let a="";
-          if(ref!=null&&v!=null&&ref!==0&&(c.k==="pr"||c.k==="nightly"||c.k==="latest")){ const d=(v-ref)/ref; if(Math.abs(d)>=0.05) a=d>0?` <span class="up">▲${(d*100).toFixed(0)}%</span>`:` <span class="down">▼${(-d*100).toFixed(0)}%</span>`; }
-          return `<td class="${c.cls||""}">${fmtVal(v, m.unit)}${a}</td>`; }).join("")+"</tr>";
-    }
-    el.innerHTML = h+"</tbody></table>";
+    }, true);
+    state.chart.resize();
   }
 
-  // ---------- orchestration ----------
-  function render() {
-    const series = allSeries();
-    renderPickers(series);
-    const sel = selected(series);
-    const warn = document.getElementById("warn");
-    const chartSel = sel.length > MAX_SERIES ? sel.slice(0, MAX_SERIES) : sel;
-    if (sel.length > MAX_SERIES) { warn.style.display=""; warn.textContent = `⚠ Chart shows the first ${MAX_SERIES} of ${sel.length} selected series — narrow the selection to compare. The table below lists all ${sel.length}.`; }
-    else warn.style.display="none";
-    document.getElementById("chart-title").textContent =
-      METRICS[state.metric].label + (state.scale==="relative"?" — relative %":state.scale==="log"?" — log":"");
-    document.getElementById("chart-count").textContent = chartSel.length ? `${chartSel.length} series` : "";
-    document.getElementById("table-count").textContent = sel.length ? `${sel.length} row${sel.length>1?"s":""}` : "";
-    renderChart(chartSel);
-    renderTable(sel);
+  // ---------- group-by chips ----------
+  function renderGroupby() {
+    const dims = DIMS[METRICS[state.metric].domain];
+    const el = document.getElementById("groupby"); el.innerHTML="";
+    dims.forEach(d=>{
+      const b=document.createElement("button"); const idx=state.groupBy.indexOf(d.key);
+      b.className = idx>=0?"on":""; b.innerHTML = d.label + (idx>=0?`<span class="ord">${idx+1}</span>`:"");
+      b.onclick = ()=>{ const i=state.groupBy.indexOf(d.key); if(i>=0) state.groupBy.splice(i,1); else state.groupBy.push(d.key);
+        renderGroupby(); if(state.table) state.table.setGroupBy(state.groupBy.length?state.groupBy:false); };
+      el.appendChild(b);
+    });
   }
 
-  function resetSelection(series) {
-    const groups = [], gs = new Set();
-    for (const s of series) if (!gs.has(s.group)) { gs.add(s.group); groups.push(s.group); }
-    state.groups = new Set(groups);              // all groups selected by default
-    const items = [], is = new Set();
-    for (const s of series) if (state.groups.has(s.group) && !is.has(s.item)) { is.add(s.item); items.push(s.item); }
-    state.items = new Set(items);                // all items selected by default
-    state.groupFilter = ""; const gf = document.getElementById("group-filter"); if (gf) gf.value = "";
-    state.itemFilter = ""; const f = document.getElementById("item-filter"); if (f) f.value = "";
+  // ---------- metric switch ----------
+  function switchMetric(mk) {
+    state.metric = mk;
+    document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===mk));
+    state.groupBy = [ DIMS[METRICS[mk].domain][0].key ];   // default: group by first dim
+    refreshSeries(); renderGroupby(); buildTable();
   }
 
+  // ---------- boot ----------
   function boot(data) {
-    state.data = { benchmarks: data.benchmarks || {}, sizes: data.sizes || null };
-    const legs = benchLegs();
-    const hasBench = Object.keys(legs).length > 0;
-    const hasSize = !!(state.data.sizes && (state.data.sizes.nightly || []).length);
-    if (!hasBench && !hasSize) { document.getElementById("subtitle").textContent="No data found.";
-      document.getElementById("wrap").innerHTML = `<div class="msg">No perf data available yet.</div>`; return; }
-    if (!hasBench && hasSize) { state.metric="size"; document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m==="size")); }
-
+    state.data = { benchmarks:data.benchmarks||{}, sizes:data.sizes||null };
+    const legs=benchLegs(); const hasBench=Object.keys(legs).length>0;
+    const hasSize=!!(state.data.sizes&&(state.data.sizes.nightly||[]).length);
+    if(!hasBench && !hasSize){ document.getElementById("subtitle").textContent="No perf data available yet."; return; }
     // subtitle
-    const h = normBench(legs);
-    const parts = Object.keys(h).map(o=>{ const d=latestDay(h[o].nightly); return d?`${o} <code>${d.version}</code>`:null; }).filter(Boolean);
-    const sz = hasSize ? (state.data.sizes.nightly.slice(-1)[0]||{}).version : null;
-    document.getElementById("subtitle").innerHTML =
-      (parts.length?"Nightly "+parts.join(" · "):"") + (sz?`  ·  sizes <code>${sz}</code>`:"") || "Ready.";
-
-    resetSelection(allSeries());
-    // wire controls
-    document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>{ state.metric=b.dataset.m;
-      document.querySelectorAll("#metric button").forEach(x=>x.classList.toggle("on",x===b));
-      resetSelection(allSeries()); render(); });
-    document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s;
-      document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); render(); });
-    document.getElementById("group-filter").oninput = e => { state.groupFilter=e.target.value; renderPickers(allSeries()); };
-    document.getElementById("item-filter").oninput = e => { state.itemFilter=e.target.value; renderPickers(allSeries()); };
-    const bulk = (kind, on) => { const uni = pickerUniverse(allSeries());
-      const list = kind==="group" ? uni.groups : uni.items; const set = kind==="group" ? state.groups : state.items;
-      set.clear(); if (on) list.forEach(x=>set.add(x)); render(); };
-    document.getElementById("group-all").onclick  = ()=>bulk("group", true);
-    document.getElementById("group-none").onclick = ()=>bulk("group", false);
-    document.getElementById("item-all").onclick   = ()=>bulk("item", true);
-    document.getElementById("item-none").onclick  = ()=>bulk("item", false);
+    const h=normBench(legs); const parts=Object.keys(h).map(o=>{ const d=latestDay(h[o].nightly); return d?`${o} <code>${d.version}</code>`:null; }).filter(Boolean);
+    const sz=hasSize?(state.data.sizes.nightly.slice(-1)[0]||{}).version:null;
+    document.getElementById("subtitle").innerHTML=(parts.length?"Nightly "+parts.join(" · "):"")+(sz?`  ·  sizes <code>${sz}</code>`:"")||"Ready.";
+    if(!hasBench && hasSize) state.metric="size";
+    document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===state.metric));
+    state.groupBy=[ DIMS[METRICS[state.metric].domain][0].key ];
+    refreshSeries(); renderGroupby(); buildTable();
+    // controls
+    document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>switchMetric(b.dataset.m));
+    document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s; document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
+    document.getElementById("clearsel").onclick=()=>{ if(state.table) state.table.deselectRow(); };
+    initSplitter();
     window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
-    render();
+  }
+
+  function initSplitter() {
+    const sp=document.getElementById("splitter"), pane=document.querySelector(".chart-pane");
+    let startY, startH;
+    const move=e=>{ const dy=startY-(e.touches?e.touches[0].clientY:e.clientY); let h=Math.min(Math.max(startH+dy,90), window.innerHeight-180); pane.style.height=h+"px"; if(state.chart) state.chart.resize(); };
+    const up=()=>{ document.removeEventListener("mousemove",move); document.removeEventListener("mouseup",up); document.removeEventListener("touchmove",move); document.removeEventListener("touchend",up); document.body.style.userSelect=""; };
+    const down=e=>{ startY=e.touches?e.touches[0].clientY:e.clientY; startH=pane.getBoundingClientRect().height; document.body.style.userSelect="none";
+      document.addEventListener("mousemove",move); document.addEventListener("mouseup",up); document.addEventListener("touchmove",move,{passive:false}); document.addEventListener("touchend",up); };
+    sp.addEventListener("mousedown",down); sp.addEventListener("touchstart",down,{passive:true});
   }
 
   // ---------- data loading ----------
-  async function fetchJson(url){ try{ const r=await fetch(url,{cache:"no-cache"}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
-  async function fetchLive() {
-    const base = new URLSearchParams(location.search).get("data") || RAW_BASE;
-    const b = base.endsWith("/")?base:base+"/";
+  async function fetchJson(u){ try{ const r=await fetch(u,{cache:"no-cache"}); if(!r.ok) return null; return await r.json(); }catch(e){ return null; } }
+  async function fetchLive(){ const base=new URLSearchParams(location.search).get("data")||RAW_BASE; const b=base.endsWith("/")?base:base+"/";
     document.getElementById("subtitle").textContent="Loading live data…";
-    // Single merged file per dimension on the aw-data branch.
-    const [benchmarks, sizes] = await Promise.all([
-      fetchJson(b+"benchmarks/index.json"), fetchJson(b+"sizes/index.json") ]);
-    boot({ benchmarks: benchmarks || {}, sizes });
-  }
-
-  const start = () => {
-    if (window.__PERF_DATA__) boot(window.__PERF_DATA__);
-    else fetchLive();
-  };
-  if (document.readyState==="loading") document.addEventListener("DOMContentLoaded", start); else start();
+    const [benchmarks,sizes]=await Promise.all([fetchJson(b+"benchmarks/index.json"),fetchJson(b+"sizes/index.json")]); boot({benchmarks:benchmarks||{},sizes}); }
+  const start=()=>{ if(window.__PERF_DATA__) boot(window.__PERF_DATA__); else fetchLive(); };
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",start); else start();
 })();
 </script>
 </body>
