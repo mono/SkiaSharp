@@ -133,6 +133,7 @@
         </div>
       </div>
       <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
+      <div class="ctl" id="osfilter-ctl"><span class="lab">OS</span><div class="chips" id="osfilter"></div></div>
       <div class="ctl"><span class="lab">Δ ≥</span>
         <div class="seg" id="threshold">
           <button data-t="0">0%</button>
@@ -187,7 +188,7 @@
   const ROLE_TITLE = { pr:"★ PR", nightly:"nightly", latest:"latest", "curr-stable":"curr-stable", "prev-stable":"prev-stable", "prev-major":"prev-major" };
   const WITH_DELTA = new Set(["pr","nightly","latest"]);
 
-  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", threshold:0.05, groupBy:[], table:null, chart:null };
+  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", threshold:0.05, groupBy:[], osFilter:new Set(), table:null, chart:null };
 
   // ---------- formatting ----------
   const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
@@ -284,10 +285,28 @@
       if(ref!=null && ref!==0){ const d=(v-ref)/ref; if(d!==0 && Math.abs(d)>=state.threshold) s+=` <span class="${d>0?'up':'down'}">${pctStr(d)}</span>`; } }
     return s;
   }
-  // grid-only search filter (does not touch selection / chart)
-  function gridFilter(data, params){ const q=(params.q||"").toLowerCase(); if(!q) return true;
-    return DIMS[METRICS[state.metric].domain].some(d=>String(data[d.key]==null?"":data[d.key]).toLowerCase().includes(q)); }
-  function applyFilter(q){ if(!state.table) return; if(q&&q.trim()) state.table.setFilter(gridFilter,{q:q.trim()}); else state.table.clearFilter(); }
+  // grid-only filters (OS + text search) — do not touch selection / chart
+  function gridFilter(data, params){
+    if(params.os instanceof Set && !params.os.has(data.os)) return false;
+    const q=(params.q||"").toLowerCase();
+    if(q && !DIMS[METRICS[state.metric].domain].some(d=>String(data[d.key]==null?"":data[d.key]).toLowerCase().includes(q))) return false;
+    return true;
+  }
+  function applyFilter(){ if(!state.table) return;
+    const hasOs = DIMS[METRICS[state.metric].domain].some(d=>d.key==="os");
+    const q=(document.getElementById("gridsearch").value||"").trim();
+    state.table.setFilter(gridFilter, { q, os: hasOs ? state.osFilter : null }); }
+  function resetOsFilter(){ state.osFilter = new Set(SERIES.map(s=>s.dims.os).filter(Boolean)); }
+  function renderOsFilter(){
+    const ctl=document.getElementById("osfilter-ctl");
+    const set=new Set(SERIES.map(s=>s.dims.os).filter(Boolean));
+    const list=OS_ORDER.filter(o=>set.has(o)).concat([...set].filter(o=>!OS_ORDER.includes(o)));
+    ctl.style.display = list.length ? "" : "none"; if(!list.length) return;
+    const el=document.getElementById("osfilter"); el.innerHTML="";
+    list.forEach(o=>{ const b=document.createElement("button"); b.className=state.osFilter.has(o)?"on":""; b.textContent=o;
+      b.onclick=()=>{ state.osFilter.has(o)?state.osFilter.delete(o):state.osFilter.add(o); renderOsFilter(); applyFilter(); };
+      el.appendChild(b); });
+  }
   function columns() {
     const m=METRICS[state.metric], dims=DIMS[m.domain], roles=ROLES[m.domain];
     const cols=[{ formatter:"rowSelection", titleFormatter:"rowSelection", titleFormatterParams:{rowRange:"active"}, headerSort:false, resizable:false, frozen:true, width:40, hozAlign:"center", cssClass:"col-sel" }];
@@ -378,7 +397,7 @@
     document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===mk));
     state.groupBy = [ DIMS[METRICS[mk].domain][0].key ];   // default: group by first dim
     const s=document.getElementById("gridsearch"); if(s) s.value="";
-    refreshSeries(); renderGroupby(); buildTable();
+    refreshSeries(); resetOsFilter(); renderGroupby(); renderOsFilter(); buildTable();
   }
 
   // ---------- boot ----------
@@ -394,12 +413,12 @@
     if(!hasBench && hasSize) state.metric="size";
     document.querySelectorAll("#metric button").forEach(b=>b.classList.toggle("on",b.dataset.m===state.metric));
     state.groupBy=[ DIMS[METRICS[state.metric].domain][0].key ];
-    refreshSeries(); renderGroupby(); buildTable();
+    refreshSeries(); resetOsFilter(); renderGroupby(); renderOsFilter(); buildTable();
     // controls
     document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>switchMetric(b.dataset.m));
     document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s; document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
     document.querySelectorAll("#threshold button").forEach(b=>b.onclick=()=>{ state.threshold=parseFloat(b.dataset.t); document.querySelectorAll("#threshold button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); });
-    document.getElementById("gridsearch").oninput = e => applyFilter(e.target.value);
+    document.getElementById("gridsearch").oninput = () => applyFilter();
     document.getElementById("clearsel").onclick=()=>{ if(state.table) state.table.deselectRow(); };
     initSplitter();
     window.addEventListener("resize", ()=>{ if(state.chart) state.chart.resize(); });
