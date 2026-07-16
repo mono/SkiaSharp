@@ -150,9 +150,13 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageRasterReleaseDelegate ((addr, _) => releaseProc (addr, releaseContext))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKImageRasterReleaseProxy : null;
 			var image = GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, proxy, (void*)ctx));
+			// if the native image was not created, the release proc will never be
+			// invoked by native code, so we must free the GC handle here to avoid a leak
+			if (image is null && del is not null)
+				gch.Free ();
 			GC.KeepAlive (pixmap);
 			return image;
 		}
@@ -301,9 +305,13 @@ namespace SkiaSharp
 			var del = releaseProc != null && releaseContext != null
 				? new SKImageTextureReleaseDelegate ((_) => releaseProc (releaseContext))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKImageTextureReleaseProxy : null;
 			var image = GetObject (SkiaApi.sk_image_new_from_texture (context.Handle, texture.Handle, origin, colorType.ToNative (), alpha, cs, proxy, (void*)ctx));
+			// if the native image was not created, the release proc will never be
+			// invoked by native code, so we must free the GC handle here to avoid a leak
+			if (image is null && del is not null)
+				gch.Free ();
 			GC.KeepAlive (context);
 			GC.KeepAlive (texture);
 			GC.KeepAlive (colorspace);
