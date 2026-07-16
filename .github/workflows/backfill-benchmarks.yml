@@ -76,16 +76,12 @@ jobs:
           IN_SINCE: ${{ inputs.since }}
           IN_UNTIL: ${{ inputs.until }}
         run: |
-          # workflow_dispatch drives the selection via inputs. On the label-triggered PR
-          # path inputs are empty, so fall back to the newest 19 (one per calendar day).
-          # TEMP (early-v4 one-off): PR-path fallback targets the older 4.133..4.150 stretch.
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            ARGS="--count ${IN_COUNT:-19}"
-            [ -n "$IN_SINCE" ] && ARGS="$ARGS --since $IN_SINCE"
-            [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
-          else
-            ARGS="--count 0 --since 2026-04-27 --until 2026-06-22"
-          fi
+          # workflow_dispatch drives the selection via inputs (count + optional since/until).
+          # On the label-triggered PR path inputs are empty, so fall back to the newest 19
+          # nightlies (one per calendar day).
+          ARGS="--count ${IN_COUNT:-19}"
+          [ -n "$IN_SINCE" ] && ARGS="$ARGS --since $IN_SINCE"
+          [ -n "$IN_UNTIL" ] && ARGS="$ARGS --until $IN_UNTIL"
           points=$(python3 scripts/infra/perf/benchmarks/backfill_dates.py $ARGS)
           echo "points=$points" >> "$GITHUB_OUTPUT"
           echo "$points" | python3 -m json.tool
