@@ -9,12 +9,6 @@ namespace SkiaSharp
 	using GCHandle = SkiaSharp.GCHandleProxy;
 #endif
 
-	/// <summary>
-	/// A short-lived recording context vended by a <see cref="SKGraphiteContext"/>.
-	/// Drawing commands target a recorder; <see cref="Snap"/> produces a Recording for
-	/// later submission. Single-thread-affine; multiple recorders may be used concurrently
-	/// on different threads against the same parent context.
-	/// </summary>
 	public unsafe class SKGraphiteRecorder : SKObject
 	{
 		// Pin keeping the user's image-upload callback alive while Skia's FfiImageProvider
@@ -57,22 +51,12 @@ namespace SkiaSharp
 		public int MaxTextureSize =>
 			SkiaApi.sk_graphite_recorder_get_max_texture_size (Handle);
 
-		/// <summary>
-		/// Produce a Recording from the work queued on this recorder. Returns null when there
-		/// are no draws to snap. After being inserted via <see cref="SKGraphiteContext.InsertRecording(SKGraphiteRecording)"/>,
-		/// a recording is consumed and should be disposed.
-		/// </summary>
 		public SKGraphiteRecording Snap ()
 		{
 			IntPtr handle = SkiaApi.sk_graphite_recorder_snap (Handle);
 			return handle == IntPtr.Zero ? null : new SKGraphiteRecording (handle, true);
 		}
 
-		/// <summary>
-		/// Allocate a fresh Skia-managed GPU texture. Pair the result with
-		/// <see cref="DeleteBackendTexture"/> (or <see cref="SKGraphiteContext.DeleteBackendTexture"/>).
-		/// Returns null on failure.
-		/// </summary>
 		public SKGraphiteBackendTexture CreateBackendTexture (int width, int height, SKGraphiteTextureInfo info)
 		{
 			if (info == null)
@@ -85,11 +69,6 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
-		/// <summary>
-		/// Schedule the underlying GPU texture for release. The
-		/// <see cref="SKGraphiteBackendTexture"/> wrapper itself must still
-		/// be disposed separately (or via <c>using</c>).
-		/// </summary>
 		public void DeleteBackendTexture (SKGraphiteBackendTexture backendTexture)
 		{
 			if (backendTexture == null)

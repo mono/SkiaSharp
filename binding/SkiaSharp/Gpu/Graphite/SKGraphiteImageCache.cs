@@ -5,13 +5,6 @@ using System.Collections.Generic;
 
 namespace SkiaSharp
 {
-	/// <summary>
-	/// Upload-once + LRU cache to back
-	/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteFindOrCreateImageDelegate, Action)"/>.
-	/// Construct one, pass <see cref="FindOrCreate"/> and <see cref="Dispose"/> to the recorder.
-	/// One cache per recorder — cached graphite-backed images reference resources owned by
-	/// that recorder and become invalid when the recorder is destroyed.
-	/// </summary>
 	public sealed class SKGraphiteImageCache : IDisposable
 	{
 		// LRU cap — keeps memory bounded when callers decode fresh SkImages
@@ -27,10 +20,6 @@ namespace SkiaSharp
 		private readonly LinkedList<(uint UniqueId, bool Mipmapped)> lruOrder = new ();
 		private readonly Dictionary<(uint UniqueId, bool Mipmapped), (LinkedListNode<(uint UniqueId, bool Mipmapped)> node, IntPtr handle)> cache = new ();
 
-		/// <summary>
-		/// Matches the <see cref="SKGraphiteFindOrCreateImageDelegate"/> signature; pass directly
-		/// to <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteFindOrCreateImageDelegate, Action)"/>.
-		/// </summary>
 		public SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
 		{
 			var key = (image.UniqueId, mipmapped);
@@ -73,12 +62,6 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Release every cached graphite-backed image. Must run before the owning recorder
-		/// is destroyed — typically wired via the <c>onDispose</c> argument to
-		/// <see cref="SKGraphiteContext.CreateRecorder(long, SKGraphiteFindOrCreateImageDelegate, Action)"/>.
-		/// Safe to call multiple times.
-		/// </summary>
 		public void Dispose ()
 		{
 			lock (cacheLock) {

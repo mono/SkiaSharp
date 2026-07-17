@@ -4,16 +4,6 @@ using System;
 
 namespace SkiaSharp
 {
-	/// <summary>
-	/// Wraps a caller-allocated GPU texture (e.g. a <c>VkImage</c> from a
-	/// swap chain) so Graphite can draw into it or sample from it. The
-	/// underlying GPU object is NOT freed by <c>Dispose</c> — only this
-	/// wrapper. Caller retains ownership of the GPU texture for its full
-	/// Vulkan/Metal/Dawn lifetime.
-	///
-	/// Use with <see cref="SKSurface.Create(SKGraphiteRecorder, SKGraphiteBackendTexture, SKColorType)"/>
-	/// to render into the wrapped texture.
-	/// </summary>
 	public unsafe class SKGraphiteBackendTexture : SKObject
 	{
 		internal SKGraphiteBackendTexture (IntPtr handle, bool owns)
@@ -21,13 +11,6 @@ namespace SkiaSharp
 		{
 		}
 
-		/// <summary>
-		/// Wrap an externally-allocated <c>VkImage</c>. Returns null if the
-		/// image is invalid or the format is not supported by Graphite. The
-		/// VkImage's memory must already be bound; this wrapper does NOT
-		/// allocate or bind memory.
-		/// </summary>
-		/// <param name="imageLayout">VkImageLayout the image is in when handed to Skia.</param>
 		public static SKGraphiteBackendTexture CreateVulkan (
 			int width, int height,
 			SKGraphiteVkTextureInfo info,
@@ -46,11 +29,6 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
-		/// <summary>
-		/// Wrap an externally-allocated id&lt;MTLTexture&gt;. The wrapper does
-		/// NOT call retain or release on the passed-in texture — caller must
-		/// keep it alive for the BackendTexture's lifetime.
-		/// </summary>
 		public static SKGraphiteBackendTexture CreateMetal (
 			int width, int height,
 			IntPtr mtlTexture)
@@ -66,13 +44,6 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
-		/// <summary>
-		/// Wrap an externally-allocated <c>WGPUTexture</c>. Dimensions and format
-		/// are queried directly from the texture. The wrapper does NOT retain
-		/// the texture — caller must keep it alive for the BackendTexture's
-		/// lifetime. Any SKSurface/SKImage built from this BackendTexture
-		/// <em>does</em> retain it, at which point the caller may drop their reference.
-		/// </summary>
 		public static SKGraphiteBackendTexture CreateDawn (IntPtr wgpuTexture)
 		{
 			if (wgpuTexture == IntPtr.Zero)

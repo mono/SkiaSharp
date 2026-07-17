@@ -7,17 +7,11 @@ using Metal;
 
 namespace SkiaSharp
 {
-	/// <summary>
-	/// Caller-supplied Metal handles used to bring up a Graphite Metal context.
-	/// <see cref="MtlDevice"/> and <see cref="MtlQueue"/> are id&lt;MTLDevice&gt; and
-	/// id&lt;MTLCommandQueue&gt; passed as CFTypeRef-compatible handles.
-	/// </summary>
 	public unsafe class SKGraphiteMtlBackendContext : IDisposable
 	{
 		private IntPtr mtlDevice;
 		private IntPtr mtlQueue;
 
-		/// <summary>id&lt;MTLDevice&gt; (CFRetainable Obj-C handle).</summary>
 		public IntPtr MtlDevice {
 			get => mtlDevice;
 			set {
@@ -28,7 +22,6 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>id&lt;MTLCommandQueue&gt; (CFRetainable Obj-C handle).</summary>
 		public IntPtr MtlQueue {
 			get => mtlQueue;
 			set {
@@ -43,10 +36,6 @@ namespace SkiaSharp
 		private IMTLDevice device;
 		private IMTLCommandQueue queue;
 
-		/// <summary>
-		/// Strongly-typed id&lt;MTLDevice&gt;. Setting this also updates <see cref="MtlDevice"/>;
-		/// setting <see cref="MtlDevice"/> directly clears this cached reference.
-		/// </summary>
 		public IMTLDevice Device {
 			get => device;
 			set {
@@ -55,10 +44,6 @@ namespace SkiaSharp
 			}
 		}
 
-		/// <summary>
-		/// Strongly-typed id&lt;MTLCommandQueue&gt;. Setting this also updates <see cref="MtlQueue"/>;
-		/// setting <see cref="MtlQueue"/> directly clears this cached reference.
-		/// </summary>
 		public IMTLCommandQueue Queue {
 			get => queue;
 			set {

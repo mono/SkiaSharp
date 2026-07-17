@@ -3,14 +3,6 @@ using SharpVk;
 
 namespace SkiaSharp
 {
-	/// <summary>
-	/// Strongly-typed <see cref="SKGraphiteVkBackendContext"/> that accepts SharpVk handle
-	/// objects (<see cref="Instance"/>, <see cref="PhysicalDevice"/>, <see cref="Device"/>,
-	/// <see cref="Queue"/>) instead of raw <see cref="IntPtr"/>s. Setting a typed handle
-	/// writes the corresponding raw handle through to the base class, so the resulting
-	/// context can be built via <see cref="SKGraphiteContext.CreateVulkan(SKGraphiteVkBackendContext)"/>.
-	/// This mirrors <see cref="GRSharpVkBackendContext"/> for the Graphite backend.
-	/// </summary>
 	public unsafe class SKGraphiteSharpVkBackendContext : SKGraphiteVkBackendContext
 	{
 		private Instance vkInstance;

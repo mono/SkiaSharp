@@ -10,11 +10,6 @@ namespace SkiaSharp
 	using GCHandle = SkiaSharp.GCHandleProxy;
 #endif
 
-	/// <summary>
-	/// Caller-supplied Vulkan handles + procedure-address callback used to bring up a
-	/// Graphite Vulkan context. The Vulkan handles are never freed by SkiaSharp — caller
-	/// retains ownership for the lifetime of the resulting <see cref="SKGraphiteContext"/>.
-	/// </summary>
 	public unsafe class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
