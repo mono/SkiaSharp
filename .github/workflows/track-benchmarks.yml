@@ -1,8 +1,8 @@
 name: Track - Benchmarks
 
-# Daily BenchmarkDotNet run on Linux/Windows/macOS, per version role. Roles split into
+# Periodic BenchmarkDotNet run on Linux/Windows/macOS, per version role. Roles split into
 # RELEASED (on nuget.org, must not regress) and UNRELEASED (CI-only):
-#   * nightly       -> newest -nightly.* from the EAP/CI feed (unreleased; daily trend)
+#   * nightly       -> newest -nightly.* from the EAP/CI feed (unreleased; trend)
 #   * latest        -> newest on nuget.org incl. preview/rc (released; less vital, still shipped)
 #   * curr-stable    \
 #   * prev-stable     >  released stable baselines, resolved from nuget.org
@@ -11,14 +11,14 @@ name: Track - Benchmarks
 #
 # History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
 # indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg
-# reads its existing history from that branch, appends today's point, and uploads it as
+# reads its existing history from that branch, appends this run's point, and uploads it as
 # an artifact; the `report` job aggregates everything, and — only for runs on main (the
-# nightly schedule) — the `persist-aw-data.yml` workflow commits the updated JSON back.
+# scheduled runs) — the `persist-aw-data.yml` workflow commits the updated JSON back.
 #
-# A leg is SKIPPED when its "fingerprint" (pinned version + hash of the benchmark
-# source) matches the last recorded one — released baselines don't change unless a new
-# release bumps the role or the benchmark code changes. The nightly role runs whenever a
-# new nightly publishes (its version changes).
+# Every run records a point (there is no skip): a run is cheap and we WANT to capture
+# runner/environment variation over time. Each point is keyed by a full datetime, so the
+# schedule can be sped up or slowed down freely — the dashboard's time axis just gets
+# denser or sparser. Retention is age-based (see track.py), independent of cadence.
 #
 # Outputs of the report job:
 #   * a Markdown dashboard in the run summary (time + allocations, per OS);
@@ -35,7 +35,7 @@ name: Track - Benchmarks
 
 on:
   schedule:
-    - cron: "0 8 * * *"  # Daily at 08:00 UTC (offset from the 07:00 size tracker)
+    - cron: "0 2,8,14,20 * * *"  # Every 6h (offset from the 07:00 size tracker); tune freely
   workflow_dispatch:
   pull_request:
 
@@ -147,20 +147,11 @@ jobs:
         run: |
           python3 scripts/infra/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
 
-      - name: Check freshness (skip unchanged baselines)
-        id: check
-        run: |
-          decision=$(python3 scripts/infra/perf/benchmarks/track.py --history "$HISTORY" --version "$VERSION" --check)
-          echo "skip=$([ "$decision" = skip ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
-          echo "$decision: ${{ runner.os }}/${{ matrix.role }} ($VERSION)"
-
       - name: Run benchmarks
-        if: steps.check.outputs.skip != 'true'
         working-directory: ${{ env.PROJECT }}
         run: dotnet run -c Release -- --filter '*'
 
       - name: Record results
-        if: steps.check.outputs.skip != 'true'
         run: |
           python3 scripts/infra/perf/benchmarks/track.py \
             --history "$HISTORY" \
@@ -177,11 +168,11 @@ jobs:
           if-no-files-found: warn
 
       - name: Upload raw BDN reports
-        # The full BenchmarkDotNet report(s) for this leg — archived per day by the
+        # The full BenchmarkDotNet report(s) for this leg — archived per run by the
         # report job (raw/<date>/<OS>-<role>/) so we can re-summarise later. The raw
         # archive is a persistence concern, so keep it main-only; PR `agent` artifacts
         # carry just the summary index.json (the raw loop simply finds nothing).
-        if: steps.check.outputs.skip != 'true' && github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: rawbench-${{ runner.os }}-${{ matrix.role }}

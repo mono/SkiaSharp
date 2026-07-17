@@ -9,18 +9,19 @@ nanoseconds) and the allocated bytes per operation.
 Design notes
 ------------
 * One history file **per operating system** (Linux / Windows / macOS). Each CI
-  matrix leg owns its own file and its own Actions cache, so the OSes never mix.
+  matrix leg owns its own file, so the OSes never mix.
 * A benchmark is keyed by its BenchmarkDotNet ``FullName``
   (``Namespace.Type.Method(Param: value)``). That name is the primary key of the
   time series -- renaming a benchmark starts a new series (by design).
-* History is retained for ``MAX_DAYS`` days even though the dashboard only shows
-  the most recent 10. Keeping more lets us look back further without re-running.
-* A leg is skipped (``--check`` prints ``skip``) when its fingerprint -- the pinned
-  version plus a hash of the benchmark source -- matches the last recorded one, so
-  unchanged baselines aren't re-run every day.
+* Each run records its own point, keyed by a full ISO-8601 UTC **datetime** (the
+  ``date`` field). This is a loosening of the earlier day granularity: the workflow
+  now runs several times a day, so intra-day points accumulate and the dashboard's
+  time axis shows hours. Re-running at the exact same timestamp replaces in place.
+* History is retained for ``MAX_AGE_DAYS`` days, so changing the run cadence only
+  changes point density -- never the length of the retained window.
 
 Only the Python standard library is used so the script runs on a clean runner.
-The history document is persisted between runs via the GitHub Actions cache; see
+The history document is persisted between runs on the ``aw-data`` branch; see
 ``.github/workflows/track-benchmarks.yml``.
 """
 
@@ -29,14 +30,13 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import glob
-import hashlib
 import json
 import os
 import pathlib
 import sys
 
 SCHEMA_VERSION = 1
-MAX_DAYS = 365  # days of history retained on disk (dashboard zooms across all of it)
+MAX_AGE_DAYS = 365  # age of history retained on disk (dashboard zooms across all of it)
 
 # This tracker is specific to the tracking projects, so its locations are constants.
 # From scripts/infra/perf/benchmarks/track.py, the repo root is parents[4].
@@ -51,24 +51,26 @@ def _results_dir(role: str) -> pathlib.Path:
     return base / "BenchmarkDotNet.Artifacts" / "results"
 
 
-def _source_hash() -> str:
-    """Short hash of the benchmark source (.cs + .csproj) — changes when a
-    benchmark is edited, so an unchanged baseline can be detected and skipped."""
-    root = PROJECT_DIR
-    files = sorted(p for p in root.rglob("*")
-                   if p.suffix in (".cs", ".csproj")
-                   and "bin" not in p.parts and "obj" not in p.parts)
-    h = hashlib.sha256()
-    for p in files:
-        h.update(p.relative_to(root).as_posix().encode())
-        h.update(b"\0")
-        h.update(p.read_bytes())
-    return h.hexdigest()[:16]
+def _point_time(entry: dict) -> dt.datetime | None:
+    """Parse a point's ``date`` into an aware UTC datetime.
 
-
-def fingerprint(version: str) -> str:
-    """A leg is unchanged when its pinned version and benchmark source are unchanged."""
-    return f"{version}|{_source_hash()}"
+    Tolerates both the legacy day granularity (``YYYY-MM-DD``) and the current full
+    ISO-8601 UTC datetime (``YYYY-MM-DDTHH:MM:SSZ``), so old and new points coexist.
+    Returns ``None`` when the value is missing or unparseable.
+    """
+    raw = (entry or {}).get("date")
+    if not isinstance(raw, str) or not raw:
+        return None
+    s = raw.strip()
+    if s.endswith("Z"):  # fromisoformat only learned 'Z' in 3.11
+        s = s[:-1] + "+00:00"
+    try:
+        parsed = dt.datetime.fromisoformat(s)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return parsed
 
 
 
@@ -171,15 +173,25 @@ def save_history(path: str, history: dict) -> None:
         json.dump(history, fh, indent=2, sort_keys=True)
     os.replace(tmp, path)
     _log(f"  wrote history -> {path} ({os.path.getsize(path) / 1024:.0f} KB, "
-         f"{len(history['days'])} day(s))")
+         f"{len(history['days'])} point(s))")
 
 
-def upsert_day(history: dict, entry: dict, max_days: int) -> None:
-    """Insert/replace the entry for its date, keep chronological, retain N days."""
-    days = [d for d in history.get("days", []) if d.get("date") != entry["date"]]
-    days.append(entry)
-    days.sort(key=lambda d: d["date"])
-    history["days"] = days[-max_days:]
+def upsert_day(history: dict, entry: dict, max_age_days: int) -> None:
+    """Insert/replace the point for its exact ``date`` key, keep chronological, and
+    retain points within ``max_age_days``.
+
+    ``date`` is now a full datetime, so each run is its own point; an idempotent
+    re-run at the same timestamp replaces in place. Retention is age-based (not a
+    fixed count), so changing the run cadence never shrinks the retained window.
+    """
+    _epoch = dt.datetime.min.replace(tzinfo=dt.timezone.utc)
+    points = [d for d in history.get("days", []) if d.get("date") != entry["date"]]
+    points.append(entry)
+    points.sort(key=lambda d: _point_time(d) or _epoch)
+    cutoff = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=max_age_days)
+    # Keep points newer than the cutoff; unparseable dates are kept (never silently dropped).
+    history["days"] = [d for d in points
+                       if (t := _point_time(d)) is None or t >= cutoff]
 
 
 # --------------------------------------------------------------------------- #
@@ -195,31 +207,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
                    help="SkiaSharp package version being benchmarked.")
     p.add_argument("--os", default="?", help="OS label (stored for the dashboard).")
     p.add_argument("--role", default="nightly", help="Version role (stored for the dashboard).")
-    p.add_argument("--check", action="store_true",
-                   help="Print 'skip' if this leg's fingerprint matches the last recorded "
-                        "one (unchanged version + benchmark source), else 'run'. Records nothing.")
     return p.parse_args(argv)
-
-
-def _last_fingerprint(history_path: str) -> str:
-    if not os.path.exists(history_path):
-        return ""
-    try:
-        with open(history_path, "r", encoding="utf-8") as fh:
-            days = (json.load(fh) or {}).get("days") or []
-        return days[-1].get("fingerprint", "") if days else ""
-    except (json.JSONDecodeError, OSError):
-        return ""
 
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
-    fp = fingerprint(args.version)
-
-    if args.check:
-        last = _last_fingerprint(args.history)
-        print("skip" if (last and fp == last) else "run")
-        return 0
 
     _log(f"Collecting benchmark results for {args.os}...")
     benchmarks = parse_results(str(_results_dir(args.role)))
@@ -228,13 +220,12 @@ def main(argv: list[str]) -> int:
         return 1
 
     history = load_history(args.history, args.os, args.role)
-    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
+    now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     upsert_day(history, {
-        "date": today,
+        "date": now,
         "version": args.version,
-        "fingerprint": fp,
         "benchmarks": benchmarks,
-    }, MAX_DAYS)
+    }, MAX_AGE_DAYS)
     save_history(args.history, history)
     return 0
 

@@ -194,7 +194,7 @@
   const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
   const fmtBytes = b => { if(b==null)return"·"; if(b<1024)return Math.round(b)+" B"; const k=b/1024; return k<1024?k.toFixed(1)+" KB":(k/1024).toFixed(2)+" MB"; };
   const fmtVal = (v,unit) => unit==="ns"?fmtTime(v):fmtBytes(v);
-  const dateMs = d => new Date(d+"T00:00:00Z").getTime();
+  const dateMs = d => new Date(/[T ]/.test(d) ? d : d+"T00:00:00Z").getTime();
   const esc = s => String(s==null?"":s).replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
   const getCss = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim() || "#888";
 
