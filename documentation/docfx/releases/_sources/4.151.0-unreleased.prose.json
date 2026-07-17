@@ -1,20 +1,31 @@
 {
-  "theme": "Unreleased work in progress",
-  "highlights_headline": "SkiaSharp 4.151.0 (next) is unreleased; work shown here has not yet shipped.",
+  "theme": "m151 engine sync and fixes",
+  "highlights_headline": "Merges upstream Skia m151 bug fixes and resolves a native resource leak in SKImage.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upstream Skia m151 bug fixes merged",
+          "detail": "Pulls in the latest chrome/m151 upstream bug fixes, keeping the bundled renderer aligned with the Chromium milestone 151 branch.",
+          "prs": [4443]
+        }
+      ]
+    },
+    {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native resource leak in SKImage.FromEncodedData(SKData, SKRectI) fixed",
-          "detail": "A native Skia image object was not being released when the crop rectangle overload of FromEncodedData returned a result, causing a memory leak on every call.",
+          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
+          "detail": "Calling SKImage.FromEncodedData with an SKRectI subset no longer leaks the underlying native image handle when the subset operation fails or the result is discarded.",
           "prs": [3997]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
