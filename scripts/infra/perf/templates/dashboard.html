@@ -130,31 +130,38 @@
       </div>
     </div>
     <div class="topbar-row">
-      <div class="ctl"><span class="lab">Metric</span>
+      <div class="ctl"><span class="lab" title="What is being measured — switches the metric plotted in the chart and shown in the table.">Metric</span>
         <div class="seg" id="metric">
-          <button data-m="time" class="on">Time</button>
-          <button data-m="alloc">Allocations</button>
-          <button data-m="size">Size</button>
+          <button data-m="time" class="on" title="Execution time per operation (mean nanoseconds).">Time</button>
+          <button data-m="alloc" title="Managed memory allocated per operation (bytes) — deterministic, hardware-independent.">Allocations</button>
+          <button data-m="size" title="On-disk size of the NuGet packages and native binaries (bytes).">Size</button>
         </div>
       </div>
-      <div class="ctl"><span class="lab">Group</span><div class="chips" id="groupby"></div></div>
-      <div class="ctl" id="osfilter-ctl"><span class="lab">OS</span><div class="chips" id="osfilter"></div></div>
-      <div class="ctl"><span class="lab">Δ ≥</span>
+      <div class="ctl"><span class="lab" title="Group the table rows by one or more dimensions. Click a chip to toggle; the number shows grouping order.">Group</span><div class="chips" id="groupby"></div></div>
+      <div class="ctl" id="osfilter-ctl"><span class="lab" title="Filter which operating systems appear in the table. All are shown by default.">OS</span><div class="chips" id="osfilter"></div></div>
+      <div class="ctl"><span class="lab" title="Regression threshold — the minimum change vs the baseline before a row is flagged faster/slower. Smaller values flag smaller differences.">Δ ≥</span>
         <div class="seg" id="threshold">
-          <button data-t="0">0%</button>
-          <button data-t="0.0001">0.01%</button>
-          <button data-t="0.001">0.1%</button>
-          <button data-t="0.01">1%</button>
-          <button data-t="0.05" class="on">5%</button>
+          <button data-t="0" title="Flag any non-zero change.">0%</button>
+          <button data-t="0.0001" title="Flag changes of at least 0.01% vs the baseline.">0.01%</button>
+          <button data-t="0.001" title="Flag changes of at least 0.1% vs the baseline.">0.1%</button>
+          <button data-t="0.01" title="Flag changes of at least 1% vs the baseline.">1%</button>
+          <button data-t="0.05" class="on" title="Flag changes of at least 5% (default) — ignores sub-5% noise.">5%</button>
         </div>
       </div>
-      <div class="ctl" id="denoise-ctl"><span class="lab">Smoothing</span>
+      <div class="ctl" id="denoise-ctl"><span class="lab" title="Whether to denoise the chart line and the table's headline number. The averaging amount is set by Span. Per-metric: On for Time, Off for the deterministic Allocations/Size.">Smoothing</span>
         <div class="seg" id="denoise">
-          <button data-d="on">On</button>
-          <button data-d="off" class="on">Off</button>
+          <button data-d="on" title="Denoise the chart line and headline number with a rolling median over the Span window (plus a ±MAD band when one series is selected).">On</button>
+          <button data-d="off" class="on" title="Plot the raw measured values exactly, with no smoothing. (The Status column still uses the Span window.)">Off</button>
         </div>
       </div>
-      <div class="ctl" style="margin-left:auto"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" /></div>
+      <div class="ctl"><span class="lab" title="Averaging window for smoothing and the Status column — medians are taken over runs within this many days. Longer = steadier but slower to react to a real change. Time-based, so it holds regardless of run cadence.">Span</span>
+        <div class="seg" id="span">
+          <button data-days="1" title="Average over 1 day of runs — most responsive, least smoothing.">1d</button>
+          <button data-days="3" class="on" title="Average over 3 days of runs (default) — balanced for the 6-hourly cadence (~12 runs).">3d</button>
+          <button data-days="7" title="Average over 7 days of runs — steadiest; matches the old daily-cadence feel.">7d</button>
+        </div>
+      </div>
+      <div class="ctl" style="margin-left:auto"><input class="search" id="gridsearch" placeholder="🔍  filter rows…" title="Filter table rows by text across the visible dimension columns." /></div>
     </div>
   </div>
   <div class="grid-pane"><div id="grid"></div></div>
@@ -162,13 +169,25 @@
   <div class="chart-pane">
     <div class="chart-head">
       <h2 id="chart-title">Trend</h2>
-      <div class="seg" id="scale">
-        <button data-s="absolute" class="on">Abs</button>
-        <button data-s="relative">Rel %</button>
-        <button data-s="log">Log</button>
+      <div class="ctl"><span class="lab" title="Time window for the chart — plots only points within this many days of the most recent run (baselines are always shown).">Window</span>
+        <div class="seg" id="range">
+          <button data-r="1" title="Last 1 day of runs.">1d</button>
+          <button data-r="7" title="Last 7 days of runs.">7d</button>
+          <button data-r="30" class="on" title="Last 30 days of runs (default).">30d</button>
+          <button data-r="60" title="Last 60 days of runs.">60d</button>
+          <button data-r="120" title="Last 120 days of runs.">120d</button>
+          <button data-r="0" title="All retained history (up to ~1 year).">All</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="lab" title="Y-axis scale for the chart.">Scale</span>
+        <div class="seg" id="scale">
+          <button data-s="absolute" class="on" title="Absolute values on a linear axis.">Abs</button>
+          <button data-s="relative" title="Relative to the curr-stable baseline (100% = curr-stable).">Rel %</button>
+          <button data-s="log" title="Logarithmic y-axis — good when values span a wide range.">Log</button>
+        </div>
       </div>
       <span class="selinfo" id="selinfo"></span>
-      <button class="minibtn" id="clearsel">Clear</button>
+      <button class="minibtn" id="clearsel" title="Clear the chart selection.">Clear</button>
     </div>
     <div id="chart"><div class="hint">Click a benchmark to plot it — tick the checkboxes to compare several.</div></div>
   </div>
@@ -199,7 +218,7 @@
   const ROLE_TITLE = { pr:"★ PR", nightly:"nightly", latest:"latest", "curr-stable":"curr-stable", "prev-stable":"prev-stable", "prev-major":"prev-major" };
   const WITH_DELTA = new Set(["pr","nightly","latest"]);
 
-  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", threshold:0.05, denoise:{time:true, alloc:false, size:false}, groupBy:[], osFilter:new Set(), table:null, chart:null };
+  const state = { data:{benchmarks:{},sizes:{}}, metric:"time", scale:"absolute", range:30, smoothDays:3, threshold:0.05, denoise:{time:true, alloc:false, size:false}, groupBy:[], osFilter:new Set(), table:null, chart:null };
 
   // ---------- formatting ----------
   const fmtTime = ns => ns==null?"·": ns<1e3?ns.toFixed(1)+" ns": ns<1e6?(ns/1e3).toFixed(2)+" µs": ns<1e9?(ns/1e6).toFixed(2)+" ms":(ns/1e9).toFixed(2)+" s";
@@ -216,16 +235,21 @@
   // Allocations/size are deterministic, so smoothing is a visual no-op there and Status simply
   // reports any sustained change — so it defaults ON for Time (noisy) and OFF for alloc/size,
   // and the choice is remembered per metric.
-  const SMOOTH_WIN = 7, BAND_K = 3, NOISY_MAD = 0.06;
+  const BAND_K = 3, NOISY_MAD = 0.06, DAY_MS = 86400000;
+  // Smoothing/statistics window is TIME-based (state.smoothDays), so it stays meaningful
+  // whatever the run cadence is — a fixed point count would drift as the schedule changes.
+  const smoothSpanMs = () => (state.smoothDays||0)*DAY_MS;
   const smoothingOn = () => !!state.denoise[state.metric];
   const _median = arr => { const a=arr.filter(v=>v!=null).slice().sort((x,y)=>x-y); const n=a.length; return n ? (n%2 ? a[(n-1)/2] : (a[n/2-1]+a[n/2])/2) : null; };
   const _mad = arr => { const m=_median(arr); return m==null ? 0 : _median(arr.map(v=>Math.abs(v-m))); };
   const _madRel = arr => { const m=_median(arr); return (m==null||!m) ? 0 : _mad(arr)/m; };
   const trendVals = trend => (trend||[]).map(p=>p[1]).filter(v=>v!=null);
-  const trailMedian = (arr,w) => arr.length ? _median(arr.slice(Math.max(0,arr.length-w))) : null;
+  // Time-windowed median/MAD over a trend of [t, value, version] points. `span` ms is the
+  // total width; the trailing variant covers the last `span`, the rolling ones are centered.
+  const trailMedianT = (trend,span) => { if(!trend||!trend.length) return null; const t0=trend[trend.length-1][0]-span; return _median(trend.filter(p=>p[0]>=t0).map(p=>p[1])); };
   const pctSigned = d => (d>0?"+":"−")+(Math.abs(d)*100).toFixed(Math.abs(d)>=0.1?0:1)+"%";
-  const rollingMedianSeries = (vals,w) => { const h=Math.floor(w/2); return vals.map((_,i)=>_median(vals.slice(Math.max(0,i-h),Math.min(vals.length,i+h+1)))); };
-  const rollingMadSeries = (vals,w) => { const h=Math.floor(w/2); return vals.map((_,i)=>_mad(vals.slice(Math.max(0,i-h),Math.min(vals.length,i+h+1)))); };
+  const rollingMedianT = (trend,span) => { const h=span/2; return trend.map(p0=>_median(trend.filter(p=>Math.abs(p[0]-p0[0])<=h).map(p=>p[1]))); };
+  const rollingMadT = (trend,span) => { const h=span/2; return trend.map(p0=>_mad(trend.filter(p=>Math.abs(p[0]-p0[0])<=h).map(p=>p[1]))); };
 
   // parse "BitmapDrawBenchmark.DrawScaledTiles(Tiles: 256)" -> {benchmark, param}
   function parseBench(full) {
@@ -314,9 +338,9 @@
     // Smoothing on: headline the denoised trailing-window median for the nightly trend
     // (the raw points stay visible in the sparkline). Other roles are single measurements.
     let compareV=v, displayV=v, smoothed=false;
-    if(noisy && role==="nightly"){ const wm=trailMedian(trendVals(row.trend), SMOOTH_WIN); if(wm!=null){ compareV=wm; displayV=wm; smoothed=true; } }
+    if(noisy && role==="nightly"){ const wm=trailMedianT(row.trend, smoothSpanMs()); if(wm!=null){ compareV=wm; displayV=wm; smoothed=true; } }
     let s=fmtVal(displayV,unit);
-    if(smoothed) s=`<span title="denoised: median of the last ${SMOOTH_WIN} runs">${s}<span class="sm">≈</span></span>`;
+    if(smoothed) s=`<span title="denoised: median of the last ${state.smoothDays}d of runs">${s}<span class="sm">≈</span></span>`;
     if(withDelta){ const ref=refOf(row);
       if(ref!=null && ref!==0){
         // Smoothing on: only flag deltas that clear this row's own noise floor
@@ -331,14 +355,16 @@
   // Compares the last window's median to the prior window's, gated by a robust 3·MAD band.
   // Using window medians makes it insensitive to one-off spikes (a "sustained shift" test).
   function statusCell(row){
-    const vals=trendVals(row.trend), w=SMOOTH_WIN;
-    if(vals.length < w+3) return `<span class="st st-na" title="need ~${w+3}+ runs to judge">—</span>`;
-    const prior=vals.slice(-2*w,-w), recent=vals.slice(-w);
+    const trend=(row.trend||[]).filter(p=>p[1]!=null), span=smoothSpanMs();
+    const tLast=trend.length?trend[trend.length-1][0]:0;
+    const recent=trend.filter(p=>p[0]>tLast-span).map(p=>p[1]);
+    const prior =trend.filter(p=>p[0]<=tLast-span && p[0]>tLast-2*span).map(p=>p[1]);
+    if(recent.length<3 || prior.length<3) return `<span class="st st-na" title="need ~2×${state.smoothDays}d of runs to judge">—</span>`;
     const pm=_median(prior), rm=_median(recent);
     if(pm==null||rm==null||!pm) return `<span class="st st-na">—</span>`;
     const bandRel=Math.max(state.threshold, BAND_K*_madRel(prior)), shift=(rm-pm)/pm;
     if(Math.abs(shift)>bandRel){ const worse=shift>0;  // time up = slower = regression
-      return `<span class="st ${worse?'st-bad':'st-good'}" title="${w}-run median moved ${pctSigned(shift)} vs the prior ${w} runs (noise band ±${(bandRel*100).toFixed(1)}%)">${worse?'▲ regressed':'▼ improved'} ${pctSigned(shift)}</span>`; }
+      return `<span class="st ${worse?'st-bad':'st-good'}" title="${state.smoothDays}d median moved ${pctSigned(shift)} vs the prior ${state.smoothDays}d (noise band ±${(bandRel*100).toFixed(1)}%)">${worse?'▲ regressed':'▼ improved'} ${pctSigned(shift)}</span>`; }
     if(_madRel(recent) > NOISY_MAD) return `<span class="st st-noisy" title="run-to-run spread ±${(_madRel(recent)*100).toFixed(1)}% — too noisy to call">noisy</span>`;
     return `<span class="st st-ok" title="within noise band ±${(bandRel*100).toFixed(1)}%">stable</span>`;
   }
@@ -361,6 +387,7 @@
     ctl.style.display = list.length ? "" : "none"; if(!list.length) return;
     const el=document.getElementById("osfilter"); el.innerHTML="";
     list.forEach(o=>{ const b=document.createElement("button"); b.className=state.osFilter.has(o)?"on":""; b.textContent=o;
+      b.title = "Show " + o + " rows in the table (toggle).";
       b.onclick=()=>{ state.osFilter.has(o)?state.osFilter.delete(o):state.osFilter.add(o); renderOsFilter(); applyFilter(); };
       el.appendChild(b); });
   }
@@ -415,32 +442,42 @@
     if(!state.chart || el.querySelector(".hint")){ el.innerHTML=""; state.chart = echarts.init(el, null, {renderer:"canvas"}); }
     const rel=state.scale==="relative", single=sel.length===1, noisy=smoothingOn(), band=noisy && single && state.scale!=="log";
     const echSeries = [];
+    // Time-window filter: keep only points within state.range days of the most recent
+    // point across the selected series (0 = All). Anchoring to the latest data point
+    // (not wall-clock) keeps the window meaningful even for an older embedded snapshot.
+    let cutoff = -Infinity;
+    if (state.range) {
+      let tmax = -Infinity;
+      sel.forEach(s => s.trend.forEach(p => { if (p[0] > tmax) tmax = p[0]; }));
+      if (tmax > -Infinity) cutoff = tmax - state.range*86400000;
+    }
+    const clip = tr => cutoff===-Infinity ? tr : tr.filter(p => p[0] >= cutoff);
     sel.forEach(s=>{
+      const tr = clip(s.trend);
       const ref = rel?refValue(s):null;
       const tx = v => (v==null?null:(rel&&ref?100*v/ref:v));
-      const data = s.trend.map(p=>[p[0], tx(p[1]), p[2]]);
+      const data = tr.map(p=>[p[0], tx(p[1]), p[2]]);
       // single-selection decorations: dashed baseline markLines + the PR pin
       const decorate = ser => {
         if(!single) return ser;
         const ml = BASELINE_ROLES.filter(r=>s.baselines[r]!=null).map(r=>({ yAxis: rel&&ref?100*s.baselines[r]/ref:s.baselines[r], label:{formatter:r,position:"insideEndTop",color:getCss("--muted"),fontSize:10}, lineStyle:{color:getCss("--muted"),type:"dashed",width:1} }));
         if(ml.length) ser.markLine={symbol:"none",data:ml};
-        if(s.pr!=null && s.trend.length){ const py=rel&&ref?100*s.pr/ref:s.pr; ser.markPoint={symbol:"pin",symbolSize:40,data:[{coord:[s.trend[s.trend.length-1][0],py],value:"PR",itemStyle:{color:getCss("--pr")},label:{formatter:"PR",color:"#fff",fontSize:10}}]}; }
+        if(s.pr!=null && tr.length){ const py=rel&&ref?100*s.pr/ref:s.pr; ser.markPoint={symbol:"pin",symbolSize:40,data:[{coord:[tr[tr.length-1][0],py],value:"PR",itemStyle:{color:getCss("--pr")},label:{formatter:"PR",color:"#fff",fontSize:10}}]}; }
         return ser;
       };
       if(!noisy){
         // allocations, size, or Smoothing=Off: plot the raw values exactly, no smoothing.
-        echSeries.push(decorate({ name:s.label, type:"line", showSymbol:s.trend.length<=60, symbolSize:5, smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color:s.color}, data }));
+        echSeries.push(decorate({ name:s.label, type:"line", showSymbol:tr.length<=60, symbolSize:5, smooth:false, connectNulls:true, lineStyle:{width:2}, itemStyle:{color:s.color}, data }));
         return;
       }
       // TIME + Smoothing: faint raw dots + a rolling-median trend, and (single) a ±k·MAD band.
-      const vals=s.trend.map(p=>p[1]);
-      const med=rollingMedianSeries(vals, SMOOTH_WIN);
-      const smooth=s.trend.map((p,i)=>[p[0], tx(med[i]), p[2]]);
-      echSeries.push({ name:s.label+" (raw)", type:"line", showSymbol:s.trend.length<=60, symbolSize:3, smooth:false, connectNulls:true, silent:true, z:1, lineStyle:{width:1,opacity:.25,color:s.color}, itemStyle:{color:s.color,opacity:.45}, data });
+      const med=rollingMedianT(tr, smoothSpanMs());
+      const smooth=tr.map((p,i)=>[p[0], tx(med[i]), p[2]]);
+      echSeries.push({ name:s.label+" (raw)", type:"line", showSymbol:tr.length<=60, symbolSize:3, smooth:false, connectNulls:true, silent:true, z:1, lineStyle:{width:1,opacity:.25,color:s.color}, itemStyle:{color:s.color,opacity:.45}, data });
       if(band){
-        const madv=rollingMadSeries(vals, SMOOTH_WIN);
-        const lo=s.trend.map((p,i)=>[p[0], tx(med[i]-BAND_K*madv[i])]);
-        const hi=s.trend.map((p,i)=>[p[0], tx(med[i]+BAND_K*madv[i])-tx(med[i]-BAND_K*madv[i])]);
+        const madv=rollingMadT(tr, smoothSpanMs());
+        const lo=tr.map((p,i)=>[p[0], tx(med[i]-BAND_K*madv[i])]);
+        const hi=tr.map((p,i)=>[p[0], tx(med[i]+BAND_K*madv[i])-tx(med[i]-BAND_K*madv[i])]);
         echSeries.push({ name:"__band_lo", type:"line", stack:"band", symbol:"none", silent:true, z:0, lineStyle:{opacity:0}, areaStyle:{opacity:0}, data:lo });
         echSeries.push({ name:"__band_hi", type:"line", stack:"band", symbol:"none", silent:true, z:0, lineStyle:{opacity:0}, areaStyle:{opacity:.10,color:s.color}, data:hi });
       }
@@ -448,7 +485,7 @@
     });
     const many=sel.length>8;
     const fmtY = v => rel?(v==null?"·":v.toFixed(1)+"%"):fmtVal(v,m.unit);
-    const dstr = t => new Date(t).toISOString().slice(0,10);
+    const dstr = t => { const s=new Date(t).toISOString(); return s.slice(11,16)==="00:00" ? s.slice(0,10) : s.slice(0,10)+" "+s.slice(11,16)+"Z"; };
     state.chart.setOption({
       color:PALETTE, animation:false, grid:{left:66,right:20,top:14,bottom:52},
       tooltip: many
@@ -474,6 +511,7 @@
     dims.forEach(d=>{
       const b=document.createElement("button"); const idx=state.groupBy.indexOf(d.key);
       b.className = idx>=0?"on":""; b.innerHTML = d.label + (idx>=0?`<span class="ord">${idx+1}</span>`:"");
+      b.title = "Group table rows by " + d.label + " (toggle; grouping order shown when active).";
       b.onclick = ()=>{ const i=state.groupBy.indexOf(d.key); if(i>=0) state.groupBy.splice(i,1); else state.groupBy.push(d.key);
         renderGroupby(); if(state.table) state.table.setGroupBy(state.groupBy.length?state.groupBy:false); };
       el.appendChild(b);
@@ -515,8 +553,10 @@
     // controls
     document.querySelectorAll("#metric button").forEach(b=>b.onclick=()=>switchMetric(b.dataset.m));
     document.querySelectorAll("#scale button").forEach(b=>b.onclick=()=>{ state.scale=b.dataset.s; document.querySelectorAll("#scale button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
+    document.querySelectorAll("#range button").forEach(b=>b.onclick=()=>{ state.range=+b.dataset.r; document.querySelectorAll("#range button").forEach(x=>x.classList.toggle("on",x===b)); updateChart(); });
     document.querySelectorAll("#threshold button").forEach(b=>b.onclick=()=>{ state.threshold=parseFloat(b.dataset.t); document.querySelectorAll("#threshold button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); });
     document.querySelectorAll("#denoise button").forEach(b=>b.onclick=()=>{ state.denoise[state.metric]=(b.dataset.d==="on"); document.querySelectorAll("#denoise button").forEach(x=>x.classList.toggle("on",x===b)); applyDenoise(); });
+    document.querySelectorAll("#span button").forEach(b=>b.onclick=()=>{ state.smoothDays=+b.dataset.days; document.querySelectorAll("#span button").forEach(x=>x.classList.toggle("on",x===b)); if(state.table) state.table.redraw(true); updateChart(); });
     document.getElementById("gridsearch").oninput = () => applyFilter();
     document.getElementById("clearsel").onclick=()=>{ if(state.table) state.table.deselectRow(); };
     initSplitter();
