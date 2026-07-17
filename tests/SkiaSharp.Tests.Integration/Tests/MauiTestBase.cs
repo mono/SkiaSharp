@@ -140,7 +140,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         // Always run from TestDir (which has global.json) using relative path
         var relativeProjectDir = Path.GetRelativePath(TestDir, projectDir);
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework}", timeoutSeconds: 600);
+        // ValidateXcodeVersion=false: the generated MAUI app is built in a temp dir outside the repo,
+        // so it does NOT inherit tests/Directory.Build.props (which sets this for the harness project).
+        // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
+        // the installed Xcode is newer than the version the pinned workload recommends — release-testing
+        // validates SkiaSharp rendering, not toolchain matching. Ignored (harmless) on Android.
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);

@@ -1,0 +1,41 @@
+{
+  "theme": "Views assemblies land",
+  "highlights_headline": "SkiaSharp 1.56.0 adds the SkiaSharp.Views assemblies for macOS, iOS and tvOS and trims a few obsolete APIs.",
+  "highlights_body": "New SkiaSharp.Views.Mac, SkiaSharp.Views.iOS and SkiaSharp.Views.tvOS packages provide native view integrations. SKPictureRecorder.BeginRecording renames its argument and the multi-mode SKImageFilter.CreateMerge overload is removed.",
+  "breaking": [
+    {
+      "title": "Obsolete SKImageFilter.CreateMerge overload removed",
+      "body": "The overload that took a parallel SKXferMode[] alongside the filter array is gone. Use the remaining CreateMerge overload that takes just the filters (and optional crop rect).",
+      "prs": []
+    },
+    {
+      "title": "SKPictureRecorder.BeginRecording parameter renamed",
+      "body": "The parameter on SKPictureRecorder.BeginRecording is now called cullRect (was rect). Named-argument callers must update the name.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "SkiaSharp.Views ships for Apple platforms",
+          "detail": "Adds the SkiaSharp.Views.Mac, SkiaSharp.Views.iOS and SkiaSharp.Views.tvOS assemblies, giving native view hosts for SKSurface rendering on Apple platforms.",
+          "prs": []
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKPictureRecorder argument clarified",
+          "detail": "BeginRecording now names its bounds argument cullRect, matching Skia's own terminology.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

@@ -68,8 +68,8 @@ namespace SkiaSharp.HarfBuzz
 
 			// get the shaping results
 			var len = buffer.Length;
-			var info = buffer.GlyphInfos;
-			var pos = buffer.GlyphPositions;
+			var info = buffer.GetGlyphInfoSpan();
+			var pos = buffer.GetGlyphPositionSpan();
 
 			// get the sizes
 			float textSizeY = font.Size / FONT_SIZE_SCALE;
