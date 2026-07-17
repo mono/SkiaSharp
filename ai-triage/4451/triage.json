@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4451,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-17T05:15:00Z",
+    "currentLabels": ["agentic-workflows"]
+  },
+  "summary": "The automated 'Fixer - Performance' agentic workflow (runs/29462636926) failed twice because `dotnet build/restore/run/cake` and network egress are blocked by the sandbox security policy, preventing the skill from proving optimizations with BenchmarkDotNet and running equivalence tests.",
+  "classification": {
+    "type": { "value": "type/bug", "confidence": 0.90 },
+    "area": { "value": "area/Build", "confidence": 0.92 }
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "build-error",
+      "errorMessage": "dotnet build/restore/run/cake + network egress: security",
+      "reproQuality": "complete"
+    },
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Trigger the 'Fixer - Performance' workflow (scheduled or manual)",
+        "The agent attempts to run `dotnet build` or `dotnet test` to prove benchmark results",
+        "The sandbox security policy blocks all `dotnet` execution and network egress",
+        "The workflow reports missing tools and exits with failure"
+      ],
+      "environmentDetails": "gh-aw-agents sandbox environment; ghcr.io/github/gh-aw-firewall/agent container",
+      "repoLinks": [
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/29462636926", "description": "Failed workflow run (first attempt)" },
+        { "url": "https://github.com/mono/SkiaSharp/actions/runs/29499822018", "description": "Failed workflow run (second attempt, from comment)" },
+        { "url": "https://github.com/mono/SkiaSharp/pull/3645", "description": "PR being worked on by the performance-fixer" }
+      ]
+    }
+  },
+  "analysis": {
+    "summary": "The performance-fixer agentic workflow is structurally incompatible with its sandbox environment: the skill requires `dotnet build`, `dotnet test`, and BenchmarkDotNet execution to satisfy its mandatory two-proof gate (speed + correctness), but the security sandbox blocks all dotnet CLI execution and network egress needed for NuGet restore. This has now failed twice on consecutive runs.",
+    "codeInvestigation": [
+      {
+        "file": ".github/workflows/performance-fixer.md",
+        "finding": "The workflow runs on a schedule every 12h in the 'gh-aw-agents' environment. The performance-fixer skill requires BenchmarkDotNet measurements and equivalence tests via `dotnet build/test` — these are its mandatory two-proof gate before opening a PR.",
+        "relevance": "direct"
+      },
+      {
+        "file": ".agents/skills/performance-fixer/SKILL.md",
+        "finding": "Golden rule #2 mandates two proofs (speed AND correctness): a BenchmarkDotNet benchmark showing meaningful speedup plus an equivalence test proving bit-exact results. Both require running dotnet — skipping them is explicitly non-negotiable.",
+        "relevance": "direct"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "dotnet build/restore/run/cake + network egress: security",
+        "source": "issue body (missing tools report)",
+        "interpretation": "The sandbox firewall blocks all dotnet CLI invocations and outbound network needed for NuGet restore — this is not a transient error."
+      },
+      {
+        "text": "Agent job 29499822018 failed. Missing Tools: dotnet (cake/build/run/test): security",
+        "source": "comment (second workflow run)",
+        "interpretation": "Same failure on a retry run — confirms this is a persistent environment constraint, not a transient issue."
+      },
+      {
+        "text": "Provide a pre-bootstrapped environment (natives in output/native + restored NuGet cache) or allow-list dotnet build/test and the natives/nuget endpoints",
+        "source": "issue body (alternatives suggestion)",
+        "interpretation": "Two remediation paths identified by the agent itself: pre-bootstrapped environment or security policy relaxation for specific dotnet operations."
+      }
+    ],
+    "rationale": "This is a build/CI infrastructure bug: the performance-fixer workflow is deployed in an environment that cannot satisfy the tool's mandatory requirements. The skill design requires dotnet execution and network access; the security sandbox prohibits both. The workflow will continue to fail on every scheduled run until the environment is changed or the skill is redesigned.",
+    "nextQuestions": [
+      "Can the 'gh-aw-agents' environment be configured with dotnet SDK pre-installed and NuGet packages pre-restored (bootstrapped environment)?",
+      "Is it possible to allowlist specific dotnet endpoints (nuget.org, dotnet download URLs) in the sandbox firewall?",
+      "What did PR #3645 contain — was any code change produced before the proof phase failed?",
+      "Should the workflow be suspended until the environment issue is resolved to avoid repeated failure issues?"
+    ],
+    "resolution": {
+      "hypothesis": "The gh-aw-agents sandbox blocks dotnet execution by security policy; the performance-fixer skill requires it. The fix is to either (a) pre-bootstrap the environment with dotnet + NuGet cache, or (b) allowlist the necessary dotnet operations in the security policy.",
+      "proposals": [
+        {
+          "title": "Pre-bootstrap the runner environment",
+          "description": "Configure the 'gh-aw-agents' environment to include a pre-restored NuGet cache and pre-built native outputs so the agent can run `dotnet test` and BenchmarkDotNet without network egress.",
+          "category": "fix",
+          "confidence": 0.75,
+          "effort": "cost/m",
+          "validated": "untested"
+        },
+        {
+          "title": "Allowlist dotnet build/test in sandbox policy",
+          "description": "Update the sandbox security policy to allow dotnet CLI operations and the nuget.org / dotnet download endpoints needed by the performance-fixer skill.",
+          "category": "fix",
+          "confidence": 0.65,
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Temporarily disable the scheduled workflow",
+          "description": "Set `report-failure-as-issue: false` in the workflow frontmatter or pause the schedule until the environment issue is resolved, to stop generating noise issues.",
+          "category": "workaround",
+          "confidence": 0.90,
+          "effort": "cost/xs",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "Pre-bootstrap the runner environment",
+      "recommendedReason": "Pre-bootstrapping keeps the security boundary intact while unblocking the dotnet proof steps. The workflow already documents this as the preferred alternative."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.88,
+      "reason": "Environment configuration change needed. Root cause is clear (sandbox blocks dotnet) but the fix requires infrastructure-level changes outside the SkiaSharp codebase.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply build area and bug type labels",
+        "risk": "low",
+        "confidence": 0.92,
+        "labels": ["type/bug", "area/Build"]
+      },
+      {
+        "type": "add-comment",
+        "description": "Post analysis explaining the root cause and proposed remediation paths",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "## Triage Analysis\n\nThe `Fixer - Performance` workflow has failed twice with the same root cause: the sandbox security policy blocks all `dotnet` CLI operations and network egress, which the skill requires to satisfy its mandatory two-proof gate (BenchmarkDotNet speed measurement + equivalence test).\n\n**Root cause:** The `performance-fixer` skill golden rule #2 mandates two proofs before opening a PR — a benchmark showing speedup and an equivalence test proving bit-exact results. Both require `dotnet build/test`, which the `gh-aw-agents` sandbox disallows by security policy.\n\n**Remediation options:**\n1. **Pre-bootstrap the environment** — populate `output/native/` with pre-built natives and pre-restore the NuGet cache so the agent can run `dotnet test` / BenchmarkDotNet without network egress. This is the agent's own suggested alternative.\n2. **Allowlist specific dotnet operations** — update the sandbox security policy to permit `dotnet build/test` and the relevant NuGet/dotnet download endpoints.\n3. **Short-term workaround** — set `report-failure-as-issue: false` in the workflow frontmatter to suppress repeated failure issues until the environment is fixed.\n\nPR [#3645](https://github.com/mono/SkiaSharp/pull/3645) was being worked on when the failure occurred — worth checking if any code change was produced before the proof phase failed."
+      }
+    ]
+  }
+}
