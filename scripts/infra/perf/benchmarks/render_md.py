@@ -5,10 +5,12 @@ Consumes ``benchmarks-<OS>-<role>.json`` documents produced by track-benchmarks.
 (one per operating system AND version role) and renders, per OS, a table whose
 columns run newest -> oldest, left -> right:
 
-    [ nightly today ... nightly 10 days ago ] [ curr-stable ] [ prev-stable ] [ prev-major ]
+    [ latest nightly ... 10 runs ago ] [ curr-stable ] [ prev-stable ] [ prev-major ]
 
-so a regression (today slower than an older build/release) shows as a red dot on
-the left. This mirrors track-artifact-sizes' layout (nightly days + released roles).
+so a regression (a recent run slower than an older build/release) shows as a red dot
+on the left. This mirrors track-artifact-sizes' layout (nightly points + released
+roles). Nightly points are now recorded per run (keyed by a full datetime), so a busy
+day contributes several columns.
 
 A small cross-OS snapshot of the latest nightly is included too, but note it is NOT
 hardware-normalized yet, so cross-OS numbers are placeholders for now.
@@ -60,6 +62,18 @@ def human_bytes(value):
 
 def short_name(full):
     return full[len(NAME_PREFIX):] if full.startswith(NAME_PREFIX) else full
+
+
+def _short_when(date_str):
+    """Compact column label from a point's ``date``: ``MM-DD`` for a legacy date-only
+    point, ``MM-DD HH:MM`` for a full datetime (several runs a day are distinguishable)."""
+    if not isinstance(date_str, str):
+        return str(date_str)
+    day, sep, time = date_str.partition("T")
+    label = day[5:] if len(day) >= 10 else day  # strip the 'YYYY-' prefix
+    if sep and len(time) >= 5:
+        return f"{label} {time[:5]}"  # append HH:MM
+    return label
 
 
 def _trend(curr, older):
@@ -134,7 +148,7 @@ def build_columns(roles):
         cols.append(Column(("pr", None), f"⭐ this PR<br>`{label}`", "role"))
     nightly = roles.get("nightly")
     for day in reversed((nightly or {}).get("days", [])[-DISPLAY_DAYS:]):
-        cols.append(Column(("nightly", day["date"]), f"🌙 {day['date'][5:]}", "nightly"))
+        cols.append(Column(("nightly", day["date"]), f"🌙 {_short_when(day['date'])}", "nightly"))
     for role in ROLE_ORDER:
         rh = roles.get(role)
         ver = (latest_day(rh) or {}).get("version", "?") if rh else None
