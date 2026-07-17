@@ -282,6 +282,15 @@ jobs:
           # Docs → /docs/
           cp -r output/site/docs site/docs
 
+          # Perf dashboard → /perf/ (unlinked; there is intentionally no nav entry).
+          # Copied verbatim, NOT rendered through render_html.py: with no embedded
+          # window.__PERF_DATA__ the page live-fetches benchmarks/index.json +
+          # sizes/index.json from the aw-data branch (raw.githubusercontent.com sends
+          # Access-Control-Allow-Origin: *), so /perf/ always shows the latest nightly
+          # data without needing a site rebuild. A ?data=<base-url> override still works.
+          mkdir -p site/perf
+          cp scripts/infra/perf/templates/dashboard.html site/perf/index.html
+
           # Gallery (Blazor) → /gallery/
           cp -r output/gallery-publish/wwwroot site/gallery
 
