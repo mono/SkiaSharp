@@ -1,0 +1,143 @@
+{
+  "theme": "Platforms, GTK4, and .NET 10",
+  "highlights_headline": "SkiaSharp 3.119.4 adds GTK4 views, Linux Bionic, Tizen x64/arm64 support, and .NET 10 SDK compatibility.",
+  "highlights_body": "New platform support spans Linux Bionic (Android-like) native assets, GTK4 via GirCore, Tizen on x64 and arm64, and a .NET 10 SDK upgrade. On Windows, MAUI TabBar SKGLView rendering is fixed and net48 full-framework targeting is added. Security mitigations and multiple native dependency updates are also included.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKManagedStream reworked: parent/child chain replaced with SKData snapshot",
+          "detail": "The internal stream lifetime model is replaced with a cleaner SKData snapshot approach, fixing edge-case disposal issues and simplifying the ownership model.",
+          "prs": [
+            3589
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "MAUI TabBar SKGLView rendering fixed",
+          "detail": "SKGLView no longer stops rendering after a tab switch in a MAUI TabBar on Android.",
+          "prs": [
+            3076
+          ]
+        },
+        {
+          "lead": "GTK4 Cairo assertion crash fixed",
+          "detail": "SKDrawingArea in GTK4 was triggering a Cairo assertion failure; the rendering path has been corrected.",
+          "prs": [
+            3562
+          ]
+        },
+        {
+          "lead": "AoT crash with IlcDisableReflection fixed",
+          "detail": "Native AoT builds using IlcDisableReflection=true no longer crash at startup.",
+          "prs": [
+            3485
+          ]
+        },
+        {
+          "lead": "tvOS native builds split to device and simulator frameworks",
+          "detail": "tvOS NativeReference targets now correctly separate device and simulator slices, matching the iOS pattern.",
+          "prs": [
+            3563,
+            3561
+          ]
+        },
+        {
+          "lead": "DesignMode detection uses property directly in WinForms",
+          "detail": "SkiaSharp.Views.WindowsForms now uses the DesignMode property directly rather than reflection-based detection.",
+          "prs": [
+            3614
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Linux Bionic native assets added",
+          "detail": "Native library assets for Linux Bionic (the Android-like Linux variant) are now included, enabling SkiaSharp use in Bionic-based environments.",
+          "prs": [
+            3217
+          ]
+        },
+        {
+          "lead": "GTK4 view added via GirCore bindings",
+          "detail": "A new SkiaSharp.Views.Gtk4 package provides SKDrawingArea for GTK4 applications using the GirCore.Gtk-4.0 bindings.",
+          "prs": [
+            3527
+          ]
+        },
+        {
+          "lead": "Tizen x64 and arm64 native builds added",
+          "detail": "Tizen support expands to x64 and arm64 architectures with updated Studio 6.1 tooling and TFM fixes.",
+          "prs": [
+            3620,
+            3619
+          ]
+        },
+        {
+          "lead": ".NET 10 SDK with workload version pinning",
+          "detail": "The build system is updated to the .NET 10 SDK with explicit workload version pinning for reproducible builds.",
+          "prs": [
+            3514
+          ]
+        },
+        {
+          "lead": "net48 full-framework target added",
+          "detail": "A net48 (Windows .NET Framework 4.8) full-framework build target is added for Windows validation scenarios.",
+          "prs": [
+            3631
+          ]
+        },
+        {
+          "lead": "C# 13 support on legacy TFMs via PolySharp",
+          "detail": "PolySharp is used to polyfill C# 13 language features on legacy target frameworks, keeping the codebase on the latest language version everywhere.",
+          "prs": [
+            3642
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Spectre mitigations enabled for all native binaries",
+          "detail": "Spectre v1 mitigation flags are now applied to both libSkiaSharp.dll (Windows) and libSkiaSharp.so (Linux/Android).",
+          "prs": [
+            3502,
+            3496
+          ]
+        },
+        {
+          "lead": "Native dependencies updated",
+          "detail": "libpng updated to 1.6.58 (from 1.6.54), libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed.",
+          "prs": [
+            3723,
+            3478,
+            3469,
+            3463
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "4Darmygeometry": "Added Linux Bionic native assets support and HarfBuzz platform improvements",
+    "sshumakov": "Enabled Spectre mitigation flags for Windows and Linux native binaries",
+    "ramezgerges": "Improved the Android NDK build configuration",
+    "SimonvBez": "Fixed SKGLView not rendering after tab switch in MAUI TabBar"
+  },
+  "preview_summaries": {
+    "v3.119.4-preview.1.1": "Preview 1 introduced Linux Bionic support, GTK4 views, Tizen x64/arm64 builds, .NET 10 SDK, the MAUI TabBar fix, tvOS build splits, GTK4 crash fix, SKManagedStream rework, and numerous dependency updates.",
+    "v3.119.3-preview.1.1": "Preview 1 of 3.119.3 delivered Spectre mitigations for Linux, the AoT reflection fix, Linux ARM64 crash fix, and libpng/libwebp/brotli updates."
+  },
+  "harfbuzz_summary": "Ships HarfBuzzSharp 8.3.1.5 with Linux Bionic support, tvOS build fixes, and the .NET 10 SDK update from this release."
+}

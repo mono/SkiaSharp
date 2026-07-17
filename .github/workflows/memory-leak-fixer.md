@@ -121,13 +121,13 @@ network:
 safe-outputs:
   create-pull-request:
     title-prefix: "[memory-leak] "
-    labels: [tenet/performance, perf/memory-leak]
+    labels: [tenet/performance, perf/memory-leak, partner/agentic-workflows]
     draft: true
     allowed-base-branches: [main]
   create-issue:
     title-prefix: "[memory-leak] "
-    labels: [tenet/performance, perf/memory-leak]
-    allowed-labels: [tenet/performance, perf/memory-leak]
+    labels: [tenet/performance, perf/memory-leak, partner/agentic-workflows]
+    allowed-labels: [tenet/performance, perf/memory-leak, partner/agentic-workflows]
     max: 1
   noop:
     report-as-issue: false

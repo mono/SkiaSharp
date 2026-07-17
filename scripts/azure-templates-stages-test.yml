@@ -18,34 +18,6 @@ parameters:
 
 stages:
 
-    - stage: api_diff
-      displayName: API Diff
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
-        dependsOn: prepare
-      ${{ else }}:
-        dependsOn: package
-      jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # API Diff
-          parameters:
-            name: api_diff_windows
-            displayName: API Diff
-            buildAgent: ${{ parameters.buildAgentWindows}}
-            target: docs-api-diff
-            cacheJob: managed/package/api_diff
-            enableCaching: ${{ parameters.enableCaching }}
-            additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            preBuildSteps:
-              - pwsh: .\scripts\infra\managed\install-gtk.ps1
-                displayName: Install GTK# 2.12
-            publishArtifacts:
-              - name: api-diff
-                always: true
-                path: '$(Build.SourcesDirectory)\output\api-diff'
-
     - stage: managed
       displayName: Build Managed
       ${{ if eq(parameters.isSplitPipeline, 'true') }}:
