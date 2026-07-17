@@ -17,6 +17,11 @@ Design notes
   ``date`` field). This is a loosening of the earlier day granularity: the workflow
   now runs several times a day, so intra-day points accumulate and the dashboard's
   time axis shows hours. Re-running at the exact same timestamp replaces in place.
+* Every point also records two descriptors (metadata only -- neither is used to skip):
+  a ``fingerprint`` (``version | hash(benchmark source)``) so a perf change with an
+  unchanged fingerprint points at the environment rather than the code; and an ``env``
+  block (runner CPU, physical/logical cores, arch, OS, runtime -- straight from the
+  BenchmarkDotNet report's HostEnvironmentInfo) so a hardware/runtime change is visible.
 * History is retained for ``MAX_AGE_DAYS`` days, so changing the run cadence only
   changes point density -- never the length of the retained window.
 
@@ -30,6 +35,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import glob
+import hashlib
 import json
 import os
 import pathlib
@@ -73,6 +79,50 @@ def _point_time(entry: dict) -> dt.datetime | None:
     return parsed
 
 
+def _source_hash() -> str:
+    """Short hash of the benchmark source (.cs + .csproj). Combined with the pinned
+    version it forms a point's ``fingerprint`` -- recorded so the dashboard can tell a
+    same-code/same-version perf shift (environment) from a real code/version change."""
+    root = PROJECT_DIR
+    files = sorted(p for p in root.rglob("*")
+                   if p.suffix in (".cs", ".csproj")
+                   and "bin" not in p.parts and "obj" not in p.parts)
+    h = hashlib.sha256()
+    for p in files:
+        h.update(p.relative_to(root).as_posix().encode())
+        h.update(b"\0")
+        h.update(p.read_bytes())
+    return h.hexdigest()[:16]
+
+
+def fingerprint(version: str) -> str:
+    """Identifies the benchmarked code state: pinned version + benchmark source hash.
+    Recorded on every point (never used to skip a run)."""
+    return f"{version}|{_source_hash()}"
+
+
+def _extract_env(doc: dict) -> dict:
+    """Compact host/environment descriptor from a BDN report's ``HostEnvironmentInfo``.
+
+    Recorded per point so the dashboard can attribute a perf shift to a changed runner
+    (different CPU model, core count, arch, OS or runtime) rather than a code regression.
+    Keys BDN did not provide are dropped so the record stays clean.
+    """
+    h = doc.get("HostEnvironmentInfo") or {}
+    env = {
+        "cpu": h.get("ProcessorName"),
+        "physicalCpus": h.get("PhysicalProcessorCount"),
+        "physicalCores": h.get("PhysicalCoreCount"),
+        "logicalCores": h.get("LogicalCoreCount"),
+        "arch": h.get("Architecture"),
+        "os": h.get("OsVersion"),
+        "runtime": h.get("RuntimeVersion"),
+        "dotnetSdk": h.get("DotNetCliVersion"),
+        "bdnVersion": h.get("BenchmarkDotNetVersion"),
+    }
+    return {k: v for k, v in env.items() if v is not None}
+
+
 
 # --------------------------------------------------------------------------- #
 # Helpers
@@ -96,8 +146,12 @@ def _num(value) -> float | None:
 # BenchmarkDotNet result parsing
 # --------------------------------------------------------------------------- #
 
-def parse_results(results_dir: str) -> dict[str, dict]:
+def parse_results(results_dir: str) -> tuple[dict[str, dict], dict]:
     """Merge every ``*-report-full.json`` in ``results_dir`` into one map.
+
+    Returns ``(benchmarks, env)`` where ``env`` is the host descriptor (see
+    ``_extract_env``) taken from the first report -- every report in a run shares the
+    same host, so one is representative.
 
     Records a superset of BenchmarkDotNet statistics so future dashboard work stays
     HTML-only (no re-collection): mean/median/min/max/p95/stdDev nanoseconds, allocated
@@ -113,6 +167,7 @@ def parse_results(results_dir: str) -> dict[str, dict]:
         )
 
     merged: dict[str, dict] = {}
+    env: dict = {}
     for path in files:
         try:
             with open(path, "r", encoding="utf-8") as fh:
@@ -120,6 +175,9 @@ def parse_results(results_dir: str) -> dict[str, dict]:
         except (json.JSONDecodeError, OSError) as err:
             _log(f"  ! skipping unreadable report {path}: {err}")
             continue
+
+        if not env:
+            env = _extract_env(doc)
 
         for bench in doc.get("Benchmarks", []):
             name = bench.get("FullName")
@@ -142,7 +200,7 @@ def parse_results(results_dir: str) -> dict[str, dict]:
             }
 
     _log(f"  parsed {len(merged)} benchmark(s) from {len(files)} report file(s)")
-    return merged
+    return merged, env
 
 
 # --------------------------------------------------------------------------- #
@@ -214,18 +272,22 @@ def main(argv: list[str]) -> int:
     args = parse_args(argv)
 
     _log(f"Collecting benchmark results for {args.os}...")
-    benchmarks = parse_results(str(_results_dir(args.role)))
+    benchmarks, env = parse_results(str(_results_dir(args.role)))
     if not benchmarks:
         _log("  no benchmarks parsed; leaving history unchanged")
         return 1
 
     history = load_history(args.history, args.os, args.role)
     now = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    upsert_day(history, {
+    point = {
         "date": now,
         "version": args.version,
+        "fingerprint": fingerprint(args.version),
         "benchmarks": benchmarks,
-    }, MAX_AGE_DAYS)
+    }
+    if env:
+        point["env"] = env
+    upsert_day(history, point, MAX_AGE_DAYS)
     save_history(args.history, history)
     return 0
 
