@@ -125,14 +125,14 @@ network:
 safe-outputs:
   create-pull-request:
     title-prefix: "[performance] "
-    labels: [tenet/performance]
-    allowed-labels: [tenet/performance, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
+    labels: [tenet/performance, partner/agentic-workflows]
+    allowed-labels: [tenet/performance, partner/agentic-workflows, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
     draft: true
     allowed-base-branches: [main]
   create-issue:
     title-prefix: "[performance] "
-    labels: [tenet/performance]
-    allowed-labels: [tenet/performance, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
+    labels: [tenet/performance, partner/agentic-workflows]
+    allowed-labels: [tenet/performance, partner/agentic-workflows, perf/allocations, perf/interop, perf/memory-leak, perf/rendering, perf/size, perf/startup, perf/throughput]
     max: 1
   noop:
     report-as-issue: false

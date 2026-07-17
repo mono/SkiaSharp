@@ -924,11 +924,17 @@ def render_all():
             page = _page_for_data(dp)
             pp = dp.with_name(dp.name[:-len(".data.json")] + ".prose.json")
             if not pp.is_file():
-                # Missing prose is tolerated (warn + keep the committed .md): a
-                # scoped/partial run legitimately renders the whole set while only
-                # polishing a subset, so pages outside this run's scope have no
-                # fresh prose. Invalid prose, below, is NOT tolerated.
-                log("  WARNING: no prose.json for {} - keeping committed page".format(page))
+                # Missing prose.json is now a HARD ERROR (§4.6). After Prepare every
+                # data.json has a matching prose.json: unchanged pages keep their
+                # committed prose, and changed pages have theirs DELETED so the agent
+                # must re-author from the fresh facts. So a data.json with no prose.json
+                # means the agent failed to (re)author a changed/new page — we fail the
+                # --all pass rather than silently keep a now-stale committed page.
+                invalid.append((page, [
+                    "no prose.json — the page's data.json changed (or is new) but the "
+                    "Polish agent did not author prose for it; re-author "
+                    + pp.name]))
+                log("  ERROR: no prose.json for {} (data changed but prose missing)".format(page))
                 continue
             prose = json.loads(pp.read_text())
             errs = validate(data, prose)

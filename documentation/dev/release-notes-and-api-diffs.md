@@ -342,6 +342,8 @@ scripts/infra/docs/                (all doc engines, together)
                                prunes stale -unreleased pages and retires HarfBuzz hub pages
   release-notes-schema/prose.schema.json   the prose contract the agent fills
   versions.json                supersession + baseline config (§1); shared repo-wide
+  release-notes-paths.json     PR path→tag classification (§4.4): the deterministic,
+                               editable product/mixed/internal path map read by release-notes-data.py
   docker/                      reproducible image + run.sh wrapper; `api-diffs`
                                invokes the `docs-api-diff` target directly
 
@@ -987,19 +989,27 @@ built from. It is timestamp-free and includes, at minimum:
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, `internal`).
+  deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
+  `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
+  non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
+  GitHub's linked-issue graph (`closingIssuesReferences`, the source of truth, batched
+  and cached in `_sources/pr-fixed-issues.json`) and the `Fixes/Closes/Resolves #NNN`
+  keywords in the PR body (the offline fallback). Downstream post-release tooling reads
+  `fixes` to apply the release milestone to the closed issues; the renderer ignores it.
 - `contributors` — the authoritative non-maintainer, non-bot roster the renderer uses
   for the community table.
 - `previews` — per-preview/RC buckets, when present. Each carries a `key`, the human
-  `label`, `date`, `changelog_url`, and its `prs`. The `key` is the stable handle the
-  prose file's `preview_summaries` maps a summary onto, so it MUST be unique within a
-  page: it is **core-qualified** as `<core>-<stage><num>` (e.g. `4.148.0-rc1`,
-  `3.118.0-p1`, `1.53.2-gpu1`). Core-qualifying keeps a rolled-up predecessor's preview
-  distinct from this line's own, and keying on the label's own stem keeps parallel
-  experimental trains (an `svg` and a `gpu` preview of one core) from colliding.
+  `label`, `date`, `changelog_url`, and its `prs`. The `key` is the milestone's **real
+  git tag name** (e.g. `v4.150.0-rc.1.1`, `v3.118.0-preview.1.1`), used verbatim incl.
+  the leading `v`. git guarantees tag names are globally unique, so a key never collides
+  across rolled-up lines, and downstream tooling can map a preview straight to its exact
+  milestone/release with no key-parsing. It is also the stable handle the prose file's
+  `preview_summaries` maps a summary onto, so it MUST be unique within a page.
   `release-notes-data.py` raises if two buckets ever produce the same key, and `release-notes-render.py`
   validates one summary **per preview** (not per unique key), so a collision can never
-  silently ship a shared or missing summary.
+  silently ship a shared or missing summary. (A handful of very old committed pages
+  predate git-tagging their previews and therefore keep a synthetic
+  `<core>-<stage><num>` key such as `1.49.1-p1`; new pages always use the real tag.)
 - `tallies` and `breaking_candidates` — companion source paths and hashes the AI reads
   for breaking-change prose (§4.7).
 
@@ -1034,18 +1044,33 @@ principles are fixed here.
    every PR is whether the **shipped SkiaSharp/HarfBuzzSharp library** — its public
    API, runtime behavior, native binary, or NuGet package — changed for a consumer.
    Prepare makes this deterministic: `release-notes-data.py` tags every PR in `data.json` as
-   **`product`**, **`mixed`**, or **`internal`** by the files it changed.
-   - **`product`** — touches shipped code (`binding/`, `externals/`, `source/`). Written up.
-   - **`internal`** — touches none of those (CI, workflows, agent skills, docs site,
-     tests, samples, build/meta). Dropped into the one collapse line.
-   - **`mixed`** — touches only build config (`native/`): it may change the shipped
-     binary via a compile flag or be pure infra. Polish judges from the title/context
-     already in `data.json`; it does not open the PR.
+   **`product`**, **`mixed`**, or **`internal`** by the files it changed. The path→tag
+   mapping is **not** hardcoded in the script — it lives in
+   [`scripts/infra/docs/release-notes-paths.json`](../../scripts/infra/docs/release-notes-paths.json),
+   the single deterministic place to edit it. It is a short list of ordered tiers (each a
+   `tag` + `patterns`) plus a `default`; the first tier with a matching file wins. A pattern
+   matches by prefix (`str.startswith`), or as a glob if it contains `* ? [`.
+   - **`product`** — touches shipped code with a real API / behaviour / native change:
+     `binding/` + `source/` (managed API & Views) and `externals/skia` (the native Skia
+     submodule, with its vendored HarfBuzz). Written up.
+   - **`mixed`** — affects the shipped package but is not itself an API/behaviour change, so
+     Polish judges from the title: `native/` (per-platform build config — compile flags/gn
+     args that shape the native binaries, usually infra) and `docs` (the mdoc API-docs
+     submodule that ships as IntelliSense XML — doc content, not behaviour).
+   - **`internal`** — the `default`: touches none of those (CI, workflows, agent skills, docs
+     *site*, tests, samples, build/meta, and the `externals/depot_tools` build-toolchain
+     submodule). Dropped into the one collapse line.
 
-   `native/` is deliberately **not** treated as shipped code: it is build
-   configuration, and the thing that actually ships is `externals/skia/`. Polish drops
-   `internal`, writes up `product`, and inspects `mixed`; moving the classification out
-   of the LLM makes product-focus reliable run-to-run.
+   `native/` shapes the shipped binaries and `docs` ships as doc XML, so neither is
+   `internal`; but neither is a direct API/behaviour change, so both are `mixed` (inspected
+   from the title) rather than firm `product`. `docs` and `externals/skia` are submodules, so
+   in the parent repo they appear as bare gitlink paths (`docs`, `externals/skia`) and the
+   prefixes match those exactly — the `externals/skia` prefix is deliberately not just
+   `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
+   submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
+   the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
+   `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
+   JSON) makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the
@@ -1159,6 +1184,11 @@ Always the same incremental Prepare + offline Polish sequence:
    index data. `release-notes-data.py` fetches `main` + every `release/*`, regenerates each
    selected SkiaSharp line's data JSON (§4.3), folds in the HarfBuzz block for released
    pages (§4.5), and writes only pages whose **whole `data.json` dict** changed.
+   **When a page's `data.json` changes, `release-notes-data.py` also DELETES that page's
+   `_sources/<stem>.prose.json`** (the human-owned `<stem>.notes.md` sidecar is left in
+   place): the facts moved, so the committed prose is stale by definition and there must
+   be nothing for Polish to keep or judge as "still matching" (§4.6 point 4). This is
+   scoped to a genuine data change — a bare `--force` re-render does not discard prose.
    `release-notes-index.py` writes timestamp-free `_sources/index.json` (the Chrome schedule +
    the `live_unreleased` set that `release-notes-render.py --all` prunes against, §4.2).
 2. **`data.json` is the release-notes change-detection key.** It has no timestamp, so
@@ -1177,12 +1207,17 @@ Always the same incremental Prepare + offline Polish sequence:
    data JSON shape or its Polish contract changes materially; a forced run rewrites the
    pages to the new format, then the pipeline settles back to idempotent.
 4. **Polish writes prose and renders offline.** The Files-to-polish list names only
-   genuinely changed pages, so the AI never rewrites an up-to-date page. After the AI
-   writes each `_sources/<stem>.prose.json` and validates the page with
+   genuinely changed pages, and each of them has had its `prose.json` **deleted** by
+   Prepare (point 1), so the AI **re-authors that page from scratch** against the fresh
+   `data.json` — it never inspects an old prose file to decide whether it "still matches"
+   (that soft judgment silently dropped brand-new product PRs). After the AI writes each
+   `_sources/<stem>.prose.json` and validates the page with
    `release-notes-render.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
    equivalent `release-notes-render.py --all`) once to regenerate every SkiaSharp page, retire
-   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. When Prepare's
-   patch is empty, the workflow skips Polish and opens no PR (§2.3).
+   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. **`--all`
+   hard-fails** if any `data.json` has no matching `prose.json` — i.e. a changed/new page
+   the AI forgot to author — so a changed page can never ship with stale (or missing)
+   prose. When Prepare's patch is empty, the workflow skips Polish and opens no PR (§2.3).
 
 A ranged run (`--min-version` / `--max-version`) is scoped by SkiaSharp version core
 and therefore includes HarfBuzz automatically through the selected pages' `harfbuzz`

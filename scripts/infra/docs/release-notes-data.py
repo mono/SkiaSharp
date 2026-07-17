@@ -95,6 +95,7 @@ Requirements: git, Python 3.7+
 from __future__ import annotations
 
 import argparse
+import fnmatch
 import hashlib
 import json
 import re
@@ -140,6 +141,12 @@ _NOREPLY_RE = re.compile(r"^\d+\+(.+)@users\.noreply\.github\.com$")
 _VERSIONS_CONFIG = {}  # type: dict[str, list[dict]]
 
 VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
+
+# PR path-classification config (loaded lazily from
+# scripts/infra/docs/release-notes-paths.json). The single deterministic place that
+# owns which touched paths map to which release-note tag — see _pr_category().
+PATH_TAGS_JSON_PATH = Path("scripts/infra/docs/release-notes-paths.json")
+_PATH_TAGS_CONFIG = None  # type: Optional[tuple]
 
 # HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
 # commits touching these — the HarfBuzzSharp binding + its native assets, the
@@ -648,6 +655,134 @@ def resolve_pr_authors(prs):
         login = cache.get(str(pr["number"]))
         if login:
             pr["author"]["login"] = login
+    return prs
+
+
+# ── GitHub fixed-issue resolution ────────────────────────────────────
+
+_FIXED_ISSUES_CACHE_PATH = RELEASES_DIR / "_sources" / "pr-fixed-issues.json"
+
+# GitHub's issue-closing keywords (any case): close/closes/closed,
+# fix/fixes/fixed, resolve/resolves/resolved, each followed by ``#NNN``
+# (optionally after a colon). Mirrors the body regex GitHub itself honours; the
+# GraphQL graph below is the source of truth and this is the offline fallback.
+_FIXES_RE = re.compile(
+    r"\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\b\s*:?\s+#(\d+)", re.IGNORECASE)
+
+
+def load_fixed_issues_cache():
+    # type: () -> dict
+    """Load the PR-number -> [issue numbers] cache (releases/_sources/pr-fixed-issues.json).
+
+    Like the author cache, this makes ordinary regenerations fully offline: a
+    warm cache means resolve_fixed_issues makes zero network calls. Each value is
+    the list of issue numbers GitHub's linked-issue graph reports the PR closes
+    (possibly empty). Delete an entry to force a re-query.
+    """
+    try:
+        return json.loads(_FIXED_ISSUES_CACHE_PATH.read_text())
+    except (OSError, ValueError):
+        return {}
+
+
+def save_fixed_issues_cache(cache):
+    # type: (dict) -> None
+    """Persist the PR-number -> fixed-issue-numbers cache, sorted for stable diffs."""
+    try:
+        ordered = {k: cache[k] for k in sorted(cache, key=lambda n: int(n))}
+    except ValueError:
+        ordered = cache
+    _FIXED_ISSUES_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _FIXED_ISSUES_CACHE_PATH.write_text(json.dumps(ordered, indent=2) + "\n")
+
+
+def _graphql_pr_fixed_issues(numbers):
+    # type: (list[int]) -> dict
+    """Resolve each PR's linked closing issues via one batched GraphQL query.
+
+    Returns ``{pr_number: [issue_number, ...]}`` for every number the API
+    answered for; PRs that error or are missing are omitted so a transient
+    failure is never cached. ``closingIssuesReferences`` is GitHub's own
+    linked-issue graph — the edges a ``Fixes #N`` in the body auto-creates, plus
+    any linked through the UI — so it is the source of truth. Requires an
+    installed, authenticated ``gh`` CLI; any failure yields an empty dict and the
+    caller falls back to the PR-body keyword regex.
+    """
+    owner, name = REPO.split("/")
+    aliases = "\n".join(
+        "p{n}: pullRequest(number: {n}) {{ closingIssuesReferences(first: 50) "
+        "{{ nodes {{ number }} }} }}".format(n=n)
+        for n in numbers)
+    query = 'query {{ repository(owner: "{}", name: "{}") {{\n{}\n}} }}'.format(
+        owner, name, aliases)
+    try:
+        # check=False: as with authors, a single blocked PR fails the batch exit
+        # code but gh still prints valid ``data`` for the rest — keep that.
+        out = run(["gh", "api", "graphql", "-f", "query=" + query], check=False)
+    except FileNotFoundError:
+        return {}  # gh not installed
+    try:
+        repo = json.loads(out)["data"]["repository"]
+    except (ValueError, KeyError, TypeError):
+        return {}
+    resolved = {}  # type: dict
+    for n in numbers:
+        node = repo.get("p{}".format(n))
+        if node is None:
+            continue  # PR not found / errored — leave uncached for retry
+        refs = (node.get("closingIssuesReferences") or {}).get("nodes") or []
+        resolved[n] = sorted({
+            r.get("number") for r in refs
+            if isinstance(r.get("number"), int)})
+    return resolved
+
+
+def _body_fixed_issues(body):
+    # type: (str) -> set
+    """Issue numbers named by a close/fix/resolve keyword in a PR body."""
+    return {int(n) for n in _FIXES_RE.findall(body or "")}
+
+
+def resolve_fixed_issues(prs):
+    # type: (list[dict]) -> list[dict]
+    """Attach the issues each PR closes to ``pr['fixes']`` (a sorted number list).
+
+    Two sources are unioned:
+      1. GitHub's ``closingIssuesReferences`` graph — the source of truth,
+         batched then cached in releases/_sources/pr-fixed-issues.json.
+      2. ``Fixes/Closes/Resolves #NNN`` keywords in the PR body — the fallback
+         that also covers the API being unavailable.
+
+    Fully offline-safe: a warm cache, or a missing/unauthenticated ``gh``, simply
+    skips the API and relies on the body regex. Downstream post-release tooling
+    uses ``fixes`` to apply milestones to the closed issues. Mutates and returns
+    ``prs``.
+    """
+    nums = sorted({pr["number"] for pr in prs if pr.get("number")})
+    if not nums:
+        return prs
+
+    cache = load_fixed_issues_cache()
+    to_query = [n for n in nums if str(n) not in cache]
+    if to_query:
+        log("  Resolving linked issues for {} PR(s) via GitHub API...".format(
+            len(to_query)))
+        dirty = False
+        for i in range(0, len(to_query), _GRAPHQL_BATCH):
+            resolved = _graphql_pr_fixed_issues(to_query[i:i + _GRAPHQL_BATCH])
+            for num, issues in resolved.items():
+                cache[str(num)] = issues
+                dirty = True
+        if dirty:
+            save_fixed_issues_cache(cache)
+
+    for pr in prs:
+        num = pr.get("number")
+        if not num:
+            continue
+        issues = set(cache.get(str(num)) or [])
+        issues |= _body_fixed_issues(pr.get("body"))
+        pr["fixes"] = sorted(issues)
     return prs
 
 
@@ -1305,26 +1440,61 @@ def determine_diff_range(branch):
 # can FOCUS on product, INSPECT mixed, and MENTION internal (§4.4) — a lexical filter
 # instead of re-judging every PR from its title each run (the source of leak variance).
 #
-#   product  — touches SHIPPED code (managed API, native code, Views). A real change a
-#              consumer can see. Companion test/benchmark/generated files are ignored.
-#   mixed    — touches only BUILD config (native/): may change the shipped binary via a
-#              compile define (e.g. a rasteriser flag), or may be pure infra (Docker
-#              image, SDK pin). Polish guesses from the title/context in data.json
-#              (it does not open the PR) — surface a behaviour change, drop pure infra.
-#   internal — touches NEITHER: a pure repository process (CI, workflows, agent skills,
-#              docs site, tests, samples, build/meta files). Dropped into the collapse line.
-_SHIP_PATH_PREFIXES = ("binding/", "externals/", "source/")
-_BUILD_PATH_PREFIXES = ("native/",)
+# The path→tag mapping is NOT hardcoded here: it lives in the committed
+# scripts/infra/docs/release-notes-paths.json, the single deterministic place to edit it
+# (ordered tiers of prefixes/globs + a default). See that file's `description`/`notes`
+# and spec §4.4 for the rationale (why `externals/skia` is exact, why `docs` is
+# slash-less, why `native/` is mixed, etc.).
+
+
+def _load_path_tags():
+    # type: () -> tuple
+    """Load release-notes-paths.json as ``([(tag, patterns), ...], default)`` (cached).
+
+    Ordered tiers + a default tag — the deterministic PR path-classification config
+    (spec §4.4). Read once and memoised; a missing/malformed file is a hard error (the
+    file is committed and required — do not silently fall back to a guessed mapping).
+    """
+    global _PATH_TAGS_CONFIG
+    if _PATH_TAGS_CONFIG is None:
+        if not PATH_TAGS_JSON_PATH.exists():
+            raise FileNotFoundError(
+                "Missing %s — the PR path-classification config (spec §4.4)."
+                % PATH_TAGS_JSON_PATH)
+        with open(PATH_TAGS_JSON_PATH) as f:
+            cfg = json.load(f)
+        tiers = [(t["tag"], tuple(t.get("patterns", [])))
+                 for t in cfg.get("tiers", [])]
+        _PATH_TAGS_CONFIG = (tiers, cfg.get("default", "internal"))
+    return _PATH_TAGS_CONFIG
+
+
+def _path_matches(path, pattern):
+    # type: (str, str) -> bool
+    """Does a file ``path`` match a config ``pattern``?
+
+    Plain patterns are PREFIXES (``str.startswith`` — so ``binding/`` catches everything
+    under it and a bare submodule gitlink like ``externals/skia`` / ``docs`` matches
+    itself). A pattern containing a glob metacharacter (``* ? [``) is matched with
+    ``fnmatch.fnmatchcase`` (case-sensitive, platform-independent) instead.
+    """
+    if any(c in pattern for c in "*?["):
+        return fnmatch.fnmatchcase(path, pattern)
+    return path.startswith(pattern)
 
 
 def _pr_category(files):
     # type: (set) -> str
-    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4)."""
-    if any(f.startswith(_SHIP_PATH_PREFIXES) for f in files):
-        return "product"
-    if any(f.startswith(_BUILD_PATH_PREFIXES) for f in files):
-        return "mixed"
-    return "internal"
+    """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4).
+
+    Tiers from release-notes-paths.json are tried in order; the first tier with any
+    matching file wins, else the configured default.
+    """
+    tiers, default = _load_path_tags()
+    for tag, patterns in tiers:
+        if any(_path_matches(f, p) for f in files for p in patterns):
+            return tag
+    return default
 
 
 # Automation accounts — never credited as human contributors (§4.5). The workflow
@@ -1371,17 +1541,31 @@ def _files_by_commit(from_ref, to_ref):
     One ``git log --name-only`` call (no pathspec filter — we want each PR's FULL
     file set to classify it product vs internal). A ``\\x1e`` record separator
     prefixes each hash line so file lines can never be mistaken for a hash.
+
+    We SPLIT on ``\\x1e`` rather than matching a leading ``\\x1e`` per line: git
+    lists commits newest-first, and ``run()`` returns ``stdout.strip()`` — and
+    ``\\x1e`` is whitespace to Python's ``str.strip()``, so the FIRST (newest)
+    record loses its leading separator. A ``startswith("\\x1e")`` scan would then
+    silently drop that newest commit's file list, tagging it ``internal`` — which
+    is exactly how the latest automated ``[skia-sync]`` submodule bump (usually the
+    newest commit in the range) kept getting mis-tagged. Splitting recovers every
+    record whether or not its leading separator survived.
     """
     out = run(["git", "log", "--no-renames", "--name-only",
                "--format=%x1e%H", "{}..{}".format(from_ref, to_ref)])
     files_by = {}  # type: dict
-    cur = None
-    for line in out.split("\n"):
-        if line.startswith("\x1e"):
-            cur = line[1:].strip()
-            files_by[cur] = set()
-        elif line.strip() and cur is not None:
-            files_by[cur].add(line.strip())
+    for record in out.split("\x1e"):
+        record = record.strip()
+        if not record:
+            continue
+        # First line is the commit hash; the rest (past the blank line git emits
+        # before --name-only output) are the touched paths. Merge commits have no
+        # --name-only output, so they map to an empty set (still `internal`).
+        lines = record.split("\n")
+        commit = lines[0].strip()
+        if not commit:
+            continue
+        files_by[commit] = {ln.strip() for ln in lines[1:] if ln.strip()}
     return files_by
 
 
@@ -1516,33 +1700,6 @@ def _release_date_display(version):
 # data.json dict. Bump when the data.json schema changes.
 _DATA_JSON_FORMAT_VERSION = 3
 
-_PREVIEW_KEY_STAGE = {
-    "Release Candidate": "rc", "Preview": "p", "Alpha": "a", "Beta": "b",
-}
-
-
-def _preview_key(core, label):
-    # type: (str, str) -> str
-    """Unique, stable short key for a preview/RC milestone.
-
-    Core-qualified so previews rolled up from different lines never collide, and
-    keyed on the label's own stem so parallel experimental trains (an ``svg`` and a
-    ``gpu`` preview of the same core) stay distinct:
-
-        ('4.148.0', 'Release Candidate 1') -> '4.148.0-rc1'
-        ('3.118.0', 'Preview 1')           -> '3.118.0-p1'
-        ('1.53.2',  'Gpu 1')               -> '1.53.2-gpu1'
-        ('1.53.2',  'Svg 1')               -> '1.53.2-svg1'
-
-    Known stages get a short abbreviation (rc/p/a/b); any other stem uses a slug of
-    itself rather than a shared fallback, so distinct nonstandard stems never merge.
-    """
-    parts = (label or "").rsplit(" ", 1)
-    stem = parts[0] if len(parts) == 2 else (label or "")
-    num = parts[1] if len(parts) == 2 else ""
-    abbrev = _PREVIEW_KEY_STAGE.get(stem) or re.sub(r"[^a-z0-9]", "", stem.lower()) or "m"
-    return "{}-{}{}".format(core, abbrev, num).strip().lower()
-
 
 def _pr_is_community(pr):
     # type: (dict) -> bool
@@ -1612,13 +1769,21 @@ def build_data_json(prs, metadata):
         num = pr.get("number")
         if not num:
             continue
-        pr_map[str(num)] = {
+        entry = {
             "url": pr.get("url", ""),
             "title": pr.get("title", ""),
             "author": (pr.get("author") or {}).get("login"),
             "community": _pr_is_community(pr),
             "tag": pr.get("category", "product"),
         }
+        # The issues this PR closes (GitHub's linked-issue graph ∪ body keywords;
+        # see resolve_fixed_issues). Emitted only when non-empty so pages with no
+        # issue-closing PRs stay byte-identical and old pages are untouched until
+        # they are genuinely regenerated. Downstream milestone tooling reads it.
+        fixes = pr.get("fixes") or []
+        if fixes:
+            entry["fixes"] = fixes
+        pr_map[str(num)] = entry
 
     contributors = [
         {"login": login,
@@ -1633,9 +1798,14 @@ def build_data_json(prs, metadata):
         label = m.get("label")
         if not label or not m.get("tag"):
             continue  # skip the synthetic leftover/unreleased bucket
-        core = m.get("version") or ((_parse_tag(m.get("tag")) or {}).get("core") or "")
         previews.append({
-            "key": _preview_key(core, label),
+            # The milestone's real git tag (e.g. "v4.150.0-rc.1.1") IS the key:
+            # git guarantees it is globally unique, so it never collides across
+            # rolled-up lines, and it lets downstream tooling map PRs → the exact
+            # milestone/release with no key-parsing. It is also the handle
+            # prose.json.preview_summaries is keyed on. m["tag"] is guaranteed
+            # present by the guard above.
+            "key": m.get("tag"),
             "label": label,
             "date": _friendly_date(m.get("date")),
             "changelog_url": m.get("compare_url"),
@@ -2101,6 +2271,10 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # new PRs miss the cache and hit the network; every old version is a cache hit.
     resolve_pr_authors(prs)
     resolve_skia_links(prs)
+    # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
+    # cached in pr-fixed-issues.json) so data.json records them for downstream
+    # milestone tooling. Same steady-state cost profile as author resolution.
+    resolve_fixed_issues(prs)
 
     # Enumerate the preview/rc milestones this page rolls up (regression R3), so
     # the trailing "## Preview N (date)" sections render. The lower bound is the
@@ -2159,13 +2333,29 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # data.json + prose.json during Polish.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
-    if not force and _data_json_unchanged(data_path, data):
+    changed = not _data_json_unchanged(data_path, data)
+    if not force and not changed:
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
     log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
+    if changed:
+        # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
+        # prose is stale by definition. DELETE it to FORCE the Polish agent to
+        # re-author the page from the fresh data.json — instead of letting it judge
+        # whether the old prose still "matches", which silently dropped brand-new
+        # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
+        # place. render --all then hard-fails until fresh prose exists, so a changed
+        # page can never ship with stale prose. Scoped to a genuine change (not a bare
+        # --force re-render) so re-rendering after a format/skill tweak does not throw
+        # away good prose. The .md itself is not deleted — render overwrites it wholesale
+        # from the new prose.
+        prose_path = _prose_json_path(output_path)
+        if prose_path.exists():
+            prose_path.unlink()
+            log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
     return str(output_path)
 
 
@@ -2256,6 +2446,7 @@ def cmd_generate(force=False, polish_list_path=None,
     log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
     write_polish_list(files_to_polish, polish_list_path)
+
 
 def main():
     parser = argparse.ArgumentParser(

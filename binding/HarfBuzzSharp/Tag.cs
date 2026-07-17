@@ -27,21 +27,24 @@ namespace HarfBuzzSharp
 			value = (uint)(((byte)c1 << 24) | ((byte)c2 << 16) | ((byte)c3 << 8) | (byte)c4);
 		}
 
-		public static Tag Parse (string tag)
+		public static Tag Parse (string tag) =>
+			Parse (tag.AsSpan ());
+
+		public static Tag Parse (ReadOnlySpan<char> tag)
 		{
-			if (string.IsNullOrEmpty (tag))
+			if (tag.IsEmpty)
 				return None;
 
-			var realTag = new char[4];
+			// Take up to the first four characters, padding any missing trailing
+			// slots with spaces — matching the original char[4]-scratch behaviour
+			// without allocating the scratch array. The first character always
+			// exists here because empty input was handled by the guard above.
+			var c1 = tag[0];
+			var c2 = tag.Length > 1 ? tag[1] : ' ';
+			var c3 = tag.Length > 2 ? tag[2] : ' ';
+			var c4 = tag.Length > 3 ? tag[3] : ' ';
 
-			var len = Math.Min (4, tag.Length);
-			var i = 0;
-			for (; i < len; i++)
-				realTag[i] = tag[i];
-			for (; i < 4; i++)
-				realTag[i] = ' ';
-
-			return new Tag (realTag[0], realTag[1], realTag[2], realTag[3]);
+			return new Tag (c1, c2, c3, c4);
 		}
 
 		public override string ToString ()

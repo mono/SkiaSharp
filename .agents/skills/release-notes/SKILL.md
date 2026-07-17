@@ -23,8 +23,8 @@ to read.
 If yes, write about it. If no (CI tweaks, internal refactors, doc/workflow
 plumbing, test infra), leave it out — the renderer already collapses that noise.
 `data.json` tags every PR `product` / `mixed` / `internal`; treat `internal` as
-invisible unless it changed shipped behaviour, and for `mixed` judge from the
-title.
+invisible unless it changed shipped behaviour, and for `mixed` (build config in
+`native/`, or a `docs` API-docs bump) judge from the title.
 
 ## Running the full pipeline (prepare → write prose → render)
 
@@ -38,11 +38,17 @@ prepare.sh   →   (you write prose.json per page)   →   render.sh
 
 1. **`.agents/skills/release-notes/scripts/prepare.sh`** — regenerates the API diffs
    (Cake), the per-page `_sources/<version>.data.json` facts, and `_sources/index.json`,
-   and writes the list of pages needing prose to `output/files-to-polish.txt`.
-2. **You** read each listed page's `data.json` and write its `prose.json` (below).
+   and writes the list of pages needing prose to `output/files-to-polish.txt`. **When a
+   page's facts changed, Prepare DELETES that page's `prose.json`** so there is nothing
+   stale to keep — every page on the list starts from a blank prose slate.
+2. **You** read each listed page's `data.json` and write its `prose.json` from scratch
+   (below). Each page in the list has **no `prose.json`** — do not go looking for an old
+   one to "check if it still matches"; the facts moved (new/removed PRs, re-tags), so you
+   author fresh. Cover every `product` PR you'd expect a consumer to notice — a page that
+   silently drops a real change is the failure this design prevents.
 3. **`.agents/skills/release-notes/scripts/render.sh`** — renders every page from
-   `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It fails loudly on
-   invalid prose.
+   `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It **fails loudly** if
+   any page on the list still lacks a `prose.json` (you missed one) or if prose is invalid.
 
 Both scripts take the **same three flags** — `--force`, `--min-version`, `--max-version`
 — and nothing else. Choose them from what was asked:

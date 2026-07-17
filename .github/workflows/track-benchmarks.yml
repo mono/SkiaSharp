@@ -1,0 +1,446 @@
+name: Track - Benchmarks
+
+# Periodic BenchmarkDotNet run on Linux/Windows/macOS, per version role. Roles split into
+# RELEASED (on nuget.org, must not regress) and UNRELEASED (CI-only):
+#   * nightly       -> newest -nightly.* from the EAP/CI feed (unreleased; trend)
+#   * latest        -> newest on nuget.org incl. preview/rc (released; less vital, still shipped)
+#   * curr-stable    \
+#   * prev-stable     >  released stable baselines, resolved from nuget.org
+#   * prev-major     /
+#   * pr             -> a FULL source build of THIS checkout (unreleased; PRs only)
+#
+# History is PERSISTED to the `aw-data` branch (not the Actions cache), so it survives
+# indefinitely — years of trend, no cache eviction or size limits. Each (OS, role) leg
+# reads its existing history from that branch, appends this run's point, and uploads it as
+# an artifact; the `report` job aggregates everything, and — only for runs on main (the
+# scheduled runs) — the `persist-aw-data.yml` workflow commits the updated JSON back.
+#
+# Every run records a point (there is no skip): a run is cheap and we WANT to capture
+# runner/environment variation over time. Each point is keyed by a full datetime, so the
+# schedule can be sped up or slowed down freely — the dashboard's time axis just gets
+# denser or sparser. Retention is age-based (see track.py), independent of cadence.
+#
+# Outputs of the report job:
+#   * a Markdown dashboard in the run summary (time + allocations, per OS);
+#   * `perf-dashboard` artifact: a self-contained interactive HTML page (time + alloc +
+#     size) with the data embedded — download it (incl. from any PR run) and open it;
+#   * the `agent` artifact (uploaded on every run for preview) that persist-aw-data
+#     commits to `aw-data` — but only for runs on main — as benchmarks/index.json, which
+#     the live dashboard template loads directly.
+#
+# Feed policy: the committed nuget.config is dnceng dotnet-public + EAP (NO nuget.org).
+# Released baselines whose exact version is not on dotnet-public are restored by
+# injecting nuget.org into a RUNTIME-ONLY nuget.config on the released legs (never
+# committed), so the internal build system's config scan stays clean.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"  # Every 6h (00/06/12/18 UTC); tune freely
+  workflow_dispatch:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  # Per-ref so PRs/branches run independently; a new commit cancels the in-flight run.
+  group: track-benchmarks-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  DATA_BRANCH: aw-data
+
+jobs:
+  resolve:
+    if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.resolve.outputs.versions }}
+      roles: ${{ steps.resolve.outputs.roles }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Resolve version roles
+        id: resolve
+        run: |
+          versions=$(python3 scripts/infra/perf/benchmarks/resolve_versions.py)
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
+          # Only schedule the roles that actually resolved (a brand-new major may have no
+          # prev-stable/prev-major yet), so no leg ever runs with an empty version.
+          echo "roles=$(echo "$versions" | jq -c 'keys')" >> "$GITHUB_OUTPUT"
+
+  benchmark:
+    needs: resolve
+    if: github.repository_owner == 'mono'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        role: ${{ fromJSON(needs.resolve.outputs.roles) }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    env:
+      PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set leg variables
+        run: |
+          echo "LABEL=${{ runner.os }}" >> "$GITHUB_ENV"
+          echo "HISTORY=benchmarks-${{ runner.os }}-${{ matrix.role }}.json" >> "$GITHUB_ENV"
+          echo "VERSION=${{ fromJSON(needs.resolve.outputs.versions)[matrix.role] }}" >> "$GITHUB_ENV"
+
+      - name: Restore history from data branch
+        # Extract this leg's slice from the merged summary on the aw-data branch (public
+        # raw URL, no auth). Missing (first run / new leg) is fine — the freshness check
+        # then decides to run.
+        run: |
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/benchmarks/index.json"
+          if curl -fsSL "$url" -o merged-index.json; then
+            LEG="${{ runner.os }}|${{ matrix.role }}" python3 - <<'PY'
+          import json, os
+          leg = os.environ["LEG"]
+          idx = json.load(open("merged-index.json"))
+          doc = (idx.get("legs") or {}).get(leg)
+          if doc:
+              json.dump(doc, open(os.environ["HISTORY"], "w"))
+              print(f"restored slice {leg}")
+          else:
+              print(f"no slice {leg} in index.json (fresh start)")
+          PY
+          else
+            echo "no index.json on $DATA_BRANCH (fresh start)"
+          fi
+          [ -f "$HISTORY" ] || echo "(starting fresh)"
+
+      - name: Install Linux native dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfontconfig1
+
+      - name: Inject nuget.org for released baseline (runtime-only)
+        if: matrix.role != 'nightly'
+        run: |
+          cat > "$PROJECT/nuget.config" <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          EOF
+
+      - name: Pin version
+        run: |
+          python3 scripts/infra/perf/benchmarks/write_version_props.py "$VERSION" "$PROJECT/version.props"
+
+      - name: Run benchmarks
+        working-directory: ${{ env.PROJECT }}
+        run: dotnet run -c Release -- --filter '*'
+
+      - name: Record results
+        run: |
+          python3 scripts/infra/perf/benchmarks/track.py \
+            --history "$HISTORY" \
+            --os "$LABEL" \
+            --role "${{ matrix.role }}" \
+            --version "$VERSION"
+
+      - name: Upload history artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ runner.os }}-${{ matrix.role }}
+          path: ${{ env.HISTORY }}
+          if-no-files-found: warn
+
+      - name: Upload raw BDN reports
+        # The full BenchmarkDotNet report(s) for this leg — archived per run by the
+        # report job (raw/<date>/<OS>-<role>/) so we can re-summarise later. The raw
+        # archive is a persistence concern, so keep it main-only; PR `agent` artifacts
+        # carry just the summary index.json (the raw loop simply finds nothing).
+        if: github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rawbench-${{ runner.os }}-${{ matrix.role }}
+          path: ${{ env.PROJECT }}/BenchmarkDotNet.Artifacts/results/*-report-full.json
+          if-no-files-found: ignore
+
+  # "this PR / this branch" column: a source build of SkiaSharp benchmarked against the
+  # baselines on ALL THREE desktop OSes, so this branch's changes show up in the ⭐ column.
+  #
+  # PR_NATIVE_SOURCE_BUILD (see the job env below) selects how the native is obtained:
+  # "auto" (default) builds libSkiaSharp from source only when the native inputs changed
+  # vs main (per repo-deps.py), otherwise downloads the prebuilt nightly natives; "true"
+  # always builds from source; "false" always downloads. Each leg is isolated + best-effort
+  # so it can never turn the run red. PR data is fresh each run (single day, labelled by
+  # PR/branch) and is NOT persisted to the data branch.
+  benchmark-source:
+    needs: resolve
+    # The ⭐ source column is only meaningful for pre-merge comparison, and it is dropped
+    # from persisted history (--drop-role pr), so run it on PRs only — never on the nightly
+    # schedule (the published "nightly" baseline already tracks main's source one build
+    # behind) and never on manual dispatch, so `workflow_dispatch` behaves exactly like the
+    # cron: an on-demand nightly run, just the persisted baselines.
+    if: >
+      github.repository_owner == 'mono' &&
+      github.event_name == 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: Linux
+            nativeJob: native/linux
+          - os: macos-latest
+            label: macOS
+            nativeJob: native/macos
+          - os: windows-latest
+            label: Windows
+            nativeJob: native/windows
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 150
+    continue-on-error: true
+    env:
+      PROJECT: benchmarks/SkiaSharp.Benchmarks.Tracking.Source
+      # Skip the emscripten activation git-sync-deps does by default — the desktop
+      # native builds don't need it (Linux runs in Docker and is unaffected).
+      GIT_SYNC_DEPS_SKIP_EMSDK: "1"
+      # How to obtain the native for the PR column:
+      #   auto  (default) — build from source ONLY if the native inputs changed vs main
+      #          (externals/skia SHA or native scripts, per scripts/infra/caching/repo-deps.py);
+      #          otherwise download the prebuilt nightly natives. Fast when native is unchanged.
+      #   true   — always build from source.  false — always download.
+      PR_NATIVE_SOURCE_BUILD: "auto"
+    steps:
+      # Always check out the superproject without submodules (fast); the native submodules
+      # are initialized later only when we decide to build from source.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Decide native build mode
+        # In "auto" mode, compare the repo-deps.py native cache-key (native sources +
+        # externals/skia + depot_tools submodule SHAs) at HEAD vs main. Equal keys mean the
+        # native the download provides is byte-identical to what a source build would produce,
+        # so we skip the (expensive) native build. Reads submodule SHAs from git — no submodule
+        # checkout needed here.
+        #
+        # Use this leg's PER-PLATFORM child job (native/linux|macos|windows, from matrix.nativeJob)
+        # rather than the coarse parent `native`. The parent job's key only hashes
+        # scripts/infra/native/shared/** + the submodule SHAs; the per-platform build.cake files
+        # (native/<plat>/**, which hold extra_cflags) live in its CHILDREN and are invisible to
+        # the parent key. Using the parent key made a flag-only native change (e.g. adding a
+        # -D define to extra_cflags) look "unchanged", so the -pr column silently DOWNLOADED the
+        # define-OFF nightly instead of building this branch — a meaningless A/B. The child key is
+        # a strict superset of the parent (same shared files + submodules, plus native/<plat>/**),
+        # so flag-only native changes now correctly trigger the source build.
+        env:
+          NATIVE_JOB: ${{ matrix.nativeJob }}
+        run: |
+          mode="$PR_NATIVE_SOURCE_BUILD"
+          build=false
+          if [ "$mode" = "true" ]; then
+            build=true
+          elif [ "$mode" = "auto" ]; then
+            git fetch --no-tags --depth=1 origin main
+            keyhead=$(python3 scripts/infra/caching/repo-deps.py cache-key --job "$NATIVE_JOB" --name k | sed -n 's/^Key:[[:space:]]*//p')
+            git worktree add -q --detach "$RUNNER_TEMP/native-base" FETCH_HEAD
+            keybase=$(cd "$RUNNER_TEMP/native-base" && python3 scripts/infra/caching/repo-deps.py cache-key --job "$NATIVE_JOB" --name k | sed -n 's/^Key:[[:space:]]*//p')
+            git worktree remove --force "$RUNNER_TEMP/native-base"
+            echo "native job: $NATIVE_JOB"
+            echo "native key HEAD: $keyhead"
+            echo "native key main: $keybase"
+            [ -n "$keybase" ] && [ "$keyhead" != "$keybase" ] && build=true
+          fi
+          echo "NATIVE_BUILD=$build" >> "$GITHUB_ENV"
+          echo "native source build: $build (mode=$mode)"
+
+      - name: Initialize native submodules
+        if: env.NATIVE_BUILD == 'true'
+        run: git submodule update --init --recursive externals/skia externals/depot_tools
+
+      - name: Label this run
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [ -n "$PR_NUMBER" ]; then
+            echo "PR_LABEL=pr/$PR_NUMBER" >> "$GITHUB_ENV"
+          else
+            echo "PR_LABEL=$REF_NAME" >> "$GITHUB_ENV"
+          fi
+
+      - name: Download prebuilt natives (fast path)
+        if: env.NATIVE_BUILD != 'true'
+        # C#-only bootstrap: pulls the current-milestone (nightly) natives into
+        # output/native so the managed build + benchmarks can run without a native compile.
+        run: |
+          dotnet tool restore
+          dotnet cake --target=externals-download
+
+      - name: Build libSkiaSharp from source (Linux x64, Docker)
+        if: runner.os == 'Linux' && env.NATIVE_BUILD == 'true'
+        # Docker + cake, same pattern as build-site.yml's WASM build. Produces
+        # output/native/linux/x64/libSkiaSharp.so from THIS source.
+        run: |
+          sudo apt-get update && sudo apt-get install -y libfontconfig1
+          bash scripts/infra/native/linux/docker/glibc/build-local.sh x64
+          sudo chown -R "$(id -u):$(id -g)" output
+
+      - name: Build libSkiaSharp from source (macOS)
+        if: runner.os == 'macOS' && env.NATIVE_BUILD == 'true'
+        # Xcode (preinstalled) + Ninja. Ad-hoc codesigned; no identity needed.
+        # Produces output/native/osx/libSkiaSharp.dylib for the host arch.
+        run: |
+          dotnet tool restore
+          pwsh ./scripts/infra/native/shared/install-ninja.ps1
+          arch=$([ "$(uname -m)" = "arm64" ] && echo arm64 || echo x64)
+          dotnet cake --target=externals-macos --configuration=Release --arch=$arch
+
+      - name: Build libSkiaSharp from source (Windows x64)
+        if: runner.os == 'Windows' && env.NATIVE_BUILD == 'true'
+        shell: pwsh
+        # Visual Studio (preinstalled) + LLVM + Ninja, mirroring the AzDO Windows
+        # native job. Produces output/native/windows/x64/libSkiaSharp.dll.
+        # We invoke the native cake with target=libSkiaSharp (not externals-windows,
+        # which also builds libHarfBuzzSharp via a vcxproj pinned to an older Windows
+        # SDK that isn't on the runner). We only need libSkiaSharp here.
+        run: |
+          dotnet tool restore
+          ./scripts/infra/native/shared/install-ninja.ps1
+          ./scripts/infra/native/windows/select-vs.ps1
+          ./scripts/infra/native/windows/install-7zip.ps1
+          ./scripts/infra/native/windows/install-llvm.ps1
+          dotnet cake native/windows/build.cake --target=libSkiaSharp --configuration=Release --arch=x64
+
+      - name: Build SkiaSharp (managed, net10 only)
+        # AllTargetFrameworks=net10.0 drops SkiaSharp's platform TFMs (android/ios/...).
+        # BuildingInsideVisualStudio=true drops the SkiaSharp.NativeAssets.* project
+        # references, which on non-Linux hosts add -macos TFMs that would demand the
+        # 'macos' workload. We only need the managed SkiaSharp.dll here (native comes
+        # from output/native), so excluding those packaging projects is correct.
+        run: dotnet build binding/SkiaSharp/SkiaSharp.csproj -c Release -p:AllTargetFrameworks=net10.0 -p:BuildingInsideVisualStudio=true
+
+      - name: Build source benchmarks
+        run: dotnet build "$PROJECT" -c Release
+
+      - name: Run source benchmarks
+        working-directory: ${{ env.PROJECT }}
+        run: dotnet run -c Release --no-build -- --filter '*'
+
+      - name: Record results (pr)
+        run: |
+          python3 scripts/infra/perf/benchmarks/track.py \
+            --history "benchmarks-${{ matrix.label }}-pr.json" \
+            --os "${{ matrix.label }}" \
+            --role pr \
+            --version "$PR_LABEL"
+
+      - name: Upload history artifact (pr)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmarks-${{ matrix.label }}-pr
+          path: benchmarks-${{ matrix.label }}-pr.json
+          if-no-files-found: warn
+
+  report:
+    needs: [benchmark, benchmark-source]
+    if: always() && github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download all histories
+        uses: actions/download-artifact@v4
+        with:
+          path: histories
+          pattern: benchmarks-*
+          merge-multiple: true
+
+      - name: Download raw BDN reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: rawreports
+          pattern: rawbench-*
+
+      - name: Render Markdown dashboard (run summary)
+        run: python3 scripts/infra/perf/benchmarks/render_md.py histories
+
+      - name: Fetch sizes from data branch (for the unified dashboard)
+        run: |
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes/index.json"
+          curl -fsSL "$url" -o branch-sizes.json || echo "{}" > branch-sizes.json
+
+      - name: Build interactive HTML dashboard
+        # Self-contained snapshot: benchmarks (incl. the PR column) merged fresh, sizes
+        # pulled from the branch -> the same unified perf dashboard, for download.
+        run: |
+          mkdir -p out
+          python3 scripts/infra/perf/merge_summaries.py histories out/benchmarks.json
+          python3 scripts/infra/perf/render_html.py \
+            scripts/infra/perf/templates/dashboard.html out/dashboard.html \
+            out/benchmarks.json branch-sizes.json
+
+      - name: Upload HTML dashboard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-dashboard
+          path: out/dashboard.html
+          if-no-files-found: warn
+
+      - name: Assemble data for the aw-data branch
+        # Always build the payload (so PR runs can download the exact `agent` artifact and
+        # preview what would be persisted); the actual COMMIT to aw-data is gated to main
+        # in persist-aw-data.yml (workflow_run head_branch == main). Writes the merged
+        # summary (index.json, WITHOUT the ephemeral pr legs) and archives today's raw BDN
+        # reports (plain JSON, additive) under raw/<date>/<OS>-<role>/ — raw is only
+        # uploaded by the legs on main, so on PRs this is just index.json. The sentinel
+        # keeps the artifact's least-common-ancestor at aw-upload/, preserving the agent/ prefix.
+        run: |
+          mkdir -p aw-upload/agent/benchmarks
+          touch aw-upload/.artifact-root
+          python3 scripts/infra/perf/merge_summaries.py histories \
+            aw-upload/agent/benchmarks/index.json --drop-role pr
+          date="$(date -u +%F)"
+          for d in rawreports/rawbench-*; do
+            [ -d "$d" ] || continue
+            leg="${d##*/rawbench-}"
+            mkdir -p "aw-upload/agent/benchmarks/raw/$date/$leg"
+            for f in "$d"/*.json; do
+              [ -f "$f" ] && cp "$f" "aw-upload/agent/benchmarks/raw/$date/$leg/"
+            done
+          done
+
+      - name: Upload aw-data payload (agent)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent
+          path: aw-upload
+          if-no-files-found: warn
