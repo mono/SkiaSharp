@@ -13,7 +13,7 @@ namespace SkiaSharp
 	/// <see cref="SKGraphiteSubmitInfo.Sync"/> = true; drive readbacks through
 	/// <see cref="SKGraphiteContext.CheckAsyncWorkCompletion"/>.
 	/// </summary>
-	public unsafe class SKGraphiteDawnBackendContext
+	public unsafe class SKGraphiteDawnBackendContext : IDisposable
 	{
 		private static readonly OSPlatform Browser = OSPlatform.Create ("BROWSER");
 
@@ -46,6 +46,16 @@ namespace SkiaSharp
 				Queue       = (void*)WgpuQueue,
 				NonYielding = IsNonYielding,
 			};
+		}
+
+		protected virtual void Dispose (bool disposing)
+		{
+		}
+
+		public void Dispose ()
+		{
+			Dispose (disposing: true);
+			GC.SuppressFinalize (this);
 		}
 	}
 }

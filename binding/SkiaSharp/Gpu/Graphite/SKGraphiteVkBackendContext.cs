@@ -15,7 +15,7 @@ namespace SkiaSharp
 	/// Graphite Vulkan context. The Vulkan handles are never freed by SkiaSharp — caller
 	/// retains ownership for the lifetime of the resulting <see cref="SKGraphiteContext"/>.
 	/// </summary>
-	public sealed unsafe class SKGraphiteVkBackendContext : IDisposable
+	public unsafe class SKGraphiteVkBackendContext : IDisposable
 	{
 		private SKGraphiteVkGetProcedureAddressDelegate getProc;
 		private GCHandle getProcHandle;

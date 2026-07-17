@@ -282,7 +282,7 @@ namespace SkiaSharp
 			(sk_graphite_backend_texture_is_valid_delegate ??= GetSymbol<Delegates.sk_graphite_backend_texture_is_valid> ("sk_graphite_backend_texture_is_valid")).Invoke (tex);
 		#endif
 
-		// void sk_graphite_context_async_rescale_and_read_pixels_surface(sk_graphite_context_t* context, const sk_surface_t* surface, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_graphite_rescale_gamma_t rescaleGamma, sk_graphite_rescale_mode_t rescaleMode, sk_graphite_async_read_pixels_proc_t callback, void* callbackContext)
+		// void sk_graphite_context_async_rescale_and_read_pixels_surface(sk_graphite_context_t* context, const sk_surface_t* surface, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_graphite_rescale_gamma_t rescaleGamma, sk_graphite_rescale_mode_t rescaleMode, sk_graphite_async_read_pixels_proc callback, void* callbackContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -652,7 +652,7 @@ namespace SkiaSharp
 			(sk_graphite_image_provider_delete_delegate ??= GetSymbol<Delegates.sk_graphite_image_provider_delete> ("sk_graphite_image_provider_delete")).Invoke (provider);
 		#endif
 
-		// sk_graphite_image_provider_t* sk_graphite_image_provider_new(sk_graphite_image_provider_proc_t proc, void* userData)
+		// sk_graphite_image_provider_t* sk_graphite_image_provider_new(sk_graphite_image_provider_proc proc, void* userData)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -671,7 +671,7 @@ namespace SkiaSharp
 			(sk_graphite_image_provider_new_delegate ??= GetSymbol<Delegates.sk_graphite_image_provider_new> ("sk_graphite_image_provider_new")).Invoke (proc, userData);
 		#endif
 
-		// sk_image_t* sk_graphite_image_wrap_texture(sk_graphite_recorder_t* recorder, const sk_graphite_backend_texture_t* backendTexture, sk_colortype_t colorType, sk_alphatype_t alphaType, sk_colorspace_t* colorSpace, sk_graphite_release_proc_t releaseProc, void* releaseContext)
+		// sk_image_t* sk_graphite_image_wrap_texture(sk_graphite_recorder_t* recorder, const sk_graphite_backend_texture_t* backendTexture, sk_colortype_t colorType, sk_alphatype_t alphaType, sk_colorspace_t* colorSpace, sk_graphite_release_proc releaseProc, void* releaseContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -842,7 +842,7 @@ namespace SkiaSharp
 			(sk_graphite_surface_make_render_target_delegate ??= GetSymbol<Delegates.sk_graphite_surface_make_render_target> ("sk_graphite_surface_make_render_target")).Invoke (recorder, info, mipmapped, props);
 		#endif
 
-		// sk_surface_t* sk_graphite_surface_wrap_backend_texture(sk_graphite_recorder_t* recorder, const sk_graphite_backend_texture_t* backendTexture, sk_colortype_t colorType, sk_colorspace_t* colorSpace, const sk_surfaceprops_t* props, sk_graphite_release_proc_t releaseProc, void* releaseContext)
+		// sk_surface_t* sk_graphite_surface_wrap_backend_texture(sk_graphite_recorder_t* recorder, const sk_graphite_backend_texture_t* backendTexture, sk_colortype_t colorType, sk_colorspace_t* colorSpace, const sk_surfaceprops_t* props, sk_graphite_release_proc releaseProc, void* releaseContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -18703,15 +18703,15 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
-	// typedef void (*)(void* callbackContext, const sk_graphite_async_read_result_t* result)* sk_graphite_async_read_pixels_proc_t
+	// typedef void (*)(void* callbackContext, const sk_graphite_async_read_result_t* result)* sk_graphite_async_read_pixels_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteAsyncReadPixelsProxyDelegate(void* callbackContext, sk_graphite_async_read_result_t result);
 
-	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)* sk_graphite_image_provider_proc_t
+	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)* sk_graphite_image_provider_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
 
-	// typedef void (*)(void* releaseContext)* sk_graphite_release_proc_t
+	// typedef void (*)(void* releaseContext)* sk_graphite_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteReleaseProxyDelegate(void* releaseContext);
 
@@ -18719,7 +18719,7 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteVkFuncPtr();
 
-	// typedef sk_graphite_vk_func_ptr (*)(void* userData, const char* name, vk_instance_t* instance, vk_device_t* device)* sk_graphite_vk_get_proc_t
+	// typedef sk_graphite_vk_func_ptr (*)(void* userData, const char* name, vk_instance_t* instance, vk_device_t* device)* sk_graphite_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr SKGraphiteVkGetProxyDelegate(void* userData, /* char */ void* name, vk_instance_t instance, vk_device_t device);
 
@@ -20761,7 +20761,7 @@ namespace SkiaSharp {
 		// public uint32_t fMaxAPIVersion
 		public UInt32 fMaxAPIVersion;
 
-		// public sk_graphite_vk_get_proc_t fGetProc
+		// public sk_graphite_vk_get_proc fGetProc
 #if USE_LIBRARY_IMPORT
 		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> fGetProc;
 #else
@@ -23238,7 +23238,7 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
 
-	/// Proxy for sk_graphite_async_read_pixels_proc_t native function.
+	/// Proxy for sk_graphite_async_read_pixels_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_async_read_result_t, void> SKGraphiteAsyncReadPixelsProxy = &SKGraphiteAsyncReadPixelsProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
@@ -23248,7 +23248,7 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial void SKGraphiteAsyncReadPixelsProxyImplementation(void* callbackContext,sk_graphite_async_read_result_t result);
 
-	/// Proxy for sk_graphite_image_provider_proc_t native function.
+	/// Proxy for sk_graphite_image_provider_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, bool, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
@@ -23258,7 +23258,7 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial sk_image_t SKGraphiteImageProviderProxyImplementation(void* userData,sk_graphite_recorder_t recorder,sk_image_t image,[MarshalAs (UnmanagedType.I1)] bool mipmapped);
 
-	/// Proxy for sk_graphite_release_proc_t native function.
+	/// Proxy for sk_graphite_release_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, void> SKGraphiteReleaseProxy = &SKGraphiteReleaseProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
@@ -23268,7 +23268,7 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial void SKGraphiteReleaseProxyImplementation(void* releaseContext);
 
-	/// Proxy for sk_graphite_vk_get_proc_t native function.
+	/// Proxy for sk_graphite_vk_get_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> SKGraphiteVkGetProxy = &SKGraphiteVkGetProxyImplementation;
 	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
