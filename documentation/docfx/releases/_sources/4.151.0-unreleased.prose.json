@@ -1,6 +1,6 @@
 {
-  "theme": "m151 engine sync and fixes",
-  "highlights_headline": "Merges upstream Skia m151 bug fixes and resolves a native resource leak in SKImage.",
+  "theme": "Active development",
+  "highlights_headline": "SkiaSharp 4.151.0-unreleased tracks ongoing work not yet shipped in a preview.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
@@ -8,19 +8,9 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Upstream Skia m151 bug fixes merged",
-          "detail": "Pulls in the latest chrome/m151 upstream bug fixes, keeping the bundled renderer aligned with the Chromium milestone 151 branch.",
-          "prs": [4443]
-        }
-      ]
-    },
-    {
-      "heading": "Bug Fixes",
-      "bullets": [
-        {
-          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "Calling SKImage.FromEncodedData with an SKRectI subset no longer leaks the underlying native image handle when the subset operation fails or the result is discarded.",
-          "prs": [3997]
+          "lead": "CPU raster shader context restored",
+          "detail": "Re-enables SK_ENABLE_LEGACY_SHADERCONTEXT in the native build to fix a CPU raster rendering regression introduced in an earlier configuration change.",
+          "prs": [4428]
         }
       ]
     }
