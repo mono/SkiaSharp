@@ -145,6 +145,8 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(1337, first);
 				Assert.Equal(7331, second);
 			}
+		}
+
 		[Fact]
 		public void BufferUnicodeFunctionsGetterDoesNotOwnBorrowedHandle()
 		{
