@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.CompilerServices;
 using Xunit;
 
@@ -17,16 +16,21 @@ namespace SkiaSharp.Tests
 			return f;
 		}
 
+		// BitConverter.SingleToInt32Bits is not available on .NET Framework (net48), so
+		// reinterpret the raw float bits directly. This is bit-identical on every runtime
+		// and keeps the equivalence checks exact rather than tolerance-based.
+		private static unsafe int SingleToBits (float value) => *(int*)&value;
+
 		private static void AssertBitExact (SKColor src)
 		{
 			var native = NativeFromColor (src);
 			SKColorF managed = src; // managed implicit operator under test
 
 			Assert.True (
-				BitConverter.SingleToInt32Bits (native.Red) == BitConverter.SingleToInt32Bits (managed.Red) &&
-				BitConverter.SingleToInt32Bits (native.Green) == BitConverter.SingleToInt32Bits (managed.Green) &&
-				BitConverter.SingleToInt32Bits (native.Blue) == BitConverter.SingleToInt32Bits (managed.Blue) &&
-				BitConverter.SingleToInt32Bits (native.Alpha) == BitConverter.SingleToInt32Bits (managed.Alpha),
+				SingleToBits (native.Red) == SingleToBits (managed.Red) &&
+				SingleToBits (native.Green) == SingleToBits (managed.Green) &&
+				SingleToBits (native.Blue) == SingleToBits (managed.Blue) &&
+				SingleToBits (native.Alpha) == SingleToBits (managed.Alpha),
 				$"SKColor {src}: managed ({managed.Red:R},{managed.Green:R},{managed.Blue:R},{managed.Alpha:R}) " +
 				$"!= native ({native.Red:R},{native.Green:R},{native.Blue:R},{native.Alpha:R})");
 		}
@@ -78,15 +82,15 @@ namespace SkiaSharp.Tests
 			var native = NativeFromColor (src);
 			var swapped = new SKColorF (native.Blue, native.Green, native.Red, native.Alpha);
 			Assert.NotEqual (
-				BitConverter.SingleToInt32Bits (native.Red),
-				BitConverter.SingleToInt32Bits (swapped.Red));
+				SingleToBits (native.Red),
+				SingleToBits (swapped.Red));
 
 			// (b) A naive divide-by-255 differs from the native *(1/255) scale at some
 			// inputs (e.g. 127), confirming the exact formula matters.
 			var grayNative = NativeFromColor (new SKColor (127, 127, 127, 127));
 			Assert.NotEqual (
-				BitConverter.SingleToInt32Bits (grayNative.Red),
-				BitConverter.SingleToInt32Bits (NaiveDivide (127)));
+				SingleToBits (grayNative.Red),
+				SingleToBits (NaiveDivide (127)));
 		}
 	}
 }
