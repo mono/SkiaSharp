@@ -1,0 +1,133 @@
+{
+  "theme": "Metal, WinUI, and .NET 5",
+  "highlights_headline": "SkiaSharp 2.80.3 adds Metal for macOS and iOS, WinUI support (including Desktop), .NET 5 targeting, and SKRuntimeEffect for GPU shaders.",
+  "highlights_body": "Metal joins Vulkan as a first-class GPU backend, WinUI gets its own views (Desktop included), and the whole stack moves to .NET 5. New APIs include SKRuntimeEffect for authoring GPU shaders, SKPicture serialization, Exif SubIFD reading, and GRContextOptions. Musl systems are now properly detected so the right native library is loaded on Alpine and similar distros.",
+  "breaking": [
+    {
+      "title": "SKXamlCanvas base type on Uno changed from FrameworkElement to Canvas",
+      "body": "As part of adding SKXamlCanvas support to the Uno backend, the control's base type moved from Windows.UI.Xaml.FrameworkElement to Windows.UI.Xaml.Controls.Canvas. Code that assumed a FrameworkElement base (custom XAML that reparents or casts the control) needs to be updated to work with a Canvas.",
+      "prs": [1704]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Metal for macOS and iOS",
+          "detail": "Metal is now a supported GPU backend, with matching managed APIs and consistency work across the metal, GL, and Vulkan surfaces.",
+          "prs": [1394, 1598, 1615]
+        },
+        {
+          "lead": "WinUI support, including Desktop",
+          "detail": "Adds WinUI views for Uno Platform and a WinUI-for-Desktop backend, updated to WinUI 0.8.0.",
+          "prs": [1704, 1696, 1741]
+        },
+        {
+          "lead": "SKRuntimeEffect for GPU shaders",
+          "detail": "Introduces the SKRuntimeEffect API for authoring and running GPU runtime effects (SkSL shaders) from managed code.",
+          "prs": [1604]
+        },
+        {
+          "lead": "SKPicture serialization and Exif SubIFD",
+          "detail": "Adds bindings to serialize and deserialize SKPicture, and support for reading the Exif SubIFD block from encoded images.",
+          "prs": [1514, 1518]
+        },
+        {
+          "lead": "GRContextOptions and GPU diagnostics",
+          "detail": "Exposes GRContextOptions for tuning GPU context creation, plus IsAbandoned on GR contexts for lifecycle checks.",
+          "prs": [1529, 1659]
+        },
+        {
+          "lead": "ANGLE GRGlInterface",
+          "detail": "Lets callers create a GRGlInterface backed by ANGLE, useful for D3D-backed GL on Windows.",
+          "prs": [1519]
+        },
+        {
+          "lead": ".NET Interactive support",
+          "detail": "Adds a .NET Interactive integration so SkiaSharp images render inline in notebooks.",
+          "prs": [1710]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "GL surface creation, resize, and read-back",
+          "detail": "Avoids issues when GL surface creation fails, swaps buffers correctly after a resize, and makes sure image pixel reads return the right bytes.",
+          "prs": [1642, 1668, 1636]
+        },
+        {
+          "lead": "SKMatrix.IsInvertible no longer crashes",
+          "detail": "Guards SKMatrix.IsInvertible against inputs that used to crash the runtime.",
+          "prs": [1527]
+        },
+        {
+          "lead": "WPF SKElement respects PresentationSource",
+          "detail": "SKElement.OnRender is now a no-op when the element has no PresentationSource, avoiding exceptions during teardown.",
+          "prs": [1606]
+        },
+        {
+          "lead": "iOS font loading and display links",
+          "detail": "Loads bundled fonts correctly on iOS and makes the display link paths more defensive against teardown races.",
+          "prs": [1539, 1620]
+        },
+        {
+          "lead": "Stream copies no longer allocate",
+          "detail": "Copying between streams no longer allocates intermediate arrays, cutting GC pressure on image decode paths.",
+          "prs": [1510]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": ".NET 5 targeting",
+          "detail": "SkiaSharp now targets .NET 5, alongside its existing target frameworks.",
+          "prs": [1697]
+        },
+        {
+          "lead": "Musl (Alpine) detection",
+          "detail": "The native loader now properly detects musl-based systems and picks the correct libSkiaSharp variant.",
+          "prs": [1657]
+        },
+        {
+          "lead": "WASM: all Emscripten versions bundled",
+          "detail": "Ships every supported Emscripten build of libSkiaSharp so WASM consumers pick up the right ABI.",
+          "prs": [1590]
+        },
+        {
+          "lead": "Uno Platform 3.0",
+          "detail": "Updates the Uno Platform integration to v3.0.",
+          "prs": [1489]
+        },
+        {
+          "lead": "Android and iOS surface refactors",
+          "detail": "Refactors the Android surface factory and shores up the metal paths on iOS.",
+          "prs": [1617, 1615]
+        },
+        {
+          "lead": "Split native packages",
+          "detail": "Native binaries are split into smaller packages so consumers download only what they need.",
+          "prs": [1660]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "gmurray81": "Made GL surface creation more resilient when the underlying context fails",
+    "HarlanHugh": "Fixed SKElement.OnRender to no-op when there is no WPF PresentationSource",
+    "jeromelaban": "Added Uno Platform references to the docs",
+    "Mikolaytis": "Added support for creating a GRGlInterface backed by ANGLE"
+  },
+  "preview_summaries": {
+    "v2.80.3-preview.93": "Preview 93 landed WinUI 0.8.0, .NET Interactive support, and further Uno updates.",
+    "v2.80.3-preview.90": "Preview 90 added musl detection, WinUI-for-Desktop, and moved the stack to .NET 5.",
+    "v2.80.3-preview.40": "Preview 40 introduced SKRuntimeEffect, GRContextOptions, IsAbandoned, and the split native packages.",
+    "v2.80.3-preview.24": "Preview 24 merged the Metal APIs into the main branch and improved consistency across GPU backends.",
+    "v2.80.3-preview.18": "Preview 18 added Exif SubIFD reading, SKPicture serialization, ANGLE GRGlInterface, iOS font loading, and Uno Platform 3.0."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 2.6.1.8 picks up the musl detection, the emscripten-versioned WASM builds, VS 2013 support, and generated HarfBuzz interop that landed in this release."
+}

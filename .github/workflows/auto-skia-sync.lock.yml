@@ -1,4 +1,4 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"fb2388bb266b109c5727d03cc4df6bff13263ccfd846bd1114b7e697d96e957b","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.7"}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"4d32e51a9e0bdb75f3ac5dd76c986d40b98d171fbe18dc9df900fc2b805d7791","compiler_version":"v0.71.5","strict":true,"agent_id":"copilot","agent_model":"claude-opus-4.7"}
 # gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN","SKIASHARP_AUTOBUMP_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"34e114876b0b11c390a56381ad16ebd13914f8d5","version":"v4"},{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"b8068426813005612b960b5ab0b8bd2c27142323","version":"v0.71.5"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40","digest":"sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.25.40@sha256:14ff567e8d9d4c2fbc5e55c973488381c71d7e0fdbe72d30ee7b8a738fd86504"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40","digest":"sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.40@sha256:2883ca3e5ae9f330cafdd9345bfd4ae17fc8da36c96d4c9a1f76e922b4c45280"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40","digest":"sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.25.40@sha256:b084f4a2c771f584ee68084ced52fa6b3245197a1889645d817462d307d3ac51"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.6","digest":"sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.6@sha256:2bb8eef86006a4c5963c55616a9c51c32f27bfdecb023b8aa6f91f6718d9171c"},{"image":"ghcr.io/github/github-mcp-server:v1.0.3","digest":"sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.3@sha256:2ac27ef03461ef2b877031b838a7d1fd7f12b12d4ace7796d8cad91446d55959"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
@@ -55,9 +55,7 @@
 name: "Sync - Skia Upstream"
 "on":
   schedule:
-  - cron: "0 7 * * *"
-  - cron: "0 12 * * *"
-  - cron: "0 17 * * *"
+  - cron: "0 */6 * * *"
   # steps: # Steps injected into pre-activation job
   # - name: Check out detection scripts
     # uses: actions/checkout@v4
@@ -65,15 +63,10 @@ name: "Sync - Skia Upstream"
       # sparse-checkout: .github/scripts
   # - env:
       # GH_TOKEN: ${{ github.token }}
-      # MILESTONE: ${{ github.event.inputs.milestone }}
-      # MODE: |-
-        # ${{ github.event.inputs.mode
-            # || (github.event.schedule == '0 7 * * *' && 'current')
-            # || (github.event.schedule == '0 17 * * *' && 'latest')
-            # || 'next' }}
+      # SYNC_TARGET: ${{ github.event.inputs.target }}
     # id: detect
     # name: Detect milestone
-    # run: bash .github/scripts/skia-sync-detect.sh --gate --mode "$MODE" --milestone "$MILESTONE"
+    # run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET"
   workflow_dispatch:
     inputs:
       aw_context:
@@ -81,26 +74,16 @@ name: "Sync - Skia Upstream"
         description: Agent caller context (used internally by Agentic Workflows).
         required: false
         type: string
-      milestone:
-        description: Exact milestone number (e.g. 148) — overrides mode if set
+      target:
+        description: What to sync. Empty = rotate over the supported versions.json lines (the scheduled default). Or a milestone number (e.g. 151), or `main` for the very tip of upstream Skia (google/skia main HEAD — bleeding edge, NOT a version bump).
         required: false
         type: string
-      mode:
-        default: next
-        description: Which milestone to track. `main` syncs the very tip of upstream Skia (google/skia main HEAD) — dispatch-only, bleeding edge, NOT a version bump.
-        options:
-        - current
-        - next
-        - latest
-        - main
-        required: false
-        type: choice
 
 permissions: {}
 
 concurrency:
   cancel-in-progress: true
-  group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
 
 run-name: "Sync - Skia Upstream"
 
@@ -236,23 +219,23 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_011236f10bc2c8a3_EOF'
+          cat << 'GH_AW_PROMPT_98d682d7e7519a45_EOF'
           <system>
-          GH_AW_PROMPT_011236f10bc2c8a3_EOF
+          GH_AW_PROMPT_98d682d7e7519a45_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_011236f10bc2c8a3_EOF'
+          cat << 'GH_AW_PROMPT_98d682d7e7519a45_EOF'
           <safe-output-tools>
           Tools: create_pull_request, missing_tool, missing_data, noop
-          GH_AW_PROMPT_011236f10bc2c8a3_EOF
+          GH_AW_PROMPT_98d682d7e7519a45_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_create_pull_request.md"
-          cat << 'GH_AW_PROMPT_011236f10bc2c8a3_EOF'
+          cat << 'GH_AW_PROMPT_98d682d7e7519a45_EOF'
           </safe-output-tools>
-          GH_AW_PROMPT_011236f10bc2c8a3_EOF
+          GH_AW_PROMPT_98d682d7e7519a45_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_011236f10bc2c8a3_EOF'
+          cat << 'GH_AW_PROMPT_98d682d7e7519a45_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if __GH_AW_GITHUB_ACTOR__ }}
@@ -284,12 +267,12 @@ jobs:
             - **Note**: If a branch you need is not in the list above and is not listed as an additional fetched ref, it has NOT been checked out. For private repositories you cannot fetch it without proper authentication. If the branch is required and not available, exit with an error and ask the user to add it to the `fetch:` option of the `checkout:` configuration (e.g., `fetch: ["refs/pulls/open/*"]` for all open PR refs, or `fetch: ["main", "feature/my-branch"]` for specific branches).
           </github-context>
           
-          GH_AW_PROMPT_011236f10bc2c8a3_EOF
+          GH_AW_PROMPT_98d682d7e7519a45_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_011236f10bc2c8a3_EOF'
+          cat << 'GH_AW_PROMPT_98d682d7e7519a45_EOF'
           </system>
           {{#runtime-import .github/workflows/auto-skia-sync.md}}
-          GH_AW_PROMPT_011236f10bc2c8a3_EOF
+          GH_AW_PROMPT_98d682d7e7519a45_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -463,7 +446,7 @@ jobs:
       - name: Align submodule to the base branch
         run: |
           OUT=$(mktemp)
-          SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --mode "$MODE" --milestone "$MILESTONE"
+          SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET"
           set -a; . "$OUT"; set +a
           bash .github/scripts/skia-sync-align-submodule.sh
         env:
@@ -472,13 +455,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_API_URL: https://localhost:18443/api/v3
           GITHUB_GRAPHQL_URL: https://localhost:18443/api/graphql
-          MILESTONE: ${{ github.event.inputs.milestone }}
-          MODE: |-
-            ${{ github.event.inputs.mode
-                || (github.event.schedule == '0 7 * * *' && 'current')
-                || (github.event.schedule == '0 17 * * *' && 'latest')
-                || 'next' }}
           NODE_EXTRA_CA_CERTS: /tmp/gh-aw/proxy-logs/proxy-tls/ca.crt
+          SYNC_TARGET: ${{ github.event.inputs.target }}
       - name: Copy push script for post-step
         run: cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
         env:
@@ -558,9 +536,9 @@ jobs:
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_1c0d66bd1e4f6d52_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_4164d86e84e0ab14_EOF'
           {"create_pull_request":{"if_no_changes":"ignore","max":1,"max_patch_files":100,"max_patch_size":1024,"protect_top_level_dot_folders":true,"protected_files":["package.json","bun.lockb","bunfig.toml","deno.json","deno.jsonc","deno.lock","global.json","NuGet.Config","Directory.Packages.props","mix.exs","mix.lock","go.mod","go.sum","stack.yaml","stack.yaml.lock","pom.xml","build.gradle","build.gradle.kts","settings.gradle","settings.gradle.kts","gradle.properties","package-lock.json","yarn.lock","pnpm-lock.yaml","npm-shrinkwrap.json","requirements.txt","Pipfile","Pipfile.lock","pyproject.toml","setup.py","setup.cfg","Gemfile","Gemfile.lock","uv.lock","CODEOWNERS","DESIGN.md","README.md","CONTRIBUTING.md","CHANGELOG.md","SECURITY.md","CODE_OF_CONDUCT.md","AGENTS.md","CLAUDE.md","GEMINI.md"],"staged":true},"create_report_incomplete_issue":{},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"false"},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_1c0d66bd1e4f6d52_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_4164d86e84e0ab14_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -766,7 +744,7 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_46ab8df01cc8e83e_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_38116be08e821048_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
               "github": {
@@ -814,7 +792,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_46ab8df01cc8e83e_EOF
+          GH_AW_MCP_CONFIG_38116be08e821048_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -1381,10 +1359,8 @@ jobs:
       detect_result: ${{ steps.detect.outcome }}
       head_branch: ${{ steps.detect.outputs.head_branch }}
       is_release: ${{ steps.detect.outputs.is_release }}
-      latest: ${{ steps.detect.outputs.latest }}
       matched_command: ''
       mode: ${{ steps.detect.outputs.mode }}
-      next: ${{ steps.detect.outputs.next }}
       setup-trace-id: ${{ steps.setup.outputs.trace-id }}
       skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
       skip: ${{ steps.detect.outputs.skip }}
@@ -1419,15 +1395,10 @@ jobs:
           sparse-checkout: .github/scripts
       - name: Detect milestone
         id: detect
-        run: bash .github/scripts/skia-sync-detect.sh --gate --mode "$MODE" --milestone "$MILESTONE"
+        run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET"
         env:
           GH_TOKEN: ${{ github.token }}
-          MILESTONE: ${{ github.event.inputs.milestone }}
-          MODE: |-
-            ${{ github.event.inputs.mode
-                || (github.event.schedule == '0 7 * * *' && 'current')
-                || (github.event.schedule == '0 17 * * *' && 'latest')
-                || 'next' }}
+          SYNC_TARGET: ${{ github.event.inputs.target }}
 
   safe_outputs:
     needs:

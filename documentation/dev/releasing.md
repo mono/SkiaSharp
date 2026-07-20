@@ -273,10 +273,8 @@ flowchart TB
     ∙ Mark pre-release if preview
     ∙ Attach samples if stable"]
     
-    RELEASE --> FINAL{Stable release?}
-    FINAL -->|No| DONE([Complete])
-    FINAL -->|Yes| MILESTONE[Close GitHub milestone]
-    MILESTONE --> DONE
+    RELEASE --> MILESTONE[Close this version's GitHub milestone]
+    MILESTONE --> DONE([Complete])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2

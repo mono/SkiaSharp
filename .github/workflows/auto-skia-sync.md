@@ -10,23 +10,17 @@ engine:
   model: claude-opus-4.7
 
 # -- Triggers ----------------------------------------------------------
-# Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
-# Manual dispatch with mode selector.
+# One cron every 6h (`0 */6 * * *` → 00/06/12/18 UTC). Scheduled runs pass no target,
+# so the detector ROTATES: it picks ONE supported line from versions.json per run,
+# round-robin (see .github/scripts/skia-sync-detect.sh / rotate_select). Manual dispatch
+# may pin a specific `target` (a milestone number, or `main` for the upstream tip).
 on:
   schedule:
-    - cron: "0 7 * * *"
-    - cron: "0 12 * * *"
-    - cron: "0 17 * * *"
+    - cron: "0 */6 * * *"
   workflow_dispatch:
     inputs:
-      mode:
-        description: "Which milestone to track. `main` syncs the very tip of upstream Skia (google/skia main HEAD) — dispatch-only, bleeding edge, NOT a version bump."
-        required: false
-        type: choice
-        default: next
-        options: [current, next, latest, main]
-      milestone:
-        description: "Exact milestone number (e.g. 148) — overrides mode if set"
+      target:
+        description: "What to sync. Empty = rotate over the supported versions.json lines (the scheduled default). Or a milestone number (e.g. 151), or `main` for the very tip of upstream Skia (google/skia main HEAD — bleeding edge, NOT a version bump)."
         required: false
         type: string
 
@@ -45,20 +39,16 @@ on:
         sparse-checkout: .github/scripts
     - name: Detect milestone
       id: detect
-      # The cron→mode mapping lives HERE, next to the cron declarations:
-      # 7 AM → current, 5 PM → latest, everything else (12 PM cron + the
-      # workflow_dispatch default) → next. Staged into env vars rather than
-      # interpolated straight into `run:`, so the free-form `milestone` input
-      # can't inject shell — the script consumes them as real --mode/--milestone args.
+      # Scheduled runs pass an empty target — the detector then ROTATES: it reads
+      # versions.json's `support` block and picks one supported line per run, round-robin
+      # by GITHUB_RUN_NUMBER (stable across jobs, so this gate and the agent-job align step
+      # resolve the SAME target). Manual dispatch passes a milestone number or `main`.
+      # Staged into an env var rather than interpolated into `run:`, so the free-form input
+      # can't inject shell — the script consumes it as a real --target arg.
       env:
-        MODE: >-
-          ${{ github.event.inputs.mode
-              || (github.event.schedule == '0 7 * * *' && 'current')
-              || (github.event.schedule == '0 17 * * *' && 'latest')
-              || 'next' }}
-        MILESTONE: ${{ github.event.inputs.milestone }}
+        SYNC_TARGET: ${{ github.event.inputs.target }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --gate --mode "$MODE" --milestone "$MILESTONE"
+      run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -67,8 +57,6 @@ jobs:
   pre-activation:
     outputs:
       current: ${{ steps.detect.outputs.current }}
-      next: ${{ steps.detect.outputs.next }}
-      latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
       upstream_ref: ${{ steps.detect.outputs.upstream_ref }}
       mode: ${{ steps.detect.outputs.mode }}
@@ -88,7 +76,7 @@ checkout:
     submodules: recursive
 timeout-minutes: 120
 concurrency:
-  group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 
 # -- Agent tools -----------------------------------------------------
@@ -164,21 +152,19 @@ steps:
     run: |
       mkdir -p /tmp/gh-aw/agent
   - name: Align submodule to the base branch
-    # Same cron→mode resolution as the pre_activation detect step (see there). The
-    # agent job can't read pre_activation's outputs (it only `needs:` activation), so
-    # re-run the same committed detector to recover base_branch / skia_base_branch,
-    # then align the submodule. skia-sync-detect.sh is the single source of truth.
+    # Same target resolution as the pre_activation detect step (see there). The agent job
+    # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
+    # same committed detector to recover base_branch / skia_base_branch, then align the
+    # submodule. For rotation runs (empty target) the detector picks the SAME line as
+    # pre_activation because the round-robin index is GITHUB_RUN_NUMBER (identical across
+    # jobs) and main's config is read at the immutable $GITHUB_SHA. skia-sync-detect.sh is
+    # the single source of truth.
     env:
-      MODE: >-
-        ${{ github.event.inputs.mode
-            || (github.event.schedule == '0 7 * * *' && 'current')
-            || (github.event.schedule == '0 17 * * *' && 'latest')
-            || 'next' }}
-      MILESTONE: ${{ github.event.inputs.milestone }}
+      SYNC_TARGET: ${{ github.event.inputs.target }}
       GH_TOKEN: ${{ github.token }}
     run: |
       OUT=$(mktemp)
-      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --mode "$MODE" --milestone "$MILESTONE"
+      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET"
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
   - name: Copy push script for post-step
@@ -262,6 +248,10 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **Phase 6 (version files)**: For a release-line sync (`is_release == true`, so `current == target`) this is a
   bug-fix-only sync — keep the release line's milestone/soname/nuget versions unchanged; the only expected
   parent-repo change is `cgmanifest.json`'s commit hash. Do NOT advance the milestone.
+  Pass the ref you actually merged to `update-versions.ps1` so `cgmanifest.json`'s `upstream_merge_commit`
+  resolves to a real SHA: **`-UpstreamRef "${{ needs.pre_activation.outputs.upstream_ref }}"`**
+  (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
+  `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,

@@ -407,6 +407,11 @@ cd ../..  # back to parent repo (Phase 5 ends inside externals/skia)
 pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
 ```
 
+> **Main-tip sync?** When Phase 5 merged `upstream/main` (not a `chrome/m{TARGET}` branch),
+> add `-UpstreamRef main` so `cgmanifest.json`'s `upstream_merge_commit` is resolved from the
+> ref you actually merged. Without it the script defaults to `upstream/chrome/m{TARGET}`, which
+> does not exist on a tip merge, and `upstream_merge_commit` is left `UNKNOWN` for you to set by hand.
+
 The script handles all of these (so you don't have to do them manually):
 - `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
 - `cgmanifest.json`: commitHash, version, chrome_milestone, upstream_merge_commit

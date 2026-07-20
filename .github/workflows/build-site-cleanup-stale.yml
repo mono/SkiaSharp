@@ -46,6 +46,48 @@ jobs:
             exit 0
           fi
 
+          # Open PRs whose staging is removed once inactive longer than this.
+          STALE_MAX_AGE_DAYS="${STALE_MAX_AGE_DAYS:-90}"
+          cutoff_epoch=$(date -u -d "${STALE_MAX_AGE_DAYS} days ago" +%s)
+          echo "Removing staging for closed/merged PRs, and open PRs inactive for more than ${STALE_MAX_AGE_DAYS} days"
+
+          # Decide whether a PR's staging folder should be swept.
+          #   returns 0 (stale) when the PR is CLOSED/MERGED, or OPEN but
+          #     inactive (last updated) for more than STALE_MAX_AGE_DAYS;
+          #   returns 1 (keep) when the PR is open and recent, or cannot be
+          #     resolved (deleted / transient API failure).
+          # Re-queried live so it stays correct if a PR becomes active mid-run.
+          is_stale() {
+            pr_number="$1"
+
+            # Query PR state and last-updated time via GitHub CLI
+            pr_json=$(gh pr view "$pr_number" \
+              --repo "$GITHUB_REPOSITORY" \
+              --json state,updatedAt 2>/dev/null || echo "")
+
+            # Keep the directory if the PR can't be resolved
+            if [ -z "$pr_json" ]; then
+              echo "PR #$pr_number — state: UNKNOWN (leaving in place)"
+              return 1
+            fi
+
+            pr_state=$(echo "$pr_json" | jq -r '.state')
+            pr_updated=$(echo "$pr_json" | jq -r '.updatedAt')
+            updated_epoch=$(date -u -d "$pr_updated" +%s)
+            age_days=$(( ($(date -u +%s) - updated_epoch) / 86400 ))
+
+            echo "PR #$pr_number — state: $pr_state, last updated: $pr_updated (${age_days}d ago)"
+
+            if [ "$pr_state" = "CLOSED" ] || [ "$pr_state" = "MERGED" ]; then
+              return 0
+            fi
+            if [ "$updated_epoch" -lt "$cutoff_epoch" ]; then
+              echo "  → open but inactive for more than ${STALE_MAX_AGE_DAYS} days, marking stale"
+              return 0
+            fi
+            return 1
+          }
+
           stale_dirs=()
 
           for dir in staging/*/; do
@@ -58,14 +100,7 @@ jobs:
               continue
             fi
 
-            # Query PR state via GitHub CLI
-            pr_state=$(gh pr view "$pr_number" \
-              --repo "$GITHUB_REPOSITORY" \
-              --json state --jq '.state' 2>/dev/null || echo "UNKNOWN")
-
-            echo "PR #$pr_number — state: $pr_state"
-
-            if [ "$pr_state" = "CLOSED" ] || [ "$pr_state" = "MERGED" ]; then
+            if is_stale "$pr_number"; then
               stale_dirs+=("staging/$pr_number")
             fi
           done
@@ -96,12 +131,19 @@ jobs:
               echo "Push failed (attempt $attempt), re-fetching and retrying..."
               git fetch --depth=1 origin docs-live
               git reset --hard origin/docs-live
-              # Re-check which dirs are still stale after re-fetch
+              # Re-check which dirs are still stale after re-fetch. Re-validate
+              # against the live PR state so a folder that became active again
+              # (open PR updated mid-run and redeployed) is not deleted.
               removed_any=false
               for d in "${stale_dirs[@]}"; do
-                if [ -d "$d" ]; then
+                if [ ! -d "$d" ]; then
+                  continue
+                fi
+                if is_stale "$(basename "$d")"; then
                   rm -rf "$d"
                   removed_any=true
+                else
+                  echo "  → $d no longer stale, leaving in place"
                 fi
               done
               if [ "$removed_any" = true ]; then
