@@ -188,40 +188,34 @@ namespace SkiaSharp
 			if (colorType == SKColorType.Unknown)
 				return false;
 
-			if (Width == 0 || Height == 0)
-				return false;
-
-			// To check if we can do a direct copy
-			// If a SKBitmap is created by ExtractSubset, its pixels may not be stored contiguously
-			// In most cases, des and src have the same Size and ColorType
-			int desWidth = destination.Width;
-			int desHeight = destination.Height;
-			if(desWidth==0||desHeight==0)
-				return false;
-			if (ColorType == destination.ColorType && ColorType == colorType) {
-				if (Width * Height * BytesPerPixel == ByteCount &&
-				    desWidth * desHeight * BytesPerPixel == destination.ByteCount) {
-					if (Width == desWidth) {
-						var des = destination.GetPixelSpan ();
-						var src = GetPixelSpan ();
-						if(Height<=desHeight) {
-							return src.TryCopyTo (des);
-						}
-						return src.Slice (0, des.Length).TryCopyTo (des);
+			// Fast path: when no color conversion is required and the destination is
+			// already allocated with the exact same image info as the source, copy the
+			// pixel memory directly instead of going through an SKCanvas. This produces a
+			// byte-identical result to the canvas-based path below, but avoids allocating
+			// a temporary bitmap, shader, paint and canvas.
+			//
+			// The copy is done row by row because the source may have a larger stride than
+			// the destination (for example when it was created via ExtractSubset and its
+			// pixels are not stored contiguously). Any other case (different size, alpha
+			// type, color space or a color type conversion) falls through to the original
+			// path below so the existing semantics are fully preserved.
+			if (colorType == ColorType && !ReferenceEquals (destination, this) && destination.Info == Info) {
+				var srcPixels = (byte*)GetPixels (out _);
+				var dstPixels = (byte*)destination.GetPixels (out _);
+				if (srcPixels != null && dstPixels != null) {
+					var height = Height;
+					var rowBytes = Info.RowBytes;
+					var srcStride = RowBytes;
+					var dstStride = destination.RowBytes;
+					for (var y = 0; y < height; y++) {
+						var src = new Span<byte> (srcPixels + (long)y * srcStride, rowBytes);
+						var dst = new Span<byte> (dstPixels + (long)y * dstStride, rowBytes);
+						src.CopyTo (dst);
 					}
+					GC.KeepAlive (this);
+					GC.KeepAlive (destination);
+					return true;
 				}
-				// Copy row by row
-				var rowBytes = Math.Min (RowBytes, destination.RowBytes);
-				var srcAddress = GetAddress (0, 0);
-				var desAddress = destination.GetAddress (0, 0);
-				var srcOriginalRowBytes = GetAddress (0, 1) - srcAddress;
-				var desOriginalRowBytes = destination.GetAddress (0, 1) - destination.GetAddress (0, 0);
-				for(var row=0;row<Math.Min(Height, desHeight);row++,srcAddress+=srcOriginalRowBytes,desAddress+=desOriginalRowBytes) {
-					var des =new Span<byte> (srcAddress.ToPointer(), rowBytes);
-					var src =new Span<byte> (desAddress.ToPointer(), rowBytes);
-					src.TryCopyTo(des);
-				}
-				return true;
 			}
 
 			using var srcPixmap = PeekPixels ();

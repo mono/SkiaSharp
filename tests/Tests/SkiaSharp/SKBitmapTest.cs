@@ -283,6 +283,62 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void CopyToPreallocatedDestinationMatchesCanvasPath()
+		{
+			using var bmp = CreateTestBitmap();
+
+			// Reference: the destination is empty, so CopyTo goes through the original
+			// SKCanvas-based path and allocates the destination itself.
+			using var reference = new SKBitmap();
+			Assert.True(bmp.CopyTo(reference, bmp.ColorType));
+
+			// Optimized: the destination is pre-allocated with the exact same image info,
+			// so CopyTo takes the direct memory-copy fast path.
+			using var fast = new SKBitmap();
+			Assert.True(fast.TryAllocPixels(bmp.Info));
+			Assert.True(bmp.CopyTo(fast, bmp.ColorType));
+
+			// Both paths must produce identical image info and byte-identical pixels,
+			// which must also match the source exactly.
+			Assert.Equal(bmp.Info, reference.Info);
+			Assert.Equal(bmp.Info, fast.Info);
+			Assert.Equal(bmp.GetPixelSpan().ToArray(), fast.GetPixelSpan().ToArray());
+			Assert.Equal(reference.GetPixelSpan().ToArray(), fast.GetPixelSpan().ToArray());
+
+			ValidateTestBitmap(fast);
+		}
+
+		[SkippableFact]
+		public void CopyToPreallocatedDestinationWithSubsetSourceMatchesCanvasPath()
+		{
+			using var full = CreateTestBitmap();
+
+			// A subset shares the pixel buffer of the original, so its row stride
+			// (RowBytes) is larger than the compact Width * BytesPerPixel. This exercises
+			// the row-by-row branch of the fast path with differing source/destination
+			// strides.
+			using var subset = new SKBitmap();
+			Assert.True(full.ExtractSubset(subset, new SKRectI(5, 5, 35, 35)));
+			Assert.True(subset.RowBytes > subset.Info.RowBytes);
+
+			// Reference via the original canvas path (empty destination -> compact copy).
+			using var reference = subset.Copy(subset.ColorType);
+			Assert.NotNull(reference);
+
+			// Optimized fast path into a pre-allocated, compact destination.
+			using var fast = new SKBitmap();
+			Assert.True(fast.TryAllocPixels(subset.Info));
+			Assert.True(subset.CopyTo(fast, subset.ColorType));
+
+			Assert.Equal(subset.Info, fast.Info);
+			Assert.Equal(reference.GetPixelSpan().ToArray(), fast.GetPixelSpan().ToArray());
+
+			for (var y = 0; y < subset.Height; y++)
+				for (var x = 0; x < subset.Width; x++)
+					Assert.Equal(subset.GetPixel(x, y), fast.GetPixel(x, y));
+		}
+
+		[SkippableFact]
 		public void ReleaseBitmapPixelsWasInvoked()
 		{
 			bool released = false;
