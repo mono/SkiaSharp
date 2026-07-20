@@ -158,9 +158,9 @@ namespace HarfBuzzSharp.Tests
 			var unicodeFunctions = new UnicodeFunctions(UnicodeFunctions.Default);
 			unicodeFunctions.SetScriptDelegate((f, cp) => Script.Unknown, () => destroyed = true);
 
-			// The buffer is intentionally left alive (and its funcs referenced) for the
-			// whole test, so the funcs must remain valid.
-			var buffer = new Buffer();
+			// The buffer is kept alive (via using) so its funcs reference stays valid
+			// through the assertion, and is disposed cleanly at the end of the scope.
+			using var buffer = new Buffer();
 			buffer.UnicodeFunctions = unicodeFunctions;
 
 			var borrowed = buffer.UnicodeFunctions;
@@ -168,8 +168,6 @@ namespace HarfBuzzSharp.Tests
 			unicodeFunctions.Dispose();
 
 			Assert.False(destroyed, "buffer.UnicodeFunctions getter over-freed a borrowed handle.");
-
-			GC.KeepAlive(buffer);
 		}
 	}
 }
