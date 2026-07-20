@@ -213,7 +213,11 @@ namespace SkiaSharp
 						src.CopyTo (dst);
 					}
 					GC.KeepAlive (this);
-					GC.KeepAlive (destination);
+					// The pixels were written directly into the destination's existing
+					// pixel buffer, so bump its generation ID to invalidate any Skia caches
+					// (e.g. images or shaders created from the destination). This mirrors the
+					// canvas-based path below, which swaps in a fresh pixel reference.
+					destination.NotifyPixelsChanged ();
 					return true;
 				}
 			}
