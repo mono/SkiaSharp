@@ -1,8 +1,7 @@
 ﻿using System.Windows;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public partial class App : Application
 {
-	public partial class App : Application
-	{
-	}
 }

@@ -26,6 +26,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (path));
 
 			Handle = SkiaApi.sk_pathmeasure_new_with_path (path.Handle, forceClosed, resScale);
+			GC.KeepAlive (path);
 
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to create a new SKPathMeasure instance.");
@@ -42,13 +43,17 @@ namespace SkiaSharp
 
 		public float Length {
 			get {
-				return SkiaApi.sk_pathmeasure_get_length (Handle);
+				var r = SkiaApi.sk_pathmeasure_get_length (Handle);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
 		public bool IsClosed {
 			get {
-				return SkiaApi.sk_pathmeasure_is_closed (Handle);
+				var r = SkiaApi.sk_pathmeasure_is_closed (Handle);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -60,6 +65,8 @@ namespace SkiaSharp
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
+			GC.KeepAlive (path);
+			GC.KeepAlive (this);
 		}
 
 		// GetPositionAndTangent
@@ -68,7 +75,9 @@ namespace SkiaSharp
 		{
 			fixed (SKPoint* p = &position)
 			fixed (SKPoint* t = &tangent) {
-				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, t);
+				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, t);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -84,7 +93,9 @@ namespace SkiaSharp
 		public bool GetPosition (float distance, out SKPoint position)
 		{
 			fixed (SKPoint* p = &position) {
-				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
+				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, p, null);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -100,7 +111,9 @@ namespace SkiaSharp
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
 			fixed (SKPoint* t = &tangent) {
-				return SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, null, t);
+				var r = SkiaApi.sk_pathmeasure_get_pos_tan (Handle, distance, null, t);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
@@ -116,34 +129,54 @@ namespace SkiaSharp
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
 			fixed (SKMatrix* m = &matrix) {
-				return SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
+				var r = SkiaApi.sk_pathmeasure_get_matrix (Handle, distance, m, flags);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
 		// GetSegment
 
+		public bool GetSegment (float start, float stop, SKPathBuilder dst, bool startWithMoveTo)
+		{
+			if (dst == null)
+				throw new ArgumentNullException (nameof (dst));
+			var result = SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
+			GC.KeepAlive (dst);
+			GC.KeepAlive (this);
+			return result;
+		}
+
+		[Obsolete ("Use the SKPathBuilder overload instead.")]
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_pathmeasure_get_segment (Handle, start, stop, dst.Handle, startWithMoveTo);
+
+			using var builder = new SKPathBuilder ();
+			if (!GetSegment (start, stop, builder, startWithMoveTo))
+				return false;
+
+			dst.ReplaceFromBuilder (builder);
+			return true;
 		}
 
 		public SKPath GetSegment (float start, float stop, bool startWithMoveTo)
 		{
-			var dst = new SKPath ();
+			using var dst = new SKPathBuilder ();
 			if (!GetSegment (start, stop, dst, startWithMoveTo)) {
-				dst.Dispose ();
-				dst = null;
+				return null;
 			}
-			return dst;
+			return dst.Detach ();
 		}
 
 		// NextContour
 
 		public bool NextContour ()
 		{
-			return SkiaApi.sk_pathmeasure_next_contour (Handle);
+			var r = SkiaApi.sk_pathmeasure_next_contour (Handle);
+			GC.KeepAlive (this);
+			return r;
 		}
 	}
 }

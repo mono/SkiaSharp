@@ -55,6 +55,7 @@ using sk_path_effect_t = System.IntPtr;
 using sk_path_iterator_t = System.IntPtr;
 using sk_path_rawiterator_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
+using sk_pathbuilder_t = System.IntPtr;
 using sk_pathmeasure_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;
@@ -4080,6 +4081,25 @@ namespace SkiaSharp
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
 		#endif
 
+		// sk_colorfilter_t* sk_colorfilter_new_overdraw(const sk_color_t[6] colors = 6)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors);
+		}
+		private static Delegates.sk_colorfilter_new_overdraw sk_colorfilter_new_overdraw_delegate;
+		internal static sk_colorfilter_t sk_colorfilter_new_overdraw (UInt32* colors) =>
+			(sk_colorfilter_new_overdraw_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_overdraw> ("sk_colorfilter_new_overdraw")).Invoke (colors);
+		#endif
+
 		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -4445,6 +4465,25 @@ namespace SkiaSharp
 		private static Delegates.sk_colorspace_make_srgb_gamma sk_colorspace_make_srgb_gamma_delegate;
 		internal static sk_colorspace_t sk_colorspace_make_srgb_gamma (sk_colorspace_t colorspace) =>
 			(sk_colorspace_make_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_srgb_gamma> ("sk_colorspace_make_srgb_gamma")).Invoke (colorspace);
+		#endif
+
+		// sk_colorspace_t* sk_colorspace_new_cicp(sk_colorspace_primaries_cicp_t colorPrimaries, sk_colorspace_transfer_fn_cicp_t transferCharacteristics)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics);
+		}
+		private static Delegates.sk_colorspace_new_cicp sk_colorspace_new_cicp_delegate;
+		internal static sk_colorspace_t sk_colorspace_new_cicp (SKColorspacePrimariesCicp colorPrimaries, SKColorspaceTransferFnCicp transferCharacteristics) =>
+			(sk_colorspace_new_cicp_delegate ??= GetSymbol<Delegates.sk_colorspace_new_cicp> ("sk_colorspace_new_cicp")).Invoke (colorPrimaries, transferCharacteristics);
 		#endif
 
 		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
@@ -5265,6 +5304,25 @@ namespace SkiaSharp
 			(sk_document_create_xps_from_stream_delegate ??= GetSymbol<Delegates.sk_document_create_xps_from_stream> ("sk_document_create_xps_from_stream")).Invoke (stream, dpi);
 		#endif
 
+		// sk_document_t* sk_document_create_xps_from_stream_with_options(sk_wstream_t* stream, const sk_document_xps_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_document_t sk_document_create_xps_from_stream_with_options (sk_wstream_t stream, SKDocumentXpsOptions* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_document_t sk_document_create_xps_from_stream_with_options (sk_wstream_t stream, SKDocumentXpsOptions* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_document_t sk_document_create_xps_from_stream_with_options (sk_wstream_t stream, SKDocumentXpsOptions* options);
+		}
+		private static Delegates.sk_document_create_xps_from_stream_with_options sk_document_create_xps_from_stream_with_options_delegate;
+		internal static sk_document_t sk_document_create_xps_from_stream_with_options (sk_wstream_t stream, SKDocumentXpsOptions* options) =>
+			(sk_document_create_xps_from_stream_with_options_delegate ??= GetSymbol<Delegates.sk_document_create_xps_from_stream_with_options> ("sk_document_create_xps_from_stream_with_options")).Invoke (stream, options);
+		#endif
+
 		// void sk_document_end_page(sk_document_t* document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -5881,25 +5939,6 @@ namespace SkiaSharp
 		private static Delegates.sk_font_measure_text_no_return sk_font_measure_text_no_return_delegate;
 		internal static void sk_font_measure_text_no_return (sk_font_t font, void* text, /* size_t */ IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, sk_paint_t paint, Single* measuredWidth) =>
 			(sk_font_measure_text_no_return_delegate ??= GetSymbol<Delegates.sk_font_measure_text_no_return> ("sk_font_measure_text_no_return")).Invoke (font, text, byteLength, encoding, bounds, paint, measuredWidth);
-		#endif
-
-		// sk_font_t* sk_font_new()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_font_t sk_font_new ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_font_t sk_font_new ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_font_t sk_font_new ();
-		}
-		private static Delegates.sk_font_new sk_font_new_delegate;
-		internal static sk_font_t sk_font_new () =>
-			(sk_font_new_delegate ??= GetSymbol<Delegates.sk_font_new> ("sk_font_new")).Invoke ();
 		#endif
 
 		// sk_font_t* sk_font_new_with_values(sk_typeface_t* typeface, float size, float scaleX, float skewX)
@@ -7601,6 +7640,25 @@ namespace SkiaSharp
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
+		// sk_imagefilter_t* sk_imagefilter_new_crop(const sk_rect_t* rect, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input);
+		}
+		private static Delegates.sk_imagefilter_new_crop sk_imagefilter_new_crop_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_crop (SKRect* rect, SKShaderTileMode tileMode, sk_imagefilter_t input) =>
+			(sk_imagefilter_new_crop_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_crop> ("sk_imagefilter_new_crop")).Invoke (rect, tileMode, input);
+		#endif
+
 		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7713,6 +7771,25 @@ namespace SkiaSharp
 		private static Delegates.sk_imagefilter_new_drop_shadow_only sk_imagefilter_new_drop_shadow_only_delegate;
 		internal static sk_imagefilter_t sk_imagefilter_new_drop_shadow_only (Single dx, Single dy, Single sigmaX, Single sigmaY, UInt32 color, sk_imagefilter_t input, SKRect* cropRect) =>
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
+		#endif
+
+		// sk_imagefilter_t* sk_imagefilter_new_empty()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_imagefilter_t sk_imagefilter_new_empty ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_imagefilter_t sk_imagefilter_new_empty ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_imagefilter_t sk_imagefilter_new_empty ();
+		}
+		private static Delegates.sk_imagefilter_new_empty sk_imagefilter_new_empty_delegate;
+		internal static sk_imagefilter_t sk_imagefilter_new_empty () =>
+			(sk_imagefilter_new_empty_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_empty> ("sk_imagefilter_new_empty")).Invoke ();
 		#endif
 
 		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
@@ -8437,6 +8514,28 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
+		// bool sk_paint_can_compute_fast_bounds(const sk_paint_t* cpaint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint);
+		}
+		private static Delegates.sk_paint_can_compute_fast_bounds sk_paint_can_compute_fast_bounds_delegate;
+		internal static bool sk_paint_can_compute_fast_bounds (sk_paint_t cpaint) =>
+			(sk_paint_can_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_can_compute_fast_bounds> ("sk_paint_can_compute_fast_bounds")).Invoke (cpaint);
+		#endif
+
 		// sk_paint_t* sk_paint_clone(sk_paint_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -8454,6 +8553,25 @@ namespace SkiaSharp
 		private static Delegates.sk_paint_clone sk_paint_clone_delegate;
 		internal static sk_paint_t sk_paint_clone (sk_paint_t param0) =>
 			(sk_paint_clone_delegate ??= GetSymbol<Delegates.sk_paint_clone> ("sk_paint_clone")).Invoke (param0);
+		#endif
+
+		// void sk_paint_compute_fast_bounds(const sk_paint_t* cpaint, const sk_rect_t* orig, sk_rect_t* storage)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage);
+		}
+		private static Delegates.sk_paint_compute_fast_bounds sk_paint_compute_fast_bounds_delegate;
+		internal static void sk_paint_compute_fast_bounds (sk_paint_t cpaint, SKRect* orig, SKRect* storage) =>
+			(sk_paint_compute_fast_bounds_delegate ??= GetSymbol<Delegates.sk_paint_compute_fast_bounds> ("sk_paint_compute_fast_bounds")).Invoke (cpaint, orig, storage);
 		#endif
 
 		// void sk_paint_delete(sk_paint_t*)
@@ -8570,25 +8688,25 @@ namespace SkiaSharp
 			(sk_paint_get_colorfilter_delegate ??= GetSymbol<Delegates.sk_paint_get_colorfilter> ("sk_paint_get_colorfilter")).Invoke (param0);
 		#endif
 
-		// bool sk_paint_get_fill_path(const sk_paint_t* cpaint, const sk_path_t* src, sk_path_t* dst, const sk_rect_t* cullRect, const sk_matrix_t* cmatrix)
+		// bool sk_paint_get_fill_path(const sk_paint_t* cpaint, const sk_path_t* src, sk_pathbuilder_t* dst, const sk_rect_t* cullRect, const sk_matrix_t* cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix);
+		internal static partial bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_pathbuilder_t dst, SKRect* cullRect, SKMatrix* cmatrix);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix);
+		internal static extern bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_pathbuilder_t dst, SKRect* cullRect, SKMatrix* cmatrix);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix);
+			internal delegate bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_pathbuilder_t dst, SKRect* cullRect, SKMatrix* cmatrix);
 		}
 		private static Delegates.sk_paint_get_fill_path sk_paint_get_fill_path_delegate;
-		internal static bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_path_t dst, SKRect* cullRect, SKMatrix* cmatrix) =>
+		internal static bool sk_paint_get_fill_path (sk_paint_t cpaint, sk_path_t src, sk_pathbuilder_t dst, SKRect* cullRect, SKMatrix* cmatrix) =>
 			(sk_paint_get_fill_path_delegate ??= GetSymbol<Delegates.sk_paint_get_fill_path> ("sk_paint_get_fill_path")).Invoke (cpaint, src, dst, cullRect, cmatrix);
 		#endif
 
@@ -9232,310 +9350,6 @@ namespace SkiaSharp
 			(sk_opbuilder_resolve_delegate ??= GetSymbol<Delegates.sk_opbuilder_resolve> ("sk_opbuilder_resolve")).Invoke (builder, result);
 		#endif
 
-		// void sk_path_add_arc(sk_path_t* cpath, const sk_rect_t* crect, float startAngle, float sweepAngle)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle);
-		}
-		private static Delegates.sk_path_add_arc sk_path_add_arc_delegate;
-		internal static void sk_path_add_arc (sk_path_t cpath, SKRect* crect, Single startAngle, Single sweepAngle) =>
-			(sk_path_add_arc_delegate ??= GetSymbol<Delegates.sk_path_add_arc> ("sk_path_add_arc")).Invoke (cpath, crect, startAngle, sweepAngle);
-		#endif
-
-		// void sk_path_add_circle(sk_path_t*, float x, float y, float radius, sk_path_direction_t dir)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir);
-		}
-		private static Delegates.sk_path_add_circle sk_path_add_circle_delegate;
-		internal static void sk_path_add_circle (sk_path_t param0, Single x, Single y, Single radius, SKPathDirection dir) =>
-			(sk_path_add_circle_delegate ??= GetSymbol<Delegates.sk_path_add_circle> ("sk_path_add_circle")).Invoke (param0, x, y, radius, dir);
-		#endif
-
-		// void sk_path_add_oval(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		}
-		private static Delegates.sk_path_add_oval sk_path_add_oval_delegate;
-		internal static void sk_path_add_oval (sk_path_t param0, SKRect* param1, SKPathDirection param2) =>
-			(sk_path_add_oval_delegate ??= GetSymbol<Delegates.sk_path_add_oval> ("sk_path_add_oval")).Invoke (param0, param1, param2);
-		#endif
-
-		// void sk_path_add_path(sk_path_t* cpath, sk_path_t* other, sk_path_add_mode_t add_mode)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode);
-		}
-		private static Delegates.sk_path_add_path sk_path_add_path_delegate;
-		internal static void sk_path_add_path (sk_path_t cpath, sk_path_t other, SKPathAddMode add_mode) =>
-			(sk_path_add_path_delegate ??= GetSymbol<Delegates.sk_path_add_path> ("sk_path_add_path")).Invoke (cpath, other, add_mode);
-		#endif
-
-		// void sk_path_add_path_matrix(sk_path_t* cpath, sk_path_t* other, sk_matrix_t* matrix, sk_path_add_mode_t add_mode)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
-		}
-		private static Delegates.sk_path_add_path_matrix sk_path_add_path_matrix_delegate;
-		internal static void sk_path_add_path_matrix (sk_path_t cpath, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode) =>
-			(sk_path_add_path_matrix_delegate ??= GetSymbol<Delegates.sk_path_add_path_matrix> ("sk_path_add_path_matrix")).Invoke (cpath, other, matrix, add_mode);
-		#endif
-
-		// void sk_path_add_path_offset(sk_path_t* cpath, sk_path_t* other, float dx, float dy, sk_path_add_mode_t add_mode)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
-		}
-		private static Delegates.sk_path_add_path_offset sk_path_add_path_offset_delegate;
-		internal static void sk_path_add_path_offset (sk_path_t cpath, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode) =>
-			(sk_path_add_path_offset_delegate ??= GetSymbol<Delegates.sk_path_add_path_offset> ("sk_path_add_path_offset")).Invoke (cpath, other, dx, dy, add_mode);
-		#endif
-
-		// void sk_path_add_path_reverse(sk_path_t* cpath, sk_path_t* other)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other);
-		}
-		private static Delegates.sk_path_add_path_reverse sk_path_add_path_reverse_delegate;
-		internal static void sk_path_add_path_reverse (sk_path_t cpath, sk_path_t other) =>
-			(sk_path_add_path_reverse_delegate ??= GetSymbol<Delegates.sk_path_add_path_reverse> ("sk_path_add_path_reverse")).Invoke (cpath, other);
-		#endif
-
-		// void sk_path_add_poly(sk_path_t* cpath, const sk_point_t* points, int count, bool close)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
-		}
-		private static Delegates.sk_path_add_poly sk_path_add_poly_delegate;
-		internal static void sk_path_add_poly (sk_path_t cpath, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close) =>
-			(sk_path_add_poly_delegate ??= GetSymbol<Delegates.sk_path_add_poly> ("sk_path_add_poly")).Invoke (cpath, points, count, close);
-		#endif
-
-		// void sk_path_add_rect(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2);
-		}
-		private static Delegates.sk_path_add_rect sk_path_add_rect_delegate;
-		internal static void sk_path_add_rect (sk_path_t param0, SKRect* param1, SKPathDirection param2) =>
-			(sk_path_add_rect_delegate ??= GetSymbol<Delegates.sk_path_add_rect> ("sk_path_add_rect")).Invoke (param0, param1, param2);
-		#endif
-
-		// void sk_path_add_rect_start(sk_path_t* cpath, const sk_rect_t* crect, sk_path_direction_t cdir, uint32_t startIndex)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex);
-		}
-		private static Delegates.sk_path_add_rect_start sk_path_add_rect_start_delegate;
-		internal static void sk_path_add_rect_start (sk_path_t cpath, SKRect* crect, SKPathDirection cdir, UInt32 startIndex) =>
-			(sk_path_add_rect_start_delegate ??= GetSymbol<Delegates.sk_path_add_rect_start> ("sk_path_add_rect_start")).Invoke (cpath, crect, cdir, startIndex);
-		#endif
-
-		// void sk_path_add_rounded_rect(sk_path_t*, const sk_rect_t*, float, float, sk_path_direction_t)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4);
-		}
-		private static Delegates.sk_path_add_rounded_rect sk_path_add_rounded_rect_delegate;
-		internal static void sk_path_add_rounded_rect (sk_path_t param0, SKRect* param1, Single param2, Single param3, SKPathDirection param4) =>
-			(sk_path_add_rounded_rect_delegate ??= GetSymbol<Delegates.sk_path_add_rounded_rect> ("sk_path_add_rounded_rect")).Invoke (param0, param1, param2, param3, param4);
-		#endif
-
-		// void sk_path_add_rrect(sk_path_t*, const sk_rrect_t*, sk_path_direction_t)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2);
-		}
-		private static Delegates.sk_path_add_rrect sk_path_add_rrect_delegate;
-		internal static void sk_path_add_rrect (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2) =>
-			(sk_path_add_rrect_delegate ??= GetSymbol<Delegates.sk_path_add_rrect> ("sk_path_add_rrect")).Invoke (param0, param1, param2);
-		#endif
-
-		// void sk_path_add_rrect_start(sk_path_t*, const sk_rrect_t*, sk_path_direction_t, uint32_t)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3);
-		}
-		private static Delegates.sk_path_add_rrect_start sk_path_add_rrect_start_delegate;
-		internal static void sk_path_add_rrect_start (sk_path_t param0, sk_rrect_t param1, SKPathDirection param2, UInt32 param3) =>
-			(sk_path_add_rrect_start_delegate ??= GetSymbol<Delegates.sk_path_add_rrect_start> ("sk_path_add_rrect_start")).Invoke (param0, param1, param2, param3);
-		#endif
-
-		// void sk_path_arc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		}
-		private static Delegates.sk_path_arc_to sk_path_arc_to_delegate;
-		internal static void sk_path_arc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y) =>
-			(sk_path_arc_to_delegate ??= GetSymbol<Delegates.sk_path_arc_to> ("sk_path_arc_to")).Invoke (param0, rx, ry, xAxisRotate, largeArc, sweep, x, y);
-		#endif
-
-		// void sk_path_arc_to_with_oval(sk_path_t*, const sk_rect_t* oval, float startAngle, float sweepAngle, bool forceMoveTo)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
-		}
-		private static Delegates.sk_path_arc_to_with_oval sk_path_arc_to_with_oval_delegate;
-		internal static void sk_path_arc_to_with_oval (sk_path_t param0, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo) =>
-			(sk_path_arc_to_with_oval_delegate ??= GetSymbol<Delegates.sk_path_arc_to_with_oval> ("sk_path_arc_to_with_oval")).Invoke (param0, oval, startAngle, sweepAngle, forceMoveTo);
-		#endif
-
-		// void sk_path_arc_to_with_points(sk_path_t*, float x1, float y1, float x2, float y2, float radius)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius);
-		}
-		private static Delegates.sk_path_arc_to_with_points sk_path_arc_to_with_points_delegate;
-		internal static void sk_path_arc_to_with_points (sk_path_t param0, Single x1, Single y1, Single x2, Single y2, Single radius) =>
-			(sk_path_arc_to_with_points_delegate ??= GetSymbol<Delegates.sk_path_arc_to_with_points> ("sk_path_arc_to_with_points")).Invoke (param0, x1, y1, x2, y2, radius);
-		#endif
-
 		// sk_path_t* sk_path_clone(const sk_path_t* cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -9555,25 +9369,6 @@ namespace SkiaSharp
 			(sk_path_clone_delegate ??= GetSymbol<Delegates.sk_path_clone> ("sk_path_clone")).Invoke (cpath);
 		#endif
 
-		// void sk_path_close(sk_path_t*)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_close (sk_path_t param0);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_close (sk_path_t param0);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_close (sk_path_t param0);
-		}
-		private static Delegates.sk_path_close sk_path_close_delegate;
-		internal static void sk_path_close (sk_path_t param0) =>
-			(sk_path_close_delegate ??= GetSymbol<Delegates.sk_path_close> ("sk_path_close")).Invoke (param0);
-		#endif
-
 		// void sk_path_compute_tight_bounds(const sk_path_t*, sk_rect_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -9591,25 +9386,6 @@ namespace SkiaSharp
 		private static Delegates.sk_path_compute_tight_bounds sk_path_compute_tight_bounds_delegate;
 		internal static void sk_path_compute_tight_bounds (sk_path_t param0, SKRect* param1) =>
 			(sk_path_compute_tight_bounds_delegate ??= GetSymbol<Delegates.sk_path_compute_tight_bounds> ("sk_path_compute_tight_bounds")).Invoke (param0, param1);
-		#endif
-
-		// void sk_path_conic_to(sk_path_t*, float x0, float y0, float x1, float y1, float w)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w);
-		}
-		private static Delegates.sk_path_conic_to sk_path_conic_to_delegate;
-		internal static void sk_path_conic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single w) =>
-			(sk_path_conic_to_delegate ??= GetSymbol<Delegates.sk_path_conic_to> ("sk_path_conic_to")).Invoke (param0, x0, y0, x1, y1, w);
 		#endif
 
 		// bool sk_path_contains(const sk_path_t* cpath, float x, float y)
@@ -9727,25 +9503,6 @@ namespace SkiaSharp
 		private static Delegates.sk_path_create_rawiter sk_path_create_rawiter_delegate;
 		internal static sk_path_rawiterator_t sk_path_create_rawiter (sk_path_t cpath) =>
 			(sk_path_create_rawiter_delegate ??= GetSymbol<Delegates.sk_path_create_rawiter> ("sk_path_create_rawiter")).Invoke (cpath);
-		#endif
-
-		// void sk_path_cubic_to(sk_path_t*, float x0, float y0, float x1, float y1, float x2, float y2)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
-		}
-		private static Delegates.sk_path_cubic_to sk_path_cubic_to_delegate;
-		internal static void sk_path_cubic_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2) =>
-			(sk_path_cubic_to_delegate ??= GetSymbol<Delegates.sk_path_cubic_to> ("sk_path_cubic_to")).Invoke (param0, x0, y0, x1, y1, x2, y2);
 		#endif
 
 		// void sk_path_delete(sk_path_t*)
@@ -10089,44 +9846,6 @@ namespace SkiaSharp
 			(sk_path_iter_next_delegate ??= GetSymbol<Delegates.sk_path_iter_next> ("sk_path_iter_next")).Invoke (iterator, points);
 		#endif
 
-		// void sk_path_line_to(sk_path_t*, float x, float y)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_line_to (sk_path_t param0, Single x, Single y);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_line_to (sk_path_t param0, Single x, Single y);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_line_to (sk_path_t param0, Single x, Single y);
-		}
-		private static Delegates.sk_path_line_to sk_path_line_to_delegate;
-		internal static void sk_path_line_to (sk_path_t param0, Single x, Single y) =>
-			(sk_path_line_to_delegate ??= GetSymbol<Delegates.sk_path_line_to> ("sk_path_line_to")).Invoke (param0, x, y);
-		#endif
-
-		// void sk_path_move_to(sk_path_t*, float x, float y)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_move_to (sk_path_t param0, Single x, Single y);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_move_to (sk_path_t param0, Single x, Single y);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_move_to (sk_path_t param0, Single x, Single y);
-		}
-		private static Delegates.sk_path_move_to sk_path_move_to_delegate;
-		internal static void sk_path_move_to (sk_path_t param0, Single x, Single y) =>
-			(sk_path_move_to_delegate ??= GetSymbol<Delegates.sk_path_move_to> ("sk_path_move_to")).Invoke (param0, x, y);
-		#endif
-
 		// sk_path_t* sk_path_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -10166,44 +9885,6 @@ namespace SkiaSharp
 		private static Delegates.sk_path_parse_svg_string sk_path_parse_svg_string_delegate;
 		internal static bool sk_path_parse_svg_string (sk_path_t cpath, [MarshalAs (UnmanagedType.LPStr)] String str) =>
 			(sk_path_parse_svg_string_delegate ??= GetSymbol<Delegates.sk_path_parse_svg_string> ("sk_path_parse_svg_string")).Invoke (cpath, str);
-		#endif
-
-		// void sk_path_quad_to(sk_path_t*, float x0, float y0, float x1, float y1)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1);
-		}
-		private static Delegates.sk_path_quad_to sk_path_quad_to_delegate;
-		internal static void sk_path_quad_to (sk_path_t param0, Single x0, Single y0, Single x1, Single y1) =>
-			(sk_path_quad_to_delegate ??= GetSymbol<Delegates.sk_path_quad_to> ("sk_path_quad_to")).Invoke (param0, x0, y0, x1, y1);
-		#endif
-
-		// void sk_path_rarc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
-		}
-		private static Delegates.sk_path_rarc_to sk_path_rarc_to_delegate;
-		internal static void sk_path_rarc_to (sk_path_t param0, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y) =>
-			(sk_path_rarc_to_delegate ??= GetSymbol<Delegates.sk_path_rarc_to> ("sk_path_rarc_to")).Invoke (param0, rx, ry, xAxisRotate, largeArc, sweep, x, y);
 		#endif
 
 		// float sk_path_rawiter_conic_weight(sk_path_rawiterator_t* iterator)
@@ -10282,44 +9963,6 @@ namespace SkiaSharp
 			(sk_path_rawiter_peek_delegate ??= GetSymbol<Delegates.sk_path_rawiter_peek> ("sk_path_rawiter_peek")).Invoke (iterator);
 		#endif
 
-		// void sk_path_rconic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float w)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
-		}
-		private static Delegates.sk_path_rconic_to sk_path_rconic_to_delegate;
-		internal static void sk_path_rconic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single w) =>
-			(sk_path_rconic_to_delegate ??= GetSymbol<Delegates.sk_path_rconic_to> ("sk_path_rconic_to")).Invoke (param0, dx0, dy0, dx1, dy1, w);
-		#endif
-
-		// void sk_path_rcubic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
-		}
-		private static Delegates.sk_path_rcubic_to sk_path_rcubic_to_delegate;
-		internal static void sk_path_rcubic_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2) =>
-			(sk_path_rcubic_to_delegate ??= GetSymbol<Delegates.sk_path_rcubic_to> ("sk_path_rcubic_to")).Invoke (param0, dx0, dy0, dx1, dy1, dx2, dy2);
-		#endif
-
 		// void sk_path_reset(sk_path_t* cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -10356,63 +9999,6 @@ namespace SkiaSharp
 		private static Delegates.sk_path_rewind sk_path_rewind_delegate;
 		internal static void sk_path_rewind (sk_path_t cpath) =>
 			(sk_path_rewind_delegate ??= GetSymbol<Delegates.sk_path_rewind> ("sk_path_rewind")).Invoke (cpath);
-		#endif
-
-		// void sk_path_rline_to(sk_path_t*, float dx, float yd)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rline_to (sk_path_t param0, Single dx, Single yd);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rline_to (sk_path_t param0, Single dx, Single yd);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rline_to (sk_path_t param0, Single dx, Single yd);
-		}
-		private static Delegates.sk_path_rline_to sk_path_rline_to_delegate;
-		internal static void sk_path_rline_to (sk_path_t param0, Single dx, Single yd) =>
-			(sk_path_rline_to_delegate ??= GetSymbol<Delegates.sk_path_rline_to> ("sk_path_rline_to")).Invoke (param0, dx, yd);
-		#endif
-
-		// void sk_path_rmove_to(sk_path_t*, float dx, float dy)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy);
-		}
-		private static Delegates.sk_path_rmove_to sk_path_rmove_to_delegate;
-		internal static void sk_path_rmove_to (sk_path_t param0, Single dx, Single dy) =>
-			(sk_path_rmove_to_delegate ??= GetSymbol<Delegates.sk_path_rmove_to> ("sk_path_rmove_to")).Invoke (param0, dx, dy);
-		#endif
-
-		// void sk_path_rquad_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1);
-		}
-		private static Delegates.sk_path_rquad_to sk_path_rquad_to_delegate;
-		internal static void sk_path_rquad_to (sk_path_t param0, Single dx0, Single dy0, Single dx1, Single dy1) =>
-			(sk_path_rquad_to_delegate ??= GetSymbol<Delegates.sk_path_rquad_to> ("sk_path_rquad_to")).Invoke (param0, dx0, dy0, dx1, dy1);
 		#endif
 
 		// void sk_path_set_filltype(sk_path_t*, sk_path_filltype_t)
@@ -10573,25 +10159,25 @@ namespace SkiaSharp
 			(sk_pathmeasure_get_pos_tan_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_pos_tan> ("sk_pathmeasure_get_pos_tan")).Invoke (pathMeasure, distance, position, tangent);
 		#endif
 
-		// bool sk_pathmeasure_get_segment(sk_pathmeasure_t* pathMeasure, float start, float stop, sk_path_t* dst, bool startWithMoveTo)
+		// bool sk_pathmeasure_get_segment(sk_pathmeasure_t* pathMeasure, float start, float stop, sk_pathbuilder_t* dst, bool startWithMoveTo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
+		internal static partial bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_pathbuilder_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
+		internal static extern bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_pathbuilder_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
+			internal delegate bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_pathbuilder_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo);
 		}
 		private static Delegates.sk_pathmeasure_get_segment sk_pathmeasure_get_segment_delegate;
-		internal static bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_path_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo) =>
+		internal static bool sk_pathmeasure_get_segment (sk_pathmeasure_t pathMeasure, Single start, Single stop, sk_pathbuilder_t dst, [MarshalAs (UnmanagedType.I1)] bool startWithMoveTo) =>
 			(sk_pathmeasure_get_segment_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_segment> ("sk_pathmeasure_get_segment")).Invoke (pathMeasure, start, stop, dst, startWithMoveTo);
 		#endif
 
@@ -10782,6 +10368,694 @@ namespace SkiaSharp
 		private static Delegates.sk_pathop_tight_bounds sk_pathop_tight_bounds_delegate;
 		internal static bool sk_pathop_tight_bounds (sk_path_t path, SKRect* result) =>
 			(sk_pathop_tight_bounds_delegate ??= GetSymbol<Delegates.sk_pathop_tight_bounds> ("sk_pathop_tight_bounds")).Invoke (path, result);
+		#endif
+
+		#endregion
+
+		#region sk_pathbuilder.h
+
+		// void sk_pathbuilder_add_arc(sk_pathbuilder_t* builder, const sk_rect_t* rect, float startAngle, float sweepAngle)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_arc (sk_pathbuilder_t builder, SKRect* rect, Single startAngle, Single sweepAngle);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_arc (sk_pathbuilder_t builder, SKRect* rect, Single startAngle, Single sweepAngle);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_arc (sk_pathbuilder_t builder, SKRect* rect, Single startAngle, Single sweepAngle);
+		}
+		private static Delegates.sk_pathbuilder_add_arc sk_pathbuilder_add_arc_delegate;
+		internal static void sk_pathbuilder_add_arc (sk_pathbuilder_t builder, SKRect* rect, Single startAngle, Single sweepAngle) =>
+			(sk_pathbuilder_add_arc_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_arc> ("sk_pathbuilder_add_arc")).Invoke (builder, rect, startAngle, sweepAngle);
+		#endif
+
+		// void sk_pathbuilder_add_circle(sk_pathbuilder_t* builder, float x, float y, float radius, sk_path_direction_t dir)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_circle (sk_pathbuilder_t builder, Single x, Single y, Single radius, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_circle (sk_pathbuilder_t builder, Single x, Single y, Single radius, SKPathDirection dir);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_circle (sk_pathbuilder_t builder, Single x, Single y, Single radius, SKPathDirection dir);
+		}
+		private static Delegates.sk_pathbuilder_add_circle sk_pathbuilder_add_circle_delegate;
+		internal static void sk_pathbuilder_add_circle (sk_pathbuilder_t builder, Single x, Single y, Single radius, SKPathDirection dir) =>
+			(sk_pathbuilder_add_circle_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_circle> ("sk_pathbuilder_add_circle")).Invoke (builder, x, y, radius, dir);
+		#endif
+
+		// void sk_pathbuilder_add_oval(sk_pathbuilder_t* builder, const sk_rect_t* rect, sk_path_direction_t dir)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_oval (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_oval (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_oval (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		}
+		private static Delegates.sk_pathbuilder_add_oval sk_pathbuilder_add_oval_delegate;
+		internal static void sk_pathbuilder_add_oval (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir) =>
+			(sk_pathbuilder_add_oval_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_oval> ("sk_pathbuilder_add_oval")).Invoke (builder, rect, dir);
+		#endif
+
+		// void sk_pathbuilder_add_path(sk_pathbuilder_t* builder, const sk_path_t* other, sk_path_add_mode_t add_mode)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_path (sk_pathbuilder_t builder, sk_path_t other, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_path (sk_pathbuilder_t builder, sk_path_t other, SKPathAddMode add_mode);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_path (sk_pathbuilder_t builder, sk_path_t other, SKPathAddMode add_mode);
+		}
+		private static Delegates.sk_pathbuilder_add_path sk_pathbuilder_add_path_delegate;
+		internal static void sk_pathbuilder_add_path (sk_pathbuilder_t builder, sk_path_t other, SKPathAddMode add_mode) =>
+			(sk_pathbuilder_add_path_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_path> ("sk_pathbuilder_add_path")).Invoke (builder, other, add_mode);
+		#endif
+
+		// void sk_pathbuilder_add_path_matrix(sk_pathbuilder_t* builder, const sk_path_t* other, sk_matrix_t* matrix, sk_path_add_mode_t add_mode)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_path_matrix (sk_pathbuilder_t builder, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_path_matrix (sk_pathbuilder_t builder, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_path_matrix (sk_pathbuilder_t builder, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode);
+		}
+		private static Delegates.sk_pathbuilder_add_path_matrix sk_pathbuilder_add_path_matrix_delegate;
+		internal static void sk_pathbuilder_add_path_matrix (sk_pathbuilder_t builder, sk_path_t other, SKMatrix* matrix, SKPathAddMode add_mode) =>
+			(sk_pathbuilder_add_path_matrix_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_path_matrix> ("sk_pathbuilder_add_path_matrix")).Invoke (builder, other, matrix, add_mode);
+		#endif
+
+		// void sk_pathbuilder_add_path_offset(sk_pathbuilder_t* builder, const sk_path_t* other, float dx, float dy, sk_path_add_mode_t add_mode)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_path_offset (sk_pathbuilder_t builder, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_path_offset (sk_pathbuilder_t builder, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_path_offset (sk_pathbuilder_t builder, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode);
+		}
+		private static Delegates.sk_pathbuilder_add_path_offset sk_pathbuilder_add_path_offset_delegate;
+		internal static void sk_pathbuilder_add_path_offset (sk_pathbuilder_t builder, sk_path_t other, Single dx, Single dy, SKPathAddMode add_mode) =>
+			(sk_pathbuilder_add_path_offset_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_path_offset> ("sk_pathbuilder_add_path_offset")).Invoke (builder, other, dx, dy, add_mode);
+		#endif
+
+		// void sk_pathbuilder_add_poly(sk_pathbuilder_t* builder, const sk_point_t* points, int count, bool close)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_poly (sk_pathbuilder_t builder, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_poly (sk_pathbuilder_t builder, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_poly (sk_pathbuilder_t builder, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close);
+		}
+		private static Delegates.sk_pathbuilder_add_poly sk_pathbuilder_add_poly_delegate;
+		internal static void sk_pathbuilder_add_poly (sk_pathbuilder_t builder, SKPoint* points, Int32 count, [MarshalAs (UnmanagedType.I1)] bool close) =>
+			(sk_pathbuilder_add_poly_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_poly> ("sk_pathbuilder_add_poly")).Invoke (builder, points, count, close);
+		#endif
+
+		// void sk_pathbuilder_add_rect(sk_pathbuilder_t* builder, const sk_rect_t* rect, sk_path_direction_t dir)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_rect (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_rect (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_rect (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir);
+		}
+		private static Delegates.sk_pathbuilder_add_rect sk_pathbuilder_add_rect_delegate;
+		internal static void sk_pathbuilder_add_rect (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir) =>
+			(sk_pathbuilder_add_rect_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_rect> ("sk_pathbuilder_add_rect")).Invoke (builder, rect, dir);
+		#endif
+
+		// void sk_pathbuilder_add_rect_start(sk_pathbuilder_t* builder, const sk_rect_t* rect, sk_path_direction_t dir, uint32_t startIndex)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_rect_start (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir, UInt32 startIndex);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_rect_start (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir, UInt32 startIndex);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_rect_start (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir, UInt32 startIndex);
+		}
+		private static Delegates.sk_pathbuilder_add_rect_start sk_pathbuilder_add_rect_start_delegate;
+		internal static void sk_pathbuilder_add_rect_start (sk_pathbuilder_t builder, SKRect* rect, SKPathDirection dir, UInt32 startIndex) =>
+			(sk_pathbuilder_add_rect_start_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_rect_start> ("sk_pathbuilder_add_rect_start")).Invoke (builder, rect, dir, startIndex);
+		#endif
+
+		// void sk_pathbuilder_add_rounded_rect(sk_pathbuilder_t* builder, const sk_rect_t* rect, float rx, float ry, sk_path_direction_t dir)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_rounded_rect (sk_pathbuilder_t builder, SKRect* rect, Single rx, Single ry, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_rounded_rect (sk_pathbuilder_t builder, SKRect* rect, Single rx, Single ry, SKPathDirection dir);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_rounded_rect (sk_pathbuilder_t builder, SKRect* rect, Single rx, Single ry, SKPathDirection dir);
+		}
+		private static Delegates.sk_pathbuilder_add_rounded_rect sk_pathbuilder_add_rounded_rect_delegate;
+		internal static void sk_pathbuilder_add_rounded_rect (sk_pathbuilder_t builder, SKRect* rect, Single rx, Single ry, SKPathDirection dir) =>
+			(sk_pathbuilder_add_rounded_rect_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_rounded_rect> ("sk_pathbuilder_add_rounded_rect")).Invoke (builder, rect, rx, ry, dir);
+		#endif
+
+		// void sk_pathbuilder_add_rrect(sk_pathbuilder_t* builder, const sk_rrect_t* rect, sk_path_direction_t dir)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_rrect (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_rrect (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_rrect (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir);
+		}
+		private static Delegates.sk_pathbuilder_add_rrect sk_pathbuilder_add_rrect_delegate;
+		internal static void sk_pathbuilder_add_rrect (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir) =>
+			(sk_pathbuilder_add_rrect_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_rrect> ("sk_pathbuilder_add_rrect")).Invoke (builder, rect, dir);
+		#endif
+
+		// void sk_pathbuilder_add_rrect_start(sk_pathbuilder_t* builder, const sk_rrect_t* rect, sk_path_direction_t dir, uint32_t start)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_add_rrect_start (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir, UInt32 start);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_add_rrect_start (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir, UInt32 start);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_add_rrect_start (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir, UInt32 start);
+		}
+		private static Delegates.sk_pathbuilder_add_rrect_start sk_pathbuilder_add_rrect_start_delegate;
+		internal static void sk_pathbuilder_add_rrect_start (sk_pathbuilder_t builder, sk_rrect_t rect, SKPathDirection dir, UInt32 start) =>
+			(sk_pathbuilder_add_rrect_start_delegate ??= GetSymbol<Delegates.sk_pathbuilder_add_rrect_start> ("sk_pathbuilder_add_rrect_start")).Invoke (builder, rect, dir, start);
+		#endif
+
+		// void sk_pathbuilder_arc_to(sk_pathbuilder_t* builder, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_arc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_arc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_arc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		}
+		private static Delegates.sk_pathbuilder_arc_to sk_pathbuilder_arc_to_delegate;
+		internal static void sk_pathbuilder_arc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y) =>
+			(sk_pathbuilder_arc_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_arc_to> ("sk_pathbuilder_arc_to")).Invoke (builder, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		#endif
+
+		// void sk_pathbuilder_arc_to_with_oval(sk_pathbuilder_t* builder, const sk_rect_t* oval, float startAngle, float sweepAngle, bool forceMoveTo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_arc_to_with_oval (sk_pathbuilder_t builder, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_arc_to_with_oval (sk_pathbuilder_t builder, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_arc_to_with_oval (sk_pathbuilder_t builder, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo);
+		}
+		private static Delegates.sk_pathbuilder_arc_to_with_oval sk_pathbuilder_arc_to_with_oval_delegate;
+		internal static void sk_pathbuilder_arc_to_with_oval (sk_pathbuilder_t builder, SKRect* oval, Single startAngle, Single sweepAngle, [MarshalAs (UnmanagedType.I1)] bool forceMoveTo) =>
+			(sk_pathbuilder_arc_to_with_oval_delegate ??= GetSymbol<Delegates.sk_pathbuilder_arc_to_with_oval> ("sk_pathbuilder_arc_to_with_oval")).Invoke (builder, oval, startAngle, sweepAngle, forceMoveTo);
+		#endif
+
+		// void sk_pathbuilder_arc_to_with_points(sk_pathbuilder_t* builder, float x1, float y1, float x2, float y2, float radius)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_arc_to_with_points (sk_pathbuilder_t builder, Single x1, Single y1, Single x2, Single y2, Single radius);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_arc_to_with_points (sk_pathbuilder_t builder, Single x1, Single y1, Single x2, Single y2, Single radius);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_arc_to_with_points (sk_pathbuilder_t builder, Single x1, Single y1, Single x2, Single y2, Single radius);
+		}
+		private static Delegates.sk_pathbuilder_arc_to_with_points sk_pathbuilder_arc_to_with_points_delegate;
+		internal static void sk_pathbuilder_arc_to_with_points (sk_pathbuilder_t builder, Single x1, Single y1, Single x2, Single y2, Single radius) =>
+			(sk_pathbuilder_arc_to_with_points_delegate ??= GetSymbol<Delegates.sk_pathbuilder_arc_to_with_points> ("sk_pathbuilder_arc_to_with_points")).Invoke (builder, x1, y1, x2, y2, radius);
+		#endif
+
+		// void sk_pathbuilder_close(sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_close (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_close (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_close (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_close sk_pathbuilder_close_delegate;
+		internal static void sk_pathbuilder_close (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_close_delegate ??= GetSymbol<Delegates.sk_pathbuilder_close> ("sk_pathbuilder_close")).Invoke (builder);
+		#endif
+
+		// void sk_pathbuilder_conic_to(sk_pathbuilder_t* builder, float x0, float y0, float x1, float y1, float w)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_conic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single w);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_conic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single w);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_conic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single w);
+		}
+		private static Delegates.sk_pathbuilder_conic_to sk_pathbuilder_conic_to_delegate;
+		internal static void sk_pathbuilder_conic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single w) =>
+			(sk_pathbuilder_conic_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_conic_to> ("sk_pathbuilder_conic_to")).Invoke (builder, x0, y0, x1, y1, w);
+		#endif
+
+		// void sk_pathbuilder_cubic_to(sk_pathbuilder_t* builder, float x0, float y0, float x1, float y1, float x2, float y2)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_cubic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_cubic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_cubic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2);
+		}
+		private static Delegates.sk_pathbuilder_cubic_to sk_pathbuilder_cubic_to_delegate;
+		internal static void sk_pathbuilder_cubic_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1, Single x2, Single y2) =>
+			(sk_pathbuilder_cubic_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_cubic_to> ("sk_pathbuilder_cubic_to")).Invoke (builder, x0, y0, x1, y1, x2, y2);
+		#endif
+
+		// void sk_pathbuilder_delete(sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_delete (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_delete (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_delete (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_delete sk_pathbuilder_delete_delegate;
+		internal static void sk_pathbuilder_delete (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_delete_delegate ??= GetSymbol<Delegates.sk_pathbuilder_delete> ("sk_pathbuilder_delete")).Invoke (builder);
+		#endif
+
+		// sk_path_t* sk_pathbuilder_detach_path(sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_t sk_pathbuilder_detach_path (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_path_t sk_pathbuilder_detach_path (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_path_t sk_pathbuilder_detach_path (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_detach_path sk_pathbuilder_detach_path_delegate;
+		internal static sk_path_t sk_pathbuilder_detach_path (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_detach_path_delegate ??= GetSymbol<Delegates.sk_pathbuilder_detach_path> ("sk_pathbuilder_detach_path")).Invoke (builder);
+		#endif
+
+		// sk_path_filltype_t sk_pathbuilder_get_filltype(const sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKPathFillType sk_pathbuilder_get_filltype (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKPathFillType sk_pathbuilder_get_filltype (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate SKPathFillType sk_pathbuilder_get_filltype (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_get_filltype sk_pathbuilder_get_filltype_delegate;
+		internal static SKPathFillType sk_pathbuilder_get_filltype (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_get_filltype_delegate ??= GetSymbol<Delegates.sk_pathbuilder_get_filltype> ("sk_pathbuilder_get_filltype")).Invoke (builder);
+		#endif
+
+		// void sk_pathbuilder_line_to(sk_pathbuilder_t* builder, float x, float y)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_line_to (sk_pathbuilder_t builder, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_line_to (sk_pathbuilder_t builder, Single x, Single y);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_line_to (sk_pathbuilder_t builder, Single x, Single y);
+		}
+		private static Delegates.sk_pathbuilder_line_to sk_pathbuilder_line_to_delegate;
+		internal static void sk_pathbuilder_line_to (sk_pathbuilder_t builder, Single x, Single y) =>
+			(sk_pathbuilder_line_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_line_to> ("sk_pathbuilder_line_to")).Invoke (builder, x, y);
+		#endif
+
+		// void sk_pathbuilder_move_to(sk_pathbuilder_t* builder, float x, float y)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_move_to (sk_pathbuilder_t builder, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_move_to (sk_pathbuilder_t builder, Single x, Single y);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_move_to (sk_pathbuilder_t builder, Single x, Single y);
+		}
+		private static Delegates.sk_pathbuilder_move_to sk_pathbuilder_move_to_delegate;
+		internal static void sk_pathbuilder_move_to (sk_pathbuilder_t builder, Single x, Single y) =>
+			(sk_pathbuilder_move_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_move_to> ("sk_pathbuilder_move_to")).Invoke (builder, x, y);
+		#endif
+
+		// sk_pathbuilder_t* sk_pathbuilder_new()
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pathbuilder_t sk_pathbuilder_new ();
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pathbuilder_t sk_pathbuilder_new ();
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pathbuilder_t sk_pathbuilder_new ();
+		}
+		private static Delegates.sk_pathbuilder_new sk_pathbuilder_new_delegate;
+		internal static sk_pathbuilder_t sk_pathbuilder_new () =>
+			(sk_pathbuilder_new_delegate ??= GetSymbol<Delegates.sk_pathbuilder_new> ("sk_pathbuilder_new")).Invoke ();
+		#endif
+
+		// sk_pathbuilder_t* sk_pathbuilder_new_from_path(const sk_path_t* path)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_pathbuilder_t sk_pathbuilder_new_from_path (sk_path_t path);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_pathbuilder_t sk_pathbuilder_new_from_path (sk_path_t path);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_pathbuilder_t sk_pathbuilder_new_from_path (sk_path_t path);
+		}
+		private static Delegates.sk_pathbuilder_new_from_path sk_pathbuilder_new_from_path_delegate;
+		internal static sk_pathbuilder_t sk_pathbuilder_new_from_path (sk_path_t path) =>
+			(sk_pathbuilder_new_from_path_delegate ??= GetSymbol<Delegates.sk_pathbuilder_new_from_path> ("sk_pathbuilder_new_from_path")).Invoke (path);
+		#endif
+
+		// void sk_pathbuilder_quad_to(sk_pathbuilder_t* builder, float x0, float y0, float x1, float y1)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_quad_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_quad_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_quad_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1);
+		}
+		private static Delegates.sk_pathbuilder_quad_to sk_pathbuilder_quad_to_delegate;
+		internal static void sk_pathbuilder_quad_to (sk_pathbuilder_t builder, Single x0, Single y0, Single x1, Single y1) =>
+			(sk_pathbuilder_quad_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_quad_to> ("sk_pathbuilder_quad_to")).Invoke (builder, x0, y0, x1, y1);
+		#endif
+
+		// void sk_pathbuilder_rarc_to(sk_pathbuilder_t* builder, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rarc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rarc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rarc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y);
+		}
+		private static Delegates.sk_pathbuilder_rarc_to sk_pathbuilder_rarc_to_delegate;
+		internal static void sk_pathbuilder_rarc_to (sk_pathbuilder_t builder, Single rx, Single ry, Single xAxisRotate, SKPathArcSize largeArc, SKPathDirection sweep, Single x, Single y) =>
+			(sk_pathbuilder_rarc_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rarc_to> ("sk_pathbuilder_rarc_to")).Invoke (builder, rx, ry, xAxisRotate, largeArc, sweep, x, y);
+		#endif
+
+		// void sk_pathbuilder_rconic_to(sk_pathbuilder_t* builder, float dx0, float dy0, float dx1, float dy1, float w)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rconic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rconic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rconic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single w);
+		}
+		private static Delegates.sk_pathbuilder_rconic_to sk_pathbuilder_rconic_to_delegate;
+		internal static void sk_pathbuilder_rconic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single w) =>
+			(sk_pathbuilder_rconic_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rconic_to> ("sk_pathbuilder_rconic_to")).Invoke (builder, dx0, dy0, dx1, dy1, w);
+		#endif
+
+		// void sk_pathbuilder_rcubic_to(sk_pathbuilder_t* builder, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rcubic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rcubic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rcubic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2);
+		}
+		private static Delegates.sk_pathbuilder_rcubic_to sk_pathbuilder_rcubic_to_delegate;
+		internal static void sk_pathbuilder_rcubic_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1, Single dx2, Single dy2) =>
+			(sk_pathbuilder_rcubic_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rcubic_to> ("sk_pathbuilder_rcubic_to")).Invoke (builder, dx0, dy0, dx1, dy1, dx2, dy2);
+		#endif
+
+		// void sk_pathbuilder_reset(sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_reset (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_reset (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_reset (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_reset sk_pathbuilder_reset_delegate;
+		internal static void sk_pathbuilder_reset (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_reset_delegate ??= GetSymbol<Delegates.sk_pathbuilder_reset> ("sk_pathbuilder_reset")).Invoke (builder);
+		#endif
+
+		// void sk_pathbuilder_reverse_add_path(sk_pathbuilder_t* builder, const sk_path_t* other)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_reverse_add_path (sk_pathbuilder_t builder, sk_path_t other);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_reverse_add_path (sk_pathbuilder_t builder, sk_path_t other);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_reverse_add_path (sk_pathbuilder_t builder, sk_path_t other);
+		}
+		private static Delegates.sk_pathbuilder_reverse_add_path sk_pathbuilder_reverse_add_path_delegate;
+		internal static void sk_pathbuilder_reverse_add_path (sk_pathbuilder_t builder, sk_path_t other) =>
+			(sk_pathbuilder_reverse_add_path_delegate ??= GetSymbol<Delegates.sk_pathbuilder_reverse_add_path> ("sk_pathbuilder_reverse_add_path")).Invoke (builder, other);
+		#endif
+
+		// void sk_pathbuilder_rline_to(sk_pathbuilder_t* builder, float dx, float dy)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rline_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rline_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rline_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		}
+		private static Delegates.sk_pathbuilder_rline_to sk_pathbuilder_rline_to_delegate;
+		internal static void sk_pathbuilder_rline_to (sk_pathbuilder_t builder, Single dx, Single dy) =>
+			(sk_pathbuilder_rline_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rline_to> ("sk_pathbuilder_rline_to")).Invoke (builder, dx, dy);
+		#endif
+
+		// void sk_pathbuilder_rmove_to(sk_pathbuilder_t* builder, float dx, float dy)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rmove_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rmove_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rmove_to (sk_pathbuilder_t builder, Single dx, Single dy);
+		}
+		private static Delegates.sk_pathbuilder_rmove_to sk_pathbuilder_rmove_to_delegate;
+		internal static void sk_pathbuilder_rmove_to (sk_pathbuilder_t builder, Single dx, Single dy) =>
+			(sk_pathbuilder_rmove_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rmove_to> ("sk_pathbuilder_rmove_to")).Invoke (builder, dx, dy);
+		#endif
+
+		// void sk_pathbuilder_rquad_to(sk_pathbuilder_t* builder, float dx0, float dy0, float dx1, float dy1)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_rquad_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_rquad_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_rquad_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1);
+		}
+		private static Delegates.sk_pathbuilder_rquad_to sk_pathbuilder_rquad_to_delegate;
+		internal static void sk_pathbuilder_rquad_to (sk_pathbuilder_t builder, Single dx0, Single dy0, Single dx1, Single dy1) =>
+			(sk_pathbuilder_rquad_to_delegate ??= GetSymbol<Delegates.sk_pathbuilder_rquad_to> ("sk_pathbuilder_rquad_to")).Invoke (builder, dx0, dy0, dx1, dy1);
+		#endif
+
+		// void sk_pathbuilder_set_filltype(sk_pathbuilder_t* builder, sk_path_filltype_t filltype)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_pathbuilder_set_filltype (sk_pathbuilder_t builder, SKPathFillType filltype);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_pathbuilder_set_filltype (sk_pathbuilder_t builder, SKPathFillType filltype);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_pathbuilder_set_filltype (sk_pathbuilder_t builder, SKPathFillType filltype);
+		}
+		private static Delegates.sk_pathbuilder_set_filltype sk_pathbuilder_set_filltype_delegate;
+		internal static void sk_pathbuilder_set_filltype (sk_pathbuilder_t builder, SKPathFillType filltype) =>
+			(sk_pathbuilder_set_filltype_delegate ??= GetSymbol<Delegates.sk_pathbuilder_set_filltype> ("sk_pathbuilder_set_filltype")).Invoke (builder, filltype);
+		#endif
+
+		// sk_path_t* sk_pathbuilder_snapshot_path(sk_pathbuilder_t* builder)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_path_t sk_pathbuilder_snapshot_path (sk_pathbuilder_t builder);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_path_t sk_pathbuilder_snapshot_path (sk_pathbuilder_t builder);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_path_t sk_pathbuilder_snapshot_path (sk_pathbuilder_t builder);
+		}
+		private static Delegates.sk_pathbuilder_snapshot_path sk_pathbuilder_snapshot_path_delegate;
+		internal static sk_path_t sk_pathbuilder_snapshot_path (sk_pathbuilder_t builder) =>
+			(sk_pathbuilder_snapshot_path_delegate ??= GetSymbol<Delegates.sk_pathbuilder_snapshot_path> ("sk_pathbuilder_snapshot_path")).Invoke (builder);
 		#endif
 
 		#endregion
@@ -11980,6 +12254,28 @@ namespace SkiaSharp
 		private static Delegates.sk_webpencoder_encode sk_webpencoder_encode_delegate;
 		internal static bool sk_webpencoder_encode (sk_wstream_t dst, sk_pixmap_t src, SKWebpEncoderOptions* options) =>
 			(sk_webpencoder_encode_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode> ("sk_webpencoder_encode")).Invoke (dst, src, options);
+		#endif
+
+		// bool sk_webpencoder_encode_animated(sk_wstream_t* dst, const sk_webpencoder_frame_t* src, int count, const sk_webpencoder_options_t* options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options);
+		}
+		private static Delegates.sk_webpencoder_encode_animated sk_webpencoder_encode_animated_delegate;
+		internal static bool sk_webpencoder_encode_animated (sk_wstream_t dst, SKWebpEncoderFrameNative* src, Int32 count, SKWebpEncoderOptions* options) =>
+			(sk_webpencoder_encode_animated_delegate ??= GetSymbol<Delegates.sk_webpencoder_encode_animated> ("sk_webpencoder_encode_animated")).Invoke (dst, src, count, options);
 		#endif
 
 		#endregion
@@ -14255,6 +14551,25 @@ namespace SkiaSharp
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
 		#endif
 
+		// sk_data_t* sk_stream_get_data(sk_stream_t* cstream)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_data_t sk_stream_get_data (sk_stream_t cstream);
+		}
+		private static Delegates.sk_stream_get_data sk_stream_get_data_delegate;
+		internal static sk_data_t sk_stream_get_data (sk_stream_t cstream) =>
+			(sk_stream_get_data_delegate ??= GetSymbol<Delegates.sk_stream_get_data> ("sk_stream_get_data")).Invoke (cstream);
+		#endif
+
 		// size_t sk_stream_get_length(sk_stream_t* cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -14378,7 +14693,7 @@ namespace SkiaSharp
 			(sk_stream_is_at_end_delegate ??= GetSymbol<Delegates.sk_stream_is_at_end> ("sk_stream_is_at_end")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_move(sk_stream_t* cstream, int offset)
+		// bool sk_stream_move(sk_stream_t* cstream, int32_t offset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15140,6 +15455,25 @@ namespace SkiaSharp
 		private static Delegates.sk_surface_draw sk_surface_draw_delegate;
 		internal static void sk_surface_draw (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, sk_paint_t paint) =>
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
+		#endif
+
+		// void sk_surface_draw_with_sampling(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_sampling_options_t* sampling, const sk_paint_t* paint)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
+		}
+		private static Delegates.sk_surface_draw_with_sampling sk_surface_draw_with_sampling_delegate;
+		internal static void sk_surface_draw_with_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint) =>
+			(sk_surface_draw_with_sampling_delegate ??= GetSymbol<Delegates.sk_surface_draw_with_sampling> ("sk_surface_draw_with_sampling")).Invoke (surface, canvas, x, y, sampling, paint);
 		#endif
 
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
@@ -15996,6 +16330,25 @@ namespace SkiaSharp
 			(sk_fontmgr_get_family_name_delegate ??= GetSymbol<Delegates.sk_fontmgr_get_family_name> ("sk_fontmgr_get_family_name")).Invoke (param0, index, familyName);
 		#endif
 
+		// sk_typeface_t* sk_fontmgr_legacy_create_typeface(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style);
+		}
+		private static Delegates.sk_fontmgr_legacy_create_typeface sk_fontmgr_legacy_create_typeface_delegate;
+		internal static sk_typeface_t sk_fontmgr_legacy_create_typeface (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style) =>
+			(sk_fontmgr_legacy_create_typeface_delegate ??= GetSymbol<Delegates.sk_fontmgr_legacy_create_typeface> ("sk_fontmgr_legacy_create_typeface")).Invoke (param0, familyName, style);
+		#endif
+
 		// sk_fontstyleset_t* sk_fontmgr_match_family(sk_fontmgr_t*, const char* familyName)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16051,25 +16404,6 @@ namespace SkiaSharp
 		private static Delegates.sk_fontmgr_match_family_style_character sk_fontmgr_match_family_style_character_delegate;
 		internal static sk_typeface_t sk_fontmgr_match_family_style_character (sk_fontmgr_t param0, IntPtr familyName, sk_fontstyle_t style, [MarshalAs (UnmanagedType.LPArray, ArraySubType = UnmanagedType.LPStr)] String[] bcp47, Int32 bcp47Count, Int32 character) =>
 			(sk_fontmgr_match_family_style_character_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family_style_character> ("sk_fontmgr_match_family_style_character")).Invoke (param0, familyName, style, bcp47, bcp47Count, character);
-		#endif
-
-		// sk_fontmgr_t* sk_fontmgr_ref_default()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_fontmgr_t sk_fontmgr_ref_default ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_fontmgr_t sk_fontmgr_ref_default ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_fontmgr_t sk_fontmgr_ref_default ();
-		}
-		private static Delegates.sk_fontmgr_ref_default sk_fontmgr_ref_default_delegate;
-		internal static sk_fontmgr_t sk_fontmgr_ref_default () =>
-			(sk_fontmgr_ref_default_delegate ??= GetSymbol<Delegates.sk_fontmgr_ref_default> ("sk_fontmgr_ref_default")).Invoke ();
 		#endif
 
 		// void sk_fontmgr_unref(sk_fontmgr_t*)
@@ -16300,6 +16634,25 @@ namespace SkiaSharp
 			(sk_fontstyleset_unref_delegate ??= GetSymbol<Delegates.sk_fontstyleset_unref> ("sk_fontstyleset_unref")).Invoke (fss);
 		#endif
 
+		// sk_typeface_t* sk_typeface_clone_with_arguments(const sk_typeface_t* typeface, const sk_fontarguments_variation_position_coordinate_t* coordinates, int coordinateCount, int collectionIndex, int paletteIndex, const sk_fontarguments_palette_override_t* paletteOverrides, int paletteOverrideCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount);
+		}
+		private static Delegates.sk_typeface_clone_with_arguments sk_typeface_clone_with_arguments_delegate;
+		internal static sk_typeface_t sk_typeface_clone_with_arguments (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount, Int32 collectionIndex, Int32 paletteIndex, SKFontPaletteOverride* paletteOverrides, Int32 paletteOverrideCount) =>
+			(sk_typeface_clone_with_arguments_delegate ??= GetSymbol<Delegates.sk_typeface_clone_with_arguments> ("sk_typeface_clone_with_arguments")).Invoke (typeface, coordinates, coordinateCount, collectionIndex, paletteIndex, paletteOverrides, paletteOverrideCount);
+		#endif
+
 		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16357,99 +16710,23 @@ namespace SkiaSharp
 			(sk_typeface_count_tables_delegate ??= GetSymbol<Delegates.sk_typeface_count_tables> ("sk_typeface_count_tables")).Invoke (typeface);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_default()
+		// sk_typeface_t* sk_typeface_create_empty()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_default ();
+		internal static partial sk_typeface_t sk_typeface_create_empty ();
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_default ();
+		internal static extern sk_typeface_t sk_typeface_create_empty ();
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_default ();
+			internal delegate sk_typeface_t sk_typeface_create_empty ();
 		}
-		private static Delegates.sk_typeface_create_default sk_typeface_create_default_delegate;
-		internal static sk_typeface_t sk_typeface_create_default () =>
-			(sk_typeface_create_default_delegate ??= GetSymbol<Delegates.sk_typeface_create_default> ("sk_typeface_create_default")).Invoke ();
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_data sk_typeface_create_from_data_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_data (sk_data_t data, Int32 index) =>
-			(sk_typeface_create_from_data_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_data> ("sk_typeface_create_from_data")).Invoke (data, index);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_file sk_typeface_create_from_file_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_file (/* char */ void* path, Int32 index) =>
-			(sk_typeface_create_from_file_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_file> ("sk_typeface_create_from_file")).Invoke (path, index);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style);
-		}
-		private static Delegates.sk_typeface_create_from_name sk_typeface_create_from_name_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_name (IntPtr familyName, sk_fontstyle_t style) =>
-			(sk_typeface_create_from_name_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_name> ("sk_typeface_create_from_name")).Invoke (familyName, style);
-		#endif
-
-		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index);
-		}
-		private static Delegates.sk_typeface_create_from_stream sk_typeface_create_from_stream_delegate;
-		internal static sk_typeface_t sk_typeface_create_from_stream (sk_stream_asset_t stream, Int32 index) =>
-			(sk_typeface_create_from_stream_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_stream> ("sk_typeface_create_from_stream")).Invoke (stream, index);
+		private static Delegates.sk_typeface_create_empty sk_typeface_create_empty_delegate;
+		internal static sk_typeface_t sk_typeface_create_empty () =>
+			(sk_typeface_create_empty_delegate ??= GetSymbol<Delegates.sk_typeface_create_empty> ("sk_typeface_create_empty")).Invoke ();
 		#endif
 
 		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
@@ -16664,6 +16941,44 @@ namespace SkiaSharp
 			(sk_typeface_get_units_per_em_delegate ??= GetSymbol<Delegates.sk_typeface_get_units_per_em> ("sk_typeface_get_units_per_em")).Invoke (typeface);
 		#endif
 
+		// int sk_typeface_get_variation_design_parameters(const sk_typeface_t* typeface, sk_fontarguments_variation_axis_t* parameters, int parameterCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount);
+		}
+		private static Delegates.sk_typeface_get_variation_design_parameters sk_typeface_get_variation_design_parameters_delegate;
+		internal static Int32 sk_typeface_get_variation_design_parameters (sk_typeface_t typeface, SKFontVariationAxis* parameters, Int32 parameterCount) =>
+			(sk_typeface_get_variation_design_parameters_delegate ??= GetSymbol<Delegates.sk_typeface_get_variation_design_parameters> ("sk_typeface_get_variation_design_parameters")).Invoke (typeface, parameters, parameterCount);
+		#endif
+
+		// int sk_typeface_get_variation_design_position(const sk_typeface_t* typeface, sk_fontarguments_variation_position_coordinate_t* coordinates, int coordinateCount)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount);
+		}
+		private static Delegates.sk_typeface_get_variation_design_position sk_typeface_get_variation_design_position_delegate;
+		internal static Int32 sk_typeface_get_variation_design_position (sk_typeface_t typeface, SKFontVariationPositionCoordinate* coordinates, Int32 coordinateCount) =>
+			(sk_typeface_get_variation_design_position_delegate ??= GetSymbol<Delegates.sk_typeface_get_variation_design_position> ("sk_typeface_get_variation_design_position")).Invoke (typeface, coordinates, coordinateCount);
+		#endif
+
 		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -16703,25 +17018,6 @@ namespace SkiaSharp
 		private static Delegates.sk_typeface_open_stream sk_typeface_open_stream_delegate;
 		internal static sk_stream_asset_t sk_typeface_open_stream (sk_typeface_t typeface, Int32* ttcIndex) =>
 			(sk_typeface_open_stream_delegate ??= GetSymbol<Delegates.sk_typeface_open_stream> ("sk_typeface_open_stream")).Invoke (typeface, ttcIndex);
-		#endif
-
-		// sk_typeface_t* sk_typeface_ref_default()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_typeface_t sk_typeface_ref_default ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_typeface_t sk_typeface_ref_default ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_typeface_t sk_typeface_ref_default ();
-		}
-		private static Delegates.sk_typeface_ref_default sk_typeface_ref_default_delegate;
-		internal static sk_typeface_t sk_typeface_ref_default () =>
-			(sk_typeface_ref_default_delegate ??= GetSymbol<Delegates.sk_typeface_ref_default> ("sk_typeface_ref_default")).Invoke ();
 		#endif
 
 		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)
@@ -17001,25 +17297,6 @@ namespace SkiaSharp
 			(sk_compatpaint_make_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_make_font> ("sk_compatpaint_make_font")).Invoke (paint);
 		#endif
 
-		// sk_compatpaint_t* sk_compatpaint_new()
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial sk_compatpaint_t sk_compatpaint_new ();
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_compatpaint_t sk_compatpaint_new ();
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_compatpaint_t sk_compatpaint_new ();
-		}
-		private static Delegates.sk_compatpaint_new sk_compatpaint_new_delegate;
-		internal static sk_compatpaint_t sk_compatpaint_new () =>
-			(sk_compatpaint_new_delegate ??= GetSymbol<Delegates.sk_compatpaint_new> ("sk_compatpaint_new")).Invoke ();
-		#endif
-
 		// sk_compatpaint_t* sk_compatpaint_new_with_font(const sk_font_t* font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -17039,23 +17316,23 @@ namespace SkiaSharp
 			(sk_compatpaint_new_with_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_new_with_font> ("sk_compatpaint_new_with_font")).Invoke (font);
 		#endif
 
-		// void sk_compatpaint_reset(sk_compatpaint_t* paint)
+		// void sk_compatpaint_reset(sk_compatpaint_t* paint, const sk_font_t* font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint);
+		internal static partial void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint);
+		internal static extern void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_compatpaint_reset (sk_compatpaint_t paint);
+			internal delegate void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font);
 		}
 		private static Delegates.sk_compatpaint_reset sk_compatpaint_reset_delegate;
-		internal static void sk_compatpaint_reset (sk_compatpaint_t paint) =>
-			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint);
+		internal static void sk_compatpaint_reset (sk_compatpaint_t paint, sk_font_t font) =>
+			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint, font);
 		#endif
 
 		// void sk_compatpaint_set_filter_quality(sk_compatpaint_t* paint, int quality)
@@ -17495,7 +17772,7 @@ namespace SkiaSharp {
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamIsAtEndProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, int offset)* sk_managedstream_move_proc
+	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, int32_t offset)* sk_managedstream_move_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamMoveProxyDelegate(sk_stream_managedstream_t s, void* context, Int32 offset);
@@ -17929,23 +18206,11 @@ namespace SkiaSharp {
 		// public uint32_t fGraphicsQueueIndex
 		public UInt32 fGraphicsQueueIndex;
 
-		// public uint32_t fMinAPIVersion
-		public UInt32 fMinAPIVersion;
-
-		// public uint32_t fInstanceVersion
-		public UInt32 fInstanceVersion;
-
 		// public uint32_t fMaxAPIVersion
 		public UInt32 fMaxAPIVersion;
 
-		// public uint32_t fExtensions
-		public UInt32 fExtensions;
-
 		// public const gr_vk_extensions_t* fVkExtensions
 		public gr_vk_extensions_t fVkExtensions;
-
-		// public uint32_t fFeatures
-		public UInt32 fFeatures;
 
 		// public const vk_physical_device_features_t* fDeviceFeatures
 		public vk_physical_device_features_t fDeviceFeatures;
@@ -17966,15 +18231,12 @@ namespace SkiaSharp {
 		// public void* fGetProcUserData
 		public void* fGetProcUserData;
 
-		// public bool fOwnsInstanceAndDevice
-		public Byte fOwnsInstanceAndDevice;
-
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
 		public readonly bool Equals (GRVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMinAPIVersion == obj.fMinAPIVersion && fInstanceVersion == obj.fInstanceVersion && fMaxAPIVersion == obj.fMaxAPIVersion && fExtensions == obj.fExtensions && fVkExtensions == obj.fVkExtensions && fFeatures == obj.fFeatures && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fOwnsInstanceAndDevice == obj.fOwnsInstanceAndDevice && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fVkExtensions == obj.fVkExtensions && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -17994,18 +18256,13 @@ namespace SkiaSharp {
 			hash.Add (fDevice);
 			hash.Add (fQueue);
 			hash.Add (fGraphicsQueueIndex);
-			hash.Add (fMinAPIVersion);
-			hash.Add (fInstanceVersion);
 			hash.Add (fMaxAPIVersion);
-			hash.Add (fExtensions);
 			hash.Add (fVkExtensions);
-			hash.Add (fFeatures);
 			hash.Add (fDeviceFeatures);
 			hash.Add (fDeviceFeatures2);
 			hash.Add (fMemoryAllocator);
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
-			hash.Add (fOwnsInstanceAndDevice);
 			hash.Add (fProtectedContext);
 			return hash.ToHashCode ();
 		}
@@ -18086,8 +18343,8 @@ namespace SkiaSharp {
 		}
 
 		// public gr_vk_ycbcrconversioninfo_t fYcbcrConversionInfo
-		private GrVkYcbcrConversionInfo fYcbcrConversionInfo;
-		public GrVkYcbcrConversionInfo YcbcrConversionInfo {
+		private GRVkYcbcrConversionInfo fYcbcrConversionInfo;
+		public GRVkYcbcrConversionInfo YcbcrConversionInfo {
 			readonly get => fYcbcrConversionInfo;
 			set => fYcbcrConversionInfo = value;
 		}
@@ -18133,9 +18390,66 @@ namespace SkiaSharp {
 
 	}
 
+	// gr_vk_ycbcr_components_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct GRVkYcbcrComponents : IEquatable<GRVkYcbcrComponents> {
+		// public uint32_t r
+		private UInt32 r;
+		public UInt32 R {
+			readonly get => r;
+			set => r = value;
+		}
+
+		// public uint32_t g
+		private UInt32 g;
+		public UInt32 G {
+			readonly get => g;
+			set => g = value;
+		}
+
+		// public uint32_t b
+		private UInt32 b;
+		public UInt32 B {
+			readonly get => b;
+			set => b = value;
+		}
+
+		// public uint32_t a
+		private UInt32 a;
+		public UInt32 A {
+			readonly get => a;
+			set => a = value;
+		}
+
+		public readonly bool Equals (GRVkYcbcrComponents obj) =>
+#pragma warning disable CS8909
+			r == obj.r && g == obj.g && b == obj.b && a == obj.a;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkYcbcrComponents f && Equals (f);
+
+		public static bool operator == (GRVkYcbcrComponents left, GRVkYcbcrComponents right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkYcbcrComponents left, GRVkYcbcrComponents right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (r);
+			hash.Add (g);
+			hash.Add (b);
+			hash.Add (a);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// gr_vk_ycbcrconversioninfo_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
+	public unsafe partial struct GRVkYcbcrConversionInfo : IEquatable<GRVkYcbcrConversionInfo> {
 		// public uint32_t fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
@@ -18192,25 +18506,39 @@ namespace SkiaSharp {
 			set => fForceExplicitReconstruction = value;
 		}
 
-		// public uint32_t fFormatFeatures
-		private UInt32 fFormatFeatures;
-		public UInt32 FormatFeatures {
-			readonly get => fFormatFeatures;
-			set => fFormatFeatures = value;
+		// public gr_vk_ycbcr_components_t fComponents
+		private GRVkYcbcrComponents fComponents;
+		public GRVkYcbcrComponents Components {
+			readonly get => fComponents;
+			set => fComponents = value;
 		}
 
-		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
+		// public bool fSamplerFilterMustMatchChromaFilter
+		private Byte fSamplerFilterMustMatchChromaFilter;
+		public bool SamplerFilterMustMatchChromaFilter {
+			readonly get => fSamplerFilterMustMatchChromaFilter > 0;
+			set => fSamplerFilterMustMatchChromaFilter = value ? (byte)1 : (byte)0;
+		}
+
+		// public bool fSupportsLinearFilter
+		private Byte fSupportsLinearFilter;
+		public bool SupportsLinearFilter {
+			readonly get => fSupportsLinearFilter > 0;
+			set => fSupportsLinearFilter = value ? (byte)1 : (byte)0;
+		}
+
+		public readonly bool Equals (GRVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
-			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
+			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fComponents == obj.fComponents && fSamplerFilterMustMatchChromaFilter == obj.fSamplerFilterMustMatchChromaFilter && fSupportsLinearFilter == obj.fSupportsLinearFilter;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is GrVkYcbcrConversionInfo f && Equals (f);
+			obj is GRVkYcbcrConversionInfo f && Equals (f);
 
-		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator == (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			left.Equals (right);
 
-		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
+		public static bool operator != (GRVkYcbcrConversionInfo left, GRVkYcbcrConversionInfo right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
@@ -18224,7 +18552,9 @@ namespace SkiaSharp {
 			hash.Add (fYChromaOffset);
 			hash.Add (fChromaFilter);
 			hash.Add (fForceExplicitReconstruction);
-			hash.Add (fFormatFeatures);
+			hash.Add (fComponents);
+			hash.Add (fSamplerFilterMustMatchChromaFilter);
+			hash.Add (fSupportsLinearFilter);
 			return hash.ToHashCode ();
 		}
 
@@ -18375,9 +18705,12 @@ namespace SkiaSharp {
 		// public int fPriorFrame
 		public Int32 fPriorFrame;
 
+		// public size_t fMaxDecodeMemory
+		public /* size_t */ IntPtr fMaxDecodeMemory;
+
 		public readonly bool Equals (SKCodecOptionsInternal obj) =>
 #pragma warning disable CS8909
-			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame;
+			fZeroInitialized == obj.fZeroInitialized && fSubset == obj.fSubset && fFrameIndex == obj.fFrameIndex && fPriorFrame == obj.fPriorFrame && fMaxDecodeMemory == obj.fMaxDecodeMemory;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -18396,6 +18729,7 @@ namespace SkiaSharp {
 			hash.Add (fSubset);
 			hash.Add (fFrameIndex);
 			hash.Add (fPriorFrame);
+			hash.Add (fMaxDecodeMemory);
 			return hash.ToHashCode ();
 		}
 
@@ -18838,6 +19172,194 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_document_xps_options_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKDocumentXpsOptions : IEquatable<SKDocumentXpsOptions> {
+		// public float fDPI
+		private Single fDPI;
+		public Single Dpi {
+			readonly get => fDPI;
+			set => fDPI = value;
+		}
+
+		// public bool fAllowNoPngs
+		private Byte fAllowNoPngs;
+		public bool AllowNoPngs {
+			readonly get => fAllowNoPngs > 0;
+			set => fAllowNoPngs = value ? (byte)1 : (byte)0;
+		}
+
+		public readonly bool Equals (SKDocumentXpsOptions obj) =>
+#pragma warning disable CS8909
+			fDPI == obj.fDPI && fAllowNoPngs == obj.fAllowNoPngs;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKDocumentXpsOptions f && Equals (f);
+
+		public static bool operator == (SKDocumentXpsOptions left, SKDocumentXpsOptions right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKDocumentXpsOptions left, SKDocumentXpsOptions right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fDPI);
+			hash.Add (fAllowNoPngs);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_palette_override_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontPaletteOverride : IEquatable<SKFontPaletteOverride> {
+		// public uint16_t index
+		private UInt16 index;
+		public UInt16 Index {
+			readonly get => index;
+			set => index = value;
+		}
+
+		// public sk_color_t color
+		private UInt32 color;
+		public UInt32 Color {
+			readonly get => color;
+			set => color = value;
+		}
+
+		public readonly bool Equals (SKFontPaletteOverride obj) =>
+#pragma warning disable CS8909
+			index == obj.index && color == obj.color;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontPaletteOverride f && Equals (f);
+
+		public static bool operator == (SKFontPaletteOverride left, SKFontPaletteOverride right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontPaletteOverride left, SKFontPaletteOverride right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (index);
+			hash.Add (color);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_variation_axis_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontVariationAxis : IEquatable<SKFontVariationAxis> {
+		// public sk_fourbytetag_t tag
+		private SKFourByteTag tag;
+		public SKFourByteTag Tag {
+			readonly get => tag;
+			set => tag = value;
+		}
+
+		// public float min
+		private Single min;
+		public Single Min {
+			readonly get => min;
+			set => min = value;
+		}
+
+		// public float def
+		private Single def;
+		public Single Default {
+			readonly get => def;
+			set => def = value;
+		}
+
+		// public float max
+		private Single max;
+		public Single Max {
+			readonly get => max;
+			set => max = value;
+		}
+
+		// public bool isHidden
+		private Byte isHidden;
+		public bool IsHidden {
+			readonly get => isHidden > 0;
+			set => isHidden = value ? (byte)1 : (byte)0;
+		}
+
+		public readonly bool Equals (SKFontVariationAxis obj) =>
+#pragma warning disable CS8909
+			tag == obj.tag && min == obj.min && def == obj.def && max == obj.max && isHidden == obj.isHidden;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontVariationAxis f && Equals (f);
+
+		public static bool operator == (SKFontVariationAxis left, SKFontVariationAxis right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontVariationAxis left, SKFontVariationAxis right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (tag);
+			hash.Add (min);
+			hash.Add (def);
+			hash.Add (max);
+			hash.Add (isHidden);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// sk_fontarguments_variation_position_coordinate_t
+	[StructLayout (LayoutKind.Sequential)]
+	public unsafe partial struct SKFontVariationPositionCoordinate : IEquatable<SKFontVariationPositionCoordinate> {
+		// public sk_fourbytetag_t axis
+		private SKFourByteTag axis;
+		public SKFourByteTag Axis {
+			readonly get => axis;
+			set => axis = value;
+		}
+
+		// public float value
+		private Single value;
+		public Single Value {
+			readonly get => this.value;
+			set => this.value = value;
+		}
+
+		public readonly bool Equals (SKFontVariationPositionCoordinate obj) =>
+#pragma warning disable CS8909
+			axis == obj.axis && value == obj.value;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKFontVariationPositionCoordinate f && Equals (f);
+
+		public static bool operator == (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKFontVariationPositionCoordinate left, SKFontVariationPositionCoordinate right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (axis);
+			hash.Add (value);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_fontmetrics_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
@@ -19175,15 +19697,15 @@ namespace SkiaSharp {
 		// public const sk_data_t* xmpMetadata
 		private readonly sk_data_t xmpMetadata;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
-		private readonly sk_colorspace_icc_profile_t fICCProfile;
+		// public int32_t fOrigin
+		private readonly Int32 fOrigin;
 
-		// public const char* fICCProfileDescription
-		private readonly /* char */ void* fICCProfileDescription;
+		// public bool fHasOrigin
+		private readonly Byte fHasOrigin;
 
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
 #pragma warning disable CS8909
-			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && xmpMetadata == obj.xmpMetadata && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && xmpMetadata == obj.xmpMetadata && fOrigin == obj.fOrigin && fHasOrigin == obj.fHasOrigin;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -19202,8 +19724,8 @@ namespace SkiaSharp {
 			hash.Add (fDownsample);
 			hash.Add (fAlphaOption);
 			hash.Add (xmpMetadata);
-			hash.Add (fICCProfile);
-			hash.Add (fICCProfileDescription);
+			hash.Add (fOrigin);
+			hash.Add (fHasOrigin);
 			return hash.ToHashCode ();
 		}
 
@@ -19816,15 +20338,15 @@ namespace SkiaSharp {
 		// public void* fComments
 		private readonly void* fComments;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
-		private readonly sk_colorspace_icc_profile_t fICCProfile;
+		// public const void* fGainmap
+		private readonly void* fGainmap;
 
-		// public const char* fICCProfileDescription
-		private readonly /* char */ void* fICCProfileDescription;
+		// public const void* fGainmapInfo
+		private readonly void* fGainmapInfo;
 
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
 #pragma warning disable CS8909
-			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fGainmap == obj.fGainmap && fGainmapInfo == obj.fGainmapInfo;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -19842,8 +20364,8 @@ namespace SkiaSharp {
 			hash.Add (fFilterFlags);
 			hash.Add (fZLibLevel);
 			hash.Add (fComments);
-			hash.Add (fICCProfile);
-			hash.Add (fICCProfileDescription);
+			hash.Add (fGainmap);
+			hash.Add (fGainmapInfo);
 			return hash.ToHashCode ();
 		}
 
@@ -20275,6 +20797,39 @@ namespace SkiaSharp {
 
 	}
 
+	// sk_webpencoder_frame_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct SKWebpEncoderFrameNative : IEquatable<SKWebpEncoderFrameNative> {
+		// public const sk_pixmap_t* pixmap
+		public sk_pixmap_t pixmap;
+
+		// public int duration
+		public Int32 duration;
+
+		public readonly bool Equals (SKWebpEncoderFrameNative obj) =>
+#pragma warning disable CS8909
+			pixmap == obj.pixmap && duration == obj.duration;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is SKWebpEncoderFrameNative f && Equals (f);
+
+		public static bool operator == (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (SKWebpEncoderFrameNative left, SKWebpEncoderFrameNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (pixmap);
+			hash.Add (duration);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// sk_webpencoder_options_t
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
@@ -20284,15 +20839,9 @@ namespace SkiaSharp {
 		// public float fQuality
 		private readonly Single fQuality;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
-		private readonly sk_colorspace_icc_profile_t fICCProfile;
-
-		// public const char* fICCProfileDescription
-		private readonly /* char */ void* fICCProfileDescription;
-
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
 #pragma warning disable CS8909
-			fCompression == obj.fCompression && fQuality == obj.fQuality && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
+			fCompression == obj.fCompression && fQuality == obj.fQuality;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -20309,8 +20858,6 @@ namespace SkiaSharp {
 			var hash = new HashCode ();
 			hash.Add (fCompression);
 			hash.Add (fQuality);
-			hash.Add (fICCProfile);
-			hash.Add (fICCProfileDescription);
 			return hash.ToHashCode ();
 		}
 
@@ -20530,6 +21077,66 @@ namespace SkiaSharp {
 		A = 3,
 	}
 
+	// sk_colorspace_primaries_cicp_t
+	public enum SKColorspacePrimariesCicp {
+		// UNKNOWN_SK_COLORSPACE_PRIMARIES_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_PRIMARIES_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_PRIMARIES_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_PRIMARIES_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_PRIMARIES_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_PRIMARIES_CICP = 7
+		SmpteSt240 = 7,
+		// GENERIC_FILM_SK_COLORSPACE_PRIMARIES_CICP = 8
+		GenericFilm = 8,
+		// REC2020_SK_COLORSPACE_PRIMARIES_CICP = 9
+		Rec2020 = 9,
+		// SMPTE_ST428_1_SK_COLORSPACE_PRIMARIES_CICP = 10
+		SmpteSt4281 = 10,
+		// SMPTE_RP431_2_SK_COLORSPACE_PRIMARIES_CICP = 11
+		SmpteRp4312 = 11,
+		// SMPTE_EG432_1_SK_COLORSPACE_PRIMARIES_CICP = 12
+		SmpteEg4321 = 12,
+		// ITU_T_H273_VALUE22_SK_COLORSPACE_PRIMARIES_CICP = 22
+		ItuTH273Value22 = 22,
+	}
+
+	// sk_colorspace_transfer_fn_cicp_t
+	public enum SKColorspaceTransferFnCicp {
+		// UNKNOWN_SK_COLORSPACE_TRANSFER_FN_CICP = 0
+		Unknown = 0,
+		// REC709_SK_COLORSPACE_TRANSFER_FN_CICP = 1
+		Rec709 = 1,
+		// REC470_SYSTEM_M_SK_COLORSPACE_TRANSFER_FN_CICP = 4
+		Rec470SystemM = 4,
+		// REC470_SYSTEM_BG_SK_COLORSPACE_TRANSFER_FN_CICP = 5
+		Rec470SystemBg = 5,
+		// REC601_SK_COLORSPACE_TRANSFER_FN_CICP = 6
+		Rec601 = 6,
+		// SMPTE_ST240_SK_COLORSPACE_TRANSFER_FN_CICP = 7
+		SmpteSt240 = 7,
+		// LINEAR_SK_COLORSPACE_TRANSFER_FN_CICP = 8
+		Linear = 8,
+		// IEC61966_2_4_SK_COLORSPACE_TRANSFER_FN_CICP = 11
+		Iec6196624 = 11,
+		// IEC61966_2_1_SK_COLORSPACE_TRANSFER_FN_CICP = 13
+		Iec6196621 = 13,
+		// REC2020_10BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 14
+		Rec202010bit = 14,
+		// REC2020_12BIT_SK_COLORSPACE_TRANSFER_FN_CICP = 15
+		Rec202012bit = 15,
+		// PQ_SK_COLORSPACE_TRANSFER_FN_CICP = 16
+		Pq = 16,
+		// SMPTE_ST428_1_SK_COLORSPACE_TRANSFER_FN_CICP = 17
+		SmpteSt4281 = 17,
+		// HLG_SK_COLORSPACE_TRANSFER_FN_CICP = 18
+		Hlg = 18,
+	}
+
 	// sk_colortype_t
 	internal enum SKColorTypeNative {
 		// UNKNOWN_SK_COLORTYPE = 0
@@ -20556,32 +21163,40 @@ namespace SkiaSharp {
 		Bgr101010x = 10,
 		// BGR_101010X_XR_SK_COLORTYPE = 11
 		Bgr101010xXr = 11,
-		// RGBA_10X6_SK_COLORTYPE = 12
-		Rgba10x6 = 12,
-		// GRAY_8_SK_COLORTYPE = 13
-		Gray8 = 13,
-		// RGBA_F16_NORM_SK_COLORTYPE = 14
-		RgbaF16Norm = 14,
-		// RGBA_F16_SK_COLORTYPE = 15
-		RgbaF16 = 15,
-		// RGBA_F32_SK_COLORTYPE = 16
-		RgbaF32 = 16,
-		// R8G8_UNORM_SK_COLORTYPE = 17
-		R8g8Unorm = 17,
-		// A16_FLOAT_SK_COLORTYPE = 18
-		A16Float = 18,
-		// R16G16_FLOAT_SK_COLORTYPE = 19
-		R16g16Float = 19,
-		// A16_UNORM_SK_COLORTYPE = 20
-		A16Unorm = 20,
-		// R16G16_UNORM_SK_COLORTYPE = 21
-		R16g16Unorm = 21,
-		// R16G16B16A16_UNORM_SK_COLORTYPE = 22
-		R16g16b16a16Unorm = 22,
-		// SRGBA_8888_SK_COLORTYPE = 23
-		Srgba8888 = 23,
-		// R8_UNORM_SK_COLORTYPE = 24
-		R8Unorm = 24,
+		// BGRA_10101010_XR_SK_COLORTYPE = 12
+		Bgra10101010Xr = 12,
+		// RGBA_10X6_SK_COLORTYPE = 13
+		Rgba10x6 = 13,
+		// GRAY_8_SK_COLORTYPE = 14
+		Gray8 = 14,
+		// RGBA_F16_NORM_SK_COLORTYPE = 15
+		RgbaF16Norm = 15,
+		// RGBA_F16_SK_COLORTYPE = 16
+		RgbaF16 = 16,
+		// RGB_F16F16F16X_SK_COLORTYPE = 17
+		RgbF16f16f16x = 17,
+		// RGBA_F32_SK_COLORTYPE = 18
+		RgbaF32 = 18,
+		// R8G8_UNORM_SK_COLORTYPE = 19
+		R8g8Unorm = 19,
+		// A16_FLOAT_SK_COLORTYPE = 20
+		A16Float = 20,
+		// R16_FLOAT_SK_COLORTYPE = 21
+		R16Float = 21,
+		// R16G16_FLOAT_SK_COLORTYPE = 22
+		R16g16Float = 22,
+		// A16_UNORM_SK_COLORTYPE = 23
+		A16Unorm = 23,
+		// R16_UNORM_SK_COLORTYPE = 24
+		R16Unorm = 24,
+		// R16G16_UNORM_SK_COLORTYPE = 25
+		R16g16Unorm = 25,
+		// R16G16B16A16_UNORM_SK_COLORTYPE = 26
+		R16g16b16a16Unorm = 26,
+		// SRGBA_8888_SK_COLORTYPE = 27
+		Srgba8888 = 27,
+		// R8_UNORM_SK_COLORTYPE = 28
+		R8Unorm = 28,
 	}
 
 	// sk_encoded_image_format_t

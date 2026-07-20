@@ -1,5 +1,4 @@
 ﻿#nullable disable
-// ReSharper disable PartialMethodParameterNameMismatch
 
 using System;
 
@@ -33,65 +32,65 @@ namespace HarfBuzzSharp
 	{
 		// internal proxy implementations
 
-		private static partial bool FontGetFontExtentsProxyImplementation (IntPtr font, void* fontData, FontExtents* extents, void* context)
+		private static partial bool FontGetFontExtentsProxyImplementation (IntPtr font, void* font_data, FontExtents* extents, void* user_data)
 		{
-			var del = GetMulti<FontExtentsDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<FontExtentsDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, out var extentsManaged);
 			if (extents != null)
 				*extents = extentsManaged;
 			return result;
 		}
 
-		private static partial bool FontGetNominalGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint* glyph, void* context)
+		private static partial bool FontGetNominalGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint* glyph, void* user_data)
 		{
-			var del = GetMulti<NominalGlyphDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<NominalGlyphDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, unicode, out var glyphManaged);
 			if (glyph != null)
 				*glyph = glyphManaged;
 			return result;
 		}
 
-		private static partial uint FontGetNominalGlyphsProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstUnicode, uint unicodeStride, uint* firstGlyph, uint glyphStride, void* context)
+		private static partial uint FontGetNominalGlyphsProxyImplementation (IntPtr font, void* font_data, uint count, uint* first_unicode, uint unicode_stride, uint* first_glyph, uint glyph_stride, void* user_data)
 		{
-			var del = GetMulti<NominalGlyphsDelegate> ((IntPtr)context, out _);
-			var unicodes = new ReadOnlySpan<uint> (firstUnicode, (int)count);
-			var glyphs = new Span<uint> (firstGlyph, (int)count);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<NominalGlyphsDelegate> ((IntPtr)user_data, out _);
+			var unicodes = new ReadOnlySpan<uint> (first_unicode, (int)count);
+			var glyphs = new Span<uint> (first_glyph, (int)count);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			return del.Invoke (userData.Font, userData.FontData, count, unicodes, glyphs);
 		}
 
-		private static partial bool FontGetVariationGlyphProxyImplementation (IntPtr font, void* fontData, uint unicode, uint variationSelector, uint* glyph, void* context)
+		private static partial bool FontGetVariationGlyphProxyImplementation (IntPtr font, void* font_data, uint unicode, uint variation_selector, uint* glyph, void* user_data)
 		{
-			var del = GetMulti<VariationGlyphDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
-			var result = del.Invoke (userData.Font, userData.FontData, unicode, variationSelector, out var glyphManaged);
+			var del = GetMulti<VariationGlyphDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
+			var result = del.Invoke (userData.Font, userData.FontData, unicode, variation_selector, out var glyphManaged);
 			if (glyph != null)
 				*glyph = glyphManaged;
 			return result;
 		}
 
-		private static partial int FontGetGlyphAdvanceProxyImplementation (IntPtr font, void* fontData, uint glyph, void* context)
+		private static partial int FontGetGlyphAdvanceProxyImplementation (IntPtr font, void* font_data, uint glyph, void* user_data)
 		{
-			var del = GetMulti<GlyphAdvanceDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphAdvanceDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			return del.Invoke (userData.Font, userData.FontData, glyph);
 		}
 
-		private static partial void FontGetGlyphAdvancesProxyImplementation (IntPtr font, void* fontData, uint count, uint* firstGlyph, uint glyphStride, int* firstAdvance, uint advanceStride, void* context)
+		private static partial void FontGetGlyphAdvancesProxyImplementation (IntPtr font, void* font_data, uint count, uint* first_glyph, uint glyph_stride, int* first_advance, uint advance_stride, void* user_data)
 		{
-			var del = GetMulti<GlyphAdvancesDelegate> ((IntPtr)context, out _);
-			var glyphs = new ReadOnlySpan<uint> (firstGlyph, (int)count);
-			var advances = new Span<int> (firstAdvance, (int)count);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphAdvancesDelegate> ((IntPtr)user_data, out _);
+			var glyphs = new ReadOnlySpan<uint> (first_glyph, (int)count);
+			var advances = new Span<int> (first_advance, (int)count);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			del.Invoke (userData.Font, userData.FontData, count, glyphs, advances);
 		}
 
-		private static partial bool FontGetGlyphOriginProxyImplementation (IntPtr font, void* fontData, uint glyph, int* x, int* y, void* context)
+		private static partial bool FontGetGlyphOriginProxyImplementation (IntPtr font, void* font_data, uint glyph, int* x, int* y, void* user_data)
 		{
-			var del = GetMulti<GlyphOriginDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphOriginDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var xManaged, out var yManaged);
 			if (x != null)
 				*x = xManaged;
@@ -100,28 +99,28 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		private static partial int FontGetGlyphKerningProxyImplementation (IntPtr font, void* fontData, uint firstGlyph, uint secondGlyph, void* context)
+		private static partial int FontGetGlyphKerningProxyImplementation (IntPtr font, void* font_data, uint first_glyph, uint second_glyph, void* user_data)
 		{
-			var del = GetMulti<GlyphKerningDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
-			return del.Invoke (userData.Font, userData.FontData, firstGlyph, secondGlyph);
+			var del = GetMulti<GlyphKerningDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
+			return del.Invoke (userData.Font, userData.FontData, first_glyph, second_glyph);
 		}
 
-		private static partial bool FontGetGlyphExtentsProxyImplementation (IntPtr font, void* fontData, uint glyph, GlyphExtents* extents, void* context)
+		private static partial bool FontGetGlyphExtentsProxyImplementation (IntPtr font, void* font_data, uint glyph, GlyphExtents* extents, void* user_data)
 		{
-			var del = GetMulti<GlyphExtentsDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphExtentsDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var extentsManaged);
 			if (extents != null)
 				*extents = extentsManaged;
 			return result;
 		}
 
-		private static partial bool FontGetGlyphContourPointProxyImplementation (IntPtr font, void* fontData, uint glyph, uint pointIndex, int* x, int* y, void* context)
+		private static partial bool FontGetGlyphContourPointProxyImplementation (IntPtr font, void* font_data, uint glyph, uint point_index, int* x, int* y, void* user_data)
 		{
-			var del = GetMulti<GlyphContourPointDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
-			var result = del.Invoke (userData.Font, userData.FontData, glyph, pointIndex, out var xManaged, out var yManaged);
+			var del = GetMulti<GlyphContourPointDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
+			var result = del.Invoke (userData.Font, userData.FontData, glyph, point_index, out var xManaged, out var yManaged);
 			if (x != null)
 				*x = xManaged;
 			if (y != null)
@@ -129,23 +128,23 @@ namespace HarfBuzzSharp
 			return result;
 		}
 
-		private static partial bool FontGetGlyphNameProxyImplementation (IntPtr font, void* fontData, uint glyph, void* nameBuffer, uint size, void* context)
+		private static partial bool FontGetGlyphNameProxyImplementation (IntPtr font, void* font_data, uint glyph, void* name, uint size, void* user_data)
 		{
-			var del = GetMulti<GlyphNameDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphNameDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 			var result = del.Invoke (userData.Font, userData.FontData, glyph, out var realName);
 
 			var nameSpan = realName.AsSpan ();
-			var bufferSpan = new Span<char> (nameBuffer, (int)size);
+			var bufferSpan = new Span<char> (name, (int)size);
 			nameSpan.CopyTo (bufferSpan);
 
 			return result;
 		}
 
-		private static partial bool FontGetGlyphFromNameProxyImplementation (IntPtr font, void* fontData, void* name, int len, uint* glyph, void* context)
+		private static partial bool FontGetGlyphFromNameProxyImplementation (IntPtr font, void* font_data, void* name, int len, uint* glyph, void* user_data)
 		{
-			var del = GetMulti<GlyphFromNameDelegate> ((IntPtr)context, out _);
-			var userData = GetMultiUserData<FontUserData> ((IntPtr)fontData, out _);
+			var del = GetMulti<GlyphFromNameDelegate> ((IntPtr)user_data, out _);
+			var userData = GetMultiUserData<FontUserData> ((IntPtr)font_data, out _);
 
 			var actualName = len < 0
 				? new string ((char*)name)

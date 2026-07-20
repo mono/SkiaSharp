@@ -20,6 +20,8 @@ namespace SkiaSharp.Skottie
 		{
 			_ = fontManager ?? throw new ArgumentNullException (nameof (fontManager));
 			SkottieApi.skottie_animation_builder_set_font_manager (Handle, fontManager.Handle);
+			GC.KeepAlive (this);
+			GC.KeepAlive (fontManager);
 			Referenced (this, fontManager);
 			return this;
 		}
@@ -28,6 +30,8 @@ namespace SkiaSharp.Skottie
 		{
 			_ = resourceProvider ?? throw new ArgumentNullException (nameof (resourceProvider));
 			SkottieApi.skottie_animation_builder_set_resource_provider (Handle, resourceProvider.Handle);
+			GC.KeepAlive (this);
+			GC.KeepAlive (resourceProvider);
 			Referenced (this, resourceProvider);
 			return this;
 		}
@@ -38,6 +42,7 @@ namespace SkiaSharp.Skottie
 			{
 				AnimationBuilderStats stats;
 				SkottieApi.skottie_animation_builder_get_stats (Handle, &stats);
+				GC.KeepAlive (this);
 				return stats;
 			}
 		}
@@ -69,6 +74,7 @@ namespace SkiaSharp.Skottie
 				try {
 					return Animation.GetObject (SkottieApi.skottie_animation_builder_make_from_data (Handle, ptr, (IntPtr)span.Length));
 				} finally {
+					GC.KeepAlive (this);
 					GC.KeepAlive(data);
 				}
 			}

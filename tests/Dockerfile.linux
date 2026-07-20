@@ -1,0 +1,42 @@
+# SkiaSharp Linux Test Environment
+# Base image with all dependencies pre-installed for running tests.
+# Mount your working directory and run tests inside.
+#
+# Build:
+#   docker build -f tests/Dockerfile.linux -t skiasharp-tests .
+#
+# Run tests (mount repo root):
+#   docker run --rm -v $(pwd):/src -w /src skiasharp-tests \
+#     dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+#
+# Interactive:
+#   docker run --rm -it -v $(pwd):/src -w /src skiasharp-tests bash
+
+FROM mcr.microsoft.com/dotnet/sdk:10.0-noble
+
+# Install dependencies matching CI pipeline (scripts/azure-templates-variables.yml):
+#   - fontconfig: font discovery (fc-cache, fc-list) used by Skia at runtime
+#   - libfontconfig1-dev: fontconfig headers for native build
+#   - clang: required for native build (retpoline flag)
+#   - ninja-build: build system for Skia
+#   - fonts-dejavu-core: provides "DejaVu Sans" (DefaultFontFamily on Linux tests)
+#   - ttf-ancient-fonts: provides "Symbola" (UnicodeFontFamilies on Linux tests)
+#   - python3: needed by Skia build scripts (git-sync-deps)
+RUN apt-get update -qq && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        clang \
+        fontconfig \
+        libfontconfig1-dev \
+        ninja-build \
+        fonts-dejavu-core \
+        ttf-ancient-fonts \
+        python3 \
+    && fc-cache -f \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV CC=clang CXX=clang++
+
+# Install android workload (required — binding projects multi-target android TFMs)
+RUN dotnet workload install android --skip-sign-check
+
+WORKDIR /src

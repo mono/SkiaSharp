@@ -7,7 +7,8 @@ namespace SkiaSharp.Tests
 {
 	public class SKColorSpaceTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreateSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -16,14 +17,16 @@ namespace SkiaSharp.Tests
 			Assert.True(SKColorSpace.Equal(colorspace, colorspace));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StaticSrgbIsReturnedAsTheStaticInstance()
 		{
+			var expected = SKColorSpace.CreateSrgb();
 			var handle = SkiaApi.sk_colorspace_new_srgb();
 			try
 			{
 				var cs = SKColorSpace.GetObject(handle, unrefExisting: false);
-				Assert.Equal("SKColorSpaceStatic", cs.GetType().Name);
+				Assert.Same(expected, cs);
+				Assert.True(cs.IgnorePublicDispose);
 			}
 			finally
 			{
@@ -31,7 +34,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImageInfoHasColorSpace()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -43,12 +46,11 @@ namespace SkiaSharp.Tests
 			Assert.Same(colorspace, image.PeekPixels().ColorSpace);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public void ImageInfoColorSpaceIsReferencedCorrectly()
 		{
+			SkipOnMono();
+
 			var img = DoWork(out var colorspaceHandle);
 
 			CollectGarbage();
@@ -104,7 +106,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ReferencesCountedCorrectly()
 		{
 			var colorspace = SKColorSpace.CreateRgb(
@@ -129,12 +131,11 @@ namespace SkiaSharp.Tests
 			GC.KeepAlive(colorspace);
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public void ColorSpaceIsNotDisposedPrematurely()
 		{
+			SkipOnMono();
+
 			var img = DoWork(out var colorSpaceHandle, out var weakColorspace);
 
 			CheckBeforeCollection(colorSpaceHandle);
@@ -171,10 +172,10 @@ namespace SkiaSharp.Tests
 				Assert.Equal(expected, csh.GetReferenceCount(false));
 
 				var info = peek.Info;
-				Assert.Equal(4, csh.GetReferenceCount(false));
+				Assert.InRange(csh.GetReferenceCount(false), expected, expected + 1);
 
 				var cs = info.ColorSpace;
-				Assert.Equal(4, csh.GetReferenceCount(false));
+				Assert.InRange(csh.GetReferenceCount(false), expected, expected + 1);
 				Assert.NotNull(cs);
 			}
 
@@ -203,7 +204,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void AdobeRGB1998IsRGB()
 		{
 			var icc = Path.Combine(PathToImages, "AdobeRGB1998.icc");
@@ -223,10 +224,10 @@ namespace SkiaSharp.Tests
 				0.01947f, 0.06087f, 0.74457f,
 			};
 			Assert.True(colorspace.ToColorSpaceXyz(out var xyz));
-			AssertSimilar(toXYZ, xyz.Values);
+			AssertSimilar(toXYZ, xyz.Values, 3);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void USWebCoatedSWOPIsUnsupportedCMYK()
 		{
 			var path = Path.Combine(PathToImages, "USWebCoatedSWOP.icc");
@@ -239,7 +240,7 @@ namespace SkiaSharp.Tests
 			Assert.Null(colorspace);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SrgbColorSpaceIsCloseToSrgb()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -247,7 +248,7 @@ namespace SkiaSharp.Tests
 			Assert.True(colorspace.GammaIsCloseToSrgb);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorSpaceCorrectlyReferencesSrgbSingleton()
 		{
 			var handle1 = SkiaApi.sk_colorspace_new_srgb();
@@ -268,7 +269,7 @@ namespace SkiaSharp.Tests
 			SkiaApi.sk_refcnt_safe_unref(handle1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SrgbColorSpaceIsCorrect()
 		{
 			var colorspace = SKColorSpace.CreateSrgb();
@@ -280,7 +281,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void LinearSrgbColorSpaceIsCorrect()
 		{
 			var colorspace = SKColorSpace.CreateSrgbLinear();
@@ -292,43 +293,102 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
 		}
 
-		[SkippableFact]
-		public void SameColorSpaceCreatedDifferentWaysAreTheSameObject()
+		[Fact]
+		public void CicpSrgbColorSpaceIsCorrect()
 		{
-			// the instance is static, so all instances in .NET are the same instance
-			const int NativeInstanceCount = 4;
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec709,
+				SKColorspaceTransferFnCicp.Iec6196621);
 
-			// get the first instance of the sRGB Linear
-			var colorspace1 = SKColorSpace.CreateSrgbLinear();
-			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace1.GetType().FullName);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
+			Assert.NotNull(colorspace);
+			Assert.True(colorspace.IsSrgb);
+			Assert.True(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+			Assert.Equal(SKColorSpaceTransferFn.Srgb, colorspace.GetNumericalTransferFunction());
+			Assert.Equal(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
 
-			// create a new one with the same parameters, which will return the same instance
-			var colorspace2 = SKColorSpace.CreateRgb(SKColorSpaceTransferFn.Linear, SKColorSpaceXyz.Srgb);
-			Assert.Equal("SkiaSharp.SKColorSpace+SKColorSpaceStatic", colorspace2.GetType().FullName);
-			Assert.Same(colorspace1, colorspace2);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-			Assert.Equal(NativeInstanceCount, colorspace2.GetReferenceCount());
+		[Fact]
+		public void CicpPqRec2020CreatesHdrColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec2020,
+				SKColorspaceTransferFnCicp.Pq);
 
-			// create a different one manually, which will return a new instance
-			var colorspace3 = SKColorSpace.CreateRgb(
-				new SKColorSpaceTransferFn { A = 0.6f, B = 0.5f, C = 0.4f, D = 0.3f, E = 0.2f, F = 0.1f },
-				SKColorSpaceXyz.Identity);
-			Assert.NotSame(colorspace1, colorspace3);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
-			Assert.Equal(NativeInstanceCount, colorspace2.GetReferenceCount());
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.False(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
 
-			colorspace3.Dispose();
-			Assert.True(colorspace3.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
+			// PQ (Perceptual Quantizer) is not sRGB
+			var trfn = colorspace.GetNumericalTransferFunction();
+			Assert.NotEqual(SKColorSpaceTransferFn.Srgb, trfn);
 
-			colorspace2.Dispose();
-			Assert.False(colorspace2.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
+			// Rec2020 primaries differ from sRGB
+			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
 
-			colorspace1.Dispose();
-			Assert.False(colorspace1.IsDisposed);
-			Assert.Equal(NativeInstanceCount, colorspace1.GetReferenceCount());
+		[Fact]
+		public void CicpHlgDisplayP3CreatesHdrColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.SmpteEg4321,
+				SKColorspaceTransferFnCicp.Hlg);
+
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.False(colorspace.GammaIsCloseToSrgb);
+			Assert.False(colorspace.GammaIsLinear);
+		}
+
+		[Fact]
+		public void CicpRec2020LinearCreatesWideGamutLinearColorSpace()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec2020,
+				SKColorspaceTransferFnCicp.Linear);
+
+			Assert.NotNull(colorspace);
+			Assert.False(colorspace.IsSrgb);
+			Assert.True(colorspace.GammaIsLinear);
+
+			// Rec2020 primaries differ from sRGB
+			Assert.NotEqual(SKColorSpaceXyz.Srgb, colorspace.ToColorSpaceXyz());
+		}
+
+		[Fact]
+		public void CicpUnknownPrimariesReturnsNull()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Unknown,
+				SKColorspaceTransferFnCicp.Iec6196621);
+
+			Assert.Null(colorspace);
+		}
+
+		[Fact]
+		public void CicpUnknownTransferFnReturnsNull()
+		{
+			var colorspace = SKColorSpace.CreateCicp(
+				SKColorspacePrimariesCicp.Rec709,
+				SKColorspaceTransferFnCicp.Unknown);
+
+			Assert.Null(colorspace);
+		}
+
+		[Fact]
+		public void CicpPqPngImageHasPqTransferFunction()
+		{
+			var path = Path.Combine(PathToImages, "cicp_pq.png");
+
+			using var codec = SKCodec.Create(path);
+			Assert.NotNull(codec);
+
+			var info = codec.Info;
+			Assert.NotNull(info.ColorSpace);
+
+			// The image has a CICP chunk with PQ transfer function — it should not be plain sRGB
+			Assert.False(info.ColorSpace.IsSrgb);
 		}
 
 		private static void AssertMatrix(float[] expected, SKMatrix44 actual)

@@ -4,25 +4,9 @@ DirectoryPath WINAPPSDK_PATH = ROOT_PATH.Combine("externals/winappsdk");
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 string ANGLE_VERSION = GetVersion("ANGLE", "release");
 
-var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
-
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
-
-string GetSpectreLibPath(string arch)
-{
-    // Normalize architecture names to match spectre lib directory structure
-    var spectreArch = arch.ToLower() switch {
-        "win32" => "x86",
-        _ => arch.ToLower()
-    };
-
-    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
-    if (spectrePaths.Count == 0) {
-        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
-    }
-    return spectrePaths.First().FullPath;
-}
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
+#load "../../scripts/infra/native/windows/windows-shared.cake"
 
 Task("sync-ANGLE")
     .WithCriteria(IsRunningOnWindows())
@@ -98,11 +82,26 @@ Task("sync-ANGLE")
     }
 
     // generate Windows App SDK files
-    if (!FileExists(WINAPPSDK_PATH.CombineWithFilePath("Microsoft.WindowsAppSDK.nuspec"))) {
-        var setup = ANGLE_PATH.CombineWithFilePath("scripts/winappsdk_setup.py");
-        RunProcess(
-            ROOT_PATH.CombineWithFilePath("scripts/vcvarsall.bat"),
-            $"\"{VS_INSTALL}\" \"x64\" \"{PYTHON_EXE}\" \"{setup}\" --output \"{WINAPPSDK_PATH}\"");
+    if (!FileExists(WINAPPSDK_PATH.Combine("include").CombineWithFilePath("Microsoft.UI.Dispatching.h"))) {
+        var winappsdk_version = GetVersion("Microsoft.WindowsAppSDK", "release");
+        var stamp = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.stamp");
+
+        // Download and extract the NuGet package using .NET HTTP (works on restricted agents
+        // where Python's urllib is blocked by firewall policy)
+        if (!FileExists(stamp)) {
+            var nugetUrl = $"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/microsoft.windowsappsdk/{winappsdk_version}/microsoft.windowsappsdk.{winappsdk_version}.nupkg";
+            var nupkgPath = WINAPPSDK_PATH.CombineWithFilePath($"{winappsdk_version}.nupkg");
+            EnsureDirectoryExists(WINAPPSDK_PATH);
+            DownloadFile(nugetUrl, nupkgPath);
+            Unzip(nupkgPath, WINAPPSDK_PATH);
+            DeleteFile(nupkgPath);
+            System.IO.File.WriteAllText(stamp.FullPath, "");
+        }
+
+        // Run the header generation script under vcvarsall.bat so midlrt can find cl.exe
+        var vcvarsall = ROOT_PATH.CombineWithFilePath("scripts/infra/native/windows/vcvarsall.bat");
+        var generateScript = MakeAbsolute(File("generate_winappsdk_headers.ps1"));
+        RunProcess(vcvarsall, $"\"{VS_INSTALL}\" \"x64\" pwsh -NoProfile -ExecutionPolicy Bypass -File \"{generateScript}\" -Path \"{WINAPPSDK_PATH}\"");
     }
 });
 

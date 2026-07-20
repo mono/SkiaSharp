@@ -104,43 +104,84 @@ namespace SkiaSharp.Skottie
 		// Render
 
 		public unsafe void Render (SKCanvas canvas, SKRect dst)
-			=> SkottieApi.skottie_animation_render (Handle, canvas.Handle, &dst);
+		{
+			SkottieApi.skottie_animation_render (Handle, canvas.Handle, &dst);
+			GC.KeepAlive (this);
+			GC.KeepAlive (canvas);
+		}
 
 		public void Render (SKCanvas canvas, SKRect dst, AnimationRenderFlags flags)
-			=> SkottieApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
+		{
+			SkottieApi.skottie_animation_render_with_flags (Handle, canvas.Handle, &dst, flags);
+			GC.KeepAlive (this);
+			GC.KeepAlive (canvas);
+		}
 
 		// Seek*
 
 		public void Seek (double percent, InvalidationController? ic = null)
-			=> SkottieApi.skottie_animation_seek (Handle, (float)percent, ic?.Handle ?? IntPtr.Zero);
+		{
+			SkottieApi.skottie_animation_seek (Handle, (float)percent, ic?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (this);
+			GC.KeepAlive (ic);
+		}
 
 		public void SeekFrame (double frame, InvalidationController? ic = null)
-			=> SkottieApi.skottie_animation_seek_frame (Handle, (float)frame, ic?.Handle ?? IntPtr.Zero);
+		{
+			SkottieApi.skottie_animation_seek_frame (Handle, (float)frame, ic?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (this);
+			GC.KeepAlive (ic);
+		}
 
 		public void SeekFrameTime (double seconds, InvalidationController? ic = null)
-			=> SkottieApi.skottie_animation_seek_frame_time (Handle, (float)seconds, ic?.Handle ?? IntPtr.Zero);
+		{
+			SkottieApi.skottie_animation_seek_frame_time (Handle, (float)seconds, ic?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (this);
+			GC.KeepAlive (ic);
+		}
 
 		public void SeekFrameTime (TimeSpan time, InvalidationController? ic = null)
 			=> SeekFrameTime (time.TotalSeconds, ic);
 
 		// Properties
 
-		public TimeSpan Duration
-			=> TimeSpan.FromSeconds (SkottieApi.skottie_animation_get_duration (Handle));
+		public TimeSpan Duration {
+			get {
+				var r = SkottieApi.skottie_animation_get_duration (Handle);
+				GC.KeepAlive (this);
+				return TimeSpan.FromSeconds (r);
+			}
+		}
 
-		public double Fps
-			=> SkottieApi.skottie_animation_get_fps (Handle);
+		public double Fps {
+			get {
+				var r = SkottieApi.skottie_animation_get_fps (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public double InPoint
-			=> SkottieApi.skottie_animation_get_in_point (Handle);
+		public double InPoint {
+			get {
+				var r = SkottieApi.skottie_animation_get_in_point (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public double OutPoint
-			=> SkottieApi.skottie_animation_get_out_point (Handle);
+		public double OutPoint {
+			get {
+				var r = SkottieApi.skottie_animation_get_out_point (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		public string Version {
 			get {
 				using var str = new SKString ();
 				SkottieApi.skottie_animation_get_version (Handle, str.Handle);
+				GC.KeepAlive (this);
 				return str.ToString ();
 			}
 		}
@@ -149,6 +190,7 @@ namespace SkiaSharp.Skottie
 			get {
 				SKSize size;
 				SkottieApi.skottie_animation_get_size (Handle, &size);
+				GC.KeepAlive (this);
 				return size;
 			}
 		}

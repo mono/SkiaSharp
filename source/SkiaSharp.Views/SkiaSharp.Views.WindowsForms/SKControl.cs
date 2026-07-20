@@ -10,16 +10,12 @@ namespace SkiaSharp.Views.Desktop
 	[DefaultProperty("Name")]
 	public class SKControl : Control
 	{
-		private readonly bool designMode;
-
 		private Bitmap bitmap;
 
 		public SKControl()
 		{
 			DoubleBuffered = true;
 			SetStyle(ControlStyles.ResizeRedraw, true);
-
-			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 		}
 
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
@@ -29,7 +25,7 @@ namespace SkiaSharp.Views.Desktop
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			if (designMode)
+			if (DesignMode)
 				return;
 
 			base.OnPaint(e);

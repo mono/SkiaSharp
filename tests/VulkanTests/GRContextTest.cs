@@ -7,7 +7,7 @@ namespace SkiaSharp.Vulkan.Tests
 	public class GRContextTest : VKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateVkContextIsValid()
 		{
 			using var ctx = CreateVkContext();
@@ -30,7 +30,7 @@ namespace SkiaSharp.Vulkan.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateVkContextWithOptionsIsValid()
 		{
 			using var ctx = CreateVkContext();

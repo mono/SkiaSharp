@@ -1,0 +1,172 @@
+@* FilterRail — sticky sidebar (desktop) / drawer (mobile) *@
+
+<aside class="filter-rail">
+    @* Search *@
+    <div class="rail-section">
+        <div class="rail-search">
+            <i class="bi bi-search"></i>
+            <input type="search" placeholder="Search samples, APIs…"
+                   @bind-value="localSearchText" @bind-value:event="oninput"
+                   @bind-value:after="OnSearchInput" />
+        </div>
+    </div>
+
+    @* Categories — expanded by default, collapsible *@
+    <div class="rail-section">
+        <button class="rail-heading-btn" @onclick="() => categoriesOpen = !categoriesOpen">
+            <h3 class="rail-heading">Categories</h3>
+            <i class="bi @(categoriesOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
+        </button>
+        @if (categoriesOpen)
+        {
+            <div class="rail-section-body">
+                <button class="cat-item @(SelectedCategory == null ? "active" : "")"
+                        @onclick="() => SelectCategory(null)">
+                    <span>All</span>
+                    <span class="cat-count">@TotalCount</span>
+                </button>
+                @foreach (var catName in AllCategories)
+                {
+                    var cat = SampleManager.GetCategoryFor(catName);
+                    var count = SampleManager.GetSampleCount(catName, AllSamples);
+                    <button class="cat-item @(SelectedCategory == catName ? "active" : "")"
+                            style="--cat-color: @cat.Color;"
+                            @onclick="() => SelectCategory(catName)">
+                        <i class="bi @cat.CssIcon cat-icon"></i>
+                        <span>@catName</span>
+                        <span class="cat-count">@count</span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    @* Tag cloud — Types — expanded by default, collapsible *@
+    <div class="rail-section">
+        <button class="rail-heading-btn" @onclick="() => typesOpen = !typesOpen">
+            <h3 class="rail-heading">Types</h3>
+            <i class="bi @(typesOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
+        </button>
+        @if (typesOpen)
+        {
+            <div class="tag-cloud">
+                @foreach (var tag in GetSortedTags(TagKind.Type))
+                {
+                    var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
+                    <TagPill @key="tag.Tag" Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Type"
+                             IsActive="@SelectedTags.Contains(tag.Tag)"
+                             IsZero="@(liveCount == 0)"
+                             Size="@GetPillSize(tag.Count)"
+                             OnTagClicked="ToggleTag" />
+                }
+            </div>
+        }
+    </div>
+
+    @* Tag cloud — Methods — collapsed by default, collapsible *@
+    <div class="rail-section">
+        <button class="rail-heading-btn" @onclick="() => methodsOpen = !methodsOpen">
+            <h3 class="rail-heading">Methods</h3>
+            <i class="bi @(methodsOpen ? "bi-chevron-up" : "bi-chevron-down") rail-chevron"></i>
+        </button>
+        @if (methodsOpen)
+        {
+            <div class="tag-cloud">
+                @foreach (var tag in GetSortedTags(TagKind.Method))
+                {
+                    var liveCount = LiveTagCounts.GetValueOrDefault(tag.Tag, 0);
+                    <TagPill @key="tag.Tag" Tag="@tag.Tag" Count="@liveCount" Kind="TagKind.Method"
+                             IsActive="@SelectedTags.Contains(tag.Tag)"
+                             IsZero="@(liveCount == 0)"
+                             Size="@GetPillSize(tag.Count)"
+                             OnTagClicked="ToggleTag" />
+                }
+            </div>
+        }
+    </div>
+
+</aside>
+
+@implements IDisposable
+
+@code {
+    [Parameter] public string[] AllCategories { get; set; } = [];
+    [Parameter] public SampleBase[] AllSamples { get; set; } = [];
+    [Parameter] public string SearchText { get; set; } = "";
+    [Parameter] public string? SelectedCategory { get; set; }
+    [Parameter] public IReadOnlySet<string> SelectedTags { get; set; } = new HashSet<string>();
+    [Parameter] public Dictionary<string, int> LiveTagCounts { get; set; } = new();
+    [Parameter] public EventCallback<string> OnSearchChanged { get; set; }
+    [Parameter] public EventCallback<string?> OnCategoryChanged { get; set; }
+    [Parameter] public EventCallback<string> OnTagToggled { get; set; }
+
+    private bool categoriesOpen = true;
+    private bool typesOpen = true;
+    private bool methodsOpen = false;
+    private CancellationTokenSource? debounceCts;
+    private string localSearchText = "";
+
+    private IReadOnlyList<(string Tag, int Count, TagKind Kind)>? allTags;
+
+    private int TotalCount => AllSamples.Length;
+
+    protected override void OnParametersSet()
+    {
+        allTags = SampleManager.GetAllTags(AllSamples);
+        // Sync local text from parent only if parent changed it (e.g. Reset)
+        if (localSearchText != SearchText && string.IsNullOrEmpty(SearchText))
+            localSearchText = SearchText;
+    }
+
+    /// <summary>
+    /// Sort tags: active (selected) first, then by live count descending.
+    /// Materialized to a list so Blazor diffing with @key sees a stable sequence.
+    /// </summary>
+    private List<(string Tag, int Count, TagKind Kind)> GetSortedTags(TagKind kind) =>
+        (allTags ?? [])
+            .Where(t => t.Kind == kind)
+            .OrderByDescending(t => SelectedTags.Contains(t.Tag) ? 1 : 0)
+            .ThenByDescending(t => LiveTagCounts.GetValueOrDefault(t.Tag, 0))
+            .ThenByDescending(t => t.Count)
+            .ThenBy(t => t.Tag)
+            .ToList();
+
+    private static TagPill.TagPillSize GetPillSize(int corpusCount) =>
+        corpusCount >= 10 ? TagPill.TagPillSize.Large
+        : corpusCount <= 2 ? TagPill.TagPillSize.Small
+        : TagPill.TagPillSize.Normal;
+
+    private void OnSearchInput()
+    {
+        debounceCts?.Cancel();
+        debounceCts = new CancellationTokenSource();
+        var token = debounceCts.Token;
+        _ = InvokeAsync(async () =>
+        {
+            try
+            {
+                await Task.Delay(200, token);
+                if (!token.IsCancellationRequested)
+                    await OnSearchChanged.InvokeAsync(localSearchText);
+            }
+            catch (OperationCanceledException) { }
+        });
+    }
+
+    private async Task SelectCategory(string? cat)
+    {
+        await OnCategoryChanged.InvokeAsync(cat);
+    }
+
+    private async Task ToggleTag(string tag)
+    {
+        await OnTagToggled.InvokeAsync(tag);
+    }
+
+    public void Dispose()
+    {
+        debounceCts?.Cancel();
+        debounceCts?.Dispose();
+        debounceCts = null;
+    }
+}

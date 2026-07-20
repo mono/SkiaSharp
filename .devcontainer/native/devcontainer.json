@@ -1,0 +1,36 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
+{
+	"name": "Full Dev (native + managed)",
+	"description": "For C/C++ native library and C# binding work. Includes clang, ninja, and the complete Skia build toolchain.",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/dotnet:10.0",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	"features": {
+		"ghcr.io/devcontainers/features/docker-in-docker:2": {}
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "bash .devcontainer/native/init.sh",
+
+	// Environment variables for the container.
+	"containerEnv": {
+		"ANDROID_HOME": "/home/vscode/android-sdk",
+		"ANDROID_SDK_ROOT": "/home/vscode/android-sdk",
+		"CC": "clang",
+		"CXX": "clang++"
+	},
+
+	// Configure tool-specific properties.
+	"customizations": {
+		// Configure properties specific to VS Code.
+		"vscode": {
+			"settings": {},
+			"extensions": [
+				"ms-dotnettools.csdevkit",
+				"ms-vscode.cpptools"
+			]
+		}
+	}
+}

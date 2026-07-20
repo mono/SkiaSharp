@@ -1,0 +1,91 @@
+<UserControl x:Class="SkiaSharpSample.Controls.SampleCard"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d"
+             MinHeight="140"
+             HorizontalAlignment="Stretch"
+             HorizontalContentAlignment="Stretch">
+
+    <Grid x:Name="CardRoot"
+          CornerRadius="6"
+          Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Rectangle x:Name="AccentBar" Grid.Column="0" />
+
+        <Grid Grid.Column="1" Padding="14,12,14,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="IconText"
+                           Grid.Column="0"
+                           FontFamily="ms-appx:///Assets/Fonts/bootstrap-icons.ttf#bootstrap-icons"
+                           FontSize="20"
+                           Margin="0,2,8,0"
+                           VerticalAlignment="Top" />
+                <TextBlock x:Name="TitleText"
+                           Grid.Column="1"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           TextTrimming="CharacterEllipsis"
+                           TextWrapping="NoWrap"
+                           VerticalAlignment="Center" />
+            </Grid>
+
+            <TextBlock Grid.Row="1"
+                       x:Name="DescriptionText"
+                       FontSize="12"
+                       Opacity="0.65"
+                       TextWrapping="Wrap"
+                       MaxLines="3"
+                       TextTrimming="CharacterEllipsis"
+                       Margin="0,6,0,0"
+                       LineHeight="16" />
+
+            <StackPanel Grid.Row="3"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        Margin="0,10,0,0">
+                <Border x:Name="CategoryBadge"
+                        Padding="6,2"
+                        CornerRadius="4">
+                    <TextBlock x:Name="CategoryText"
+                               FontSize="10"
+                               FontWeight="SemiBold" />
+                </Border>
+                <Border x:Name="TypeBadge"
+                        Padding="6,2"
+                        CornerRadius="10">
+                    <TextBlock x:Name="TypeText"
+                               FontSize="10"
+                               FontWeight="SemiBold" />
+                </Border>
+                <Border x:Name="UnsupportedBadge"
+                        Padding="6,2"
+                        CornerRadius="10"
+                        Background="#FCE4EC"
+                        Visibility="Collapsed">
+                    <TextBlock Text="Unavailable"
+                               FontSize="10"
+                               FontWeight="SemiBold"
+                               Foreground="#C62828" />
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Grid>
+
+</UserControl>

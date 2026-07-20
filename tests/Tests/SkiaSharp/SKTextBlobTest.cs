@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKTextBlobTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void TestEmptyBuilderReturnsNull()
 		{
 			var builder = new SKTextBlobBuilder();
@@ -16,7 +16,8 @@ namespace SkiaSharp.Tests
 			Assert.Null(blob);
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void RunsAllocateNoPositions()
 		{
 			var font = new SKFont();
@@ -30,7 +31,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(blob);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RawRunsAllocateNoPositions()
 		{
 			var font = new SKFont();
@@ -46,7 +47,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(blob);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TextRunsAllocateTextSpan()
 		{
 			var font = new SKFont();
@@ -61,7 +62,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(blob);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RawTextRunsAllocateTextSpan()
 		{
 			var font = new SKFont();
@@ -76,7 +77,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(blob);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestExplicitBounds()
 		{
 			var builder = new SKTextBlobBuilder();
@@ -127,7 +128,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestImplicitBounds()
 		{
 			var builder = new SKTextBlobBuilder();
@@ -144,7 +145,7 @@ namespace SkiaSharp.Tests
 			Assert.True(blob.Bounds.IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void TestPositionedRunIsBothPointsAndFloats()
 		{
 			var font = new SKFont();

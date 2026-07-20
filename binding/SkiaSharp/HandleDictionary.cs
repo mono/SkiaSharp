@@ -56,6 +56,19 @@ namespace SkiaSharp
 		/// </summary>
 		/// <returns>The instance, or null if the handle was null.</returns>
 		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, Func<IntPtr, bool, TSkiaObject> objectFactory)
+			where TSkiaObject : SKObject =>
+			GetOrAddObject (handle, owns, unrefExisting, disposeProtected: false, objectFactory);
+
+		/// <summary>
+		/// Retrieve or create an instance for the native handle. When <paramref name="disposeProtected"/> is true,
+		/// IgnorePublicDispose is set via PreventPublicDisposal on the wrapper that is returned (whether an
+		/// existing one was found or a new one was created).
+		/// This is safe because this method holds the upgradeable-read lock for its whole duration, which is
+		/// mutually exclusive with the write lock public Dispose() holds around its IgnorePublicDispose check —
+		/// so the flag set cannot race a concurrent public disposal. (PreventPublicDisposal itself takes no lock.)
+		/// </summary>
+		/// <returns>The instance, or null if the handle was null.</returns>
+		internal static TSkiaObject GetOrAddObject<TSkiaObject> (IntPtr handle, bool owns, bool unrefExisting, bool disposeProtected, Func<IntPtr, bool, TSkiaObject> objectFactory)
 			where TSkiaObject : SKObject
 		{
 			if (handle == IntPtr.Zero)
@@ -86,10 +99,21 @@ namespace SkiaSharp
 						refcnt.SafeUnRef ();
 					}
 
+					if (disposeProtected)
+						// Safe against a concurrent PUBLIC Dispose: it holds the write lock, which is
+						// mutually exclusive with the upgradeable-read lock held here. Internal Dispose
+						// paths don't affect the flag's purpose, and no dispose-protected target can be
+						// internally disposed concurrently either (see PreventPublicDisposal's guard).
+						instance.PreventPublicDisposal ();
+
 					return instance;
 				}
 
 				var obj = objectFactory.Invoke (handle, owns);
+
+				// Cannot race with a concurrent public Dispose call. same reasoning as above.
+				if (disposeProtected && obj is not null)
+					obj.PreventPublicDisposal ();
 
 				return obj;
 			} finally {

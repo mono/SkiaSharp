@@ -18,86 +18,178 @@ namespace SkiaSharp
 		}
 
 		public SKFont ()
-			: this (SkiaApi.sk_font_new (), true)
+			: this (SKTypeface.Default, DefaultSize, DefaultScaleX, DefaultSkewX)
 		{
-			if (Handle == IntPtr.Zero)
-				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
 		public SKFont (SKTypeface typeface, float size = DefaultSize, float scaleX = DefaultScaleX, float skewX = DefaultSkewX)
 			: this (SkiaApi.sk_font_new_with_values (typeface?.Handle ?? IntPtr.Zero, size, scaleX, skewX), true)
 		{
+			GC.KeepAlive (typeface);
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
-		protected override void DisposeNative () =>
+		protected override void DisposeNative ()
+		{
 			SkiaApi.sk_font_delete (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public bool ForceAutoHinting {
-			get => SkiaApi.sk_font_is_force_auto_hinting (Handle);
-			set => SkiaApi.sk_font_set_force_auto_hinting (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_force_auto_hinting (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_force_auto_hinting (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool EmbeddedBitmaps {
-			get => SkiaApi.sk_font_is_embedded_bitmaps (Handle);
-			set => SkiaApi.sk_font_set_embedded_bitmaps (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_embedded_bitmaps (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_embedded_bitmaps (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool Subpixel {
-			get => SkiaApi.sk_font_is_subpixel (Handle);
-			set => SkiaApi.sk_font_set_subpixel (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_subpixel (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_subpixel (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool LinearMetrics {
-			get => SkiaApi.sk_font_is_linear_metrics (Handle);
-			set => SkiaApi.sk_font_set_linear_metrics (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_linear_metrics (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_linear_metrics (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool Embolden {
-			get => SkiaApi.sk_font_is_embolden (Handle);
-			set => SkiaApi.sk_font_set_embolden (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_embolden (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_embolden (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public bool BaselineSnap {
-			get => SkiaApi.sk_font_is_baseline_snap (Handle);
-			set => SkiaApi.sk_font_set_baseline_snap (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_is_baseline_snap (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_baseline_snap (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKFontEdging Edging {
-			get => SkiaApi.sk_font_get_edging (Handle);
-			set => SkiaApi.sk_font_set_edging (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_get_edging (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_edging (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKFontHinting Hinting {
-			get => SkiaApi.sk_font_get_hinting (Handle);
-			set => SkiaApi.sk_font_set_hinting (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_get_hinting (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_hinting (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public SKTypeface Typeface {
-			get => SKTypeface.GetObject (SkiaApi.sk_font_get_typeface (Handle));
-			set => SkiaApi.sk_font_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
+			get {
+				var r = SKTypeface.GetObject (SkiaApi.sk_font_get_typeface (Handle));
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_typeface (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public float Size {
-			get => SkiaApi.sk_font_get_size (Handle);
-			set => SkiaApi.sk_font_set_size (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_get_size (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_size (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public float ScaleX {
-			get => SkiaApi.sk_font_get_scale_x (Handle);
-			set => SkiaApi.sk_font_set_scale_x (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_get_scale_x (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_scale_x (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public float SkewX {
-			get => SkiaApi.sk_font_get_skew_x (Handle);
-			set => SkiaApi.sk_font_set_skew_x (Handle, value);
+			get {
+				var r = SkiaApi.sk_font_get_skew_x (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				SkiaApi.sk_font_set_skew_x (Handle, value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		// FontSpacing
 
-		public float Spacing =>
-			SkiaApi.sk_font_get_metrics (Handle, null);
+		public float Spacing {
+			get {
+				var r = SkiaApi.sk_font_get_metrics (Handle, null);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		// FontMetrics
 
@@ -111,14 +203,20 @@ namespace SkiaSharp
 		public float GetFontMetrics (out SKFontMetrics metrics)
 		{
 			fixed (SKFontMetrics* m = &metrics) {
-				return SkiaApi.sk_font_get_metrics (Handle, m);
+				var r = SkiaApi.sk_font_get_metrics (Handle, m);
+				GC.KeepAlive (this);
+				return r;
 			}
 		}
 
 		// GetGlyph
 
-		public ushort GetGlyph (int codepoint) =>
-			SkiaApi.sk_font_unichar_to_glyph (Handle, codepoint);
+		public ushort GetGlyph (int codepoint)
+		{
+			var r = SkiaApi.sk_font_unichar_to_glyph (Handle, codepoint);
+			GC.KeepAlive (this);
+			return r;
+		}
 
 		// GetGlyphs
 
@@ -140,6 +238,7 @@ namespace SkiaSharp
 			fixed (int* up = codepoints)
 			fixed (ushort* gp = glyphs) {
 				SkiaApi.sk_font_unichars_to_glyphs (Handle, up, codepoints.Length, gp);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -206,6 +305,7 @@ namespace SkiaSharp
 
 			fixed (ushort* gp = glyphs) {
 				SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, gp, glyphs.Length);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -261,7 +361,9 @@ namespace SkiaSharp
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
 
-			return SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, null, 0);
+			var r = SkiaApi.sk_font_text_to_glyphs (Handle, text, (IntPtr)length, encoding, null, 0);
+			GC.KeepAlive (this);
+			return r;
 		}
 
 		// MeasureText (text)
@@ -319,6 +421,8 @@ namespace SkiaSharp
 
 			float measuredWidth;
 			SkiaApi.sk_font_measure_text_no_return (Handle, text, (IntPtr)length, encoding, bounds, paint?.Handle ?? IntPtr.Zero, &measuredWidth);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 			return measuredWidth;
 		}
 
@@ -385,7 +489,10 @@ namespace SkiaSharp
 			if (!ValidateTextArgs (text, length, encoding))
 				return 0;
 
-			return (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
+			var result = (int)SkiaApi.sk_font_break_text (Handle, text, (IntPtr)length, encoding, maxWidth, measuredWidth, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		// GetGlyphPositions (text)
@@ -475,6 +582,7 @@ namespace SkiaSharp
 			fixed (ushort* gp = glyphs)
 			fixed (SKPoint* pp = positions) {
 				SkiaApi.sk_font_get_pos (Handle, gp, glyphs.Length, pp, &origin);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -565,6 +673,7 @@ namespace SkiaSharp
 			fixed (ushort* gp = glyphs)
 			fixed (float* pp = offsets) {
 				SkiaApi.sk_font_get_xpos (Handle, gp, glyphs.Length, pp, origin);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -709,6 +818,8 @@ namespace SkiaSharp
 				var b = bounds.Length > 0 ? bp : null;
 				SkiaApi.sk_font_get_widths_bounds (Handle, gp, glyphs.Length, w, b, paint?.Handle ?? IntPtr.Zero);
 			}
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
 		}
 
 		// GetGlyphPath
@@ -720,6 +831,7 @@ namespace SkiaSharp
 				path.Dispose ();
 				path = null;
 			}
+			GC.KeepAlive (this);
 			return path;
 		}
 
@@ -752,6 +864,7 @@ namespace SkiaSharp
 
 			var path = new SKPath ();
 			SkiaApi.sk_text_utils_get_path (text, (IntPtr)length, encoding, origin.X, origin.Y, Handle, path.Handle);
+			GC.KeepAlive (this);
 			return path;
 		}
 
@@ -785,6 +898,7 @@ namespace SkiaSharp
 			var path = new SKPath ();
 			fixed (SKPoint* p = positions) {
 				SkiaApi.sk_text_utils_get_pos_path (text, (IntPtr)length, encoding, p, Handle, path.Handle);
+				GC.KeepAlive (this);
 			}
 			return path;
 		}
@@ -798,6 +912,7 @@ namespace SkiaSharp
 			try {
 				fixed (ushort* g = glyphs) {
 					SkiaApi.sk_font_get_paths (Handle, g, glyphs.Length, proxy, (void*)ctx);
+					GC.KeepAlive (this);
 				}
 			} finally {
 				gch.Free ();
@@ -881,7 +996,7 @@ namespace SkiaSharp
 			var alignment = (int)textAlign * 0.5f;
 			var startOffset = glyphPositions[0].X + (contourLength - textLength) * alignment;
 
-			var textPath = new SKPath ();
+			using var builder = new SKPathBuilder ();
 
 			// TODO: deal with multiple contours?
 			for (var index = 0; index < glyphPositions.Length; index++) {
@@ -895,14 +1010,14 @@ namespace SkiaSharp
 					var glyphPath = glyphPathCache.GetPath (glyphId);
 					if (glyphPath != null) {
 						var transformation = SKMatrix.CreateTranslation (x0, glyphOffset.Y);
-						MorphPath (textPath, glyphPath, pathMeasure, transformation);
+						MorphPath (builder, glyphPath, pathMeasure, transformation);
 					}
 				}
 			}
 
-			return textPath;
+			return builder.Detach ();
 
-			static void MorphPath (SKPath dst, SKPath src, SKPathMeasure meas, in SKMatrix matrix)
+			static void MorphPath (SKPathBuilder dst, SKPath src, SKPathMeasure meas, in SKMatrix matrix)
 			{
 				// TODO:
 				// Need differentially more subdivisions when the follow-path is curvy. Not sure how to determine

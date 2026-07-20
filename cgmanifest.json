@@ -3,22 +3,23 @@
   "Version": 1,
   "registrations": [
     {
-      "comment": "Security-relevant dependencies - using 'other' type with canonical names for CVE matching",
+      "comment": "Security-relevant dependencies - using 'other' type with canonical upstream names for CVE matching. Actual code comes from Chromium forks (see DEPS) but CVEs are filed against the upstream projects.",
       "component": {
         "type": "other",
         "other": {
           "name": "libpng",
-          "version": "1.6.44",
-          "downloadUrl": "https://github.com/glennrp/libpng"
+          "version": "1.6.58",
+          "downloadUrl": "https://github.com/pnggroup/libpng"
         }
       }
     },
     {
+      "comment": "Used by both Skia (via DEPS -> chromium fork) and ANGLE (via submodule -> same chromium fork). CVEs are filed against upstream madler/zlib.",
       "component": {
         "type": "other",
         "other": {
           "name": "zlib",
-          "version": "1.3.0.1",
+          "version": "1.3.2",
           "downloadUrl": "https://github.com/madler/zlib"
         }
       }
@@ -28,7 +29,7 @@
         "type": "other",
         "other": {
           "name": "libjpeg-turbo",
-          "version": "2.1.5.1",
+          "version": "3.1.4.1",
           "downloadUrl": "https://github.com/libjpeg-turbo/libjpeg-turbo"
         }
       }
@@ -48,7 +49,7 @@
         "type": "other",
         "other": {
           "name": "freetype",
-          "version": "2.13.3",
+          "version": "2.14.3",
           "downloadUrl": "https://gitlab.freedesktop.org/freetype/freetype"
         }
       }
@@ -58,7 +59,7 @@
         "type": "other",
         "other": {
           "name": "harfbuzz",
-          "version": "8.3.1",
+          "version": "14.2.1",
           "downloadUrl": "https://github.com/harfbuzz/harfbuzz"
         }
       }
@@ -68,7 +69,7 @@
         "type": "other",
         "other": {
           "name": "libexpat",
-          "version": "2.7.3",
+          "version": "2.8.1",
           "downloadUrl": "https://github.com/libexpat/libexpat"
         }
       }
@@ -89,7 +90,7 @@
         "other": {
           "name": "wuffs",
           "version": "0.3.3",
-          "downloadUrl": "https://github.com/aspect-build/aspect-cli"
+          "downloadUrl": "https://github.com/google/wuffs-mirror-release-c"
         }
       }
     },
@@ -98,7 +99,7 @@
         "type": "other",
         "other": {
           "name": "dng_sdk",
-          "version": "1.6.0",
+          "version": "1.4.0",
           "downloadUrl": "https://android.googlesource.com/platform/external/dng_sdk"
         }
       }
@@ -109,7 +110,7 @@
         "type": "other",
         "other": {
           "name": "VulkanMemoryAllocator",
-          "version": "3.0.1",
+          "version": "3.2.1",
           "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator"
         }
       }
@@ -119,8 +120,19 @@
         "type": "other",
         "other": {
           "name": "SPIRV-Cross",
-          "version": "vulkan-sdk-1.3.268.0",
+          "version": "vulkan-sdk-1.3.275.0",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Cross"
+        }
+      }
+    },
+    {
+      "comment": "Pinned to commit 169895d (2020-08-18), header declares version 2.0.0-development",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "D3D12MemoryAllocator",
+          "version": "2.0.0-development",
+          "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator"
         }
       }
     },
@@ -128,9 +140,73 @@
       "component": {
         "type": "other",
         "other": {
-          "name": "D3D12MemoryAllocator",
-          "version": "2.0.1",
-          "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator"
+          "name": "vulkan-headers",
+          "version": "1.4.345",
+          "downloadUrl": "https://github.com/KhronosGroup/Vulkan-Headers"
+        }
+      }
+    },
+    {
+      "comment": "Supporting dependencies",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "piex",
+          "version": "0.0.0",
+          "downloadUrl": "https://android.googlesource.com/platform/external/piex"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE (Windows-only, WinUI). Cloned separately from Skia — version from scripts/VERSIONS.txt",
+      "component": {
+        "type": "git",
+        "git": {
+          "repositoryUrl": "https://github.com/google/angle.git",
+          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
+        }
+      }
+    },
+    {
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "angle",
+          "version": "chromium/6275",
+          "downloadUrl": "https://github.com/google/angle"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: JSON parser used by ANGLE's build system (not used by Skia)",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "jsoncpp",
+          "version": "1.9.4",
+          "downloadUrl": "https://github.com/open-source-parsers/jsoncpp"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: ASTC texture compression (not used by Skia)",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "astc-encoder",
+          "version": "573c475389bf",
+          "downloadUrl": "https://github.com/ARM-software/astc-encoder"
+        }
+      }
+    },
+    {
+      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. (Skia pulls these individually via DEPS)",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "angle-vulkan-deps",
+          "version": "3834da2004ec",
+          "downloadUrl": "https://chromium.googlesource.com/vulkan-deps"
         }
       }
     },
@@ -140,9 +216,22 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "491bcfca02505489dd744353cb495c4887356c59"
+          "commitHash": "15fb073bf63e1aaa3a9c3e88db511a2f10cfd969"
         }
       }
+    },
+    {
+      "comment": "Skia core CVE tracking. CG cannot auto-detect Skia CVEs (no CPE, filed under google:chrome). The security-audit skill uses chrome_milestone to query the NVD API for Skia CVEs fixed after this milestone. Update chrome_milestone and upstream_merge_commit when merging new upstream Skia code.",
+      "component": {
+        "type": "other",
+        "other": {
+          "name": "skia",
+          "version": "chrome/m151",
+          "downloadUrl": "https://github.com/google/skia"
+        }
+      },
+      "chrome_milestone": 151,
+      "upstream_merge_commit": "87424bcdba68e14ff3b40524ed09ad150ce3c92e"
     }
   ]
 }

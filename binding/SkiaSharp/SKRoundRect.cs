@@ -46,6 +46,7 @@ namespace SkiaSharp
 		public SKRoundRect (SKRoundRect rrect)
 			: this (SkiaApi.sk_rrect_new_copy (rrect.Handle), true)
 		{
+			GC.KeepAlive (rrect);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -58,6 +59,7 @@ namespace SkiaSharp
 			get {
 				SKRect rect;
 				SkiaApi.sk_rrect_get_rect (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -69,13 +71,37 @@ namespace SkiaSharp
 			GetRadii(SKRoundRectCorner.LowerLeft),
 		};
 
-		public SKRoundRectType Type => SkiaApi.sk_rrect_get_type (Handle);
+		public SKRoundRectType Type {
+			get {
+				var r = SkiaApi.sk_rrect_get_type (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public float Width => SkiaApi.sk_rrect_get_width (Handle);
+		public float Width {
+			get {
+				var r = SkiaApi.sk_rrect_get_width (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public float Height => SkiaApi.sk_rrect_get_height (Handle);
+		public float Height {
+			get {
+				var r = SkiaApi.sk_rrect_get_height (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public bool IsValid => SkiaApi.sk_rrect_is_valid (Handle);
+		public bool IsValid {
+			get {
+				var r = SkiaApi.sk_rrect_is_valid (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		public bool AllCornersCircular => CheckAllCornersCircular (Utils.NearlyZero);
 
@@ -96,26 +122,31 @@ namespace SkiaSharp
 		public void SetEmpty ()
 		{
 			SkiaApi.sk_rrect_set_empty (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public void SetRect (SKRect rect)
 		{
 			SkiaApi.sk_rrect_set_rect (Handle, &rect);
+			GC.KeepAlive (this);
 		}
 
 		public void SetRect (SKRect rect, float xRadius, float yRadius)
 		{
 			SkiaApi.sk_rrect_set_rect_xy (Handle, &rect, xRadius, yRadius);
+			GC.KeepAlive (this);
 		}
 
 		public void SetOval (SKRect rect)
 		{
 			SkiaApi.sk_rrect_set_oval (Handle, &rect);
+			GC.KeepAlive (this);
 		}
 
 		public void SetNinePatch (SKRect rect, float leftRadius, float topRadius, float rightRadius, float bottomRadius)
 		{
 			SkiaApi.sk_rrect_set_nine_patch (Handle, &rect, leftRadius, topRadius, rightRadius, bottomRadius);
+			GC.KeepAlive (this);
 		}
 
 		public void SetRectRadii (SKRect rect, SKPoint[] radii)
@@ -133,18 +164,22 @@ namespace SkiaSharp
 
 			fixed (SKPoint* r = radii) {
 				SkiaApi.sk_rrect_set_rect_radii (Handle, &rect, r);
+				GC.KeepAlive (this);
 			}
 		}
 
 		public bool Contains (SKRect rect)
 		{
-			return SkiaApi.sk_rrect_contains (Handle, &rect);
+			var r = SkiaApi.sk_rrect_contains (Handle, &rect);
+			GC.KeepAlive (this);
+			return r;
 		}
 
 		public SKPoint GetRadii (SKRoundRectCorner corner)
 		{
 			SKPoint radii;
 			SkiaApi.sk_rrect_get_radii (Handle, corner, &radii);
+			GC.KeepAlive (this);
 			return radii;
 		}
 
@@ -156,6 +191,7 @@ namespace SkiaSharp
 		public void Deflate (float dx, float dy)
 		{
 			SkiaApi.sk_rrect_inset (Handle, dx, dy);
+			GC.KeepAlive (this);
 		}
 
 		public void Inflate (SKSize size)
@@ -166,6 +202,7 @@ namespace SkiaSharp
 		public void Inflate (float dx, float dy)
 		{
 			SkiaApi.sk_rrect_outset (Handle, dx, dy);
+			GC.KeepAlive (this);
 		}
 
 		public void Offset (SKPoint pos)
@@ -176,12 +213,15 @@ namespace SkiaSharp
 		public void Offset (float dx, float dy)
 		{
 			SkiaApi.sk_rrect_offset (Handle, dx, dy);
+			GC.KeepAlive (this);
 		}
 
 		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
 			var destHandle = SkiaApi.sk_rrect_new ();
-			if (SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle)) {
+			var success = SkiaApi.sk_rrect_transform (Handle, &matrix, destHandle);
+			GC.KeepAlive (this);
+			if (success) {
 				transformed = new SKRoundRect (destHandle, true);
 				return true;
 			}

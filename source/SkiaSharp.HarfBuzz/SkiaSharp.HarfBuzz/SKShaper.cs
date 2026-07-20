@@ -40,13 +40,13 @@ namespace SkiaSharp.HarfBuzz
 			hbBuffer?.Dispose();
 		}
 
-		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.")]
+		[Obsolete("Use Shape(Buffer buffer, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, SKPaint paint) =>
-			Shape(buffer, 0, 0, paint.GetFont());
+			Shape(buffer, 0, 0, paint.GetLegacyFont());
 
-		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.")]
+		[Obsolete("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.", error: true)]
 		public Result Shape(Buffer buffer, float xOffset, float yOffset, SKPaint paint) =>
-			Shape(buffer, xOffset, yOffset, paint.GetFont());
+			Shape(buffer, xOffset, yOffset, paint.GetLegacyFont());
 
 		public Result Shape(Buffer buffer, SKFont font) =>
 			Shape(buffer, 0, 0, font);
@@ -68,8 +68,8 @@ namespace SkiaSharp.HarfBuzz
 
 			// get the shaping results
 			var len = buffer.Length;
-			var info = buffer.GlyphInfos;
-			var pos = buffer.GlyphPositions;
+			var info = buffer.GetGlyphInfoSpan();
+			var pos = buffer.GetGlyphPositionSpan();
 
 			// get the sizes
 			float textSizeY = font.Size / FONT_SIZE_SCALE;
@@ -100,11 +100,11 @@ namespace SkiaSharp.HarfBuzz
 			return new Result(codepoints, clusters, points, width);
 		}
 
-		[Obsolete("Use Shape(string text, SKFont font) instead.")]
+		[Obsolete("Use Shape(string text, SKFont font) instead.", error: true)]
 		public Result Shape(string text, SKPaint paint) =>
-			Shape(text, 0, 0, paint.GetFont());
+			Shape(text, 0, 0, paint.GetLegacyFont());
 
-		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.")]
+		[Obsolete("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.", error: true)]
 		public Result Shape(string text, float xOffset, float yOffset, SKPaint paint)
 		{
 			if (string.IsNullOrEmpty(text))
@@ -114,7 +114,7 @@ namespace SkiaSharp.HarfBuzz
 
 			using var buffer = new Buffer();
 
-			switch (paint.TextEncoding)
+			switch (paint.GetLegacyTextEncoding())
 			{
 				case SKTextEncoding.Utf8:
 					buffer.AddUtf8(text);

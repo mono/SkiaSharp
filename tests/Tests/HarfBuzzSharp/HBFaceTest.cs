@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 using Xunit;
 
@@ -6,7 +7,532 @@ namespace HarfBuzzSharp.Tests
 {
 	public class HBFaceTest : HBTest
 	{
-		[SkippableFact]
+		// Variable font helpers
+		private Face CreateVariableFace ()
+		{
+			using var blob = Blob.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
+			return new Face (blob, 0);
+		}
+
+		// US1: Query Variable Font Axes
+
+		[Fact]
+		public void CanGetVariationAxisCount ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.VariationAxisCount > 0);
+		}
+
+		[Fact]
+		public void CanGetVariationAxisInfos ()
+		{
+			using var face = CreateVariableFace ();
+			var axes = face.VariationAxisInfos;
+			Assert.NotEmpty (axes);
+
+			// Distortable.ttf should have at least one axis
+			var axis = axes[0];
+			Assert.NotEqual ((uint)0, axis.Tag);
+			Assert.True (axis.MinValue <= axis.DefaultValue);
+			Assert.True (axis.DefaultValue <= axis.MaxValue);
+		}
+
+		[Fact]
+		public void VariationAxisCountIsZeroForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.Equal (0, face.VariationAxisCount);
+		}
+
+		[Fact]
+		public void TryFindVariationAxisReturnsTrueForExistingAxis ()
+		{
+			using var face = CreateVariableFace ();
+			var axes = face.VariationAxisInfos;
+			Assert.NotEmpty (axes);
+
+			Tag axisTag = axes[0].Tag;
+			var found = face.TryFindVariationAxis (axisTag, out var axisInfo);
+			Assert.True (found);
+			Assert.Equal (axes[0].Tag, axisInfo.Tag);
+		}
+
+		[Fact]
+		public void TryFindVariationAxisReturnsFalseForMissingAxis ()
+		{
+			using var face = CreateVariableFace ();
+			// Use a tag that is unlikely to exist
+			var found = face.TryFindVariationAxis (Tag.Parse ("zzzz"), out _);
+			Assert.False (found);
+		}
+
+		// US3: Named Instances
+
+		[Fact]
+		public void VariationAxisCountMatchesArrayLength ()
+		{
+			using var face = CreateVariableFace ();
+			var axes = face.VariationAxisInfos;
+			Assert.Equal (face.VariationAxisCount, axes.Length);
+		}
+
+		[Fact]
+		public void SpanGetVariationAxisInfosMatchesArrayVersion ()
+		{
+			using var face = CreateVariableFace ();
+			var arrayResult = face.VariationAxisInfos;
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new OpenTypeVarAxisInfo[face.VariationAxisCount];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++) {
+				Assert.Equal (arrayResult[i].Tag, spanBuffer[i].Tag);
+				Assert.Equal (arrayResult[i].MinValue, spanBuffer[i].MinValue);
+				Assert.Equal (arrayResult[i].DefaultValue, spanBuffer[i].DefaultValue);
+				Assert.Equal (arrayResult[i].MaxValue, spanBuffer[i].MaxValue);
+			}
+		}
+
+		[Fact]
+		public void SpanGetVariationAxisInfosWithOversizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			var axisCount = face.VariationAxisCount;
+			Assert.True (axisCount > 0);
+
+			// Pass a buffer larger than needed
+			var spanBuffer = new OpenTypeVarAxisInfo[axisCount + 5];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (axisCount, written);
+		}
+
+		[Fact]
+		public void SpanGetVariationAxisInfosWithUndersizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			var axisCount = face.VariationAxisCount;
+			Assert.True (axisCount > 0);
+
+			// Pass a buffer smaller than needed — HarfBuzz fills what fits
+			var spanBuffer = new OpenTypeVarAxisInfo[1];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (1, written);
+		}
+
+		[Fact]
+		public void SpanGetVariationAxisInfosWithEmptyBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.VariationAxisCount > 0);
+
+			var spanBuffer = new OpenTypeVarAxisInfo[0];
+			var written = face.GetVariationAxisInfos (spanBuffer);
+			Assert.Equal (0, written);
+		}
+
+		[Fact]
+		public void CanGetNamedInstanceCount ()
+		{
+			using var face = CreateVariableFace ();
+			// Distortable.ttf has 3 named instances
+			Assert.True (face.NamedInstanceCount > 0);
+		}
+
+		[Fact]
+		public void NamedInstanceDesignCoordsCountMatchesAxisCount ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			// Per HarfBuzz docs, design coords count equals the number of axes
+			var coordsCount = face.GetNamedInstanceDesignCoordsCount (0);
+			Assert.Equal (face.VariationAxisCount, coordsCount);
+		}
+
+		[Fact]
+		public void NamedInstanceDesignCoordsArrayLengthMatchesCount ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var coordsCount = face.GetNamedInstanceDesignCoordsCount (0);
+			var coords = face.GetNamedInstanceDesignCoords (0);
+			Assert.Equal (coordsCount, coords.Length);
+			Assert.NotEmpty (coords);
+		}
+
+		[Fact]
+		public void SpanGetNamedInstanceDesignCoordsMatchesArrayVersion ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var arrayResult = face.GetNamedInstanceDesignCoords (0);
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new float[face.GetNamedInstanceDesignCoordsCount (0)];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++)
+				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[Fact]
+		public void SpanGetNamedInstanceDesignCoordsWithUndersizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var totalCoords = face.GetNamedInstanceDesignCoordsCount (0);
+			Assert.True (totalCoords > 0);
+
+			// Pass a buffer with only 1 slot — HarfBuzz fills what fits
+			var spanBuffer = new float[1];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (1, written);
+		}
+
+		[Fact]
+		public void SpanGetNamedInstanceDesignCoordsWithEmptyBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var spanBuffer = new float[0];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (0, written);
+		}
+
+		[Fact]
+		public void SpanGetNamedInstanceDesignCoordsWithOversizedBuffer ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var totalCoords = face.GetNamedInstanceDesignCoordsCount (0);
+			var spanBuffer = new float[totalCoords + 5];
+			var written = face.GetNamedInstanceDesignCoords (0, spanBuffer);
+			Assert.Equal (totalCoords, written);
+		}
+
+		[Fact]
+		public void EachNamedInstanceHasDesignCoords ()
+		{
+			using var face = CreateVariableFace ();
+			var instanceCount = face.NamedInstanceCount;
+			Assert.True (instanceCount > 0);
+
+			for (int i = 0; i < instanceCount; i++) {
+				var coords = face.GetNamedInstanceDesignCoords (i);
+				Assert.NotEmpty (coords);
+				Assert.Equal (face.VariationAxisCount, coords.Length);
+			}
+		}
+
+		[Fact]
+		public void NamedInstanceSubfamilyNameIdIsValid ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			var nameId = face.GetNamedInstanceSubfamilyNameId (0);
+			// Name IDs are unsigned; a valid named instance should have a non-zero subfamily name ID
+			Assert.True ((uint)nameId > 0);
+		}
+
+		[Fact]
+		public void NamedInstancePostScriptNameIdDoesNotThrow ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.NamedInstanceCount > 0);
+
+			// PostScript name ID may be 0xFFFF (invalid) for some fonts, but it should not throw
+			var nameId = face.GetNamedInstancePostScriptNameId (0);
+			// Just verify it returns without error
+		}
+
+		[Fact]
+		public void NegativeInstanceIndexThrowsForSubfamilyNameId ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceSubfamilyNameId (-1));
+		}
+
+		[Fact]
+		public void NegativeInstanceIndexThrowsForPostScriptNameId ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstancePostScriptNameId (-1));
+		}
+
+		[Fact]
+		public void NegativeInstanceIndexThrowsForDesignCoords ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoords (-1));
+		}
+
+		[Fact]
+		public void NegativeInstanceIndexThrowsForDesignCoordsCount ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoordsCount (-1));
+		}
+
+		[Fact]
+		public void NegativeInstanceIndexThrowsForDesignCoordsSpan ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetNamedInstanceDesignCoords (-1, new float[1]));
+		}
+
+		[Fact]
+		public void NamedInstanceCountIsZeroForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.Equal (0, face.NamedInstanceCount);
+		}
+
+		[Fact]
+		public void HasVariationDataIsTrueForVariableFont ()
+		{
+			using var face = CreateVariableFace ();
+			Assert.True (face.HasVariationData);
+		}
+
+		[Fact]
+		public void HasVariationDataIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasVariationData);
+		}
+
+		// Color font / palette tests
+
+		private Face CreateColorFace ()
+		{
+			using var blob = Blob.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
+			return new Face (blob, 0);
+		}
+
+		[Fact]
+		public void HasPalettesIsTrueForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.HasPalettes);
+		}
+
+		[Fact]
+		public void HasPalettesIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasPalettes);
+		}
+
+		[Fact]
+		public void PaletteCountIsNonZeroForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			// test_glyphs-COLRv1.ttf has 3 palettes
+			Assert.True (face.PaletteCount >= 3);
+		}
+
+		[Fact]
+		public void PaletteCountIsZeroForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.Equal (0, face.PaletteCount);
+		}
+
+		[Fact]
+		public void CanGetPaletteColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+		}
+
+		[Fact]
+		public void SpanGetPaletteColorsMatchesArrayVersion ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var arrayResult = face.GetPaletteColors (0);
+			Assert.NotEmpty (arrayResult);
+
+			var spanBuffer = new HBColor[arrayResult.Length];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (arrayResult.Length, written);
+
+			for (int i = 0; i < arrayResult.Length; i++)
+				Assert.Equal (arrayResult[i], spanBuffer[i]);
+		}
+
+		[Fact]
+		public void SpanGetPaletteColorsWithUndersizedBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var totalColors = face.GetPaletteColors (0).Length;
+			Assert.True (totalColors > 1, $"Need palette with >1 colors, got {totalColors}");
+
+			// HarfBuzz fills what fits
+			var spanBuffer = new HBColor[1];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (1, written);
+		}
+
+		[Fact]
+		public void SpanGetPaletteColorsWithOversizedBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var totalColors = face.GetPaletteColors (0).Length;
+
+			var spanBuffer = new HBColor[totalColors + 5];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (totalColors, written);
+		}
+
+		[Fact]
+		public void SpanGetPaletteColorsWithEmptyBuffer ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+
+			var spanBuffer = new HBColor[0];
+			var written = face.GetPaletteColors (0, spanBuffer);
+			Assert.Equal (0, written);
+		}
+
+		[Fact]
+		public void DifferentPalettesHaveDifferentColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount >= 2);
+
+			var palette0 = face.GetPaletteColors (0);
+			var palette1 = face.GetPaletteColors (1);
+			Assert.Equal (palette0.Length, palette1.Length);
+
+			// At least one color should differ between palettes
+			var anyDifferent = false;
+			for (int i = 0; i < palette0.Length; i++) {
+				if (palette0[i] != palette1[i]) {
+					anyDifferent = true;
+					break;
+				}
+			}
+			Assert.True (anyDifferent);
+		}
+
+		[Fact]
+		public void CanGetPaletteFlags ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+			// Should not throw
+			var flags = face.GetPaletteFlags (0);
+		}
+
+		[Fact]
+		public void CanGetPaletteNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.PaletteCount > 0);
+			// Should not throw
+			var nameId = face.GetPaletteNameId (0);
+		}
+
+		[Fact]
+		public void CanGetPaletteColorNameId ()
+		{
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+			// Should not throw
+			var nameId = face.GetPaletteColorNameId (0);
+		}
+
+		[Fact]
+		public void HasColorLayersIsTrueForColorFont ()
+		{
+			using var face = CreateColorFace ();
+			Assert.True (face.HasColorLayers);
+		}
+
+		[Fact]
+		public void HasColorLayersIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorLayers);
+		}
+
+		[Fact]
+		public void HasColorPngIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorPng);
+		}
+
+		[Fact]
+		public void HasColorSvgIsFalseForStaticFont ()
+		{
+			using var face = new Face (Blob, 0);
+			Assert.False (face.HasColorSvg);
+		}
+
+		[Fact]
+		public void NegativeIndexThrowsForPaletteColors ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColors (-1));
+		}
+
+		[Fact]
+		public void NegativeIndexThrowsForPaletteFlags ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteFlags (-1));
+		}
+
+		[Fact]
+		public void NegativeIndexThrowsForPaletteNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteNameId (-1));
+		}
+
+		[Fact]
+		public void NegativeIndexThrowsForPaletteColorNameId ()
+		{
+			using var face = CreateColorFace ();
+			Assert.Throws<ArgumentOutOfRangeException> (() => face.GetPaletteColorNameId (-1));
+		}
+
+		[Fact]
+		public void PaletteColorsHaveCorrectChannels ()
+		{
+			// GetPaletteColors() returns HBColor[] with correct channel accessors.
+			// HBColor properties use the same bit-shift logic as the native
+			// hb_color_get_* macros — no P/Invoke needed.
+			using var face = CreateColorFace ();
+			var colors = face.GetPaletteColors (0);
+			Assert.NotEmpty (colors);
+
+			// Verify at least one color has non-zero alpha (palette colors should be opaque)
+			Assert.Contains (colors, c => c.Alpha > 0);
+		}
+
+		[Fact]
 		public void ShouldHaveGlyphCount()
 		{
 			using (var face = new Face(Blob, 0))
@@ -15,7 +541,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldBeImmutable()
 		{
 			using (var face = new Face(Blob, 0))
@@ -26,7 +552,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveIndex()
 		{
 			using (var face = new Face(Blob, 0))
@@ -35,7 +561,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveUnitsPerEm()
 		{
 			using (var face = new Face(Blob, 0))
@@ -44,7 +570,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldHaveTableTags()
 		{
 			using (var face = new Face(Blob, 0))
@@ -53,7 +579,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldReferenceTable()
 		{
 			using (var face = new Face(Blob, 0))
@@ -63,7 +589,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ShouldCreateWithTableFunc()
 		{
 			var tag = Tag.Parse("kern");
@@ -76,7 +602,7 @@ namespace HarfBuzzSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DelegateBasedConstructionSucceededs()
 		{
 			var didReference = 0;
@@ -122,7 +648,7 @@ namespace HarfBuzzSharp.Tests
 		}
 
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyFacesAreExactlyTheSameInstance()
 		{
 			var emptyFace1 = Face.Empty;
@@ -133,7 +659,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Same(emptyFace1, emptyFace2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyFacesAreNotDisposed()
 		{
 			var emptyFace = Face.Empty;

@@ -108,11 +108,19 @@ namespace SkiaSharp
 
 		//
 
-		public bool Validate () =>
-			SkiaApi.gr_glinterface_validate (Handle);
+		public bool Validate ()
+		{
+			var result = SkiaApi.gr_glinterface_validate (Handle);
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public bool HasExtension (string extension) =>
-			SkiaApi.gr_glinterface_has_extension (Handle, extension);
+		public bool HasExtension (string extension)
+		{
+			var result = SkiaApi.gr_glinterface_has_extension (Handle, extension);
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		//
 
@@ -210,6 +218,7 @@ namespace SkiaSharp
 			private readonly IntPtr glEvas;
 			private readonly EvasGlApi api;
 
+#if NET7_0_OR_GREATER
 			[LibraryImport (libevas)]
 			internal static partial IntPtr evas_gl_api_get (IntPtr evas_gl);
 
@@ -221,6 +230,19 @@ namespace SkiaSharp
 
 			[LibraryImport(libevas)]
 			internal static partial IntPtr evas_gl_proc_address_get (IntPtr evas_gl, [MarshalAs (UnmanagedType.LPStr)] string name);
+#else
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_api_get (IntPtr evas_gl);
+
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_context_api_get (IntPtr evas_gl, IntPtr ctx);
+
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_current_context_get (IntPtr evas_gl);
+
+			[DllImport (libevas)]
+			internal static extern IntPtr evas_gl_proc_address_get (IntPtr evas_gl, [MarshalAs (UnmanagedType.LPStr)] string name);
+#endif
 
 			static EvasGlLoader ()
 			{

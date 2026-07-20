@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>SkiaSharpSample</RootNamespace>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <!-- In debug, make builds faster by reducing optimizations -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+    <WasmNativeStrip>false</WasmNativeStrip>
+    <EmccCompileOptimizationFlag>-O1</EmccCompileOptimizationFlag>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.5" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <ProjectReference Include="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Blazor\SkiaSharp.Views.Blazor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shared\SkiaSharpSample.Shared.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
+  <Import Project="..\..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
+  <Import Project="..\..\..\source\SkiaSharp.Views\SkiaSharp.Views.Blazor\nuget\buildTransitive\SkiaSharp.Views.Blazor.Local.props" />
+
+</Project>

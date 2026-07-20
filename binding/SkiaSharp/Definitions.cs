@@ -60,6 +60,10 @@ namespace SkiaSharp
 		Srgba8888 = 22,
 		R8Unorm = 23,
 		Rgba10x6 = 24,
+		Bgra10101010XR = 25,
+		RgbF16F16F16x = 26,
+		R16Unorm = 27,
+		RF16 = 28,
 	}
 
 	public static partial class SkiaExtensions
@@ -91,6 +95,8 @@ namespace SkiaSharp
 				SKColorType.Rg88 => 2,
 				SKColorType.Alpha16 => 2,
 				SKColorType.AlphaF16 => 2,
+				SKColorType.R16Unorm => 2,
+				SKColorType.RF16 => 2,
 				// 4
 				SKColorType.Bgra8888 => 4,
 				SKColorType.Bgra1010102 => 4,
@@ -108,6 +114,8 @@ namespace SkiaSharp
 				SKColorType.RgbaF16 => 8,
 				SKColorType.Rgba16161616 => 8,
 				SKColorType.Rgba10x6 => 8,
+				SKColorType.Bgra10101010XR => 8,
+				SKColorType.RgbF16F16F16x => 8,
 				// 16
 				SKColorType.RgbaF32 => 16,
 				//
@@ -129,6 +137,8 @@ namespace SkiaSharp
 				SKColorType.Rg88 => 1,
 				SKColorType.Alpha16 => 1,
 				SKColorType.AlphaF16 => 1,
+				SKColorType.R16Unorm => 1,
+				SKColorType.RF16 => 1,
 				// 2
 				SKColorType.Bgra8888 => 2,
 				SKColorType.Bgra1010102 => 2,
@@ -146,6 +156,8 @@ namespace SkiaSharp
 				SKColorType.RgbaF16 => 3,
 				SKColorType.Rgba16161616 => 3,
 				SKColorType.Rgba10x6 => 3,
+				SKColorType.Bgra10101010XR => 3,
+				SKColorType.RgbF16F16F16x => 3,
 				// 4
 				SKColorType.RgbaF32 => 4,
 				//
@@ -181,6 +193,7 @@ namespace SkiaSharp
 				case SKColorType.RgbaF32:
 				case SKColorType.Rgba16161616:
 				case SKColorType.Rgba10x6:
+				case SKColorType.Bgra10101010XR:
 					break;
 
 				// opaque
@@ -194,6 +207,9 @@ namespace SkiaSharp
 				case SKColorType.Bgr101010x:
 				case SKColorType.Bgr101010xXR:
 				case SKColorType.R8Unorm:
+				case SKColorType.R16Unorm:
+				case SKColorType.RF16:
+				case SKColorType.RgbF16F16F16x:
 					alphaType = SKAlphaType.Opaque;
 					break;
 
@@ -521,9 +537,6 @@ namespace SkiaSharp
 
 		public SKPngEncoderOptions (SKPngEncoderFilterFlags filterFlags, int zLibLevel)
 		{
-			fICCProfile = default;
-			fICCProfileDescription = default;
-
 			fFilterFlags = filterFlags;
 			fZLibLevel = zLibLevel;
 			fComments = null;
@@ -545,9 +558,9 @@ namespace SkiaSharp
 
 		public SKJpegEncoderOptions (int quality)
 		{
-			fICCProfile = default;
-			fICCProfileDescription = default;
 			xmpMetadata = default;
+			fOrigin = default;
+			fHasOrigin = default;
 
 			fQuality = quality;
 			fDownsample = SKJpegEncoderDownsample.Downsample420;
@@ -556,9 +569,9 @@ namespace SkiaSharp
 
 		public SKJpegEncoderOptions (int quality, SKJpegEncoderDownsample downsample, SKJpegEncoderAlphaOption alphaOption)
 		{
-			fICCProfile = default;
-			fICCProfileDescription = default;
 			xmpMetadata = default;
+			fOrigin = default;
+			fHasOrigin = default;
 
 			fQuality = quality;
 			fDownsample = downsample;
@@ -583,9 +596,6 @@ namespace SkiaSharp
 
 		public SKWebpEncoderOptions (SKWebpEncoderCompression compression, float quality)
 		{
-			fICCProfile = default;
-			fICCProfileDescription = default;
-
 			fCompression = compression;
 			fQuality = quality;
 		}
@@ -593,6 +603,33 @@ namespace SkiaSharp
 		public SKWebpEncoderCompression Compression => fCompression;
 
 		public float Quality => fQuality;
+	}
+
+	public struct SKWebpEncoderFrame
+	{
+		public SKWebpEncoderFrame (SKPixmap pixmap, TimeSpan duration)
+		{
+			Pixmap = pixmap ?? throw new ArgumentNullException (nameof (pixmap));
+			Duration = duration;
+		}
+
+		public SKWebpEncoderFrame (SKBitmap bitmap, TimeSpan duration)
+		{
+			_ = bitmap ?? throw new ArgumentNullException (nameof (bitmap));
+			Pixmap = bitmap.PeekPixels () ?? throw new ArgumentException ("Unable to peek pixels from bitmap.", nameof (bitmap));
+			Duration = duration;
+		}
+
+		public SKWebpEncoderFrame (SKImage image, TimeSpan duration)
+		{
+			_ = image ?? throw new ArgumentNullException (nameof (image));
+			Pixmap = image.PeekPixels () ?? throw new ArgumentException ("Unable to peek pixels from image. Ensure the image is raster-backed.", nameof (image));
+			Duration = duration;
+		}
+
+		public SKPixmap Pixmap { readonly get; set; }
+
+		public TimeSpan Duration { readonly get; set; }
 	}
 
 	public partial struct SKCubicResampler

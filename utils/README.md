@@ -62,16 +62,4 @@ dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- cooki
 * `--type <full type name>`  
   The type containing the interops.
 
-## WasmTestRunner
 
-Run the WASM unit tests in a browser.
-
-This can be run with:
-
-```pwsh
-dotnet run --project=utils/WasmTestRunner/WasmTestRunner.csproj -- "http://localhost:5000/"
-```
-
-* `--output TestResults.xml`  
-* `--timeout 30`  
-* `--no-headless`  

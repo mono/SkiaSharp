@@ -120,7 +120,7 @@ namespace SkiaSharpGenerator
 			functionMappings.TryGetValue(name, out var map);
 			name = map?.CsType ?? CleanName(name);
 
-			writer.WriteLine($"\t// {del}");
+			writer.WriteLine($"\t// {FormatCppSignature(del.ToString())}");
 			writer.WriteLine($"\t[UnmanagedFunctionPointer (CallingConvention.Cdecl)]");
 
 			var (paramsList, returnType) = GetManagedFunctionArguments(function, map);
@@ -193,7 +193,7 @@ namespace SkiaSharpGenerator
 				var funcPointerType = GetFunctionPointerType(field.Type);
 				var cppT = GetCppType(field.Type);
 
-				writer.WriteLine($"\t\t// {field}");
+				writer.WriteLine($"\t\t// {FormatCppSignature(field.ToString())}");
 
 				var fieldName = field.Name;
 				var isPrivate = fieldName.StartsWith("_private_", StringComparison.OrdinalIgnoreCase);
@@ -540,7 +540,7 @@ namespace SkiaSharpGenerator
 					}
 
 					writer.WriteLine();
-					writer.WriteLine($"\t\t// {function}");
+					writer.WriteLine($"\t\t// {FormatCppSignature(function)}");
 					writer.WriteLine($"\t\t#if !USE_DELEGATES");
 					writer.WriteLine($"\t\t#if USE_LIBRARY_IMPORT");
 					writer.WriteLine($"\t\t[LibraryImport ({config.DllName})]");
@@ -652,6 +652,18 @@ namespace SkiaSharpGenerator
 				writer.WriteLine($"\tprivate static partial {returnType} {implName}({string.Join(",", paramsList)});");
 				writer.WriteLine();
 			}
+		}
+
+		// Normalize CppAst's ToString() output to the historical style the checked-in
+		// generated files use: "const T*" instead of "T const *", no space before *.
+		private static string FormatCppSignature(CppFunction function) =>
+			FormatCppSignature(function.ToString());
+
+		private static string FormatCppSignature(string s)
+		{
+			s = System.Text.RegularExpressions.Regex.Replace(s, @"(\w+)\s+const\b", "const $1");
+			s = s.Replace(" *", "*").Replace(" &", "&");
+			return s;
 		}
 
 		private void WriteDocIfAny(TextWriter writer, string key, string indent)

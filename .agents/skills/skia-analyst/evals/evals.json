@@ -1,0 +1,42 @@
+{
+  "skill_name": "skia-analyst",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Analyze what's new in Skia that we should know about. Do a full scan.",
+      "expected_output": "Full scan of all milestones. Should find SkMesh, gradient interpolation, HDR pipeline, SkPathBuilder, runtime shader image filters. JSON should pass validation.",
+      "files": [],
+      "expectations": [
+        "Produces a JSON that passes validate-skia-analyst.py",
+        "meta.scanMode is 'full'",
+        "findings array has at least 30 items",
+        "At least one finding with impact 'transformative'",
+        "At least one finding with bindingStatus 'missing'"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "What changed between v3.119.4-preview.1.1 and origin/main?",
+      "expected_output": "Diff mode between two refs. Should find variable fonts, color palettes, SKPathBuilder, security hardening, Skia m147 bump. Should have upstream benefits from m134-m147.",
+      "files": [],
+      "expectations": [
+        "Produces a valid JSON report",
+        "meta.scanMode is 'diff'",
+        "meta.refFrom contains 'v3.119.4'",
+        "At least one finding with changeType 'upstream'",
+        "At least one finding with changeType 'added'"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "What landed between milestone 133 and 147?",
+      "expected_output": "Windowed scan m133-m147. Should find SkPath immutability, gradient interpolation in P3/Rec2020, HDR metadata, kR16_unorm, kRec709 correction.",
+      "files": [],
+      "expectations": [
+        "meta.scanMode is 'windowed'",
+        "At least one finding mentions SkPath or SkPathBuilder",
+        "At least one finding mentions gradient interpolation"
+      ]
+    }
+  ]
+}

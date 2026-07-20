@@ -12,37 +12,11 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: enableCaching
+    type: boolean
+    default: false
 
 stages:
-
-    - stage: api_diff
-      displayName: API Diff
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
-        dependsOn: prepare
-      ${{ else }}:
-        dependsOn: package
-      jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # API Diff
-          parameters:
-            name: api_diff_windows
-            displayName: API Diff
-            buildAgent: ${{ parameters.buildAgentWindows}}
-            target: docs-api-diff
-            additionalArgs: --nugetDiffPrerelease=$(NUGET_DIFF_PRERELEASE)
-            shouldPublish: false
-            requiredArtifacts:
-              - name: nuget
-                dir: nugets
-            preBuildSteps:
-              - pwsh: .\scripts\install-gtk.ps1
-                displayName: Install GTK# 2.12
-            publishArtifacts:
-              - name: api-diff
-                always: true
-                path: '$(Build.SourcesDirectory)\output\api-diff'
-              - name: changelogs
-                always: true
-                path: '$(Build.SourcesDirectory)\changelogs'
 
     - stage: managed
       displayName: Build Managed
@@ -65,6 +39,8 @@ stages:
             displayName: Managed (Windows)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -77,6 +53,8 @@ stages:
             displayName: Managed (macOS)
             buildAgent: ${{ parameters.buildAgentMac }}
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -90,6 +68,8 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES)
             target: libs
+            cacheJob: managed/libs
+            enableCaching: ${{ parameters.enableCaching }}
             additionalArgs: --skipExternals="all"
             requiredArtifacts:
               - name: native
@@ -116,12 +96,15 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Framework test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Windows .NET Framework Tests'
             publishArtifacts:
               - name: testlogs_netfx_windows
@@ -139,12 +122,15 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Windows .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_windows
@@ -164,12 +150,15 @@ stages:
             requiredArtifacts:
               - name: native
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'macOS .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_macos
@@ -182,20 +171,45 @@ stages:
             name: tests_netcore_linux
             displayName: Linux (.NET Core)
             buildAgent: ${{ parameters.buildAgentLinux }}
-            packages: $(MANAGED_LINUX_PACKAGES)
+            # Software GL (Mesa llvmpipe) + software Vulkan (Mesa lavapipe) + a
+            # virtual X server give the headless agent deterministic GPU output so
+            # the visual-regression matrix can render and golden-compare ganesh-gl
+            # / ganesh-vulkan here. If any of this is missing the GPU cells skip
+            # (no display / no ICD), so this provisioning can only add coverage,
+            # never turn the build red.
+            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri mesa-vulkan-drivers vulkan-tools
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              - bash: |
+                  set -e
+                  nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
+                  sleep 3
+                  echo "Started Xvfb on :99"
+                  # Expose the software-GPU environment to the test step. Forcing
+                  # Mesa llvmpipe (GL) and the lavapipe ICD (Vulkan) keeps output
+                  # deterministic; a wrong/absent ICD path just means the cell finds
+                  # no driver and skips, so this never turns the build red.
+                  echo "##vso[task.setvariable variable=DISPLAY]:99"
+                  echo "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
+                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]llvmpipe"
+                  echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
+                  echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
+                displayName: Start Xvfb and select software GPU (visual tests)
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the .NET Core test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Linux .NET Core Tests'
             publishArtifacts:
               - name: testlogs_netcore_linux
@@ -203,28 +217,43 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_linux
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (Linux)
           parameters:
-            name: tests_android_macos
-            displayName: Android (macOS)
+            name: tests_android_linux
+            displayName: Android (Linux)
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             shouldPublish: false
+            installXcode: false
+            dotnetWorkloads: android,maui-android
             requiredArtifacts:
               - name: native
             preBuildSteps:
-              - pwsh: .\scripts\install-android-package.ps1 -Package "emulator"
+              - script: |
+                  echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+                  sudo udevadm control --reload-rules
+                  sudo udevadm trigger --name-match=kvm
+                displayName: Enable KVM for Android emulator
+              - script: |
+                  mkdir -p "$HOME/.android/avd"
+                  echo "##vso[task.setvariable variable=ANDROID_AVD_HOME]$HOME/.android/avd"
+                  echo "##vso[task.setvariable variable=ANDROID_EMULATOR_HOME]$HOME/.android"
+                displayName: Set Android AVD home (fix XDG path mismatch)
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "emulator"
                 displayName: Install the Android emulator
-              - pwsh: .\scripts\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
+              - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "system-images;android-$(ANDROID_TEST_DEVICE_VERSION);google_apis;x86_64"
                 displayName: Install the Android API $(ANDROID_TEST_DEVICE_VERSION) emulator image
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Android test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Android Tests (API $(ANDROID_TEST_DEVICE_VERSION))'
             publishArtifacts:
               - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
@@ -240,15 +269,16 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the iOS test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'iOS Tests (v$(IOS_TEST_DEVICE_VERSION))'
             publishArtifacts:
               - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
@@ -266,15 +296,16 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the Mac Catalyst test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/TestResults.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Mac Catalyst Tests'
             publishArtifacts:
               - name: testlogs_maccatalyst
@@ -287,7 +318,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
-            additionalArgs: --skipExternals="all" --coverage=false --chromedriver=$(CHROMEWEBDRIVER)
+            additionalArgs: --skipExternals="all" --coverage=false
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
@@ -295,12 +326,15 @@ stages:
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
             postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
+                displayName: Extract visual-regression failure images for triage
+                condition: always()
               - task: PublishTestResults@2
                 displayName: Publish the WASM test results
                 condition: always()
                 inputs:
-                  testResultsFormat: xUnit
-                  testResultsFiles: 'output/logs/testlogs/**/*.xml'
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
                   testRunTitle: 'Linux WASM Tests'
             publishArtifacts:
               - name: testlogs_wasm
@@ -318,7 +352,7 @@ stages:
             - tests_netcore_linux
           steps:
             - checkout: self
-            - pwsh: ./scripts/set-build-variables.ps1
+            - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
               displayName: Configure build variables
             - task: DownloadBuildArtifacts@1
               displayName: Download the coverage_netcore_windows artifact
@@ -371,8 +405,6 @@ stages:
             requiredArtifacts:
               - name: nuget
                 dir: nugets
-            preBuildSteps:
-              - template: /scripts/azure-templates-steps-provisioning-profiles.yml@self
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Samples (Linux)
           parameters:
             name: samples_linux

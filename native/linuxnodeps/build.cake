@@ -1,6 +1,6 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 
-#load "../../scripts/cake/shared.cake"
+#load "../../scripts/infra/shared/shared.cake"
 
 Task("libSkiaSharp")
     .WithCriteria(IsRunningOnLinux())

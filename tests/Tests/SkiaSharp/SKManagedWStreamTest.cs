@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKManagedWStreamTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void DotNetStreamIsCollected()
 		{
 			var dotnet = new MemoryStream();
@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DotNetStreamIsNotCollected()
 		{
 			var dotnet = new MemoryStream();
@@ -32,7 +32,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamIsNotDisposedWhenReferencedIsDisposed()
 		{
 			var stream = new SKManagedWStream(new MemoryStream(), true);
@@ -44,12 +44,11 @@ namespace SkiaSharp.Tests
 			Assert.True(SKObject.GetInstance<SKManagedWStream>(handle, out _));
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public void StreamIsCollectedEvenWhenNotProperlyDisposed()
 		{
+			SkipOnMono();
+
 			var handle = DoWork();
 
 			CollectGarbage();
@@ -65,7 +64,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamWritesByteCorrectly()
 		{
 			var dotnet = new MemoryStream();
@@ -87,7 +86,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new byte[] { 123, 246 }, dotnet.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamWritesChunkCorrectly()
 		{
 			var data = new byte[1024];
@@ -109,12 +108,11 @@ namespace SkiaSharp.Tests
 			Assert.Equal(data, dotnet.ToArray());
 		}
 
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.Android)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.iOS)] // Mono does not guarantee finalizers are invoked immediately
-		[Trait(Traits.SkipOn.Key, Traits.SkipOn.Values.MacCatalyst)] // Mono does not guarantee finalizers are invoked immediately
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamIsReferencedAndNotDisposedPrematurely()
 		{
+			SkipOnMono();
+
 			DoWork(out var docH, out var streamH);
 
 			CollectGarbage();

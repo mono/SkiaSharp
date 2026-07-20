@@ -1,0 +1,212 @@
+#!/usr/bin/env pwsh
+<#
+.SYNOPSIS
+    Phase 6: Update all SkiaSharp version files for a Skia milestone update.
+
+.DESCRIPTION
+    Performs ALL version updates required by Phase 6 of the update-skia skill:
+    - scripts/VERSIONS.txt (milestone, increment, soname, assembly, file, all nuget lines)
+    - cgmanifest.json (commitHash, version, chrome_milestone, upstream_merge_commit)
+    - scripts/azure-templates-variables.yml (SKIASHARP_VERSION)
+    - externals/skia/include/c/sk_types.h (verifies SK_C_INCREMENT is 0)
+
+    Then runs the mandatory verification greps to catch any stale references.
+
+.PARAMETER Current
+    The current Skia milestone number (e.g., 119)
+
+.PARAMETER Target
+    The target Skia milestone number (e.g., 120)
+
+.PARAMETER UpstreamRef
+    The upstream ref that was actually merged, as named under the `upstream` remote
+    (without the `upstream/` prefix). Normally `chrome/m<Target>`; pass `main` for a
+    bleeding-edge main-tip sync (where no `chrome/m<Target>` branch is merged). Defaults
+    to `chrome/m<Target>`.
+
+.EXAMPLE
+    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
+
+.EXAMPLE
+    # main-tip sync (same milestone, merged from upstream/main):
+    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 151 -Target 151 -UpstreamRef main
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [int]$Current,
+
+    [Parameter(Mandatory=$true)]
+    [int]$Target,
+
+    [string]$UpstreamRef
+)
+
+$ErrorActionPreference = 'Stop'
+$repoRoot = git rev-parse --show-toplevel
+
+Write-Host "`n=== Phase 6: Update Version Files (m$Current -> m$Target) ===" -ForegroundColor Cyan
+
+# --- Step 1: VERSIONS.txt ---
+Write-Host "`n--- Updating scripts/VERSIONS.txt ---" -ForegroundColor Yellow
+$versionsPath = Join-Path $repoRoot 'scripts/VERSIONS.txt'
+$content = Get-Content $versionsPath -Raw
+
+# Get current nuget version pattern (e.g., 4.119.4)
+$majorPattern = '\d+\.' + $Current + '\.\d+'
+$currentNuget = [regex]::Match($content, $majorPattern).Value
+if (-not $currentNuget) {
+    Write-Error "Could not find current nuget version pattern X.$Current.x in VERSIONS.txt"
+}
+Write-Host "  Current nuget version: $currentNuget"
+$currentMajor = $currentNuget.Split('.')[0]
+
+# Replace all version patterns
+$content = $content -replace "release\s+m$Current", "release     m$Target"
+$content = $content -replace "milestone\s+$Current", "milestone   $Target"
+$content = $content -replace "increment\s+\d+", "increment   0"
+$content = $content -replace "$Current\.0\.0", "$Target.0.0"
+$content = $content -replace "$currentMajor\.$Current\.\d+\.0", "$currentMajor.$Target.0.0"
+$content = $content -replace "$currentMajor\.$Current\.\d+", "$currentMajor.$Target.0"
+
+Set-Content $versionsPath $content -NoNewline
+Write-Host "  Updated VERSIONS.txt" -ForegroundColor Green
+
+# --- Step 2: cgmanifest.json ---
+Write-Host "`n--- Updating cgmanifest.json ---" -ForegroundColor Yellow
+$cgPath = Join-Path $repoRoot 'cgmanifest.json'
+$cgContent = Get-Content $cgPath -Raw
+
+# Get submodule commit hash
+$submoduleHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse HEAD
+Write-Host "  Submodule HEAD: $submoduleHash"
+
+# Get upstream merge commit. Resolve the ref that was ACTUALLY merged: a chrome/m<N>
+# milestone branch normally, or `main` for a bleeding-edge tip sync. `--verify --quiet`
+# makes git fail cleanly (empty output + non-zero $LASTEXITCODE) when the ref is missing,
+# instead of echoing the literal argument back on stdout — without it, a wrong or absent
+# ref (e.g. upstream/chrome/m151 on a main-tip merge) would be written verbatim into
+# upstream_merge_commit as if it were a SHA. `^{commit}` peels the ref to its commit.
+if (-not $UpstreamRef) { $UpstreamRef = "chrome/m$Target" }
+$upstreamHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse --verify --quiet "upstream/$UpstreamRef^{commit}"
+if ($LASTEXITCODE -ne 0 -or -not $upstreamHash) {
+    Write-Warning "  Could not resolve upstream/$UpstreamRef - set upstream_merge_commit manually"
+    $upstreamHash = "UNKNOWN"
+} else {
+    $upstreamHash = $upstreamHash.Trim()
+    Write-Host "  Upstream ($UpstreamRef) tip: $upstreamHash"
+}
+
+# Update cgmanifest.json fields
+$cgJson = $cgContent | ConvertFrom-Json
+
+foreach ($reg in $cgJson.registrations) {
+    # Update git component (commitHash)
+    if ($reg.component.type -eq 'git' -and $reg.component.git.repositoryUrl -match 'mono/skia') {
+        $reg.component.git.commitHash = $submoduleHash
+        Write-Host "  Updated commitHash" -ForegroundColor Green
+    }
+    # Update skia other component (version, chrome_milestone, upstream_merge_commit)
+    if ($reg.component.type -eq 'other' -and $reg.component.other.name -eq 'skia') {
+        $reg.component.other.version = "chrome/m$Target"
+    }
+    # Handle custom fields at registration level
+    if ($null -ne $reg.chrome_milestone) {
+        $reg.chrome_milestone = $Target
+        Write-Host "  Updated chrome_milestone" -ForegroundColor Green
+    }
+    if ($null -ne $reg.upstream_merge_commit) {
+        $reg.upstream_merge_commit = $upstreamHash
+        Write-Host "  Updated upstream_merge_commit" -ForegroundColor Green
+    }
+}
+
+$cgJson | ConvertTo-Json -Depth 10 | Set-Content $cgPath
+Write-Host "  Updated cgmanifest.json" -ForegroundColor Green
+
+# --- Step 3: azure-templates-variables.yml (SKIASHARP_VERSION) ---
+# This must match the SkiaSharp nuget version in VERSIONS.txt. It is a separate,
+# compile-time constant used by the BUILD_NUMBER counter, so it cannot be derived
+# dynamically and must be bumped here too.
+$targetNuget = "$currentMajor.$Target.0"
+$pipelinePath = Join-Path $repoRoot 'scripts/azure-templates-variables.yml'
+if (-not (Test-Path $pipelinePath)) {
+    Write-Error "Expected $pipelinePath not found. If the file was renamed, update this script (Step 3) and the verification gate below."
+}
+Write-Host "`n--- Updating azure-templates-variables.yml ---" -ForegroundColor Yellow
+$pipelineContent = Get-Content $pipelinePath -Raw
+$pipelineContent = $pipelineContent -replace "(SKIASHARP_VERSION:\s*)$currentMajor\.$Current\.\d+", "`${1}$targetNuget"
+Set-Content $pipelinePath $pipelineContent -NoNewline
+Write-Host "  Updated SKIASHARP_VERSION -> $targetNuget" -ForegroundColor Green
+
+# --- Step 4: Reset and verify SK_C_INCREMENT ---
+Write-Host "`n--- Checking SK_C_INCREMENT ---" -ForegroundColor Yellow
+$skTypesPath = Join-Path $repoRoot 'externals/skia/include/c/sk_types.h'
+if ($Current -ne $Target) {
+    Write-Host "  Milestone change (m$Current -> m$Target) — resetting SK_C_INCREMENT to 0" -ForegroundColor Yellow
+    $skTypesContent = Get-Content $skTypesPath -Raw
+    $skTypesContent = $skTypesContent -replace '(#define\s+SK_C_INCREMENT\s+)\d+', '${1}0'
+    Set-Content $skTypesPath $skTypesContent -NoNewline
+    Write-Host "  SK_C_INCREMENT reset to 0" -ForegroundColor Green
+} else {
+    $incrementLine = Select-String -Path $skTypesPath -Pattern 'SK_C_INCREMENT'
+    if ($incrementLine -match 'SK_C_INCREMENT\s+0') {
+        Write-Host "  SK_C_INCREMENT is 0" -ForegroundColor Green
+    } else {
+        Write-Error "SK_C_INCREMENT is NOT 0 — reset it to 0 in $skTypesPath"
+    }
+}
+
+# --- Step 5: Mandatory Verification ---
+Write-Host "`n=== Verification ===" -ForegroundColor Cyan
+
+if ($Current -eq $Target) {
+    Write-Host "  Same-milestone sync (m$Current -> m$Target) — skipping stale-reference check" -ForegroundColor Yellow
+    Write-Host "  (only commitHash/upstream_merge_commit were updated)" -ForegroundColor Yellow
+    Write-Host "`n✅ GATE PASSED — same-milestone sync, version numbers unchanged" -ForegroundColor Green
+} else {
+    $staleVersions = Select-String -Path $versionsPath -Pattern "$Current" |
+        Where-Object { $_.Line -notmatch '^\s*#' -and $_.Line -notmatch 'HarfBuzz' }
+
+    $staleCgmanifest = Select-String -Path $cgPath -Pattern "m$Current|`"$Current`""
+
+    # Positive assertion: the SKIASHARP_VERSION must end up EXACTLY at the target
+    # nuget version. A stale-only check (looking for $Current) would pass if the
+    # value were stuck on a different milestone (e.g. 4.146.0) or carried a suffix
+    # (e.g. 4.147.0-preview.2 -> 4.148.0-preview.2 no longer contains 147).
+    $pipelineNow = Get-Content $pipelinePath -Raw
+    $pipelineVerMatch = [regex]::Match($pipelineNow, 'SKIASHARP_VERSION:\s*(?<ver>\S+)')
+    $pipelineVer = if ($pipelineVerMatch.Success) { $pipelineVerMatch.Groups['ver'].Value } else { '<missing>' }
+
+    $failures = @()
+
+    if ($staleVersions) {
+        $failures += "VERSIONS.txt still contains '$Current':"
+        foreach ($match in $staleVersions) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($staleCgmanifest) {
+        $failures += "cgmanifest.json still contains '$Current':"
+        foreach ($match in $staleCgmanifest) {
+            $failures += "  Line $($match.LineNumber): $($match.Line.Trim())"
+        }
+    }
+
+    if ($pipelineVer -ne $targetNuget) {
+        $failures += "azure-templates-variables.yml SKIASHARP_VERSION is '$pipelineVer', expected '$targetNuget' (must match VERSIONS.txt nuget version)"
+    }
+
+    if ($failures.Count -gt 0) {
+        Write-Host "`n❌ GATE FAILED — stale references found:" -ForegroundColor Red
+        foreach ($f in $failures) { Write-Host "  $f" -ForegroundColor Red }
+        exit 1
+    } else {
+        Write-Host "`n✅ GATE PASSED — no stale milestone references found" -ForegroundColor Green
+        Write-Host "  SK_C_INCREMENT: 0" -ForegroundColor Green
+        Write-Host "  VERSIONS.txt: clean" -ForegroundColor Green
+        Write-Host "  cgmanifest.json: clean" -ForegroundColor Green
+        Write-Host "  azure-templates-variables.yml: SKIASHARP_VERSION = $targetNuget" -ForegroundColor Green
+    }
+}

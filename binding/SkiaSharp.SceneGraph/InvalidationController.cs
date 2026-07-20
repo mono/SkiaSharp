@@ -27,12 +27,14 @@ namespace SkiaSharp.SceneGraph
 		public unsafe void Invalidate (SKRect rect, SKMatrix matrix)
 		{
 			SceneGraphApi.sksg_invalidation_controller_inval (Handle, &rect, &matrix);
+			GC.KeepAlive (this);
 		}
 
 		public unsafe SKRect Bounds {
 			get {
 				SKRect rect;
 				SceneGraphApi.sksg_invalidation_controller_get_bounds (Handle, &rect);
+				GC.KeepAlive (this);
 				return rect;
 			}
 		}
@@ -40,16 +42,19 @@ namespace SkiaSharp.SceneGraph
 		public unsafe void Begin ()
 		{
 			SceneGraphApi.sksg_invalidation_controller_begin (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public unsafe void End ()
 		{
 			SceneGraphApi.sksg_invalidation_controller_end (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public unsafe void Reset ()
 		{
 			SceneGraphApi.sksg_invalidation_controller_reset (Handle);
+			GC.KeepAlive (this);
 		}
 	}
 }

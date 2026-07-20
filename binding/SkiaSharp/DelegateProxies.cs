@@ -1,6 +1,5 @@
 ﻿#nullable disable
 // ReSharper disable InconsistentNaming
-// ReSharper disable PartialMethodParameterNameMismatch
 
 using System;
 using System.ComponentModel;
@@ -31,31 +30,31 @@ namespace SkiaSharp
 	{
 		// internal proxy implementations
 
-		private static partial void SKBitmapReleaseProxyImplementation (void* address, void* context)
+		private static partial void SKBitmapReleaseProxyImplementation (void* addr, void* context)
 		{
 			var del = Get<SKBitmapReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
-				del.Invoke ((IntPtr)address, null);
+				del.Invoke ((IntPtr)addr, null);
 			} finally {
 				gch.Free ();
 			}
 		}
 
-		private static partial void SKDataReleaseProxyImplementation (void* address, void* context)
+		private static partial void SKDataReleaseProxyImplementation (void* ptr, void* context)
 		{
 			var del = Get<SKDataReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
-				del.Invoke ((IntPtr)address, null);
+				del.Invoke ((IntPtr)ptr, null);
 			} finally {
 				gch.Free ();
 			}
 		}
 
-		private static partial void SKImageRasterReleaseProxyImplementation (void* pixels, void* context)
+		private static partial void SKImageRasterReleaseProxyImplementation (void* addr, void* context)
 		{
 			var del = Get<SKImageRasterReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
-				del.Invoke ((IntPtr)pixels, null);
+				del.Invoke ((IntPtr)addr, null);
 			} finally {
 				gch.Free ();
 			}
@@ -71,30 +70,30 @@ namespace SkiaSharp
 			}
 		}
 
-		private static partial void SKSurfaceRasterReleaseProxyImplementation (void* address, void* context)
+		private static partial void SKSurfaceRasterReleaseProxyImplementation (void* addr, void* context)
 		{
 			var del = Get<SKSurfaceReleaseDelegate> ((IntPtr)context, out var gch);
 			try {
-				del.Invoke ((IntPtr)address, null);
+				del.Invoke ((IntPtr)addr, null);
 			} finally {
 				gch.Free ();
 			}
 		}
 
-		private static partial void SKImageRasterReleaseProxyImplementationForCoTaskMem (void* pixels, void* context)
+		private static partial void SKImageRasterReleaseProxyImplementationForCoTaskMem (void* addr, void* context)
 		{
-			Marshal.FreeCoTaskMem ((IntPtr)pixels);
+			Marshal.FreeCoTaskMem ((IntPtr)addr);
 		}
 
-		private static partial IntPtr GRGlGetProcProxyImplementation (void* context, void* name)
+		private static partial IntPtr GRGlGetProcProxyImplementation (void* ctx, void* name)
 		{
-			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			var del = Get<GRGlGetProcedureAddressDelegate> ((IntPtr)ctx, out _);
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name));
 		}
 
-		private static partial IntPtr GRVkGetProcProxyImplementation (void* context, void* name, IntPtr instance, IntPtr device)
+		private static partial IntPtr GRVkGetProcProxyImplementation (void* ctx, void* name, IntPtr instance, IntPtr device)
 		{
-			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)context, out _);
+			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)ctx, out _);
 
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
 		}

@@ -1,0 +1,434 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/skia-analyst-schema.json",
+  "title": "SkiaSharp Skia Analyst Report",
+  "description": "Unified analysis of Skia features: what shipped (changelog) and what's missing (gap analysis). Always produces both lenses from the same data.",
+  "type": "object",
+  "required": [
+    "meta",
+    "summary",
+    "findings"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": [
+        "date",
+        "schemaVersion",
+        "repo",
+        "currentMilestone",
+        "latestUpstreamMilestone",
+        "releaseNotesSource"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "schemaVersion": {
+          "type": "string",
+          "const": "1.0"
+        },
+        "repo": {
+          "type": "string"
+        },
+        "currentMilestone": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "latestUpstreamMilestone": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "releaseNotesSource": {
+          "type": "string",
+          "format": "uri"
+        },
+        "refFrom": {
+          "type": "string",
+          "description": "Starting ref (tag, branch, SHA) if diffing"
+        },
+        "refTo": {
+          "type": "string",
+          "description": "Ending ref if diffing"
+        },
+        "shaFrom": {
+          "type": "string"
+        },
+        "shaTo": {
+          "type": "string"
+        },
+        "dateFrom": {
+          "type": "string"
+        },
+        "dateTo": {
+          "type": "string"
+        },
+        "commitCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "prCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "scanMode": {
+          "type": "string",
+          "enum": [
+            "full",
+            "windowed",
+            "diff"
+          ],
+          "description": "full=all milestones, windowed=milestone range, diff=git ref range"
+        },
+        "milestoneFrom": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "milestoneTo": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "skiaSubmoduleCommit": {
+          "type": "string"
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "totalFindings"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "totalFindings": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "byChangeType": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "byImportance": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "byBindingStatus": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "byImpact": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "byPriority": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "bySource": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "byLabel": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    }
+  },
+  "$defs": {
+    "changeType": {
+      "type": "string",
+      "enum": [
+        "added",
+        "changed",
+        "fixed",
+        "deprecated",
+        "removed",
+        "dependency",
+        "platform",
+        "upstream"
+      ]
+    },
+    "importance": {
+      "type": "string",
+      "enum": [
+        "breaking",
+        "major",
+        "minor",
+        "patch"
+      ]
+    },
+    "bindingStatus": {
+      "type": "string",
+      "enum": [
+        "full",
+        "partial",
+        "missing",
+        "action_needed",
+        "correctly_absent",
+        "not_applicable"
+      ]
+    },
+    "impact": {
+      "type": "string",
+      "enum": [
+        "transformative",
+        "significant",
+        "moderate",
+        "minor"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "critical",
+        "high",
+        "medium",
+        "low"
+      ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "release-notes",
+        "header-scan",
+        "binding-audit",
+        "git-diff"
+      ]
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "new_feature",
+        "codec",
+        "image",
+        "image_filter",
+        "shader",
+        "color",
+        "canvas",
+        "path",
+        "font",
+        "utility",
+        "performance",
+        "behavior_change",
+        "deprecation",
+        "security",
+        "platform",
+        "dependency"
+      ]
+    },
+    "finding": {
+      "type": "object",
+      "required": [
+        "name",
+        "category",
+        "description",
+        "source",
+        "changeType",
+        "importance",
+        "bindingStatus",
+        "impact",
+        "priority"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "$ref": "#/$defs/category"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source"
+        },
+        "changeType": {
+          "$ref": "#/$defs/changeType"
+        },
+        "importance": {
+          "$ref": "#/$defs/importance"
+        },
+        "bindingStatus": {
+          "$ref": "#/$defs/bindingStatus"
+        },
+        "impact": {
+          "$ref": "#/$defs/impact"
+        },
+        "priority": {
+          "$ref": "#/$defs/priority"
+        },
+        "effort": {
+          "type": "string",
+          "enum": [
+            "trivial",
+            "small",
+            "medium",
+            "large"
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "milestone": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "milestones": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 79
+          }
+        },
+        "milestoneDeprecated": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "milestoneRemoved": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "skiaApi": {
+          "type": "string"
+        },
+        "userValue": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "pr": {
+          "type": "integer"
+        },
+        "prUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "commitUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "issue": {
+          "type": "integer"
+        },
+        "issueUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "author": {
+          "type": "string"
+        },
+        "cApiFunction": {
+          "type": "string"
+        },
+        "cApiFile": {
+          "type": "string"
+        },
+        "csharpMethod": {
+          "type": "string"
+        },
+        "csharpFile": {
+          "type": "string"
+        },
+        "cppClass": {
+          "type": "string"
+        },
+        "cppHeader": {
+          "type": "string"
+        },
+        "cppMethod": {
+          "type": "string"
+        },
+        "affectedTypes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "affectedMethods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "platforms": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "replacement": {
+          "type": "string"
+        },
+        "obsoleteMessage": {
+          "type": "string"
+        },
+        "migrationGuide": {
+          "type": "string"
+        },
+        "slideBullet": {
+          "type": "string"
+        },
+        "dependencyName": {
+          "type": "string"
+        },
+        "dependencyFrom": {
+          "type": "string"
+        },
+        "dependencyTo": {
+          "type": "string"
+        },
+        "skiaFeature": {
+          "type": "string"
+        },
+        "skiaMilestone": {
+          "type": "integer",
+          "minimum": 79
+        },
+        "skillToUse": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

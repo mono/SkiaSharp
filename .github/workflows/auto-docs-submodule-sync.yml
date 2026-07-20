@@ -1,0 +1,84 @@
+name: Sync - Docs Submodule
+
+on:
+  schedule:
+    - cron: "0 10 * * *"  # Daily at 10 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-docs-submodule-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout SkiaSharp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Initialize and update docs submodule
+        run: |
+          git submodule update --init -- docs
+          cd docs
+          git fetch origin main
+          git checkout origin/main
+          cd ..
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet -- docs; then
+            echo "Submodule is up to date — nothing to do"
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Submodule has changed"
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+            LATEST_MSG=$(git -C docs log -1 --format=%s)
+            echo "latest_msg=$LATEST_MSG" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update PR
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST_MSG: ${{ steps.check.outputs.latest_msg }}
+        run: |
+          BRANCH="automation/update-docs-submodule"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Always start fresh from main — avoids stale commit accumulation
+          git checkout -B "$BRANCH" origin/main
+
+          git add docs
+          if git diff --cached --quiet; then
+            echo "No changes after staging"
+            exit 0
+          fi
+
+          git commit -m "Update docs submodule to latest main
+
+          Latest: $LATEST_MSG"
+
+          git push origin "$BRANCH" --force
+
+          # Create PR if one doesn't already exist
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already exists, force-pushed update"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Update docs submodule to latest main" \
+              --body "Automated update of the \`docs/\` submodule to track \`mono/SkiaSharp-API-docs\` main.
+
+          Created by [auto-docs-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-docs-submodule-sync.yml)."
+          fi

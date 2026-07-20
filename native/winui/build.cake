@@ -1,10 +1,9 @@
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../.."));
 DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native/winui"));
 
-var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
-
-#load "../../scripts/cake/native-shared.cake"
-#load "../../scripts/cake/msbuild.cake"
+#load "../../scripts/infra/native/shared/native-shared.cake"
+#load "../../scripts/infra/shared/msbuild.cake"
+#load "../../scripts/infra/native/windows/windows-shared.cake"
 
 void CheckDeps(FilePath dll)
 {
@@ -41,8 +40,8 @@ Task("SkiaSharp.Views.WinUI.Native")
 
         var anyOutDir = OUTPUT_PATH.Combine("any");
         EnsureDirectoryExists(anyOutDir);
-        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net6.0-windows10.0.19041.0/{name}.Projection.dll", anyOutDir);
-        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net6.0-windows10.0.19041.0/{name}.Projection.pdb", anyOutDir);
+        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net9.0-windows10.0.19041.0/{name}.Projection.dll", anyOutDir);
+        CopyFileToDirectory($"{name}/{name}.Projection/bin/{CONFIGURATION}/net9.0-windows10.0.19041.0/{name}.Projection.pdb", anyOutDir);
 
         CheckDeps($"{outDir}/{name}.dll");
         CheckDeps($"{anyOutDir}/{name}.Projection.dll");

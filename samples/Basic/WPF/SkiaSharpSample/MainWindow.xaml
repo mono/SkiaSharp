@@ -4,10 +4,13 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SkiaSharpSample"
-        xmlns:skia="clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF"
         mc:Ignorable="d"
-        Title="SkiaSharp Sample" Height="350" Width="525" Icon="/icon.ico">
-    <Grid>
-        <skia:SKElement PaintSurface="OnPaintSurface" IgnorePixelScaling="True" />
-    </Grid>
+        Title="SkiaSharp Sample" Height="600" Width="900" Icon="/icon.ico">
+
+    <TabControl x:Name="TabNav" SelectionChanged="OnTabSelectionChanged">
+        <TabItem Header="CPU" Tag="cpu" />
+        <TabItem Header="GPU" Tag="gpu" />
+        <TabItem Header="Drawing" Tag="drawing" />
+    </TabControl>
+
 </Window>

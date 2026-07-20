@@ -1,11 +1,21 @@
 <Project>
 
   <ItemGroup Condition=" ($(TargetFramework.StartsWith('net4')) or '$(TargetFramework)' == 'netstandard2.0') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
-    <PackageReference Include="System.Memory" Version="4.5.5" />
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+    <!-- Use PolySharp to support C# 13 language features on older TFMs -->
+    <PackageReference Include="PolySharp" Version="1.15.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup Condition=" ('$(TargetFramework)' == 'netstandard2.1') and (!$(MSBuildProjectName.Contains('.NativeAssets.'))) ">
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.1.2" />
+    <!-- Use PolySharp to support C# 13 language feature -->
+    <PackageReference Include="PolySharp" Version="1.15.0">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(PackagingGroup)' == 'SkiaSharp'">

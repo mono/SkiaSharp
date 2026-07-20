@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 	public class GRContextTest : SKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void AbandonContextIsAbandoned()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -37,7 +37,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultContextWithOptionsIsValid()
 		{
 			using var ctx = CreateGlContext();
@@ -49,7 +49,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(grContext);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToGlSizedFormat()
 		{
 			var unknowns = new[] {
@@ -59,7 +59,9 @@ namespace SkiaSharp.Tests
 				SKColorType.Bgra1010102,
 				SKColorType.Bgr101010x,
 				SKColorType.Bgr101010xXR,
+				SKColorType.Bgra10101010XR,
 				SKColorType.Rgba10x6,
+				SKColorType.RgbF16F16F16x,
 			};
 
 			foreach (SKColorType value in Enum.GetValues(typeof(SKColorType)))
@@ -72,7 +74,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateSpecificContextIsValid()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -89,7 +91,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void CreateSpecificContextWithOptionsIsValid()
 		{
 			using var ctx = CreateGlContext();
@@ -106,7 +108,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuSurfaceIsCreated()
 		{
 			using (var ctx = CreateGlContext()) {
@@ -125,7 +127,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuSurfaceReferencesSameContext()
 		{
 			using var ctx = CreateGlContext();
@@ -139,7 +141,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void GpuSurfaceCanMakeAnotherSurface()
 		{
 			using var ctx = CreateGlContext();

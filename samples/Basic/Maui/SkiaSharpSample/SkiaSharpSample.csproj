@@ -1,12 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0-ios;net8.0-maccatalyst;net8.0-android</TargetFrameworks>
-    <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net8.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net10.0-ios;net10.0-maccatalyst;net10.0-android</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
+    <Nullable>enable</Nullable>
     <UseInterpreter Condition="'$(Configuration)' == 'Debug'">True</UseInterpreter>
   </PropertyGroup>
 
@@ -19,16 +19,21 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">14.2</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">14.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-ios'))">12.2</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-maccatalyst'))">15.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
-    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-tizen'))">6.5</SupportedOSPlatformVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" ForegroundScale="0.90" />
     <MauiSplashScreen Include="Resources\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
+    <MauiImage Include="Resources\Images\*" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) Or $(TargetFramework.Contains('-maccatalyst'))">
+    <MauiIcon Remove="Resources\appicon.png" />
+    <MauiIcon Include="Resources\appicon.png" IsAppIcon="true" Color="#F8F8F8" ForegroundScale="1.30" />
   </ItemGroup>
 
   <ItemGroup>

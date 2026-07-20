@@ -6,17 +6,23 @@ namespace SkiaSharp
 {
 	public class SKFontStyle : SKObject, ISKSkipObjectRegistration
 	{
-		private static readonly SKFontStyle normal;
-		private static readonly SKFontStyle bold;
-		private static readonly SKFontStyle italic;
-		private static readonly SKFontStyle boldItalic;
+		private static readonly SKFontStyle normal =
+			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Upright);
+		private static readonly SKFontStyle bold =
+			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Upright);
+		private static readonly SKFontStyle italic =
+			MakeDisposeProtected (SKFontStyleWeight.Normal, SKFontStyleSlant.Italic);
+		private static readonly SKFontStyle boldItalic =
+			MakeDisposeProtected (SKFontStyleWeight.Bold, SKFontStyleSlant.Italic);
 
-		static SKFontStyle ()
+		private static SKFontStyle MakeDisposeProtected (SKFontStyleWeight weight, SKFontStyleSlant slant)
 		{
-			normal = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-			bold = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);
-			italic = new SKFontStyleStatic (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
-			boldItalic = new SKFontStyleStatic (SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Italic);
+			var style = new SKFontStyle (weight, SKFontStyleWidth.Normal, slant);
+			// The PreventPublicDisposal call here doesn't suffer from the case of skia
+			// giving us the same handle as a return value of another pinvoke call,
+			// because these are created by us and not returned by skia.
+			style.PreventPublicDisposal ();
+			return style;
 		}
 
 		internal SKFontStyle (IntPtr handle, bool owns)
@@ -63,15 +69,5 @@ namespace SkiaSharp
 
 		internal static SKFontStyle GetObject (IntPtr handle) =>
 			handle == IntPtr.Zero ? null : new SKFontStyle (handle, true);
-
-		private sealed class SKFontStyleStatic : SKFontStyle
-		{
-			internal SKFontStyleStatic (SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant)
-				: base (weight, width, slant)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }

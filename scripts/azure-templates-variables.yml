@@ -1,6 +1,9 @@
 variables:
-  SKIASHARP_MAJOR_VERSION: 3
-  SKIASHARP_VERSION: 3.119.4
+  # NOTE: Update this value when bumping the SkiaSharp version.
+  # It must match the SkiaSharp nuget version in scripts/VERSIONS.txt.
+  # SKIASHARP_VERSION is used in the BUILD_NUMBER counter expression below,
+  # which requires a compile-time constant (cannot be derived dynamically).
+  SKIASHARP_VERSION: 4.151.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
@@ -10,22 +13,20 @@ variables:
   PREVIEW_LABEL: 'preview.0'
   BUILD_NUMBER: $[counter(format('_{0}_{1}_{2}_', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
   BUILD_COUNTER: $[counter('global_counter', 1)]
-  TIZEN_LINUX_PACKAGES: libxcb-icccm4 libxcb-render-util0 gettext libxcb-image0 libsdl1.2debian libv4l-0 libxcb-randr0 bridge-utils libxcb-shape0 libpython2.7 openvpn libkf5itemmodels5 libkf5kiowidgets5 libkchart2
-  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build
-  XCODE_VERSION: '15.4'
-  XCODE_VERSION_NATIVE: '15.4'
+  MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build libgtk-4-1
+  XCODE_VERSION: '26.3'
+  XCODE_VERSION_NATIVE: '16.2'
   VISUAL_STUDIO_VERSION: ''
-  DOTNET_VERSION: '8.0.304'
-  DOTNET_VERSION_PREVIEW: ''
-  DOTNET_WORKLOAD_SOURCE: 'https://github.com/dotnet/maui/releases/download/8.0.82/8.0.82.json'
-  DOTNET_WORKLOAD_TIZEN: '8.0.149'
+  DOTNET_VERSION: '10.0.108'
+  DOTNET_WORKLOAD_TIZEN: '10.0.100/10.0.123'
+  DOTNET_WORKLOAD_VERSION: '10.0.108'
   CONFIGURATION: 'Release'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   NUGET_DIFF_PRERELEASE: false
   ENABLE_CODE_COVERAGE: true
-  EMSCRIPTEN_VERSION: 3.1.34
+  EMSCRIPTEN_VERSION: 3.1.56
   Codeql.Enabled: true
-  IOS_TEST_DEVICE_VERSION: 17.2
-  ANDROID_TEST_DEVICE_VERSION: 34
-  ANDROID_PLATFORM_VERSIONS: 21,34
+  IOS_TEST_DEVICE_VERSION: 26.2
+  ANDROID_TEST_DEVICE_VERSION: 36
+  ANDROID_PLATFORM_VERSIONS: 21,35,36
   TeamName: .NET MAUI

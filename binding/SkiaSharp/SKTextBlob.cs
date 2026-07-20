@@ -12,19 +12,34 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_textblob_ref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+		{
+			SkiaApi.sk_textblob_ref (Handle);
+			GC.KeepAlive (this);
+		}
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+		{
+			SkiaApi.sk_textblob_unref (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public SKRect Bounds {
 			get {
 				SKRect bounds;
 				SkiaApi.sk_textblob_get_bounds (Handle, &bounds);
+				GC.KeepAlive (this);
 				return bounds;
 			}
 		}
 
-		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
+		public uint UniqueId {
+			get {
+				var r = SkiaApi.sk_textblob_get_unique_id (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		// Create
 
@@ -240,6 +255,8 @@ namespace SkiaSharp
 			bounds[1] = lowerBounds;
 			fixed (float* i = intervals) {
 				SkiaApi.sk_textblob_get_intercepts (Handle, bounds, i, paint?.Handle ?? IntPtr.Zero);
+				GC.KeepAlive (paint);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -250,7 +267,10 @@ namespace SkiaSharp
 			var bounds = stackalloc float[2];
 			bounds[0] = upperBounds;
 			bounds[1] = lowerBounds;
-			return SkiaApi.sk_textblob_get_intercepts (Handle, bounds, null, paint?.Handle ?? IntPtr.Zero);
+			var result = SkiaApi.sk_textblob_get_intercepts (Handle, bounds, null, paint?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (paint);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		//
@@ -274,8 +294,11 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		protected override void DisposeNative () =>
+		protected override void DisposeNative ()
+		{
 			SkiaApi.sk_textblob_builder_delete (Handle);
+			GC.KeepAlive (this);
+		}
 
 		// Build
 
@@ -396,6 +419,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run (Handle, font.Handle, count, x, y, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<float> (runbuffer, count, 0, 0);
 		}
 
@@ -416,6 +441,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_text (Handle, font.Handle, count, x, y, textByteCount, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<float> (runbuffer, count, 0, textByteCount);
 		}
 
@@ -438,6 +465,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_pos_h (Handle, font.Handle, count, y, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<float> (runbuffer, count, count, 0);
 		}
 
@@ -458,6 +487,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_text_pos_h (Handle, font.Handle, count, y, textByteCount, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<float> (runbuffer, count, count, textByteCount);
 
 		}
@@ -481,6 +512,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_pos (Handle, font.Handle, count, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<SKPoint> (runbuffer, count, count, 0);
 		}
 
@@ -501,6 +534,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_text_pos (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<SKPoint> (runbuffer, count, count, textByteCount);
 		}
 
@@ -523,6 +558,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_rsxform (Handle, font.Handle, count, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<SKRotationScaleMatrix> (runbuffer, count, count, 0);
 		}
 
@@ -543,6 +580,8 @@ namespace SkiaSharp
 			else
 				SkiaApi.sk_textblob_builder_alloc_run_text_rsxform (Handle, font.Handle, count, textByteCount, null, &runbuffer);
 
+			GC.KeepAlive (font);
+			GC.KeepAlive (this);
 			return new SKRawRunBuffer<SKRotationScaleMatrix> (runbuffer, count, count, textByteCount);
 		}
 	}

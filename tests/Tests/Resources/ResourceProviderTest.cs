@@ -8,7 +8,7 @@ namespace SkiaSharp.Tests
 {
 	public class ResourceProviderTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void FileResourceProviderCanReadFiles()
 		{
 			var fullPath = Path.Combine(PathToImages, "baboon.png");
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedData.ToArray(), data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ProxyProviderCanReadFiles()
 		{
 			var fullPath = Path.Combine(PathToImages, "baboon.png");
@@ -36,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedData.ToArray(), data.ToArray());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateDefaultDataUri()
 		{
 			using var datauri = new DataUriResourceProvider();
@@ -44,7 +44,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(datauri);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateNullDataUri()
 		{
 			using var datauri = new DataUriResourceProvider(null);
@@ -52,7 +52,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(datauri);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void WrappedResourceManagersAreNotCollectedPrematurely()
 		{
 			var fullPath = Path.Combine(PathToImages, "baboon.png");

@@ -3,10 +3,10 @@ trigger: none
 pr: none
 
 parameters:
-  - name: buildExternals
-    displayName: 'The Build ID containing the specific native artifacts to use:'
-    type: string
-    default: 'latest'
+  - name: enableCaching
+    displayName: 'Enable build caching (skip native builds on cache hit):'
+    type: boolean
+    default: true
   - name: buildAgentHost
     displayName: 'The generic host build agent configuration:'
     type: object
@@ -37,7 +37,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-14
+        vmImage: macos-15
         os: macos
   - name: buildAgentMacNative
     displayName: 'The macOS build agent configuration for building the native assets:'
@@ -69,10 +69,8 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: macos-14
-        os: macos
-      parameters:
-        installXcode: false
+        vmImage: ubuntu-24.04
+        os: linux
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
@@ -91,7 +89,6 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'complete'
-          buildExternals: ${{ parameters.buildExternals }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
@@ -100,3 +97,4 @@ extends:
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+          enableCaching: ${{ parameters.enableCaching }}

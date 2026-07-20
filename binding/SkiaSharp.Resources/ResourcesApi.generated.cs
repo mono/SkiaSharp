@@ -56,6 +56,7 @@ using sk_path_effect_t = System.IntPtr;
 using sk_path_iterator_t = System.IntPtr;
 using sk_path_rawiterator_t = System.IntPtr;
 using sk_path_t = System.IntPtr;
+using sk_pathbuilder_t = System.IntPtr;
 using sk_pathmeasure_t = System.IntPtr;
 using sk_picture_recorder_t = System.IntPtr;
 using sk_picture_t = System.IntPtr;

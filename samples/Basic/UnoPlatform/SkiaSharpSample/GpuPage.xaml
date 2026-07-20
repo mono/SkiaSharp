@@ -1,0 +1,44 @@
+﻿<Page
+    x:Class="SkiaSharpSample.GpuPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:SkiaSharpSample"
+    xmlns:windows="using:SkiaSharp.Views.Windows"
+    xmlns:skia="http://uno.ui/skia"
+    xmlns:not_skia="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="skia"
+    Loaded="OnLoaded"
+    Unloaded="OnUnloaded">
+
+    <Grid>
+        <not_skia:Border>
+            <windows:SKSwapChainPanel x:Name="skiaView" PaintSurface="OnPaintSurface"
+                                      PointerPressed="OnPointerPressed"
+                                      PointerMoved="OnPointerMoved"
+                                      PointerReleased="OnPointerReleased" />
+        </not_skia:Border>
+        <skia:Border>
+            <local:SkiaGpuView x:Name="skiaView"
+                                       PointerPressed="OnPointerPressed"
+                                       PointerMoved="OnPointerMoved"
+                                       PointerReleased="OnPointerReleased" />
+        </skia:Border>
+
+        <!-- FPS pill overlay — centered top -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="0,8,0,0"
+                CornerRadius="12"
+                BorderBrush="#44FFFFFF"
+                BorderThickness="1"
+                Background="#AA000000"
+                Padding="12,6">
+            <TextBlock x:Name="fpsText"
+                       Text="FPS: --"
+                       Foreground="White"
+                       FontSize="14" />
+        </Border>
+    </Grid>
+
+</Page>

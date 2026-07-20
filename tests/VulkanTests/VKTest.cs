@@ -17,7 +17,8 @@ namespace SkiaSharp.Vulkan.Tests
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"Unable to create Vulkan context: {ex.Message}");
+				Assert.Skip($"Unable to create Vulkan context: {ex.Message}");
+				throw;
 			}
 		}
 	}

@@ -4,7 +4,7 @@ namespace SkiaSharp.Views.Android.Tests
 {
 	public class AndroidExtensionsTests : AndroidTests
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -21,7 +21,7 @@ namespace SkiaSharp.Views.Android.Tests
 			androidBitmap.Recycle();
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -37,7 +37,7 @@ namespace SkiaSharp.Views.Android.Tests
 			androidBitmap.Recycle();
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]
@@ -54,7 +54,7 @@ namespace SkiaSharp.Views.Android.Tests
 			androidBitmap.Recycle();
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0)]
 		[InlineData(10)]
 		[InlineData(100)]

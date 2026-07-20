@@ -1,0 +1,49 @@
+{
+  "skill_name": "ci-status",
+  "evals": [
+    {
+      "id": 0,
+      "name": "daily-health-check",
+      "prompt": "Is main green right now? Give me a quick read on CI health across our branches.",
+      "expected_output": "A concise health summary covering main and recent release branches, showing the status of each pipeline (Public, Native, Managed, Tests), with a clear verdict on whether main is passing.",
+      "files": [],
+      "expectations": [
+        "States a clear verdict on whether main is currently green/passing",
+        "Covers recent release/* branches, not just main",
+        "Reports per-pipeline status naming the pipelines (Public, Native, Managed/SkiaSharp, Tests)",
+        "Includes at least one concrete ADO build ID or build results link as evidence",
+        "Stays concise — a quick read rather than an exhaustive multi-section report"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "full-report-with-analysis",
+      "prompt": "Check the CI build health across all branches. Generate a full report with AI analysis — I want to know if main is green, which release branches are at risk, and what the top actions are to fix any failures.",
+      "expected_output": "A full markdown report with a health matrix, root-cause analysis of failures (classifying them as infra/flake/regression/code), and a prioritized list of top actions with build links.",
+      "files": [],
+      "expectations": [
+        "Includes a health matrix/table covering branches against the four pipelines",
+        "Correctly states that main is green/passing",
+        "Identifies which release branches are failing or at risk",
+        "Classifies failures by category (e.g. infra, flake, regression, or code issue)",
+        "Provides a prioritized list of top actions to fix the failures",
+        "Includes ADO build IDs or links for failing builds as evidence",
+        "Accounts for the pipeline chain — distinguishes root-cause failures from cascaded downstream failures"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "release-readiness",
+      "prompt": "We're thinking about shipping the next release. Are the release branches in good shape, or is something blocking them? What would I need to fix first?",
+      "expected_output": "A risk assessment of the release/* branches: whether each is shippable, what is blocking it (with root cause), and what needs to be fixed, ordered by priority.",
+      "files": [],
+      "expectations": [
+        "Gives a per-release-branch shippability verdict (shippable vs blocked)",
+        "Identifies the specific blocker(s) for each failing release branch with a root cause",
+        "Provides prioritized fixes describing what to fix first",
+        "Covers the actual recent release/* branches in the repo",
+        "Includes ADO build IDs or links as supporting evidence"
+      ]
+    }
+  ]
+}

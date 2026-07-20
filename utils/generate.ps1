@@ -26,18 +26,31 @@ New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
 
 dotnet build utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj
 
+$failed = $false
 foreach ($proj in $projects) {
     $json = $proj.Json;
     $output = $proj.Output;
     $root = $proj.Root;
     $filename = Split-Path $output -Leaf
 
-    $cmd = "dotnet run --no-build --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/$json --root $root --output binding/$output"
-    Write-Host $cmd
-    Invoke-Expression $cmd
-    if (!$?) {
-        exit $LASTEXITCODE
+    $runArgs = @("run", "--no-build", "--no-launch-profile",
+              "--project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj",
+              "--", "generate",
+              "--config", "binding/$json",
+              "--root", $root,
+              "--output", "binding/$output")
+    Write-Host "dotnet $($runArgs -join ' ')"
+    & dotnet @runArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "ERROR: Generation failed for $json with exit code $LASTEXITCODE"
+        $failed = $true
+        continue
     }
 
     Copy-Item -Path binding/$output -Destination output/generated/$filename -Force
+}
+
+if ($failed) {
+    Write-Host "ERROR: One or more generation steps failed"
+    exit 1
 }

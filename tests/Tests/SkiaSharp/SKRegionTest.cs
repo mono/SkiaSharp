@@ -4,7 +4,8 @@ namespace SkiaSharp.Tests
 {
 	public class SKRegionTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void EmptyRegionIsEmpty()
 		{
 			using var region = new SKRegion();
@@ -14,7 +15,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectRegionIsRect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -24,7 +25,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TwoRectRegionIsComplex()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -35,7 +36,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.IsComplex);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickContainsIsCorrect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -45,7 +46,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.QuickContains(SKRectI.Create(200, 20, 50, 50)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickRejectIsCorrect()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -55,7 +56,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.QuickReject(SKRectI.Create(200, 20, 50, 50)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetBoundaryPathReturnsNotNullPath()
 		{
 			using var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
@@ -66,11 +67,12 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromPathWithoutClipDoesNotCreateEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion(path);
 
@@ -79,11 +81,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithoutClipDoesNotCreateEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path);
@@ -92,11 +95,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Truncate(path.Bounds), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithEmptyClipDoesCreatesEmptyRegion()
 		{
-			using var path = new SKPath();
-			path.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var builder = new SKPathBuilder();
+			builder.AddRect(SKRect.Create(10, 20, 30, 40));
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, new SKRegion());
@@ -106,7 +110,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Empty, region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SetPathWithClipDoesCreatesCorrectRegion()
 		{
 			var clipRect = new SKRectI(25, 25, 50, 50);
@@ -114,8 +118,9 @@ namespace SkiaSharp.Tests
 			clip.SetRect(clipRect);
 
 			var rect = new SKRectI(10, 20, 30, 40);
-			using var path = new SKPath();
-			path.AddRect(rect);
+			using var builder = new SKPathBuilder();
+			builder.AddRect(rect);
+			using var path = builder.Detach();
 
 			using var region = new SKRegion();
 			var isNonEmpty = region.SetPath(path, clip);
@@ -124,7 +129,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRectI.Intersect(clipRect, rect), region.Bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyRegionDoesNotIntersectsWithRectI()
 		{
 			using var region = new SKRegion();
@@ -135,7 +140,7 @@ namespace SkiaSharp.Tests
 		}
 
 		// This was added for https://github.com/mono/SkiaSharp/issues/770
-		[SkippableFact]
+		[Fact]
 		public void RegionIntersectsWithRectI()
 		{
 			using var region = new SKRegion();
@@ -146,7 +151,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Intersects(rect));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsFalseIfItDoesNotContain()
 		{
 			using var region = new SKRegion(new SKRectI(30, 30, 40, 40));
@@ -155,7 +160,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.Contains(region2));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsTrueIfItDoesContain()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -164,7 +169,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Contains(region2));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsFalseIfItDoesNotContainPoint()
 		{
 			using var region = new SKRegion(new SKRectI(30, 30, 40, 40));
@@ -172,7 +177,7 @@ namespace SkiaSharp.Tests
 			Assert.False(region.Contains(60, 60));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsReturnsTrueIfItDoesContainPoint()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -180,7 +185,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.Contains(40, 40));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void QuickContainsReturnsTrueIfItDoesContain()
 		{
 			using var region = new SKRegion(new SKRectI(25, 25, 50, 50));
@@ -188,7 +193,7 @@ namespace SkiaSharp.Tests
 			Assert.True(region.QuickContains(new SKRectI(30, 30, 40, 40)));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectIteratorHasCorrectRectsForEmpty()
 		{
 			using var region = new SKRegion();
@@ -202,7 +207,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RectIteratorHasCorrectRects()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);
@@ -229,7 +234,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ClipIteratorHasCorrectRects()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);
@@ -253,7 +258,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanIteratorHasCorrectIntercepts()
 		{
 			var rectA = SKRectI.Create(10, 10, 100, 100);

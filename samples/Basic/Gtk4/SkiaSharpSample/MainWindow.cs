@@ -1,47 +1,40 @@
+using System;
+using System.IO;
 using Gtk;
-using SkiaSharp;
-using SkiaSharp.Views.Desktop;
-using SkiaSharp.Views.Gtk;
 
-namespace SkiaSharpSample
+namespace SkiaSharpSample;
+
+public class MainWindow : ApplicationWindow
 {
-	public class MainWindow : ApplicationWindow
+	public static SamplePage DefaultPage { get; set; } = SamplePage.Cpu;
+
+	public MainWindow(Application app)
+		: base(new GObject.ConstructArgument[] { })
 	{
-		private readonly SKDrawingArea skiaView;
+		Application = app;
+		Title = "SkiaSharp on Gtk4";
+		SetDefaultSize(1024, 768);
 
-		public MainWindow(Application app)
-			: base(new GObject.ConstructArgument[] { })
-		{
-			Application = app;
-			Title = "SkiaSharp";
-			SetDefaultSize(400, 300);
+		var builder = LoadBuilder("MainWindow.ui");
+		var rootBox = (Box)builder.GetObject("rootBox");
+		Child = rootBox;
 
-			skiaView = new SKDrawingArea();
-			skiaView.PaintSurface += OnPaintSurface;
-			Child = skiaView;
-		}
+		var contentStack = (Stack)builder.GetObject("contentStack");
 
-		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
-		{
-			// get the canvas and properties
-			var canvas = e.Surface.Canvas;
+		// Add pages
+		var cpuPage = new CpuPage();
+		contentStack.AddTitled(cpuPage, "cpu", "CPU Canvas");
 
-			// make sure the canvas is blank
-			canvas.Clear(SKColors.White);
+		var drawingPage = new DrawingPage();
+		contentStack.AddTitled(drawingPage, "drawing", "Drawing");
 
-			// draw some text
-			using var paint = new SKPaint
-			{
-				Color = SKColors.Black,
-				IsAntialias = true,
-				Style = SKPaintStyle.Fill
-			};
-			using var font = new SKFont
-			{
-				Size = 24
-			};
-			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + font.Size) / 2);
-			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
-		}
+		if (DefaultPage == SamplePage.Drawing)
+			contentStack.SetVisibleChildName("drawing");
+	}
+
+	public static Builder LoadBuilder(string filename)
+	{
+		var path = Path.Combine(AppContext.BaseDirectory, filename);
+		return Builder.NewFromFile(path);
 	}
 }

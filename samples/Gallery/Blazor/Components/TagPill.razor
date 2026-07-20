@@ -1,0 +1,65 @@
+@* Reusable tag pill — used in rail, cards, active filters *@
+
+<button class="api-tag @KindClass @SizeClass @(IsActive ? "active" : "") @(IsZero ? "zero" : "")"
+        @onclick="OnClick" @onclick:stopPropagation="true"
+        disabled="@IsZero"
+        aria-disabled="@(IsZero ? "true" : null)"
+        title="@TooltipText">
+    @if (Kind == TagKind.Type)
+    {
+        <span class="tag-prefix">T</span>
+    }
+    <span class="tag-name">@DisplayName</span>
+    @if (ShowCount && Count > 0)
+    {
+        <span class="tag-count">@Count</span>
+    }
+    @if (IsActive && Removable)
+    {
+        <span class="tag-remove">✕</span>
+    }
+</button>
+
+
+@code {
+    [Parameter, EditorRequired] public string Tag { get; set; } = "";
+    [Parameter] public int Count { get; set; }
+    [Parameter] public TagKind Kind { get; set; } = TagKind.Method;
+    [Parameter] public bool IsActive { get; set; }
+    [Parameter] public bool IsZero { get; set; }
+    [Parameter] public bool ShowCount { get; set; } = true;
+    [Parameter] public bool Removable { get; set; }
+    [Parameter] public TagPillSize Size { get; set; } = TagPillSize.Normal;
+    [Parameter] public EventCallback<string> OnTagClicked { get; set; }
+
+    private string KindClass => Kind switch
+    {
+        TagKind.Type => "tag-type",
+        _ => "tag-method",
+    };
+
+    private string DisplayName => KnownApis.GetDisplayName(Tag);
+
+    private string SizeClass => Size switch
+    {
+        TagPillSize.Large => "size-large",
+        TagPillSize.Small => "size-small",
+        _ => "",
+    };
+
+    private string TooltipText => IsZero
+        ? $"No samples match with current filters"
+        : Kind == TagKind.Method
+            ? $"{Tag} — used in {Count} sample{(Count != 1 ? "s" : "")}"
+            : $"Used in {Count} sample{(Count != 1 ? "s" : "")}";
+
+    private async Task OnClick()
+    {
+        if (!IsZero)
+            await OnTagClicked.InvokeAsync(Tag);
+    }
+}
+
+@code {
+    public enum TagPillSize { Normal, Large, Small }
+}

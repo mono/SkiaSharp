@@ -27,6 +27,7 @@ namespace HarfBuzzSharp
 			}
 
 			Handle = HarfBuzzApi.hb_face_create (blob.Handle, (uint)index);
+			GC.KeepAlive (blob);
 		}
 
 		public Face (GetTableDelegate getTable)
@@ -52,18 +53,39 @@ namespace HarfBuzzSharp
 		}
 
 		public int Index {
-			get => (int)HarfBuzzApi.hb_face_get_index (Handle);
-			set => HarfBuzzApi.hb_face_set_index (Handle, (uint)value);
+			get {
+				var r = (int)HarfBuzzApi.hb_face_get_index (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_face_set_index (Handle, (uint)value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public int UnitsPerEm {
-			get => (int)HarfBuzzApi.hb_face_get_upem (Handle);
-			set => HarfBuzzApi.hb_face_set_upem (Handle, (uint)value);
+			get {
+				var r = (int)HarfBuzzApi.hb_face_get_upem (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_face_set_upem (Handle, (uint)value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public int GlyphCount {
-			get => (int)HarfBuzzApi.hb_face_get_glyph_count (Handle);
-			set => HarfBuzzApi.hb_face_set_glyph_count (Handle, (uint)value);
+			get {
+				var r = (int)HarfBuzzApi.hb_face_get_glyph_count (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+			set {
+				HarfBuzzApi.hb_face_set_glyph_count (Handle, (uint)value);
+				GC.KeepAlive (this);
+			}
 		}
 
 		public unsafe Tag[] Tables {
@@ -74,16 +96,261 @@ namespace HarfBuzzSharp
 				fixed (void* ptr = buffer) {
 					HarfBuzzApi.hb_face_get_table_tags (Handle, 0, &count, (uint*)ptr);
 				}
+				GC.KeepAlive (this);
 				return buffer;
 			}
 		}
 
-		public Blob ReferenceTable (Tag table) =>
-			new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
+		public Blob ReferenceTable (Tag table)
+		{
+			var r = new Blob (HarfBuzzApi.hb_face_reference_table (Handle, table));
+			GC.KeepAlive (this);
+			return r;
+		}
 
-		public bool IsImmutable => HarfBuzzApi.hb_face_is_immutable (Handle);
+		public bool IsImmutable {
+			get {
+				var r = HarfBuzzApi.hb_face_is_immutable (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
+		public void MakeImmutable ()
+		{
+			HarfBuzzApi.hb_face_make_immutable (Handle);
+			GC.KeepAlive (this);
+		}
+
+		// Variable font support
+
+		public bool HasVariationData {
+			get {
+				var r = HarfBuzzApi.hb_ot_var_has_data (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public int VariationAxisCount {
+			get {
+				var r = (int)HarfBuzzApi.hb_ot_var_get_axis_count (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public OpenTypeVarAxisInfo[] VariationAxisInfos
+		{
+			get {
+				var count = HarfBuzzApi.hb_ot_var_get_axis_count (Handle);
+				if (count == 0) {
+					GC.KeepAlive (this);
+					return Array.Empty<OpenTypeVarAxisInfo> ();
+				}
+
+				var axes = new OpenTypeVarAxisInfo[(int)count];
+				fixed (OpenTypeVarAxisInfo* ptr = axes) {
+					HarfBuzzApi.hb_ot_var_get_axis_infos (Handle, 0, &count, ptr);
+				}
+				GC.KeepAlive (this);
+				return axes;
+			}
+		}
+
+		public int GetVariationAxisInfos (Span<OpenTypeVarAxisInfo> axes)
+		{
+			uint count = (uint)axes.Length;
+			fixed (OpenTypeVarAxisInfo* ptr = axes) {
+				HarfBuzzApi.hb_ot_var_get_axis_infos (Handle, 0, &count, ptr);
+			}
+			GC.KeepAlive (this);
+			return (int)count;
+		}
+
+		public bool TryFindVariationAxis (Tag tag, out OpenTypeVarAxisInfo axisInfo)
+		{
+			axisInfo = default;
+			fixed (OpenTypeVarAxisInfo* ptr = &axisInfo) {
+				var r = HarfBuzzApi.hb_ot_var_find_axis_info (Handle, tag, ptr);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public int NamedInstanceCount {
+			get {
+				var r = (int)HarfBuzzApi.hb_ot_var_get_named_instance_count (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public OpenTypeNameId GetNamedInstanceSubfamilyNameId (int instanceIndex)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+			var r = HarfBuzzApi.hb_ot_var_named_instance_get_subfamily_name_id (Handle, (uint)instanceIndex);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public OpenTypeNameId GetNamedInstancePostScriptNameId (int instanceIndex)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+			var r = HarfBuzzApi.hb_ot_var_named_instance_get_postscript_name_id (Handle, (uint)instanceIndex);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public int GetNamedInstanceDesignCoordsCount (int instanceIndex)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+
+			// Return value is the total number of design coordinates
+			var r = (int)HarfBuzzApi.hb_ot_var_named_instance_get_design_coords (Handle, (uint)instanceIndex, null, null);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public float[] GetNamedInstanceDesignCoords (int instanceIndex)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+
+			// Return value is the total number of design coordinates
+			var totalCoords = (int)HarfBuzzApi.hb_ot_var_named_instance_get_design_coords (Handle, (uint)instanceIndex, null, null);
+			if (totalCoords == 0) {
+				GC.KeepAlive (this);
+				return Array.Empty<float> ();
+			}
+
+			uint coordsLength = (uint)totalCoords;
+			var coords = new float[totalCoords];
+			fixed (float* ptr = coords) {
+				HarfBuzzApi.hb_ot_var_named_instance_get_design_coords (Handle, (uint)instanceIndex, &coordsLength, ptr);
+			}
+			GC.KeepAlive (this);
+			return coords;
+		}
+
+		public int GetNamedInstanceDesignCoords (int instanceIndex, Span<float> coords)
+		{
+			if (instanceIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (instanceIndex));
+
+			uint coordsLength = (uint)coords.Length;
+			fixed (float* ptr = coords) {
+				HarfBuzzApi.hb_ot_var_named_instance_get_design_coords (Handle, (uint)instanceIndex, &coordsLength, ptr);
+			}
+			GC.KeepAlive (this);
+			return (int)coordsLength;
+		}
+
+		// Color font / palette support
+
+		public bool HasPalettes {
+			get {
+				var r = HarfBuzzApi.hb_ot_color_has_palettes (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public int PaletteCount {
+			get {
+				var r = (int)HarfBuzzApi.hb_ot_color_palette_get_count (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public HBColor[] GetPaletteColors (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+
+			var totalColors = (int)HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, null, null);
+			if (totalColors == 0) {
+				GC.KeepAlive (this);
+				return Array.Empty<HBColor> ();
+			}
+
+			uint count = (uint)totalColors;
+			var colors = new HBColor[totalColors];
+			fixed (HBColor* ptr = colors) {
+				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
+			}
+			GC.KeepAlive (this);
+			return colors;
+		}
+
+		public int GetPaletteColors (int paletteIndex, Span<HBColor> colors)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+
+			uint count = (uint)colors.Length;
+			fixed (HBColor* ptr = colors) {
+				HarfBuzzApi.hb_ot_color_palette_get_colors (Handle, (uint)paletteIndex, 0, &count, ptr);
+			}
+			GC.KeepAlive (this);
+			return (int)count;
+		}
+
+		public OpenTypeColorPaletteFlags GetPaletteFlags (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			var r = HarfBuzzApi.hb_ot_color_palette_get_flags (Handle, (uint)paletteIndex);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public OpenTypeNameId GetPaletteNameId (int paletteIndex)
+		{
+			if (paletteIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (paletteIndex));
+			var r = HarfBuzzApi.hb_ot_color_palette_get_name_id (Handle, (uint)paletteIndex);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public OpenTypeNameId GetPaletteColorNameId (int colorIndex)
+		{
+			if (colorIndex < 0)
+				throw new ArgumentOutOfRangeException (nameof (colorIndex));
+			var r = HarfBuzzApi.hb_ot_color_palette_color_get_name_id (Handle, (uint)colorIndex);
+			GC.KeepAlive (this);
+			return r;
+		}
+
+		public bool HasColorLayers {
+			get {
+				var r = HarfBuzzApi.hb_ot_color_has_layers (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public bool HasColorPng {
+			get {
+				var r = HarfBuzzApi.hb_ot_color_has_png (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
+		public bool HasColorSvg {
+			get {
+				var r = HarfBuzzApi.hb_ot_color_has_svg (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
+
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
