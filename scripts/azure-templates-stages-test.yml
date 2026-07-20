@@ -340,6 +340,36 @@ stages:
               - name: testlogs_wasm
                 always: true
                 path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM Preview] (Linux)
+          parameters:
+            # Runs the SkiaSharp.Tests.Wasm suite as the preview .NET (tests only — the rest of CI
+            # stays on net10) so WASM regressions on the newer runtime, such as an exception-handling
+            # mismatch in the native lib, fail CI. installPreviewSdk provisions the preview SDK +
+            # wasm-tools workload (which bundles the matching emscripten) and pins global.json to it.
+            name: tests_wasm_preview_linux
+            displayName: WASM Preview (Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            packages: $(MANAGED_LINUX_PACKAGES) ninja-build
+            target: tests-wasm
+            additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
+            installAndroidSdk: false
+            shouldPublish: false
+            installPreviewSdk: true
+            previewWorkloads: wasm-tools,android
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the WASM preview test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux WASM Preview Tests'
+            publishArtifacts:
+              - name: testlogs_wasm_preview
+                always: true
+                path: 'output/logs/testlogs'
         # TODO: add tests for linux alpine
         # TODO: add tests for linux no dependencies
         # TODO: add tests for windows nano server

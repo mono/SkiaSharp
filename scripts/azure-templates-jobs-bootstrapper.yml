@@ -28,6 +28,8 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
+  previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
@@ -231,6 +233,30 @@ jobs:
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
+        # install and select the preview .NET SDK (opt-in; for jobs that run against a preview runtime)
+        - ${{ if eq(parameters.installPreviewSdk, 'true') }}:
+          - task: UseDotNet@2
+            displayName: Install .NET $(DOTNET_VERSION_PREVIEW) (preview)
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              packageType: sdk
+              version: $(DOTNET_VERSION_PREVIEW)
+          - pwsh: |
+              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "latestFeature" } } | ConvertTo-Json
+              Set-Content -Path global.json -Value $globalJson
+              Get-Content global.json
+              dotnet --version
+            displayName: Pin global.json to the preview .NET SDK
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - ${{ if ne(parameters.previewWorkloads, '') }}:
+            # Reuse the shared workload install script, pinned to the exact preview workload set.
+            # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
+            # those workloads must be installed too — same as the non-preview test jobs.
+            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
+              displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:

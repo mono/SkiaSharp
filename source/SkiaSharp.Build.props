@@ -68,6 +68,17 @@
     <TFMMinimum>net6.0</TFMMinimum>
   </PropertyGroup>
 
+  <!--
+    Opt-in (off by default): shift the .NET version window forward one release, so projects target
+    the preview .NET and its predecessor instead of the current/previous shipping versions. Dropping
+    the now-EOL oldest version lets everything build cleanly under a preview .NET SDK. Enabled by the
+    preview WASM test job.
+  -->
+  <PropertyGroup Condition="'$(UsePreviewTFM)' == 'true'">
+    <TFMPrevious>net10.0</TFMPrevious>
+    <TFMCurrent>net11.0</TFMCurrent>
+  </PropertyGroup>
+
   <!-- Target Platform Versions -->
   <PropertyGroup>
     <!-- Previous (net9.0) -->
