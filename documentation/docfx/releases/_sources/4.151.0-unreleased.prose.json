@@ -1,31 +1,35 @@
 {
-  "theme": "m151 engine sync and fixes",
-  "highlights_headline": "Merges upstream Skia m151 bug fixes and resolves a native resource leak in SKImage.",
+  "theme": "Managed math and WASM hardening",
+  "highlights_headline": "Color conversion hot paths are ported to managed integer math, and WASM gains exception-handling support for .NET's new exnref mode.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Upstream Skia m151 bug fixes merged",
-          "detail": "Pulls in the latest chrome/m151 upstream bug fixes, keeping the bundled renderer aligned with the Chromium milestone 151 branch.",
-          "prs": [4443]
+          "lead": "SKColor and SKColorF conversion ported to managed C#",
+          "detail": "The SKColor-to-SKColorF round-trip is now computed in managed integer math, removing a P/Invoke call on every conversion.",
+          "prs": [4370]
+        },
+        {
+          "lead": "SKPMColor premultiply/unpremultiply ported to managed math",
+          "detail": "Single-value premultiply and unpremultiply are now handled entirely in managed code, eliminating a native interop call per pixel on hot colour paths.",
+          "prs": [4385]
         }
       ]
     },
     {
-      "heading": "Bug Fixes",
+      "heading": "Platform",
       "bullets": [
         {
-          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "Calling SKImage.FromEncodedData with an SKRectI subset no longer leaks the underlying native image handle when the subset operation fails or the result is discarded.",
-          "prs": [3997]
+          "lead": "WASM exception-handling regression tests added",
+          "detail": "A preview-.NET test job validates that SkiaSharp WASM builds compiled with the new exnref exception-handling model do not regress, catching issues before they reach a release.",
+          "prs": [4488]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
