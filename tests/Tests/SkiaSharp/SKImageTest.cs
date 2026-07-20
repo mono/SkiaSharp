@@ -36,6 +36,12 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void FailedRasterCreateDoesNotLeakPixelBuffer()
 		{
+			// The leak is measured via System.Diagnostics.Process.PrivateMemorySize64, which is
+			// not supported on WASM (no System.Diagnostics.Process), iOS or Mac Catalyst. The fix
+			// itself is platform-agnostic and still exercised by the desktop and Android legs.
+			SkipOnPlatform(IsBrowser || IsIOS || IsMacCatalyst,
+				"System.Diagnostics.Process.PrivateMemorySize64 is not supported on WASM, iOS or Mac Catalyst");
+
 			// An Rgba8888 info with an Unknown alpha type has a positive BytesSize but is
 			// rejected by Skia, so sk_image_new_raster returns null. SKImage.Create must free
 			// the CoTaskMem pixel buffer it allocated, otherwise every failed call leaks it.
