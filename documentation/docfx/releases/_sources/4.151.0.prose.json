@@ -1,20 +1,20 @@
 {
-  "theme": "Skia m151 and performance wins",
-  "highlights_headline": "SkiaSharp 4.151.0 upgrades to Skia m151 and delivers a sweep of allocation-free hot-path improvements.",
-  "highlights_body": "This release eliminates several per-call heap allocations in HarfBuzzSharp and SKShaper, adds ReadOnlySpan overloads to SKColor hex parsing, and fixes a WASM build regression. It also removes the last unsafe modifier from GRContextOptions.",
+  "theme": "Performance and Skia m151",
+  "highlights_headline": "SkiaSharp 4.151.0 upgrades to Skia m151 and delivers allocation-free text shaping improvements.",
+  "highlights_body": "This preview introduces a wave of performance optimizations across HarfBuzzSharp and SKShaper, eliminating per-call heap allocations and using zero-copy spans. It also adds ReadOnlySpan<char> overloads for SKColor, fixes a native resource leak in SKImage, and brings WASM support for .NET 11 via Emscripten 5.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia upgraded to milestone m151",
-          "detail": "The bundled Skia engine is now built from chrome/m151, bringing upstream rendering bug fixes and improvements across all platforms.",
-          "prs": [4294, 4312, 4382]
+          "lead": "Upgraded to Skia milestone m151",
+          "detail": "The bundled Skia engine advances to chrome/m151, bringing upstream rendering improvements and stability fixes backported across three sync passes.",
+          "prs": [4294, 4312, 4382, 4443]
         },
         {
-          "lead": "WASM build: SK_BUILD_FOR_WASM redefinition warning fixed",
-          "detail": "A macro redefinition in the Skia submodule caused a build warning (and potential errors) for WASM targets. The submodule has been bumped to resolve it.",
+          "lead": "Skia submodule WASM build fix",
+          "detail": "A redefinition of SK_BUILD_FOR_WASM in the Skia submodule was dropped, resolving a build-time warning on WASM targets.",
           "prs": [3788]
         }
       ]
@@ -23,44 +23,54 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKColor hex parsing with ReadOnlySpan<char> overloads",
-          "detail": "SKColor.Parse and TryParse now accept ReadOnlySpan<char> in addition to string, avoiding string allocations in hot paths that parse color values.",
+          "lead": "Allocation-free text shaping hot paths",
+          "detail": "HarfBuzzSharp.Buffer.AddUtf8 now uses pooled UTF-8 encoding to avoid heap allocation per call, Tag.Parse eliminates a char[4] allocation, and SKShaper reads glyph results via zero-copy spans. SKFourByteTag.Parse receives the same char[4] allocation fix.",
+          "prs": [4376, 4408, 4388, 4396]
+        },
+        {
+          "lead": "SKColor hex parsing optimized with ReadOnlySpan overloads",
+          "detail": "SKColor.Parse and TryParse gain ReadOnlySpan<char> overloads, removing unnecessary string allocations when parsing hex color strings in hot paths.",
           "prs": [4345]
         },
         {
-          "lead": "unsafe modifier removed from GRContextOptions",
-          "detail": "The unnecessary unsafe modifier on GRContextOptions has been removed, cleaning up the public API surface without any behavioral change.",
+          "lead": "GRContextOptions unnecessary unsafe modifier removed",
+          "detail": "The unsafe modifier on GRContextOptions has been removed, cleaning up the public API surface without any behavioral change.",
           "prs": [3991]
         }
       ]
     },
     {
-      "heading": "Lifecycle & Internals",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "HarfBuzzSharp.Buffer.AddUtf8(string) is now allocation-free",
-          "detail": "UTF-8 encoding is now done via a pooled buffer, eliminating the per-call byte array allocation when adding text to a HarfBuzz shaping buffer.",
-          "prs": [4376]
+          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
+          "detail": "SKImage.FromEncodedData(SKData, SKRectI) was leaking a native handle on every call; the handle is now correctly released.",
+          "prs": [3997]
         },
         {
-          "lead": "HarfBuzzSharp.Tag.Parse and SKFourByteTag.Parse no longer allocate per call",
-          "detail": "Both Parse methods previously allocated a char[4] on every call to read the four-byte tag. They now use stack memory, removing the allocation.",
-          "prs": [4408, 4396]
-        },
+          "lead": "CPU raster regression resolved",
+          "detail": "Restoring SK_ENABLE_LEGACY_SHADERCONTEXT corrects a CPU raster pipeline regression introduced when syncing to the m151 engine.",
+          "prs": [4428]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
         {
-          "lead": "SKShaper glyph results read via zero-copy spans",
-          "detail": "Glyph result arrays from the native shaper are now accessed through zero-copy spans instead of marshalled copies, reducing allocation and improving throughput in text shaping.",
-          "prs": [4388]
+          "lead": "WASM support for .NET 11 via Emscripten 5",
+          "detail": "New Emscripten 5.0.6 static libraries are included, enabling SkiaSharp on WASM targets building against .NET 11.",
+          "prs": [4459]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Golden-image test harness and Uno sample contributions"
+    "ramezgerges": "WASM Emscripten 5 static library support for .NET 11, the Skia submodule drop of the SK_BUILD_FOR_WASM redefinition, and a cross-backend visual regression test harness"
   },
   "preview_summaries": {
-    "v4.151.0-preview.2.1": "Preview 2 delivered the full performance sweep: allocation-free HarfBuzz buffer encoding, zero-copy span shaper results, tag parse fixes, and SKColor span overloads. It also merged the second round of chrome/m151 upstream bug fixes.",
-    "v4.151.0-preview.1.1": "Preview 1 opened the 4.151 line with the Skia m151 milestone upgrade, the WASM submodule fix, and the GRContextOptions unsafe cleanup."
+    "v4.151.0-preview.1.1": "Preview 1 delivered the initial Skia m151 engine upgrade, the first upstream bug-fix sync, and the Skia submodule WASM build fix.",
+    "v4.151.0-preview.2.1": "Preview 2 delivered the full wave of allocation-free text shaping improvements across HarfBuzzSharp and SKShaper, SKColor ReadOnlySpan overloads, the GRContextOptions cleanup, the SKImage resource leak fix, and additional m151 upstream syncs."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 carries two performance improvements in this release: allocation-free AddUtf8 encoding and a stack-allocated Tag.Parse, both eliminating per-call heap allocations in shaping hot paths."
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 eliminates per-call heap allocations in Buffer.AddUtf8 and Tag.Parse, and adds Emscripten 5.0.6 WASM libraries for .NET 11."
 }
