@@ -57,6 +57,14 @@ BASELINE_LABELS = {
 
 # Metrics we diff: (json key, section title, formatter, worse-word, better-word). Lower is
 # better for both, so a positive delta (pr > baseline) is the "worse" direction.
+# Metrics we diff: (json key, section title, formatter, worse-word, better-word). Lower is
+# better for both, so a positive delta (pr > baseline) is the "worse" direction.
+#
+# NOTE: time is reported RAW (BenchmarkDotNet mean), deliberately un-smoothed. The ⭐ pr and
+# baseline legs run on separate CI runners, so wall-clock time carries cross-runner variance
+# and microbenchmarks can swing run-to-run; the comment says as much and points at the
+# interactive perf-dashboard (which smooths the trend). Allocations are deterministic and are
+# the reliable signal. Both use the shared 5% noise threshold (render_md.TREND_PCT).
 METRICS = (
     ("meanNs", "⏱️ Time", rmd.human_time, "slower", "faster"),
     ("allocatedBytes", "📦 Allocations", rmd.human_bytes, "more alloc", "less alloc"),
@@ -223,7 +231,13 @@ def render(histories, pr_number=None, run_url=None, forced_baseline=None):
              f"{' · '.join(compared)}", "",
              f"> Informational only — this never blocks the PR. {rmd.TREND_FASTER} faster / "
              f"less allocation · {rmd.TREND_SLOWER} slower / more allocation; moves under "
-             f"{rmd.TREND_PCT:.0%} are hidden as noise.", ""]
+             f"{rmd.TREND_PCT:.0%} are hidden as noise.",
+             ">",
+             "> ⏱️ Times are **raw** BenchmarkDotNet means, and the ⭐ PR and baseline legs run "
+             "on **separate CI runners**, so microbenchmarks can swing run-to-run — treat small "
+             "time deltas as noise. Allocations are deterministic and the reliable signal. The "
+             "interactive `perf-dashboard` (linked below) applies smoothing for the trend view.",
+             ""]
 
     highlights, any_mover = _highlights(ctx, oses)
     if any_mover:
