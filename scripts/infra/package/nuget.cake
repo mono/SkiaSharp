@@ -13,8 +13,6 @@ Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
-    // The WebAssembly package's emdawnwebgpu port is packed from the WASM native
-    // output, which this pack job downloads with the native artifacts.
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },

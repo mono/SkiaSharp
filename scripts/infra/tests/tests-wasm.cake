@@ -15,8 +15,6 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 Task ("Default")
     .Does (() =>
 {
-    // The emdawnwebgpu port ships inside the WASM native artifact, so the test
-    // agent already has it after downloading the native artifacts.
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj";
 
     var previewTfm = Argument("previewtfm", false);
