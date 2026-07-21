@@ -1,0 +1,168 @@
+name: PR - Artifact Sizes
+
+# Guards against a PR silently exploding NuGet / native-binary size.
+#
+# Instead of rebuilding anything in GitHub Actions, this reacts to the Azure DevOps
+# job that already packs the NuGets. The moment the `Package NuGets` check run reports
+# success (long before the whole pipeline finishes), we:
+#   1. pull the exact AzDO build id out of the check-run event,
+#   2. download that build's `nuget` pipeline artifact (public, anonymous),
+#   3. measure every .nupkg + every file inside it (reusing the nightly tracker's logic),
+#   4. diff it against the latest nightly baseline persisted on the `aw-data` branch, and
+#   5. post/update an informational size-diff comment on the PR.
+#
+# It is INFORMATIONAL ONLY — it never fails a check or blocks the PR. It does not touch
+# the nightly `track-artifact-sizes.yml` and never writes to `aw-data`.
+#
+# NOTE: `check_run` only triggers workflows that live on the default branch, so this file
+# has no effect until merged to `main`. Validate it before then with `workflow_dispatch`
+# and a known `build_id` (e.g. one from a recent PR build).
+
+on:
+  check_run:
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      build_id:
+        description: "Azure DevOps build id to measure (from a PR build)."
+        required: true
+        type: string
+      pr_number:
+        description: "PR number to comment on (optional; resolved from the build if omitted)."
+        required: false
+        type: string
+
+# One run per build; a re-run of the same build cancels the in-flight one.
+concurrency:
+  group: pr-artifact-sizes-${{ github.event.check_run.id || github.event.inputs.build_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  DATA_BRANCH: aw-data
+
+jobs:
+  size:
+    # Fire on the successful nuget-publishing check run (or a manual dispatch). Every other
+    # check_run completion on the build hits this workflow too, but is filtered out here and
+    # the job is simply skipped.
+    if: >-
+      github.repository_owner == 'mono' &&
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event.check_run.app.slug == 'azure-pipelines' &&
+          github.event.check_run.name == 'mono-SkiaSharp (Package NuGets Package NuGets)' &&
+          github.event.check_run.conclusion == 'success'
+        )
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Resolve build id
+        id: build
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            let buildId, buildUrl, prNumber = '';
+            if (context.eventName === 'workflow_dispatch') {
+              buildId = context.payload.inputs.build_id;
+              prNumber = context.payload.inputs.pr_number || '';
+            } else {
+              const cr = context.payload.check_run;
+              // details_url looks like: .../_build/results?buildId=1517880[&view=logs...]
+              const m = /[?&]buildId=(\d+)/.exec(cr.details_url || '');
+              if (m) {
+                buildId = m[1];
+              } else if (cr.external_id) {
+                // external_id looks like "345|1517880|<projectGuid>"
+                buildId = cr.external_id.split('|')[1];
+              }
+              // Best-effort PR hint from the event (empty for fork PRs); measure_pr.py
+              // resolves it authoritatively from the build's source branch anyway.
+              const prs = cr.pull_requests || [];
+              if (prs.length) prNumber = String(prs[0].number);
+            }
+            if (!buildId || !/^\d+$/.test(buildId)) {
+              core.setFailed(`Could not determine a numeric build id (got: ${buildId}).`);
+              return;
+            }
+            const buildResultsUrl =
+              `https://dev.azure.com/dnceng-public/public/_build/results?buildId=${buildId}`;
+            core.setOutput('build_id', buildId);
+            core.setOutput('pr_number', prNumber);
+            core.setOutput('build_url', buildResultsUrl);
+            core.info(`build_id=${buildId} pr_number=${prNumber || '(unresolved)'}`);
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download + measure the PR's packages
+        run: |
+          python3 scripts/infra/perf/sizes/measure_pr.py \
+            --build-id "${{ steps.build.outputs.build_id }}" \
+            ${{ steps.build.outputs.pr_number && format('--pr-number {0}', steps.build.outputs.pr_number) || '' }} \
+            --output pr-sizes.json
+
+      - name: Fetch the nightly baseline from the data branch
+        # The nightly summary (sizes/index.json) points at the newest observation; the full
+        # per-file breakdown for that day lives in sizes/raw/<date>.json. Missing baseline is
+        # fine — the renderer then shows absolute sizes only.
+        run: |
+          base="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes"
+          date=$(curl -fsSL "$base/index.json" \
+            | python3 -c "import sys,json; n=json.load(sys.stdin).get('nightly',[]); print(n[-1]['date'] if n else '')" \
+            || true)
+          if [ -n "$date" ] && curl -fsSL "$base/raw/$date.json" -o baseline.json; then
+            echo "restored baseline for $date"
+          else
+            echo "no nightly baseline available (absolute-only report)"
+            rm -f baseline.json
+          fi
+
+      - name: Render the size-diff comment
+        run: |
+          python3 scripts/infra/perf/sizes/render_pr_md.py \
+            --pr-sizes pr-sizes.json \
+            --baseline baseline.json \
+            --build-url "${{ steps.build.outputs.build_url }}" \
+            --output comment.md
+
+      - name: Post or update the PR comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const measurement = JSON.parse(fs.readFileSync('pr-sizes.json', 'utf8'));
+            const prNumber = measurement.prNumber
+              || Number('${{ steps.build.outputs.pr_number }}') || null;
+            if (!prNumber) {
+              core.warning('No PR number could be resolved; skipping comment.');
+              return;
+            }
+            const body = fs.readFileSync('comment.md', 'utf8');
+            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+            if (existing) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+              core.info(`updated comment on PR #${prNumber}`);
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
+              core.info(`created comment on PR #${prNumber}`);
+            }
