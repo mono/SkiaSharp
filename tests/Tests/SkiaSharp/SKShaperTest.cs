@@ -150,5 +150,175 @@ namespace SkiaSharp.HarfBuzz.Tests
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 83));
 			Assert.Equal(SKColors.White, bitmap.GetPixel(x + 258, y + 113));
 		}
+
+		[SkippableFact]
+		public void ToHarfBuzzBlobDoesNotDisposeStream()
+		{
+			// Test that ToHarfBuzzBlob does not take ownership of the stream
+			// and the stream remains usable after creating a blob
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
+
+			int index;
+			using var stream = tf.OpenStream(out index);
+			
+			// Verify stream is usable before creating blob
+			Assert.NotNull(stream);
+			Assert.True(stream.Length > 0);
+			var initialPosition = stream.Position;
+
+			// Create blob - this should NOT take ownership of the stream
+			using var blob = stream.ToHarfBuzzBlob();
+			
+			// Verify blob was created successfully
+			Assert.NotNull(blob);
+			Assert.Equal(stream.Length, blob.Length);
+
+			// Verify stream is still usable after blob creation
+			// The stream should not be disposed
+			Assert.Equal(initialPosition, stream.Position);
+			Assert.True(stream.HasPosition);
+			Assert.True(stream.HasLength);
+		}
+
+		[SkippableFact]
+		public void ToHarfBuzzBlobStreamMustBeDisposedByCaller()
+		{
+			// Test that the caller is responsible for disposing the stream
+			// even after creating a blob from it
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
+
+			int index;
+			using var stream = tf.OpenStream(out index);
+			var streamLength = stream.Length;
+
+			// Create and dispose blob
+			using (var blob = stream.ToHarfBuzzBlob())
+			{
+				Assert.NotNull(blob);
+				Assert.Equal(streamLength, blob.Length);
+			}
+			// Blob is now disposed
+
+			// Stream should still be valid and usable after blob disposal
+			Assert.True(stream.HasLength);
+			Assert.Equal(streamLength, stream.Length);
+		}
+
+		[SkippableFact]
+		public void ToHarfBuzzBlobBlobCanBeUsedWithinStreamLifetime()
+		{
+			// Test that blob and stream can coexist and both be used
+			// The typical pattern is: using (stream) using (blob) { use blob }
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
+
+			int index;
+			using (var stream = tf.OpenStream(out index))
+			using (var blob = stream.ToHarfBuzzBlob())
+			{
+				Assert.NotNull(blob);
+				Assert.True(blob.Length > 0);
+				
+				// Verify we can create a face from the blob while stream is alive
+				using var face = new Face(blob, index);
+				Assert.NotNull(face);
+				Assert.Equal(index, face.Index);
+				
+				// Stream should still be valid
+				Assert.True(stream.HasLength);
+			}
+		}
+
+		[SkippableFact]
+		public void ToHarfBuzzBlobWorksWithNonMemoryMappedStream()
+		{
+			// Test the fallback path where GetMemoryBase returns IntPtr.Zero
+			// This tests the code path that copies data to allocated memory
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			var fileBytes = File.ReadAllBytes(fontFile);
+			
+			// Create a managed stream (which won't have a memory base)
+			using var managedStream = new MemoryStream(fileBytes);
+			using var skStream = new SKManagedStream(managedStream);
+
+			// Create blob from non-memory-mapped stream
+			using var blob = skStream.ToHarfBuzzBlob();
+
+			// Verify blob was created successfully
+			Assert.NotNull(blob);
+			Assert.Equal(fileBytes.Length, blob.Length);
+
+			// Verify we can use the blob
+			using var face = new Face(blob, 0);
+			Assert.NotNull(face);
+
+			// Verify stream is still usable
+			Assert.True(skStream.HasLength);
+			Assert.Equal(fileBytes.Length, skStream.Length);
+		}
+
+		[SkippableFact]
+		public void SKShaperConstructorSucceeds()
+		{
+			// Test that SKShaper constructor works correctly with the behavioral change
+			// SKShaper must handle stream lifecycle properly after ToHarfBuzzBlob change
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
+
+			// Create SKShaper
+			using var shaper = new SKShaper(tf);
+			
+			// Verify shaper was created successfully
+			Assert.NotNull(shaper);
+			Assert.Equal(tf, shaper.Typeface);
+
+			// Verify shaper can be used for shaping
+			using var font = new SKFont { Size = 64, Typeface = tf };
+			var result = shaper.Shape("متن", font);
+			
+			Assert.NotNull(result);
+			Assert.True(result.Codepoints.Length > 0);
+		}
+
+		[SkippableFact]
+		public void ToHarfBuzzBlobCanCreateMultipleBlobsFromSameStream()
+		{
+			// Test that we can create multiple blobs from the same stream
+			// since the stream is not disposed by ToHarfBuzzBlob
+			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
+			using var tf = SKTypeface.FromFile(fontFile);
+
+			int index;
+			using var stream = tf.OpenStream(out index);
+
+			// Create first blob
+			using var blob1 = stream.ToHarfBuzzBlob();
+			Assert.NotNull(blob1);
+			var length = blob1.Length;
+
+			// Stream should still be usable
+			Assert.True(stream.HasLength);
+
+			// Reset stream position if needed
+			if (stream.HasPosition)
+			{
+				stream.Position = 0;
+			}
+
+			// Create second blob from the same stream
+			using var blob2 = stream.ToHarfBuzzBlob();
+			Assert.NotNull(blob2);
+			Assert.Equal(length, blob2.Length);
+
+			// Both blobs should be valid
+			using (var face1 = new Face(blob1, index))
+			using (var face2 = new Face(blob2, index))
+			{
+				Assert.NotNull(face1);
+				Assert.NotNull(face2);
+			}
+		}
 	}
 }
