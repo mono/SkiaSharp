@@ -215,6 +215,29 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
   using var gpuImage = cpuImage.ToTextureImage(recorder);
   ```
 
+## Drawing CPU images: the image provider
+
+> [!IMPORTANT]
+> Unlike Ganesh, Graphite does **not** automatically upload a non-Graphite `SKImage` to the GPU. If you draw a raster/CPU-backed `SKImage` — for example one you decoded with `SKImage.FromEncodedData` — onto a Graphite surface **without an image provider, the draw is silently dropped**: nothing appears and no error is raised.
+
+There are two ways to handle this. You can upload each image yourself with [`ToTextureImage`](#using-textures-as-images) and draw the GPU-backed result. Or you can give the recorder an *image provider* callback that uploads CPU images on demand, so ordinary `DrawImage` calls just work.
+
+Pass the callback to the `CreateRecorder` overload that accepts one. SkiaSharp ships a ready-made `SKGraphiteImageCache` whose `FindOrCreate` method implements the callback (uploading via `ToTextureImage`) and caches the results so repeated draws of the same image don't re-upload:
+
+```csharp
+var imageCache = new SKGraphiteImageCache();
+
+using var recorder = context.CreateRecorder(
+    recorderBudgetBytes: -1,
+    findOrCreate: imageCache.FindOrCreate,     // uploads + caches CPU images on demand
+    findOrCreateDispose: imageCache.Dispose);  // released with the recorder
+
+using var surface = SKSurface.Create(recorder, info);
+surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provider
+```
+
+The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest correct default.
+
 ## Dawn in the browser
 
 When Graphite runs over Dawn in a browser/WebAssembly host, the Dawn event loop cannot be pumped from inside a managed call, so **synchronous submission is not allowed**. Calling `Submit` with `Sync = true` there throws an `InvalidOperationException`.

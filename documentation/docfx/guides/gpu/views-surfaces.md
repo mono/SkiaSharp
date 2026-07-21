@@ -15,7 +15,7 @@ There are two families of view control, and the difference between them is exact
 - **GPU views** create and manage a GPU context and a surface that [wraps the control's render target](ganesh-surfaces.md#wrapping-an-existing-render-target), so your drawing goes straight to the GPU and is presented without a CPU copy.
 
 > [!NOTE]
-> The view controls use the **Ganesh** backend for GPU rendering. The newer [Graphite](graphite-surfaces.md) backend is currently an offscreen path and is **not** wired into any view control yet.
+> The view controls are **raster + Ganesh only** today. **None of them drive Graphite yet** — in this release [Graphite](graphite-surfaces.md) is an offscreen-only path with no view control. Onscreen Graphite views are **not yet available and are under active investigation**, so treat this as "not wired up yet," not "impossible."
 
 ## The paint event
 
@@ -40,7 +40,34 @@ void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 }
 ```
 
-The GPU views (`SKGLView`) raise `SKPaintGLSurfaceEventArgs`, but the drawing code is identical — you still just draw on `e.Surface.Canvas`. Choosing a GPU view means the same drawing runs on the GPU.
+The GPU views raise a different event-argument type, but the drawing code is identical — you still just draw on `e.Surface.Canvas`. A **GL view** (`SKGLView` / `SKGLSurfaceView`) raises `SKPaintGLSurfaceEventArgs`:
+
+```csharp
+void OnPaintGLSurface(object sender, SKPaintGLSurfaceEventArgs e)
+{
+    var canvas = e.Surface.Canvas;
+    var info = e.Info;
+
+    canvas.Clear(SKColors.White);
+    canvas.DrawCircle(info.Width / 2f, info.Height / 2f, 100, new SKPaint
+    {
+        Color = SKColors.CornflowerBlue,
+    });
+}
+```
+
+On Apple platforms, a **Metal view** (`SKMetalView`) is the Metal-backed alternative and raises `SKPaintMetalSurfaceEventArgs` — again, the same drawing:
+
+```csharp
+void OnPaintMetalSurface(object sender, SKPaintMetalSurfaceEventArgs e)
+{
+    var canvas = e.Surface.Canvas;
+    canvas.Clear(SKColors.White);
+    // draw exactly as with the raster and GL views
+}
+```
+
+Choosing a GPU view means the same drawing runs on the GPU.
 
 ## .NET MAUI
 
