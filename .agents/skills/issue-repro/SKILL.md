@@ -32,9 +32,29 @@ These 3 reads are REQUIRED. Do not proceed to Phase 1 until all three are loaded
 > 6. Test multiple SkiaSharp versions (3A reporter's → 3B latest → 3C main)
 > 7. Generate JSON → validate → persist
 
+### Data sources
+
+**Primary source: GitHub itself.** Prefer `gh` CLI for repeatable issue/PR fetches. If the environment exposes GitHub MCP issue/PR lookup tools, those are also valid. Do not set up or depend on a cache worktree or cache branch for this skill.
+
 ```
-Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate) → Phase 6 (Persist & Present)
+Phase 0 (Setup) → Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON + Output) → Phase 5 (Validate) → Phase 6 (Persist & Present)
 ```
+
+---
+
+## Phase 0 — Setup
+
+Run once per session:
+
+```bash
+pip3 install -r .agents/skills/issue-repro/scripts/requirements.txt --quiet
+python3 --version  # Requires 3.9+
+python3 -c "import jinja2; print('jinja2', jinja2.__version__)"
+gh --version
+gh auth status
+```
+
+If `gh` is unavailable or unauthenticated, use the GitHub MCP issue/PR retrieval tools available in the environment.
 
 ---
 
@@ -42,13 +62,12 @@ Phase 1 (Fetch) → Phase 2 (Assess) → Phase 3 (Reproduce) → Phase 4 (JSON +
 
 1. **Read the issue** (preferred):
    ```bash
-   CACHE=".data-cache/repos/mono-SkiaSharp"
-   [ -d ".data-cache" ] || git worktree add .data-cache docs-data-cache
-   git -C .data-cache pull --rebase origin docs-data-cache
-   cat $CACHE/github/items/{number}.json
+   gh issue view {number} --repo mono/SkiaSharp \
+     --json number,title,body,labels,comments,state,createdAt,updatedAt,closedAt,author,milestone \
+     > /tmp/{number}.issue.json
    ```
-   **Fallback:** `gh issue view {number} --repo mono/SkiaSharp --json title,body,labels,comments,state,createdAt,closedAt,author`
-2. **Triage boost** — if `$CACHE/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
+   GitHub MCP issue/PR retrieval tools are equally valid if the environment exposes them.
+2. **Triage boost** — if `output/ai/repos/mono-SkiaSharp/ai-triage/{number}.json` exists, extract `classification.platforms[]`, `evidence.bugSignals`, `analysis.nextQuestions[]`, and `output.actionability.suggestedReproPlatform` as **hints** (verify independently). The `suggestedReproPlatform` (`linux`|`macos`|`windows`) indicates which CI runner was selected for reproduction.
 
 ---
 
@@ -69,7 +88,7 @@ If not stated, use the latest stable release. **.NET is forward-compatible** —
 
 ### 3. Environment check
 
-**⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{timestamp}/{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version. `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format.
+**⚠️ Run `dotnet --info` in `/tmp/repro-{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version.
 
 Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability, .NET workloads (`dotnet workload list`). Install missing workloads now — don't wait.
 
@@ -104,9 +123,9 @@ Read [references/anti-patterns.md](references/anti-patterns.md) for the full lis
 3. **Stopping at build success.** Many bugs manifest at RUNTIME. Build ≠ runtime.
 4. **Stale build artifacts.** Fresh project dirs or `rm -rf bin/ obj/` between versions.
 5. **Honesty over completion.** `not-reproduced` and `needs-platform` are VALID SUCCESS conclusions. Reporting inability to reproduce is correct behavior, NOT failure. NEVER invent output you did not observe from an actual command execution.
-6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/skiasharp/repro/{timestamp}/` only (`{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format). If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
+6. **NEVER modify product source.** Do not edit files in `binding/`, `externals/`, `samples/`, `source/`, `tests/`, `utils/`, or any other product source during reproduction. Repro creates NEW test projects in `/tmp/repro-{number}/` only. If you find yourself editing SkiaSharp source, you have crossed into fix territory — stop.
 7. **NEVER use `store_memory`.** Reproduction produces JSON artifacts, not memories. Storing unverified observations as permanent facts pollutes all future sessions.
-8. **NEVER skip validation.** You MUST run `validate-repro.ps1` (or `.py` fallback) and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the reproduction is invalid.
+8. **NEVER skip validation.** You MUST run `validate-repro.py` and see ✅ before persisting. Mentally checking fields is not validation. If the script isn't run, the reproduction is invalid.
 
 **Intermittent bugs:** If results are inconsistent, run 3–5 times. Reproduced ≥1 time → `reproduced` with note "Intermittent: X/Y runs". Never reproduced after 5 → `not-reproduced`.
 
@@ -155,7 +174,7 @@ Follow the platform file from Phase 2.4. For each step, capture:
 
 ### 3B. Test on latest release
 
-> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/skiasharp/repro/{timestamp}/{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
+> **⚠️ Clean build required:** Create a fresh project directory per version (`/tmp/repro-{number}-latest/`) or `rm -rf bin/ obj/` before building. Never just `sed` the version — stale native binaries produce unreliable results. See [references/anti-patterns.md](references/anti-patterns.md) #7.
 
 Use the same platform strategy from 3A with the latest stable SkiaSharp. Record in `versionResults`.
 
@@ -228,7 +247,7 @@ Read [references/conclusion-guide.md](references/conclusion-guide.md). Key quest
 
 ### 2. Generate JSON
 
-Write to `/tmp/skiasharp/repro/{timestamp}/{number}.json`. Use the exact literal path `/tmp/skiasharp/repro/{timestamp}/` — do NOT substitute `$TMPDIR` or any other variable. `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format. Run `mkdir -p /tmp/skiasharp/repro/{timestamp}` first if needed.
+Write to `/tmp/{number}.json`. Use this exact literal path structure — do NOT substitute `$TMPDIR` or any other variable. Do NOT use `mkdir` — write directly to `/tmp/`.
 
 Schema: [references/repro-schema.json](references/repro-schema.json). See [references/repro-examples.md](references/repro-examples.md) for full worked examples.
 
@@ -296,9 +315,7 @@ Use the same action types as triage. Common repro actions:
 ### 1. Validate (MANDATORY — run first)
 
 ```bash
-# Try pwsh first, fall back to python3
-pwsh .agents/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json \
-  || python3 .agents/skills/issue-repro/scripts/validate-repro.py /tmp/skiasharp/repro/{timestamp}/{number}.json
+python3 .agents/skills/issue-repro/scripts/validate-repro.py /tmp/{number}.json
 ```
 
 - **Exit 0** = ✅ valid → proceed to Phase 6
@@ -314,18 +331,24 @@ pwsh .agents/skills/issue-repro/scripts/validate-repro.ps1 /tmp/skiasharp/repro/
 
 ### 1. Persist (only after validator prints ✅)
 
-Copy the validated JSON to `output/ai/` for collection.
+Copy the validated JSON to `output/ai/` for collection, then render companion Markdown and HTML reports.
 
 ```bash
-pwsh .agents/skills/issue-repro/scripts/persist-repro.ps1 /tmp/skiasharp/repro/{timestamp}/{number}.json
+python3 .agents/skills/issue-repro/scripts/persist-repro.py /tmp/{number}.json
 ```
 
-This copies the JSON to `output/ai/` mirroring the data-cache structure.
+This produces:
+
+- `output/ai/repos/mono-SkiaSharp/ai-repro/{number}.json`
+- `output/ai/repos/mono-SkiaSharp/ai-repro/{number}.md`
+- `output/ai/repos/mono-SkiaSharp/ai-repro/{number}.html`
 
 ### 2. Present summary
 
 ```
 ✅ Reproduction: ai-repro/{number}.json
+✅ Report: ai-repro/{number}.md
+✅ Viewer: ai-repro/{number}.html
 
 Conclusion:  reproduced
 Steps:       5 (3 success, 1 failure, 1 skip)
@@ -336,3 +359,13 @@ Version results:
   SkiaSharp 3.116.1 (latest):  ❌ REPRODUCED
   main (source):               ✅ not-reproduced
 ```
+
+---
+
+## Scripts
+
+- **`scripts/validate-repro.py <repro.json>`** — Validate against schema + step/conclusion consistency
+- **`scripts/persist-repro.py <repro.json>`** — Copy validated JSON to `output/ai/` and invoke renderer
+- **`scripts/render-repro-report.py <repro.json>`** — Render validated repro JSON → `.md` + `.html` (uses Jinja2 template for markdown)
+- **`scripts/repro-report.md.jinja2`** — Jinja2 template for the Markdown report
+- **`scripts/viewer.html`** — Bootstrap 5 HTML template for the interactive viewer
