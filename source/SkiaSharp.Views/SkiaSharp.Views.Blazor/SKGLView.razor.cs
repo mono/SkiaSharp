@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -8,32 +8,40 @@ using SkiaSharp.Views.Blazor.Internal;
 
 namespace SkiaSharp.Views.Blazor
 {
+#if !NET9_0_OR_GREATER
 	[SupportedOSPlatform("browser")]
+#endif
 	public partial class SKGLView : IDisposable
 	{
-		private SKHtmlCanvasInterop interop = null!;
-		private SizeWatcherInterop sizeWatcher = null!;
-		private DpiWatcherInterop dpiWatcher = null!;
-		private SKHtmlCanvasInterop.GLInfo jsGLInfo = null!;
 		private ElementReference htmlCanvas;
-
-		private const int ResourceCacheBytes = 256 * 1024 * 1024; // 256 MB
-		private const SKColorType colorType = SKColorType.Rgba8888;
-		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
-
-		private GRContext? context;
-		private GRGlInterface? glInterface;
-		private GRBackendRenderTarget? renderTarget;
-		private SKSize renderTargetSize;
-		private SKSurface? surface;
-		private SKCanvas? canvas;
-		private bool enableRenderLoop;
+		private IRenderer? renderer;
 		private bool ignorePixelScaling;
-		private double dpi;
-		private SKSize canvasSize;
+		private bool enableRenderLoop;
 
 		[Inject]
 		IJSRuntime JS { get; set; } = null!;
+
+#if NET9_0_OR_GREATER
+		[Inject]
+		IServiceProvider Services { get; set; } = null!;
+
+		/// <summary>
+		/// The frame transfer format to use when this view runs in a bridged host (Blazor Server,
+		/// Blazor Hybrid or static SSR). When <see langword="null"/> the global option or a host
+		/// default is used. Ignored in Blazor WebAssembly. In a bridged host drawing is CPU raster
+		/// and the frame is presented into a WebGL-backed canvas.
+		/// </summary>
+		[Parameter]
+		public SKBlazorTransferFormat? TransferFormat { get; set; }
+
+		/// <summary>
+		/// The JPEG quality (0-100) used when the resolved <see cref="TransferFormat"/> is
+		/// <see cref="SKBlazorTransferFormat.Jpeg"/>. When <see langword="null"/> the global option
+		/// value is used. Ignored in Blazor WebAssembly.
+		/// </summary>
+		[Parameter]
+		public int? Quality { get; set; }
+#endif
 
 		[Parameter]
 		public Action<SKPaintGLSurfaceEventArgs>? OnPaintSurface { get; set; }
@@ -69,129 +77,67 @@ namespace SkiaSharp.Views.Blazor
 		[Parameter(CaptureUnmatchedValues = true)]
 		public IReadOnlyDictionary<string, object>? AdditionalAttributes { get; set; }
 
-		public double Dpi => dpi;
+		public double Dpi => renderer?.Dpi ?? 0;
 
 		protected override async Task OnAfterRenderAsync(bool firstRender)
 		{
-			if (firstRender)
-			{
-				interop = await SKHtmlCanvasInterop.ImportAsync(JS, htmlCanvas, OnRenderFrame);
-				jsGLInfo = interop.InitGL();
+			if (!firstRender)
+				return;
 
-				sizeWatcher = await SizeWatcherInterop.ImportAsync(JS, htmlCanvas, OnSizeChanged);
-				dpiWatcher = await DpiWatcherInterop.ImportAsync(JS, OnDpiChanged);
+#if NET9_0_OR_GREATER
+			var hostKind = Host.Resolve(RendererInfo.Name);
+			if (Host.IsBridged(hostKind))
+			{
+				var options = (Services?.GetService(typeof(SKBlazorOptions)) as SKBlazorOptions) ?? SKBlazorOptions.Default;
+				renderer = new BridgedRenderer(JS, isGL: true, hostKind, options, PaintFrame);
 			}
+			else if (OperatingSystem.IsBrowser())
+			{
+				renderer = new GLDirectRenderer(JS, PaintFrame);
+			}
+#else
+			renderer = new GLDirectRenderer(JS, PaintFrame);
+#endif
+
+			if (renderer == null)
+				return;
+
+			SyncRenderer();
+			await renderer.InitializeAsync(htmlCanvas);
 		}
 
 		public void Invalidate()
 		{
-			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0 || jsGLInfo == null)
+			if (renderer == null)
 				return;
 
-			interop.RequestAnimationFrame(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));
+			SyncRenderer();
+			renderer.Invalidate();
 		}
 
-		private void OnRenderFrame()
+		private void SyncRenderer()
 		{
-			if (canvasSize.Width <= 0 || canvasSize.Height <= 0 || dpi <= 0 || jsGLInfo == null)
+			if (renderer == null)
 				return;
 
-			// create the SkiaSharp context
-			if (context == null)
-			{
-				glInterface = GRGlInterface.Create();
-				context = GRContext.CreateGl(glInterface);
-
-				// bump the default resource cache limit
-				context.SetResourceCacheLimit(ResourceCacheBytes);
-			}
-
-			// get the new surface size
-			var newSize = CreateSize(out var unscaledSize);
-			var info = new SKImageInfo(newSize.Width, newSize.Height, colorType);
-			var userVisibleSize = IgnorePixelScaling ? unscaledSize : info.Size;
-
-			// manage the drawing surface
-			if (renderTarget == null || renderTargetSize != newSize || !renderTarget.IsValid)
-			{
-				// create or update the dimensions
-				renderTargetSize = newSize;
-
-				var glInfo = new GRGlFramebufferInfo(jsGLInfo.FboId, colorType.ToGlSizedFormat());
-
-				// destroy the old surface
-				surface?.Dispose();
-				surface = null;
-				canvas = null;
-
-				// re-create the render target
-				renderTarget?.Dispose();
-				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, jsGLInfo.Samples, jsGLInfo.Stencils, glInfo);
-			}
-
-			// create the surface
-			if (surface == null)
-			{
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
-				canvas = surface.Canvas;
-			}
-
-			using (new SKAutoCanvasRestore(canvas, true))
-			{
-				if (IgnorePixelScaling)
-				{
-					var canvas = surface.Canvas;
-					canvas.Scale((float)dpi);
-					canvas.Save();
-				}
-
-				// start drawing
-				OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, info.WithSize(userVisibleSize), info));
-			}
-
-			// update the control
-			canvas?.Flush();
-			context.Flush();
+			renderer.EnableRenderLoop = enableRenderLoop;
+			renderer.IgnorePixelScaling = ignorePixelScaling;
+#if NET9_0_OR_GREATER
+			renderer.TransferFormat = TransferFormat;
+			renderer.Quality = Quality;
+#endif
 		}
 
-		private void OnDpiChanged(double newDpi)
-		{
-			dpi = newDpi;
-
-			Invalidate();
-		}
-
-		private void OnSizeChanged(SKSize newSize)
-		{
-			canvasSize = newSize;
-
-			Invalidate();
-		}
-
-		private SKSizeI CreateSize(out SKSizeI unscaledSize)
-		{
-			unscaledSize = SKSizeI.Empty;
-
-			var w = canvasSize.Width;
-			var h = canvasSize.Height;
-
-			if (!IsPositive(w) || !IsPositive(h))
-				return SKSizeI.Empty;
-
-			unscaledSize = new SKSizeI((int)w, (int)h);
-			return new SKSizeI((int)(w * dpi), (int)(h * dpi));
-
-			static bool IsPositive(double value)
-			{
-				return !double.IsNaN(value) && !double.IsInfinity(value) && value > 0;
-			}
-		}
+		private void PaintFrame(SKSurface surface, SKImageInfo info, SKImageInfo rawInfo, GRBackendRenderTarget? glRenderTarget, GRSurfaceOrigin glOrigin) =>
+			OnPaintSurface?.Invoke(new SKPaintGLSurfaceEventArgs(surface, glRenderTarget!, glOrigin, info, rawInfo));
 
 		public void Dispose()
 		{
-			dpiWatcher.Unsubscribe(OnDpiChanged);
-			sizeWatcher.Dispose();
-			interop.Dispose();
+			if (renderer != null)
+			{
+				_ = renderer.DisposeAsync();
+				renderer = null;
+			}
 		}
 	}
 }

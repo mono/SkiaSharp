@@ -417,4 +417,5 @@ Work directly for:
 | Error Handling | `documentation/dev/error-handling.md` |
 | Debugging | `documentation/dev/debugging-methodology.md` |
 | NuGet Packages | `documentation/dev/packages.md` |
+| Blazor Server/Hybrid Rendering | `documentation/dev/blazor-server-hybrid-rendering.md` |
 | Release Notes & API Diffs | `documentation/dev/release-notes-and-api-diffs.md` |
