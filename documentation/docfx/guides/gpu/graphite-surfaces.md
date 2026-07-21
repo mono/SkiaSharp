@@ -177,7 +177,7 @@ if (!done || pixels is null)
     throw new InvalidOperationException("Graphite async readback did not complete.");
 ```
 
-The callback receives an `SKGraphiteAsyncReadResult` whose planes may be **row-padded**, so copy row-by-row using `GetPlaneRowBytes(0)` rather than assuming tightly packed pixels. A shorter `RequestReadPixels` overload uses default rescaling; a longer overload lets you pass an [`SKGraphiteRescaleGamma`](#status-and-enums) and [`SKGraphiteRescaleMode`](#status-and-enums) when you want the read to also rescale the image.
+The callback receives an `SKGraphiteAsyncReadResult` whose planes may be **row-padded**, so copy row-by-row using `GetPlaneRowBytes(0)` rather than assuming tightly packed pixels. If you don't need to see the padding handling spelled out, `SKGraphiteAsyncReadResult.CopyPlaneTo(planeIndex, destination, rowCount)` performs exactly this padding-aware copy for you; the manual loop above is shown to make the row padding explicit. A shorter `RequestReadPixels` overload uses default rescaling; a longer overload lets you pass an [`SKGraphiteRescaleGamma`](#status-and-enums) and [`SKGraphiteRescaleMode`](#status-and-enums) when you want the read to also rescale the image.
 
 ## Wrapping an external GPU texture
 
