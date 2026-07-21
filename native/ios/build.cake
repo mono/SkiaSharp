@@ -44,11 +44,14 @@ Task("libSkiaSharp")
         var deviceArm64 = Build("iphoneos", "arm64", "arm64");
 
         // device framework (runtimes/ios): device-arm64 + legacy simulator-x86_64,
-        // the exact arch layout the published iOS NuGet expects. The device (iphoneos)
-        // framework is the base, so the shipped bundle advertises the device SDK.
+        // the exact arch/plist layout the published iOS NuGet ships. The simulator
+        // (iphonesimulator) framework is the base, so the bundle Info.plist advertises the
+        // simulator SDK — matching every historically shipped iOS device NuGet (the Xcode
+        // build likewise used the simulator slice as the fat framework's plist base). The
+        // device arm64 binary slice is still lipo'd in, so the framework runs on device.
         CombineFrameworks(
             OUTPUT_PATH.Combine("ios/libSkiaSharp.framework"),
-            new[] { deviceArm64, simX64 });
+            new[] { simX64, deviceArm64 });
 
         // simulator framework (runtimes/iossimulator): simulator-x86_64 + simulator-arm64.
         CombineFrameworks(
@@ -93,9 +96,10 @@ Task("libHarfBuzzSharp")
         var simArm64 = Build("iphonesimulator", "arm64", "arm64");
         var deviceArm64 = Build("iphoneos", "arm64", "arm64");
 
+        // device framework: simulator framework is the base (see libSkiaSharp above).
         CombineFrameworks(
             OUTPUT_PATH.Combine("ios/libHarfBuzzSharp.framework"),
-            new[] { deviceArm64, simX64 });
+            new[] { simX64, deviceArm64 });
 
         CombineFrameworks(
             OUTPUT_PATH.Combine("iossimulator/libHarfBuzzSharp.framework"),

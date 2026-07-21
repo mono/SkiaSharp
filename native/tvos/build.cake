@@ -38,11 +38,14 @@ Task("libSkiaSharp")
     var deviceArm64 = Build("appletvos", "arm64", "arm64");
 
     // device framework (runtimes/tvos): device-arm64 + legacy simulator-x86_64,
-    // the exact arch layout the published tvOS NuGet expects. The device (appletvos)
-    // framework is the base, so the shipped bundle advertises the device SDK.
+    // the exact arch/plist layout the published tvOS NuGet ships. The simulator
+    // (appletvsimulator) framework is the base, so the bundle Info.plist advertises the
+    // simulator SDK — matching every historically shipped tvOS device NuGet (the Xcode
+    // build likewise used the simulator slice as the fat framework's plist base). The
+    // device arm64 binary slice is still lipo'd in, so the framework runs on device.
     CombineFrameworks(
         OUTPUT_PATH.Combine("tvos/libSkiaSharp.framework"),
-        new[] { deviceArm64, simX64 });
+        new[] { simX64, deviceArm64 });
 
     // simulator framework (runtimes/tvossimulator): simulator-x86_64 + simulator-arm64.
     CombineFrameworks(
@@ -74,9 +77,10 @@ Task("libHarfBuzzSharp")
     var simArm64 = Build("appletvsimulator", "arm64", "arm64");
     var deviceArm64 = Build("appletvos", "arm64", "arm64");
 
+    // device framework: simulator framework is the base (see libSkiaSharp above).
     CombineFrameworks(
         OUTPUT_PATH.Combine("tvos/libHarfBuzzSharp.framework"),
-        new[] { deviceArm64, simX64 });
+        new[] { simX64, deviceArm64 });
 
     CombineFrameworks(
         OUTPUT_PATH.Combine("tvossimulator/libHarfBuzzSharp.framework"),

@@ -37,9 +37,12 @@ void RunLipo(FilePath output, FilePath[] inputs)
 // (incl. the DT*/BuildMachineOSBuild keys App Store / notarization validation expects). The only
 // thing that cannot live inside a single GN invocation is fusing slices from different arch/SDK out
 // dirs, so all this does is:
-//   1. copy the base framework (gnFrameworks[0]) - its Info.plist and bundle layout are the shipped
-//      ones, so the base must be the framework whose SDK the shipped artifact should advertise (e.g.
-//      the iphoneos slice for the device framework, which also carries a legacy simulator slice);
+//   1. copy the base framework (gnFrameworks[0]) - its Info.plist and bundle layout become the
+//      shipped ones, so the caller passes the framework whose SDK the shipped artifact should
+//      advertise first. To stay byte-compatible with the historically shipped NuGets, the device
+//      frameworks (runtimes/ios, runtimes/tvos) use the *simulator* slice as the base (the old
+//      Xcode build's fat framework advertised the simulator SDK too); the device arm64 binary is
+//      still lipo'd in below, so the framework runs on device;
 //   2. lipo every slice's binary into the base's universal binary;
 //   3. strip and ad-hoc codesign LAST, after lipo (which would otherwise invalidate the signature);
 //   4. zip the macOS-style versioned bundle (Mac Catalyst).
