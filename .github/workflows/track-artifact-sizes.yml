@@ -40,13 +40,15 @@ jobs:
 
       - name: Restore size history from data branch
         # Read the existing history from the aw-data branch (public raw URL, no auth).
-        # Missing (first run) is fine — track.py then starts a fresh document.
+        # The file is persisted as sizes/index.json (see persist-aw-data.yml); it must be
+        # restored under that same name or every run starts fresh and overwrites history
+        # with a single day's data point. Missing (first run) is fine.
         run: |
-          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes/artifact-sizes.json"
+          url="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes/index.json"
           if curl -fsSL "$url" -o artifact-sizes.json; then
-            echo "restored artifact-sizes.json from $DATA_BRANCH"
+            echo "restored size history from $DATA_BRANCH/sizes/index.json"
           else
-            echo "no existing artifact-sizes.json on $DATA_BRANCH (fresh start)"
+            echo "no existing sizes/index.json on $DATA_BRANCH (fresh start)"
             rm -f artifact-sizes.json
           fi
 
