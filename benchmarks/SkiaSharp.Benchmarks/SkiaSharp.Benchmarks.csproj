@@ -28,6 +28,13 @@
     <None Remove="BenchmarkDotNet.Artifacts/**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Real font used by SKShaperGlyphExtractionBenchmark to shape text. Linked from the test
+         content (not duplicated into the repo) and embedded so it loads regardless of the working
+         directory BenchmarkDotNet spawns the process from. -->
+    <EmbeddedResource Include="..\..\tests\Content\fonts\content-font.ttf" Link="content-font.ttf" LogicalName="content-font.ttf" />
+  </ItemGroup>
+
   <Import Project="..\..\binding\IncludeNativeAssets.SkiaSharp.targets" />
   <Import Project="..\..\binding\IncludeNativeAssets.HarfBuzzSharp.targets" />
 

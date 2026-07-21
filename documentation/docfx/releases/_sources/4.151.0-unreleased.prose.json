@@ -1,0 +1,35 @@
+{
+  "theme": "Managed math and WASM hardening",
+  "highlights_headline": "Color conversion hot paths are ported to managed integer math, and WASM gains exception-handling support for .NET's new exnref mode.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKColor and SKColorF conversion ported to managed C#",
+          "detail": "The SKColor-to-SKColorF round-trip is now computed in managed integer math, removing a P/Invoke call on every conversion.",
+          "prs": [4370]
+        },
+        {
+          "lead": "SKPMColor premultiply/unpremultiply ported to managed math",
+          "detail": "Single-value premultiply and unpremultiply are now handled entirely in managed code, eliminating a native interop call per pixel on hot colour paths.",
+          "prs": [4385]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "WASM exception-handling regression tests added",
+          "detail": "A preview-.NET test job validates that SkiaSharp WASM builds compiled with the new exnref exception-handling model do not regress, catching issues before they reach a release.",
+          "prs": [4488]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

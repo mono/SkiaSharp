@@ -92,10 +92,11 @@ push_skia() {
     local pr
     pr=$(gh pr list --repo mono/skia --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 
-    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
+    # Every skia-sync PR carries type/milestone-sync and partner/agentic-workflows (it is
+    # created by the auto-skia-sync agentic workflow); milestone bumps (those that change
     # SK_MILESTONE in include/core/SkMilestone.h) additionally carry type/milestone-bump.
-    # Both labels must already exist in the repo.
-    local skia_label_args=(--label "type/milestone-sync")
+    # All labels must already exist in the repo.
+    local skia_label_args=(--label "type/milestone-sync" --label "partner/agentic-workflows")
     if [ "$IS_MILESTONE_BUMP" = "true" ]; then
         skia_label_args+=(--label "type/milestone-bump")
     fi
@@ -114,9 +115,9 @@ ${SKIA_SUMMARY}
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/skia PR"
     else
         echo "Updating mono/skia PR #${pr}..."
-        local skia_add_labels="type/milestone-sync"
+        local skia_add_labels="type/milestone-sync,partner/agentic-workflows"
         if [ "$IS_MILESTONE_BUMP" = "true" ]; then
-            skia_add_labels="type/milestone-sync,type/milestone-bump"
+            skia_add_labels="type/milestone-sync,type/milestone-bump,partner/agentic-workflows"
         fi
         gh pr edit "$pr" --repo mono/skia --add-label "$skia_add_labels" || true
         gh pr edit "$pr" --repo mono/skia \
@@ -147,10 +148,11 @@ push_skiasharp() {
 
     ss_pr=$(gh pr list --repo mono/SkiaSharp --head "$BRANCH" --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
 
-    # Every skia-sync PR carries type/milestone-sync; milestone bumps (those that change
-    # the milestone in scripts/VERSIONS.txt) additionally carry type/milestone-bump. Both
+    # Every skia-sync PR carries type/milestone-sync and partner/agentic-workflows (it is
+    # created by the auto-skia-sync agentic workflow); milestone bumps (those that change
+    # the milestone in scripts/VERSIONS.txt) additionally carry type/milestone-bump. All
     # labels must already exist in the repo.
-    local ss_label_args=(--label "type/milestone-sync")
+    local ss_label_args=(--label "type/milestone-sync" --label "partner/agentic-workflows")
     if [ "$IS_MILESTONE_BUMP" = "true" ]; then
         ss_label_args+=(--label "type/milestone-bump")
     fi
@@ -171,9 +173,9 @@ ${SS_SUMMARY}
 Created by ${WORKFLOW_LINK}." || echo "::warning::Failed to create mono/SkiaSharp PR"
     else
         echo "Updating mono/SkiaSharp PR #${ss_pr}..."
-        local ss_add_labels="type/milestone-sync"
+        local ss_add_labels="type/milestone-sync,partner/agentic-workflows"
         if [ "$IS_MILESTONE_BUMP" = "true" ]; then
-            ss_add_labels="type/milestone-sync,type/milestone-bump"
+            ss_add_labels="type/milestone-sync,type/milestone-bump,partner/agentic-workflows"
         fi
         gh pr edit "$ss_pr" --repo mono/SkiaSharp --add-label "$ss_add_labels" || true
         gh pr edit "$ss_pr" --repo mono/SkiaSharp \
