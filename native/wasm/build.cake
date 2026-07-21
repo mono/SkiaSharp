@@ -34,13 +34,25 @@ string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
 string COMPILERS = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
-// Sync Dawn's emdawnwebgpu port into externals/emdawnwebgpu_pkg. Idempotent:
-// re-runs are no-ops when VERSION.txt already matches EMDAWN_TAG. Runs
-// unconditionally (not gated on SUPPORT_GRAPHITE) so downstream targets that
-// reference EMDAWN_ROOT — libSkiaSharp *and* SkiaSharp.targets consumers linking
-// managed WASM — don't have to re-derive the version gate.
+// Sync Dawn's emdawnwebgpu port into externals/emdawnwebgpu_pkg (needed at
+// compile time for libSkiaSharp's --use-port) and then stage a copy into the
+// WASM native output so it travels with the native artifact — exactly like the
+// libSkiaSharp*.a files. Downstream pack and test agents consume the port
+// straight from output/native/wasm/emdawnwebgpu_pkg (the downloaded native
+// artifact) and never have to re-fetch it. Idempotent: the sync is a no-op when
+// VERSION.txt already matches EMDAWN_TAG. Runs unconditionally (not gated on
+// SUPPORT_GRAPHITE) so the port is always present in the artifact regardless of
+// which emsdk-version leg produced it.
 Task("externals-emdawnwebgpu")
-    .Does(() => SyncEmdawnwebgpuPort());
+    .Does(() =>
+{
+    SyncEmdawnwebgpuPort();
+
+    var portOutput = OUTPUT_PATH.Combine("wasm/emdawnwebgpu_pkg");
+    EnsureDirectoryExists(portOutput);
+    CleanDirectories(portOutput.FullPath);
+    CopyDirectory(EMDAWN_ROOT, portOutput);
+});
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")

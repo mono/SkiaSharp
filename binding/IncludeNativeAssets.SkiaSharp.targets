@@ -93,8 +93,11 @@
          swallows backslashes on Windows (the raw path arrives without any
          separators). Normalize to forward slashes so the trailing `/webgpu/…`
          concatenation stays consistent and the resulting path resolves on
-         both platforms. -->
-    <_SkiaSharpEmdawnwebgpuPkg>$([System.String]::Copy('$(MSBuildThisFileDirectory)..\externals\emdawnwebgpu_pkg').Replace('\','/'))</_SkiaSharpEmdawnwebgpuPkg>
+         both platforms.
+         The port is staged into the WASM native output by the
+         externals-emdawnwebgpu cake task, so it lives next to the
+         libSkiaSharp*.a files below and travels with the native artifact. -->
+    <_SkiaSharpEmdawnwebgpuPkg>$([System.String]::Copy('$(MSBuildThisFileDirectory)..\output\native\wasm\emdawnwebgpu_pkg').Replace('\','/'))</_SkiaSharpEmdawnwebgpuPkg>
     <!--
       Inline the port's inputs instead of using emcc's ports mechanism.
       That mechanism compiles libemdawnwebgpu-<hash>.a into emcc's cache
