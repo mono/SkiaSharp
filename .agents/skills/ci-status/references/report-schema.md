@@ -166,7 +166,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
 {
   "workflows": [
     {
-      "name": "Docs - Deploy",
+      "name": "Pages - Deploy",
       "repo": "mono/SkiaSharp",
       "trigger": "push",
       "scope": "branch",

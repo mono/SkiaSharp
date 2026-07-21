@@ -72,6 +72,44 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void CanvasReturnsSameInstanceAcrossCalls()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+
+			var canvas1 = surface.Canvas;
+			var canvas2 = surface.Canvas;
+
+			// Skia caches the canvas for the surface's lifetime, so the managed
+			// wrapper is cached too and the same instance is returned each call.
+			Assert.NotNull(canvas1);
+			Assert.Same(canvas1, canvas2);
+			Assert.Equal(canvas1.Handle, canvas2.Handle);
+		}
+
+		[Fact]
+		public void CanvasIsRefetchedAfterExplicitCanvasDispose()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+
+			var canvas1 = surface.Canvas;
+			Assert.NotNull(canvas1);
+
+			// Disposing the surface-owned canvas is an anti-pattern, but it must not
+			// leave the cache holding a dead wrapper: the next access re-fetches a
+			// fresh, usable canvas wrapping the still-alive native canvas.
+			canvas1.Dispose();
+			Assert.Equal(IntPtr.Zero, canvas1.Handle);
+
+			var canvas2 = surface.Canvas;
+			Assert.NotNull(canvas2);
+			Assert.NotEqual(IntPtr.Zero, canvas2.Handle);
+			Assert.NotSame(canvas1, canvas2);
+
+			// The re-fetched canvas is fully functional.
+			canvas2.Clear(SKColors.Red);
+		}
+
+		[Fact]
 		public void SimpleSurfaceIsUnknownPixelGeometry()
 		{
 			var info = new SKImageInfo(100, 100);

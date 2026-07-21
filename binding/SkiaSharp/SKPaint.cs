@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace SkiaSharp
 {
-	[Obsolete ($"Use {nameof (SKFontHinting)} instead.")]
+	[Obsolete ($"Use {nameof (SKFontHinting)} instead.", error: true)]
 	public enum SKPaintHinting
 	{
 		NoHinting = 0,
@@ -14,7 +14,7 @@ namespace SkiaSharp
 		Full = 3,
 	}
 
-	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
+	[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.", error: true)]
 	public enum SKFilterQuality
 	{
 		None = 0,
@@ -732,6 +732,23 @@ namespace SkiaSharp
 			GC.KeepAlive (dst);
 			GC.KeepAlive (this);
 			return result;
+		}
+
+		// GetFastBounds
+
+		public bool GetFastBounds (SKRect bounds, out SKRect fastBounds)
+		{
+			if (!SkiaApi.sk_paint_can_compute_fast_bounds (Handle)) {
+				GC.KeepAlive (this);
+				fastBounds = SKRect.Empty;
+				return false;
+			}
+
+			fixed (SKRect* storage = &fastBounds) {
+				SkiaApi.sk_paint_compute_fast_bounds (Handle, &bounds, storage);
+			}
+			GC.KeepAlive (this);
+			return true;
 		}
 
 		// CountGlyphs

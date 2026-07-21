@@ -7,6 +7,13 @@ namespace SkiaSharp
 {
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
+		// Skia's SkSurface lazily creates its SkCanvas once and returns the same raw
+		// pointer for the surface's entire lifetime (SkSurface_Base::getCachedCanvas,
+		// shared by all backends). The managed wrapper is therefore also stable, so we
+		// cache it here to avoid a P/Invoke and a locked HandleDictionary lookup on every
+		// access — a measurable win in draw-heavy render loops that fetch Canvas per draw.
+		private SKCanvas canvas;
+
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -14,6 +21,15 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
+
+		protected override void DisposeManaged ()
+		{
+			base.DisposeManaged ();
+
+			// Drop the cached wrapper; it is an owned child and was already torn down by
+			// base disposal. A fresh surface gets its own canvas, so nothing to reuse.
+			canvas = null;
+		}
 
 		// RASTER surface
 
@@ -290,9 +306,13 @@ namespace SkiaSharp
 
 		public SKCanvas Canvas {
 			get {
-				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				// Re-fetch if not yet cached, or if the cached wrapper was disposed out from
+				// under us (e.g. a caller explicitly disposed the surface-owned canvas).
+				if (canvas == null || canvas.Handle == IntPtr.Zero) {
+					canvas = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				}
 				GC.KeepAlive (this);
-				return result;
+				return canvas;
 			}
 		}
 

@@ -18,7 +18,7 @@ namespace SkiaSharp
 			CreateGl (width, height, sampleCount, stencilBits, glInfo);
 		}
 
-		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRVkImageInfo vkImageInfo) instead.")]
+		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRVkImageInfo vkImageInfo) instead.", error: true)]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo)
 			: this (width, height, vkImageInfo)
 		{
@@ -38,7 +38,7 @@ namespace SkiaSharp
 
 #if __IOS__ || __MACOS__ || __TVOS__
 
-		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.")]
+		[Obsolete ("Use GRBackendRenderTarget(int width, int height, GRMtlTextureInfo mtlInfo) instead.", error: true)]
 		public GRBackendRenderTarget (int width, int height, int sampleCount, GRMtlTextureInfo mtlInfo)
 			: this (width, height, mtlInfo)
 		{

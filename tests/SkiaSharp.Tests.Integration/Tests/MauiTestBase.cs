@@ -140,7 +140,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         // Always run from TestDir (which has global.json) using relative path
         var relativeProjectDir = Path.GetRelativePath(TestDir, projectDir);
-        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework}", timeoutSeconds: 600);
+        // ValidateXcodeVersion=false: the generated MAUI app is built in a temp dir outside the repo,
+        // so it does NOT inherit tests/Directory.Build.props (which sets this for the harness project).
+        // Skip the .NET for iOS/Mac Catalyst Xcode major.minor check so the harness keeps working when
+        // the installed Xcode is newer than the version the pinned workload recommends — release-testing
+        // validates SkiaSharp rendering, not toolchain matching. Ignored (harmless) on Android.
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework} -p:ValidateXcodeVersion=false", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);
@@ -170,8 +175,11 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var projectDir = Path.Combine(TestDir, projectName);
         var relativeProjectDir = projectName;  // Relative to TestDir
         
-        // Create project (run from TestDir to pick up global.json)
-        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir}");
+        // Create project (run from TestDir to pick up global.json). Pin the template to the shared
+        // BaseFramework (net10.0) so the generated TFMs always match the framework the harness
+        // builds below — the installed MAUI template can otherwise default to a newer (e.g. net11.0)
+        // framework even when the SDK is pinned, since its default comes from the MAUI workload.
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir} -f {BaseFramework}");
 
         // Add SkiaSharp package (run from TestDir)
         await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");

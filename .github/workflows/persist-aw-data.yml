@@ -1,13 +1,20 @@
-name: Persist Agentic Workflow Data
+name: Sync - Agentic Data
 
 # Downloads the agent artifact from a completed agentic workflow run and commits
 # files to the aw-data branch. The data-key (subfolder) is resolved from a
 # mapping of workflow names, or can be provided via manual dispatch with a run URL.
+#
+# Auto-persist (workflow_run) only fires for SUCCESSFUL runs on `main` from THIS repo,
+# so PR/branch/fork runs never write to aw-data even though they now upload the same
+# `agent` artifact (for download/preview). Manual workflow_dispatch bypasses the branch
+# gate on purpose (admin escape hatch to persist a specific run by URL).
 
 on:
   workflow_run:
     workflows:
-      - "Auto-Triage SkiaSharp Issue"
+      - "Sync - Issue Triage"
+      - "Track - Benchmarks"
+      - "Track - Artifact Sizes"
     types: [completed]
 
   workflow_dispatch:
@@ -34,7 +41,9 @@ jobs:
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
 
     steps:
       - name: Resolve run ID and data key
@@ -49,7 +58,9 @@ jobs:
           # --- Workflow name → data-key mapping ---
           resolve_key() {
             case "$1" in
-              "Auto-Triage SkiaSharp Issue") echo "ai-triage" ;;
+              "Sync - Issue Triage") echo "ai-triage" ;;
+              "Track - Benchmarks") echo "benchmarks" ;;
+              "Track - Artifact Sizes") echo "sizes" ;;
               # Add future mappings here:
               # "Auto-Repro SkiaSharp Issue") echo "ai-repro" ;;
               *) echo "" ;;

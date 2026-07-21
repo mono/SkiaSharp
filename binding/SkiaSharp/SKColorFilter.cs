@@ -157,6 +157,21 @@ namespace SkiaSharp
 			return CreateHighContrast(new SKHighContrastConfig(grayscale, invertStyle, contrast));
 		}
 
+		public static SKColorFilter CreateOverdraw(ReadOnlySpan<SKColor> colors)
+		{
+			if (colors.Length != 6)
+				throw new ArgumentException("Exactly 6 colors are required.", nameof(colors));
+			fixed (SKColor* c = colors)
+				return GetObject(SkiaApi.sk_colorfilter_new_overdraw((uint*)c));
+		}
+
+		public static SKColorFilter CreateOverdraw(SKColor[] colors)
+		{
+			if (colors == null)
+				throw new ArgumentNullException(nameof(colors));
+			return CreateOverdraw(colors.AsSpan());
+		}
+
 		internal static SKColorFilter GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKColorFilter (h, o));
 

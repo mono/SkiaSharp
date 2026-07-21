@@ -37,8 +37,19 @@ namespace SkiaSharp.Tests
 
 		public static void CollectGarbage()
 		{
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
+			// Loop so multi-level finalization chains fully drain. Collecting one
+			// wrapper can release a managed reference it held to another (e.g. an
+			// SKDocument releasing its SKWStream only when the document itself is
+			// finalized); that second object becomes collectable *during* the first
+			// round's finalization, so it survives a single Collect/WaitForPending-
+			// Finalizers and is only reclaimed on a subsequent round. A single pass
+			// therefore makes GC-lifetime tests (e.g. StreamIsNotCollectedPrematurely)
+			// intermittently fail depending on when an earlier implicit GC happened.
+			for (var i = 0; i < 4; i++)
+			{
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+			}
 		}
 
 		protected static bool IsAndroid =>

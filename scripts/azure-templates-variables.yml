@@ -3,7 +3,7 @@ variables:
   # It must match the SkiaSharp nuget version in scripts/VERSIONS.txt.
   # SKIASHARP_VERSION is used in the BUILD_NUMBER counter expression below,
   # which requires a compile-time constant (cannot be derived dynamically).
-  SKIASHARP_VERSION: 4.150.0
+  SKIASHARP_VERSION: 4.151.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
   GIT_SHA: $(Build.SourceVersion)
@@ -18,6 +18,10 @@ variables:
   XCODE_VERSION_NATIVE: '16.2'
   VISUAL_STUDIO_VERSION: ''
   DOTNET_VERSION: '10.0.108'
+  # Preview .NET SDK version + its workload set, used by jobs that run tests against a preview
+  # runtime. Bump both to the next preview .NET as it moves forward.
+  DOTNET_VERSION_PREVIEW: '11.0.100-preview.6.26359.118'
+  DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-preview.6.26364.2'
   DOTNET_WORKLOAD_TIZEN: '10.0.100/10.0.123'
   DOTNET_WORKLOAD_VERSION: '10.0.108'
   CONFIGURATION: 'Release'

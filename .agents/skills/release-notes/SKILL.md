@@ -1,212 +1,223 @@
 ---
 name: release-notes
-description: >
-  Generate or regenerate polished website release notes for SkiaSharp versions.
-  Collects raw PR data from git history (no API calls needed), reads the template,
-  and writes formatted markdown pages to documentation/docfx/releases/.
-
-  Use this skill whenever the user asks to:
-  - Generate release notes for a version ("write release notes for 3.119.2")
-  - Regenerate or refresh release notes ("regenerate 3.119.x release notes")
-  - Format raw release data into the website template
-  - Manually fix or update release notes that the automated workflow got wrong
-
-  Triggers: "release notes for X", "regenerate release notes", "format release notes",
-  "update website release notes", "write release notes", "refresh release notes".
-
-  NOTE: Website release notes are normally updated automatically by the
-  `update-release-notes` agentic workflow when code lands on main, release branches,
-  or tags are pushed. That workflow drives this skill in `--all` mode; the same
-  skill is also used manually for regeneration or corrections.
+description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/_sources/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`prose.json`); a deterministic renderer builds the page.
 ---
 
-# Release Notes Skill
+# Release notes — writing the prose
 
-Generate polished website release notes for SkiaSharp versions.
+You are writing the human prose for one release-notes page. **You do not build the
+page.** A script (`release-notes-render.py`) owns every heading, table, banner, `@handle`,
+❤️, and PR link. Your entire job is to fill a small set of prose *slots*, and the
+renderer assembles the page from those plus the facts in `data.json`.
 
-This skill is used both by the `update-release-notes` agentic workflow (automatically
-on push to `main`, `release/*` branches, and tags) and manually when regenerating,
-correcting, or bulk-processing release notes.
+This split exists on purpose: the parts that used to break — dropped headings,
+bare handles, missing contributors, malformed links — are now impossible because
+you never type them. Spend your effort on the one thing only a human-quality
+writer can do: turn a raw activity log into a changelog a **NuGet consumer** wants
+to read.
 
-## Process
+## The one test for everything you write
 
-### Step 1 — Determine versions
+> Would a consumer notice this change without looking inside our repo?
 
-> **Running unattended (e.g. from the `update-release-notes` workflow)?** There is
-> no user to ask — skip straight to the `--all` invocation in
-> [Step 2](#step-2--run-the-script), which regenerates every branch automatically.
+If yes, write about it. If no (CI tweaks, internal refactors, doc/workflow
+plumbing, test infra), leave it out — the renderer already collapses that noise.
+`data.json` tags every PR `product` / `mixed` / `internal`; treat `internal` as
+invisible unless it changed shipped behaviour, and for `mixed` (build config in
+`native/`, or a `docs` API-docs bump) judge from the title.
 
-Ask the user which version(s) to generate, or infer from context:
-- A specific version: `3.119.2`
-- A branch: `release/4.147.0-preview.1` or `main`
-- Multiple versions: `3.119.0, 3.119.1, 3.119.2`
-- A range by minor: "all 3.119.x"
+## Running the full pipeline (prepare → write prose → render)
 
-### Step 2 — Run the script
+Producing release notes is three steps. Two are scripts you run; the middle one is
+the writing this skill is about.
 
-Run the script **from the repository root** to collect raw PR data and write it to
-the version file:
+```
+prepare.sh   →   (you write prose.json per page)   →   render.sh
+ (network)              (this skill)                     (offline)
+```
 
+1. **`.agents/skills/release-notes/scripts/prepare.sh`** — regenerates the API diffs
+   (Cake), the per-page `_sources/<version>.data.json` facts, and `_sources/index.json`,
+   and writes the list of pages needing prose to `output/files-to-polish.txt`. **When a
+   page's facts changed, Prepare DELETES that page's `prose.json`** so there is nothing
+   stale to keep — every page on the list starts from a blank prose slate.
+2. **You** read each listed page's `data.json` and write its `prose.json` from scratch
+   (below). Each page in the list has **no `prose.json`** — do not go looking for an old
+   one to "check if it still matches"; the facts moved (new/removed PRs, re-tags), so you
+   author fresh. Cover every `product` PR you'd expect a consumer to notice — a page that
+   silently drops a real change is the failure this design prevents.
+3. **`.agents/skills/release-notes/scripts/render.sh`** — renders every page from
+   `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It **fails loudly** if
+   any page on the list still lacks a `prose.json` (you missed one) or if prose is invalid.
+
+Both scripts take the **same three flags** — `--force`, `--min-version`, `--max-version`
+— and nothing else. Choose them from what was asked:
+- "regenerate the release notes **for 4.151.0**" → `--min-version 4.151.0 --max-version 4.151.0`
+- "regenerate the release notes" (everything) → no flags
+- after changing the **api-diff tools or the page format** → add `--force` (rebuilds even
+  cached api diffs / unchanged pages)
+
+Everything is incremental: an unforced run skips work whose output already exists (a
+shipped version's api diff never changes), so a routine run is cheap — there is no
+"notes-only" mode to reach for.
+
+**Running locally** (needs `dotnet`, `python3`, `git`, `gh`):
 ```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch release/4.147.0-preview.1
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --branch main
+# one version, end to end
+.agents/skills/release-notes/scripts/prepare.sh --min-version 4.151.0 --max-version 4.151.0
+#   … you write documentation/docfx/releases/_sources/4.151.0.prose.json …
+.agents/skills/release-notes/scripts/render.sh  --min-version 4.151.0 --max-version 4.151.0
+
+# everything
+.agents/skills/release-notes/scripts/prepare.sh
+.agents/skills/release-notes/scripts/render.sh
 ```
 
-To regenerate **every** branch in one idempotent pass, use `--all`:
+**In CI** a separate `prepare` job runs step 1, and you (the agent) do steps 2 and 3 —
+write each page's prose, then run `release-notes-render.py --all` to finalize (the workflow's
+tool allowlist permits `python3` for exactly this).
 
-```bash
-python3 .agents/skills/release-notes/scripts/generate-release-notes.py --all
-```
+## How to work
 
-`--all` loops over `main` plus every `release/*` branch and regenerates each
-version's raw data, but **only rewrites files that actually changed** (same PR
-count AND same diff range ⇒ skipped, so the AI never re-polishes an unchanged
-page). Superseded versions are still generated — they keep their own page; the
-supersede marker only excludes them from being a diff *baseline*. The "Files to
-polish" output therefore lists only genuinely-changed pages.
+You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
+`documentation/docfx/releases/<version>.md` path per line). The list **may be
+empty** — that just means no page needs new prose this run, but you must still run
+the final render (`render.sh`, or `release-notes-render.py --all` in CI) to materialize the
+deterministic pages and rebuild the TOC/index; don't exit early. Every input for a
+page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
+the inputs are `releases/_sources/<version>.data.json`,
+`releases/_sources/<version>.prose.json` (what you write), and an optional
+`releases/_sources/<version>.notes.md`. HarfBuzzSharp is not a separate page — it
+ships inside each SkiaSharp release, so it renders as a `## HarfBuzzSharp X.Y.Z`
+section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
-This writes raw PR data to `documentation/docfx/releases/{version}.md` or
-`documentation/docfx/releases/{version}-unreleased.md` depending on the branch type,
-and regenerates TOC/index. All data comes from git history — no API calls or tokens needed.
+1. Read its `_sources/<version>.data.json`. It has:
+   `prs` (title, author, community, tag), `previews` (each with its PR list),
+   `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
+   and the banner/link facts.
+2. Read the breaking sources it points at, if present: the version's
+   `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
+   are your material for the `breaking` slot — the API diff gives signature
+   removals, the notes sidecar gives *behavioural* breaks (same signature, new
+   runtime behaviour) that no diff can detect.
+3. Write `documentation/docfx/releases/_sources/<version>.prose.json`
+   (schema: `scripts/infra/docs/release-notes-schema/prose.schema.json`).
+4. Render the page:
+   `python3 scripts/infra/docs/release-notes-render.py _sources/<version>.data.json _sources/<version>.prose.json <version>.md`
+   (use the full `documentation/docfx/releases/` paths). If it prints
+   `PROSE VALIDATION FAILED`, read the errors, fix that slot, and re-run. A clean
+   render — the `.md` written — is the bar.
 
-When TOC/index are regenerated, the script also **prunes stale unreleased pages**: any
-`{version}-unreleased.md` whose stable `{version}.md` already exists is deleted, because
-that version has shipped and the line has moved on to the next patch (e.g. once
-`3.119.4.md` exists, `3.119.4-unreleased.md` is removed in favour of `3.119.5-unreleased.md`).
-An unreleased page is still listed in its minor group even when no stable page of that exact
-version exists yet (e.g. `3.119.5-unreleased.md` before `3.119.5` ships).
+You never hand-edit the `.md`, `TOC.yml`, or `index.md`, and you never create,
+rename, or delete pages — `release-notes-render.py --all` (which `render.sh` runs) owns page
+creation and pruning. The per-page render above is just to validate your
+prose as you go; **`render.sh` does the authoritative final pass** — it re-renders
+every page and rebuilds `TOC.yml` + `index.md` from the committed JSON. Commit the
+`_sources/<version>.prose.json` and the rendered `.md` together (the
+`_sources/<version>.data.json` is already produced by the Prepare phase).
 
-The file starts with an HTML comment block containing both metadata (version, status, branch,
-diff range, PR count) AND the raw PR list. Below the comment is a skeleton heading with a
-placeholder for polished content. The raw data comment must be preserved in the final file.
+## The slots
 
-**IMPORTANT:** The script prints a summary at the end listing ALL files to polish:
+Each slot below lists its purpose, the cap the renderer enforces, and one good +
+one bad example. Caps are hard: the renderer rejects an over-long highlight, a
+missing contributor, or an unknown category. Stay well under and you never see an
+error. Where a slot is nullable or optional, the note says so — reach for `null`
+rather than padding.
 
-```
-========================================
-Files to polish:
-  - documentation/docfx/releases/4.147.0.md
-  - documentation/docfx/releases/3.119.5-unreleased.md
-  - documentation/docfx/releases/4.148.0-unreleased.md
-========================================
-```
+### `theme` — 2-6 words
+What *this* release is about, shown bold in the banner. No punctuation.
+- Good: `First stable v4 release`
+- Bad: `Version 4.148.0` (that's the title, not a theme) · `Lots of fixes and new APIs` (vague)
 
-You MUST polish **every file** in the "Files to polish" list — not just the first one.
-Read each file to get its raw data and metadata, then rewrite it with polished content.
+### `highlights_headline` — one sentence, ≤20 words
+The single most important thing about the release. **Not a list.** Decide it from
+the `product`-tagged PRs, the Skia milestone bump, and whether there are breaking
+changes — the one thing a consumer would care about most, in a sentence. You are
+not summarising every PR here.
+- Good: `SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148.`
+- Bad: `This release adds WebP, SKStream.GetData, singleton lifecycle, pixel fixes, WinUI fixes, and more.` (enumeration)
 
-### Step 3 — Read the template
+### `highlights_body` — optional, ≤60 words, or `null`
+Name the biggest themes to draw the reader in. Prose is best, but a short feature
+list is fine for a big release — just keep the whole Highlights block (headline +
+body) under ~100 words so it stays a lead-in, not the changelog. No PR links, no
+`@handles`. If the headline already says enough, use `null`.
+- Good: `It adds variable fonts and animated WebP, and reworks the singleton lifecycle. This is a breaking release — check the changes below before upgrading.`
+- Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles, and it's just PR numbers, not themes)
 
-Read `documentation/docfx/releases/TEMPLATE.md`. This is a real example of a polished
-release notes page. Match its structure, tone, and formatting exactly.
+### `breaking` — array, one entry per change a consumer must act on
+Merge from two sources: signature removals in the `*.breaking.md` diff, and
+behavioural breaks described in `breaking_candidates` / the notes sidecar. Empty
+array is fine and renders "None in this release." Give each a `title`, a `body`
+that says what changed **and what to do**, and the `prs` it came from. Only write
+what you can substantiate: a `breaking_candidate` carries a `hint` and sometimes
+`prs`, but when its companion file isn't on disk and it lists no concrete change,
+fall back to the PR titles in `prs` you can actually read — never invent a removal
+you can't point at.
+- Good: `{"title": "SKPaint no longer exposes legacy text state", "body": "The paint text/font members obsoleted in v3 are now compile errors — move typeface and text size onto SKFont.", "prs": [4068, 4114]}`
+- Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
 
-Determine the version's status from the HTML comment block in the file (`status: unreleased`, `status: preview`, or `status: stable`):
-- **Stable**: header uses `Released {date}` + NuGet link + GitHub Release link
-- **Preview**: header uses `Preview only` + preview NuGet link + GitHub Release link
-- **Unreleased**: header uses `> **Upcoming release** · In development · Not yet available on NuGet`
-- **Superseded** (a `superseded:` line is present in the comment block): the version was a
-  preview that will never ship as stable. Keep the script-generated
-  `> **Preview only** · Superseded by [X.Y.Z](...) · Never released as stable …` header and
-  add a short note in Highlights that the work rolled up into the superseding version.
-- **Successor** (a `supersedes:` line is present in the comment block): this version rolls
-  up one or more skipped preview-only versions. Keep the script-generated
-  `> **Supersedes [X.Y.Z](...)** · Rolls up preview-only work …` note and mention in
-  Highlights that the skipped preview work is rolled up cumulatively. This is the back-link
-  that makes the supersede relationship **two-way** (the superseded page points forward, the
-  successor points back).
+### `categories` — array of `{heading, bullets}`
+The body of the page. **`heading` must be exactly one of these six** (the renderer
+rejects anything else — this is the closed list, in the order they render):
 
-### Skipped / superseded minors (preview-only versions)
+| Heading | What belongs here |
+|---|---|
+| `Engine` | The Skia milestone bump and upstream engine syncs; bundled-engine changes a consumer would feel. |
+| `API Surface` | New or changed public APIs — added types, methods, overloads, options. |
+| `Bug Fixes` | Corrected behaviour, crashes, wrong output — even when platform-specific. |
+| `Lifecycle & Internals` | Disposal, finalizers, initialization, singleton/handle lifecycle — consumer-visible runtime behaviour, not build plumbing. |
+| `Platform` | Platform-**support** changes: a target added or dropped, new native assets, TFM realignment. |
+| `Security` | Bundled native-dependency refreshes and security fixes. |
 
-Occasionally a minor ships previews but is **skipped** before going stable — e.g. `4.147`
-was previewed but abandoned in favour of `4.148`. **The script handles all of this for you**
-and records the outcome in the file's data-block; you only render what's there:
+You choose which of the six to include — a section appears only when it has a real
+product-facing bullet, and you may use as few as one. Prefer fewer, denser
+sections over many one-bullet ones. **Curate, don't enumerate:** each bullet
+MERGES related PRs into one product theme (aim 3-5 bullets per section on a big
+release; 1-2 is perfectly fine on a servicing release — never merge distinct areas
+just to hit a count), with a `lead` (bold summary) + `detail` (what it means for
+the consumer) + the `prs`. The renderer adds the PR links and the ❤️ community
+credit — never write those yourself. A change with a migration usually belongs in
+`breaking`; don't also give it its own thin category section unless it has
+independent product value. Placement rule of thumb: ordinary fixes go under **Bug
+Fixes** even when platform-specific; use **Platform** only for platform-support
+additions or removals.
+- Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
+- Bad: `{"heading": "Bugfixes", …}` (not one of the six) · one bullet per PR restating its title · a section that lists 20 internal PRs.
 
-- The diff base is already chosen and baked into the `from..to` range, so a skipped line is
-  rolled up automatically (e.g. `4.148`'s data already covers all the `4.147` work). You never
-  pick a base yourself — just summarise the PRs in the file.
-- A `superseded:` line means the version was a preview that never shipped stable. Render the
-  script-generated *"Preview only · Superseded by …"* header (kept verbatim).
-- A `supersedes:` line is the two-way back-link on the successor page. Render the
-  script-generated *"Supersedes …"* note (kept verbatim).
+### `contributor_summaries` — one line per roster login
+`data.contributors` is authoritative — every login there needs an entry (the
+renderer fails otherwise) and no one else gets one. Summarise that person's work
+in prose; the renderer adds their `@handle` and PR links. This is the one place
+`internal` work is worth naming — a contributor's sample or CI work still deserves
+credit even though it never became a category bullet.
+- Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
+- Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
 
-> You never compute supersession or base selection — just render whatever markers the file
-> contains. The mechanics (and the optional `scripts/versions.json` overrides) are script
-> internals.
+### `preview_summaries` — one line per preview key
+`data.previews` lists each preview/RC with the PRs that first shipped in it. Give
+each `key` a 1-2 sentence summary of what that milestone delivered. When a preview
+only carried internal work, describe the milestone itself (e.g. "opened the line"
+or "cut the release candidate") rather than forcing a product story.
+- Good: `"4.148.0-p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
+- Bad: leaving a preview key out (the renderer fails), or restating every PR.
 
-When polishing a superseded page, keep the script-generated *"Preview only · Superseded by …"*
-header and add a one-line note in Highlights that the work rolled up into the successor.
-When polishing a **successor** page, keep the script-generated *"Supersedes …"* note and add a
-one-line note in Highlights that the skipped preview work is rolled up cumulatively.
+### `harfbuzz_summary` — one short paragraph, or `null`
+HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
+`## HarfBuzzSharp X.Y.Z` section on this page, not a separate page. `data.harfbuzz`
+gives the version and `prs` — the PRs in this release that touched the HarfBuzz
+binding (a subset of the page's PRs, so you have already written about most of them
+above). Summarise the HarfBuzz-facing story in 1-2 sentences; the renderer adds the
+heading, the ❤️ credit and the PR links.
+- Required only when `data.harfbuzz.prs` is non-empty. When it is empty the renderer
+  writes "No HarfBuzzSharp binding changes shipped…" itself — set `harfbuzz_summary`
+  to `null`. When `data.harfbuzz` is absent (e.g. an unreleased head), omit it.
+- Good: `"Adds variable-font shaping and an HBColor value type, and refreshes the bundled HarfBuzz to 8.3.0."`
+- Bad: re-listing every PR, or repeating the SkiaSharp highlights verbatim.
 
-### Step 4 — Write polished pages
+## Why this is short
 
-For **every file** listed in the script's "Files to polish" output, write polished release
-notes **below the raw data HTML comment block**. 
-
-**CRITICAL: Preserve the raw data comment.** The `<!-- RAW PR DATA ... -->` comment block at
-the top of the file must remain intact. Replace everything AFTER it (the skeleton heading and
-placeholder) with polished content. When you write the polished content, start with the
-`<!-- Generated: ... -->` timestamp line, then the `# Version X.Y.Z` heading, then the rest.
-
-The final file structure should be:
-
-```markdown
-<!-- RAW PR DATA — Do not remove this comment block. ... -->
-
-<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->
-
-# Version X.Y.Z
-
-> **theme** · status · links
-
-## Highlights
-...
-```
-
-Each file has its own HTML comment block with version, status, branch, and diff range.
-
-**CRITICAL: Each file is independent.** Only use the raw PR data that is IN THAT FILE.
-Do NOT combine data from other files. For example, if `3.119.4-unreleased.md` has 4 PRs
-and `3.119.4.md` has 101 PRs, the unreleased file should only cover those 4 PRs — it is
-NOT a rollup of the version file.
-
-Follow these rules:
-
-1. **Highlights** — 1-3 sentences. What's the story? Lead with the biggest changes.
-   Mention community contributors by linked name.
-
-2. **Skia engine** — If a "Bump skia" or "milestone" PR appears in the raw data,
-   list it first under an **Engine** category.
-
-3. **Categorize features** — Group by what they affect. Use sub-headers:
-   Engine, GPU & Rendering, API Surface, Text & Fonts, Platform, Security, etc.
-   Each item: **bold title** — description. ❤️ [@contributor](https://github.com/contributor) ([#NNN](url))
-
-4. **Community contributors** — Anyone not @mattleibow. Mark with ❤️ inline AND
-   in a Contributors table. **ALWAYS** link: `[@user](https://github.com/user)`.
-   Never write bare `@user` anywhere in the file.
-
-5. **Omit noise** — Skip version bumps, CI-only fixes, doc updates, workflow/skill changes.
-   If many, mention as: "Plus several CI and documentation improvements."
-
-6. **Breaking changes** — If any, list under `### ⚠️ Breaking Changes` after Highlights.
-
-7. **PR links** — Every item links to its PR.
-
-8. **Generation timestamp** — Always include `<!-- Generated: YYYY-MM-DDTHH:MM:SSZ by {model-name} -->`
-   as the first line AFTER the raw data comment block (before the `# Version` heading).
-   Use the current UTC time and your model name.
-
-9. **Rollup at top** — Aggregate ALL changes across all previews into the main sections.
-
-10. **Previews are minimal** — One sentence + changelog link each, at the bottom.
-
-11. **Links section** — Full Changelog, NuGet Package, API Diff.
-
-## Parallelization
-
-When regenerating multiple versions, process them in parallel — each version is independent.
-Fetch all raw data in one script call, then launch one agent per version to write the polished page.
-
-> This applies to **interactive/manual** use where sub-agents are available. When running
-> unattended (e.g. the automated workflow), just polish the listed files **sequentially** in
-> the one agent — do not try to spawn sub-agents.
+There is no separate template, grouping guide, or checklist to reconcile — the
+renderer is the checklist, and this file is the only instructions. If a rule
+isn't here, it's because the renderer already guarantees it. Write the prose;
+let the script build the page.

@@ -209,5 +209,138 @@ namespace SkiaSharp.Tests
 			using var clonedPaint = paint.Clone();
 			using var clonedPaint2 = paint.Clone();
 		}
+
+		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
+		public void GetFastBoundsWithBlurOutsetsByThreeSigma()
+		{
+			const float sigma = 4.5f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// A fill paint adds no stroke inflation, so the blur mask filter outsets the
+			// source rect by 3 * sigma on every edge.
+			var pad = 3f * sigma;
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
+		}
+
+		[Fact]
+		public void GetFastBoundsFillWithNoEffectsReturnsSource()
+		{
+			using var paint = new SKPaint();
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// Filling with no geometry-affecting effects cannot grow the bounds.
+			Assert.Equal(src, bounds);
+		}
+
+		[Fact]
+		public void GetFastBoundsStrokeOutsetsByHalfStrokeWidth()
+		{
+			const float strokeWidth = 12f;
+			using var paint = new SKPaint
+			{
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = strokeWidth,
+				StrokeJoin = SKStrokeJoin.Round,
+				StrokeCap = SKStrokeCap.Round,
+			};
+
+			var src = new SKRect(10, 20, 110, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// Round join and round cap give an inflation multiplier of 1, so the rect
+			// outsets by strokeWidth / 2 on every edge.
+			var pad = strokeWidth / 2f;
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
+		}
+
+		[Fact]
+		public void GetFastBoundsComposesStrokeAndBlur()
+		{
+			const float sigma = 5f;
+			const float strokeWidth = 8f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint
+			{
+				Style = SKPaintStyle.Stroke,
+				StrokeWidth = strokeWidth,
+				StrokeJoin = SKStrokeJoin.Round,
+				StrokeCap = SKStrokeCap.Round,
+				MaskFilter = blur,
+			};
+
+			var src = new SKRect(20, 20, 120, 120);
+			Assert.True(paint.GetFastBounds(src, out var bounds));
+
+			// The paint composes effects: the stroke inflates by strokeWidth / 2, then the
+			// blur outsets that result by 3 * sigma.
+			var pad = (strokeWidth / 2f) + (3f * sigma);
+			Assert.Equal(src.Left - pad, bounds.Left, 3);
+			Assert.Equal(src.Top - pad, bounds.Top, 3);
+			Assert.Equal(src.Right + pad, bounds.Right, 3);
+			Assert.Equal(src.Bottom + pad, bounds.Bottom, 3);
+		}
+
+		[Fact]
+		public void GetFastBoundsDoesNotModifySource()
+		{
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 5f);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(10, 10, 60, 60);
+			var original = src;
+
+			Assert.True(paint.GetFastBounds(src, out _));
+
+			Assert.Equal(original, src);
+		}
+
+		[Fact]
+		public void GetFastBoundsReturnsTrueForSimplePaints()
+		{
+			var src = new SKRect(0, 0, 50, 50);
+
+			using var fill = new SKPaint();
+			Assert.True(fill.GetFastBounds(src, out _));
+
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6f);
+			using var blurred = new SKPaint { MaskFilter = blur };
+			Assert.True(blurred.GetFastBounds(src, out _));
+
+			using var stroked = new SKPaint { Style = SKPaintStyle.Stroke, StrokeWidth = 4 };
+			Assert.True(stroked.GetFastBounds(src, out _));
+		}
+
+		[Fact]
+		public void GetFastBoundsMatchesNativeApi()
+		{
+			const float sigma = 3.25f;
+			using var blur = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, sigma);
+			using var paint = new SKPaint { MaskFilter = blur };
+
+			var src = new SKRect(5, 15, 95, 135);
+
+			Assert.True(paint.GetFastBounds(src, out var managed));
+
+			SKRect native;
+			unsafe
+			{
+				SkiaApi.sk_paint_compute_fast_bounds(paint.Handle, &src, &native);
+			}
+
+			Assert.Equal(native, managed);
+		}
 	}
 }

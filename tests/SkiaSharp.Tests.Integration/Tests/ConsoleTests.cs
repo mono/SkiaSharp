@@ -15,8 +15,10 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
         var projectName = "SkiaSharpConsoleTest";
         var projectDir = Path.Combine(TestDir, projectName);
         
-        // Run from TestDir (which has global.json) using relative paths
-        await Run("dotnet", $"new console -n {projectName} -o {projectName}");
+        // Run from TestDir (which has global.json) using relative paths. Pin the template
+        // framework to keep the generated TFM aligned with the .NET 10 SDK band even when a
+        // newer (e.g. net11.0) SDK is installed on the machine.
+        await Run("dotnet", $"new console -n {projectName} -o {projectName} -f {BaseFramework}");
         await Run("dotnet", $"add {projectName} package SkiaSharp --version {SkiaVersion}");
         
         var drawCode = TestImage.GetDrawCode();
@@ -53,8 +55,9 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
         var projectName = "HarfBuzzConsoleTest";
         var projectDir = Path.Combine(TestDir, projectName);
         
-        // Run from TestDir (which has global.json) using relative paths
-        await Run("dotnet", $"new console -n {projectName} -o {projectName}");
+        // Run from TestDir (which has global.json) using relative paths. Pin the template
+        // framework to keep the generated TFM aligned with the .NET 10 SDK band.
+        await Run("dotnet", $"new console -n {projectName} -o {projectName} -f {BaseFramework}");
         await Run("dotnet", $"add {projectName} package SkiaSharp --version {SkiaVersion}");
         await Run("dotnet", $"add {projectName} package HarfBuzzSharp --version {HarfBuzzVersion}");
         
