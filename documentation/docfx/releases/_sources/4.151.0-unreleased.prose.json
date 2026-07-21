@@ -1,20 +1,35 @@
 {
-  "theme": "Managed math and WASM hardening",
-  "highlights_headline": "Color conversion hot paths are ported to managed integer math, and WASM gains exception-handling support for .NET's new exnref mode.",
-  "highlights_body": null,
+  "theme": "m151 fixes and performance ports",
+  "highlights_headline": "SkiaSharp 4.151.0-unreleased merges upstream Skia m151 bug fixes and ports two colour-conversion hot paths to managed code.",
+  "highlights_body": "SKColor-to-SKColorF conversion and SKPMColor premultiply/unpremultiply now run entirely in managed integer math, eliminating P/Invoke round-trips. The WASM target gains an exception-handling regression test and the emsdk 5.0.6 exnref libraries.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upstream Skia m151 bug fixes merged",
+          "detail": "Syncs the latest upstream chrome/m151 bug fixes into the bundled Skia renderer.",
+          "prs": [4489]
+        },
+        {
+          "lead": "CPU raster regression corrected",
+          "detail": "Restores SK_ENABLE_LEGACY_SHADERCONTEXT so CPU-rasterised surfaces produce correct output after the m151 sync.",
+          "prs": [4428]
+        }
+      ]
+    },
     {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKColor and SKColorF conversion ported to managed C#",
-          "detail": "The SKColor-to-SKColorF round-trip is now computed in managed integer math, removing a P/Invoke call on every conversion.",
+          "lead": "SKColor-to-SKColorF conversion ported to managed math",
+          "detail": "The hot-path SKColor → SKColorF conversion now runs in managed C# integer arithmetic, removing a P/Invoke round-trip on every call.",
           "prs": [4370]
         },
         {
           "lead": "SKPMColor premultiply/unpremultiply ported to managed math",
-          "detail": "Single-value premultiply and unpremultiply are now handled entirely in managed code, eliminating a native interop call per pixel on hot colour paths.",
+          "detail": "Single-value premultiply and unpremultiply operations now use managed integer math instead of native calls, reducing interop overhead.",
           "prs": [4385]
         }
       ]
@@ -23,9 +38,9 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WASM exception-handling regression tests added",
-          "detail": "A preview-.NET test job validates that SkiaSharp WASM builds compiled with the new exnref exception-handling model do not regress, catching issues before they reach a release.",
-          "prs": [4488]
+          "lead": "Emscripten 5.0.6 exnref libraries for WASM",
+          "detail": "Builds the emsdk 5.0.6 static libraries with new exnref exception handling, and adds a preview-.NET WASM test job to catch exception-handling regressions.",
+          "prs": [4487, 4488]
         }
       ]
     }
