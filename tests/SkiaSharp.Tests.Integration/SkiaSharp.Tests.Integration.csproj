@@ -19,6 +19,13 @@
          with no version fails fast via the ValidateVersions target below. -->
     <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
     <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
+
+    <!-- Framework band for the generated temp projects. Defaults to net10.0. To smoke-test the
+         packages on a newer band (e.g. a .NET 11 preview), override all three, e.g.:
+         dotnet test -p:BaseFramework=net11.0 -p:SdkVersion=11.0.100-preview.6 -p:SdkAllowPrerelease=true -->
+    <BaseFramework Condition="'$(BaseFramework)' == ''">net10.0</BaseFramework>
+    <SdkVersion Condition="'$(SdkVersion)' == ''">10.0.100</SdkVersion>
+    <SdkAllowPrerelease Condition="'$(SdkAllowPrerelease)' == ''">false</SdkAllowPrerelease>
     
     <!-- Device configuration - can be overridden via command line -->
     <!-- dotnet test -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5" -->
@@ -35,7 +42,11 @@
 
   <ItemGroup>
     <PackageReference Include="Appium.WebDriver" Version="5.1.0" />
-    <PackageReference Include="Microsoft.Playwright" Version="1.49.0" />
+    <!-- Playwright 1.55 bundles Chromium 140, which supports the WebAssembly exception-handling
+         (exnref) feature the .NET 11 WASM runtime requires. Older Chromium (e.g. 131, bundled by
+         Playwright 1.49) aborts Blazor WASM startup on net11 with a "doesn't support WASM exception
+         handling" CompileError, so it cannot boot net11 apps under test. -->
+    <PackageReference Include="Microsoft.Playwright" Version="1.55.0" />
     <PackageReference Include="xunit.v3" Version="3.2.2" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="1.9.1" />
     <PackageReference Include="Microsoft.Testing.Extensions.HangDump" Version="1.9.1" />
@@ -57,6 +68,9 @@
   <ItemGroup>
     <RuntimeHostConfigurationOption Include="SkiaSharpVersion" Value="$(SkiaSharpVersion)" />
     <RuntimeHostConfigurationOption Include="HarfBuzzSharpVersion" Value="$(HarfBuzzSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="BaseFramework" Value="$(BaseFramework)" />
+    <RuntimeHostConfigurationOption Include="SdkVersion" Value="$(SdkVersion)" />
+    <RuntimeHostConfigurationOption Include="SdkAllowPrerelease" Value="$(SdkAllowPrerelease)" />
     <RuntimeHostConfigurationOption Include="iOSDevice" Value="$(iOSDevice)" />
     <RuntimeHostConfigurationOption Include="iOSVersion" Value="$(iOSVersion)" />
     <RuntimeHostConfigurationOption Include="AndroidDevice" Value="$(AndroidDevice)" />
