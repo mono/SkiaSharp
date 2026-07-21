@@ -15,12 +15,8 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 Task ("Default")
     .Does (() =>
 {
-    // SkiaSharp.Tests.Wasm.csproj imports binding/IncludeNativeAssets.SkiaSharp.targets,
-    // which forwards the emdawnwebgpu port at emcc link time under net9.0+. The
-    // port ships inside the WASM native artifact (staged into
-    // output/native/wasm/emdawnwebgpu_pkg by the externals-emdawnwebgpu cake
-    // task), so the test agent already has it after downloading the native
-    // artifacts — no on-demand sync needed here.
+    // The emdawnwebgpu port ships inside the WASM native artifact, so the test
+    // agent already has it after downloading the native artifacts.
     FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Wasm/SkiaSharp.Tests.Wasm.csproj";
 
     var previewTfm = Argument("previewtfm", false);

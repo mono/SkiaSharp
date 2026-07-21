@@ -13,11 +13,8 @@ Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
-    // SkiaSharp.NativeAssets.WebAssembly.csproj packs the emdawnwebgpu port from
-    // output/native/wasm/emdawnwebgpu_pkg into buildTransitive/netstandard1.0/
-    // emdawnwebgpu_pkg/. The port is produced by the WASM native build and ships
-    // inside the native artifact this pack job downloads (alongside the
-    // libSkiaSharp*.a files), so there is no on-demand sync at pack time.
+    // The WebAssembly package's emdawnwebgpu port is packed from the WASM native
+    // output, which this pack job downloads with the native artifacts.
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },

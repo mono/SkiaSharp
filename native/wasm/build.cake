@@ -9,25 +9,18 @@ string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("E
 string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "").ToLower()
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
-// Graphite/Dawn/WebGPU need Skia's is_canvaskit path, which m151 wrote against
-// the newer WebGPU headers only present in emsdk >= 3.1.51. The .NET-8 (3.1.34)
-// WASM matrix would fail to compile Dawn (WGPUBufferMapAsyncStatus_*, ShaderF16,
-// wgpu::Buffer::GetMapState, etc.), so drop back to a raster + ganesh-only build
-// there. Ganesh (WebGL) stays enabled either way.
+// Graphite/Dawn/WebGPU need Skia's is_canvaskit path, which requires the newer
+// WebGPU headers only present in emsdk >= 3.1.51. Older emsdk matrices build
+// raster + ganesh only; Ganesh (WebGL) stays enabled either way.
 bool SUPPORT_GRAPHITE = SUPPORT_GPU &&
     (string.IsNullOrEmpty(EMSCRIPTEN_VERSION) ||
      string.CompareOrdinal(EMSCRIPTEN_VERSION, "3.1.51") >= 0);
 
-// Dawn's WebGPU-C++ interface has diverged from Emscripten's built-in
-// `-sUSE_WEBGPU=1` port (deprecated in emsdk 4.0.10, removed in 4.0.18). Skia
-// m151+'s Graphite backend targets the newer interface and needs Dawn's own
-// `emdawnwebgpu` port instead. We fetch a pinned release tarball on demand so
-// (a) the source tree stays lean, (b) the port lives next to `externals/skia`
-// like all other native inputs, and (c) once staged into the WASM native output
-// (see the externals-emdawnwebgpu task below) the port ships inside the native
-// artifact, so pack + test agents get identical build inputs without re-fetching.
-// The pin (tag / SHA512) and the sync helper live here because the WASM native
-// build is now the only thing that fetches the port.
+// Skia's Graphite backend needs Dawn's `emdawnwebgpu` Emscripten port (the
+// built-in `-sUSE_WEBGPU=1` port is gone). The WASM native build fetches a
+// pinned release and stages it into the native output (see the
+// externals-emdawnwebgpu task), so it ships inside the native artifact and
+// pack + test agents consume it from there without re-fetching.
 string EMDAWN_TAG = "v20260624.223603";
 string EMDAWN_SHA512 = "615257384ad7df17174c5733c17d8ac0473dfdcddeac69e334d7109501954dc42e77ed54deb666bf44581fcf8e69c2365311626786cd267e52a3d48d7a9441c5";
 DirectoryPath EMDAWN_ROOT = ROOT_PATH.Combine("externals/emdawnwebgpu_pkg");
@@ -145,23 +138,12 @@ Task("libSkiaSharp")
         .Where(f => !f.StartsWith("_"))
         .ToArray();
 
-    // Skia's Dawn-on-WebGPU sources include <webgpu/webgpu.h> and
-    // <webgpu/webgpu_cpp.h>. Historically Emscripten's `-sUSE_WEBGPU=1` port
-    // dropped those into `emsdk/system/include/webgpu/`, so a static-archive
-    // build like this one got them "for free" without ever passing -sUSE_WEBGPU
-    // at compile time. That port was deprecated in emsdk 4.0.10 and removed in
-    // 4.0.18, so we forward `--use-port=<emdawnwebgpu.port.py>` to emcc, which
-    // registers the same include paths + link-time JS glue via Dawn's own port.
-    // Kept out of extra_cflags_cc because emcc reads it from extra_cflags too
-    // (and duplicating triggers "port already loaded" diagnostics).
-    // Skia's Graphite Dawn sources are riddled with `#if defined(__EMSCRIPTEN__)`
-    // branches that assume Emscripten's *old* -sUSE_WEBGPU=1 headers
-    // (ShaderModuleWGSLDescriptor, VertexBufferNotUsed, ComputePassTimestampWrites,
-    // legacy OnSubmittedWorkDone). emdawnwebgpu delivers the *native* Dawn API
-    // through the Emscripten toolchain, so we need Skia to take its native-Dawn
-    // `#else` branches. The mono/skia carry-patch on this submodule redirects
-    // every such gate to also check `!defined(SKIA_USING_EMDAWNWEBGPU)`;
-    // defining it here activates that override. Only meaningful under the port.
+    // Forward Dawn's emdawnwebgpu port to emcc: `--use-port` registers the
+    // port's include paths + link-time JS glue, and `-DSKIA_USING_EMDAWNWEBGPU=1`
+    // activates the submodule carry-patch that makes Skia's Graphite Dawn sources
+    // take their native-Dawn code paths. Passed only via extra_cflags (not
+    // extra_cflags_cc) — emcc reads it from both and duplicating triggers
+    // "port already loaded".
     string emdawnPortArg = SUPPORT_GRAPHITE
         ? $", '--use-port={EMDAWN_ROOT.CombineWithFilePath("emdawnwebgpu.port.py")}'"
           + ", '-DSKIA_USING_EMDAWNWEBGPU=1'"
@@ -171,11 +153,9 @@ Task("libSkiaSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
-        // is_canvaskit is the Skia switch that makes :graphite's Dawn-backed
-        // sources resolve <webgpu/webgpu_cpp.h> via the Emscripten-style
-        // bindings header layout (as opposed to native-Dawn generated headers
-        // that only exist off-tree). emdawnwebgpu ships that same layout, so
-        // we keep is_canvaskit tracking SUPPORT_GRAPHITE.
+        // is_canvaskit makes Skia's Graphite Dawn sources resolve
+        // <webgpu/webgpu_cpp.h> via the Emscripten-style header layout that
+        // emdawnwebgpu ships, so it tracks SUPPORT_GRAPHITE.
         $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +

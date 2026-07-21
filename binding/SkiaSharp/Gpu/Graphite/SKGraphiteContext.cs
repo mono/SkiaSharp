@@ -89,9 +89,9 @@ namespace SkiaSharp
 
 			var ctx = new SKGraphiteContext (handle, true);
 
-			// Variant A — transfer GCHandle ownership. The Skia context's Vulkan dispatch
-			// lambda captured the function pointer + userData by value; SKGraphiteContext
-			// is now responsible for keeping the underlying managed delegate alive.
+			// The Skia context's Vulkan dispatch lambda captured the function
+			// pointer + userData by value, so SKGraphiteContext takes over keeping
+			// the underlying managed delegate alive.
 			ctx.AttachPinnedBackendDelegate (backendContext.TransferGetProcHandle ());
 
 			return ctx;
