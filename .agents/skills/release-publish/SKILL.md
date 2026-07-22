@@ -45,7 +45,7 @@ Publish packages to NuGet.org and finalize releases.
 │  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
-│  8. Close Milestone      → Close this version's milestone (all)    │
+│  8. Milestone Hygiene    → Audit/sync assignments, then close      │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -333,7 +333,36 @@ example. Process:
 
 ---
 
-## Step 8: Close Milestone (Every Release)
+## Step 8: Milestone Hygiene (Every Release)
+
+Because the tag now exists (Step 4), this release counts as **shipped** — so this is the
+moment to (8a) sync every milestone assignment for the line, then (8b) close this version's
+milestone. Do both, in order.
+
+### 8a. Sync milestone assignments (run the audit)
+
+[`audit-milestones.ps1`](../../../scripts/infra/milestones/audit-milestones.ps1) walks the
+release branches for the line and assigns every merged PR — and the issues it closed — to the
+milestone of the release it actually **shipped** in. It's idempotent and self-correcting, so
+running it at every publish keeps milestones clean incrementally (an unshipped preview's PRs
+roll forward to the next shipped release; commits not yet in any shipped release are left alone).
+
+Pass the **base line** version (`X.Y.Z`, no `-preview`/`-rc` suffix — the script audits the
+whole line). Dry-run first, review, then apply:
+
+```bash
+# Review what would change (read-only)
+pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun -Version {X.Y.Z}
+
+# Apply
+pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
+```
+
+> See [`scripts/infra/milestones/README.md`](../../../scripts/infra/milestones/README.md) for
+> the full algorithm. The header prints which cadence branches shipped (have a tag) vs. rolled
+> forward, so you can sanity-check before applying.
+
+### 8b. Close this version's milestone
 
 **Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
 GitHub milestone for every version in the cadence, so each published version has its
