@@ -377,9 +377,7 @@ jobs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
                 image: skiasharp:skiasharp
-                # Windows container images are built for the (Windows) host and cannot cross-build
-                # from linux/amd64, so the platform flag is only passed for non-Windows agents.
-                buildArguments: ${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), '', '--platform linux/amd64 ') }}--tag skiasharp ${{ parameters.dockerArgs }}
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
@@ -389,7 +387,7 @@ jobs:
                 command: build
                 buildContext: ${{ parameters.docker }}
                 dockerfile: ${{ parameters.docker }}/Dockerfile
-                arguments: ${{ iif(eq(parameters.buildAgent.pool.os, 'windows'), '', '--platform linux/amd64 ') }}--tag skiasharp ${{ parameters.dockerArgs }}
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
           # Run the target inside the image against the mounted repo. Linux and Windows containers
           # differ in shell and mount path, so the run step is branched by agent OS.
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
