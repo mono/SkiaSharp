@@ -16,9 +16,19 @@ namespace HarfBuzzSharp
 
 		public static UnicodeFunctions Empty => emptyFunctions.Value;
 
+		// true when this wrapper owns the native handle and must destroy it on dispose;
+		// false when it merely borrows a handle owned by another object (e.g. a buffer).
+		private readonly bool owns = true;
+
 		internal UnicodeFunctions (IntPtr handle)
 			: base (handle)
 		{
+		}
+
+		internal UnicodeFunctions (IntPtr handle, bool owns)
+			: base (handle)
+		{
+			this.owns = owns;
 		}
 
 		public UnicodeFunctions (UnicodeFunctions parent) : base (IntPtr.Zero)
@@ -196,7 +206,7 @@ namespace HarfBuzzSharp
 
 		protected override void DisposeHandler ()
 		{
-			if (Handle != IntPtr.Zero) {
+			if (owns && Handle != IntPtr.Zero) {
 				HarfBuzzApi.hb_unicode_funcs_destroy (Handle);
 			}
 		}
