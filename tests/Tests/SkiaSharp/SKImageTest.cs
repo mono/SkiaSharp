@@ -53,7 +53,7 @@ namespace SkiaSharp.Tests
 
 			CollectGarbage();
 
-			var process = System.Diagnostics.Process.GetCurrentProcess();
+			using var process = System.Diagnostics.Process.GetCurrentProcess();
 			process.Refresh();
 			var before = process.PrivateMemorySize64;
 
@@ -64,9 +64,7 @@ namespace SkiaSharp.Tests
 				Assert.Null(image);
 			}
 
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
+			CollectGarbage();
 
 			process.Refresh();
 			var grownBytes = process.PrivateMemorySize64 - before;
