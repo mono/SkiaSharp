@@ -87,8 +87,9 @@ Each leg is a bootstrapper job in the `tests` stage that:
 - publishes the TRX via `PublishTestResults@2` (Azure DevOps Tests tab) and the
   `testlogs_container_<platform>` artifact.
 
-The legs are non-gating (`continueOnError: true`): container runtimes have legitimate environment
-differences (e.g. fonts) that can fail individual tests without indicating a SkiaSharp regression.
+The legs are gating: a genuine test failure fails the build. Environment differences that are not
+SkiaSharp regressions — most notably the fontless `nodeps` and Nano Server builds — are handled by
+the runtime self-skip helpers (see [Fonts](#fonts) below), so those tests skip rather than fail.
 
 The Nano Server leg requires a Windows agent with container support (matching the `ltsc2022` image
 base) and pulls the Nano Server .NET SDK image.
