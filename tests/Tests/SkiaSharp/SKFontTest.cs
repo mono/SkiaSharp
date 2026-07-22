@@ -88,6 +88,7 @@ namespace SkiaSharp.Tests
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
@@ -107,6 +108,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void ContainsTextIsCorrect()
 		{
 			const string text = "A";
@@ -119,6 +121,7 @@ namespace SkiaSharp.Tests
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void ContainsUnicodeTextIsCorrect()
 		{
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
@@ -153,6 +156,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void MeasureTextMeasuresTheText()
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -163,6 +167,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void MeasureTextMeasuresTheTextForBytes()
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -182,6 +187,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void MeasureTextReturnsTheBounds()
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -193,6 +199,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void MeasureTextReturnsTheBoundsForBytes()
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -275,6 +282,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void GetGlyphWidthsAreCorrect()
 		{
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts for glyph width measurement");
@@ -301,6 +309,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public unsafe void TextInterceptsAreFoundCorrectly()
 		{
 			var text = "|";
@@ -333,6 +342,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void GetTextPathWithPositionsProducesNonEmptyPath()
 		{
 			var font = new SKFont();
@@ -352,6 +362,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void GetTextPathWithPositionsMatchesExpectedBounds()
 		{
 			var font = new SKFont();
@@ -382,6 +393,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextEncoding.Utf32, "a", 4)]
 		[InlineData(SKTextEncoding.GlyphId, "ä", 2)]
 		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -440,6 +452,7 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(-1)]
 		[InlineData(1 << 17)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -463,6 +476,7 @@ namespace SkiaSharp.Tests
 		[Theory]
 		[InlineData(-1)]
 		[InlineData(1 << 17)]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void BreakTextHandlesLongText(int textSize)
 		{
 			var font = new SKFont(SKTypeface.Default);
@@ -560,6 +574,7 @@ namespace SkiaSharp.Tests
 		// the parameterless ctor stays useful for text measurement.
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void DefaultFontTypefaceIsDefault()
 		{
 			using var font = new SKFont();
@@ -596,6 +611,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void FontWithDefaultCanMeasure()
 		{
 			using var font = new SKFont(SKTypeface.Default);

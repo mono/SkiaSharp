@@ -76,6 +76,7 @@ namespace SkiaSharp.Tests
 
 		// Test for issue #276
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");

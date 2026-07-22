@@ -378,6 +378,11 @@ stages:
         # against the mounted repo. Native libraries come from the merged `native` artifact
         # (requiredArtifacts); `--nativePlatform` selects which build to run against. Non-gating
         # because container runtimes have legitimate environment differences (e.g. fonts).
+        #
+        # Builds that can't enumerate system fonts (NoDependencies Linux, built skia_use_fontconfig=
+        # false, and Nano Server) pass `--skipSystemFonts`, which excludes the
+        # [Trait("Category","RequiresSystemFonts")] tests. This is an interim filter; when those tests
+        # learn to self-skip on a fontless environment it can be dropped from the legs here.
         # See documentation/dev/containerized-testing.md.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux glibc)
           parameters:
@@ -403,6 +408,33 @@ stages:
                   testRunTitle: 'Linux Container Tests'
             publishArtifacts:
               - name: testlogs_container_linux
+                always: true
+                path: 'output/logs/testlogs'
+        # Linux NoDependencies (glibc, built without fontconfig — no enumerable system fonts).
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux NoDeps)
+          parameters:
+            name: tests_container_linux_nodeps
+            displayName: Container (Linux NoDeps)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/glibc
+            target: tests-container
+            additionalArgs: --nativePlatform=linuxnodeps --skipSystemFonts=true
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            continueOnError: true
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Linux NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux NoDeps Container Tests'
+            publishArtifacts:
+              - name: testlogs_container_linux_nodeps
                 always: true
                 path: 'output/logs/testlogs'
         # Linux Alpine (musl).
@@ -432,8 +464,36 @@ stages:
               - name: testlogs_container_alpine
                 always: true
                 path: 'output/logs/testlogs'
+        # Linux Alpine NoDependencies (musl, built without fontconfig — no enumerable system fonts).
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Alpine NoDeps)
+          parameters:
+            name: tests_container_alpine_nodeps
+            displayName: Container (Alpine NoDeps)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/alpine
+            target: tests-container
+            additionalArgs: --nativePlatform=alpinenodeps --skipSystemFonts=true
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            continueOnError: true
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Alpine NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Alpine NoDeps Container Tests'
+            publishArtifacts:
+              - name: testlogs_container_alpine_nodeps
+                always: true
+                path: 'output/logs/testlogs'
         # Windows Nano Server. Requires a Windows agent with container support; builds and runs the
-        # suite in the Nano Server .NET SDK image against the nanoserver native build.
+        # suite in the Nano Server .NET SDK image against the nanoserver native build. Nano Server has
+        # no enumerable system fonts, so --skipSystemFonts=true is passed.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
@@ -441,7 +501,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows }}
             docker: scripts/infra/tests/docker/nanoserver
             target: tests-container
-            additionalArgs: --nativePlatform=nanoserver
+            additionalArgs: --nativePlatform=nanoserver --skipSystemFonts=true
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false

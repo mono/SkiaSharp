@@ -238,6 +238,7 @@ namespace SkiaSharp.Tests
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[Fact]
 		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
@@ -258,6 +259,7 @@ namespace SkiaSharp.Tests
 
 		[Fact]
 		[Obsolete ("Tests obsolete SKTypeface.ContainsGlyphs — see SKFontTest for non-obsolete equivalents")]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void ContainsGlyphsWithByteSpanDoesNotStackOverflow ()
 		{
 			using var typeface = SKTypeface.Default;
@@ -598,6 +600,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void DefaultFamilyNameIsNotNullOrEmpty()
 		{
 			Assert.NotNull(SKTypeface.Default.FamilyName);
@@ -605,6 +608,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void DefaultIsNotEmpty()
 		{
 			Assert.False(SKTypeface.Default.IsEmpty);

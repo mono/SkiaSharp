@@ -112,3 +112,10 @@ just on the image:
 The Linux test config chooses `UnicodeFontFamilies` per libc — `Symbola` on glibc (from
 `ttf-ancient-fonts`) and `Noto Color Emoji` on musl (from `font-noto-emoji`), keyed off
 `PlatformConfiguration.IsGlibc`.
+
+Tests that need enumerable system fonts are tagged
+`[Trait("Category", "RequiresSystemFonts")]`. The non-fontconfig legs (`linuxnodeps`,
+`alpinenodeps`, `nanoserver`) pass `--skipSystemFonts`, which forwards
+`--filter-not-trait "Category=RequiresSystemFonts"` to the runner so those tests don't run. This is
+an interim filter kept in the leg definitions; it can be removed once those tests self-skip on a
+fontless environment.
