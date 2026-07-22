@@ -1,35 +1,145 @@
 name: Track - Artifact Sizes
 
-# Measures the on-disk size of every SkiaSharp / HarfBuzzSharp NuGet package and its
-# native binaries (per os/arch), for the latest nightly + released reference versions.
+# Measures the on-disk size of SkiaSharp / HarfBuzzSharp packages and their native
+# binaries. ONE workflow, two modes chosen by a shared `resolve` job (mirroring the
+# benchmark tracker's resolve → … → report shape):
 #
-# History is PERSISTED to the `aw-data` branch (sizes/artifact-sizes.json), not the
-# Actions cache — same model as the benchmark tracker, so the time-series survives
-# indefinitely. Each run restores the existing history from the branch, appends today,
-# and (only on main/schedule) hands the updated file to persist-aw-data.yml to commit.
+#   * nightly  (schedule / manual dispatch)
+#       Measures the latest nightly + released reference versions from the feeds, persists
+#       the time-series to the `aw-data` branch (sizes/index.json, via persist-aw-data.yml),
+#       and emits the shared interactive perf dashboard.
 #
-# It also emits the shared interactive dashboard: sizes are embedded fresh and the
-# benchmark dimension is fetched from the branch, so the artifact is the SAME unified
-# perf dashboard the benchmark workflow produces (time + allocations + size).
+#   * pr       (the AzDO nuget-publishing check run, or a manual dispatch with a build id)
+#       Reacts to the Azure DevOps job that already packed the NuGets — no rebuild here.
+#       Downloads that build's `nuget` artifact, measures every .nupkg + every file inside,
+#       diffs against the latest nightly baseline on `aw-data`, and posts/updates a size-diff
+#       PR comment. Informational only: never blocks, never writes to `aw-data`.
+#
+# Both modes share the measurement primitives in scripts/infra/perf/sizes/ (track.py's
+# measure_nupkg) and the render helpers in render_md.py.
+#
+# NOTE: `check_run` only triggers workflows on the default branch, so the pr mode is inert
+# until this file is merged to `main`. Validate it beforehand with `workflow_dispatch` and a
+# known PR `build_id`.
 
 on:
   schedule:
     - cron: "0 7 * * *"  # Daily at 07:00 UTC (offset from the 08:00 benchmark tracker)
   workflow_dispatch:
+    inputs:
+      build_id:
+        description: "PR mode: AzDO build id to measure. Leave empty for a nightly run."
+        required: false
+        type: string
+      pr_number:
+        description: "PR mode: PR number to comment on (optional; resolved from the build)."
+        required: false
+        type: string
+  check_run:
+    types: [completed]
 
 permissions:
   contents: read
 
 concurrency:
-  group: track-artifact-sizes
+  # nightly runs are a singleton (never cancel a persist); pr runs are keyed per build.
+  group: track-artifact-sizes-${{ github.event.check_run.id || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_id) || 'nightly' }}
   cancel-in-progress: false
 
 env:
   DATA_BRANCH: aw-data
 
 jobs:
-  track:
+  # --------------------------------------------------------------------------- #
+  # Shared entrypoint: pick the mode and, for pr mode, resolve the build/PR.
+  # --------------------------------------------------------------------------- #
+  resolve:
     if: github.repository_owner == 'mono'
+    runs-on: ubuntu-latest
+    outputs:
+      mode: ${{ steps.resolve.outputs.mode }}
+      build_id: ${{ steps.resolve.outputs.build_id }}
+      pr_number: ${{ steps.resolve.outputs.pr_number }}
+      build_url: ${{ steps.resolve.outputs.build_url }}
+    steps:
+      - name: Resolve mode + build
+        id: resolve
+        run: |
+          python3 - <<'PY'
+          import json, os, re, urllib.request
+
+          PACKAGE_CHECK = "mono-SkiaSharp (Package NuGets Package NuGets)"
+          event = os.environ["GITHUB_EVENT_NAME"]
+          payload = json.load(open(os.environ["GITHUB_EVENT_PATH"]))
+
+          mode, build_id, pr_number, build_url = "none", "", "", ""
+
+          if event == "schedule":
+              mode = "nightly"
+          elif event == "workflow_dispatch":
+              inp = payload.get("inputs") or {}
+              build_id = (inp.get("build_id") or "").strip()
+              if build_id:
+                  mode, pr_number = "pr", (inp.get("pr_number") or "").strip()
+              else:
+                  mode = "nightly"
+          elif event == "check_run":
+              cr = payload.get("check_run") or {}
+              app = (cr.get("app") or {}).get("slug")
+              if (app == "azure-pipelines"
+                      and cr.get("name") == PACKAGE_CHECK
+                      and cr.get("conclusion") == "success"):
+                  m = re.search(r"[?&]buildId=(\d+)", cr.get("details_url") or "")
+                  if m:
+                      build_id = m.group(1)
+                  else:
+                      parts = (cr.get("external_id") or "").split("|")
+                      if len(parts) > 1 and parts[1].isdigit():
+                          build_id = parts[1]
+                  prs = cr.get("pull_requests") or []
+                  if prs:
+                      pr_number = str(prs[0]["number"])
+                  if build_id:
+                      mode = "pr"
+
+          # For a check-run build with no PR hint (fork PR, or a push to a branch/main),
+          # verify via the build's source branch so main/push builds don't trigger a
+          # pointless ~1 GB download. Only refs/pull/<n>/merge builds proceed.
+          if mode == "pr" and build_id and not pr_number and event == "check_run":
+              try:
+                  url = ("https://dev.azure.com/dnceng-public/public/_apis/build/builds/"
+                         f"{build_id}?api-version=7.1")
+                  req = urllib.request.Request(url, headers={"User-Agent": "skiasharp-size-pr/1.0"})
+                  data = json.load(urllib.request.urlopen(req, timeout=60))
+                  mm = re.search(r"refs/pull/(\d+)/merge", data.get("sourceBranch", "") or "", re.I)
+                  if mm:
+                      pr_number = mm.group(1)
+                  else:
+                      print(f"::notice::build {build_id} is not a PR build "
+                            f"({data.get('sourceBranch')!r}); skipping")
+                      mode = "none"
+              except Exception as err:  # noqa: BLE001
+                  print(f"::warning::could not verify build {build_id}: {err}")
+                  mode = "none"
+
+          if mode == "pr" and build_id:
+              build_url = ("https://dev.azure.com/dnceng-public/public/_build/results"
+                           f"?buildId={build_id}")
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"mode={mode}\n")
+              fh.write(f"build_id={build_id}\n")
+              fh.write(f"pr_number={pr_number}\n")
+              fh.write(f"build_url={build_url}\n")
+          print(f"mode={mode} build_id={build_id or '-'} pr_number={pr_number or '-'}")
+          PY
+
+  # --------------------------------------------------------------------------- #
+  # Nightly: measure feed packages, persist history, render the dashboard.
+  # --------------------------------------------------------------------------- #
+  nightly:
+    needs: resolve
+    if: needs.resolve.outputs.mode == 'nightly'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
@@ -105,3 +215,83 @@ jobs:
           name: agent
           path: aw-upload
           if-no-files-found: warn
+
+  # --------------------------------------------------------------------------- #
+  # PR: measure the packages a PR build produced and post a size-diff comment.
+  # --------------------------------------------------------------------------- #
+  pr:
+    needs: resolve
+    if: needs.resolve.outputs.mode == 'pr'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Download + measure the PR's packages
+        run: |
+          python3 scripts/infra/perf/sizes/measure_pr.py \
+            --build-id "${{ needs.resolve.outputs.build_id }}" \
+            ${{ needs.resolve.outputs.pr_number && format('--pr-number {0}', needs.resolve.outputs.pr_number) || '' }} \
+            --output pr-sizes.json
+
+      - name: Fetch the nightly baseline from the data branch
+        # The nightly summary (sizes/index.json) points at the newest observation; the full
+        # per-file breakdown for that day lives in sizes/raw/<date>.json. Missing baseline is
+        # fine — the renderer then shows absolute sizes only.
+        run: |
+          base="https://raw.githubusercontent.com/${{ github.repository }}/${DATA_BRANCH}/sizes"
+          date=$(curl -fsSL "$base/index.json" \
+            | python3 -c "import sys,json; n=json.load(sys.stdin).get('nightly',[]); print(n[-1]['date'] if n else '')" \
+            || true)
+          if [ -n "$date" ] && curl -fsSL "$base/raw/$date.json" -o baseline.json; then
+            echo "restored baseline for $date"
+          else
+            echo "no nightly baseline available (absolute-only report)"
+            rm -f baseline.json
+          fi
+
+      - name: Render the size-diff comment
+        run: |
+          python3 scripts/infra/perf/sizes/render_pr_md.py \
+            --pr-sizes pr-sizes.json \
+            --baseline baseline.json \
+            --build-url "${{ needs.resolve.outputs.build_url }}" \
+            --output comment.md
+
+      - name: Post or update the PR comment
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const measurement = JSON.parse(fs.readFileSync('pr-sizes.json', 'utf8'));
+            const prNumber = measurement.prNumber
+              || Number('${{ needs.resolve.outputs.pr_number }}') || null;
+            if (!prNumber) {
+              core.warning('No PR number could be resolved; skipping comment.');
+              return;
+            }
+            const body = fs.readFileSync('comment.md', 'utf8');
+            const marker = '<!-- skiasharp-pr-artifact-sizes -->';
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+            if (existing) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+              core.info(`updated comment on PR #${prNumber}`);
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
+              core.info(`created comment on PR #${prNumber}`);
+            }

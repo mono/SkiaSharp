@@ -266,7 +266,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (effect));
 
 			names = effect.Uniforms.ToArray ();
-			uniforms = new Dictionary<string, Variable> ();
+			uniforms = new Dictionary<string, Variable> (names.Length);
 			data = effect.UniformSize is int size && size > 0
 				? SKData.Create (effect.UniformSize)
 				: SKData.Empty;

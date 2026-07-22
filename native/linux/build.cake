@@ -118,7 +118,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan=true " +
             bionicArgs +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-stdlib=libc++'{spectreFlags}{wordSizeDefine}{bionicDefine} ] " +
             $"extra_ldflags=[ '-stdlib=libc++', '-static-libgcc'{staticLibcxx}, '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
