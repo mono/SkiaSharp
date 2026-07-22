@@ -121,8 +121,6 @@ namespace SkiaSharp
 
 	public unsafe static class StringUtilities
 	{
-		internal const string NullTerminator = "\0";
-
 		// GetUnicodeStringLength
 
 		private static int GetUnicodeStringLength (SKTextEncoding encoding) =>
@@ -163,10 +161,34 @@ namespace SkiaSharp
 
 		internal static byte[] GetEncodedText (string text, SKTextEncoding encoding, bool addNull)
 		{
-			if (!string.IsNullOrEmpty (text) && addNull)
-				text += NullTerminator;
+			var span = text.AsSpan ();
 
-			return GetEncodedText (text.AsSpan (), encoding);
+			if (span.Length == 0 || !addNull)
+				return GetEncodedText (span, encoding);
+
+			return GetEncodedTextWithNullTerminator (span, encoding);
+		}
+
+		private static byte[] GetEncodedTextWithNullTerminator (ReadOnlySpan<char> text, SKTextEncoding encoding)
+		{
+			var enc = encoding switch {
+				SKTextEncoding.Utf8 => Encoding.UTF8,
+				SKTextEncoding.Utf16 => Encoding.Unicode,
+				SKTextEncoding.Utf32 => Encoding.UTF32,
+				_ => throw new ArgumentOutOfRangeException (nameof (encoding), $"Encoding {encoding} is not supported."),
+			};
+
+			var nullBytes = encoding.GetCharacterByteSize ();
+
+			fixed (char* t = text) {
+				var byteCount = enc.GetByteCount (t, text.Length);
+				var bytes = new byte[byteCount + nullBytes];
+				fixed (byte* b = bytes) {
+					enc.GetBytes (t, text.Length, b, byteCount);
+				}
+				// the remaining nullBytes stay zero, matching the encoding of a trailing '\0'
+				return bytes;
+			}
 		}
 
 		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
