@@ -167,6 +167,7 @@ if ($lastMb -ne $headSha) {
 
 $fixed = 0
 $correct = 0
+$errors = 0
 
 foreach ($range in $ranges) {
     $msTitle = $range.Title
