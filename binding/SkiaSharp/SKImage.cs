@@ -30,7 +30,13 @@ namespace SkiaSharp
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
 			using (var pixmap = new SKPixmap (info, pixels)) {
 				// don't use the managed version as that is just extra overhead which isn't necessary
-				return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseProxyForCoTaskMem, null));
+				var image = GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseProxyForCoTaskMem, null));
+				if (image == null) {
+					// the native image was not created, so the release proc will never run to
+					// free the buffer - free it now to avoid leaking the allocation
+					Marshal.FreeCoTaskMem (pixels);
+				}
+				return image;
 			}
 		}
 
