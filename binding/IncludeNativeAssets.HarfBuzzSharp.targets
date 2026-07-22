@@ -6,7 +6,17 @@
     <BuildArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant)</BuildArch>
   </PropertyGroup>
   
-  <ItemGroup Condition="!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop'))">
+  <!--
+    Explicit native-platform override (used by the containerized test legs). When
+    HarfBuzzSharpNativePlatform is set (e.g. 'nanoserver', 'alpine', 'linux'), copy the native library
+    from output/native/<HarfBuzzSharpNativePlatform>/<arch> ONLY, instead of the OS-derived globs below.
+    This is a real swap of the native build under test — see documentation/dev/containerized-testing.md.
+  -->
+  <ItemGroup Condition="'$(HarfBuzzSharpNativePlatform)' != '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(HarfBuzzSharpNativePlatform)\$(BuildArch)\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(HarfBuzzSharpNativePlatform)' == '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
