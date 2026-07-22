@@ -372,16 +372,12 @@ stages:
                 path: 'output/logs/testlogs'
         # TODO: add tests for linux no dependencies
 
-        # --- Containerized test legs (run by default, non-gating) -----------------------------
-        # Run the console test suite INSIDE a container using the standard bootstrapper `docker:`
-        # feature: it builds the env image with the approved Docker@2 task, then runs
-        # `dotnet cake --target=tests-container` against the mounted repo. The native library comes
-        # from the merged `native` artifact (requiredArtifacts) — never externals-download — and
-        # `--nativePlatform` makes the build copy ONLY that platform's library (a real swap via the
-        # SkiaSharp/HarfBuzzSharp NativePlatform MSBuild property). Legs are non-gating
-        # (continueOnError) while the known-failure baseline is established, but they run by default.
-        # (These legs intentionally do NOT flow use1ESPipelineTemplates: tests never run on the 1ES
-        # pipeline, and should fail loudly if they ever do.)
+        # --- Containerized test legs -----------------------------------------------------------
+        # Run the console test suite inside a container using the bootstrapper `docker:` feature: it
+        # builds the env image with the Docker@2 task, then runs `dotnet cake --target=tests-container`
+        # against the mounted repo. Native libraries come from the merged `native` artifact
+        # (requiredArtifacts); `--nativePlatform` selects which build to run against. Non-gating
+        # because container runtimes have legitimate environment differences (e.g. fonts).
         # See documentation/dev/containerized-testing.md.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux glibc)
           parameters:
@@ -394,9 +390,9 @@ stages:
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false
-            continueOnError: true          # NON-GATING until a known-failure baseline is agreed
+            continueOnError: true
             requiredArtifacts:
-              - name: native               # -> output/native/linux/<arch>/libSkiaSharp.so (never externals-download)
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Linux container test results
@@ -409,7 +405,7 @@ stages:
               - name: testlogs_container_linux
                 always: true
                 path: 'output/logs/testlogs'
-        # Linux Alpine (musl). Same feature, against the musl native build (--nativePlatform=alpine).
+        # Linux Alpine (musl).
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux Alpine)
           parameters:
             name: tests_container_alpine_linux
@@ -421,9 +417,9 @@ stages:
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false
-            continueOnError: true          # NON-GATING until a known-failure baseline is agreed
+            continueOnError: true
             requiredArtifacts:
-              - name: native               # -> output/native/alpine/<arch>/libSkiaSharp.so (never externals-download)
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Alpine container test results
@@ -436,10 +432,8 @@ stages:
               - name: testlogs_container_alpine
                 always: true
                 path: 'output/logs/testlogs'
-        # Windows Nano Server. REQUIRES a Windows agent with container support. It builds AND runs
-        # the suite in the Nano Server .NET SDK image (no system fonts — the environment under test),
-        # against the nanoserver native build (--nativePlatform=nanoserver). Known font-related
-        # failures are expected — hence non-gating.
+        # Windows Nano Server. Requires a Windows agent with container support; builds and runs the
+        # suite in the Nano Server .NET SDK image against the nanoserver native build.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
@@ -451,9 +445,9 @@ stages:
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false
-            continueOnError: true          # NON-GATING (known font-related failures are expected)
+            continueOnError: true
             requiredArtifacts:
-              - name: native               # -> output/native/nanoserver/x64/libSkiaSharp.dll (never externals-download)
+              - name: native
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the Nano Server container test results

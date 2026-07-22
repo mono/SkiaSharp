@@ -16,10 +16,10 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // set, so the container image stays minimal (no GTK4 / Vulkan / Direct3D dependencies).
 //
 // --nativePlatform selects which output/native/<platform>/<arch> build to run against. It is passed
-// straight through to the native-asset targets as the SkiaSharp/HarfBuzzSharp NativePlatform MSBuild
-// property, so the build copies ONLY that platform's library (a real swap — no post-build overlay).
-// This is what lets the Windows container run against the *nanoserver* build
-// (output/native/nanoserver/x64/libSkiaSharp.dll), which the OS-derived defaults don't map.
+// through to the native-asset targets as the SkiaSharp/HarfBuzzSharp NativePlatform MSBuild property,
+// so the build copies that platform's library. This is how the Windows container runs against the
+// nanoserver build (output/native/nanoserver/x64/libSkiaSharp.dll) and Alpine against the musl build,
+// which the OS-derived defaults don't map.
 //
 //   dotnet cake --target=tests-container --nativePlatform=linux
 //   dotnet cake --target=tests-container --nativePlatform=alpine
@@ -48,7 +48,7 @@ Task ("Default")
         { "TargetFrameworks", tfm },
     };
 
-    // Real native swap: tell the native-asset targets to copy ONLY this platform's library.
+    // Select the native build: the native-asset targets copy this platform's library.
     if (!string.IsNullOrEmpty(NATIVE_PLATFORM)) {
         props["SkiaSharpNativePlatform"] = NATIVE_PLATFORM;
         props["HarfBuzzSharpNativePlatform"] = NATIVE_PLATFORM;
