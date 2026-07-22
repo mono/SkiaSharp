@@ -372,14 +372,7 @@ stages:
                 path: 'output/logs/testlogs'
         # TODO: add tests for linux no dependencies
 
-        # --- Containerized test legs -----------------------------------------------------------
-        # Run the console test suite inside a container using the bootstrapper `docker:` feature: it
-        # builds the env image with the Docker@2 task, then runs `dotnet cake --target=tests-container`
-        # against the mounted repo. Native libraries come from the merged `native` artifact
-        # (requiredArtifacts); `--nativePlatform` selects which build to run against. Non-gating
-        # because container runtimes have legitimate environment differences (e.g. fonts — the
-        # NoDependencies and Nano Server builds have no enumerable system fonts, so the font tests
-        # self-skip). See documentation/dev/containerized-testing.md.
+        # Containerized test legs — see documentation/dev/containerized-testing.md
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux glibc)
           parameters:
             name: tests_container_linux
@@ -406,7 +399,6 @@ stages:
               - name: testlogs_container_linux
                 always: true
                 path: 'output/logs/testlogs'
-        # Linux NoDependencies (glibc, built without fontconfig — no enumerable system fonts).
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux NoDeps)
           parameters:
             name: tests_container_linux_nodeps
@@ -433,7 +425,6 @@ stages:
               - name: testlogs_container_linux_nodeps
                 always: true
                 path: 'output/logs/testlogs'
-        # Linux Alpine (musl).
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux Alpine)
           parameters:
             name: tests_container_alpine_linux
@@ -460,7 +451,6 @@ stages:
               - name: testlogs_container_alpine
                 always: true
                 path: 'output/logs/testlogs'
-        # Linux Alpine NoDependencies (musl, built without fontconfig — no enumerable system fonts).
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Alpine NoDeps)
           parameters:
             name: tests_container_alpine_nodeps
@@ -487,9 +477,6 @@ stages:
               - name: testlogs_container_alpine_nodeps
                 always: true
                 path: 'output/logs/testlogs'
-        # Windows Nano Server. Requires a Windows agent with container support; builds and runs the
-        # suite in the Nano Server .NET SDK image against the nanoserver native build. Nano Server has
-        # no enumerable system fonts, so the font tests self-skip.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
