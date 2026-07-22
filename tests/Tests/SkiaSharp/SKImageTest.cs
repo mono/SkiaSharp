@@ -51,9 +51,7 @@ namespace SkiaSharp.Tests
 			// sanity: creation really does fail for this info
 			Assert.Null(SKImage.Create(info));
 
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			GC.Collect();
+			CollectGarbage();
 
 			var process = System.Diagnostics.Process.GetCurrentProcess();
 			process.Refresh();
