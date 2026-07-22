@@ -49,6 +49,9 @@ Task ("Default")
         // The Windows-only sn.exe re-sign step isn't present in the Nano Server SDK image (and isn't
         // needed to run tests — PublicSign already gives the correct identity for InternalsVisibleTo).
         { "DisableStrongNameSigning", "true" },
+        // mdoc.exe doesn't run on Nano Server (missing Windows DLL deps) and doc generation is
+        // irrelevant to running the test suite, so skip it in every container build.
+        { "SkipMDocGenerateDocs", "true" },
     };
 
     // Select the native build: the native-asset targets copy this platform's library.
