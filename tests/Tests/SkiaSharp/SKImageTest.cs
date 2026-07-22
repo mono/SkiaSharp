@@ -34,6 +34,49 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
+		public void FailedRasterCreateDoesNotLeakPixelBuffer()
+		{
+			// The leak is measured via System.Diagnostics.Process.PrivateMemorySize64, which is
+			// not supported on WASM (no System.Diagnostics.Process), iOS or Mac Catalyst. The fix
+			// itself is platform-agnostic and still exercised by the desktop and Android legs.
+			SkipOnPlatform(IsBrowser || IsIOS || IsMacCatalyst,
+				"System.Diagnostics.Process.PrivateMemorySize64 is not supported on WASM, iOS or Mac Catalyst");
+
+			// An Rgba8888 info with an Unknown alpha type has a positive BytesSize but is
+			// rejected by Skia, so sk_image_new_raster returns null. SKImage.Create must free
+			// the CoTaskMem pixel buffer it allocated, otherwise every failed call leaks it.
+			var info = new SKImageInfo(1024, 1024, SKColorType.Rgba8888, SKAlphaType.Unknown);
+			Assert.True(info.BytesSize > 0);
+
+			// sanity: creation really does fail for this info
+			Assert.Null(SKImage.Create(info));
+
+			CollectGarbage();
+
+			using var process = System.Diagnostics.Process.GetCurrentProcess();
+			process.Refresh();
+			var before = process.PrivateMemorySize64;
+
+			const int count = 200;
+			for (var i = 0; i < count; i++)
+			{
+				var image = SKImage.Create(info);
+				Assert.Null(image);
+			}
+
+			CollectGarbage();
+
+			process.Refresh();
+			var grownBytes = process.PrivateMemorySize64 - before;
+			var allocatedBytes = (long)count * info.BytesSize; // ~400 MB if leaked
+
+			// If the buffer leaks, growth is a large fraction of allocatedBytes. When freed
+			// correctly, growth stays near zero. Use a generous threshold to avoid flakiness.
+			Assert.True(grownBytes < allocatedBytes / 4,
+				$"Private memory grew {grownBytes / (1024 * 1024)} MB over {count} failed SKImage.Create calls (~{allocatedBytes / (1024 * 1024)} MB allocated) - the pixel buffer is leaking.");
+		}
+
+		[Fact]
 		public void ToRasterImageReturnsSameRaster()
 		{
 			using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
