@@ -46,6 +46,9 @@ Task ("Default")
         // so the Android/iOS/etc. workloads are never restored/built — keeping the image lean.
         { "TargetFramework", tfm },
         { "TargetFrameworks", tfm },
+        // The Windows-only sn.exe re-sign step isn't present in the Nano Server SDK image (and isn't
+        // needed to run tests — PublicSign already gives the correct identity for InternalsVisibleTo).
+        { "DisableStrongNameSigning", "true" },
     };
 
     // Select the native build: the native-asset targets copy this platform's library.
