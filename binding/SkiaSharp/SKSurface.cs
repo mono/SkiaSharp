@@ -280,12 +280,18 @@ namespace SkiaSharp
 		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace) =>
 			Create (recorder, backendTexture, colorType, colorSpace, props: null);
 
-		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props)
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props, releaseProc: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props, SKGraphiteReleaseDelegate releaseProc)
 		{
 			if (recorder == null)
 				throw new ArgumentNullException (nameof (recorder));
 			if (backendTexture == null)
 				throw new ArgumentNullException (nameof (backendTexture));
+
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.SKGraphiteReleaseProxy : null;
 
 			return GetObject (SkiaApi.sk_graphite_surface_wrap_backend_texture (
 				recorder.Handle,
@@ -293,8 +299,8 @@ namespace SkiaSharp
 				colorType.ToNative (),
 				colorSpace?.Handle ?? IntPtr.Zero,
 				props?.Handle ?? IntPtr.Zero,
-				/* releaseProc */ null,
-				/* releaseContext */ null));
+				proxy,
+				(void*)ctx));
 		}
 
 #if __MACOS__ || __IOS__ || __TVOS__

@@ -26,7 +26,7 @@ namespace SkiaSharp
 
 	public delegate IntPtr SKGraphiteVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
 
-	public delegate void SKGraphiteReleaseDelegate (object context);
+	public delegate void SKGraphiteReleaseDelegate ();
 
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
@@ -113,7 +113,7 @@ namespace SkiaSharp
 		{
 			var del = Get<SKGraphiteReleaseDelegate> ((IntPtr)releaseContext, out var gch);
 			try {
-				del.Invoke (null);
+				del.Invoke ();
 			} finally {
 				gch.Free ();
 			}

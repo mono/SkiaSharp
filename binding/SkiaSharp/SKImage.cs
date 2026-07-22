@@ -212,12 +212,18 @@ namespace SkiaSharp
 		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType) =>
 			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace: null);
 
-		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace)
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace) =>
+			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace, releaseProc: null);
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace, SKGraphiteReleaseDelegate releaseProc)
 		{
 			if (recorder == null)
 				throw new ArgumentNullException (nameof (recorder));
 			if (backendTexture == null)
 				throw new ArgumentNullException (nameof (backendTexture));
+
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.SKGraphiteReleaseProxy : null;
 
 			return GetObject (SkiaApi.sk_graphite_image_wrap_texture (
 				recorder.Handle,
@@ -225,8 +231,8 @@ namespace SkiaSharp
 				colorType.ToNative (),
 				alphaType,
 				colorSpace?.Handle ?? IntPtr.Zero,
-				/* releaseProc */ null,
-				/* releaseContext */ null));
+				proxy,
+				(void*)ctx));
 		}
 
 		public static SKImage FromEncodedData (SKStream data)
