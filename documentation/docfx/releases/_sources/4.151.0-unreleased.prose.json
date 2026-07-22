@@ -1,38 +1,47 @@
 {
-  "theme": "Performance and font improvements",
-  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance fixes and adds FreeType-based font support for Windows Nano Server.",
-  "highlights_body": "String allocation in the text encoding hot path is eliminated, the SKRuntimeEffect uniform map is pre-sized to avoid rehashing, and a community contribution brings FreeType font rendering to environments like Windows Nano Server where the system font stack is unavailable.",
+  "theme": "Performance and bug fixes",
+  "highlights_headline": "SkiaSharp 4.151.0 brings performance improvements, a memory-leak fix, and Nano Server font support.",
+  "highlights_body": "This release fixes a pixel-buffer memory leak in the SKImage raster failure path, reduces allocations in text encoding, speeds up SKRuntimeEffect uniform lookups, and adds FreeType-backed font support for Windows Nano Server.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Pixel-buffer memory leak fixed in SKImage.Create",
+          "detail": "A CoTaskMem-allocated pixel buffer leaked when SKImage.Create failed to create a raster image; the buffer is now correctly freed on the failure path.",
+          "prs": [4455]
+        }
+      ]
+    },
     {
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "FreeType font support on Windows Nano Server",
-          "detail": "SKFontManager can now use FreeType as the font backend on Windows environments that lack the GDI font stack, such as Windows Nano Server containers, fixing font loading failures on those targets.",
+          "lead": "FreeType font support for Windows Nano Server",
+          "detail": "SkiaSharp now uses FreeType as its font backend on Windows Nano Server, enabling text rendering in environments where GDI fonts are unavailable.",
           "prs": [4280]
         }
       ]
     },
     {
-      "heading": "Bug Fixes",
+      "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Eliminated intermediate string allocation in GetEncodedText",
-          "detail": "The null-terminated code path in `GetEncodedText` no longer creates an intermediate string; the encoded bytes are written directly, reducing GC pressure in text-heavy workloads.",
+          "lead": "Reduced allocations in GetEncodedText",
+          "detail": "The null-terminated path in GetEncodedText no longer allocates an intermediate string, lowering GC pressure in text-heavy rendering workloads.",
           "prs": [4498]
         },
         {
-          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
-          "detail": "The internal uniform-name lookup dictionary is now initialised with the known uniform count, avoiding repeated resize allocations when populating effect uniforms.",
+          "lead": "Faster SKRuntimeEffect uniform lookups",
+          "detail": "The uniform lookup map inside SKRuntimeEffectUniforms is now pre-sized to the known uniform count, eliminating repeated rehashing during effect evaluation.",
           "prs": [4512]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeffska": "Added FreeType-based font support for Windows Nano Server, enabling font loading in container environments where the system font stack is absent"
+    "jeffska": "Added FreeType-backed font support for Windows Nano Server environments"
   },
-  "preview_summaries": {},
-  "harfbuzz_summary": null
+  "preview_summaries": {}
 }
