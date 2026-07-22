@@ -407,7 +407,13 @@ jobs:
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
-                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c "dotnet tool restore && dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}"
+                'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
+                'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
+                Get-Content cmd.cmd
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
