@@ -25,10 +25,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestSetHasAtLeastOne()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -52,10 +51,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestCanCreateBoldFromIndex()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 			var set = fonts.GetFontStyles(DefaultFontFamily);
@@ -82,10 +80,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestCanCreateBold()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 			var set = fonts.GetFontStyles(DefaultFontFamily);
@@ -124,10 +121,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public unsafe void CreateTypefaceDisposeDoesNotDispose()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 			var set = fonts.GetFontStyles(DefaultFontFamily);

@@ -14,10 +14,6 @@ namespace SkiaSharp.Tests
 				public const string Api = "API";
 				public const string Gpu = "GPU";
 				public const string MatchCharacter = "MatchCharacter";
-				// Tests that need system fonts to be installed AND enumerable by the font manager.
-				// Skipped (via --filter-not-trait) on builds with no enumerable system fonts, e.g.
-				// the NoDependencies Linux builds (skia_use_fontconfig=false) and Windows Nano Server.
-				public const string RequiresSystemFonts = "RequiresSystemFonts";
 			public const string Smoke = "Smoke";
 			}
 		}

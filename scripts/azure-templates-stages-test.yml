@@ -377,13 +377,9 @@ stages:
         # builds the env image with the Docker@2 task, then runs `dotnet cake --target=tests-container`
         # against the mounted repo. Native libraries come from the merged `native` artifact
         # (requiredArtifacts); `--nativePlatform` selects which build to run against. Non-gating
-        # because container runtimes have legitimate environment differences (e.g. fonts).
-        #
-        # Builds that can't enumerate system fonts (NoDependencies Linux, built skia_use_fontconfig=
-        # false, and Nano Server) pass `--skipSystemFonts`, which excludes the
-        # [Trait("Category","RequiresSystemFonts")] tests. This is an interim filter; when those tests
-        # learn to self-skip on a fontless environment it can be dropped from the legs here.
-        # See documentation/dev/containerized-testing.md.
+        # because container runtimes have legitimate environment differences (e.g. fonts — the
+        # NoDependencies and Nano Server builds have no enumerable system fonts, so the font tests
+        # self-skip). See documentation/dev/containerized-testing.md.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Linux glibc)
           parameters:
             name: tests_container_linux
@@ -418,7 +414,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/glibc
             target: tests-container
-            additionalArgs: --nativePlatform=linuxnodeps --skipSystemFonts=true
+            additionalArgs: --nativePlatform=linuxnodeps
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false
@@ -472,7 +468,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/alpine
             target: tests-container
-            additionalArgs: --nativePlatform=alpinenodeps --skipSystemFonts=true
+            additionalArgs: --nativePlatform=alpinenodeps
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false
@@ -493,7 +489,7 @@ stages:
                 path: 'output/logs/testlogs'
         # Windows Nano Server. Requires a Windows agent with container support; builds and runs the
         # suite in the Nano Server .NET SDK image against the nanoserver native build. Nano Server has
-        # no enumerable system fonts, so --skipSystemFonts=true is passed.
+        # no enumerable system fonts, so the font tests self-skip.
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|container (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
@@ -501,7 +497,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentWindows }}
             docker: scripts/infra/tests/docker/nanoserver
             target: tests-container
-            additionalArgs: --nativePlatform=nanoserver --skipSystemFonts=true
+            additionalArgs: --nativePlatform=nanoserver
             installAndroidSdk: false
             installXcode: false
             shouldPublish: false

@@ -8,10 +8,9 @@ namespace SkiaSharp.Tests
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestFontManagerMatchCharacter()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
@@ -50,10 +49,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestGetFontStyles()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -64,10 +62,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void TestMatchFamilyStyle()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -244,10 +241,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -263,10 +259,9 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public unsafe void TypefaceAndFontManagerReturnsSameObject()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 

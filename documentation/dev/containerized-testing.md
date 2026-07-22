@@ -113,9 +113,12 @@ The Linux test config chooses `UnicodeFontFamilies` per libc — `Symbola` on gl
 `ttf-ancient-fonts`) and `Noto Color Emoji` on musl (from `font-noto-emoji`), keyed off
 `PlatformConfiguration.IsGlibc`.
 
-Tests that need enumerable system fonts are tagged
-`[Trait("Category", "RequiresSystemFonts")]`. The non-fontconfig legs (`linuxnodeps`,
-`alpinenodeps`, `nanoserver`) pass `--skipSystemFonts`, which forwards
-`--filter-not-trait "Category=RequiresSystemFonts"` to the runner so those tests don't run. This is
-an interim filter kept in the leg definitions; it can be removed once those tests self-skip on a
-fontless environment.
+Tests that need system fonts detect the environment at runtime and self-skip, so the same suite
+runs unmodified everywhere:
+
+- `SkipWhenNoSystemFontManager()` — for tests that enumerate or match families
+  (`SKFontManager` / `SKFontStyleSet`, or `MatchCharacter`). Skips where there is no usable font
+  manager: WASM, the NoDependencies builds, and Nano Server.
+- `SkipWhenNoDefaultFont()` — for tests that measure or draw with the **default** typeface. Skips
+  where the default typeface is empty: the NoDependencies builds and Nano Server. WASM keeps a
+  single embedded default font, so these still run there.

@@ -76,9 +76,9 @@ namespace SkiaSharp.Tests
 
 		// Test for issue #276
 		[Fact]
-		[Trait(Traits.Category.Key, Traits.Category.Values.RequiresSystemFonts)]
 		public void NonAntiAliasedTextOnScaledCanvasIsCorrect()
 		{
+			SkipWhenNoDefaultFont();
 			SkipOnPlatform(IsAndroid, "TODO: figure out why the font has changed");
 			SkipOnPlatform(IsBrowser, "WASM text rendering produces slightly different pixel values");
 

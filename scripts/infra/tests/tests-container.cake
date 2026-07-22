@@ -24,17 +24,11 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 //   dotnet cake --target=tests-container --nativePlatform=linux
 //   dotnet cake --target=tests-container --nativePlatform=alpine
 //   dotnet cake --target=tests-container --nativePlatform=nanoserver
-//
-// --skipSystemFonts filters out tests tagged [Trait("Category","RequiresSystemFonts")] — used for
-// builds that can't enumerate system fonts (NoDependencies Linux, Nano Server).
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // Which output/native/<platform>/<arch> build to run against. The <arch> is derived from the host
 // (OSArchitecture) by the native-asset targets, so only the platform is specified here.
 var NATIVE_PLATFORM = Argument("nativePlatform", "");
-
-// Skip the tests that need enumerable system fonts (see Traits.Category.RequiresSystemFonts).
-var SKIP_SYSTEM_FONTS = Argument("skipSystemFonts", false);
 
 Task ("Default")
     .Description ("Run the .NET console test suite (for containerized runs).")
@@ -60,16 +54,12 @@ Task ("Default")
         props["HarfBuzzSharpNativePlatform"] = NATIVE_PLATFORM;
     }
 
-    var extraRunnerArgs = new List<string>();
-    if (SKIP_SYSTEM_FONTS)
-        extraRunnerArgs.Add("--filter-not-trait \"Category=RequiresSystemFonts\"");
-
     if (!SKIP_BUILD) {
         RunDotNetBuild (csproj, properties: props);
     }
 
     var results = $"{ROOT_PATH}/output/logs/testlogs/{testAssembly}/{DATE_TIME_STR}/{tfm}";
-    RunDotNetTest (csproj, results, properties: props, extraRunnerArgs: extraRunnerArgs);
+    RunDotNetTest (csproj, results, properties: props);
 });
 
 RunTarget(TARGET);
