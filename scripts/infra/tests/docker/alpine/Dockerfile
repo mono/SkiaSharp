@@ -20,6 +20,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine
 #   - libstdc++ / libgcc: required by the native libSkiaSharp.so
 #   - icu-libs: globalization (avoids invariant-mode limitations in the tests)
 #   - fontconfig + font-dejavu: "DejaVu Sans" (DefaultFontFamily on Linux tests)
+#   - font-noto-emoji: "Noto Color Emoji" (UnicodeFontFamilies on Alpine — covers emoji like U+1F680)
 RUN apk add --no-cache \
         bash \
         libstdc++ \
@@ -27,6 +28,7 @@ RUN apk add --no-cache \
         icu-libs \
         fontconfig \
         font-dejavu \
+        font-noto-emoji \
     && fc-cache -f
 
 WORKDIR /work

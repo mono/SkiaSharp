@@ -93,11 +93,22 @@ differences (e.g. fonts) that can fail individual tests without indicating a Ski
 The Nano Server leg requires a Windows agent with container support (matching the `ltsc2022` image
 base) and pulls the Nano Server .NET SDK image.
 
-## Fonts on Nano Server
+## Fonts
 
-Nano Server ships **no system fonts**. Its font manager (`SkFontMgr_New_Custom_Empty`, a FreeType
-scanner) enumerates no families but can create typefaces from external streams, data, or files
-(`SKTypeface.FromFile` / `FromStream` / `FromData`). So on Nano Server, APIs that resolve a system
-family or the default typeface (`SKTypeface.FromFamilyName`, `SKFontManager.Default`, a default
-`SKFont`) have nothing to bind to, while explicitly loaded fonts work. This is a property of the
-environment, not of the native build.
+Whether the suite can resolve **system fonts** depends on how the native library was compiled, not
+just on the image:
+
+- **fontconfig builds** (`linux`, `alpine`) enumerate whatever fonts are installed in the image.
+  Base .NET SDK images ship no fonts, so the env images install them: `fontconfig` + DejaVu on both,
+  plus `font-noto-emoji` on Alpine for emoji coverage. These provide the families the test config
+  expects (`DefaultFontFamily`, `UnicodeFontFamilies`).
+- **non-fontconfig builds** — the NoDependencies variants (`linuxnodeps`, `alpinenodeps`, built with
+  `skia_use_fontconfig=false`) and **Nano Server** — enumerate **no** system fonts regardless of
+  what the image contains. Their font manager (`SkFontMgr_New_Custom_Empty`, a FreeType scanner) can
+  only use fonts loaded explicitly (`SKTypeface.FromFile` / `FromStream` / `FromData`). APIs that
+  resolve a system family or the default typeface (`SKTypeface.FromFamilyName`, `SKFontManager.Default`,
+  a default `SKFont`) have nothing to bind to.
+
+The Linux test config chooses `UnicodeFontFamilies` per libc — `Symbola` on glibc (from
+`ttf-ancient-fonts`) and `Noto Color Emoji` on musl (from `font-noto-emoji`), keyed off
+`PlatformConfiguration.IsGlibc`.
