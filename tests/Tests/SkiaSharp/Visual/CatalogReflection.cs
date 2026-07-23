@@ -10,13 +10,10 @@ namespace SkiaSharp.Tests.Visual
 	///
 	/// <para>
 	/// Scans both the assembly that defines the catalog (where the portable
-	/// renderers and scenes live) and the host test assembly (Console, Vulkan,
-	/// Direct3D, Devices, Wasm). This lets host-specific projects contribute their
-	/// own renderers (e.g. the Vulkan project adds a Vulkan renderer that depends on
-	/// Silk.NET) without the shared catalog needing to reference them. The host is
-	/// the entry assembly on desktop, but <see cref="Assembly.GetEntryAssembly"/> is
-	/// null on Android/MAUI and WASM, so loaded <c>SkiaSharp.Tests*</c> assemblies
-	/// are also scanned by name.
+	/// renderers and scenes live — raster, Metal, and Vulkan) and the entry
+	/// assembly, so a host that compiles in its own renderer (the Console host adds
+	/// the desktop GL renderer) is covered too, without the shared catalog needing
+	/// to reference it.
 	/// </para>
 	/// </summary>
 	internal static class CatalogReflection
@@ -55,30 +52,11 @@ namespace SkiaSharp.Tests.Visual
 
 		private static IEnumerable<Assembly> CandidateAssemblies()
 		{
-			var catalog = typeof(CatalogReflection).Assembly;
-			var seen = new HashSet<Assembly> { catalog };
-			yield return catalog;
+			yield return typeof(CatalogReflection).Assembly;
 
-			// The host test project contributes its own renderers (e.g. the Vulkan
-			// host adds GaneshVulkanRenderer). On the desktop Console host that host
-			// *is* the entry assembly, but Assembly.GetEntryAssembly() returns null
-			// on Android/MAUI and WASM, so relying on it alone hides those renderers
-			// on device. Every host assembly is named "SkiaSharp.Tests*", so also
-			// pick up any that are already loaded.
 			var entry = Assembly.GetEntryAssembly();
-			if (entry is not null && seen.Add(entry))
+			if (entry is not null && entry != typeof(CatalogReflection).Assembly)
 				yield return entry;
-
-			foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				var name = assembly.GetName().Name;
-				if (name is not null &&
-					name.StartsWith("SkiaSharp.Tests", StringComparison.Ordinal) &&
-					seen.Add(assembly))
-				{
-					yield return assembly;
-				}
-			}
 		}
 	}
 }

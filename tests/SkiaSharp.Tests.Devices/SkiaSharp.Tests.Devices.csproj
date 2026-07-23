@@ -62,15 +62,6 @@
     <MauiSplashScreen Include="Resources\Splash\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />
   </ItemGroup>
 
-  <!-- Vulkan tests only on the platforms whose native library is built with Vulkan: Android and Windows. -->
-  <ItemGroup Condition="$(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-windows'))">
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
-    <PackageReference Include="SharpVk" Version="0.4.2" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
-    <Compile Include="..\VulkanTests\**\*.cs" Link="VulkanTests\%(RecursiveDir)%(FileName)%(Extension)" />
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="..\Content\**" Exclude="..\Content\.DS_Store" Link="Content\%(RecursiveDir)%(FileName)%(Extension)" />
   </ItemGroup>
