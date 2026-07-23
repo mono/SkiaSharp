@@ -151,6 +151,10 @@ internal partial class VersionConstants {
     _SignAssembly
 
     Sign the assembly using sn.
+
+    Set DisableStrongNameSigning=true to skip this sn.exe re-sign (and its verify) where sn.exe is
+    unavailable, e.g. the Nano Server SDK container. PublicSign still applies, so the assembly keeps
+    its public-key identity for InternalsVisibleTo.
     ===================================================================================================================
   -->
   <PropertyGroup Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true'">
@@ -163,7 +167,7 @@ internal partial class VersionConstants {
   </PropertyGroup>
   <Target Name="_SignAssembly"
           AfterTargets="$(_SignAssemblyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' and '$(DisableStrongNameSigning)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" />
     <Exec Command="&quot;$(_SnExePath)&quot; -q -R @(IntermediateRefAssembly -> '&quot;%(Identity)&quot;') &quot;$(AssemblyOriginatorKeyFile)&quot;" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>
@@ -182,7 +186,7 @@ internal partial class VersionConstants {
   </PropertyGroup>
   <Target Name="_SignAssemblyVerify"
           AfterTargets="$(_SignAssemblyVerifyAfterTargets)"
-          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' ">
+          Condition=" $(IsWindows) and '$(SignAssembly)' == 'true' and '$(Configuration)' == 'Release' and '$(TargetPath)' != '' and '$(BuildingInsideVisualStudio)' != 'true' and '$(DisableStrongNameSigning)' != 'true' ">
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetPath)&quot;" StandardOutputImportance="Normal" />
     <Exec Command="&quot;$(_SnExePath)&quot; -vf &quot;$(TargetRefPath)&quot;" StandardOutputImportance="Normal" Condition="'$(ProduceReferenceAssembly)' == 'true'" />
   </Target>

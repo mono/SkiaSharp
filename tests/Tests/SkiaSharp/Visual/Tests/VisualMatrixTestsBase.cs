@@ -158,7 +158,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			using var data = image.Encode(SKEncodedImageFormat.Png, 100);
-			var key = $"{rendererName}.{VisualPlatform.Tag}/{sceneName}.{kind}.png";
+			var key = $"{rendererName}.{VisualPlatform.Tags[0]}/{sceneName}.{kind}.png";
 			WriteOutput(
 				$"{VisualImageMarker} path={key} " +
 				$"size={normalized.Width}x{normalized.Height} base64={Convert.ToBase64String(data.ToArray())}");
@@ -216,7 +216,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 			// marker above), so seed it by harvesting the TRX and committing the
 			// result, after which the cell compares strictly and goes green.
 			Assert.Fail(
-				$"No golden recorded yet for '{rendererName}/{sceneName}' on '{VisualPlatform.Tag}' " +
+				$"No golden recorded yet for '{rendererName}/{sceneName}' on '{string.Join("' / '", VisualPlatform.Tags)}' " +
 				$"(looked for {looked}). " +
 				"The rendered PNG is in the test results as a ##SKIA-GOLDEN-IMAGE## marker; " +
 				"seed it with scripts/infra/tests/extract-visual-goldens.py and commit. " +
