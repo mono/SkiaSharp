@@ -32,21 +32,18 @@ namespace SkiaSharp.Tests.Visual
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			lock (GpuRenderGate.Sync)
-			{
-				using var glContext = CreateContextOrSkip();
-				glContext.MakeCurrent();
+			using var glContext = CreateContextOrSkip();
+			glContext.MakeCurrent();
 
-				using var grContext = GRContext.CreateGl()
-					?? throw new InvalidOperationException("GRContext.CreateGl returned null.");
-				using var surface = SKSurface.Create(grContext, budgeted: true, info)
-					?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/GL.");
+			using var grContext = GRContext.CreateGl()
+				?? throw new InvalidOperationException("GRContext.CreateGl returned null.");
+			using var surface = SKSurface.Create(grContext, budgeted: true, info)
+				?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/GL.");
 
-				scene.Draw(surface.Canvas);
-				grContext.Flush(submit: true, synchronous: true);
+			scene.Draw(surface.Canvas);
+			grContext.Flush(submit: true, synchronous: true);
 
-				return Task.FromResult(RendererPixels.ReadRgba(surface, info));
-			}
+			return Task.FromResult(RendererPixels.ReadRgba(surface, info));
 		}
 
 		public void Dispose()

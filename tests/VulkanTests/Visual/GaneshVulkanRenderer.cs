@@ -44,42 +44,39 @@ namespace SkiaSharp.Tests.Visual
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
 
-			lock (GpuRenderGate.Sync)
+			SilkVkContext ctx = null;
+			try
 			{
-				SilkVkContext ctx = null;
-				try
+				ctx = CreateContextOrSkip();
+
+				using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+
+				using var backendContext = new GRSilkNetBackendContext
 				{
-					ctx = CreateContextOrSkip();
+					VkInstance = ctx.Instance,
+					VkPhysicalDevice = ctx.PhysicalDevice,
+					VkDevice = ctx.Device,
+					VkQueue = ctx.GraphicsQueue,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxAPIVersion = SilkVkContext.ApiVersion,
+					Extensions = extensions,
+					GetProcedureAddress = ctx.GetProc,
+					VkPhysicalDeviceFeatures = ctx.Features,
+				};
 
-					using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+				using var grContext = GRContext.CreateVulkan(backendContext)
+					?? throw new InvalidOperationException("GRContext.CreateVulkan returned null.");
+				using var surface = SKSurface.Create(grContext, budgeted: true, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Vulkan.");
 
-					using var backendContext = new GRSilkNetBackendContext
-					{
-						VkInstance = ctx.Instance,
-						VkPhysicalDevice = ctx.PhysicalDevice,
-						VkDevice = ctx.Device,
-						VkQueue = ctx.GraphicsQueue,
-						GraphicsQueueIndex = ctx.GraphicsFamily,
-						MaxAPIVersion = SilkVkContext.ApiVersion,
-						Extensions = extensions,
-						GetProcedureAddress = ctx.GetProc,
-						VkPhysicalDeviceFeatures = ctx.Features,
-					};
+				scene.Draw(surface.Canvas);
+				grContext.Flush(submit: true, synchronous: true);
 
-					using var grContext = GRContext.CreateVulkan(backendContext)
-						?? throw new InvalidOperationException("GRContext.CreateVulkan returned null.");
-					using var surface = SKSurface.Create(grContext, budgeted: true, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Vulkan.");
-
-					scene.Draw(surface.Canvas);
-					grContext.Flush(submit: true, synchronous: true);
-
-					return Task.FromResult(RendererPixels.ReadRgba(surface, info));
-				}
-				finally
-				{
-					ctx?.Dispose();
-				}
+				return Task.FromResult(RendererPixels.ReadRgba(surface, info));
+			}
+			finally
+			{
+				ctx?.Dispose();
 			}
 		}
 

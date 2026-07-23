@@ -24,6 +24,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// </para>
 	/// </summary>
 	[Trait("Category", VisualCategory)]
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class VisualMatrixTests : VisualMatrixTestsBase
 	{
 		public VisualMatrixTests(ITestOutputHelper output)
