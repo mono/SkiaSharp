@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace SkiaSharp.Tests.Visual
 {
@@ -18,14 +19,17 @@ namespace SkiaSharp.Tests.Visual
 		/// falls back to the shared <c>windows</c> golden for cells that render
 		/// identically (shapes, gradients).
 		/// </summary>
-		public static IReadOnlyList<string> Tags { get; } = DetermineTags();
+		public static IReadOnlyList<string> Tags { get; } = DetermineTags().ToList();
 
-		private static IReadOnlyList<string> DetermineTags()
+		private static IEnumerable<string> DetermineTags()
 		{
+			// Nano Server IS Windows but rasterizes text with FreeType, not DirectWrite,
+			// so it looks up its own golden first and then falls back to the shared
+			// "windows" golden (DetermineTag returns "windows" on Nano).
 			if (TestConfig.Current.IsNanoServer)
-				return new[] { "nanoserver", "windows" };
+				yield return "nanoserver";
 
-			return new[] { DetermineTag() };
+			yield return DetermineTag();
 		}
 
 		private static string DetermineTag()
