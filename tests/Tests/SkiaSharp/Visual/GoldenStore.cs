@@ -72,11 +72,12 @@ namespace SkiaSharp.Tests.Visual
 
 		/// <summary>
 		/// Golden keys for a cell in lookup order (most specific first):
-		/// the per-platform override, then the platform-portable renderer golden.
+		/// each per-platform tag, then the platform-portable renderer golden.
 		/// </summary>
 		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
 		{
-			yield return $"{rendererName}.{VisualPlatform.Tag}/{sceneName}.png";
+			foreach (var tag in VisualPlatform.Tags)
+				yield return $"{rendererName}.{tag}/{sceneName}.png";
 			yield return $"{rendererName}/{sceneName}.png";
 		}
 

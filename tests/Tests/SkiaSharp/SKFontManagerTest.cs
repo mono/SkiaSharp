@@ -279,6 +279,7 @@ namespace SkiaSharp.Tests
 		public unsafe void GCStillCollectsTypeface()
 		{
 			SkipOnNonWindows("Test uses Windows-specific font path");
+			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
 			var handle = DoWork();
 

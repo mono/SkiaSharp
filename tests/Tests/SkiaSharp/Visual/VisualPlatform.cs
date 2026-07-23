@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace SkiaSharp.Tests.Visual
 {
@@ -10,7 +11,32 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	internal static class VisualPlatform
 	{
-		public static string Tag { get; } = DetermineTag();
+		/// <summary>
+		/// Golden directory tags for the current host, most specific first. Usually a
+		/// single entry, but Windows Nano Server rasterizes text with FreeType instead
+		/// of DirectWrite, so it looks up its own <c>nanoserver</c> golden first and
+		/// falls back to the shared <c>windows</c> golden for cells that render
+		/// identically (shapes, gradients).
+		/// </summary>
+		public static IReadOnlyList<string> Tags { get; } = DetermineTags();
+
+		public static string Tag => Tags[0];
+
+		private static IReadOnlyList<string> DetermineTags()
+		{
+			var baseTag = DetermineTag();
+
+			if (baseTag == "windows" && HasNoSystemFontManager())
+				return new[] { "nanoserver", "windows" };
+
+			return new[] { baseTag };
+		}
+
+		// Nano Server is the only Windows configuration with an empty system font
+		// manager (SkFontMgr_New_Custom_Empty over FreeType); probing a basic Latin
+		// character detects it.
+		private static bool HasNoSystemFontManager() =>
+			SkiaSharp.SKFontManager.Default.MatchCharacter('a') is null;
 
 		private static string DetermineTag()
 		{
