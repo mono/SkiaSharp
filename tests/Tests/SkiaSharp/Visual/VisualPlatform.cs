@@ -20,8 +20,6 @@ namespace SkiaSharp.Tests.Visual
 		/// </summary>
 		public static IReadOnlyList<string> Tags { get; } = DetermineTags();
 
-		public static string Tag => Tags[0];
-
 		private static IReadOnlyList<string> DetermineTags()
 		{
 			if (TestConfig.Current.IsNanoServer)

@@ -7,12 +7,6 @@ namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		// XPS requires the Windows XPS Object Model / DirectWrite, present on desktop
-		// and Server Windows but not on Nano Server or non-Windows platforms (where
-		// CreateXps returns null). Keying off the platform lets the supported and
-		// unsupported cases each be a straight-line test.
-		private static readonly bool SupportsXps = IsWindows && !IsNanoServer;
-
 		[Fact]
 		public void PdfFileIsClosed()
 		{

@@ -11,6 +11,11 @@ namespace SkiaSharp.Tests
 		protected static bool IsWindows = TestConfig.Current.IsWindows;
 		protected static bool IsNanoServer = TestConfig.Current.IsNanoServer;
 
+		// XPS requires the Windows XPS Object Model / DirectWrite, present on desktop
+		// and Server Windows but not on Nano Server or non-Windows platforms (where
+		// CreateXps returns null).
+		protected static bool SupportsXps = IsWindows && !IsNanoServer;
+
 		protected static string[] UnicodeFontFamilies => TestConfig.Current.UnicodeFontFamilies;
 		protected static string DefaultFontFamily => TestConfig.Current.DefaultFontFamily;
 
