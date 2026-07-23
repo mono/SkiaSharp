@@ -9,8 +9,11 @@ namespace SkiaSharp.Tests.Visual
 	/// negligible and the determinism win is large.
 	///
 	/// <para>
-	/// Public because renderers in the satellite host projects (Vulkan, Direct3D)
-	/// need to hold the same lock as the shared renderers.
+	/// Public because it is shared across assembly boundaries: the Direct3D
+	/// satellite host, the Graphite renderers, and — on the MAUI Devices host —
+	/// the Vulkan renderers (which are compiled into the app assembly while this
+	/// gate lives in the referenced <c>SkiaSharp.Tests</c> assembly) all hold
+	/// the same lock as the shared GL/Metal renderers.
 	/// </para>
 	/// </summary>
 	public static class GpuRenderGate
