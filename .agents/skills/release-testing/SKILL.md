@@ -256,6 +256,26 @@ dotnet test ... \
   -- --filter-class "*MauiAndroidTests"
 ```
 
+### Test Properties
+
+MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
+
+| Property | What it's for |
+|----------|---------------|
+| `SkiaSharpVersion` | SkiaSharp package version under test (**required**) |
+| `HarfBuzzSharpVersion` | HarfBuzzSharp package version under test (**required**) |
+| `BaseFramework` | TFM the generated temp apps target (`dotnet new … -f`) |
+| `SdkVersion` | SDK feature band pinned in the temp apps' `global.json` |
+| `SdkAllowPrerelease` | allow a prerelease SDK for that band (`true` for previews) |
+| `iOSDevice` / `iOSVersion` | simulator device name + iOS runtime for MAUI iOS tests |
+| `AndroidDevice` / `AndroidVersion` | device name + Android version (display metadata) |
+| `AndroidDeviceId` | target emulator/device UDID (e.g. `emulator-5554`) |
+| `AndroidApiLevel` | expected API level, validated at runtime |
+
+> **Testing a different .NET band (e.g. a preview):** change these two — `BaseFramework` to `netX.0`
+> and `SdkVersion` to the matching SDK feature band — and add `-p:SdkAllowPrerelease=true` for a
+> preview SDK. With no override they use the project defaults.
+
 ### Android Emulator Workflow
 
 ⚠️ **CRITICAL:** Run only ONE Android emulator at a time to avoid device confusion.
@@ -303,6 +323,44 @@ dotnet test ... \
    ```
 
 5. **Repeat for next API level** (start from step 1)
+
+### WASM (Blazor) Workflow
+
+`BlazorTests` builds a **real** WASM app (`-p:WasmBuildNative=true`, so it exercises the shipped
+native `.a` libs), boots it headless in Playwright/Chromium, and screenshot-diffs the canvas. Run it
+once per .NET band you're validating.
+
+1. **Install the Playwright browser (one-time):**
+   ```bash
+   cd tests/SkiaSharp.Tests.Integration
+   dotnet build -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+   pwsh bin/Debug/*/playwright.ps1 install chromium
+   ```
+
+2. **Run on the default .NET band:**
+   ```bash
+   dotnet test \
+     -p:SkiaSharpVersion={version} \
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -- --filter-class "*BlazorTests"
+   ```
+
+3. **Run on another band** (e.g. a preview) — change `BaseFramework` + `SdkVersion` (see [Test Properties](#test-properties)):
+   ```bash
+   dotnet test \
+     -p:SkiaSharpVersion={version} \
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:BaseFramework=netX.0 \
+     -p:SdkVersion=X.0.100 \
+     -p:SdkAllowPrerelease=true \
+     -- --filter-class "*BlazorTests"
+   ```
+
+   ⚠️ **The target band needs its own `wasm-tools` workload**, and Playwright must be new enough to
+   boot that runtime (a too-old Chromium can't start preview-.NET WASM apps — they use the `exnref`
+   exception-handling feature). The required Playwright version is pinned in the test project.
+
+4. **Repeat step 3 for each additional band.**
 
 ### Test Execution Order
 

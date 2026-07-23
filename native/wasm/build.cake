@@ -23,6 +23,7 @@ Task("libSkiaSharp")
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
+    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
@@ -66,9 +67,10 @@ Task("libSkiaSharp")
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"  { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } " +
+        $"  { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } " +
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
@@ -116,6 +118,7 @@ Task("libHarfBuzzSharp")
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
+    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
@@ -127,8 +130,8 @@ Task("libHarfBuzzSharp")
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
         $"skia_use_partition_alloc=false " +
-        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);

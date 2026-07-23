@@ -1,16 +1,16 @@
 {
-  "theme": "m151 engine sync and fixes",
-  "highlights_headline": "Merges upstream Skia m151 bug fixes and resolves a native resource leak in SKImage.",
-  "highlights_body": null,
+  "theme": "Performance and font improvements",
+  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance fixes and adds FreeType-based font support for Windows Nano Server.",
+  "highlights_body": "String allocation in the text encoding hot path is eliminated, the SKRuntimeEffect uniform map is pre-sized to avoid rehashing, and a community contribution brings FreeType font rendering to environments like Windows Nano Server where the system font stack is unavailable.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Upstream Skia m151 bug fixes merged",
-          "detail": "Pulls in the latest chrome/m151 upstream bug fixes, keeping the bundled renderer aligned with the Chromium milestone 151 branch.",
-          "prs": [4443]
+          "lead": "FreeType font support on Windows Nano Server",
+          "detail": "SKFontManager can now use FreeType as the font backend on Windows environments that lack the GDI font stack, such as Windows Nano Server containers, fixing font loading failures on those targets.",
+          "prs": [4280]
         }
       ]
     },
@@ -18,14 +18,21 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "Calling SKImage.FromEncodedData with an SKRectI subset no longer leaks the underlying native image handle when the subset operation fails or the result is discarded.",
-          "prs": [3997]
+          "lead": "Eliminated intermediate string allocation in GetEncodedText",
+          "detail": "The null-terminated code path in `GetEncodedText` no longer creates an intermediate string; the encoded bytes are written directly, reducing GC pressure in text-heavy workloads.",
+          "prs": [4498]
+        },
+        {
+          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
+          "detail": "The internal uniform-name lookup dictionary is now initialised with the known uniform count, avoiding repeated resize allocations when populating effect uniforms.",
+          "prs": [4512]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-based font support for Windows Nano Server, enabling font loading in container environments where the system font stack is absent"
+  },
   "preview_summaries": {},
   "harfbuzz_summary": null
 }
