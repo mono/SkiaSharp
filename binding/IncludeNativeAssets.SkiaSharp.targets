@@ -6,7 +6,18 @@
     <BuildArch>$([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString().ToLowerInvariant)</BuildArch>
   </PropertyGroup>
   
-  <ItemGroup Condition="!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop'))">
+  <!--
+    Explicit native-platform override (used by the containerized test legs). When
+    SkiaSharpNativePlatform is set (e.g. 'nanoserver', 'alpine', 'linux'), copy the native library
+    from output/native/<SkiaSharpNativePlatform>/<arch> ONLY, instead of the OS-derived globs below.
+    Used by the containerized test legs — see documentation/dev/containerized-testing.md.
+  -->
+  <ItemGroup Condition="'$(SkiaSharpNativePlatform)' != '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(BuildArch)\libSkiaSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(Platform)\libSkiaSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(SkiaSharpNativePlatform)' == '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(BuildArch)\libSkiaSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\windows\$(Platform)\libSkiaSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\osx\libSkiaSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
