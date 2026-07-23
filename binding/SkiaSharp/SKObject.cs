@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace SkiaSharp
@@ -18,7 +17,8 @@ namespace SkiaSharp
 			get {
 				if (ownedObjects == null) {
 					lock (locker) {
-						ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+						ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> (
+							concurrencyLevel: 1, capacity: 4);
 					}
 				}
 				return ownedObjects;
@@ -29,7 +29,8 @@ namespace SkiaSharp
 			get {
 				if (keepAliveObjects == null) {
 					lock (locker) {
-						keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> ();
+						keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> (
+							concurrencyLevel: 1, capacity: 4);
 					}
 				}
 				return keepAliveObjects;
@@ -203,8 +204,7 @@ namespace SkiaSharp
 
 			if (newOwner == null) {
 				DisposeInternal ();
-			}
-			else {
+			} else {
 				HandleDictionary.instancesLock.EnterWriteLock ();
 				try {
 					PreventPublicDisposal ();
