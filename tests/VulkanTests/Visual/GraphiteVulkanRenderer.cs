@@ -54,28 +54,22 @@ namespace SkiaSharp.Tests.Visual
 
 					var queue = device.GetQueue(graphicsFamily, 0);
 
-					// Same shim as GaneshVulkanRenderer: dispatch to device → instance →
-					// SharpVk's static instance table depending on what the caller has.
-					// Uses the typed SharpVk backend context, so the delegate receives
-					// SharpVk Instance/Device objects directly.
+					// Hand Skia the raw Vulkan handles directly (no SharpVk-typed backend
+					// context). vkGetProcAddr dispatches to device → instance depending on
+					// what Skia passes; the closure resolves via the SharpVk objects.
 					var localInstance = instance;
-					GRSharpVkGetProcedureAddressDelegate getProc = (name, inst, dev) =>
+					var localDevice = device;
+					using var backendContext = new SKGraphiteVkBackendContext
 					{
-						if (dev != null)
-							return dev.GetProcedureAddress(name);
-						if (inst != null)
-							return inst.GetProcedureAddress(name);
-						return localInstance.GetProcedureAddress(name);
-					};
-
-					using var backendContext = new SKGraphiteSharpVkBackendContext
-					{
-						VkInstance = instance,
-						VkPhysicalDevice = physicalDevice,
-						VkDevice = device,
-						VkQueue = queue,
+						VkInstance = (IntPtr)instance.RawHandle.ToUInt64(),
+						VkPhysicalDevice = (IntPtr)physicalDevice.RawHandle.ToUInt64(),
+						VkDevice = (IntPtr)device.RawHandle.ToUInt64(),
+						VkQueue = (IntPtr)queue.RawHandle.ToUInt64(),
 						GraphicsQueueIndex = graphicsFamily,
-						GetProcedureAddress = getProc,
+						GetProcedureAddress = (name, inst, dev) =>
+							dev != IntPtr.Zero ? localDevice.GetProcedureAddress(name)
+							: inst != IntPtr.Zero ? localInstance.GetProcedureAddress(name)
+							: localInstance.GetProcedureAddress(name),
 					};
 
 					using var context = SKGraphiteContext.CreateVulkan(backendContext)

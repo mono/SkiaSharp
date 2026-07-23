@@ -65,23 +65,18 @@ namespace SkiaSharp.Tests
 				var queue = device.GetQueue(graphicsFamily, 0);
 
 				var localInstance = instance;
-				GRSharpVkGetProcedureAddressDelegate getProc = (name, inst, dev) =>
+				var localDevice = device;
+				var backendContext = new SKGraphiteVkBackendContext
 				{
-					if (dev != null)
-						return dev.GetProcedureAddress(name);
-					if (inst != null)
-						return inst.GetProcedureAddress(name);
-					return localInstance.GetProcedureAddress(name);
-				};
-
-				var backendContext = new SKGraphiteSharpVkBackendContext
-				{
-					VkInstance = instance,
-					VkPhysicalDevice = physicalDevice,
-					VkDevice = device,
-					VkQueue = queue,
+					VkInstance = (IntPtr)instance.RawHandle.ToUInt64(),
+					VkPhysicalDevice = (IntPtr)physicalDevice.RawHandle.ToUInt64(),
+					VkDevice = (IntPtr)device.RawHandle.ToUInt64(),
+					VkQueue = (IntPtr)queue.RawHandle.ToUInt64(),
 					GraphicsQueueIndex = graphicsFamily,
-					GetProcedureAddress = getProc,
+					GetProcedureAddress = (name, inst, dev) =>
+						dev != IntPtr.Zero ? localDevice.GetProcedureAddress(name)
+						: inst != IntPtr.Zero ? localInstance.GetProcedureAddress(name)
+						: localInstance.GetProcedureAddress(name),
 				};
 
 				var context = SKGraphiteContext.CreateVulkan(backendContext)
@@ -114,11 +109,11 @@ namespace SkiaSharp.Tests
 		{
 			private readonly Instance instance;
 			private readonly Device device;
-			private readonly SKGraphiteSharpVkBackendContext backendContext;
+			private readonly SKGraphiteVkBackendContext backendContext;
 			private readonly SKGraphiteContext context;
 			private readonly SKGraphiteRecorder recorder;
 
-			public VulkanHarness(Instance instance, Device device, SKGraphiteSharpVkBackendContext backendContext, SKGraphiteContext context, SKGraphiteRecorder recorder)
+			public VulkanHarness(Instance instance, Device device, SKGraphiteVkBackendContext backendContext, SKGraphiteContext context, SKGraphiteRecorder recorder)
 			{
 				this.instance = instance;
 				this.device = device;
