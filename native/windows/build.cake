@@ -94,7 +94,7 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);

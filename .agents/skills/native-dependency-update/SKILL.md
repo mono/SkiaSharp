@@ -192,7 +192,7 @@ See [documentation/dev/building.md](../../../documentation/dev/building.md#build
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
 # Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
-dotnet test tests/SkiaSharp.Tests.Console.sln
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 
 ### Build Retry Strategy
