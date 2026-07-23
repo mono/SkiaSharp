@@ -72,7 +72,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ```bash
 dotnet cake --target=externals-download  # Get native libs
 dotnet build binding/SkiaSharp/SkiaSharp.csproj  # Build managed
-dotnet test tests/SkiaSharp.Tests.Console.sln    # Run all tests
+dotnet test tests/SkiaSharp.Tests.Console.slnx    # Run all tests
 ```
 
 ## External Resources
