@@ -34,9 +34,10 @@ namespace SkiaSharp.Tests
 			DefaultFontFamily = IsLinux ? "DejaVu Sans" : "Arial";
 			UnicodeFontFamilies =
 				IsLinux ? (SkiaSharp.Internals.PlatformConfiguration.IsGlibc
-					// glibc images install ttf-ancient-fonts (Symbola); Alpine/musl images
-					// install font-noto-emoji instead, which matches emoji as "Noto Color Emoji".
-					? new[] { "Symbola" }
+					// glibc images resolve emoji via "Symbola" (ttf-ancient-fonts, on the desktop
+					// Ubuntu agent) or "Noto Emoji" (downloaded into the Azure Linux container image);
+					// Alpine/musl images install font-noto-emoji, matching "Noto Color Emoji".
+					? new[] { "Symbola", "Noto Emoji" }
 					: new[] { "Noto Color Emoji" }) :
 				IsMac ? new[] { "Apple Color Emoji" } :
 				new[] { "Segoe UI Emoji", "Segoe UI Symbol" };

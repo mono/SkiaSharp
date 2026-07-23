@@ -399,7 +399,7 @@ jobs:
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - bash: |
-                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
+                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))

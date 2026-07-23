@@ -2,17 +2,21 @@
 
 The console test suite (`SkiaSharp.Tests.Console`) can be run **inside a Docker container** against a
 chosen native build. This covers container runtimes that the agent-based test legs don't — **Linux
-glibc**, **Linux Alpine (musl)**, and **Windows Nano Server**.
+(Azure Linux, glibc)**, **Linux (Alpine, musl)**, their **No Dependencies** variants, and **Windows
+Nano Server**.
 
 Pieces:
 
 - **Cake target** [`tests-container`](../../scripts/infra/tests/tests-container.cake) — runs the
   console suite against a prebuilt native library. Builds no externals.
 - **Env images** [`scripts/infra/tests/docker/`](../../scripts/infra/tests/docker) —
-  `glibc/`, `alpine/`, `nanoserver/`.
-- **CI legs** `tests_container_linux`, `tests_container_alpine_linux`,
-  `tests_container_nanoserver_windows` in
+  `azurelinux/`, `azurelinux-nodeps/`, `alpine/`, `alpine-nodeps/`, `nanoserver/`.
+- **CI legs** `tests_container_linux`, `tests_container_linux_nodeps`, `tests_container_alpine_linux`,
+  `tests_container_alpine_nodeps`, `tests_container_nanoserver_windows` in
   [`scripts/azure-templates-stages-test.yml`](../../scripts/azure-templates-stages-test.yml).
+
+The desktop `Linux` leg already runs on an Ubuntu agent, so the glibc container leg uses **Azure
+Linux** instead — a different, minimal glibc distro rather than a second Ubuntu run.
 
 ## How a leg runs
 
@@ -22,13 +26,13 @@ Each leg uses the bootstrapper `docker:` feature (`azure-templates-jobs-bootstra
 2. runs `dotnet cake --target=tests-container` **inside** that image against the mounted repo:
    `docker run --volume <repo>:<work> skiasharp … dotnet cake --target=tests-container …`.
 
-The feature runs on both Linux and Windows agents: Linux mounts `/work` and runs via `/bin/bash`;
-Windows mounts `C:\work` and runs via `cmd`.
+The feature runs on both Linux and Windows agents: Linux mounts `/work` and runs via `/bin/sh` (POSIX,
+so the bare No Dependencies images need no shell package); Windows mounts `C:\work` and runs via `cmd`.
 
-The **env images** provide only the runtime and fonts — the SDK, and for the Linux images the
-`fontconfig` + DejaVu fonts. The Nano Server image is the Nano Server **.NET SDK** image, which has
-no system fonts (see [Fonts on Nano Server](#fonts-on-nano-server)). There is no `COPY` in these
-Dockerfiles; the repo is mounted at run time.
+The **env images** provide only what each scenario needs. The two fontconfig images add `fontconfig`
++ fonts (see [Fonts](#fonts)); the **No Dependencies** and **Nano Server** images install **nothing**
+beyond the base .NET SDK — that is the point of those legs. There is no `COPY` in these Dockerfiles;
+the repo is mounted at run time.
 
 ## What `tests-container` does
 
@@ -55,18 +59,26 @@ This is how a container runs against a platform-specific build the OS-derived de
 Build the env image, then run `tests-container` inside it against the mounted repo:
 
 ```bash
-# Linux glibc  (--nativePlatform picks the build; <arch> is auto from the host).
+# Linux Azure Linux (glibc). --nativePlatform picks the build; <arch> is auto from the host.
 dotnet cake --target=externals-download
-docker build -t skiasharp-tests-env scripts/infra/tests/docker/glibc
+docker build -t skiasharp-tests-env scripts/infra/tests/docker/azurelinux
 docker run --rm --volume "$(pwd):/work" -w /work skiasharp-tests-env \
-    /bin/bash -c "dotnet tool restore && dotnet cake --target=tests-container --nativePlatform=linux"
+    /bin/sh -c "dotnet tool restore && dotnet cake --target=tests-container --nativePlatform=linux"
 ```
 
 ```bash
 # Linux Alpine (musl).
 docker build -t skiasharp-tests-env-alpine scripts/infra/tests/docker/alpine
 docker run --rm --volume "$(pwd):/work" -w /work skiasharp-tests-env-alpine \
-    /bin/bash -c "dotnet tool restore && dotnet cake --target=tests-container --nativePlatform=alpine"
+    /bin/sh -c "dotnet tool restore && dotnet cake --target=tests-container --nativePlatform=alpine"
+```
+
+```bash
+# No Dependencies (bare image, no fontconfig). Swap in alpine-nodeps / --nativePlatform=alpinenodeps
+# for the musl variant.
+docker build -t skiasharp-tests-env-nodeps scripts/infra/tests/docker/azurelinux-nodeps
+docker run --rm --volume "$(pwd):/work" -w /work skiasharp-tests-env-nodeps \
+    /bin/sh -c "dotnet tool restore && dotnet cake --target=tests-container --nativePlatform=linuxnodeps"
 ```
 
 ```powershell
@@ -100,18 +112,21 @@ Whether the suite can resolve **system fonts** depends on how the native library
 just on the image:
 
 - **fontconfig builds** (`linux`, `alpine`) enumerate whatever fonts are installed in the image.
-  Base .NET SDK images ship no fonts, so the env images install them: `fontconfig` + DejaVu on both,
-  plus `font-noto-emoji` on Alpine for emoji coverage. These provide the families the test config
+  Base .NET SDK images ship no fonts, so the two fontconfig env images install them: `fontconfig` +
+  DejaVu on both, plus an emoji font for the Unicode tests. Alpine installs `font-noto-emoji`
+  (packaged); Azure Linux has no emoji font in its repos, so its Dockerfile downloads **Noto Emoji**
+  (SIL OFL) pinned by URL commit and verified by SHA-256. These provide the families the test config
   expects (`DefaultFontFamily`, `UnicodeFontFamilies`).
-- **non-fontconfig builds** — the NoDependencies variants (`linuxnodeps`, `alpinenodeps`, built with
-  `skia_use_fontconfig=false`) and **Nano Server** — enumerate **no** system fonts regardless of
-  what the image contains. Their font manager (`SkFontMgr_New_Custom_Empty`, a FreeType scanner) can
-  only use fonts loaded explicitly (`SKTypeface.FromFile` / `FromStream` / `FromData`). APIs that
-  resolve a system family or the default typeface (`SKTypeface.FromFamilyName`, `SKFontManager.Default`,
-  a default `SKFont`) have nothing to bind to.
+- **non-fontconfig / bare** — the **No Dependencies** variants (`linuxnodeps`, `alpinenodeps`, built
+  with `skia_use_fontconfig=false`) run in bare images with nothing installed, and **Nano Server** —
+  all enumerate **no** system fonts regardless of what the image contains. Their font manager
+  (`SkFontMgr_New_Custom_Empty`, a FreeType scanner) can only use fonts loaded explicitly
+  (`SKTypeface.FromFile` / `FromStream` / `FromData`). APIs that resolve a system family or the
+  default typeface (`SKTypeface.FromFamilyName`, `SKFontManager.Default`, a default `SKFont`) have
+  nothing to bind to.
 
-The Linux test config chooses `UnicodeFontFamilies` per libc — `Symbola` on glibc (from
-`ttf-ancient-fonts`) and `Noto Color Emoji` on musl (from `font-noto-emoji`), keyed off
+The Linux test config chooses `UnicodeFontFamilies` per libc — `Symbola` (Ubuntu desktop) or
+`Noto Emoji` (Azure Linux container) on glibc, and `Noto Color Emoji` on musl — keyed off
 `PlatformConfiguration.IsGlibc`.
 
 Tests that need system fonts detect the environment at runtime and self-skip, so the same suite
