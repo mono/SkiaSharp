@@ -13,7 +13,8 @@
     Used by the containerized test legs — see documentation/dev/containerized-testing.md.
   -->
   <ItemGroup Condition="'$(SkiaSharpNativePlatform)' != '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(BuildArch)\libSkiaSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(BuildArch)\libSkiaSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(SkiaSharpNativePlatform)\$(Platform)\libSkiaSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(SkiaSharpNativePlatform)' == '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">

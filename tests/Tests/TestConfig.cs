@@ -36,12 +36,22 @@ namespace SkiaSharp.Tests
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private static bool ReadIsNanoServer()
 		{
-			using var key = Microsoft.Win32.Registry.LocalMachine
-				.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
-			return string.Equals(
-				key?.GetValue("InstallationType") as string,
-				"Nano Server",
-				StringComparison.OrdinalIgnoreCase);
+			try
+			{
+				using var key = Microsoft.Win32.Registry.LocalMachine
+					.OpenSubKey(@"SOFTWARE\Microsoft\Windows NT\CurrentVersion");
+				return string.Equals(
+					key?.GetValue("InstallationType") as string,
+					"Nano Server",
+					StringComparison.OrdinalIgnoreCase);
+			}
+			catch
+			{
+				// A constrained host can deny the registry read (SecurityException,
+				// UnauthorizedAccessException, etc.). Treat any failure as "not Nano Server"
+				// so a capability probe never fails the whole test run during config evaluation.
+				return false;
+			}
 		}
 
 		public string[] UnicodeFontFamilies { get; protected set; }

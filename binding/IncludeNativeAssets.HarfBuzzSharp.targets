@@ -13,7 +13,8 @@
     Used by the containerized test legs — see documentation/dev/containerized-testing.md.
   -->
   <ItemGroup Condition="'$(HarfBuzzSharpNativePlatform)' != '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
-    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(HarfBuzzSharpNativePlatform)\$(BuildArch)\libHarfBuzzSharp.*" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(HarfBuzzSharpNativePlatform)\$(BuildArch)\libHarfBuzzSharp.*" Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU' or '$(Platform)' == 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)..\output\native\$(HarfBuzzSharpNativePlatform)\$(Platform)\libHarfBuzzSharp.*" Condition="'$(Platform)' != '' and '$(Platform)' != 'AnyCPU' and '$(Platform)' != 'Any CPU'" Visible="False" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(HarfBuzzSharpNativePlatform)' == '' and (!$(TargetFramework.Contains('-')) or $(TargetFramework.Contains('-desktop')))">
