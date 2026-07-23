@@ -39,7 +39,7 @@ namespace SkiaSharp.Tests
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
 				Assert.Skip("No Metal device on this host.");
-			if (!MetalHasGraphiteCapableFamily(device))
+			if (!MetalCanDriveGraphite(device))
 			{
 				ObjcRelease(device);
 				Assert.Skip("MTLDevice does not support a Skia-Graphite MTLGPUFamily (Apple7+, Mac2).");
@@ -159,6 +159,23 @@ namespace SkiaSharp.Tests
 			}
 			return false;
 		}
+
+		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
+		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
+		// Apple *simulator* is a proven exception: it under-reports its GPU family
+		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
+		// Silicon GPU and drives Graphite Metal correctly — verified running the
+		// full wrap/insert/submit/release scenario green on an iOS simulator — so
+		// it is whitelisted rather than skipped. (The virtualized x64 Azure DevOps
+		// Metal host, which genuinely cannot, is already skipped earlier via
+		// IsAzureDevOpsX64Host.)
+		private static bool MetalCanDriveGraphite(IntPtr device) =>
+			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
+
+		// The iOS/tvOS simulator sets SIMULATOR_* in the app's environment.
+		private static bool IsRunningOnAppleSimulator =>
+			!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_UDID"))
+			|| !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_DEVICE_NAME"));
 
 		private static bool IsApplePlatform =>
 			OperatingSystem.IsMacOS()

@@ -70,7 +70,7 @@ namespace SkiaSharp.Tests.Visual
 					// process if none is supported; the newCommandQueue call itself is
 					// also what leaves the dispatch-queue state that hangs shutdown on
 					// virtualized Metal, so we skip it if the probe fails.
-					if (!MetalHasGraphiteCapableFamily(device))
+					if (!MetalCanDriveGraphite(device))
 						throw new RendererUnavailableException(
 							"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
 							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
@@ -132,6 +132,21 @@ namespace SkiaSharp.Tests.Visual
 			}
 			return false;
 		}
+
+		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
+		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
+		// Apple simulator is a proven exception: it under-reports its GPU family
+		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
+		// Silicon GPU and drives Graphite Metal correctly, so it is whitelisted
+		// rather than skipped. (The virtualized x64 Azure DevOps Metal host, which
+		// genuinely cannot, is already skipped earlier via IsAzureDevOpsX64Host.)
+		private static bool MetalCanDriveGraphite(IntPtr device) =>
+			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
+
+		// The iOS/tvOS simulator sets SIMULATOR_* in the app's environment.
+		private static bool IsRunningOnAppleSimulator =>
+			!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_UDID"))
+			|| !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_DEVICE_NAME"));
 
 		[DllImport("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
 		private static extern byte objc_msgSend_supportsFamily(IntPtr receiver, IntPtr selector, ulong family);
