@@ -154,7 +154,7 @@ These use MSBuild properties from `SkiaSharp.Build.props`:
 ## Files That Are Safe (no changes needed)
 
 - `IsTargetFrameworkCompatible('net7.0')` conditions in binding csproj files — floor check
-- `.sln` / `.slnf` files — don't encode TFMs
+- `.slnx` / `.slnf` files — don't encode TFMs
 - `samples/Gallery/` — Legacy samples, not updated
 
 ## How to Test a Preview .NET Version (e.g., .NET 11 Preview)

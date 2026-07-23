@@ -188,7 +188,7 @@ Upstream periodically improves color conversion precision, shifting expected pix
 
 ### 18. Test Runner
 
-Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.sln` for the full suite. Backend-specific tests self-skip when hardware isn't available.
+Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full suite. Backend-specific tests self-skip when hardware isn't available.
 
 ---
 
