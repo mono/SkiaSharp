@@ -9,31 +9,154 @@ string EMSCRIPTEN_VERSION = Argument("emscriptenVersion", EnvironmentVariable("E
 string[] EMSCRIPTEN_FEATURES = Argument("emscriptenFeatures", EnvironmentVariable("EMSCRIPTEN_FEATURES") ?? "").ToLower()
     .Split(",").Where(f => f != "none").ToArray();
 bool SUPPORT_GPU = SUPPORT_GPU_VAR == "1" || SUPPORT_GPU_VAR == "true";
+// Graphite/Dawn/WebGPU need Skia's is_canvaskit path, which requires the newer
+// WebGPU headers only present in emsdk >= 3.1.51. Older emsdk matrices build
+// raster + ganesh only; Ganesh (WebGL) stays enabled either way.
+bool SUPPORT_GRAPHITE = SUPPORT_GPU &&
+    (string.IsNullOrEmpty(EMSCRIPTEN_VERSION) ||
+     string.CompareOrdinal(EMSCRIPTEN_VERSION, "3.1.51") >= 0);
+
+// Skia's Graphite backend needs Dawn's `emdawnwebgpu` Emscripten port (the
+// built-in `-sUSE_WEBGPU=1` port is gone). The WASM native build fetches a
+// pinned release and stages it into the native output (see the
+// externals-emdawnwebgpu task), so it ships inside the native artifact and
+// pack + test agents consume it from there without re-fetching.
+string EMDAWN_TAG = "v20260624.223603";
+string EMDAWN_SHA512 = "615257384ad7df17174c5733c17d8ac0473dfdcddeac69e334d7109501954dc42e77ed54deb666bf44581fcf8e69c2365311626786cd267e52a3d48d7a9441c5";
+DirectoryPath EMDAWN_ROOT = ROOT_PATH.Combine("externals/emdawnwebgpu_pkg");
+
+void SyncEmdawnwebgpuPort()
+{
+    // The port ships its own VERSION.txt containing a natural-language string:
+    //   "Dawn release v<tag> at revision <sha>."
+    // Reusing it as our up-to-date probe keeps the working tree byte-identical
+    // to the upstream release (no marker files of ours to `git status`-noise).
+    var versionFile = EMDAWN_ROOT.CombineWithFilePath("VERSION.txt");
+    var needsExtract = !FileExists(versionFile) ||
+        !System.IO.File.ReadAllText(versionFile.FullPath).Contains(EMDAWN_TAG);
+
+    if (needsExtract) {
+        var zipName = $"emdawnwebgpu_pkg-{EMDAWN_TAG}.zip";
+        var zipUrl = $"https://github.com/google/dawn/releases/download/{EMDAWN_TAG}/{zipName}";
+        var cacheDir = ROOT_PATH.Combine("externals/package_cache/emdawnwebgpu");
+        EnsureDirectoryExists(cacheDir);
+        var zipPath = cacheDir.CombineWithFilePath(zipName);
+
+        if (!FileExists(zipPath)) {
+            Information($"Downloading {zipUrl}");
+            DownloadFile(zipUrl, zipPath);
+        }
+
+        // Verify SHA512 before touching the working tree — a corrupted /
+        // tampered zip must never overwrite a good port on disk.
+        string actualSha512;
+        using (var stream = System.IO.File.OpenRead(zipPath.FullPath))
+        using (var sha = System.Security.Cryptography.SHA512.Create()) {
+            var hash = sha.ComputeHash(stream);
+            var sb = new System.Text.StringBuilder(hash.Length * 2);
+            foreach (var b in hash) sb.Append(b.ToString("x2"));
+            actualSha512 = sb.ToString();
+        }
+        if (!string.Equals(actualSha512, EMDAWN_SHA512, StringComparison.OrdinalIgnoreCase)) {
+            DeleteFile(zipPath);
+            throw new Exception(
+                $"emdawnwebgpu port {EMDAWN_TAG} SHA512 mismatch.\n" +
+                $"  expected: {EMDAWN_SHA512}\n" +
+                $"  actual:   {actualSha512}\n" +
+                $"Downloaded zip was deleted; re-run to retry.");
+        }
+
+        if (DirectoryExists(EMDAWN_ROOT))
+            CleanDirectories(EMDAWN_ROOT.FullPath);
+        EnsureDirectoryExists(EMDAWN_ROOT);
+        // The zip unpacks with `emdawnwebgpu_pkg/` at its root, so extracting
+        // to `externals/` lands the contents directly at EMDAWN_ROOT —
+        // VERSION.txt included.
+        Unzip(zipPath, ROOT_PATH.Combine("externals"));
+    } else {
+        Information($"emdawnwebgpu port already at {EMDAWN_TAG}, skipping extract.");
+    }
+
+    // emdawnwebgpu's library_webgpu.js declares __deps: ['$stackSave',
+    // '$stackRestore', ...] against emscripten's JS library system. That works
+    // on newer emsdks where those names exist as `$`-form aliases, but emsdk
+    // 3.1.56 (shipped with .NET 10 WASM SDK) has stackSave and stackRestore
+    // only as bare WASM_SYSTEM_EXPORTS — no `$` alias — so the ports mechanism
+    // resolves them but a bare `--js-library` load bombs at compiler.mjs with
+    // "undefined symbol: $stackSave". Rewrite those two to their bare names so
+    // consumers on 3.1.56's emsdk can link. Idempotent: applying to already-
+    // patched files is a no-op. Runs on every sync (not just first-extract)
+    // so a manual re-download can't leave a mismatched library on disk.
+    var libJs = EMDAWN_ROOT.CombineWithFilePath("webgpu/src/library_webgpu.js");
+    var lib = System.IO.File.ReadAllText(libJs.FullPath);
+    var patched = lib
+        .Replace("'$stackSave'", "'stackSave'")
+        .Replace("'$stackRestore'", "'stackRestore'");
+    if (patched != lib) {
+        System.IO.File.WriteAllText(libJs.FullPath, patched);
+        Information("Patched library_webgpu.js: $stackSave/$stackRestore -> bare names for emsdk 3.1.56.");
+    }
+}
 
 string CC = Argument("cc", "emcc");
 string CXX = Argument("cxx", "em++");
 string AR = Argument("ar", "emar");
 string COMPILERS = $"cc='{CC}' cxx='{CXX}' ar='{AR}' ";
 
+// Sync Dawn's emdawnwebgpu port into externals/emdawnwebgpu_pkg (needed at
+// compile time for libSkiaSharp's --use-port) and then stage a copy into the
+// WASM native output so it travels with the native artifact — exactly like the
+// libSkiaSharp*.a files. Downstream pack and test agents consume the port
+// straight from output/native/wasm/emdawnwebgpu_pkg (the downloaded native
+// artifact) and never have to re-fetch it. Idempotent: the sync is a no-op when
+// VERSION.txt already matches EMDAWN_TAG. Runs unconditionally (not gated on
+// SUPPORT_GRAPHITE) so the port is always present in the artifact regardless of
+// which emsdk-version leg produced it.
+Task("externals-emdawnwebgpu")
+    .Does(() =>
+{
+    SyncEmdawnwebgpuPort();
+
+    var portOutput = OUTPUT_PATH.Combine("wasm/emdawnwebgpu_pkg");
+    EnsureDirectoryExists(portOutput);
+    CleanDirectories(portOutput.FullPath);
+    CopyDirectory(EMDAWN_ROOT, portOutput);
+});
+
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
+    .IsDependentOn("externals-emdawnwebgpu")
     .WithCriteria(IsRunningOnLinux())
     .Does(() =>
 {
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
-    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
         .Where(f => !f.StartsWith("_"))
         .ToArray();
 
+    // Forward Dawn's emdawnwebgpu port to emcc: `--use-port` registers the
+    // port's include paths + link-time JS glue, and `-DSKIA_USING_EMDAWNWEBGPU=1`
+    // activates the submodule carry-patch that makes Skia's Graphite Dawn sources
+    // take their native-Dawn code paths. Passed only via extra_cflags (not
+    // extra_cflags_cc) — emcc reads it from both and duplicating triggers
+    // "port already loaded".
+    string emdawnPortArg = SUPPORT_GRAPHITE
+        ? $", '--use-port={EMDAWN_ROOT.CombineWithFilePath("emdawnwebgpu.port.py")}'"
+          + ", '-DSKIA_USING_EMDAWNWEBGPU=1'"
+        : "";
+
     GnNinja($"wasm", "SkiaSharp",
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        // is_canvaskit makes Skia's Graphite Dawn sources resolve
+        // <webgpu/webgpu_cpp.h> via the Emscripten-style header layout that
+        // emdawnwebgpu ships, so it tracks SUPPORT_GRAPHITE.
+        $"is_canvaskit={SUPPORT_GRAPHITE} ".ToLower() +
         $"skia_enable_fontmgr_custom_directory=false " +
         $"skia_enable_fontmgr_custom_empty=false " +
         $"skia_enable_fontmgr_custom_embedded=true " +
@@ -60,29 +183,47 @@ Task("libSkiaSharp")
         $"skia_use_vulkan=false " +
         $"skia_use_wuffs=true " +
         $"skia_enable_skottie=true " +
+        $"skia_enable_graphite={SUPPORT_GRAPHITE} ".ToLower() +
+        $"skia_use_dawn={SUPPORT_GRAPHITE} ".ToLower() +
+        $"skia_use_webgpu={SUPPORT_GRAPHITE} ".ToLower() +
         $"extra_cflags=[ " +
-        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_POOR_ENTROPY', " +
+        $"  '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DXML_POOR_ENTROPY', " +
         $" {(!hasSimdEnabled ? "'-DSKNX_NO_SIMD', " : "")} '-DSK_DISABLE_AAA', '-DGR_GL_CHECK_ALLOC_WITH_GET_ERROR=0', " +
         $"  '-s', 'WARN_UNALIGNED=1' " + // '-s', 'USE_WEBGL2=1' (experimental)
         $"  { (hasSimdEnabled ? ", '-msimd128'" : "") } " +
         $"  { (hasThreadingEnabled ? ", '-pthread'" : "") } " +
         $"  { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } " +
-        $"  { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } " +
+        $"  {emdawnPortArg} " +
         $"] " +
         // SIMD support is based on https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/modules/canvaskit/compile.sh#L57
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
 
     var a = SKIA_PATH.CombineWithFilePath($"out/wasm/libSkiaSharp.a");
 
-    // separate all the .wasm.a files into .o files
+    // Extract every Skia static archive's .o files and merge them into libSkiaSharp.a
+    // so the consumer's final link sees a single fat archive. Archive naming differs
+    // by build mode:
+    //   * Default WASM build → `*.a.wasm` (set by gn/toolchain/BUILD.gn).
+    //   * canvaskit / Graphite-on-WebGPU build (is_canvaskit=true) → `*.a` (no .wasm
+    //     suffix), because that's the canvaskit convention upstream.
+    // The merge must skip libSkiaSharp.a itself (we're appending INTO it) and skip
+    // libHarfBuzzSharp.a.wasm (separate consumer-facing archive). Globbing both
+    // patterns keeps both build modes working.
     var skiaOut = SKIA_PATH.Combine("out/wasm");
     var mergeDir = skiaOut.Combine("obj/merge");
     EnsureDirectoryExists(mergeDir);
     CleanDirectories(mergeDir.FullPath);
-    foreach (var file in GetFiles($"{skiaOut}/*.wasm.a")) {
+    var archivesToMerge = GetFiles($"{skiaOut}/*.a.wasm").ToList();
+    archivesToMerge.AddRange(GetFiles($"{skiaOut}/*.wasm.a"));
+    archivesToMerge.AddRange(GetFiles($"{skiaOut}/*.a"));
+    foreach (var file in archivesToMerge) {
+        var name = file.GetFilename().FullPath;
+        // libSkiaSharp.a is our output; libHarfBuzzSharp.* ships separately.
+        if (name == "libSkiaSharp.a" || name.StartsWith("libHarfBuzzSharp."))
+            continue;
         RunProcess(AR, new ProcessSettings {
             Arguments = $"x \"{file}\"",
             WorkingDirectory = mergeDir.FullPath,
@@ -118,7 +259,6 @@ Task("libHarfBuzzSharp")
     bool hasSimdEnabled = EMSCRIPTEN_FEATURES.Contains("simd") || EMSCRIPTEN_FEATURES.Contains("_simd");
     bool hasThreadingEnabled = EMSCRIPTEN_FEATURES.Contains("mt");
     bool hasWasmEH = EMSCRIPTEN_FEATURES.Contains("_wasmeh");
-    bool hasNewExc = EMSCRIPTEN_FEATURES.Contains("_newexc");
 
     var emscriptenFeaturesModifiers = 
         EMSCRIPTEN_FEATURES
@@ -129,9 +269,10 @@ Task("libHarfBuzzSharp")
         $"target_os='linux' " +
         $"target_cpu='wasm' " +
         $"is_static_skiasharp=true " +
+        // See libSkiaSharp target above.
         $"skia_use_partition_alloc=false " +
-        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
-        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } { (hasNewExc ? ", '-s', 'WASM_LEGACY_EXCEPTIONS=0'" : "") } ] " +
+        $"extra_cflags=[ '-s', 'WARN_UNALIGNED=1' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
+        $"extra_cflags_cc=[ '-frtti' { (hasSimdEnabled ? ", '-msimd128'" : "") } { (hasThreadingEnabled ? ", '-pthread'" : "") } { (hasWasmEH ? ", '-fwasm-exceptions'" : "") } ] " +
         $"skia_emsdk_dir='{EMSCRIPTEN_ROOT}'" +
         COMPILERS +
         ADDITIONAL_GN_ARGS);
@@ -142,9 +283,13 @@ Task("libHarfBuzzSharp")
     if (emscriptenFeaturesModifiers.Length != 0)
         outDir = outDir.Combine(string.Join(",", emscriptenFeaturesModifiers));
     EnsureDirectoryExists(outDir);
-    var so = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.wasm.a");
-    CopyFileToDirectory(so, outDir);
-    CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
+    // Emsdk 3.1.56 emits `libHarfBuzzSharp.wasm.a`; newer versions emit
+    // `libHarfBuzzSharp.a.wasm`. Take whichever exists.
+    var hb = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.a.wasm");
+    if (!FileExists(hb))
+        hb = SKIA_PATH.CombineWithFilePath($"out/wasm/libHarfBuzzSharp.wasm.a");
+    CopyFileToDirectory(hb, outDir);
+    CopyFile(hb, outDir.CombineWithFilePath("libHarfBuzzSharp.a"));
 });
 
 Task("Default")
