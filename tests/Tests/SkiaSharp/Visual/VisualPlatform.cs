@@ -24,19 +24,11 @@ namespace SkiaSharp.Tests.Visual
 
 		private static IReadOnlyList<string> DetermineTags()
 		{
-			var baseTag = DetermineTag();
-
-			if (baseTag == "windows" && HasNoSystemFontManager())
+			if (TestConfig.Current.IsNanoServer)
 				return new[] { "nanoserver", "windows" };
 
-			return new[] { baseTag };
+			return new[] { DetermineTag() };
 		}
-
-		// Nano Server is the only Windows configuration with an empty system font
-		// manager (SkFontMgr_New_Custom_Empty over FreeType); probing a basic Latin
-		// character detects it.
-		private static bool HasNoSystemFontManager() =>
-			SkiaSharp.SKFontManager.Default.MatchCharacter('a') is null;
 
 		private static string DetermineTag()
 		{
