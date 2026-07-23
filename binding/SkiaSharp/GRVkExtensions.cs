@@ -11,7 +11,7 @@ namespace SkiaSharp
 		{
 		}
 
-		private GRVkExtensions ()
+		public GRVkExtensions ()
 			: this (SkiaApi.gr_vk_extensions_new (), true)
 		{
 		}

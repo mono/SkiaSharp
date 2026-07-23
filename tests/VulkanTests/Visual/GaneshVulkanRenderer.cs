@@ -49,7 +49,8 @@ namespace SkiaSharp.Tests.Visual
 			{
 				ctx = CreateContextOrSkip();
 
-				using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+				using var extensions = new GRVkExtensions();
+				extensions.Initialize(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
 
 				using var backendContext = new GRSilkNetBackendContext
 				{

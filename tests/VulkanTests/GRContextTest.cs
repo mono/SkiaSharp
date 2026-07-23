@@ -12,7 +12,8 @@ namespace SkiaSharp.Vulkan.Tests
 		{
 			using var ctx = CreateSilkVkContext();
 
-			using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+			using var extensions = new GRVkExtensions();
+			extensions.Initialize(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
 
 			using var grVkBackendContext = new GRVkBackendContext
 			{
@@ -39,7 +40,8 @@ namespace SkiaSharp.Vulkan.Tests
 		{
 			using var ctx = CreateSilkVkContext();
 
-			using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+			using var extensions = new GRVkExtensions();
+			extensions.Initialize(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
 
 			using var grVkBackendContext = new GRVkBackendContext
 			{

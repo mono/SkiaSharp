@@ -5,12 +5,6 @@ namespace SkiaSharp
 {
 	public static class GRVkExtensionsSilkNetExtensions
 	{
-		public static GRVkExtensions Create(GRSilkNetGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice) =>
-			Create(getProc, instance, physicalDevice, null, null);
-
-		public static GRVkExtensions Create(GRSilkNetGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice, string[] instanceExtensions, string[] deviceExtensions) =>
-			GRVkExtensions.Create(ToBaseProc(getProc, instance), instance.Handle, physicalDevice.Handle, instanceExtensions, deviceExtensions);
-
 		public static void Initialize(this GRVkExtensions extensions, GRSilkNetGetProcedureAddressDelegate getProc, Instance instance, PhysicalDevice physicalDevice) =>
 			extensions.Initialize(getProc, instance, physicalDevice, null, null);
 
