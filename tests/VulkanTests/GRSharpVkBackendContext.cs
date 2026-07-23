@@ -9,7 +9,7 @@ namespace SkiaSharp.Vulkan.Tests
 		[Fact]
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
-			using var ctx = CreateVkContext();
+			using var ctx = CreateSharpVkContext();
 			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
 				VkInstance = ctx.Instance,

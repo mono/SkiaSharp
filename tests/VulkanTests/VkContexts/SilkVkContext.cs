@@ -22,6 +22,9 @@ namespace SkiaSharp.Tests
 	/// </summary>
 	public sealed unsafe class SilkVkContext : IDisposable
 	{
+		// Vulkan 1.1 — the API level Skia targets; also handed to GRVkBackendContext.MaxAPIVersion.
+		public const uint ApiVersion = (1u << 22) | (1u << 12);
+
 		private readonly Vk vk;
 
 		public Instance Instance { get; }
@@ -36,7 +39,11 @@ namespace SkiaSharp.Tests
 
 		public PhysicalDeviceFeatures Features { get; }
 
+		/// <summary>Silk.NET-typed proc lookup, for <see cref="GRSilkNetBackendContext"/>.</summary>
 		public GRSilkNetGetProcedureAddressDelegate GetProc { get; }
+
+		/// <summary>Raw-handle proc lookup, for the binding-neutral <see cref="GRVkBackendContext"/>.</summary>
+		public GRVkGetProcedureAddressDelegate BaseGetProc { get; }
 
 		public SilkVkContext()
 		{
@@ -118,6 +125,17 @@ namespace SkiaSharp.Tests
 					if (deviceHandle.Handle != 0)
 						return localVk.GetDeviceProcAddr(deviceHandle, pName);
 					return localVk.GetInstanceProcAddr(instanceHandle, pName);
+				}
+			};
+
+			BaseGetProc = (name, instanceHandle, deviceHandle) =>
+			{
+				var bytes = Encoding.ASCII.GetBytes(name + "\0");
+				fixed (byte* pName = bytes)
+				{
+					if (deviceHandle != IntPtr.Zero)
+						return localVk.GetDeviceProcAddr(new Device(deviceHandle), pName);
+					return localVk.GetInstanceProcAddr(new Instance(instanceHandle), pName);
 				}
 			};
 		}

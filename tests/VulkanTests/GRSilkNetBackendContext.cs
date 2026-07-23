@@ -1,19 +1,17 @@
-﻿using System;
-using Silk.NET.Vulkan;
+﻿using Silk.NET.Vulkan;
 using Xunit;
 using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
-	public class SilkNetBackendContextTest
+	public class SilkNetBackendContextTest : VKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
 		[Fact]
 		public void VkGpuSurfaceIsCreatedSilkNetTypes()
 		{
-			using var ctx = CreateSilkContextOrSkip();
+			using var ctx = CreateSilkVkContext();
 
-			const uint apiVersion = (1u << 22) | (1u << 12); // Vulkan 1.1
 			using var extensions = GRVkExtensionsSilkNetExtensions.Create(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
 
 			using var grVkBackendContext = new GRSilkNetBackendContext
@@ -23,7 +21,7 @@ namespace SkiaSharp.Vulkan.Tests
 				VkDevice = ctx.Device,
 				VkQueue = ctx.GraphicsQueue,
 				GraphicsQueueIndex = ctx.GraphicsFamily,
-				MaxAPIVersion = apiVersion,
+				MaxAPIVersion = SilkVkContext.ApiVersion,
 				Extensions = extensions,
 				GetProcedureAddress = ctx.GetProc,
 				VkPhysicalDeviceFeatures = ctx.Features,
@@ -38,22 +36,6 @@ namespace SkiaSharp.Vulkan.Tests
 
 			surface.Canvas.Clear(SKColors.Purple);
 			grContext.Flush(submit: true, synchronous: true);
-		}
-
-		// A missing native entry point is a broken binding and must fail; an
-		// absent Vulkan loader / ICD (no driver, no software rasterizer) is an
-		// honest skip.
-		private static SilkVkContext CreateSilkContextOrSkip()
-		{
-			try
-			{
-				return new SilkVkContext();
-			}
-			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
-			{
-				Assert.Skip($"Unable to create a Silk.NET Vulkan context: {ex.Message}");
-				throw;
-			}
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
