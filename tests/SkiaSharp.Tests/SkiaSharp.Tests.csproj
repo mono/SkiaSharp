@@ -14,18 +14,6 @@
     <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
   </ItemGroup>
 
-  <!--
-    Vulkan test dependencies. The Vulkan tests live in ..\VulkanTests and are
-    compiled into this shared library (below), so every host that references it
-    (Console via source, plus the Devices and WASM apps) picks them up uniformly.
-    The tests skip at runtime on platforms without a Vulkan ICD, and SharpVk is
-    only ever instantiated on Windows (see VKTest.CreateSharpVkContext).
-  -->
-  <ItemGroup>
-    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
-    <PackageReference Include="SharpVk" Version="0.4.2" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
@@ -33,6 +21,9 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
+    <!-- The Vulkan tests (..\VulkanTests below) are compiled into this shared library; these two
+         projects bring in Silk.NET.Vulkan and SharpVk transitively. Hosts that reference this
+         library (Devices, WASM) get the Vulkan tests too; they skip where there is no Vulkan ICD. -->
     <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
   </ItemGroup>
