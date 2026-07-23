@@ -10,6 +10,7 @@ namespace SkiaSharp.Tests
 		protected static bool IsUnix = TestConfig.Current.IsUnix;
 		protected static bool IsWindows = TestConfig.Current.IsWindows;
 		protected static bool IsNanoServer = TestConfig.Current.IsNanoServer;
+		protected static bool IsMusl = TestConfig.Current.IsMusl;
 
 		// XPS requires the Windows XPS Object Model / DirectWrite, present on desktop
 		// and Server Windows but not on Nano Server or non-Windows platforms (where

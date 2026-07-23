@@ -21,6 +21,8 @@ namespace SkiaSharp.Tests
 		public bool IsMac => PlatformConfiguration.IsMac;
 		public bool IsUnix => PlatformConfiguration.IsUnix;
 		public bool IsWindows => PlatformConfiguration.IsWindows;
+		public bool IsGlibc => PlatformConfiguration.IsGlibc;
+		public bool IsMusl => PlatformConfiguration.IsLinux && !PlatformConfiguration.IsGlibc;
 		public bool IsNanoServer => _isNanoServer.Value;
 
 		private static readonly Lazy<bool> _isNanoServer = new(DetectNanoServer);
