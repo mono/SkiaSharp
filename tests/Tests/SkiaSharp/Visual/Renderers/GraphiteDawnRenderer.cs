@@ -65,13 +65,22 @@ namespace SkiaSharp.Tests.Visual
 						?? throw new RendererUnavailableException("adapter.requestDevice returned null.");
 					s_offscreenDevice = device;
 
-					var queue = SKWebGpu.GetDeviceQueue(device);
-					int queueId = SKWebGpu.RegisterQueue(queue);
-					int deviceId = SKWebGpu.RegisterDevice(device);
-					// Emscripten 3.1.56 has no mgrInstance — wgpuCreateInstance returns
-					// a hard-coded value. Skia's DawnBackendContext stores fInstance
-					// opaquely, so any non-null value works.
+					// SkiaSharp.NativeAssets.WebAssembly.targets exports
+					// _wgpuCreateInstance so we can allocate a real WGPUInstanceImpl
+					// under the emdawnwebgpu port. wgpu::Instance(...) inside
+					// sk_graphite_context_make_dawn calls AddRef on this handle,
+					// which dereferences it — a fake sentinel would hang.
 					int instanceId = SKWebGpu.CreateInstance();
+					if (instanceId == 0)
+						throw new InvalidOperationException("Module._wgpuCreateInstance not exported — cannot obtain a real WGPUInstance.");
+
+					// The imported device/queue must carry the instance ID as
+					// EventSource parent, otherwise EventManager::WaitAny fires
+					// assert(event->mInstanceId == instance) on the first async
+					// wait (buffer.mapAsync, createRenderPipelineAsync, ...).
+					var queue = SKWebGpu.GetDeviceQueue(device);
+					int queueId = SKWebGpu.RegisterQueue(queue, instanceId);
+					int deviceId = SKWebGpu.RegisterDevice(device, instanceId);
 
 					var bc = new SKGraphiteDawnBackendContext
 					{
@@ -81,7 +90,14 @@ namespace SkiaSharp.Tests.Visual
 					};
 					s_ctx = SKGraphiteContext.CreateDawn(bc)
 						?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
-					s_recorder = s_ctx.CreateRecorder()
+					// Register a findOrCreate image-provider callback so raster
+					// SkImages (glyph atlases, cached surfaces, XAML Image controls)
+					// upload to Graphite-backed textures on first use. Without a
+					// callback, Skia's Graphite has no way to convert a raster
+					// SkImage and every DrawImage / DrawText / ... path hits
+					// "Couldn't convert SkImage to a Graphite-backed representation"
+					// and the draw is silently dropped.
+					s_recorder = s_ctx.CreateRecorder(-1, (recorder, image, mipmapped) => image.ToTextureImage(recorder, mipmapped))
 						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
 					s_dawnReady = true;
 				}
@@ -161,6 +177,15 @@ namespace SkiaSharp.Tests.Visual
 		[JSImport("globalThis.eval")]
 		private static partial void Eval(string expr);
 
+		// Evaluate an expression and marshal the resulting JS value back as a
+		// JSObject reference. Used to hand `globalThis` itself over to managed
+		// code so we can stash the dotnet-runtime-scoped `Module` on it (the
+		// alternative — referencing `Module` from inside a `globalThis.eval`
+		// string — fails with ReferenceError because eval runs at global
+		// scope and `Module` lives inside dotnet.native.js's IIFE).
+		[JSImport("globalThis.eval")]
+		private static partial JSObject EvalObject(string expr);
+
 		static SKWebGpu()
 		{
 			// Fail fast at static-ctor time if we're not inside a .NET WASM
@@ -171,65 +196,81 @@ namespace SkiaSharp.Tests.Visual
 			_ = module.GetPropertyAsJSObject("WebGPU")
 				?? throw new InvalidOperationException("Module.WebGPU missing — EXPORTED_RUNTIME_METHODS lacks 'WebGPU'.");
 
+			// The helpers installed below run at global scope (via
+			// globalThis.eval), so they can't reach the IIFE-scoped `Module`.
+			// Publish the JSObject we already have onto globalThis and read it
+			// back from there.
+			var globalThisObj = EvalObject("globalThis")
+				?? throw new InvalidOperationException("globalThis unavailable — cannot install SkiaSharp WebGPU shim.");
+			globalThisObj.SetProperty("skiaSharpModule", module);
+
 			Eval(@"
-				globalThis.skiaSharpWebGpu = {
-					requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),
-					createInstance: () => (typeof _wgpuCreateInstance === 'function') ? _wgpuCreateInstance(0) : 1,
-					// Port-agnostic handle registration. emdawnwebgpu ships
-					// importJs* on Module.WebGPU; the legacy -sUSE_WEBGPU=1
-					// port shipped mgr* HandleAllocator tables with .create.
-					registerDevice: (d) => Module.WebGPU.importJsDevice
-						? Module.WebGPU.importJsDevice(d)
-						: Module.WebGPU.mgrDevice.create(d),
-					registerQueue: (q) => Module.WebGPU.importJsQueue
-						? Module.WebGPU.importJsQueue(q)
-						: Module.WebGPU.mgrQueue.create(q),
-					registerTexture: (t) => Module.WebGPU.importJsTexture
-						? Module.WebGPU.importJsTexture(t)
-						: Module.WebGPU.mgrTexture.create(t),
-					// Under emdawnwebgpu, released handles hold real
-					// refcounted C-side WGPUTexture objects — call the C ABI
-					// via the exported symbol. Under the legacy port they
-					// were HandleAllocator table entries with a JS-side
-					// .release. Try the C ABI first (it's the mandatory
-					// path under emdawnwebgpu), fall back to the JS table.
-					releaseTexture: (id) => {
-						if (typeof Module._wgpuTextureRelease === 'function') {
-							Module._wgpuTextureRelease(id);
-						} else if (Module.WebGPU.mgrTexture) {
-							Module.WebGPU.mgrTexture.release(id);
-						}
-					},
-					requestDevice: (adapter) => adapter.requestDevice(),
-					deviceQueue: (d) => d.queue,
-					createTexture: (d, w, h) => d.createTexture({
-						size: { width: w, height: h, depthOrArrayLayers: 1 },
-						format: 'rgba8unorm',
-						usage: 0x10 | 0x01,
-					}),
-					createBuffer: (d, sz) => d.createBuffer({ size: sz, usage: 0x09 }),
-					createCommandEncoder: (d) => d.createCommandEncoder(),
-					copyTextureToBuffer: (e, tex, buf, bpr, w, h) => e.copyTextureToBuffer(
-						{ texture: tex },
-						{ buffer: buf, bytesPerRow: bpr, rowsPerImage: h },
-						{ width: w, height: h, depthOrArrayLayers: 1 }),
-					submitEncoder: (d, e) => d.queue.submit([e.finish()]),
-					mapBufferRead: (b) => b.mapAsync(0x01),
-					getMappedBase64: (b, bpr, w, h) => {
-						const mapped = new Uint8Array(b.getMappedRange());
-						const widthBytes = w * 4;
-						const packed = new Uint8Array(widthBytes * h);
-						for (let r = 0; r < h; r++)
-							packed.set(mapped.subarray(r * bpr, r * bpr + widthBytes), r * widthBytes);
-						b.unmap();
-						b.destroy();
-						let s = '';
-						const CHUNK = 0x8000;
-						for (let i = 0; i < packed.length; i += CHUNK)
-							s += String.fromCharCode.apply(null, packed.subarray(i, i + CHUNK));
-						return btoa(s);
-					},
-				};
+				(function () {
+					const M = globalThis.skiaSharpModule;
+					globalThis.skiaSharpWebGpu = {
+						requestAdapter: () => navigator.gpu && navigator.gpu.requestAdapter({ powerPreference: 'low-power' }),
+						createInstance: () => (typeof M._wgpuCreateInstance === 'function') ? M._wgpuCreateInstance(0) : 0,
+						// Port-agnostic handle registration. emdawnwebgpu ships
+						// importJs* on Module.WebGPU; the legacy -sUSE_WEBGPU=1
+						// port shipped mgr* HandleAllocator tables with .create.
+						// emdawnwebgpu tags each imported object's events with the
+						// parent EventSource's InstanceID; leaving parent=0 makes
+						// WaitAny assert(event->mInstanceId == instance) fire on
+						// the first async wait. Pass the current instance handle
+						// so device/queue events resolve against it.
+						registerDevice: (d, parent) => M.WebGPU.importJsDevice
+							? M.WebGPU.importJsDevice(d, parent)
+							: M.WebGPU.mgrDevice.create(d),
+						registerQueue: (q, parent) => M.WebGPU.importJsQueue
+							? M.WebGPU.importJsQueue(q, parent)
+							: M.WebGPU.mgrQueue.create(q),
+						registerTexture: (t) => M.WebGPU.importJsTexture
+							? M.WebGPU.importJsTexture(t)
+							: M.WebGPU.mgrTexture.create(t),
+						// Under emdawnwebgpu, released handles hold real
+						// refcounted C-side WGPUTexture objects — call the C ABI
+						// via the exported symbol. Under the legacy port they
+						// were HandleAllocator table entries with a JS-side
+						// .release. Try the C ABI first (it's the mandatory
+						// path under emdawnwebgpu), fall back to the JS table.
+						releaseTexture: (id) => {
+							if (typeof M._wgpuTextureRelease === 'function') {
+								M._wgpuTextureRelease(id);
+							} else if (M.WebGPU.mgrTexture) {
+								M.WebGPU.mgrTexture.release(id);
+							}
+						},
+						requestDevice: (adapter) => adapter.requestDevice(),
+						deviceQueue: (d) => d.queue,
+						createTexture: (d, w, h) => d.createTexture({
+							size: { width: w, height: h, depthOrArrayLayers: 1 },
+							format: 'rgba8unorm',
+							usage: 0x10 | 0x01,
+						}),
+						createBuffer: (d, sz) => d.createBuffer({ size: sz, usage: 0x09 }),
+						createCommandEncoder: (d) => d.createCommandEncoder(),
+						copyTextureToBuffer: (e, tex, buf, bpr, w, h) => e.copyTextureToBuffer(
+							{ texture: tex },
+							{ buffer: buf, bytesPerRow: bpr, rowsPerImage: h },
+							{ width: w, height: h, depthOrArrayLayers: 1 }),
+						submitEncoder: (d, e) => d.queue.submit([e.finish()]),
+						mapBufferRead: (b) => b.mapAsync(0x01),
+						getMappedBase64: (b, bpr, w, h) => {
+							const mapped = new Uint8Array(b.getMappedRange());
+							const widthBytes = w * 4;
+							const packed = new Uint8Array(widthBytes * h);
+							for (let r = 0; r < h; r++)
+								packed.set(mapped.subarray(r * bpr, r * bpr + widthBytes), r * widthBytes);
+							b.unmap();
+							b.destroy();
+							let s = '';
+							const CHUNK = 0x8000;
+							for (let i = 0; i < packed.length; i += CHUNK)
+								s += String.fromCharCode.apply(null, packed.subarray(i, i + CHUNK));
+							return btoa(s);
+						},
+					};
+				})();
 			");
 		}
 
@@ -243,10 +284,10 @@ namespace SkiaSharp.Tests.Visual
 		internal static partial JSObject GetDeviceQueue(JSObject device);
 
 		[JSImport("globalThis.skiaSharpWebGpu.registerDevice")]
-		internal static partial int RegisterDevice(JSObject device);
+		internal static partial int RegisterDevice(JSObject device, int parent);
 
 		[JSImport("globalThis.skiaSharpWebGpu.registerQueue")]
-		internal static partial int RegisterQueue(JSObject queue);
+		internal static partial int RegisterQueue(JSObject queue, int parent);
 
 		[JSImport("globalThis.skiaSharpWebGpu.registerTexture")]
 		internal static partial int RegisterTexture(JSObject texture);
