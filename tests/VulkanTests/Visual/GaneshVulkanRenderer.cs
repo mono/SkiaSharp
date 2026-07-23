@@ -33,9 +33,16 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows
+			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows || IsAndroid
 				? null
-				: "Vulkan is wired up for the Linux and Windows desktop hosts.";
+				: "Vulkan is wired up for the Linux, Windows, and Android hosts.";
+
+		private static bool IsAndroid =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsAndroid();
+#else
+			false;
+#endif
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

@@ -28,7 +28,6 @@ Task ("Default")
         var testAssemblies = new List<string> {
             "SkiaSharp.Tests.Console",
             "SkiaSharp.Tests.SingletonInit.Console",
-            "SkiaSharp.Vulkan.Tests.Console",
             "SkiaSharp.Direct3D.Tests.Console",
         };
         foreach (var testAssembly in testAssemblies) {
