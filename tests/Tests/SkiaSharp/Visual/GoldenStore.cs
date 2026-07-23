@@ -62,21 +62,22 @@ namespace SkiaSharp.Tests.Visual
 
 		/// <summary>
 		/// The default golden key for a cell, relative to the <c>Goldens</c> root:
-		/// <c>{renderer}.{platform}/{scene}.png</c>. This is the path the
-		/// captured-image marker carries and the harvest script writes to by
-		/// default; a promoted, platform-portable golden lives at the shared
-		/// <c>{renderer}/{scene}.png</c> key instead.
+		/// <c>{renderer}.{platform}/{scene}.png</c> using the most-specific platform
+		/// tag. This is the path the captured-image marker carries and the harvest
+		/// script writes to by default; a promoted, platform-portable golden lives at
+		/// the shared <c>{renderer}/{scene}.png</c> key instead.
 		/// </summary>
 		public static string Key(string rendererName, string sceneName) =>
-			$"{rendererName}.{VisualPlatform.Tag}/{sceneName}.png";
+			$"{rendererName}.{VisualPlatform.Tags[0]}/{sceneName}.png";
 
 		/// <summary>
 		/// Golden keys for a cell in lookup order (most specific first):
-		/// the per-platform override, then the platform-portable renderer golden.
+		/// each per-platform tag, then the platform-portable renderer golden.
 		/// </summary>
 		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
 		{
-			yield return $"{rendererName}.{VisualPlatform.Tag}/{sceneName}.png";
+			foreach (var tag in VisualPlatform.Tags)
+				yield return $"{rendererName}.{tag}/{sceneName}.png";
 			yield return $"{rendererName}/{sceneName}.png";
 		}
 

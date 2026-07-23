@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace SkiaSharp.Tests.Visual
 {
@@ -10,7 +12,25 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	internal static class VisualPlatform
 	{
-		public static string Tag { get; } = DetermineTag();
+		/// <summary>
+		/// Golden directory tags for the current host, most specific first. Usually a
+		/// single entry, but Windows Nano Server rasterizes text with FreeType instead
+		/// of DirectWrite, so it looks up its own <c>nanoserver</c> golden first and
+		/// falls back to the shared <c>windows</c> golden for cells that render
+		/// identically (shapes, gradients).
+		/// </summary>
+		public static IReadOnlyList<string> Tags { get; } = DetermineTags().ToList();
+
+		private static IEnumerable<string> DetermineTags()
+		{
+			// Nano Server IS Windows but rasterizes text with FreeType, not DirectWrite,
+			// so it looks up its own golden first and then falls back to the shared
+			// "windows" golden (DetermineTag returns "windows" on Nano).
+			if (TestConfig.Current.IsNanoServer)
+				yield return "nanoserver";
+
+			yield return DetermineTag();
+		}
 
 		private static string DetermineTag()
 		{

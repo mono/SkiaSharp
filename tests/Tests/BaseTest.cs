@@ -9,6 +9,13 @@ namespace SkiaSharp.Tests
 		protected static bool IsMac = TestConfig.Current.IsMac;
 		protected static bool IsUnix = TestConfig.Current.IsUnix;
 		protected static bool IsWindows = TestConfig.Current.IsWindows;
+		protected static bool IsNanoServer = TestConfig.Current.IsNanoServer;
+		protected static bool IsMusl = TestConfig.Current.IsMusl;
+
+		// XPS requires the Windows XPS Object Model / DirectWrite, present on desktop
+		// and Server Windows but not on Nano Server or non-Windows platforms (where
+		// CreateXps returns null).
+		protected static bool SupportsXps = IsWindows && !IsNanoServer;
 
 		protected static string[] UnicodeFontFamilies => TestConfig.Current.UnicodeFontFamilies;
 		protected static string DefaultFontFamily => TestConfig.Current.DefaultFontFamily;
@@ -93,6 +100,32 @@ namespace SkiaSharp.Tests
 		protected static void SkipOnPlatform(bool condition, string reason)
 		{
 			Assert.SkipWhen(condition, reason);
+		}
+
+		// True when the platform has no system font manager that can enumerate or match fonts.
+		// WASM has no font manager; the NoDependencies Linux builds (skia_use_fontconfig=false) and
+		// Windows Nano Server have an "empty" font manager that reports one empty family and matches
+		// nothing. Probing a basic Latin character ('a') detects all three (guard IsBrowser first so
+		// we never call into a non-existent manager on WASM).
+		protected static bool HasNoSystemFontManager =>
+			IsBrowser || SkiaSharp.SKFontManager.Default.MatchCharacter('a') is null;
+
+		// True when there is no usable default typeface. The NoDependencies and Nano Server builds
+		// default to an empty typeface (no glyphs). WASM keeps a single embedded default font, so it
+		// is NOT considered fontless here.
+		protected static bool HasNoDefaultFont =>
+			SkiaSharp.SKTypeface.Default.IsEmpty;
+
+		// Skip tests that need the system font manager to enumerate or match fonts.
+		protected static void SkipWhenNoSystemFontManager(string reason = "This platform has no system font manager to enumerate or match fonts.")
+		{
+			Assert.SkipWhen(HasNoSystemFontManager, reason);
+		}
+
+		// Skip tests that need a usable default typeface (system fonts installed and enumerable).
+		protected static void SkipWhenNoDefaultFont(string reason = "This platform has no usable default typeface (no system fonts).")
+		{
+			Assert.SkipWhen(HasNoDefaultFont, reason);
 		}
 	}
 }

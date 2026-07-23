@@ -168,7 +168,7 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint) {
 
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
-dotnet test tests/SkiaSharp.Tests.Console.sln
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 
 ## Reference-Counted Return Example

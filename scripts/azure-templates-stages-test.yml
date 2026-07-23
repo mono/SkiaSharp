@@ -84,7 +84,7 @@ stages:
       ${{ else }}:
         dependsOn: native
       jobs:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netfx (Windows)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework)
           parameters:
             name: tests_netfx_windows
             displayName: Windows (.NET Framework)
@@ -110,7 +110,7 @@ stages:
               - name: testlogs_netfx_windows
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Windows)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Core)
           parameters:
             name: tests_netcore_windows
             displayName: Windows (.NET Core)
@@ -138,10 +138,10 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_windows
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|macOS
           parameters:
             name: tests_netcore_macos
-            displayName: macOS (.NET Core)
+            displayName: macOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
@@ -166,10 +166,10 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_macos
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|netcore (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux
           parameters:
             name: tests_netcore_linux
-            displayName: Linux (.NET Core)
+            displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
             # Software GL (Mesa llvmpipe) + software Vulkan (Mesa lavapipe) + a
             # virtual X server give the headless agent deterministic GPU output so
@@ -217,10 +217,10 @@ stages:
                 path: 'output/logs/testlogs'
               - name: coverage_netcore_linux
                 path: 'output/coverage'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|android (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Android
           parameters:
             name: tests_android_linux
-            displayName: Android (Linux)
+            displayName: Android
             buildAgent: ${{ parameters.buildAgentAndroidTests }}
             target: tests-android
             additionalArgs: --device=android-emulator-64 --deviceVersion=$(ANDROID_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
@@ -259,10 +259,10 @@ stages:
               - name: testlogs_android_$(ANDROID_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|ios (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|iOS
           parameters:
             name: tests_ios_macos
-            displayName: iOS (macOS)
+            displayName: iOS
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-ios
             additionalArgs: --device=ios-simulator-64 --deviceVersion=$(IOS_TEST_DEVICE_VERSION) --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
@@ -284,10 +284,10 @@ stages:
               - name: testlogs_ios_$(IOS_TEST_DEVICE_VERSION)
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|maccatalyst (macOS)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Mac Catalyst
           parameters:
             name: tests_maccatalyst_macos
-            displayName: Mac Catalyst (macOS)
+            displayName: Mac Catalyst
             continueOnError: true
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
@@ -311,10 +311,10 @@ stages:
               - name: testlogs_maccatalyst
                 always: true
                 path: 'output/logs/testlogs'
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests [WASM] (Linux)
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|WASM
           parameters:
             name: tests_wasm_linux
-            displayName: WASM (Linux)
+            displayName: WASM
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
@@ -347,7 +347,7 @@ stages:
             # mismatch in the native lib, fail CI. installPreviewSdk provisions the preview SDK +
             # wasm-tools workload (which bundles the matching emscripten) and pins global.json to it.
             name: tests_wasm_preview_linux
-            displayName: WASM Preview (Linux)
+            displayName: WASM (.NET Preview)
             buildAgent: ${{ parameters.buildAgentLinux }}
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
@@ -370,9 +370,134 @@ stages:
               - name: testlogs_wasm_preview
                 always: true
                 path: 'output/logs/testlogs'
-        # TODO: add tests for linux alpine
-        # TODO: add tests for linux no dependencies
-        # TODO: add tests for windows nano server
+
+        # Containerized test legs — see documentation/dev/containerized-testing.md
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
+          parameters:
+            name: tests_container_linux
+            displayName: Linux (Azure Linux)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/azurelinux
+            target: tests-container
+            additionalArgs: --nativePlatform=linux
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Azure Linux container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Azure Linux) Tests'
+            publishArtifacts:
+              - name: testlogs_container_linux
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
+          parameters:
+            name: tests_container_linux_nodeps
+            displayName: Linux (Azure Linux, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/azurelinux-nodeps
+            target: tests-container
+            additionalArgs: --nativePlatform=linuxnodeps
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Azure Linux NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Azure Linux, No Dependencies) Tests'
+            publishArtifacts:
+              - name: testlogs_container_linux_nodeps
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
+          parameters:
+            name: tests_container_alpine_linux
+            displayName: Linux (Alpine)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/alpine
+            target: tests-container
+            additionalArgs: --nativePlatform=alpine
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Alpine container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Alpine) Tests'
+            publishArtifacts:
+              - name: testlogs_container_alpine
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
+          parameters:
+            name: tests_container_alpine_nodeps
+            displayName: Linux (Alpine, No Dependencies)
+            buildAgent: ${{ parameters.buildAgentLinux }}
+            docker: scripts/infra/tests/docker/alpine-nodeps
+            target: tests-container
+            additionalArgs: --nativePlatform=alpinenodeps
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Alpine NoDeps container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Linux (Alpine, No Dependencies) Tests'
+            publishArtifacts:
+              - name: testlogs_container_alpine_nodeps
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
+          parameters:
+            name: tests_container_nanoserver_windows
+            displayName: Windows (Nano Server)
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            docker: scripts/infra/tests/docker/nanoserver
+            target: tests-container
+            additionalArgs: --nativePlatform=nanoserver
+            installAndroidSdk: false
+            installXcode: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            postBuildSteps:
+              - task: PublishTestResults@2
+                displayName: Publish the Nano Server container test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Nano Server Container Tests'
+            publishArtifacts:
+              - name: testlogs_container_nanoserver
+                always: true
+                path: 'output/logs/testlogs'
+
         - job: coverage_reports                      # Coverage Reports
           displayName: Coverage Reports
           pool: ${{ parameters.buildAgentHost.pool }}

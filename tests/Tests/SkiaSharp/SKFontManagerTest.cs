@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void TestFontManagerMatchCharacter()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 			var emoji = "🚀";
@@ -51,7 +51,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void TestGetFontStyles()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -64,7 +64,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void TestMatchFamilyStyle()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -243,7 +243,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -261,7 +261,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public unsafe void TypefaceAndFontManagerReturnsSameObject()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system font manager");
+			SkipWhenNoSystemFontManager();
 
 			var fonts = SKFontManager.Default;
 
@@ -279,6 +279,7 @@ namespace SkiaSharp.Tests
 		public unsafe void GCStillCollectsTypeface()
 		{
 			SkipOnNonWindows("Test uses Windows-specific font path");
+			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
 			var handle = DoWork();
 

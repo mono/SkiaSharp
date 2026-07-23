@@ -377,7 +377,7 @@ jobs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
                 image: skiasharp:skiasharp
-                buildArguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
@@ -387,19 +387,34 @@ jobs:
                 command: build
                 buildContext: ${{ parameters.docker }}
                 dockerfile: ${{ parameters.docker }}/Dockerfile
-                arguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
-          - bash: |
-              echo dotnet tool restore > cmd.sh
-              echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
-              sed -i 's/--gnArgs=\" \"//' cmd.sh
-              cat cmd.sh
-            displayName: Generate the script for the Docker image
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - bash: |
-              docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
-            displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
-            retryCountOnTaskFailure: ${{ parameters.retryCount }}
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+          # Run the target inside the image against the mounted repo. Linux and Windows containers
+          # differ in shell and mount path, so the run step is branched by agent OS.
+          - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
+            - bash: |
+                echo dotnet tool restore > cmd.sh
+                echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+                sed -i 's/--gnArgs=\" \"//' cmd.sh
+                cat cmd.sh
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - bash: |
+                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+            - pwsh: |
+                'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
+                'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
+                Get-Content cmd.cmd
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
