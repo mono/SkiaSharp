@@ -1,19 +1,22 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
-using SharpVk;
+using SkiaSharp.Tests.Visual;
+using SkiaSharp.Vulkan.Tests;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Graphite release-callback tests over Vulkan, for the Linux and Windows
-	/// desktop hosts. Shares the SharpVk bring-up used by
-	/// <c>GraphiteVulkanRenderer</c>, then lets Skia allocate the wrappable backend
-	/// texture via <see cref="SKGraphiteRecorder.CreateBackendTexture"/> (no manual
-	/// VkImage). Runs on CI wherever a Vulkan device — real or a software ICD — is
+	/// Graphite release-callback tests over Vulkan, for the Linux, Windows and
+	/// Android hosts. Brings Vulkan up through the maintained, cross-platform
+	/// <see cref="SilkVkContext"/> (Silk.NET) and feeds the raw handles to
+	/// <see cref="SKGraphiteContext.CreateVulkan"/>, then lets Skia allocate the
+	/// wrappable backend texture via
+	/// <see cref="SKGraphiteRecorder.CreateBackendTexture"/> (no manual VkImage).
+	/// Runs wherever a Vulkan device — real or a software ICD such as Lavapipe — is
 	/// present; skips cleanly otherwise.
 	/// </summary>
+	[Collection(VulkanGpuRenderingCollection.Name)]
 	public sealed class SKGraphiteReleaseVulkanTests : SKGraphiteReleaseTestsBase
 	{
 		// VK_FORMAT_R8G8B8A8_UNORM matches SKColorType.Rgba8888.
@@ -28,55 +31,37 @@ namespace SkiaSharp.Tests
 		protected override SKColorType ColorType => SKColorType.Rgba8888;
 
 		protected override string UnsupportedReason =>
-			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows
+			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows || TestConfig.Current.IsAndroid
 				? null
-				: "Vulkan is wired up for the Linux and Windows desktop hosts.";
+				: "Vulkan is wired up for the Linux, Windows, and Android hosts.";
 
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
 			Task.FromResult(CreateHarness());
 
 		private GraphiteReleaseHarness CreateHarness()
 		{
-			Instance instance;
+			SilkVkContext ctx;
 			try
 			{
-				instance = Instance.Create(null, null);
+				ctx = new SilkVkContext();
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
-				Assert.Skip($"Unable to create a Vulkan instance on this host: {ex.Message}");
+				Assert.Skip($"Unable to create a Vulkan context on this host: {ex.Message}");
 				throw; // unreachable
 			}
 
 			try
 			{
-				var physicalDevice = instance.EnumeratePhysicalDevices().FirstOrDefault();
-				if (physicalDevice is null)
-				{
-					instance.Dispose();
-					Assert.Skip("No Vulkan physical device was found (no driver or software ICD installed).");
-				}
-
-				var graphicsFamily = FindGraphicsFamily(physicalDevice);
-				var device = physicalDevice.CreateDevice(new[]
-				{
-					new DeviceQueueCreateInfo { QueueFamilyIndex = graphicsFamily, QueuePriorities = new[] { 1f } },
-				}, null, null);
-				var queue = device.GetQueue(graphicsFamily, 0);
-
-				var localInstance = instance;
-				var localDevice = device;
 				var backendContext = new SKGraphiteVkBackendContext
 				{
-					VkInstance = (IntPtr)instance.RawHandle.ToUInt64(),
-					VkPhysicalDevice = (IntPtr)physicalDevice.RawHandle.ToUInt64(),
-					VkDevice = (IntPtr)device.RawHandle.ToUInt64(),
-					VkQueue = (IntPtr)queue.RawHandle.ToUInt64(),
-					GraphicsQueueIndex = graphicsFamily,
-					GetProcedureAddress = (name, inst, dev) =>
-						dev != IntPtr.Zero ? localDevice.GetProcedureAddress(name)
-						: inst != IntPtr.Zero ? localInstance.GetProcedureAddress(name)
-						: localInstance.GetProcedureAddress(name),
+					VkInstance = ctx.Instance.Handle,
+					VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+					VkDevice = ctx.Device.Handle,
+					VkQueue = ctx.GraphicsQueue.Handle,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxApiVersion = SilkVkContext.ApiVersion,
+					GetProcedureAddress = (name, instance, device) => ctx.BaseGetProc(name, instance, device),
 				};
 
 				var context = SKGraphiteContext.CreateVulkan(backendContext)
@@ -84,39 +69,25 @@ namespace SkiaSharp.Tests
 				var recorder = context.CreateRecorder()
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
 
-				return new VulkanHarness(instance, device, backendContext, context, recorder);
+				return new VulkanHarness(ctx, backendContext, context, recorder);
 			}
 			catch
 			{
-				instance.Dispose();
+				ctx.Dispose();
 				throw;
 			}
 		}
 
-		private static uint FindGraphicsFamily(PhysicalDevice physicalDevice)
-		{
-			var families = physicalDevice.GetQueueFamilyProperties();
-			for (uint i = 0; i < families.Length; i++)
-			{
-				if (families[i].QueueFlags.HasFlag(QueueFlags.Graphics))
-					return i;
-			}
-
-			throw new InvalidOperationException("This Vulkan device exposes no graphics queue family.");
-		}
-
 		private sealed class VulkanHarness : GraphiteReleaseHarness
 		{
-			private readonly Instance instance;
-			private readonly Device device;
+			private readonly SilkVkContext ctx;
 			private readonly SKGraphiteVkBackendContext backendContext;
 			private readonly SKGraphiteContext context;
 			private readonly SKGraphiteRecorder recorder;
 
-			public VulkanHarness(Instance instance, Device device, SKGraphiteVkBackendContext backendContext, SKGraphiteContext context, SKGraphiteRecorder recorder)
+			public VulkanHarness(SilkVkContext ctx, SKGraphiteVkBackendContext backendContext, SKGraphiteContext context, SKGraphiteRecorder recorder)
 			{
-				this.instance = instance;
-				this.device = device;
+				this.ctx = ctx;
 				this.backendContext = backendContext;
 				this.context = context;
 				this.recorder = recorder;
@@ -153,8 +124,7 @@ namespace SkiaSharp.Tests
 				recorder.Dispose();
 				context.Dispose();
 				backendContext.Dispose();
-				device.Dispose();
-				instance.Dispose();
+				ctx.Dispose();
 			}
 
 			private sealed class VulkanTextureOwner : IDisposable

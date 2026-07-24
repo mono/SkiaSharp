@@ -55,58 +55,57 @@ namespace SkiaSharp.Tests.Visual
 					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
 					"Metal driver leaves state that hangs the test host on shutdown).");
 
-			lock (GpuRenderGate.Sync)
+			// GPU work is serialized by the GpuRenderingCollection the driving test
+			// class joins (xUnit DisableParallelization), so no in-renderer lock.
+			var device = IntPtr.Zero;
+			var queue = IntPtr.Zero;
+			try
 			{
-				var device = IntPtr.Zero;
-				var queue = IntPtr.Zero;
-				try
-				{
-					device = MTLCreateSystemDefaultDevice();
-					if (device == IntPtr.Zero)
-						throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
+				device = MTLCreateSystemDefaultDevice();
+				if (device == IntPtr.Zero)
+					throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
-					// Probe the device BEFORE allocating a command queue. Skia's Graphite
-					// Metal init walks MTLGPUFamilyApple9..7 and Mac2 and SK_ABORTs the
-					// process if none is supported; the newCommandQueue call itself is
-					// also what leaves the dispatch-queue state that hangs shutdown on
-					// virtualized Metal, so we skip it if the probe fails.
-					if (!MetalCanDriveGraphite(device))
-						throw new RendererUnavailableException(
-							"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
-							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+				// Probe the device BEFORE allocating a command queue. Skia's Graphite
+				// Metal init walks MTLGPUFamilyApple9..7 and Mac2 and SK_ABORTs the
+				// process if none is supported; the newCommandQueue call itself is
+				// also what leaves the dispatch-queue state that hangs shutdown on
+				// virtualized Metal, so we skip it if the probe fails.
+				if (!MetalCanDriveGraphite(device))
+					throw new RendererUnavailableException(
+						"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
+						"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
 
-					queue = ObjcSendVoid(device, "newCommandQueue");
-					if (queue == IntPtr.Zero)
-						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
+				queue = ObjcSendVoid(device, "newCommandQueue");
+				if (queue == IntPtr.Zero)
+					throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
-					var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
-					using var context = SKGraphiteContext.CreateMetal(backendContext)
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
-					using var recorder = context.CreateRecorder()
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
-					using var surface = SKSurface.Create(recorder, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Graphite/Metal.");
+				var backendContext = new SKGraphiteMtlBackendContext { MtlDevice = device, MtlQueue = queue };
+				using var context = SKGraphiteContext.CreateMetal(backendContext)
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateMetal returned null.");
+				using var recorder = context.CreateRecorder()
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				using var surface = SKSurface.Create(recorder, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Graphite/Metal.");
 
-					scene.Draw(surface.Canvas);
+				scene.Draw(surface.Canvas);
 
-					using var recording = recorder.Snap()
-						?? throw new InvalidOperationException("Recorder.Snap() returned null.");
-					if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-						throw new InvalidOperationException("InsertRecording did not report Success.");
-					if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-						throw new InvalidOperationException("Submit(Sync=true) returned false.");
+				using var recording = recorder.Snap()
+					?? throw new InvalidOperationException("Recorder.Snap() returned null.");
+				if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
+					throw new InvalidOperationException("InsertRecording did not report Success.");
+				if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
+					throw new InvalidOperationException("Submit(Sync=true) returned false.");
 
-					// Graphite surfaces don't support synchronous SKSurface.ReadPixels in shipping
-					// builds; read back through the async rescale-and-read path instead.
-					return Task.FromResult(RendererPixels.ReadRgbaGraphite(context, surface, info));
-				}
-				finally
-				{
-					if (queue != IntPtr.Zero)
-						ObjcRelease(queue);
-					if (device != IntPtr.Zero)
-						ObjcRelease(device);
-				}
+				// Graphite surfaces don't support synchronous SKSurface.ReadPixels in shipping
+				// builds; read back through the async rescale-and-read path instead.
+				return Task.FromResult(RendererPixels.ReadRgbaGraphite(context, surface, info));
+			}
+			finally
+			{
+				if (queue != IntPtr.Zero)
+					ObjcRelease(queue);
+				if (device != IntPtr.Zero)
+					ObjcRelease(device);
 			}
 		}
 

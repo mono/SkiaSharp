@@ -1,19 +1,26 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpVk;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
-	/// Graphite GPU backend over Vulkan for the desktop hosts (Linux and Windows).
-	/// Shares the SharpVk vehicle used by <see cref="GaneshVulkanRenderer"/> —
-	/// same Instance → PhysicalDevice → graphics Queue → Device sequence, feeding
-	/// <see cref="SKGraphiteContext.CreateVulkan"/> instead of
-	/// <see cref="GRContext.CreateVulkan"/>. Compiled into the
-	/// <c>SkiaSharp.Vulkan.Tests</c> satellite so the SharpVk dependency stays
-	/// out of the base test assembly.
+	/// Graphite GPU backend over Vulkan for the desktop and Android hosts. Brings
+	/// Vulkan up through <see cref="SilkVkContext"/> — the maintained,
+	/// cross-platform Silk.NET binding — and feeds the raw Vulkan handles to
+	/// <see cref="SKGraphiteContext.CreateVulkan"/> via the binding-neutral
+	/// <see cref="SKGraphiteVkBackendContext"/> (no SharpVk, no Graphite-specific
+	/// wrapper type). It is the Graphite analogue of
+	/// <see cref="GaneshVulkanRenderer"/> and, like it, is fully headless —
+	/// Instance → PhysicalDevice → graphics Queue → Device with no surface/swapchain.
+	///
+	/// <para>
+	/// On a host without a Vulkan ICD (the default macOS agent, or a
+	/// Linux/Windows/Android host missing a driver / software ICD such as Lavapipe)
+	/// instance creation or device enumeration fails and the cell <b>skips</b> with
+	/// a reason. A missing native entry point — a broken binding rather than an
+	/// absent driver — is rethrown so it fails.
+	/// </para>
 	/// </summary>
 	public sealed class GraphiteVulkanRenderer : IRenderer
 	{
@@ -22,9 +29,9 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows
+			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows || TestConfig.Current.IsAndroid
 				? null
-				: "Vulkan is wired up for the Linux and Windows desktop hosts.";
+				: "Vulkan is wired up for the Linux, Windows, and Android hosts.";
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
@@ -33,70 +40,47 @@ namespace SkiaSharp.Tests.Visual
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
 
-			lock (GpuRenderGate.Sync)
+			// GPU work is serialized by the VulkanGpuRenderingCollection the driving
+			// test class joins (xUnit DisableParallelization), so no in-renderer lock.
+			SilkVkContext ctx = null;
+			try
 			{
-				Instance instance = null;
-				Device device = null;
-				try
+				ctx = CreateContextOrSkip();
+
+				using var backendContext = new SKGraphiteVkBackendContext
 				{
-					instance = CreateInstanceOrSkip();
+					VkInstance = ctx.Instance.Handle,
+					VkPhysicalDevice = ctx.PhysicalDevice.Handle,
+					VkDevice = ctx.Device.Handle,
+					VkQueue = ctx.GraphicsQueue.Handle,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxApiVersion = SilkVkContext.ApiVersion,
+					GetProcedureAddress = (name, instance, device) => ctx.BaseGetProc(name, instance, device),
+				};
 
-					var physicalDevice = instance.EnumeratePhysicalDevices().FirstOrDefault()
-						?? throw new RendererUnavailableException(
-							"No Vulkan physical device was found (no driver or software ICD installed).");
+				using var context = SKGraphiteContext.CreateVulkan(backendContext)
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateVulkan returned null.");
+				using var recorder = context.CreateRecorder()
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				using var surface = SKSurface.Create(recorder, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Graphite/Vulkan.");
 
-					var graphicsFamily = FindGraphicsFamily(physicalDevice);
+				scene.Draw(surface.Canvas);
 
-					device = physicalDevice.CreateDevice(new[]
-					{
-						new DeviceQueueCreateInfo { QueueFamilyIndex = graphicsFamily, QueuePriorities = new[] { 1f } },
-					}, null, null);
+				using var recording = recorder.Snap()
+					?? throw new InvalidOperationException("Recorder.Snap() returned null.");
+				if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
+					throw new InvalidOperationException("InsertRecording did not report Success.");
+				if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
+					throw new InvalidOperationException("Submit(Sync=true) returned false.");
 
-					var queue = device.GetQueue(graphicsFamily, 0);
-
-					// Hand Skia the raw Vulkan handles directly (no SharpVk-typed backend
-					// context). vkGetProcAddr dispatches to device → instance depending on
-					// what Skia passes; the closure resolves via the SharpVk objects.
-					var localInstance = instance;
-					var localDevice = device;
-					using var backendContext = new SKGraphiteVkBackendContext
-					{
-						VkInstance = (IntPtr)instance.RawHandle.ToUInt64(),
-						VkPhysicalDevice = (IntPtr)physicalDevice.RawHandle.ToUInt64(),
-						VkDevice = (IntPtr)device.RawHandle.ToUInt64(),
-						VkQueue = (IntPtr)queue.RawHandle.ToUInt64(),
-						GraphicsQueueIndex = graphicsFamily,
-						GetProcedureAddress = (name, inst, dev) =>
-							dev != IntPtr.Zero ? localDevice.GetProcedureAddress(name)
-							: inst != IntPtr.Zero ? localInstance.GetProcedureAddress(name)
-							: localInstance.GetProcedureAddress(name),
-					};
-
-					using var context = SKGraphiteContext.CreateVulkan(backendContext)
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateVulkan returned null.");
-					using var recorder = context.CreateRecorder()
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
-					using var surface = SKSurface.Create(recorder, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Graphite/Vulkan.");
-
-					scene.Draw(surface.Canvas);
-
-					using var recording = recorder.Snap()
-						?? throw new InvalidOperationException("Recorder.Snap() returned null.");
-					if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-						throw new InvalidOperationException("InsertRecording did not report Success.");
-					if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-						throw new InvalidOperationException("Submit(Sync=true) returned false.");
-
-					// Graphite surfaces don't support synchronous SKSurface.ReadPixels in shipping
-					// builds; read back through the async rescale-and-read path instead.
-					return Task.FromResult(RendererPixels.ReadRgbaGraphite(context, surface, info));
-				}
-				finally
-				{
-					device?.Dispose();
-					instance?.Dispose();
-				}
+				// Graphite surfaces don't support synchronous SKSurface.ReadPixels in shipping
+				// builds; read back through the async rescale-and-read path instead.
+				return Task.FromResult(RendererPixels.ReadRgbaGraphite(context, surface, info));
+			}
+			finally
+			{
+				ctx?.Dispose();
 			}
 		}
 
@@ -104,29 +88,20 @@ namespace SkiaSharp.Tests.Visual
 		{
 		}
 
-		private static Instance CreateInstanceOrSkip()
+		// Distinguishes "Vulkan genuinely absent on this host" (legit skip) from a
+		// broken binding (real failure). A missing native entry point or method is
+		// a regression and MUST fail; an absent driver / ICD is an honest skip.
+		private static SilkVkContext CreateContextOrSkip()
 		{
 			try
 			{
-				return Instance.Create(null, null);
+				return new SilkVkContext();
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
 				throw new RendererUnavailableException(
-					$"Unable to create a Vulkan instance on this host: {ex.Message}", ex);
+					$"Unable to create a Vulkan context on this host: {ex.Message}", ex);
 			}
-		}
-
-		private static uint FindGraphicsFamily(PhysicalDevice physicalDevice)
-		{
-			var families = physicalDevice.GetQueueFamilyProperties();
-			for (uint i = 0; i < families.Length; i++)
-			{
-				if (families[i].QueueFlags.HasFlag(QueueFlags.Graphics))
-					return i;
-			}
-
-			throw new RendererUnavailableException("This Vulkan device exposes no graphics queue family.");
 		}
 	}
 }

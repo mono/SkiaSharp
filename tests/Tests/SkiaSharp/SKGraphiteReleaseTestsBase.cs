@@ -132,19 +132,13 @@ namespace SkiaSharp.Tests
 		}
 
 		/// <summary>
-		/// Runs the (mostly synchronous) GPU scenario under the shared GPU gate.
-		/// The default serializes with every other GPU renderer via
-		/// <see cref="GpuRenderGate"/>; the body's only real suspension point is
-		/// harness creation, which completes synchronously for the desktop
-		/// backends. Backends that must genuinely await (Dawn on single-threaded
-		/// WASM, where the gate is unnecessary) override this to run lock-free.
+		/// Runs the GPU scenario. GPU work is serialized across the whole assembly
+		/// by the GPU rendering test collection each derived class joins (xUnit
+		/// <c>DisableParallelization</c>), so no in-test lock is needed; the body is
+		/// simply awaited (harness creation completes synchronously for the desktop
+		/// backends and genuinely awaits on single-threaded WASM for Dawn).
 		/// </summary>
-		protected virtual Task RunGuardedAsync(Func<Task> body)
-		{
-			lock (GpuRenderGate.Sync)
-				body().GetAwaiter().GetResult();
-			return Task.CompletedTask;
-		}
+		protected Task RunGuardedAsync(Func<Task> body) => body();
 
 		private void SkipIfUnsupported()
 		{

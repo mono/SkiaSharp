@@ -17,11 +17,12 @@ namespace SkiaSharp.Tests
 	/// Dawn on WASM is a <em>non-yielding</em> context: it cannot submit
 	/// synchronously and the context must outlive any in-flight GPU work, so the
 	/// context/recorder are created once and kept for the process lifetime (never
-	/// disposed). Bring-up is asynchronous, so this class runs lock-free — the
-	/// single-threaded WASM host needs no GPU gate, and blocking on the async
-	/// setup would deadlock the JS event loop.
+	/// disposed). Bring-up is asynchronous; the single-threaded WASM host needs no
+	/// GPU gate, and blocking on the async setup would deadlock the JS event loop,
+	/// so <see cref="SKGraphiteReleaseTestsBase.RunGuardedAsync"/> simply awaits.
 	/// </para>
 	/// </summary>
+	[Collection(GpuRenderingCollection.Name)]
 	public sealed class SKGraphiteReleaseDawnTests : SKGraphiteReleaseTestsBase
 	{
 		private static SKGraphiteContext s_context;
@@ -37,10 +38,6 @@ namespace SkiaSharp.Tests
 			OperatingSystem.IsBrowser()
 				? null
 				: "graphite-dawn requires a WebGPU-capable browser (WASM) host.";
-
-		// Single-threaded WASM: no GPU gate, and the async setup must not be
-		// blocked on (it would deadlock the JS event loop), so run lock-free.
-		protected override Task RunGuardedAsync(Func<Task> body) => body();
 
 		protected override async Task<GraphiteReleaseHarness> CreateHarnessAsync()
 		{

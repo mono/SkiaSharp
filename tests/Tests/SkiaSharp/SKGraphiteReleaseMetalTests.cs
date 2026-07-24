@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests
@@ -12,6 +13,7 @@ namespace SkiaSharp.Tests
 	/// with <c>GraphiteMetalRenderer</c> for now; a shared Metal test vehicle is a
 	/// later cleanup.)
 	/// </summary>
+	[Collection(GpuRenderingCollection.Name)]
 	public sealed class SKGraphiteReleaseMetalTests : SKGraphiteReleaseTestsBase
 	{
 		protected override SKColorType ColorType => SKColorType.Bgra8888;
