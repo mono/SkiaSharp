@@ -1,0 +1,138 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4123,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-24T05:14:03Z",
+    "currentLabels": [
+      "enhancement"
+    ]
+  },
+  "summary": "Maintainer-filed enhancement to surface user-code exceptions captured by the PR #4119 callback proxy try/catch blocks back to callers at synchronous API boundaries using ExceptionDispatchInfo capture-and-replay, instead of silently swallowing them.",
+  "classification": {
+    "type": {
+      "value": "type/enhancement",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp",
+      "confidence": 0.95
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "reproEvidence": {
+      "stepsToReproduce": [
+        "Create a Stream whose Read() throws IOException",
+        "Pass it to SKCodec.Create(stream)",
+        "Observe: method returns null with no indication of why \u2014 the exception is swallowed"
+      ],
+      "environmentDetails": "All platforms; affects SKCodec.Create(stream), bitmap.Encode(wstream,...), SKFontManager.CreateTypeface(stream)",
+      "repoLinks": [
+        {
+          "url": "https://github.com/mono/SkiaSharp/pull/4119",
+          "description": "PR #4119 \u2014 callback exception isolation and RevokeOwnership lifecycle fix (parent work)"
+        }
+      ]
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [],
+      "currentRelevance": "likely",
+      "relevanceReason": "The exception swallowing behavior is present in current code; ReportCallbackException and ExceptionDispatchInfo replay are not yet implemented."
+    }
+  },
+  "analysis": {
+    "summary": "After PR #4119 wrapped each reverse-P/Invoke callback proxy in try/catch to prevent managed exceptions from unwinding through native frames, exceptions from user-supplied Stream.Read/Write or custom callbacks are silently consumed. The caller only receives a null/false return with no diagnostic. This enhancement tracks adding ExceptionDispatchInfo capture on the stream/callback instance and ThrowIfPendingException() calls at known synchronous API boundaries (SKCodec.Create, Encode, SKFontManager.CreateTypeface) so the original exception, with its full stack, is re-thrown to the caller without ever having unwound through native frames.",
+    "codeInvestigation": [
+      {
+        "file": "binding/SkiaSharp/DelegateProxies.stream.cs",
+        "finding": "Stream proxy implementations (OnRead, OnPeek, OnSeek, etc.) are plain partial method implementations with no try/catch. Exceptions from SKAbstractManagedStream.OnRead() would propagate directly. The try/catch wrapping is expected to be added by PR #4119 at the generated partial-method wrapper level.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/DelegateProxies.wstream.cs",
+        "finding": "Write stream proxy (OnWrite, OnFlush) similarly lacks exception capture. OnWrite returning false is the current silent failure mode for encode paths.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/Binding.Shared/DelegateProxies.shared.cs",
+        "finding": "Contains GCHandle plumbing (Create, Get, GetUserData). ReportCallbackException and LastCallbackException mentioned in the issue are not present in the current codebase, confirming the capture-and-replay mechanism is not yet implemented.",
+        "relevance": "direct"
+      },
+      {
+        "file": "binding/SkiaSharp/DelegateProxies.cs",
+        "finding": "Release callbacks (SKBitmapRelease, SKDataRelease, SKImageRasterRelease) use try/finally for GCHandle.Free but have no catch clause \u2014 consistent with the issue's statement that finalizer/release paths are out of scope for replay.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "The containment is correct for crash-safety, but it currently swallows the user's own exception.",
+        "source": "issue body",
+        "interpretation": "Author acknowledges PR #4119's value but identifies a usability gap."
+      },
+      {
+        "text": "This is a behavior enhancement and is intentionally deferred out of #4119, which is scoped to fixing crashes.",
+        "source": "issue body",
+        "interpretation": "Intentional scope decision by maintainer; issue is a tracked work item, not a spontaneous bug report."
+      },
+      {
+        "text": "Store an ExceptionDispatchInfo on the stream/callback instance (not [ThreadStatic]) ... Use Interlocked.CompareExchange so the first exception is preserved",
+        "source": "issue body",
+        "interpretation": "Design is fully specified with thread-safety considerations already addressed."
+      }
+    ],
+    "rationale": "Filed by a maintainer contributor as a deliberate scope-out from PR #4119. The type is enhancement (improving existing exception-swallowing behavior, not adding new capability). The area is core SkiaSharp binding. The tenet is reliability \u2014 silently swallowing user exceptions degrades debuggability and operational correctness. The design is fully specified with ExceptionDispatchInfo, ThrowIfPendingException, wrapper-chain forwarding, and native-object leak prevention, making this ready for implementation.",
+    "resolution": {
+      "hypothesis": "Implement ExceptionDispatchInfo capture-and-replay on SKAbstractManagedStream/SKAbstractManagedWStream and relevant callback instances, with ThrowIfPendingException() called at the synchronous API boundaries identified in the issue (SKCodec.Create, Encode paths, SKFontManager.CreateTypeface). Add ContainedCallbackExceptionCount guard in GarbageCleanupFixture for CI.",
+      "proposals": [
+        {
+          "title": "Implement ExceptionDispatchInfo capture-and-replay per issue spec",
+          "description": "Add a pending-exception field (ExceptionDispatchInfo) to SKAbstractManagedStream and SKAbstractManagedWStream using Interlocked.CompareExchange. Catch exceptions in proxy implementations, store them via ReportCallbackException, then call ThrowIfPendingException() at each synchronous API boundary. Handle wrapper chains (SKFrontBufferedManagedStream forwarding to inner SKManagedStream) and dispose the native wrapper before rethrowing to avoid leaks.",
+          "category": "fix",
+          "effort": "cost/l",
+          "validated": "untested"
+        },
+        {
+          "title": "Add ContainedCallbackExceptionCount CI guard",
+          "description": "Add an atomic ContainedCallbackExceptionCount counter incremented in ReportCallbackException. Assert zero in GarbageCleanupFixture.Dispose using Volatile.Read. Isolate deliberately-throwing tests in a serialized xUnit collection that accounts for their own containments, keeping global assertion sound under parallel test execution.",
+          "category": "fix",
+          "effort": "cost/s",
+          "validated": "untested"
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "Core ask of the issue; fix-2 is a companion quality guard that should follow fix-1."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "needs-investigation",
+      "confidence": 0.9,
+      "reason": "Well-specified enhancement with full design in the issue body. Needs implementation exploration to validate the ExceptionDispatchInfo approach against the actual proxy architecture (generated vs. hand-written partials), wrapper-chain edge cases, and test strategy.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply correct triage labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/enhancement",
+          "area/SkiaSharp",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the issue and summarize the implementation plan",
+        "risk": "medium",
+        "confidence": 0.88,
+        "comment": "Thanks for the detailed design spec! This is a well-scoped enhancement that builds naturally on the crash-safety work in #4119.\n\n**Summary of proposed approach:**\n1. Add `ExceptionDispatchInfo? _pendingException` to `SKAbstractManagedStream` / `SKAbstractManagedWStream` with `Interlocked.CompareExchange` so the first captured exception wins.\n2. Catch in each proxy `*Implementation` method and call `ReportCallbackException(stream, ex)` to store it.\n3. Add `ThrowIfPendingException()` after native returns at `SKCodec.Create(stream)`, `SKBitmap/SKPixmap/SKImage.Encode`, and `SKFontManager.CreateTypeface(stream)`.\n4. For non-seekable codec paths, forward the pending exception from `SKFrontBufferedManagedStream` to its inner `SKManagedStream`.\n5. Dispose the managed wrapper before re-throwing to avoid leaking native objects.\n6. Add `ContainedCallbackExceptionCount` in `ReportCallbackException` + global assertion in `GarbageCleanupFixture`.\n\nThis is tracked as a follow-up to #4119 and is ready for implementation."
+      }
+    ]
+  }
+}
