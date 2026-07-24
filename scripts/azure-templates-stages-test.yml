@@ -121,6 +121,16 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Provision a software Vulkan ICD (SwiftShader) + the Khronos loader
+              # so the visual-regression matrix can render and golden-compare
+              # ganesh-vulkan here, mirroring the Linux leg's Mesa lavapipe setup.
+              # The netcore host runs as a 64-bit process, so only win-x64 is
+              # provisioned. If the download/ICD is ever missing the Vulkan cells
+              # just skip (no driver), so this can only add coverage, never turn
+              # the build red (the script swallows all errors and exits 0).
+              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1 -Arch x64
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
