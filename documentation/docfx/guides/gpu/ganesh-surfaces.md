@@ -49,22 +49,27 @@ using var backendContext = new GRVkBackendContext
 using var context = GRContext.CreateVulkan(backendContext);
 ```
 
-If you use the [SharpVk](https://www.nuget.org/packages/SharpVk) managed Vulkan binding, the **SkiaSharp.Vulkan.SharpVk** package provides a typed `GRSharpVkBackendContext` that accepts SharpVk objects directly instead of raw handles, so you don't have to marshal `IntPtr`s yourself:
+For a typed binding that hands you `IntPtr`s to fill in, the recommended managed Vulkan binding is [Silk.NET](https://www.nuget.org/packages/Silk.NET.Vulkan). The **SkiaSharp.Vulkan.Silk.NET** package provides a typed `GRSilkNetBackendContext` that accepts Silk.NET objects directly, so you don't marshal handles yourself:
 
 ```csharp
-using var backendContext = new GRSharpVkBackendContext
+using Silk.NET.Vulkan;
+
+using var backendContext = new GRSilkNetBackendContext
 {
-    VkInstance = instance,
-    VkPhysicalDevice = physicalDevice,
-    VkDevice = device,
-    VkQueue = queue,
+    VkInstance = instance,               // Silk.NET.Vulkan.Instance
+    VkPhysicalDevice = physicalDevice,   // PhysicalDevice
+    VkDevice = device,                   // Device
+    VkQueue = graphicsQueue,             // Queue
     GraphicsQueueIndex = graphicsFamily,
-    GetProcedureAddress = (name, instance, device) => /* ... */,
-    VkPhysicalDeviceFeatures = physicalDevice.GetFeatures(),
+    GetProcedureAddress = getProc,       // (name, Instance, Device) => IntPtr
+    VkPhysicalDeviceFeatures = features, // PhysicalDeviceFeatures
 };
 
 using var context = GRContext.CreateVulkan(backendContext);
 ```
+
+> [!NOTE]
+> Silk.NET is the maintained, cross-platform binding and is the recommended choice for new Vulkan code. An older **SkiaSharp.Vulkan.SharpVk** package with a `GRSharpVkBackendContext` still exists, but SharpVk is effectively unmaintained and only works on Windows and Linux (it throws on Android). Because `GRVkBackendContext` takes raw handles, you can also pair it with any other binding — or raw `libvulkan` P/Invoke — without a wrapper package.
 
 ### Metal
 

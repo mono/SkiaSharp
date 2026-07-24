@@ -30,7 +30,8 @@ Both Ganesh and Graphite are GPU backends that render into an `SKSurface`, but t
 | | Ganesh | Graphite |
 | --- | --- | --- |
 | Context type | [`GRContext`](xref:SkiaSharp.GRContext) | `SKGraphiteContext` |
-| Backends | OpenGL, Vulkan, Metal, Direct3D | Vulkan, Metal, Dawn (WebGPU) |
+| Backends | OpenGL, Vulkan, Metal, Direct3D | Vulkan, Metal, Dawn (WebGPU) — no Direct3D |
+| Platforms | All | Metal on Apple; Vulkan on Linux/Android/Windows; Dawn on WASM |
 | Drawing model | Draw on the canvas, then `Flush`/`Submit` the context | Draw on the canvas, then `Snap` a recording and `InsertRecording` + `Submit` it |
 | Reading pixels back | Synchronous `SKSurface.ReadPixels` works | **Asynchronous only** — use `SKGraphiteContext.RequestReadPixels` |
 | In the SkiaSharp Views | Yes (`SKGLView`, `SKMetalView`) | Not yet — offscreen only |

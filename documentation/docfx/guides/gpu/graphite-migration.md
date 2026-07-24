@@ -24,7 +24,7 @@ There is also a **structural** shift: Ganesh records a draw stream on one `GRCon
 | `GRContext` | `SKGraphiteContext` |
 | `GRContext.CreateGl` / `CreateVulkan` / `CreateMetal` / `CreateDirect3D` | `SKGraphiteContext.CreateVulkan` / `CreateMetal` / `CreateDawn` |
 | `GRVkBackendContext` / `GRMtlBackendContext` | `SKGraphiteVkBackendContext` / `SKGraphiteMtlBackendContext` / `SKGraphiteDawnBackendContext` |
-| `GRSharpVkBackendContext` (typed Vulkan) | `SKGraphiteSharpVkBackendContext` (typed Vulkan) |
+| `GRSilkNetBackendContext` (typed Vulkan, Silk.NET) — or legacy `GRSharpVkBackendContext` | No typed Graphite wrapper — fill `SKGraphiteVkBackendContext` with raw handles (e.g. Silk.NET `.Handle` values) |
 | `SKSurface.Create(context, budgeted, info)` | `context.CreateRecorder()` + `SKSurface.Create(recorder, info)` |
 | Draw on `surface.Canvas` | Draw on `surface.Canvas` (unchanged) |
 | `context.Flush(submit: true, synchronous: true)` | `recorder.Snap()` + `context.InsertRecording(recording)` + `context.Submit(new SKGraphiteSubmitInfo { Sync = true })` |
@@ -118,7 +118,9 @@ Per-surface and per-image creation moves from the context to the recorder:
 
 ## Watch out for
 
-- **No OpenGL or Direct3D.** Graphite targets Vulkan, Metal, and Dawn. If your Ganesh code uses GL or D3D, there is no direct Graphite equivalent; keep using Ganesh, or move to Vulkan/Metal/Dawn.
+- **No OpenGL or Direct3D.** Graphite targets Vulkan, Metal, and Dawn. There is no Direct3D Graphite backend — on Windows, Graphite means Vulkan. If your Ganesh code uses GL or D3D, there is no direct Graphite equivalent; keep using Ganesh, or move to Vulkan/Metal/Dawn.
+- **Apple uses Metal, not Vulkan.** On macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal; Vulkan Graphite is Linux/Android/Windows. See the [platform matrix](graphite-surfaces.md#backend-platform-support).
+- **New Vulkan code should use Silk.NET.** For both Ganesh and Graphite, prefer Silk.NET (or raw `libvulkan`) over the unmaintained, Windows/Linux-only SharpVk. For Graphite there is no typed wrapper at all — feed raw handles into `SKGraphiteVkBackendContext`.
 - **CPU images need a provider.** The single easiest thing to miss — a raster `SKImage` drawn without an image provider simply doesn't appear. See change 3 above.
 - **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Dawn in the browser](graphite-surfaces.md#dawn-in-the-browser).
 - **Check backend availability.** Use `SKGraphiteContext.IsBackendAvailable` before creating a context, since not every build includes every backend.

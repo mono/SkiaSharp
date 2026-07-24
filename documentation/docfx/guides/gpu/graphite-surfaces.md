@@ -19,6 +19,22 @@ Graphite supports three backends: **Vulkan**, **Metal**, and **Dawn** (WebGPU).
 > [!NOTE]
 > Like Ganesh, an `SKGraphiteContext`, its recorders, and its surfaces are not thread-safe. Create and use them on a single thread that owns the underlying graphics device.
 
+## Backend platform support
+
+Which Graphite backend you use is determined by the platform:
+
+| Backend | Platforms |
+| --- | --- |
+| **Metal** | macOS, iOS (including the iOS Simulator on Apple Silicon), Mac Catalyst, tvOS |
+| **Vulkan** | Linux, Android, Windows |
+| **Dawn** (WebGPU) | WebAssembly / browser only |
+
+A few consequences worth calling out:
+
+- **Apple platforms use Metal, not Vulkan.** The native Skia build for Apple is not compiled with Vulkan, so on macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal.
+- **On Windows, Graphite means Vulkan.** There is **no Direct3D Graphite backend** in SkiaSharp — a D3D path would only exist as Graphite→Dawn→D3D12, which is not exposed. If you need D3D specifically, use [Ganesh](ganesh-surfaces.md) with `GRContext.CreateDirect3D`.
+- **Dawn is browser-only.** It is the WebAssembly path and carries an extra submission constraint — see [Dawn in the browser](#dawn-in-the-browser).
+
 ## Checking a backend is available
 
 A given build of SkiaSharp may not include every Graphite backend. Before creating a context, you can check whether a backend is compiled in with `SKGraphiteContext.IsBackendAvailable`:
@@ -36,7 +52,7 @@ You create a context from a backend context that carries the native device objec
 
 ### Vulkan
 
-Fill in a `SKGraphiteVkBackendContext` with your instance, physical device, device, queue, and graphics-queue index, plus a `GetProcedureAddress` delegate that resolves Vulkan functions:
+Graphite Vulkan is available on **Linux, Android, and Windows** (not Apple — see the [platform matrix](#backend-platform-support)). There is no typed Graphite-specific Vulkan wrapper: you fill in the binding-neutral `SKGraphiteVkBackendContext` with raw handles and a `GetProcedureAddress` delegate that resolves Vulkan functions.
 
 ```csharp
 using var backendContext = new SKGraphiteVkBackendContext
@@ -46,27 +62,34 @@ using var backendContext = new SKGraphiteVkBackendContext
     VkDevice = deviceHandle,
     VkQueue = graphicsQueueHandle,
     GraphicsQueueIndex = graphicsFamilyIndex,
-    GetProcedureAddress = (name, instance, device) => /* vkGetXxxProcAddr */,
+    MaxApiVersion = apiVersion,
+    GetProcedureAddress = (name, instance, device) => /* vkGetInstance/DeviceProcAddr */,
 };
 
 using var context = SKGraphiteContext.CreateVulkan(backendContext);
 ```
 
-If you use the [SharpVk](https://www.nuget.org/packages/SharpVk) managed binding, the **SkiaSharp.Vulkan.SharpVk** package ships a typed `SKGraphiteSharpVkBackendContext` that accepts SharpVk objects directly:
+Because the handles are raw `IntPtr`s, you can source them from any Vulkan binding. The recommended one is [Silk.NET](https://www.nuget.org/packages/Silk.NET.Vulkan) — feed its objects' `.Handle` values straight in:
 
 ```csharp
-using var backendContext = new SKGraphiteSharpVkBackendContext
+using Silk.NET.Vulkan;
+
+using var backendContext = new SKGraphiteVkBackendContext
 {
-    VkInstance = instance,
-    VkPhysicalDevice = physicalDevice,
-    VkDevice = device,
-    VkQueue = queue,
+    VkInstance = instance.Handle,
+    VkPhysicalDevice = physicalDevice.Handle,
+    VkDevice = device.Handle,
+    VkQueue = graphicsQueue.Handle,
     GraphicsQueueIndex = graphicsFamily,
-    GetProcedureAddress = (name, instance, device) => /* ... */,
+    MaxApiVersion = apiVersion,
+    GetProcedureAddress = getProc,
 };
 
 using var context = SKGraphiteContext.CreateVulkan(backendContext);
 ```
+
+> [!NOTE]
+> Steer new Vulkan code to Silk.NET (or raw `libvulkan` P/Invoke). The older SharpVk binding is unmaintained and Windows/Linux-only (it throws on Android), and there is no SharpVk wrapper for the Graphite path — Graphite always takes the raw handles above.
 
 ### Metal
 
@@ -81,6 +104,9 @@ using var backendContext = new SKGraphiteMtlBackendContext
 
 using var context = SKGraphiteContext.CreateMetal(backendContext);
 ```
+
+> [!NOTE]
+> Graphite Metal works on the **iOS and tvOS Simulator on Apple Silicon** (it is backed by the host's Apple-Silicon GPU). Be aware that the simulator's `MTLDevice` under-reports its capabilities — it advertises only `Apple1`/`Apple2`/`Common1`, not `Apple7+`/`Mac2` — so a naive `supportsFamily:` capability gate would wrongly skip it even though rendering works. Don't gate simulator support on the reported GPU family.
 
 ### Dawn (WebGPU)
 
@@ -198,6 +224,22 @@ There are matching factory methods for each backend:
 - `SKGraphiteBackendTexture.CreateMetal(width, height, mtlTexture)`
 - `SKGraphiteBackendTexture.CreateDawn(wgpuTexture)`
 
+> [!IMPORTANT]
+> **Vulkan surfaces need input-attachment usage.** When you wrap an externally-created Vulkan `VkImage` as a Graphite **surface** (a render target), the texture's `SKGraphiteVkTextureInfo.ImageUsageFlags` must include **both** `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT` (`0x10`) **and** `VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT` (`0x80`). Skia Graphite requires input-attachment usage on every color-renderable Vulkan texture; without it, `SKSurface.Create` returns **null** (the texture is not considered renderable). A typical renderable usage mask is `TRANSFER_SRC | TRANSFER_DST | SAMPLED | COLOR_ATTACHMENT | INPUT_ATTACHMENT` = `0x97`. This applies to **surfaces only** — a texture you only *sample* from as an image (see [`SKImage.FromTexture`](#using-textures-as-images)) needs just `SAMPLED`.
+
+### Releasing a wrapped texture
+
+When Skia is done with a wrapped backend texture it can notify you so you can free the caller-owned native texture. The wrap overloads accept a parameterless `SKGraphiteReleaseDelegate` that fires **exactly once**, when Skia destroys the wrapped texture (on dispose of the wrapping surface or image, after the GPU work has drained):
+
+```csharp
+using var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888,
+    colorSpace: null, props: null,
+    releaseProc: () => FreeMyNativeTexture());
+```
+
+`SKImage.FromTexture` has the same release-callback overload for the image path.
+
 ## Using textures as images
 
 You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) objects on a recorder:
@@ -208,6 +250,8 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
   using var image = SKImage.FromTexture(
       recorder, backendTexture, SKColorType.Rgba8888, SKAlphaType.Premul);
   ```
+
+  A longer overload also takes a color space and a parameterless `SKGraphiteReleaseDelegate` that fires once when Skia releases the wrapped texture.
 
 - [`ToTextureImage`](xref:SkiaSharp.SKImage.ToTextureImage*) uploads an existing image (for example, one decoded on the CPU) into a GPU-backed image on the recorder:
 
@@ -252,6 +296,9 @@ context.Submit(new SKGraphiteSubmitInfo { Sync = false });
 // later, pump completion instead of blocking
 context.CheckAsyncWorkCompletion();
 ```
+
+> [!NOTE]
+> **Dawn bring-up on WASM.** When building the `SKGraphiteDawnBackendContext` in the browser (the emdawnwebgpu port), you must create a **real** `WGPUInstance` via `wgpuCreateInstance` and register the device and queue under *that* instance as their event-source parent. If the instance is a placeholder or the device/queue are registered under a different instance, `SKGraphiteContext.CreateDawn` deadlocks — emdawnwebgpu's event manager waits on a mismatched instance and never completes.
 
 ## Context options
 
