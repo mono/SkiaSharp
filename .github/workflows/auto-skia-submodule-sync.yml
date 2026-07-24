@@ -1,0 +1,120 @@
+name: Sync - Skia Submodule
+
+on:
+  schedule:
+    - cron: "30 10 * * *"  # Daily at 10:30 AM UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: auto-skia-submodule-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout SkiaSharp
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+
+      - name: Update Skia submodule and cgmanifest
+        id: update
+        run: |
+          git submodule update --init --remote --depth 1 -- externals/skia
+
+          SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
+          MANIFEST_MATCHES=$(jq '[.registrations[] | select(
+            .component.type == "git"
+            and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
+          )] | length' cgmanifest.json)
+
+          if [ "$MANIFEST_MATCHES" -ne 1 ]; then
+            echo "Expected exactly one mono/skia git registration in cgmanifest.json, found $MANIFEST_MATCHES"
+            exit 1
+          fi
+
+          TMP=$(mktemp)
+          jq --arg sha "$SKIA_SHA" '
+            (.registrations[]
+              | select(
+                .component.type == "git"
+                and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
+              )
+              | .component.git.commitHash) = $sha
+          ' cgmanifest.json > "$TMP"
+          mv "$TMP" cgmanifest.json
+
+          echo "skia_sha=$SKIA_SHA" >> "$GITHUB_OUTPUT"
+          echo "latest_msg=$(git -C externals/skia log -1 --format=%s)" >> "$GITHUB_OUTPUT"
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet -- externals/skia; then
+            echo "submodule_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Skia submodule has changed"
+            echo "submodule_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if git diff --quiet -- cgmanifest.json; then
+            echo "manifest_changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "cgmanifest.json has changed"
+            echo "manifest_changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+          if git diff --quiet -- externals/skia cgmanifest.json; then
+            echo "Skia submodule and cgmanifest.json are up to date"
+            echo "needs_update=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "needs_update=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create or update PR
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LATEST_MSG: ${{ steps.update.outputs.latest_msg }}
+          SKIA_SHA: ${{ steps.update.outputs.skia_sha }}
+        run: |
+          BRANCH="automation/update-skia-submodule"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Always start fresh from main to avoid stale commit accumulation.
+          git checkout -B "$BRANCH" origin/main
+
+          git add externals/skia cgmanifest.json
+          if git diff --cached --quiet; then
+            echo "No changes after staging"
+            exit 0
+          fi
+
+          git commit -m "Sync Skia submodule and cgmanifest
+
+          Latest: $LATEST_MSG
+          Commit: $SKIA_SHA"
+
+          git push origin "$BRANCH" --force
+
+          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            echo "PR #$existing already exists, force-pushed update"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Sync Skia submodule and cgmanifest" \
+              --body "Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`skiasharp\` branch.
+
+          The \`mono/skia\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
+
+          Created by [auto-skia-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-skia-submodule-sync.yml)."
+          fi
