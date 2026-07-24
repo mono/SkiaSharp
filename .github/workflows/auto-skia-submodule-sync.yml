@@ -4,18 +4,26 @@ on:
   schedule:
     - cron: "30 10 * * *"  # Daily at 10:30 AM UTC
   workflow_dispatch:
+    inputs:
+      target_branch:
+        description: "SkiaSharp branch to sync and target with the pull request"
+        required: false
+        default: main
+        type: string
 
 permissions:
   contents: write
   pull-requests: write
 
 concurrency:
-  group: auto-skia-submodule-sync
+  group: auto-skia-submodule-sync-${{ github.event.inputs.target_branch || 'main' }}
   cancel-in-progress: true
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    env:
+      TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'main' }}
 
     steps:
       - name: Checkout SkiaSharp
@@ -23,6 +31,15 @@ jobs:
         with:
           fetch-depth: 0
           submodules: false
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Validate target branch
+        run: |
+          git check-ref-format --branch "$TARGET_BRANCH"
+          if ! git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
+            echo "Target branch does not exist on origin: $TARGET_BRANCH"
+            exit 1
+          fi
 
       - name: Update Skia submodule and cgmanifest
         id: update
@@ -85,13 +102,14 @@ jobs:
           LATEST_MSG: ${{ steps.update.outputs.latest_msg }}
           SKIA_SHA: ${{ steps.update.outputs.skia_sha }}
         run: |
-          BRANCH="automation/update-skia-submodule"
+          BRANCH="automation/update-skia-submodule-$TARGET_BRANCH"
+          git check-ref-format --branch "$BRANCH"
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Always start fresh from main to avoid stale commit accumulation.
-          git checkout -B "$BRANCH" origin/main
+          # Always start fresh from the target branch to avoid stale commit accumulation.
+          git checkout -B "$BRANCH" "origin/$TARGET_BRANCH"
 
           git add externals/skia cgmanifest.json
           if git diff --cached --quiet; then
@@ -106,13 +124,15 @@ jobs:
 
           git push origin "$BRANCH" --force
 
-          existing=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number')
+          existing=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
           if [ -n "$existing" ]; then
             echo "PR #$existing already exists, force-pushed update"
           else
-            gh pr create --base main --head "$BRANCH" \
-              --title "Sync Skia submodule and cgmanifest" \
+            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" \
+              --title "Sync Skia submodule and cgmanifest into $TARGET_BRANCH" \
               --body "Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`skiasharp\` branch.
+
+          This pull request targets the \`$TARGET_BRANCH\` branch in \`${{ github.repository }}\`.
 
           The \`mono/skia\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
 
