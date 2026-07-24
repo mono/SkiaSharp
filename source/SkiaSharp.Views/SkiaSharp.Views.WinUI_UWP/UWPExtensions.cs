@@ -2,23 +2,22 @@
 using Windows.Foundation;
 using Windows.UI;
 using Windows.Storage.Streams;
-#if !HAS_UNO
-using SkiaSharp.Views.WinUI.Native;
-#endif
 
-#if WINDOWS || WINUI
+#if WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
+using SkiaSharp.Views.WinUI.Native;
 #else
 using Windows.UI.Xaml.Media.Imaging;
+using SkiaSharp.Views.UWP.Native;
 #endif
 
-#if WINDOWS || WINUI
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
 {
-#if WINDOWS
+#if WINUI
 	public static class WindowsExtensions
 #else
 	public static class UWPExtensions
@@ -79,7 +78,7 @@ namespace SkiaSharp.Views.UWP
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
 			{
-				return image?.ToWriteableBitmap();
+				return image.ToWriteableBitmap();
 			}
 		}
 

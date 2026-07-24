@@ -1,22 +1,30 @@
 ﻿using System;
 using System.Threading.Tasks;
+using SkiaSharp.Views.GlesInterop;
+using Windows.ApplicationModel;
+using Windows.Foundation;
+
+using Windows.System.Threading;
+using Windows.UI.Core;
+
+#if WINUI
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
-using SkiaSharp.Views.GlesInterop;
-using Windows.ApplicationModel;
-using Windows.Foundation;
-using Windows.System.Threading;
-using Windows.UI.Core;
-
-#if WINDOWS
+#else
+using Windows.System;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Data;
+#endif
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
 #endif
 {
-	public class AngleSwapChainPanel : SwapChainPanel
+	public partial class AngleSwapChainPanel : SwapChainPanel
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
@@ -198,7 +206,7 @@ namespace SkiaSharp.Views.UWP
 				SizeChanged -= OnSizeChanged;
 				CompositionScaleChanged -= OnCompositionChanged;
 
-				glesContext.CreateSurface(this, null, CompositionScaleX);
+				glesContext?.CreateSurface(this, null, CompositionScaleX);
 
 				SizeChanged += OnSizeChanged;
 				CompositionScaleChanged += OnCompositionChanged;
@@ -294,11 +302,19 @@ namespace SkiaSharp.Views.UWP
 				{
 					// run in the main thread, block this one
 					var tcs = new TaskCompletionSource();
+#if WINUI
 					DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Normal, () =>
 					{
 						RenderFrame();
 						tcs.SetResult();
 					});
+#else
+					Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
+					{
+						RenderFrame();
+						tcs.SetResult();
+					}).AsTask().Wait();
+#endif
 					tcs.Task.Wait();
 				}
 			}

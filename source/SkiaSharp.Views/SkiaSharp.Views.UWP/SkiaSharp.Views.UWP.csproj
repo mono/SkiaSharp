@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(UWPTargetFramework)</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    
+    <RootNamespace>SkiaSharp.Views.Windows</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Windows</AssemblyName>
+    <PackageId>SkiaSharp.Views.UWP</PackageId>
+    <PackagingGroup>SkiaSharp.Views.UWP</PackagingGroup>
+    
+    <UseUwp>true</UseUwp>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <IsAotCompatible>true</IsAotCompatible>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    
+    <Title>SkiaSharp Views &amp; Layers for Windows UI (UWP)</Title>
+    <PackageTags>uwp</PackageTags>
+
+    <DefineConstants>$(DefineConstants);WINDOWS_UWP</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup>
+    <WindowsSdkPackageVersion>10.0.26100.57</WindowsSdkPackageVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.0-prerelease.251115.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp.NativeAssets.UWP\SkiaSharp.NativeAssets.UWP.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="..\..\..\output\native\uwp\any\*.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SkiaSharp.Views.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\SkiaSharp.Views.WinUI_UWP\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+</Project>
