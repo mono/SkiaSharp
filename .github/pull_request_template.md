@@ -7,17 +7,17 @@ Thanks for contributing to SkiaSharp!
   but never delete "API Changes" or "Required skia PR".
 -->
 
-## Description
+### Description
 
 <!-- What does this change do, and why? Reviewers need the *why* most. -->
 
-## Related Issues
+### Related Issues
 
 Fixes #
 
 <!-- "Fixes #123" / "Closes #123" to auto-close, or "Related to #123" for context. -->
 
-## Areas Affected
+### Areas Affected
 
 - [ ] Managed API (`binding/`)
 - [ ] Native / C API (`externals/skia/src/c`, `include/c`)
@@ -30,7 +30,7 @@ Fixes #
 - [ ] Build, packaging, or CI
 - [ ] Documentation or samples
 
-## API Changes
+### API Changes
 
 <!--
   SkiaSharp keeps a STRICT stable ABI: additive only — no removals, no signature
@@ -56,14 +56,14 @@ None.
 
 <!-- Changing or removing an existing public signature is not allowed — deprecate instead. -->
 
-## Behavioral Changes
+### Behavioral Changes
 
 None.
 
 <!-- Any change to rendering output, defaults, exceptions, threading, or memory
      ownership that an app would notice after upgrading. -->
 
-## Required skia PR
+### Required skia PR
 
 None.
 
@@ -75,7 +75,7 @@ None.
    • re-run `pwsh ./utils/generate.ps1` and commit SkiaApi.generated.cs
 -->
 
-## Testing
+### Testing
 
 <!--
   • What tests did you add or update, and where?
@@ -94,7 +94,7 @@ None.
 
 </details>
 
-## Checklist
+### Checklist
 
 - [ ] Tests added or updated (if omitted, explain in Testing above)
 - [ ] `API Changes` above is complete (or "None.")
