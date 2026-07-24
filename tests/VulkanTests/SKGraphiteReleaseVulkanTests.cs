@@ -25,8 +25,11 @@ namespace SkiaSharp.Tests
 		private const int VK_SHARING_MODE_EXCLUSIVE = 0;
 		private const uint VK_IMAGE_ASPECT_COLOR_BIT = 0x00000001;
 
-		// VkImageUsageFlags: TRANSFER_SRC | TRANSFER_DST | SAMPLED | COLOR_ATTACHMENT.
-		private const uint ImageUsage = 0x1 | 0x2 | 0x4 | 0x10;
+		// VkImageUsageFlags: TRANSFER_SRC | TRANSFER_DST | SAMPLED | COLOR_ATTACHMENT
+		// | INPUT_ATTACHMENT. Graphite requires a color-renderable Vulkan texture to
+		// carry INPUT_ATTACHMENT usage (see VulkanCaps::getTextureUsage), so a surface
+		// can wrap it; without it validate_backend_texture rejects the surface.
+		private const uint ImageUsage = 0x1 | 0x2 | 0x4 | 0x10 | 0x80;
 
 		protected override SKColorType ColorType => SKColorType.Rgba8888;
 
