@@ -11,7 +11,7 @@ Thanks for contributing to SkiaSharp!
 
 <!-- What does this change do, and why? Reviewers need the *why* most. -->
 
-**Fixes**
+**Related issues**
 
 Fixes #
 
