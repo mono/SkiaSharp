@@ -124,6 +124,97 @@ try {
     # older/newer loaders both resolve it, matching the Linux leg.
     Write-Host "##vso[task.setvariable variable=VK_ICD_FILENAMES]$icdJson"
     Write-Host "##vso[task.setvariable variable=VK_DRIVER_FILES]$icdJson"
+    # Make the Khronos loader explain (in the test leg's log) why it accepts or
+    # rejects the ICD, so a skip is diagnosable. error,warn is concise; the loader
+    # only logs around vkCreateInstance, which the Vulkan cells call and then skip.
+    Write-Host "##vso[task.setvariable variable=VK_LOADER_DEBUG]error,warn"
+
+    # --- In-step smoke test (diagnostic, never fatal) -----------------------------
+    # Prove HERE (in this fast step, not buried in the 9 MB test TRX) whether the
+    # loader can actually load and initialise the SwiftShader ICD. A direct
+    # LoadLibrary distinguishes a missing dependency (err 126) from an architecture
+    # mismatch (err 193); vkCreateInstance with VK_LOADER_DEBUG=all makes the loader
+    # print the exact accept/reject reason. Wrapped so it can only inform, not fail.
+    try {
+        $swiftDll = Join-Path $dest 'vk_swiftshader.dll'
+
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+public static class VkSmoke
+{
+    [StructLayout(LayoutKind.Sequential)]
+    public struct VkApplicationInfo {
+        public int sType; public IntPtr pNext; public IntPtr pApplicationName;
+        public uint applicationVersion; public IntPtr pEngineName; public uint engineVersion; public uint apiVersion;
+    }
+    [StructLayout(LayoutKind.Sequential)]
+    public struct VkInstanceCreateInfo {
+        public int sType; public IntPtr pNext; public uint flags; public IntPtr pApplicationInfo;
+        public uint enabledLayerCount; public IntPtr ppEnabledLayerNames;
+        public uint enabledExtensionCount; public IntPtr ppEnabledExtensionNames;
+    }
+    [DllImport("kernel32", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr LoadLibraryW(string lpFileName);
+    [DllImport("kernel32", SetLastError = true)]
+    public static extern bool SetDllDirectory(string lpPathName);
+    [DllImport("vulkan-1.dll", CallingConvention = CallingConvention.StdCall)]
+    public static extern int vkCreateInstance(ref VkInstanceCreateInfo pCreateInfo, IntPtr pAllocator, out IntPtr pInstance);
+    [DllImport("vulkan-1.dll", CallingConvention = CallingConvention.StdCall)]
+    public static extern void vkDestroyInstance(IntPtr instance, IntPtr pAllocator);
+
+    public static int DirectLoad(string dllPath, out int win32Error) {
+        IntPtr h = LoadLibraryW(dllPath);
+        win32Error = (h == IntPtr.Zero) ? Marshal.GetLastWin32Error() : 0;
+        return (h == IntPtr.Zero) ? 0 : 1;
+    }
+    public static int CreateInstance() {
+        var app = new VkApplicationInfo { sType = 0, apiVersion = (1u << 22) }; // API 1.0
+        IntPtr appPtr = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(VkApplicationInfo)));
+        Marshal.StructureToPtr(app, appPtr, false);
+        var ci = new VkInstanceCreateInfo { sType = 1, pApplicationInfo = appPtr };
+        IntPtr inst;
+        int res = vkCreateInstance(ref ci, IntPtr.Zero, out inst);
+        if (res == 0 && inst != IntPtr.Zero) vkDestroyInstance(inst, IntPtr.Zero);
+        Marshal.FreeHGlobal(appPtr);
+        return res;
+    }
+}
+'@
+
+        # Point THIS process's loader at the ICD and make it maximally verbose.
+        $env:VK_ICD_FILENAMES = $icdJson
+        $env:VK_DRIVER_FILES = $icdJson
+        $env:VK_LOADER_DEBUG = 'all'
+        $env:PATH = "$dest;$env:PATH"
+        [VkSmoke]::SetDllDirectory($dest) | Out-Null
+
+        Write-Host ""
+        Write-Host "SMOKE: testing the SwiftShader ICD on this agent ..."
+
+        $w32 = 0
+        $loaded = [VkSmoke]::DirectLoad($swiftDll, [ref] $w32)
+        if ($loaded -eq 1) {
+            Write-Host "SMOKE: LoadLibrary(vk_swiftshader.dll) OK"
+        } else {
+            Write-Host "SMOKE: LoadLibrary(vk_swiftshader.dll) FAILED win32=$w32 (126=missing dependency DLL e.g. VC++ runtime, 193=architecture mismatch)"
+        }
+
+        try {
+            $res = [VkSmoke]::CreateInstance()
+            if ($res -eq 0) {
+                Write-Host "SMOKE: vkCreateInstance -> 0 (VK_SUCCESS) -- the ICD works; ganesh-vulkan cells should execute."
+            } else {
+                Write-Host "SMOKE: vkCreateInstance -> $res (0=SUCCESS, -9=INCOMPATIBLE_DRIVER, -3=INITIALIZATION_FAILED). See the VK_LOADER_DEBUG=all lines above for the reason."
+            }
+        } catch {
+            Write-Host "SMOKE: vkCreateInstance threw: $($_.Exception.Message)"
+        }
+        Write-Host "SMOKE: end of diagnostic."
+        Write-Host ""
+    } catch {
+        Write-Warning "Vulkan smoke test could not run (diagnostic only, ignored): $($_.Exception.Message)"
+    }
 
     Write-Host "Software Vulkan ICD provisioned; ganesh-vulkan cells should now execute."
     exit 0
