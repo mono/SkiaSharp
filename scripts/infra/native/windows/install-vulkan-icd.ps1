@@ -28,8 +28,10 @@ $repoRoot = if ($env:BUILD_SOURCESDIRECTORY) {
 } else {
     (Resolve-Path (Join-Path $PSScriptRoot '..\..\..\..')).Path
 }
-$dest = Join-Path $repoRoot 'output\vulkan-icd\win-x64'
-$tempDir = Join-Path $repoRoot 'output\vulkan-icd\_download'
+# Staged alongside the other downloaded native deps (externals/angle, externals/winappsdk),
+# not output/ which is reserved for artifacts our own native build produces.
+$dest = Join-Path $repoRoot 'externals\vulkan-icd'
+$tempDir = Join-Path $repoRoot 'externals\vulkan-icd\_download'
 New-Item -ItemType Directory -Force -Path $dest, $tempDir | Out-Null
 
 $downloadFile = Join-Path $PSScriptRoot '..\shared\download-file.ps1'
