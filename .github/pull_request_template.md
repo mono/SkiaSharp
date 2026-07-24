@@ -3,8 +3,8 @@ Thanks for contributing to SkiaSharp!
 
 • Target the `main` branch — maintainers backport to release branches.
 • Adding or changing API? See documentation/dev/adding-apis.md and documentation/dev/api-design.md.
-• Replace each prompt below. Write "None." for sub-sections that don't apply —
-  but always fill in "Changes" and "Required skia PR" rather than deleting them.
+• Just fill in the Description — the other sections have sensible defaults. Each
+  section's comment holds a copy-paste block; drop it in only when you have something.
 -->
 
 ## Description
@@ -15,7 +15,7 @@ Thanks for contributing to SkiaSharp!
 
 Fixes #
 
-<!-- "Fixes #123" / "Closes #123" to auto-close, or "Related to #123" for context. -->
+<!-- "Fixes #123" / "Closes #123" auto-closes the issue; use "Related to #123" for context only. -->
 
 **Areas affected**
 
@@ -35,66 +35,65 @@ Fixes #
 None.
 
 <!--
-  If this touches the C API or externals/skia submodule, paste the companion PR:
-    Requires https://github.com/mono/skia/pull/<number>
-  Native changes also require:
-   • commit inside externals/skia first, then `git add externals/skia` here
-   • re-run `pwsh ./utils/generate.ps1` and commit SkiaApi.generated.cs
+Touching the C API or the externals/skia submodule? Replace "None." above with:
+
+Requires https://github.com/mono/skia/pull/<number>
+
+Native changes also require committing inside externals/skia (then `git add externals/skia`
+here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit SkiaApi.generated.cs.
 -->
 
 ## Changes
 
+None.
+
 <!--
-  SkiaSharp keeps a STRICT stable ABI: additive only — no removals, no signature
-  or return-type changes. Deprecate with [Obsolete] instead of removing.
-  List the public API you touched below (or write "None."), and note any behavioral change.
--->
+SkiaSharp keeps a STRICT stable ABI: additive only — no removals or signature /
+return-type changes; deprecate with [Obsolete] instead of removing.
+
+Changed public API or behavior? Copy the parts that apply over "None." above:
 
 **Added**
 
 ```csharp
-// New public signatures, e.g.:
-// void SKCanvas.DrawFoo(float x, float y, SKPaint paint);
+void SKCanvas.DrawFoo(float x, float y, SKPaint paint);
 ```
 
 **Obsoleted**
 
 ```csharp
-// Deprecated APIs + their replacement, e.g.:
-// [Obsolete] void SKCanvas.OldMethod();  // use SKCanvas.NewMethod()
+[Obsolete] void SKCanvas.OldMethod();  // use SKCanvas.NewMethod()
 ```
 
 **Behavioral**
 
-None.
-
-<!-- Any change to rendering output, defaults, exceptions, threading, or memory
-     ownership that an app would notice after upgrading. -->
+A change to rendering output, defaults, exceptions, threading, or memory
+ownership that an app would notice after upgrading.
+-->
 
 ## Testing
 
 <!--
-  • What tests did you add or update, and where?
-  • How can a reviewer reproduce your verification?
-  • Which backends/platforms did you run on (CPU, GPU/Metal/Vulkan/ANGLE,
-    Windows/macOS/Linux/Android/iOS/tvOS/Tizen/WASM)? Note anything you could NOT test.
-  • Rendering change? Mention any golden-image updates (tests/Content/Goldens/).
--->
+How did you verify this? Add or update tests where relevant, and note which
+backends/platforms you ran on (CPU, GPU/Metal/Vulkan/ANGLE, Windows/macOS/Linux/
+Android/iOS/tvOS/Tizen/WASM) and anything you could NOT test.
 
-**Screenshots (before / after)**
+Rendering change? Mention golden-image updates (tests/Content/Goldens/) and copy
+this in to show the difference:
 
 <details>
-<summary>Show rendering output</summary>
+<summary>Screenshots (before / after)</summary>
 
 | Before | After |
 | --- | --- |
 |  |  |
 
 </details>
+-->
 
 ## Checklist
 
-- [ ] Tests added or updated (if omitted, explain in Testing above)
+- [ ] Tests added or updated (if omitted, explain why above)
 - [ ] `Changes` above lists all public API and behavioral changes (or "None.")
 - [ ] New/changed public API? Filed a docs issue in [mono/SkiaSharp-API-docs](https://github.com/mono/SkiaSharp-API-docs/issues) so reference docs can be written later
 - [ ] Native change? Companion `mono/skia` PR linked above and bindings regenerated
