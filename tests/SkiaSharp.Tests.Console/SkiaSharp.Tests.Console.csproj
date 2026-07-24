@@ -27,42 +27,6 @@
     <PackageReference Include="System.Net.Http" Version="4.3.4" Condition="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
 
-  <!--
-    Software Vulkan for the Windows test legs (both .NET Framework and .NET Core).
-
-    The headless Windows CI agents have no registered Vulkan ICD (and no guaranteed
-    loader), so every ganesh-vulkan cell skips. These first-party, Apache-2.0 Silk.NET
-    native packages provide a software ICD (SwiftShader: vk_swiftshader.dll +
-    vk_swiftshader_icd.json) and the Khronos loader (vulkan-1.dll). We copy the correct
-    bitness next to the test host so the Vulkan tests EXECUTE and golden-compare,
-    mirroring the Linux leg's Mesa lavapipe provisioning.
-
-    We deliberately take only the native assets (ExcludeAssets=build) and copy them
-    ourselves so net48 and net-current behave identically (the packages' own MSBuild
-    targets ship for net461 only). VulkanIcdEnvironmentFixture then points the loader at
-    the copied manifest. A missing/broken ICD or loader just makes the Vulkan cells skip
-    (see tests/VulkanTests/VKTest.cs), so this can only add coverage, never turn the
-    build red. Windows-only; a no-op on Linux/Android/macOS legs.
-  -->
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT'">
-    <PackageReference Include="Silk.NET.Vulkan.Loader.Native" Version="2025.9.12" GeneratePathProperty="true" PrivateAssets="all" ExcludeAssets="build;buildTransitive" />
-    <PackageReference Include="Silk.NET.Vulkan.SwiftShader.Native" Version="2025.9.8" GeneratePathProperty="true" PrivateAssets="all" ExcludeAssets="build;buildTransitive" />
-  </ItemGroup>
-
-  <!-- 64-bit host: x64, or AnyCPU (netcore leg) running as a 64-bit process. -->
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT' and '$(Platform)' != 'x86'">
-    <Content Include="$(PkgSilk_NET_Vulkan_Loader_Native)\runtimes\win-x64\native\vulkan-1.dll" Link="vulkan-1.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-    <Content Include="$(PkgSilk_NET_Vulkan_SwiftShader_Native)\runtimes\win-x64\native\vk_swiftshader.dll" Link="vk_swiftshader.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-    <Content Include="$(PkgSilk_NET_Vulkan_SwiftShader_Native)\runtimes\win-x64\native\vk_swiftshader_icd.json" Link="vk_swiftshader_icd.json" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-  </ItemGroup>
-
-  <!-- 32-bit host: the .NET Framework leg also runs an x86 pass. -->
-  <ItemGroup Condition="'$(OS)' == 'Windows_NT' and '$(Platform)' == 'x86'">
-    <Content Include="$(PkgSilk_NET_Vulkan_Loader_Native)\runtimes\win-x86\native\vulkan-1.dll" Link="vulkan-1.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-    <Content Include="$(PkgSilk_NET_Vulkan_SwiftShader_Native)\runtimes\win-x86\native\vk_swiftshader.dll" Link="vk_swiftshader.dll" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-    <Content Include="$(PkgSilk_NET_Vulkan_SwiftShader_Native)\runtimes\win-x86\native\vk_swiftshader_icd.json" Link="vk_swiftshader_icd.json" CopyToOutputDirectory="PreserveNewest" Visible="false" />
-  </ItemGroup>
-
   <ItemGroup>
     <ProjectReference Include="..\..\binding\HarfBuzzSharp\HarfBuzzSharp.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp.SceneGraph\SkiaSharp.SceneGraph.csproj" />
