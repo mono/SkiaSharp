@@ -229,16 +229,51 @@ There are matching factory methods for each backend:
 
 ### Releasing a wrapped texture
 
-When Skia is done with a wrapped backend texture it can notify you so you can free the caller-owned native texture. The wrap overloads accept a parameterless `SKGraphiteReleaseDelegate` that fires **exactly once**, when Skia destroys the wrapped texture (on dispose of the wrapping surface or image, after the GPU work has drained):
+When Skia is done with a wrapped backend texture it can notify you so you can free the caller-owned native texture. The wrap overloads accept a parameterless `SKGraphiteReleaseDelegate`.
+
+> [!IMPORTANT]
+> The release callback fires when Skia destroys **its** reference to the wrapped texture — which is **after** the wrapping surface (or image) is disposed **and** the pending GPU work has drained. Disposing the surface alone is not enough. To force the callback to run, submit and pump completion, then free cached GPU resources:
 
 ```csharp
-using var surface = SKSurface.Create(
-    recorder, backendTexture, SKColorType.Rgba8888,
-    colorSpace: null, props: null,
-    releaseProc: () => FreeMyNativeTexture());
+using var context  = SKGraphiteContext.CreateVulkan(backendContext);
+using var recorder = context.CreateRecorder();
+
+// A RENDERABLE backend texture needs COLOR_ATTACHMENT (0x10) + INPUT_ATTACHMENT (0x80).
+var vkInfo = new SKGraphiteVkTextureInfo
+{
+    Format = 37,           // VK_FORMAT_R8G8B8A8_UNORM
+    ImageTiling = 0,       // VK_IMAGE_TILING_OPTIMAL
+    SampleCount = 1,
+    AspectMask = 1,        // VK_IMAGE_ASPECT_COLOR_BIT
+    SharingMode = 0,       // VK_SHARING_MODE_EXCLUSIVE
+    ImageUsageFlags = 0x1 | 0x2 | 0x4 | 0x10 | 0x80, // = 0x97
+};
+using var texInfo = SKGraphiteTextureInfo.CreateVulkan(vkInfo);
+using var backendTexture = recorder.CreateBackendTexture(width, height, texInfo);
+
+var released = false;
+using (var surface = SKSurface.Create(
+           recorder, backendTexture, SKColorType.Rgba8888,
+           colorSpace: null, props: null,
+           releaseProc: () => released = true))
+{
+    surface.Canvas.Clear(SKColors.Red);
+    using var recording = recorder.Snap();
+    context.InsertRecording(recording);
+    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+} // surface disposed here — but the texture is not released yet
+
+// Drain deferred GPU work so Skia actually destroys the wrapped texture → releaseProc fires
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+for (var i = 0; i < 100; i++)
+    context.CheckAsyncWorkCompletion();
+context.FreeGpuResources();
+// released == true
+
+recorder.DeleteBackendTexture(backendTexture); // free the caller-owned texture
 ```
 
-`SKImage.FromTexture` has the same release-callback overload for the image path.
+The example above uses `recorder.CreateBackendTexture` for brevity; to wrap a texture your own code allocated, build the `SKGraphiteBackendTexture` with `SKGraphiteBackendTexture.CreateVulkan/CreateMetal/CreateDawn` instead — the release flow is identical. `SKImage.FromTexture` has the same release-callback overload and fires the same way (on image dispose plus GPU drain); a sample-only image needs only `SAMPLED` usage, not `INPUT_ATTACHMENT`.
 
 ## Using textures as images
 
