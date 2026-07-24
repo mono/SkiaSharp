@@ -3,21 +3,21 @@ Thanks for contributing to SkiaSharp!
 
 • Target the `main` branch — maintainers backport to release branches.
 • Adding or changing API? See documentation/dev/adding-apis.md and documentation/dev/api-design.md.
-• Replace each prompt below. Write "None." for sections that don't apply —
-  but never delete "API Changes" or "Required skia PR".
+• Replace each prompt below. Write "None." for sub-sections that don't apply —
+  but never delete the "API changes" or "Required skia PR" parts.
 -->
 
 ### Description
 
 <!-- What does this change do, and why? Reviewers need the *why* most. -->
 
-### Related Issues
+**Fixes**
 
 Fixes #
 
 <!-- "Fixes #123" / "Closes #123" to auto-close, or "Related to #123" for context. -->
 
-### Areas Affected
+**Areas affected**
 
 - [ ] Managed API (`binding/`)
 - [ ] Native / C API (`externals/skia/src/c`, `include/c`)
@@ -30,7 +30,19 @@ Fixes #
 - [ ] Build, packaging, or CI
 - [ ] Documentation or samples
 
-### API Changes
+**Required skia PR**
+
+None.
+
+<!--
+  If this touches the C API or externals/skia submodule, paste the companion PR:
+    Requires https://github.com/mono/skia/pull/<number>
+  Native changes also require:
+   • commit inside externals/skia first, then `git add externals/skia` here
+   • re-run `pwsh ./utils/generate.ps1` and commit SkiaApi.generated.cs
+-->
+
+### API changes
 
 <!--
   SkiaSharp keeps a STRICT stable ABI: additive only — no removals, no signature
@@ -56,24 +68,12 @@ None.
 
 <!-- Changing or removing an existing public signature is not allowed — deprecate instead. -->
 
-### Behavioral Changes
+### Behavioral changes
 
 None.
 
 <!-- Any change to rendering output, defaults, exceptions, threading, or memory
      ownership that an app would notice after upgrading. -->
-
-### Required skia PR
-
-None.
-
-<!--
-  If this touches the C API or externals/skia submodule, paste the companion PR:
-    Requires https://github.com/mono/skia/pull/<number>
-  Native changes also require:
-   • commit inside externals/skia first, then `git add externals/skia` here
-   • re-run `pwsh ./utils/generate.ps1` and commit SkiaApi.generated.cs
--->
 
 ### Testing
 
@@ -85,8 +85,10 @@ None.
   • Rendering change? Mention any golden-image updates (tests/Content/Goldens/).
 -->
 
+**Screenshots (before / after)**
+
 <details>
-<summary>Screenshots / rendering output (before &amp; after)</summary>
+<summary>Show rendering output</summary>
 
 | Before | After |
 | --- | --- |
@@ -97,6 +99,6 @@ None.
 ### Checklist
 
 - [ ] Tests added or updated (if omitted, explain in Testing above)
-- [ ] `API Changes` above is complete (or "None.")
+- [ ] `API changes` above is complete (or "None.")
 - [ ] New/changed public API? Filed a docs issue in [mono/SkiaSharp-API-docs](https://github.com/mono/SkiaSharp-API-docs/issues) so reference docs can be written later
 - [ ] Native change? Companion `mono/skia` PR linked above and bindings regenerated
