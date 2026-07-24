@@ -1,29 +1,21 @@
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using SharpVk;
 
 namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
 	/// Ganesh GPU backend over Vulkan for the desktop hosts (Linux and Windows).
-	/// Reuses the existing SharpVk vehicle — the same managed Vulkan binding and
-	/// <see cref="GRSharpVkBackendContext"/> bridge that <c>SkiaSharp.Vulkan.Tests</c>
-	/// already exercises — rather than reinventing a loader.
+	/// Brings Vulkan up through <see cref="SilkVkContext"/> — the maintained,
+	/// cross-platform Silk.NET binding — and bridges to Skia with
+	/// <see cref="GRSilkNetBackendContext"/>.
 	///
 	/// <para>
 	/// The context is fully <b>headless</b>: it creates only an
 	/// <c>Instance</c> → <c>PhysicalDevice</c> → graphics <c>Queue</c> → <c>Device</c>,
 	/// with no <c>VK_KHR_surface</c>/swapchain and no window — exactly the inputs
 	/// <see cref="GRContext.CreateVulkan"/> needs to render to an offscreen
-	/// <see cref="SKSurface"/>. This file is compiled into the
-	/// <c>SkiaSharp.Vulkan.Tests</c> satellite host (which already references
-	/// SharpVk), <b>not</b> the base test assembly, so the Vulkan dependency never
-	/// reaches the Console / MAUI device / WASM builds. The satellite's
-	/// <c>VulkanVisualTests</c> drives this renderer through the shared
-	/// <c>VisualMatrixTestsBase</c> engine. Android Vulkan is a separate
-	/// device-host renderer.
+	/// <see cref="SKSurface"/>.
 	/// </para>
 	///
 	/// <para>
@@ -41,9 +33,9 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows
+			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows || TestConfig.Current.IsAndroid
 				? null
-				: "Vulkan is wired up for the Linux and Windows desktop hosts.";
+				: "Vulkan is wired up for the Linux, Windows, and Android hosts.";
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
@@ -52,66 +44,40 @@ namespace SkiaSharp.Tests.Visual
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
 
-			lock (GpuRenderGate.Sync)
+			SilkVkContext ctx = null;
+			try
 			{
-				Instance instance = null;
-				Device device = null;
-				try
+				ctx = CreateContextOrSkip();
+
+				using var extensions = new GRVkExtensions();
+				extensions.Initialize(ctx.GetProc, ctx.Instance, ctx.PhysicalDevice);
+
+				using var backendContext = new GRSilkNetBackendContext
 				{
-					instance = CreateInstanceOrSkip();
+					VkInstance = ctx.Instance,
+					VkPhysicalDevice = ctx.PhysicalDevice,
+					VkDevice = ctx.Device,
+					VkQueue = ctx.GraphicsQueue,
+					GraphicsQueueIndex = ctx.GraphicsFamily,
+					MaxAPIVersion = SilkVkContext.ApiVersion,
+					Extensions = extensions,
+					GetProcedureAddress = ctx.GetProc,
+					VkPhysicalDeviceFeatures = ctx.Features,
+				};
 
-					var physicalDevice = instance.EnumeratePhysicalDevices().FirstOrDefault()
-						?? throw new RendererUnavailableException(
-							"No Vulkan physical device was found (no driver or software ICD installed).");
+				using var grContext = GRContext.CreateVulkan(backendContext)
+					?? throw new InvalidOperationException("GRContext.CreateVulkan returned null.");
+				using var surface = SKSurface.Create(grContext, budgeted: true, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Vulkan.");
 
-					var graphicsFamily = FindGraphicsFamily(physicalDevice);
+				scene.Draw(surface.Canvas);
+				grContext.Flush(submit: true, synchronous: true);
 
-					device = physicalDevice.CreateDevice(new[]
-					{
-						new DeviceQueueCreateInfo { QueueFamilyIndex = graphicsFamily, QueuePriorities = new[] { 1f } },
-					}, null, null);
-
-					var queue = device.GetQueue(graphicsFamily, 0);
-
-					// SharpVk exposes the static "instance" functions on the
-					// Instance, so fall back to it when no device/instance is
-					// supplied — the same shim Win32VkContext uses.
-					var localInstance = instance;
-					GRSharpVkGetProcedureAddressDelegate getProc = (name, inst, dev) =>
-					{
-						if (dev != null)
-							return dev.GetProcedureAddress(name);
-						if (inst != null)
-							return inst.GetProcedureAddress(name);
-						return localInstance.GetProcedureAddress(name);
-					};
-
-					using var backendContext = new GRSharpVkBackendContext
-					{
-						VkInstance = instance,
-						VkPhysicalDevice = physicalDevice,
-						VkDevice = device,
-						VkQueue = queue,
-						GraphicsQueueIndex = graphicsFamily,
-						GetProcedureAddress = getProc,
-						VkPhysicalDeviceFeatures = physicalDevice.GetFeatures(),
-					};
-
-					using var grContext = GRContext.CreateVulkan(backendContext)
-						?? throw new InvalidOperationException("GRContext.CreateVulkan returned null.");
-					using var surface = SKSurface.Create(grContext, budgeted: true, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Vulkan.");
-
-					scene.Draw(surface.Canvas);
-					grContext.Flush(submit: true, synchronous: true);
-
-					return Task.FromResult(RendererPixels.ReadRgba(surface, info));
-				}
-				finally
-				{
-					device?.Dispose();
-					instance?.Dispose();
-				}
+				return Task.FromResult(RendererPixels.ReadRgba(surface, info));
+			}
+			finally
+			{
+				ctx?.Dispose();
 			}
 		}
 
@@ -119,29 +85,20 @@ namespace SkiaSharp.Tests.Visual
 		{
 		}
 
-		private static Instance CreateInstanceOrSkip()
+		// Distinguishes "Vulkan genuinely absent on this host" (legit skip) from a
+		// broken binding (real failure). A missing native entry point or method is
+		// a regression and MUST fail; an absent driver / ICD is an honest skip.
+		private static SilkVkContext CreateContextOrSkip()
 		{
 			try
 			{
-				return Instance.Create(null, null);
+				return new SilkVkContext();
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
 				throw new RendererUnavailableException(
-					$"Unable to create a Vulkan instance on this host: {ex.Message}", ex);
+					$"Unable to create a Vulkan context on this host: {ex.Message}", ex);
 			}
-		}
-
-		private static uint FindGraphicsFamily(PhysicalDevice physicalDevice)
-		{
-			var families = physicalDevice.GetQueueFamilyProperties();
-			for (uint i = 0; i < families.Length; i++)
-			{
-				if (families[i].QueueFlags.HasFlag(QueueFlags.Graphics))
-					return i;
-			}
-
-			throw new RendererUnavailableException("This Vulkan device exposes no graphics queue family.");
 		}
 	}
 }

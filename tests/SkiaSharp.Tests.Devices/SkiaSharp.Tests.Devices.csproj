@@ -57,6 +57,14 @@
     <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
   </ItemGroup>
 
+  <!-- Vulkan tests: only the device platforms whose native library is built with Vulkan and whose
+       linker can resolve the Vulkan P/Invokes (android, windows). The library is unsigned so it can
+       reference the unsigned Silk.NET/SharpVk packages; MauiProgram registers its assembly so the
+       renderer catalog and the test runner both discover it. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\SkiaSharp.Vulkan.Tests\SkiaSharp.Vulkan.Tests.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <MauiIcon Include="Resources\AppIcon\appicon.png" IsAppIcon="true" Color="#F8F8F8" />
     <MauiSplashScreen Include="Resources\Splash\skiasharplogo.png" BaseSize="256" Color="#F8F8F8" />

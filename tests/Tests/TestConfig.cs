@@ -56,6 +56,13 @@ namespace SkiaSharp.Tests
 			}
 		}
 
+		public bool IsAndroid =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsAndroid();
+#else
+			false;
+#endif
+
 		public string[] UnicodeFontFamilies { get; protected set; }
 		public string DefaultFontFamily { get; protected set; }
 
