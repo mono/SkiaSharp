@@ -125,8 +125,8 @@ stages:
               # Provision a software Vulkan ICD (SwiftShader) + the Khronos loader
               # so the visual-regression matrix can render and golden-compare
               # ganesh-vulkan here, mirroring the Linux leg's Mesa lavapipe setup.
-              # Skip-safe: the script swallows all errors and exits 0, so a missing
-              # ICD just makes the Vulkan cells skip, never turns the build red.
+              # This is a required step: if provisioning fails it fails the build,
+              # so a broken ICD surfaces loudly rather than silently skipping.
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
