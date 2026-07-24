@@ -1,21 +1,26 @@
 {
-  "theme": "New platforms and performance",
-  "highlights_headline": "SkiaSharp 4.151.0 adds Vulkan/Silk.NET support, FreeType on Nano Server, and several performance fixes.",
-  "highlights_body": "This release expands platform reach with a new Vulkan binding package and FreeType-backed font support on Windows Nano Server. It also includes a memory-leak fix in raster image creation and two performance improvements in text encoding and runtime-effect uniforms.",
+  "theme": "Vulkan package and platform expansion",
+  "highlights_headline": "SkiaSharp 4.151.0 adds a new Vulkan Silk.NET package, expands platform support, and syncs Skia m151 bug fixes.",
+  "highlights_body": "This release introduces the `SkiaSharp.Vulkan.Silk.NET` integration package, brings font rendering to Nano Server via FreeType, and expands verified platform support to Azure Linux, Alpine/musl, and Nano Server containers. The bundled Skia engine picks up upstream m151 bug fixes.",
   "breaking": [],
   "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia m151 upstream bug fixes merged",
+          "detail": "The bundled renderer is updated with the latest upstream chrome/m151 patches, keeping SkiaSharp aligned with the current stable Skia engine.",
+          "prs": [4538, 4537]
+        }
+      ]
+    },
     {
       "heading": "API Surface",
       "bullets": [
         {
           "lead": "New SkiaSharp.Vulkan.Silk.NET package",
-          "detail": "A dedicated NuGet package integrates SkiaSharp with Vulkan via the Silk.NET bindings, enabling GPU-accelerated rendering on Linux and Android Vulkan back-ends.",
+          "detail": "A dedicated NuGet package for Vulkan GPU backend integration via Silk.NET is now available, making it straightforward to wire up a Vulkan surface without manual P/Invoke.",
           "prs": [4527]
-        },
-        {
-          "lead": "FreeType font support on Windows Nano Server",
-          "detail": "Nano Server containers lack the GDI font stack; SkiaSharp now falls back to FreeType so font rendering works in that environment.",
-          "prs": [4280]
         }
       ]
     },
@@ -23,29 +28,19 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Memory leak in SKImage.Create raster failure path fixed",
-          "detail": "A CoTaskMem pixel buffer was not freed when the underlying Skia raster-image creation failed, causing a native memory leak. The buffer is now released on the failure path.",
+          "lead": "CoTaskMem pixel-buffer leak fixed in SKImage.Create",
+          "detail": "A native memory leak in the raster-image failure path of `SKImage.Create` was plugged — the CoTaskMem buffer is now freed correctly when Skia rejects the pixel data.",
           "prs": [4455]
-        }
-      ]
-    },
-    {
-      "heading": "Lifecycle & Internals",
-      "bullets": [
+        },
         {
-          "lead": "Avoid intermediate string allocation in GetEncodedText null-terminated path",
-          "detail": "The hot path that reads null-terminated text no longer allocates an intermediate string, reducing GC pressure on text-heavy workloads.",
+          "lead": "String allocation removed in GetEncodedText",
+          "detail": "The null-terminated fast path in `GetEncodedText` no longer allocates an intermediate string, reducing GC pressure in text-heavy rendering loops.",
           "prs": [4498]
         },
         {
-          "lead": "Pre-size uniform lookup map in SKRuntimeEffectUniforms",
-          "detail": "The uniform-name lookup dictionary is now sized to the known count at construction time, eliminating rehash allocations for typical runtime-effect usage.",
+          "lead": "SKRuntimeEffectUniforms lookup pre-sized",
+          "detail": "The uniform-name lookup map is now sized to the known uniform count upfront, eliminating repeated rehashing on first access for effects with many uniforms.",
           "prs": [4512]
-        },
-        {
-          "lead": "Solutions converted to .slnx format",
-          "detail": "All .sln solution files have been migrated to the lighter .slnx format for improved tooling compatibility.",
-          "prs": [4528]
         }
       ]
     },
@@ -53,15 +48,21 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Containerized test legs added: Azure Linux, Alpine/musl, Nano Server",
-          "detail": "CI now runs a full test matrix on Azure Linux, Alpine (musl libc), and Windows Nano Server containers, catching platform-specific regressions earlier.",
+          "lead": "Font rendering on Nano Server via FreeType",
+          "detail": "Nano Server's stripped GDI environment previously prevented font loading; SkiaSharp now routes font access through FreeType on that platform, fixing text rendering for Windows container workloads.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Verified support for Azure Linux, Alpine/musl, and Nano Server",
+          "detail": "Containerized CI legs now confirm that SkiaSharp runs correctly on Azure Linux, Alpine (musl libc), and Windows Nano Server, giving these targets the same tested-and-verified status as the mainline platforms.",
           "prs": [4515]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeffska": "FreeType font support on Windows Nano Server, fixing long-standing font rendering failures in container environments."
+    "jeffska": "Enabled FreeType-based font loading on Windows Nano Server, fixing long-standing text rendering failures in GDI-less container environments"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
