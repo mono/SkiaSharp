@@ -4,10 +4,10 @@ Thanks for contributing to SkiaSharp!
 • Target the `main` branch — maintainers backport to release branches.
 • Adding or changing API? See documentation/dev/adding-apis.md and documentation/dev/api-design.md.
 • Replace each prompt below. Write "None." for sub-sections that don't apply —
-  but never delete the "API changes" or "Required skia PR" parts.
+  but always fill in "Changes" and "Required skia PR" rather than deleting them.
 -->
 
-### Description
+## Description
 
 <!-- What does this change do, and why? Reviewers need the *why* most. -->
 
@@ -42,15 +42,13 @@ None.
    • re-run `pwsh ./utils/generate.ps1` and commit SkiaApi.generated.cs
 -->
 
-### API changes
+## Changes
 
 <!--
   SkiaSharp keeps a STRICT stable ABI: additive only — no removals, no signature
   or return-type changes. Deprecate with [Obsolete] instead of removing.
-  Fill the fences below, or write "None." if there are no public API changes.
+  List the public API you touched below (or write "None."), and note any behavioral change.
 -->
-
-None.
 
 **Added**
 
@@ -66,16 +64,14 @@ None.
 // [Obsolete] void SKCanvas.OldMethod();  // use SKCanvas.NewMethod()
 ```
 
-<!-- Changing or removing an existing public signature is not allowed — deprecate instead. -->
-
-### Behavioral changes
+**Behavioral**
 
 None.
 
 <!-- Any change to rendering output, defaults, exceptions, threading, or memory
      ownership that an app would notice after upgrading. -->
 
-### Testing
+## Testing
 
 <!--
   • What tests did you add or update, and where?
@@ -96,9 +92,9 @@ None.
 
 </details>
 
-### Checklist
+## Checklist
 
 - [ ] Tests added or updated (if omitted, explain in Testing above)
-- [ ] `API changes` above is complete (or "None.")
+- [ ] `Changes` above lists all public API and behavioral changes (or "None.")
 - [ ] New/changed public API? Filed a docs issue in [mono/SkiaSharp-API-docs](https://github.com/mono/SkiaSharp-API-docs/issues) so reference docs can be written later
 - [ ] Native change? Companion `mono/skia` PR linked above and bindings regenerated
