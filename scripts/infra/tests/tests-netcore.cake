@@ -30,6 +30,7 @@ Task ("Default")
         "SkiaSharp.Tests.Console",
         "SkiaSharp.Tests.SingletonInit.Console",
         "SkiaSharp.Direct3D.Tests.Console",
+        "SkiaSharp.Vulkan.Tests.Console",
         "SkiaSharp.Views.Gtk4.Tests",
     };
     foreach (var testAssembly in testAssemblies) {

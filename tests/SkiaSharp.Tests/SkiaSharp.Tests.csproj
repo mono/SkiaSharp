@@ -21,16 +21,10 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
-    <!-- The Vulkan tests (..\VulkanTests below) are compiled into this shared library; these two
-         projects bring in Silk.NET.Vulkan and SharpVk transitively. Hosts that reference this
-         library (Devices, WASM) get the Vulkan tests too; they skip where there is no Vulkan ICD. -->
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Exclude="..\Tests\SkiaSharp\GlContexts\*\**;..\Tests\SkiaSharp\Visual\Renderers\Desktop\**" Link="%(RecursiveDir)%(FileName)%(Extension)" />
-    <Compile Include="..\VulkanTests\**\*.cs" Link="VulkanTests\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
 

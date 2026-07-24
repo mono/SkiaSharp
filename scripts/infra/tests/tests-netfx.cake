@@ -29,6 +29,7 @@ Task ("Default")
             "SkiaSharp.Tests.Console",
             "SkiaSharp.Tests.SingletonInit.Console",
             "SkiaSharp.Direct3D.Tests.Console",
+            "SkiaSharp.Vulkan.Tests.Console",
         };
         foreach (var testAssembly in testAssemblies) {
             var csproj = $"{ROOT_PATH}/tests/{testAssembly}/{testAssembly}.csproj";

@@ -34,14 +34,10 @@
     <ProjectReference Include="..\..\binding\SkiaSharp.Skottie\SkiaSharp.Skottie.csproj" />
     <ProjectReference Include="..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz\SkiaSharp.HarfBuzz.csproj" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
-    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Tests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
-    <!-- Vulkan tests: desktop host runs on Linux/Windows; on macOS they skip at runtime (no Vulkan native). -->
-    <Compile Include="..\VulkanTests\**\*.cs" Link="VulkanTests\%(RecursiveDir)%(FileName)%(Extension)" />
     <Compile Include="..\..\binding\Binding.Shared\LibraryLoader.cs" Link="Utils\LibraryLoader.cs" />
   </ItemGroup>
 

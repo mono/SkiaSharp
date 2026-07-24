@@ -4,6 +4,7 @@ using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
+	[Collection(VulkanGpuRenderingCollection.Name)]
 	public class GRContextTest : VKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
