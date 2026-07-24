@@ -17,19 +17,6 @@ Fixes #
 
 <!-- "Fixes #123" / "Closes #123" auto-closes the issue; use "Related to #123" for context only. -->
 
-**Areas affected**
-
-- [ ] Managed API (`binding/`)
-- [ ] Native / C API (`externals/skia/src/c`, `include/c`)
-- [ ] Generated P/Invoke bindings
-- [ ] Native dependency or Skia update (libpng, HarfBuzz, FreeType, zlib, milestone bump, …)
-- [ ] Views & integrations (MAUI, Uno, WPF, WinUI, Blazor, …)
-- [ ] Rendering output / visual behavior
-- [ ] Performance
-- [ ] Tests
-- [ ] Build, packaging, or CI
-- [ ] Documentation or samples
-
 **Required skia PR**
 
 None.
@@ -42,6 +29,19 @@ Requires https://github.com/mono/skia/pull/<number>
 Native changes also require committing inside externals/skia (then `git add externals/skia`
 here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit SkiaApi.generated.cs.
 -->
+
+**Areas affected**
+
+- [ ] Managed API (`binding/`)
+- [ ] Native / C API (`externals/skia/src/c`, `include/c`)
+- [ ] Generated P/Invoke bindings
+- [ ] Native dependency or Skia update (libpng, HarfBuzz, FreeType, zlib, milestone bump, …)
+- [ ] Views & integrations (MAUI, Uno, WPF, WinUI, Blazor, …)
+- [ ] Rendering output / visual behavior
+- [ ] Performance
+- [ ] Tests
+- [ ] Build, packaging, or CI
+- [ ] Documentation or samples
 
 ## Changes
 
