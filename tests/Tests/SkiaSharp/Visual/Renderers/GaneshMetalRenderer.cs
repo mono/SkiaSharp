@@ -53,38 +53,35 @@ namespace SkiaSharp.Tests.Visual
 			if (!IsAvailable)
 				throw new RendererUnavailableException(UnavailableReason);
 
-			lock (GpuRenderGate.Sync)
+			var device = IntPtr.Zero;
+			var queue = IntPtr.Zero;
+			try
 			{
-				var device = IntPtr.Zero;
-				var queue = IntPtr.Zero;
-				try
-				{
-					device = MTLCreateSystemDefaultDevice();
-					if (device == IntPtr.Zero)
-						throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
+				device = MTLCreateSystemDefaultDevice();
+				if (device == IntPtr.Zero)
+					throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
-					queue = ObjcSendVoid(device, "newCommandQueue");
-					if (queue == IntPtr.Zero)
-						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
+				queue = ObjcSendVoid(device, "newCommandQueue");
+				if (queue == IntPtr.Zero)
+					throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
-					using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
-					using var grContext = GRContext.CreateMetal(backendContext)
-						?? throw new InvalidOperationException("GRContext.CreateMetal returned null.");
-					using var surface = SKSurface.Create(grContext, budgeted: true, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Metal.");
+				using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
+				using var grContext = GRContext.CreateMetal(backendContext)
+					?? throw new InvalidOperationException("GRContext.CreateMetal returned null.");
+				using var surface = SKSurface.Create(grContext, budgeted: true, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Metal.");
 
-					scene.Draw(surface.Canvas);
-					grContext.Flush(submit: true, synchronous: true);
+				scene.Draw(surface.Canvas);
+				grContext.Flush(submit: true, synchronous: true);
 
-					return Task.FromResult(RendererPixels.ReadRgba(surface, info));
-				}
-				finally
-				{
-					if (queue != IntPtr.Zero)
-						ObjcRelease(queue);
-					if (device != IntPtr.Zero)
-						ObjcRelease(device);
-				}
+				return Task.FromResult(RendererPixels.ReadRgba(surface, info));
+			}
+			finally
+			{
+				if (queue != IntPtr.Zero)
+					ObjcRelease(queue);
+				if (device != IntPtr.Zero)
+					ObjcRelease(device);
 			}
 		}
 
