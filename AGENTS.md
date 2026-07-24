@@ -67,7 +67,7 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
 1. **Create a feature branch FIRST** — Use naming convention: `dev/issue-NNNN-description`
 2. **Make all commits on the feature branch** — Never commit directly to protected branches
-3. **Submit a Pull Request** — Changes must be reviewed before merging
+3. **Submit a Pull Request** — Fill in the PR template (`.github/pull_request_template.md`) completely; changes must be reviewed before merging
 
 ```bash
 # CORRECT — Always create a feature branch first
@@ -83,6 +83,8 @@ git checkout skiasharp && git commit  # FORBIDDEN (in skia submodule)
 ```
 
 **This applies to BOTH repositories.** The skia submodule has its own protected branches that must be respected.
+
+**Always use the PR template.** When opening a pull request, populate every section of the repository's `.github/pull_request_template.md` — do **not** open a PR with an empty or default body. Keep the ABI-critical **API Changes** and **Required skia PR** sections (write `None.` instead of deleting them), tick the relevant **Areas Affected**, describe how you verified the change under **Testing**, and attach before/after screenshots for any rendering change. The `externals/skia` submodule ships its own matching template for C API PRs.
 
 ---
 
