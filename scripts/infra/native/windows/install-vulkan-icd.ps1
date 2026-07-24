@@ -2,12 +2,12 @@
 # Windows CI agent so the ganesh-vulkan tests execute and golden-compare,
 # mirroring what the Linux leg does with Mesa lavapipe.
 #
-# Downloads two first-party, Apache-2.0 Silk.NET native NuGet packages by their
-# immutable api.nuget.org URL (a plain HTTPS artifact download, NOT a NuGet
-# <PackageReference>, so the curated feeds are untouched):
+# Downloads two first-party, Apache-2.0 Silk.NET native NuGet packages from the
+# dnceng "dotnet-public" mirror by their immutable .nupkg URL (a plain HTTPS
+# artifact download, NOT a NuGet <PackageReference>, so the curated feeds are
+# untouched). Same feed the WinAppSDK / ANGLE provisioning downloads from:
 #   Silk.NET.Vulkan.Loader.Native      -> vulkan-1.dll        (Khronos loader)
-#   Silk.NET.Vulkan.SwiftShader.Native -> vk_swiftshader.dll  (software ICD)
-#                                         vk_swiftshader_icd.json
+#   Silk.NET.Vulkan.SwiftShader.Native -> vk_swiftshader.dll + vk_swiftshader_icd.json
 #
 # This is a deterministic, required provisioning step: any failure is fatal and
 # fails the build, so a broken ICD surfaces loudly instead of silently dropping
@@ -38,25 +38,12 @@ $downloadFile = Join-Path $PSScriptRoot '..\shared\download-file.ps1'
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $packages = @(
-    @{
-        Id      = 'silk.net.vulkan.loader.native'
-        Version = $loaderVersion
-        Sha256  = $loaderSha
-        Entries = @{ 'runtimes/win-x64/native/vulkan-1.dll' = 'vulkan-1.dll' }
-    },
-    @{
-        Id      = 'silk.net.vulkan.swiftshader.native'
-        Version = $swiftVersion
-        Sha256  = $swiftSha
-        Entries = @{
-            'runtimes/win-x64/native/vk_swiftshader.dll'      = 'vk_swiftshader.dll'
-            'runtimes/win-x64/native/vk_swiftshader_icd.json' = 'vk_swiftshader_icd.json'
-        }
-    }
+    @{ Id = 'silk.net.vulkan.loader.native';     Version = $loaderVersion; Sha256 = $loaderSha },
+    @{ Id = 'silk.net.vulkan.swiftshader.native'; Version = $swiftVersion;  Sha256 = $swiftSha  }
 )
 
 foreach ($pkg in $packages) {
-    $uri = "https://api.nuget.org/v3-flatcontainer/$($pkg.Id)/$($pkg.Version)/$($pkg.Id).$($pkg.Version).nupkg"
+    $uri = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/flat2/$($pkg.Id)/$($pkg.Version)/$($pkg.Id).$($pkg.Version).nupkg"
     $nupkg = Join-Path $tempDir "$($pkg.Id).$($pkg.Version).nupkg"
 
     Write-Host "Downloading $($pkg.Id) $($pkg.Version) ..."
@@ -67,18 +54,12 @@ foreach ($pkg in $packages) {
         throw "SHA-256 mismatch for $($pkg.Id) $($pkg.Version): expected $($pkg.Sha256), got $actualSha"
     }
 
-    $zip = [System.IO.Compression.ZipFile]::OpenRead($nupkg)
-    try {
-        foreach ($entryPath in $pkg.Entries.Keys) {
-            $entry = $zip.GetEntry($entryPath)
-            if (-not $entry) { throw "Package $($pkg.Id) $($pkg.Version) is missing entry '$entryPath'." }
-            $target = Join-Path $dest $pkg.Entries[$entryPath]
-            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $target, $true)
-            Write-Host "  extracted $($pkg.Entries[$entryPath])"
-        }
-    } finally {
-        $zip.Dispose()
-    }
+    # Unzip the whole .nupkg, then flatten the win-x64 native binaries into $dest
+    # (vulkan-1.dll from the loader; vk_swiftshader.dll + .json from SwiftShader).
+    $extractDir = Join-Path $tempDir $pkg.Id
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($nupkg, $extractDir)
+    Copy-Item -Path (Join-Path $extractDir 'runtimes\win-x64\native\*') -Destination $dest -Force
+    Write-Host "  staged native binaries from $($pkg.Id)"
 }
 
 $icdJson = Join-Path $dest 'vk_swiftshader_icd.json'
