@@ -52,7 +52,6 @@ namespace SkiaSharp.Tests.Visual
 			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase) &&
 			RuntimeInformation.OSArchitecture == Architecture.X64;
 
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -75,47 +74,46 @@ namespace SkiaSharp.Tests.Visual
 					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
 					"Metal driver leaves state that hangs the test host on shutdown).");
 
-			lock (GpuRenderGate.Sync)
+			// GPU work is serialized by the GpuRenderingCollection the driving test
+			// class joins (xUnit DisableParallelization), so no in-renderer lock.
+			var device = IntPtr.Zero;
+			var queue = IntPtr.Zero;
+			try
 			{
-				var device = IntPtr.Zero;
-				var queue = IntPtr.Zero;
-				try
-				{
-					device = MTLCreateSystemDefaultDevice();
-					if (device == IntPtr.Zero)
-						throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
+				device = MTLCreateSystemDefaultDevice();
+				if (device == IntPtr.Zero)
+					throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
-					// Probe the device BEFORE allocating a command queue. newCommandQueue
-					// on virtualized Metal is precisely what leaves the dispatch-queue
-					// state that hangs shutdown; if the device doesn't advertise a
-					// Graphite-capable family, we never call newCommandQueue.
-					if (!MetalHasRenderCapableFamily(device))
-						throw new RendererUnavailableException(
-							"MTLDevice does not support any MTLGPUFamily that Ganesh needs " +
-							"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+				// Probe the device BEFORE allocating a command queue. newCommandQueue
+				// on virtualized Metal is precisely what leaves the dispatch-queue
+				// state that hangs shutdown; if the device doesn't advertise a
+				// render-capable family, we never call newCommandQueue.
+				if (!MetalHasRenderCapableFamily(device))
+					throw new RendererUnavailableException(
+						"MTLDevice does not support any MTLGPUFamily that Ganesh needs " +
+						"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
 
-					queue = ObjcSendVoid(device, "newCommandQueue");
-					if (queue == IntPtr.Zero)
-						throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
+				queue = ObjcSendVoid(device, "newCommandQueue");
+				if (queue == IntPtr.Zero)
+					throw new InvalidOperationException("[MTLDevice newCommandQueue] returned null.");
 
-					using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
-					using var grContext = GRContext.CreateMetal(backendContext)
-						?? throw new InvalidOperationException("GRContext.CreateMetal returned null.");
-					using var surface = SKSurface.Create(grContext, budgeted: true, info)
-						?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Metal.");
+				using var backendContext = new GRMtlBackendContext { DeviceHandle = device, QueueHandle = queue };
+				using var grContext = GRContext.CreateMetal(backendContext)
+					?? throw new InvalidOperationException("GRContext.CreateMetal returned null.");
+				using var surface = SKSurface.Create(grContext, budgeted: true, info)
+					?? throw new InvalidOperationException("SKSurface.Create returned null on Ganesh/Metal.");
 
-					scene.Draw(surface.Canvas);
-					grContext.Flush(submit: true, synchronous: true);
+				scene.Draw(surface.Canvas);
+				grContext.Flush(submit: true, synchronous: true);
 
-					return Task.FromResult(RendererPixels.ReadRgba(surface, info));
-				}
-				finally
-				{
-					if (queue != IntPtr.Zero)
-						ObjcRelease(queue);
-					if (device != IntPtr.Zero)
-						ObjcRelease(device);
-				}
+				return Task.FromResult(RendererPixels.ReadRgba(surface, info));
+			}
+			finally
+			{
+				if (queue != IntPtr.Zero)
+					ObjcRelease(queue);
+				if (device != IntPtr.Zero)
+					ObjcRelease(device);
 			}
 		}
 
