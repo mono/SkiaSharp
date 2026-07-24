@@ -48,27 +48,32 @@ here) and re-running `pwsh ./utils/generate.ps1` to regenerate + commit SkiaApi.
 None.
 
 <!--
-SkiaSharp keeps a STRICT stable ABI: additive only — no removals or signature /
-return-type changes; deprecate with [Obsolete] instead of removing.
+Scope: your PUBLIC API surface and any observable BEHAVIOR — NOT a file-by-file
+list. The diff already shows which files changed; the "what & why" narrative
+belongs in Description above. A CI-only or refactor PR that changes neither can
+just leave "None." (a short qualifier is fine, e.g.
+"None — CI-only, no public API or behavior change.").
 
-Changed public API or behavior? Copy the parts that apply over "None." above:
+Otherwise copy the parts that apply over "None." and delete the rest:
 
-**Added**
+**Public API**
+
+STRICT stable ABI — additive only: no removals, no signature or return-type
+changes; deprecate with [Obsolete] rather than removing. List the exact signatures:
 
 ```csharp
-void SKCanvas.DrawFoo(float x, float y, SKPaint paint);
+// added
+public bool SKPath.TryGetTightBounds(out SKRect bounds);
+
+// deprecated (kept for compatibility)
+[Obsolete("Use TryGetTightBounds instead.")]
+public SKRect SKPath.GetTightBounds();
 ```
 
-**Obsoleted**
+**Behavior**
 
-```csharp
-[Obsolete] void SKCanvas.OldMethod();  // use SKCanvas.NewMethod()
-```
-
-**Behavioral**
-
-A change to rendering output, defaults, exceptions, threading, or memory
-ownership that an app would notice after upgrading.
+What an app would notice after upgrading — rendering output, defaults, thrown
+exceptions, threading, or memory ownership — and the impact. Keep it to a line or two.
 -->
 
 ## Testing
