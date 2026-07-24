@@ -14,8 +14,14 @@
 #
 # The loader is discovered by Silk.NET via the OS search path (LoadLibrary
 # "vulkan-1"), so we prepend the extract dir to PATH. The ICD is discovered by
-# the loader via VK_ICD_FILENAMES / VK_DRIVER_FILES (the Windows loader uses the
-# registry/env, not the app dir), so we point those at the extracted manifest.
+# the loader through the Windows REGISTRY -- the primary, officially-documented
+# discovery path -- by writing the manifest's absolute path as a REG_DWORD=0
+# value under HKLM\SOFTWARE\Khronos\Vulkan\Drivers. This is required because CI
+# agents run ELEVATED, and the Khronos loader deliberately IGNORES the
+# VK_ICD_FILENAMES / VK_DRIVER_FILES / VK_ADD_DRIVER_FILES environment variables
+# for elevated processes (a security measure), so env-var selection alone is
+# silently discarded and vkCreateInstance reports "Found no drivers!". We still
+# also set those env vars as a harmless fallback for any non-elevated consumer.
 # The manifest's library_path is ".\vk_swiftshader.dll" (relative to the json),
 # so the json and dll are extracted into the same directory.
 #
@@ -117,11 +123,40 @@ try {
     Write-Host "ICD manifest contents:"
     Get-Content $icdJson | Write-Host
 
+    # --- Register the ICD in the Windows registry (PRIMARY discovery path) --------
+    # The Khronos loader IGNORES VK_ICD_FILENAMES / VK_DRIVER_FILES / VK_ADD_DRIVER_FILES
+    # when the process is ELEVATED (documented security behaviour). CI agents run
+    # elevated, so env-var selection is discarded and vkCreateInstance returns
+    # "Found no drivers!". The registry works regardless of elevation and is the
+    # officially-documented mechanism: a REG_DWORD value named with the manifest's
+    # absolute path, data 0 (0 = enabled), under
+    #   HKLM\SOFTWARE\Khronos\Vulkan\Drivers            (64-bit loader)
+    #   HKLM\SOFTWARE\WOW6432Node\Khronos\Vulkan\Drivers (32-bit loader)
+    # See KhronosGroup/Vulkan-Loader docs/LoaderDriverInterface.md ("Driver
+    # Discovery on Windows" and "Exception for Elevated Privileges").
+    $driversKey = if ($Arch -eq 'x86') {
+        'HKLM:\SOFTWARE\WOW6432Node\Khronos\Vulkan\Drivers'
+    } else {
+        'HKLM:\SOFTWARE\Khronos\Vulkan\Drivers'
+    }
+    try {
+        if (-not (Test-Path $driversKey)) {
+            New-Item -Path $driversKey -Force | Out-Null
+        }
+        New-ItemProperty -Path $driversKey -Name $icdJson -PropertyType DWord -Value 0 -Force | Out-Null
+        Write-Host "Registered ICD in registry: $driversKey"
+        Write-Host "  `"$icdJson`" = dword:0"
+    } catch {
+        Write-Warning "Could not register the ICD in the registry (need elevation); the loader will ignore the VK_* env vars if elevated, so the Vulkan cells may skip: $($_.Exception.Message)"
+    }
+
     # Loader discovery: Silk.NET loads "vulkan-1" by name off the OS search path.
     Write-Host "##vso[task.prependpath]$dest"
-    # ICD discovery: point the Vulkan loader at the SwiftShader manifest. Both the
-    # legacy (VK_ICD_FILENAMES) and current (VK_DRIVER_FILES) variables are set so
-    # older/newer loaders both resolve it, matching the Linux leg.
+    # ICD discovery fallback: point the Vulkan loader at the SwiftShader manifest
+    # for any NON-elevated consumer. Both the legacy (VK_ICD_FILENAMES) and current
+    # (VK_DRIVER_FILES) variables are set so older/newer loaders both resolve it,
+    # matching the Linux leg. NOTE: these are ignored by an elevated loader (see the
+    # registry registration above, which is the mechanism that actually applies on CI).
     Write-Host "##vso[task.setvariable variable=VK_ICD_FILENAMES]$icdJson"
     Write-Host "##vso[task.setvariable variable=VK_DRIVER_FILES]$icdJson"
     # Make the Khronos loader explain (in the test leg's log) why it accepts or
@@ -182,7 +217,9 @@ public static class VkSmoke
 }
 '@
 
-        # Point THIS process's loader at the ICD and make it maximally verbose.
+        # Under elevation the registry registration above (not these env vars) is
+        # what the loader uses; we still set them for a non-elevated loader and make
+        # the loader maximally verbose so a skip stays diagnosable.
         $env:VK_ICD_FILENAMES = $icdJson
         $env:VK_DRIVER_FILES = $icdJson
         $env:VK_LOADER_DEBUG = 'all'
