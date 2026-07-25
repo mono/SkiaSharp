@@ -613,6 +613,27 @@ namespace SkiaSharp
 			return result;
 		}
 
+		// RequestReadPixels
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageAsyncReadResult> callback) =>
+			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.RepeatedLinear, callback);
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageAsyncReadResult> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException (nameof (callback));
+
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKImageAsyncReadResult (raw);
+				callback (result);
+			};
+			DelegateProxies.Create (handler, out _, out var ctx);
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_image_async_rescale_and_read_pixels (Handle, &cinfo, &srcRect, rescaleGamma, rescaleMode, DelegateProxies.SKImageAsyncReadPixelsProxy, (void*)ctx);
+			GC.KeepAlive (this);
+		}
+
 		// ScalePixels
 
 		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling) instead.", error: true)]

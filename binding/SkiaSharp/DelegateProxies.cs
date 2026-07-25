@@ -104,5 +104,19 @@ namespace SkiaSharp
 			var path = SKPath.GetObject (pathOrNull, false);
 			del.Invoke (path, *matrix);
 		}
+
+		private static partial void SKImageAsyncReadPixelsProxyImplementation (void* context, IntPtr result)
+		{
+			// The captured Action<IntPtr> is the closure built by SKImage/SKSurface.RequestReadPixels.
+			// `result` is non-owning and only valid for the duration of this invocation (it is IntPtr.Zero
+			// on failure); the closure must read all data before returning. This fires at most once, so the
+			// pinning handle is freed here.
+			var del = Get<Action<IntPtr>> ((IntPtr)context, out var gch);
+			try {
+				del.Invoke (result);
+			} finally {
+				gch.Free ();
+			}
+		}
 	}
 }
