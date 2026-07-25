@@ -517,46 +517,129 @@ namespace SkiaSharp.Tests
 			Assert.True(mesh.IsValid);
 		}
 
-		[Fact]
-		public void MeshRendersRedPixelWithColorShader()
+		// Full-canvas quad (two triangles) covering a 100x100 area.
+		private static readonly float[] QuadVertices = { 0, 0, 100, 0, 100, 100, 0, 100 };
+		private static readonly ushort[] QuadIndices = { 0, 1, 2, 0, 2, 3 };
+
+		private SKMesh CreateFullCanvasRedMesh(SKMeshSpecification spec, SKMeshBuilder builder,
+			SKMeshVertexBuffer vb, SKMeshIndexBuffer ib)
 		{
-			// NOTE: SkMesh rendering only works on GPU-backed surfaces.
-			// SkBitmapDevice::drawMesh() is a no-op in upstream Skia.
-			// This test verifies mesh creation and DrawMesh doesn't crash on CPU.
+			builder.Bounds = new SKRect(0, 0, 100, 100);
+			return builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void MeshRendersRedPixelOnGpuSurface()
+		{
+			// SkMesh rendering only works on GPU-backed surfaces (SkBitmapDevice::drawMesh
+			// is a no-op in upstream Skia), so this test requires a real GL context.
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+			Assert.NotNull(grContext);
+
 			using var cs = SKColorSpace.CreateSrgb();
 			var spec = SKMeshSpecification.Create(
-				SimpleAttributes,
-				sizeof(float) * 2,
-				EmptyVaryings,
-				SimpleVertexShader,
-				ColorFragmentShader,
-				cs, SKAlphaType.Premul,
-				out var errors);
-
+				SimpleAttributes, sizeof(float) * 2, EmptyVaryings,
+				SimpleVertexShader, ColorFragmentShader, cs, SKAlphaType.Premul, out var errors);
 			Assert.NotNull(spec);
 			Assert.Null(errors);
 
-			// Full-canvas quad
-			var vertices = new float[] { 0, 0, 100, 0, 100, 100, 0, 100 };
-			var indices = new ushort[] { 0, 1, 2, 0, 2, 3 };
-			using var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(vertices.AsSpan()));
-			using var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(indices.AsSpan()));
-
+			using var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
+			using var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
 			using var builder = new SKMeshBuilder(spec);
-			builder.Bounds = new SKRect(0, 0, 100, 100);
-
-			using var mesh = builder.BuildIndexed(vb, 4, 0, ib, 6, 0);
+			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
 			Assert.NotNull(mesh);
 			Assert.True(mesh.IsValid);
 
-			// DrawMesh on CPU surface is a no-op (upstream limitation) but must not crash
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			Assert.NotNull(surface);
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.Blue);
+
+			// The mesh's fragment-shader colour (red) is modulated with the paint colour by the
+			// default blender, so a white paint is required for the mesh's own colour to show —
+			// a default (black) paint would render the mesh black. See DrawMeshDefaultPaintModulatesToBlack.
+			using var paint = new SKPaint { Color = SKColors.White };
+			canvas.DrawMesh(mesh, paint);
+			canvas.Flush();
+
+			using var img = surface.Snapshot();
+			using var raster = img.ToRasterImage(true);
+			using var bmp = SKBitmap.FromImage(raster);
+
+			Assert.Equal(SKColors.Red, bmp.GetPixel(50, 50));
+			Assert.Equal(SKColors.Red, bmp.GetPixel(10, 10));
+		}
+
+		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Fact]
+		public void DrawMeshDefaultPaintModulatesToBlack()
+		{
+			// Documents the "black by default" gotcha: with a default (opaque black) paint,
+			// the mesh colour is modulated to black rather than showing its own colour.
+			using var ctx = CreateGlContext();
+			ctx.MakeCurrent();
+			using var grContext = GRContext.CreateGl();
+
+			using var cs = SKColorSpace.CreateSrgb();
+			var spec = SKMeshSpecification.Create(
+				SimpleAttributes, sizeof(float) * 2, EmptyVaryings,
+				SimpleVertexShader, ColorFragmentShader, cs, SKAlphaType.Premul, out _);
+			Assert.NotNull(spec);
+
+			using var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
+			using var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
+			using var builder = new SKMeshBuilder(spec);
+			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
+			Assert.NotNull(mesh);
+
+			using var surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));
+			var canvas = surface.Canvas;
+			canvas.Clear(SKColors.Blue);
+
+			using var paint = new SKPaint (); // default: opaque black
+			canvas.DrawMesh(mesh, paint);
+			canvas.Flush();
+
+			using var img = surface.Snapshot();
+			using var raster = img.ToRasterImage(true);
+			using var bmp = SKBitmap.FromImage(raster);
+
+			Assert.Equal(SKColors.Black, bmp.GetPixel(50, 50));
+		}
+
+		[Fact]
+		public void DrawMeshOnRasterSurfaceIsNoOp()
+		{
+			// On a CPU/raster surface DrawMesh is a documented no-op (upstream Skia limitation):
+			// it must not crash and must not modify the canvas.
+			using var cs = SKColorSpace.CreateSrgb();
+			var spec = SKMeshSpecification.Create(
+				SimpleAttributes, sizeof(float) * 2, EmptyVaryings,
+				SimpleVertexShader, ColorFragmentShader, cs, SKAlphaType.Premul, out var errors);
+			Assert.NotNull(spec);
+			Assert.Null(errors);
+
+			using var vb = SKMeshVertexBuffer.Make(MemoryMarshal.AsBytes(QuadVertices.AsSpan()));
+			using var ib = SKMeshIndexBuffer.Make(MemoryMarshal.AsBytes(QuadIndices.AsSpan()));
+			using var builder = new SKMeshBuilder(spec);
+			using var mesh = CreateFullCanvasRedMesh(spec, builder, vb, ib);
+			Assert.NotNull(mesh);
+			Assert.True(mesh.IsValid);
+
 			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
 			var canvas = surface.Canvas;
 			canvas.Clear(SKColors.White);
 
-			using var paint = new SKPaint();
+			using var paint = new SKPaint { Color = SKColors.White };
 			canvas.DrawMesh(mesh, paint);
 			canvas.Flush();
+
+			using var img = surface.Snapshot();
+			using var bmp = SKBitmap.FromImage(img);
+			Assert.Equal(SKColors.White, bmp.GetPixel(50, 50)); // unchanged — mesh was not drawn
 		}
 
 		[Fact]
@@ -618,5 +701,6 @@ namespace SkiaSharp.Tests
 			canvas.DrawMesh(mesh, paint);
 			canvas.Flush();
 		}
+
 	}
 }
