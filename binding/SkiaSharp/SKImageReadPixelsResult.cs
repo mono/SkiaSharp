@@ -5,19 +5,19 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// The pixel data produced by <see cref="SKImage.RequestReadPixels(SKImageInfo, SKRectI, Action{SKImageAsyncReadResult})" />
-	/// or <see cref="SKSurface.RequestReadPixels(SKImageInfo, SKRectI, Action{SKImageAsyncReadResult})" />.
+	/// The pixel data produced by <see cref="SKImage.RequestReadPixels(SKImageInfo, SKRectI, Action{SKImageReadPixelsResult})" />
+	/// or <see cref="SKSurface.RequestReadPixels(SKImageInfo, SKRectI, Action{SKImageReadPixelsResult})" />.
 	/// </summary>
 	/// <remarks>
 	/// This is a non-owning view over the native result. It is only valid for the duration of the
 	/// callback it is delivered to; the underlying pixels are released as soon as the callback returns.
 	/// Accessing any member after the callback has returned throws <see cref="ObjectDisposedException" />.
 	/// </remarks>
-	public sealed unsafe class SKImageAsyncReadResult : IDisposable
+	public sealed unsafe class SKImageReadPixelsResult : IDisposable
 	{
 		private IntPtr handle;
 
-		internal SKImageAsyncReadResult (IntPtr handle)
+		internal SKImageReadPixelsResult (IntPtr handle)
 		{
 			this.handle = handle;
 		}
@@ -92,7 +92,7 @@ namespace SkiaSharp
 		private void ThrowIfDisposed ()
 		{
 			if (handle == IntPtr.Zero)
-				throw new ObjectDisposedException (nameof (SKImageAsyncReadResult),
+				throw new ObjectDisposedException (nameof (SKImageReadPixelsResult),
 					"The async read result is only valid for the duration of the callback.");
 		}
 	}

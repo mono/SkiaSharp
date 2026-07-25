@@ -16,7 +16,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(255, pixels[3]); // A
 		}
 
-		private static byte[] CopyFirstPlane(SKImageAsyncReadResult result, int rowCount)
+		private static byte[] CopyFirstPlane(SKImageReadPixelsResult result, int rowCount)
 		{
 			Assert.NotNull(result);
 			Assert.Equal(1, result.PlaneCount);
@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests
 			surface.Canvas.Clear(FillColor);
 			surface.Flush();
 
-			SKImageAsyncReadResult captured = null;
+			SKImageReadPixelsResult captured = null;
 
 			surface.RequestReadPixels(info, new SKRectI(0, 0, 4, 4), result =>
 			{
@@ -115,6 +115,28 @@ namespace SkiaSharp.Tests
 
 			Assert.NotNull(captured);
 			Assert.Throws<ObjectDisposedException>(() => _ = captured.PlaneCount);
+		}
+
+		[Fact]
+		public void RasterSurfaceRequestReadPixelsWholeImageOverloadWorks()
+		{
+			// The (info, callback) overload reads at 1:1 (srcRect == info size), so no rescale happens.
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = SKSurface.Create(info);
+			surface.Canvas.Clear(FillColor);
+			surface.Flush();
+
+			var done = false;
+			byte[] pixels = null;
+
+			surface.RequestReadPixels(info, result =>
+			{
+				done = true;
+				pixels = CopyFirstPlane(result, info.Height);
+			});
+
+			Assert.True(done);
+			AssertIsFillColor(pixels);
 		}
 
 		[Fact]
