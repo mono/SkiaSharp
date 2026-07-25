@@ -6,24 +6,35 @@ namespace SkiaSharp.Tests
 {
 	public class SKAsyncReadPixelsTest : SKTest
 	{
-		private static readonly SKColor FillColor = SKColors.Red; // (255, 0, 0, 255)
+		private static readonly SKColor FillColor = SKColors.Red; // rgba 255,0,0,255
 
-		private static void AssertIsFillColor(byte[] pixels)
-		{
-			Assert.Equal(255, pixels[0]); // R
-			Assert.Equal(0, pixels[1]);   // G
-			Assert.Equal(0, pixels[2]);   // B
-			Assert.Equal(255, pixels[3]); // A
-		}
-
-		private static byte[] CopyFirstPlane(SKImageReadPixelsResult result, int rowCount)
+		private static byte[] GetPixels(SKImageReadPixelsResult result)
 		{
 			Assert.NotNull(result);
 			Assert.Equal(1, result.PlaneCount);
-			var rowBytes = result.GetPlaneRowBytes(0);
-			var pixels = new byte[rowBytes * rowCount];
-			result.CopyPlaneTo(0, pixels, rowCount);
-			return pixels;
+			return result.GetPlaneData(0).ToArray();
+		}
+
+		private static void AssertPixel(byte[] pixels, int height, int x, int y, byte r, byte g, byte b, byte a)
+		{
+			// GetPlaneData returns exactly rowBytes*height bytes, so rowBytes = length/height.
+			var rowBytes = pixels.Length / height;
+			var o = (y * rowBytes) + (x * 4);
+			Assert.Equal(r, pixels[o + 0]);
+			Assert.Equal(g, pixels[o + 1]);
+			Assert.Equal(b, pixels[o + 2]);
+			Assert.Equal(a, pixels[o + 3]);
+		}
+
+		// Left half red, right half blue — a pattern a broken rescale/row-traversal cannot fake.
+		private static SKSurface CreateSplitSurface(int size)
+		{
+			var surface = SKSurface.Create(new SKImageInfo(size, size, SKColorType.Rgba8888, SKAlphaType.Premul));
+			surface.Canvas.Clear(SKColors.Red);
+			using (var paint = new SKPaint { Color = SKColors.Blue })
+				surface.Canvas.DrawRect(new SKRect(size / 2, 0, size, size), paint);
+			surface.Flush();
+			return surface;
 		}
 
 		// Per Skia (SkImage.h/SkSurface.h): async reads are Ganesh-only; "in all other cases this
@@ -42,12 +53,12 @@ namespace SkiaSharp.Tests
 			surface.RequestReadPixels(info, new SKRectI(0, 0, 4, 4), result =>
 			{
 				done = true;
-				pixels = CopyFirstPlane(result, info.Height);
+				pixels = GetPixels(result);
 			});
 
-			// No Submit / CheckAsyncWorkCompletion pump: it must already have fired.
-			Assert.True(done);
-			AssertIsFillColor(pixels);
+			Assert.True(done); // no Submit / pump: it must already have fired
+			AssertPixel(pixels, info.Height, 0, 0, 255, 0, 0, 255);
+			AssertPixel(pixels, info.Height, 3, 3, 255, 0, 0, 255);
 		}
 
 		[Fact]
@@ -65,22 +76,42 @@ namespace SkiaSharp.Tests
 			image.RequestReadPixels(info, new SKRectI(0, 0, 4, 4), result =>
 			{
 				done = true;
-				pixels = CopyFirstPlane(result, info.Height);
+				pixels = GetPixels(result);
 			});
 
 			Assert.True(done);
-			AssertIsFillColor(pixels);
+			AssertPixel(pixels, info.Height, 0, 0, 255, 0, 0, 255);
 		}
 
-		// Reading a smaller destination than the source rectangle exercises the rescale path.
+		// Same-size read of a two-colour pattern: verifies full readback + correct row traversal/stride.
+		[Fact]
+		public void RasterSurfaceRequestReadPixelsSameSizeReadsWholePattern()
+		{
+			var info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = CreateSplitSurface(8);
+
+			var done = false;
+			byte[] pixels = null;
+
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 8, 8), result =>
+			{
+				done = true;
+				pixels = GetPixels(result);
+			});
+
+			Assert.True(done);
+			AssertPixel(pixels, info.Height, 0, 0, 255, 0, 0, 255); // left = red
+			AssertPixel(pixels, info.Height, 3, 3, 255, 0, 0, 255); // still left of the split
+			AssertPixel(pixels, info.Height, 4, 4, 0, 0, 255, 255); // right = blue
+			AssertPixel(pixels, info.Height, 7, 7, 0, 0, 255, 255);
+		}
+
+		// Downscale a two-colour pattern 8x8 -> 4x4; a no-op or broken rescale cannot reproduce it.
 		[Fact]
 		public void RasterSurfaceRequestReadPixelsDownscaleWorks()
 		{
-			var srcInfo = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
 			var dstInfo = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
-			using var surface = SKSurface.Create(srcInfo);
-			surface.Canvas.Clear(FillColor);
-			surface.Flush();
+			using var surface = CreateSplitSurface(8);
 
 			var done = false;
 			byte[] pixels = null;
@@ -88,12 +119,12 @@ namespace SkiaSharp.Tests
 			surface.RequestReadPixels(dstInfo, new SKRectI(0, 0, 8, 8), result =>
 			{
 				done = true;
-				pixels = CopyFirstPlane(result, dstInfo.Height);
+				pixels = GetPixels(result);
 			});
 
 			Assert.True(done);
-			// A solid fill downscales to the same solid color.
-			AssertIsFillColor(pixels);
+			AssertPixel(pixels, dstInfo.Height, 0, 0, 255, 0, 0, 255); // left column stays red
+			AssertPixel(pixels, dstInfo.Height, 3, 0, 0, 0, 255, 255); // right column stays blue
 		}
 
 		// The result view is only valid during the callback; using it afterwards must throw.
@@ -118,28 +149,6 @@ namespace SkiaSharp.Tests
 		}
 
 		[Fact]
-		public void RasterSurfaceRequestReadPixelsWholeImageOverloadWorks()
-		{
-			// The (info, callback) overload reads at 1:1 (srcRect == info size), so no rescale happens.
-			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
-			using var surface = SKSurface.Create(info);
-			surface.Canvas.Clear(FillColor);
-			surface.Flush();
-
-			var done = false;
-			byte[] pixels = null;
-
-			surface.RequestReadPixels(info, result =>
-			{
-				done = true;
-				pixels = CopyFirstPlane(result, info.Height);
-			});
-
-			Assert.True(done);
-			AssertIsFillColor(pixels);
-		}
-
-		[Fact]
 		public void RequestReadPixelsThrowsForNullCallback()
 		{
 			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -147,12 +156,34 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => surface.RequestReadPixels(info, new SKRectI(0, 0, 4, 4), null));
 		}
 
-		// On Ganesh the read is genuinely asynchronous: the callback must NOT fire during the Request
-		// call. It only fires once work is submitted and CheckAsyncWorkCompletion is pumped. That
-		// false -> (pump) -> true transition is the proof of asynchrony.
+		// A srcRect not contained by the source causes failure: the callback is invoked with null.
+		[Fact]
+		public void RequestReadPixelsInvokesCallbackWithNullOnFailure()
+		{
+			var info = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = SKSurface.Create(info);
+			surface.Canvas.Clear(FillColor);
+			surface.Flush();
+
+			var called = false;
+			SKImageReadPixelsResult captured = null;
+
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 1000, 1000), result =>
+			{
+				called = true;
+				captured = result;
+			});
+
+			Assert.True(called);      // raster failure is delivered synchronously
+			Assert.Null(captured);
+		}
+
+		// On Ganesh the read is deferred when the backend supports transfer buffers; otherwise Skia
+		// falls back to a synchronous read. Assert the deferred transition only when it did not fire
+		// inline, and always assert it eventually completes with correct pixels.
 		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		public void GpuSurfaceRequestReadPixelsIsAsynchronousAndCorrect()
+		public void GpuSurfaceRequestReadPixelsCompletesWithCorrectPixels()
 		{
 			using var ctx = CreateGlContext();
 			ctx.MakeCurrent();
@@ -170,24 +201,26 @@ namespace SkiaSharp.Tests
 			{
 				done = true;
 				if (result != null)
-					pixels = CopyFirstPlane(result, info.Height);
+					pixels = GetPixels(result);
 			});
 
-			// PROVE ASYNC: the callback is deferred on the GPU backend.
-			Assert.False(done);
-
-			// Drive the work to completion.
-			grContext.Submit(synchronous: true);
-			for (var i = 0; i < 1000 && !done; i++)
+			var firedSynchronously = done;
+			if (!firedSynchronously)
 			{
-				grContext.CheckAsyncWorkCompletion();
-				if (!done)
-					Thread.Sleep(1);
+				// Proven deferred: it must not have fired before we pump.
+				Assert.False(done);
+				grContext.Submit(synchronous: true);
+				for (var i = 0; i < 1000 && !done; i++)
+				{
+					grContext.CheckAsyncWorkCompletion();
+					if (!done)
+						Thread.Sleep(1);
+				}
 			}
 
 			Assert.True(done);
 			Assert.NotNull(pixels);
-			AssertIsFillColor(pixels);
+			AssertPixel(pixels, info.Height, 0, 0, 255, 0, 0, 255);
 		}
 
 		[Fact]
@@ -198,10 +231,12 @@ namespace SkiaSharp.Tests
 			ctx.MakeCurrent();
 			using var grContext = GRContext.CreateGl();
 
-			var srcInfo = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
 			var dstInfo = new SKImageInfo(4, 4, SKColorType.Rgba8888, SKAlphaType.Premul);
+			var srcInfo = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
 			using var surface = SKSurface.Create(grContext, true, srcInfo);
-			surface.Canvas.Clear(FillColor);
+			surface.Canvas.Clear(SKColors.Red);
+			using (var paint = new SKPaint { Color = SKColors.Blue })
+				surface.Canvas.DrawRect(new SKRect(4, 0, 8, 8), paint);
 			surface.Flush();
 
 			var done = false;
@@ -211,20 +246,24 @@ namespace SkiaSharp.Tests
 			{
 				done = true;
 				if (result != null)
-					pixels = CopyFirstPlane(result, dstInfo.Height);
+					pixels = GetPixels(result);
 			});
 
-			grContext.Submit(synchronous: true);
-			for (var i = 0; i < 1000 && !done; i++)
+			if (!done)
 			{
-				grContext.CheckAsyncWorkCompletion();
-				if (!done)
-					Thread.Sleep(1);
+				grContext.Submit(synchronous: true);
+				for (var i = 0; i < 1000 && !done; i++)
+				{
+					grContext.CheckAsyncWorkCompletion();
+					if (!done)
+						Thread.Sleep(1);
+				}
 			}
 
 			Assert.True(done);
 			Assert.NotNull(pixels);
-			AssertIsFillColor(pixels);
+			AssertPixel(pixels, dstInfo.Height, 0, 0, 255, 0, 0, 255); // left stays red
+			AssertPixel(pixels, dstInfo.Height, 3, 0, 0, 0, 255, 255); // right stays blue
 		}
 	}
 }

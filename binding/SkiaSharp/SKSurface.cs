@@ -408,9 +408,6 @@ namespace SkiaSharp
 
 		// RequestReadPixels
 
-		public void RequestReadPixels (SKImageInfo info, Action<SKImageReadPixelsResult> callback) =>
-			RequestReadPixels (info, SKRectI.Create (info.Width, info.Height), SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
-
 		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
 			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
 
@@ -420,8 +417,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (callback));
 
 			Action<IntPtr> handler = raw => {
-				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw);
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, info);
 				callback (result);
+				// Keep this surface alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
 			};
 			DelegateProxies.Create (handler, out _, out var ctx);
 
