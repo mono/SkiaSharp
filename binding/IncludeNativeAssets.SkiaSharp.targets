@@ -85,6 +85,29 @@
     <WasmShellExtraEmccFlags Condition="'$(WasmShellEnableThreads)'=='True'" Include="-s OFFSCREEN_FRAMEBUFFER=1" />
   </ItemGroup>
 
+  <!-- Uno 6.x single-project browser-wasm (Skia renderer). Newer Uno no longer sets
+       UnoRuntimeIdentifier=WebAssembly (it uses UnoUIRuntimeIdentifier=Skia), so the block
+       above never matches. Uno's Skia WASM targets link the native through the
+       @(SkiaSharpStaticLibrary) item, so populate it from the in-tree native output. -->
+  <!-- Use a dedicated property (not _SkiaSharpNativeBinaryType): Uno also sets
+       UsingMicrosoftNETSdkWebAssembly=true, so the block below recomputes that shared
+       property (as 'st', since Uno sets WasmEnableSIMD only after this import) and would
+       clobber our value. The Uno WASM runtime is always SIMD, so append it unconditionally. -->
+  <!-- Unconditional: IsUnoHead/RuntimeIdentifier are not yet set where this file is imported
+       (property pass), while the ItemGroup below is guarded and evaluated later with final
+       values. The property is only consumed by that guarded ItemGroup, so computing it
+       everywhere is harmless. Uno WASM is always single-thread + SIMD for this catalog. -->
+  <PropertyGroup>
+    <_SkiaSharpUnoWasmBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_SkiaSharpUnoWasmBinaryType>
+    <_SkiaSharpUnoWasmBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_SkiaSharpUnoWasmBinaryType>
+    <_SkiaSharpUnoWasmBinaryType>$(_SkiaSharpUnoWasmBinaryType),simd</_SkiaSharpUnoWasmBinaryType>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == '' and '$(RuntimeIdentifier)' == 'browser-wasm' and '$(TargetFrameworkVersion)' != ''">
+    <SkiaSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.34\$(_SkiaSharpUnoWasmBinaryType)\libSkiaSharp.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <SkiaSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\3.1.56\$(_SkiaSharpUnoWasmBinaryType)\libSkiaSharp.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
+    <SkiaSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libSkiaSharp.a\5.0.6\$(_SkiaSharpUnoWasmBinaryType)\libSkiaSharp.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
+  </ItemGroup>
+
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
     <EmccExtraLDFlags>$(EmccExtraLDFlags) -s USE_WEBGL2=1</EmccExtraLDFlags>

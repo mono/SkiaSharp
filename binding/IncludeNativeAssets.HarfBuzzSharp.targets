@@ -83,6 +83,22 @@
     <Content Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\*\$(_HarfBuzzSharpNativeBinaryType)\*.a" Visible="false" />
   </ItemGroup>
 
+  <!-- Uno 6.x single-project browser-wasm (Skia renderer) — see the SkiaSharp targets for
+       the rationale. Uno links the native through @(HarfBuzzSharpStaticLibrary). -->
+  <!-- Dedicated property — see the SkiaSharp targets for why _HarfBuzzSharpNativeBinaryType
+       cannot be reused here. Uno WASM is always SIMD. -->
+  <!-- Unconditional — see the SkiaSharp targets for the rationale. -->
+  <PropertyGroup>
+    <_HarfBuzzSharpUnoWasmBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpUnoWasmBinaryType>
+    <_HarfBuzzSharpUnoWasmBinaryType Condition="'$(WasmEnableThreads)' != 'True'">st</_HarfBuzzSharpUnoWasmBinaryType>
+    <_HarfBuzzSharpUnoWasmBinaryType>$(_HarfBuzzSharpUnoWasmBinaryType),simd</_HarfBuzzSharpUnoWasmBinaryType>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == '' and '$(RuntimeIdentifier)' == 'browser-wasm' and '$(TargetFrameworkVersion)' != ''">
+    <HarfBuzzSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.34\$(_HarfBuzzSharpUnoWasmBinaryType)\libHarfBuzzSharp.a" Condition="$([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0'))" />
+    <HarfBuzzSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\3.1.56\$(_HarfBuzzSharpUnoWasmBinaryType)\libHarfBuzzSharp.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '9.0')) and $([MSBuild]::VersionLessThan($(TargetFrameworkVersion), '11.0'))" />
+    <HarfBuzzSharpStaticLibrary Include="$(MSBuildThisFileDirectory)..\output\native\wasm\libHarfBuzzSharp.a\5.0.6\$(_HarfBuzzSharpUnoWasmBinaryType)\libHarfBuzzSharp.a" Condition="$([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '11.0'))" />
+  </ItemGroup>
+
   <PropertyGroup Condition="('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true')">
     <WasmBuildNative Condition="'$(WasmBuildNative)' == ''">true</WasmBuildNative>
     <_HarfBuzzSharpNativeBinaryType Condition="'$(WasmEnableThreads)' == 'True'">mt</_HarfBuzzSharpNativeBinaryType>
