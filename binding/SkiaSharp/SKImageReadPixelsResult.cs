@@ -68,9 +68,18 @@ namespace SkiaSharp
 					nameof (destination));
 
 			var srcRowBytes = (int)SkiaApi.sk_image_async_read_result_get_row_bytes (handle, planeIndex);
-			var copy = Math.Min (srcRowBytes, packedRowBytes);
+			var srcLength = checked (srcRowBytes * height);
+			CopyRows (new ReadOnlySpan<byte> (src, srcLength), srcRowBytes, destination, packedRowBytes, height);
+		}
+
+		// Copies `height` rows from a strided source into a strided destination, taking the smaller of
+		// the two strides per row (so source row padding is dropped when destination is tighter).
+		// Internal + span-based so the padding-stripping path is unit-testable without a real GPU read.
+		internal static void CopyRows (ReadOnlySpan<byte> source, int srcRowBytes, Span<byte> destination, int dstRowBytes, int height)
+		{
+			var copy = Math.Min (srcRowBytes, dstRowBytes);
 			for (var y = 0; y < height; y++)
-				new ReadOnlySpan<byte> (src + (y * srcRowBytes), copy).CopyTo (destination.Slice (y * packedRowBytes));
+				source.Slice (y * srcRowBytes, copy).CopyTo (destination.Slice (y * dstRowBytes));
 		}
 
 		// Returns a tightly-packed copy of the plane that outlives the callback.
