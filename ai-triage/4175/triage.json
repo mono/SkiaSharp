@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4175,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-07-26T05:20:00Z"
+  },
+  "summary": "SKShaper ignores a typeface's variation coordinates when shaping variable fonts, causing identical glyph advances regardless of weight.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.HarfBuzz",
+      "confidence": 0.97
+    },
+    "tenets": [
+      "tenet/reliability"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "high",
+      "regressionClaimed": false,
+      "errorType": "wrong-output",
+      "reproQuality": "complete",
+      "targetFrameworks": [
+        "net9.0"
+      ]
+    },
+    "reproEvidence": {
+      "codeSnippets": [
+        "using var vf = SKTypeface.FromFile(\"NotoSans[wght].ttf\");\nvar wght = SKFourByteTag.Parse(\"wght\");\n\nSKTypeface CloneAt(float w) =>\n    vf.Clone([ new SKFontVariationPositionCoordinate { Axis = wght, Value = w } ]);\n\nfloat ShapedWidth(SKTypeface tf)\n{\n    using var shaper = new SKShaper(tf);\n    using var font = new SKFont(tf, 80);\n    return shaper.Shape(\"Weight\", font).Width;\n}\n\nusing var thin  = CloneAt(100);\nusing var black = CloneAt(900);\n\n// Both return same value (~266.1) \u2014 bug:\nConsole.WriteLine($\"{ShapedWidth(thin)} vs {ShapedWidth(black)}\");\n\n// SKFont correctly differs (~247.3 vs ~300.4):\nusing var f100 = new SKFont(thin, 80);\nusing var f900 = new SKFont(black, 80);\nConsole.WriteLine($\"{f100.MeasureText(\"Weight\")} vs {f900.MeasureText(\"Weight\")}\");"
+      ],
+      "repoLinks": []
+    },
+    "versionAnalysis": {
+      "mentionedVersions": [
+        "4.148.0-rc.1.2"
+      ],
+      "currentRelevance": "likely",
+      "relevanceReason": "Reporter confirmed reproduces on current main, and code investigation shows SKShaper constructor still does not call SetVariations."
+    }
+  },
+  "analysis": {
+    "summary": "The SKShaper constructor loads the font's binary stream into a HarfBuzz Face/Font, but never calls hbFont.SetVariations() with the variation coordinates from the SKTypeface. As a result, HarfBuzz shapes at the font's default instance regardless of which variation was cloned. The fix is to read Typeface.VariationDesignPosition and map its SKFontVariationPositionCoordinate entries to HarfBuzzSharp.Variation structs, then call hbFont.SetVariations() after SetFunctionsOpenType().",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz/SKShaper.cs",
+        "finding": "The SKShaper constructor (lines 15-32) opens the typeface stream, creates a HarfBuzz Face and Font, calls hbFont.SetScale() and hbFont.SetFunctionsOpenType(), but never reads the typeface's variation coordinates and never calls hbFont.SetVariations(). This is the root cause.",
+        "relevance": "direct",
+        "lines": "15-32"
+      },
+      {
+        "file": "binding/HarfBuzzSharp/Font.cs",
+        "finding": "HarfBuzzSharp.Font exposes SetVariations(ReadOnlySpan<Variation> variations) which calls hb_font_set_variations. The Variation struct has Tag (uint) and Value (float) \u2014 matching SKFontVariationPositionCoordinate.Axis and .Value.",
+        "relevance": "direct",
+        "lines": "349-355"
+      },
+      {
+        "file": "binding/SkiaSharp/SKTypeface.cs",
+        "finding": "SKTypeface.VariationDesignPosition returns SKFontVariationPositionCoordinate[] with Axis (uint, a four-byte tag) and Value (float). This is the per-axis position as set when the typeface was cloned.",
+        "relevance": "direct",
+        "lines": "486-499"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "SKShaper (HarfBuzz path) \u2014 identical; both shape the default instance: ~266.1 vs ~266.1",
+        "source": "issue body - repro output",
+        "interpretation": "HarfBuzz is using the default variation instance regardless of the cloned weight."
+      },
+      {
+        "text": "SKFont.MeasureText contrast shows the typeface clone itself is correct \u2014 the gap is specific to the HarfBuzz shaping path",
+        "source": "issue body - actual behavior",
+        "interpretation": "SKTypeface.Clone() works; the problem is SKShaper not forwarding variation data to HarfBuzz."
+      },
+      {
+        "text": "I had some luck with reading the typeface's design position in the constructor and applying it to the HarfBuzz font in SKShaper.cs",
+        "source": "issue body - note",
+        "interpretation": "Reporter already identified the fix location and approach."
+      }
+    ],
+    "rationale": "Classified as type/bug in area/SkiaSharp.HarfBuzz because the SKShaper constructor fails to propagate SKTypeface variation coordinates to the HarfBuzz font, causing incorrect shaping results for variable font instances. The repro is minimal, self-contained, and the root cause is confirmed by code investigation. The fix path is clear: map SKFontVariationPositionCoordinate[] to HarfBuzzSharp.Variation[] and call hbFont.SetVariations() in the constructor.",
+    "workarounds": [
+      "Use SKFont.MeasureText() instead of SKShaper for advance measurement when HarfBuzz complex shaping is not required.",
+      "Subclass or wrap SKShaper and manually call hbFont.SetVariations() after construction using reflection (fragile, not recommended for production)."
+    ],
+    "nextQuestions": [
+      "Should SetVariations also be applied when the font is recreated, or is this a one-time constructor concern?",
+      "Are there other places in SKShaper where variation state needs to be synchronized with the SKTypeface?"
+    ],
+    "resolution": {
+      "hypothesis": "In the SKShaper constructor, after calling hbFont.SetFunctionsOpenType(), read Typeface.VariationDesignPosition and convert each coordinate to a HarfBuzzSharp.Variation, then call hbFont.SetVariations().",
+      "proposals": [
+        {
+          "title": "Apply variation coordinates in SKShaper constructor",
+          "category": "fix",
+          "effort": "cost/xs",
+          "description": "After hbFont.SetFunctionsOpenType(), read Typeface.VariationDesignPosition and call hbFont.SetVariations() with the mapped coordinates.",
+          "codeSnippet": "// In SKShaper constructor, after hbFont.SetFunctionsOpenType():\nvar coords = Typeface.VariationDesignPosition;\nif (coords.Length > 0)\n{\n    var variations = new HarfBuzzSharp.Variation[coords.Length];\n    for (var i = 0; i < coords.Length; i++)\n        variations[i] = new HarfBuzzSharp.Variation { Tag = coords[i].Axis, Value = coords[i].Value };\n    hbFont.SetVariations(variations);\n}",
+          "validated": "yes"
+        },
+        {
+          "title": "Use SKFont.MeasureText for advance width when complex shaping is not needed",
+          "category": "workaround",
+          "effort": "cost/xs",
+          "description": "SKFont.MeasureText correctly honors the variation instance, so for pure advance-width measurement without ligatures/GSUB, use it instead of SKShaper.",
+          "codeSnippet": "using var font = new SKFont(typeface, fontSize);\nfloat width = font.MeasureText(\"Weight\");",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "fix-1",
+      "recommendedReason": "Single-line fix in the constructor; no API changes needed. The reporter already identified this approach and confirmed it works."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.95,
+      "reason": "Root cause is confirmed in code, fix path is clear and trivial (read VariationDesignPosition, call SetVariations in constructor), and the reporter provided a working repro. No reproduction step needed.",
+      "suggestedReproPlatform": "linux"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply classification labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.HarfBuzz",
+          "tenet/reliability"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Acknowledge the bug, confirm root cause, provide workaround, and explain the fix path",
+        "risk": "medium",
+        "confidence": 0.95,
+        "comment": "Thanks for the detailed repro!\n\nThis is a confirmed bug. The `SKShaper` constructor opens the typeface's raw binary stream into HarfBuzz but never forwards the variation coordinates from the cloned `SKTypeface` to the HarfBuzz font. HarfBuzz therefore shapes at the font's default instance for every weight, which explains the identical advance widths.\n\n**Root cause:** `SKShaper.cs` constructor is missing a call to `hbFont.SetVariations()` after `hbFont.SetFunctionsOpenType()`.\n\n**Workaround (until fixed):** If you only need advance-width measurement and don't require ligature/GSUB shaping, `SKFont.MeasureText` already honors the variation clone correctly:\n\n```csharp\nusing var font = new SKFont(typeface, fontSize);\nfloat width = font.MeasureText(text);\n```\n\nFor the fix, the constructor should read `Typeface.VariationDesignPosition` and map the coordinates to `HarfBuzzSharp.Variation[]`, then call `hbFont.SetVariations()`. Your approach described in the note is exactly right."
+      }
+    ]
+  }
+}
