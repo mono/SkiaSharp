@@ -288,6 +288,19 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+			// Write native memory straight to the stream: no intermediate managed buffer and no
+			// Marshal.Copy, so the pixel/encoded bytes are copied once instead of twice.
+			var src = (byte*)ptr;
+			for (var left = total; left > 0;) {
+				var copyCount = (int)Math.Min (CopyBufferSize, left);
+				target.Write (new ReadOnlySpan<byte> (src, copyCount));
+				left -= copyCount;
+				src += copyCount;
+			}
+#else
+			// Stream.Write(ReadOnlySpan<byte>) is unavailable on netstandard2.0 / .NET Framework, so
+			// fall back to copying through a pooled buffer.
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			for (var left = total; left > 0;) {
 				var copyCount = (int)Math.Min (CopyBufferSize, left);
@@ -296,6 +309,7 @@ namespace SkiaSharp
 				ptr += copyCount;
 				target.Write ((byte[])buffer, 0, copyCount);
 			}
+#endif
 			GC.KeepAlive (this);
 		}
 
