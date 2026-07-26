@@ -178,6 +178,75 @@ namespace SkiaSharp.Tests
 			Assert.Null(captured);
 		}
 
+		[Fact]
+		public void ToArrayIsTightlyPackedAndCorrect()
+		{
+			var info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = CreateSplitSurface(8);
+
+			byte[] array = null;
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 8, 8), result => array = result.ToArray());
+
+			Assert.Equal(info.BytesSize, array.Length); // tightly packed (padding stripped)
+			AssertPixel(array, info.Height, 0, 0, 255, 0, 0, 255); // red
+			AssertPixel(array, info.Height, 7, 7, 0, 0, 255, 255); // blue
+		}
+
+		[Fact]
+		public void CopyPlaneToStripsPaddingAndValidatesSize()
+		{
+			var info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = CreateSplitSurface(8);
+
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 8, 8), result =>
+			{
+				var packed = new byte[info.BytesSize];
+				result.CopyPlaneTo(0, packed);
+				AssertPixel(packed, info.Height, 0, 0, 255, 0, 0, 255);
+				AssertPixel(packed, info.Height, 7, 7, 0, 0, 255, 255);
+
+				// A too-small destination throws rather than over-reading.
+				Assert.Throws<ArgumentException>(() => result.CopyPlaneTo(0, new byte[info.BytesSize - 1]));
+			});
+		}
+
+		[Fact]
+		public void ToImageOutlivesCallbackAndIsCorrect()
+		{
+			var info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = CreateSplitSurface(8);
+
+			SKImage image = null;
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 8, 8), result => image = result.ToImage());
+
+			Assert.NotNull(image); // owned copy, valid after the callback returned
+			using (image)
+			{
+				Assert.Equal(8, image.Width);
+				Assert.Equal(8, image.Height);
+				using var bmp = SKBitmap.FromImage(image);
+				Assert.Equal(SKColors.Red, bmp.GetPixel(0, 0));
+				Assert.Equal(SKColors.Blue, bmp.GetPixel(7, 7));
+			}
+		}
+
+		[Fact]
+		public void ToBitmapOutlivesCallbackAndIsCorrect()
+		{
+			var info = new SKImageInfo(8, 8, SKColorType.Rgba8888, SKAlphaType.Premul);
+			using var surface = CreateSplitSurface(8);
+
+			SKBitmap bitmap = null;
+			surface.RequestReadPixels(info, new SKRectI(0, 0, 8, 8), result => bitmap = result.ToBitmap());
+
+			Assert.NotNull(bitmap);
+			using (bitmap)
+			{
+				Assert.Equal(SKColors.Red, bitmap.GetPixel(0, 0));
+				Assert.Equal(SKColors.Blue, bitmap.GetPixel(7, 7));
+			}
+		}
+
 		// On Ganesh the read is deferred when the backend supports transfer buffers; otherwise Skia
 		// falls back to a synchronous read. Assert the deferred transition only when it did not fire
 		// inline, and always assert it eventually completes with correct pixels.
