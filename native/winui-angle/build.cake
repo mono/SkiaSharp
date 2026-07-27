@@ -17,18 +17,10 @@ Task("sync-ANGLE")
         RunProcess("git", $"clone https://github.com/google/angle.git --branch {ANGLE_VERSION} --depth 1 --single-branch --shallow-submodules {ANGLE_PATH}");
     }
 
-    // sync submodules.
-    //
-    // NOTE: "testing" (chromium/src/testing) is intentionally omitted. It is
-    // Chromium's test-infrastructure submodule, needed only by ANGLE's own
-    // test targets — not by libGLESv2 / libEGL, which is all SkiaSharp packs
-    // for WinUI. Sync attempts on stale Chromium release branches (currently
-    // chromium/6275) fail with "fatal: could not get a repository handle for
-    // submodule 'testing'" once upstream restructures or GC's that branch's
-    // submodule mapping; excluding it keeps the ANGLE bootstrap running
-    // without needing a matching ANGLE version bump.
+    // sync submodules
     var submodules = new[] {
         "build",
+        "testing",
         "third_party/zlib",
         "third_party/jsoncpp",
         "third_party/vulkan-deps",
