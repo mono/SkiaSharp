@@ -173,6 +173,40 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(spec.Children);
 		}
 
+		[Fact]
+		public void UniformsAreEnumeratedAndCanBeSetByName()
+		{
+			// Regression: SKMeshSpecification.Uniforms/Children must lazily enumerate the
+			// native uniforms. A non-null field initializer previously defeated the `??=`
+			// lazy-init, so Uniforms was always empty and setting a declared uniform by
+			// name threw ArgumentOutOfRangeException.
+			const string fragmentShaderWithUniform = @"
+				uniform float2 uImageSize;
+				float2 main(const Varyings varyings) {
+					return varyings.position * uImageSize;
+				}";
+
+			using var spec = SKMeshSpecification.Create(
+				SimpleAttributes,
+				sizeof(float) * 2,
+				EmptyVaryings,
+				SimpleVertexShader,
+				fragmentShaderWithUniform,
+				out var errors);
+
+			Assert.Null(errors);
+			Assert.NotNull(spec);
+			Assert.Equal(8, spec.UniformSize); // float2 == 8 bytes
+			Assert.Single(spec.Uniforms);
+			Assert.Equal("uImageSize", spec.Uniforms[0]);
+
+			using var builder = new SKMeshBuilder(spec);
+			Assert.Single(builder.Uniforms.Names);
+
+			// Must not throw "Variable was not found".
+			builder.Uniforms["uImageSize"] = (ReadOnlySpan<float>)new[] { 512f, 512f };
+		}
+
 		// Buffer tests
 
 		[Fact]
