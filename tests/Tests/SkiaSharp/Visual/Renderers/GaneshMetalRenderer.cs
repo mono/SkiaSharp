@@ -29,21 +29,9 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			IsApplePlatform
+			TestConfig.Current.IsApple
 				? null
 				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
-
-		private static bool IsApplePlatform =>
-#if NET5_0_OR_GREATER
-			OperatingSystem.IsMacOS()
-			|| OperatingSystem.IsIOS()
-			|| OperatingSystem.IsMacCatalyst()
-			|| OperatingSystem.IsTvOS();
-#else
-			// net48 (Windows-only TFM) predates the OperatingSystem.Is* probes and
-			// can never be an Apple platform, so fall back to the TestConfig flag.
-			TestConfig.Current.IsMac;
-#endif
 
 		// Azure DevOps sets TF_BUILD=True on every agent. Apple-Silicon macOS
 		// agents run real hardware and pass through to real Metal cleanly; only

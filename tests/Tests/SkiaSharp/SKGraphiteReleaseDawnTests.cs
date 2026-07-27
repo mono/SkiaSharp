@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 		protected override bool CanSubmitSync => false;
 
 		protected override string UnsupportedReason =>
-			OperatingSystem.IsBrowser()
+			TestConfig.Current.IsBrowser
 				? null
 				: "graphite-dawn requires a WebGPU-capable browser (WASM) host.";
 

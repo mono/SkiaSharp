@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 		{
 			get
 			{
-				if (!IsApplePlatform)
+				if (!TestConfig.Current.IsApple)
 					return "Metal is only available on Apple platforms.";
 				// x64 Azure DevOps macOS agents run a virtualized Metal driver that
 				// leaves state hanging the host on shutdown (see the Graphite/Ganesh
@@ -178,12 +178,6 @@ namespace SkiaSharp.Tests
 		private static bool IsRunningOnAppleSimulator =>
 			!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_UDID"))
 			|| !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_DEVICE_NAME"));
-
-		private static bool IsApplePlatform =>
-			OperatingSystem.IsMacOS()
-			|| OperatingSystem.IsIOS()
-			|| OperatingSystem.IsMacCatalyst()
-			|| OperatingSystem.IsTvOS();
 
 		private static bool IsAzureDevOpsX64Host =>
 			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase)

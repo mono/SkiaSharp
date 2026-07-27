@@ -24,12 +24,7 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "graphite-dawn";
 
-		public bool IsAvailable =>
-#if NET5_0_OR_GREATER
-			OperatingSystem.IsBrowser();
-#else
-			false;
-#endif
+		public bool IsAvailable => TestConfig.Current.IsBrowser;
 
 		public string UnavailableReason =>
 			IsAvailable ? null : "graphite-dawn requires a WebGPU-capable browser host.";

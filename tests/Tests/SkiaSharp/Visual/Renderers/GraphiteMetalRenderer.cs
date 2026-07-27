@@ -20,19 +20,9 @@ namespace SkiaSharp.Tests.Visual
 		public bool IsAvailable => UnavailableReason is null;
 
 		public string UnavailableReason =>
-			IsApplePlatform
+			TestConfig.Current.IsApple
 				? null
 				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
-
-		private static bool IsApplePlatform =>
-#if NET5_0_OR_GREATER
-			OperatingSystem.IsMacOS()
-			|| OperatingSystem.IsIOS()
-			|| OperatingSystem.IsMacCatalyst()
-			|| OperatingSystem.IsTvOS();
-#else
-			TestConfig.Current.IsMac;
-#endif
 
 		// See GaneshMetalRenderer.IsAzureDevOpsX64Host — same reasoning.
 		private static bool IsAzureDevOpsX64Host =>
