@@ -12,14 +12,11 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower ()
 string SUPPORT_DIRECT3D_VAR = Argument ("supportDirect3D", EnvironmentVariable ("SUPPORT_DIRECT3D") ?? "true");
 bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLower () == "true";
 
-// Nano Server needs FreeType so SkFontMgr_New_Custom_Empty() is compiled — its
-// SK_BUILD_FOR_NANOSERVER-guarded call site in Skia's sk_typeface.cpp otherwise
-// leaves an undefined symbol at link time (the fontmgr_custom_empty target's
-// enable-gate is `skia_use_freetype && !is_canvaskit`).
+var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
+
 string USE_FREETYPE_VAR = Argument ("useFreeType", EnvironmentVariable ("USE_FREETYPE") ?? "false");
 bool USE_FREETYPE = USE_FREETYPE_VAR == "1" || USE_FREETYPE_VAR.ToLower () == "true";
-
-var VERIFY_DELAY_LOADED = SUPPORT_DIRECT3D ? new[] { "d3d12", "D3DCOMPILER" } : new string[0];
+bool USE_FONTMGR_WIN = !USE_FREETYPE;
 
 #load "../../scripts/infra/native/shared/native-shared.cake"
 #load "../../scripts/infra/shared/msbuild.cake"
@@ -69,10 +66,12 @@ Task("libSkiaSharp")
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower () +
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
             $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
+            $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
             $"skia_enable_graphite=true " +
             clang +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
 
