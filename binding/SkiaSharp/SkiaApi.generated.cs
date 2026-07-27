@@ -47,6 +47,7 @@ using sk_graphite_image_provider_t = System.IntPtr;
 using sk_graphite_recorder_t = System.IntPtr;
 using sk_graphite_recording_t = System.IntPtr;
 using sk_graphite_texture_info_t = System.IntPtr;
+using sk_image_async_read_result_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
 using sk_manageddrawable_t = System.IntPtr;
@@ -1435,6 +1436,25 @@ namespace SkiaSharp
 		private static Delegates.gr_direct_context_abandon_context gr_direct_context_abandon_context_delegate;
 		internal static void gr_direct_context_abandon_context (gr_direct_context_t context) =>
 			(gr_direct_context_abandon_context_delegate ??= GetSymbol<Delegates.gr_direct_context_abandon_context> ("gr_direct_context_abandon_context")).Invoke (context);
+		#endif
+
+		// void gr_direct_context_check_async_work_completion(gr_direct_context_t* context)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_direct_context_check_async_work_completion (gr_direct_context_t context);
+		}
+		private static Delegates.gr_direct_context_check_async_work_completion gr_direct_context_check_async_work_completion_delegate;
+		internal static void gr_direct_context_check_async_work_completion (gr_direct_context_t context) =>
+			(gr_direct_context_check_async_work_completion_delegate ??= GetSymbol<Delegates.gr_direct_context_check_async_work_completion> ("gr_direct_context_check_async_work_completion")).Invoke (context);
 		#endif
 
 		// void gr_direct_context_dump_memory_statistics(const gr_direct_context_t* context, sk_tracememorydump_t* dump)
@@ -7826,6 +7846,82 @@ namespace SkiaSharp
 		#endregion
 
 		#region sk_image.h
+
+		// int32_t sk_image_async_read_result_get_count(const sk_image_async_read_result_t* result)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial Int32 sk_image_async_read_result_get_count (sk_image_async_read_result_t result);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 sk_image_async_read_result_get_count (sk_image_async_read_result_t result);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 sk_image_async_read_result_get_count (sk_image_async_read_result_t result);
+		}
+		private static Delegates.sk_image_async_read_result_get_count sk_image_async_read_result_get_count_delegate;
+		internal static Int32 sk_image_async_read_result_get_count (sk_image_async_read_result_t result) =>
+			(sk_image_async_read_result_get_count_delegate ??= GetSymbol<Delegates.sk_image_async_read_result_get_count> ("sk_image_async_read_result_get_count")).Invoke (result);
+		#endif
+
+		// const void* sk_image_async_read_result_get_data(const sk_image_async_read_result_t* result, int32_t planeIndex)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void* sk_image_async_read_result_get_data (sk_image_async_read_result_t result, Int32 planeIndex);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void* sk_image_async_read_result_get_data (sk_image_async_read_result_t result, Int32 planeIndex);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void* sk_image_async_read_result_get_data (sk_image_async_read_result_t result, Int32 planeIndex);
+		}
+		private static Delegates.sk_image_async_read_result_get_data sk_image_async_read_result_get_data_delegate;
+		internal static void* sk_image_async_read_result_get_data (sk_image_async_read_result_t result, Int32 planeIndex) =>
+			(sk_image_async_read_result_get_data_delegate ??= GetSymbol<Delegates.sk_image_async_read_result_get_data> ("sk_image_async_read_result_get_data")).Invoke (result, planeIndex);
+		#endif
+
+		// size_t sk_image_async_read_result_get_row_bytes(const sk_image_async_read_result_t* result, int32_t planeIndex)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial /* size_t */ IntPtr sk_image_async_read_result_get_row_bytes (sk_image_async_read_result_t result, Int32 planeIndex);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern /* size_t */ IntPtr sk_image_async_read_result_get_row_bytes (sk_image_async_read_result_t result, Int32 planeIndex);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate /* size_t */ IntPtr sk_image_async_read_result_get_row_bytes (sk_image_async_read_result_t result, Int32 planeIndex);
+		}
+		private static Delegates.sk_image_async_read_result_get_row_bytes sk_image_async_read_result_get_row_bytes_delegate;
+		internal static /* size_t */ IntPtr sk_image_async_read_result_get_row_bytes (sk_image_async_read_result_t result, Int32 planeIndex) =>
+			(sk_image_async_read_result_get_row_bytes_delegate ??= GetSymbol<Delegates.sk_image_async_read_result_get_row_bytes> ("sk_image_async_read_result_get_row_bytes")).Invoke (result, planeIndex);
+		#endif
+
+		// void sk_image_async_rescale_and_read_pixels(const sk_image_t* image, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_image_rescale_gamma_t rescaleGamma, sk_image_rescale_mode_t rescaleMode, sk_image_async_read_pixels_proc callback, void* context)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_image_async_rescale_and_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, void* callback, void* context);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_image_async_rescale_and_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_image_async_rescale_and_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context);
+		}
+		private static Delegates.sk_image_async_rescale_and_read_pixels sk_image_async_rescale_and_read_pixels_delegate;
+		internal static void sk_image_async_rescale_and_read_pixels (sk_image_t image, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context) =>
+			(sk_image_async_rescale_and_read_pixels_delegate ??= GetSymbol<Delegates.sk_image_async_rescale_and_read_pixels> ("sk_image_async_rescale_and_read_pixels")).Invoke (image, dstInfo, srcRect, rescaleGamma, rescaleMode, callback, context);
+		#endif
 
 		// sk_alphatype_t sk_image_get_alpha_type(const sk_image_t* image)
 		#if !USE_DELEGATES
@@ -16432,6 +16528,25 @@ namespace SkiaSharp
 
 		#region sk_surface.h
 
+		// void sk_surface_async_rescale_and_read_pixels(sk_surface_t* surface, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_image_rescale_gamma_t rescaleGamma, sk_image_rescale_mode_t rescaleMode, sk_image_async_read_pixels_proc callback, void* context)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_surface_async_rescale_and_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, void* callback, void* context);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_surface_async_rescale_and_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_surface_async_rescale_and_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context);
+		}
+		private static Delegates.sk_surface_async_rescale_and_read_pixels sk_surface_async_rescale_and_read_pixels_delegate;
+		internal static void sk_surface_async_rescale_and_read_pixels (sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* context) =>
+			(sk_surface_async_rescale_and_read_pixels_delegate ??= GetSymbol<Delegates.sk_surface_async_rescale_and_read_pixels> ("sk_surface_async_rescale_and_read_pixels")).Invoke (surface, dstInfo, srcRect, rescaleGamma, rescaleMode, callback, context);
+		#endif
+
 		// void sk_surface_draw(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_paint_t* paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -18722,6 +18837,9 @@ namespace SkiaSharp {
 	// typedef sk_graphite_vk_func_ptr (*)(void* userData, const char* name, vk_instance_t* instance, vk_device_t* device)* sk_graphite_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr SKGraphiteVkGetProxyDelegate(void* userData, /* char */ void* name, vk_instance_t instance, vk_device_t device);
+	// typedef void (*)(void* context, const sk_image_async_read_result_t* result)* sk_image_async_read_pixels_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKImageAsyncReadPixelsProxyDelegate(void* context, sk_image_async_read_result_t result);
 
 	// typedef void (*)(const void* addr, void* context)* sk_image_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
@@ -22802,6 +22920,26 @@ namespace SkiaSharp {
 		Disallow = 1,
 	}
 
+	// sk_image_rescale_gamma_t
+	public enum SKImageRescaleGamma {
+		// SRC_SK_IMAGE_RESCALE_GAMMA = 0
+		Src = 0,
+		// LINEAR_SK_IMAGE_RESCALE_GAMMA = 1
+		Linear = 1,
+	}
+
+	// sk_image_rescale_mode_t
+	public enum SKImageRescaleMode {
+		// NEAREST_SK_IMAGE_RESCALE_MODE = 0
+		Nearest = 0,
+		// LINEAR_SK_IMAGE_RESCALE_MODE = 1
+		Linear = 1,
+		// REPEATED_LINEAR_SK_IMAGE_RESCALE_MODE = 2
+		RepeatedLinear = 2,
+		// REPEATED_CUBIC_SK_IMAGE_RESCALE_MODE = 3
+		RepeatedCubic = 3,
+	}
+
 	// sk_jpegencoder_alphaoption_t
 	public enum SKJpegEncoderAlphaOption {
 		// IGNORE_SK_JPEGENCODER_ALPHA_OPTION = 0
@@ -23277,6 +23415,15 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (SKGraphiteVkGetProxyDelegate))]
 #endif
 	private static partial IntPtr SKGraphiteVkGetProxyImplementation(void* userData,/* char */ void* name,vk_instance_t instance,vk_device_t device);
+	/// Proxy for sk_image_async_read_pixels_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, sk_image_async_read_result_t, void> SKImageAsyncReadPixelsProxy = &SKImageAsyncReadPixelsProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKImageAsyncReadPixelsProxyDelegate SKImageAsyncReadPixelsProxy = SKImageAsyncReadPixelsProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKImageAsyncReadPixelsProxyDelegate))]
+#endif
+	private static partial void SKImageAsyncReadPixelsProxyImplementation(void* context,sk_image_async_read_result_t result);
 
 	/// Proxy for sk_image_raster_release_proc native function.
 #if USE_LIBRARY_IMPORT
