@@ -45,10 +45,17 @@ namespace SkiaSharp.Tests
 			{
 				try
 				{
-					var adapter = await SKWebGpu.RequestAdapter()
-						?? throw new InvalidOperationException("navigator.gpu.requestAdapter returned null — WebGPU unavailable.");
-					var device = await SKWebGpu.RequestDevice(adapter)
-						?? throw new InvalidOperationException("adapter.requestDevice returned null.");
+					// A browser host can expose navigator.gpu yet still have no usable
+					// adapter/device (headless CI agents, software-only, WebGPU disabled
+					// by policy). That is "this host cannot drive Dawn", not a failure —
+					// skip like the visual GraphiteDawnRenderer does, honouring the
+					// CreateHarnessAsync contract (it may Assert.Skip on a runtime probe).
+					var adapter = await SKWebGpu.RequestAdapter();
+					if (adapter is null)
+						Assert.Skip("WebGPU unavailable on this host: navigator.gpu.requestAdapter returned null.");
+					var device = await SKWebGpu.RequestDevice(adapter);
+					if (device is null)
+						Assert.Skip("WebGPU unavailable on this host: adapter.requestDevice returned null.");
 					s_device = device;
 
 					// Create a real WGPUInstance first: emdawnwebgpu tags each imported
