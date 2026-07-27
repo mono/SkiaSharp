@@ -60,6 +60,7 @@ Task("libSkiaSharp")
             $"skia_use_partition_alloc=false " +
             $"skia_use_piex=true " +
             $"skia_use_system_expat=false " +
+            $"skia_use_system_freetype2=false " +
             $"skia_use_system_libjpeg_turbo=false " +
             $"skia_use_system_libpng=false " +
             $"skia_use_system_libwebp=false " +
