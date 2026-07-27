@@ -6,8 +6,8 @@ namespace SkiaSharp;
 
 public unsafe class SKMeshSpecification : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 {
-	private IReadOnlyList<string> uniformNames = Array.Empty<string>();
-	private IReadOnlyList<string> childNames = Array.Empty<string>();
+	private IReadOnlyList<string>? uniformNames;
+	private IReadOnlyList<string>? childNames;
 
 	internal SKMeshSpecification (IntPtr handle, bool owns)
 		: base (handle, owns)
