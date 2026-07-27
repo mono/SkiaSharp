@@ -270,16 +270,19 @@ namespace SkiaSharp
 			SKSurface surface,
 			SKImageInfo dstInfo,
 			SKRectI srcRect,
-			SKGraphiteRescaleGamma rescaleGamma,
-			SKGraphiteRescaleMode rescaleMode,
-			Action<SKGraphiteAsyncReadResult> callback)
+			SKImageRescaleGamma rescaleGamma,
+			SKImageRescaleMode rescaleMode,
+			Action<SKImageReadPixelsResult> callback)
 		{
 			if (surface is null) throw new ArgumentNullException (nameof (surface));
 			if (callback is null) throw new ArgumentNullException (nameof (callback));
 
 			Action<IntPtr> handler = raw => {
-				using var result = raw == IntPtr.Zero ? null : new SKGraphiteAsyncReadResult (raw);
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, dstInfo);
 				callback (result);
+				// Keep the context and surface alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
+				GC.KeepAlive (surface);
 			};
 
 			DelegateProxies.Create (handler, out _, out var ctxPtr);
@@ -288,16 +291,18 @@ namespace SkiaSharp
 			SkiaApi.sk_graphite_context_async_rescale_and_read_pixels_surface (
 				Handle, surface.Handle, &nativeInfo, &srcRect,
 				rescaleGamma, rescaleMode,
-				DelegateProxies.SKGraphiteAsyncReadPixelsProxy,
+				DelegateProxies.SKImageAsyncReadPixelsProxy,
 				(void*)ctxPtr);
+			GC.KeepAlive (this);
+			GC.KeepAlive (surface);
 		}
 
 		public void RequestReadPixels (
 			SKSurface surface,
 			SKImageInfo dstInfo,
 			SKRectI srcRect,
-			Action<SKGraphiteAsyncReadResult> callback) =>
+			Action<SKImageReadPixelsResult> callback) =>
 			RequestReadPixels (surface, dstInfo, srcRect,
-				SKGraphiteRescaleGamma.Src, SKGraphiteRescaleMode.RepeatedLinear, callback);
+				SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
 	}
 }

@@ -45,7 +45,7 @@ namespace SkiaSharp.Tests.Visual
 		/// RGBA8888/premul buffer. Graphite surfaces do NOT support the synchronous
 		/// <see cref="SKSurface.ReadPixels(SKImageInfo, IntPtr, int, int, int)"/> in shipping builds
 		/// — Skia gates that on <c>GPU_TEST_UTILS</c> (see <c>src/gpu/graphite/Device.cpp</c>), so it
-		/// returns false. Use the async <see cref="SKGraphiteContext.RequestReadPixels(SKSurface, SKImageInfo, SKRectI, Action{SKGraphiteAsyncReadResult})"/>
+		/// returns false. Use the async <see cref="SKGraphiteContext.RequestReadPixels(SKSurface, SKImageInfo, SKRectI, Action{SKImageReadPixelsResult})"/>
 		/// path the C API exposes for exactly this purpose, driven synchronously to completion here.
 		/// </summary>
 		public static byte[] ReadRgbaGraphite(SKGraphiteContext context, SKSurface surface, SKImageInfo info)
@@ -73,22 +73,9 @@ namespace SkiaSharp.Tests.Visual
 						return;
 					}
 
-					var srcBase = result.GetPlaneData(0);
-					if (srcBase == IntPtr.Zero)
-					{
-						failed = true;
-						return;
-					}
-
-					// The async result plane may be padded; copy row-by-row into the
-					// tightly-packed golden buffer, dropping any per-row padding.
-					var buffer = new byte[rgba.BytesSize];
-					var srcRowBytes = result.GetPlaneRowBytes(0);
-					var rowBytes = Math.Min(srcRowBytes, rgba.RowBytes);
-					for (var y = 0; y < rgba.Height; y++)
-						Marshal.Copy(srcBase + (y * srcRowBytes), buffer, y * rgba.RowBytes, rowBytes);
-
-					pixels = buffer;
+					// ToArray drops any per-row transfer-buffer padding, returning a
+					// tightly-packed rgba buffer sized to info.BytesSize (info.RowBytes stride).
+					pixels = result.ToArray();
 				});
 
 			// Flush the queued readback copy and wait for the GPU, then pump the context

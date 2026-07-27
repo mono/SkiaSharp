@@ -134,19 +134,6 @@ namespace SkiaSharp
 			}
 		}
 
-		private static partial void SKGraphiteAsyncReadPixelsProxyImplementation (void* callbackContext, IntPtr result)
-		{
-			// The captured Action<IntPtr> is the closure built by SKGraphiteContext.ReadPixels.
-			// `result` is non-owning and is only valid for the duration of this invocation —
-			// the caller must call sk_graphite_async_read_result_get_* before returning.
-			var del = Get<Action<IntPtr>> ((IntPtr)callbackContext, out var gch);
-			try {
-				del.Invoke (result);
-			} finally {
-				gch.Free ();
-			}
-		}
-
 		private static partial void SKGlyphPathProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
 		{
 			var del = Get<SKGlyphPathDelegate> ((IntPtr)context, out _);

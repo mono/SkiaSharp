@@ -40,7 +40,6 @@ using sk_font_t = System.IntPtr;
 using sk_fontmgr_t = System.IntPtr;
 using sk_fontstyle_t = System.IntPtr;
 using sk_fontstyleset_t = System.IntPtr;
-using sk_graphite_async_read_result_t = System.IntPtr;
 using sk_graphite_backend_texture_t = System.IntPtr;
 using sk_graphite_context_t = System.IntPtr;
 using sk_graphite_image_provider_t = System.IntPtr;
@@ -124,63 +123,6 @@ namespace SkiaSharp
 	internal unsafe partial class SkiaApi
 	{
 		#region sk_graphite.h
-
-		// int32_t sk_graphite_async_read_result_get_count(const sk_graphite_async_read_result_t* result)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial Int32 sk_graphite_async_read_result_get_count (sk_graphite_async_read_result_t result);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern Int32 sk_graphite_async_read_result_get_count (sk_graphite_async_read_result_t result);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate Int32 sk_graphite_async_read_result_get_count (sk_graphite_async_read_result_t result);
-		}
-		private static Delegates.sk_graphite_async_read_result_get_count sk_graphite_async_read_result_get_count_delegate;
-		internal static Int32 sk_graphite_async_read_result_get_count (sk_graphite_async_read_result_t result) =>
-			(sk_graphite_async_read_result_get_count_delegate ??= GetSymbol<Delegates.sk_graphite_async_read_result_get_count> ("sk_graphite_async_read_result_get_count")).Invoke (result);
-		#endif
-
-		// const void* sk_graphite_async_read_result_get_data(const sk_graphite_async_read_result_t* result, int32_t planeIndex)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial void* sk_graphite_async_read_result_get_data (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void* sk_graphite_async_read_result_get_data (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void* sk_graphite_async_read_result_get_data (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		}
-		private static Delegates.sk_graphite_async_read_result_get_data sk_graphite_async_read_result_get_data_delegate;
-		internal static void* sk_graphite_async_read_result_get_data (sk_graphite_async_read_result_t result, Int32 planeIndex) =>
-			(sk_graphite_async_read_result_get_data_delegate ??= GetSymbol<Delegates.sk_graphite_async_read_result_get_data> ("sk_graphite_async_read_result_get_data")).Invoke (result, planeIndex);
-		#endif
-
-		// size_t sk_graphite_async_read_result_get_row_bytes(const sk_graphite_async_read_result_t* result, int32_t planeIndex)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static partial /* size_t */ IntPtr sk_graphite_async_read_result_get_row_bytes (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern /* size_t */ IntPtr sk_graphite_async_read_result_get_row_bytes (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate /* size_t */ IntPtr sk_graphite_async_read_result_get_row_bytes (sk_graphite_async_read_result_t result, Int32 planeIndex);
-		}
-		private static Delegates.sk_graphite_async_read_result_get_row_bytes sk_graphite_async_read_result_get_row_bytes_delegate;
-		internal static /* size_t */ IntPtr sk_graphite_async_read_result_get_row_bytes (sk_graphite_async_read_result_t result, Int32 planeIndex) =>
-			(sk_graphite_async_read_result_get_row_bytes_delegate ??= GetSymbol<Delegates.sk_graphite_async_read_result_get_row_bytes> ("sk_graphite_async_read_result_get_row_bytes")).Invoke (result, planeIndex);
-		#endif
 
 		// bool sk_graphite_backend_is_available(sk_graphite_backend_t backend)
 		#if !USE_DELEGATES
@@ -283,22 +225,22 @@ namespace SkiaSharp
 			(sk_graphite_backend_texture_is_valid_delegate ??= GetSymbol<Delegates.sk_graphite_backend_texture_is_valid> ("sk_graphite_backend_texture_is_valid")).Invoke (tex);
 		#endif
 
-		// void sk_graphite_context_async_rescale_and_read_pixels_surface(sk_graphite_context_t* context, const sk_surface_t* surface, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_graphite_rescale_gamma_t rescaleGamma, sk_graphite_rescale_mode_t rescaleMode, sk_graphite_async_read_pixels_proc callback, void* callbackContext)
+		// void sk_graphite_context_async_rescale_and_read_pixels_surface(sk_graphite_context_t* context, const sk_surface_t* surface, const sk_imageinfo_t* dstInfo, const sk_irect_t* srcRect, sk_image_rescale_gamma_t rescaleGamma, sk_image_rescale_mode_t rescaleMode, sk_image_async_read_pixels_proc callback, void* callbackContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKGraphiteRescaleGamma rescaleGamma, SKGraphiteRescaleMode rescaleMode, void* callback, void* callbackContext);
+		internal static partial void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, void* callback, void* callbackContext);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKGraphiteRescaleGamma rescaleGamma, SKGraphiteRescaleMode rescaleMode, SKGraphiteAsyncReadPixelsProxyDelegate callback, void* callbackContext);
+		internal static extern void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* callbackContext);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKGraphiteRescaleGamma rescaleGamma, SKGraphiteRescaleMode rescaleMode, SKGraphiteAsyncReadPixelsProxyDelegate callback, void* callbackContext);
+			internal delegate void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* callbackContext);
 		}
 		private static Delegates.sk_graphite_context_async_rescale_and_read_pixels_surface sk_graphite_context_async_rescale_and_read_pixels_surface_delegate;
-		internal static void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKGraphiteRescaleGamma rescaleGamma, SKGraphiteRescaleMode rescaleMode, SKGraphiteAsyncReadPixelsProxyDelegate callback, void* callbackContext) =>
+		internal static void sk_graphite_context_async_rescale_and_read_pixels_surface (sk_graphite_context_t context, sk_surface_t surface, SKImageInfoNative* dstInfo, SKRectI* srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, SKImageAsyncReadPixelsProxyDelegate callback, void* callbackContext) =>
 			(sk_graphite_context_async_rescale_and_read_pixels_surface_delegate ??= GetSymbol<Delegates.sk_graphite_context_async_rescale_and_read_pixels_surface> ("sk_graphite_context_async_rescale_and_read_pixels_surface")).Invoke (context, surface, dstInfo, srcRect, rescaleGamma, rescaleMode, callback, callbackContext);
 		#endif
 
@@ -18818,10 +18760,6 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
-	// typedef void (*)(void* callbackContext, const sk_graphite_async_read_result_t* result)* sk_graphite_async_read_pixels_proc
-	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-	internal unsafe delegate void SKGraphiteAsyncReadPixelsProxyDelegate(void* callbackContext, sk_graphite_async_read_result_t result);
-
 	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)* sk_graphite_image_provider_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
@@ -18837,6 +18775,7 @@ namespace SkiaSharp {
 	// typedef sk_graphite_vk_func_ptr (*)(void* userData, const char* name, vk_instance_t* instance, vk_device_t* device)* sk_graphite_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr SKGraphiteVkGetProxyDelegate(void* userData, /* char */ void* name, vk_instance_t instance, vk_device_t device);
+
 	// typedef void (*)(void* context, const sk_image_async_read_result_t* result)* sk_image_async_read_pixels_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKImageAsyncReadPixelsProxyDelegate(void* context, sk_image_async_read_result_t result);
@@ -22884,24 +22823,6 @@ namespace SkiaSharp {
 		OutOfOrderRecording = 5,
 	}
 
-	// sk_graphite_rescale_gamma_t
-	public enum SKGraphiteRescaleGamma {
-		// SRC_SK_GRAPHITE_RESCALE_GAMMA = 0
-		Src = 0,
-		// LINEAR_SK_GRAPHITE_RESCALE_GAMMA = 1
-		Linear = 1,
-	}
-
-	// sk_graphite_rescale_mode_t
-	public enum SKGraphiteRescaleMode {
-		// NEAREST_SK_GRAPHITE_RESCALE_MODE = 0
-		Nearest = 0,
-		// REPEATED_LINEAR_SK_GRAPHITE_RESCALE_MODE = 1
-		RepeatedLinear = 1,
-		// REPEATED_CUBIC_SK_GRAPHITE_RESCALE_MODE = 2
-		RepeatedCubic = 2,
-	}
-
 	// sk_highcontrastconfig_invertstyle_t
 	public enum SKHighContrastConfigInvertStyle {
 		// NO_INVERT_SK_HIGH_CONTRAST_CONFIG_INVERT_STYLE = 0
@@ -23376,16 +23297,6 @@ internal static unsafe partial class DelegateProxies {
 #endif
 	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
 
-	/// Proxy for sk_graphite_async_read_pixels_proc native function.
-#if USE_LIBRARY_IMPORT
-	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_async_read_result_t, void> SKGraphiteAsyncReadPixelsProxy = &SKGraphiteAsyncReadPixelsProxyImplementation;
-	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
-#else
-	public static readonly SKGraphiteAsyncReadPixelsProxyDelegate SKGraphiteAsyncReadPixelsProxy = SKGraphiteAsyncReadPixelsProxyImplementation;
-	[MonoPInvokeCallback (typeof (SKGraphiteAsyncReadPixelsProxyDelegate))]
-#endif
-	private static partial void SKGraphiteAsyncReadPixelsProxyImplementation(void* callbackContext,sk_graphite_async_read_result_t result);
-
 	/// Proxy for sk_graphite_image_provider_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, sk_graphite_recorder_t, sk_image_t, bool, sk_image_t> SKGraphiteImageProviderProxy = &SKGraphiteImageProviderProxyImplementation;
@@ -23415,6 +23326,7 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (SKGraphiteVkGetProxyDelegate))]
 #endif
 	private static partial IntPtr SKGraphiteVkGetProxyImplementation(void* userData,/* char */ void* name,vk_instance_t instance,vk_device_t device);
+
 	/// Proxy for sk_image_async_read_pixels_proc native function.
 #if USE_LIBRARY_IMPORT
 	public static readonly delegate* unmanaged[Cdecl] <void*, sk_image_async_read_result_t, void> SKImageAsyncReadPixelsProxy = &SKImageAsyncReadPixelsProxyImplementation;
