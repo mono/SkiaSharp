@@ -406,6 +406,29 @@ namespace SkiaSharp
 			return result;
 		}
 
+		// RequestReadPixels
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
+			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException (nameof (callback));
+
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, info);
+				callback (result);
+				// Keep this surface alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
+			};
+			DelegateProxies.Create (handler, out _, out var ctx);
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_surface_async_rescale_and_read_pixels (Handle, &cinfo, &srcRect, rescaleGamma, rescaleMode, DelegateProxies.SKImageAsyncReadPixelsProxy, (void*)ctx);
+			GC.KeepAlive (this);
+		}
+
 		public void Flush () => Flush (true);
 
 		public void Flush (bool submit, bool synchronous = false)
