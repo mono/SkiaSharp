@@ -2171,11 +2171,20 @@ namespace SkiaSharp
 
 		// DrawMesh
 
+		/// <summary>Draws a custom vertex mesh using the specified paint.</summary>
+		/// <param name="mesh">The mesh to draw.</param>
+		/// <param name="paint">The paint to draw with.</param>
+		/// <remarks>The fragment program output is modulated with the paint color, so a white paint is required for the mesh colors to show unchanged. Meshes only draw on GPU-backed surfaces.</remarks>
 		public void DrawMesh (SKMesh mesh, SKPaint paint)
 		{
 			DrawMesh (mesh, null, paint);
 		}
 
+		/// <summary>Draws a custom vertex mesh, combining its output with the paint using the specified blender.</summary>
+		/// <param name="mesh">The mesh to draw.</param>
+		/// <param name="blender">The blender that combines the mesh output with the paint.</param>
+		/// <param name="paint">The paint to draw with.</param>
+		/// <remarks>Meshes only draw on GPU-backed surfaces.</remarks>
 		public void DrawMesh (SKMesh mesh, SKBlender blender, SKPaint paint)
 		{
 			if (mesh == null)
