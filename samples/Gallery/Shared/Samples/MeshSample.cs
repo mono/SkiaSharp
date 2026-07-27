@@ -101,6 +101,15 @@ public class MeshSample : CanvasSampleBase
 		return base.OnInit();
 	}
 
+	// Pace the animation loop (~60 FPS). Without this, the base class's animation loop
+	// spins with no delay (default OnUpdate returns instantly), flooding the UI scheduler
+	// with Refresh tasks until the managed heap is exhausted (OOM). All other animated
+	// samples do the same.
+	protected override async Task OnUpdate(System.Threading.CancellationToken token)
+	{
+		await Task.Delay(16, token);
+	}
+
 	private void EnsureResources()
 	{
 		if (builder != null)
