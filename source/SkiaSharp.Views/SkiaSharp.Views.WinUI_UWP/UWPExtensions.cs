@@ -3,12 +3,17 @@ using Windows.Foundation;
 using Windows.UI;
 using Windows.Storage.Streams;
 
+#if !HAS_UNO && WINUI
+using SkiaSharp.Views.WinUI.Native;
+#elif !HAS_UNO && WINDOWS_UWP
+using SkiaSharp.Views.UWP.Native;
+#endif
+
 #if WINUI
 using Microsoft.UI.Xaml.Media.Imaging;
-using SkiaSharp.Views.WinUI.Native;
 #else
 using Windows.UI.Xaml.Media.Imaging;
-using SkiaSharp.Views.UWP.Native;
+
 #endif
 
 #if WINUI

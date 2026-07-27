@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.iOS
 	[SupportedOSPlatform("tvos")]
 	[UnsupportedOSPlatform("macos")]
 	[UnsupportedOSPlatform("maccatalyst")]
-	public class SKGLLayer : CAEAGLLayer
+	public unsafe class SKGLLayer : CAEAGLLayer
 	{
 		private const SKColorType colorType = SKColorType.Rgba8888;
 		private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;
@@ -60,8 +60,9 @@ namespace SkiaSharp.Views.iOS
 			var newSize = lastSize;
 			if (recreateSurface)
 			{
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, out var bufferWidth);
-				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, out var bufferHeight);
+				int bufferWidth = 0, bufferHeight = 0;
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_WIDTH, &bufferWidth);
+				Gles.glGetRenderbufferParameteriv(Gles.GL_RENDERBUFFER, Gles.GL_RENDERBUFFER_HEIGHT, &bufferHeight);
 				newSize = new SKSizeI(bufferWidth, bufferHeight);
 			}
 
@@ -72,9 +73,10 @@ namespace SkiaSharp.Views.iOS
 				lastSize = newSize;
 
 				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				int framebuffer = 0, stencil = 0, samples = 0;
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, &framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, &stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, &samples);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
@@ -141,12 +143,14 @@ namespace SkiaSharp.Views.iOS
 			EAGLContext.SetCurrentContext(glContext);
 
 			// create render buffer
-			Gles.glGenRenderbuffers(1, ref renderBuffer);
+			fixed (uint* p = &renderBuffer)
+				Gles.glGenRenderbuffers(1, p);
 			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
 			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
 			// create frame buffer
-			Gles.glGenFramebuffers(1, ref framebuffer);
+			fixed (uint* p = &framebuffer)
+				Gles.glGenFramebuffers(1, p);
 			Gles.glBindFramebuffer(Gles.GL_FRAMEBUFFER, framebuffer);
 			Gles.glFramebufferRenderbuffer(Gles.GL_FRAMEBUFFER, Gles.GL_COLOR_ATTACHMENT0, Gles.GL_RENDERBUFFER, renderBuffer);
 
@@ -162,11 +166,13 @@ namespace SkiaSharp.Views.iOS
 
 		private void ResizeGLContexts()
 		{
-			// delete old buffers
-			Gles.glDeleteRenderbuffers(1, ref renderBuffer);
+			// delete old buffer and re-create
+			fixed (uint* p = &renderBuffer)
+			{
+				Gles.glDeleteRenderbuffers(1, p);
+				Gles.glGenRenderbuffers(1, p);
+			}
 
-			// re-create render buffer
-			Gles.glGenRenderbuffers(1, ref renderBuffer);
 			Gles.glBindRenderbuffer(Gles.GL_RENDERBUFFER, renderBuffer);
 			glContext.RenderBufferStorage(Gles.GL_RENDERBUFFER, this);
 
