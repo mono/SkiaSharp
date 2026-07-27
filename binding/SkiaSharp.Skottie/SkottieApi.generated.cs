@@ -41,6 +41,7 @@ using sk_font_t = System.IntPtr;
 using sk_fontmgr_t = System.IntPtr;
 using sk_fontstyle_t = System.IntPtr;
 using sk_fontstyleset_t = System.IntPtr;
+using sk_image_async_read_result_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
 using sk_imagefilter_t = System.IntPtr;
 using sk_manageddrawable_t = System.IntPtr;
