@@ -109,7 +109,7 @@ using var context = SKGraphiteContext.CreateMetal(backendContext);
 > Graphite Metal works on the **iOS and tvOS Simulator on Apple Silicon** (it is backed by the host's Apple-Silicon GPU). Two simulator-specific caveats:
 >
 > - The simulator's `MTLDevice` under-reports its capabilities — it advertises only `Apple1`/`Apple2`/`Common1`, not `Apple7+`/`Mac2` — so a naive `supportsFamily:` capability gate would wrongly skip it even though rendering works. Don't gate simulator support on the reported GPU family.
-> - The simulator's Metal shader compiler cannot build some pipelines Graphite emits — notably **gradient shaders**. When that happens, `recorder.Snap()` returns `null` for that frame. The same content renders correctly with Graphite/Metal on macOS and on real iOS hardware, and with Ganesh/Metal on the simulator — it is a simulator-only limitation. Always null-check `Snap()` (see [The render loop](#the-render-loop)).
+> - The simulator's Metal shader compiler cannot build some pipelines Graphite emits — notably **gradient shaders** (the compiler reports "Compiler failed to build request"). When that happens, `recorder.Snap()` returns `null` for that frame. The same content renders correctly with Graphite/Metal on macOS and on real iOS hardware, and with Ganesh/Metal on the simulator — it is a simulator-only limitation, tracked in [mono/SkiaSharp#4555](https://github.com/mono/SkiaSharp/issues/4555). Always null-check `Snap()` (see [The render loop](#the-render-loop)).
 
 ### Dawn (WebGPU)
 
