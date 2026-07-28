@@ -1,6 +1,6 @@
 # SkiaSharp UWP Sample
 
-Demonstrates all SkiaSharp UWP view types with top tab navigation, dark/light theming, and pointer interaction.
+Demonstrates all SkiaSharp UWP view types with top tab navigation and pointer interaction.
 
 ## Sample Pages
 
@@ -49,7 +49,7 @@ A freehand drawing canvas with a floating toolbox for choosing colors and brush 
 ## Requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download) or later
-- Windows 10 (build 19041 or later)
+- Windows 10 (build 26100 or later)
 
 ## Running the Sample
 
@@ -59,7 +59,7 @@ Build and run with MSBuild (Windows only):
 msbuild SkiaSharpSample/SkiaSharpSample.csproj /p:Platform=x64 /restore
 ```
 
-To start on a different page, change `DefaultPage` in `MainWindow.xaml.cs`:
+To start on a different page, change `DefaultPage` in `MainPage.xaml.cs`:
 
 ```csharp
 public static SamplePage DefaultPage { get; set; } = SamplePage.Gpu;
