@@ -288,7 +288,7 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
 			// Write native memory straight to the stream: no intermediate managed buffer and no
 			// Marshal.Copy, so the pixel/encoded bytes are copied once instead of twice.
 			var src = (byte*)ptr;
