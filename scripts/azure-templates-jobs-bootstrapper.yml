@@ -88,6 +88,12 @@ jobs:
         - checkout: self
           submodules: false
           fetchDepth: 1
+        - task: UsePythonVersion@0
+          displayName: Switch to the correct Python version
+          retryCountOnTaskFailure: 3
+          inputs:
+            versionSpec: '3.x'
+            architecture: 'x64'
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
         - pwsh: |
