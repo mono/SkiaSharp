@@ -22,6 +22,11 @@ namespace SkiaSharp
 
 		public SKImage FindOrCreate (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
 		{
+			if (recorder is null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (image is null)
+				throw new ArgumentNullException (nameof (image));
+
 			var key = (image.UniqueId, mipmapped);
 
 			// Hold the lock across the upload so concurrent misses for the same key

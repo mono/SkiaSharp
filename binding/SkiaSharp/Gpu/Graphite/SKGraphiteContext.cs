@@ -37,14 +37,24 @@ namespace SkiaSharp
 		public static bool IsBackendAvailable (SKGraphiteBackend backend) =>
 			SkiaApi.sk_graphite_backend_is_available (backend);
 
+		// default(SKGraphiteContextOptions) zero-initialises every field, but a 0
+		// GpuBudgetInBytes is an *explicit* 0-byte GPU resource cache, not "use Skia's
+		// default" — the C shim's sentinel for the latter is a negative value (see
+		// sk_graphite.h: "-1 to use Skia's default"). Left as default, the no-options
+		// factories would silently disable Skia's 256 MB resource cache and thrash. Seed
+		// -1 so they get Skia's real default budget. (InternalMultisampleCount 0 is
+		// already the "use Skia default" sentinel and the bool fields match Skia's
+		// release defaults, so only the budget needs seeding here.)
+		private static readonly SKGraphiteContextOptions DefaultOptions = new () { GpuBudgetInBytes = -1 };
+
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
-			CreateVulkan (backendContext, default);
+			CreateVulkan (backendContext, DefaultOptions);
 
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
-			CreateMetal (backendContext, default);
+			CreateMetal (backendContext, DefaultOptions);
 
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
-			CreateDawn (backendContext, default);
+			CreateDawn (backendContext, DefaultOptions);
 
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext, SKGraphiteContextOptions options)
 		{
