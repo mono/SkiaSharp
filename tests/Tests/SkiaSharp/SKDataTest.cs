@@ -226,5 +226,55 @@ namespace SkiaSharp.Tests
 			// since the data was nuked, they will differ
 			Assert.NotEqual(OddData, buffer);
 		}
+
+		// Reference implementation: the previous (buffered) SaveTo path — copy native memory into a
+		// pooled managed buffer with Marshal.Copy, then write that buffer to the stream. Used as the
+		// oracle to prove the current (span-based) SaveTo is byte-for-byte identical.
+		private static unsafe void SaveToBuffered(SKData data, Stream target)
+		{
+			const int CopyBufferSize = 81920;
+			var ptr = data.Data;
+			var total = data.Size;
+			var buffer = new byte[CopyBufferSize];
+			for (var left = total; left > 0;)
+			{
+				var copyCount = (int)Math.Min(CopyBufferSize, left);
+				Marshal.Copy(ptr, buffer, 0, copyCount);
+				left -= copyCount;
+				ptr += copyCount;
+				target.Write(buffer, 0, copyCount);
+			}
+			GC.KeepAlive(data);
+		}
+
+		[Theory]
+		// Sizes chosen to cross the 81920-byte internal chunk boundary: empty, sub-chunk, exactly one
+		// chunk, one chunk + 1, and several chunks + a partial tail.
+		[InlineData(0)]
+		[InlineData(1)]
+		[InlineData(5)]
+		[InlineData(81919)]
+		[InlineData(81920)]
+		[InlineData(81921)]
+		[InlineData(200000)]
+		public void SaveToMatchesBufferedReference(int size)
+		{
+			var bytes = new byte[size];
+			for (var i = 0; i < size; i++)
+				bytes[i] = (byte)(i * 31 + 7);
+
+			using var data = SKData.CreateCopy(bytes);
+
+			using var actual = new MemoryStream();
+			data.SaveTo(actual);
+
+			using var expected = new MemoryStream();
+			SaveToBuffered(data, expected);
+
+			// The written stream must equal both the buffered-reference output and the source bytes.
+			Assert.Equal(expected.ToArray(), actual.ToArray());
+			Assert.Equal(bytes, actual.ToArray());
+			Assert.Equal(size, actual.Length);
+		}
 	}
 }
