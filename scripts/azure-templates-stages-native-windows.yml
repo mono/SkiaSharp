@@ -158,6 +158,60 @@ stages:
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|x86 (Win)
+        parameters:
+          name: native_uwp_x86_windows
+          displayName: UWP x86
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=x86
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|x64 (Win)
+        parameters:
+          name: native_uwp_x64_windows
+          displayName: UWP x64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native UWP|arm64 (Win)
+        parameters:
+          name: native_uwp_arm64_windows
+          displayName: UWP arm64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp
+          cacheJob: native/uwp
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=arm64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|x86 (Win)
+        parameters:
+          name: native_uwp_angle_x86_windows
+          displayName: ANGLE UWP x86
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=x86
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|x64 (Win)
+        parameters:
+          name: native_uwp_angle_x64_windows
+          displayName: ANGLE UWP x64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=x64
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE UWP|arm64 (Win)
+        parameters:
+          name: native_uwp_angle_arm64_windows
+          displayName: ANGLE UWP arm64
+          buildAgent: ${{ parameters.buildAgentWindowsNative }}
+          target: externals-uwp-angle
+          cacheJob: native/uwp_angle
+          enableCaching: ${{ parameters.enableCaching }}
+          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
           name: native_win32_x64_nanoserver_windows
