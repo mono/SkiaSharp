@@ -170,6 +170,7 @@ steps:
   - name: Copy push script for post-step
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      cp .github/scripts/verify-vulkan-test-results.py /tmp/gh-aw/verify-vulkan-test-results.py
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -189,16 +190,53 @@ pre-agent-steps:
     # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
     run: |
       sudo apt-get update -qq
-      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts mesa-vulkan-drivers vulkan-tools
+      LAVAPIPE_ICD=$(dpkg -L mesa-vulkan-drivers | grep -E '/lvp_icd(\.x86_64)?\.json$' | head -n 1)
+      if [ -z "$LAVAPIPE_ICD" ]; then
+        echo "::error::mesa-vulkan-drivers did not install a lavapipe ICD manifest."
+        exit 1
+      fi
+      export VK_ICD_FILENAMES="$LAVAPIPE_ICD"
+      export VK_DRIVER_FILES="$LAVAPIPE_ICD"
+      {
+        echo "VK_ICD_FILENAMES=$LAVAPIPE_ICD"
+        echo "VK_DRIVER_FILES=$LAVAPIPE_ICD"
+      } >> "$GITHUB_ENV"
       fc-cache -f
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
+  - name: Verify Mesa lavapipe
+    run: |
+      set -euo pipefail
+      if [ ! -r "$VK_DRIVER_FILES" ]; then
+        echo "::error::Mesa lavapipe ICD manifest is missing or unreadable: $VK_DRIVER_FILES"
+        exit 1
+      fi
+
+      VULKANINFO_OUTPUT=$(mktemp)
+      if ! vulkaninfo --summary >"$VULKANINFO_OUTPUT" 2>&1; then
+        cat "$VULKANINFO_OUTPUT"
+        echo "::error::vulkaninfo could not initialize the pinned Mesa lavapipe ICD."
+        exit 1
+      fi
+      cat "$VULKANINFO_OUTPUT"
+
+      if ! grep -Eiq '(deviceName|driverName).*(llvmpipe|lavapipe)' "$VULKANINFO_OUTPUT"; then
+        echo "::error::The pinned Vulkan ICD did not expose Mesa lavapipe/llvmpipe."
+        exit 1
+      fi
+      echo "Verified deterministic software Vulkan through $VK_DRIVER_FILES"
 
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs
 # using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
 post-steps:
+  - name: Require Ganesh and Graphite Vulkan test evidence
+    run: |
+      python3 /tmp/gh-aw/verify-vulkan-test-results.py \
+        /tmp/gh-aw/agent/vulkan-results/TestResults.trx \
+        --summary-file "$GITHUB_STEP_SUMMARY"
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
@@ -255,7 +293,8 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   This also applies to Phase 10 if a native rebuild is needed.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
-  fontconfig, ninja). You CANNOT install packages (no apt/sudo in the sandbox; the firewall blocks OS
+  fontconfig, ninja, and Mesa lavapipe discovered from the installed package manifest and pinned
+  through both `VK_ICD_FILENAMES` and `VK_DRIVER_FILES`). You CANNOT install packages (no apt/sudo in the sandbox; the firewall blocks OS
   mirrors). If a build fails because a **host dependency is missing**, that's a workflow bug: STOP, do
   NOT hack compiler/linker flags (e.g. `-stdlib=libc++`) or `scripts/infra/native/**` to silence it
   (those are shared with the Windows/macOS/iOS/Android/WASM builds you never run here), and record it
@@ -267,6 +306,27 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   flag the change in BOTH PR summaries for cross-platform human review.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
+- **Phase 10 Vulkan gate**: the core console project does not prove that the standalone Vulkan
+  satellite executed. After the smoke and full core runs, run the Vulkan satellite explicitly and
+  preserve its TRX at the exact path below:
+  ```bash
+  mkdir -p /tmp/gh-aw/agent/vulkan-results
+  rm -f /tmp/gh-aw/agent/vulkan-results/TestResults.trx
+  set -o pipefail
+  dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj -- \
+    --results-directory /tmp/gh-aw/agent/vulkan-results \
+    --report-trx \
+    --report-trx-filename TestResults.trx \
+    2>&1 | tee -a /tmp/gh-aw/agent/test-output.txt
+  python3 .github/scripts/verify-vulkan-test-results.py \
+    /tmp/gh-aw/agent/vulkan-results/TestResults.trx
+  ```
+  The verifier requires named passing evidence from both
+  `GRContextTest.CreateVkContextIsValid` (Ganesh) and
+  `GraphiteVkBackendContextTest.GraphiteVkContextIsCreatedFromRawHandles` (Graphite). A missing,
+  skipped, or failed required test is a hard failure. Do not proceed, commit, or emit the completion
+  signal until this gate passes. The host post-step independently reruns the verifier before it can
+  push either PR, so zero/only-skipped Vulkan coverage cannot appear green.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
