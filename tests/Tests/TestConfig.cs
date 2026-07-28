@@ -63,6 +63,26 @@ namespace SkiaSharp.Tests
 			false;
 #endif
 
+		public bool IsApple =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsMacOS()
+			|| OperatingSystem.IsIOS()
+			|| OperatingSystem.IsMacCatalyst()
+			|| OperatingSystem.IsTvOS();
+#else
+			// net48 (Windows-only TFM) predates the OperatingSystem.Is* probes; the
+			// only Apple host it could ever be is desktop macOS, which the
+			// RuntimeInformation-based IsMac flag detects.
+			IsMac;
+#endif
+
+		public bool IsBrowser =>
+#if NET5_0_OR_GREATER
+			OperatingSystem.IsBrowser();
+#else
+			false;
+#endif
+
 		public string[] UnicodeFontFamilies { get; protected set; }
 		public string DefaultFontFamily { get; protected set; }
 
