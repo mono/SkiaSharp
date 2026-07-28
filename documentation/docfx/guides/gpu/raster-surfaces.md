@@ -118,3 +118,4 @@ If you need GPU acceleration — because you are rendering many frames per secon
 
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
 - [Creating and Drawing on Bitmaps](../bitmaps/drawing.md)
+- [Skia canvas creation, Raster backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

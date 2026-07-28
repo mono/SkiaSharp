@@ -124,7 +124,7 @@ Per-surface and per-image creation moves from the context to the recorder:
 - **CPU images need a provider.** The single easiest thing to miss — a raster `SKImage` drawn without an image provider simply doesn't appear. See change 3 above.
 - **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Dawn in the browser](graphite-surfaces.md#dawn-in-the-browser).
 - **Check backend availability.** Use `SKGraphiteContext.IsBackendAvailable` before creating a context, since not every build includes every backend.
-- **The recorder is per-thread.** As with Ganesh, the context, recorders, and surfaces are single-threaded — use a recorder only on the thread that created it, and give each rendering thread its own.
+- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite Offscreen Surfaces](graphite-surfaces.md).
 
 ## Related Links
 

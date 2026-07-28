@@ -9,6 +9,8 @@ _Render on the GPU with the new Graphite backend_
 
 *Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](views-surfaces.md).
 
+Where the older [Ganesh](ganesh-surfaces.md) backend issues GPU work as you draw and auto-flushes it, Graphite separates **recording** from **submission**: drawing is captured into a *recording* that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.
+
 Graphite differs from [Ganesh](ganesh-surfaces.md) in two important ways:
 
 - **Drawing is recorded, not flushed.** You draw onto a surface's canvas as usual, but instead of flushing a context you *snap* a **recording** from a **recorder** and *insert* that recording into the context, then *submit* it.
@@ -17,7 +19,7 @@ Graphite differs from [Ganesh](ganesh-surfaces.md) in two important ways:
 Graphite supports three backends: **Vulkan**, **Metal**, and **Dawn** (WebGPU).
 
 > [!NOTE]
-> Like Ganesh, an `SKGraphiteContext`, its recorders, and its surfaces are not thread-safe. Create and use them on a single thread that owns the underlying graphics device.
+> **Threading.** A single `SKGraphiteRecorder` — and the surfaces created from it — belongs to one thread; don't touch it concurrently. But unlike a single-threaded Ganesh `GRContext`, Graphite is designed for parallel recording: give **each thread its own recorder**, record on all of them at once, then feed their recordings to the one shared `SKGraphiteContext`. Serialize the context-level calls (`InsertRecording`, `Submit`) rather than calling them from several threads simultaneously.
 
 ## Backend platform support
 
@@ -157,7 +159,7 @@ context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 A few things to note:
 
 - `CreateRecorder` returns an `SKGraphiteRecorder`. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly. If you draw raster (CPU-backed) `SKImage`s, create the recorder with an image provider instead — see [Drawing CPU images](#drawing-cpu-images-the-image-provider).
-- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It returns **`null`** if the recording could not be built (for example, if Skia failed to compile a pipeline for something you drew), so check the result before inserting it.
+- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It returns **`null`** if the recording could not be built (for example, if the driver could not compile a pipeline for something you drew — see [Pipeline compilation](#pipeline-compilation)), so check the result before inserting it.
 - `InsertRecording` returns an [`SKGraphiteInsertStatus`](#status-and-enums); always confirm it is `Success`.
 - `Submit(new SKGraphiteSubmitInfo { Sync = true })` flushes the work to the GPU and, with `Sync = true`, waits for it to finish. It returns `false` if submission failed.
 
@@ -360,6 +362,17 @@ An `SKGraphiteContext` exposes a few properties and methods for inspecting and m
 
 Dispose recordings, surfaces, recorders, and the context when you are done. The context owns the GPU resources allocated through it.
 
+## Pipeline compilation
+
+Graphite renders by building a GPU **pipeline** (a compiled shader program) for each distinct combination of draw operation, paint effects, blend mode, and target surface format. Each pipeline is compiled the **first time** that combination is drawn, and then cached on the context for reuse.
+
+Two practical consequences follow:
+
+- **The first frame that uses a new combination can be slower**, because the pipeline is compiled on demand (during `Snap`/`InsertRecording`). Subsequent frames reuse the cached pipeline and are fast.
+- **If the driver cannot compile the pipeline, `recorder.Snap()` returns `null`** for that frame. This is exactly the [iOS Simulator gradient limitation](#metal) — the simulator's Metal compiler rejects the pipeline Graphite emits for gradient shaders. Always null-check `Snap()`.
+
+Skia itself supports *pipeline precompilation* — warming the pipeline cache before the first frame so there is no first-use hitch — but that is not yet surfaced in SkiaSharp, so for now just be aware that first use of a new draw/paint combination pays a one-time compilation cost.
+
 ## Status and enums
 
 Graphite uses a handful of enums and one shared result type:
@@ -375,3 +388,4 @@ Graphite uses a handful of enums and one shared result type:
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
 - [Ganesh GPU Surfaces](ganesh-surfaces.md)
 - [Migrating from Ganesh to Graphite](graphite-migration.md)
+- [Skia GPU documentation (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

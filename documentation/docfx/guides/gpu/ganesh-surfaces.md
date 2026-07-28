@@ -188,3 +188,4 @@ Dispose your surfaces and the `GRContext` when you are done, and make sure the g
 - [Raster Surfaces](raster-surfaces.md)
 - [Surfaces in the SkiaSharp Views](views-surfaces.md)
 - [Graphite Offscreen Surfaces](graphite-surfaces.md)
+- [Skia canvas creation, GPU backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)
