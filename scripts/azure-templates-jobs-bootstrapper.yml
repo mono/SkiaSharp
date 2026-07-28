@@ -83,17 +83,18 @@ jobs:
         displayName: Get the volume information before the run
         condition: always()
 
+      - task: UsePythonVersion@0
+        displayName: Switch to the correct Python version
+        retryCountOnTaskFailure: 3
+        inputs:
+          versionSpec: '3.x'
+          architecture: 'x64'
+
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - checkout: self
           submodules: false
           fetchDepth: 1
-        - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
-          retryCountOnTaskFailure: 3
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
         - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
           displayName: Configure build variables
         - pwsh: |
@@ -159,14 +160,6 @@ jobs:
 
       # install extra bits for the native builds
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
-        # switch to the correct Python version
-        - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
         # install ninja
         - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
           displayName: Install Ninja
@@ -216,8 +209,8 @@ jobs:
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
