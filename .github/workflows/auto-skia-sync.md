@@ -216,6 +216,7 @@ steps:
       RUNTIME_DIR="$RUNNER_TEMP/skia-sync-runtime"
       mkdir -p "$RUNTIME_DIR"
       cp .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      cp .github/scripts/verify-vulkan-test-results.py "$RUNTIME_DIR/verify-vulkan-test-results.py"
       cp .agents/skills/update-skia/scripts/update_versions.py "$RUNTIME_DIR/update_versions.py"
       cp .agents/skills/update-skia/scripts/audit_fork_patches.py "$RUNTIME_DIR/audit-fork-patches.py"
       chmod -R a-w "$RUNTIME_DIR"
@@ -314,6 +315,13 @@ pre-agent-steps:
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
 post-steps:
+  - name: Require Ganesh and Graphite Vulkan test evidence
+    env:
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
+    run: |
+      python3 "$SKIA_SYNC_RUNTIME_DIR/verify-vulkan-test-results.py" \
+        /tmp/gh-aw/agent/vulkan-results/TestResults.trx \
+        --summary-file "$GITHUB_STEP_SUMMARY"
   - name: Finalize sync metadata
     env:
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
