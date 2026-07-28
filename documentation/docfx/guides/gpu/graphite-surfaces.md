@@ -25,7 +25,7 @@ Which Graphite backend you use is determined by the platform:
 
 | Backend | Platforms |
 | --- | --- |
-| **Metal** | macOS, iOS (including the iOS Simulator on Apple Silicon), Mac Catalyst, tvOS |
+| **Metal** | macOS, iOS (including the iOS Simulator on Apple Silicon, with one caveat below), Mac Catalyst, tvOS |
 | **Vulkan** | Linux, Android, Windows |
 | **Dawn** (WebGPU) | WebAssembly / browser only |
 
@@ -106,7 +106,10 @@ using var context = SKGraphiteContext.CreateMetal(backendContext);
 ```
 
 > [!NOTE]
-> Graphite Metal works on the **iOS and tvOS Simulator on Apple Silicon** (it is backed by the host's Apple-Silicon GPU). Be aware that the simulator's `MTLDevice` under-reports its capabilities — it advertises only `Apple1`/`Apple2`/`Common1`, not `Apple7+`/`Mac2` — so a naive `supportsFamily:` capability gate would wrongly skip it even though rendering works. Don't gate simulator support on the reported GPU family.
+> Graphite Metal works on the **iOS and tvOS Simulator on Apple Silicon** (it is backed by the host's Apple-Silicon GPU). Two simulator-specific caveats:
+>
+> - The simulator's `MTLDevice` under-reports its capabilities — it advertises only `Apple1`/`Apple2`/`Common1`, not `Apple7+`/`Mac2` — so a naive `supportsFamily:` capability gate would wrongly skip it even though rendering works. Don't gate simulator support on the reported GPU family.
+> - The simulator's Metal shader compiler cannot build some pipelines Graphite emits — notably **gradient shaders**. When that happens, `recorder.Snap()` returns `null` for that frame. The same content renders correctly with Graphite/Metal on macOS and on real iOS hardware, and with Ganesh/Metal on the simulator — it is a simulator-only limitation. Always null-check `Snap()` (see [The render loop](#the-render-loop)).
 
 ### Dawn (WebGPU)
 
@@ -141,6 +144,8 @@ surface.Canvas.DrawCircle(256, 256, 200, new SKPaint { Color = SKColors.Cornflow
 
 // capture everything recorded so far
 using var recording = recorder.Snap();
+if (recording is null)
+    throw new InvalidOperationException("Graphite Snap() returned null.");
 
 // hand the recording to the context and submit it to the GPU
 if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
@@ -151,8 +156,8 @@ context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 
 A few things to note:
 
-- `CreateRecorder` returns an `SKGraphiteRecorder`. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly.
-- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame.
+- `CreateRecorder` returns an `SKGraphiteRecorder`. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly. If you draw raster (CPU-backed) `SKImage`s, create the recorder with an image provider instead — see [Drawing CPU images](#drawing-cpu-images-the-image-provider).
+- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It returns **`null`** if the recording could not be built (for example, if Skia failed to compile a pipeline for something you drew), so check the result before inserting it.
 - `InsertRecording` returns an [`SKGraphiteInsertStatus`](#status-and-enums); always confirm it is `Success`.
 - `Submit(new SKGraphiteSubmitInfo { Sync = true })` flushes the work to the GPU and, with `Sync = true`, waits for it to finish. It returns `false` if submission failed.
 
@@ -300,13 +305,13 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
 
 There are two ways to handle this. You can upload each image yourself with [`ToTextureImage`](#using-textures-as-images) and draw the GPU-backed result. Or you can give the recorder an *image provider* callback that uploads CPU images on demand, so ordinary `DrawImage` calls just work.
 
-Pass the callback to the `CreateRecorder` overload that accepts one. SkiaSharp ships a ready-made `SKGraphiteImageCache` whose `FindOrCreate` method implements the callback (uploading via `ToTextureImage`) and caches the results so repeated draws of the same image don't re-upload:
+Pass the callback to the `CreateRecorder` overload that accepts one. SkiaSharp ships a ready-made `SKGraphiteImageCache` whose `FindOrCreate` method implements the callback (uploading via `ToTextureImage`) and caches the results — an LRU cache (capped at 256 entries, keyed on the image's unique id and mipmap flag) so repeated draws of the same image don't re-upload every frame:
 
 ```csharp
 var imageCache = new SKGraphiteImageCache();
 
 using var recorder = context.CreateRecorder(
-    recorderBudgetBytes: -1,
+    recorderBudgetBytes: -1,                   // -1 = use Skia's default budget
     findOrCreate: imageCache.FindOrCreate,     // uploads + caches CPU images on demand
     findOrCreateDispose: imageCache.Dispose);  // released with the recorder
 
@@ -314,7 +319,7 @@ using var surface = SKSurface.Create(recorder, info);
 surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provider
 ```
 
-The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest correct default.
+The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache.FindOrCreate` throws `ArgumentNullException` if the recorder or image is null, and is `IDisposable` — pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released with the recorder. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest correct default.
 
 ## Dawn in the browser
 
@@ -336,19 +341,21 @@ context.CheckAsyncWorkCompletion();
 
 ## Context options
 
-The `Create*` factories accept an optional `SKGraphiteContextOptions`. The most commonly useful field is `InternalMultisampleCount` (the internal MSAA sample count), which must be `0` (use Skia's default) or one of `1`, `2`, `4`, `8`, or `16`; other values are rejected. Other options include a GPU byte budget and driver-workaround toggles.
+The `Create*` factories accept an optional `SKGraphiteContextOptions`. The most commonly useful field is `InternalMultisampleCount` (the internal MSAA sample count), which must be `0` (use Skia's default) or one of `1`, `2`, `4`, `8`, or `16`; other values are rejected. Other options include a GPU byte budget (`GpuBudgetInBytes`) and driver-workaround toggles.
 
 ```csharp
 var options = new SKGraphiteContextOptions { InternalMultisampleCount = 4 };
 using var context = SKGraphiteContext.CreateMetal(backendContext, options);
 ```
 
+The factory overloads that **don't** take options use Skia's defaults, including its default GPU resource budget (256 MB). If you build an `SKGraphiteContextOptions` yourself and want that same default budget, set `GpuBudgetInBytes = -1` (the "use Skia's default" sentinel) — a literal `0` means a zero-byte cache, which disables budgeting.
+
 ## Managing resources
 
 An `SKGraphiteContext` exposes a few properties and methods for inspecting and managing GPU resources:
 
 - `Backend`, `IsDeviceLost`, `MaxTextureSize`, and `SupportsProtectedContent` report the state of the underlying device.
-- `MaxBudgetedBytes` gets or sets the GPU memory budget; `CurrentBudgetedBytes` reports current usage.
+- `MaxBudgetedBytes` gets or sets the GPU memory budget (defaulting to Skia's 256 MB); `CurrentBudgetedBytes` reports current usage.
 - `FreeGpuResources()` releases cached GPU resources; `PerformDeferredCleanup(TimeSpan)` purges resources unused for longer than the given duration.
 
 Dispose recordings, surfaces, recorders, and the context when you are done. The context owns the GPU resources allocated through it.
