@@ -179,19 +179,9 @@ context.RequestReadPixels(
         if (result is null || result.PlaneCount < 1)
             return;
 
-        var src = result.GetPlaneData(0);
-        if (src == IntPtr.Zero)
-            return;
-
-        // the returned plane may have per-row padding; copy row-by-row into a
-        // tightly-packed buffer, dropping any padding
-        var buffer = new byte[dstInfo.BytesSize];
-        var srcRowBytes = result.GetPlaneRowBytes(0);
-        var rowBytes = Math.Min(srcRowBytes, dstInfo.RowBytes);
-        for (var y = 0; y < dstInfo.Height; y++)
-            Marshal.Copy(src + (y * srcRowBytes), buffer, y * dstInfo.RowBytes, rowBytes);
-
-        pixels = buffer;
+        // ToArray copies the plane into a tightly-packed byte[] that outlives the callback,
+        // stripping any per-row transfer padding for you.
+        pixels = result.ToArray();
     });
 
 // flush the queued readback and wait, then pump the context until the callback runs
@@ -203,7 +193,16 @@ if (!done || pixels is null)
     throw new InvalidOperationException("Graphite async readback did not complete.");
 ```
 
-The callback receives an `SKGraphiteAsyncReadResult` whose planes may be **row-padded**, so copy row-by-row using `GetPlaneRowBytes(0)` rather than assuming tightly packed pixels. If you don't need to see the padding handling spelled out, `SKGraphiteAsyncReadResult.CopyPlaneTo(planeIndex, destination, rowCount)` performs exactly this padding-aware copy for you; the manual loop above is shown to make the row padding explicit. A shorter `RequestReadPixels` overload uses default rescaling; a longer overload lets you pass an [`SKGraphiteRescaleGamma`](#status-and-enums) and [`SKGraphiteRescaleMode`](#status-and-enums) when you want the read to also rescale the image.
+The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `GRContext` read paths. It is `IDisposable` and **only valid for the duration of the callback**, so copy what you need out before returning; touching it afterwards throws `ObjectDisposedException`.
+
+It offers a few ways to extract pixels:
+
+- `ToArray(planeIndex = 0)` — a tightly-packed `byte[]` copy (padding stripped), as above.
+- `ToBitmap()` / `ToImage()` — an owned [`SKBitmap`](xref:SkiaSharp.SKBitmap) or [`SKImage`](xref:SkiaSharp.SKImage) for single-plane (interleaved) results.
+- `CopyPlaneTo(planeIndex, destination)` — copies one plane into a `Span<byte>` you own, stripping row padding.
+- `GetPlaneData(planeIndex)` / `GetPlaneRowBytes(planeIndex)` — the raw `ReadOnlySpan<byte>` and its stride, if you want to handle padding yourself.
+
+A shorter `RequestReadPixels` overload uses default rescaling; a longer overload lets you pass an [`SKImageRescaleGamma`](#status-and-enums) and [`SKImageRescaleMode`](#status-and-enums) when you want the read to also rescale the image. The default is `(SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest)`.
 
 ## Wrapping an external GPU texture
 
@@ -356,12 +355,13 @@ Dispose recordings, surfaces, recorders, and the context when you are done. The 
 
 ## Status and enums
 
-Graphite uses a handful of enums:
+Graphite uses a handful of enums and one shared result type:
 
 - `SKGraphiteBackend` — `Dawn`, `Metal`, `Vulkan`, or `Unknown`.
 - `SKGraphiteInsertStatus` — the result of `InsertRecording`; `Success` plus failure reasons such as `InvalidRecording`, `AddCommandsFailed`, and `OutOfOrderRecording`.
-- `SKGraphiteRescaleGamma` — `Src` or `Linear`, for the optional readback rescale.
-- `SKGraphiteRescaleMode` — `Nearest`, `RepeatedLinear`, or `RepeatedCubic`, for the optional readback rescale.
+- `SKImageRescaleGamma` — `Src` or `Linear`, for the optional readback rescale. Backend-neutral (shared with the Ganesh async-read path), not Graphite-specific.
+- `SKImageRescaleMode` — `Nearest`, `Linear`, `RepeatedLinear`, or `RepeatedCubic`, for the optional readback rescale. Also backend-neutral.
+- `SKImageReadPixelsResult` — the backend-neutral result handed to the `RequestReadPixels` callback (see [Reading pixels back](#reading-pixels-back)). `IDisposable` and valid only for the duration of the callback.
 
 ## Related Links
 

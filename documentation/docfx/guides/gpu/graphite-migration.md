@@ -101,7 +101,7 @@ Always check that `InsertRecording` returns `SKGraphiteInsertStatus.Success`, an
 
 ### 2. Replace synchronous `ReadPixels` with asynchronous readback
 
-This is the most important change. Graphite surfaces do **not** support synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) in shipping builds — it returns `false`. Replace it with `RequestReadPixels`, then drive the request to completion with `Submit` and repeated `CheckAsyncWorkCompletion` calls. The returned plane may be row-padded, so copy row-by-row. See [Reading pixels back](graphite-surfaces.md#reading-pixels-back) for the complete helper.
+This is the most important change. Graphite surfaces do **not** support synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) in shipping builds — it returns `false`. Replace it with `RequestReadPixels`, then drive the request to completion with `Submit` and repeated `CheckAsyncWorkCompletion` calls. The callback receives a backend-neutral `SKImageReadPixelsResult`; call `ToArray()`, `ToBitmap()`, or `CopyPlaneTo(...)` on it to get tightly-packed pixels (row padding is stripped for you). See [Reading pixels back](graphite-surfaces.md#reading-pixels-back) for the complete helper.
 
 ### 3. Give the recorder an image provider for CPU images
 
