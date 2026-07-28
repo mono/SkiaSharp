@@ -90,7 +90,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+			SkipWhenNoSystemFontManager();
 
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
@@ -109,6 +109,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void ContainsTextIsCorrect()
 		{
+			SkipWhenNoDefaultFont();
 			const string text = "A";
 
 			var font = new SKFont();
@@ -121,7 +122,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void ContainsUnicodeTextIsCorrect()
 		{
-			SkipOnPlatform(IsBrowser, "WASM has no system fonts with emoji support");
+			SkipWhenNoSystemFontManager();
 
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
@@ -155,6 +156,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeasureTextMeasuresTheText()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!");
@@ -165,6 +167,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeasureTextMeasuresTheTextForBytes()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
@@ -184,6 +187,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeasureTextReturnsTheBounds()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!", out var bounds);
@@ -195,6 +199,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void MeasureTextReturnsTheBoundsForBytes()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
@@ -277,6 +282,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void GetGlyphWidthsAreCorrect()
 		{
+			SkipWhenNoDefaultFont();
 			SkipOnPlatform(IsBrowser, "WASM has no system fonts for glyph width measurement");
 
 			var font = new SKFont(SKTypeface.Default);
@@ -303,6 +309,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public unsafe void TextInterceptsAreFoundCorrectly()
 		{
+			SkipWhenNoDefaultFont();
 			var text = "|";
 
 			var font = new SKFont(SKTypeface.Default);
@@ -335,6 +342,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void GetTextPathWithPositionsProducesNonEmptyPath()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont();
 			var text = "AV";
 			var glyphCount = font.CountGlyphs(text);
@@ -354,6 +362,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void GetTextPathWithPositionsMatchesExpectedBounds()
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont();
 			var text = "A";
 
@@ -384,6 +393,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
 		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			// get bytes
@@ -442,6 +452,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
@@ -465,6 +476,7 @@ namespace SkiaSharp.Tests
 		[InlineData(1 << 17)]
 		public void BreakTextHandlesLongText(int textSize)
 		{
+			SkipWhenNoDefaultFont();
 			var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
@@ -562,6 +574,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void DefaultFontTypefaceIsDefault()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont();
 			Assert.NotNull(font.Typeface);
 			Assert.False(font.Typeface.IsEmpty);
@@ -598,6 +611,7 @@ namespace SkiaSharp.Tests
 		[Fact]
 		public void FontWithDefaultCanMeasure()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 			var width = font.MeasureText("Hello World!");
 			Assert.True(width > 0);

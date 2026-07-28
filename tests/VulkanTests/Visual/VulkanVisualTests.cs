@@ -24,6 +24,7 @@ namespace SkiaSharp.Vulkan.Tests
 	/// </para>
 	/// </summary>
 	[Trait("Category", VisualMatrixTestsBase.VisualCategory)]
+	[Collection(VulkanGpuRenderingCollection.Name)]
 	public class VulkanVisualTests : VisualMatrixTestsBase
 	{
 		public VulkanVisualTests(ITestOutputHelper output)

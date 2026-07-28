@@ -331,6 +331,59 @@ namespace SkiaSharp.Tests
 				Assert.Equal(uniforms, builder.Uniforms);
 			}
 
+			// The SKRuntimeEffectUniforms constructor pre-sizes its internal name->Variable map to
+			// the known uniform count (SKRuntimeEffect.cs). This asserts that building the map with an
+			// explicit capacity is behaviour-identical to the default-sized map for a many-uniform
+			// effect that exercises several rehash boundaries: every declared uniform must be listed,
+			// individually settable/gettable, and the packed uniform buffer must be identical whether
+			// written all-at-once or one entry at a time. A mis-sized, truncated, or corrupted map
+			// would drop or misplace an entry and fail one of these assertions.
+			[Fact]
+			public void UniformsMapIsCompleteForManyUniforms()
+			{
+				const int count = 24;
+
+				var declarations = new System.Text.StringBuilder();
+				for (var i = 0; i < count; i++)
+					declarations.AppendLine($"uniform float uniform_{i};");
+
+				var src = $"""
+					{declarations}
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				var expectedNames = new string[count];
+				for (var i = 0; i < count; i++)
+					expectedNames[i] = $"uniform_{i}";
+
+				// Every uniform is present and in declaration order.
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+				Assert.Equal(expectedNames, uniforms.Names);
+				Assert.Equal(count, uniforms.Count);
+
+				// Reference buffer: set each uniform via the indexer to a distinct value.
+				var reference = new SKRuntimeEffectUniforms(effect);
+				for (var i = 0; i < count; i++)
+					reference[$"uniform_{i}"] = i + 0.5f;
+				var referenceData = reference.ToData().ToArray();
+
+				// Same values applied in reverse order must produce the exact same packed buffer,
+				// proving the map maps each name to the correct offset regardless of insertion path.
+				var shuffled = new SKRuntimeEffectUniforms(effect);
+				for (var i = count - 1; i >= 0; i--)
+					shuffled[$"uniform_{i}"] = i + 0.5f;
+				Assert.Equal(referenceData, shuffled.ToData().ToArray());
+
+				// The packed buffer round-trips to the declared float values.
+				var floats = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, float>(referenceData);
+				Assert.Equal(count, floats.Length);
+				for (var i = 0; i < count; i++)
+					Assert.Equal(i + 0.5f, floats[i]);
+			}
+
 			[Fact]
 			public void ChildrenWorksCorrectly()
 			{

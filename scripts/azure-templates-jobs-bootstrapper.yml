@@ -28,6 +28,8 @@ parameters:
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
+  previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
   publishArtifacts: []                          # the additional artifacts to publish
   tools: []                                     # any additional .net global tools
@@ -231,6 +233,30 @@ jobs:
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
             displayName: Install the .NET workloads
+        # install and select the preview .NET SDK (opt-in; for jobs that run against a preview runtime)
+        - ${{ if eq(parameters.installPreviewSdk, 'true') }}:
+          - task: UseDotNet@2
+            displayName: Install .NET $(DOTNET_VERSION_PREVIEW) (preview)
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              packageType: sdk
+              version: $(DOTNET_VERSION_PREVIEW)
+          - pwsh: |
+              $globalJson = @{ sdk = @{ version = "$(DOTNET_VERSION_PREVIEW)"; allowPrerelease = $true; rollForward = "latestFeature" } } | ConvertTo-Json
+              Set-Content -Path global.json -Value $globalJson
+              Get-Content global.json
+              dotnet --version
+            displayName: Pin global.json to the preview .NET SDK
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - ${{ if ne(parameters.previewWorkloads, '') }}:
+            # Reuse the shared workload install script, pinned to the exact preview workload set.
+            # WASM tests still restore the platform TFMs (e.g. -android) of referenced projects, so
+            # those workloads must be installed too — same as the non-preview test jobs.
+            - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Workloads "${{ parameters.previewWorkloads }}" -WorkloadSetVersion "$(DOTNET_WORKLOAD_VERSION_PREVIEW)" -Tizen ""
+              displayName: Install the preview .NET workloads (${{ parameters.previewWorkloads }})
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install the mac tools
       - ${{ if and(eq(parameters.installXcode, 'true'), ne(parameters.buildAgent.parameters.installXcode, 'false'), eq(parameters.buildAgent.pool.os, 'macos'), ne(parameters.skipInstall, 'true')) }}:
@@ -351,7 +377,7 @@ jobs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
                 image: skiasharp:skiasharp
-                buildArguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
@@ -361,19 +387,34 @@ jobs:
                 command: build
                 buildContext: ${{ parameters.docker }}
                 dockerfile: ${{ parameters.docker }}/Dockerfile
-                arguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
-          - bash: |
-              echo dotnet tool restore > cmd.sh
-              echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
-              sed -i 's/--gnArgs=\" \"//' cmd.sh
-              cat cmd.sh
-            displayName: Generate the script for the Docker image
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - bash: |
-              docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/bash /work/cmd.sh
-            displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
-            retryCountOnTaskFailure: ${{ parameters.retryCount }}
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+          # Run the target inside the image against the mounted repo. Linux and Windows containers
+          # differ in shell and mount path, so the run step is branched by agent OS.
+          - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
+            - bash: |
+                echo dotnet tool restore > cmd.sh
+                echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
+                sed -i 's/--gnArgs=\" \"//' cmd.sh
+                cat cmd.sh
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - bash: |
+                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+            - pwsh: |
+                'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
+                'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
+                Get-Content cmd.cmd
+              displayName: Generate the script for the Docker image
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
+              displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
+              retryCountOnTaskFailure: ${{ parameters.retryCount }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build

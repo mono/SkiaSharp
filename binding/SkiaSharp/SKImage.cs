@@ -30,7 +30,13 @@ namespace SkiaSharp
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
 			using (var pixmap = new SKPixmap (info, pixels)) {
 				// don't use the managed version as that is just extra overhead which isn't necessary
-				return GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseProxyForCoTaskMem, null));
+				var image = GetObject (SkiaApi.sk_image_new_raster (pixmap.Handle, DelegateProxies.SKImageRasterReleaseProxyForCoTaskMem, null));
+				if (image == null) {
+					// the native image was not created, so the release proc will never run to
+					// free the buffer - free it now to avoid leaking the allocation
+					Marshal.FreeCoTaskMem (pixels);
+				}
+				return image;
 			}
 		}
 
@@ -209,6 +215,34 @@ namespace SkiaSharp
 			using (var skdata = SKData.CreateCopy (data)) {
 				return FromEncodedData (skdata);
 			}
+		}
+
+		// Graphite-backed: wrap a backend texture as a sampling image
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType) =>
+			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace: null);
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace) =>
+			FromTexture (recorder, backendTexture, colorType, alphaType, colorSpace, releaseProc: null);
+
+		public static SKImage FromTexture (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKAlphaType alphaType, SKColorSpace colorSpace, SKGraphiteReleaseDelegate releaseProc)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.SKGraphiteReleaseProxy : null;
+
+			return GetObject (SkiaApi.sk_graphite_image_wrap_texture (
+				recorder.Handle,
+				backendTexture.Handle,
+				colorType.ToNative (),
+				alphaType,
+				colorSpace?.Handle ?? IntPtr.Zero,
+				proxy,
+				(void*)ctx));
 		}
 
 		public static SKImage FromEncodedData (SKStream data)
@@ -615,6 +649,29 @@ namespace SkiaSharp
 			return result;
 		}
 
+		// RequestReadPixels
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
+			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException (nameof (callback));
+
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, info);
+				callback (result);
+				// Keep this image alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
+			};
+			DelegateProxies.Create (handler, out _, out var ctx);
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_image_async_rescale_and_read_pixels (Handle, &cinfo, &srcRect, rescaleGamma, rescaleMode, DelegateProxies.SKImageAsyncReadPixelsProxy, (void*)ctx);
+			GC.KeepAlive (this);
+		}
+
 		// ScalePixels
 
 		[Obsolete("Use ScalePixels(SKPixmap dst, SKSamplingOptions sampling) instead.", error: true)]
@@ -688,6 +745,26 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 			GC.KeepAlive (context);
 			return image;
+		}
+
+		// Graphite-backed equivalents — Graphite has no separate "budgeted" knob
+		// (tracking happens at the recorder/context level), so the API is narrower
+		// than the Ganesh overloads above.
+
+		public SKImage ToTextureImage (SKGraphiteRecorder recorder) =>
+			ToTextureImage (recorder, this, false);
+
+		public SKImage ToTextureImage (SKGraphiteRecorder recorder, bool mipmapped) =>
+			ToTextureImage (recorder, this, mipmapped);
+
+		internal static SKImage ToTextureImage (SKGraphiteRecorder recorder, SKImage image, bool mipmapped)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (image == null)
+				throw new ArgumentNullException (nameof (image));
+
+			return GetObject (SkiaApi.sk_graphite_image_make_texture (recorder.Handle, image.Handle, mipmapped));
 		}
 
 		// ApplyImageFilter

@@ -1,6 +1,7 @@
 ﻿#nullable disable
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
@@ -250,11 +251,19 @@ namespace SkiaSharp
 		public readonly override string ToString () =>
 			((SKColor)this).ToString ();
 
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
 		public static implicit operator SKColorF (SKColor color)
 		{
-			SKColorF colorF;
-			SkiaApi.sk_color4f_from_color ((uint)color, &colorF);
-			return colorF;
+			// Ported from the native sk_color4f_from_color (SkColor4f::FromColor):
+			// each 8-bit channel is scaled by 1/255 with no gamma applied. This is a
+			// single multiply per channel, so the managed result is bit-identical to the
+			// native path on every runtime (including x87) and avoids a P/Invoke per call.
+			const float scale = 1f / 255f;
+			return new SKColorF (
+				color.Red * scale,
+				color.Green * scale,
+				color.Blue * scale,
+				color.Alpha * scale);
 		}
 
 		public static explicit operator SKColor (SKColorF color) =>

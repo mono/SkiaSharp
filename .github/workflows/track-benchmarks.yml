@@ -368,6 +368,11 @@ jobs:
     needs: [benchmark, benchmark-source]
     if: always() && github.repository_owner == 'mono'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Needed only for the PR-only benchmark comment below. Informational, never blocks;
+      # on fork PRs the token is read-only, so the post step is best-effort (continue-on-error).
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -444,3 +449,53 @@ jobs:
           name: agent
           path: aw-upload
           if-no-files-found: warn
+
+      # ----------------------------------------------------------------------- #
+      # PR-only: a single, informational benchmark comment. render_pr_md.py reads the
+      # same per-(OS, role) histories downloaded above, compares the ⭐ source-built `pr`
+      # leg against the nightly baseline, and emits a COMPACT marker comment (highlights +
+      # collapsed per-OS details). It never blocks the PR.
+      # ----------------------------------------------------------------------- #
+      - name: Render PR benchmark comment
+        if: github.event_name == 'pull_request'
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          python3 scripts/infra/perf/benchmarks/render_pr_md.py histories \
+            --output pr-benchmarks.md
+          echo "---- rendered PR benchmark comment ----"
+          cat pr-benchmarks.md
+
+      - name: Post or update PR benchmark comment
+        if: github.event_name == 'pull_request'
+        # Best-effort: on fork PRs the GITHUB_TOKEN is read-only and cannot comment. That must
+        # never fail the run — this is informational only.
+        continue-on-error: true
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('pr-benchmarks.md', 'utf8');
+
+            // Unique marker so we find-update-or-create a single comment per PR (same
+            // pattern as pr-artifacts-comment.yml).
+            const marker = '<!-- skiasharp-pr-benchmarks -->';
+            const prNumber = context.payload.pull_request.number;
+            const repo = { owner: context.repo.owner, repo: context.repo.repo };
+
+            // Find the existing marker comment (paginate in case of many comments).
+            let existing = null;
+            for await (const page of github.paginate.iterator(
+              github.rest.issues.listComments,
+              { ...repo, issue_number: prNumber, per_page: 100 }
+            )) {
+              existing = page.data.find(c => c.body.includes(marker));
+              if (existing) break;
+            }
+
+            if (existing) {
+              await github.rest.issues.updateComment({ ...repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ ...repo, issue_number: prNumber, body });
+            }

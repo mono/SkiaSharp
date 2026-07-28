@@ -135,6 +135,14 @@ The Skia entry in cgmanifest.json includes custom fields for version tracking:
 | `chrome_milestone` | Integer milestone number — used to filter NVD results |
 | `upstream_merge_commit` | SHA of the upstream `chrome/mNNN` branch tip that was merged into the fork |
 
+The [`auto-skia-submodule-sync`](../../.github/workflows/auto-skia-submodule-sync.yml)
+workflow runs daily to advance `externals/skia` to the `mono/skia` `skiasharp`
+branch and derive the Component Governance git registration's `commitHash` from
+the checked-out submodule. It opens a PR when either value changes, which also
+repairs manifest drift. The milestone fields above remain owned by the full Skia
+upstream update workflow. Scheduled runs target `main`; manual runs can set the
+`target_branch` input to sync another SkiaSharp branch instead.
+
 ### When to Update
 
 Update these fields whenever merging new upstream Skia code:
