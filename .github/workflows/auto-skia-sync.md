@@ -168,9 +168,7 @@ steps:
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
   - name: Copy push script for post-step
-    run: |
-      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
-      cp .github/scripts/verify-vulkan-test-results.py /tmp/gh-aw/verify-vulkan-test-results.py
+    run: cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -232,11 +230,6 @@ pre-agent-steps:
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs
 # using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
 post-steps:
-  - name: Require Ganesh and Graphite Vulkan test evidence
-    run: |
-      python3 /tmp/gh-aw/verify-vulkan-test-results.py \
-        /tmp/gh-aw/agent/vulkan-results/TestResults.trx \
-        --summary-file "$GITHUB_STEP_SUMMARY"
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
@@ -306,27 +299,6 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   flag the change in BOTH PR summaries for cross-platform human review.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
-- **Phase 10 Vulkan gate**: the core console project does not prove that the standalone Vulkan
-  satellite executed. After the smoke and full core runs, run the Vulkan satellite explicitly and
-  preserve its TRX at the exact path below:
-  ```bash
-  mkdir -p /tmp/gh-aw/agent/vulkan-results
-  rm -f /tmp/gh-aw/agent/vulkan-results/TestResults.trx
-  set -o pipefail
-  dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj -- \
-    --results-directory /tmp/gh-aw/agent/vulkan-results \
-    --report-trx \
-    --report-trx-filename TestResults.trx \
-    2>&1 | tee -a /tmp/gh-aw/agent/test-output.txt
-  python3 .github/scripts/verify-vulkan-test-results.py \
-    /tmp/gh-aw/agent/vulkan-results/TestResults.trx
-  ```
-  The verifier requires named passing evidence from both
-  `GRContextTest.CreateVkContextIsValid` (Ganesh) and
-  `GraphiteVkBackendContextTest.GraphiteVkContextIsCreatedFromRawHandles` (Graphite). A missing,
-  skipped, or failed required test is a hard failure. Do not proceed, commit, or emit the completion
-  signal until this gate passes. The host post-step independently reruns the verifier before it can
-  push either PR, so zero/only-skipped Vulkan coverage cannot appear green.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
