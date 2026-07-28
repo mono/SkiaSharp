@@ -68,6 +68,7 @@ Task("libSkiaSharp")
             $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
             $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
             $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
+            $"skia_enable_graphite=true " +
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +

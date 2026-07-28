@@ -24,6 +24,10 @@ namespace SkiaSharp
 
 	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
 
+	public delegate IntPtr SKGraphiteVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
+
+	public delegate void SKGraphiteReleaseDelegate ();
+
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal static unsafe partial class DelegateProxies
@@ -96,6 +100,38 @@ namespace SkiaSharp
 			var del = Get<GRVkGetProcedureAddressDelegate> ((IntPtr)ctx, out _);
 
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
+		}
+
+		private static partial IntPtr SKGraphiteVkGetProxyImplementation (void* userData, void* name, IntPtr instance, IntPtr device)
+		{
+			var del = Get<SKGraphiteVkGetProcedureAddressDelegate> ((IntPtr)userData, out _);
+
+			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
+		}
+
+		private static partial void SKGraphiteReleaseProxyImplementation (void* releaseContext)
+		{
+			var del = Get<SKGraphiteReleaseDelegate> ((IntPtr)releaseContext, out var gch);
+			try {
+				del.Invoke ();
+			} finally {
+				gch.Free ();
+			}
+		}
+
+		private static partial IntPtr SKGraphiteImageProviderProxyImplementation (void* userData, IntPtr recorder, IntPtr image, bool mipmapped)
+		{
+			// userData is a GCHandle pinned by SKGraphiteContext.CreateRecorder; the
+			// recorder keeps it alive for its own lifetime and frees it in DisposeNative.
+			// Returning IntPtr.Zero drops the draw, same as if no callback were installed.
+			var del = Get<SKGraphiteFindOrCreateImageProxy> ((IntPtr)userData, out _);
+			try {
+				return del.Invoke (recorder, image, mipmapped);
+			} catch {
+				// Never throw across the FFI boundary. Drop the draw on any
+				// managed exception inside FindOrCreate.
+				return IntPtr.Zero;
+			}
 		}
 
 		private static partial void SKGlyphPathProxyImplementation (IntPtr pathOrNull, SKMatrix* matrix, void* context)
