@@ -102,6 +102,15 @@ Classify every changed active entry:
 
 Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
+**Worked example — m152 VMA compatibility roll.** Upstream commit `272ed8a1f3`
+changed both `DEPS` and `src/gpu/vk/vulkanmemoryallocator/VulkanAMDMemoryAllocator.cpp`.
+The target source uses `VmaVulkanFunctions::vkGetPhysicalDeviceProperties2KHR` and
+`VmaAllocationCreateInfo::minAlignment`, which are absent from the fork's old
+`c788c521...` revision. Therefore m152 must roll VMA to `eb744ea7...`. This roll is
+independent of the Ganesh C API adaptation: `gr_context.cpp` must also create a default
+VMA-backed allocator when `fMemoryAllocator` is absent, analogous to
+`sk_graphite_vulkan.cpp`.
+
 ### 9. HarfBuzz — ALWAYS Separate
 
 HarfBuzz updates require hand-written C# delegate proxies and must be done via the `native-dependency-update` skill. During a milestone update, ALWAYS:
