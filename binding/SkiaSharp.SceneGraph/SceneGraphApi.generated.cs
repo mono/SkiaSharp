@@ -46,6 +46,7 @@ using sk_graphite_context_t = System.IntPtr;
 using sk_graphite_image_provider_t = System.IntPtr;
 using sk_graphite_recorder_t = System.IntPtr;
 using sk_graphite_recording_t = System.IntPtr;
+using sk_graphite_shader_error_handler_t = System.IntPtr;
 using sk_graphite_texture_info_t = System.IntPtr;
 using sk_image_async_read_result_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
