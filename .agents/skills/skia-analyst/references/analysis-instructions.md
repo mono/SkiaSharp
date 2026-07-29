@@ -123,9 +123,6 @@ Every finding needs BOTH a changelog classification AND a gap classification.
 - Version bump commits
 - CI/docs/skill-only changes
 
-Graphite and Dawn are **shipped backends** — include their changes on the same
-terms as Ganesh.
-
 ## Upstream Benefits (changeType: "upstream")
 
 When a Skia bump is in the diff, extract "invisible benefits" — things users get automatically:

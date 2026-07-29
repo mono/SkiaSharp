@@ -200,7 +200,6 @@ E. Ship (Phase 11)
    | **Renamed/Moved APIs** | 🟡 MEDIUM | Namespace changes, header moves |
    | **New APIs** | 🟢 LOW | Additive changes, new factories |
    | **Behavior changes** | 🟡 MEDIUM | Default changes, semantic shifts |
-   | **Graphite changes** | 🟡 MEDIUM | Graphite is shipped — trace the C API, bindings and backend tests |
 
 3. **Map each HIGH/MEDIUM change to C API files**:
    ```bash
@@ -571,7 +570,7 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    afterward. Standalone runs can use any writable path; the automated workflow overrides this to
    `/tmp/gh-aw/agent/test-output.txt` so it's uploaded as an artifact (see the workflow's Phase 10 note).
    ```bash
-   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/skia-test-output.txt
+   dotnet test tests/SkiaSharp.Tests.Console.slnx 2>&1 | tee /tmp/skia-test-output.txt
    ```
    Wait for it to finish (takes 5–7 min). Then read the summary:
    ```bash
@@ -579,7 +578,8 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    ```
    The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
 
-   This runs all test projects (core, Vulkan, Direct3D). GPU backends are required
+   The solution runs the core, Vulkan and Direct3D consoles; the single
+   `SkiaSharp.Tests.Console.csproj` runs only the core one. GPU backends are required
    per `GpuPolicy`: a backend skips only when the platform table says it does not
    exist here or `SKIASHARP_TEST_SKIP_GPU` opts this agent out — a backend that
    fails to come up is a test failure. CI handles WASM/Android/iOS separately.

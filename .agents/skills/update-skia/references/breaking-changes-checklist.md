@@ -18,25 +18,23 @@ curl -s https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md | \
 
 ## Step 2: Filter by Relevance
 
-SkiaSharp ships **both Ganesh and Graphite** (`skia_enable_graphite=true` on every
-platform; Graphite runs on Vulkan, Metal and Dawn). Filter changes:
+Relevance is about whether **our C API or a build we ship** touches the code — not
+which backend it belongs to. Filter changes:
 
 | Prefix/Keyword | Relevant? | Notes |
 |----------------|-----------|-------|
-| `skgpu::graphite::` | ✅ Yes | Graphite backend — shipped on all platforms |
-| `GrDirectContext`, `Gr*` | ✅ Yes | Ganesh backend — always check |
+| `Gr*`, `skgpu::`, `Dawn*`, `wgpu::` | ✅ Yes | GPU code — which platforms compile it is set by `native/*/build.cake` |
 | `SkImage`, `SkSurface`, `SkCanvas` | ✅ Yes | Core APIs — always check |
 | `SkTypeface`, `SkFont` | ✅ Yes | Text/font APIs — always check |
 | `SkPath`, `SkPaint` | ✅ Yes | Drawing APIs — always check |
-| `Dawn*`, `wgpu::` | ✅ Yes | Graphite's WASM backend (`skia_use_dawn`) |
 | `SkSL`, `SkRuntimeEffect` | ⚠️ Maybe | Only if C API exposes runtime effects |
 | `SkCodec`, `SkEncoder` | ⚠️ Maybe | Only if C API exposes codec/encoder APIs |
 
 **Two common misclassification traps:**
 
-1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): Types here are
-   shared across Ganesh and Graphite, so a change lands on both — e.g., `GrFlushInfo`
-   uses types from `GpuTypes.h`. Trace both consumers.
+1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): a change here reaches
+   every consumer tree — check `include/gpu/ganesh/` *and* `include/gpu/graphite/`, e.g.
+   `GrFlushInfo` uses types from `GpuTypes.h`.
 
 2. **Struct field changes in asserted types**: `sk_structs.cpp` has `static_assert(sizeof(...))`
    for every C API struct mapped via `reinterpret_cast`. A field addition to any of these

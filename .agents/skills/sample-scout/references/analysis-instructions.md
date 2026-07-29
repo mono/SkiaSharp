@@ -16,9 +16,9 @@ interest level guidelines, and API availability checking methodology.
 ### Quick Classification Rules
 
 - Files starting with `crbug_` or `skbug` → **low** (bug regression tests)
-- Files exercising backend plumbing (`GrFragmentProcessor`, `GrGeometryProcessor`,
-  Graphite/Dawn/Vulkan internals) → **low** — judge by whether it tests *internals*,
-  not by which backend it names: Ganesh, Graphite and Dawn all ship
+- Files exercising backend plumbing (`GrFragmentProcessor`, `GrGeometryProcessor`, GPU
+  backend internals) → **low** — the test is whether it exercises *internals*, not which
+  backend it names
 - Files testing a single specific visual feature with nice output → **high**
 - Files testing edge cases of an already-covered feature → **medium**
 - Files showing off compositing, effects chains, or creative techniques → **high**
@@ -61,8 +61,7 @@ A good SkiaSharp Gallery sample:
 
 Use the notes field to capture important context:
 - "GPU-only" — requires GPU backend, won't work on CPU raster
-- "Graphite-specific" — needs the Graphite backend; check platform coverage (Vulkan on
-  Windows/Linux/Android, Metal on Apple, Dawn on WASM)
+- "Graphite-specific" — needs the Graphite backend; check platform coverage
 - "Bug regression test" — tests a specific fixed bug, not a feature demo
 - "Stress test" — performance/edge case test, not visual
 - "Requires test fonts" — needs specific font files
