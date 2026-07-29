@@ -1,4 +1,4 @@
-﻿using SkiaSharp.Tests;
+using SkiaSharp.Tests;
 
 namespace SkiaSharp.Direct3D.Tests;
 
@@ -13,7 +13,7 @@ public class Direct3DTest<TContext> : Direct3DTest
 	// must work — no catch, no inline platform check.
 	protected Direct3DContext CreateDirect3DContext()
 	{
-		GpuPolicy.RequireOrSkip(GpuBackend.GaneshDirect3D);
+		GpuPolicy.RequireOrSkip(GpuBackends.GaneshDirect3D);
 
 		return new TContext();
 	}

@@ -33,7 +33,7 @@ namespace SkiaSharp.Tests
 
 		protected override SKColorType ColorType => SKColorType.Rgba8888;
 
-		protected override GpuBackend Backend => GpuBackend.GraphiteVulkan;
+		protected override string Backend => GpuBackends.GraphiteVulkan;
 
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
 			Task.FromResult(CreateHarness());

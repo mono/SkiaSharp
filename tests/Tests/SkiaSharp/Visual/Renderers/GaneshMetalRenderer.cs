@@ -26,8 +26,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "ganesh-metal";
 
-		public GpuBackend Backend => GpuBackend.GaneshMetal;
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -41,8 +39,7 @@ namespace SkiaSharp.Tests.Visual
 				device = MTLCreateSystemDefaultDevice();
 				if (device == IntPtr.Zero)
 					throw new InvalidOperationException(
-						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host. " +
-						GpuPolicy.OptOutHint(GpuBackend.GaneshMetal));
+						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
 				// Probe the device BEFORE allocating a command queue. newCommandQueue
 				// on a virtualized Metal driver is precisely what leaves dispatch-queue
@@ -51,8 +48,7 @@ namespace SkiaSharp.Tests.Visual
 				if (!MetalHasRenderCapableFamily(device))
 					throw new InvalidOperationException(
 						"MTLDevice does not support any MTLGPUFamily that Ganesh needs (Apple7+, Mac2). " +
-						"This is usually a virtualized/software Metal driver. " +
-						GpuPolicy.OptOutHint(GpuBackend.GaneshMetal));
+						"This is usually a virtualized/software Metal driver.");
 
 				queue = ObjcSendVoid(device, "newCommandQueue");
 				if (queue == IntPtr.Zero)

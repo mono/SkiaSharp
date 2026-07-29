@@ -1,4 +1,4 @@
-﻿using SkiaSharp.Tests;
+using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
@@ -9,16 +9,16 @@ namespace SkiaSharp.Vulkan.Tests
 		// lavapipe or SwiftShader, which is what CI provisions.
 		protected SilkVkContext CreateSilkVkContext()
 		{
-			GpuPolicy.RequireOrSkip(GpuBackend.GaneshVulkan);
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkan);
 
 			return new SilkVkContext();
 		}
 
 		// Legacy SharpVk context, kept only for the SharpVk-specific tests. It cannot
-		// create a surface off Windows, hence the Windows-only BuiltOn in the policy.
+		// create a surface off Windows, hence the Windows-only row in the policy.
 		protected VkContext CreateSharpVkContext()
 		{
-			GpuPolicy.RequireOrSkip(GpuBackend.GaneshVulkanSharpVk);
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkanSharpVk);
 
 			return new Win32VkContext();
 		}

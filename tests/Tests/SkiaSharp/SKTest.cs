@@ -237,7 +237,7 @@ namespace SkiaSharp.Tests
 		/// </summary>
 		protected GlContext CreateGlContext()
 		{
-			GpuPolicy.RequireOrSkip(GpuBackend.GaneshGl);
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshGl);
 
 			return TestConfig.Current.CreateGlContext();
 		}

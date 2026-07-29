@@ -24,8 +24,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "graphite-dawn";
 
-		public GpuBackend Backend => GpuBackend.GraphiteDawn;
-
 		// Non-yielding mode disallows SKGraphiteContext.Dispose() while any GPU
 		// work is in flight; keep the Context + Recorder alive for the WASM
 		// process lifetime, cycle only the per-render Surface + backend texture.
@@ -50,11 +48,10 @@ namespace SkiaSharp.Tests.Visual
 				// discover as a silent skip.
 				var adapter = await SKWebGpu.RequestAdapter()
 					?? throw new InvalidOperationException(
-						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser. " +
-						GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser.");
 				var device = await SKWebGpu.RequestDevice(adapter)
 					?? throw new InvalidOperationException(
-						"adapter.requestDevice returned null. " + GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+						"adapter.requestDevice returned null.");
 				s_offscreenDevice = device;
 
 				// SkiaSharp.NativeAssets.WebAssembly.targets exports

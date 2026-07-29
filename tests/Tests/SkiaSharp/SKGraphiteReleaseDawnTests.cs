@@ -34,7 +34,7 @@ namespace SkiaSharp.Tests
 
 		protected override bool CanSubmitSync => false;
 
-		protected override GpuBackend Backend => GpuBackend.GraphiteDawn;
+		protected override string Backend => GpuBackends.GraphiteDawn;
 
 		protected override async Task<GraphiteReleaseHarness> CreateHarnessAsync()
 		{
@@ -44,11 +44,10 @@ namespace SkiaSharp.Tests
 				// navigator.gpu but vends no adapter is a coverage gap to fix.
 				var adapter = await SKWebGpu.RequestAdapter()
 					?? throw new InvalidOperationException(
-						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser. " +
-						GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser.");
 				var device = await SKWebGpu.RequestDevice(adapter)
 					?? throw new InvalidOperationException(
-						"adapter.requestDevice returned null. " + GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+						"adapter.requestDevice returned null.");
 				s_device = device;
 
 				// Create a real WGPUInstance first: emdawnwebgpu tags each imported

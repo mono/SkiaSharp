@@ -17,8 +17,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "graphite-metal";
 
-		public GpuBackend Backend => GpuBackend.GraphiteMetal;
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -32,8 +30,7 @@ namespace SkiaSharp.Tests.Visual
 				device = MTLCreateSystemDefaultDevice();
 				if (device == IntPtr.Zero)
 					throw new InvalidOperationException(
-						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host. " +
-						GpuPolicy.OptOutHint(GpuBackend.GraphiteMetal));
+						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
 				// Probe the device BEFORE allocating a command queue. Skia's Graphite
 				// Metal init walks MTLGPUFamilyApple9..7 and Mac2 and SK_ABORTs the
@@ -43,8 +40,7 @@ namespace SkiaSharp.Tests.Visual
 				if (!MetalCanDriveGraphite(device))
 					throw new InvalidOperationException(
 						"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
-						"(Apple7+, Mac2). This is usually a virtualized/software Metal driver. " +
-						GpuPolicy.OptOutHint(GpuBackend.GraphiteMetal));
+						"(Apple7+, Mac2). This is usually a virtualized/software Metal driver.");
 
 				queue = ObjcSendVoid(device, "newCommandQueue");
 				if (queue == IntPtr.Zero)

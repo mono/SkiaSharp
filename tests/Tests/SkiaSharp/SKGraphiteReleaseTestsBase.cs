@@ -35,7 +35,7 @@ namespace SkiaSharp.Tests
 		/// is decided centrally by <see cref="GpuPolicy"/>, so a derived class
 		/// never gates itself on the platform.
 		/// </summary>
-		protected abstract GpuBackend Backend { get; }
+		protected abstract string Backend { get; }
 
 		/// <summary>
 		/// Brings up the backend and returns a live harness. Called only when the

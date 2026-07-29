@@ -21,8 +21,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "ganesh-gl";
 
-		public GpuBackend Backend => GpuBackend.GaneshGl;
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();

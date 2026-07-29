@@ -68,8 +68,7 @@ public interface ISkiaScene
 
 public interface IRenderer : IDisposable
 {
-    string Name { get; }              // golden subfolder, e.g. "ganesh-metal"
-    GpuBackend Backend { get; }       // which backend; GpuPolicy decides if it runs here
+    string Name { get; }              // golden subfolder + GpuPolicy id, e.g. "ganesh-metal"
     Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken ct);
 }
 ```
@@ -82,22 +81,20 @@ renderer just to enumerate the matrix, so a constructor must not bring up a GPU
 context. Do heavy work lazily inside `RenderAsync`.
 
 A renderer never gates itself on the platform, and never catches a failed
-bring-up. It declares `Backend`; `GpuPolicy` owns the "which OS has which API"
-table.
+bring-up. Its `Name` *is* the `GpuPolicy` backend id, and the policy owns the
+"which OS has which API" table.
 
 ---
 
 ## Failure discipline
 
 This is the property the harness exists to guarantee. A cell may **skip** *only*
-when [`GpuPolicy`](gpu-test-policy.md) reports the renderer's backend as anything
-other than `Required` on this host:
+when [`GpuPolicy`](gpu-test-policy.md) says the renderer's backend is not
+required on this host — either because the platform is not in its `RequiredOn`
+set (Metal off Apple, Vulkan on macOS) or because it was explicitly opted out
+for this agent with `SKIASHARP_TEST_SKIP_GPU`.
 
-- `Unsupported` — the API does not exist on this platform (Metal off Apple),
-- `NotBuilt` — we don't ship it on this platform yet (Vulkan on macOS),
-- `Disabled` — explicitly opted out for this agent via `SKIASHARP_TEST_SKIP_GPU`.
-
-All three are *declared*. None of them is inferred from an exception.
+Both are *declared*. Neither is inferred from an exception.
 
 **Every other outcome is a hard failure:**
 
@@ -111,8 +108,6 @@ The first point is the one that changed, and it is the point: a renderer must no
 catch a failed bring-up and turn it into a skip. If a CI agent legitimately can't
 run a backend, that belongs in the policy table or in `SKIASHARP_TEST_SKIP_GPU`
 where it is reviewable — not in a catch block where it silently erodes coverage.
-Failure messages from a required backend carry `GpuPolicy.OptOutHint(...)`, so a
-red cell tells you the exact directive that would legitimise the skip.
 
 An unseeded cell is likewise a **failure, not a skip**. The backend was available
 and produced pixels, so a green result would be a coverage hole. There is no
@@ -421,17 +416,11 @@ The matrix ships wired into CI as part of `scripts/azure-templates-stages-test.y
   software ICDs present the cell actually renders and emits its
   `##SKIA-GOLDEN-IMAGE##` marker, which the published TRX carries back for
   harvesting.
-- **Declared GPU opt-outs.** The macOS, iOS and Mac Catalyst legs run
-  `scripts/infra/tests/declare-macos-gpu-optout.sh` before the build. On an x64
-  agent it sets `SKIASHARP_TEST_SKIP_GPU=ganesh-metal,graphite-metal`, because that
-  pool's virtualized Metal driver hangs the test host on shutdown; on Apple Silicon
-  it does nothing and Metal stays required. This is the only pre-set opt-out in the
-  pipeline, and it exists to avoid a hang, not to hide a failure. See
-  [gpu-test-policy.md](gpu-test-policy.md).
-- **Per-leg policy report.** `GpuPolicyTests` writes one
-  `##SKIA-GPU-POLICY## backend=… state=… reason=…` line per backend into every
-  leg's TRX, so each run records which backends it required and why the rest were
-  skipped.
+- **Declared GPU opt-outs.** Legs that genuinely cannot run a backend declare it
+  with the bootstrapper's `env:` parameter, e.g. `SKIASHARP_TEST_SKIP_GPU: ganesh-gl`
+  on the container legs, so what a leg can and cannot do is visible in the
+  pipeline definition rather than inferred at runtime. Skips land in the TRX with
+  their reason. See [gpu-test-policy.md](gpu-test-policy.md) for the current set.
 - **Failure / capture artifacts.** Every cell's rendered PNG is in the published
   TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail). A failing cell
   additionally emits its golden and colored diff as `##SKIA-VISUAL-IMAGE##`
@@ -530,9 +519,9 @@ captured PNGs from the TRX and commit them (see *Seeding goldens*).
 automatically. Use this only for backends that need no extra NuGet package and are
 safe in the MAUI/WASM builds (e.g. an Apple-gated Metal renderer).
 
-**Declare its backend:** every renderer returns a `GpuBackend` from `Backend`, and
-that backend needs a row in the [`GpuPolicy`](gpu-test-policy.md) matrix giving the
-platforms it can exist on and the platforms we build it for. The renderer itself
+**Declare its backend:** a renderer's `Name` is its
+[`GpuPolicy`](gpu-test-policy.md) backend id, and that id needs a row in the
+policy table giving the platforms it must work on. The renderer itself
 must not check the platform and must not catch a failed bring-up — both belong in
 the policy.
 

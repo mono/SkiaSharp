@@ -1,39 +1,31 @@
+using System.Linq;
+using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	/// <summary>
-	/// Guards the GPU policy and records how it resolved here. Deliberately not tagged
-	/// <c>Category=GPU</c>: a leg that filters the GPU suite out should still publish
-	/// its policy report, because the report is how a correctly-skipped backend is told
-	/// apart from one that silently never ran.
-	/// </summary>
 	public class GpuPolicyTests : BaseTest
 	{
-		public const string PolicyMarker = "##SKIA-GPU-POLICY##";
-
-		public GpuPolicyTests(ITestOutputHelper output)
-			: base(output)
-		{
-		}
-
+		/// <summary>
+		/// An unrecognised host would classify every backend as not-required and skip
+		/// the whole GPU suite — the silent hole this policy exists to close.
+		/// </summary>
 		[Fact]
 		public void HostPlatformIsRecognised() =>
 			Assert.True(
-				GpuPolicy.Platform != TestPlatforms.None,
-				"The host platform was not recognised, so every GPU backend would skip. " +
-				"Add it to TestPlatforms and GpuPolicy.DetectPlatform.");
+				TestConfig.Current.Platform != TestPlatforms.None,
+				"The host platform was not recognised. Add it to TestPlatforms and TestConfig.DetectPlatform.");
 
+		/// <summary>A typo must not quietly leave a backend required.</summary>
 		[Fact]
 		public void OptOutListNamesOnlyKnownBackends() => GpuPolicy.Validate();
 
+		/// <summary>
+		/// Renderer names are the policy ids, so a renderer the policy does not know
+		/// would never be gated. Catches drift between the two.
+		/// </summary>
 		[Fact]
-		public void ReportsResolvedPolicy()
-		{
-			WriteOutput($"{PolicyMarker} platform={GpuPolicy.PlatformName}");
-
-			foreach (var line in GpuPolicy.Describe())
-				WriteOutput($"{PolicyMarker} {line}");
-		}
+		public void EveryRendererNameIsAKnownBackend() =>
+			Assert.All(RendererCatalog.AllNames, name => Assert.Contains(name, GpuPolicy.All));
 	}
 }

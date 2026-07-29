@@ -22,8 +22,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "ganesh-vulkan";
 
-		public GpuBackend Backend => GpuBackend.GaneshVulkan;
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();

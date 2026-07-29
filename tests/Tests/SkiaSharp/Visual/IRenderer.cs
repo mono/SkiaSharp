@@ -20,17 +20,10 @@ namespace SkiaSharp.Tests.Visual
 	public interface IRenderer : IDisposable
 	{
 		/// <summary>
-		/// Stable identifier, used as the per-renderer golden directory name
-		/// (e.g. <c>"raster"</c>, <c>"ganesh-metal"</c>). Matches
-		/// <see cref="GpuPolicy.Id"/> for <see cref="Backend"/>.
+		/// Stable identifier — the golden directory name and the
+		/// <see cref="GpuBackends"/> id the policy gates on (e.g. <c>"ganesh-metal"</c>).
 		/// </summary>
 		string Name { get; }
-
-		/// <summary>
-		/// The backend this renderer drives. Whether it runs here is decided by
-		/// <see cref="GpuPolicy"/> — a renderer never gates itself on the platform.
-		/// </summary>
-		GpuBackend Backend { get; }
 
 		/// <summary>
 		/// Renders <paramref name="scene"/> at <paramref name="info"/>'s size and

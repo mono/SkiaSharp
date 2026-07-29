@@ -15,33 +15,27 @@ so CI stayed green while coverage quietly evaporated. The committed goldens are
 the receipt: `ganesh-gl` had a golden for macOS only, and `graphite-dawn` had
 none at all, because those cells had been silently skipping for a long time.
 
-## The four states
+## Required, or skipped for a stated reason
 
-`GpuPolicy.Resolve(backend)` returns exactly one of these. Only the first can
-produce a failure, and only the second is configured.
+A backend is **required** on this host unless one of two things is true:
 
-| State | Example | Can fail? | Configured? |
-|---|---|---|---|
-| `Required` | Vulkan on Linux, Metal on macOS | **yes** | no |
-| `Disabled` | `ganesh-gl` on a headless CI agent | no | **yes** |
-| `Unsupported` | Metal on Windows, Direct3D on Linux, Vulkan in the browser | no | no |
-| `NotBuilt` | Vulkan on macOS, Dawn on desktop, OpenGL on Android | no | no |
+| Not required because | Example | Configured? |
+|---|---|---|
+| the platform isn't in its `RequiredOn` set | Metal on Windows, Vulkan on macOS, Dawn on desktop | no |
+| it was **disabled** for this agent | `ganesh-gl` on a headless CI agent | **yes** |
 
-The distinction that matters:
+Everything else must work. No device, no driver, no ICD, a null context or a
+broken binding is a **failure**.
 
-- **`Unsupported`** is a permanent fact about the platform. The API does not
-  exist there and never will.
-- **`NotBuilt`** is a fact about *our* build today. The API exists, we just
-  don't ship it on that platform yet — Vulkan on macOS would need MoltenVK,
-  Dawn on desktop would need `skia_use_dawn` outside the WASM build. These may
-  flip later; the reason string names what would have to change.
-- **`Disabled`** is a fact about *one machine*. It is the only state driven by
-  configuration.
-
-> **The rule:** the matrix describes **platforms**; the environment variable
+> **The rule:** the table describes **platforms**; the environment variable
 > describes **agents**. Nothing about a platform's inherent capabilities is ever
 > expressed as configuration — you never need to set anything to make Metal skip
 > on Windows.
+
+The table doesn't distinguish "the API doesn't exist here" (Metal off Apple)
+from "we don't build it here yet" (Vulkan on macOS, which would need MoltenVK).
+Both simply aren't in `RequiredOn`, and both skip without configuration; the
+column below says which is which.
 
 ## Opting out (`SKIASHARP_TEST_SKIP_GPU`)
 
@@ -80,31 +74,27 @@ forward it as the property, so a pipeline leg can set the variable once and have
 it apply on every host. Resolution order is `AppContext` → environment variable
 → nothing.
 
-## The matrix
+## The table
 
 Ids match the visual-matrix renderer names one-for-one, so a golden folder, an
 opt-out directive and a failure message all use the same word.
 
-Each backend declares two platform sets. Outside `ExistsOn` it is `Unsupported`;
-inside `ExistsOn` but outside `BuiltOn` it is `NotBuilt`; inside `BuiltOn` it is
-`Required`.
-
-| Id | ExistsOn | BuiltOn (⇒ required) |
+| Id | RequiredOn | Absent elsewhere because |
 |---|---|---|
-| `raster` | all | all (CPU — always required) |
-| `ganesh-gl` | all | Windows, macOS, Linux, Nano Server |
-| `ganesh-vulkan` | all but Browser | Windows, Linux, Android |
-| `graphite-vulkan` | all but Browser | Windows, Linux, Android |
-| `ganesh-vulkan-sharpvk` | all but Browser | Windows |
-| `ganesh-metal` | Apple | Apple |
-| `graphite-metal` | Apple | Apple |
-| `ganesh-direct3d` | Windows, Nano Server | Windows |
-| `graphite-dawn` | all | Browser |
+| `raster` | all | — (CPU, always required) |
+| `ganesh-gl` | Windows, macOS, Linux, Nano Server | no `GlContext` for the device/browser hosts |
+| `ganesh-vulkan` | Windows, Linux, Android | not built for Apple, Nano Server or the browser |
+| `graphite-vulkan` | Windows, Linux, Android | not built for Apple, Nano Server or the browser |
+| `ganesh-vulkan-sharpvk` | Windows | SharpVk cannot create a context off Windows |
+| `ganesh-metal` | Apple | Metal is an Apple-only API |
+| `graphite-metal` | Apple | Metal is an Apple-only API |
+| `ganesh-direct3d` | Windows | Direct3D is Windows-only; not built for Nano Server |
+| `graphite-dawn` | Browser | Dawn is only built for WebAssembly |
 
-`BuiltOn` mirrors the `gn` args in `native/*/build.cake` — `skia_use_metal`,
+`RequiredOn` mirrors the `gn` args in `native/*/build.cake` — `skia_use_metal`,
 `skia_use_vulkan`, `skia_use_dawn`, `skia_use_direct3d`. **Keep the two in sync.**
-Enabling a backend on a new platform is a one-token change to its `BuiltOn` set,
-after which that platform's cells become required and must pass.
+Enabling a backend on a new platform is a one-token change to its `RequiredOn`
+set, after which that platform's cells become required and must pass.
 
 Windows Nano Server is tracked as its own platform because it runs a *different
 native build*: `native/nanoserver/build.cake` passes `supportVulkan=false` and
@@ -119,48 +109,29 @@ test. Call it, then bring the backend up **without a catch**:
 ```csharp
 protected GlContext CreateGlContext()
 {
-    GpuPolicy.RequireOrSkip(GpuBackend.GaneshGl);
+    GpuPolicy.RequireOrSkip(GpuBackends.GaneshGl);
 
     return TestConfig.Current.CreateGlContext();
 }
 ```
 
-When a required backend genuinely can't come up, throw with
-`GpuPolicy.OptOutHint(backend)` appended so the reader gets the exact directive
-that would legitimise a skip:
+When a required backend genuinely can't come up, just throw — the exception says
+what broke, and xUnit reports it as a failure:
 
 ```csharp
 if (device == IntPtr.Zero)
     throw new InvalidOperationException(
-        "MTLCreateSystemDefaultDevice returned null; no Metal device on this host. " +
-        GpuPolicy.OptOutHint(GpuBackend.GaneshMetal));
+        "MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 ```
 
-Visual-matrix renderers don't call the policy themselves — they declare
-`IRenderer.Backend` and `VisualMatrixTestsBase.RunCellAsync` gates the cell. A
-renderer must never gate itself on the platform, or the "which OS has which API"
+Visual-matrix renderers don't call the policy themselves — their `Name` *is* the
+backend id, and `VisualMatrixTestsBase.RunCellAsync` gates the cell. A renderer
+must never gate itself on the platform, or the "which OS has which API"
 knowledge stops living in one table.
 
-## The per-run report
-
-`GpuPolicyTests.ReportsResolvedPolicy` writes one line per backend into the test
-log:
-
-```
-##SKIA-GPU-POLICY## platform=linux
-##SKIA-GPU-POLICY## backend=ganesh-gl state=required
-##SKIA-GPU-POLICY## backend=ganesh-metal state=unsupported reason=Metal is an Apple-only API …
-##SKIA-GPU-POLICY## backend=graphite-dawn state=not-built reason=Dawn/WebGPU is only built for …
-```
-
-The TRX is the one output channel that exists on every host — desktop, device
-and browser — so this is how a CI leg reports which backends it actually
-required. It is what makes a skip auditable: every skipped backend has to name
-the reason it was skipped, and a backend that silently never ran shows up as
-`state=required` with no corresponding test results.
-
-The test is deliberately **not** tagged `Category=GPU`, so a leg that filters the
-GPU suite out still publishes its report.
+Skips are visible in the normal test output: xUnit records every skipped test
+with its reason (`'ganesh-metal' is not required on windows.`) in the TRX that
+each CI leg publishes.
 
 ## Declared opt-outs in CI
 
@@ -196,11 +167,11 @@ release into a trusted feed would unblock it.
 
 ## Adding a backend
 
-1. Add a value to `GpuBackend` and a row to the `GpuPolicy` matrix with its
-   `ExistsOn` / `BuiltOn` sets and both reason strings.
-2. Point the tests at it — an `IRenderer.Backend` for a visual cell, or
-   `GpuPolicy.RequireOrSkip` at the top of a bring-up helper.
-3. Run it. On the platforms in `BuiltOn` it is now required, so an unseeded
+1. Add a const to `GpuBackends` and a row to the `requiredOn` table naming the
+   platforms it must work on.
+2. Point the tests at it — an `IRenderer` whose `Name` is that id for a visual
+   cell, or `GpuPolicy.RequireOrSkip` at the top of a bring-up helper.
+3. Run it. On the platforms in `RequiredOn` it is now required, so an unseeded
    golden or a failed bring-up will be red until you seed or fix it. That is the
    intended signal; see [golden-image-tests.md](golden-image-tests.md).
 
@@ -208,5 +179,5 @@ release into a trusted feed would unblock it.
 
 - [golden-image-tests.md](golden-image-tests.md) — the visual-regression matrix
   that consumes this policy.
-- `tests/Tests/SkiaSharp/Gpu/` — `GpuPolicy`, `GpuBackend`, `TestPlatforms` and
-  the policy guard tests.
+- `tests/Tests/SkiaSharp/Gpu/GpuPolicy.cs` — the table, the opt-out parsing and
+  the guard tests. `TestPlatforms` lives beside `TestConfig`.

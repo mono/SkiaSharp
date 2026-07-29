@@ -18,7 +18,7 @@ namespace SkiaSharp.Tests
 	{
 		protected override SKColorType ColorType => SKColorType.Bgra8888;
 
-		protected override GpuBackend Backend => GpuBackend.GraphiteMetal;
+		protected override string Backend => GpuBackends.GraphiteMetal;
 
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
 			Task.FromResult(CreateHarness());
@@ -30,15 +30,13 @@ namespace SkiaSharp.Tests
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
 				throw new InvalidOperationException(
-					"MTLCreateSystemDefaultDevice returned null; no Metal device on this host. " +
-					GpuPolicy.OptOutHint(GpuBackend.GraphiteMetal));
+					"MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 			if (!MetalCanDriveGraphite(device))
 			{
 				ObjcRelease(device);
 				throw new InvalidOperationException(
 					"MTLDevice does not support a Skia-Graphite MTLGPUFamily (Apple7+, Mac2). " +
-					"This is usually a virtualized/software Metal driver. " +
-					GpuPolicy.OptOutHint(GpuBackend.GraphiteMetal));
+					"This is usually a virtualized/software Metal driver.");
 			}
 
 			var queue = ObjcSend(device, "newCommandQueue");

@@ -5,237 +5,127 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
-	public enum GpuBackend
+	/// <summary>
+	/// Stable backend ids. Also the visual-matrix renderer names and the golden
+	/// directory names, so one word identifies a backend everywhere.
+	/// </summary>
+	public static class GpuBackends
 	{
-		Cpu,
-		GaneshGl,
-		GaneshVulkan,
-		GaneshVulkanSharpVk,
-		GaneshMetal,
-		GaneshDirect3D,
-		GraphiteVulkan,
-		GraphiteMetal,
-		GraphiteDawn,
-	}
-
-	[Flags]
-	public enum TestPlatforms
-	{
-		None = 0,
-
-		Windows = 1 << 0,
-		MacOS = 1 << 1,
-		Linux = 1 << 2,
-		Android = 1 << 3,
-		IOS = 1 << 4,
-		MacCatalyst = 1 << 5,
-		TvOS = 1 << 6,
-		Browser = 1 << 7,
-
-		// Kept apart from Windows because native/nanoserver/build.cake builds without
-		// Vulkan or Direct3D: the OS is Windows but the library is not.
-		NanoServer = 1 << 8,
-
-		Apple = MacOS | IOS | MacCatalyst | TvOS,
-		Desktop = Windows | MacOS | Linux,
-		AnyWindows = Windows | NanoServer,
-		All = Windows | MacOS | Linux | Android | IOS | MacCatalyst | TvOS | Browser | NanoServer,
+		public const string Raster = "raster";
+		public const string GaneshGl = "ganesh-gl";
+		public const string GaneshVulkan = "ganesh-vulkan";
+		public const string GaneshVulkanSharpVk = "ganesh-vulkan-sharpvk";
+		public const string GaneshMetal = "ganesh-metal";
+		public const string GaneshDirect3D = "ganesh-direct3d";
+		public const string GraphiteVulkan = "graphite-vulkan";
+		public const string GraphiteMetal = "graphite-metal";
+		public const string GraphiteDawn = "graphite-dawn";
 	}
 
 	/// <summary>
-	/// Decides whether a GPU backend must work on this host, and is the only place in
-	/// the suite allowed to skip a GPU test.
+	/// Decides whether a GPU backend must work on this host, and is the only place
+	/// in the suite allowed to skip a GPU test. Anything not skipped must work: no
+	/// device, no driver, no ICD, a null context or a broken binding is a failure.
 	///
 	/// <para>
-	/// A backend is <c>required</c> unless it is <c>unsupported</c> (the API does not
-	/// exist here), <c>not-built</c> (we do not ship it here yet) or <c>disabled</c>
-	/// (opted out for this agent). Everything else — no device, no driver, no ICD, a
-	/// null context, a broken binding — is a test failure.
-	/// </para>
-	///
-	/// <para>
-	/// The table below describes <b>platforms</b>; <see cref="EnvironmentVariable"/>
-	/// describes <b>agents</b>. See documentation/dev/gpu-test-policy.md.
+	/// <see cref="requiredOn"/> describes <b>platforms</b>;
+	/// <see cref="EnvironmentVariable"/> describes <b>agents</b>. See
+	/// documentation/dev/gpu-test-policy.md.
 	/// </para>
 	/// </summary>
 	public static class GpuPolicy
 	{
-		/// <summary>Backend ids to skip, or <c>all</c>. Comma/semicolon/space separated.</summary>
+		/// <summary>Backend ids to skip on this agent, or <c>all</c>.</summary>
 		public const string EnvironmentVariable = "SKIASHARP_TEST_SKIP_GPU";
 
 		/// <summary>
-		/// The same value for hosts that cannot read the agent environment (Android,
-		/// iOS, Mac Catalyst, WASM), set from the SkiaSharpTestSkipGpu MSBuild property.
+		/// The same list for hosts that cannot read the agent environment (Android,
+		/// iOS, Mac Catalyst, WASM), from the SkiaSharpTestSkipGpu MSBuild property.
 		/// </summary>
 		public const string AppContextKey = "SkiaSharp.Tests.SkipGpu";
 
-		// ExistsOn: where the API can ever exist. BuiltOn: where we actually ship it,
-		// mirroring the gn args in native/*/build.cake (skia_use_metal, skia_use_vulkan,
-		// skia_use_dawn, skia_use_direct3d) — keep the two in sync.
-		private static readonly (GpuBackend Backend, string Id, TestPlatforms ExistsOn, TestPlatforms BuiltOn)[] backends =
+		// Where each backend must work. Mirrors the gn args in native/*/build.cake
+		// (skia_use_metal, skia_use_vulkan, skia_use_dawn, skia_use_direct3d).
+		private static readonly Dictionary<string, TestPlatforms> requiredOn = new()
 		{
-			(GpuBackend.Cpu, "raster", TestPlatforms.All, TestPlatforms.All),
-			(GpuBackend.GaneshGl, "ganesh-gl", TestPlatforms.All, TestPlatforms.Desktop | TestPlatforms.NanoServer),
-			(GpuBackend.GaneshVulkan, "ganesh-vulkan", TestPlatforms.All & ~TestPlatforms.Browser, TestPlatforms.Windows | TestPlatforms.Linux | TestPlatforms.Android),
-			(GpuBackend.GraphiteVulkan, "graphite-vulkan", TestPlatforms.All & ~TestPlatforms.Browser, TestPlatforms.Windows | TestPlatforms.Linux | TestPlatforms.Android),
-			(GpuBackend.GaneshVulkanSharpVk, "ganesh-vulkan-sharpvk", TestPlatforms.All & ~TestPlatforms.Browser, TestPlatforms.Windows),
-			(GpuBackend.GaneshMetal, "ganesh-metal", TestPlatforms.Apple, TestPlatforms.Apple),
-			(GpuBackend.GraphiteMetal, "graphite-metal", TestPlatforms.Apple, TestPlatforms.Apple),
-			(GpuBackend.GaneshDirect3D, "ganesh-direct3d", TestPlatforms.AnyWindows, TestPlatforms.Windows),
-			(GpuBackend.GraphiteDawn, "graphite-dawn", TestPlatforms.All, TestPlatforms.Browser),
+			[GpuBackends.Raster] = TestPlatforms.All,
+			[GpuBackends.GaneshGl] = TestPlatforms.Desktop | TestPlatforms.NanoServer,
+			[GpuBackends.GaneshVulkan] = TestPlatforms.Windows | TestPlatforms.Linux | TestPlatforms.Android,
+			[GpuBackends.GraphiteVulkan] = TestPlatforms.Windows | TestPlatforms.Linux | TestPlatforms.Android,
+			[GpuBackends.GaneshVulkanSharpVk] = TestPlatforms.Windows,
+			[GpuBackends.GaneshMetal] = TestPlatforms.Apple,
+			[GpuBackends.GraphiteMetal] = TestPlatforms.Apple,
+			[GpuBackends.GaneshDirect3D] = TestPlatforms.Windows,
+			[GpuBackends.GraphiteDawn] = TestPlatforms.Browser,
 		};
 
-		// Lazy caches the parse exception, so a malformed opt-out list fails every GPU
-		// test identically instead of only the first one to look.
-		private static readonly Lazy<HashSet<GpuBackend>> disabled = new(ParseOptOut);
-		private static readonly Lazy<TestPlatforms> platform = new(DetectPlatform);
+		// Backends this agent was told it cannot run. Declared after requiredOn,
+		// which ParseOptOut reads: static initializers run in declaration order.
+		private static readonly HashSet<string> disabled = ParseOptOut();
 
-		public static TestPlatforms Platform => platform.Value;
+		/// <summary>Every known backend id.</summary>
+		public static IEnumerable<string> All => requiredOn.Keys;
 
-		public static string PlatformName =>
-			Platform == TestPlatforms.None ? "unknown" : Platform.ToString().ToLowerInvariant();
-
-		public static string Id(GpuBackend backend) => Find(backend).Id;
-
-		/// <summary>Forces the opt-out list to parse, throwing if it names an unknown id.</summary>
-		public static void Validate() => _ = disabled.Value;
-
-		/// <summary>
-		/// The state of <paramref name="backend"/> on this host, and why it need not
-		/// work. <c>Reason</c> is <see langword="null"/> exactly when it must.
-		/// </summary>
-		public static (string State, string Reason) Resolve(GpuBackend backend)
-		{
-			var b = Find(backend);
-
-			if (backend == GpuBackend.Cpu)
-				return ("required", null);
-			if (disabled.Value.Contains(backend))
-				return ("disabled", $"'{b.Id}' is disabled on this host via {OptOutSource()}.");
-			if ((b.ExistsOn & Platform) == 0)
-				return ("unsupported", $"'{b.Id}' does not exist on {PlatformName}.");
-			if ((b.BuiltOn & Platform) == 0)
-				return ("not-built", $"'{b.Id}' is not built for {PlatformName}.");
-
-			return ("required", null);
-		}
+		/// <summary>Throws if the opt-out list names an unknown backend.</summary>
+		public static void Validate() => _ = disabled.Count;
 
 		/// <summary>
 		/// Skips when <paramref name="backend"/> need not work here, and otherwise
 		/// returns so the caller can bring it up <b>without</b> a catch.
 		/// </summary>
-		public static void RequireOrSkip(GpuBackend backend)
+		public static void RequireOrSkip(string backend)
 		{
-			var (state, reason) = Resolve(backend);
-			if (reason is not null)
-				Assert.Skip($"[{state}] {reason}");
+			if (SkipReason(backend) is { } reason)
+				Assert.Skip(reason);
 		}
 
-		/// <summary>
-		/// Append to a failure from a required backend so a red test names the exact
-		/// opt-out that would legitimise a skip.
-		/// </summary>
-		public static string OptOutHint(GpuBackend backend) =>
-			$"If this host genuinely cannot run '{Id(backend)}', declare it: set " +
-			$"{EnvironmentVariable}={Id(backend)} (or build with -p:SkiaSharpTestSkipGpu={Id(backend)}).";
-
-		/// <summary>One line per backend for the ##SKIA-GPU-POLICY## marker.</summary>
-		public static IEnumerable<string> Describe() =>
-			backends.Select(b =>
-			{
-				var (state, reason) = Resolve(b.Backend);
-				return $"backend={b.Id} state={state}" + (reason is null ? "" : $" reason={reason}");
-			});
-
-		private static (GpuBackend Backend, string Id, TestPlatforms ExistsOn, TestPlatforms BuiltOn) Find(GpuBackend backend)
+		private static string SkipReason(string backend)
 		{
-			foreach (var b in backends)
-			{
-				if (b.Backend == backend)
-					return b;
-			}
-			throw new ArgumentOutOfRangeException(nameof(backend), backend, "Unknown GPU backend.");
+			if (!requiredOn.TryGetValue(backend, out var platforms))
+				throw new ArgumentException($"Unknown GPU backend '{backend}'.", nameof(backend));
+
+			if (disabled.Contains(backend))
+				return $"'{backend}' is disabled for this host via {EnvironmentVariable}.";
+
+			if ((platforms & TestConfig.Current.Platform) == 0)
+				return $"'{backend}' is not required on {TestConfig.Current.PlatformName}.";
+
+			return null;
 		}
 
-		private static string OptOutSource() =>
-			AppContextValue() is not null ? AppContextKey : EnvironmentVariable;
-
-		private static string AppContextValue() =>
-			AppContext.GetData(AppContextKey) is string v && !string.IsNullOrWhiteSpace(v) ? v : null;
-
-		private static HashSet<GpuBackend> ParseOptOut()
+		private static HashSet<string> ParseOptOut()
 		{
-			var result = new HashSet<GpuBackend>();
+			var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			var raw = AppContextValue() ?? Environment.GetEnvironmentVariable(EnvironmentVariable);
+			var raw = AppContext.GetData(AppContextKey) as string;
+			if (string.IsNullOrWhiteSpace(raw))
+				raw = Environment.GetEnvironmentVariable(EnvironmentVariable);
 			if (string.IsNullOrWhiteSpace(raw))
 				return result;
 
+			// raster is CPU: "all" never disables it, and naming it is an error.
+			var gpu = requiredOn.Keys.Where(k => k != GpuBackends.Raster).ToList();
 			var unknown = new List<string>();
 
 			foreach (var token in raw.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
 			{
 				if (string.Equals(token, "all", StringComparison.OrdinalIgnoreCase))
-				{
-					foreach (var b in backends.Where(b => b.Backend != GpuBackend.Cpu))
-						result.Add(b.Backend);
-				}
-				else if (backends.FirstOrDefault(b => b.Backend != GpuBackend.Cpu && string.Equals(b.Id, token, StringComparison.OrdinalIgnoreCase)) is { Id: not null } match)
-				{
-					result.Add(match.Backend);
-				}
+					result.UnionWith(gpu);
+				else if (gpu.FirstOrDefault(k => string.Equals(k, token, StringComparison.OrdinalIgnoreCase)) is { } id)
+					result.Add(id);
 				else
-				{
 					unknown.Add(token);
-				}
 			}
 
-			// A typo must never quietly leave a backend required — that is the same
-			// silent hole this policy exists to close, moved into the pipeline.
+			// A typo must never quietly leave a backend required.
 			if (unknown.Count > 0)
 			{
-				var known = string.Join(", ", backends.Where(b => b.Backend != GpuBackend.Cpu).Select(b => b.Id));
 				throw new InvalidOperationException(
 					$"{EnvironmentVariable} names unknown backends: '{string.Join("', '", unknown)}'. " +
-					$"Valid ids are: {known}, or 'all'.");
+					$"Valid ids are: {string.Join(", ", gpu)}, or 'all'.");
 			}
 
 			return result;
 		}
-
-		// Most specific first: Mac Catalyst also reports IsIOS, iOS/tvOS can report
-		// IsMacOS, and Nano Server is Windows. Mirrors VisualPlatform.DetermineTag.
-		private static TestPlatforms DetectPlatform()
-		{
-#if NET5_0_OR_GREATER
-			if (OperatingSystem.IsBrowser())
-				return TestPlatforms.Browser;
-			if (OperatingSystem.IsAndroid())
-				return TestPlatforms.Android;
-			if (OperatingSystem.IsMacCatalyst())
-				return TestPlatforms.MacCatalyst;
-			if (OperatingSystem.IsIOS())
-				return TestPlatforms.IOS;
-			if (OperatingSystem.IsTvOS())
-				return TestPlatforms.TvOS;
-			if (OperatingSystem.IsMacOS())
-				return TestPlatforms.MacOS;
-			if (OperatingSystem.IsWindows())
-				return WindowsFlavor();
-			if (OperatingSystem.IsLinux())
-				return TestPlatforms.Linux;
-#else
-			if (TestConfig.Current.IsMac)
-				return TestPlatforms.MacOS;
-			if (TestConfig.Current.IsWindows)
-				return WindowsFlavor();
-			if (TestConfig.Current.IsLinux)
-				return TestPlatforms.Linux;
-#endif
-			return TestPlatforms.None;
-		}
-
-		private static TestPlatforms WindowsFlavor() =>
-			TestConfig.Current.IsNanoServer ? TestPlatforms.NanoServer : TestPlatforms.Windows;
 	}
 }

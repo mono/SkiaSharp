@@ -105,7 +105,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		{
 			// The one and only skip seam. Past this line the backend must work here,
 			// so nothing below may catch a bring-up failure.
-			GpuPolicy.RequireOrSkip(renderer.Backend);
+			GpuPolicy.RequireOrSkip(renderer.Name);
 
 			var info = scene.Info;
 

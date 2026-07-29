@@ -19,8 +19,6 @@ namespace SkiaSharp.Tests.Visual
 	{
 		public string Name => "graphite-vulkan";
 
-		public GpuBackend Backend => GpuBackend.GraphiteVulkan;
-
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
