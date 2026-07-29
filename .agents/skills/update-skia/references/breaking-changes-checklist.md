@@ -8,33 +8,35 @@ layer **before** you start merging.
 
 ## Step 1: Gather Release Notes
 
-For each milestone between current and target:
+Use the authoritative range prepared by Phase 2:
 
 ```bash
-# Fetch and read the official release notes
-curl -s https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md | \
-  sed -n '/^Milestone {N}$/,/^\* \* \*$/p'
+git log --oneline "$DIFF_RANGE"
+git diff --stat "$DIFF_RANGE" -- src/ include/ BUILD.gn DEPS
 ```
+
+Read the official release-note section for every milestone crossed as additional context.
 
 ## Step 2: Filter by Relevance
 
-SkiaSharp uses **Ganesh** (not Graphite). Filter changes:
+SkiaSharp exposes both Ganesh and Graphite. Filter changes by actual C API/binding usage,
+not by backend name:
 
 | Prefix/Keyword | Relevant? | Notes |
 |----------------|-----------|-------|
-| `skgpu::graphite::` | ❌ No | Graphite backend — skip |
+| `skgpu::graphite::`, `SKGraphite*` | ✅ Yes | Graphite C API, bindings, Vulkan/Metal/Dawn tests |
 | `GrDirectContext`, `Gr*` | ✅ Yes | Ganesh backend — always check |
 | `SkImage`, `SkSurface`, `SkCanvas` | ✅ Yes | Core APIs — always check |
 | `SkTypeface`, `SkFont` | ✅ Yes | Text/font APIs — always check |
 | `SkPath`, `SkPaint` | ✅ Yes | Drawing APIs — always check |
-| `Dawn*`, `wgpu::` | ❌ No | Dawn/WebGPU — skip |
+| `Dawn*`, `wgpu::` | ⚠️ Check | Relevant when consumed by `sk_graphite_dawn.cpp` or managed Graphite APIs |
 | `SkSL`, `SkRuntimeEffect` | ⚠️ Maybe | Only if C API exposes runtime effects |
 | `SkCodec`, `SkEncoder` | ⚠️ Maybe | Only if C API exposes codec/encoder APIs |
 
 **Two common misclassification traps:**
 
 1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): Types here are
-   shared across Ganesh and Graphite. Before skipping as "Graphite-only", check if
+   shared across Ganesh and Graphite. Before classifying a change as backend-local, check if
    `include/gpu/ganesh/` consumes them — e.g., `GrFlushInfo` uses types from `GpuTypes.h`.
 
 2. **Struct field changes in asserted types**: `sk_structs.cpp` has `static_assert(sizeof(...))`
@@ -67,7 +69,7 @@ git show upstream/chrome/m{TARGET}:include/encode/SkPngEncoder.h | grep -A30 "st
 
 **Check for moved files** (Skia relocates, it rarely deletes):
 ```bash
-git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=D --name-only
+git diff "$DIFF_RANGE" --diff-filter=D --name-only
 # For each deleted file our C API references:
 git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
 ```
@@ -109,10 +111,10 @@ grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 ## Step 7: Build & Verify
 
 After applying fixes:
-1. Build native: `dotnet cake --target=externals-macos --arch=arm64`
-2. Regenerate: `pwsh ./utils/generate.ps1`
+1. Build native for the current host from source
+2. Regenerate: `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Test: `dotnet test tests/SkiaSharp.Tests.Console.slnx`
+4. Test only through `dotnet test tests/SkiaSharp.Tests.Console.slnx`
 
 ## Historical Examples
 
@@ -131,7 +133,7 @@ After applying fixes:
 - `SkJSON.h` deletion was a **relocation** to `modules/jsonreader/` — always search for moves
 - `SkPngEncoder::Options` field addition broke `static_assert` — always audit asserted structs
 - `fSuppressPrints` appeared "removed" in diff but was reordered — verify on target branch
-- `GpuTypes.h` changes looked Graphite-only but `GrFlushInfo` (Ganesh) uses them — trace consumers
+- `GpuTypes.h` changes looked backend-local but `GrFlushInfo` (Ganesh) uses them — trace consumers
 
 ### m118 → m119 Changes Required
 

@@ -25,8 +25,8 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 
 ## Key References
 
-- [**references/breaking-changes-checklist.md**](references/breaking-changes-checklist.md) — How to analyze breaking changes between milestones
-- [**references/known-gotchas.md**](references/known-gotchas.md) — Hard-won lessons and troubleshooting table
+- [**references/breaking-changes-checklist.md**](references/breaking-changes-checklist.md) — Mandatory Phase 2 analysis procedure
+- [**references/known-gotchas.md**](references/known-gotchas.md) — Mandatory before resolving `DEPS` or build conflicts; also the troubleshooting table
 - [**references/typical-changes.md**](references/typical-changes.md) — Files typically changed during an update
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency tracking and cgmanifest.json format
 - [**RELEASE\_NOTES.md in upstream Skia**](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md) — Official Skia release notes
@@ -46,6 +46,16 @@ Updating Skia is the **highest-risk operation** in SkiaSharp. It touches:
 - All platforms (macOS, Windows, Linux, iOS, Android, etc.)
 
 **Go slow. Research first. Build and test before any PR.**
+
+Use one artifact directory for analysis, logs, and handoff files:
+
+```bash
+ARTIFACT_DIR="${SKIA_SYNC_ARTIFACT_DIR:-${TMPDIR:-/tmp}/skia-sync-agent}"
+mkdir -p "$ARTIFACT_DIR"
+```
+
+The automated workflow sets `SKIA_SYNC_ARTIFACT_DIR=/tmp/gh-aw/agent`, which is the only
+writable temporary area exposed to the agent.
 
 ## ⚠️ Follow Every Phase In Order
 
@@ -173,9 +183,8 @@ E. Ship (Phase 11)
    include new upstream API/binding changes, so regenerate + build + test as normal (Phases 8–10).
    A tip merge is large and conflict-heavy because the submodule base is well behind `main`, so the
    verify-upstream-or-reapply policy (Phase 5 / [gotcha #15](references/known-gotchas.md)) is
-   mandatory. Because the tip is not a milestone branch, the milestone-pair diff in **Phase 2 step 4**
-   doesn't apply — substitute `$(git merge-base {SKIA_BASE_BRANCH} upstream/main)..upstream/main`
-   (Phase 5's diffs already use `{UPSTREAM_REF}`, so they need no change).
+   mandatory. Phase 2 uses the base branch's recorded `upstream_merge_commit` as the start
+   of the diff, so the same analysis procedure works for tip, milestone, and release-line syncs.
 
    Use these `{UPSTREAM_REF}` / `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}` values
    everywhere below in place of the hardcoded `chrome/m{TARGET}` / `main` / `skiasharp` /
@@ -187,6 +196,24 @@ E. Ship (Phase 11)
 ### Phase 2: Breaking Change Analysis
 
 **This is the most critical phase.** Thorough analysis here prevents customer-facing breakage.
+
+Read [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)
+before starting. Use the exact upstream commit recorded by the base branch as the beginning
+of the range; milestone names are not sufficient for release-line bug-fix syncs and tip syncs:
+
+```bash
+BASE_UPSTREAM_SHA="${SKIA_BASE_UPSTREAM_SHA:-$(git -C ../.. show "origin/{BASE_BRANCH}:cgmanifest.json" |
+  jq -r '.registrations[] | select(.component.other.name == "skia") | .upstream_merge_commit')}"
+TARGET_UPSTREAM_REF="upstream/{UPSTREAM_REF}"
+
+git cat-file -e "${BASE_UPSTREAM_SHA}^{commit}"
+git rev-parse --verify "${TARGET_UPSTREAM_REF}^{commit}"
+DIFF_RANGE="${BASE_UPSTREAM_SHA}..${TARGET_UPSTREAM_REF}"
+```
+
+For a standalone run, fetch `chrome/m{CURRENT}` as well as `{UPSTREAM_REF}` if the recorded
+base commit is not present locally. The automated workflow pre-fetches both and exports
+`SKIA_BASE_UPSTREAM_SHA`.
 
 1. **Read official release notes** for EVERY milestone being skipped:
     - Fetch `https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md`
@@ -200,7 +227,7 @@ E. Ship (Phase 11)
    | **Renamed/Moved APIs** | 🟡 MEDIUM | Namespace changes, header moves |
    | **New APIs** | 🟢 LOW | Additive changes, new factories |
    | **Behavior changes** | 🟡 MEDIUM | Default changes, semantic shifts |
-   | **Graphite-only** | ⚪ SKIP | SkiaSharp uses Ganesh, not Graphite |
+   | **Graphite / Dawn** | 🟡 CHECK | SkiaSharp exposes Graphite and tests Graphite Vulkan; trace C API, bindings, and shared GPU types |
 
 3. **Map each HIGH/MEDIUM change to C API files**:
    ```bash
@@ -212,14 +239,16 @@ E. Ship (Phase 11)
 
 4. **Run structural diff on include/ directory**:
    ```bash
-   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --stat -- include/
-   git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} -- include/core/ include/gpu/ganesh/
+   git diff "$DIFF_RANGE" --stat -- include/
+   git diff "$DIFF_RANGE" -- include/core/ include/gpu/
    ```
 
 👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for the full analysis template, including verification steps for struct sizes, moved files, and diff-reading traps.
 
-> 🛑 **GATE**: Include the breaking change analysis in the PR description body. Summarize the
-> key findings (HIGH/MEDIUM risk changes and their C API impact) for the user.
+Write the analysis to `$ARTIFACT_DIR/skia-breaking-change-analysis.md`.
+
+> 🛑 **GATE**: The analysis file exists and covers HIGH/MEDIUM changes, C API impact,
+> Graphite/Ganesh/shared GPU impact, and dependency/build-system changes.
 
 ### Phase 3: Validation
 
@@ -227,13 +256,19 @@ The agent performing the breaking change analysis has blind spots — it may fil
 relevant changes or miss moved headers. An independent validation catches these before
 they become runtime crashes.
 
-Launch an **explore agent** with `model: "claude-opus-4.6"` using the prompt template from
-[references/validation-prompt.md](references/validation-prompt.md) — substitute the
-milestone numbers and paste your breaking change analysis table. The default explore model
-(Haiku) is too weak for accurate header-level validation — use Opus for reliability.
+Launch an independent validator with the built-in `task` tool. Use `agent_type="explore"`,
+`model="claude-opus-4.7"`, and `mode="sync"`, with the prompt template from
+[references/validation-prompt.md](references/validation-prompt.md). Substitute
+`$DIFF_RANGE` and provide the analysis file. The validator must inspect the repository
+itself rather than accepting the first analysis as correct.
 
-> 🛑 **GATE**: Validation agent has run and confirmed analysis. If it found missed items,
-> update the analysis and re-present to user before proceeding.
+Integrate every finding into the primary analysis and write the validator's findings to
+`$ARTIFACT_DIR/skia-validation-review.md`. This phase is fully automated; it does not pause
+to present intermediate results to a user. If a HIGH/MEDIUM finding remains unresolved,
+stop without producing PR output.
+
+> 🛑 **GATE**: The validation agent completed, its report exists, and all findings are
+> incorporated or resolved.
 
 > ✅ **Before proceeding to B (Branch & Merge):**
 > - Current and target milestones confirmed
@@ -318,6 +353,10 @@ milestone numbers and paste your breaking change analysis table. The default exp
 
 You should still be inside `externals/skia` from Phase 4.
 
+Before merging, read the dependency and merge-strategy sections of
+[references/known-gotchas.md](references/known-gotchas.md). They are preventive guidance,
+not troubleshooting to consult after a build fails.
+
 1. **Merge upstream** — use `--no-commit` for manual conflict resolution:
    ```bash
    git merge --no-commit upstream/{UPSTREAM_REF}   # chrome/m{TARGET}, or main in tip mode
@@ -342,7 +381,7 @@ You should still be inside `externals/skia` from Phase 4.
    | File Category | Strategy |
    |--------------|----------|
    | `BUILD.gn` | **Combine both** — keep upstream structure AND SkiaSharp's platform flags + `skiasharp_build` target |
-   | `DEPS` | **Combine** — keep our dependency pins, accept upstream structure |
+   | `DEPS` | **Classify every changed entry** — preserve the fork's enabled/disabled state and pin unless target source code demonstrably requires a compatible upstream revision |
    | `RELEASE_NOTES.md`, `infra/` | **Take upstream** |
    | C API (`include/c/`, `src/c/`) | **Keep SkiaSharp** — adapt includes/API calls in post-merge commits |
    | Other upstream source (`src/`, `include/`) | **Verify-upstream-or-reapply** — see [gotcha #15](references/known-gotchas.md) |
@@ -350,11 +389,24 @@ You should still be inside `externals/skia` from Phase 4.
    **Audit (mandatory).** Snapshot fork patches before merging, then cross-reference every conflict:
    ```bash
    MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
-   git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+   git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before.txt"
    ```
    For every conflicted file, the fork patch(es) touching it must appear in the mono/skia PR's "Conflicts
    resolved" table as *upstreamed* or *re-applied*. A fork patch on a conflicted file that is neither is a
    lost patch — STOP and fix it. (Patches whose files did not conflict merge cleanly and need no listing.)
+
+   For every active dependency whose pin or enabled/commented state differs, record one
+   decision in `$ARTIFACT_DIR/skia-dependency-decisions.md`:
+
+   | Decision | Required evidence |
+   |---|---|
+   | Preserve fork revision/state | Fork commit or build file that depends on it |
+   | Accept upstream revision/state | Proof that no fork customization depends on the old state |
+   | Compatibility roll | Exact target source/API change that requires the new revision |
+
+   Do not infer that all active dependencies should follow upstream. Conversely, do not
+   preserve a fork pin when target source code uses API that revision does not provide.
+   HarfBuzz remains a separate update and keeps the fork revision.
 
 3. **Commit the merge**:
    ```bash
@@ -404,7 +456,7 @@ You should still be inside `externals/skia` from Phase 4.
 In the **SkiaSharp parent repo**, run:
 ```bash
 cd ../..  # back to parent repo (Phase 5 ends inside externals/skia)
-pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
+pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
 ```
 
 > **Main-tip sync?** When Phase 5 merged `upstream/main` (not a `chrome/m{TARGET}` branch),
@@ -488,11 +540,11 @@ must be updated when the underlying C++ APIs change.
 > and lists any new functions that may need C# wrappers.
 
 ```bash
-pwsh .agents/skills/update-skia/scripts/regenerate-bindings.ps1
+pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/regenerate-bindings.ps1
 ```
 
 The script handles all of these (so you don't forget any):
-- Runs `pwsh ./utils/generate.ps1`
+- Runs `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1`
 - Reverts `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` (proactively, not reactively)
 - Reports the binding diff summary
 - Lists NEW generated functions that may need C# wrappers in Phase 9
@@ -556,19 +608,17 @@ dotnet cake --target=externals-{platform} --arch={arch}
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-**Full test solution (required before any PR):** always run the solution. Never run an
-individual test project as a substitute, and do not mention or use a test project path in the
-validation commands. The solution is the maintained test entry point and includes the base,
-singleton-init, Vulkan, and Direct3D hosts. Capture the output to a log you can inspect
-afterward. Standalone runs can use any writable path; the automated workflow overrides this
-to `/tmp/gh-aw/agent/test-output.txt` so it's uploaded as an artifact (see the workflow's
-Phase 10 note).
+**Full test solution (required before any PR):** always run the solution. Do not invoke an
+individual test project for validation, diagnosis, baseline comparison, or post-fix
+confirmation. The solution is the maintained test entry point and includes the base,
+singleton-init, Vulkan, and Direct3D hosts.
 
 ```bash
+set -o pipefail
 dotnet test tests/SkiaSharp.Tests.Console.slnx \
   -p:TargetFramework=net10.0 \
   -p:TargetFrameworks=net10.0 \
-  2>&1 | tee /tmp/skia-test-output.txt
+  2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
 ```
 
 The framework properties collapse multi-targeted dependencies to the desktop test framework,
@@ -576,7 +626,7 @@ avoiding restores for unrelated Android and Apple workloads. Wait for it to fini
 5–7 min). Then read the summary:
 
 ```bash
-tail -5 /tmp/skia-test-output.txt
+tail -10 "$ARTIFACT_DIR/test-output.txt"
 ```
 
 Confirm the solution output includes results from every host, including Vulkan.
@@ -587,7 +637,7 @@ Confirm the solution output includes results from every host, including Vulkan.
 > the output file. After the run, inspect failures with:
 >
 > ```bash
-> grep '^  Failed' /tmp/skia-test-output.txt
+> grep '^  Failed' "$ARTIFACT_DIR/test-output.txt"
 > ```
 
 All builds and all tests MUST pass before the update can be considered complete. If anything
@@ -613,10 +663,11 @@ skip, disable, or defer a failing test. Do not classify a failure as "human atte
 > **Phase 10 is a hard prerequisite.** Do not enter this phase unless both builds and the full
 > solution test run passed. Build or test failures must be fixed, not documented in a PR.
 
-> **Same-milestone bug-fix syncs:** When `CURRENT == TARGET`, only `cgmanifest.json`'s
+> **Same-milestone bug-fix syncs:** When `CURRENT == TARGET` and `{UPSTREAM_REF} != main`, only `cgmanifest.json`'s
 > `commitHash`/`upstream_merge_commit` change. Use PR titles like
 > `[skia-sync] Merge upstream chrome/m{TARGET} bug fixes` instead of milestone-bump titles.
-> A release-line update is always such a sync.
+> A release-line update is always such a sync. A `main` tip sync also has
+> `CURRENT == TARGET`, but it still updates the submodule and may change bindings or APIs.
 
 > **Branch targets by mode:** Use the `{BASE_BRANCH}` / `{SKIA_BASE_BRANCH}` / `{HEAD_BRANCH}`
 > values resolved in Phase 1 step 5. For a `main` update they are `main` / `skiasharp` /
@@ -637,7 +688,7 @@ skip, disable, or defer a failing test. Do not classify a failure as "human atte
 |-------|-------|
 | Branch | `{HEAD_BRANCH}` |
 | Target | `{BASE_BRANCH}` |
-| Title | `[skia-sync] Update skia to milestone {TARGET}` (or `Merge upstream chrome/m{TARGET} bug fixes` when `CURRENT == TARGET`) |
+| Title | `[skia-sync] Update skia to milestone {TARGET}` (or `Merge upstream chrome/m{TARGET} bug fixes` when `CURRENT == TARGET` and `{UPSTREAM_REF} != main`) |
 
 **Submodule must point to the mono/skia PR branch.**
 
@@ -688,8 +739,9 @@ Before proceeding past each step, verify:
 
 ## Reference Material
 
-These files contain lookup information — consult them when you hit a problem or need context,
-not necessarily upfront:
+Read the phase-specific references when their phases require them. In particular, the
+breaking-change checklist is mandatory in Phase 2 and the dependency/merge sections of
+known-gotchas are mandatory before Phase 5:
 
 - **[references/known-gotchas.md](references/known-gotchas.md)** — Hard-won lessons from past updates (DEF_STRUCT_MAP, emsdk, BUILD.gn flags, HarfBuzz, DEPS forks, etc.) and a troubleshooting table
 - **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed in each repository during an update

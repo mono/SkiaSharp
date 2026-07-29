@@ -1,6 +1,8 @@
 # Known Gotchas & Troubleshooting
 
-Hard-won findings from past Skia milestone updates. Check these proactively — they will save hours of debugging.
+Hard-won findings from past Skia milestone updates. Read the dependency and merge-strategy
+sections before resolving an upstream merge; they are preventive requirements, not fallback
+troubleshooting after a build fails.
 
 ## C++ ↔ C API Layer
 
@@ -76,13 +78,25 @@ Upstream sometimes introduces a build dependency our fork deliberately does **no
 
 ### 8. DEPS: Fork-Customized Dependencies
 
-SkiaSharp's fork often has **newer** dependency versions than upstream. When resolving DEPS conflicts, do NOT blindly take upstream's hashes — you may downgrade and break the build.
+SkiaSharp's fork often has **newer** dependency versions or deliberately different enabled
+states. When resolving `DEPS`, do not blindly take upstream's hashes or comment state.
 
 ```bash
 git log --oneline skiasharp | grep -i "update\|bump\|libpng\|zlib\|expat\|brotli\|webp\|harfbuzz\|vulkan"
 ```
 
-Keep fork's hash for customized deps. Common ones: libwebp, brotli, expat, libpng, zlib, vulkanmemoryallocator, **harfbuzz**.
+Classify every changed active entry:
+
+- Preserve the fork revision and enabled/commented state when a fork build file or patch
+  depends on it. Common customized entries include libwebp, brotli, expat, libpng, zlib,
+  vulkanmemoryallocator, spirv-cross, and **harfbuzz**.
+- Accept an upstream revision only after verifying no fork customization depends on the old
+  revision.
+- Roll for compatibility when target Skia source uses API absent from the fork revision.
+  Record the exact source/API dependency. For example, an allocator factory call alone does
+  not imply a VMA roll, but target code using new `VmaAllocationCreateInfo` fields does.
+
+Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
 ### 9. HarfBuzz — ALWAYS Separate
 
@@ -164,7 +178,7 @@ you can cross-reference every conflict against them:
 ```bash
 # before the merge — list our fork's commits on top of the merge base (the patches at risk)
 MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
-git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before.txt"
 ```
 
 For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
@@ -189,7 +203,8 @@ Upstream periodically improves color conversion precision, shifting expected pix
 ### 18. Test Runner
 
 Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Every host must run
-and all tests must pass. Fix every failure before creating PRs.
+and all tests must pass. Do not invoke individual test projects for diagnosis or confirmation.
+Fix every failure before creating PRs.
 
 ### 24. Vulkan Tests Are a Separate Satellite
 
@@ -206,7 +221,7 @@ about Vulkan.
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
-| `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
+| `error CS0246` missing type | Binding not regenerated | `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1` |
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |
 | `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |
@@ -215,4 +230,4 @@ about Vulkan.
 | Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
-| GPU context C API returns nullptr | Backend defines not reaching `:core` | Add defines to `:core` in BUILD.gn |
+| GPU context C API returns nullptr | Backend compile flags, a newly required backend-context field, or native initialization failure | Trace every native `nullptr` return before changing the runner or tests; compare the previous implementation and analogous backend shims |

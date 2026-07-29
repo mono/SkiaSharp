@@ -1,28 +1,30 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.0
 <#
 .SYNOPSIS
     Phase 8: Regenerate bindings with automatic HarfBuzz revert and diff summary.
 
 .DESCRIPTION
     Performs ALL steps of Phase 8 of the update-skia skill:
-    1. Runs pwsh ./utils/generate.ps1 to regenerate all bindings
+    1. Runs pwsh -NoLogo -NoProfile -File ./utils/generate.ps1 to regenerate all bindings
     2. IMMEDIATELY reverts HarfBuzz generated bindings (HarfBuzz updates are always separate)
     3. Reports the diff summary of what changed in SkiaSharp bindings
     4. Lists any NEW functions that may need C# wrappers
 
 .EXAMPLE
-    pwsh .agents/skills/update-skia/scripts/regenerate-bindings.ps1
+    pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/regenerate-bindings.ps1
 #>
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = git rev-parse --show-toplevel
+Set-StrictMode -Version 3.0
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../../..')).Path
 Set-Location $repoRoot
 
 Write-Host "`n=== Phase 8: Regenerate Bindings ===" -ForegroundColor Cyan
 
 # --- Step 1: Run generator ---
 Write-Host "`n--- Running binding generator ---" -ForegroundColor Yellow
-& pwsh ./utils/generate.ps1
+& pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Binding generation failed"
 }

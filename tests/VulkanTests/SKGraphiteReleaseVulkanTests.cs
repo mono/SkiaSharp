@@ -50,8 +50,10 @@ namespace SkiaSharp.Tests
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
-				Assert.Skip($"Unable to create a Vulkan context on this host: {ex.Message}");
-				throw; // unreachable
+				VulkanTestEnvironment.SkipOrThrow(
+					$"Unable to create a Vulkan context on this host: {ex.Message}",
+					ex);
+				throw;
 			}
 
 			try

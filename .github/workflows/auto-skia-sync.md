@@ -7,16 +7,15 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 # benefits from the stronger model, despite the higher AI-credit cost.
 engine:
   id: copilot
-  model: claude-opus-4.7
+model: claude-opus-4.7
 
 # -- Triggers ----------------------------------------------------------
-# One cron every 6h (`0 */6 * * *` → 00/06/12/18 UTC). Scheduled runs pass no target,
-# so the detector ROTATES: it picks ONE supported line from versions.json per run,
-# round-robin (see .github/scripts/skia-sync-detect.sh / rotate_select). Manual dispatch
-# may pin a specific `target` (a milestone number, or `main` for the upstream tip).
+# One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
+# it picks ONE supported line from versions.json per run, round-robin
+# (see .github/scripts/skia-sync-detect.sh / rotate_select). Manual dispatch may pin a
+# specific `target` (a milestone number, or `main` for the upstream tip).
 on:
-  schedule:
-    - cron: "0 */6 * * *"
+  schedule: every 6h
   workflow_dispatch:
     inputs:
       target:
@@ -34,7 +33,7 @@ on:
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Check out detection scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
       with:
         sparse-checkout: .github/scripts
     - name: Detect milestone
@@ -102,13 +101,15 @@ network:
     - "swiftshader.googlesource.com"
     - "chrome-infra-packages.appspot.com"
     - "gn.googlesource.com"
-    - "storage.googleapis.com"
+    - dart
 
 # -- Environment -----------------------------------------------------
 # Clang is required for the Linux native build (retpoline flag).
 env:
   CC: clang
   CXX: clang++
+  SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
+  SKIASHARP_REQUIRE_VULKAN: "1"
 permissions:
   contents: read
   pull-requests: read
@@ -167,8 +168,14 @@ steps:
       SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET"
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
-  - name: Copy push script for post-step
-    run: cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      bash .github/scripts/skia-sync-prefetch-upstream.sh
+  - name: Copy post-step assets
+    run: |
+      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      cp .github/scripts/skia-sync-pwsh-preflight.ps1 /tmp/gh-aw/agent/skia-sync-pwsh-preflight.ps1
+      cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
+      cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
+      cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -204,6 +211,17 @@ pre-agent-steps:
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
+  - name: Configure PowerShell for the agent
+    run: |
+      set -euo pipefail
+      PWSH_HOME=$(pwsh -NoLogo -NoProfile -Command '$PSHOME')
+      PWSH_MODULE_PATH="${PWSH_HOME}/Modules"
+      if [ -n "${PSModulePath:-}" ]; then
+        PWSH_MODULE_PATH="${PWSH_MODULE_PATH}:${PSModulePath}"
+      fi
+      export PSModulePath="$PWSH_MODULE_PATH"
+      echo "PSModulePath=$PWSH_MODULE_PATH" >> "$GITHUB_ENV"
+      pwsh -NoLogo -NoProfile -File .github/scripts/skia-sync-pwsh-preflight.ps1
   - name: Verify Mesa lavapipe
     run: |
       set -euo pipefail
@@ -260,12 +278,18 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 
 **Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
 
-- **Phase 1 is pre-computed** (above). Skip it — but you still need to add the `upstream` remote
-  and fetch the upstream ref `${{ needs.pre_activation.outputs.upstream_ref }}` (Phase 1 step 4) since Phase 5 depends on it.
-  For every mode except `main` this is a `chrome/m${{ needs.pre_activation.outputs.target }}` milestone branch;
-  for `main` (tip) mode it is google/skia's `main` HEAD (bleeding edge — may include new APIs/binding changes,
-  but it is NOT a version bump, and the head branch is `skia-sync/main`).
+- **Phase 1 is pre-computed** (above). Skip it. The host setup has already added the
+  `upstream` remote, fetched `${{ needs.pre_activation.outputs.upstream_ref }}` and the current
+  milestone branch, and exported the exact prior upstream commit as `SKIA_BASE_UPSTREAM_SHA`.
+  Verify those refs; do not re-derive the mode or substitute a milestone-name range.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
+- **Immediately after tool restore**, run:
+  `pwsh -NoLogo -NoProfile -File /tmp/gh-aw/agent/skia-sync-pwsh-preflight.ps1`.
+  If it fails, stop and report an incomplete run; do not reimplement the PowerShell helpers.
+- **Phases 2 and 3 are NOT pre-computed.** Complete both before branching or merging.
+  Write the primary analysis to `/tmp/gh-aw/agent/skia-breaking-change-analysis.md`, invoke
+  the independent reviewer with the available `task` tool exactly as Phase 3 requires, and
+  write its findings to `/tmp/gh-aw/agent/skia-validation-review.md`.
 - **Phase 4**: The parent base branch is `origin/${{ needs.pre_activation.outputs.base_branch }}` and the
   submodule base branch is mono/skia `${{ needs.pre_activation.outputs.skia_base_branch }}` — use these in
   place of `origin/main` / `skiasharp` for every step. The sync branch in BOTH repos is
@@ -276,13 +300,19 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   **Skip Phase 4 step 5** (submodule SHA alignment) — the pre-agent step already aligned the submodule to
   the base branch's pointer (on mono/skia `${{ needs.pre_activation.outputs.skia_base_branch }}`).
   Branch from the current HEAD when creating the submodule feature branch in step 6.
-- **Phase 6 (version files)**: For a release-line sync (`is_release == true`, so `current == target`) this is a
-  bug-fix-only sync — keep the release line's milestone/soname/nuget versions unchanged; the only expected
-  parent-repo change is `cgmanifest.json`'s commit hash. Do NOT advance the milestone.
+- **Phase 6 (version files)**: When `current == target` and the upstream ref is `chrome/m<N>`,
+  this is a bug-fix-only sync (including release-line syncs) — keep milestone/soname/nuget
+  versions unchanged; only the Skia hashes in `cgmanifest.json` advance. Do NOT advance the
+  milestone. A `main` tip sync also has `current == target`, but may carry API/binding changes
+  and still updates the submodule.
   Pass the ref you actually merged to `update-versions.ps1` so `cgmanifest.json`'s `upstream_merge_commit`
   resolves to a real SHA: **`-UpstreamRef "${{ needs.pre_activation.outputs.upstream_ref }}"`**
   (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
   `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
+- **Phase 5 dependency decisions**: write
+  `/tmp/gh-aw/agent/skia-dependency-decisions.md` before committing the merge. Classify every
+  changed active `DEPS` entry; preserve fork state/pins by default, but accept a compatible
+  upstream revision when target source code demonstrably uses API absent from the fork pin.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   Phase 10 always rebuilds native before building C# and running tests.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
@@ -302,6 +332,11 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   Do NOT skip or disable tests. Do NOT classify a build/test failure as "human attention," stage it
   for review, write the output files below, or signal completion. The fact that this is an automated
   workflow does not permit creating a failing PR.
+  `SKIASHARP_REQUIRE_VULKAN=1` is set deliberately: failure to initialize the pinned lavapipe
+  runtime is a test failure, not an allowed runtime skip. The two platform-specific SharpVk
+  skips on Linux remain expected.
+  Before testing, assert that `SKIASHARP_REQUIRE_VULKAN` is exactly `1` and
+  `SKIA_SYNC_ARTIFACT_DIR` is exactly `/tmp/gh-aw/agent`; stop if either is missing.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
@@ -311,7 +346,8 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   commits, so this should rarely happen. If it does, do NOT write `skia-sync-env.sh`, call `noop`
   with a one-line reason, and stop.
 
-After Phase 10 has passed completely, write these files:
+After Phase 10 has passed completely, confirm all three analysis files above exist and are
+non-empty, then write these files:
 
 1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
    ```bash
@@ -327,13 +363,22 @@ After Phase 10 has passed completely, write these files:
    EOF
    ```
 
-2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - for the mono/skia PR:
-   - Upstream merge details, conflicts resolved, C API fixes, items needing human attention
+2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - the automated report inserted into the
+   dedicated mono/skia PR template:
+   - Use the exact headings `## Changes`, `## Testing`, and `## Human review`.
+   - Include upstream merge details, every conflict/dependency decision, C API fixes,
+     validation results, and remaining cross-platform review.
 
-3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - for the mono/SkiaSharp PR:
-   - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
+3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - the automated report inserted into the
+   dedicated mono/SkiaSharp PR template:
+   - Use the exact headings `## Changes`, `## Testing`, and `## Human review`.
+   - Include the breaking-change analysis, version/binding/C# changes, exact host test
+     results, and remaining cross-platform review.
 
-All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
+The post-step renders the complete, repository-specific PR bodies from
+`.github/scripts/skia-sync-pr-skia.md` and
+`.github/scripts/skia-sync-pr-skiasharp.md`; do not reproduce contributor templates in the
+summary fragments. All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
 For Phase 10, write the test-output log to `/tmp/gh-aw/agent/test-output.txt` (in place of the
 skill's default path) so it's uploaded as an artifact and failures can be inspected after the run.
 
@@ -343,11 +388,13 @@ Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` 
 ## Completion signal
 
 When the sync is done — you have committed locally and written `skia-sync-env.sh` plus both
-summaries — call the `create_pull_request` safe-output tool **once** as your completion signal.
-It is **staged** (preview-only: it creates NO real PR and pushes nothing — the post-step opens both
-real PRs with the autobump token), but it records this run as a real upstream sync instead of a
-no-op. Pass a short title (the `[skia-sync] …` title for this mode) and a one-line body pointing at
-the two summary files. Do this **instead of** `noop`.
+summaries — invoke staged `create_pull_request` **once** through the `safeoutputs` CLI preferred
+by the injected system instructions. Build its JSON input under `/tmp/gh-aw/agent/`, include the
+actual current branch from `git branch --show-current`, and pass it with
+`safeoutputs create_pull_request . < INPUT.json`. This is preview-only: it creates no real PR and
+pushes nothing. The post-step opens both real PRs with the autobump token. Use the `[skia-sync] …`
+title for this mode and a one-line body pointing at the two summary files. Do this instead of
+`noop`; do not call the raw MCP function when the CLI is available.
 
 Call `noop` (and never `create_pull_request`) **only** when there was genuinely no work to do
 — i.e. you did not write `skia-sync-env.sh`.

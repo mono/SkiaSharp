@@ -18,7 +18,9 @@ namespace SkiaSharp.Vulkan.Tests
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
-				Assert.Skip($"Unable to create a Silk.NET Vulkan context: {ex.Message}");
+				VulkanTestEnvironment.SkipOrThrow(
+					$"Unable to create a Silk.NET Vulkan context: {ex.Message}",
+					ex);
 				throw;
 			}
 		}

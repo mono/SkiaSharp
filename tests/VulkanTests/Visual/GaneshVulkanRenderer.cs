@@ -96,6 +96,11 @@ namespace SkiaSharp.Tests.Visual
 			}
 			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
 			{
+				if (VulkanTestEnvironment.IsVulkanRequired)
+					throw new InvalidOperationException(
+						$"Unable to create a required Vulkan context: {ex.Message}",
+						ex);
+
 				throw new RendererUnavailableException(
 					$"Unable to create a Vulkan context on this host: {ex.Message}", ex);
 			}

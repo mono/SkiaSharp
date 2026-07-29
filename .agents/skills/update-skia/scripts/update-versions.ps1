@@ -1,4 +1,5 @@
 #!/usr/bin/env pwsh
+#Requires -Version 7.0
 <#
 .SYNOPSIS
     Phase 6: Update all SkiaSharp version files for a Skia milestone update.
@@ -25,11 +26,11 @@
     to `chrome/m<Target>`.
 
 .EXAMPLE
-    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
+    pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/update-versions.ps1 -Current 119 -Target 120
 
 .EXAMPLE
     # main-tip sync (same milestone, merged from upstream/main):
-    pwsh .agents/skills/update-skia/scripts/update-versions.ps1 -Current 151 -Target 151 -UpstreamRef main
+    pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/update-versions.ps1 -Current 151 -Target 151 -UpstreamRef main
 #>
 
 param(
@@ -43,7 +44,8 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$repoRoot = git rev-parse --show-toplevel
+Set-StrictMode -Version 3.0
+$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '../../../..')).Path
 
 Write-Host "`n=== Phase 6: Update Version Files (m$Current -> m$Target) ===" -ForegroundColor Cyan
 
@@ -78,7 +80,10 @@ $cgPath = Join-Path $repoRoot 'cgmanifest.json'
 $cgContent = Get-Content $cgPath -Raw
 
 # Get submodule commit hash
-$submoduleHash = git -C (Join-Path $repoRoot 'externals/skia') rev-parse HEAD
+$submoduleHash = (git -C (Join-Path $repoRoot 'externals/skia') rev-parse HEAD).Trim()
+if ($LASTEXITCODE -ne 0 -or -not $submoduleHash) {
+    throw 'Could not resolve the mono/skia submodule HEAD.'
+}
 Write-Host "  Submodule HEAD: $submoduleHash"
 
 # Get upstream merge commit. Resolve the ref that was ACTUALLY merged: a chrome/m<N>
@@ -111,11 +116,11 @@ foreach ($reg in $cgJson.registrations) {
         $reg.component.other.version = "chrome/m$Target"
     }
     # Handle custom fields at registration level
-    if ($null -ne $reg.chrome_milestone) {
+    if ($reg.PSObject.Properties['chrome_milestone']) {
         $reg.chrome_milestone = $Target
         Write-Host "  Updated chrome_milestone" -ForegroundColor Green
     }
-    if ($null -ne $reg.upstream_merge_commit) {
+    if ($reg.PSObject.Properties['upstream_merge_commit']) {
         $reg.upstream_merge_commit = $upstreamHash
         Write-Host "  Updated upstream_merge_commit" -ForegroundColor Green
     }

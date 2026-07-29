@@ -19,12 +19,18 @@ BASE_BRANCH="${base_branch:?base_branch not set — source skia-sync-detect.sh f
 SKIA_BASE_BRANCH="${skia_base_branch:?skia_base_branch not set — source skia-sync-detect.sh first}"
 
 echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
-git fetch origin "$BASE_BRANCH" 2>&1 || true
+git fetch origin "$BASE_BRANCH" 2>&1
 BASE_SUB_SHA=$(git ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
+if [ -z "$BASE_SUB_SHA" ]; then
+  echo "::error::origin/${BASE_BRANCH} does not contain the externals/skia submodule."
+  exit 1
+fi
 echo "origin/${BASE_BRANCH} submodule SHA: $BASE_SUB_SHA"
 git -C externals/skia fetch origin "$SKIA_BASE_BRANCH" 2>&1
 git -C externals/skia checkout "$BASE_SUB_SHA" 2>&1
 echo "Verifying SHA is on ${SKIA_BASE_BRANCH} branch:"
-git -C externals/skia branch -r --contains "$BASE_SUB_SHA" | grep -q "origin/${SKIA_BASE_BRANCH}" \
-  && echo "  ✅ SHA is on origin/${SKIA_BASE_BRANCH}" \
-  || echo "  ⚠️ SHA is NOT on origin/${SKIA_BASE_BRANCH} — submodule pointer may be stale"
+if ! git -C externals/skia branch -r --contains "$BASE_SUB_SHA" | grep -q "origin/${SKIA_BASE_BRANCH}"; then
+  echo "::error::The base submodule SHA is not on origin/${SKIA_BASE_BRANCH}."
+  exit 1
+fi
+echo "  ✅ SHA is on origin/${SKIA_BASE_BRANCH}"
