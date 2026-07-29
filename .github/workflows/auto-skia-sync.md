@@ -284,14 +284,12 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
   `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
-  This also applies to Phase 10 if a native rebuild is needed.
+  Phase 10 always rebuilds native before building C# and running tests.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
   fontconfig, ninja, and Mesa lavapipe discovered from the installed package manifest and pinned
   through both `VK_ICD_FILENAMES` and `VK_DRIVER_FILES`). You CANNOT install packages (no apt/sudo in the sandbox; the firewall blocks OS
-  mirrors). If a build fails because a **host dependency is missing**, that's a workflow bug: STOP, do
-  NOT hack compiler/linker flags (e.g. `-stdlib=libc++`) or `scripts/infra/native/**` to silence it
-  (those are shared with the Windows/macOS/iOS/Android/WASM builds you never run here), and record it
-  under "items needing human attention" so the `Install native build dependencies` step can be fixed.
+  mirrors). Do NOT hack compiler/linker flags (e.g. `-stdlib=libc++`) or `scripts/infra/native/**`
+  to silence a failure; diagnose and fix the actual update.
 - **A genuinely required new upstream gn arg** (e.g. `skia_use_partition_alloc=false`, when a new
   dependency our `DEPS` doesn't vendor forces it) goes in `native/**/build.cake`, NOT a one-off
   `--gnArgs` flag — see **[skill Phase 7](.agents/skills/update-skia/SKILL.md) / [gotcha #23](.agents/skills/update-skia/references/known-gotchas.md)**.
@@ -299,6 +297,11 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   flag the change in BOTH PR summaries for cross-platform human review.
 - **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
+- **Phase 10 is a hard gate**: build native, build C#, then run the full `.slnx`. ALL builds and
+  ALL tests must pass. If anything fails, diagnose it, fix it, rebuild, and rerun the full solution.
+  Do NOT skip or disable tests. Do NOT classify a build/test failure as "human attention," stage it
+  for review, write the output files below, or signal completion. The fact that this is an automated
+  workflow does not permit creating a failing PR.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
@@ -308,7 +311,7 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   commits, so this should rarely happen. If it does, do NOT write `skia-sync-env.sh`, call `noop`
   with a one-line reason, and stop.
 
-After Phase 10, write these files:
+After Phase 10 has passed completely, write these files:
 
 1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
    ```bash

@@ -188,15 +188,16 @@ Upstream periodically improves color conversion precision, shifting expected pix
 
 ### 18. Test Runner
 
-Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Backend-specific tests self-skip when hardware isn't available.
+Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Every host must run
+and all tests must pass. Fix every failure before creating PRs.
 
 ### 24. Vulkan Tests Are a Separate Satellite
 
 The base test host does not contain the Vulkan tests. Always run
 `tests/SkiaSharp.Tests.Console.slnx`, which includes the separate Vulkan satellite; never
 substitute an individual project run or include a test project path in the validation commands.
-On a Vulkan-provisioned host, confirm the solution output reports executed, passing Vulkan tests.
-A green base-host run proves nothing about Vulkan.
+Confirm the solution output reports passing Vulkan tests. A green base-host run proves nothing
+about Vulkan.
 
 ---
 

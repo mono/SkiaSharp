@@ -6,10 +6,10 @@ description: >
   dual-repo PR coordination.
 
   Use when user asks to:
-  - Update/bump Skia to a new milestone (m120, m121, etc.)
-  - Merge upstream Skia changes
-  - Update the Skia submodule to a newer version
-  - Check what Skia milestone is current or what version of Skia is used
+    - Update/bump Skia to a new milestone (m120, m121, etc.)
+    - Merge upstream Skia changes
+    - Update the Skia submodule to a newer version
+    - Check what Skia milestone is current or what version of Skia is used
 
   Triggers: "update skia", "bump skia", "skia milestone", "update to m121",
   "merge upstream skia", "skia update", "new skia version", "what milestone",
@@ -25,11 +25,11 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 
 ## Key References
 
-- **[references/breaking-changes-checklist.md](references/breaking-changes-checklist.md)** — How to analyze breaking changes between milestones
-- **[references/known-gotchas.md](references/known-gotchas.md)** — Hard-won lessons and troubleshooting table
-- **[references/typical-changes.md](references/typical-changes.md)** — Files typically changed during an update
+- [**references/breaking-changes-checklist.md**](references/breaking-changes-checklist.md) — How to analyze breaking changes between milestones
+- [**references/known-gotchas.md**](references/known-gotchas.md) — Hard-won lessons and troubleshooting table
+- [**references/typical-changes.md**](references/typical-changes.md) — Files typically changed during an update
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency tracking and cgmanifest.json format
-- **[RELEASE_NOTES.md in upstream Skia](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md)** — Official Skia release notes
+- [**RELEASE\_NOTES.md in upstream Skia**](https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md) — Official Skia release notes
 
 ## Scripts
 
@@ -189,8 +189,8 @@ E. Ship (Phase 11)
 **This is the most critical phase.** Thorough analysis here prevents customer-facing breakage.
 
 1. **Read official release notes** for EVERY milestone being skipped:
-   - Fetch `https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md`
-   - Document all changes for each milestone between current and target
+    - Fetch `https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md`
+    - Document all changes for each milestone between current and target
 
 2. **Categorize changes by impact**:
 
@@ -335,9 +335,9 @@ You should still be inside `externals/skia` from Phase 4.
    git log -S "<distinctive code>" --oneline upstream/{UPSTREAM_REF}   # did upstream adopt it?
    ```
 
-   - **Upstreamed** → take upstream's (possibly refined) form; record `"<subject>" upstreamed as <sha>`.
-   - **Not upstreamed** → re-apply our patch on top of upstream's edits; **never drop it**; record `re-applied`.
-   - **Never** blanket `git checkout --theirs`/`--ours` on a file you have not classified.
+    - **Upstreamed** → take upstream's (possibly refined) form; record `"<subject>" upstreamed as <sha>`.
+    - **Not upstreamed** → re-apply our patch on top of upstream's edits; **never drop it**; record `re-applied`.
+    - **Never** blanket `git checkout --theirs`/`--ours` on a file you have not classified.
 
    | File Category | Strategy |
    |--------------|----------|
@@ -546,9 +546,10 @@ the build succeeds.
 
 ### Phase 10: Build & Test
 
+Run these steps in order. Do not start the tests until both builds succeed.
+
 ```bash
-# Rebuild native only if you touched C API files in Phase 9
-# (Phase 7 already built — skip if no native changes since then)
+# Build native from the updated Skia source
 dotnet cake --target=externals-{platform} --arch={arch}
 
 # Build C#
@@ -578,37 +579,39 @@ avoiding restores for unrelated Android and Apple workloads. Wait for it to fini
 tail -5 /tmp/skia-test-output.txt
 ```
 
-Backend-specific tests self-skip when their backend is genuinely unavailable. CI handles
-WASM/Android/iOS separately. On the automated Linux sync host, lavapipe is verified before the
-agent starts, so confirm the solution output includes a Vulkan test-host result with tests
-executed and passed. A missing or all-skipped Vulkan host is a failure that must be fixed.
+Confirm the solution output includes results from every host, including Vulkan.
 
 > **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
 > like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
 > while tests are still running. Capture with `tee` first, wait for completion, then `tail`
 > the output file. After the run, inspect failures with:
+>
 > ```bash
 > grep '^  Failed' /tmp/skia-test-output.txt
 > ```
 
-The full solution MUST pass before the update can be considered complete. Do not create PRs with
-only an individual-project test run.
+All builds and all tests MUST pass before the update can be considered complete. If anything
+fails, diagnose the failure, fix the implementation, rebuild, and rerun the full solution. Do not
+skip, disable, or defer a failing test. Do not classify a failure as "human attention."
 
-> 🛑 **GATE**: ALL tests pass in the full solution, and a
-> Vulkan-provisioned host reports executed, passing Vulkan tests. Do NOT skip failing tests.
-> Do NOT proceed with failures or a missing/all-skipped Vulkan host.
+> 🛑 **GATE**: Native build succeeds, C# build succeeds, and ALL tests pass in the full solution.
+> Do not proceed to Phase 11, create PRs, or report completion while any build or test is failing.
 
 > ✅ **Before proceeding to E (Ship):**
 > - Bindings regenerated (Phase 8 script passed)
+> - Native build succeeds
 > - C# builds with 0 errors
 > - ALL tests pass (full solution)
-> - The solution run includes passing Vulkan tests on a Vulkan-provisioned host
+> - The solution run includes passing Vulkan tests
 
 ---
 
 ## E. Ship (Phase 11)
 
 ### Phase 11: Create PRs
+
+> **Phase 10 is a hard prerequisite.** Do not enter this phase unless both builds and the full
+> solution test run passed. Build or test failures must be fixed, not documented in a PR.
 
 > **Same-milestone bug-fix syncs:** When `CURRENT == TARGET`, only `cgmanifest.json`'s
 > `commitHash`/`upstream_merge_commit` change. Use PR titles like
@@ -655,9 +658,9 @@ Before proceeding to merge, verify ALL of these:
 - [ ] `scripts/VERSIONS.txt` updated (ALL version lines, not just milestone)
 - [ ] `SkiaApi.generated.cs` regenerated and committed
 - [ ] Both PRs cross-reference each other
-- [ ] Native build passes on at least one platform
+- [ ] Native build passes
 - [ ] C# build passes with 0 errors
-- [ ] All tests pass (with proper platform filtering)
+- [ ] All tests pass in the full solution
 
 #### Merge Sequence (CRITICAL)
 
