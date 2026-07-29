@@ -113,7 +113,7 @@ namespace SkiaSharp.Tests.Visual.Tests
 		private void CompareOrFail(string rendererName, string sceneName, SKImageInfo info, byte[] actual, GoldenStore.ResolvedGolden golden)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
-			var tolerance = GoldenTolerance.For(rendererName, sceneName);
+			var tolerance = GoldenTolerance.For(rendererName);
 
 			using var actualImage = ToImage(actual, normalized);
 			using var goldenImage = ToImage(golden.Pixels, normalized);
