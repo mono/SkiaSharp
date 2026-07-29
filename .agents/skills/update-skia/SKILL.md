@@ -567,20 +567,44 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    > you missed a version update — go back to Phase 6 and verify ALL version lines.
    > Do NOT work around this with `--no-incremental` or by copying native libs manually.
 
-2. **Full test suite (required before any PR):** capture the output to a log you can inspect
+2. **Full test solution (required before any PR):** run the solution, not the base Console
+   project. `SkiaSharp.Tests.Console.csproj` contains only the base tests; it does **not** run the
+   separate Vulkan or Direct3D satellite hosts. Capture the output to a log you can inspect
    afterward. Standalone runs can use any writable path; the automated workflow overrides this to
    `/tmp/gh-aw/agent/test-output.txt` so it's uploaded as an artifact (see the workflow's Phase 10 note).
    ```bash
-   dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj 2>&1 | tee /tmp/skia-test-output.txt
+   dotnet test tests/SkiaSharp.Tests.Console.slnx 2>&1 | tee /tmp/skia-test-output.txt
    ```
    Wait for it to finish (takes 5–7 min). Then read the summary:
    ```bash
    tail -5 /tmp/skia-test-output.txt
    ```
-   The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
+   The solution runs the core, singleton-init, Vulkan, and Direct3D hosts. Backend-specific tests
+   self-skip when their backend is genuinely unavailable. CI handles WASM/Android/iOS separately.
 
-   This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
-   self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+3. **Prove Vulkan executed (required on a Vulkan-provisioned host):** run the Vulkan satellite
+   explicitly and produce a TRX report. A successful base Console run is not Vulkan validation.
+   ```bash
+   mkdir -p /tmp/skia-vulkan-results
+   dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj -- \
+     --report-trx \
+     --report-trx-filename vulkan.trx \
+     --results-directory /tmp/skia-vulkan-results \
+     2>&1 | tee /tmp/skia-vulkan-test-output.txt
+   ```
+   In the automated sync workflow, write the log to
+   `/tmp/gh-aw/agent/vulkan-test-output.txt` and results beneath
+   `/tmp/gh-aw/agent/vulkan-results/` so both are uploaded as artifacts.
+
+   Inspect `vulkan.trx` and confirm it contains at least one **Passed** test from each backend:
+   - Ganesh: `GRContextTest` (or another test that calls `GRContext.CreateVulkan`)
+   - Graphite: a test name containing `Graphite`
+
+   Listing or discovering these tests is not evidence that they ran. On the automated Linux sync
+   host, lavapipe is verified before the agent starts, so zero Vulkan tests, all-skipped Vulkan
+   tests, or no passing Ganesh/Graphite result is a failure that must be fixed. On a local host
+   without Vulkan, report the limitation explicitly and rely on required Vulkan-capable CI; do not
+   claim Vulkan validation.
 
    > **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
    > like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
@@ -590,16 +614,19 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    > grep '^  Failed' /tmp/skia-test-output.txt
    > ```
 
-Smoke tests are just that — smoke. They verify the basics. The full suite MUST pass
-before the update can be considered complete. Do not create PRs with only smoke tests passing.
+Smoke tests are just that — smoke. They verify the basics. The full solution and the explicit
+Vulkan run MUST pass before the update can be considered complete. Do not create PRs with only
+smoke or base Console tests passing.
 
-> 🛑 **GATE**: ALL tests pass (full suite, not just smoke). Do NOT skip failing tests.
-> Do NOT proceed with failures.
+> 🛑 **GATE**: ALL tests pass (full solution, not just smoke/base Console), and a
+> Vulkan-provisioned host has passing Ganesh and Graphite evidence. Do NOT skip failing tests.
+> Do NOT proceed with failures or an all-skipped Vulkan run.
 
 > ✅ **Before proceeding to E (Ship):**
 > - Bindings regenerated (Phase 8 script passed)
 > - C# builds with 0 errors
-> - ALL tests pass (full suite)
+> - ALL tests pass (full solution)
+> - Vulkan satellite has passing Ganesh and Graphite tests on a Vulkan-provisioned host
 
 ---
 

@@ -188,7 +188,21 @@ Upstream periodically improves color conversion precision, shifting expected pix
 
 ### 18. Test Runner
 
-Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full suite. Backend-specific tests self-skip when hardware isn't available.
+Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Backend-specific tests self-skip when hardware isn't available.
+
+### 24. Vulkan Tests Are a Separate Satellite
+
+`tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` does not contain the Vulkan
+tests. They live in `tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj`.
+The solution includes that satellite, but milestone updates must also run it explicitly on a
+Vulkan-provisioned host and retain TRX evidence that both Ganesh and Graphite tests passed. A
+green base Console run proves nothing about Vulkan.
+
+Starting with m152, Ganesh no longer creates its old `SK_USE_VMA` fallback allocator. Rolling the
+VulkanMemoryAllocator dependency can make the native build compile while
+`GRContext.CreateVulkan` still returns null. If the C API caller does not supply
+`fMemoryAllocator`, create the default VMA-backed allocator in `src/c/gr_context.cpp`, analogous
+to `src/c/sk_graphite_vulkan.cpp`, and fail context creation if allocator creation fails.
 
 ---
 
@@ -207,4 +221,4 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
 | GPU context C API returns nullptr | Backend defines not reaching `:core` | Add defines to `:core` in BUILD.gn |
-| Vulkan GRContext returns null | VMA fallback compiled out | Check `SK_USE_VMA` is defined in GN build |
+| Vulkan GRContext returns null | No allocator supplied after Ganesh fallback removal | Create a default VMA-backed allocator in `src/c/gr_context.cpp`, analogous to `sk_graphite_vulkan.cpp` |
