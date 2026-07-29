@@ -136,7 +136,11 @@ namespace SkiaSharp.Tests
 					Xlib.XFreePixmap(fDisplay, fPixmap);
 					fPixmap = IntPtr.Zero;
 				}
-				
+
+				// Every context opens its own connection, and the suite creates one
+				// per GPU test. Without this the connections accumulate for the life
+				// of the process, along with the driver state hanging off each.
+				Xlib.XCloseDisplay(fDisplay);
 				fDisplay = IntPtr.Zero;
 			}
 		}

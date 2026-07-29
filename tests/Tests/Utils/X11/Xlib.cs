@@ -17,6 +17,8 @@ namespace SkiaSharp.Tests
 		[DllImport(libX11)]
 		public extern static IntPtr XOpenDisplay(string display_name);
 		[DllImport(libX11)]
+		public extern static int XCloseDisplay(IntPtr display);
+		[DllImport(libX11)]
 		public extern static int XFree(IntPtr data);
 		[DllImport(libX11)]
 		public extern static int XDefaultScreen(IntPtr display);

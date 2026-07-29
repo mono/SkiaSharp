@@ -317,6 +317,12 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-maccatalyst
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
+            # the device reports none of the families Ganesh or Graphite require and
+            # bring-up fails outright. Native macOS on this same pool does get Mac2
+            # and is NOT opted out — this is a Catalyst limitation, not the agent.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:

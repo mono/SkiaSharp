@@ -64,9 +64,10 @@ dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 
 In CI each opt-out is a bootstrapper `env:` value in
 `scripts/azure-templates-stages-test.yml` — read it there for the current set
-rather than duplicating it here. Today: iOS skips Metal (the simulator's
-virtualized Metal hangs the host on shutdown), the Windows and container legs
-skip `ganesh-gl` for want of a software GL stack, and the WASM legs skip
+rather than duplicating it here. Today: iOS and Mac Catalyst skip Metal (the
+simulator's virtualized Metal hangs the host on shutdown; a Catalyst app never
+sees the `Mac2` GPU family Skia needs), the Windows and container legs skip
+`ganesh-gl` for want of a software GL stack, and the WASM legs skip
 `graphite-dawn` because the headless browser exposes no WebGPU adapter.
 
 ## Adding a backend
