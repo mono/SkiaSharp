@@ -259,8 +259,9 @@ they become runtime crashes.
 Launch an independent validator with the built-in `task` tool. Use `agent_type="explore"`,
 `model="claude-opus-4.8"`, and `mode="sync"`, with the prompt template from
 [references/validation-prompt.md](references/validation-prompt.md). Substitute
-`$DIFF_RANGE` and provide the analysis file. The validator must inspect the repository
-itself rather than accepting the first analysis as correct.
+`$DIFF_RANGE`, `{TARGET_UPSTREAM_REF}`, `{SKIA_BASE_BRANCH}`, and the analysis file.
+The validator must inspect the repository itself rather than accepting the first analysis
+as correct.
 
 Integrate every finding into the primary analysis and write the validator's findings to
 `$ARTIFACT_DIR/skia-validation-review.md`. This phase is fully automated; it does not pause
@@ -395,14 +396,37 @@ not troubleshooting to consult after a build fails.
    resolved" table as *upstreamed* or *re-applied*. A fork patch on a conflicted file that is neither is a
    lost patch — STOP and fix it. (Patches whose files did not conflict merge cleanly and need no listing.)
 
-   For every active dependency whose pin or enabled/commented state differs, record one
-   decision in `$ARTIFACT_DIR/skia-dependency-decisions.md`:
+   Compare the **fork base**, not the previous upstream milestone, against the target:
+
+   ```bash
+   git show origin/{SKIA_BASE_BRANCH}:DEPS > "$ARTIFACT_DIR/deps-fork.txt"
+   git show upstream/{UPSTREAM_REF}:DEPS > "$ARTIFACT_DIR/deps-target.txt"
+   diff -u "$ARTIFACT_DIR/deps-fork.txt" "$ARTIFACT_DIR/deps-target.txt"
+   ```
+
+   For every dependency whose revision or enabled/commented state differs, record one
+   decision in `$ARTIFACT_DIR/skia-dependency-decisions.md`. The report must account for
+   every changed entry; comparing `upstream/chrome/m{CURRENT}` to the target is insufficient
+   because it omits deliberate fork pins.
 
    | Decision | Required evidence |
    |---|---|
    | Preserve fork revision/state | Fork commit or build file that depends on it |
    | Accept upstream revision/state | Proof that no fork customization depends on the old state |
    | Compatibility roll | Exact target source/API change that requires the new revision |
+
+   For each target revision, find the upstream commit that introduced it and inspect all
+   source changes coupled to that roll:
+
+   ```bash
+   git log -S "<target revision>" --oneline "$DIFF_RANGE" -- DEPS
+   git show --stat <roll-commit>
+   git show <roll-commit> -- DEPS src/ include/ third_party/
+   ```
+
+   If the same upstream commit changes Skia wrapper code to use new dependency fields,
+   functions, or constants, treat the roll as compatibility-required unless the fork
+   revision is proven to expose that API.
 
    Do not infer that all active dependencies should follow upstream. Conversely, do not
    preserve a fork pin when target source code uses API that revision does not provide.

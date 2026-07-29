@@ -89,6 +89,18 @@ cd externals/skia
 grep -rn "SYMBOL_NAME" src/c/ include/c/
 ```
 
+## Step 6: Dependency Compatibility Audit
+
+Diff the fork base against the target; an upstream-to-upstream diff hides fork-specific pins:
+
+```bash
+git diff origin/{SKIA_BASE_BRANCH}..{TARGET_UPSTREAM_REF} -- DEPS
+```
+
+For each changed revision or enabled/commented state, inspect both fork history and the
+upstream roll commit. A dependency roll and wrapper-source change in the same commit are
+presumed coupled until the older fork revision is proven to expose the target API.
+
 ### Recurring patterns across milestone bumps
 
 | Pattern | Risk | C API Fix | C# Fix |
@@ -101,14 +113,14 @@ grep -rn "SYMBOL_NAME" src/c/ include/c/
 | **Enum value inserted mid-sequence** (renumbers everything after) | 🟡 MED | Regenerate bindings — never hand-edit | Regenerate + update mappings |
 | **File moved to new module** (e.g., `src/utils/` → `modules/`) | 🟡 MED | Update `#include` path | None |
 
-## Step 6: C# Impact Analysis
+## Step 7: C# Impact Analysis
 
 ```bash
 grep -rn "ENUM_NAME\|FUNCTION_NAME" binding/SkiaSharp/
 grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 ```
 
-## Step 7: Build & Verify
+## Step 8: Build & Verify
 
 After applying fixes:
 1. Build native for the current host from source

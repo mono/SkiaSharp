@@ -8,6 +8,7 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 engine:
   id: copilot
 model: claude-opus-4.8
+max-ai-credits: 2000
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
@@ -298,8 +299,12 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
 - **Phase 5 dependency decisions**: write
   `/tmp/gh-aw/agent/skia-dependency-decisions.md` before committing the merge. Classify every
-  changed active `DEPS` entry; preserve fork state/pins by default, but accept a compatible
-  upstream revision when target source code demonstrably uses API absent from the fork pin.
+  entry whose revision or enabled/commented state differs between
+  `origin/${{ needs.pre_activation.outputs.skia_base_branch }}:DEPS` and
+  `upstream/${{ needs.pre_activation.outputs.upstream_ref }}:DEPS`; do not compare only the two
+  upstream milestones because that omits fork customizations. Preserve fork state/pins by
+  default, but take a compatible upstream revision when target source code demonstrably uses
+  API absent from the fork pin.
 - **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
   Phase 10 always rebuilds native before building C# and running tests.
 - **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
