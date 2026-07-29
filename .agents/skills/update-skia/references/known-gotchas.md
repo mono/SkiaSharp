@@ -202,16 +202,17 @@ Upstream periodically improves color conversion precision, shifting expected pix
 ### 18. Test Runner
 
 Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Every host must run
-and all tests must pass. Do not invoke individual test projects for diagnosis or confirmation.
-Fix every failure before creating PRs.
+and all tests must pass. Do not filter the solution because projects with zero matches fail.
+After the solution identifies a failing host, use that host's project for focused diagnostic
+runs, then rerun the unfiltered solution. A focused project run is never final validation.
 
 ### 24. Vulkan Tests Are a Separate Satellite
 
 The base test host does not contain the Vulkan tests. Always run
-`tests/SkiaSharp.Tests.Console.slnx`, which includes the separate Vulkan satellite; never
-substitute an individual project run or include a test project path in the validation commands.
-Confirm the solution output reports passing Vulkan tests. A green base-host run proves nothing
-about Vulkan.
+`tests/SkiaSharp.Tests.Console.slnx`, which includes the separate Vulkan satellite, for initial
+and final validation. A Vulkan project filter is permitted only after the solution exposes a
+Vulkan failure and must be followed by another unfiltered solution run. Confirm the final
+solution output reports passing Vulkan tests. A green base-host run proves nothing about Vulkan.
 
 ---
 

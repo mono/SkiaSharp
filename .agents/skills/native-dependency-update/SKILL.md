@@ -195,6 +195,11 @@ dotnet cake --target=externals-macos --arch=arm64  # Example
 dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 
+Use the unfiltered solution for initial and final validation. If it identifies a failure,
+use the owning core, singleton, Vulkan, or Direct3D test project for filtered diagnostic
+iterations; filtering the `.slnx` fails the other projects with zero matches. Rerun the
+unfiltered solution after the focused test passes.
+
 ### Build Retry Strategy
 
 **Common transient failure: HTTP 429 from chromium.googlesource.com**

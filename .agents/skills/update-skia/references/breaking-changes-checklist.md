@@ -138,7 +138,9 @@ After applying fixes:
 1. Build native for the current host from source
 2. Regenerate: `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Test only through `dotnet test tests/SkiaSharp.Tests.Console.slnx`
+4. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` unfiltered
+5. If it fails, use the owning host project for filtered diagnostics
+6. Rerun the unfiltered solution; only that run is final validation
 
 ## Historical Examples
 

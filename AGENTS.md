@@ -300,6 +300,29 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 dotnet test tests/SkiaSharp.Tests.Console.slnx -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0
 ```
 
+The unfiltered solution is the primary test entry point and the only final validation.
+Microsoft.Testing.Platform treats a solution project with zero filtered matches as a failure,
+so do not apply a single-test filter to the `.slnx`. After an unfiltered solution run identifies
+a failure, use that test's owning host project for filtered diagnostic iterations:
+
+| Failing host | Diagnostic project |
+|---|---|
+| Core/base | `tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
+| Singleton initialization | `tests/SkiaSharp.Tests.SingletonInit.Console/SkiaSharp.Tests.SingletonInit.Console.csproj` |
+| Vulkan | `tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj` |
+| Direct3D | `tests/SkiaSharp.Direct3D.Tests.Console/SkiaSharp.Direct3D.Tests.Console.csproj` |
+
+Example:
+
+```bash
+dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj \
+  -p:TargetFramework=net10.0 -p:TargetFrameworks=net10.0 \
+  -- --filter-method "*CreateVkContextIsValid*"
+```
+
+Once the focused failure passes, rerun the unfiltered `.slnx`. A project-level run never
+satisfies the final test gate.
+
 ### Tests MUST Pass
 
 > **NON-NEGOTIABLE:** Tests must PASS before claiming completion.

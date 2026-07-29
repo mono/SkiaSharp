@@ -635,10 +635,10 @@ dotnet cake --target=externals-{platform} --arch={arch}
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
-**Full test solution (required before any PR):** always run the solution. Do not invoke an
-individual test project for validation, diagnosis, baseline comparison, or post-fix
-confirmation. The solution is the maintained test entry point and includes the base,
-singleton-init, Vulkan, and Direct3D hosts.
+**Full test solution (required before any PR):** start with the unfiltered solution. It is
+the maintained test entry point and includes the base, singleton-init, Vulkan, and Direct3D
+hosts. Do not apply a single-test filter to the `.slnx`: Microsoft.Testing.Platform returns
+a failure for every solution project with zero filtered matches.
 
 ```bash
 set -o pipefail
@@ -658,6 +658,29 @@ tail -10 "$ARTIFACT_DIR/test-output.txt"
 
 Confirm the solution output includes results from every host, including Vulkan.
 
+When this run identifies a failing test, iterate with the owning host project rather than
+filtering the solution:
+
+| Host reported by the solution | Diagnostic project |
+|---|---|
+| `SkiaSharp.Tests` | `tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
+| `SkiaSharp.Tests.SingletonInit` | `tests/SkiaSharp.Tests.SingletonInit.Console/SkiaSharp.Tests.SingletonInit.Console.csproj` |
+| `SkiaSharp.Vulkan.Tests` | `tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj` |
+| `SkiaSharp.Direct3D.Tests` | `tests/SkiaSharp.Direct3D.Tests.Console/SkiaSharp.Direct3D.Tests.Console.csproj` |
+
+Use the runner filter after `--`, for example:
+
+```bash
+dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj \
+  -p:TargetFramework=net10.0 \
+  -p:TargetFrameworks=net10.0 \
+  -- --filter-method "*CreateVkContextIsValid*"
+```
+
+Focused project runs are diagnostic iterations only. After the focused test passes, rebuild
+as needed and rerun the unfiltered full solution. Only the final unfiltered solution run
+satisfies Phase 10.
+
 > **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
 > like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful
 > while tests are still running. Capture with `tee` first, wait for completion, then `tail`
@@ -668,8 +691,9 @@ Confirm the solution output includes results from every host, including Vulkan.
 > ```
 
 All builds and all tests MUST pass before the update can be considered complete. If anything
-fails, diagnose the failure, fix the implementation, rebuild, and rerun the full solution. Do not
-skip, disable, or defer a failing test. Do not classify a failure as "human attention."
+fails, diagnose it in the owning host, fix the implementation, rebuild, and rerun the full
+solution unfiltered. Do not skip, disable, or defer a failing test. Do not classify a failure
+as "human attention."
 
 > 🛑 **GATE**: Native build succeeds, C# build succeeds, and ALL tests pass in the full solution.
 > Do not proceed to Phase 11, create PRs, or report completion while any build or test is failing.

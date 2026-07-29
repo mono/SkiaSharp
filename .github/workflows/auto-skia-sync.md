@@ -326,6 +326,10 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 - **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
 - **Phase 10 is a hard gate**: build native, build C#, then run the full `.slnx`. ALL builds and
   ALL tests must pass. If anything fails, diagnose it, fix it, rebuild, and rerun the full solution.
+  Run the `.slnx` unfiltered. After it identifies a failing host, filtered diagnostic iterations
+  may use that host's project because solution projects with zero filtered matches fail under
+  Microsoft.Testing.Platform. A project-level run never satisfies the gate; finish with another
+  unfiltered full solution run.
   Do NOT skip or disable tests. Do NOT classify a build/test failure as "human attention," stage it
   for review, write the output files below, or signal completion. The fact that this is an automated
   workflow does not permit creating a failing PR.
