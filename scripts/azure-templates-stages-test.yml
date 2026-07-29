@@ -344,6 +344,12 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false
+            # navigator.gpu.requestAdapter() returns null in the headless browser the
+            # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
+            # `wasm test` command takes no browser arguments, so the WebGPU flags
+            # cannot be passed through without an upstream change to that package.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
@@ -377,6 +383,9 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
+            # See the WASM leg above: the headless browser exposes no WebGPU adapter.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
             shouldPublish: false
             installPreviewSdk: true
