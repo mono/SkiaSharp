@@ -27,9 +27,8 @@ Task ("tests-ios")
         var udid = System.Text.Json.JsonDocument.Parse(createJson).RootElement.GetProperty("udid").GetString();
         Information("  Created simulator with UDID: {0}", udid);
 
-        // Boot by UDID and verify that CoreSimulator reached the booted state.
-        RunProcess("xcrun", $"simctl boot \"{udid}\"");
-        RunProcess("xcrun", $"simctl bootstatus \"{udid}\" -b");
+        // Boot by UDID
+        DotNetTool($"apple simulator boot \"{udid}\" --wait");
         Information("  Simulator booted");
 
         FilePath csproj = $"{ROOT_PATH}/tests/SkiaSharp.Tests.Devices/SkiaSharp.Tests.Devices.csproj";
