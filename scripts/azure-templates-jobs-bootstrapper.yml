@@ -228,6 +228,10 @@ jobs:
             displayName: Install Android SDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools"
+            displayName: Install Android platform tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
           - pwsh: .\scripts\infra\managed\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
             displayName: Install Android APIs
