@@ -12,9 +12,9 @@ Please validate by (run from externals/skia):
 1. Run: git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --stat -- src/ include/
    Count the files changed and compare to my analysis — did I miss any?
 2. For each HIGH/MEDIUM item I identified, verify the C API impact by grepping src/c/ include/c/
-3. Check for changes I may have filtered as "Graphite-only" that actually affect Ganesh:
+3. Check GPU changes across both shipped families — Ganesh and Graphite:
    - Search shared GPU headers (include/gpu/GpuTypes.h, include/gpu/*.h outside ganesh/ and graphite/)
-   - For each new type, grep include/gpu/ganesh/ to see if Ganesh consumes it
+   - For each new type, grep include/gpu/ganesh/ and include/gpu/graphite/ to see which consume it
 4. Check for removed/moved headers that our C API includes:
    grep -rh '#include' src/c/*.cpp | sort -u
    Then verify each included header still exists at upstream/chrome/m{TARGET}

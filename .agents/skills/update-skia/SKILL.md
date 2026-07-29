@@ -200,7 +200,7 @@ E. Ship (Phase 11)
    | **Renamed/Moved APIs** | 🟡 MEDIUM | Namespace changes, header moves |
    | **New APIs** | 🟢 LOW | Additive changes, new factories |
    | **Behavior changes** | 🟡 MEDIUM | Default changes, semantic shifts |
-   | **Graphite-only** | ⚪ SKIP | SkiaSharp uses Ganesh, not Graphite |
+   | **Graphite changes** | 🟡 MEDIUM | Graphite is shipped — trace the C API, bindings and backend tests |
 
 3. **Map each HIGH/MEDIUM change to C API files**:
    ```bash

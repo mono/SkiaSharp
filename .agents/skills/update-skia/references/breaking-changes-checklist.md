@@ -18,24 +18,25 @@ curl -s https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md | \
 
 ## Step 2: Filter by Relevance
 
-SkiaSharp uses **Ganesh** (not Graphite). Filter changes:
+SkiaSharp ships **both Ganesh and Graphite** (`skia_enable_graphite=true` on every
+platform; Graphite runs on Vulkan, Metal and Dawn). Filter changes:
 
 | Prefix/Keyword | Relevant? | Notes |
 |----------------|-----------|-------|
-| `skgpu::graphite::` | ❌ No | Graphite backend — skip |
+| `skgpu::graphite::` | ✅ Yes | Graphite backend — shipped on all platforms |
 | `GrDirectContext`, `Gr*` | ✅ Yes | Ganesh backend — always check |
 | `SkImage`, `SkSurface`, `SkCanvas` | ✅ Yes | Core APIs — always check |
 | `SkTypeface`, `SkFont` | ✅ Yes | Text/font APIs — always check |
 | `SkPath`, `SkPaint` | ✅ Yes | Drawing APIs — always check |
-| `Dawn*`, `wgpu::` | ❌ No | Dawn/WebGPU — skip |
+| `Dawn*`, `wgpu::` | ✅ Yes | Graphite's WASM backend (`skia_use_dawn`) |
 | `SkSL`, `SkRuntimeEffect` | ⚠️ Maybe | Only if C API exposes runtime effects |
 | `SkCodec`, `SkEncoder` | ⚠️ Maybe | Only if C API exposes codec/encoder APIs |
 
 **Two common misclassification traps:**
 
 1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): Types here are
-   shared across Ganesh and Graphite. Before skipping as "Graphite-only", check if
-   `include/gpu/ganesh/` consumes them — e.g., `GrFlushInfo` uses types from `GpuTypes.h`.
+   shared across Ganesh and Graphite, so a change lands on both — e.g., `GrFlushInfo`
+   uses types from `GpuTypes.h`. Trace both consumers.
 
 2. **Struct field changes in asserted types**: `sk_structs.cpp` has `static_assert(sizeof(...))`
    for every C API struct mapped via `reinterpret_cast`. A field addition to any of these
@@ -131,7 +132,7 @@ After applying fixes:
 - `SkJSON.h` deletion was a **relocation** to `modules/jsonreader/` — always search for moves
 - `SkPngEncoder::Options` field addition broke `static_assert` — always audit asserted structs
 - `fSuppressPrints` appeared "removed" in diff but was reordered — verify on target branch
-- `GpuTypes.h` changes looked Graphite-only but `GrFlushInfo` (Ganesh) uses them — trace consumers
+- `GpuTypes.h` is shared: a change there reaches Ganesh (`GrFlushInfo`) and Graphite alike — trace consumers
 
 ### m118 → m119 Changes Required
 
