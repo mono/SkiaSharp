@@ -331,7 +331,7 @@ satisfies the final test gate.
 > **A skip must always be DECLARED, never inferred from an exception.**
 >
 > For **GPU tests** the rule is enforced by `GpuPolicy` — see
-> [documentation/dev/golden-image-tests.md](documentation/dev/golden-image-tests.md).
+> [documentation/dev/gpu-test-policy.md](documentation/dev/gpu-test-policy.md).
 > A backend is *required* on every platform we build it for; "no device", "no
 > driver", "no ICD" and "no display" are **failures**. Skips are owned by the
 > existing platform/host policy; an agent investigating or fixing a failure must
