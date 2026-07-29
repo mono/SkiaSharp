@@ -145,6 +145,39 @@ class UpdateVersionsTests(unittest.TestCase):
         for path, content in before.items():
             self.assertEqual(content, path.read_bytes())
 
+    def test_milestone_update_is_idempotent_after_submodule_commit_changes(self) -> None:
+        update_versions(self.root, 151, 152, "chrome/m152")
+        tracked_versions = (
+            self.root / "scripts" / "VERSIONS.txt",
+            self.root / "scripts" / "azure-templates-variables.yml",
+            self.root / "externals" / "skia" / "include" / "c" / "sk_types.h",
+        )
+        before = {path: path.read_bytes() for path in tracked_versions}
+
+        skia_root = self.root / "externals" / "skia"
+        marker = skia_root / "post-merge-fix.txt"
+        marker.write_text("fix\n", encoding="utf-8")
+        subprocess.run(["git", "add", marker.name], cwd=skia_root, check=True)
+        subprocess.run(
+            ["git", "commit", "--quiet", "-m", "post merge fix"],
+            cwd=skia_root,
+            check=True,
+        )
+        new_head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=skia_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        update_versions(self.root, 151, 152, "chrome/m152")
+
+        for path, content in before.items():
+            self.assertEqual(content, path.read_bytes())
+        cgmanifest = json.loads((self.root / "cgmanifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(new_head, cgmanifest["registrations"][0]["component"]["git"]["commitHash"])
+
 
 if __name__ == "__main__":
     unittest.main()

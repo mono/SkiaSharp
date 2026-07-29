@@ -39,4 +39,5 @@ Please validate by (run from externals/skia):
    `git log -S "<target revision>" {DIFF_RANGE} -- DEPS`, inspect source changes in that
    commit, and verify the chosen dependency revision exposes every field/function the target
    source uses. A pin roll coupled to wrapper-source changes is compatibility-sensitive.
-11. Report: missed items, incorrect classifications, dependency decisions, and confirmed items.
+11. Report only missed items, incorrect classifications, unsafe dependency decisions, and a
+    concise confirmation checklist. Do not restate the primary analysis.

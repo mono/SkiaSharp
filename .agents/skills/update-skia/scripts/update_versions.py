@@ -24,6 +24,20 @@ def replace_or_fail(content: str, pattern: str, replacement: str, description: s
     return updated
 
 
+def replace_transition(
+    content: str,
+    current_pattern: str,
+    target_pattern: str,
+    replacement: str,
+    description: str,
+) -> str:
+    if re.search(current_pattern, content, flags=re.MULTILINE):
+        return replace_or_fail(content, current_pattern, replacement, description)
+    if not re.search(target_pattern, content, flags=re.MULTILINE):
+        raise RuntimeError(f"Could not find current or target {description}.")
+    return content
+
+
 def update_versions(repo_root: Path, current: int, target: int, upstream_ref: str) -> None:
     versions_path = repo_root / "scripts" / "VERSIONS.txt"
     pipeline_path = repo_root / "scripts" / "azure-templates-variables.yml"
@@ -44,23 +58,25 @@ def update_versions(repo_root: Path, current: int, target: int, upstream_ref: st
     sk_types = sk_types_path.read_text(encoding="utf-8-sig")
     cgmanifest = json.loads(cgmanifest_path.read_text(encoding="utf-8-sig"))
 
-    match = re.search(rf"\b(\d+)\.{current}\.\d+\b", versions)
+    match = re.search(rf"\b(\d+)\.(?:{current}|{target})\.\d+\b", versions)
     if not match:
         raise RuntimeError(
-            f"Could not find current NuGet version X.{current}.x in {versions_path}."
+            f"Could not find current or target NuGet version in {versions_path}."
         )
     major = match.group(1)
 
     if current != target:
-        versions = replace_or_fail(
+        versions = replace_transition(
             versions,
             rf"(skia\s+release\s+)m{current}\b",
+            rf"skia\s+release\s+m{target}\b",
             rf"\g<1>m{target}",
             "Skia release milestone",
         )
-        versions = replace_or_fail(
+        versions = replace_transition(
             versions,
             rf"(libSkiaSharp\s+milestone\s+){current}\b",
+            rf"libSkiaSharp\s+milestone\s+{target}\b",
             rf"\g<1>{target}",
             "libSkiaSharp milestone",
         )
@@ -81,11 +97,10 @@ def update_versions(repo_root: Path, current: int, target: int, upstream_ref: st
             f"{major}.{target}.0",
             versions,
         )
-        pipeline = replace_or_fail(
-            pipeline,
+        pipeline = re.sub(
             rf"(SKIASHARP_VERSION:\s*){major}\.{current}\.\d+\b",
             rf"\g<1>{major}.{target}.0",
-            "SKIASHARP_VERSION",
+            pipeline,
         )
         sk_types = replace_or_fail(
             sk_types,

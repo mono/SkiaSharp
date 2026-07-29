@@ -330,6 +330,9 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   may use that host's project because solution projects with zero filtered matches fail under
   Microsoft.Testing.Platform. A project-level run never satisfies the gate; finish with another
   unfiltered full solution run.
+  When a managed factory returns null, trace the managed → C API → native factory return path and
+  diff that implementation before treating nearby warnings as causal. If an exact failure repeats
+  after a fix, first prove the changed code was compiled and loaded before exploring another cause.
   Do NOT skip or disable tests. Do NOT classify a build/test failure as "human attention," stage it
   for review, write the output files below, or signal completion. The fact that this is an automated
   workflow does not permit creating a failing PR.

@@ -243,6 +243,16 @@ base commit is not present locally. The automated workflow pre-fetches both and 
    git diff "$DIFF_RANGE" -- include/core/ include/gpu/
    ```
 
+5. **Audit implementation behavior for wrapped factories/context creation.** Public signatures
+   can remain unchanged while implementations add a required context field, remove default
+   behavior, or gain a new null-return path. For affected backends, trace the C API's native
+   call and inspect commits/diffs in that implementation path before assigning LOW risk:
+
+   ```bash
+   git log --oneline "$DIFF_RANGE" -- <implementation-paths-called-by-the-C-API>
+   git diff "$DIFF_RANGE" -- <implementation-paths-called-by-the-C-API>
+   ```
+
 👉 See [references/breaking-changes-checklist.md](references/breaking-changes-checklist.md) for the full analysis template, including verification steps for struct sizes, moved files, and diff-reading traps.
 
 Write the analysis to `$ARTIFACT_DIR/skia-breaking-change-analysis.md`.
@@ -257,7 +267,7 @@ relevant changes or miss moved headers. An independent validation catches these 
 they become runtime crashes.
 
 Launch an independent validator with the built-in `task` tool. Use `agent_type="explore"`,
-`model="claude-opus-4.8"`, and `mode="sync"`, with the prompt template from
+`model="claude-sonnet-5"`, and `mode="sync"`, with the prompt template from
 [references/validation-prompt.md](references/validation-prompt.md). Substitute
 `$DIFF_RANGE`, `{TARGET_UPSTREAM_REF}`, `{SKIA_BASE_BRANCH}`, and the analysis file.
 The validator must inspect the repository itself rather than accepting the first analysis
@@ -392,6 +402,20 @@ not troubleshooting to consult after a build fails.
    MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
    git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before.txt"
    ```
+
+   Immediately after the merge stops for conflicts, collect every conflicted file and its fork
+   history in one pass before resolving any file:
+
+   ```bash
+   git diff --name-only --diff-filter=U > "$ARTIFACT_DIR/conflicted-files.txt"
+   while IFS= read -r file; do
+     printf '\n## %s\n' "$file"
+     git log --oneline "$MB..{SKIA_BASE_BRANCH}" -- "$file"
+   done < "$ARTIFACT_DIR/conflicted-files.txt" > "$ARTIFACT_DIR/conflict-fork-history.md"
+   ```
+
+   Classify all listed patches first; do not take an entire file from either side and audit it
+   afterward.
    For every conflicted file, the fork patch(es) touching it must appear in the mono/skia PR's "Conflicts
    resolved" table as *upstreamed* or *re-applied*. A fork patch on a conflicted file that is neither is a
    lost patch — STOP and fix it. (Patches whose files did not conflict merge cleanly and need no listing.)
