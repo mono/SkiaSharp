@@ -20,7 +20,7 @@ Otherwise it returns and the caller brings the backend up **without a catch**.
 
 | Test | Gate |
 |---|---|
-| Visual matrix cells | `VisualMatrixTestsBase.RunCellAsync` |
+| Visual tests | `VisualMatrixTestsBase.RunTestAsync` |
 | OpenGL tests | `SKTest.CreateGlContext` |
 | Vulkan tests | `VKTest` |
 | Direct3D tests | `Direct3DTest` |

@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests.Visual
 	/// vary with driver and antialiasing implementation, so they get a wider
 	/// per-channel tolerance and allow a small fraction of outlier pixels. Values
 	/// can be overridden per renderer, and per (renderer, scene) for a specific
-	/// known-divergent cell.
+	/// known-divergent case.
 	/// </summary>
 	public readonly struct GoldenTolerance
 	{
@@ -42,10 +42,10 @@ namespace SkiaSharp.Tests.Visual
 
 		private static readonly Dictionary<string, GoldenTolerance> ByRenderer = new(StringComparer.Ordinal)
 		{
-			["raster"] = Deterministic,
+			[GpuBackends.Raster] = Deterministic,
 		};
 
-		// Per (renderer, scene) overrides for individually known-divergent cells.
+		// Per (renderer, scene) overrides for individually known-divergent cases.
 		private static readonly Dictionary<string, GoldenTolerance> ByRendererScene = new(StringComparer.Ordinal)
 		{
 		};

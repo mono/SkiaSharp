@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Harvest golden images for the visual-regression matrix from test results (TRX).
+"""Harvest golden images for the visual-regression tests from test results (TRX).
 
-Every cell of the visual matrix (tests/Tests/SkiaSharp/Visual) emits its rendered
-PNG into the test output as a single line:
+Every visual test (tests/Tests/SkiaSharp/Visual) emits its rendered PNG into the
+test output as a single line:
 
-    ##SKIA-GOLDEN-IMAGE## path={renderer}.{platform}/{scene}.png size=WxH base64=<...>
+    ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png outcome=pass size=WxH base64=<...>
 
-That line lands in the TRX produced by every test host -- desktop Console, the
-MAUI device hosts, and the WASM host alike -- which makes the TRX the one uniform
-channel for seeding goldens, including on device/browser hosts whose filesystem is
-sandboxed/embedded and cannot be written to in-process.
+A mismatch additionally emits ##SKIA-VISUAL-GOLDEN## and ##SKIA-VISUAL-DIFF##
+lines with the same path. Those lines land in the TRX produced by every test host
+-- desktop Console, the MAUI device hosts, and the WASM host alike -- which makes
+the TRX the one uniform channel for seeding goldens, including on device/browser
+hosts whose filesystem is sandboxed/embedded and cannot be written to in-process.
 
 Seeding workflow:
-    1. Run the matrix (locally or in CI). Cells with no committed golden FAIL, but
+    1. Run the suite (locally or in CI). Tests with no committed golden FAIL, but
        still emit their PNG marker.
     2. Point this script at the TRX file(s) (the CI 'testlogs_*' artifacts, or a
        local output/logs/testlogs directory).
     3. Review the resulting git diff of tests/Content/Goldens/** and commit.
-    4. Re-run -- the now-committed goldens are compared strictly and pass.
+    4. Re-run -- the now-committed goldens are compared and pass.
 
 Usage:
     python3 scripts/infra/tests/extract-visual-goldens.py [PATH ...]
@@ -33,11 +34,21 @@ import os
 import re
 import sys
 
-MARKER = "##SKIA-GOLDEN-IMAGE##"
-# ##SKIA-GOLDEN-IMAGE## path=ganesh-gl.macos/DiagonalLines.png size=256x256 base64=AAAA...
-LINE_RE = re.compile(
-    r"##SKIA-GOLDEN-IMAGE##\s+path=(?P<path>[^\s]+)\s+size=(?P<size>\d+x\d+)\s+base64=(?P<b64>[A-Za-z0-9+/=]+)"
-)
+
+def _marker_re(role, extra=""):
+    return re.compile(
+        rf"##SKIA-VISUAL-{role}##\s+path=(?P<path>[^\s]+)\s+{extra}"
+        r"size=(?P<size>\d+x\d+)\s+base64=(?P<b64>[A-Za-z0-9+/=]+)"
+    )
+
+
+# All three carry the same path -- the golden key. The role is the marker name,
+# and ACTUAL also carries the verdict, because a pass and an unseeded test emit
+# an identical set of images.
+ACTUAL_MARKER = "##SKIA-VISUAL-ACTUAL##"
+ACTUAL_RE = _marker_re("ACTUAL", r"outcome=(?P<outcome>\w+)\s+")
+GOLDEN_RE = _marker_re("GOLDEN")
+DIFF_RE = _marker_re("DIFF")
 
 # Golden paths are always "{renderer}.{platform}/{scene}.png": exactly one
 # subdirectory, a .png leaf, and no traversal. Reject anything else so a malformed
@@ -49,16 +60,6 @@ SAFE_PATH_RE = re.compile(r"^[A-Za-z0-9][\w.\-]*/[A-Za-z0-9][\w.\-]*\.png$")
 # of the directory). Returns None when the directory has no platform suffix (the
 # path is already the shared form).
 PLATFORM_DIR_RE = re.compile(r"^(?P<renderer>.+)\.(?P<platform>[^.]+)/(?P<scene>.+\.png)$")
-
-# Triage markers, emitted by VisualMatrixTestsBase alongside the captured image.
-# ##SKIA-VISUAL-CELL## path=ganesh-gl.linux/DiagonalLines.png outcome=mismatch
-CELL_RE = re.compile(
-    r"##SKIA-VISUAL-CELL##\s+path=(?P<path>[^\s]+)\s+outcome=(?P<outcome>\w+)"
-)
-# ##SKIA-VISUAL-IMAGE## path=ganesh-gl.linux/DiagonalLines.golden.png size=256x256 base64=AAAA...
-IMAGE_RE = re.compile(
-    r"##SKIA-VISUAL-IMAGE##\s+path=(?P<path>[^\s]+)\s+size=(?P<size>\d+x\d+)\s+base64=(?P<b64>[A-Za-z0-9+/=]+)"
-)
 
 
 def shared_path_for(path):
@@ -95,7 +96,7 @@ def extract(trx_files):
     for trx in trx_files:
         with open(trx, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
-        for m in LINE_RE.finditer(text):
+        for m in ACTUAL_RE.finditer(text):
             path = m.group("path")
             if not SAFE_PATH_RE.match(path):
                 print(f"warning: skipping unsafe golden path '{path}' in {trx}", file=sys.stderr)
@@ -116,13 +117,15 @@ def extract(trx_files):
     return found
 
 
-def _decode_markers(text, regex, trx, into):
+def _decode_markers(text, regex, trx, into, outcomes=None):
     """Decode {path: png_bytes} from one TRX's markers, skipping unsafe/bad ones."""
     for m in regex.finditer(text):
         path = m.group("path")
         if not SAFE_PATH_RE.match(path):
             print(f"warning: skipping unsafe path '{path}' in {trx}", file=sys.stderr)
             continue
+        if outcomes is not None:
+            outcomes[path] = m.group("outcome")
         try:
             into[path] = base64.b64decode(m.group("b64"), validate=True)
         except Exception as ex:  # noqa: BLE001
@@ -130,53 +133,45 @@ def _decode_markers(text, regex, trx, into):
 
 
 def extract_failures(trx_files, out_dir):
-    """Write browsable triage images for every failing cell, grouped by outcome.
+    """Write browsable triage images for every failing test, grouped by outcome.
 
-    Reads the captured (actual) image, the per-cell outcome, and the golden/diff
-    images a mismatch emits, then writes:
-        {out_dir}/unseeded/{renderer}.{platform}/{scene}.actual.png
-        {out_dir}/mismatch/{renderer}.{platform}/{scene}.{actual,golden,diff}.png
-    so a red cell is reviewable as PNGs straight from the published TRX, and an
-    unseeded cell (harvest it) is told apart from a regression (investigate it).
-    Passing cells are skipped. Returns (mismatch_count, unseeded_count).
+    Writes {out_dir}/{unseeded,mismatch}/{renderer}.{platform}/{scene}.{role}.png,
+    so a red test is reviewable as PNGs straight from the published TRX, and an
+    unseeded test (harvest it) is told apart from a regression (investigate it).
+    Passing tests are skipped. Returns (mismatch_count, unseeded_count).
     """
-    actuals, images, outcomes = {}, {}, {}
+    outcomes = {}
+    images = {"actual": {}, "golden": {}, "diff": {}}
     for trx in trx_files:
         with open(trx, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
-        _decode_markers(text, LINE_RE, trx, actuals)
-        _decode_markers(text, IMAGE_RE, trx, images)
-        for m in CELL_RE.finditer(text):
-            if SAFE_PATH_RE.match(m.group("path")):
-                outcomes[m.group("path")] = m.group("outcome")
+        _decode_markers(text, ACTUAL_RE, trx, images["actual"], outcomes)
+        _decode_markers(text, GOLDEN_RE, trx, images["golden"])
+        _decode_markers(text, DIFF_RE, trx, images["diff"])
 
     mismatch = unseeded = 0
-    for cell_path in sorted(outcomes):
-        outcome = outcomes[cell_path]
+    for path in sorted(outcomes):
+        outcome = outcomes[path]
         if outcome not in ("mismatch", "unseeded"):
             continue
-        rel_dir, leaf = cell_path.split("/", 1)
+        rel_dir, leaf = path.split("/", 1)
         base = leaf[:-4]  # strip ".png"
         dest_dir = os.path.join(out_dir, outcome, *rel_dir.split("/"))
         os.makedirs(dest_dir, exist_ok=True)
 
         wrote_any = False
-        if cell_path in actuals:
-            with open(os.path.join(dest_dir, base + ".actual.png"), "wb") as fh:
-                fh.write(actuals[cell_path])
+        for role, store in images.items():
+            if path not in store:
+                continue
+            with open(os.path.join(dest_dir, f"{base}.{role}.png"), "wb") as fh:
+                fh.write(store[path])
             wrote_any = True
-        if outcome == "mismatch":
-            for kind in ("golden", "diff"):
-                key = f"{rel_dir}/{base}.{kind}.png"
-                if key in images:
-                    with open(os.path.join(dest_dir, f"{base}.{kind}.png"), "wb") as fh:
-                        fh.write(images[key])
         if wrote_any:
-            print(f"  {outcome}: {cell_path}")
+            print(f"  {outcome}: {path}")
         mismatch += outcome == "mismatch"
         unseeded += outcome == "unseeded"
 
-    print(f"\nWrote {mismatch} mismatch + {unseeded} unseeded cell(s) under {out_dir}.")
+    print(f"\nWrote {mismatch} mismatch + {unseeded} unseeded test(s) under {out_dir}.")
     return mismatch, unseeded
 
 
@@ -190,7 +185,7 @@ def main(argv=None):
                         help="List the goldens that would be written without writing them")
     parser.add_argument("--failures-out", metavar="DIR", default=None,
                         help="Triage mode: instead of seeding goldens, extract actual/golden/diff "
-                             "images for failing cells into DIR (grouped by outcome). Intended as an "
+                             "images for failing tests into DIR (grouped by outcome). Intended as an "
                              "always() CI step writing into the published test-logs artifact.")
     args = parser.parse_args(argv)
 
@@ -198,7 +193,7 @@ def main(argv=None):
     if not trx_files:
         print("No .trx files found.", file=sys.stderr)
         # In triage mode a missing TRX is not an error (the lane may have no
-        # visual cells); never fail the CI step over it.
+        # visual tests); never fail the CI step over it.
         return 0 if args.failures_out else 1
 
     # Triage mode: dump failure images for review; do not touch the goldens tree.
@@ -207,10 +202,10 @@ def main(argv=None):
         extract_failures(trx_files, args.failures_out)
         return 0
 
-    print(f"Scanning {len(trx_files)} TRX file(s) for {MARKER} markers...")
+    print(f"Scanning {len(trx_files)} TRX file(s) for {ACTUAL_MARKER} markers...")
     goldens = extract(trx_files)
     if not goldens:
-        print(f"No {MARKER} markers found. Did the visual matrix run and emit images?", file=sys.stderr)
+        print(f"No {ACTUAL_MARKER} markers found. Did the visual tests run and emit images?", file=sys.stderr)
         return 1
 
     written = 0

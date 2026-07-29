@@ -27,7 +27,7 @@ its Silk.NET dependency stays out of the shared test assembly.
 A renderer's `Name` is also its [`GpuPolicy`](gpu-test-policy.md) backend id and
 its golden directory name, so one word identifies a backend everywhere.
 
-## The seam
+## Interfaces
 
 ```csharp
 public interface ISkiaScene
@@ -53,31 +53,22 @@ in a constructor. A renderer must not check the platform and must not catch a
 failed bring-up — both belong to the policy.
 
 Each driver runs the renderers declared in *its own* assembly against every
-scene, so the base matrix and a satellite never double-run a cell.
+scene, so the base matrix and a satellite never double-run a test.
 
-## Cell lifecycle
+## How a test runs
 
 1. `GpuPolicy.RequireOrSkip(renderer.Name)` — skip here or commit to rendering.
-2. `RenderAsync`. **Any** exception fails the cell.
-3. Emit the rendered PNG as a `##SKIA-GOLDEN-IMAGE##` marker.
-4. Look up the golden. None → fail as *unseeded*.
-5. Compare within tolerance → pass, or fail as *mismatch*.
+2. `RenderAsync`. **Any** exception fails the test.
+3. Look up the golden. None → emit *actual*, fail as **unseeded**.
+4. Within tolerance → emit *actual*, pass.
+5. Otherwise → emit *actual* + *golden* + *diff*, fail as **mismatch**.
 
-So a **skip** or a **render failure** produces no image marker; every outcome
-that got as far as pixels does.
-
-### Failure discipline
-
-A cell skips only when the policy says the backend is not required here. Every
-other outcome is a failure:
-
-- `RenderAsync` throws anything at all,
-- an existing golden is out of tolerance (*mismatch*),
-- no golden is committed for this cell on this platform (*unseeded*).
+A skip or a render failure therefore produces no image; everything that got as
+far as pixels does.
 
 Unseeded is a failure, not a skip: the backend produced pixels, so a green result
 would be a coverage hole. That is affordable because the captured PNG is already
-in the TRX — harvest it, commit, and the cell goes green.
+in the TRX — harvest it, commit, and the test goes green.
 
 ## Goldens
 
@@ -106,7 +97,7 @@ the CPU baseline.
 
 ## Tolerance
 
-`GoldenTolerance` gives each cell a `ChannelTolerance` (max per-channel delta)
+`GoldenTolerance` gives each test a `ChannelTolerance` (max per-channel delta)
 and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 
 | Renderer | Tolerance |
@@ -115,7 +106,7 @@ and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 | every GPU renderer | `(12, 0.02)` |
 
 Raster is not bit-exact because the shared `raster/` golden is captured on one
-architecture and replayed on others. For a single divergent cell add a
+architecture and replayed on others. For a single divergent case add a
 `(renderer, scene)` entry to `GoldenTolerance.ByRendererScene` rather than
 loosening a whole renderer.
 
@@ -129,8 +120,8 @@ cd tests/SkiaSharp.Tests.Console/bin/Release/net*/
 ./SkiaSharp.Tests --filter-trait "Category=Visual"
 ```
 
-Every cell is tagged `Category=Visual`, so `--filter-not-trait "Category=Visual"`
-excludes the suite. The Vulkan cells live in the satellite — build and run
+Every test is tagged `Category=Visual`, so `--filter-not-trait "Category=Visual"`
+excludes the suite. The Vulkan renderers live in the satellite — build and run
 `SkiaSharp.Vulkan.Tests.Console` the same way.
 
 On a mismatch the runner writes `_visualfailures/{renderer}/{scene}.actual.png`
@@ -168,9 +159,13 @@ host:
 
 | Marker | Carries |
 |---|---|
-| `##SKIA-GOLDEN-IMAGE##` | the rendered PNG (base64) |
-| `##SKIA-VISUAL-CELL##` | `outcome={pass\|mismatch\|unseeded}` |
-| `##SKIA-VISUAL-IMAGE##` | the golden and diff PNGs, on a mismatch |
+| `##SKIA-VISUAL-ACTUAL##` | the rendered PNG, plus `outcome={pass\|mismatch\|unseeded}` |
+| `##SKIA-VISUAL-GOLDEN##` | the committed reference PNG, on a mismatch |
+| `##SKIA-VISUAL-DIFF##` | the difference PNG, on a mismatch |
+
+All three share one `path` — the golden key — so the marker name is the only
+thing that distinguishes the roles. *actual* carries the outcome because a pass
+and an unseeded test emit an identical set of images.
 
 An `always()` CI step runs `extract-visual-goldens.py … --failures-out` to decode
 them into the published `testlogs_*` artifact as browsable PNGs, grouped by
@@ -187,7 +182,7 @@ one from `tests/Content/fonts`), no clock, no randomness.
 depends on the desktop `GlContexts`; in a satellite project if it needs a NuGet
 dependency that must not reach the shared assembly. Give its `Name` a row in
 `GpuPolicy.RequiredOn`, and join the driving test class to the GPU rendering
-collection so cells never render concurrently.
+collection so renderers never run concurrently.
 
 Either way the catalogs discover it, and its first run fails as unseeded until
 you harvest the goldens.
@@ -198,7 +193,7 @@ you harvest the goldens.
 |---|---|
 | `tests/Tests/SkiaSharp/Visual/` | interfaces, catalogs, `GoldenStore`, `GoldenTolerance`, `VisualPlatform` |
 | `Visual/Renderers/`, `Renderers/Desktop/` | shared and desktop-only renderers |
-| `Visual/Tests/VisualMatrixTestsBase.cs` | the per-cell pipeline every host shares |
+| `Visual/Tests/VisualMatrixTestsBase.cs` | the render/compare pipeline every host shares |
 | `tests/VulkanTests/Visual/` | the Vulkan satellite's renderers and driver |
 | `tests/Content/Goldens/` | committed reference PNGs |
 | `scripts/infra/tests/extract-visual-goldens.py` | marker → PNG harvest |
