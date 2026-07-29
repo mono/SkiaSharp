@@ -199,7 +199,7 @@ void RunNinja(DirectoryPath working, DirectoryPath outDir, string target = "")
     RunPython(working, script, $"-C {outDir} {target}");
 }
 
-void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+void GenerateGnBuild(DirectoryPath outDir, string skiaArgs)
 {
     // override win_vc with the command line args
     if (!string.IsNullOrEmpty(VS_INSTALL)) {
@@ -214,6 +214,11 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
 
     // generate native skia build files
     RunGn(SKIA_PATH, $"out/{outDir}", skiaArgs);
+}
+
+void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
+{
+    GenerateGnBuild(outDir, skiaArgs);
 
     // build native skia
     RunNinja(SKIA_PATH, $"out/{outDir}", target);
