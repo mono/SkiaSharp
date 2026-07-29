@@ -203,6 +203,13 @@ jobs:
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
+        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+          - task: UseNode@1
+            displayName: Install Node.js
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              version: 20.x
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
