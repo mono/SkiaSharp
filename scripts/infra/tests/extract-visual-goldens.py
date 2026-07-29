@@ -51,8 +51,9 @@ MARKERS = {role: _marker_re(role.upper()) for role in ("actual", "golden", "diff
 
 # Golden paths are always "{renderer}.{platform}/{scene}.png": exactly one
 # subdirectory, a .png leaf, and no traversal. Reject anything else so a malformed
-# or hostile marker can never write outside the goldens tree.
-SAFE_PATH_RE = re.compile(r"^[A-Za-z0-9][\w.\-]*/[A-Za-z0-9][\w.\-]*\.png$")
+# or hostile marker can never write outside the goldens tree. \Z rather than $,
+# since $ also matches before a trailing newline.
+SAFE_PATH_RE = re.compile(r"^[A-Za-z0-9][\w.\-]*/[A-Za-z0-9][\w.\-]*\.png\Z")
 
 # Splits "{renderer}.{platform}/{scene}.png" into its shared, platform-portable
 # counterpart "{renderer}/{scene}.png" (renderer is everything before the last dot
