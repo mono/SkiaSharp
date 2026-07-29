@@ -198,12 +198,6 @@ The solution includes that satellite, but milestone updates must also run it exp
 Vulkan-provisioned host and retain TRX evidence that both Ganesh and Graphite tests passed. A
 green base Console run proves nothing about Vulkan.
 
-Starting with m152, Ganesh no longer creates its old `SK_USE_VMA` fallback allocator. Rolling the
-VulkanMemoryAllocator dependency can make the native build compile while
-`GRContext.CreateVulkan` still returns null. If the C API caller does not supply
-`fMemoryAllocator`, create the default VMA-backed allocator in `src/c/gr_context.cpp`, analogous
-to `src/c/sk_graphite_vulkan.cpp`, and fail context creation if allocator creation fails.
-
 ---
 
 ## Troubleshooting
@@ -221,4 +215,3 @@ to `src/c/sk_graphite_vulkan.cpp`, and fail context creation if allocator creati
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
 | GPU context C API returns nullptr | Backend defines not reaching `:core` | Add defines to `:core` in BUILD.gn |
-| Vulkan GRContext returns null | No allocator supplied after Ganesh fallback removal | Create a default VMA-backed allocator in `src/c/gr_context.cpp`, analogous to `sk_graphite_vulkan.cpp` |
