@@ -367,8 +367,6 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
-                ANDROID_HOME: $(ANDROID_HOME)
-                ANDROID_SDK_ROOT: $(ANDROID_SDK_ROOT)
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
@@ -385,8 +383,6 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
-                ANDROID_HOME: $(ANDROID_HOME)
-                ANDROID_SDK_ROOT: $(ANDROID_SDK_ROOT)
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
               displayName: Run the bootstrapper for ${{ parameters.target }}

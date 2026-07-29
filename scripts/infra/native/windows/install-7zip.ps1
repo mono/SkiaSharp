@@ -1,5 +1,6 @@
 Param(
-    [string] $Version = '26.02'
+    [string] $Version = '26.02',
+    [string] $Sha256 = 'db407a4f6d4999e5c7bc00ce8a882be94717b56e7fa68140fe3f12605d91643e'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -29,6 +30,11 @@ New-Item -ItemType Directory -Force -Path $tempDir | Out-Null
 
 Write-Host "Downloading 7-zip Installer: $uri..."
 .\scripts\infra\native\shared\download-file.ps1 -Uri $uri -OutFile $installer
+
+$actualSha256 = (Get-FileHash -Algorithm SHA256 -Path $installer).Hash.ToLowerInvariant()
+if ($actualSha256 -ne $Sha256.ToLowerInvariant()) {
+    throw "7-Zip $Version SHA-256 mismatch: expected $Sha256, got $actualSha256"
+}
 
 $p = "$env:BUILD_SOURCESDIRECTORY\output\logs\install-logs"
 New-Item -ItemType Directory -Force -Path $p | Out-Null
