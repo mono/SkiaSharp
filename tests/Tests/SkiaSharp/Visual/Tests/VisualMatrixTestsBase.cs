@@ -44,16 +44,17 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		public const string VisualCategory = "Visual";
 
-		// One marker per image role, each a single line so the harvest script can
-		// scan a TRX line by line (base64 has no whitespace and is XML-safe):
+		// One marker per image, each a single line so the harvest script can scan a
+		// TRX line by line (base64 has no whitespace and is XML-safe). All three
+		// share one path — the golden key:
 		//
-		//   ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png outcome={pass|mismatch|unseeded} size=WxH base64=...
+		//   ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png size=WxH base64=...
 		//   ##SKIA-VISUAL-GOLDEN## path=... size=WxH base64=...
 		//   ##SKIA-VISUAL-DIFF##   path=... size=WxH base64=...
 		//
-		// ACTUAL is what the renderer produced, and carries the verdict because a
-		// pass and an unseeded test are otherwise indistinguishable to the script.
-		// GOLDEN and DIFF are emitted only on a mismatch.
+		// Which markers are present says everything: no golden means none was
+		// committed, and a diff only exists when there was something to diff
+		// against. A pass emits all three too, so a near-miss can still be eyeballed.
 		public const string ActualImageMarker = "##SKIA-VISUAL-ACTUAL##";
 		public const string GoldenImageMarker = "##SKIA-VISUAL-GOLDEN##";
 		public const string DiffImageMarker = "##SKIA-VISUAL-DIFF##";
@@ -78,10 +79,11 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 
+			EmitActual(renderer.Name, scene.Name, info, actual);
+
 			var golden = GoldenStore.TryLoad(renderer.Name, scene.Name, info);
 			if (golden is null)
 			{
-				EmitActual(renderer.Name, scene.Name, "unseeded", info, actual);
 				FailUnseeded(renderer.Name, scene.Name, info, actual);
 				return;
 			}
@@ -91,11 +93,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 		// Harvesting this marker from the TRX is how goldens are created, so it
 		// carries the pixels verbatim.
-		private void EmitActual(string rendererName, string sceneName, string outcome, SKImageInfo info, byte[] actual)
-		{
-			var png = GoldenStore.EncodePng(actual, info);
-			Emit(ActualImageMarker, rendererName, sceneName, info, png, $"outcome={outcome} ");
-		}
+		private void EmitActual(string rendererName, string sceneName, SKImageInfo info, byte[] actual) =>
+			Emit(ActualImageMarker, rendererName, sceneName, info, GoldenStore.EncodePng(actual, info));
 
 		private void EmitImage(string marker, string rendererName, string sceneName, SKImageInfo info, SKImage image)
 		{
@@ -103,11 +102,11 @@ namespace SkiaSharp.Tests.Visual.Tests
 			Emit(marker, rendererName, sceneName, info, data.ToArray());
 		}
 
-		private void Emit(string marker, string rendererName, string sceneName, SKImageInfo info, byte[] png, string extra = "")
+		private void Emit(string marker, string rendererName, string sceneName, SKImageInfo info, byte[] png)
 		{
 			var normalized = RendererPixels.NormalizedInfo(info);
 			WriteOutput(
-				$"{marker} path={GoldenStore.Key(rendererName, sceneName)} {extra}" +
+				$"{marker} path={GoldenStore.Key(rendererName, sceneName)} " +
 				$"size={normalized.Width}x{normalized.Height} base64={Convert.ToBase64String(png)}");
 		}
 
@@ -122,18 +121,13 @@ namespace SkiaSharp.Tests.Visual.Tests
 			var result = SkiaSharp.Extended.SKPixelComparer.Compare(goldenImage, actualImage, tolerance.ChannelTolerance);
 			var allowedOutliers = (long)Math.Floor(result.TotalPixels * tolerance.MaxOutlierFraction);
 
-			if (result.ErrorPixelCount <= allowedOutliers)
-			{
-				EmitActual(rendererName, sceneName, "pass", info, actual);
-				return;
-			}
-
 			using var diffImage = SkiaSharp.Extended.SKPixelComparer.GenerateDifferenceImage(goldenImage, actualImage, tolerance.ChannelTolerance);
 
-			// Actual + golden + diff, so the published TRX alone is enough to triage.
-			EmitActual(rendererName, sceneName, "mismatch", info, actual);
 			EmitImage(GoldenImageMarker, rendererName, sceneName, info, goldenImage);
 			EmitImage(DiffImageMarker, rendererName, sceneName, info, diffImage);
+
+			if (result.ErrorPixelCount <= allowedOutliers)
+				return;
 
 			var actualPath = TrySave(() => GoldenStore.SaveFailureArtifact(rendererName, sceneName, ".actual.png", actual, info));
 			var diffPath = TrySave(() => GoldenStore.SaveFailureImage(rendererName, sceneName, ".diff.png", diffImage));

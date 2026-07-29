@@ -59,12 +59,13 @@ scene, so the base matrix and a satellite never double-run a test.
 
 1. `GpuPolicy.RequireOrSkip(renderer.Name)` — skip here or commit to rendering.
 2. `RenderAsync`. **Any** exception fails the test.
-3. Look up the golden. None → emit *actual*, fail as **unseeded**.
-4. Within tolerance → emit *actual*, pass.
-5. Otherwise → emit *actual* + *golden* + *diff*, fail as **mismatch**.
+3. Emit *actual*.
+4. Look up the golden. None → fail as **unseeded**.
+5. Emit *golden* + *diff*, then pass or fail as **mismatch** on tolerance.
 
-A skip or a render failure therefore produces no image; everything that got as
-far as pixels does.
+So the markers alone say what happened: no *golden* means none was committed, and
+a *diff* only exists when there was something to diff against. A pass emits all
+three too, so a near-miss can still be eyeballed.
 
 Unseeded is a failure, not a skip: the backend produced pixels, so a green result
 would be a coverage hole. That is affordable because the captured PNG is already
@@ -159,17 +160,18 @@ host:
 
 | Marker | Carries |
 |---|---|
-| `##SKIA-VISUAL-ACTUAL##` | the rendered PNG, plus `outcome={pass\|mismatch\|unseeded}` |
-| `##SKIA-VISUAL-GOLDEN##` | the committed reference PNG, on a mismatch |
-| `##SKIA-VISUAL-DIFF##` | the difference PNG, on a mismatch |
+| `##SKIA-VISUAL-ACTUAL##` | the rendered PNG |
+| `##SKIA-VISUAL-GOLDEN##` | the committed reference PNG, when one exists |
+| `##SKIA-VISUAL-DIFF##` | the difference PNG, when a golden exists |
 
 All three share one `path` — the golden key — so the marker name is the only
-thing that distinguishes the roles. *actual* carries the outcome because a pass
-and an unseeded test emit an identical set of images.
+thing that distinguishes them.
 
-An `always()` CI step runs `extract-visual-goldens.py … --failures-out` to decode
-them into the published `testlogs_*` artifact as browsable PNGs, grouped by
-outcome — `unseeded/` (harvest it) and `mismatch/` (investigate it).
+An `always()` CI step runs `extract-visual-goldens.py … --images-out` to decode
+them into the published `testlogs_*` artifact as browsable PNGs mirroring the
+goldens tree: `{renderer}.{platform}/{scene}.{actual,golden,diff}.png`. A scene
+with only an `.actual.png` had no golden; the test result and its message say
+whether the rest passed.
 
 ## Extending
 

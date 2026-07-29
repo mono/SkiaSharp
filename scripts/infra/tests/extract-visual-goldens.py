@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
 """Harvest golden images for the visual-regression tests from test results (TRX).
 
-Every visual test (tests/Tests/SkiaSharp/Visual) emits its rendered PNG into the
-test output as a single line:
+Every visual test (tests/Tests/SkiaSharp/Visual) emits its images into the test
+output, one line each, all sharing one path -- the golden key:
 
-    ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png outcome=pass size=WxH base64=<...>
+    ##SKIA-VISUAL-ACTUAL## path={renderer}.{platform}/{scene}.png size=WxH base64=<...>
+    ##SKIA-VISUAL-GOLDEN## path=... size=WxH base64=<...>
+    ##SKIA-VISUAL-DIFF##   path=... size=WxH base64=<...>
 
-A mismatch additionally emits ##SKIA-VISUAL-GOLDEN## and ##SKIA-VISUAL-DIFF##
-lines with the same path. Those lines land in the TRX produced by every test host
--- desktop Console, the MAUI device hosts, and the WASM host alike -- which makes
-the TRX the one uniform channel for seeding goldens, including on device/browser
-hosts whose filesystem is sandboxed/embedded and cannot be written to in-process.
+No golden means none was committed, and a diff only exists when there was
+something to diff against.
+
+Those lines land in the TRX produced by every test host -- desktop Console, the
+MAUI device hosts, and the WASM host alike -- which makes the TRX the one uniform
+channel for seeding goldens, including on device/browser hosts whose filesystem is
+sandboxed/embedded and cannot be written to in-process.
 
 Seeding workflow:
-    1. Run the suite (locally or in CI). Tests with no committed golden FAIL, but
-       still emit their PNG marker.
+    1. Run the suite (locally or in CI). Tests with no committed golden FAIL and
+       emit their rendered PNG.
     2. Point this script at the TRX file(s) (the CI 'testlogs_*' artifacts, or a
        local output/logs/testlogs directory).
     3. Review the resulting git diff of tests/Content/Goldens/** and commit.
@@ -35,20 +39,15 @@ import re
 import sys
 
 
-def _marker_re(role, extra=""):
+def _marker_re(role):
     return re.compile(
-        rf"##SKIA-VISUAL-{role}##\s+path=(?P<path>[^\s]+)\s+{extra}"
+        rf"##SKIA-VISUAL-{role}##\s+path=(?P<path>[^\s]+)\s+"
         r"size=(?P<size>\d+x\d+)\s+base64=(?P<b64>[A-Za-z0-9+/=]+)"
     )
 
 
-# All three carry the same path -- the golden key. The role is the marker name,
-# and ACTUAL also carries the verdict, because a pass and an unseeded test emit
-# an identical set of images.
 ACTUAL_MARKER = "##SKIA-VISUAL-ACTUAL##"
-ACTUAL_RE = _marker_re("ACTUAL", r"outcome=(?P<outcome>\w+)\s+")
-GOLDEN_RE = _marker_re("GOLDEN")
-DIFF_RE = _marker_re("DIFF")
+MARKERS = {role: _marker_re(role.upper()) for role in ("actual", "golden", "diff")}
 
 # Golden paths are always "{renderer}.{platform}/{scene}.png": exactly one
 # subdirectory, a .png leaf, and no traversal. Reject anything else so a malformed
@@ -96,7 +95,7 @@ def extract(trx_files):
     for trx in trx_files:
         with open(trx, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
-        for m in ACTUAL_RE.finditer(text):
+        for m in MARKERS["actual"].finditer(text):
             path = m.group("path")
             if not SAFE_PATH_RE.match(path):
                 print(f"warning: skipping unsafe golden path '{path}' in {trx}", file=sys.stderr)
@@ -117,62 +116,37 @@ def extract(trx_files):
     return found
 
 
-def _decode_markers(text, regex, trx, into, outcomes=None):
-    """Decode {path: png_bytes} from one TRX's markers, skipping unsafe/bad ones."""
-    for m in regex.finditer(text):
-        path = m.group("path")
-        if not SAFE_PATH_RE.match(path):
-            print(f"warning: skipping unsafe path '{path}' in {trx}", file=sys.stderr)
-            continue
-        if outcomes is not None:
-            outcomes[path] = m.group("outcome")
-        try:
-            into[path] = base64.b64decode(m.group("b64"), validate=True)
-        except Exception as ex:  # noqa: BLE001
-            print(f"warning: bad base64 for '{path}' in {trx}: {ex}", file=sys.stderr)
+def extract_images(trx_files, out_dir):
+    """Write every emitted image as a browsable PNG, mirroring the goldens tree.
 
-
-def extract_failures(trx_files, out_dir):
-    """Write browsable triage images for every failing test, grouped by outcome.
-
-    Writes {out_dir}/{unseeded,mismatch}/{renderer}.{platform}/{scene}.{role}.png,
-    so a red test is reviewable as PNGs straight from the published TRX, and an
-    unseeded test (harvest it) is told apart from a regression (investigate it).
-    Passing tests are skipped. Returns (mismatch_count, unseeded_count).
+    Produces {out_dir}/{renderer}.{platform}/{scene}.{actual,golden,diff}.png. A
+    scene with only an .actual.png had no golden committed; one with all three was
+    compared, and the test result says whether it passed. Returns the file count.
     """
-    outcomes = {}
-    images = {"actual": {}, "golden": {}, "diff": {}}
+    written = 0
     for trx in trx_files:
         with open(trx, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
-        _decode_markers(text, ACTUAL_RE, trx, images["actual"], outcomes)
-        _decode_markers(text, GOLDEN_RE, trx, images["golden"])
-        _decode_markers(text, DIFF_RE, trx, images["diff"])
+        for role, regex in MARKERS.items():
+            for m in regex.finditer(text):
+                path = m.group("path")
+                if not SAFE_PATH_RE.match(path):
+                    print(f"warning: skipping unsafe path '{path}' in {trx}", file=sys.stderr)
+                    continue
+                try:
+                    data = base64.b64decode(m.group("b64"), validate=True)
+                except Exception as ex:  # noqa: BLE001
+                    print(f"warning: bad base64 for '{path}' in {trx}: {ex}", file=sys.stderr)
+                    continue
+                rel_dir, leaf = path.split("/", 1)
+                dest_dir = os.path.join(out_dir, *rel_dir.split("/"))
+                os.makedirs(dest_dir, exist_ok=True)
+                with open(os.path.join(dest_dir, f"{leaf[:-4]}.{role}.png"), "wb") as out:
+                    out.write(data)
+                written += 1
 
-    mismatch = unseeded = 0
-    for path in sorted(outcomes):
-        outcome = outcomes[path]
-        if outcome not in ("mismatch", "unseeded"):
-            continue
-        rel_dir, leaf = path.split("/", 1)
-        base = leaf[:-4]  # strip ".png"
-        dest_dir = os.path.join(out_dir, outcome, *rel_dir.split("/"))
-        os.makedirs(dest_dir, exist_ok=True)
-
-        wrote_any = False
-        for role, store in images.items():
-            if path not in store:
-                continue
-            with open(os.path.join(dest_dir, f"{base}.{role}.png"), "wb") as fh:
-                fh.write(store[path])
-            wrote_any = True
-        if wrote_any:
-            print(f"  {outcome}: {path}")
-        mismatch += outcome == "mismatch"
-        unseeded += outcome == "unseeded"
-
-    print(f"\nWrote {mismatch} mismatch + {unseeded} unseeded test(s) under {out_dir}.")
-    return mismatch, unseeded
+    print(f"Wrote {written} image(s) under {out_dir}.")
+    return written
 
 
 def main(argv=None):
@@ -183,23 +157,22 @@ def main(argv=None):
                         help="Goldens root to write into (default: tests/Content/Goldens)")
     parser.add_argument("--dry-run", action="store_true",
                         help="List the goldens that would be written without writing them")
-    parser.add_argument("--failures-out", metavar="DIR", default=None,
-                        help="Triage mode: instead of seeding goldens, extract actual/golden/diff "
-                             "images for failing tests into DIR (grouped by outcome). Intended as an "
-                             "always() CI step writing into the published test-logs artifact.")
+    parser.add_argument("--images-out", metavar="DIR", default=None,
+                        help="Instead of seeding goldens, write every emitted actual/golden/diff "
+                             "image into DIR as browsable PNGs. Intended as an always() CI step "
+                             "writing into the published test-logs artifact.")
     args = parser.parse_args(argv)
 
     trx_files = find_trx_files(args.paths)
     if not trx_files:
         print("No .trx files found.", file=sys.stderr)
-        # In triage mode a missing TRX is not an error (the lane may have no
-        # visual tests); never fail the CI step over it.
-        return 0 if args.failures_out else 1
+        # A missing TRX is not an error when extracting images (the lane may have
+        # no visual tests); never fail the CI step over it.
+        return 0 if args.images_out else 1
 
-    # Triage mode: dump failure images for review; do not touch the goldens tree.
-    if args.failures_out:
-        print(f"Scanning {len(trx_files)} TRX file(s) for visual-regression failures...")
-        extract_failures(trx_files, args.failures_out)
+    if args.images_out:
+        print(f"Scanning {len(trx_files)} TRX file(s) for visual-regression images...")
+        extract_images(trx_files, args.images_out)
         return 0
 
     print(f"Scanning {len(trx_files)} TRX file(s) for {ACTUAL_MARKER} markers...")
