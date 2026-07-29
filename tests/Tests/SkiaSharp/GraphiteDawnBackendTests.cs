@@ -8,10 +8,10 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Graphite release-callback tests over Dawn (WebGPU) for the Blazor WASM
-	/// host. Reuses the <c>SKWebGpu</c> JS interop that <c>GraphiteDawnRenderer</c>
-	/// uses to obtain a WebGPU device and mint textures. Only runs in a browser;
-	/// every other host skips.
+	/// <see cref="GraphiteBackendTestBase"/> harness over Dawn (WebGPU) for the
+	/// Blazor WASM host. Reuses the <c>SKWebGpu</c> JS interop that
+	/// <c>GraphiteDawnRenderer</c> uses to obtain a WebGPU device and mint
+	/// textures. Only runs in a browser; every other host skips.
 	///
 	/// <para>
 	/// Dawn on WASM is a <em>non-yielding</em> context: it cannot submit
@@ -19,11 +19,14 @@ namespace SkiaSharp.Tests
 	/// context/recorder are created once and kept for the process lifetime (never
 	/// disposed). Bring-up is asynchronous; the single-threaded WASM host needs no
 	/// GPU gate, and blocking on the async setup would deadlock the JS event loop,
-	/// so <see cref="SKGraphiteReleaseTestsBase.RunGuardedAsync"/> simply awaits.
+	/// so <see cref="GraphiteBackendTestBase.RunGuardedAsync"/> simply awaits.
+	/// Because the Context is process-shared, per-test <see cref="SKGraphiteContextOptions"/>
+	/// cannot be honored — <see cref="SupportsPerHarnessOptions"/> is false and the
+	/// shader-error-handler scenario skips on this backend.
 	/// </para>
 	/// </summary>
 	[Collection(GpuRenderingCollection.Name)]
-	public sealed class SKGraphiteReleaseDawnTests : SKGraphiteReleaseTestsBase
+	public sealed class GraphiteDawnBackendTests : GraphiteBackendTestBase
 	{
 		private static SKGraphiteContext s_context;
 		private static SKGraphiteRecorder s_recorder;
@@ -36,7 +39,12 @@ namespace SkiaSharp.Tests
 
 		protected override string Backend => GpuBackends.GraphiteDawn;
 
-		protected override async Task<GraphiteReleaseHarness> CreateHarnessAsync()
+		// The Dawn Context is process-shared (non-yielding constraint); a per-harness
+		// SKGraphiteContextOptions.ShaderErrorHandler would be silently dropped on any
+		// call after the first.
+		protected override bool SupportsPerHarnessOptions => false;
+
+		protected override async Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options)
 		{
 			if (!s_ready)
 			{
@@ -76,7 +84,7 @@ namespace SkiaSharp.Tests
 			return new DawnHarness(s_context, s_recorder, s_device);
 		}
 
-		private sealed class DawnHarness : GraphiteReleaseHarness
+		private sealed class DawnHarness : GraphiteBackendHarness
 		{
 			private readonly JSObject device;
 
