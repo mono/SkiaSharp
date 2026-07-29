@@ -25,6 +25,9 @@
 #                                               target milestone stays == main's milestone.
 #                                    * number → an exact milestone (e.g. 151); merge
 #                                               chrome/m<number>.
+#   --base-branch <branch>         Optional mono/SkiaSharp base override for manual
+#                                  validation. Production runs omit this and use normal
+#                                  main/release-line detection.
 #   --gate                         Also run the gating checks (does upstream exist? is it
 #                                  already merged?) and emit `skip=true` / exit
 #                                  accordingly. Only pre_activation needs this.
@@ -41,12 +44,16 @@ set -euo pipefail
 
 GATE=false
 SYNC_TARGET=""
+BASE_BRANCH_OVERRIDE=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --gate) GATE=true; shift ;;
     --target)
       [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --target requires a value"; exit 2; }
       SYNC_TARGET="$2"; shift 2 ;;
+    --base-branch)
+      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --base-branch requires a value"; exit 2; }
+      BASE_BRANCH_OVERRIDE="$2"; shift 2 ;;
     *) echo "::error::skia-sync-detect.sh: unknown argument '$1'"; exit 2 ;;
   esac
 done
@@ -180,9 +187,21 @@ else
   HEAD_BRANCH="skia-sync/m${TARGET}"
 fi
 RELEASE_BRANCH=""
+if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
+  if ! git check-ref-format --branch "$BASE_BRANCH_OVERRIDE" >/dev/null; then
+    echo "::error::Invalid base branch override: '$BASE_BRANCH_OVERRIDE'"
+    exit 1
+  fi
+  if ! git ls-remote --exit-code --heads "https://github.com/${GITHUB_REPOSITORY}.git" \
+      "refs/heads/${BASE_BRANCH_OVERRIDE}" >/dev/null; then
+    echo "::error::Base branch override '${BASE_BRANCH_OVERRIDE}' does not exist in ${GITHUB_REPOSITORY}."
+    exit 1
+  fi
+  BASE_BRANCH="$BASE_BRANCH_OVERRIDE"
+  echo "Manual base override: ${BASE_BRANCH}"
 # `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
 # TARGET, which then falls through to the main line.
-if [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
+elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
   RELEASE_BRANCH=$(git ls-remote --heads "https://github.com/${GITHUB_REPOSITORY}.git" \
       "refs/heads/release/*.${TARGET}.x" \
     | sed -n 's|.*refs/heads/\(release/[0-9][0-9.]*\.x\)$|\1|p' | sort -u)
@@ -194,7 +213,9 @@ if [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
     exit 1
   fi
 fi
-if [ -n "$RELEASE_BRANCH" ]; then
+if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
+  :
+elif [ -n "$RELEASE_BRANCH" ]; then
   IS_RELEASE=true
   BASE_BRANCH="$RELEASE_BRANCH"
   SKIA_BASE_BRANCH="$RELEASE_BRANCH"
@@ -215,7 +236,7 @@ fi
 # `current` = milestone of the BASE branch we sync INTO:
 #   - main line → main's milestone
 #   - release   → that line's milestone (== TARGET ⇒ a bug-fix-only sync)
-if [ "$IS_RELEASE" = true ]; then
+if [ -n "$BASE_BRANCH_OVERRIDE" ] || [ "$IS_RELEASE" = true ]; then
   CURRENT=$(milestone_of "$BASE_BRANCH")
 else
   CURRENT="$MAIN_MS"

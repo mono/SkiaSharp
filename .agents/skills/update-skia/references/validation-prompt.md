@@ -29,11 +29,14 @@ Please validate by (run from externals/skia):
 7. **Removal verification**: For any symbol claimed "removed" in the analysis, verify it
    is truly absent from the target branch (not just moved within the file):
    git show {TARGET_UPSTREAM_REF}:PATH | grep SYMBOL
-8. Recompute the dependency diff from the fork base, not from the previous upstream milestone:
+8. For wrapped factory/context-creation paths, inspect implementation changes and identify
+   new null-return preconditions, required context fields, or removed default/fallback behavior.
+   An unchanged public signature is not proof of unchanged behavior.
+9. Recompute the dependency diff from the fork base, not from the previous upstream milestone:
    `git diff origin/{SKIA_BASE_BRANCH}..{TARGET_UPSTREAM_REF} -- DEPS`.
    Confirm the decision report accounts for every revision and enabled/commented-state difference.
-9. For every accepted or preserved revision, find the upstream roll commit with
+10. For every accepted or preserved revision, find the upstream roll commit with
    `git log -S "<target revision>" {DIFF_RANGE} -- DEPS`, inspect source changes in that
    commit, and verify the chosen dependency revision exposes every field/function the target
    source uses. A pin roll coupled to wrapper-source changes is compatibility-sensitive.
-10. Report: missed items, incorrect classifications, dependency decisions, and confirmed items.
+11. Report: missed items, incorrect classifications, dependency decisions, and confirmed items.

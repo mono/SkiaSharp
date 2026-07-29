@@ -8,7 +8,6 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 engine:
   id: copilot
 model: claude-opus-4.8
-max-ai-credits: 2000
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
@@ -21,6 +20,10 @@ on:
     inputs:
       target:
         description: "What to sync. Empty = rotate over the supported versions.json lines (the scheduled default). Or a milestone number (e.g. 151), or `main` for the very tip of upstream Skia (google/skia main HEAD — bleeding edge, NOT a version bump)."
+        required: false
+        type: string
+      base_branch:
+        description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
         required: false
         type: string
 
@@ -47,8 +50,9 @@ on:
       # can't inject shell — the script consumes it as a real --target arg.
       env:
         SYNC_TARGET: ${{ github.event.inputs.target }}
+        SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET"
+      run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -76,7 +80,7 @@ checkout:
     submodules: recursive
 timeout-minutes: 120
 concurrency:
-  group: skia-upstream-sync-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 
 # -- Agent tools -----------------------------------------------------
@@ -163,10 +167,11 @@ steps:
     # the single source of truth.
     env:
       SYNC_TARGET: ${{ github.event.inputs.target }}
+      SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
       GH_TOKEN: ${{ github.token }}
     run: |
       OUT=$(mktemp)
-      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET"
+      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
       bash .github/scripts/skia-sync-prefetch-upstream.sh
@@ -329,6 +334,10 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   skips on Linux remain expected.
   Before testing, assert that `SKIASHARP_REQUIRE_VULKAN` is exactly `1` and
   `SKIA_SYNC_ARTIFACT_DIR` is exactly `/tmp/gh-aw/agent`; stop if either is missing.
+- **Commit sequencing**: Phase 5's genuine two-parent upstream merge commit is required before
+  building. Do not commit later dependency/C API fixes in the submodule, and do not commit the
+  parent update at all, until Phase 10 passes. This keeps every tested fix in the final submodule
+  tip and prevents the parent from recording an intermediate pointer.
 - **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
   Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.

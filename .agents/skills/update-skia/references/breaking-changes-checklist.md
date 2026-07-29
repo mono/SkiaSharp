@@ -89,6 +89,18 @@ cd externals/skia
 grep -rn "SYMBOL_NAME" src/c/ include/c/
 ```
 
+For every wrapped factory or context-creation path touched by the range, inspect implementation
+changes as well as public headers. An unchanged signature can still gain a new null-return
+precondition or lose default/fallback behavior:
+
+```bash
+git log --oneline "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
+git diff "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
+```
+
+Do not classify a backend update as low risk solely because the public header and C API
+signature are unchanged.
+
 ## Step 6: Dependency Compatibility Audit
 
 Diff the fork base against the target; an upstream-to-upstream diff hides fork-specific pins:

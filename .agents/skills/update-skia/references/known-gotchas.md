@@ -93,19 +93,9 @@ Classify every changed active entry:
 - Accept an upstream revision only after verifying no fork customization depends on the old
   revision.
 - Roll for compatibility when target Skia source uses API absent from the fork revision.
-  Record the exact source/API dependency. For example, an allocator factory call alone does
-  not imply a VMA roll, but target code using new `VmaAllocationCreateInfo` fields does.
+  Record the exact target source/API dependency and prove the older revision lacks it.
 
 Preserving every pin unconditionally is as unsafe as taking every upstream pin.
-
-**Worked example — m152 VMA compatibility roll.** Upstream commit `272ed8a1f3`
-changed both `DEPS` and `src/gpu/vk/vulkanmemoryallocator/VulkanAMDMemoryAllocator.cpp`.
-The target source uses `VmaVulkanFunctions::vkGetPhysicalDeviceProperties2KHR` and
-`VmaAllocationCreateInfo::minAlignment`, which are absent from the fork's old
-`c788c521...` revision. Therefore m152 must roll VMA to `eb744ea7...`. This roll is
-independent of the Ganesh C API adaptation: `gr_context.cpp` must also create a default
-VMA-backed allocator when `fMemoryAllocator` is absent, analogous to
-`sk_graphite_vulkan.cpp`.
 
 ### 9. HarfBuzz — ALWAYS Separate
 
@@ -239,4 +229,8 @@ about Vulkan.
 | Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
-| GPU context C API returns nullptr | Backend compile flags, a newly required backend-context field, or native initialization failure | Trace every native `nullptr` return before changing the runner or tests; compare the previous implementation and analogous backend shims |
+| GPU context C API returns nullptr | Backend compile flags, a newly required backend-context field, removed fallback behavior, or native initialization failure | Trace the managed→C API→native factory return path and diff its implementation before treating nearby warnings as causal; search analogous C shims for the established include/ownership pattern |
+
+If an exact build or test failure repeats after a supposed fix, first prove the changed code
+was compiled and loaded (compile command/define, object or library content, runtime binary
+timestamp). Do not start a second root-cause theory until deployment of the first fix is verified.
