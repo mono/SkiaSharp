@@ -101,7 +101,7 @@ namespace SkiaSharp.Tests
 				unsupportedReason: "WebAssembly has no Vulkan.",
 				notBuiltReason:
 					"The legacy SharpVk vehicle can only create a Vulkan context on Windows; " +
-					"ganesh-vulkan (Silk.NET) covers the other hosts. " + VulkanNotBuilt),
+					"ganesh-vulkan (Silk.NET) covers every other host."),
 
 			new Entry(
 				GpuBackend.GaneshMetal, "ganesh-metal",
