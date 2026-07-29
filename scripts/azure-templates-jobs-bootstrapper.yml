@@ -300,6 +300,11 @@ jobs:
               displayName: Install the Windows 10 SDK 10.0.19041
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - ${{ if eq(parameters.buildAgent.parameters.installWindowsSdk19041, 'true') }}:
+            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
+              displayName: Install the Windows 10 SDK 10.0.19041
+              retryCountOnTaskFailure: 3
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
@@ -354,6 +359,7 @@ jobs:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
+                VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false
               displayName: Run the bootstrapper for ${{ parameters.target }}
