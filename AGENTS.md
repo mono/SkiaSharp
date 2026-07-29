@@ -324,7 +324,8 @@ public void FeatureWorks()
 
 **BaseTest helpers:** `PathToImages`, `PathToFonts`, `IsWindows/Mac/Linux`
 
-**Philosophy:** Tests FAIL when wrong, never skip (except missing hardware).
+**Philosophy:** Tests fail when wrong. GPU tests skip only when `GpuPolicy`
+declares it; other tests skip only for an explicitly checked capability gap.
 
 ### Debugging Methodology
 

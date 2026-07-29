@@ -579,8 +579,10 @@ dotnet build binding/SkiaSharp/SkiaSharp.csproj
    ```
    The last line will look like: `Passed!  - Failed:     0, Passed:  5435, Skipped:   171, Total:  5606`
 
-   This runs all test projects (core, Vulkan, Direct3D). Backend-specific tests
-   self-skip when hardware isn't available. CI handles WASM/Android/iOS separately.
+   This runs all test projects (core, Vulkan, Direct3D). GPU backends are required
+   per `GpuPolicy`: a backend skips only when the platform table says it does not
+   exist here or `SKIASHARP_TEST_SKIP_GPU` opts this agent out — a backend that
+   fails to come up is a test failure. CI handles WASM/Android/iOS separately.
 
    > **⚠️ These MUST be two separate commands.** Do NOT combine them into a single pipeline
    > like `| tee ... | tail` — the piped tail runs immediately and will show nothing useful

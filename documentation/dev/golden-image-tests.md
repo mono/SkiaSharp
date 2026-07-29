@@ -107,9 +107,8 @@ and a `MaxOutlierFraction` (share of pixels allowed to exceed it).
 | every GPU renderer | `(12, 0.02)` |
 
 Raster is not bit-exact because the shared `raster/` golden is captured on one
-architecture and replayed on others. If a single scene ever needs its own
-tolerance, special-case it in `GoldenTolerance.For` rather than loosening a
-whole renderer.
+architecture and replayed on others. Tolerance is chosen by renderer alone —
+`GoldenTolerance.For` sees only the renderer name.
 
 ## Running locally
 
