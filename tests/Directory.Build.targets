@@ -12,11 +12,14 @@
 
     Set it with the cake `skipGpu` argument, or directly as an MSBuild property:
     `-p:SkiaSharpTestSkipGpu=graphite-dawn`. See documentation/dev/gpu-test-policy.md.
+
+    Deliberately no `Trim` metadata: ILLink collects every RuntimeHostConfigurationOption
+    marked Trim=true as a feature switch and parses its value as a bool, which this
+    backend-id list is not. Trim metadata does not affect runtimeconfig.json generation.
   -->
   <ItemGroup Condition="'$(SkiaSharpTestSkipGpu)' != ''">
     <RuntimeHostConfigurationOption Include="SkiaSharp.Tests.SkipGpu"
-                                    Value="$(SkiaSharpTestSkipGpu)"
-                                    Trim="true" />
+                                    Value="$(SkiaSharpTestSkipGpu)" />
   </ItemGroup>
 
 </Project>

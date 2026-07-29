@@ -92,19 +92,24 @@ inside `ExistsOn` but outside `BuiltOn` it is `NotBuilt`; inside `BuiltOn` it is
 | Id | ExistsOn | BuiltOn (⇒ required) |
 |---|---|---|
 | `raster` | all | all (CPU — always required) |
-| `ganesh-gl` | all | Windows, macOS, Linux |
+| `ganesh-gl` | all | Windows, macOS, Linux, Nano Server |
 | `ganesh-vulkan` | all but Browser | Windows, Linux, Android |
 | `graphite-vulkan` | all but Browser | Windows, Linux, Android |
 | `ganesh-vulkan-sharpvk` | all but Browser | Windows |
 | `ganesh-metal` | Apple | Apple |
 | `graphite-metal` | Apple | Apple |
-| `ganesh-direct3d` | Windows | Windows |
+| `ganesh-direct3d` | Windows, Nano Server | Windows |
 | `graphite-dawn` | all | Browser |
 
 `BuiltOn` mirrors the `gn` args in `native/*/build.cake` — `skia_use_metal`,
-`skia_use_vulkan`, `skia_use_dawn`. **Keep the two in sync.** Enabling a backend
-on a new platform is a one-token change to its `BuiltOn` set, after which that
-platform's cells become required and must pass.
+`skia_use_vulkan`, `skia_use_dawn`, `skia_use_direct3d`. **Keep the two in sync.**
+Enabling a backend on a new platform is a one-token change to its `BuiltOn` set,
+after which that platform's cells become required and must pass.
+
+Windows Nano Server is tracked as its own platform because it runs a *different
+native build*: `native/nanoserver/build.cake` passes `supportVulkan=false` and
+`supportDirect3D=false`, so those backends are absent from `libSkiaSharp.dll`
+there even though the OS is Windows.
 
 ## Using it in a test
 

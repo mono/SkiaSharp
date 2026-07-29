@@ -18,10 +18,17 @@
 
 var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU") ?? "");
 
+// GpuPolicy accepts comma, semicolon or whitespace separators, but neither forwarding path
+// survives the last two: a space splits the `/p:` into two process arguments, and a semicolon is
+// MSBuild's own property-list separator. Normalise to a comma-joined list so every documented
+// spelling reaches the test host intact.
+string NormalizeGpuOptOut(string value) =>
+    string.Join(",", value.Split(new[] { ',', ';', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries));
+
 void AddGpuOptOut(Dictionary<string, string> properties)
 {
-    if (!string.IsNullOrEmpty(SKIP_GPU)) {
-        properties["SkiaSharpTestSkipGpu"] = SKIP_GPU;
+    if (!string.IsNullOrWhiteSpace(SKIP_GPU)) {
+        properties["SkiaSharpTestSkipGpu"] = NormalizeGpuOptOut(SKIP_GPU);
     }
 }
 

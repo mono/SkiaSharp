@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			new Entry(
 				GpuBackend.GaneshGl, "ganesh-gl",
 				existsOn: TestPlatforms.All,
-				builtOn: TestPlatforms.Desktop,
+				builtOn: TestPlatforms.Desktop | TestPlatforms.NanoServer,
 				unsupportedReason: null,
 				notBuiltReason:
 					"OpenGL is not wired up for this host: there is no GlContext implementation " +
@@ -101,7 +101,7 @@ namespace SkiaSharp.Tests
 				unsupportedReason: "WebAssembly has no Vulkan.",
 				notBuiltReason:
 					"The legacy SharpVk vehicle can only create a Vulkan context on Windows; " +
-					"ganesh-vulkan (Silk.NET) covers the other hosts."),
+					"ganesh-vulkan (Silk.NET) covers the other hosts. " + VulkanNotBuilt),
 
 			new Entry(
 				GpuBackend.GaneshMetal, "ganesh-metal",
@@ -119,10 +119,12 @@ namespace SkiaSharp.Tests
 
 			new Entry(
 				GpuBackend.GaneshDirect3D, "ganesh-direct3d",
-				existsOn: TestPlatforms.Windows,
+				existsOn: TestPlatforms.AnyWindows,
 				builtOn: TestPlatforms.Windows,
 				unsupportedReason: "Direct3D is a Windows-only API.",
-				notBuiltReason: null),
+				notBuiltReason:
+					"Direct3D is not built for Windows Nano Server — native/nanoserver/build.cake " +
+					"passes supportDirect3D=false."),
 
 			new Entry(
 				GpuBackend.GraphiteDawn, "graphite-dawn",
@@ -139,9 +141,10 @@ namespace SkiaSharp.Tests
 			"Metal is an Apple-only API (macOS, iOS, Mac Catalyst, tvOS).";
 
 		private const string VulkanNotBuilt =
-			"Vulkan is not built for the Apple platforms today: native/macos/build.cake and " +
-			"native/ios/build.cake do not set skia_use_vulkan (no MoltenVK in the build). Add the " +
-			"platform to BuiltOn when they do.";
+			"Vulkan is not built for this host: the Apple builds have no MoltenVK " +
+			"(native/macos/build.cake and native/ios/build.cake do not set skia_use_vulkan), and " +
+			"native/nanoserver/build.cake passes supportVulkan=false. Add the platform to BuiltOn " +
+			"when its native build enables it.";
 
 		// Lazy so the parse happens once and any error is raised identically on
 		// every access: Lazy caches the exception, so a malformed opt-out list

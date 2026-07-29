@@ -26,13 +26,25 @@ namespace SkiaSharp.Tests
 		TvOS = 1 << 6,
 		Browser = 1 << 7,
 
+		/// <summary>
+		/// Windows Nano Server. Tracked separately from <see cref="Windows"/>
+		/// because it runs a <i>different native build</i>:
+		/// <c>native/nanoserver/build.cake</c> passes <c>supportVulkan=false</c> and
+		/// <c>supportDirect3D=false</c>, so those backends are absent from
+		/// <c>libSkiaSharp.dll</c> there even though the OS is Windows.
+		/// </summary>
+		NanoServer = 1 << 8,
+
 		/// <summary>The Apple platforms — the only ones that have Metal.</summary>
 		Apple = MacOS | IOS | MacCatalyst | TvOS,
 
 		/// <summary>The three desktop hosts the Console test app runs on.</summary>
 		Desktop = Windows | MacOS | Linux,
 
-		All = Windows | MacOS | Linux | Android | IOS | MacCatalyst | TvOS | Browser,
+		/// <summary>Every host running a Windows kernel, full or Nano.</summary>
+		AnyWindows = Windows | NanoServer,
+
+		All = Windows | MacOS | Linux | Android | IOS | MacCatalyst | TvOS | Browser | NanoServer,
 	}
 
 	/// <summary>
@@ -58,7 +70,8 @@ namespace SkiaSharp.Tests
 		// Order matters: Mac Catalyst also reports IsIOS, and iOS/tvOS also report
 		// IsMacOS on some runtimes, so the most specific probe has to win. This
 		// mirrors VisualPlatform.DetermineTag, which builds the golden directory
-		// tags from the same distinctions.
+		// tags from the same distinctions. Nano Server is likewise probed before
+		// Windows, because it IS Windows but ships a different native build.
 		private static TestPlatforms Detect()
 		{
 #if NET5_0_OR_GREATER
@@ -75,7 +88,7 @@ namespace SkiaSharp.Tests
 			if (OperatingSystem.IsMacOS())
 				return TestPlatforms.MacOS;
 			if (OperatingSystem.IsWindows())
-				return TestPlatforms.Windows;
+				return TestConfig.Current.IsNanoServer ? TestPlatforms.NanoServer : TestPlatforms.Windows;
 			if (OperatingSystem.IsLinux())
 				return TestPlatforms.Linux;
 			return TestPlatforms.None;
@@ -85,7 +98,7 @@ namespace SkiaSharp.Tests
 			if (TestConfig.Current.IsMac)
 				return TestPlatforms.MacOS;
 			if (TestConfig.Current.IsWindows)
-				return TestPlatforms.Windows;
+				return TestConfig.Current.IsNanoServer ? TestPlatforms.NanoServer : TestPlatforms.Windows;
 			if (TestConfig.Current.IsLinux)
 				return TestPlatforms.Linux;
 			return TestPlatforms.None;
