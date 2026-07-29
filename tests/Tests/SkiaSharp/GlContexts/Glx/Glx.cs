@@ -6,7 +6,12 @@ namespace SkiaSharp.Tests
 {
 	internal class Glx
 	{
-		private const string libGL = "libGL";
+		// The versioned SONAME, not the bare "libGL". The unversioned libGL.so is a
+		// linker symlink that only ships in the -dev package, so a runtime-only host
+		// (a CI agent, a container, a user's machine) has libGL.so.1 and nothing else
+		// — DllImport("libGL") then fails with DllNotFoundException even though Mesa
+		// is installed and working.
+		private const string libGL = "libGL.so.1";
 
 		public const int GL_TEXTURE_2D = 0x0DE1;
 		public const int GL_UNSIGNED_BYTE = 0x1401;

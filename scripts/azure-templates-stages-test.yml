@@ -157,12 +157,6 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              # Declares the GPU opt-out for this agent. On the x64 pool the
-              # virtualized Metal driver hangs the test host on shutdown, so Metal
-              # is opted out there; on Apple Silicon it stays required.
-              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
-                displayName: Declare the GPU opt-out for this macOS agent
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
@@ -283,11 +277,15 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              # Same declared opt-out as the macOS leg: the iOS simulator runs on the
-              # same agent, so an x64 pool must not touch Metal.
-              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
-                displayName: Declare the GPU opt-out for this macOS agent
+            # The iOS *simulator* on the x64 macOS pool exposes a virtualized Metal
+            # device: creating a command queue on it leaves dispatch-queue state that
+            # never signals, hanging the test host's shutdown for hours. Declared here
+            # rather than sniffed at runtime — this describes the pool we run on today,
+            # so if the pool moves to Apple Silicon this line is what has to change.
+            # (macOS and Mac Catalyst run Metal natively on the same agent and are NOT
+            # opted out — they pass.)
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
@@ -315,11 +313,6 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            preBuildSteps:
-              # Same declared opt-out as the macOS leg: Mac Catalyst runs in-process
-              # on the same agent, so an x64 pool must not touch Metal.
-              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
-                displayName: Declare the GPU opt-out for this macOS agent
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
@@ -399,6 +392,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
           parameters:
             name: tests_container_linux
+            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
+            # genuinely cannot come up. Declared here rather than inferred from the
+            # DllNotFoundException the test would otherwise throw.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/azurelinux
@@ -424,6 +422,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
           parameters:
             name: tests_container_linux_nodeps
+            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
+            # genuinely cannot come up. Declared here rather than inferred from the
+            # DllNotFoundException the test would otherwise throw.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux, No Dependencies)
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/azurelinux-nodeps
@@ -449,6 +452,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
           parameters:
             name: tests_container_alpine_linux
+            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
+            # genuinely cannot come up. Declared here rather than inferred from the
+            # DllNotFoundException the test would otherwise throw.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine)
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/alpine
@@ -474,6 +482,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
           parameters:
             name: tests_container_alpine_nodeps
+            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
+            # genuinely cannot come up. Declared here rather than inferred from the
+            # DllNotFoundException the test would otherwise throw.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine, No Dependencies)
             buildAgent: ${{ parameters.buildAgentLinux }}
             docker: scripts/infra/tests/docker/alpine-nodeps
@@ -499,6 +512,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
+            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
+            # genuinely cannot come up. Declared here rather than inferred from the
+            # DllNotFoundException the test would otherwise throw.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Windows (Nano Server)
             buildAgent: ${{ parameters.buildAgentWindows }}
             docker: scripts/infra/tests/docker/nanoserver

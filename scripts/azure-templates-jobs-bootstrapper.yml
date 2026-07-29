@@ -12,6 +12,7 @@ parameters:
   preBuildSteps: []                             # any steps to run before the build
   provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
+  env: {}                                       # environment variables to set for the bootstrapper (also forwarded into Docker)
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
   retryCount: 3                                 # the number of times to retry the bootstrapper
@@ -354,6 +355,8 @@ jobs:
                 LLVM_HOME: $(LLVM_HOME)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -365,6 +368,8 @@ jobs:
 
               env:
                 JavaSdkDirectory: $(JAVA_HOME)
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -390,16 +395,27 @@ jobs:
                 arguments: --tag skiasharp ${{ parameters.dockerArgs }}
           # Run the target inside the image against the mounted repo. Linux and Windows containers
           # differ in shell and mount path, so the run step is branched by agent OS.
+          #
+          # The container inherits nothing from the agent, so `env` is materialised into an env-file
+          # and handed to `docker run --env-file`. The file is always created (empty when no `env`
+          # is declared) so the run command stays uniform.
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 echo dotnet tool restore > cmd.sh
                 echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
                 sed -i 's/--gnArgs=\" \"//' cmd.sh
                 cat cmd.sh
+                : > docker.env
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              - bash: |
+                  printf '%s=%s\n' '${{ pair.key }}' '${{ pair.value }}' >> docker.env
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - bash: |
-                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
+                cat docker.env
+                docker run --rm --name skiasharp --env-file docker.env --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -408,10 +424,18 @@ jobs:
                 'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
                 'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
                 Get-Content cmd.cmd
+                # Docker's env-file parser keeps a trailing CR as part of the value, so write LF only.
+                [IO.File]::WriteAllText("$PWD/docker.env", "")
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              - pwsh: |
+                  [IO.File]::AppendAllText("$PWD/docker.env", "${{ pair.key }}=${{ pair.value }}`n")
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
-                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
+                Get-Content docker.env
+                docker run --rm --name skiasharp --env-file docker.env --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
