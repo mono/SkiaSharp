@@ -65,6 +65,18 @@ namespace SkiaSharp
 		/// <remarks />
 		public bool ProtectedContext { get; set; }
 
+		/// <summary>Gets or sets the Vulkan memory allocator used by the context.</summary>
+		/// <value>The allocator to use, or <see langword="null" /> to let Skia create its default allocator.</value>
+		/// <remarks>The context takes its own reference, so the wrapper may be disposed once the context has been created.</remarks>
+		// Optional caller-provided memory allocator. When null, the C shim
+		// auto-creates Skia's default VMA-backed allocator at context creation
+		// time (see sk_graphite_vulkan.cpp) so pre-#4567 callers keep working.
+		// Callers who need to share or tune the allocator can build one via
+		// GRVkMemoryAllocator.CreateDefault and assign it here; the Context
+		// takes its own internal ref, so it is safe to dispose the wrapper
+		// immediately after SKGraphiteContext.CreateVulkan returns.
+		public GRVkMemoryAllocator MemoryAllocator { get; set; }
+
 		/// <summary>Gets or sets the delegate that resolves Vulkan function addresses by name.</summary>
 		/// <value>The Vulkan function loader delegate, or <see langword="null" /> if none is set.</value>
 		/// <remarks />
@@ -120,6 +132,7 @@ namespace SkiaSharp
 				fGetProcUserData    = getProcContext,
 				fGetProc            = getProcContext is not null ? DelegateProxies.SKGraphiteVkGetProxy : null,
 				fProtectedContext   = ProtectedContext ? (byte)1 : (byte)0,
+				fMemoryAllocator    = MemoryAllocator?.Handle ?? IntPtr.Zero,
 			};
 		}
 
