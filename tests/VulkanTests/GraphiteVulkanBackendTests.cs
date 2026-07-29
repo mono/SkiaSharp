@@ -7,18 +7,18 @@ using Xunit;
 namespace SkiaSharp.Tests
 {
 	/// <summary>
-	/// Graphite release-callback tests over Vulkan, for the Linux, Windows and
-	/// Android hosts. Brings Vulkan up through the maintained, cross-platform
-	/// <see cref="SilkVkContext"/> (Silk.NET) and feeds the raw handles to
-	/// <see cref="SKGraphiteContext.CreateVulkan"/>, then lets Skia allocate the
-	/// wrappable backend texture via
+	/// <see cref="GraphiteBackendTestBase"/> harness over Vulkan, for the Linux,
+	/// Windows and Android hosts. Brings Vulkan up through the maintained,
+	/// cross-platform <see cref="SilkVkContext"/> (Silk.NET) and feeds the raw
+	/// handles to <see cref="SKGraphiteContext.CreateVulkan(SKGraphiteVkBackendContext, SKGraphiteContextOptions)"/>,
+	/// then lets Skia allocate the wrappable backend texture via
 	/// <see cref="SKGraphiteRecorder.CreateBackendTexture"/> (no manual VkImage).
 	/// Runs wherever `ganesh-vulkan`/`graphite-vulkan` are required (see
 	/// <see cref="SkiaSharp.Tests.GpuPolicy"/>); a Vulkan device — real or a
 	/// software ICD such as Lavapipe — must then be present or the test fails.
 	/// </summary>
 	[Collection(VulkanGpuRenderingCollection.Name)]
-	public sealed class SKGraphiteReleaseVulkanTests : SKGraphiteReleaseTestsBase
+	public sealed class GraphiteVulkanBackendTests : GraphiteBackendTestBase
 	{
 		// VK_FORMAT_R8G8B8A8_UNORM matches SKColorType.Rgba8888.
 		private const int VK_FORMAT_R8G8B8A8_UNORM = 37;
@@ -36,10 +36,10 @@ namespace SkiaSharp.Tests
 
 		protected override string Backend => GpuBackends.GraphiteVulkan;
 
-		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
-			Task.FromResult(CreateHarness());
+		protected override Task<GraphiteBackendHarness> CreateHarnessAsync(SKGraphiteContextOptions options) =>
+			Task.FromResult(CreateHarness(options));
 
-		private GraphiteReleaseHarness CreateHarness()
+		private GraphiteBackendHarness CreateHarness(SKGraphiteContextOptions options)
 		{
 			// No catch: GpuPolicy already established that Vulkan is required here,
 			// and CI provisions a software ICD so it succeeds. A failure means the
@@ -59,7 +59,7 @@ namespace SkiaSharp.Tests
 					GetProcedureAddress = (name, instance, device) => ctx.BaseGetProc(name, instance, device),
 				};
 
-				var context = SKGraphiteContext.CreateVulkan(backendContext)
+				var context = SKGraphiteContext.CreateVulkan(backendContext, options)
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateVulkan returned null.");
 				var recorder = context.CreateRecorder()
 					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
@@ -73,7 +73,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		private sealed class VulkanHarness : GraphiteReleaseHarness
+		private sealed class VulkanHarness : GraphiteBackendHarness
 		{
 			private readonly SilkVkContext ctx;
 			private readonly SKGraphiteVkBackendContext backendContext;
