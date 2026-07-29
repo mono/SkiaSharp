@@ -192,11 +192,11 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 
 ### 24. Vulkan Tests Are a Separate Satellite
 
-`tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` does not contain the Vulkan
-tests. They live in `tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj`.
-The solution includes that satellite, but milestone updates must also run it explicitly on a
-Vulkan-provisioned host and retain TRX evidence that both Ganesh and Graphite tests passed. A
-green base Console run proves nothing about Vulkan.
+The base test host does not contain the Vulkan tests. Always run
+`tests/SkiaSharp.Tests.Console.slnx`, which includes the separate Vulkan satellite; never
+substitute an individual project run or include a test project path in the validation commands.
+On a Vulkan-provisioned host, confirm the solution output reports executed, passing Vulkan tests.
+A green base-host run proves nothing about Vulkan.
 
 ---
 

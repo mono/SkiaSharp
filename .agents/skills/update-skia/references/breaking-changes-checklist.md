@@ -112,7 +112,7 @@ After applying fixes:
 1. Build native: `dotnet cake --target=externals-macos --arch=arm64`
 2. Regenerate: `pwsh ./utils/generate.ps1`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Test: `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`
+4. Test: `dotnet test tests/SkiaSharp.Tests.Console.slnx`
 
 ## Historical Examples
 
