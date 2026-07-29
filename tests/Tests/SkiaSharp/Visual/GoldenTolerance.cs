@@ -37,15 +37,12 @@ namespace SkiaSharp.Tests.Visual
 		public static readonly GoldenTolerance Deterministic = new(2, 0.002);
 
 		// Hardware/driver GPU output: absorbs antialiasing and rounding variance.
+		// Every renderer but raster falls back to this.
 		public static readonly GoldenTolerance Gpu = new(12, 0.02);
 
 		private static readonly Dictionary<string, GoldenTolerance> ByRenderer = new(StringComparer.Ordinal)
 		{
 			["raster"] = Deterministic,
-			["ganesh-gl"] = Gpu,
-			["ganesh-metal"] = Gpu,
-			["ganesh-vulkan"] = Gpu,
-			["direct3d"] = Gpu,
 		};
 
 		// Per (renderer, scene) overrides for individually known-divergent cells.

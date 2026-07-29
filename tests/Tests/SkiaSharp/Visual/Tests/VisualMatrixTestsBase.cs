@@ -103,9 +103,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 
 			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 
-			// Always publish the rendered PNG into the test results, pass or fail.
-			// This is the seed channel (harvest from the TRX) and lets a passing
-			// cell still be eyeballed against its golden when tolerance is in play.
+			// The seed channel: harvesting this marker from the TRX is how goldens are
+			// created. Only reached once the render succeeded.
 			EmitGoldenImage(renderer.Name, scene.Name, info, actual);
 
 			var golden = GoldenStore.TryLoad(renderer.Name, scene.Name, info);

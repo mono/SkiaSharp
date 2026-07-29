@@ -26,7 +26,7 @@ namespace SkiaSharp.Tests
 	/// Decides whether a GPU backend must work on this host, and is the only place
 	/// in the suite allowed to skip a GPU test. Anything not skipped must work: no
 	/// device, no driver, no ICD, a null context or a broken binding is a failure.
-	/// See documentation/dev/golden-image-tests.md.
+	/// See documentation/dev/gpu-test-policy.md.
 	/// </summary>
 	public static class GpuPolicy
 	{

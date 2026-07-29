@@ -25,7 +25,7 @@
 # Any failure here is fatal, so a broken ICD surfaces loudly instead of silently
 # dropping Vulkan coverage. An agent that genuinely cannot run Vulkan must be
 # declared with SKIASHARP_TEST_SKIP_GPU (see
-# documentation/dev/golden-image-tests.md), never inferred from a load failure.
+# documentation/dev/gpu-test-policy.md), never inferred from a load failure.
 
 $ErrorActionPreference = 'Stop'
 

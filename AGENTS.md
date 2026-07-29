@@ -299,7 +299,7 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 > **A skip must always be DECLARED, never inferred from an exception.**
 >
 > For **GPU tests** the rule is enforced by `GpuPolicy` — see
-> [documentation/dev/golden-image-tests.md](documentation/dev/golden-image-tests.md).
+> [documentation/dev/gpu-test-policy.md](documentation/dev/gpu-test-policy.md).
 > A backend is *required* on every platform we build it for; "no device", "no
 > driver", "no ICD" and "no display" are **failures**. The only legitimate skips
 > are the platform matrix (Metal off Apple, Vulkan on macOS) and an explicit
