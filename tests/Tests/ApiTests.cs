@@ -184,7 +184,8 @@ namespace SkiaSharp.Tests
 							paramType.FullName != typeof(SKManagedDrawableDelegates).FullName &&
 							paramType.FullName != typeof(SKManagedTraceMemoryDumpDelegates).FullName &&
 							paramType.FullName != typeof(GRVkBackendContextNative).FullName && // TODO: this type probably needs better checks as it is not 100% delegates
-							paramType.FullName != typeof(SKGraphiteVkBackendContextNative).FullName; // same shape as GRVkBackendContextNative (managed delegate field)
+							paramType.FullName != typeof(SKGraphiteVkBackendContextNative).FullName && // same shape as GRVkBackendContextNative (managed delegate field)
+							paramType.FullName != typeof(GRVkAllocatorDefaultOptionsNative).FullName; // ditto — carries a fGetProc delegate for by-value marshalling
 
 						// make sure our structs have a layout type
 						if (!paramType.GetTypeInfo().IsEnum && isLocalType && isSkippedType)
