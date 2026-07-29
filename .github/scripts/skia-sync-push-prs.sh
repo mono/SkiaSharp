@@ -12,8 +12,8 @@ SKIA_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skia-summary.md"
 SS_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skiasharp-summary.md"
 
 if [[ ! -f "$ENV_FILE" ]]; then
-  echo "No skia-sync-env.sh — agent determined no work was needed"
-  exit 0
+  echo "::error::The detector found sync work, but the agent did not produce skia-sync-env.sh."
+  exit 1
 fi
 
 required_file() {

@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+
+import argparse
+import shutil
+import subprocess
+from pathlib import Path
+
+
+PROJECTS = (
+    (
+        "libSkiaSharp.json",
+        "externals/skia",
+        "SkiaSharp/SkiaApi.generated.cs",
+    ),
+    (
+        "libSkiaSharp.Skottie.json",
+        "externals/skia",
+        "SkiaSharp.Skottie/SkottieApi.generated.cs",
+    ),
+    (
+        "libSkiaSharp.SceneGraph.json",
+        "externals/skia",
+        "SkiaSharp.SceneGraph/SceneGraphApi.generated.cs",
+    ),
+    (
+        "libSkiaSharp.Resources.json",
+        "externals/skia",
+        "SkiaSharp.Resources/ResourcesApi.generated.cs",
+    ),
+    (
+        "libHarfBuzzSharp.json",
+        "externals/skia/third_party/externals/harfbuzz",
+        "HarfBuzzSharp/HarfBuzzApi.generated.cs",
+    ),
+)
+
+
+def run(repo_root: Path, *args: str, capture: bool = False) -> str:
+    result = subprocess.run(
+        [*args],
+        cwd=repo_root,
+        check=True,
+        capture_output=capture,
+        text=True,
+    )
+    return result.stdout if capture else ""
+
+
+def select_projects(config: str | None):
+    if config is None:
+        return PROJECTS
+    name = Path(config).name
+    selected = tuple(project for project in PROJECTS if project[0] == name)
+    if not selected:
+        valid = ", ".join(project[0] for project in PROJECTS)
+        raise ValueError(f"Unknown config '{config}'. Valid configs: {valid}")
+    return selected
+
+
+def added_internal_functions(diff: str) -> list[str]:
+    return [
+        line[1:].strip()
+        for line in diff.splitlines()
+        if line.startswith("+") and not line.startswith("+++") and "internal static" in line
+    ]
+
+
+def regenerate(repo_root: Path, config: str | None = None) -> None:
+    generator_project = (
+        repo_root / "utils" / "SkiaSharpGenerator" / "SkiaSharpGenerator.csproj"
+    )
+    generated_directory = repo_root / "output" / "generated"
+    generated_directory.mkdir(parents=True, exist_ok=True)
+
+    run(repo_root, "dotnet", "build", str(generator_project))
+    for config_name, source_root, output in select_projects(config):
+        output_path = repo_root / "binding" / output
+        command = (
+            "dotnet",
+            "run",
+            "--no-build",
+            "--no-launch-profile",
+            f"--project={generator_project}",
+            "--",
+            "generate",
+            "--config",
+            str(repo_root / "binding" / config_name),
+            "--root",
+            str(repo_root / source_root),
+            "--output",
+            str(output_path),
+        )
+        print(" ".join(str(part) for part in command))
+        run(repo_root, *command)
+        shutil.copy2(output_path, generated_directory / output_path.name)
+
+    harfbuzz = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
+    harfbuzz_status = subprocess.run(
+        ["git", "diff", "--quiet", "--", harfbuzz],
+        cwd=repo_root,
+        check=False,
+    ).returncode
+    if harfbuzz_status == 1:
+        run(repo_root, "git", "restore", "--source=HEAD", "--", harfbuzz)
+        print(f"Reverted {harfbuzz}; HarfBuzz updates are separate.")
+    elif harfbuzz_status != 0:
+        raise RuntimeError("Could not inspect the HarfBuzz binding diff.")
+
+    binding_stat = run(repo_root, "git", "diff", "--stat", "--", "binding/", capture=True)
+    print("Binding diff summary:")
+    print(binding_stat.rstrip() or "  No binding changes.")
+
+    skia_diff = run(
+        repo_root,
+        "git",
+        "diff",
+        "--",
+        "binding/SkiaSharp/SkiaApi.generated.cs",
+        capture=True,
+    )
+    functions = added_internal_functions(skia_diff)
+    if functions:
+        print("New generated functions requiring wrapper review:")
+        for function in functions:
+            print(f"  {function}")
+    else:
+        print("No new generated functions.")
+
+    print("GATE PASSED: binding regeneration completed.")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Regenerate SkiaSharp bindings and report wrapper work."
+    )
+    parser.add_argument("--config")
+    parser.add_argument("--repo-root", type=Path)
+    args = parser.parse_args()
+    repo_root = (
+        args.repo_root.resolve()
+        if args.repo_root
+        else Path(__file__).resolve().parents[4]
+    )
+    regenerate(repo_root, args.config)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

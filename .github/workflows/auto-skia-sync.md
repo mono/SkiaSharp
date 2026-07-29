@@ -172,7 +172,6 @@ steps:
   - name: Copy post-step assets
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
-      cp .github/scripts/skia-sync-pwsh-preflight.ps1 /tmp/gh-aw/agent/skia-sync-pwsh-preflight.ps1
       cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
       cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
       cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
@@ -211,17 +210,6 @@ pre-agent-steps:
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
-  - name: Configure PowerShell for the agent
-    run: |
-      set -euo pipefail
-      PWSH_HOME=$(pwsh -NoLogo -NoProfile -Command '$PSHOME')
-      PWSH_MODULE_PATH="${PWSH_HOME}/Modules"
-      if [ -n "${PSModulePath:-}" ]; then
-        PWSH_MODULE_PATH="${PWSH_MODULE_PATH}:${PSModulePath}"
-      fi
-      export PSModulePath="$PWSH_MODULE_PATH"
-      echo "PSModulePath=$PWSH_MODULE_PATH" >> "$GITHUB_ENV"
-      pwsh -NoLogo -NoProfile -File .github/scripts/skia-sync-pwsh-preflight.ps1
   - name: Verify Mesa lavapipe
     run: |
       set -euo pipefail
@@ -283,9 +271,8 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   milestone branch, and exported the exact prior upstream commit as `SKIA_BASE_UPSTREAM_SHA`.
   Verify those refs; do not re-derive the mode or substitute a milestone-name range.
 - **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
-- **Immediately after tool restore**, run:
-  `pwsh -NoLogo -NoProfile -File /tmp/gh-aw/agent/skia-sync-pwsh-preflight.ps1`.
-  If it fails, stop and report an incomplete run; do not reimplement the PowerShell helpers.
+- The update-skia orchestration scripts are Python. Use those maintained scripts rather
+  than recreating their versioning or binding-generation logic.
 - **Phases 2 and 3 are NOT pre-computed.** Complete both before branching or merging.
   Write the primary analysis to `/tmp/gh-aw/agent/skia-breaking-change-analysis.md`, invoke
   the independent reviewer with the available `task` tool exactly as Phase 3 requires, and
@@ -305,8 +292,8 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   versions unchanged; only the Skia hashes in `cgmanifest.json` advance. Do NOT advance the
   milestone. A `main` tip sync also has `current == target`, but may carry API/binding changes
   and still updates the submodule.
-  Pass the ref you actually merged to `update-versions.ps1` so `cgmanifest.json`'s `upstream_merge_commit`
-  resolves to a real SHA: **`-UpstreamRef "${{ needs.pre_activation.outputs.upstream_ref }}"`**
+  Pass the ref you actually merged to `update_versions.py` so `cgmanifest.json`'s `upstream_merge_commit`
+  resolves to a real SHA: **`--upstream-ref "${{ needs.pre_activation.outputs.upstream_ref }}"`**
   (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
   `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
 - **Phase 5 dependency decisions**: write
@@ -342,9 +329,9 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
   post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
   Do NOT call `create_issue`. Your completion signal is `create_pull_request` (staged) when you did
   work, or `noop` when you did not — see "Completion signal" at the end of this prompt.
-- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream
-  commits, so this should rarely happen. If it does, do NOT write `skia-sync-env.sh`, call `noop`
-  with a one-line reason, and stop.
+- **No-work handling is owned by pre-activation.** If the agent job starts, work was detected.
+  Do not convert an incomplete run into `noop`; stop with a failure signal and leave
+  `skia-sync-env.sh` absent. The post-step treats a missing handoff as an error.
 
 After Phase 10 has passed completely, confirm all three analysis files above exist and are
 non-empty, then write these files:
@@ -396,5 +383,5 @@ pushes nothing. The post-step opens both real PRs with the autobump token. Use t
 title for this mode and a one-line body pointing at the two summary files. Do this instead of
 `noop`; do not call the raw MCP function when the CLI is available.
 
-Call `noop` (and never `create_pull_request`) **only** when there was genuinely no work to do
-— i.e. you did not write `skia-sync-env.sh`.
+Do not call `noop` from the agent job. Runs with no upstream work are skipped before the agent
+starts; an agent run without `skia-sync-env.sh` is incomplete and must fail.

@@ -112,7 +112,7 @@ grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 
 After applying fixes:
 1. Build native for the current host from source
-2. Regenerate: `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1`
+2. Regenerate: `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
 4. Test only through `dotnet test tests/SkiaSharp.Tests.Console.slnx`
 

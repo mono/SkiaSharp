@@ -221,7 +221,7 @@ about Vulkan.
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
-| `error CS0246` missing type | Binding not regenerated | `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1` |
+| `error CS0246` missing type | Binding not regenerated | `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py` |
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |
 | `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |

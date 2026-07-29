@@ -33,8 +33,8 @@ Update Google Skia to a new Chrome milestone in SkiaSharp's mono/skia fork.
 
 ## Scripts
 
-- **`scripts/update-versions.ps1`** — Phase 6: Updates all version files and runs verification
-- **`scripts/regenerate-bindings.ps1`** — Phase 8: Regenerates bindings, reverts HarfBuzz, reports new functions
+- **`scripts/update_versions.py`** — Phase 6: Updates all version files and runs verification
+- **`scripts/regenerate_bindings.py`** — Phase 8: Regenerates bindings, reverts HarfBuzz, reports new functions
 
 ## Overview
 
@@ -456,13 +456,16 @@ not troubleshooting to consult after a build fails.
 In the **SkiaSharp parent repo**, run:
 ```bash
 cd ../..  # back to parent repo (Phase 5 ends inside externals/skia)
-pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/update-versions.ps1 -Current {CURRENT} -Target {TARGET}
+python3 .agents/skills/update-skia/scripts/update_versions.py \
+  --current {CURRENT} \
+  --target {TARGET} \
+  --upstream-ref {UPSTREAM_REF}
 ```
 
 > **Main-tip sync?** When Phase 5 merged `upstream/main` (not a `chrome/m{TARGET}` branch),
-> add `-UpstreamRef main` so `cgmanifest.json`'s `upstream_merge_commit` is resolved from the
+> pass `--upstream-ref main` so `cgmanifest.json`'s `upstream_merge_commit` is resolved from the
 > ref you actually merged. Without it the script defaults to `upstream/chrome/m{TARGET}`, which
-> does not exist on a tip merge, and `upstream_merge_commit` is left `UNKNOWN` for you to set by hand.
+> does not exist on a tip merge, and the script fails rather than recording the wrong commit.
 
 The script handles all of these (so you don't have to do them manually):
 - `scripts/VERSIONS.txt`: milestone, increment→0, soname, assembly, file, ALL ~30 nuget lines
@@ -540,11 +543,11 @@ must be updated when the underlying C++ APIs change.
 > and lists any new functions that may need C# wrappers.
 
 ```bash
-pwsh -NoLogo -NoProfile -File .agents/skills/update-skia/scripts/regenerate-bindings.ps1
+python3 .agents/skills/update-skia/scripts/regenerate_bindings.py
 ```
 
 The script handles all of these (so you don't forget any):
-- Runs `pwsh -NoLogo -NoProfile -File ./utils/generate.ps1`
+- Runs the SkiaSharpGenerator for all maintained binding configurations
 - Reverts `binding/HarfBuzzSharp/HarfBuzzApi.generated.cs` (proactively, not reactively)
 - Reports the binding diff summary
 - Lists NEW generated functions that may need C# wrappers in Phase 9
