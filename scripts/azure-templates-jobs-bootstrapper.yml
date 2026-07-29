@@ -300,12 +300,6 @@ jobs:
               displayName: Install the Windows 10 SDK 10.0.19041
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          - ${{ if eq(parameters.buildAgent.parameters.installWindowsSdk19041, 'true') }}:
-            - pwsh: .\scripts\infra\native\windows\install-winsdk.ps1 -LinkId 2120843 -Version 10.0.19041.0
-              displayName: Install the Windows 10 SDK 10.0.19041
-              retryCountOnTaskFailure: 3
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
         - ${{ each tool in parameters.tools }}:
