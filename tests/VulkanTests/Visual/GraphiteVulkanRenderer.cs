@@ -15,37 +15,28 @@ namespace SkiaSharp.Tests.Visual
 	/// Instance → PhysicalDevice → graphics Queue → Device with no surface/swapchain.
 	///
 	/// <para>
-	/// On a host without a Vulkan ICD (the default macOS agent, or a
-	/// Linux/Windows/Android host missing a driver / software ICD such as Lavapipe)
-	/// instance creation or device enumeration fails and the cell <b>skips</b> with
-	/// a reason. A missing native entry point — a broken binding rather than an
-	/// absent driver — is rethrown so it fails.
+	/// <see cref="GpuPolicy"/> decides where Vulkan is required. On a host where it
+	/// is, a missing ICD is a <b>failure</b>, not a skip: CI provisions a software
+	/// ICD (Mesa lavapipe on Linux, SwiftShader on Windows) precisely so this
+	/// renders, and a silent skip would let that provisioning rot unnoticed.
 	/// </para>
 	/// </summary>
 	public sealed class GraphiteVulkanRenderer : IRenderer
 	{
 		public string Name => "graphite-vulkan";
 
-		public bool IsAvailable => UnavailableReason is null;
-
-		public string UnavailableReason =>
-			TestConfig.Current.IsLinux || TestConfig.Current.IsWindows || TestConfig.Current.IsAndroid
-				? null
-				: "Vulkan is wired up for the Linux, Windows, and Android hosts.";
+		public GpuBackend Backend => GpuBackend.GraphiteVulkan;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-
-			if (!IsAvailable)
-				throw new RendererUnavailableException(UnavailableReason);
 
 			// GPU work is serialized by the VulkanGpuRenderingCollection the driving
 			// test class joins (xUnit DisableParallelization), so no in-renderer lock.
 			SilkVkContext ctx = null;
 			try
 			{
-				ctx = CreateContextOrSkip();
+				ctx = new SilkVkContext();
 
 				using var backendContext = new SKGraphiteVkBackendContext
 				{
@@ -86,22 +77,6 @@ namespace SkiaSharp.Tests.Visual
 
 		public void Dispose()
 		{
-		}
-
-		// Distinguishes "Vulkan genuinely absent on this host" (legit skip) from a
-		// broken binding (real failure). A missing native entry point or method is
-		// a regression and MUST fail; an absent driver / ICD is an honest skip.
-		private static SilkVkContext CreateContextOrSkip()
-		{
-			try
-			{
-				return new SilkVkContext();
-			}
-			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
-			{
-				throw new RendererUnavailableException(
-					$"Unable to create a Vulkan context on this host: {ex.Message}", ex);
-			}
 		}
 	}
 }

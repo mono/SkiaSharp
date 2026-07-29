@@ -1,6 +1,31 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+// GPU OPT-OUT — declared list of GPU backends to skip on this host
+//
+// Desktop and container legs read SKIASHARP_TEST_SKIP_GPU straight from the environment inside the
+// test process. The Android / iOS / Mac Catalyst / WASM hosts cannot: they run on a device, emulator
+// or browser that never sees the build agent's environment. For those, the value is baked into
+// runtimeconfig.json as the SkiaSharp.Tests.SkipGpu setting (see tests/Directory.Build.targets) and
+// read back by GpuPolicy through AppContext.
+//
+// Accepts either form, so a pipeline leg can set the environment variable once and have it apply
+// uniformly to every host:
+//
+//   dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
+//   SKIASHARP_TEST_SKIP_GPU=ganesh-gl dotnet cake --target=tests-netcore
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU") ?? "");
+
+void AddGpuOptOut(Dictionary<string, string> properties)
+{
+    if (!string.IsNullOrEmpty(SKIP_GPU)) {
+        properties["SkiaSharpTestSkipGpu"] = SKIP_GPU;
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 // DEVICE RUNNERS — shared helper for DeviceRunners.Testing.Targets based tests
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -19,15 +44,18 @@ void RunDeviceRunnersTest(
     output = MakeAbsolute(output);
     CleanDirectories(output.FullPath);
 
+    properties = properties == null
+        ? new Dictionary<string, string>()
+        : new Dictionary<string, string>(properties);
+    AddGpuOptOut(properties);
+
     var msb = new DotNetMSBuildSettings();
     msb.Properties ["RestoreNoCache"] = new [] { "true" };
     msb.Properties ["RestorePackagesPath"] = new [] { PACKAGE_CACHE_PATH.FullPath };
 
-    if (properties != null) {
-        foreach (var prop in properties) {
-            if (!string.IsNullOrEmpty(prop.Value)) {
-                msb.Properties [prop.Key] = new [] { prop.Value };
-            }
+    foreach (var prop in properties) {
+        if (!string.IsNullOrEmpty(prop.Value)) {
+            msb.Properties [prop.Key] = new [] { prop.Value };
         }
     }
 
@@ -93,6 +121,12 @@ void RunDotNetTest(
 {
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
+
+    properties = properties == null
+        ? new Dictionary<string, string>()
+        : new Dictionary<string, string>(properties);
+    AddGpuOptOut(properties);
+
     var settings = new DotNetTestSettings {
         Configuration = configuration ?? CONFIGURATION,
         NoBuild = true,
@@ -106,12 +140,10 @@ void RunDotNetTest(
                     .Append("/p:CollectCoverage=true")
                     .Append("/p:CoverletOutputFormat=cobertura")
                     .Append($"/p:CoverletOutput={output.Combine("Coverage").FullPath}/");
-            if (properties != null) {
-                foreach (var prop in properties) {
-                    if (!string.IsNullOrEmpty(prop.Value)) {
-                        args = args
-                            .Append($"/p:{prop.Key}={prop.Value}");
-                    }
+            foreach (var prop in properties) {
+                if (!string.IsNullOrEmpty(prop.Value)) {
+                    args = args
+                        .Append($"/p:{prop.Key}={prop.Value}");
                 }
             }
             // Everything after "--" is forwarded to the Microsoft.Testing.Platform runner.

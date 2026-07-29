@@ -34,58 +34,49 @@ namespace SkiaSharp.Tests
 
 		protected override bool CanSubmitSync => false;
 
-		protected override string UnsupportedReason =>
-			TestConfig.Current.IsBrowser
-				? null
-				: "graphite-dawn requires a WebGPU-capable browser (WASM) host.";
+		protected override GpuBackend Backend => GpuBackend.GraphiteDawn;
 
 		protected override async Task<GraphiteReleaseHarness> CreateHarnessAsync()
 		{
 			if (!s_ready)
 			{
-				try
+				// No skips: Dawn is required on the browser host, so a browser that
+				// exposes navigator.gpu but cannot vend an adapter/device is a real
+				// coverage gap — fix the browser flags, or declare the opt-out with
+				// SKIASHARP_TEST_SKIP_GPU. Discovering it as a silent skip is exactly
+				// how WebGPU coverage went missing in the first place.
+				var adapter = await SKWebGpu.RequestAdapter()
+					?? throw new InvalidOperationException(
+						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser. " +
+						GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+				var device = await SKWebGpu.RequestDevice(adapter)
+					?? throw new InvalidOperationException(
+						"adapter.requestDevice returned null. " + GpuPolicy.OptOutHint(GpuBackend.GraphiteDawn));
+				s_device = device;
+
+				// Create a real WGPUInstance first: emdawnwebgpu tags each imported
+				// object's events with the parent EventSource's InstanceID, so the
+				// queue/device must be registered under this instance or
+				// EventManager::WaitAny asserts on the first async wait.
+				var instanceId = SKWebGpu.CreateInstance();
+				if (instanceId == 0)
+					throw new InvalidOperationException("Module._wgpuCreateInstance not exported — cannot obtain a real WGPUInstance.");
+
+				var queue = SKWebGpu.GetDeviceQueue(device);
+				var queueId = SKWebGpu.RegisterQueue(queue, instanceId);
+				var deviceId = SKWebGpu.RegisterDevice(device, instanceId);
+
+				var backendContext = new SKGraphiteDawnBackendContext
 				{
-					// A browser host can expose navigator.gpu yet still have no usable
-					// adapter/device (headless CI agents, software-only, WebGPU disabled
-					// by policy). That is "this host cannot drive Dawn", not a failure —
-					// skip like the visual GraphiteDawnRenderer does, honouring the
-					// CreateHarnessAsync contract (it may Assert.Skip on a runtime probe).
-					var adapter = await SKWebGpu.RequestAdapter();
-					if (adapter is null)
-						Assert.Skip("WebGPU unavailable on this host: navigator.gpu.requestAdapter returned null.");
-					var device = await SKWebGpu.RequestDevice(adapter);
-					if (device is null)
-						Assert.Skip("WebGPU unavailable on this host: adapter.requestDevice returned null.");
-					s_device = device;
-
-					// Create a real WGPUInstance first: emdawnwebgpu tags each imported
-					// object's events with the parent EventSource's InstanceID, so the
-					// queue/device must be registered under this instance or
-					// EventManager::WaitAny asserts on the first async wait.
-					var instanceId = SKWebGpu.CreateInstance();
-					if (instanceId == 0)
-						throw new InvalidOperationException("Module._wgpuCreateInstance not exported — cannot obtain a real WGPUInstance.");
-
-					var queue = SKWebGpu.GetDeviceQueue(device);
-					var queueId = SKWebGpu.RegisterQueue(queue, instanceId);
-					var deviceId = SKWebGpu.RegisterDevice(device, instanceId);
-
-					var backendContext = new SKGraphiteDawnBackendContext
-					{
-						WgpuInstance = (IntPtr)instanceId,
-						WgpuDevice = (IntPtr)deviceId,
-						WgpuQueue = (IntPtr)queueId,
-					};
-					s_context = SKGraphiteContext.CreateDawn(backendContext)
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
-					s_recorder = s_context.CreateRecorder()
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
-					s_ready = true;
-				}
-				catch (TypeInitializationException ex)
-				{
-					Assert.Skip($"WebGPU host bring-up failed: {ex.InnerException?.Message ?? ex.Message}");
-				}
+					WgpuInstance = (IntPtr)instanceId,
+					WgpuDevice = (IntPtr)deviceId,
+					WgpuQueue = (IntPtr)queueId,
+				};
+				s_context = SKGraphiteContext.CreateDawn(backendContext)
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
+				s_recorder = s_context.CreateRecorder()
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				s_ready = true;
 			}
 
 			return new DawnHarness(s_context, s_recorder, s_device);

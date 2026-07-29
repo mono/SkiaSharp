@@ -34,16 +34,17 @@ namespace SkiaSharp.Tests.Visual.Tests
 	/// the device/browser hosts have no writable source tree, so a write-to-disk
 	/// record path could never seed them.</para>
 	///
-	/// <para><b>Discipline.</b> A cell <i>skips</i> only when the backend is
-	/// genuinely absent on this host — the renderer reports
-	/// <see cref="IRenderer.IsAvailable"/> = <see langword="false"/>, or
-	/// <see cref="IRenderer.RenderAsync"/> throws
-	/// <see cref="RendererUnavailableException"/>. Every other outcome is a hard
-	/// <b>failure</b>: a render that throws anything else, pixels that differ from a
-	/// golden that exists, or <i>no golden recorded yet</i> for this cell on this
-	/// platform (the captured PNG is in the TRX — harvest and commit it, then the
-	/// cell goes green). There is no path that downgrades a real regression to a
-	/// skip or a warning.</para>
+	/// <para><b>Discipline.</b> A cell <i>skips</i> only when
+	/// <see cref="SkiaSharp.Tests.GpuPolicy"/> says the renderer's backend is not
+	/// required on this host — because the API does not exist here, because we do
+	/// not build it here yet, or because it was explicitly opted out with
+	/// <c>SKIASHARP_TEST_SKIP_GPU</c>. Every other outcome is a hard
+	/// <b>failure</b>: a render that throws <i>anything</i>, pixels that differ
+	/// from a golden that exists, or <i>no golden recorded yet</i> for this cell on
+	/// this platform (the captured PNG is in the TRX — harvest and commit it, then
+	/// the cell goes green). There is no path that downgrades a real regression to
+	/// a skip or a warning, and in particular no renderer may catch a failed
+	/// bring-up and turn it into a skip.</para>
 	///
 	/// <para><b>Selecting the suite.</b> Every cell is tagged
 	/// <c>[Trait("Category", "Visual")]</c>. Run only the visual matrix with
@@ -102,21 +103,14 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		protected async Task RunCellAsync(IRenderer renderer, ISkiaScene scene)
 		{
-			if (!renderer.IsAvailable)
-				Assert.Skip($"Renderer '{renderer.Name}' is unavailable on this host: {renderer.UnavailableReason}");
+			// The one and only skip seam. Past this line the backend is required on
+			// this host, so nothing below may catch a bring-up failure: a missing
+			// device, driver, ICD or display is a red cell to act on.
+			GpuPolicy.RequireOrSkip(renderer.Backend);
 
 			var info = scene.Info;
 
-			byte[] actual;
-			try
-			{
-				actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
-			}
-			catch (RendererUnavailableException ex)
-			{
-				Assert.Skip($"Renderer '{renderer.Name}' could not run scene '{scene.Name}' on this host: {ex.Message}");
-				return;
-			}
+			var actual = await renderer.RenderAsync(scene, info, CancellationToken.None);
 
 			// Always publish the rendered PNG into the test results, pass or fail.
 			// This is the seed channel (harvest from the TRX) and lets a passing

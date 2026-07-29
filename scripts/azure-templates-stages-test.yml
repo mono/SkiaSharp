@@ -157,6 +157,12 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Declares the GPU opt-out for this agent. On the x64 pool the
+              # virtualized Metal driver hangs the test host on shutdown, so Metal
+              # is opted out there; on Apple Silicon it stays required.
+              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
+                displayName: Declare the GPU opt-out for this macOS agent
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
@@ -277,6 +283,11 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Same declared opt-out as the macOS leg: the iOS simulator runs on the
+              # same agent, so an x64 pool must not touch Metal.
+              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
+                displayName: Declare the GPU opt-out for this macOS agent
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage
@@ -304,6 +315,11 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              # Same declared opt-out as the macOS leg: Mac Catalyst runs in-process
+              # on the same agent, so an x64 pool must not touch Metal.
+              - bash: bash ./scripts/infra/tests/declare-macos-gpu-optout.sh
+                displayName: Declare the GPU opt-out for this macOS agent
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --failures-out output/logs/testlogs/visual-failures
                 displayName: Extract visual-regression failure images for triage

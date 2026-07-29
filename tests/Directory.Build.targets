@@ -2,4 +2,21 @@
 
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
+  <!--
+    Carries the GPU opt-out list into hosts that cannot read the build agent's
+    environment: the Android, iOS, Mac Catalyst and WASM test apps run on a
+    device, emulator or browser, so SKIASHARP_TEST_SKIP_GPU never reaches them.
+    Baking the value into runtimeconfig.json lets GpuPolicy read it back through
+    AppContext, giving those hosts the same declared opt-out the desktop legs get
+    from the environment variable.
+
+    Set it with the cake `skipGpu` argument, or directly as an MSBuild property:
+    `-p:SkiaSharpTestSkipGpu=graphite-dawn`. See documentation/dev/gpu-test-policy.md.
+  -->
+  <ItemGroup Condition="'$(SkiaSharpTestSkipGpu)' != ''">
+    <RuntimeHostConfigurationOption Include="SkiaSharp.Tests.SkipGpu"
+                                    Value="$(SkiaSharpTestSkipGpu)"
+                                    Trim="true" />
+  </ItemGroup>
+
 </Project>

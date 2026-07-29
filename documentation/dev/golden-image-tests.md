@@ -16,10 +16,13 @@ the shared `SkiaSharp.Tests` project, the same matrix compiles and runs in:
   Windows).
 - `SkiaSharp.Tests.Wasm` — browser (WebAssembly).
 
-Each renderer's `IsAvailable` reflects what *that* host can do; cells that can't
-run skip with a reason. The harness is built on existing primitives —
-`SKPixelComparer`, the `GlContexts/` abstraction, `TestConfig`, and the `Content`
-embed/copy pipeline — rather than reinventing them.
+Each renderer declares the GPU backend it drives; whether that backend runs on
+this host is decided centrally by `GpuPolicy` (see
+[gpu-test-policy.md](gpu-test-policy.md)). A cell skips only when the policy says
+the backend is not required here — never because a bring-up threw. The harness is
+built on existing primitives — `SKPixelComparer`, the `GlContexts/` abstraction,
+`TestConfig`, and the `Content` embed/copy pipeline — rather than reinventing
+them.
 
 ---
 
@@ -66,8 +69,7 @@ public interface ISkiaScene
 public interface IRenderer : IDisposable
 {
     string Name { get; }              // golden subfolder, e.g. "ganesh-metal"
-    bool IsAvailable { get; }         // cheap, side-effect-free probe
-    string UnavailableReason { get; } // why IsAvailable is false (else null)
+    GpuBackend Backend { get; }       // which backend; GpuPolicy decides if it runs here
     Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken ct);
 }
 ```
@@ -77,33 +79,44 @@ single format every golden is stored and compared in (see `RendererPixels`).
 
 Renderers must be **cheap to construct**: the catalog instantiates every
 renderer just to enumerate the matrix, so a constructor must not bring up a GPU
-context. Do heavy work lazily inside `RenderAsync`, and keep `IsAvailable` a
-metadata-only probe.
+context. Do heavy work lazily inside `RenderAsync`.
+
+A renderer never gates itself on the platform, and never catches a failed
+bring-up. It declares `Backend`; `GpuPolicy` owns the "which OS has which API"
+table.
 
 ---
 
 ## Failure discipline
 
-This is the property the harness exists to guarantee, and the thing the prior
-prototype got wrong. A cell may **skip** *only* when the backend is genuinely
-absent on this host — there is nothing to render, so nothing to assert:
+This is the property the harness exists to guarantee. A cell may **skip** *only*
+when [`GpuPolicy`](gpu-test-policy.md) reports the renderer's backend as anything
+other than `Required` on this host:
 
-- `IRenderer.IsAvailable` is `false` (wrong OS, no GPU wiring for this host), or
-- `IRenderer.RenderAsync` throws `RendererUnavailableException` (a runtime probe
-  found no device / no driver feature / no context).
+- `Unsupported` — the API does not exist on this platform (Metal off Apple),
+- `NotBuilt` — we don't ship it on this platform yet (Vulkan on macOS),
+- `Disabled` — explicitly opted out for this agent via `SKIASHARP_TEST_SKIP_GPU`.
+
+All three are *declared*. None of them is inferred from an exception.
 
 **Every other outcome is a hard failure:**
 
-- `RenderAsync` throws anything else (including `EntryPointNotFoundException` /
-  `MissingMethodException` from a broken binding),
+- `RenderAsync` throws **anything at all** — a missing device, an absent driver
+  or ICD, no display, a null context, or a broken binding,
 - a golden that **does exist** is out of tolerance,
 - the renderer ran but **no golden has been recorded yet** for this
   `(renderer, scene)` on this platform — an *unseeded* cell.
 
-The last point is the deliberate difference from the prototype: an unseeded cell
-is a **failure, not a skip**. The backend was available and produced pixels, so a
-green result would be a coverage hole. There is no silent "skip until someone
-records a golden" state to hide a regression in.
+The first point is the one that changed, and it is the point: a renderer must not
+catch a failed bring-up and turn it into a skip. If a CI agent legitimately can't
+run a backend, that belongs in the policy table or in `SKIASHARP_TEST_SKIP_GPU`
+where it is reviewable — not in a catch block where it silently erodes coverage.
+Failure messages from a required backend carry `GpuPolicy.OptOutHint(...)`, so a
+red cell tells you the exact directive that would legitimise the skip.
+
+An unseeded cell is likewise a **failure, not a skip**. The backend was available
+and produced pixels, so a green result would be a coverage hole. There is no
+silent "skip until someone records a golden" state to hide a regression in.
 
 This is safe to enforce because **every cell publishes its rendered PNG into the
 test results on pass *and* fail** (the `##SKIA-GOLDEN-IMAGE##` marker, see below).
@@ -112,10 +125,7 @@ harvest the marker from the TRX, commit it, re-run, and the cell goes green. No
 second "record" run is needed.
 
 There is no path that downgrades a real regression to a skip or a warning, and a
-golden that exists is *always* compared strictly. In particular, the desktop GL
-renderer rethrows `EntryPointNotFoundException` / `MissingMethodException` from
-context creation (those mean a broken binding) and only converts a genuine "no
-GL context could be created" into a skip.
+golden that exists is *always* compared strictly.
 
 ---
 
@@ -331,8 +341,8 @@ committing.
   `GoldenStore`, `GoldenTolerance`, `VisualPlatform`, `RendererPixels`,
   `GpuRenderGate`) live where the shared `SkiaSharp.Tests` project compiles them,
   so they run in Console, Devices, and Wasm. `GaneshMetalRenderer` is
-  portable-but-Apple-gated (`IsAvailable` is true only on Apple OSes), so the same
-  file gives macOS Console *and* the iOS / Mac Catalyst device hosts their Metal
+  portable-but-Apple-gated (the policy marks Metal `Unsupported` off Apple), so the
+  same file gives macOS Console *and* the iOS / Mac Catalyst device hosts their Metal
   cell with no per-host code. `VisualMatrixTestsBase` carries the whole per-cell
   pipeline (render → emit `##SKIA-GOLDEN-IMAGE##` → compare-or-fail) so every host
   shares one engine; `VisualMatrixTests` is the thin `[Theory]` over every renderer
@@ -400,16 +410,28 @@ The matrix ships wired into CI as part of `scripts/azure-templates-stages-test.y
   virtual X server, and exports the env that pins GL/Vulkan to Mesa's software
   rasterizers (`LIBGL_ALWAYS_SOFTWARE=1`, llvmpipe, and the lavapipe
   `VK_ICD_FILENAMES`). That gives `ganesh-gl` / `ganesh-vulkan` deterministic
-  output on a headless agent. Selection is **fail-safe**: if any piece is missing
-  or misconfigured, context creation throws `RendererUnavailableException` and the
-  GPU cell skips — it never turns a provisioning gap into a red build. (A useful
-  side effect: the existing `GRContextTest` / `GRGlInterfaceTest` GL tests, which
-  otherwise skip for lack of a display, now also exercise llvmpipe.)
+  output on a headless agent. This provisioning is **required**, not best-effort:
+  `ganesh-gl` and `ganesh-vulkan` are required on Linux, so if any piece is missing
+  or misconfigured the GPU cells go **red**. That is deliberate — the previous
+  fail-safe behaviour meant a broken provisioning step silently dropped GPU
+  coverage and nobody noticed. (A useful side effect: the existing `GRContextTest`
+  / `GRGlInterfaceTest` GL tests also exercise llvmpipe.)
 
   This provisioning is also what lets a GPU cell be *seeded* on CI: with the
   software ICDs present the cell actually renders and emits its
   `##SKIA-GOLDEN-IMAGE##` marker, which the published TRX carries back for
-  harvesting. Without them the cell would skip and emit nothing.
+  harvesting.
+- **Declared GPU opt-outs.** The macOS, iOS and Mac Catalyst legs run
+  `scripts/infra/tests/declare-macos-gpu-optout.sh` before the build. On an x64
+  agent it sets `SKIASHARP_TEST_SKIP_GPU=ganesh-metal,graphite-metal`, because that
+  pool's virtualized Metal driver hangs the test host on shutdown; on Apple Silicon
+  it does nothing and Metal stays required. This is the only pre-set opt-out in the
+  pipeline, and it exists to avoid a hang, not to hide a failure. See
+  [gpu-test-policy.md](gpu-test-policy.md).
+- **Per-leg policy report.** `GpuPolicyTests` writes one
+  `##SKIA-GPU-POLICY## backend=… state=… reason=…` line per backend into every
+  leg's TRX, so each run records which backends it required and why the rest were
+  skipped.
 - **Failure / capture artifacts.** Every cell's rendered PNG is in the published
   TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail). A failing cell
   additionally emits its golden and colored diff as `##SKIA-VISUAL-IMAGE##`
@@ -461,30 +483,37 @@ then stops re-creating the per-platform copies.
 
 ## Backend coverage
 
-| Host | Platform | raster | GPU |
+Which renderers a host *compiles* is a matter of project references; which of
+those are **required** to pass is decided by
+[`GpuPolicy`](gpu-test-policy.md#the-matrix), whose table is the authoritative
+version of this list.
+
+| Host | Platform | raster | GPU renderers compiled in |
 |---|---|---|---|
-| Console | macOS | ✓ | `ganesh-gl` (CGL), `ganesh-metal` (in-process) |
+| Console | macOS | ✓ | `ganesh-gl` (CGL), `ganesh-metal`, `graphite-metal` |
 | Console | Linux | ✓ | `ganesh-gl` (GLX/EGL, Mesa sw) |
 | Console | Windows | ✓ | `ganesh-gl` (WGL) |
-| Vulkan satellite | Linux | — | `ganesh-vulkan` (Lavapipe sw) |
-| Vulkan satellite | Windows | — | `ganesh-vulkan` (ICD if present) |
-| Devices | iOS / Mac Catalyst | ✓ | `ganesh-metal` (shared Apple-gated renderer) |
-| Devices | Android | ✓ | per-host GLES / Vulkan — follow-up |
-| Wasm | browser | ✓ | WebGL2 — follow-up |
+| Vulkan satellite | Windows / Linux | — | `ganesh-vulkan`, `graphite-vulkan` (SwiftShader / Lavapipe sw) |
+| Direct3D satellite | Windows | — | `ganesh-direct3d` (Vortice) |
+| Devices | iOS / Mac Catalyst | ✓ | `ganesh-metal`, `graphite-metal` |
+| Devices | Android | ✓ | `ganesh-vulkan`, `graphite-vulkan` |
+| Wasm | browser | ✓ | `graphite-dawn` |
 
 > The "Vulkan satellite" is `SkiaSharp.Vulkan.Tests.Console`; it runs on the same
-> `tests-netcore` Linux/Windows agents as the base Console, just from its own
-> assembly so the `SharpVk` dependency stays out of the shared test code. Direct3D
-> (`SkiaSharp.Direct3D.Tests.Console`) is the same pattern, added later.
+> `tests-netcore` Windows/macOS/Linux agents as the base Console, just from its own
+> assembly so the `Silk.NET`/`SharpVk` dependency stays out of the shared test code.
+> Direct3D (`SkiaSharp.Direct3D.Tests.Console`) is the same pattern. Both are also
+> referenced by the Android and Windows device hosts where applicable.
 
-`raster` and `ganesh-metal` run from shared code (Metal is gated to Apple OSes, so
-it lights up on macOS Console and the iOS / Mac Catalyst device hosts alike). The
-desktop GL renderer is Console-only; `ganesh-vulkan` lives in the
-`SkiaSharp.Vulkan.Tests.Console` satellite and `direct3d` is a later addition in
-the `SkiaSharp.Direct3D.Tests.Console` satellite. Each cell's golden is **seeded
-per platform from its own CI run** (harvest the TRX); until a cell is seeded it
-**fails** as unseeded — the captured PNG is in the TRX, so harvesting and
-committing it closes the gap (see *Failure discipline* and *Seeding goldens*).
+`raster`, `ganesh-metal` and `graphite-metal` run from shared code and compile
+into every host; the policy marks Metal `Unsupported` off Apple, so it lights up
+on macOS Console and the iOS / Mac Catalyst device hosts alike with no per-host
+code. The desktop GL renderer is Console-only.
+
+Each cell's golden is **seeded per platform from its own CI run** (harvest the
+TRX); until a cell is seeded it **fails** as unseeded — the captured PNG is in the
+TRX, so harvesting and committing it closes the gap (see *Failure discipline* and
+*Seeding goldens*).
 
 ---
 
@@ -500,6 +529,12 @@ captured PNGs from the TRX and commit them (see *Seeding goldens*).
 `Visual/Renderers/`. It appears in every scene's row of the shared matrix
 automatically. Use this only for backends that need no extra NuGet package and are
 safe in the MAUI/WASM builds (e.g. an Apple-gated Metal renderer).
+
+**Declare its backend:** every renderer returns a `GpuBackend` from `Backend`, and
+that backend needs a row in the [`GpuPolicy`](gpu-test-policy.md) matrix giving the
+platforms it can exist on and the platforms we build it for. The renderer itself
+must not check the platform and must not catch a failed bring-up — both belong in
+the policy.
 
 **Add a desktop GL/Metal renderer:** put it under `Visual/Renderers/Desktop/`
 (excluded from the shared project) so it compiles only into `SkiaSharp.Tests.Console`.
@@ -539,8 +574,8 @@ The catalogs auto-discover both. Because the seam uses clean names on main rathe
 than mirroring the prototype, the Graphite renderer files take a small (~5-line)
 rebase edit:
 
-- implement **`SkiaSharp.Tests.Visual.IRenderer`** (`Name`, `IsAvailable`,
-  `UnavailableReason`, `RenderAsync(scene, info, ct)` returning RGBA8888/Premul
+- implement **`SkiaSharp.Tests.Visual.IRenderer`** (`Name`, `Backend`,
+  `RenderAsync(scene, info, ct)` returning RGBA8888/Premul
   via `RendererPixels.ReadRgba`),
 - acquire the GPU device/context from the shared **`TestConfig` / `GlContexts`**
   providers (or the satellite's existing `VkContext` / `GRSharpVkBackendContext`)

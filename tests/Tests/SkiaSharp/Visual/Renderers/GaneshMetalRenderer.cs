@@ -9,58 +9,28 @@ namespace SkiaSharp.Tests.Visual
 	/// Ganesh GPU backend over Apple Metal. Builds a
 	/// <see cref="GRMtlBackendContext"/> from the system default
 	/// <c>MTLDevice</c> and a fresh <c>MTLCommandQueue</c> via direct P/Invoke
-	/// into Metal.framework and libobjc — the same vehicle the Graphite PR's
-	/// Metal renderers use, so the bring-up pattern is shared.
+	/// into Metal.framework and libobjc — the same vehicle the Graphite Metal
+	/// renderer uses, so the bring-up pattern is shared.
 	///
 	/// <para>
 	/// This renderer lives in the shared harness (not under
 	/// <c>Renderers/Desktop/</c>), so it compiles into every host. Because Metal
 	/// is reached purely through runtime P/Invoke — not a platform-TFM API — the
 	/// same file runs in-process on the macOS Console host <i>and</i> on the
-	/// iOS / Mac Catalyst / tvOS MAUI device hosts. It reports unavailable (and so
-	/// skips) on any non-Apple platform, where the Metal/libobjc entry points are
-	/// never touched.
+	/// iOS / Mac Catalyst / tvOS MAUI device hosts. <see cref="GpuPolicy"/> reports
+	/// Metal as unsupported on every non-Apple platform, so the Metal/libobjc
+	/// entry points are never touched there.
 	/// </para>
 	/// </summary>
 	public sealed class GaneshMetalRenderer : IRenderer
 	{
 		public string Name => "ganesh-metal";
 
-		public bool IsAvailable => UnavailableReason is null;
-
-		public string UnavailableReason =>
-			TestConfig.Current.IsApple
-				? null
-				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
-
-		// Azure DevOps sets TF_BUILD=True on every agent. Apple-Silicon macOS
-		// agents run real hardware and pass through to real Metal cleanly; only
-		// the x64 macOS pool virtualizes the Metal driver.
-		private static bool IsAzureDevOpsX64Host =>
-			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase) &&
-			RuntimeInformation.OSArchitecture == Architecture.X64;
+		public GpuBackend Backend => GpuBackend.GaneshMetal;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-
-			if (!IsAvailable)
-				throw new RendererUnavailableException(UnavailableReason);
-
-			// Azure DevOps macOS agents advertise Metal but only expose a
-			// virtualized/software device whose driver leaves an internal
-			// dispatch queue in the process that never signals during teardown.
-			// Even with the family probe (below) skipping the actual render, the
-			// mere act of calling MTLCreateSystemDefaultDevice + newCommandQueue
-			// on that device leaves state that hangs the test host's post-session
-			// shutdown for 2h+. Short-circuit before touching Metal at all when
-			// we can safely conclude we're on such a runner: Azure sets TF_BUILD,
-			// and only x64 CI agents virtualize Metal (Apple Silicon agents run
-			// real hardware).
-			if (IsAzureDevOpsX64Host)
-				throw new RendererUnavailableException(
-					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
-					"Metal driver leaves state that hangs the test host on shutdown).");
 
 			// GPU work is serialized by the GpuRenderingCollection the driving test
 			// class joins (xUnit DisableParallelization), so no in-renderer lock.
@@ -70,16 +40,19 @@ namespace SkiaSharp.Tests.Visual
 			{
 				device = MTLCreateSystemDefaultDevice();
 				if (device == IntPtr.Zero)
-					throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
+					throw new InvalidOperationException(
+						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host. " +
+						GpuPolicy.OptOutHint(GpuBackend.GaneshMetal));
 
 				// Probe the device BEFORE allocating a command queue. newCommandQueue
-				// on virtualized Metal is precisely what leaves the dispatch-queue
-				// state that hangs shutdown; if the device doesn't advertise a
-				// render-capable family, we never call newCommandQueue.
+				// on a virtualized Metal driver is precisely what leaves dispatch-queue
+				// state that hangs the test host's shutdown for hours, so bail out
+				// first if the device doesn't advertise a render-capable family.
 				if (!MetalHasRenderCapableFamily(device))
-					throw new RendererUnavailableException(
-						"MTLDevice does not support any MTLGPUFamily that Ganesh needs " +
-						"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+					throw new InvalidOperationException(
+						"MTLDevice does not support any MTLGPUFamily that Ganesh needs (Apple7+, Mac2). " +
+						"This is usually a virtualized/software Metal driver. " +
+						GpuPolicy.OptOutHint(GpuBackend.GaneshMetal));
 
 				queue = ObjcSendVoid(device, "newCommandQueue");
 				if (queue == IntPtr.Zero)
