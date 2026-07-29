@@ -77,6 +77,38 @@ Opt-outs are per leg, so an architecture-specific limitation needs its own job:
 `GpuPolicy` models the OS, not the architecture. That is why the .NET Framework
 tests run as separate x64 and x86 jobs.
 
+## Declared opt-outs in CI
+
+Every opt-out lives in `scripts/azure-templates-stages-test.yml` as a bootstrapper
+`env:` value, so what a leg can and cannot do is visible in the pipeline
+definition rather than inferred at runtime. The full current set:
+
+| Leg(s) | Opted out | Why |
+|---|---|---|
+| iOS | `ganesh-metal`, `graphite-metal` | Runs the *simulator*, whose virtualized Metal leaves dispatch-queue state that hangs the test host on shutdown. macOS and Mac Catalyst drive real Metal on the same agent and stay **required**. |
+| Windows (.NET Framework + .NET Core) | `ganesh-gl` | No GPU driver, so Windows falls back to GDI generic OpenGL 1.1 with no `WGL_ARB_*` extensions. Fixable — see below. Vulkan and Direct3D stay required. |
+| Azure Linux, Alpine (+ NoDeps ×2), Nano Server | `ganesh-gl` | No X server, no Mesa, no ICD in those images. |
+
+Everything else is required, including Vulkan on Windows/Linux/Android, Metal on
+macOS/Mac Catalyst, Direct3D on Windows, and Dawn in the browser.
+
+### Known gap: software OpenGL on Windows
+
+`ganesh-gl` on the Windows agents is a provisioning gap, not a platform limit.
+The fix is Mesa's llvmpipe: drop its `opengl32.dll` + `libgallium_wgl.dll` into
+`System32`/`SysWOW64` (the same shape as `install-vulkan-icd.ps1`) and set
+`GALLIUM_DRIVER=llvmpipe`. It needs **no test-code change** — Mesa's WGL
+extension string statically advertises both `WGL_ARB_pixel_format` and
+`WGL_ARB_pbuffer`, and its `wglChoosePixelFormatARB` reports
+`WGL_FULL_ACCELERATION_ARB`, which is exactly what `WglContext` requires.
+
+It is not wired up yet only because there is no trustworthy package feed for
+Mesa's Windows binaries: `Silk.NET` ships no desktop-GL package (and its
+`Silk.NET.OpenGLES.ANGLE.Native` is unusable — every published version has
+32-bit binaries in `runtimes/win-x64/`), and the community NuGet alternatives
+are neither complete nor credible. Mirroring the upstream `mesa-dist-win` MSVC
+release into a trusted feed would unblock it.
+
 ## Adding a backend
 
 Add a const to `GpuBackends` and a row to `GpuPolicy.RequiredOn`. On those
