@@ -95,6 +95,15 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            # OpenGL is opted out until a software GL stack is provisioned here. The
+            # agents have no GPU driver, so Windows falls back to the GDI generic
+            # OpenGL 1.1 implementation, which exposes no WGL_ARB_* extensions and
+            # cannot satisfy WglContext. Mesa (llvmpipe) is the fix — its opengl32.dll
+            # + libgallium_wgl.dll would go into System32/SysWOW64 exactly as the
+            # Vulkan loader does, and it needs no test-code change — but it has no
+            # trustworthy package feed yet. Vulkan and Direct3D stay required here.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
               # Provision a software Vulkan ICD (SwiftShader) so ganesh-vulkan renders here.
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
@@ -125,6 +134,9 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
+            # See the .NET Framework leg above: no software GL stack on these agents yet.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
               # Provision a software Vulkan ICD (SwiftShader) so ganesh-vulkan renders here.
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
