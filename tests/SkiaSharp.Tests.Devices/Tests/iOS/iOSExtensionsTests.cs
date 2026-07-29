@@ -108,9 +108,8 @@ namespace SkiaSharp.Views.iOS.Tests
 		{
 			GpuPolicy.RequireOrSkip(GpuBackend.GaneshMetal);
 
-			// No skip on a missing device: the policy already established that Metal
-			// is required on this host, so no MTLDevice is a red test, not a quiet
-			// pass. Declare the opt-out if an agent genuinely cannot run Metal.
+			// Past the policy gate Metal must work here, so a missing device is a red
+			// test rather than a quiet pass.
 			var device = MTLDevice.SystemDefault
 				?? throw new InvalidOperationException(
 					"MTLDevice.SystemDefault returned null; no Metal device on this host. " +

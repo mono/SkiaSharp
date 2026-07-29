@@ -14,12 +14,6 @@ namespace SkiaSharp.Tests.Visual
 	/// <see cref="GaneshVulkanRenderer"/> and, like it, is fully headless —
 	/// Instance → PhysicalDevice → graphics Queue → Device with no surface/swapchain.
 	///
-	/// <para>
-	/// <see cref="GpuPolicy"/> decides where Vulkan is required. On a host where it
-	/// is, a missing ICD is a <b>failure</b>, not a skip: CI provisions a software
-	/// ICD (Mesa lavapipe on Linux, SwiftShader on Windows) precisely so this
-	/// renders, and a silent skip would let that provisioning rot unnoticed.
-	/// </para>
 	/// </summary>
 	public sealed class GraphiteVulkanRenderer : IRenderer
 	{

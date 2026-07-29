@@ -25,9 +25,8 @@ namespace SkiaSharp.Tests
 
 		private GraphiteReleaseHarness CreateHarness()
 		{
-			// No skips here: GpuPolicy already established that Metal is required on
-			// this host, so a missing device or an unusable GPU family is a failure
-			// to act on — either fix the agent or declare the opt-out.
+			// Past the policy gate Metal must work here, so a missing device or an
+			// unusable GPU family is a failure to act on.
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
 				throw new InvalidOperationException(

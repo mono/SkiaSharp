@@ -232,15 +232,8 @@ namespace SkiaSharp.Tests
 		}
 
 		/// <summary>
-		/// Brings up an OpenGL context for a GPU test.
-		///
-		/// <para>
-		/// Deliberately has no catch. <see cref="GpuPolicy"/> has already decided
-		/// whether GL is required on this host; if it is, a context we cannot
-		/// create is a real failure to investigate — an absent display or driver
-		/// on a CI agent must be declared with <c>SKIASHARP_TEST_SKIP_GPU</c>, not
-		/// discovered as a silent skip.
-		/// </para>
+		/// Brings up an OpenGL context. No catch: past the policy gate, a context we
+		/// cannot create is a failure to investigate, not a skip.
 		/// </summary>
 		protected GlContext CreateGlContext()
 		{

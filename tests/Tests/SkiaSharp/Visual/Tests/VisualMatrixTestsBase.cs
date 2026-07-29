@@ -103,9 +103,8 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		protected async Task RunCellAsync(IRenderer renderer, ISkiaScene scene)
 		{
-			// The one and only skip seam. Past this line the backend is required on
-			// this host, so nothing below may catch a bring-up failure: a missing
-			// device, driver, ICD or display is a red cell to act on.
+			// The one and only skip seam. Past this line the backend must work here,
+			// so nothing below may catch a bring-up failure.
 			GpuPolicy.RequireOrSkip(renderer.Backend);
 
 			var info = scene.Info;

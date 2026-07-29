@@ -20,32 +20,28 @@ namespace SkiaSharp.Tests.Visual
 	public interface IRenderer : IDisposable
 	{
 		/// <summary>
-		/// Stable identifier, used as the per-renderer golden override directory
-		/// name (e.g. <c>"raster"</c>, <c>"ganesh-gl"</c>, <c>"ganesh-metal"</c>).
-		/// Matches <see cref="GpuPolicy.Id"/> for <see cref="Backend"/>.
+		/// Stable identifier, used as the per-renderer golden directory name
+		/// (e.g. <c>"raster"</c>, <c>"ganesh-metal"</c>). Matches
+		/// <see cref="GpuPolicy.Id"/> for <see cref="Backend"/>.
 		/// </summary>
 		string Name { get; }
 
 		/// <summary>
-		/// The backend this renderer drives. Whether it runs on the current host
-		/// is decided centrally by <see cref="GpuPolicy"/> — a renderer never
-		/// gates itself on the platform, so the "which OS has which API"
-		/// knowledge lives in exactly one table.
+		/// The backend this renderer drives. Whether it runs here is decided by
+		/// <see cref="GpuPolicy"/> — a renderer never gates itself on the platform.
 		/// </summary>
 		GpuBackend Backend { get; }
 
 		/// <summary>
 		/// Renders <paramref name="scene"/> at <paramref name="info"/>'s size and
-		/// returns the pixel buffer normalized to RGBA8888 / premultiplied. The
-		/// caller owns the returned array.
+		/// returns the pixels normalized to RGBA8888 / premultiplied. The caller owns
+		/// the returned array.
 		///
 		/// <para>
-		/// This is only ever called for a backend the policy reports as
-		/// <see cref="GpuAvailability.Required"/>, so <b>every</b> exception is a
-		/// real test failure. Do not swallow a missing device, driver or context
-		/// into a skip: if a host legitimately cannot run this backend, that
-		/// belongs in the <see cref="GpuPolicy"/> table or in
-		/// <c>SKIASHARP_TEST_SKIP_GPU</c>, never in a catch block.
+		/// Only called for a backend the policy says is required, so <b>every</b>
+		/// exception is a real failure. Never catch a missing device, driver or
+		/// context into a skip — that belongs in the policy table or in
+		/// <c>SKIASHARP_TEST_SKIP_GPU</c>.
 		/// </para>
 		/// </summary>
 		Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken);

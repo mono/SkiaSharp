@@ -40,11 +40,8 @@ namespace SkiaSharp.Tests
 		{
 			if (!s_ready)
 			{
-				// No skips: Dawn is required on the browser host, so a browser that
-				// exposes navigator.gpu but cannot vend an adapter/device is a real
-				// coverage gap — fix the browser flags, or declare the opt-out with
-				// SKIASHARP_TEST_SKIP_GPU. Discovering it as a silent skip is exactly
-				// how WebGPU coverage went missing in the first place.
+				// Past the policy gate Dawn must work here, so a browser that exposes
+				// navigator.gpu but vends no adapter is a coverage gap to fix.
 				var adapter = await SKWebGpu.RequestAdapter()
 					?? throw new InvalidOperationException(
 						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser. " +
