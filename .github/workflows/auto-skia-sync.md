@@ -7,7 +7,7 @@ description: "Daily upstream Skia milestone sync - merges new commits, resolves 
 # benefits from the stronger model, despite the higher AI-credit cost.
 engine:
   id: copilot
-model: claude-opus-4.7
+model: claude-opus-4.8
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:

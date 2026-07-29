@@ -257,7 +257,7 @@ relevant changes or miss moved headers. An independent validation catches these 
 they become runtime crashes.
 
 Launch an independent validator with the built-in `task` tool. Use `agent_type="explore"`,
-`model="claude-opus-4.7"`, and `mode="sync"`, with the prompt template from
+`model="claude-opus-4.8"`, and `mode="sync"`, with the prompt template from
 [references/validation-prompt.md](references/validation-prompt.md). Substitute
 `$DIFF_RANGE` and provide the analysis file. The validator must inspect the repository
 itself rather than accepting the first analysis as correct.
