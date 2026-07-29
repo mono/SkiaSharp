@@ -3,19 +3,14 @@
   <Import Project="$(MSBuildThisFileDirectory)..\source\SkiaSharp.Build.targets" />
 
   <!--
-    Carries the GPU opt-out list into hosts that cannot read the build agent's
-    environment: the Android, iOS, Mac Catalyst and WASM test apps run on a
-    device, emulator or browser, so SKIASHARP_TEST_SKIP_GPU never reaches them.
-    Baking the value into runtimeconfig.json lets GpuPolicy read it back through
-    AppContext, giving those hosts the same declared opt-out the desktop legs get
-    from the environment variable.
+    Carries the GPU opt-out into hosts that never see the build agent's environment: the Android,
+    iOS, Mac Catalyst and WASM test apps run on a device, emulator or browser. runtimeconfig.json is
+    how GpuPolicy reads it back, through AppContext.
 
-    Set it with the cake `skipGpu` argument, or directly as an MSBuild property:
-    `-p:SkiaSharpTestSkipGpu=graphite-dawn`. See documentation/dev/gpu-test-policy.md.
+    Set it with the cake `skipGpu` argument or directly as `-p:SkiaSharpTestSkipGpu=graphite-dawn`.
 
-    Deliberately no `Trim` metadata: ILLink collects every RuntimeHostConfigurationOption
-    marked Trim=true as a feature switch and parses its value as a bool, which this
-    backend-id list is not. Trim metadata does not affect runtimeconfig.json generation.
+    No `Trim` metadata: ILLink treats a trimmable RuntimeHostConfigurationOption as a feature switch
+    and parses its value as a bool, which this backend-id list is not.
   -->
   <ItemGroup Condition="'$(SkiaSharpTestSkipGpu)' != ''">
     <RuntimeHostConfigurationOption Include="SkiaSharp.Tests.SkipGpu"

@@ -30,17 +30,12 @@ namespace SkiaSharp.Tests
 		/// <summary>Some backends (Dawn on WASM) cannot submit synchronously.</summary>
 		protected virtual bool CanSubmitSync => true;
 
-		/// <summary>
-		/// The GPU backend these tests drive. Whether it runs on the current host
-		/// is decided centrally by <see cref="GpuPolicy"/>, so a derived class
-		/// never gates itself on the platform.
-		/// </summary>
+		/// <summary>The GPU backend these tests drive.</summary>
 		protected abstract string Backend { get; }
 
 		/// <summary>
-		/// Brings up the backend and returns a live harness. Called only when the
-		/// backend is required on this host, so it must <b>not</b> catch a failed
-		/// bring-up: a missing device or driver is a red test, not a skip.
+		/// Brings up the backend and returns a live harness. Must not catch a failed
+		/// bring-up.
 		/// </summary>
 		protected abstract Task<GraphiteReleaseHarness> CreateHarnessAsync();
 

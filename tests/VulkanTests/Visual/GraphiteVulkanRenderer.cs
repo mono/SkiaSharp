@@ -17,7 +17,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GraphiteVulkanRenderer : IRenderer
 	{
-		public string Name => "graphite-vulkan";
+		public string Name => GpuBackends.GraphiteVulkan;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

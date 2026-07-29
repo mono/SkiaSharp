@@ -1,19 +1,13 @@
 #addin nuget:?package=Cake.FileHelpers&version=4.0.1
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// GPU OPT-OUT — declared list of GPU backends to skip on this host
+// GPU OPT-OUT — backends to skip on this host
 //
-// Desktop and container legs need nothing here: their test process is a child of this one, so it
-// inherits SKIASHARP_TEST_SKIP_GPU from the environment and GpuPolicy reads it directly.
-//
-// The Android / iOS / Mac Catalyst / WASM hosts cannot do that — they run on a device, emulator or
-// browser that never sees the build agent's environment. For those the value is baked into
-// runtimeconfig.json as the SkiaSharp.Tests.SkipGpu setting (see tests/Directory.Build.targets) and
-// read back by GpuPolicy through AppContext. That is why AddGpuOptOut is only wired into
-// RunDeviceRunnersTest.
-//
-// Accepts either form, so a pipeline leg can set the environment variable once and have it apply
-// uniformly to every host:
+// Desktop and container legs need nothing here: their test process is a child of this one and
+// inherits SKIASHARP_TEST_SKIP_GPU from the environment. The Android / iOS / Mac Catalyst / WASM
+// hosts run on a device, emulator or browser that never sees the agent environment, so for those
+// the value is baked into runtimeconfig.json (see tests/Directory.Build.targets) and read back
+// through AppContext.
 //
 //   dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 //   SKIASHARP_TEST_SKIP_GPU=ganesh-gl dotnet cake --target=tests-netcore
@@ -21,10 +15,10 @@
 
 var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU") ?? "");
 
-// GpuPolicy accepts comma, semicolon or whitespace separators; normalise them to the single form the
-// MSBuild property path handles. Cake's DotNetMSBuildSettings quotes the value, so a comma-joined
-// list arrives intact — unlike a raw `/p:` on a command line, where MSBuild splits the switch on
-// commas AND semicolons (a list there parses as several properties and fails with MSB1006).
+// GpuPolicy accepts comma, semicolon or whitespace separators; normalise to the one form the
+// MSBuild property path survives. Cake's DotNetMSBuildSettings quotes the value, so a comma-joined
+// list arrives intact — a raw /p: on a command line would not, since MSBuild splits that switch on
+// commas as well as semicolons (MSB1006).
 string NormalizeGpuOptOut(string value) =>
     string.Join(",", value.Split(new[] { ',', ';', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries));
 
@@ -132,11 +126,6 @@ void RunDotNetTest(
     output = MakeAbsolute(output);
     var dir = testProject.GetDirectory();
 
-    // Deliberately NOT calling AddGpuOptOut here: this path runs the tests in a child process that
-    // already inherits SKIASHARP_TEST_SKIP_GPU, and it builds the `/p:` switches by hand — where
-    // MSBuild splits on commas as well as semicolons, so a multi-backend list would be parsed as
-    // several properties (MSB1006). It would also be a no-op, since NoBuild=true means no
-    // runtimeconfig.json is regenerated. Only the device/browser hosts need the property.
     properties = properties == null
         ? new Dictionary<string, string>()
         : new Dictionary<string, string>(properties);

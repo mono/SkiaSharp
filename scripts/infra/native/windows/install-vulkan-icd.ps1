@@ -1,38 +1,31 @@
-# Provision a software Vulkan ICD (SwiftShader) + the Khronos loader on the
-# Windows CI agent so the ganesh-vulkan tests execute and golden-compare,
-# mirroring what the Linux leg does with Mesa lavapipe.
+# Provisions a software Vulkan ICD (SwiftShader) + the Khronos loader so the
+# ganesh-vulkan tests execute and golden-compare, mirroring what the Linux leg
+# does with Mesa lavapipe.
 #
 # Downloads two first-party, Apache-2.0 Silk.NET native NuGet packages from the
-# dnceng "dotnet-public" mirror by their immutable .nupkg URL (a plain HTTPS
-# artifact download, NOT a NuGet <PackageReference>, so the curated feeds are
-# untouched). Same feed the WinAppSDK / ANGLE provisioning downloads from:
+# dnceng "dotnet-public" mirror by immutable .nupkg URL (a plain HTTPS artifact
+# download, NOT a <PackageReference>, so the curated feeds are untouched):
 #   Silk.NET.Vulkan.Loader.Native      -> vulkan-1.dll        (Khronos loader)
 #   Silk.NET.Vulkan.SwiftShader.Native -> vk_swiftshader.dll + vk_swiftshader_icd.json
 #
-# BOTH x64 and x86 are provisioned. The .NET Framework test leg runs the suite
-# twice, once per bitness, and a 32-bit process cannot load a 64-bit
-# vulkan-1.dll — so an x64-only install left every x86 Vulkan test failing to
-# find the loader.
+# Both x64 and x86 are provisioned: the .NET Framework leg runs the suite once
+# per bitness, and a 32-bit process cannot load a 64-bit vulkan-1.dll.
 #
-# Bitness resolution is delegated to Windows rather than PATH ordering, exactly
-# as the official Vulkan Runtime installer does it:
+# Bitness resolution is left to Windows rather than PATH ordering, as the
+# official Vulkan Runtime installer does it:
 #
-#   * the loader goes in System32 (x64) and SysWOW64 (x86). WOW64 file
-#     redirection points a 32-bit process at SysWOW64 when it resolves the
-#     system directory, so LoadLibrary("vulkan-1") finds the matching bitness
-#     with no PATH involved (PATH would be ambiguous: two files, one name).
-#   * the ICD manifests stay in externals\vulkan-icd\<arch>\ next to their
-#     vk_swiftshader.dll, because the manifest's "library_path" is relative
-#     (".\vk_swiftshader.dll") and so must sit beside the DLL it names.
-#   * each manifest is registered in the matching registry view: the native
-#     Khronos\Vulkan\Drivers key for x64, and its WOW6432Node twin for x86,
-#     which is where a 32-bit loader looks.
+#   * the loader goes in System32 (x64) and SysWOW64 (x86). WOW64 redirection
+#     points a 32-bit process at SysWOW64, so LoadLibrary("vulkan-1") finds the
+#     matching bitness. PATH could not disambiguate two files of one name.
+#   * the ICD manifests stay in externals\vulkan-icd\<arch>\ beside their
+#     vk_swiftshader.dll, because the manifest's "library_path" is relative.
+#   * each manifest is registered in the registry view its loader reads: the
+#     native Khronos\Vulkan\Drivers key for x64, WOW6432Node for x86.
 #
-# This is a deterministic, required provisioning step: any failure is fatal and
-# fails the build, so a broken ICD surfaces loudly instead of silently dropping
-# Vulkan coverage. Missing GPU support on an agent that genuinely cannot run
-# Vulkan must be declared with SKIASHARP_TEST_SKIP_GPU (see
-# documentation/dev/gpu-test-policy.md), never inferred from a load failure.
+# Any failure here is fatal, so a broken ICD surfaces loudly instead of silently
+# dropping Vulkan coverage. An agent that genuinely cannot run Vulkan must be
+# declared with SKIASHARP_TEST_SKIP_GPU (see
+# documentation/dev/golden-image-tests.md), never inferred from a load failure.
 
 $ErrorActionPreference = 'Stop'
 
@@ -106,12 +99,10 @@ foreach ($t in $loaderTargets) {
     Write-Host "Installed the $($t.Arch) Vulkan loader into $($t.Dir)"
 }
 
-# Register each ICD manifest in the registry view its loader reads. CI agents run
-# ELEVATED, and the Khronos loader deliberately ignores VK_ICD_FILENAMES /
-# VK_DRIVER_FILES for elevated processes, so the registry (a REG_DWORD named with
-# the manifest's absolute path, data 0 = enabled) is the discovery path that
-# actually applies. WOW6432Node is the 32-bit view, which a 32-bit loader sees as
-# plain SOFTWARE\Khronos.
+# The Khronos loader ignores VK_ICD_FILENAMES / VK_DRIVER_FILES for elevated
+# processes, and CI agents run elevated, so the registry is the discovery path
+# that applies: a REG_DWORD named with the manifest's absolute path, data 0.
+# WOW6432Node is the view a 32-bit loader sees as plain SOFTWARE\Khronos.
 $icdTargets = @(
     @{ Arch = 'x64'; Key = 'HKLM:\SOFTWARE\Khronos\Vulkan\Drivers' },
     @{ Arch = 'x86'; Key = 'HKLM:\SOFTWARE\WOW6432Node\Khronos\Vulkan\Drivers' }

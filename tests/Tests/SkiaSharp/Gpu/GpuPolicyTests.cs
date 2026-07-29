@@ -1,31 +1,24 @@
-using System.Linq;
-using SkiaSharp.Tests.Visual;
 using Xunit;
 
 namespace SkiaSharp.Tests
 {
 	public class GpuPolicyTests : BaseTest
 	{
-		/// <summary>
-		/// An unrecognised host would classify every backend as not-required and skip
-		/// the whole GPU suite — the silent hole this policy exists to close.
-		/// </summary>
+		// An unrecognised host would leave every backend not-required, silently
+		// skipping the whole GPU suite.
 		[Fact]
 		public void HostPlatformIsRecognised() =>
 			Assert.True(
 				TestConfig.Current.Platform != TestPlatforms.None,
 				"The host platform was not recognised. Add it to TestPlatforms and TestConfig.DetectPlatform.");
 
-		/// <summary>A typo must not quietly leave a backend required.</summary>
 		[Fact]
-		public void OptOutListNamesOnlyKnownBackends() => GpuPolicy.Validate();
+		public void OptOutListNamesOnlyKnownBackends() => GpuPolicy.Disabled();
 
-		/// <summary>
-		/// Renderer names are the policy ids, so a renderer the policy does not know
-		/// would never be gated. Catches drift between the two.
-		/// </summary>
+		// Renderer names are the policy ids, so a renderer the policy does not know
+		// would never be gated.
 		[Fact]
 		public void EveryRendererNameIsAKnownBackend() =>
-			Assert.All(RendererCatalog.AllNames, name => Assert.Contains(name, GpuPolicy.All));
+			Assert.All(Visual.RendererCatalog.AllNames, name => Assert.Contains(name, GpuPolicy.RequiredOn.Keys));
 	}
 }

@@ -93,9 +93,9 @@ namespace SkiaSharp.Tests
 			false;
 #endif
 
-		// Declared after _isNanoServer, which DetectPlatform reads: static field
-		// initializers run in declaration order. Deliberately does not go through
-		// Current, which would recurse into DefaultTestConfig's constructor.
+		// Reads _isNanoServer, so must be declared after it: static field
+		// initializers run in declaration order. Goes via PlatformConfiguration
+		// rather than Current, which would recurse into DefaultTestConfig's ctor.
 		private static readonly TestPlatforms _platform = DetectPlatform();
 
 		// Most specific first: Mac Catalyst also reports IsIOS, iOS/tvOS can report

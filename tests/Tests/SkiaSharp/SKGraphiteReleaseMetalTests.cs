@@ -25,8 +25,6 @@ namespace SkiaSharp.Tests
 
 		private GraphiteReleaseHarness CreateHarness()
 		{
-			// Past the policy gate Metal must work here, so a missing device or an
-			// unusable GPU family is a failure to act on.
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
 				throw new InvalidOperationException(
@@ -156,13 +154,9 @@ namespace SkiaSharp.Tests
 
 		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
 		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
-		// Apple *simulator* is a proven exception: it under-reports its GPU family
-		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
-		// Silicon GPU and drives Graphite Metal correctly — verified running the
-		// full wrap/insert/submit/release scenario green on an iOS simulator — so
-		// it is whitelisted rather than rejected. (The virtualized x64 Azure DevOps
-		// Metal host, which genuinely cannot, is opted out declaratively by the
-		// macOS CI leg via SKIASHARP_TEST_SKIP_GPU.)
+		// Apple simulator under-reports its GPU family (typically Apple1/Apple2/
+		// Common1) yet is backed by the host Apple Silicon GPU and drives Graphite
+		// Metal correctly, so it is whitelisted.
 		private static bool MetalCanDriveGraphite(IntPtr device) =>
 			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
 

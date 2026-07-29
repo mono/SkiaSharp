@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GaneshVulkanRenderer : IRenderer
 	{
-		public string Name => "ganesh-vulkan";
+		public string Name => GpuBackends.GaneshVulkan;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

@@ -18,7 +18,7 @@ the shared `SkiaSharp.Tests` project, the same matrix compiles and runs in:
 
 Each renderer declares the GPU backend it drives; whether that backend runs on
 this host is decided centrally by `GpuPolicy` (see
-[gpu-test-policy.md](gpu-test-policy.md)). A cell skips only when the policy says
+[GPU policy](#gpu-policy)). A cell skips only when the policy says
 the backend is not required here — never because a bring-up threw. The harness is
 built on existing primitives — `SKPixelComparer`, the `GlContexts/` abstraction,
 `TestConfig`, and the `Content` embed/copy pipeline — rather than reinventing
@@ -88,13 +88,10 @@ bring-up. Its `Name` *is* the `GpuPolicy` backend id, and the policy owns the
 
 ## Failure discipline
 
-This is the property the harness exists to guarantee. A cell may **skip** *only*
-when [`GpuPolicy`](gpu-test-policy.md) says the renderer's backend is not
-required on this host — either because the platform is not in its `RequiredOn`
-set (Metal off Apple, Vulkan on macOS) or because it was explicitly opted out
-for this agent with `SKIASHARP_TEST_SKIP_GPU`.
-
-Both are *declared*. Neither is inferred from an exception.
+A cell may **skip** only when `GpuPolicy` says the renderer's backend is not
+required on this host — either the platform is not in the backend's `RequiredOn`
+set, or it was opted out for this agent with `SKIASHARP_TEST_SKIP_GPU`. Both are
+declared; neither is inferred from an exception.
 
 **Every other outcome is a hard failure:**
 
@@ -104,10 +101,10 @@ Both are *declared*. Neither is inferred from an exception.
 - the renderer ran but **no golden has been recorded yet** for this
   `(renderer, scene)` on this platform — an *unseeded* cell.
 
-The first point is the one that changed, and it is the point: a renderer must not
-catch a failed bring-up and turn it into a skip. If a CI agent legitimately can't
-run a backend, that belongs in the policy table or in `SKIASHARP_TEST_SKIP_GPU`
-where it is reviewable — not in a catch block where it silently erodes coverage.
+A renderer must not catch a failed bring-up and turn it into a skip. If a CI
+agent legitimately can't run a backend, that belongs in the policy table or in
+`SKIASHARP_TEST_SKIP_GPU` where it is reviewable — not in a catch block where it
+silently erodes coverage.
 
 An unseeded cell is likewise a **failure, not a skip**. The backend was available
 and produced pixels, so a green result would be a coverage hole. There is no
@@ -118,6 +115,94 @@ test results on pass *and* fail** (the `##SKIA-GOLDEN-IMAGE##` marker, see below
 So an unseeded cell fails loudly *and* hands you exactly the bytes to commit:
 harvest the marker from the TRX, commit it, re-run, and the cell goes green. No
 second "record" run is needed.
+
+---
+
+## GPU policy
+
+`GpuPolicy` decides whether a backend must work on this host. It is the only
+place in the suite allowed to skip a GPU test, and it is used by the plain GPU
+tests (`SKTest.CreateGlContext`, `VKTest`, `Direct3DTest`, the Graphite release
+tests) as well as the visual matrix.
+
+A backend is **required** unless one of two things is true:
+
+| Not required because | Example | Configured? |
+|---|---|---|
+| the platform is not in its `RequiredOn` set | Metal on Windows, Vulkan on macOS | no |
+| it was disabled for this agent | `ganesh-gl` on a headless CI agent | **yes** |
+
+> The table describes **platforms**; the environment variable describes
+> **agents**. You never set anything to make Metal skip on Windows.
+
+| Id | RequiredOn | Absent elsewhere because |
+|---|---|---|
+| `raster` | all | — (CPU, always required) |
+| `ganesh-gl` | Windows, macOS, Linux, Nano Server | no `GlContext` for the device/browser hosts |
+| `ganesh-vulkan` | Windows, Linux, Android | not built for Apple, Nano Server or the browser |
+| `graphite-vulkan` | Windows, Linux, Android | not built for Apple, Nano Server or the browser |
+| `ganesh-vulkan-sharpvk` | Windows | SharpVk cannot create a context off Windows |
+| `ganesh-metal` | Apple | Metal is an Apple-only API |
+| `graphite-metal` | Apple | Metal is an Apple-only API |
+| `ganesh-direct3d` | Windows | Direct3D is Windows-only; not built for Nano Server |
+| `graphite-dawn` | Browser | Dawn is only built for WebAssembly |
+
+`RequiredOn` mirrors the `gn` args in `native/*/build.cake` — `skia_use_metal`,
+`skia_use_vulkan`, `skia_use_dawn`, `skia_use_direct3d`. **Keep the two in sync.**
+Nano Server is its own platform because `native/nanoserver/build.cake` passes
+`supportVulkan=false` and `supportDirect3D=false`.
+
+### Opting out
+
+```bash
+SKIASHARP_TEST_SKIP_GPU=ganesh-gl,graphite-dawn   # specific backends
+SKIASHARP_TEST_SKIP_GPU=all                       # every GPU backend
+```
+
+Comma, semicolon or whitespace separated, case-insensitive. **An unrecognised id
+is a hard error**, so a typo cannot quietly leave a backend required.
+
+Device and browser hosts never see the agent environment, so the same list is
+baked into `runtimeconfig.json` from the `SkiaSharpTestSkipGpu` MSBuild property
+and read through `AppContext`:
+
+```bash
+dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
+```
+
+In CI each opt-out is a bootstrapper `env:` value in
+`scripts/azure-templates-stages-test.yml`, so what a leg can do is visible in the
+pipeline definition:
+
+| Leg(s) | Opted out | Why |
+|---|---|---|
+| iOS | `ganesh-metal`, `graphite-metal` | Runs the *simulator*, whose virtualized Metal leaves dispatch-queue state that hangs the test host on shutdown. macOS and Mac Catalyst drive real Metal on the same agent and stay required. |
+| Windows (.NET Framework + .NET Core) | `ganesh-gl` | No GPU driver, so Windows falls back to GDI generic OpenGL 1.1 with no `WGL_ARB_*` extensions. Vulkan and Direct3D stay required. |
+| Azure Linux, Alpine (+ NoDeps ×2), Nano Server | `ganesh-gl` | No X server, no Mesa, no ICD in those images. |
+
+### Known gap: software OpenGL on Windows
+
+`ganesh-gl` on the Windows agents is a provisioning gap, not a platform limit.
+Mesa's llvmpipe fixes it with **no test-code change**: drop its `opengl32.dll` +
+`libgallium_wgl.dll` into `System32`/`SysWOW64` (the shape `install-vulkan-icd.ps1`
+already uses) and set `GALLIUM_DRIVER=llvmpipe`. Mesa's WGL extension string
+statically advertises both `WGL_ARB_pixel_format` and `WGL_ARB_pbuffer`, and its
+`wglChoosePixelFormatARB` reports `WGL_FULL_ACCELERATION_ARB` — exactly what
+`WglContext` requires.
+
+The blocker is provenance: `Silk.NET` ships no desktop-GL package (and its
+`Silk.NET.OpenGLES.ANGLE.Native` has 32-bit binaries in `runtimes/win-x64/` in
+every published version), and the community NuGet alternatives are incomplete.
+Mirroring the upstream `mesa-dist-win` MSVC release into a trusted feed unblocks
+it.
+
+### Adding a backend
+
+1. Add a const to `GpuBackends` and a row to `GpuPolicy`'s `requiredOn` table.
+2. Point the tests at it — an `IRenderer` whose `Name` is that id, or
+   `GpuPolicy.RequireOrSkip` at the top of a bring-up helper.
+3. Run it. On the platforms in `RequiredOn` it is required, so an unseeded golden
+   or a failed bring-up is red until you seed or fix it.
 
 There is no path that downgrades a real regression to a skip or a warning, and a
 golden that exists is *always* compared strictly.
@@ -420,7 +505,7 @@ The matrix ships wired into CI as part of `scripts/azure-templates-stages-test.y
   with the bootstrapper's `env:` parameter, e.g. `SKIASHARP_TEST_SKIP_GPU: ganesh-gl`
   on the container legs, so what a leg can and cannot do is visible in the
   pipeline definition rather than inferred at runtime. Skips land in the TRX with
-  their reason. See [gpu-test-policy.md](gpu-test-policy.md) for the current set.
+  their reason. See [GPU policy](#gpu-policy) for the current set.
 - **Failure / capture artifacts.** Every cell's rendered PNG is in the published
   TRX as a `##SKIA-GOLDEN-IMAGE##` marker (on pass and fail). A failing cell
   additionally emits its golden and colored diff as `##SKIA-VISUAL-IMAGE##`
@@ -474,7 +559,7 @@ then stops re-creating the per-platform copies.
 
 Which renderers a host *compiles* is a matter of project references; which of
 those are **required** to pass is decided by
-[`GpuPolicy`](gpu-test-policy.md#the-matrix), whose table is the authoritative
+[`GpuPolicy`](#gpu-policy), whose table is the authoritative
 version of this list.
 
 | Host | Platform | raster | GPU renderers compiled in |
@@ -520,7 +605,7 @@ automatically. Use this only for backends that need no extra NuGet package and a
 safe in the MAUI/WASM builds (e.g. an Apple-gated Metal renderer).
 
 **Declare its backend:** a renderer's `Name` is its
-[`GpuPolicy`](gpu-test-policy.md) backend id, and that id needs a row in the
+[`GpuPolicy`](#gpu-policy) backend id, and that id needs a row in the
 policy table giving the platforms it must work on. The renderer itself
 must not check the platform and must not catch a failed bring-up — both belong in
 the policy.

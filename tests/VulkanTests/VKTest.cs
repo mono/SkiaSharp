@@ -4,9 +4,9 @@ namespace SkiaSharp.Vulkan.Tests
 {
 	public class VKTest : SKTest
 	{
-		// A headless Silk.NET bring-up against the OS-provided Vulkan loader, so it
-		// runs on any host with an ICD — including a software one such as Mesa
-		// lavapipe or SwiftShader, which is what CI provisions.
+		// A headless Silk.NET bring-up against the OS-provided Vulkan loader, so any
+		// host with an ICD works — including a software one such as Mesa lavapipe or
+		// SwiftShader, which is what CI provisions.
 		protected SilkVkContext CreateSilkVkContext()
 		{
 			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkan);
@@ -15,7 +15,7 @@ namespace SkiaSharp.Vulkan.Tests
 		}
 
 		// Legacy SharpVk context, kept only for the SharpVk-specific tests. It cannot
-		// create a surface off Windows, hence the Windows-only row in the policy.
+		// create a surface off Windows.
 		protected VkContext CreateSharpVkContext()
 		{
 			GpuPolicy.RequireOrSkip(GpuBackends.GaneshVulkanSharpVk);

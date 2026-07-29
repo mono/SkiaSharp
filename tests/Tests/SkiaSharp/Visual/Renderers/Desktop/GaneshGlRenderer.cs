@@ -19,7 +19,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GaneshGlRenderer : IRenderer
 	{
-		public string Name => "ganesh-gl";
+		public string Name => GpuBackends.GaneshGl;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

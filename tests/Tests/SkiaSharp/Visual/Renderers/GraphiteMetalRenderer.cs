@@ -9,13 +9,11 @@ namespace SkiaSharp.Tests.Visual
 	/// Graphite GPU backend over Apple Metal. Uses the same Metal.framework
 	/// + libobjc runtime bring-up as <see cref="GaneshMetalRenderer"/> — system
 	/// default MTLDevice + a fresh MTLCommandQueue — feeding
-	/// <see cref="SKGraphiteContext.CreateMetal"/> instead of the Ganesh
-	/// factory. Compiled into every host; <see cref="GpuPolicy"/> reports Metal as
-	/// unsupported off Apple, so the P/Invoke surface is never touched there.
+	/// <see cref="SKGraphiteContext.CreateMetal"/> instead of the Ganesh factory.
 	/// </summary>
 	public sealed class GraphiteMetalRenderer : IRenderer
 	{
-		public string Name => "graphite-metal";
+		public string Name => GpuBackends.GraphiteMetal;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
@@ -61,13 +59,7 @@ namespace SkiaSharp.Tests.Visual
 				{
 					// The Apple simulator's Metal cannot compile every pipeline Graphite
 					// emits — notably the gradient-shader pipeline (GradientBlend) — so
-					// Recorder.Snap() returns null there for those scenes.
-					//
-					// This used to be laundered into a skip. It is now a hard failure:
-					// a per-cell gap must be *declared*, not inferred from a null return,
-					// or it is indistinguishable from a real Graphite regression. If this
-					// cell should be excluded on the simulator, add a declared per-cell
-					// exclusion; do not reintroduce a catch here.
+					// Snap() returns null there for those scenes.
 					throw new InvalidOperationException(
 						"Graphite/Metal Recorder.Snap() returned null" +
 						(IsRunningOnAppleSimulator
@@ -123,12 +115,9 @@ namespace SkiaSharp.Tests.Visual
 
 		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
 		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
-		// Apple simulator is a proven exception: it under-reports its GPU family
-		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
-		// Silicon GPU and drives Graphite Metal correctly, so it is whitelisted
-		// rather than rejected. (The virtualized x64 Azure DevOps Metal host, which
-		// genuinely cannot, is opted out declaratively by the macOS CI legs via
-		// SKIASHARP_TEST_SKIP_GPU.)
+		// Apple simulator under-reports its GPU family (typically Apple1/Apple2/
+		// Common1) yet is backed by the host Apple Silicon GPU and drives Graphite
+		// Metal correctly, so it is whitelisted.
 		private static bool MetalCanDriveGraphite(IntPtr device) =>
 			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
 

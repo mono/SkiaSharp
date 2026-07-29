@@ -17,14 +17,12 @@ namespace SkiaSharp.Tests.Visual
 	/// <c>Renderers/Desktop/</c>), so it compiles into every host. Because Metal
 	/// is reached purely through runtime P/Invoke — not a platform-TFM API — the
 	/// same file runs in-process on the macOS Console host <i>and</i> on the
-	/// iOS / Mac Catalyst / tvOS MAUI device hosts. <see cref="GpuPolicy"/> reports
-	/// Metal as unsupported on every non-Apple platform, so the Metal/libobjc
-	/// entry points are never touched there.
+	/// iOS / Mac Catalyst / tvOS MAUI device hosts.
 	/// </para>
 	/// </summary>
 	public sealed class GaneshMetalRenderer : IRenderer
 	{
-		public string Name => "ganesh-metal";
+		public string Name => GpuBackends.GaneshMetal;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

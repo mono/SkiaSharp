@@ -231,10 +231,6 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		/// <summary>
-		/// Brings up an OpenGL context. No catch: past the policy gate, a context we
-		/// cannot create is a failure to investigate, not a skip.
-		/// </summary>
 		protected GlContext CreateGlContext()
 		{
 			GpuPolicy.RequireOrSkip(GpuBackends.GaneshGl);

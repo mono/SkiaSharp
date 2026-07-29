@@ -57,8 +57,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ### Testing
 | Document | Description |
 |----------|-------------|
-| [gpu-test-policy.md](gpu-test-policy.md) | When a GPU backend is required vs skipped, and the `SKIASHARP_TEST_SKIP_GPU` opt-out |
-| [golden-image-tests.md](golden-image-tests.md) | The cross-backend visual-regression matrix: scenes, renderers, goldens, and how to seed them |
+| [golden-image-tests.md](golden-image-tests.md) | The cross-backend visual-regression matrix, and the GPU policy that decides when a backend is required vs skipped (`SKIASHARP_TEST_SKIP_GPU`) |
 | [containerized-testing.md](containerized-testing.md) | Run the console test suite inside a Docker container (Linux glibc/Alpine + Nano Server) via the bootstrapper `docker:` feature + the `tests-container` cake target |
 
 ### Releasing

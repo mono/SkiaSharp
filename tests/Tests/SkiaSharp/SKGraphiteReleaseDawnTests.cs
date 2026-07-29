@@ -40,8 +40,6 @@ namespace SkiaSharp.Tests
 		{
 			if (!s_ready)
 			{
-				// Past the policy gate Dawn must work here, so a browser that exposes
-				// navigator.gpu but vends no adapter is a coverage gap to fix.
 				var adapter = await SKWebGpu.RequestAdapter()
 					?? throw new InvalidOperationException(
 						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser.");

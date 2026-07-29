@@ -31,10 +31,8 @@ namespace SkiaSharp.Tests.Visual
 		/// the returned array.
 		///
 		/// <para>
-		/// Only called for a backend the policy says is required, so <b>every</b>
-		/// exception is a real failure. Never catch a missing device, driver or
-		/// context into a skip — that belongs in the policy table or in
-		/// <c>SKIASHARP_TEST_SKIP_GPU</c>.
+		/// Only called for a backend the policy says is required, so every exception
+		/// is a real failure — never catch a failed bring-up into a skip.
 		/// </para>
 		/// </summary>
 		Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken);

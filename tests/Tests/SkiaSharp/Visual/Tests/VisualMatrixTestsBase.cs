@@ -36,15 +36,9 @@ namespace SkiaSharp.Tests.Visual.Tests
 	///
 	/// <para><b>Discipline.</b> A cell <i>skips</i> only when
 	/// <see cref="SkiaSharp.Tests.GpuPolicy"/> says the renderer's backend is not
-	/// required on this host — because the API does not exist here, because we do
-	/// not build it here yet, or because it was explicitly opted out with
-	/// <c>SKIASHARP_TEST_SKIP_GPU</c>. Every other outcome is a hard
-	/// <b>failure</b>: a render that throws <i>anything</i>, pixels that differ
-	/// from a golden that exists, or <i>no golden recorded yet</i> for this cell on
-	/// this platform (the captured PNG is in the TRX — harvest and commit it, then
-	/// the cell goes green). There is no path that downgrades a real regression to
-	/// a skip or a warning, and in particular no renderer may catch a failed
-	/// bring-up and turn it into a skip.</para>
+	/// required on this host. Every other outcome is a hard <b>failure</b>: a
+	/// render that throws <i>anything</i>, pixels that differ from a golden that
+	/// exists, or no golden recorded yet for this cell on this platform.</para>
 	///
 	/// <para><b>Selecting the suite.</b> Every cell is tagged
 	/// <c>[Trait("Category", "Visual")]</c>. Run only the visual matrix with
@@ -103,8 +97,6 @@ namespace SkiaSharp.Tests.Visual.Tests
 		/// </summary>
 		protected async Task RunCellAsync(IRenderer renderer, ISkiaScene scene)
 		{
-			// The one and only skip seam. Past this line the backend must work here,
-			// so nothing below may catch a bring-up failure.
 			GpuPolicy.RequireOrSkip(renderer.Name);
 
 			var info = scene.Info;

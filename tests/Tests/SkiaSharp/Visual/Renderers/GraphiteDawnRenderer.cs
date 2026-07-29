@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GraphiteDawnRenderer : IRenderer
 	{
-		public string Name => "graphite-dawn";
+		public string Name => GpuBackends.GraphiteDawn;
 
 		// Non-yielding mode disallows SKGraphiteContext.Dispose() while any GPU
 		// work is in flight; keep the Context + Recorder alive for the WASM
