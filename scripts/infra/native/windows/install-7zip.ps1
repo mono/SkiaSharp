@@ -5,7 +5,8 @@ Param(
 
 $ErrorActionPreference = 'Stop'
 
-$sevenZipPath = (Get-Command 7z -ErrorAction SilentlyContinue).Source
+$sevenZipPath = (Get-Command 7z -CommandType Application -ErrorAction SilentlyContinue |
+    Select-Object -First 1).Source
 if (-not $sevenZipPath) {
     $installedPath = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
     if (Test-Path $installedPath) {
