@@ -1,18 +1,26 @@
 Param(
-    [string] $Version = '21.07'
+    [string] $Version = '26.02'
 )
 
 $ErrorActionPreference = 'Stop'
 
-try {
-    7z --help
-    Write-Host "7-zip already installed."
-    exit 0
-} catch {
-    # no op
+$sevenZipPath = (Get-Command 7z -ErrorAction SilentlyContinue).Source
+if (-not $sevenZipPath) {
+    $installedPath = Join-Path $env:ProgramFiles '7-Zip\7z.exe'
+    if (Test-Path $installedPath) {
+        $sevenZipPath = $installedPath
+    }
 }
 
-$uri = "https://www.7-zip.org/a/7z$($Version.Replace('.', ''))-x64.msi"
+if ($sevenZipPath) {
+    & $sevenZipPath --help
+    Write-Host "7-zip already installed."
+    $sevenZipDirectory = Split-Path $sevenZipPath
+    Write-Host "##vso[task.setvariable variable=PATH;]$sevenZipDirectory;$env:PATH"
+    exit 0
+}
+
+$uri = "https://github.com/ip7z/7zip/releases/download/$Version/7z$($Version.Replace('.', ''))-x64.msi"
 
 $HOME_DIR = if ($env:HOME) { $env:HOME } else { $env:USERPROFILE }
 $tempDir = Join-Path "$HOME_DIR" "7zip-temp"
