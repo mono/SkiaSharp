@@ -101,7 +101,7 @@ stages:
             # cannot satisfy WglContext. Mesa (llvmpipe) is the fix — its opengl32.dll
             # + libgallium_wgl.dll would go into System32/SysWOW64 exactly as the
             # Vulkan loader does, and it needs no test-code change — but it has no
-            # trustworthy package feed yet. Vulkan and Direct3D stay required here.
+            # trustworthy package feed yet (see #4591). Vulkan and Direct3D stay required here.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
@@ -134,7 +134,7 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            # See the .NET Framework leg above: no software GL stack on these agents yet.
+            # See the .NET Framework leg above: no software GL stack on these agents yet (#4591).
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
@@ -197,13 +197,18 @@ stages:
             name: tests_netcore_linux
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
-            # Software GL (Mesa llvmpipe) + software Vulkan (Mesa lavapipe) + a
-            # virtual X server give the headless agent deterministic GPU output.
-            # ganesh-gl and ganesh-vulkan are required here, so if any of this is
-            # missing the tests fail rather than skip.
+            # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
+            # headless agent deterministic GPU output. ganesh-vulkan and
+            # graphite-vulkan are required here, so missing provisioning fails.
             packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri mesa-vulkan-drivers vulkan-tools
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            # GLX loads here now, but the nine classes that call CreateGlContext()
+            # are in no xUnit collection, so they build and tear down llvmpipe
+            # contexts concurrently and the host dies with exit 7 at a random point
+            # — no results at all, so the whole leg is lost. See #4590.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
@@ -297,8 +302,7 @@ stages:
             # never signals, hanging the test host's shutdown for hours. Declared here
             # rather than sniffed at runtime — this describes the pool we run on today,
             # so if the pool moves to Apple Silicon this line is what has to change.
-            # (macOS and Mac Catalyst run Metal natively on the same agent and are NOT
-            # opted out — they pass.)
+            # See #4555: no CI host has a usable Metal device today.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             postBuildSteps:
@@ -326,7 +330,7 @@ stages:
             # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
             # the device reports none of the families Ganesh or Graphite require and
             # bring-up fails outright. Native macOS on this same pool does get Mac2
-            # and is NOT opted out — this is a Catalyst limitation, not the agent.
+            # and is NOT opted out — this is a Catalyst limitation, not the agent. See #4555.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
@@ -359,7 +363,7 @@ stages:
             # navigator.gpu.requestAdapter() returns null in the headless browser the
             # DeviceRunners CLI launches, so Dawn has no adapter to bind to. Its
             # `wasm test` command takes no browser arguments, so the WebGPU flags
-            # cannot be passed through without an upstream change to that package.
+            # cannot be passed through without an upstream change to that package. See #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
@@ -398,7 +402,7 @@ stages:
             packages: $(MANAGED_LINUX_PACKAGES) ninja-build
             target: tests-wasm
             additionalArgs: --skipExternals="all" --coverage=false --previewtfm=true
-            # See the WASM leg above: the headless browser exposes no WebGPU adapter.
+            # See the WASM leg above: the headless browser exposes no WebGPU adapter (#4591).
             env:
               SKIASHARP_TEST_SKIP_GPU: graphite-dawn
             installAndroidSdk: false
@@ -429,7 +433,7 @@ stages:
             name: tests_container_linux
             # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
             # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw.
+            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux)
@@ -459,7 +463,7 @@ stages:
             name: tests_container_linux_nodeps
             # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
             # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw.
+            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux, No Dependencies)
@@ -489,7 +493,7 @@ stages:
             name: tests_container_alpine_linux
             # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
             # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw.
+            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine)
@@ -519,7 +523,7 @@ stages:
             name: tests_container_alpine_nodeps
             # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
             # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw.
+            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine, No Dependencies)
@@ -549,7 +553,7 @@ stages:
             name: tests_container_nanoserver_windows
             # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
             # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw.
+            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Windows (Nano Server)

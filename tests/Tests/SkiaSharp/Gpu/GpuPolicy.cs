@@ -66,8 +66,9 @@ namespace SkiaSharp.Tests
 			if (!RequiredOn.TryGetValue(backend, out var platforms))
 				throw new ArgumentException($"Unknown GPU backend '{backend}'.", nameof(backend));
 
-			if (Disabled().Contains(backend))
-				Assert.Skip($"'{backend}' is disabled for this host via {EnvironmentVariable}.");
+			var (raw, source) = OptOut();
+			if (Parse(raw).Contains(backend))
+				Assert.Skip($"'{backend}' is disabled for this host via {source}.");
 
 			if ((platforms & TestConfig.Current.Platform) == 0)
 				Assert.Skip($"'{backend}' is not required on {TestConfig.Current.PlatformName}.");
@@ -77,13 +78,23 @@ namespace SkiaSharp.Tests
 		/// The opt-out list for this host. Throws when it names a backend that does
 		/// not exist, so a typo cannot quietly leave a backend required.
 		/// </summary>
-		public static ISet<string> Disabled()
+		public static ISet<string> Disabled() => Parse(OptOut().Raw);
+
+		// Desktop and container hosts inherit the environment variable; device and
+		// browser hosts never see it, so the value is baked into runtimeconfig.json
+		// and read back through AppContext. A skip names whichever one set it.
+		private static (string Raw, string Source) OptOut()
+		{
+			var data = AppContext.GetData(AppContextKey) as string;
+			return string.IsNullOrWhiteSpace(data)
+				? (Environment.GetEnvironmentVariable(EnvironmentVariable), EnvironmentVariable)
+				: (data, AppContextKey);
+		}
+
+		private static ISet<string> Parse(string raw)
 		{
 			var result = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			var raw = AppContext.GetData(AppContextKey) as string;
-			if (string.IsNullOrWhiteSpace(raw))
-				raw = Environment.GetEnvironmentVariable(EnvironmentVariable);
 			if (string.IsNullOrWhiteSpace(raw))
 				return result;
 

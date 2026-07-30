@@ -18,9 +18,10 @@ var SKIP_GPU = Argument("skipGpu", EnvironmentVariable("SKIASHARP_TEST_SKIP_GPU"
 // GpuPolicy accepts comma, semicolon or whitespace separators; normalise to the one form the
 // MSBuild property path survives. Cake's DotNetMSBuildSettings quotes the value, so a comma-joined
 // list arrives intact — a raw /p: on a command line would not, since MSBuild splits that switch on
-// commas as well as semicolons (MSB1006).
+// commas as well as semicolons (MSB1006). Newlines are separators here too, matching GpuPolicy, so
+// a YAML block value cannot smuggle one into an MSBuild property.
 string NormalizeGpuOptOut(string value) =>
-    string.Join(",", value.Split(new[] { ',', ';', ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries));
+    string.Join(",", value.Split(new[] { ',', ';', ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
 
 void AddGpuOptOut(Dictionary<string, string> properties)
 {
