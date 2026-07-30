@@ -176,6 +176,12 @@ namespace SkiaSharp
 			GC.KeepAlive (this);
 		}
 
+		public void CheckAsyncWorkCompletion ()
+		{
+			SkiaApi.gr_direct_context_check_async_work_completion (Handle);
+			GC.KeepAlive (this);
+		}
+
 		public void Flush (SKImage image)
 		{
 			if (image == null) {
