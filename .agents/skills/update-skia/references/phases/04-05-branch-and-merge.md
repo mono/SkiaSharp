@@ -57,6 +57,11 @@ Classify every fork patch touching a conflict:
 - **Not upstreamed** — reapply the fork behavior on top of target changes.
 - **Obsolete by design** — use only when replacement behavior is proven and record the evidence.
 
+Call something a fork patch only when a commit in `MB..origin/{SKIA_BASE_BRANCH}` introduced or
+changed it. Behavior inherited from the old upstream milestone is not a fork patch merely because
+the fork relied on it; if target removes that behavior, handle it later as a compatibility
+adaptation.
+
 Never resolve an entire source, build, or dependency file with blanket `ours`/`theirs` before
 classifying all fork changes in it.
 
