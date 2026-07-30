@@ -103,6 +103,12 @@ The legs are gating: a genuine test failure fails the build. Environment differe
 SkiaSharp regressions — most notably the fontless `nodeps` and Nano Server builds — are handled by
 the runtime self-skip helpers (see [Fonts](#fonts) below), so those tests skip rather than fail.
 
+These images carry no GPU stack — no X server, no Mesa, no ICD — so every container leg declares
+`SKIASHARP_TEST_SKIP_GPU: ganesh-gl` via the bootstrapper's `env:` parameter (see
+[gpu-test-policy.md](gpu-test-policy.md)). The opt-out is declared rather than inferred: without it
+the test fails, because GPU backends are required by default. Vulkan and Direct3D need no opt-out
+here — `tests-container` runs only `SkiaSharp.Tests.Console`, so those satellites never load.
+
 The Nano Server leg requires a Windows agent with container support (matching the `ltsc2022` image
 base) and pulls the Nano Server .NET SDK image.
 

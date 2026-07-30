@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Xunit;
 
@@ -63,13 +63,18 @@ public class SKBlenderTest
 
 		protected abstract void CreateSurface(int width, int height);
 
+		// Both paths draw the same blend, so they must agree. Raster is
+		// deterministic and agrees exactly; on a GPU the blend-mode and blender
+		// paths compile to different shaders and round independently.
+		protected virtual int ChannelTolerance => 0;
+
 		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingOpaqueColor(SKBlendMode mode)
 		{
 			var blendModeColor = GetColor(p => ApplyColor(p, false), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColor(p, false), p => ApplyBlender(p, mode));
-			Assert.Equal(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -78,7 +83,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColor(p, true), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColor(p, true), p => ApplyBlender(p, mode));
-			Assert.Equal(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -87,7 +92,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColorShader(p, false), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColorShader(p, false), p => ApplyBlender(p, mode));
-			Assert.Equal(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -96,7 +101,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColorShader(p, true), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColorShader(p, true), p => ApplyBlender(p, mode));
-			Assert.Equal(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		private SKColor GetColor(Action<SKPaint> applyColor, Action<SKPaint> applyBlend)
@@ -177,6 +182,8 @@ public class SKBlenderTest
 	{
 		GlContext glContext;
 		GRContext grContext;
+
+		protected override int ChannelTolerance => 1;
 
 		public Gpu()
 		{

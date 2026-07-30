@@ -25,6 +25,16 @@ namespace SkiaSharp.Tests
 		public bool IsMusl => PlatformConfiguration.IsLinux && !PlatformConfiguration.IsGlibc;
 		public bool IsNanoServer => _isNanoServer.Value;
 
+		/// <summary>The current host as a single flag.</summary>
+		public TestPlatforms Platform => _platform;
+
+		/// <summary>
+		/// Lowercase name of the current host — <c>"macos"</c>, <c>"nanoserver"</c>,
+		/// <c>"unknown"</c>. Also the golden directory tag (see VisualPlatform).
+		/// </summary>
+		public string PlatformName =>
+			Platform == TestPlatforms.None ? "unknown" : Platform.ToString().ToLowerInvariant();
+
 		private static readonly Lazy<bool> _isNanoServer = new(DetectNanoServer);
 
 		// Windows Nano Server identifies itself in the registry as InstallationType
@@ -82,6 +92,39 @@ namespace SkiaSharp.Tests
 #else
 			false;
 #endif
+
+		// Reads _isNanoServer, so must be declared after it: static field
+		// initializers run in declaration order. Goes via PlatformConfiguration
+		// rather than Current, which would recurse into DefaultTestConfig's ctor.
+		private static readonly TestPlatforms _platform = DetectPlatform();
+
+		// Most specific first: Mac Catalyst also reports IsIOS, iOS/tvOS can report
+		// IsMacOS, and Nano Server is Windows.
+		private static TestPlatforms DetectPlatform()
+		{
+#if NET5_0_OR_GREATER
+			if (OperatingSystem.IsBrowser())
+				return TestPlatforms.Browser;
+			if (OperatingSystem.IsAndroid())
+				return TestPlatforms.Android;
+			if (OperatingSystem.IsMacCatalyst())
+				return TestPlatforms.MacCatalyst;
+			if (OperatingSystem.IsIOS())
+				return TestPlatforms.IOS;
+			if (OperatingSystem.IsTvOS())
+				return TestPlatforms.TvOS;
+			if (OperatingSystem.IsMacOS())
+				return TestPlatforms.MacOS;
+#endif
+			if (PlatformConfiguration.IsWindows)
+				return _isNanoServer.Value ? TestPlatforms.NanoServer : TestPlatforms.Windows;
+			if (PlatformConfiguration.IsMac)
+				return TestPlatforms.MacOS;
+			if (PlatformConfiguration.IsLinux)
+				return TestPlatforms.Linux;
+
+			return TestPlatforms.None;
+		}
 
 		public string[] UnicodeFontFamilies { get; protected set; }
 		public string DefaultFontFamily { get; protected set; }

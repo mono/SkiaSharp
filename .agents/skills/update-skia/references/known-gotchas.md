@@ -206,6 +206,8 @@ Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Ever
 and all tests must pass. Do not filter the solution because projects with zero matches fail.
 After the solution identifies a failing host, use that host's project for focused diagnostic
 runs, then rerun the unfiltered solution. A focused project run is never final validation.
+GPU backends are gated by `GpuPolicy`: failed bring-up is a failure unless the platform table or
+an explicit `SKIASHARP_TEST_SKIP_GPU` agent opt-out declares the skip.
 
 ### 24. Vulkan Tests Are a Separate Satellite
 

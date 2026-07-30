@@ -79,6 +79,7 @@ checkout:
   - fetch-depth: 0
     submodules: recursive
 timeout-minutes: 120
+max-ai-credits: 2000
 concurrency:
   group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
@@ -114,7 +115,7 @@ env:
   CC: clang
   CXX: clang++
   SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
-  SKIASHARP_REQUIRE_VULKAN: "1"
+  SKIASHARP_TEST_SKIP_GPU: "ganesh-gl"
 permissions:
   contents: read
   pull-requests: read
@@ -341,7 +342,9 @@ the supplied values.
 - The exact base native tree was built before the agent. Reuse its hydrated dependencies and Ninja
   objects, but still perform the mandatory merged-target source build.
 - Clang, libc++, fontconfig/fonts, Ninja, Android workload, and deterministic Mesa lavapipe are
-  installed. The lavapipe ICD is pinned and `SKIASHARP_REQUIRE_VULKAN=1`.
+  installed. The lavapipe ICD is pinned, so Ganesh and Graphite Vulkan remain required by
+  `GpuPolicy`. This headless agent explicitly opts out only `ganesh-gl`, for which it provisions no
+  GL/X stack.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 

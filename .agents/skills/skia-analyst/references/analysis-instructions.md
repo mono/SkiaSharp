@@ -119,8 +119,6 @@ Every finding needs BOTH a changelog classification AND a gap classification.
 
 **Exclude:**
 - Internal refactoring (header moves)
-- Graphite-only changes (SkiaSharp uses Ganesh)
-- Dawn backend changes
 - Build system internals (GN flags)
 - Version bump commits
 - CI/docs/skill-only changes

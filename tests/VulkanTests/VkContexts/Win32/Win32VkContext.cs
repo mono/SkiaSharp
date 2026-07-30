@@ -11,7 +11,14 @@ namespace SkiaSharp.Tests
 
 		public Win32VkContext()
 		{
-			Instance = Instance.Create(null, new[] { "VK_KHR_surface", "VK_KHR_win32_surface" });
+			var applicationInfo = new ApplicationInfo
+			{
+				ApiVersion = new SharpVk.Version(1, 1, 0),
+			};
+			Instance = Instance.Create(
+				null,
+				new[] { "VK_KHR_surface", "VK_KHR_win32_surface" },
+				applicationInfo: applicationInfo);
 
 			PhysicalDevice = Instance.EnumeratePhysicalDevices().First();
 

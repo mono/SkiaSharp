@@ -19,25 +19,22 @@ Read the official release-note section for every milestone crossed as additional
 
 ## Step 2: Filter by Relevance
 
-SkiaSharp exposes both Ganesh and Graphite. Filter changes by actual C API/binding usage,
-not by backend name:
+Relevance is whether our C API or a build we ship touches the code, not which backend family
+owns it:
 
 | Prefix/Keyword | Relevant? | Notes |
 |----------------|-----------|-------|
-| `skgpu::graphite::`, `SKGraphite*` | ✅ Yes | Graphite C API, bindings, Vulkan/Metal/Dawn tests |
-| `GrDirectContext`, `Gr*` | ✅ Yes | Ganesh backend — always check |
+| `Gr*`, `skgpu::`, `Dawn*`, `wgpu::` | ✅ Yes | GPU code — inspect the affected C shim and `native/*/build.cake` consumers |
 | `SkImage`, `SkSurface`, `SkCanvas` | ✅ Yes | Core APIs — always check |
 | `SkTypeface`, `SkFont` | ✅ Yes | Text/font APIs — always check |
 | `SkPath`, `SkPaint` | ✅ Yes | Drawing APIs — always check |
-| `Dawn*`, `wgpu::` | ⚠️ Check | Relevant when consumed by `sk_graphite_dawn.cpp` or managed Graphite APIs |
 | `SkSL`, `SkRuntimeEffect` | ⚠️ Maybe | Only if C API exposes runtime effects |
 | `SkCodec`, `SkEncoder` | ⚠️ Maybe | Only if C API exposes codec/encoder APIs |
 
 **Two common misclassification traps:**
 
-1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): Types here are
-   shared across Ganesh and Graphite. Before classifying a change as backend-local, check if
-   `include/gpu/ganesh/` consumes them — e.g., `GrFlushInfo` uses types from `GpuTypes.h`.
+1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): check consumers in both
+   `include/gpu/ganesh/` and `include/gpu/graphite/` before classifying a change as local.
 
 2. **Struct field changes in asserted types**: `sk_structs.cpp` has `static_assert(sizeof(...))`
    for every C API struct mapped via `reinterpret_cast`. A field addition to any of these

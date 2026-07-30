@@ -16,9 +16,8 @@ namespace SkiaSharp.Tests.Visual
 	/// renderers live under <c>tests/Tests/SkiaSharp/Visual/Renderers/</c>;
 	/// desktop-only renderers (which depend on the GL/Vulkan/Metal context
 	/// abstractions) live under <c>Renderers/Desktop/</c> and are compiled only
-	/// into the desktop host projects. This is the single seam the Graphite
-	/// backend plugs into: it adds renderer classes and golden images, nothing
-	/// else.
+	/// into the desktop host projects. Adding a backend means a renderer class
+	/// and golden images, nothing else.
 	/// </para>
 	/// </summary>
 	public static class RendererCatalog
@@ -33,9 +32,9 @@ namespace SkiaSharp.Tests.Visual
 		/// <summary>
 		/// Names of the renderers whose implementing type is declared in
 		/// <paramref name="assembly"/>. A satellite host project (Vulkan,
-		/// Direct3D) drives its visual cells with
+		/// Direct3D) drives its visual tests with
 		/// <c>NamesIn(Assembly.GetExecutingAssembly())</c> so it runs only the
-		/// renderers it contributes — never the shared raster/GL/Metal cells,
+		/// renderers it contributes — never the shared raster/GL/Metal ones,
 		/// which the base <see cref="Tests.VisualMatrixTests"/> already covers.
 		/// This is what makes a new backend "one renderer file": drop a renderer
 		/// into the satellite and it joins that satellite's matrix automatically.

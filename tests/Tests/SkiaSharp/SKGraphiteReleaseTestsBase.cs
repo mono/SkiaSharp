@@ -30,13 +30,12 @@ namespace SkiaSharp.Tests
 		/// <summary>Some backends (Dawn on WASM) cannot submit synchronously.</summary>
 		protected virtual bool CanSubmitSync => true;
 
-		/// <summary>Cheap, side-effect-free gate; null when the backend can run here.</summary>
-		protected abstract string UnsupportedReason { get; }
+		/// <summary>The GPU backend these tests drive.</summary>
+		protected abstract string Backend { get; }
 
 		/// <summary>
-		/// Brings up the backend and returns a live harness. May call
-		/// <see cref="Assert.Skip"/> if a runtime probe (e.g. GPU family support)
-		/// shows the host cannot actually drive the backend.
+		/// Brings up the backend and returns a live harness. Must not catch a failed
+		/// bring-up.
 		/// </summary>
 		protected abstract Task<GraphiteReleaseHarness> CreateHarnessAsync();
 
@@ -140,11 +139,7 @@ namespace SkiaSharp.Tests
 		/// </summary>
 		protected Task RunGuardedAsync(Func<Task> body) => body();
 
-		private void SkipIfUnsupported()
-		{
-			if (UnsupportedReason is { } reason)
-				Assert.Skip(reason);
-		}
+		private void SkipIfUnsupported() => GpuPolicy.RequireOrSkip(Backend);
 
 		private void SnapAndSubmit(GraphiteReleaseHarness harness)
 		{

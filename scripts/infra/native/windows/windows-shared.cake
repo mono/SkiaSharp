@@ -11,12 +11,16 @@ void RunNinjaWithVcVars(
     var vcVarsAll = ((DirectoryPath)VS_INSTALL)
         .CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
     var ninjaScript = DEPOT_PATH.CombineWithFilePath("ninja.py");
+    // omitted rather than empty, as vcvarsall fails on an SDK that is not installed
+    var windowsSdkVersionArg = string.IsNullOrEmpty(windowsSdkVersion)
+        ? ""
+        : $" {windowsSdkVersion}";
     var vcVarsVersionArg = string.IsNullOrEmpty(vcVarsVersion)
         ? ""
         : $" -vcvars_ver={vcVarsVersion}";
     var ninjaTarget = string.IsNullOrEmpty(target) ? "" : $" {target}";
     var command =
-        $"call \"{vcVarsAll.FullPath}\" {architecture} {windowsSdkVersion}{vcVarsVersionArg} >nul" +
+        $"call \"{vcVarsAll.FullPath}\" {architecture}{windowsSdkVersionArg}{vcVarsVersionArg}" +
         $" && \"{PYTHON_EXE}\" \"{ninjaScript.FullPath}\" -C \"{outDir.FullPath}\"{ninjaTarget}";
 
     Information($"Initializing the Visual C++ environment once for {architecture}.");

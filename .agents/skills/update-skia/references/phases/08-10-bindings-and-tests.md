@@ -31,15 +31,16 @@ existing wrapper cannot.
 
 ### Prepare the runtime
 
-Use a host that can execute every backend being validated. For Vulkan validation:
+Use a host that can execute every backend `GpuPolicy` requires. For Vulkan validation:
 
 - Verify a Vulkan ICD initializes before running tests.
-- Set `SKIASHARP_REQUIRE_VULKAN=1` so inability to initialize Vulkan is a failure.
 - In deterministic automation, pin the selected software ICD rather than using opportunistic GPU
   discovery.
 
-If the local machine cannot execute Vulkan, it cannot provide final update validation; use the
-provisioned workflow rather than claiming success from skips.
+Failed GPU bring-up is a test failure. Use `SKIASHARP_TEST_SKIP_GPU` only for a backend the agent
+explicitly cannot provide; name each backend rather than catching an exception. If the local host
+cannot execute the update's required GPU backends, use the provisioned workflow instead of
+claiming success from runtime skips.
 
 ### Initial full solution
 
@@ -53,8 +54,7 @@ dotnet test tests/SkiaSharp.Tests.Console.slnx \
 ```
 
 Run the solution unfiltered. Confirm the base, singleton, Vulkan, and Direct3D hosts all reported
-results. The Vulkan host must execute tests and report zero failures. Do not add skip exceptions,
-disable tests, or treat a missing backend as success.
+results. Every backend required by `GpuPolicy` must execute and report zero failures.
 
 ### Focused diagnostics
 
@@ -108,6 +108,6 @@ After the final full solution passes:
 - Binding helper and managed build pass.
 - No required native function lacks a managed decision.
 - Final unfiltered solution passes every host.
-- Vulkan initializes and executes real tests with zero failures.
+- Every `GpuPolicy`-required backend initializes and executes with zero failures.
 - Parent points to the exact tested mono/skia commit.
 - Every final fork-delta change has one non-contradictory evidence-backed disposition.

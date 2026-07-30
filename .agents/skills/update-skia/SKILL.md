@@ -61,7 +61,7 @@ An update is complete only when:
 - The updated native source builds; downloaded old native artifacts were never substituted.
 - Bindings were regenerated and every required managed wrapper was reviewed.
 - The final **unfiltered** `tests/SkiaSharp.Tests.Console.slnx` run passes every host, including
-  actual Vulkan execution on a Vulkan-capable validation host.
+  every GPU backend required by `GpuPolicy` on the validation host.
 - The parent points to the exact tested mono/skia commit.
 - Both PR descriptions identify untested platforms and are ready for human review.
 
@@ -75,6 +75,8 @@ An update is complete only when:
 - Never hand-edit `*.generated.cs`; regenerate it.
 - Keep public managed ABI additive.
 - A focused project test is diagnostic only; it never satisfies the final gate.
+- GPU bring-up failures are test failures unless the platform table or an explicit
+  `SKIASHARP_TEST_SKIP_GPU` agent opt-out declares that backend unavailable.
 - Diagnose failures from repository evidence. Do not add one-off compiler/GN flags, skip tests,
   weaken assertions, or encode milestone-specific answers to make one run green.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.
