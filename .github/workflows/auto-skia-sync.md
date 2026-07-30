@@ -157,6 +157,28 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
+  - name: Export resolved sync state
+    env:
+      CURRENT: ${{ needs.pre_activation.outputs.current }}
+      TARGET: ${{ needs.pre_activation.outputs.target }}
+      UPSTREAM_REF: ${{ needs.pre_activation.outputs.upstream_ref }}
+      IS_RELEASE: ${{ needs.pre_activation.outputs.is_release }}
+      BASE_BRANCH: ${{ needs.pre_activation.outputs.base_branch }}
+      SKIA_BASE_BRANCH: ${{ needs.pre_activation.outputs.skia_base_branch }}
+      HEAD_BRANCH: ${{ needs.pre_activation.outputs.head_branch }}
+    run: |
+      {
+        printf 'SKIA_SYNC_AUTOMATION=1\n'
+        printf 'SKIA_SYNC_CURRENT=%s\n' "$CURRENT"
+        printf 'SKIA_SYNC_TARGET=%s\n' "$TARGET"
+        printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$UPSTREAM_REF"
+        printf 'SKIA_SYNC_IS_RELEASE=%s\n' "$IS_RELEASE"
+        printf 'SKIA_SYNC_BASE_BRANCH=%s\n' "$BASE_BRANCH"
+        printf 'SKIA_SYNC_SKIA_BASE_BRANCH=%s\n' "$SKIA_BASE_BRANCH"
+        printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$HEAD_BRANCH"
+        printf 'SKIA_SYNC_PLATFORM=linux\n'
+        printf 'SKIA_SYNC_ARCH=x64\n'
+      } >> "$GITHUB_ENV"
   - name: Align submodule to the base branch
     # Same target resolution as the pre_activation detect step (see there). The agent job
     # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
@@ -290,164 +312,49 @@ post-steps:
 
 # Sync - Skia Upstream
 
-Base milestone (current): `m${{ needs.pre_activation.outputs.current }}`.  
-Target milestone: `m${{ needs.pre_activation.outputs.target }}`.  
-Upstream ref (merge from): `${{ needs.pre_activation.outputs.upstream_ref }}` (google/skia) — `main` means the bleeding-edge tip.  
-Base branch (SkiaSharp): `${{ needs.pre_activation.outputs.base_branch }}` — mono/skia base: `${{ needs.pre_activation.outputs.skia_base_branch }}`.  
-Sync (head) branch: `${{ needs.pre_activation.outputs.head_branch }}` (same name in both repos).  
-Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
+Read `.agents/skills/update-skia/SKILL.md` and use it as the complete engineering process.
+Load one numbered phase reference at a time.
 
-> **Mode (resolved above — don't re-derive).** `is_release == true` ⇒ a **release-line bug-fix
-> sync** (`current == target`): do NOT bump milestone/soname/nuget versions; only `cgmanifest.json`'s
-> hash changes. `upstream_ref == main` ⇒ **`main`/tip mode** (head `skia-sync/main`): also not a
-> version bump, but it MAY carry new APIs (regenerate + build + test as normal). Everything else is a
-> normal milestone bump. See **[skill Phase 1](.agents/skills/update-skia/SKILL.md)** for what each
-> mode means; always use the base/head values above, never hardcode `main`/`skiasharp`/`skia-sync/m{target}`.
->
-> **Tip merges are large and conflict-heavy** (the submodule base is well behind `main`), so the
-> **verify-upstream-or-reapply** policy is mandatory — for every conflicted file, classify each fork
-> patch as *upstreamed* (take upstream's refined form) or *not upstreamed* (re-apply on top), never a
-> blanket `--theirs`/`--ours`, never a silent drop. Full procedure + the mandatory before-merge
-> snapshot/audit: **skill Phase 5** and [gotcha #15](.agents/skills/update-skia/references/known-gotchas.md).
+## 1. Resolved runtime state
 
-**Read `.agents/skills/update-skia/SKILL.md` as the phase router. Load only the current phase
-reference and follow Phases 2–10 in order.** Notes specific to this automated workflow:
+| Value | Resolved setting |
+|---|---|
+| Current milestone | `${{ needs.pre_activation.outputs.current }}` |
+| Target milestone | `${{ needs.pre_activation.outputs.target }}` |
+| Upstream ref | `${{ needs.pre_activation.outputs.upstream_ref }}` |
+| Parent base | `${{ needs.pre_activation.outputs.base_branch }}` |
+| mono/skia base | `${{ needs.pre_activation.outputs.skia_base_branch }}` |
+| Shared head branch | `${{ needs.pre_activation.outputs.head_branch }}` |
+| Release-line mode | `${{ needs.pre_activation.outputs.is_release }}` |
+| Build target | `linux / x64` |
 
-- **Phase 1 is pre-computed** (above). Skip it. The host setup has already added the
-  `upstream` remote, fetched `${{ needs.pre_activation.outputs.upstream_ref }}` and the current
-  milestone branch, and exported the exact prior upstream commit as `SKIA_BASE_UPSTREAM_SHA`.
-  Verify those refs; do not re-derive the mode or substitute a milestone-name range.
-- The host already restored .NET tools, hydrated Skia dependencies, and built the exact base
-  branch's Linux x64 native library. The merged-target native build in Phase 7 remains mandatory,
-  but GN/Ninja can reuse unchanged cached inputs and objects.
-- Run `dotnet tool restore` inside the agent before that build; the host tool restore does not
-  carry into the AWF chroot.
-- The update-skia orchestration scripts are Python. Use those maintained scripts rather
-  than recreating their versioning or binding-generation logic.
-- **Phases 2 and 3 are NOT pre-computed.** Complete both before branching or merging.
-  Write the primary analysis to `/tmp/gh-aw/agent/skia-breaking-change-analysis.md`, invoke
-  the independent reviewer with the available `task` tool exactly as Phase 3 requires, and
-  write its findings to `/tmp/gh-aw/agent/skia-validation-review.md`.
-- **Phase 4**: The parent base branch is `origin/${{ needs.pre_activation.outputs.base_branch }}` and the
-  submodule base branch is mono/skia `${{ needs.pre_activation.outputs.skia_base_branch }}` — use these in
-  place of `origin/main` / `skiasharp` for every step. The sync branch in BOTH repos is
-  `${{ needs.pre_activation.outputs.head_branch }}`. Before creating a fresh branch, check if
-  `origin/${{ needs.pre_activation.outputs.head_branch }}` already exists; if so, check it out — the
-  pre-activation step already verified new upstream commits exist. Even when current == target there may
-  be new upstream bug-fix commits — a matching milestone does NOT mean no work.
-  **Skip Phase 4 step 5** (submodule SHA alignment) — the pre-agent step already aligned the submodule to
-  the base branch's pointer (on mono/skia `${{ needs.pre_activation.outputs.skia_base_branch }}`).
-  Branch from the current HEAD when creating the submodule feature branch in step 6.
-- **Phase 6 (version files)**: When `current == target` and the upstream ref is `chrome/m<N>`,
-  this is a bug-fix-only sync (including release-line syncs) — keep milestone/soname/nuget
-  versions unchanged; only the Skia hashes in `cgmanifest.json` advance. Do NOT advance the
-  milestone. A `main` tip sync also has `current == target`, but may carry API/binding changes
-  and still updates the submodule.
-  Pass the ref you actually merged to `update_versions.py` so `cgmanifest.json`'s `upstream_merge_commit`
-  resolves to a real SHA: **`--upstream-ref "${{ needs.pre_activation.outputs.upstream_ref }}"`**
-  (this is `chrome/m<N>` for a milestone sync, or `main` for a tip sync — the script defaults to
-  `chrome/m{target}`, which does NOT exist on a `main`-tip merge).
-- **Phase 5 dependency decisions**: write
-  `/tmp/gh-aw/agent/skia-dependency-decisions.md` before committing the merge. Classify every
-  entry whose revision or enabled/commented state differs between
-  `origin/${{ needs.pre_activation.outputs.skia_base_branch }}:DEPS` and
-  `upstream/${{ needs.pre_activation.outputs.upstream_ref }}:DEPS`; do not compare only the two
-  upstream milestones because that omits fork customizations. Preserve fork state/pins by
-  default, but take a compatible upstream revision when target source code demonstrably uses
-  API absent from the fork pin.
-- **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
-  Phase 10 always rebuilds native before building C# and running tests.
-- **Native build environment is provisioned by the host workflow** (clang, `libc++-dev`/`libc++abi-dev`,
-  fontconfig, ninja, and Mesa lavapipe discovered from the installed package manifest and pinned
-  through both `VK_ICD_FILENAMES` and `VK_DRIVER_FILES`). You CANNOT install packages (no apt/sudo in the sandbox; the firewall blocks OS
-  mirrors). Do NOT hack compiler/linker flags (e.g. `-stdlib=libc++`) or `scripts/infra/native/**`
-  to silence a failure; diagnose and fix the actual update.
-- **A genuinely required new upstream gn arg** (e.g. `skia_use_partition_alloc=false`, when a new
-  dependency our `DEPS` doesn't vendor forces it) goes in `native/**/build.cake`, NOT a one-off
-  `--gnArgs` flag — see **[skill Phase 7](.agents/skills/update-skia/SKILL.md) / [gotcha #23](.agents/skills/update-skia/references/known-gotchas.md)**.
-  Since you only build Linux x64 here, apply it to every clang platform's `build.cake` that needs it and
-  flag the change in BOTH PR summaries for cross-platform human review.
-- **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
-- **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
-- **Phase 10 is a hard gate**: build native, build C#, then run the full `.slnx`. ALL builds and
-  ALL tests must pass. If anything fails, diagnose it, fix it, rebuild, and rerun the full solution.
-  Run the `.slnx` unfiltered. After it identifies a failing host, filtered diagnostic iterations
-  may use that host's project because solution projects with zero filtered matches fail under
-  Microsoft.Testing.Platform. A project-level run never satisfies the gate; finish with another
-  unfiltered full solution run.
-  When a managed factory returns null, trace the managed → C API → native factory return path and
-  diff that implementation before treating nearby warnings as causal. If an exact failure repeats
-  after a fix, first prove the changed code was compiled and loaded before exploring another cause.
-  Do NOT skip or disable tests. Do NOT classify a build/test failure as "human attention," stage it
-  for review, write the output files below, or signal completion. The fact that this is an automated
-  workflow does not permit creating a failing PR.
-  `SKIASHARP_REQUIRE_VULKAN=1` is set deliberately: failure to initialize the pinned lavapipe
-  runtime is a test failure, not an allowed runtime skip. The two platform-specific SharpVk
-  skips on Linux remain expected.
-  Before testing, assert that `SKIASHARP_REQUIRE_VULKAN` is exactly `1` and
-  `SKIA_SYNC_ARTIFACT_DIR` is exactly `/tmp/gh-aw/agent`; stop if either is missing.
-- **Commit sequencing**: Phase 5's genuine two-parent upstream merge commit is required before
-  building. Do not commit later dependency/C API fixes in the submodule, and do not commit the
-  parent update at all, until Phase 10 passes. This keeps every tested fix in the final submodule
-  tip and prevents the parent from recording an intermediate pointer.
-- **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
-  Do NOT push branches or create *real* PRs/issues — every GitHub artifact is created by the
-  post-step (it pushes both repos and opens both PRs with the autobump token). Just commit locally.
-  Do NOT call `create_issue`. Your completion signal is `create_pull_request` (staged) when you did
-  work, or `noop` when you did not — see "Completion signal" at the end of this prompt.
-- **No-work handling is owned by pre-activation.** If the agent job starts, work was detected.
-  Do not convert an incomplete run into `noop`; stop with a failure signal and leave
-  `skia-sync-env.sh` absent. The post-step treats a missing handoff as an error.
+These values are exported as `SKIA_SYNC_*`. Phase 01 target resolution and no-work detection are
+already complete; verify the supplied refs and begin its research work. Do not re-derive or replace
+the supplied values.
 
-After Phase 10 has passed completely, confirm all three analysis files above exist and are
-non-empty, then write these files:
+## 2. Provisioned environment
 
-1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
-   ```bash
-   mkdir -p /tmp/gh-aw/agent
-   cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
-   TARGET=${{ needs.pre_activation.outputs.target }}
-   CURRENT=${{ needs.pre_activation.outputs.current }}
-   UPSTREAM_REF=${{ needs.pre_activation.outputs.upstream_ref }}
-   IS_RELEASE=${{ needs.pre_activation.outputs.is_release }}
-   BASE_BRANCH=${{ needs.pre_activation.outputs.base_branch }}
-   SKIA_BASE_BRANCH=${{ needs.pre_activation.outputs.skia_base_branch }}
-   HEAD_BRANCH=${{ needs.pre_activation.outputs.head_branch }}
-   EOF
-   ```
+- The parent and submodule are aligned to the selected bases; the target upstream ref and exact
+  recorded base-upstream SHA are fetched.
+- The exact base native tree was built before the agent. Reuse its hydrated dependencies and Ninja
+  objects, but still perform the mandatory merged-target source build.
+- Clang, libc++, fontconfig/fonts, Ninja, Android workload, and deterministic Mesa lavapipe are
+  installed. The lavapipe ICD is pinned and `SKIASHARP_REQUIRE_VULKAN=1`.
+- The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
+  durable repository configuration; do not alter flags to mask a missing prerequisite.
 
-2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - the automated report inserted into the
-   dedicated mono/skia PR template:
-   - Use the exact headings `## Changes`, `## Testing`, and `## Human review`.
-   - Include upstream merge details, every conflict/dependency decision, C API fixes,
-     validation results, and remaining cross-platform review.
+## 3. Execution contract
 
-3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - the automated report inserted into the
-   dedicated mono/SkiaSharp PR template:
-   - Use the exact headings `## Changes`, `## Testing`, and `## Human review`.
-   - Include the breaking-change analysis, version/binding/C# changes, exact host test
-     results, and remaining cross-platform review.
+- Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
+- The agent job starts only after upstream work is detected. It must complete or fail; never return
+  `noop` or human-review output for an unresolved build/test failure.
+- Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
+  with actual Vulkan execution, exactly as defined by the skill.
+- Commit only to `${{ needs.pre_activation.outputs.head_branch }}` in both local repositories.
 
-The post-step renders the complete, repository-specific PR bodies from
-`.github/scripts/skia-sync-pr-skia.md` and
-`.github/scripts/skia-sync-pr-skiasharp.md`; do not reproduce contributor templates in the
-summary fragments. All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
-For Phase 10, write the test-output log to `/tmp/gh-aw/agent/test-output.txt` (in place of the
-skill's default path) so it's uploaded as an artifact and failures can be inspected after the run.
+## 4. Automated delivery
 
-Commit submodule changes inside `externals/skia` on `${{ needs.pre_activation.outputs.head_branch }}`.
-Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` in the parent.
-
-## Completion signal
-
-When the sync is done — you have committed locally and written `skia-sync-env.sh` plus both
-summaries — invoke staged `create_pull_request` **once** through the `safeoutputs` CLI preferred
-by the injected system instructions. Build its JSON input under `/tmp/gh-aw/agent/`, include the
-actual current branch from `git branch --show-current`, and pass it with
-`safeoutputs create_pull_request . < INPUT.json`. This is preview-only: it creates no real PR and
-pushes nothing. The post-step opens both real PRs with the autobump token. Use the `[skia-sync] …`
-title for this mode and a one-line body pointing at the two summary files. Do this instead of
-`noop`; do not call the raw MCP function when the CLI is available.
-
-Do not call `noop` from the agent job. Runs with no upstream work are skipped before the agent
-starts; an agent run without `skia-sync-env.sh` is incomplete and must fail.
+After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
+create real PRs/issues from the agent. Write the required artifacts under
+`/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
+The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.

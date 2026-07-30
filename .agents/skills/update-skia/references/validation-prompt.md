@@ -8,6 +8,7 @@ numbers and paste your breaking change analysis table.
 I'm updating SkiaSharp's Skia submodule over this authoritative upstream range:
 `{DIFF_RANGE}`.
 Here is the breaking-change analysis file: `{ANALYSIS_FILE}`.
+Here is the provisional fork-vs-target dependency decision file: `{DEPENDENCY_FILE}`.
 
 Please validate by (run from externals/skia):
 1. Run: git diff {DIFF_RANGE} --stat -- src/ include/
