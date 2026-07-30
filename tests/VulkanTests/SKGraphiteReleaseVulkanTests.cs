@@ -13,8 +13,9 @@ namespace SkiaSharp.Tests
 	/// <see cref="SKGraphiteContext.CreateVulkan"/>, then lets Skia allocate the
 	/// wrappable backend texture via
 	/// <see cref="SKGraphiteRecorder.CreateBackendTexture"/> (no manual VkImage).
-	/// Runs wherever a Vulkan device — real or a software ICD such as Lavapipe — is
-	/// present; skips cleanly otherwise.
+	/// Runs wherever `ganesh-vulkan`/`graphite-vulkan` are required (see
+	/// <see cref="SkiaSharp.Tests.GpuPolicy"/>); a Vulkan device — real or a
+	/// software ICD such as Lavapipe — must then be present or the test fails.
 	/// </summary>
 	[Collection(VulkanGpuRenderingCollection.Name)]
 	public sealed class SKGraphiteReleaseVulkanTests : SKGraphiteReleaseTestsBase

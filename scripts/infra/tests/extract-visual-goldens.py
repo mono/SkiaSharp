@@ -124,27 +124,39 @@ def extract_images(trx_files, out_dir):
     scene with only an .actual.png had no golden committed; one with all three was
     compared, and the test result says whether it passed. Returns the file count.
     """
+    # The path carries the OS tag, not the architecture or the retry number, so
+    # the same scene appears in several TRX files. Take each path from the first
+    # file that has it, otherwise a triple could pair one run's actual with
+    # another's golden and misdirect whoever is reading it.
+    seen = set()
     written = 0
     for trx in trx_files:
         with open(trx, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
+
+        images = {}
         for role, regex in MARKERS.items():
             for m in regex.finditer(text):
                 path = m.group("path")
                 if not SAFE_PATH_RE.match(path):
                     print(f"warning: skipping unsafe path '{path}' in {trx}", file=sys.stderr)
                     continue
+                if path in seen:
+                    continue
                 try:
-                    data = base64.b64decode(m.group("b64"), validate=True)
+                    images.setdefault(path, {})[role] = base64.b64decode(m.group("b64"), validate=True)
                 except Exception as ex:  # noqa: BLE001
                     print(f"warning: bad base64 for '{path}' in {trx}: {ex}", file=sys.stderr)
-                    continue
-                rel_dir, leaf = path.split("/", 1)
-                dest_dir = os.path.join(out_dir, *rel_dir.split("/"))
-                os.makedirs(dest_dir, exist_ok=True)
+
+        for path, roles in images.items():
+            rel_dir, leaf = path.split("/", 1)
+            dest_dir = os.path.join(out_dir, *rel_dir.split("/"))
+            os.makedirs(dest_dir, exist_ok=True)
+            for role, data in roles.items():
                 with open(os.path.join(dest_dir, f"{leaf[:-4]}.{role}.png"), "wb") as out:
                     out.write(data)
                 written += 1
+            seen.add(path)
 
     print(f"Wrote {written} image(s) under {out_dir}.")
     return written
