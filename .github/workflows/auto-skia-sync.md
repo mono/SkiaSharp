@@ -175,6 +175,31 @@ steps:
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
       bash .github/scripts/skia-sync-prefetch-upstream.sh
+  - name: Compute native cache key
+    id: native-cache-key
+    run: |
+      set -euo pipefail
+      BASE_SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
+      BUILD_HASH=$(
+        find native/linux scripts/infra/native -type f -print0 |
+          sort -z |
+          xargs -0 sha256sum |
+          sha256sum |
+          awk '{print $1}'
+      )
+      PREFIX="skia-sync-linux-x64-${BUILD_HASH}-"
+      echo "key=${PREFIX}${BASE_SKIA_SHA}" >> "$GITHUB_OUTPUT"
+      echo "restore-key=${PREFIX}" >> "$GITHUB_OUTPUT"
+  - name: Restore native base cache
+    id: restore-native-cache
+    uses: actions/cache/restore@v6
+    with:
+      path: |
+        externals/skia/third_party/externals
+        externals/skia/out/linux/x64
+        output/native/linux/x64
+      key: ${{ steps.native-cache-key.outputs.key }}
+      restore-keys: ${{ steps.native-cache-key.outputs.restore-key }}
   - name: Copy post-step assets
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
@@ -237,6 +262,21 @@ pre-agent-steps:
         exit 1
       fi
       echo "Verified deterministic software Vulkan through $VK_DRIVER_FILES"
+  - name: Build native base for incremental reuse
+    run: |
+      set -euo pipefail
+      dotnet tool restore
+      dotnet cake --target=externals-linux --arch=x64 \
+        2>&1 | tee /tmp/gh-aw/agent/base-native-build.log
+  - name: Save native base cache
+    if: steps.restore-native-cache.outputs.cache-hit != 'true'
+    uses: actions/cache/save@v6
+    with:
+      path: |
+        externals/skia/third_party/externals
+        externals/skia/out/linux/x64
+        output/native/linux/x64
+      key: ${{ steps.native-cache-key.outputs.key }}
 
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Pushes branches and creates/updates PRs
@@ -270,13 +310,18 @@ Release-line sync: `${{ needs.pre_activation.outputs.is_release }}`.
 > blanket `--theirs`/`--ours`, never a silent drop. Full procedure + the mandatory before-merge
 > snapshot/audit: **skill Phase 5** and [gotcha #15](.agents/skills/update-skia/references/known-gotchas.md).
 
-**Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
+**Read `.agents/skills/update-skia/SKILL.md` as the phase router. Load only the current phase
+reference and follow Phases 2–10 in order.** Notes specific to this automated workflow:
 
 - **Phase 1 is pre-computed** (above). Skip it. The host setup has already added the
   `upstream` remote, fetched `${{ needs.pre_activation.outputs.upstream_ref }}` and the current
   milestone branch, and exported the exact prior upstream commit as `SKIA_BASE_UPSTREAM_SHA`.
   Verify those refs; do not re-derive the mode or substitute a milestone-name range.
-- **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
+- The host already restored .NET tools, hydrated Skia dependencies, and built the exact base
+  branch's Linux x64 native library. The merged-target native build in Phase 7 remains mandatory,
+  but GN/Ninja can reuse unchanged cached inputs and objects.
+- Run `dotnet tool restore` inside the agent before that build; the host tool restore does not
+  carry into the AWF chroot.
 - The update-skia orchestration scripts are Python. Use those maintained scripts rather
   than recreating their versioning or binding-generation logic.
 - **Phases 2 and 3 are NOT pre-computed.** Complete both before branching or merging.
