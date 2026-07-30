@@ -68,7 +68,8 @@ dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 In CI each opt-out is a bootstrapper `env:` value in
 `scripts/azure-templates-stages-test.yml` — read it there for the current set
 rather than duplicating it here. Today: **every Apple leg skips Metal** because
-no CI host has a real Metal device (see #4555), the Linux, Windows and container
+no CI host has a real Metal device (#4598 macOS, #4599 Mac Catalyst, #4555 the
+iOS simulator's gradient pipeline), the Linux, Windows and container
 legs skip `ganesh-gl` for want of a working software GL stack (#4590 on Linux),
 the WASM legs skip `graphite-dawn` because the headless browser exposes no
 WebGPU adapter, and the .NET Framework **x86** leg additionally skips Vulkan
