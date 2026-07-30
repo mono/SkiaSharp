@@ -84,6 +84,13 @@ jobs:
         displayName: Get the volume information before the run
         condition: always()
 
+      - task: UsePythonVersion@0
+        displayName: Switch to the correct Python version
+        retryCountOnTaskFailure: 3
+        inputs:
+          versionSpec: '3.x'
+          architecture: 'x64'
+
       # prepare - checkout strategy depends on caching
       - ${{ if and(ne(parameters.cacheJob, ''), eq(parameters.enableCaching, true)) }}:
         - checkout: self
@@ -154,14 +161,6 @@ jobs:
 
       # install extra bits for the native builds
       - ${{ if and(startsWith(parameters.name, 'native_'), ne(parameters.skipInstall, 'true')) }}:
-        # switch to the correct Python version
-        - task: UsePythonVersion@0
-          displayName: Switch to the correct Python version
-          retryCountOnTaskFailure: 3
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          inputs:
-            versionSpec: '3.x'
-            architecture: 'x64'
         # install ninja
         - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
           displayName: Install Ninja
@@ -205,14 +204,21 @@ jobs:
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
+        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+          - task: UseNode@1
+            displayName: Install Node.js
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              version: 20.x
         # install ninja
         - ${{ if eq(parameters.installNinja, 'true') }}:
           - pwsh: .\scripts\infra\native\shared\install-ninja.ps1
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
@@ -221,6 +227,18 @@ jobs:
           # install the correct version of the Android SDK
           - pwsh: .\scripts\infra\managed\install-android-sdk.ps1
             displayName: Install Android SDK
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools"
+            displayName: Install Android platform tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;35.0.0"
+            displayName: Install Android 35 build tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;36.0.0"
+            displayName: Install Android 36 build tools
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
@@ -302,7 +320,6 @@ jobs:
               displayName: Install the Windows 10 SDK 10.0.19041
               retryCountOnTaskFailure: 3
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-
       # install any .NET global tools
       - ${{ if ne(parameters.skipInstall, 'true') }}:
         - ${{ each tool in parameters.tools }}:
@@ -351,8 +368,10 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
+                VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false
                 ${{ each pair in parameters.env }}:
@@ -367,6 +386,7 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 ${{ each pair in parameters.env }}:
                   ${{ pair.key }}: ${{ pair.value }}

@@ -368,6 +368,9 @@ stages:
               - name: native
             installEmsdk: true
             initScript: source ~/emsdk/emsdk_env.sh
+            preBuildSteps:
+              - bash: bash ./scripts/infra/managed/install-chrome.sh
+                displayName: Install Chrome for WASM tests
             postBuildSteps:
               - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
                 displayName: Extract visual-regression images for triage
@@ -404,6 +407,9 @@ stages:
             previewWorkloads: wasm-tools,android
             requiredArtifacts:
               - name: native
+            preBuildSteps:
+              - bash: bash ./scripts/infra/managed/install-chrome.sh
+                displayName: Install Chrome for WASM tests
             postBuildSteps:
               - task: PublishTestResults@2
                 displayName: Publish the WASM preview test results
