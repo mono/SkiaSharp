@@ -60,6 +60,11 @@ var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
     { "PREVIEW_LABEL", PREVIEW_LABEL },
 };
 
+var ANDROID_SDK_ROOT = EnvironmentVariable("ANDROID_SDK_ROOT");
+if (!string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
+    MSBUILD_VERSION_PROPERTIES["AndroidSdkDirectory"] = ANDROID_SDK_ROOT;
+}
+
 var DATE_TIME_NOW = DateTime.Now;
 var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_HHmmss");
 
