@@ -1,5 +1,35 @@
 var VERIFY_EXCLUDED = new[] { "VCRUNTIME", "MSVCP" };
 
+void RunNinjaWithVcVars(
+    DirectoryPath working,
+    DirectoryPath outDir,
+    string target,
+    string architecture,
+    string windowsSdkVersion,
+    string vcVarsVersion)
+{
+    var vcVarsAll = ((DirectoryPath)VS_INSTALL)
+        .CombineWithFilePath("VC/Auxiliary/Build/vcvarsall.bat");
+    var ninjaScript = DEPOT_PATH.CombineWithFilePath("ninja.py");
+    var vcVarsVersionArg = string.IsNullOrEmpty(vcVarsVersion)
+        ? ""
+        : $" -vcvars_ver={vcVarsVersion}";
+    var ninjaTarget = string.IsNullOrEmpty(target) ? "" : $" {target}";
+    var command =
+        $"call \"{vcVarsAll.FullPath}\" {architecture} {windowsSdkVersion}{vcVarsVersionArg} >nul" +
+        $" && \"{PYTHON_EXE}\" \"{ninjaScript.FullPath}\" -C \"{outDir.FullPath}\"{ninjaTarget}";
+
+    Information($"Initializing the Visual C++ environment once for {architecture}.");
+    RunProcess("cmd.exe", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder()
+            .Append("/d")
+            .Append("/s")
+            .Append("/c")
+            .AppendQuoted(command),
+        WorkingDirectory = working.FullPath,
+    });
+}
+
 string GetSpectreLibPath(string arch)
 {
     var spectreArch = arch.ToLower() switch {
