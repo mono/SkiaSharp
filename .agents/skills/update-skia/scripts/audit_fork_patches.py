@@ -16,6 +16,9 @@ ROW_PATTERN = re.compile(
     r"^\| `(?P<path>.+?)` \| (?P<change>[^|]+) \| `(?P<fingerprint>[0-9a-f]+)` \| "
     r"(?P<disposition>[^|]+) \| (?P<evidence>.*) \|$"
 )
+HUNK_PATTERN = re.compile(
+    r"^@@ -\d+(?:,\d+)? \+\d+(?:,\d+)? @@(?P<context>.*)$"
+)
 
 
 def git(skia_root: Path, *args: str) -> str:
@@ -36,8 +39,30 @@ def verify_ref(skia_root: Path, ref: str) -> None:
     git(skia_root, "rev-parse", "--verify", f"{ref}^{{commit}}")
 
 
+def normalize_patch(raw: str) -> str:
+    normalized = []
+    in_header = True
+    for line in raw.split("\n"):
+        hunk = HUNK_PATTERN.match(line)
+        if hunk:
+            in_header = False
+            normalized.append(f"@@ @@{hunk.group('context')}")
+            continue
+        if line == "GIT binary patch" or line.startswith("Binary files "):
+            in_header = False
+        if in_header and (
+            line.startswith("diff --git ")
+            or line.startswith("index ")
+            or line.startswith("--- ")
+            or line.startswith("+++ ")
+        ):
+            continue
+        normalized.append(line)
+    return "\n".join(normalized)
+
+
 def patch(skia_root: Path, old: str, new: str, path: str) -> str:
-    return git(
+    raw = git(
         skia_root,
         "diff",
         "--binary",
@@ -47,6 +72,7 @@ def patch(skia_root: Path, old: str, new: str, path: str) -> str:
         "--",
         path,
     )
+    return normalize_patch(raw)
 
 
 def changed_files(skia_root: Path, old: str, new: str) -> list[str]:

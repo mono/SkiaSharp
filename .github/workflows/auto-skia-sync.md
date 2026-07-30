@@ -352,6 +352,9 @@ the supplied values.
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
   with actual Vulkan execution, exactly as defined by the skill.
+- For a deterministic failure, trace the failing call through its direct implementation and
+  preconditions before widening the search. Expand to surrounding logs or broader history only when
+  evidence rules out that path.
 - Commit only to `${{ needs.pre_activation.outputs.head_branch }}` in both local repositories.
 
 ## 4. Automated delivery

@@ -79,17 +79,13 @@ single-test filter to the `.slnx`.
 
 Diagnose the failing behavior before editing:
 
-- For a null factory, use this order before broad searching:
-  1. Trace managed wrapper -> C API -> exact native factory.
-  2. Read that factory body and enumerate every null return/precondition.
-  3. Diff that factory and its direct caller mapping over `DIFF_RANGE`.
-  4. Inspect only commits that changed those lines.
-  5. Then check required context fields, ownership, and feature guards.
-- Do not chase adjacent warnings, test-harness theories, broad backend logs, or known-gotcha
-  guesses until the direct return path has been inspected.
+- Trace the first failing call through its direct managed/native implementation and preconditions,
+  then diff that path over `DIFF_RANGE`. Broaden the investigation only when evidence rules it out.
 - Prefer compatibility changes in fork-owned `src/c`, `include/c`, managed wrappers, or durable
   build targets. Before adding a new patch to upstream-owned implementation, inspect analogous
   C shims and prove the behavior cannot be preserved at the binding boundary.
+- When adapting from repository prior art, account for its private types and feature guards before
+  rebuilding.
 - After native changes, rebuild from source and prove the changed library is loaded.
 - If the C API surface changed, regenerate bindings and repeat Phase 09.
 

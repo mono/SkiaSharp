@@ -65,6 +65,49 @@ def added_internal_functions(diff: str) -> list[str]:
     ]
 
 
+def function_regions(text: str) -> tuple[str, list[str], dict[str, str], str]:
+    lines = text.splitlines(keepends=True)
+    starts = [
+        index for index, line in enumerate(lines) if line.startswith("\t\t#region ")
+    ]
+    if not starts:
+        return text, [], {}, ""
+
+    blocks = {}
+    order = []
+    last_end = None
+    for start in starts:
+        name = lines[start].strip().removeprefix("#region ")
+        if name in blocks:
+            raise ValueError(f"Duplicate generated function region: {name}")
+        end = next(
+            (
+                index + 1
+                for index in range(start + 1, len(lines))
+                if lines[index].startswith("\t\t#endregion")
+            ),
+            None,
+        )
+        if end is None:
+            raise ValueError(f"Unterminated generated function region: {name}")
+        blocks[name] = "".join(lines[start:end])
+        order.append(name)
+        last_end = end
+
+    return "".join(lines[: starts[0]]), order, blocks, "".join(lines[last_end:])
+
+
+def preserve_function_region_order(original: str, generated: str) -> str:
+    _, original_order, _, _ = function_regions(original)
+    prefix, generated_order, generated_blocks, suffix = function_regions(generated)
+    if not original_order or not generated_order:
+        return generated
+
+    order = [name for name in original_order if name in generated_blocks]
+    order.extend(sorted(name for name in generated_blocks if name not in original_order))
+    return prefix + "\n".join(generated_blocks[name] for name in order) + suffix
+
+
 def regenerate(repo_root: Path, config: str | None = None) -> None:
     generator_project = (
         repo_root / "utils" / "SkiaSharpGenerator" / "SkiaSharpGenerator.csproj"
@@ -75,6 +118,7 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
     run(repo_root, "dotnet", "build", str(generator_project))
     for config_name, source_root, output in select_projects(config):
         output_path = repo_root / "binding" / output
+        original = output_path.read_text(encoding="utf-8") if output_path.exists() else None
         command = (
             "dotnet",
             "run",
@@ -92,6 +136,12 @@ def regenerate(repo_root: Path, config: str | None = None) -> None:
         )
         print(" ".join(str(part) for part in command))
         run(repo_root, *command)
+        if original is not None:
+            generated = output_path.read_text(encoding="utf-8")
+            output_path.write_text(
+                preserve_function_region_order(original, generated),
+                encoding="utf-8",
+            )
         shutil.copy2(output_path, generated_directory / output_path.name)
 
     harfbuzz = "binding/HarfBuzzSharp/HarfBuzzApi.generated.cs"
