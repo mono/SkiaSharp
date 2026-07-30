@@ -1,4 +1,4 @@
-# Phases 1–3: Research
+# Phases 01–03: Research
 
 ## Phase 1 — establish the exact range
 

@@ -1,4 +1,4 @@
-# Phases 6–7: Update and native build
+# Phases 06–07: Update and native build
 
 ## Phase 6 — update version surfaces
 
