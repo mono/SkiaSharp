@@ -68,25 +68,13 @@ public class SKBlenderTest
 		// paths compile to different shaders and round independently.
 		protected virtual int ChannelTolerance => 0;
 
-		private void AssertSameColor(SKColor blendModeColor, SKColor blenderColor)
-		{
-			var delta = Math.Max(
-				Math.Max(Math.Abs(blendModeColor.Red - blenderColor.Red), Math.Abs(blendModeColor.Green - blenderColor.Green)),
-				Math.Max(Math.Abs(blendModeColor.Blue - blenderColor.Blue), Math.Abs(blendModeColor.Alpha - blenderColor.Alpha)));
-
-			Assert.True(
-				delta <= ChannelTolerance,
-				$"Blend mode produced {blendModeColor} but the blender produced {blenderColor} " +
-				$"— channels differ by {delta}, more than the allowed {ChannelTolerance}.");
-		}
-
 		[Theory]
 		[MemberData(nameof(GetAllBlendModes))]
 		public void BlenderMatchesBlendModeWhenUsingOpaqueColor(SKBlendMode mode)
 		{
 			var blendModeColor = GetColor(p => ApplyColor(p, false), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColor(p, false), p => ApplyBlender(p, mode));
-			AssertSameColor(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -95,7 +83,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColor(p, true), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColor(p, true), p => ApplyBlender(p, mode));
-			AssertSameColor(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -104,7 +92,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColorShader(p, false), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColorShader(p, false), p => ApplyBlender(p, mode));
-			AssertSameColor(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		[Theory]
@@ -113,7 +101,7 @@ public class SKBlenderTest
 		{
 			var blendModeColor = GetColor(p => ApplyColorShader(p, true), p => ApplyBlendMode(p, mode));
 			var blenderColor = GetColor(p => ApplyColorShader(p, true), p => ApplyBlender(p, mode));
-			AssertSameColor(blendModeColor, blenderColor);
+			AssertSimilarColor(blendModeColor, blenderColor, ChannelTolerance);
 		}
 
 		private SKColor GetColor(Action<SKPaint> applyColor, Action<SKPaint> applyBlend)
