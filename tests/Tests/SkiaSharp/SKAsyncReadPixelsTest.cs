@@ -4,6 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class SKAsyncReadPixelsTest : SKTest
 	{
 		private const int SrcSize = 8;
