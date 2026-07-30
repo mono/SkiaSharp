@@ -1,8 +1,9 @@
 # GPU test policy
 
-A GPU backend is **required** on every host we build it for. Failing to bring one
-up — no device, no driver, no ICD, a null context, a broken binding — is a **test
-failure**. A GPU test may only be skipped when `GpuPolicy` says so.
+A GPU backend is **required** on every host `GpuPolicy.RequiredOn` names for it.
+Failing to bring one up — no device, no driver, no ICD, a null context, a broken
+binding — is a **test failure**. A GPU test may only be skipped when `GpuPolicy`
+says so.
 
 ## The rule
 
@@ -28,9 +29,11 @@ Otherwise it returns and the caller brings the backend up **without a catch**.
 
 ## Required platforms
 
-`GpuPolicy.RequiredOn` mirrors the `gn` args in `native/*/build.cake`
-(`skia_use_metal`, `skia_use_vulkan`, `skia_use_dawn`, `skia_use_direct3d`) —
-keep the two in sync.
+`GpuPolicy.RequiredOn` should track the `gn` args in `native/*/build.cake`
+(`skia_use_metal`, `skia_use_vulkan`, `skia_use_dawn`, `skia_use_direct3d`) for
+every platform that has a test host — keep the two in sync. It lists test hosts,
+not every native build: Tizen builds Ganesh but has no test leg, and the browser
+build enables Ganesh without `ganesh-gl` being required there.
 
 | Backend | Required on |
 |---|---|

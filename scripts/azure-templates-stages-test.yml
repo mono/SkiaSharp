@@ -365,8 +365,9 @@ stages:
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
             # the device reports none of the families Ganesh or Graphite require and
-            # bring-up fails outright. Native macOS on this same pool does get Mac2
-            # and is NOT opted out — this is a Catalyst limitation, not the agent. See #4555.
+            # bring-up fails outright. macOS on this same pool is opted out too, for
+            # a different reason — its virtualized Metal hangs the host on shutdown.
+            # See #4555: no CI host has a usable Metal device.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false

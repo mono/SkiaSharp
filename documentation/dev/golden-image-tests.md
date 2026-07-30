@@ -21,8 +21,10 @@ Three families, all equal citizens:
 
 Most live in `Visual/Renderers/` and compile into every host. `ganesh-gl` is
 desktop-only (`Renderers/Desktop/`, it needs the `GlContexts` abstraction); the
-two Vulkan renderers live in the `SkiaSharp.Vulkan.Tests.Console` satellite so
-its Silk.NET dependency stays out of the shared test assembly.
+two Vulkan renderers live under `tests/VulkanTests/` so their Silk.NET dependency
+stays out of the shared test assembly. Those sources build into
+`SkiaSharp.Vulkan.Tests.Console` for desktop and into the platform-restricted
+`SkiaSharp.Vulkan.Tests` library the Android and Windows device hosts register.
 
 A renderer's `Name` is also its [`GpuPolicy`](gpu-test-policy.md) backend id and
 its golden directory name, so one word identifies a backend everywhere.
@@ -84,7 +86,9 @@ tests/Content/Goldens/
 
 Lookup takes the first hit over `VisualPlatform.Tags` then the shared folder.
 Tags are `macos`, `windows`, `linux`, `android`, `ios`, `maccatalyst`, `tvos`,
-`browser`, `nanoserver`. Nano Server yields two tags, so it probes
+`browser`, `nanoserver`. Not every tag has committed goldens — a tag only gains
+them once a leg runs that backend, so the first run fails as unseeded until
+harvested. Nano Server yields two tags, so it probes
 `{renderer}.nanoserver` → `{renderer}.windows` → `{renderer}`: it *is* Windows,
 but rasterizes text with FreeType instead of DirectWrite.
 
