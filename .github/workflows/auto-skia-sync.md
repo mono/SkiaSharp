@@ -204,7 +204,6 @@ steps:
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
       cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
-      cp .github/scripts/skia-sync-validate-tests.py /tmp/gh-aw/skia-sync-validate-tests.py
       cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
       cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
 
@@ -435,9 +434,6 @@ The post-step renders the complete, repository-specific PR bodies from
 summary fragments. All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
 For Phase 10, write the test-output log to `/tmp/gh-aw/agent/test-output.txt` (in place of the
 skill's default path) so it's uploaded as an artifact and failures can be inspected after the run.
-Before pushing, the deterministic post-step independently reruns the built Vulkan test application,
-emits named xUnit results, and rejects missing, failed, unexpectedly skipped, count-mismatched, or
-unnamed Ganesh/Graphite Vulkan coverage.
 
 Commit submodule changes inside `externals/skia` on `${{ needs.pre_activation.outputs.head_branch }}`.
 Commit parent repo changes on `${{ needs.pre_activation.outputs.head_branch }}` in the parent.

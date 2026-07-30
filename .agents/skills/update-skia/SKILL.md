@@ -63,11 +63,11 @@ Read **only the current phase file**, complete its gate, then move to the next r
 
 | Phases | Read when starting | Required outcome |
 |---|---|---|
-| 1–3 Research | [references/phases/research.md](references/phases/research.md) | Authoritative diff analysis plus independent discrepancy review |
-| 4–5 Branch & merge | [references/phases/merge.md](references/phases/merge.md) | Correct branches and audited two-parent upstream merge |
-| 6–7 Update & native build | [references/phases/build.md](references/phases/build.md) | Version files consistent and updated native source builds |
-| 8–10 Bindings, managed build, tests | [references/phases/verify.md](references/phases/verify.md) | Bindings reviewed and final unfiltered solution green |
-| 11 Ship | [references/phases/ship.md](references/phases/ship.md) | Complete, cross-linked PRs; no merge without approval |
+| 1–3 Research | [references/phases/01-research.md](references/phases/01-research.md) | Authoritative diff analysis plus independent discrepancy review |
+| 4–5 Branch & merge | [references/phases/04-branch-and-merge.md](references/phases/04-branch-and-merge.md) | Correct branches and audited two-parent upstream merge |
+| 6–7 Update & native build | [references/phases/06-update-and-build.md](references/phases/06-update-and-build.md) | Version files consistent and updated native source builds |
+| 8–10 Bindings, managed build, tests | [references/phases/08-bindings-and-tests.md](references/phases/08-bindings-and-tests.md) | Bindings reviewed and final unfiltered solution green |
+| 11 Ship | [references/phases/11-ship.md](references/phases/11-ship.md) | Complete, cross-linked PRs; no merge without approval |
 
 Do not preload all phase files. The current phase file names any narrower reference section
 needed for that phase.

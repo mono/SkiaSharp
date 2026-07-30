@@ -1,4 +1,4 @@
-# Phases 8–10: Bindings, managed build, and tests
+# Phases 08–10: Bindings, managed build, and tests
 
 ## Phase 8 — regenerate bindings
 
