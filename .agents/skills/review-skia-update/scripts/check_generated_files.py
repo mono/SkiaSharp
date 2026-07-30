@@ -3,10 +3,10 @@
 
 Assumes the working tree is already checked out to the correct state
 (SkiaSharp companion PR + skia submodule at PR head — done by the orchestrator).
-Runs utils/generate.ps1, then uses git diff to check if the regenerated
-files match what's checked in. Any diff = FAIL.
-HarfBuzzSharp is excluded — harfbuzz updates are never part of a Skia update,
-so the generated file is reverted to HEAD before comparison.
+Runs the maintained update-skia Python binding helper, then uses git diff to
+check if the regenerated files match what's checked in. Any diff = FAIL.
+The helper keeps generated function-region ordering deterministic across hosts
+and restores HarfBuzzSharp because HarfBuzz updates are separate.
 """
 import argparse
 import os
@@ -34,10 +34,21 @@ def run_check(repo_root: str, output_dir: str) -> dict:
     generator_log = os.path.join(output_dir, "generator-output.log")
 
     # --- Step 1: Run the generator and capture raw output as proof of execution ---
-    eprint(f"🔄 Running utils/generate.ps1 (capturing output to {generator_log})...")
+    helper = os.path.join(
+        repo_root,
+        ".agents",
+        "skills",
+        "update-skia",
+        "scripts",
+        "regenerate_bindings.py",
+    )
+    eprint(
+        "🔄 Running update-skia/scripts/regenerate_bindings.py "
+        f"(capturing output to {generator_log})..."
+    )
     try:
         proc = subprocess.Popen(
-            ["pwsh", "./utils/generate.ps1"],
+            [sys.executable, helper],
             cwd=repo_root,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,

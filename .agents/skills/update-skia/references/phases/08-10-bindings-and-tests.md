@@ -50,7 +50,7 @@ set -o pipefail
 dotnet test tests/SkiaSharp.Tests.Console.slnx \
   -p:TargetFramework=net10.0 \
   -p:TargetFrameworks=net10.0 \
-  2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
+  2>&1 | tee "$ARTIFACT_DIR/initial-test-output.txt"
 ```
 
 Run the solution unfiltered. Confirm the base, singleton, Vulkan, and Direct3D hosts all reported
@@ -89,8 +89,18 @@ Diagnose the failing behavior before editing:
 - After native changes, rebuild from source and prove the changed library is loaded.
 - If the C API surface changed, regenerate bindings and repeat Phase 09.
 
-A focused run proves a candidate fix only. Rerun the full unfiltered solution after every failure is
-fixed; only that final run satisfies the gate.
+A focused run proves a candidate fix only. Rerun the full unfiltered solution after every failure
+is fixed; only that final run satisfies the gate. Capture the complete final command output—not a
+manually written summary—in the canonical artifact:
+
+```bash
+rm -f "$ARTIFACT_DIR/test-output.txt"
+set -o pipefail
+dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 \
+  -p:TargetFrameworks=net10.0 \
+  2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
+```
 
 ### Finalize tested commits
 
