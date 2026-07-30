@@ -165,6 +165,12 @@ stages:
             buildAgent: ${{ parameters.buildAgentMac }}
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            # This pool is x64 and virtualizes Metal. Merely calling
+            # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
+            # state that never signals, so the test host hangs on shutdown until the
+            # job times out at 180 min — no results, no TRX. See #4555.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
