@@ -1,5 +1,9 @@
 # Phases 4–5: Branch and merge
 
+Before using this file, verify that both `skia-breaking-change-analysis.md` and
+`skia-validation-review.md` exist and contain no unresolved HIGH/MEDIUM finding. Otherwise return
+to the research phase without creating branches or starting the merge.
+
 Read only the dependency and merge-strategy sections (8, 13–15) of
 [../known-gotchas.md](../known-gotchas.md).
 

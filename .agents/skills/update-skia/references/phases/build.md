@@ -47,6 +47,9 @@ arguments belong in affected `native/**/build.cake` files.
 After any native edit, rebuild from source. If the exact failure repeats, prove the changed code
 was compiled/linked before forming a second theory.
 
+When a build disproves an earlier dependency or risk conclusion, update the dependency decisions,
+primary analysis, and validation-review disposition together so the final artifacts agree.
+
 Do not commit dependency or C API fixes yet.
 
 ## Gate
