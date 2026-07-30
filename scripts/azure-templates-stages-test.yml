@@ -86,11 +86,11 @@ stages:
       jobs:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework)
           parameters:
-            name: tests_netfx_windows
-            displayName: Windows (.NET Framework)
+            name: tests_netfx_windows_x64
+            displayName: Windows (.NET Framework, x64)
             buildAgent: ${{ parameters.buildAgentWindows}}
             target: tests-netfx
-            additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            additionalArgs: --arch=x64 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
@@ -113,14 +113,50 @@ stages:
                 displayName: Extract visual-regression images for triage
                 condition: always()
               - task: PublishTestResults@2
-                displayName: Publish the .NET Framework test results
+                displayName: Publish the .NET Framework x64 test results
                 condition: always()
                 inputs:
                   testResultsFormat: VSTest
                   testResultsFiles: 'output/logs/testlogs/**/*.trx'
-                  testRunTitle: 'Windows .NET Framework Tests'
+                  testRunTitle: 'Windows .NET Framework x64 Tests'
             publishArtifacts:
-              - name: testlogs_netfx_windows
+              - name: testlogs_netfx_windows_x64
+                always: true
+                path: 'output/logs/testlogs'
+        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Framework, x86)
+          parameters:
+            name: tests_netfx_windows_x86
+            displayName: Windows (.NET Framework, x86)
+            buildAgent: ${{ parameters.buildAgentWindows}}
+            target: tests-netfx
+            additionalArgs: --arch=x86 --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
+            installAndroidSdk: false
+            shouldPublish: false
+            requiredArtifacts:
+              - name: native
+            # Same OpenGL gap as x64 (#4591), plus Vulkan: SwiftShader's LLVM JIT
+            # cannot resolve __chkstk in a 32-bit process, so the software ICD
+            # crashes the host outright ("exit code is '7'") instead of failing a
+            # test. x64 runs the identical suite green, which is why the two
+            # architectures are separate jobs. Direct3D stays required on both.
+            env:
+              SKIASHARP_TEST_SKIP_GPU: ganesh-gl,ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
+            preBuildSteps:
+              - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
+                displayName: Provision software Vulkan (SwiftShader) for visual tests
+            postBuildSteps:
+              - pwsh: python3 scripts/infra/tests/extract-visual-goldens.py output/logs/testlogs --images-out output/logs/testlogs/visual-images
+                displayName: Extract visual-regression images for triage
+                condition: always()
+              - task: PublishTestResults@2
+                displayName: Publish the .NET Framework x86 test results
+                condition: always()
+                inputs:
+                  testResultsFormat: VSTest
+                  testResultsFiles: 'output/logs/testlogs/**/*.trx'
+                  testRunTitle: 'Windows .NET Framework x86 Tests'
+            publishArtifacts:
+              - name: testlogs_netfx_windows_x86
                 always: true
                 path: 'output/logs/testlogs'
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (.NET Core)

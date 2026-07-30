@@ -66,8 +66,13 @@ In CI each opt-out is a bootstrapper `env:` value in
 `scripts/azure-templates-stages-test.yml` — read it there for the current set
 rather than duplicating it here. Today: **every Apple leg skips Metal** because
 no CI host has a real Metal device (see #4555), the Windows and container legs
-skip `ganesh-gl` for want of a software GL stack, and the WASM legs skip
-`graphite-dawn` because the headless browser exposes no WebGPU adapter.
+skip `ganesh-gl` for want of a software GL stack, the WASM legs skip
+`graphite-dawn` because the headless browser exposes no WebGPU adapter, and the
+.NET Framework **x86** leg additionally skips Vulkan (SwiftShader cannot JIT in a
+32-bit process). See #4591 for the work to remove these.
+
+The .NET Framework legs are split per architecture precisely so an opt-out can
+differ between x64 and x86 — `GpuPolicy` models the OS, not the architecture.
 
 ## Adding a backend
 
