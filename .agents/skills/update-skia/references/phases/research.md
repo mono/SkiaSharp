@@ -73,3 +73,6 @@ the primary analysis.
 - Primary analysis exists.
 - Independent review exists.
 - No unresolved HIGH/MEDIUM finding remains.
+
+Stop here until both report files exist and the review is integrated. Do not load the merge
+phase, create either branch, or begin the merge before this gate passes.

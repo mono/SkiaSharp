@@ -45,6 +45,31 @@ source "$ENV_FILE"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
 
+VULKAN_TEST_APP="$GITHUB_WORKSPACE/tests/SkiaSharp.Vulkan.Tests.Console/bin/Debug/net10.0/SkiaSharp.Vulkan.Tests"
+VULKAN_RESULTS="$ARTIFACT_DIR/vulkan-results.xml"
+VULKAN_RUN_OUTPUT="$ARTIFACT_DIR/vulkan-post-test.txt"
+if [[ ! -x "$VULKAN_TEST_APP" ]]; then
+  echo "::error::The built Vulkan test application is missing: $VULKAN_TEST_APP"
+  exit 1
+fi
+if [[ "${SKIASHARP_REQUIRE_VULKAN:-}" != "1" ]]; then
+  echo "::error::SKIASHARP_REQUIRE_VULKAN must be 1 for the deterministic Vulkan rerun."
+  exit 1
+fi
+rm -f "$VULKAN_RESULTS"
+(
+  cd "$(dirname "$VULKAN_TEST_APP")"
+  ./SkiaSharp.Vulkan.Tests \
+    --no-ansi \
+    --results-directory "$ARTIFACT_DIR" \
+    --report-xunit \
+    --report-xunit-filename "$(basename "$VULKAN_RESULTS")"
+) 2>&1 | tee "$VULKAN_RUN_OUTPUT"
+required_file "$VULKAN_RESULTS"
+python3 "$RUNTIME_DIR/skia-sync-validate-tests.py" \
+  "$ARTIFACT_DIR/test-output.txt" \
+  "$VULKAN_RESULTS"
+
 BRANCH="$HEAD_BRANCH"
 SS_BASE="$BASE_BRANCH"
 SKIA_BASE="$SKIA_BASE_BRANCH"
