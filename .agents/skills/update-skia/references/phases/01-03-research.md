@@ -40,6 +40,9 @@ Fetch:
 - `upstream/{UPSTREAM_REF}` in mono/skia.
 - The base branch's recorded `upstream_merge_commit`, by SHA.
 
+Export the exact parent-base submodule pointer as `SKIA_SYNC_SKIA_BASE_SHA`; use it instead of a
+moving remote branch ref in later integrity checks.
+
 Use the base branch's recorded commit, not a milestone label:
 
 ```bash
@@ -48,6 +51,9 @@ BASE_UPSTREAM_SHA="${SKIA_BASE_UPSTREAM_SHA:-$(git show "origin/{BASE_BRANCH}:cg
 TARGET_UPSTREAM_REF="upstream/{UPSTREAM_REF}"
 git -C externals/skia cat-file -e "${BASE_UPSTREAM_SHA}^{commit}"
 git -C externals/skia rev-parse --verify "${TARGET_UPSTREAM_REF}^{commit}"
+TARGET_UPSTREAM_SHA=$(git -C externals/skia rev-parse "${TARGET_UPSTREAM_REF}^{commit}")
+export SKIA_SYNC_BASE_UPSTREAM_SHA="$BASE_UPSTREAM_SHA"
+export SKIA_SYNC_TARGET_UPSTREAM_SHA="$TARGET_UPSTREAM_SHA"
 DIFF_RANGE="${BASE_UPSTREAM_SHA}..${TARGET_UPSTREAM_REF}"
 ```
 

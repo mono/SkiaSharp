@@ -30,6 +30,7 @@ required_file "$SS_SUMMARY_FILE"
 required_file "$ARTIFACT_DIR/skia-breaking-change-analysis.md"
 required_file "$ARTIFACT_DIR/skia-validation-review.md"
 required_file "$ARTIFACT_DIR/skia-dependency-decisions.md"
+required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
 required_file "$ARTIFACT_DIR/test-output.txt"
 
 # Written by the trusted agent in this workflow and validated immediately below.
@@ -41,7 +42,10 @@ source "$ENV_FILE"
 : "${UPSTREAM_REF:?UPSTREAM_REF is required}"
 : "${BASE_BRANCH:?BASE_BRANCH is required}"
 : "${SKIA_BASE_BRANCH:?SKIA_BASE_BRANCH is required}"
+: "${SKIA_BASE_SHA:?SKIA_BASE_SHA is required}"
 : "${HEAD_BRANCH:?HEAD_BRANCH is required}"
+: "${BASE_UPSTREAM_SHA:?BASE_UPSTREAM_SHA is required}"
+: "${TARGET_UPSTREAM_SHA:?TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
 
@@ -51,6 +55,15 @@ SKIA_BASE="$SKIA_BASE_BRANCH"
 IS_RELEASE="${IS_RELEASE:-false}"
 UPDATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
+
+python3 "$RUNTIME_DIR/audit-fork-patches.py" \
+  --skia-root "$GITHUB_WORKSPACE/externals/skia" \
+  --old-upstream "$BASE_UPSTREAM_SHA" \
+  --new-upstream "$TARGET_UPSTREAM_SHA" \
+  --fork-base "$SKIA_BASE_SHA" \
+  --merged-head "$BRANCH" \
+  --output "$ARTIFACT_DIR/skia-fork-patch-audit.md" \
+  --validate
 
 for report in "$SKIA_SUMMARY_FILE" "$SS_SUMMARY_FILE"; do
   for heading in "## Changes" "## Testing" "## Human review"; do

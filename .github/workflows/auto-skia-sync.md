@@ -197,6 +197,7 @@ steps:
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
       bash .github/scripts/skia-sync-prefetch-upstream.sh
+      echo "SKIA_SYNC_SKIA_BASE_SHA=$(git -C externals/skia rev-parse HEAD)" >> "$GITHUB_ENV"
   - name: Compute native cache key
     id: native-cache-key
     run: |
@@ -226,6 +227,7 @@ steps:
     run: |
       cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
       cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
+      cp .agents/skills/update-skia/scripts/audit_fork_patches.py /tmp/gh-aw/audit-fork-patches.py
       cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
       cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
 

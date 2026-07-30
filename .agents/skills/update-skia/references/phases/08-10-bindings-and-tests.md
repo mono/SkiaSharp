@@ -105,6 +105,7 @@ After the final full solution passes:
 3. Commit version, binding, wrapper, test, and submodule changes in the parent.
 4. Verify no build-time side effects or unrelated files are staged.
 5. Verify the parent gitlink equals the mono/skia commit used by the green run.
+6. Refresh and validate `skia-fork-patch-audit.md` against the final mono/skia tip.
 
 ## Gate
 
@@ -113,3 +114,4 @@ After the final full solution passes:
 - Final unfiltered solution passes every host.
 - Vulkan initializes and executes real tests with zero failures.
 - Parent points to the exact tested mono/skia commit.
+- Every final fork-delta change has one non-contradictory evidence-backed disposition.

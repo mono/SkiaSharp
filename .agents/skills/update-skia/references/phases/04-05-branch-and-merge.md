@@ -17,6 +17,7 @@ parent base:
 
 ```bash
 BASE_SUB_SHA=$(git ls-tree "origin/{BASE_BRANCH}" -- externals/skia | awk '{print $3}')
+export SKIA_SYNC_SKIA_BASE_SHA="$BASE_SUB_SHA"
 git -C externals/skia fetch origin "{SKIA_BASE_BRANCH}"
 git -C externals/skia checkout "$BASE_SUB_SHA"
 git -C externals/skia branch -r --contains "$BASE_SUB_SHA" |
@@ -103,10 +104,31 @@ Create the required two-parent merge commit. Verify its parents are the selected
 the target upstream commit. Build-driven dependency or C API adaptations belong in later, separate
 commits after their need is proven.
 
+### Audit the complete fork delta
+
+Conflict resolution is not enough: a whole-file resolution can drop a separate non-conflicting
+fork patch. Return to the parent repository root and generate the diff-of-diffs audit after the
+merge:
+
+```bash
+python3 .agents/skills/update-skia/scripts/audit_fork_patches.py \
+  --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+  --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+  --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
+  --merged-head HEAD \
+  --output "$ARTIFACT_DIR/skia-fork-patch-audit.md"
+```
+
+Inspect both old and new patches for every table row. Replace every `TODO` with a valid final
+disposition and concrete source/commit evidence, then rerun with `--validate`. Reapply or adapt any
+patch that was neither upstreamed nor intentionally obsolete. Never infer integrity from commit or
+file counts alone.
+
 ## Gate
 
 - Parent and mono/skia feature branches have the resolved bases.
 - The merge commit has exactly two parents.
 - Every fork patch and dependency difference is classified.
+- `audit_fork_patches.py --validate` passes with no provisional decisions.
 - C API and build configuration survive intact.
 - Analysis artifacts still agree with the merged tree.

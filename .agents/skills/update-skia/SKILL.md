@@ -33,8 +33,11 @@ names.
 | `{UPSTREAM_REF}` | `SKIA_SYNC_UPSTREAM_REF` | `chrome/m{TARGET}` or `main` |
 | `{BASE_BRANCH}` | `SKIA_SYNC_BASE_BRANCH` | Parent PR base |
 | `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | mono/skia PR base |
+| `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact mono/skia commit recorded by the parent base |
 | `{HEAD_BRANCH}` | `SKIA_SYNC_HEAD_BRANCH` | Feature branch used in both repositories |
 | `{IS_RELEASE}` | `SKIA_SYNC_IS_RELEASE` | Whether the selected base is a release line |
+| `{BASE_UPSTREAM_SHA}` | `SKIA_SYNC_BASE_UPSTREAM_SHA` | Exact upstream commit recorded by the parent base |
+| `{TARGET_UPSTREAM_SHA}` | `SKIA_SYNC_TARGET_UPSTREAM_SHA` | Exact fetched target upstream commit |
 | `{PLATFORM}` | `SKIA_SYNC_PLATFORM` | Native Cake target suffix |
 | `{ARCH}` | `SKIA_SYNC_ARCH` | Native architecture |
 
@@ -108,6 +111,8 @@ needed for that phase.
 - `scripts/update_versions.py` updates and validates version surfaces and Skia hashes.
 - `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,
   and reports new native functions.
+- `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
+  added, removed, or changed patch lacks a final evidence-backed disposition.
 
 These scripts are idempotent and are the source of truth for their phases. Do not manually
 recreate their behavior.

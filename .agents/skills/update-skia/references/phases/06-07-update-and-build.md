@@ -68,8 +68,12 @@ affected platform's `native/**/build.cake` and must be reported for cross-platfo
 
 When evidence disproves an earlier dependency or risk conclusion, update
 `skia-dependency-decisions.md`, `skia-breaking-change-analysis.md`, and the validation-review
-disposition together. Commit each proven post-merge dependency/C API adaptation in mono/skia as a
-separate explanatory commit.
+disposition together by replacing the provisional entry; do not append a contradictory "final"
+section. Commit each proven post-merge dependency/C API adaptation in mono/skia as a separate
+explanatory commit.
+
+After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
+new or changed rows and require `--validate` to pass again.
 
 ## Gate
 
@@ -77,3 +81,4 @@ separate explanatory commit.
 - Updated target native library builds from source.
 - Every build failure is resolved rather than bypassed.
 - Dependency and analysis artifacts match the built tree.
+- The refreshed fork-patch audit validates.
