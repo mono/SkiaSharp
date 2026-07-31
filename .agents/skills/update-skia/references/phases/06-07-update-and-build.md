@@ -12,8 +12,9 @@ python3 .agents/skills/update-skia/scripts/update_versions.py \
   --upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA"
 ```
 
-The helper updates and validates `scripts/VERSIONS.txt`, `cgmanifest.json`,
-`scripts/azure-templates-variables.yml`, and the native C API version. It implements all modes:
+The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
+`cgmanifest.json`, `scripts/azure-templates-variables.yml`, and the native C API version. It
+implements all modes:
 
 - Milestone bump: advance milestone and package/native versions.
 - Same-milestone bug-fix: keep versions and advance Skia hashes.
@@ -82,10 +83,20 @@ Before Phase 08, run `git -C externals/skia diff "$SKIA_SYNC_SKIA_BASE_SHA..HEAD
 reconcile the main decision table with the built file. Rewrite any affected row and delete
 superseded provisional text; do not leave contradictory preserve/accept/compatibility conclusions.
 
+For every dependency whose revision or enabled/commented state changed and whose final state is
+enabled, check whether `cgmanifest.json` tracks that component. If it does, update the registration
+to the semantic version declared by the checked-out dependency's authoritative version constant,
+header, tag, or release metadata. The semantic version may legitimately remain unchanged across a
+revision-only roll; record that it was verified unchanged. A registration that differs from the
+derived version is a gate failure. Record the version source and manifest action in
+`skia-dependency-decisions.md`.
+
 ## Gate
 
 - Version helper passes for the selected mode.
 - Updated target native library builds from source.
 - Every build failure is resolved rather than bypassed.
 - Dependency and analysis artifacts match the built tree.
+- Component Governance registrations match every tracked dependency whose revision or enabled
+  state changed and whose final state is enabled.
 - The refreshed fork-patch audit validates.

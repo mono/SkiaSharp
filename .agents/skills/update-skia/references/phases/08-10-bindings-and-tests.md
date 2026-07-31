@@ -114,10 +114,13 @@ After the final full solution passes:
 
 1. Ensure every post-merge mono/skia adaptation is committed and the worktree is clean.
 2. Rerun `update_versions.py` so `cgmanifest.json` records the final tested submodule tip.
-3. Commit version, binding, wrapper, test, and submodule changes in the parent.
-4. Verify no build-time side effects or unrelated files are staged.
-5. Verify the parent gitlink equals the mono/skia commit used by the green run.
-6. Refresh and validate `skia-fork-patch-audit.md` against the final mono/skia tip.
+3. Recheck that Component Governance semantic versions match every tracked dependency whose
+   revision or enabled state changed and whose final state is enabled, including revision-only
+   rolls whose semantic version was verified unchanged.
+4. Commit version, binding, wrapper, test, and submodule changes in the parent.
+5. Verify no build-time side effects or unrelated files are staged.
+6. Verify the parent gitlink equals the mono/skia commit used by the green run.
+7. Refresh and validate `skia-fork-patch-audit.md` against the final mono/skia tip.
 
 ## Gate
 
@@ -126,4 +129,6 @@ After the final full solution passes:
 - Final unfiltered solution passes every host.
 - Every `GpuPolicy`-required backend initializes and executes with zero failures.
 - Parent points to the exact tested mono/skia commit.
+- Versions for tracked dependencies whose revision or enabled state changed and whose final state
+  is enabled match their checked-out source metadata in `cgmanifest.json`.
 - Every final fork-delta change has one non-contradictory evidence-backed disposition.

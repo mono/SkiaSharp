@@ -2,9 +2,12 @@
 
 """Synchronize Skia version and source metadata during Phases 06 and 10.
 
-Milestone, ABI, package, pipeline, submodule, and component-governance values
-must describe the same tested update. This helper changes them together and is
-rerun after final native adaptations so manifests record the exact tested SHAs.
+Milestone, ABI, package, pipeline, submodule, and Skia component-governance
+values must describe the same tested update. This helper changes them together
+and is rerun after final native adaptations so manifests record the exact
+tested SHAs. Semantic versions for tracked third-party dependencies whose
+revision or enabled state changed and whose final state is enabled remain a
+Phase 07 reconciliation because they come from each dependency's own metadata.
 """
 
 import argparse
