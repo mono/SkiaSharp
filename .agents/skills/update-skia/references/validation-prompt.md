@@ -10,26 +10,28 @@ I'm updating SkiaSharp's Skia submodule over this authoritative upstream range:
 Here is the breaking-change analysis file: `{ANALYSIS_FILE}`.
 Here is the provisional fork-vs-target dependency decision file: `{DEPENDENCY_FILE}`.
 
-Please validate by (run from externals/skia):
-1. Run: git diff {DIFF_RANGE} --stat -- src/ include/
+Please validate by (run from `externals/skia`):
+1. Run: `git diff {DIFF_RANGE} --stat -- src/ include/`
    Count the files changed and compare to my analysis — did I miss any?
-2. For each HIGH/MEDIUM item I identified, verify the C API impact by grepping src/c/ include/c/
+2. For each HIGH/MEDIUM item I identified, verify the C API impact by grepping `src/c/` and
+   `include/c/`.
 3. Check GPU changes across both shipped families — Ganesh and Graphite:
-   - Search shared GPU headers (include/gpu/GpuTypes.h, include/gpu/*.h outside ganesh/ and graphite/)
-   - For each new type, grep include/gpu/ganesh/ and include/gpu/graphite/ to see which consume it
+   - Search shared GPU headers (`include/gpu/GpuTypes.h`, and `include/gpu/*.h` outside `ganesh/`
+     and `graphite/`).
+   - For each new type, grep `include/gpu/ganesh/` and `include/gpu/graphite/` to see which consume it.
 4. Check for removed/moved headers that our C API includes:
-   grep -rh '#include' src/c/*.cpp | sort -u
+   `grep -rh '#include' src/c/*.cpp | sort -u`
    Then verify each included header still exists at the target commit
-5. **Struct size audit**: Check every `static_assert(sizeof(...))` in src/c/sk_structs.cpp.
+5. **Struct size audit**: Check every `static_assert(sizeof(...))` in `src/c/sk_structs.cpp`.
    For each asserted C++ struct, compare the target milestone's definition against our
-   C API struct in include/c/sk_types.h. Flag any struct that gained or lost fields.
+   C API struct in `include/c/sk_types.h`. Flag any struct that gained or lost fields.
 6. **Deleted file audit**: For each file deleted between milestones
-   (git diff --diff-filter=D --name-only), check if our C API references it (#include
+   (`git diff --diff-filter=D --name-only`), check if our C API references it (`#include`
    or uses its types). For referenced deletions, search the target branch for where the
-   content moved (git ls-tree -r {TARGET_UPSTREAM_REF} --name-only | grep STEM).
+   content moved (`git ls-tree -r {TARGET_UPSTREAM_REF} --name-only | grep STEM`).
 7. **Removal verification**: For any symbol claimed "removed" in the analysis, verify it
    is truly absent from the target branch (not just moved within the file):
-   git show {TARGET_UPSTREAM_REF}:PATH | grep SYMBOL
+   `git show {TARGET_UPSTREAM_REF}:PATH | grep SYMBOL`
 8. For wrapped factory/context-creation paths, inspect implementation changes and identify
    new null-return preconditions, required context fields, or removed default/fallback behavior.
    An unchanged public signature is not proof of unchanged behavior.
