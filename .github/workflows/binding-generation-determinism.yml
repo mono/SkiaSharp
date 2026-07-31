@@ -4,33 +4,40 @@ on:
   push:
     branches:
       - main
+    # Keep this exact whitelist in sync with pull_request below. The generated
+    # files are inputs because generation preserves their XML documentation.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
-      - '.gitmodules'
-      - '.config/dotnet-tools.json'
-      - 'binding/lib*.json'
-      - 'build.cake'
+      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
+      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
+      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
+      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
+      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/libHarfBuzzSharp.json'
+      - 'binding/libSkiaSharp.Resources.json'
+      - 'binding/libSkiaSharp.SceneGraph.json'
+      - 'binding/libSkiaSharp.Skottie.json'
+      - 'binding/libSkiaSharp.json'
       - 'externals/skia'
       - 'global.json'
-      - 'scripts/VERSIONS.txt'
-      - 'scripts/infra/managed/interop.cake'
-      - 'scripts/infra/native/shared/native-shared.cake'
-      - 'scripts/infra/shared/shared.cake'
       - 'utils/generate.ps1'
       - 'utils/SkiaSharpGenerator/**'
   pull_request:
+    # Same automatic-trigger whitelist as push.
     paths:
       - '.github/workflows/binding-generation-determinism.yml'
-      - '.gitmodules'
-      - '.config/dotnet-tools.json'
-      - 'binding/lib*.json'
-      - 'build.cake'
+      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
+      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
+      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
+      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
+      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/libHarfBuzzSharp.json'
+      - 'binding/libSkiaSharp.Resources.json'
+      - 'binding/libSkiaSharp.SceneGraph.json'
+      - 'binding/libSkiaSharp.Skottie.json'
+      - 'binding/libSkiaSharp.json'
       - 'externals/skia'
       - 'global.json'
-      - 'scripts/VERSIONS.txt'
-      - 'scripts/infra/managed/interop.cake'
-      - 'scripts/infra/native/shared/native-shared.cake'
-      - 'scripts/infra/shared/shared.cake'
       - 'utils/generate.ps1'
       - 'utils/SkiaSharpGenerator/**'
   workflow_dispatch:
@@ -80,11 +87,13 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Restore tools
-        run: dotnet tool restore
+      - name: Sync Skia dependencies
+        working-directory: externals/skia
+        run: python tools/git-sync-deps
 
       - name: Generate bindings
-        run: dotnet cake --target=externals-interop
+        shell: pwsh
+        run: pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
 
       - name: Upload generated bindings
         uses: actions/upload-artifact@v4
