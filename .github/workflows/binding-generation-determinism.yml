@@ -1,0 +1,139 @@
+name: Tests - Binding Generation Determinism
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/binding-generation-determinism.yml'
+      - '.gitmodules'
+      - '.config/dotnet-tools.json'
+      - 'binding/lib*.json'
+      - 'build.cake'
+      - 'externals/skia'
+      - 'global.json'
+      - 'scripts/VERSIONS.txt'
+      - 'scripts/infra/managed/interop.cake'
+      - 'scripts/infra/native/shared/native-shared.cake'
+      - 'scripts/infra/shared/shared.cake'
+      - 'utils/generate.ps1'
+      - 'utils/SkiaSharpGenerator/**'
+  pull_request:
+    paths:
+      - '.github/workflows/binding-generation-determinism.yml'
+      - '.gitmodules'
+      - '.config/dotnet-tools.json'
+      - 'binding/lib*.json'
+      - 'build.cake'
+      - 'externals/skia'
+      - 'global.json'
+      - 'scripts/VERSIONS.txt'
+      - 'scripts/infra/managed/interop.cake'
+      - 'scripts/infra/native/shared/native-shared.cake'
+      - 'scripts/infra/shared/shared.cake'
+      - 'utils/generate.ps1'
+      - 'utils/SkiaSharpGenerator/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      GIT_SYNC_DEPS_SKIP_EMSDK: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            artifact: linux
+            os: ubuntu-latest
+          - name: macOS
+            artifact: macos
+            os: macos-latest
+          - name: Windows
+            artifact: windows
+            os: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Windows long paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+
+      - name: Initialize Skia submodule
+        run: git submodule update --init --recursive externals/skia
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Restore tools
+        run: dotnet tool restore
+
+      - name: Generate bindings
+        run: dotnet cake --target=externals-interop
+
+      - name: Upload generated bindings
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.artifact }}
+          path: output/generated
+          if-no-files-found: error
+          retention-days: 7
+
+  compare:
+    name: Compare generated bindings
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download generated bindings
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bindings-*
+          path: generated
+
+      - name: Compare outputs byte-for-byte
+        shell: bash
+        run: |
+          mkdir -p comparison
+          status=0
+          for candidate in macos windows; do
+            summary="comparison/linux-${candidate}.summary.txt"
+            detail="comparison/linux-${candidate}.diff"
+            if diff -qr "generated/bindings-linux" "generated/bindings-${candidate}" > "$summary"; then
+              rm "$summary"
+              echo "Linux and ${candidate} outputs are byte-for-byte identical."
+            else
+              status=1
+              echo "::error::Linux and ${candidate} binding outputs differ."
+              git diff --no-index --no-color --text \
+                "generated/bindings-linux" "generated/bindings-${candidate}" \
+                > "$detail" || true
+              cat "$summary"
+              cat "$detail"
+            fi
+          done
+          exit "$status"
+
+      - name: Upload determinism diff
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binding-determinism-diff
+          path: comparison
+          if-no-files-found: error
+          retention-days: 7
