@@ -117,7 +117,7 @@ namespace SkiaSharpGenerator
 				return (Method: m.Name, Signature: returnSig + paramsSig);
 			});
 
-			return methods.OrderBy(s => s.Signature).ToArray();
+			return methods.OrderBy(s => s.Signature, StringComparer.Ordinal).ToArray();
 
 			static string GetSignature(MethodDefinition method, TypeReference ret)
 			{

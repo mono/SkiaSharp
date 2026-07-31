@@ -1,0 +1,189 @@
+name: Tests - Binding Generation Determinism
+
+on:
+  push:
+    branches:
+      - main
+    # Keep this exact whitelist in sync with pull_request below. The generated
+    # files are inputs because generation preserves their XML documentation.
+    paths:
+      - '.github/workflows/binding-generation-determinism.yml'
+      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
+      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
+      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
+      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
+      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/libHarfBuzzSharp.json'
+      - 'binding/libSkiaSharp.Resources.json'
+      - 'binding/libSkiaSharp.SceneGraph.json'
+      - 'binding/libSkiaSharp.Skottie.json'
+      - 'binding/libSkiaSharp.json'
+      - 'externals/skia'
+      - 'global.json'
+      - 'utils/generate.ps1'
+      - 'utils/SkiaSharpGenerator/**'
+  pull_request:
+    # Same automatic-trigger whitelist as push.
+    paths:
+      - '.github/workflows/binding-generation-determinism.yml'
+      - 'binding/HarfBuzzSharp/HarfBuzzApi.generated.cs'
+      - 'binding/SkiaSharp.Resources/ResourcesApi.generated.cs'
+      - 'binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs'
+      - 'binding/SkiaSharp.Skottie/SkottieApi.generated.cs'
+      - 'binding/SkiaSharp/SkiaApi.generated.cs'
+      - 'binding/libHarfBuzzSharp.json'
+      - 'binding/libSkiaSharp.Resources.json'
+      - 'binding/libSkiaSharp.SceneGraph.json'
+      - 'binding/libSkiaSharp.Skottie.json'
+      - 'binding/libSkiaSharp.json'
+      - 'externals/skia'
+      - 'global.json'
+      - 'utils/generate.ps1'
+      - 'utils/SkiaSharpGenerator/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    name: Generate (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    env:
+      GIT_SYNC_DEPS_SKIP_EMSDK: '1'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux
+            artifact: linux
+            os: ubuntu-latest
+          - name: macOS
+            artifact: macos
+            os: macos-latest
+          - name: Windows
+            artifact: windows
+            os: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Windows long paths
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: git config --global core.longpaths true
+
+      - name: Initialize Skia submodule
+        run: git submodule update --init --recursive externals/skia
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Sync Skia dependencies
+        working-directory: externals/skia
+        run: python tools/git-sync-deps
+
+      - name: Generate bindings
+        shell: pwsh
+        run: pwsh -NoLogo -NoProfile -File ./utils/generate.ps1
+
+      - name: Upload generated bindings
+        uses: actions/upload-artifact@v4
+        with:
+          name: bindings-${{ matrix.artifact }}
+          path: output/generated
+          if-no-files-found: error
+          retention-days: 7
+
+  compare:
+    name: Compare generated bindings
+    needs: generate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download generated bindings
+        uses: actions/download-artifact@v4
+        with:
+          pattern: bindings-*
+          path: generated
+
+      - name: Compare outputs byte-for-byte
+        shell: bash
+        run: |
+          mkdir -p comparison
+          status=0
+          for candidate in macos windows; do
+            summary="comparison/linux-${candidate}.summary.txt"
+            detail="comparison/linux-${candidate}.diff"
+            if diff -qr "generated/bindings-linux" "generated/bindings-${candidate}" > "$summary"; then
+              rm "$summary"
+              echo "Linux and ${candidate} outputs are byte-for-byte identical."
+            else
+              status=1
+              echo "::error::Linux and ${candidate} binding outputs differ."
+              git diff --no-index --no-color --text \
+                "generated/bindings-linux" "generated/bindings-${candidate}" \
+                > "$detail" || true
+              cat "$summary"
+              cat "$detail"
+            fi
+          done
+          exit "$status"
+
+      - name: Compare checked-in Skia bindings
+        shell: bash
+        run: |
+          status=0
+          check_freshness() {
+            name="$1"
+            committed="$2"
+            generated="generated/bindings-linux/${name}"
+            detail="comparison/committed-${name}.diff"
+
+            if cmp -s "$committed" "$generated"; then
+              echo "${committed} is current."
+            else
+              status=1
+              echo "::error file=${committed}::Checked-in binding differs from deterministic generation."
+              git diff --no-index --no-color --text "$committed" "$generated" \
+                > "$detail" || true
+              cat "$detail"
+            fi
+          }
+
+          # HarfBuzz bindings are versioned separately from Skia's DEPS checkout,
+          # so freshness is enforced for the four Skia outputs only.
+          check_freshness \
+            "SkiaApi.generated.cs" \
+            "binding/SkiaSharp/SkiaApi.generated.cs"
+          check_freshness \
+            "SkottieApi.generated.cs" \
+            "binding/SkiaSharp.Skottie/SkottieApi.generated.cs"
+          check_freshness \
+            "SceneGraphApi.generated.cs" \
+            "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs"
+          check_freshness \
+            "ResourcesApi.generated.cs" \
+            "binding/SkiaSharp.Resources/ResourcesApi.generated.cs"
+
+          exit "$status"
+
+      - name: Upload binding comparison diff
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: binding-generation-diff
+          path: comparison
+          if-no-files-found: error
+          retention-days: 7
