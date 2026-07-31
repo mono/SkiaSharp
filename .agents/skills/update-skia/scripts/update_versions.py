@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""Update Skia version surfaces and exact source registrations as one operation."""
+"""Synchronize Skia version and source metadata during Phases 06 and 10.
+
+Milestone, ABI, package, pipeline, submodule, and component-governance values
+must describe the same tested update. This helper changes them together and is
+rerun after final native adaptations so manifests record the exact tested SHAs.
+"""
 
 import argparse
 import json

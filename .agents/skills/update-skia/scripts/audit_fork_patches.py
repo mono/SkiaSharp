@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""Compare the fork's old and new patch sets and require reviewed dispositions."""
+"""Audit mono/skia fork-patch integrity during Phases 05 and 10.
+
+The upstream merge may silently drop or alter a fork patch without producing a
+conflict. This helper compares the old and new upstream-relative fork deltas,
+then requires an evidence-backed disposition for every changed patch.
+"""
 
 import argparse
 import hashlib

@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 
-"""Regenerate all maintained bindings and report native functions needing wrappers."""
+"""Regenerate and review the maintained native bindings during Phase 08.
+
+This helper runs every generator configuration, normalizes function-region
+ordering across hosts, and reports new P/Invoke functions that may need a
+hand-written wrapper decision.
+"""
 
 import argparse
 import shutil
