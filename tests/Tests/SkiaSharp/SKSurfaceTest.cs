@@ -4,6 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class SKSurfaceTest : SKTest
 	{
 		private void DrawGpuSurface(Action<SKSurface, SKImageInfo> draw)
