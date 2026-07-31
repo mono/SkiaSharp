@@ -6,7 +6,9 @@ namespace SkiaSharp.Tests
 {
 	internal class Xlib
 	{
-		private const string libX11 = "libX11";
+		// The versioned SONAME — see the note in Glx.cs. A runtime-only host ships
+		// libX11.so.6 but not the unversioned libX11.so linker symlink.
+		private const string libX11 = "libX11.so.6";
 
 		public const int None = 0;
 		public const int True = 1;
@@ -14,6 +16,8 @@ namespace SkiaSharp.Tests
 
 		[DllImport(libX11)]
 		public extern static IntPtr XOpenDisplay(string display_name);
+		[DllImport(libX11)]
+		public extern static int XCloseDisplay(IntPtr display);
 		[DllImport(libX11)]
 		public extern static int XFree(IntPtr data);
 		[DllImport(libX11)]

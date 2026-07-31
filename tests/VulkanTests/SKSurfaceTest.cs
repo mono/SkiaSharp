@@ -50,6 +50,14 @@ namespace SkiaSharp.Vulkan.Tests
 		{
 			using var ctx = CreateSharpVkContext();
 
+			using var extensions = new GRVkExtensions();
+			extensions.Initialize(
+				ctx.GetProc,
+				(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
+				(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
+				ctx.InstanceExtensions,
+				ctx.DeviceExtensions);
+
 			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
 				VkInstance = ctx.Instance,
@@ -57,7 +65,10 @@ namespace SkiaSharp.Vulkan.Tests
 				VkDevice = ctx.Device,
 				VkQueue = ctx.GraphicsQueue,
 				GraphicsQueueIndex = ctx.GraphicsFamily,
-				GetProcedureAddress = ctx.SharpVkGetProc
+				MaxAPIVersion = ctx.ApiVersion,
+				Extensions = extensions,
+				VkPhysicalDeviceFeatures = ctx.Features,
+				GetProcedureAddress = ctx.SharpVkGetProc,
 			};
 
 			Assert.NotNull(grVkBackendContext);

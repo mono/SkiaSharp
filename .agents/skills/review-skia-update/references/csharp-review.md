@@ -57,6 +57,8 @@ Check `tests/Tests/` for:
 - No newly skipped tests. GPU coverage is defined by the existing host/platform
   `GpuPolicy`; missing hardware or a failed bring-up for a required backend is a failure.
   Flag any PR that adds or expands a skip instead of fixing the environment or backend.
+  The only permitted GPU skips are the platform matrix or a declared
+  `SKIASHARP_TEST_SKIP_GPU` opt-out.
 
 ## Output Format
 
