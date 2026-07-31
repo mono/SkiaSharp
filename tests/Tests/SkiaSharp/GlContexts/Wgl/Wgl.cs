@@ -133,6 +133,41 @@ namespace SkiaSharp.Tests
 			var dummyGLRC = Wgl.wglCreateContext(dummyDC);
 			if (dummyGLRC == IntPtr.Zero)
 			{
+				// GDI's SetPixelFormat does not always reach the driver. A Mesa ICD
+				// (how a headless CI agent gets OpenGL at all) reports its formats
+				// through ChoosePixelFormat and lets SetPixelFormat return true, yet
+				// never learns which one was picked, so wglCreateContext then fails
+				// with ERROR_INVALID_PIXEL_FORMAT. opengl32's own wglSetPixelFormat
+				// is the entry point that does reach the driver.
+				//
+				// Only on that failure, though: a real hardware ICD wants the GDI
+				// path and refuses a context when the format was set this way. A
+				// pixel format can be set once per DC, so this needs a fresh one.
+				User32.ReleaseDC(dummyWND, dummyDC);
+				User32.DestroyWindow(dummyWND);
+
+				dummyWND = User32.CreateWindowEx(
+					User32.WS_EX_CLIENTEDGE,
+					"DummyClass",
+					"DummyWindow",
+					WindowStyles.WS_CLIPSIBLINGS | WindowStyles.WS_CLIPCHILDREN | WindowStyles.WS_SYSMENU,
+					0, 0,
+					windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+					IntPtr.Zero, IntPtr.Zero, Kernel32.CurrentModuleHandle, IntPtr.Zero);
+				if (dummyWND == IntPtr.Zero)
+				{
+					User32.UnregisterClass("DummyClass", Kernel32.CurrentModuleHandle);
+					throw new Exception("Could not create dummy window.");
+				}
+
+				dummyDC = User32.GetDC(dummyWND);
+				dummyFormat = Wgl.wglChoosePixelFormat(dummyDC, ref dummyPFD);
+				Wgl.wglSetPixelFormat(dummyDC, dummyFormat, ref dummyPFD);
+
+				dummyGLRC = Wgl.wglCreateContext(dummyDC);
+			}
+			if (dummyGLRC == IntPtr.Zero)
+			{
 				throw new Exception("Could not create dummy GL context.");
 			}
 			Wgl.wglMakeCurrent(dummyDC, dummyGLRC);
@@ -202,6 +237,14 @@ namespace SkiaSharp.Tests
 
 		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetCurrentDC();
+
+		// opengl32's own pixel-format entry points, which reach an ICD that GDI's
+		// SetPixelFormat does not — see the fallback in the static constructor.
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern int wglChoosePixelFormat(IntPtr hDC, ref PIXELFORMATDESCRIPTOR pfd);
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern bool wglSetPixelFormat(IntPtr hDC, int format, ref PIXELFORMATDESCRIPTOR pfd);
 
 		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetCurrentContext();

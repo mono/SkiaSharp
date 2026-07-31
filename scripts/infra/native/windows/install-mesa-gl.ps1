@@ -82,6 +82,8 @@ public static class MesaGlVerifier
         int x, int y, int w, int h, IntPtr parent, IntPtr menu, IntPtr inst, IntPtr param);
     [DllImport("gdi32.dll")] static extern int ChoosePixelFormat(IntPtr hdc, ref PIXELFORMATDESCRIPTOR pfd);
     [DllImport("gdi32.dll", SetLastError = true)] static extern bool SetPixelFormat(IntPtr hdc, int fmt, ref PIXELFORMATDESCRIPTOR pfd);
+    [DllImport(OGL)] static extern int wglChoosePixelFormat(IntPtr hdc, ref PIXELFORMATDESCRIPTOR pfd);
+    [DllImport(OGL, SetLastError = true)] static extern bool wglSetPixelFormat(IntPtr hdc, int fmt, ref PIXELFORMATDESCRIPTOR pfd);
     [DllImport("gdi32.dll")] static extern int DescribePixelFormat(IntPtr hdc, int fmt, uint bytes, ref PIXELFORMATDESCRIPTOR pfd);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern int GetModuleFileNameW(IntPtr module, [Out] char[] buffer, int size);
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool GetModuleHandleExW(int flags, string name, out IntPtr module);
@@ -177,7 +179,31 @@ public static class MesaGlVerifier
             return "SetPixelFormat failed (" + Marshal.GetLastWin32Error() + ")";
 
         var rc = wglCreateContext(dc);
-        diagnostics = Diagnostics(dc) + "; chosenFormat=" + format;
+        var path = "gdi32";
+        if (rc == IntPtr.Zero)
+        {
+            // Same fallback the suite's Wgl bootstrap uses: GDI's SetPixelFormat
+            // does not reach a Mesa ICD, so the driver never learns which format
+            // was picked and wglCreateContext fails with ERROR_INVALID_PIXEL_FORMAT
+            // (2000). opengl32's own wglSetPixelFormat does reach it. A format can
+            // be set once per DC, so this needs a fresh window.
+            var retryHwnd = CreateWindowExW(0, "STATIC", "mesagl2", 0, 0, 0, 8, 8,
+                IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
+            if (retryHwnd == IntPtr.Zero)
+                return "wglCreateContext returned NULL (" + Marshal.GetLastWin32Error() + "), and the retry window could not be created";
+
+            dc = GetDC(retryHwnd);
+            format = wglChoosePixelFormat(dc, ref pfd);
+            if (format == 0)
+                return "wglChoosePixelFormat found no OpenGL pixel format";
+            if (!wglSetPixelFormat(dc, format, ref pfd))
+                return "wglSetPixelFormat failed (" + Marshal.GetLastWin32Error() + ")";
+
+            rc = wglCreateContext(dc);
+            path = "opengl32";
+        }
+
+        diagnostics = Diagnostics(dc) + "; chosenFormat=" + format + "; pixelFormatPath=" + path;
         if (rc == IntPtr.Zero)
             return "wglCreateContext returned NULL (" + Marshal.GetLastWin32Error() + ")";
         if (!wglMakeCurrent(dc, rc))
