@@ -83,6 +83,8 @@ Also write `$ARTIFACT_DIR/skia-dependency-decisions.md` before review. Account f
 versus target revision and enabled/commented-state difference, with a provisional preserve,
 accept-target, or compatibility-roll decision backed by source/fork evidence. Phase 05 finalizes
 this report during conflict resolution; Phase 07 updates it when a build disproves a decision.
+Treat enabled/commented state and revision choice as separate decisions: preserving the fork's
+dependency shape does not by itself prove that an upstream revision roll is safe.
 
 ## Phase 03 — independent discrepancy review
 

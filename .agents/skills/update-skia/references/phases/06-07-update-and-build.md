@@ -74,7 +74,13 @@ section. Commit each proven post-merge dependency/C API adaptation in mono/skia 
 explanatory commit.
 
 After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
-new or changed rows and require `--validate` to pass again.
+new or changed rows and require `--validate` to pass again. Reuse the exact Phase 05
+`python3 .agents/skills/update-skia/scripts/audit_fork_patches.py` command rather than searching
+for another copy of the helper.
+
+Before Phase 08, run `git -C externals/skia diff "$SKIA_SYNC_SKIA_BASE_SHA..HEAD" -- DEPS` and
+reconcile the main decision table with the built file. Rewrite any affected row and delete
+superseded provisional text; do not leave contradictory preserve/accept/compatibility conclusions.
 
 ## Gate
 

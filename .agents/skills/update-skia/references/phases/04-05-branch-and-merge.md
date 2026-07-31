@@ -91,7 +91,9 @@ changes, then verify the selected revision contains every required field/functio
 pin unconditionally is as unsafe as accepting every target pin.
 
 Update `$ARTIFACT_DIR/skia-dependency-decisions.md` with the final merged dispositions. Keep
-HarfBuzz on the fork revision; its update is a separate dependency workflow.
+HarfBuzz on the fork revision; its update is a separate dependency workflow. Replace provisional
+rows rather than appending a second conclusion. A row that says accept-target while merged `DEPS`
+retains the fork revision is a gate failure.
 
 ### Complete the merge
 
@@ -100,6 +102,8 @@ Before committing:
 - Verify added/deleted sources against GN build lists.
 - Verify C API and fork build targets survived.
 - Verify every conflict and fork patch has a recorded disposition.
+- Compare final `DEPS` against both the fork base and target, then confirm every dependency-decision
+  row names the revision and enabled/commented state actually present in the merged file.
 - Run `git diff --check` and confirm no unresolved paths remain.
 
 Create the required two-parent merge commit. Verify its parents are the selected mono/skia base and

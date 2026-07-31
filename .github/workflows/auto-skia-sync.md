@@ -157,28 +157,6 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Export resolved sync state
-    env:
-      CURRENT: ${{ needs.pre_activation.outputs.current }}
-      TARGET: ${{ needs.pre_activation.outputs.target }}
-      UPSTREAM_REF: ${{ needs.pre_activation.outputs.upstream_ref }}
-      IS_RELEASE: ${{ needs.pre_activation.outputs.is_release }}
-      BASE_BRANCH: ${{ needs.pre_activation.outputs.base_branch }}
-      SKIA_BASE_BRANCH: ${{ needs.pre_activation.outputs.skia_base_branch }}
-      HEAD_BRANCH: ${{ needs.pre_activation.outputs.head_branch }}
-    run: |
-      {
-        printf 'SKIA_SYNC_AUTOMATION=1\n'
-        printf 'SKIA_SYNC_CURRENT=%s\n' "$CURRENT"
-        printf 'SKIA_SYNC_TARGET=%s\n' "$TARGET"
-        printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$UPSTREAM_REF"
-        printf 'SKIA_SYNC_IS_RELEASE=%s\n' "$IS_RELEASE"
-        printf 'SKIA_SYNC_BASE_BRANCH=%s\n' "$BASE_BRANCH"
-        printf 'SKIA_SYNC_SKIA_BASE_BRANCH=%s\n' "$SKIA_BASE_BRANCH"
-        printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$HEAD_BRANCH"
-        printf 'SKIA_SYNC_PLATFORM=linux\n'
-        printf 'SKIA_SYNC_ARCH=x64\n'
-      } >> "$GITHUB_ENV"
   - name: Align submodule to the base branch
     # Same target resolution as the pre_activation detect step (see there). The agent job
     # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
@@ -197,7 +175,19 @@ steps:
       set -a; . "$OUT"; set +a
       bash .github/scripts/skia-sync-align-submodule.sh
       bash .github/scripts/skia-sync-prefetch-upstream.sh
-      echo "SKIA_SYNC_SKIA_BASE_SHA=$(git -C externals/skia rev-parse HEAD)" >> "$GITHUB_ENV"
+      {
+        printf 'SKIA_SYNC_AUTOMATION=1\n'
+        printf 'SKIA_SYNC_CURRENT=%s\n' "$current"
+        printf 'SKIA_SYNC_TARGET=%s\n' "$target"
+        printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$upstream_ref"
+        printf 'SKIA_SYNC_IS_RELEASE=%s\n' "$is_release"
+        printf 'SKIA_SYNC_BASE_BRANCH=%s\n' "$base_branch"
+        printf 'SKIA_SYNC_SKIA_BASE_BRANCH=%s\n' "$skia_base_branch"
+        printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
+        printf 'SKIA_SYNC_PLATFORM=linux\n'
+        printf 'SKIA_SYNC_ARCH=x64\n'
+        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
+      } >> "$GITHUB_ENV"
   - name: Compute native cache key
     id: native-cache-key
     run: |

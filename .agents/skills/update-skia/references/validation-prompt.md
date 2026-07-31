@@ -41,7 +41,9 @@ Please validate by (run from `externals/skia`):
    An unchanged public signature is not proof of unchanged behavior.
 10. Recompute the dependency diff from the fork base, not from the previous upstream milestone:
    `git diff origin/{SKIA_BASE_BRANCH}..{TARGET_UPSTREAM_REF} -- DEPS`.
-   Confirm the decision report accounts for every revision and enabled/commented-state difference.
+   Confirm the decision report accounts separately for every revision and enabled/commented-state
+   difference. Flag any accept-target decision whose only evidence is that the dependency remains
+   active or that the target revision is newer.
 11. For every compatibility-sensitive decision, and every dependency roll in `{DIFF_RANGE}` that
    also changes consuming source, inspect the roll commit with
    `git log -S "<target revision>" {DIFF_RANGE} -- DEPS`. Verify the chosen revision exposes the
