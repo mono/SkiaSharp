@@ -336,10 +336,10 @@ satisfies the final test gate.
 > For **GPU tests** the rule is enforced by `GpuPolicy` — see
 > [documentation/dev/gpu-test-policy.md](documentation/dev/gpu-test-policy.md).
 > A backend is *required* on every platform we build it for; "no device", "no
-> driver", "no ICD" and "no display" are **failures**. The only legitimate skips
-> are the platform matrix (Metal off Apple, Vulkan on macOS) and an explicit
-> `SKIASHARP_TEST_SKIP_GPU` opt-out for a specific agent. Never wrap a GPU
-> bring-up in `try/catch { Assert.Skip }`.
+> driver", "no ICD" and "no display" are **failures**. Skips are owned by the
+> existing platform/host policy; an agent investigating or fixing a failure must
+> not add or expand a GPU skip. Never wrap a GPU bring-up in
+> `try/catch { Assert.Skip }`.
 >
 > For **non-GPU** tests, skipping is acceptable only for a genuine capability
 > gap that is checked explicitly (no system font manager, no XPS support, no

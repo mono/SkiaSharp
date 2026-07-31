@@ -75,8 +75,8 @@ An update is complete only when:
 - Never hand-edit `*.generated.cs`; regenerate it.
 - Keep public managed ABI additive.
 - A focused project test is diagnostic only; it never satisfies the final gate.
-- GPU bring-up failures are test failures unless the platform table or an explicit
-  `SKIASHARP_TEST_SKIP_GPU` agent opt-out declares that backend unavailable.
+- GPU bring-up failures are test failures. The validation environment must provide every backend
+  required by `GpuPolicy` for its platform.
 - Diagnose failures from repository evidence. Do not add one-off compiler/GN flags, skip tests,
   weaken assertions, or encode milestone-specific answers to make one run green.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.

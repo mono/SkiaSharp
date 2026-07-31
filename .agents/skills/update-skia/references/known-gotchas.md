@@ -206,16 +206,16 @@ Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Ever
 and all tests must pass. Do not filter the solution because projects with zero matches fail.
 After the solution identifies a failing host, use that host's project for focused diagnostic
 runs, then rerun the unfiltered solution. A focused project run is never final validation.
-GPU backends are gated by `GpuPolicy`: failed bring-up is a failure unless the platform table or
-an explicit `SKIASHARP_TEST_SKIP_GPU` agent opt-out declares the skip.
+GPU backends are gated by `GpuPolicy`: every backend required on the validation platform must
+initialize and pass.
 
-### 24. Vulkan Tests Are a Separate Satellite
+### 24. Satellite Test Hosts Are Part of the Gate
 
-The base test host does not contain the Vulkan tests. Always run
-`tests/SkiaSharp.Tests.Console.slnx`, which includes the separate Vulkan satellite, for initial
-and final validation. A Vulkan project filter is permitted only after the solution exposes a
-Vulkan failure and must be followed by another unfiltered solution run. Confirm the final
-solution output reports passing Vulkan tests. A green base-host run proves nothing about Vulkan.
+The base test host does not contain every maintained test. Always run
+`tests/SkiaSharp.Tests.Console.slnx`, which includes singleton, Vulkan, Direct3D, and future
+satellite hosts, for initial and final validation. A project filter is permitted only after the
+solution exposes a failure in that host and must be followed by another unfiltered solution run.
+Confirm the final output reports results for every maintained host.
 
 ---
 

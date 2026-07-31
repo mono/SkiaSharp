@@ -35,10 +35,9 @@ Use a host that can execute every maintained test host and every backend `GpuPol
 Verify required runtime prerequisites before running tests. In deterministic automation, pin
 software implementations where practical instead of relying on opportunistic hardware discovery.
 
-Failed GPU bring-up is a test failure. Use `SKIASHARP_TEST_SKIP_GPU` only for a backend the agent
-explicitly cannot provide; name each backend rather than catching an exception. If the local host
-cannot execute the update's required GPU backends, use the provisioned workflow instead of
-claiming success from runtime skips.
+Failed GPU bring-up is a test failure. If a local host cannot execute every backend required by
+`GpuPolicy` for that platform, use the provisioned workflow instead of claiming successful
+validation from incomplete coverage.
 
 ### Initial full solution
 

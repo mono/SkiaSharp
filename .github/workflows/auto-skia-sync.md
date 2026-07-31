@@ -115,7 +115,6 @@ env:
   CC: clang
   CXX: clang++
   SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
-  SKIASHARP_TEST_SKIP_GPU: "ganesh-gl"
 permissions:
   contents: read
   pull-requests: read
@@ -250,7 +249,7 @@ pre-agent-steps:
     # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
     run: |
       sudo apt-get update -qq
-      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts mesa-vulkan-drivers vulkan-tools
+      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
       LAVAPIPE_ICD=$(dpkg -L mesa-vulkan-drivers | grep -E '/lvp_icd(\.x86_64)?\.json$' | head -n 1)
       if [ -z "$LAVAPIPE_ICD" ]; then
         echo "::error::mesa-vulkan-drivers did not install a lavapipe ICD manifest."
@@ -287,6 +286,25 @@ pre-agent-steps:
         exit 1
       fi
       echo "Verified deterministic software Vulkan through $VK_DRIVER_FILES"
+  - name: Verify Mesa software OpenGL
+    run: |
+      set -euo pipefail
+      nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
+      sleep 3
+      {
+        echo "DISPLAY=:99"
+        echo "LIBGL_ALWAYS_SOFTWARE=1"
+        echo "GALLIUM_DRIVER=softpipe"
+      } >> "$GITHUB_ENV"
+
+      DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=softpipe \
+        glxinfo -B | tee /tmp/glxinfo.txt
+      if ! grep -Eiq 'renderer string:.*softpipe' /tmp/glxinfo.txt; then
+        cat /tmp/xvfb.log
+        echo "::error::Mesa software OpenGL did not initialize with softpipe."
+        exit 1
+      fi
+      echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
   - name: Build native base for incremental reuse
     run: |
       set -euo pipefail
@@ -341,10 +359,9 @@ the supplied values.
   recorded base-upstream SHA are fetched.
 - The exact base native tree was built before the agent. Reuse its hydrated dependencies and Ninja
   objects, but still perform the mandatory merged-target source build.
-- Clang, libc++, fontconfig/fonts, Ninja, Android workload, and deterministic Mesa lavapipe are
-  installed. The lavapipe ICD is pinned so the Vulkan backends required by `GpuPolicy` execute
-  deterministically. This headless agent explicitly opts out only `ganesh-gl`, for which it
-  provisions no GL/X stack.
+- Clang, libc++, fontconfig/fonts, Ninja, Android workload, Xvfb, and Mesa software GL/Vulkan are
+  installed. Mesa softpipe and the lavapipe ICD are pinned so every Linux backend required by
+  `GpuPolicy` executes deterministically.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 
