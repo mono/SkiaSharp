@@ -31,9 +31,12 @@
 # (see documentation/dev/gpu-test-policy.md), never inferred from a failure.
 
 param (
-    # Re-entry point used to prove the 32-bit deployment: the script relaunches
-    # itself under the in-box 32-bit PowerShell, which cannot install anything.
-    [switch] $VerifyOnly
+    # Re-entry point used to prove a deployment: the script relaunches itself,
+    # once per candidate driver and once under the in-box 32-bit PowerShell,
+    # because a process can only ever bring up one OpenGL context. Neither
+    # re-entry installs anything.
+    [switch] $VerifyOnly,
+    [string] $Driver = 'default'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -43,11 +46,16 @@ $ErrorActionPreference = 'Stop'
 $mesaVersion = '26.1.3'
 $mesaSha     = '6dd431f4620cea73970b13e3ffa94f721f2a3924306b8a4283c97648cdb6eb9c'
 
-# softpipe, not llvmpipe: llvmpipe's LLVM shader JIT segfaults compiling the
-# fragment shader Skia generates for a runtime blender, taking the whole test
-# host with it. Reproduced on Mesa 25.2 (Linux, LLVM 20) and 26.1 (Windows,
-# LLVM 22); softpipe runs the identical tests green on both. See #4604.
-$galliumDriver = 'softpipe'
+# Candidate gallium drivers, in the order they are tried; the first that brings
+# a context up wins and is exported for the test step.
+#
+# softpipe leads, not llvmpipe: llvmpipe's LLVM shader JIT segfaults compiling
+# the fragment shader Skia generates for a runtime blender, taking the whole
+# test host with it. Reproduced on Mesa 25.2 (Linux, LLVM 20) and 26.1 (Windows,
+# LLVM 22); softpipe runs the identical tests green on both. See #4604. The
+# others are here so a host where softpipe cannot come up still has a chance,
+# and so the log says what each one did.
+$galliumDrivers = @('softpipe', 'llvmpipe', 'd3d12', 'default')
 
 # ---------------------------------------------------------------------------
 # The verifier: brings up a WGL context exactly as WglContext does, and reports
@@ -62,7 +70,7 @@ public static class MesaGlVerifier
 {
     const string OGL = "opengl32.dll";
 
-    [DllImport(OGL)] static extern IntPtr wglCreateContext(IntPtr hdc);
+    [DllImport(OGL, SetLastError = true)] static extern IntPtr wglCreateContext(IntPtr hdc);
     [DllImport(OGL)] static extern bool wglMakeCurrent(IntPtr hdc, IntPtr hrc);
     [DllImport(OGL)] static extern bool wglDeleteContext(IntPtr hrc);
     [DllImport(OGL)] static extern IntPtr wglGetProcAddress([MarshalAs(UnmanagedType.LPStr)] string n);
@@ -74,6 +82,9 @@ public static class MesaGlVerifier
         int x, int y, int w, int h, IntPtr parent, IntPtr menu, IntPtr inst, IntPtr param);
     [DllImport("gdi32.dll")] static extern int ChoosePixelFormat(IntPtr hdc, ref PIXELFORMATDESCRIPTOR pfd);
     [DllImport("gdi32.dll", SetLastError = true)] static extern bool SetPixelFormat(IntPtr hdc, int fmt, ref PIXELFORMATDESCRIPTOR pfd);
+    [DllImport("gdi32.dll")] static extern int DescribePixelFormat(IntPtr hdc, int fmt, uint bytes, ref PIXELFORMATDESCRIPTOR pfd);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern int GetModuleFileNameW(IntPtr module, [Out] char[] buffer, int size);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)] static extern bool GetModuleHandleExW(int flags, string name, out IntPtr module);
 
     [StructLayout(LayoutKind.Sequential)]
     struct PIXELFORMATDESCRIPTOR
@@ -95,19 +106,58 @@ public static class MesaGlVerifier
         return p == IntPtr.Zero ? null : Marshal.PtrToStringAnsi(p);
     }
 
+    static string ModulePath(string name)
+    {
+        IntPtr module;
+        if (!GetModuleHandleExW(0, name, out module) || module == IntPtr.Zero)
+            return "<not loaded>";
+        var buffer = new char[520];
+        var n = GetModuleFileNameW(module, buffer, buffer.Length);
+        return new string(buffer, 0, n);
+    }
+
+    /// <summary>
+    /// Which OpenGL implementation actually answered. mesadrv.dll being loaded is
+    /// the proof that the MSOGL registration took effect; the pixel-format count
+    /// separates Mesa (four figures) from the in-box generic driver (a couple of
+    /// dozen). Never throws -- this runs on the failure path too.
+    /// </summary>
+    public static string Diagnostics(IntPtr dc)
+    {
+        var report = "opengl32=" + ModulePath("opengl32.dll")
+                   + "; mesadrv=" + ModulePath("mesadrv.dll")
+                   + "; libgallium_wgl=" + ModulePath("libgallium_wgl.dll");
+
+        if (dc != IntPtr.Zero)
+        {
+            var pfd = new PIXELFORMATDESCRIPTOR();
+            var count = DescribePixelFormat(dc, 1, (uint)Marshal.SizeOf(typeof(PIXELFORMATDESCRIPTOR)), ref pfd);
+            report += "; pixelFormats=" + count;
+        }
+
+        return report;
+    }
+
     // Returns null on success, or a description of what went wrong.
-    public static string Verify(out string vendor, out string renderer, out string version, out string extensions)
+    public static string Verify(out string vendor, out string renderer, out string version, out string extensions, out string diagnostics)
     {
         vendor = renderer = version = extensions = null;
+        diagnostics = null;
 
         var hwnd = CreateWindowExW(0, "STATIC", "mesagl", 0, 0, 0, 8, 8,
             IntPtr.Zero, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero);
         if (hwnd == IntPtr.Zero)
+        {
+            diagnostics = Diagnostics(IntPtr.Zero);
             return "CreateWindowEx failed (" + Marshal.GetLastWin32Error() + ")";
+        }
 
         var dc = GetDC(hwnd);
         if (dc == IntPtr.Zero)
+        {
+            diagnostics = Diagnostics(IntPtr.Zero);
             return "GetDC failed";
+        }
 
         var pfd = new PIXELFORMATDESCRIPTOR
         {
@@ -120,14 +170,16 @@ public static class MesaGlVerifier
         };
 
         var format = ChoosePixelFormat(dc, ref pfd);
+        diagnostics = Diagnostics(dc) + "; chosenFormat=" + format;
         if (format == 0)
             return "ChoosePixelFormat found no OpenGL pixel format";
         if (!SetPixelFormat(dc, format, ref pfd))
             return "SetPixelFormat failed (" + Marshal.GetLastWin32Error() + ")";
 
         var rc = wglCreateContext(dc);
+        diagnostics = Diagnostics(dc) + "; chosenFormat=" + format;
         if (rc == IntPtr.Zero)
-            return "wglCreateContext returned NULL";
+            return "wglCreateContext returned NULL (" + Marshal.GetLastWin32Error() + ")";
         if (!wglMakeCurrent(dc, rc))
             return "wglMakeCurrent failed";
 
@@ -149,46 +201,76 @@ public static class MesaGlVerifier
 }
 '@
 
-function Invoke-Verification {
-    $arch = if ([IntPtr]::Size -eq 8) { 'x64' } else { 'x86' }
+function Test-GlDriver {
+    # A single attempt with one gallium driver selected. Returns the driver name
+    # on success and $null on failure, reporting either way. A GL context can be
+    # created only once per process, so each attempt runs in its own child.
+    param (
+        [Parameter(Mandatory)] [string] $Driver,
+        [Parameter(Mandatory)] [string] $Arch
+    )
+
+    $label = if ($Driver -eq 'default') { '<mesa default>' } else { $Driver }
 
     if (-not ('MesaGlVerifier' -as [type])) {
         Add-Type -TypeDefinition $verifierSource -Language CSharp | Out-Null
     }
 
-    $vendor = $renderer = $version = $extensions = $null
-    $failure = [MesaGlVerifier]::Verify([ref] $vendor, [ref] $renderer, [ref] $version, [ref] $extensions)
+    if ($Driver -eq 'default') { Remove-Item Env:GALLIUM_DRIVER -ErrorAction SilentlyContinue } else { $env:GALLIUM_DRIVER = $Driver }
+
+    # The agents have no GPU, and this is the hint Mesa reads to keep a layered
+    # driver (d3d12) on a software device rather than looking for hardware. It is
+    # a no-op for softpipe and llvmpipe, which are software either way, and it is
+    # what the Linux leg already sets.
+    $env:LIBGL_ALWAYS_SOFTWARE = '1'
+
+    $vendor = $renderer = $version = $extensions = $diagnostics = $null
+    $failure = [MesaGlVerifier]::Verify(
+        [ref] $vendor, [ref] $renderer, [ref] $version, [ref] $extensions, [ref] $diagnostics)
+
+    Write-Host "  [$Arch/$label] $diagnostics"
     if ($failure) {
-        throw "OpenGL bring-up failed for $arch after provisioning Mesa: $failure"
+        Write-Host "  [$Arch/$label] FAILED: $failure"
+        return $null
     }
 
-    Write-Host "  [$arch] GL_VENDOR   : $vendor"
-    Write-Host "  [$arch] GL_RENDERER : $renderer"
-    Write-Host "  [$arch] GL_VERSION  : $version"
+    Write-Host "  [$Arch/$label] GL_VENDOR   : $vendor"
+    Write-Host "  [$Arch/$label] GL_RENDERER : $renderer"
+    Write-Host "  [$Arch/$label] GL_VERSION  : $version"
 
     # An unprovisioned agent answers "Microsoft Corporation" / "GDI Generic" /
     # "1.1.0", which is precisely the state this script exists to replace.
     if ($vendor -notmatch 'Mesa|VMware|Brian Paul') {
-        throw "Expected the Mesa ICD to answer for $arch, got vendor '$vendor' / renderer '$renderer'. " +
-              "The MSOGL registration did not take effect."
+        Write-Host "  [$Arch/$label] FAILED: expected Mesa to answer, got vendor '$vendor' / renderer '$renderer'."
+        return $null
     }
 
     # WglContext needs both: it picks a format with wglChoosePixelFormatARB and
     # renders into a pbuffer.
     foreach ($required in @('WGL_ARB_pixel_format', 'WGL_ARB_pbuffer')) {
         if ($extensions -notmatch [regex]::Escape($required)) {
-            throw "The $arch OpenGL driver does not expose $required, which WglContext requires."
+            Write-Host "  [$Arch/$label] FAILED: driver does not expose $required, which WglContext requires."
+            return $null
         }
     }
-    Write-Host "  [$arch] WGL_ARB_pixel_format and WGL_ARB_pbuffer present"
+
+    Write-Host "  [$Arch/$label] WGL_ARB_pixel_format and WGL_ARB_pbuffer present"
+    return $label
+}
+
+function Invoke-Verification {
+    # One attempt, in this process, with the driver this invocation was given.
+    $arch = if ([IntPtr]::Size -eq 8) { 'x64' } else { 'x86' }
+    if (Test-GlDriver -Driver $Driver -Arch $arch) { return }
+    throw "OpenGL bring-up failed for $arch."
 }
 
 # ---------------------------------------------------------------------------
-# Verification re-entry (32-bit relaunch), before any installation work.
+# Verification re-entry, before any installation work. A process can bring up
+# only one OpenGL context, so every attempt is its own child.
 # ---------------------------------------------------------------------------
 
 if ($VerifyOnly) {
-    $env:GALLIUM_DRIVER = $galliumDriver
     Invoke-Verification
     return
 }
@@ -265,12 +347,13 @@ $targets = @(
 )
 
 foreach ($t in $targets) {
+    if (-not (Test-Path $t.SystemDir)) {
+        throw "Missing system directory: $($t.SystemDir)"
+    }
+
     $src = Join-Path $extractDir "$($t.Arch)\libgallium_wgl.dll"
     if (-not (Test-Path $src)) {
         throw "Mesa $mesaVersion has no $($t.Arch)\libgallium_wgl.dll payload."
-    }
-    if (-not (Test-Path $t.SystemDir)) {
-        throw "Missing system directory: $($t.SystemDir)"
     }
 
     $archDest = Join-Path $dest $t.Arch
@@ -279,6 +362,15 @@ foreach ($t in $targets) {
 
     Copy-Item -Path $src -Destination (Join-Path $t.SystemDir 'mesadrv.dll') -Force
     Write-Host "Installed the $($t.Arch) Mesa megadriver into $($t.SystemDir)\mesadrv.dll"
+
+    # The d3d12 gallium driver refuses to load without DirectX IL beside it, and
+    # Mesa's own system-wide deployment installs it for exactly that reason. It
+    # costs a megabyte and keeps that driver available as a fallback.
+    $dxil = Join-Path $extractDir "$($t.Arch)\dxil.dll"
+    if (Test-Path $dxil) {
+        Copy-Item -Path $dxil -Destination (Join-Path $t.SystemDir 'dxil.dll') -Force
+        Write-Host "Installed the $($t.Arch) DirectX IL redistributable into $($t.SystemDir)\dxil.dll"
+    }
 
     if (-not (Test-Path $t.Key)) { New-Item -Path $t.Key -Force | Out-Null }
     New-ItemProperty -Path $t.Key -Name 'DLL'           -PropertyType String -Value 'mesadrv.dll' -Force | Out-Null
@@ -290,26 +382,51 @@ foreach ($t in $targets) {
 
 Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
-# Select the driver for every later step in the job. Set in the process too, so
-# the verification below exercises the same driver the tests will.
-Write-Host "##vso[task.setvariable variable=GALLIUM_DRIVER]$galliumDriver"
-$env:GALLIUM_DRIVER = $galliumDriver
-
 # ---------------------------------------------------------------------------
-# Prove it, in both bitnesses.
+# Prove it, in both bitnesses. Each attempt is a child process because a process
+# can bring up only one OpenGL context, and every attempt is reported whether it
+# worked or not -- when none of them do, the log has to say why for each one.
 # ---------------------------------------------------------------------------
 
-Write-Host 'Verifying OpenGL ...'
-Invoke-Verification
+Write-Host 'Verifying OpenGL (x64) ...'
 
+$powershell64 = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
 $powershell32 = Join-Path $env:SystemRoot 'SysWOW64\WindowsPowerShell\v1.0\powershell.exe'
-if (Test-Path $powershell32) {
-    & $powershell32 -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -VerifyOnly
-    if ($LASTEXITCODE -ne 0) {
-        throw "The 32-bit OpenGL verification failed (exit $LASTEXITCODE)."
+foreach ($shell in @($powershell64, $powershell32)) {
+    if (-not (Test-Path $shell)) {
+        throw "Missing the Windows PowerShell needed to verify the driver: $shell"
     }
-} else {
-    throw "Missing the 32-bit Windows PowerShell needed to verify the x86 driver: $powershell32"
 }
 
-Write-Host "Mesa OpenGL ($galliumDriver) provisioned for x64 and x86; ganesh-gl will execute."
+$selected = $null
+foreach ($candidate in $galliumDrivers) {
+    & $powershell64 -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -VerifyOnly -Driver $candidate
+    if ($LASTEXITCODE -eq 0) {
+        $selected = $candidate
+        break
+    }
+}
+
+if ($null -eq $selected) {
+    throw "No Mesa gallium driver could bring up an OpenGL context on this agent. " +
+          "Tried: $($galliumDrivers -join ', '). " +
+          "See the per-driver diagnostics above."
+}
+
+$selectedLabel = if ($selected -eq 'default') { '<mesa default>' } else { $selected }
+Write-Host "Selected the $selectedLabel gallium driver."
+
+Write-Host 'Verifying OpenGL (x86) ...'
+& $powershell32 -NoProfile -ExecutionPolicy Bypass -File $PSCommandPath -VerifyOnly -Driver $selected
+if ($LASTEXITCODE -ne 0) {
+    throw "The x86 OpenGL verification failed with the $selectedLabel driver (exit $LASTEXITCODE)."
+}
+
+# Select the driver for every later step in the job. Mesa's own default needs no
+# variable, and setting an empty one would override nothing usefully.
+if ($selected -ne 'default') {
+    Write-Host "##vso[task.setvariable variable=GALLIUM_DRIVER]$selected"
+}
+Write-Host "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
+
+Write-Host "Mesa OpenGL ($selectedLabel) provisioned for x64 and x86; ganesh-gl will execute."
