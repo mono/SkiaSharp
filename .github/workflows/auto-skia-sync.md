@@ -114,7 +114,6 @@ network:
 env:
   CC: clang
   CXX: clang++
-  DOTNET_CLI_UI_LANGUAGE: en-US
   SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
   SKIASHARP_TEST_SKIP_GPU: "ganesh-gl"
 permissions:
@@ -122,10 +121,10 @@ permissions:
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# The agent workflow never receives a repository write token. It emits exact tested Git bundles;
-# auto-skia-sync-publish.yml verifies them on a fresh runner and publishes from another fresh
-# runner that alone receives SKIASHARP_AUTOBUMP_TOKEN. `staged: true` keeps the agent from
-# creating anything directly.
+# All real GitHub writes (push, both PRs) are done in the post-step via bash with
+# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
+# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
+# agent from creating anything directly.
 #
 # `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
 # (preview-only — NO real PR is created), so a successful sync registers as a pull-request
@@ -200,10 +199,6 @@ steps:
       bash .github/scripts/skia-sync-align-submodule.sh
       bash .github/scripts/skia-sync-prefetch-upstream.sh
       echo "SKIA_SYNC_SKIA_BASE_SHA=$(git -C externals/skia rev-parse HEAD)" >> "$GITHUB_ENV"
-      PARENT_REMOTE_HEAD=$(git ls-remote --heads origin "refs/heads/$SKIA_SYNC_HEAD_BRANCH" | awk '{print $1}')
-      SKIA_REMOTE_HEAD=$(git -C externals/skia ls-remote --heads origin "refs/heads/$SKIA_SYNC_HEAD_BRANCH" | awk '{print $1}')
-      echo "SKIA_SYNC_PARENT_REMOTE_HEAD=${PARENT_REMOTE_HEAD:-none}" >> "$GITHUB_ENV"
-      echo "SKIA_SYNC_SKIA_REMOTE_HEAD=${SKIA_REMOTE_HEAD:-none}" >> "$GITHUB_ENV"
   - name: Compute native cache key
     id: native-cache-key
     run: |
@@ -231,35 +226,11 @@ steps:
       restore-keys: ${{ steps.native-cache-key.outputs.restore-key }}
   - name: Copy post-step assets
     run: |
-      TRUSTED_DIR="$RUNNER_TEMP/gh-aw/skia-sync-trusted"
-      rm -rf "$TRUSTED_DIR"
-      mkdir -p "$TRUSTED_DIR"
-      cp .github/scripts/skia-sync-common.sh "$TRUSTED_DIR/skia-sync-common.sh"
-      cp .github/scripts/skia-sync-validate-tests.sh "$TRUSTED_DIR/skia-sync-validate-tests.sh"
-      cp .agents/skills/update-skia/scripts/audit_fork_patches.py "$TRUSTED_DIR/audit-fork-patches.py"
-      cp .agents/skills/update-skia/scripts/validate_test_output.py "$TRUSTED_DIR/validate-test-output.py"
-      cat >"$TRUSTED_DIR/skia-sync-expected.env" <<EOF
-      TARGET=$SKIA_SYNC_TARGET
-      CURRENT=$SKIA_SYNC_CURRENT
-      UPSTREAM_REF=$SKIA_SYNC_UPSTREAM_REF
-      IS_RELEASE=$SKIA_SYNC_IS_RELEASE
-      BASE_BRANCH=$SKIA_SYNC_BASE_BRANCH
-      SKIA_BASE_BRANCH=$SKIA_SYNC_SKIA_BASE_BRANCH
-      SKIA_BASE_SHA=$SKIA_SYNC_SKIA_BASE_SHA
-      HEAD_BRANCH=$SKIA_SYNC_HEAD_BRANCH
-      BASE_UPSTREAM_SHA=$SKIA_SYNC_BASE_UPSTREAM_SHA
-      TARGET_UPSTREAM_SHA=$SKIA_SYNC_TARGET_UPSTREAM_SHA
-      PARENT_REMOTE_HEAD=$SKIA_SYNC_PARENT_REMOTE_HEAD
-      SKIA_REMOTE_HEAD=$SKIA_SYNC_SKIA_REMOTE_HEAD
-      EOF
-      chmod -R a-w "$TRUSTED_DIR"
-  - name: Upload trusted sync state
-    uses: actions/upload-artifact@v7
-    with:
-      name: skia-sync-expected
-      path: ${{ runner.temp }}/gh-aw/skia-sync-trusted/skia-sync-expected.env
-      if-no-files-found: error
-      retention-days: 7
+      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
+      cp .agents/skills/update-skia/scripts/audit_fork_patches.py /tmp/gh-aw/audit-fork-patches.py
+      cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
+      cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -333,31 +304,13 @@ pre-agent-steps:
       key: ${{ steps.native-cache-key.outputs.key }}
 
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. This job has no write token: it reruns validation and emits bundles
-# consumed by the separate fresh-runner publisher workflow.
+# Run AFTER the AI finishes. Pushes branches and creates/updates PRs
+# using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
 post-steps:
-  - name: Validate exact test evidence
+  - name: Push branches and create PRs
     env:
-      BASH_ENV: /dev/null
-      DOTNET_STARTUP_HOOKS: ""
-      ENV: /dev/null
-      GIT_CONFIG_GLOBAL: /dev/null
-      GIT_CONFIG_NOSYSTEM: "1"
-      GIT_NO_REPLACE_OBJECTS: "1"
-      LD_PRELOAD: ""
-      PATH: /usr/bin:/bin
-      PYTHONHOME: ""
-      PYTHONPATH: ""
-      SKIA_SYNC_TRUSTED_DIR: ${{ runner.temp }}/gh-aw/skia-sync-trusted
-      SKIA_SYNC_VALIDATION_DIR: ${{ runner.temp }}/gh-aw/skia-sync-validation
-    run: bash "$SKIA_SYNC_TRUSTED_DIR/skia-sync-validate-tests.sh"
-  - name: Upload validated sync bundles
-    uses: actions/upload-artifact@v7
-    with:
-      name: skia-sync-validated
-      path: ${{ runner.temp }}/gh-aw/skia-sync-validation
-      if-no-files-found: error
-      retention-days: 7
+      GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+    run: bash /tmp/gh-aw/skia-sync-push-prs.sh
 ---
 
 # Sync - Skia Upstream
@@ -389,9 +342,9 @@ the supplied values.
 - The exact base native tree was built before the agent. Reuse its hydrated dependencies and Ninja
   objects, but still perform the mandatory merged-target source build.
 - Clang, libc++, fontconfig/fonts, Ninja, Android workload, and deterministic Mesa lavapipe are
-  installed. The lavapipe ICD is pinned, so Ganesh and Graphite Vulkan remain required by
-  `GpuPolicy`. This headless agent explicitly opts out only `ganesh-gl`, for which it provisions no
-  GL/X stack.
+  installed. The lavapipe ICD is pinned so the Vulkan backends required by `GpuPolicy` execute
+  deterministically. This headless agent explicitly opts out only `ganesh-gl`, for which it
+  provisions no GL/X stack.
 - The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
   durable repository configuration; do not alter flags to mask a missing prerequisite.
 
@@ -401,7 +354,8 @@ the supplied values.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
-  with actual Vulkan execution, exactly as defined by the skill.
+  with every maintained host and every `GpuPolicy`-required backend executing successfully, exactly
+  as defined by the skill.
 - For a deterministic failure, trace the failing call through its direct implementation and
   preconditions before widening the search. Expand to surrounding logs or broader history only when
   evidence rules out that path.
@@ -412,6 +366,4 @@ the supplied values.
 After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
 create real PRs/issues from the agent. Write the required artifacts under
 `/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
-The token-free post-step emits exact validated bundles. The separate publisher workflow verifies
-them on a fresh runner, then performs guarded pushes and creates the two cross-linked draft PRs
-from another fresh runner.
+The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.

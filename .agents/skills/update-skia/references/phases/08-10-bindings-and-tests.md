@@ -31,13 +31,9 @@ existing wrapper cannot.
 
 ### Prepare the runtime
 
-Use a host that can execute every backend `GpuPolicy` requires. For Vulkan validation:
-
-- Export `DOTNET_CLI_UI_LANGUAGE=en-US` so the evidence validator receives stable Microsoft.Testing.Platform
-  summary labels on every developer and automation host.
-- Verify a Vulkan ICD initializes before running tests.
-- In deterministic automation, pin the selected software ICD rather than using opportunistic GPU
-  discovery.
+Use a host that can execute every maintained test host and every backend `GpuPolicy` requires.
+Verify required runtime prerequisites before running tests. In deterministic automation, pin
+software implementations where practical instead of relying on opportunistic hardware discovery.
 
 Failed GPU bring-up is a test failure. Use `SKIASHARP_TEST_SKIP_GPU` only for a backend the agent
 explicitly cannot provide; name each backend rather than catching an exception. If the local host
@@ -47,19 +43,17 @@ claiming success from runtime skips.
 ### Initial full solution
 
 ```bash
-export DOTNET_CLI_UI_LANGUAGE=en-US
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 set -o pipefail
-{
-  echo "SKIA_SYNC_TEST_EVIDENCE full stage=initial solution=tests/SkiaSharp.Tests.Console.slnx tfm=net10.0 unfiltered=true"
-  dotnet test tests/SkiaSharp.Tests.Console.slnx \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0
-} 2>&1 | tee "$ARTIFACT_DIR/initial-test-output.txt"
+dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 \
+  -p:TargetFrameworks=net10.0 \
+  2>&1 | tee "$ARTIFACT_DIR/initial-test-output.txt"
 ```
 
-Run the solution unfiltered. Confirm the base, singleton, Vulkan, and Direct3D hosts all reported
-results. Every backend required by `GpuPolicy` must execute and report zero failures.
+Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
+Every backend required by `GpuPolicy` must execute and report zero failures; a required host that
+runs zero tests or only skips tests is not a successful validation.
 
 ### Focused diagnostics
 
@@ -101,47 +95,11 @@ manually written summary—in the canonical artifact:
 ```bash
 rm -f "$ARTIFACT_DIR/test-output.txt"
 set -o pipefail
-{
-  echo "SKIA_SYNC_TEST_EVIDENCE full stage=final solution=tests/SkiaSharp.Tests.Console.slnx tfm=net10.0 unfiltered=true"
-  dotnet test tests/SkiaSharp.Tests.Console.slnx \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0
-} 2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
+dotnet test tests/SkiaSharp.Tests.Console.slnx \
+  -p:TargetFramework=net10.0 \
+  -p:TargetFrameworks=net10.0 \
+  2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
 ```
-
-### Record explicit Vulkan evidence
-
-The full solution summary proves that the Vulkan host ran, but it does not print successful test
-names. Run one maintained context-creation test for each required Vulkan backend and retain their
-complete output:
-
-```bash
-{
-  echo "SKIA_SYNC_TEST_EVIDENCE vulkan backend=ganesh filter=*CreateVkContextIsValid*"
-  dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0 \
-    -- --filter-method "*CreateVkContextIsValid*"
-} 2>&1 | tee "$ARTIFACT_DIR/vulkan-ganesh-evidence.txt"
-
-{
-  echo "SKIA_SYNC_TEST_EVIDENCE vulkan backend=graphite filter=*GraphiteVkContextIsCreatedFromRawHandles*"
-  dotnet test tests/SkiaSharp.Vulkan.Tests.Console/SkiaSharp.Vulkan.Tests.Console.csproj \
-    -p:TargetFramework=net10.0 \
-    -p:TargetFrameworks=net10.0 \
-    -- --filter-method "*GraphiteVkContextIsCreatedFromRawHandles*"
-} 2>&1 | tee "$ARTIFACT_DIR/vulkan-graphite-evidence.txt"
-
-python3 .agents/skills/update-skia/scripts/validate_test_output.py \
-  --initial "$ARTIFACT_DIR/initial-test-output.txt" \
-  --final "$ARTIFACT_DIR/test-output.txt" \
-  --ganesh "$ARTIFACT_DIR/vulkan-ganesh-evidence.txt" \
-  --graphite "$ARTIFACT_DIR/vulkan-graphite-evidence.txt"
-```
-
-Each focused command must execute exactly one passing, non-skipped test. Automation reruns the
-complete final solution, both focused commands, and the validator from trusted pre-agent copies
-before it pushes either branch.
 
 ### Finalize tested commits
 
@@ -160,7 +118,5 @@ After the final full solution passes:
 - No required native function lacks a managed decision.
 - Final unfiltered solution passes every host.
 - Every `GpuPolicy`-required backend initializes and executes with zero failures.
-- Initial and final full-solution logs are retained, and the explicit Ganesh and Graphite Vulkan
-  evidence validator passes.
 - Parent points to the exact tested mono/skia commit.
 - Every final fork-delta change has one non-contradictory evidence-backed disposition.

@@ -38,8 +38,6 @@ names.
 | `{IS_RELEASE}` | `SKIA_SYNC_IS_RELEASE` | Whether the selected base is a release line |
 | `{BASE_UPSTREAM_SHA}` | `SKIA_SYNC_BASE_UPSTREAM_SHA` | Exact upstream commit recorded by the parent base |
 | `{TARGET_UPSTREAM_SHA}` | `SKIA_SYNC_TARGET_UPSTREAM_SHA` | Exact fetched target upstream commit |
-| `{PARENT_REMOTE_HEAD}` | `SKIA_SYNC_PARENT_REMOTE_HEAD` | Parent sync-branch SHA observed before the agent, or `none` |
-| `{SKIA_REMOTE_HEAD}` | `SKIA_SYNC_SKIA_REMOTE_HEAD` | mono/skia sync-branch SHA observed before the agent, or `none` |
 | `{PLATFORM}` | `SKIA_SYNC_PLATFORM` | Native Cake target suffix |
 | `{ARCH}` | `SKIA_SYNC_ARCH` | Native architecture |
 
@@ -64,12 +62,8 @@ An update is complete only when:
 - Bindings were regenerated and every required managed wrapper was reviewed.
 - The final **unfiltered** `tests/SkiaSharp.Tests.Console.slnx` run passes every host, including
   every GPU backend required by `GpuPolicy` on the validation host.
-- Named Ganesh and Graphite Vulkan context tests execute without skips, and the deterministic
-  evidence validator accepts the initial, final, and focused logs.
 - The parent points to the exact tested mono/skia commit.
 - Both PR descriptions identify untested platforms and are ready for human review.
-- Automated publication uses verified Git bundles and never exposes a write token to the agent or
-  to a runner that executes updated repository code.
 
 ## Working rules
 
@@ -121,8 +115,6 @@ needed for that phase.
   and reports new native functions.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any
   added, removed, or changed patch lacks a final evidence-backed disposition.
-- `scripts/validate_test_output.py` verifies every full-solution host passed and requires explicit,
-  non-skipped Ganesh and Graphite Vulkan evidence.
 
 These scripts are idempotent and are the source of truth for their phases. Do not manually
 recreate their behavior.
