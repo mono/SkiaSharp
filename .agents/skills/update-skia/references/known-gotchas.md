@@ -39,7 +39,8 @@ Upstream progressively deprecates legacy APIs behind flags (e.g., `SK_DEFAULT_TY
 
 1. **Check what the flag removes** — read the upstream commit that added it
 2. **If the C API uses the removed behavior**, update the C API to use the replacement API. This is the real fix — upstream is signaling that the old API will be removed entirely in a future milestone.
-3. **Only as a short-term bridge** (with a TODO comment and tracking issue), you may comment out the flag to unblock the build while you work on the proper fix. Never leave a commented-out flag without a plan to address it.
+3. If the replacement cannot be implemented in this update, leave the gate failed and report the
+   blocker. Never comment out the flag merely to unblock the build.
 
 Also watch for renamed/removed GN flags between milestones — obsolete flags cause `Unknown GN flag` errors. Always diff the target `BUILD.gn` against the current one.
 
@@ -67,9 +68,12 @@ Upstream may move previously-core modules into separate optional targets. If the
 
 Upstream sometimes introduces an optional dependency our fork deliberately does not vendor. Before
 changing GN configuration, inspect the target declaration, default, source guards, and documented
-embedder path. If disabling the feature is explicitly supported and appropriate for SkiaSharp, add
-the durable arg to every affected platform's `native/**/build.cake` next to related `skia_use_*`
-settings.
+embedder path. Disable the feature only when existing fork policy already establishes that choice
+(for example, the dependency is deliberately absent/commented or the same feature family is
+already disabled in `native/**/build.cake`). Add the durable arg to every affected platform and
+report it under `## Human review` in both repository summaries. Without existing policy, add the
+supported dependency path or report the unresolved product decision instead of making it during
+the update.
 
 Do not use a one-off Cake/CLI GN argument, and do not add an argument before the selected upstream
 tree defines it. Never change GN or compiler/linker flags merely to hide a missing host package,

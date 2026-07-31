@@ -51,8 +51,9 @@ dotnet test tests/SkiaSharp.Tests.Console.slnx \
 ```
 
 Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
-Every backend required by `GpuPolicy` must execute and report zero failures; a required host that
-runs zero tests or only skips tests is not a successful validation.
+The initial run exists to expose failures for the diagnostic loop below. A required host that runs
+zero tests or only skips tests is an infrastructure failure; test failures are expected inputs to
+diagnosis and must be fixed before the final run.
 
 ### Focused diagnostics
 
@@ -93,11 +94,18 @@ manually written summary—in the canonical artifact:
 
 ```bash
 rm -f "$ARTIFACT_DIR/test-output.txt"
-set -o pipefail
-dotnet test tests/SkiaSharp.Tests.Console.slnx \
-  -p:TargetFramework=net10.0 \
-  -p:TargetFrameworks=net10.0 \
-  2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
+rm -f "$ARTIFACT_DIR/test-exit-code.txt"
+(
+  set +e
+  set -o pipefail
+  dotnet test tests/SkiaSharp.Tests.Console.slnx \
+    -p:TargetFramework=net10.0 \
+    -p:TargetFrameworks=net10.0 \
+    2>&1 | tee "$ARTIFACT_DIR/test-output.txt"
+  TEST_EXIT=${PIPESTATUS[0]}
+  printf '%s\n' "$TEST_EXIT" > "$ARTIFACT_DIR/test-exit-code.txt"
+  exit "$TEST_EXIT"
+)
 ```
 
 ### Finalize tested commits

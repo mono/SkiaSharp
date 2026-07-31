@@ -1,7 +1,9 @@
 # 04–05 — Branch and merge
 
 Require the Phase 03 analysis, dependency-decision, and review artifacts before using this file.
-Read only sections 8 and 13–15 of [../known-gotchas.md](../known-gotchas.md).
+Read only `DEPS: Fork-Customized Dependencies`, `Genuine Merge Required`,
+`Conflict Resolution by File Category`, and `Verify-Upstream-or-Reapply` in
+[../known-gotchas.md](../known-gotchas.md).
 
 ## Phase 04 — branch from the resolved bases
 

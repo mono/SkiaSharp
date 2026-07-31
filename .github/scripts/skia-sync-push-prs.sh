@@ -32,6 +32,7 @@ required_file "$ARTIFACT_DIR/skia-validation-review.md"
 required_file "$ARTIFACT_DIR/skia-dependency-decisions.md"
 required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
 required_file "$ARTIFACT_DIR/test-output.txt"
+required_file "$ARTIFACT_DIR/test-exit-code.txt"
 
 # Written by the trusted agent in this workflow and validated immediately below.
 # shellcheck source=/dev/null
@@ -48,6 +49,33 @@ source "$ENV_FILE"
 : "${TARGET_UPSTREAM_SHA:?TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
+
+assert_resolved() {
+  local artifact_name="$1"
+  local artifact_value="$2"
+  local workflow_name="$3"
+  local workflow_value="$4"
+  if [[ -z "$workflow_value" || "$artifact_value" != "$workflow_value" ]]; then
+    echo "::error::Handoff $artifact_name does not match workflow-resolved $workflow_name."
+    exit 1
+  fi
+}
+
+assert_resolved TARGET "$TARGET" SKIA_SYNC_TARGET "${SKIA_SYNC_TARGET:-}"
+assert_resolved CURRENT "$CURRENT" SKIA_SYNC_CURRENT "${SKIA_SYNC_CURRENT:-}"
+assert_resolved UPSTREAM_REF "$UPSTREAM_REF" SKIA_SYNC_UPSTREAM_REF "${SKIA_SYNC_UPSTREAM_REF:-}"
+assert_resolved IS_RELEASE "$IS_RELEASE" SKIA_SYNC_IS_RELEASE "${SKIA_SYNC_IS_RELEASE:-}"
+assert_resolved BASE_BRANCH "$BASE_BRANCH" SKIA_SYNC_BASE_BRANCH "${SKIA_SYNC_BASE_BRANCH:-}"
+assert_resolved SKIA_BASE_BRANCH "$SKIA_BASE_BRANCH" SKIA_SYNC_SKIA_BASE_BRANCH "${SKIA_SYNC_SKIA_BASE_BRANCH:-}"
+assert_resolved SKIA_BASE_SHA "$SKIA_BASE_SHA" SKIA_SYNC_SKIA_BASE_SHA "${SKIA_SYNC_SKIA_BASE_SHA:-}"
+assert_resolved HEAD_BRANCH "$HEAD_BRANCH" SKIA_SYNC_HEAD_BRANCH "${SKIA_SYNC_HEAD_BRANCH:-}"
+assert_resolved BASE_UPSTREAM_SHA "$BASE_UPSTREAM_SHA" SKIA_SYNC_BASE_UPSTREAM_SHA "${SKIA_SYNC_BASE_UPSTREAM_SHA:-}"
+assert_resolved TARGET_UPSTREAM_SHA "$TARGET_UPSTREAM_SHA" SKIA_SYNC_TARGET_UPSTREAM_SHA "${SKIA_SYNC_TARGET_UPSTREAM_SHA:-}"
+
+if [[ "$(tr -d '[:space:]' < "$ARTIFACT_DIR/test-exit-code.txt")" != "0" ]]; then
+  echo "::error::The final unfiltered test command did not exit successfully."
+  exit 1
+fi
 
 BRANCH="$HEAD_BRANCH"
 SS_BASE="$BASE_BRANCH"

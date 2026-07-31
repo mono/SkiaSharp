@@ -178,6 +178,44 @@ class UpdateVersionsTests(unittest.TestCase):
         cgmanifest = json.loads((self.root / "cgmanifest.json").read_text(encoding="utf-8"))
         self.assertEqual(new_head, cgmanifest["registrations"][0]["component"]["git"]["commitHash"])
 
+    def test_records_exact_upstream_sha_when_branch_moves(self) -> None:
+        skia_root = self.root / "externals" / "skia"
+        exact_sha = subprocess.run(
+            ["git", "rev-parse", "upstream/chrome/m152"],
+            cwd=skia_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        marker = skia_root / "later-upstream-commit.txt"
+        marker.write_text("later\n", encoding="utf-8")
+        subprocess.run(["git", "add", marker.name], cwd=skia_root, check=True)
+        subprocess.run(
+            ["git", "commit", "--quiet", "-m", "later upstream commit"],
+            cwd=skia_root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "branch", "-f", "upstream/chrome/m152", "HEAD"],
+            cwd=skia_root,
+            check=True,
+        )
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            upstream_sha=exact_sha,
+        )
+
+        cgmanifest = json.loads((self.root / "cgmanifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(
+            exact_sha,
+            cgmanifest["registrations"][1]["upstream_merge_commit"],
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

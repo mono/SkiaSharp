@@ -9,6 +9,7 @@ rerun after final native adaptations so manifests record the exact tested SHAs.
 
 import argparse
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -46,7 +47,13 @@ def replace_transition(
     return content
 
 
-def update_versions(repo_root: Path, current: int, target: int, upstream_ref: str) -> None:
+def update_versions(
+    repo_root: Path,
+    current: int,
+    target: int,
+    upstream_ref: str,
+    upstream_sha: str | None = None,
+) -> None:
     """Synchronize version files, C ABI increment, and component-governance SHAs."""
     versions_path = repo_root / "scripts" / "VERSIONS.txt"
     pipeline_path = repo_root / "scripts" / "azure-templates-variables.yml"
@@ -59,7 +66,9 @@ def update_versions(repo_root: Path, current: int, target: int, upstream_ref: st
         skia_root,
         "rev-parse",
         "--verify",
-        f"upstream/{upstream_ref}^{{commit}}",
+        f"{upstream_sha}^{{commit}}"
+        if upstream_sha
+        else f"upstream/{upstream_ref}^{{commit}}",
     )
 
     versions = versions_path.read_text(encoding="utf-8-sig")
@@ -172,6 +181,7 @@ def main() -> int:
     parser.add_argument("--current", required=True, type=int)
     parser.add_argument("--target", required=True, type=int)
     parser.add_argument("--upstream-ref")
+    parser.add_argument("--upstream-sha")
     parser.add_argument("--repo-root", type=Path)
     args = parser.parse_args()
 
@@ -181,7 +191,14 @@ def main() -> int:
         else Path(__file__).resolve().parents[4]
     )
     upstream_ref = args.upstream_ref or f"chrome/m{args.target}"
-    update_versions(repo_root, args.current, args.target, upstream_ref)
+    upstream_sha = args.upstream_sha or os.environ.get("SKIA_SYNC_TARGET_UPSTREAM_SHA")
+    update_versions(
+        repo_root,
+        args.current,
+        args.target,
+        upstream_ref,
+        upstream_sha,
+    )
     return 0
 
 

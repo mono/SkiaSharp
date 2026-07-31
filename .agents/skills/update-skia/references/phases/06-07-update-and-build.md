@@ -8,7 +8,8 @@ From the parent repository, run the maintained helper:
 python3 .agents/skills/update-skia/scripts/update_versions.py \
   --current "{CURRENT}" \
   --target "{TARGET}" \
-  --upstream-ref "{UPSTREAM_REF}"
+  --upstream-ref "{UPSTREAM_REF}" \
+  --upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, `cgmanifest.json`,
@@ -58,7 +59,7 @@ Treat each distinct failure as a new gate:
 | Struct/static assert | Reconcile C representation and managed mapping |
 | Missing dependency API/source | Reopen the dependency decision and hydrated revision |
 | Obsolete GN arg | Update durable `native/**/build.cake` configuration |
-| Newly optional module | Add the supported target dependency/feature configuration |
+| Newly optional module | Follow existing fork policy; otherwise add its supported dependency or report the product decision |
 | Undefined symbol | Check feature guards, defines, and explicit target dependencies |
 
 Read only the matching build/C API section of
