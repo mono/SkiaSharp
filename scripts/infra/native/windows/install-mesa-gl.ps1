@@ -69,11 +69,11 @@ public static class MesaGlVerifier
     [DllImport(OGL)] static extern IntPtr glGetString(uint name);
 
     [DllImport("user32.dll")] static extern IntPtr GetDC(IntPtr hwnd);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     static extern IntPtr CreateWindowExW(int ex, string cls, string name, int style,
         int x, int y, int w, int h, IntPtr parent, IntPtr menu, IntPtr inst, IntPtr param);
     [DllImport("gdi32.dll")] static extern int ChoosePixelFormat(IntPtr hdc, ref PIXELFORMATDESCRIPTOR pfd);
-    [DllImport("gdi32.dll")] static extern bool SetPixelFormat(IntPtr hdc, int fmt, ref PIXELFORMATDESCRIPTOR pfd);
+    [DllImport("gdi32.dll", SetLastError = true)] static extern bool SetPixelFormat(IntPtr hdc, int fmt, ref PIXELFORMATDESCRIPTOR pfd);
 
     [StructLayout(LayoutKind.Sequential)]
     struct PIXELFORMATDESCRIPTOR
@@ -220,13 +220,39 @@ if ($actualSha -ne $mesaSha) {
     throw "SHA-256 mismatch for $archiveName : expected $mesaSha, got $actualSha"
 }
 
-# tar.exe is bsdtar/libarchive, in-box since Windows 10 1803, and reads 7-Zip.
+# The archive is 7-Zip. tar.exe is bsdtar/libarchive, in-box since Windows 10
+# 1803, and reads 7-Zip when it was built with liblzma — which is not guaranteed
+# on every image, so fall back to 7-Zip itself, which the Windows agent images
+# carry. Failing both is fatal rather than silent.
 $extractDir = Join-Path $tempDir 'extracted'
 if (Test-Path $extractDir) { Remove-Item $extractDir -Recurse -Force }
 New-Item -ItemType Directory -Force -Path $extractDir | Out-Null
-& tar.exe -xf $archive -C $extractDir
-if ($LASTEXITCODE -ne 0) {
-    throw "Failed to extract $archiveName (tar exited $LASTEXITCODE)."
+
+$extractors = @(
+    @{ Name = 'tar';   Path = (Join-Path $env:SystemRoot 'System32\tar.exe'); Args = @('-xf', $archive, '-C', $extractDir) },
+    @{ Name = '7-Zip'; Path = 'C:\Program Files\7-Zip\7z.exe';                Args = @('x', $archive, "-o$extractDir", '-y') }
+)
+
+$extracted = $false
+foreach ($extractor in $extractors) {
+    if (-not (Test-Path $extractor.Path)) {
+        Write-Host "  $($extractor.Name) is not present at $($extractor.Path); trying the next extractor."
+        continue
+    }
+
+    & $extractor.Path @($extractor.Args) | Out-Null
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Extracted $archiveName with $($extractor.Name)."
+        $extracted = $true
+        break
+    }
+
+    Write-Host "  $($extractor.Name) could not read the archive (exit $LASTEXITCODE); trying the next extractor."
+    Remove-Item (Join-Path $extractDir '*') -Recurse -Force -ErrorAction SilentlyContinue
+}
+
+if (-not $extracted) {
+    throw "No available extractor could unpack $archiveName. Tried: $(($extractors | ForEach-Object { $_.Name }) -join ', ')."
 }
 
 # ---------------------------------------------------------------------------
