@@ -204,7 +204,7 @@ stages:
             # This pool is x64 and virtualizes Metal. Merely calling
             # MTLCreateSystemDefaultDevice + newCommandQueue on that driver leaves
             # state that never signals, so the test host hangs on shutdown until the
-            # job times out at 180 min — no results, no TRX. See #4555.
+            # job times out at 180 min — no results, no TRX. See #4598.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false
@@ -338,7 +338,8 @@ stages:
             # never signals, hanging the test host's shutdown for hours. Declared here
             # rather than sniffed at runtime — this describes the pool we run on today,
             # so if the pool moves to Apple Silicon this line is what has to change.
-            # See #4555: no CI host has a usable Metal device today.
+            # Same shutdown hang as #4598; the simulator additionally cannot compile
+            # Graphite's gradient pipeline (#4555). #4591 tracks the wider picture.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             postBuildSteps:
@@ -365,9 +366,9 @@ stages:
             additionalArgs: --device=maccatalyst --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
             # A Mac Catalyst app sees iOS-style Metal GPU families, never Mac2, so
             # the device reports none of the families Ganesh or Graphite require and
-            # bring-up fails outright. macOS on this same pool is opted out too, for
-            # a different reason — its virtualized Metal hangs the host on shutdown.
-            # See #4555: no CI host has a usable Metal device.
+            # bring-up fails outright (#4599). macOS on this same pool is opted out
+            # too, for a different reason — its virtualized Metal hangs the host on
+            # shutdown (#4598). #4591 tracks the wider picture.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-metal,graphite-metal
             installAndroidSdk: false

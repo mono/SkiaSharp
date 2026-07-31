@@ -49,11 +49,14 @@ namespace SkiaSharp.Vulkan.Tests
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
 			using var ctx = CreateSharpVkContext();
+
 			using var extensions = new GRVkExtensions();
 			extensions.Initialize(
 				ctx.GetProc,
 				(IntPtr)ctx.Instance.RawHandle.ToUInt64(),
-				(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64());
+				(IntPtr)ctx.PhysicalDevice.RawHandle.ToUInt64(),
+				ctx.InstanceExtensions,
+				ctx.DeviceExtensions);
 
 			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
@@ -62,10 +65,10 @@ namespace SkiaSharp.Vulkan.Tests
 				VkDevice = ctx.Device,
 				VkQueue = ctx.GraphicsQueue,
 				GraphicsQueueIndex = ctx.GraphicsFamily,
-				MaxAPIVersion = SilkVkContext.ApiVersion,
+				MaxAPIVersion = ctx.ApiVersion,
 				Extensions = extensions,
+				VkPhysicalDeviceFeatures = ctx.Features,
 				GetProcedureAddress = ctx.SharpVkGetProc,
-				VkPhysicalDeviceFeatures = ctx.PhysicalDevice.GetFeatures(),
 			};
 
 			Assert.NotNull(grVkBackendContext);

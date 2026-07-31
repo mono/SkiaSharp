@@ -66,17 +66,16 @@ dotnet cake --target=tests-android --skipGpu=ganesh-vulkan
 ```
 
 In CI each opt-out is a bootstrapper `env:` value in
-`scripts/azure-templates-stages-test.yml` — read it there for the current set
-rather than duplicating it here. Today: **every Apple leg skips Metal** because
-no CI host has a real Metal device (see #4555), the Linux, Windows and container
-legs skip `ganesh-gl` for want of a working software GL stack (#4590 on Linux),
-the WASM legs skip `graphite-dawn` because the headless browser exposes no
-WebGPU adapter, and the .NET Framework **x86** leg additionally skips Vulkan
-(SwiftShader cannot JIT in a 32-bit process). See #4591 for the work to remove
-these.
+`scripts/azure-templates-stages-test.yml`, declared per leg with the reason and a
+tracking issue recorded inline. That file is the live list — read it there.
 
-The .NET Framework legs are split per architecture precisely so an opt-out can
-differ between x64 and x86 — `GpuPolicy` models the OS, not the architecture.
+An opt-out is a statement about **one agent**, not about the backend. It belongs
+in the YAML precisely so it can be removed when the agent gains the capability,
+without touching the policy or this document.
+
+Opt-outs are per leg, so an architecture-specific limitation needs its own job:
+`GpuPolicy` models the OS, not the architecture. That is why the .NET Framework
+tests run as separate x64 and x86 jobs.
 
 ## Adding a backend
 
