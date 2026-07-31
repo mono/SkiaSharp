@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Compare the fork's old and new patch sets and require reviewed dispositions."""
+
 import argparse
 import hashlib
 import re
@@ -40,6 +42,7 @@ def verify_ref(skia_root: Path, ref: str) -> None:
 
 
 def normalize_patch(raw: str) -> str:
+    """Remove location metadata while retaining source context and binary payloads."""
     normalized = []
     in_header = True
     for line in raw.split("\n"):
@@ -92,6 +95,7 @@ def compute_audit(
     fork_base: str,
     merged_head: str,
 ) -> dict[str, object]:
+    """Classify fork patches by comparing old and new upstream-relative deltas."""
     for ref in (old_upstream, new_upstream, fork_base, merged_head):
         verify_ref(skia_root, ref)
 
@@ -133,6 +137,7 @@ def compute_audit(
 
 
 def read_decisions(path: Path) -> dict[str, tuple[str, str, str, str]]:
+    """Load prior decisions so unchanged patch fingerprints retain their review."""
     if not path.exists():
         return {}
     decisions = {}
@@ -156,6 +161,7 @@ def render(
     fork_base: str,
     merged_head: str,
 ) -> str:
+    """Render a concise review table, resetting stale decisions to TODO."""
     rows = []
     for change in ("removed", "changed", "added"):
         for path in audit[change]:
@@ -212,6 +218,7 @@ def validate(
     audit: dict[str, object],
     decisions: dict[str, tuple[str, str, str, str]],
 ) -> list[str]:
+    """Reject missing, invalid, or stale decisions for every changed fork patch."""
     errors = []
     expected = {
         path: change

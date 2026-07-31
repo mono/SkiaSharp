@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Regenerate all maintained bindings and report native functions needing wrappers."""
+
 import argparse
 import shutil
 import subprocess
@@ -47,6 +49,7 @@ def run(repo_root: Path, *args: str, capture: bool = False) -> str:
 
 
 def select_projects(config: str | None):
+    """Select one generator config or the complete maintained binding set."""
     if config is None:
         return PROJECTS
     name = Path(config).name
@@ -58,6 +61,7 @@ def select_projects(config: str | None):
 
 
 def added_internal_functions(diff: str) -> list[str]:
+    """Extract newly generated P/Invoke declarations from a Git diff."""
     return [
         line[1:].strip()
         for line in diff.splitlines()
@@ -66,6 +70,7 @@ def added_internal_functions(diff: str) -> list[str]:
 
 
 def function_regions(text: str) -> tuple[str, list[str], dict[str, str], str]:
+    """Split generated output into named function regions plus surrounding text."""
     lines = text.splitlines(keepends=True)
     starts = [
         index for index, line in enumerate(lines) if line.startswith("\t\t#region ")
@@ -98,6 +103,7 @@ def function_regions(text: str) -> tuple[str, list[str], dict[str, str], str]:
 
 
 def preserve_function_region_order(original: str, generated: str) -> str:
+    """Keep committed region order while appending genuinely new functions."""
     _, original_order, _, _ = function_regions(original)
     prefix, generated_order, generated_blocks, suffix = function_regions(generated)
     if not original_order or not generated_order:
@@ -109,6 +115,7 @@ def preserve_function_region_order(original: str, generated: str) -> str:
 
 
 def regenerate(repo_root: Path, config: str | None = None) -> None:
+    """Run generators, normalize output ordering, and summarize wrapper work."""
     generator_project = (
         repo_root / "utils" / "SkiaSharpGenerator" / "SkiaSharpGenerator.csproj"
     )

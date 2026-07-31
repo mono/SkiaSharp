@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Update Skia version surfaces and exact source registrations as one operation."""
+
 import argparse
 import json
 import re
@@ -31,6 +33,7 @@ def replace_transition(
     replacement: str,
     description: str,
 ) -> str:
+    """Apply a transition once while allowing an already-updated target value."""
     if re.search(current_pattern, content, flags=re.MULTILINE):
         return replace_or_fail(content, current_pattern, replacement, description)
     if not re.search(target_pattern, content, flags=re.MULTILINE):
@@ -39,6 +42,7 @@ def replace_transition(
 
 
 def update_versions(repo_root: Path, current: int, target: int, upstream_ref: str) -> None:
+    """Synchronize version files, C ABI increment, and component-governance SHAs."""
     versions_path = repo_root / "scripts" / "VERSIONS.txt"
     pipeline_path = repo_root / "scripts" / "azure-templates-variables.yml"
     cgmanifest_path = repo_root / "cgmanifest.json"
