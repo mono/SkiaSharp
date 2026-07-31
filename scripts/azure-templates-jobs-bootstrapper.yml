@@ -12,6 +12,7 @@ parameters:
   preBuildSteps: []                             # any steps to run before the build
   provisioningSteps: []                         # any steps to run to provision the machine
   postBuildSteps: []                            # any additional steps to run after the build
+  env: {}                                       # environment variables to set for the bootstrapper (also forwarded into Docker)
   initScript: ''                                # any scripts to run before starting the bootstrapper
   additionalArgs: ''                            # any additional arguments to pass to the bootstrapper
   retryCount: 3                                 # the number of times to retry the bootstrapper
@@ -373,6 +374,8 @@ jobs:
                 VS_INSTALL: $(VS_INSTALL)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
                 AppxSymbolPackageEnabled: false
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -385,6 +388,8 @@ jobs:
               env:
                 AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
+                ${{ each pair in parameters.env }}:
+                  ${{ pair.key }}: ${{ pair.value }}
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -410,31 +415,64 @@ jobs:
                 arguments: --tag skiasharp ${{ parameters.dockerArgs }}
           # Run the target inside the image against the mounted repo. Linux and Windows containers
           # differ in shell and mount path, so the run step is branched by agent OS.
+          #
+          # The container inherits nothing from the agent, so `env` is materialised into an env-file
+          # and handed to `docker run --env-file`. The file is always created (empty when no `env`
+          # is declared) so the run command stays uniform.
           - ${{ if ne(parameters.buildAgent.pool.os, 'windows') }}:
             - bash: |
                 echo dotnet tool restore > cmd.sh
                 echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh
                 sed -i 's/--gnArgs=\" \"//' cmd.sh
                 cat cmd.sh
+                : > docker.env
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              # The value travels in the step's own environment rather than being
+              # pasted into the script, so a quote in it cannot break out.
+              - bash: |
+                  printf '%s=%s\n' "$PAIR_KEY" "$PAIR_VALUE" >> docker.env
+                env:
+                  PAIR_KEY: ${{ pair.key }}
+                  PAIR_VALUE: ${{ pair.value }}
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - bash: |
-                docker run --rm --name skiasharp --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
+                docker run --rm --name skiasharp --env-file docker.env --volume $(pwd):/work skiasharp /bin/sh /work/cmd.sh
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - bash: rm -f docker.env
+              displayName: Remove the Docker env-file
+              condition: always()
           - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
             - pwsh: |
                 'dotnet tool restore' | Set-Content cmd.cmd -Encoding ascii
                 'dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}' | Add-Content cmd.cmd -Encoding ascii
                 Get-Content cmd.cmd
+                # Docker's env-file parser keeps a trailing CR as part of the value, so write LF only.
+                [IO.File]::WriteAllText("$PWD/docker.env", "")
               displayName: Generate the script for the Docker image
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - ${{ each pair in parameters.env }}:
+              # As above: the value is read from the environment, never interpolated
+              # into the script, so quotes and $ in it stay literal.
+              - pwsh: |
+                  [IO.File]::AppendAllText("$PWD/docker.env", "${env:PAIR_KEY}=${env:PAIR_VALUE}`n")
+                env:
+                  PAIR_KEY: ${{ pair.key }}
+                  PAIR_VALUE: ${{ pair.value }}
+                displayName: Forward ${{ pair.key }} into the Docker image
+                condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
-                docker run --rm --name skiasharp --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
+                docker run --rm --name skiasharp --env-file docker.env --volume "$(Build.SourcesDirectory):C:\work" -w C:\work skiasharp cmd /c C:\work\cmd.cmd
               displayName: Run the bootstrapper for ${{ parameters.target }} using the Docker image
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: Remove-Item docker.env -Force -ErrorAction SilentlyContinue
+              displayName: Remove the Docker env-file
+              condition: always()
 
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
