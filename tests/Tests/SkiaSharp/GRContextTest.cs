@@ -4,6 +4,7 @@ using Xunit;
 
 namespace SkiaSharp.Tests
 {
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public class GRContextTest : SKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]

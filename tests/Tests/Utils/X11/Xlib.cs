@@ -14,10 +14,22 @@ namespace SkiaSharp.Tests
 		public const int True = 1;
 		public const int False = 0;
 
+		static Xlib()
+		{
+			// Xlib is only thread-safe once XInitThreads has run, and it must be the
+			// very first Xlib call in the process — which a static constructor
+			// guarantees, since every entry point below lives on this type. The GL
+			// tests are serialized by GpuRenderingCollection so they never share a
+			// display concurrently, but xUnit still hands successive tests to
+			// different pool threads and the driver keeps per-thread state, so make
+			// the library thread-aware anyway. See #4590.
+			XInitThreads();
+		}
+
+		[DllImport(libX11)]
+		public extern static int XInitThreads();
 		[DllImport(libX11)]
 		public extern static IntPtr XOpenDisplay(string display_name);
-		[DllImport(libX11)]
-		public extern static int XCloseDisplay(IntPtr display);
 		[DllImport(libX11)]
 		public extern static int XFree(IntPtr data);
 		[DllImport(libX11)]

@@ -95,17 +95,11 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            # OpenGL is opted out until a software GL stack is provisioned here. The
-            # agents have no GPU driver, so Windows falls back to the GDI generic
-            # OpenGL 1.1 implementation, which exposes no WGL_ARB_* extensions and
-            # cannot satisfy WglContext. Mesa (llvmpipe) is the fix — its opengl32.dll
-            # + libgallium_wgl.dll would go into System32/SysWOW64 exactly as the
-            # Vulkan loader does, and it needs no test-code change — but it has no
-            # trustworthy package feed yet (see #4591). Vulkan and Direct3D stay required here.
-            env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
-              # Provision a software Vulkan ICD (SwiftShader) so ganesh-vulkan renders here.
+              # Provision a software GL driver (Mesa) and a software Vulkan ICD
+              # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
@@ -134,14 +128,16 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            # Same OpenGL gap as x64 (#4591), plus Vulkan: SwiftShader's LLVM JIT
-            # cannot resolve __chkstk in a 32-bit process, so the software ICD
-            # crashes the host outright ("exit code is '7'") instead of failing a
-            # test. x64 runs the identical suite green, which is why the two
-            # architectures are separate jobs. Direct3D stays required on both.
+            # SwiftShader's LLVM JIT cannot resolve __chkstk in a 32-bit process, so
+            # the software Vulkan ICD crashes the host outright ("exit code is '7'")
+            # instead of failing a test. x64 runs the identical suite green, which is
+            # why the two architectures are separate jobs. OpenGL and Direct3D stay
+            # required on both — Mesa provisions fine in either bitness.
             env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-gl,ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
+              SKIASHARP_TEST_SKIP_GPU: ganesh-vulkan,graphite-vulkan,ganesh-vulkan-sharpvk
             preBuildSteps:
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
@@ -170,11 +166,11 @@ stages:
             shouldPublish: false
             requiredArtifacts:
               - name: native
-            # See the .NET Framework leg above: no software GL stack on these agents yet (#4591).
-            env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             preBuildSteps:
-              # Provision a software Vulkan ICD (SwiftShader) so ganesh-vulkan renders here.
+              # Provision a software GL driver (Mesa) and a software Vulkan ICD
+              # (SwiftShader) so ganesh-gl and ganesh-vulkan render here.
+              - pwsh: .\scripts\infra\native\windows\install-mesa-gl.ps1
+                displayName: Provision software OpenGL (Mesa) for the GL tests
               - pwsh: .\scripts\infra\native\windows\install-vulkan-icd.ps1
                 displayName: Provision software Vulkan (SwiftShader) for visual tests
             postBuildSteps:
@@ -234,17 +230,11 @@ stages:
             displayName: Linux
             buildAgent: ${{ parameters.buildAgentLinux }}
             # Software Vulkan (Mesa lavapipe) plus a virtual X server give the
-            # headless agent deterministic GPU output. ganesh-vulkan and
+            # headless agent deterministic GPU output. ganesh-gl, ganesh-vulkan and
             # graphite-vulkan are required here, so missing provisioning fails.
-            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri mesa-vulkan-drivers vulkan-tools
+            packages: $(MANAGED_LINUX_PACKAGES) xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
             target: tests-netcore
             additionalArgs: --skipExternals="all" --coverage=$(ENABLE_CODE_COVERAGE)
-            # GLX loads here now, but the nine classes that call CreateGlContext()
-            # are in no xUnit collection, so they build and tear down llvmpipe
-            # contexts concurrently and the host dies with exit 7 at a random point
-            # — no results at all, so the whole leg is lost. See #4590.
-            env:
-              SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             installAndroidSdk: false
             shouldPublish: false
             requiredArtifacts:
@@ -256,11 +246,18 @@ stages:
                   sleep 3
                   echo "Started Xvfb on :99"
                   # Expose the software-GPU environment to the test step. Forcing
-                  # Mesa llvmpipe (GL) and the lavapipe ICD (Vulkan) keeps output
-                  # deterministic.
+                  # Mesa (GL) and the lavapipe ICD (Vulkan) keeps output deterministic.
+                  #
+                  # softpipe rather than llvmpipe for GL: llvmpipe's LLVM shader JIT
+                  # segfaults compiling the fragment shader Skia generates for a
+                  # runtime blender and takes the whole test host with it, which is
+                  # what made this leg lose all its results (#4590). softpipe is the
+                  # non-JIT gallium rasterizer and runs the same tests green. It
+                  # caps at GL 3.3, which is well past the 3.0 Ganesh needs. See
+                  # #4604 to move back to llvmpipe.
                   echo "##vso[task.setvariable variable=DISPLAY]:99"
                   echo "##vso[task.setvariable variable=LIBGL_ALWAYS_SOFTWARE]1"
-                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]llvmpipe"
+                  echo "##vso[task.setvariable variable=GALLIUM_DRIVER]softpipe"
                   echo "##vso[task.setvariable variable=VK_ICD_FILENAMES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                   echo "##vso[task.setvariable variable=VK_DRIVER_FILES]/usr/share/vulkan/icd.d/lvp_icd.x86_64.json"
                 displayName: Start Xvfb and select software GPU (visual tests)
@@ -469,9 +466,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux)
           parameters:
             name: tests_container_linux
-            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
-            # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux)
@@ -499,9 +498,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Azure Linux, No Dependencies)
           parameters:
             name: tests_container_linux_nodeps
-            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
-            # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux, No Dependencies)
@@ -529,9 +530,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine)
           parameters:
             name: tests_container_alpine_linux
-            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
-            # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine)
@@ -559,9 +562,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Linux (Alpine, No Dependencies)
           parameters:
             name: tests_container_alpine_nodeps
-            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
-            # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine, No Dependencies)
@@ -589,9 +594,11 @@ stages:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Tests|Windows (Nano Server)
           parameters:
             name: tests_container_nanoserver_windows
-            # No GPU stack in these images: no X server, no Mesa, no ICD, so OpenGL
-            # genuinely cannot come up. Declared here rather than inferred from the
-            # DllNotFoundException the test would otherwise throw. Tracked by #4591.
+            # No GPU stack in these images, by design: they exist to prove SkiaSharp
+            # works without those dependencies, so OpenGL genuinely cannot come up.
+            # Declared here rather than inferred from the DllNotFoundException the
+            # test would otherwise throw; the desktop Linux and Windows legs carry
+            # the ganesh-gl coverage. Tracked by #4591.
             env:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Windows (Nano Server)

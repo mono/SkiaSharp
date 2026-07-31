@@ -178,6 +178,7 @@ public class SKBlenderTest
 	}
 
 	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+	[Collection(Visual.GpuRenderingCollection.Name)]
 	public unsafe class Gpu : SurfaceTestBase, IDisposable
 	{
 		GlContext glContext;
