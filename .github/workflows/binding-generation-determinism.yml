@@ -109,6 +109,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Download generated bindings
         uses: actions/download-artifact@v4
         with:
@@ -138,11 +141,49 @@ jobs:
           done
           exit "$status"
 
-      - name: Upload determinism diff
+      - name: Compare checked-in Skia bindings
+        shell: bash
+        run: |
+          status=0
+          check_freshness() {
+            name="$1"
+            committed="$2"
+            generated="generated/bindings-linux/${name}"
+            detail="comparison/committed-${name}.diff"
+
+            if cmp -s "$committed" "$generated"; then
+              echo "${committed} is current."
+            else
+              status=1
+              echo "::error file=${committed}::Checked-in binding differs from deterministic generation."
+              git diff --no-index --no-color --text "$committed" "$generated" \
+                > "$detail" || true
+              cat "$detail"
+            fi
+          }
+
+          # HarfBuzz bindings are versioned separately from Skia's DEPS checkout,
+          # so freshness is enforced for the four Skia outputs only.
+          check_freshness \
+            "SkiaApi.generated.cs" \
+            "binding/SkiaSharp/SkiaApi.generated.cs"
+          check_freshness \
+            "SkottieApi.generated.cs" \
+            "binding/SkiaSharp.Skottie/SkottieApi.generated.cs"
+          check_freshness \
+            "SceneGraphApi.generated.cs" \
+            "binding/SkiaSharp.SceneGraph/SceneGraphApi.generated.cs"
+          check_freshness \
+            "ResourcesApi.generated.cs" \
+            "binding/SkiaSharp.Resources/ResourcesApi.generated.cs"
+
+          exit "$status"
+
+      - name: Upload binding comparison diff
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: binding-determinism-diff
+          name: binding-generation-diff
           path: comparison
           if-no-files-found: error
           retention-days: 7
