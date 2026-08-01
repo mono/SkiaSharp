@@ -79,7 +79,7 @@ checkout:
   - fetch-depth: 0
     submodules: recursive
 timeout-minutes: 120
-max-ai-credits: 2000
+max-ai-credits: 2500
 concurrency:
   group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true

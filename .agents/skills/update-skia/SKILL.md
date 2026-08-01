@@ -79,6 +79,9 @@ An update is complete only when:
   required by `GpuPolicy` for its platform.
 - Diagnose failures from repository evidence. Do not add one-off compiler/GN flags, skip tests,
   weaken assertions, or encode milestone-specific answers to make one run green.
+- Run long builds and full test suites in the foreground as one shell invocation. Do not use
+  `nohup`, `&`, or agent-turn progress polling. If the shell tool keeps a command running, block on
+  that existing session and inspect its output once after it exits.
 - Do not create PRs, write automation handoff files, or report completion while any gate fails.
 - In automation, no-work is handled before the agent starts. A started agent that cannot
   complete must fail rather than return success-shaped output.
