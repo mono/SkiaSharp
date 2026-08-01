@@ -79,6 +79,9 @@ An update is complete only when:
   required by `GpuPolicy` for its platform.
 - Diagnose failures from repository evidence. Do not add one-off compiler/GN flags, skip tests,
   weaken assertions, or encode milestone-specific answers to make one run green.
+- Execute the update phases in this agent. Do not delegate the full update, or any mutating,
+  build, test, or delivery phase, to a general-purpose/background agent. Only Phase 03's explicitly
+  read-only discrepancy review may be delegated.
 - Run long builds and full test suites in the foreground as one shell invocation. Do not use
   `nohup`, `&`, or agent-turn progress polling. If the shell tool keeps a command running, block on
   that existing session and inspect its output once after it exits.
