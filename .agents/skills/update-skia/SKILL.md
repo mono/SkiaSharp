@@ -70,7 +70,12 @@ An update is complete only when:
 - Create feature branches in both repositories before changes; never commit to protected branches.
 - Use a genuine two-parent merge in mono/skia; never use a tree-override merge.
 - Preserve every fork patch unless upstream contains an equivalent or improved form.
+- Mark a removed patch `upstreamed` only after enumerating every independent behavior in its old
+  delta and locating each one in the target; one upstreamed hunk does not cover another lost hunk.
 - Classify dependency revisions against the **fork base**, not only the prior upstream milestone.
+- Treat final `DEPS` as ground truth: every enabled revision that differs from the fork base must
+  have a matching final decision, exact-SHA evidence, and reconciled Component Governance metadata.
+  A dependency recorded as preserved must still equal the fork-base revision.
 - Never use `externals-download` after a submodule/native/C API change.
 - Never hand-edit `*.generated.cs`; regenerate it.
 - Keep public managed ABI additive.
