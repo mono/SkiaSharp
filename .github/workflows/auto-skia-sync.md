@@ -330,7 +330,7 @@ post-steps:
         {
           git diff --name-only
           git diff --cached --name-only
-        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
+        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia|externals/depot_tools)$' || true
       )
       if [ -n "$UNEXPECTED_CHANGES" ]; then
         echo "::error::The agent left uncommitted semantic changes:"
