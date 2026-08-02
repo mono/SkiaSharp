@@ -2,11 +2,11 @@
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
 # -- Engine ------------------------------------------------------------
-# Use Claude Sonnet 5 to test whether the refined deterministic workflow can
-# retain update quality at lower inference cost.
+# Use Claude Opus for the primary update work. A controlled Sonnet 5 evaluation
+# was cheaper when successful, but did not achieve the required reliability.
 engine:
   id: copilot
-model: claude-sonnet-5
+model: claude-opus-4.8
 
 # -- Triggers ----------------------------------------------------------
 # One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
