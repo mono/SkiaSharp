@@ -198,6 +198,7 @@ if [ -n "$BASE_BRANCH_OVERRIDE" ]; then
     exit 1
   fi
   BASE_BRANCH="$BASE_BRANCH_OVERRIDE"
+  HEAD_BRANCH="${HEAD_BRANCH}-${BASE_BRANCH_OVERRIDE//\//-}"
   echo "Manual base override: ${BASE_BRANCH}"
 # `2>/dev/null` swallows the "integer expression expected" noise for a non-numeric
 # TARGET, which then falls through to the main line.

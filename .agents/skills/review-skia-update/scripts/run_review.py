@@ -110,6 +110,16 @@ def extract_skia_upstream_commit_from_cgmanifest(cgmanifest: dict):
     return None
 
 
+def extract_skia_upstream_ref_from_cgmanifest(cgmanifest: dict):
+    """Extract the authoritative upstream ref, with milestone fallback for old manifests."""
+    for reg in cgmanifest.get("registrations", []):
+        comp = reg.get("component", {}).get("other", {})
+        if comp.get("name") == "skia":
+            upstream_ref = reg.get("upstream_ref", "").strip()
+            return upstream_ref or extract_skia_milestone_from_cgmanifest(cgmanifest)
+    return None
+
+
 def recorded_commit_belongs_to_upstream(cwd: str, commit: str, upstream_ref: str) -> bool:
     """Return whether a recorded commit belongs to the fetched upstream branch history."""
     result = subprocess.run(
@@ -271,6 +281,7 @@ def main():
 
     old_cgmanifest = load_json_at_git_ref(repo_root, companion_base_sha, "cgmanifest.json")
     old_milestone = extract_skia_milestone_from_cgmanifest(old_cgmanifest)
+    old_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(old_cgmanifest)
     old_upstream_sha = extract_skia_upstream_commit_from_cgmanifest(old_cgmanifest)
     if not old_milestone:
         raise RuntimeError(
@@ -280,6 +291,11 @@ def main():
     if not old_upstream_sha:
         raise RuntimeError(
             f"Could not determine old upstream commit from companion PR base "
+            f"{companion_base_sha[:12]}:cgmanifest.json"
+        )
+    if not old_upstream_ref:
+        raise RuntimeError(
+            f"Could not determine old upstream ref from companion PR base "
             f"{companion_base_sha[:12]}:cgmanifest.json"
         )
 
@@ -303,10 +319,12 @@ def main():
     # Check cgmanifest.json from companion PR head
     companion_head_sha = companion_pr.get("headRefOid", "").strip()
     cgmanifest_milestone = None
+    new_upstream_ref = None
     new_upstream_sha = None
     if companion_head_sha and len(companion_head_sha) >= 7:
         new_cgmanifest = load_json_at_git_ref(repo_root, companion_head_sha, "cgmanifest.json")
         cgmanifest_milestone = extract_skia_milestone_from_cgmanifest(new_cgmanifest)
+        new_upstream_ref = extract_skia_upstream_ref_from_cgmanifest(new_cgmanifest)
         new_upstream_sha = extract_skia_upstream_commit_from_cgmanifest(new_cgmanifest)
     if cgmanifest_milestone and cgmanifest_milestone != caller_milestone:
         eprint(
@@ -318,16 +336,22 @@ def main():
             f"Could not determine new upstream commit from companion PR head "
             f"{companion_head_sha[:12]}:cgmanifest.json"
         )
+    if not new_upstream_ref:
+        raise RuntimeError(
+            f"Could not determine new upstream ref from companion PR head "
+            f"{companion_head_sha[:12]}:cgmanifest.json"
+        )
 
-    new_milestone = caller_milestone
-
-    eprint(f"   New upstream: {new_milestone}")
-    eprint(f"   Old upstream: {old_milestone}")
+    eprint(f"   New upstream: {new_upstream_ref}")
+    eprint(f"   Old upstream: {old_upstream_ref}")
 
     # 1e. Fetch git refs
     eprint("▸ Fetching git refs...")
     ensure_remote(skia_root, "upstream", "https://github.com/google/skia.git")
-    run_git(["fetch", "upstream", old_milestone, new_milestone], cwd=skia_root)
+    run_git(
+        ["fetch", "upstream", *dict.fromkeys([old_upstream_ref, new_upstream_ref])],
+        cwd=skia_root,
+    )
     # Fetch the base branch and the PR head via GitHub's PR ref. This works for
     # both same-repo and fork PRs — the branch name only exists on the fork's
     # remote, but refs/pull/{N}/head is always available on origin.
@@ -358,8 +382,8 @@ def main():
             )
 
     for label, sha, upstream_ref in (
-        ("old", old_upstream_sha, f"upstream/{old_milestone}"),
-        ("new", new_upstream_sha, f"upstream/{new_milestone}"),
+        ("old", old_upstream_sha, f"upstream/{old_upstream_ref}"),
+        ("new", new_upstream_sha, f"upstream/{new_upstream_ref}"),
     ):
         if not recorded_commit_belongs_to_upstream(skia_root, sha, upstream_ref):
             raise RuntimeError(
@@ -540,8 +564,8 @@ def main():
             "prTitle": pr["title"],
             "prState": pr["state"],
             "prAuthor": pr.get("author", {}).get("login", ""),
-            "oldUpstreamBranch": old_milestone,
-            "upstreamBranch": new_milestone,
+            "oldUpstreamBranch": old_upstream_ref,
+            "upstreamBranch": new_upstream_ref,
             "shas": {
                 "prHead": pr_head_sha,
                 "base": base_sha,

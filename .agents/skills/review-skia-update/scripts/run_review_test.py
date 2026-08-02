@@ -4,6 +4,7 @@ from unittest.mock import patch
 from run_review import (
     extract_skia_milestone_from_cgmanifest,
     extract_skia_upstream_commit_from_cgmanifest,
+    extract_skia_upstream_ref_from_cgmanifest,
     recorded_commit_belongs_to_upstream,
 )
 
@@ -32,12 +33,37 @@ class RunReviewTests(unittest.TestCase):
         self.assertEqual(
             "abc123", extract_skia_upstream_commit_from_cgmanifest(manifest)
         )
+        self.assertEqual(
+            "chrome/m152", extract_skia_upstream_ref_from_cgmanifest(manifest)
+        )
 
     def test_returns_none_when_skia_registration_is_missing(self) -> None:
         manifest = {"registrations": []}
 
         self.assertIsNone(extract_skia_milestone_from_cgmanifest(manifest))
         self.assertIsNone(extract_skia_upstream_commit_from_cgmanifest(manifest))
+        self.assertIsNone(extract_skia_upstream_ref_from_cgmanifest(manifest))
+
+    def test_extracts_explicit_main_upstream_ref(self) -> None:
+        manifest = {
+            "registrations": [
+                {
+                    "component": {
+                        "other": {
+                            "name": "skia",
+                            "version": "chrome/m152",
+                        }
+                    },
+                    "chrome_milestone": 152,
+                    "upstream_ref": "main",
+                    "upstream_merge_commit": "abc123",
+                },
+            ]
+        }
+
+        self.assertEqual(
+            "main", extract_skia_upstream_ref_from_cgmanifest(manifest)
+        )
 
     @patch("run_review.subprocess.run")
     def test_accepts_commit_from_upstream_history(self, run) -> None:

@@ -1,10 +1,13 @@
 import json
+import os
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from update_versions import resolve_upstream_sha, update_versions
+from update_versions import main, update_versions
 
 
 class UpdateVersionsTests(unittest.TestCase):
@@ -98,6 +101,7 @@ class UpdateVersionsTests(unittest.TestCase):
         skia = cgmanifest["registrations"][1]
         self.assertEqual(152, skia["chrome_milestone"])
         self.assertEqual("chrome/m152", skia["component"]["other"]["version"])
+        self.assertEqual("chrome/m152", skia["upstream_ref"])
 
     def test_same_milestone_updates_only_manifest_hashes(self) -> None:
         versions_path = self.root / "scripts" / "VERSIONS.txt"
@@ -128,6 +132,7 @@ class UpdateVersionsTests(unittest.TestCase):
             self.assertEqual(content, path.read_bytes())
         cgmanifest = json.loads((self.root / "cgmanifest.json").read_text(encoding="utf-8"))
         self.assertEqual("chrome/m151", cgmanifest["registrations"][1]["component"]["other"]["version"])
+        self.assertEqual("main", cgmanifest["registrations"][1]["upstream_ref"])
         self.assertNotEqual("old", cgmanifest["registrations"][1]["upstream_merge_commit"])
 
     def test_missing_upstream_ref_does_not_modify_files(self) -> None:
@@ -216,16 +221,38 @@ class UpdateVersionsTests(unittest.TestCase):
             cgmanifest["registrations"][1]["upstream_merge_commit"],
         )
 
-    def test_rejects_upstream_sha_that_conflicts_with_workflow_state(self) -> None:
-        with self.assertRaisesRegex(RuntimeError, "does not match"):
-            resolve_upstream_sha("fork-head", "target-upstream")
+    def test_automation_uses_environment_without_arguments(self) -> None:
+        exact_sha = subprocess.run(
+            ["git", "rev-parse", "upstream/chrome/m152"],
+            cwd=self.root / "externals" / "skia",
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        environment = {
+            "SKIA_SYNC_AUTOMATION": "1",
+            "SKIA_SYNC_CURRENT": "151",
+            "SKIA_SYNC_TARGET": "152",
+            "SKIA_SYNC_UPSTREAM_REF": "chrome/m152",
+            "SKIA_SYNC_TARGET_UPSTREAM_SHA": exact_sha,
+        }
+        arguments = [
+            "update_versions.py",
+            "--repo-root",
+            str(self.root),
+        ]
 
-    def test_prefers_workflow_upstream_sha(self) -> None:
-        self.assertEqual(
-            "target-upstream",
-            resolve_upstream_sha(None, "target-upstream"),
+        with patch.dict(os.environ, environment, clear=False), patch.object(
+            sys, "argv", arguments
+        ):
+            self.assertEqual(0, main())
+
+        manifest = json.loads(
+            (self.root / "cgmanifest.json").read_text(encoding="utf-8")
         )
-
+        registration = manifest["registrations"][1]
+        self.assertEqual("chrome/m152", registration["upstream_ref"])
+        self.assertEqual(exact_sha, registration["upstream_merge_commit"])
 
 if __name__ == "__main__":
     unittest.main()

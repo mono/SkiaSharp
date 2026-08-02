@@ -51,6 +51,8 @@ dotnet test tests/SkiaSharp.Tests.Console.slnx \
 ```
 
 Run the solution unfiltered. Confirm every maintained test host in the solution reported results.
+Run each full solution command as one foreground invocation and wait for it to return; do not
+background or poll it.
 The initial run exists to expose failures for the diagnostic loop below. A required host that runs
 zero tests or only skips tests is an infrastructure failure; test failures are expected inputs to
 diagnosis and must be fixed before the final run.
@@ -113,10 +115,8 @@ rm -f "$ARTIFACT_DIR/test-exit-code.txt"
 After the final full solution passes:
 
 1. Ensure every post-merge mono/skia adaptation is committed and the worktree is clean.
-2. Rerun `update_versions.py` with
-   `--upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA"` so `cgmanifest.json` records the final tested
-   submodule tip while retaining the exact target-upstream provenance. Never pass the fork/submodule
-   head as `--upstream-sha`.
+2. Rerun `update_versions.py` with no arguments so it records the final tested submodule tip while
+   retaining the workflow-resolved upstream provenance.
 3. Recheck that Component Governance semantic versions match every tracked dependency whose
    revision or enabled state changed and whose final state is enabled, including revision-only
    rolls whose semantic version was verified unchanged.

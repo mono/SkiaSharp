@@ -50,16 +50,6 @@ def replace_transition(
     return content
 
 
-def resolve_upstream_sha(argument_sha: str | None, environment_sha: str | None) -> str | None:
-    """Use the workflow-resolved upstream SHA and reject conflicting overrides."""
-    if argument_sha and environment_sha and argument_sha != environment_sha:
-        raise RuntimeError(
-            "--upstream-sha does not match SKIA_SYNC_TARGET_UPSTREAM_SHA: "
-            f"{argument_sha} != {environment_sha}"
-        )
-    return environment_sha or argument_sha
-
-
 def update_versions(
     repo_root: Path,
     current: int,
@@ -151,6 +141,7 @@ def update_versions(
         if other_component.get("name") == "skia":
             other_component["version"] = f"chrome/m{target}"
             registration["chrome_milestone"] = target
+            registration["upstream_ref"] = upstream_ref
             registration["upstream_merge_commit"] = upstream_hash
             version_registration = registration
 
@@ -191,8 +182,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Update all SkiaSharp version files for a Skia sync."
     )
-    parser.add_argument("--current", required=True, type=int)
-    parser.add_argument("--target", required=True, type=int)
+    parser.add_argument("--current", type=int)
+    parser.add_argument("--target", type=int)
     parser.add_argument("--upstream-ref")
     parser.add_argument("--upstream-sha")
     parser.add_argument("--repo-root", type=Path)
@@ -203,15 +194,35 @@ def main() -> int:
         if args.repo_root
         else Path(__file__).resolve().parents[4]
     )
-    upstream_ref = args.upstream_ref or f"chrome/m{args.target}"
-    upstream_sha = resolve_upstream_sha(
-        args.upstream_sha,
-        os.environ.get("SKIA_SYNC_TARGET_UPSTREAM_SHA"),
-    )
+    if os.environ.get("SKIA_SYNC_AUTOMATION") == "1":
+        required = {
+            "SKIA_SYNC_CURRENT": os.environ.get("SKIA_SYNC_CURRENT"),
+            "SKIA_SYNC_TARGET": os.environ.get("SKIA_SYNC_TARGET"),
+            "SKIA_SYNC_UPSTREAM_REF": os.environ.get("SKIA_SYNC_UPSTREAM_REF"),
+            "SKIA_SYNC_TARGET_UPSTREAM_SHA": os.environ.get(
+                "SKIA_SYNC_TARGET_UPSTREAM_SHA"
+            ),
+        }
+        missing = [name for name, value in required.items() if not value]
+        if missing:
+            raise RuntimeError(
+                "Missing required automation values: " + ", ".join(missing)
+            )
+        current = int(required["SKIA_SYNC_CURRENT"])
+        target = int(required["SKIA_SYNC_TARGET"])
+        upstream_ref = required["SKIA_SYNC_UPSTREAM_REF"]
+        upstream_sha = required["SKIA_SYNC_TARGET_UPSTREAM_SHA"]
+    else:
+        if args.current is None or args.target is None:
+            parser.error("--current and --target are required outside automation.")
+        current = args.current
+        target = args.target
+        upstream_ref = args.upstream_ref or f"chrome/m{target}"
+        upstream_sha = args.upstream_sha
     update_versions(
         repo_root,
-        args.current,
-        args.target,
+        current,
+        target,
         upstream_ref,
         upstream_sha,
     )

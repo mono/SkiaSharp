@@ -6,15 +6,10 @@
 set -euo pipefail
 
 ARTIFACT_DIR="${SKIA_SYNC_ARTIFACT_DIR:-/tmp/gh-aw/agent}"
-RUNTIME_DIR="/tmp/gh-aw"
-ENV_FILE="$ARTIFACT_DIR/skia-sync-env.sh"
+RUNTIME_DIR="${SKIA_SYNC_RUNTIME_DIR:-/tmp/gh-aw}"
+readonly ARTIFACT_DIR RUNTIME_DIR
 SKIA_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skia-summary.md"
 SS_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skiasharp-summary.md"
-
-if [[ ! -f "$ENV_FILE" ]]; then
-  echo "::error::The detector found sync work, but the agent did not produce skia-sync-env.sh."
-  exit 1
-fi
 
 required_file() {
   local path="$1"
@@ -24,7 +19,6 @@ required_file() {
   fi
 }
 
-required_file "$ENV_FILE"
 required_file "$SKIA_SUMMARY_FILE"
 required_file "$SS_SUMMARY_FILE"
 required_file "$ARTIFACT_DIR/skia-breaking-change-analysis.md"
@@ -34,21 +28,29 @@ required_file "$ARTIFACT_DIR/skia-fork-patch-audit.md"
 required_file "$ARTIFACT_DIR/test-output.txt"
 required_file "$ARTIFACT_DIR/test-exit-code.txt"
 
-# Written by the trusted agent in this workflow and validated immediately below.
-# shellcheck source=/dev/null
-source "$ENV_FILE"
-
-: "${TARGET:?TARGET is required}"
-: "${CURRENT:?CURRENT is required}"
-: "${UPSTREAM_REF:?UPSTREAM_REF is required}"
-: "${BASE_BRANCH:?BASE_BRANCH is required}"
-: "${SKIA_BASE_BRANCH:?SKIA_BASE_BRANCH is required}"
-: "${SKIA_BASE_SHA:?SKIA_BASE_SHA is required}"
-: "${HEAD_BRANCH:?HEAD_BRANCH is required}"
-: "${BASE_UPSTREAM_SHA:?BASE_UPSTREAM_SHA is required}"
-: "${TARGET_UPSTREAM_SHA:?TARGET_UPSTREAM_SHA is required}"
+: "${SKIA_SYNC_TARGET:?SKIA_SYNC_TARGET is required}"
+: "${SKIA_SYNC_CURRENT:?SKIA_SYNC_CURRENT is required}"
+: "${SKIA_SYNC_UPSTREAM_REF:?SKIA_SYNC_UPSTREAM_REF is required}"
+: "${SKIA_SYNC_IS_RELEASE:?SKIA_SYNC_IS_RELEASE is required}"
+: "${SKIA_SYNC_BASE_BRANCH:?SKIA_SYNC_BASE_BRANCH is required}"
+: "${SKIA_SYNC_SKIA_BASE_BRANCH:?SKIA_SYNC_SKIA_BASE_BRANCH is required}"
+: "${SKIA_SYNC_SKIA_BASE_SHA:?SKIA_SYNC_SKIA_BASE_SHA is required}"
+: "${SKIA_SYNC_HEAD_BRANCH:?SKIA_SYNC_HEAD_BRANCH is required}"
+: "${SKIA_SYNC_BASE_UPSTREAM_SHA:?SKIA_SYNC_BASE_UPSTREAM_SHA is required}"
+: "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
+
+TARGET="$SKIA_SYNC_TARGET"
+CURRENT="$SKIA_SYNC_CURRENT"
+UPSTREAM_REF="$SKIA_SYNC_UPSTREAM_REF"
+IS_RELEASE="$SKIA_SYNC_IS_RELEASE"
+BASE_BRANCH="$SKIA_SYNC_BASE_BRANCH"
+SKIA_BASE_BRANCH="$SKIA_SYNC_SKIA_BASE_BRANCH"
+SKIA_BASE_SHA="$SKIA_SYNC_SKIA_BASE_SHA"
+HEAD_BRANCH="$SKIA_SYNC_HEAD_BRANCH"
+BASE_UPSTREAM_SHA="$SKIA_SYNC_BASE_UPSTREAM_SHA"
+TARGET_UPSTREAM_SHA="$SKIA_SYNC_TARGET_UPSTREAM_SHA"
 
 assert_resolved() {
   local artifact_name="$1"
@@ -61,45 +63,39 @@ assert_resolved() {
   fi
 }
 
-assert_resolved TARGET "$TARGET" SKIA_SYNC_TARGET "${SKIA_SYNC_TARGET:-}"
-assert_resolved CURRENT "$CURRENT" SKIA_SYNC_CURRENT "${SKIA_SYNC_CURRENT:-}"
-assert_resolved UPSTREAM_REF "$UPSTREAM_REF" SKIA_SYNC_UPSTREAM_REF "${SKIA_SYNC_UPSTREAM_REF:-}"
-assert_resolved IS_RELEASE "$IS_RELEASE" SKIA_SYNC_IS_RELEASE "${SKIA_SYNC_IS_RELEASE:-}"
-assert_resolved BASE_BRANCH "$BASE_BRANCH" SKIA_SYNC_BASE_BRANCH "${SKIA_SYNC_BASE_BRANCH:-}"
-assert_resolved SKIA_BASE_BRANCH "$SKIA_BASE_BRANCH" SKIA_SYNC_SKIA_BASE_BRANCH "${SKIA_SYNC_SKIA_BASE_BRANCH:-}"
-assert_resolved SKIA_BASE_SHA "$SKIA_BASE_SHA" SKIA_SYNC_SKIA_BASE_SHA "${SKIA_SYNC_SKIA_BASE_SHA:-}"
-assert_resolved HEAD_BRANCH "$HEAD_BRANCH" SKIA_SYNC_HEAD_BRANCH "${SKIA_SYNC_HEAD_BRANCH:-}"
-assert_resolved BASE_UPSTREAM_SHA "$BASE_UPSTREAM_SHA" SKIA_SYNC_BASE_UPSTREAM_SHA "${SKIA_SYNC_BASE_UPSTREAM_SHA:-}"
-assert_resolved TARGET_UPSTREAM_SHA "$TARGET_UPSTREAM_SHA" SKIA_SYNC_TARGET_UPSTREAM_SHA "${SKIA_SYNC_TARGET_UPSTREAM_SHA:-}"
-
-MANIFEST="$GITHUB_WORKSPACE/cgmanifest.json"
-required_file "$MANIFEST"
+MANIFEST_JSON=$(git -C "$GITHUB_WORKSPACE" show "${HEAD_BRANCH}:cgmanifest.json")
 MANIFEST_SKIA_HEAD=$(jq -er '
   .registrations[]
   | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git")
   | .component.git.commitHash
-' "$MANIFEST")
+' <<<"$MANIFEST_JSON")
 MANIFEST_UPSTREAM_SHA=$(jq -er '
   .registrations[]
   | select(.component.other.name == "skia")
   | .upstream_merge_commit
-' "$MANIFEST")
+' <<<"$MANIFEST_JSON")
 MANIFEST_MILESTONE=$(jq -er '
   .registrations[]
   | select(.component.other.name == "skia")
   | .chrome_milestone
-' "$MANIFEST")
+' <<<"$MANIFEST_JSON")
+MANIFEST_UPSTREAM_REF=$(jq -er '
+  .registrations[]
+  | select(.component.other.name == "skia")
+  | .upstream_ref
+' <<<"$MANIFEST_JSON")
 MANIFEST_UPSTREAM_VERSION=$(jq -er '
   .registrations[]
   | select(.component.other.name == "skia")
   | .component.other.version
-' "$MANIFEST")
+' <<<"$MANIFEST_JSON")
 LOCAL_SKIA_HEAD=$(git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "${HEAD_BRANCH}^{commit}")
 PARENT_GITLINK=$(git -C "$GITHUB_WORKSPACE" ls-tree "$HEAD_BRANCH" externals/skia | awk '{print $3}')
 
 assert_resolved CGMANIFEST_SKIA_HEAD "$MANIFEST_SKIA_HEAD" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
 assert_resolved PARENT_GITLINK "$PARENT_GITLINK" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
 assert_resolved CGMANIFEST_UPSTREAM_SHA "$MANIFEST_UPSTREAM_SHA" SKIA_SYNC_TARGET_UPSTREAM_SHA "$TARGET_UPSTREAM_SHA"
+assert_resolved CGMANIFEST_UPSTREAM_REF "$MANIFEST_UPSTREAM_REF" SKIA_SYNC_UPSTREAM_REF "$UPSTREAM_REF"
 assert_resolved CGMANIFEST_MILESTONE "$MANIFEST_MILESTONE" SKIA_SYNC_TARGET "$TARGET"
 assert_resolved CGMANIFEST_UPSTREAM_VERSION "$MANIFEST_UPSTREAM_VERSION" EXPECTED_UPSTREAM_VERSION "chrome/m${TARGET}"
 

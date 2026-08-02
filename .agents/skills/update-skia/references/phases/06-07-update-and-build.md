@@ -5,16 +5,12 @@
 From the parent repository, run the maintained helper:
 
 ```bash
-python3 .agents/skills/update-skia/scripts/update_versions.py \
-  --current "{CURRENT}" \
-  --target "{TARGET}" \
-  --upstream-ref "{UPSTREAM_REF}" \
-  --upstream-sha "$SKIA_SYNC_TARGET_UPSTREAM_SHA"
+python3 .agents/skills/update-skia/scripts/update_versions.py
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
 `cgmanifest.json`, `scripts/azure-templates-variables.yml`, and the native C API version. It
-implements all modes:
+reads the workflow-resolved `SKIA_SYNC_*` values in automation and implements all modes:
 
 - Milestone bump: advance milestone and package/native versions.
 - Same-milestone bug-fix: keep versions and advance Skia hashes.
@@ -40,6 +36,10 @@ platform from source:
 dotnet tool restore
 dotnet cake --target="externals-{PLATFORM}" --arch="{ARCH}"
 ```
+
+Run the build as one foreground shell invocation and wait for that invocation to return. Do not
+wrap it in `nohup`, append `&`, or start progress-polling commands; the shell tool can remain active
+for the full build.
 
 Automation may provide a built/cached base tree so GN, Ninja, and unchanged dependencies can be
 reused. That is only an optimization; the merged-target source build remains mandatory.

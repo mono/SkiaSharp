@@ -214,11 +214,15 @@ steps:
       restore-keys: ${{ steps.native-cache-key.outputs.restore-key }}
   - name: Copy post-step assets
     run: |
-      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
-      cp .github/scripts/skia-sync-render-template.py /tmp/gh-aw/skia-sync-render-template.py
-      cp .agents/skills/update-skia/scripts/audit_fork_patches.py /tmp/gh-aw/audit-fork-patches.py
-      cp .github/scripts/skia-sync-pr-skia.md /tmp/gh-aw/skia-sync-pr-skia.md
-      cp .github/scripts/skia-sync-pr-skiasharp.md /tmp/gh-aw/skia-sync-pr-skiasharp.md
+      RUNTIME_DIR="$RUNNER_TEMP/skia-sync-runtime"
+      mkdir -p "$RUNTIME_DIR"
+      cp .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      cp .github/scripts/skia-sync-render-template.py "$RUNTIME_DIR/skia-sync-render-template.py"
+      cp .agents/skills/update-skia/scripts/update_versions.py "$RUNTIME_DIR/update_versions.py"
+      cp .agents/skills/update-skia/scripts/audit_fork_patches.py "$RUNTIME_DIR/audit-fork-patches.py"
+      cp .github/scripts/skia-sync-pr-skia.md "$RUNTIME_DIR/skia-sync-pr-skia.md"
+      cp .github/scripts/skia-sync-pr-skiasharp.md "$RUNTIME_DIR/skia-sync-pr-skiasharp.md"
+      chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -311,13 +315,49 @@ pre-agent-steps:
       key: ${{ steps.native-cache-key.outputs.key }}
 
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. Pushes branches and creates/updates PRs
-# using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
+# Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
+# then push branches and create/update PRs with the write credential.
 post-steps:
+  - name: Finalize sync metadata
+    env:
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
+    run: |
+      set -euo pipefail
+      test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+
+      UNEXPECTED_CHANGES=$(
+        {
+          git diff --name-only
+          git diff --cached --name-only
+        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia)$' || true
+      )
+      if [ -n "$UNEXPECTED_CHANGES" ]; then
+        echo "::error::The agent left uncommitted semantic changes:"
+        echo "$UNEXPECTED_CHANGES"
+        exit 1
+      fi
+
+      python3 "$SKIA_SYNC_RUNTIME_DIR/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+
+      if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
+        echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
+        exit 1
+      fi
+
+      git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
+      if ! git diff --cached --quiet; then
+        git config user.name "SkiaSharp Sync"
+        git config user.email "devnull@localhost"
+        git commit -m "[skia-sync] Finalize deterministic metadata"
+      fi
+      git diff --quiet
+      git diff --cached --quiet
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-    run: bash /tmp/gh-aw/skia-sync-push-prs.sh
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
+    run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
 ---
 
 # Sync - Skia Upstream
