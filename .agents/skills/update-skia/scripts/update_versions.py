@@ -50,6 +50,16 @@ def replace_transition(
     return content
 
 
+def resolve_upstream_sha(argument_sha: str | None, environment_sha: str | None) -> str | None:
+    """Use the workflow-resolved upstream SHA and reject conflicting overrides."""
+    if argument_sha and environment_sha and argument_sha != environment_sha:
+        raise RuntimeError(
+            "--upstream-sha does not match SKIA_SYNC_TARGET_UPSTREAM_SHA: "
+            f"{argument_sha} != {environment_sha}"
+        )
+    return environment_sha or argument_sha
+
+
 def update_versions(
     repo_root: Path,
     current: int,
@@ -194,7 +204,10 @@ def main() -> int:
         else Path(__file__).resolve().parents[4]
     )
     upstream_ref = args.upstream_ref or f"chrome/m{args.target}"
-    upstream_sha = args.upstream_sha or os.environ.get("SKIA_SYNC_TARGET_UPSTREAM_SHA")
+    upstream_sha = resolve_upstream_sha(
+        args.upstream_sha,
+        os.environ.get("SKIA_SYNC_TARGET_UPSTREAM_SHA"),
+    )
     update_versions(
         repo_root,
         args.current,

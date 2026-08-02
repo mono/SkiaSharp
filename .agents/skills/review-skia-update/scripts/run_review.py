@@ -110,6 +110,17 @@ def extract_skia_upstream_commit_from_cgmanifest(cgmanifest: dict):
     return None
 
 
+def recorded_commit_belongs_to_upstream(cwd: str, commit: str, upstream_ref: str) -> bool:
+    """Return whether a recorded commit belongs to the fetched upstream branch history."""
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, upstream_ref],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Run all mechanical checks for a Skia update review."
@@ -344,6 +355,17 @@ def main():
             raise RuntimeError(
                 f"Recorded {label} upstream commit {sha!r} is unavailable: "
                 f"{verify.stderr.strip()}"
+            )
+
+    for label, sha, upstream_ref in (
+        ("old", old_upstream_sha, f"upstream/{old_milestone}"),
+        ("new", new_upstream_sha, f"upstream/{new_milestone}"),
+    ):
+        if not recorded_commit_belongs_to_upstream(skia_root, sha, upstream_ref):
+            raise RuntimeError(
+                f"Recorded {label} upstream commit {sha} does not belong to "
+                f"{upstream_ref}. The companion cgmanifest may contain a fork head "
+                "instead of the exact upstream commit."
             )
 
     # Use PR metadata for base SHA; fall back to resolving the ref

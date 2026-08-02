@@ -72,6 +72,37 @@ assert_resolved HEAD_BRANCH "$HEAD_BRANCH" SKIA_SYNC_HEAD_BRANCH "${SKIA_SYNC_HE
 assert_resolved BASE_UPSTREAM_SHA "$BASE_UPSTREAM_SHA" SKIA_SYNC_BASE_UPSTREAM_SHA "${SKIA_SYNC_BASE_UPSTREAM_SHA:-}"
 assert_resolved TARGET_UPSTREAM_SHA "$TARGET_UPSTREAM_SHA" SKIA_SYNC_TARGET_UPSTREAM_SHA "${SKIA_SYNC_TARGET_UPSTREAM_SHA:-}"
 
+MANIFEST="$GITHUB_WORKSPACE/cgmanifest.json"
+required_file "$MANIFEST"
+MANIFEST_SKIA_HEAD=$(jq -er '
+  .registrations[]
+  | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git")
+  | .component.git.commitHash
+' "$MANIFEST")
+MANIFEST_UPSTREAM_SHA=$(jq -er '
+  .registrations[]
+  | select(.component.other.name == "skia")
+  | .upstream_merge_commit
+' "$MANIFEST")
+MANIFEST_MILESTONE=$(jq -er '
+  .registrations[]
+  | select(.component.other.name == "skia")
+  | .chrome_milestone
+' "$MANIFEST")
+MANIFEST_UPSTREAM_VERSION=$(jq -er '
+  .registrations[]
+  | select(.component.other.name == "skia")
+  | .component.other.version
+' "$MANIFEST")
+LOCAL_SKIA_HEAD=$(git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "${HEAD_BRANCH}^{commit}")
+PARENT_GITLINK=$(git -C "$GITHUB_WORKSPACE" ls-tree "$HEAD_BRANCH" externals/skia | awk '{print $3}')
+
+assert_resolved CGMANIFEST_SKIA_HEAD "$MANIFEST_SKIA_HEAD" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
+assert_resolved PARENT_GITLINK "$PARENT_GITLINK" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
+assert_resolved CGMANIFEST_UPSTREAM_SHA "$MANIFEST_UPSTREAM_SHA" SKIA_SYNC_TARGET_UPSTREAM_SHA "$TARGET_UPSTREAM_SHA"
+assert_resolved CGMANIFEST_MILESTONE "$MANIFEST_MILESTONE" SKIA_SYNC_TARGET "$TARGET"
+assert_resolved CGMANIFEST_UPSTREAM_VERSION "$MANIFEST_UPSTREAM_VERSION" EXPECTED_UPSTREAM_VERSION "chrome/m${TARGET}"
+
 if [[ "$(tr -d '[:space:]' < "$ARTIFACT_DIR/test-exit-code.txt")" != "0" ]]; then
   echo "::error::The final unfiltered test command did not exit successfully."
   exit 1

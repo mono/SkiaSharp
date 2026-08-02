@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from update_versions import update_versions
+from update_versions import resolve_upstream_sha, update_versions
 
 
 class UpdateVersionsTests(unittest.TestCase):
@@ -214,6 +214,16 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertEqual(
             exact_sha,
             cgmanifest["registrations"][1]["upstream_merge_commit"],
+        )
+
+    def test_rejects_upstream_sha_that_conflicts_with_workflow_state(self) -> None:
+        with self.assertRaisesRegex(RuntimeError, "does not match"):
+            resolve_upstream_sha("fork-head", "target-upstream")
+
+    def test_prefers_workflow_upstream_sha(self) -> None:
+        self.assertEqual(
+            "target-upstream",
+            resolve_upstream_sha(None, "target-upstream"),
         )
 
 

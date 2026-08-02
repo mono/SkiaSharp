@@ -1,8 +1,10 @@
 import unittest
+from unittest.mock import patch
 
 from run_review import (
     extract_skia_milestone_from_cgmanifest,
     extract_skia_upstream_commit_from_cgmanifest,
+    recorded_commit_belongs_to_upstream,
 )
 
 
@@ -36,6 +38,30 @@ class RunReviewTests(unittest.TestCase):
 
         self.assertIsNone(extract_skia_milestone_from_cgmanifest(manifest))
         self.assertIsNone(extract_skia_upstream_commit_from_cgmanifest(manifest))
+
+    @patch("run_review.subprocess.run")
+    def test_accepts_commit_from_upstream_history(self, run) -> None:
+        run.return_value.returncode = 0
+
+        self.assertTrue(
+            recorded_commit_belongs_to_upstream(
+                "/repo",
+                "target-sha",
+                "upstream/chrome/m152",
+            )
+        )
+
+    @patch("run_review.subprocess.run")
+    def test_rejects_fork_head_as_upstream_commit(self, run) -> None:
+        run.return_value.returncode = 1
+
+        self.assertFalse(
+            recorded_commit_belongs_to_upstream(
+                "/repo",
+                "fork-head",
+                "upstream/chrome/m152",
+            )
+        )
 
 
 if __name__ == "__main__":
