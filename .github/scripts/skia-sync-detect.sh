@@ -3,14 +3,14 @@
 # skia-sync-detect.sh — Resolve which Skia milestone and branch line the upstream
 # sync targets. This is the SINGLE source of truth for branch resolution, shared by:
 #
-#   - the pre_activation "Detect milestone" step  → run with --gate; writes the job
-#     outputs consumed by the prompt and the activation gate.
-#   - the agent job "Align submodule" step        → run without --gate and sourced,
-#     because that job cannot read pre_activation's outputs and must recompute them.
+#   - the pre_activation "Detect milestone" step → run normally; writes the job outputs
+#     consumed by the prompt and checks whether the expensive agent job should run.
+#   - the agent job "Prepare Skia checkout" step → run with --resolve-only and sourced,
+#     because that job cannot read pre_activation's outputs and must recompute the facts.
 #
 # Contract:
 #   - `key=value` lines (lowercase, matching the workflow's declared outputs) are
-#     appended to the file named by $SKIA_SYNC_OUT, defaulting to $GITHUB_OUTPUT.
+#     appended to the file passed with --output.
 #   - All human-readable logs and ::error::/::notice:: workflow commands go to stdout
 #     (so GitHub renders annotations and the machine output stays clean for sourcing).
 #
@@ -28,9 +28,10 @@
 #   --base-branch <branch>         Optional mono/SkiaSharp base override for manual
 #                                  validation. Production runs omit this and use normal
 #                                  main/release-line detection.
-#   --gate                         Also run the gating checks (does upstream exist? is it
-#                                  already merged?) and emit `skip=true` / exit
-#                                  accordingly. Only pre_activation needs this.
+#   --output <file>                Required destination for resolved `key=value` facts.
+#   --resolve-only                 Stop after resolving and emitting sync facts. Skip the
+#                                  check for new upstream work. The agent setup uses this
+#                                  because pre_activation already made the run decision.
 #
 # Inputs (env):
 #   GITHUB_REPOSITORY  owner/repo of this SkiaSharp checkout (default GitHub env)
@@ -42,23 +43,27 @@
 
 set -euo pipefail
 
-GATE=false
+RESOLVE_ONLY=false
 SYNC_TARGET=""
 BASE_BRANCH_OVERRIDE=""
+OUT=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --gate) GATE=true; shift ;;
+    --resolve-only) RESOLVE_ONLY=true; shift ;;
     --target)
       [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --target requires a value"; exit 2; }
       SYNC_TARGET="$2"; shift 2 ;;
     --base-branch)
       [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --base-branch requires a value"; exit 2; }
       BASE_BRANCH_OVERRIDE="$2"; shift 2 ;;
+    --output)
+      [ $# -ge 2 ] || { echo "::error::skia-sync-detect.sh: --output requires a value"; exit 2; }
+      OUT="$2"; shift 2 ;;
     *) echo "::error::skia-sync-detect.sh: unknown argument '$1'"; exit 2 ;;
   esac
 done
 
-OUT="${SKIA_SYNC_OUT:-${GITHUB_OUTPUT:?SKIA_SYNC_OUT or GITHUB_OUTPUT must be set}}"
+[ -n "$OUT" ] || { echo "::error::skia-sync-detect.sh: --output is required"; exit 2; }
 emit() { printf '%s=%s\n' "$1" "$2" >>"$OUT"; }
 
 # Milestone number from scripts/VERSIONS.txt at the given ref (remote read, no checkout).
@@ -73,7 +78,7 @@ milestone_of() {
 # milestone; NEXT (= MAIN_MS + 1) is the rotation's leading-edge fallback.
 #
 # Read main's config at the IMMUTABLE triggering commit ($GITHUB_SHA), not the branch
-# ref: both the pre_activation gate and the agent-job align step re-run this script, and
+# ref: both the pre_activation gate and the agent-job prepare step re-run this script, and
 # a branch (GITHUB_REF) could advance between them and make them disagree. (Release-line
 # reads below intentionally use the branch name, to pick up that line's own tip.)
 REF_IMMUTABLE="${GITHUB_SHA:-$GITHUB_REF}"
@@ -107,14 +112,14 @@ chrome_branch_exists() {
 #
 # The picker is GITHUB_RUN_NUMBER, which increments by exactly 1 per run of THIS workflow
 # and is identical across every job/step of a run. So the round-robin is fully
-# deterministic between the pre_activation gate and the agent-job align step (separate
+# deterministic between the pre_activation gate and the agent-job prepare step (separate
 # jobs that each re-run this script) — no wall-clock read, so no risk of the two steps
 # landing on different targets near a time boundary. It advances one line per run; with a
 # 6-hourly schedule that is one line every 6h, cycling through a list of ANY length.
 #
 # `next` = highest supported milestone + 1: if upstream has a chrome/m<N> branch it is
 # a real milestone bump into main; otherwise it falls back to the bleeding-edge main tip
-# (head skia-sync/main). The skip-gate no-ops any run that has nothing new, so a run
+# (head skia-sync/main). The work check no-ops any run that has nothing new, so a run
 # landing on an up-to-date line is essentially free.
 rotate_select() {
   local support next_ms specs len idx chosen rest m run_number
@@ -228,8 +233,8 @@ elif [ -n "$RELEASE_BRANCH" ]; then
   fi
 elif [ "$TARGET" -lt "$MAIN_MS" ] 2>/dev/null; then
   # A supported/rotation line older than main but with NO release/<major>.<TARGET>.x
-  # branch has no home — do NOT merge an older milestone into main. Flag it so the gate
-  # skips (fix versions.json 'support' if this milestone should still be synced).
+  # branch has no home — do NOT merge an older milestone into main. Flag it so the work
+  # check skips (fix versions.json 'support' if this milestone should still be synced).
   INVALID=true
   echo "::notice::milestone m${TARGET} is older than main (m${MAIN_MS}) but has no release/*.${TARGET}.x branch — nothing to sync."
 fi
@@ -254,8 +259,10 @@ emit current "$CURRENT"
 
 echo "Resolved: m${TARGET} → ${BASE_BRANCH} (mode=${MODE}, upstream=${UPSTREAM_REF}, base milestone=m${CURRENT}, head=${HEAD_BRANCH}, release=${IS_RELEASE}, invalid=${INVALID})"
 
-# Branch derivation is all the agent job needs; gating is pre_activation-only.
-$GATE || exit 0
+# Branch derivation is all the agent job needs; pre_activation already checked for work.
+if [ "$RESOLVE_ONLY" = true ]; then
+  exit 0
+fi
 
 # A supported/rotation line older than main with no release branch has nowhere to sync.
 if [ "$INVALID" = true ]; then
@@ -263,7 +270,7 @@ if [ "$INVALID" = true ]; then
   exit 0
 fi
 
-# -- Gate: only spin up the (expensive) agent when there is new upstream work ----
+# -- Work check: only spin up the expensive agent when there is new upstream work ----
 UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/${UPSTREAM_REF}" | awk '{print $1}')
 if [ -z "$UPSTREAM_SHA" ]; then
   echo "::notice::upstream/${UPSTREAM_REF} does not exist yet"

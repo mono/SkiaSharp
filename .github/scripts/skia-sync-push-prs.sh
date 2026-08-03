@@ -196,6 +196,112 @@ changed_check() {
   fi
 }
 
+SKIA_PR_TEMPLATE=$(cat <<'EOF'
+## Description
+
+{{BODY_INTRO}}
+
+This pull request was produced by {{WORKFLOW_LINK}}.
+
+**SkiaSharp issue**
+
+N/A — automated upstream synchronization.
+
+**Required SkiaSharp PR**
+
+Requires {{COMPANION_PR_URL}}
+
+**Areas affected**
+
+- [{{CAPI_CHECK}}] C API (`include/c`, `src/c`)
+- [{{DEPS_CHECK}}] Native dependency / `DEPS`
+- [{{BUILD_CHECK}}] Build (gn / build files)
+- [x] Upstream Skia merge or rebase
+- [{{RENDERING_CHECK}}] Rendering output / behavior
+- [ ] Other
+
+{{AUTOMATED_REPORT}}
+
+## Checklist
+
+- [x] Targets the `{{BASE_BRANCH}}` branch
+- [x] `Changes` above lists every added/changed C API export or states that none changed
+- [x] Companion `mono/SkiaSharp` PR linked above
+
+_Last rendered by the sync workflow: {{UPDATED_AT}}_
+EOF
+)
+
+SKIASHARP_PR_TEMPLATE=$(cat <<'EOF'
+## Description
+
+{{BODY_INTRO}}
+
+This pull request was produced by {{WORKFLOW_LINK}}.
+
+**Related issues**
+
+N/A — automated upstream synchronization.
+
+**Required skia PR**
+
+Requires {{COMPANION_PR_URL}}
+
+**Areas affected**
+
+- [{{MANAGED_CHECK}}] Managed API (`binding/`)
+- [{{NATIVE_CHECK}}] Native / C API (`externals/skia/src/c`, `include/c`)
+- [{{GENERATED_CHECK}}] Generated P/Invoke bindings
+- [x] Native dependency or Skia update
+- [{{INTEGRATIONS_CHECK}}] Views & integrations
+- [{{RENDERING_CHECK}}] Rendering output / visual behavior
+- [ ] Performance
+- [{{TESTS_CHECK}}] Tests
+- [{{BUILD_CHECK}}] Build, packaging, or CI
+- [{{DOCS_CHECK}}] Documentation or samples
+
+{{AUTOMATED_REPORT}}
+
+## Checklist
+
+- [x] Tests added or updated when behavior required them, or the report explains why not
+- [x] `Changes` above lists all public API and behavioral changes or states that none changed
+- [{{DOCS_FOLLOWUP_CHECK}}] Documentation follow-up filed, or no public API changed
+- [x] Companion `mono/skia` PR linked above and bindings regenerated
+
+_Last rendered by the sync workflow: {{UPDATED_AT}}_
+EOF
+)
+readonly SKIA_PR_TEMPLATE SKIASHARP_PR_TEMPLATE
+
+render_template() {
+  local template="$1"
+  local values_path="$2"
+  local output_path="$3"
+
+  jq -nr \
+    --arg template "$template" \
+    --slurpfile values "$values_path" \
+    '
+      if ($values | length) != 1 or ($values[0] | type) != "object" then
+        error("template values must be a JSON object")
+      else
+        $values[0] as $values
+        | $template
+        | gsub("\\{\\{(?<key>[A-Z0-9_]+)\\}\\}";
+            .key as $key
+            | if ($values | has($key) | not) then
+                error("missing template value: \($key)")
+              elif ($values[$key] | type) != "string" then
+                error("template value \($key) must be a string")
+              else
+                $values[$key]
+              end)
+        | sub("[[:space:]]+$"; "")
+      end
+    ' >"$output_path"
+}
+
 render_skia_body() {
   local companion_url="$1"
   local output="$2"
@@ -225,8 +331,7 @@ render_skia_body() {
       UPDATED_AT: $UPDATED_AT
     }' >"$values"
 
-  python3 "$RUNTIME_DIR/skia-sync-render-template.py" \
-    "$RUNTIME_DIR/skia-sync-pr-skia.md" "$values" "$output"
+  render_template "$SKIA_PR_TEMPLATE" "$values" "$output"
 }
 
 render_skiasharp_body() {
@@ -268,8 +373,7 @@ render_skiasharp_body() {
       UPDATED_AT: $UPDATED_AT
     }' >"$values"
 
-  python3 "$RUNTIME_DIR/skia-sync-render-template.py" \
-    "$RUNTIME_DIR/skia-sync-pr-skiasharp.md" "$values" "$output"
+  render_template "$SKIASHARP_PR_TEMPLATE" "$values" "$output"
 }
 
 find_pr() {

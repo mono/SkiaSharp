@@ -28,9 +28,9 @@ on:
 
   # -- Pre-activation step -------------------------------------------
   # Runs BEFORE the agent job. Detects the target milestone + branch line.
-  # All resolution logic lives in the committed .github/scripts/skia-sync-detect.sh
-  # (the single source of truth, sparse-checked-out below); --gate adds the
-  # "is there anything to sync?" check.
+  # All resolution and work-detection logic lives in the committed
+  # .github/scripts/skia-sync-detect.sh (the single source of truth,
+  # sparse-checked-out below).
   # Exit 1 = hard failure (explicit milestone input doesn't exist / branch missing).
   # skip=true output = nothing to sync (graceful skip, workflow shows green).
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
@@ -43,7 +43,7 @@ on:
       id: detect
       # Scheduled runs pass an empty target — the detector then ROTATES: it reads
       # versions.json's `support` block and picks one supported line per run, round-robin
-      # by GITHUB_RUN_NUMBER (stable across jobs, so this gate and the agent-job align step
+      # by GITHUB_RUN_NUMBER (stable across jobs, so this gate and the agent-job prepare step
       # resolve the SAME target). Manual dispatch passes a milestone number or `main`.
       # Staged into an env var rather than interpolated into `run:`, so the free-form input
       # can't inject shell — the script consumes it as a real --target arg.
@@ -51,7 +51,7 @@ on:
         SYNC_TARGET: ${{ github.event.inputs.target }}
         SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: bash .github/scripts/skia-sync-detect.sh --gate --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+      run: bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -156,24 +156,23 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Align submodule to the base branch
+  - name: Prepare Skia checkout
     # Same target resolution as the pre_activation detect step (see there). The agent job
     # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
-    # same committed detector to recover base_branch / skia_base_branch, then align the
-    # submodule. For rotation runs (empty target) the detector picks the SAME line as
-    # pre_activation because the round-robin index is GITHUB_RUN_NUMBER (identical across
-    # jobs) and main's config is read at the immutable $GITHUB_SHA. skia-sync-detect.sh is
-    # the single source of truth.
+    # same committed detector to recover base_branch / skia_base_branch, then prepare the
+    # submodule and exact upstream analysis range. For rotation runs (empty target), the
+    # detector picks the SAME line as pre_activation because the round-robin index is
+    # GITHUB_RUN_NUMBER (identical across jobs) and main's config is read at the immutable
+    # $GITHUB_SHA. skia-sync-detect.sh is the single source of truth.
     env:
       SYNC_TARGET: ${{ github.event.inputs.target }}
       SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
       GH_TOKEN: ${{ github.token }}
     run: |
       OUT=$(mktemp)
-      SKIA_SYNC_OUT="$OUT" bash .github/scripts/skia-sync-detect.sh --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+      bash .github/scripts/skia-sync-detect.sh --resolve-only --output "$OUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
       set -a; . "$OUT"; set +a
-      bash .github/scripts/skia-sync-align-submodule.sh
-      bash .github/scripts/skia-sync-prefetch-upstream.sh
+      bash .github/scripts/skia-sync-prepare-skia.sh
       {
         printf 'SKIA_SYNC_AUTOMATION=1\n'
         printf 'SKIA_SYNC_CURRENT=%s\n' "$current"
@@ -217,11 +216,8 @@ steps:
       RUNTIME_DIR="$RUNNER_TEMP/skia-sync-runtime"
       mkdir -p "$RUNTIME_DIR"
       cp .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
-      cp .github/scripts/skia-sync-render-template.py "$RUNTIME_DIR/skia-sync-render-template.py"
       cp .agents/skills/update-skia/scripts/update_versions.py "$RUNTIME_DIR/update_versions.py"
       cp .agents/skills/update-skia/scripts/audit_fork_patches.py "$RUNTIME_DIR/audit-fork-patches.py"
-      cp .github/scripts/skia-sync-pr-skia.md "$RUNTIME_DIR/skia-sync-pr-skia.md"
-      cp .github/scripts/skia-sync-pr-skiasharp.md "$RUNTIME_DIR/skia-sync-pr-skiasharp.md"
       chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
