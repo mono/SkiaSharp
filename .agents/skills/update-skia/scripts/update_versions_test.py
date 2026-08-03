@@ -7,7 +7,13 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from update_versions import main, update_versions
+from update_versions import (
+    TRACKED_SKIA_DEPENDENCIES,
+    DependencyReviewRequired,
+    main,
+    reconcile_dependency_metadata,
+    update_versions,
+)
 
 
 class UpdateVersionsTests(unittest.TestCase):
@@ -33,6 +39,17 @@ class UpdateVersionsTests(unittest.TestCase):
         (self.root / "externals" / "skia" / "include" / "c" / "sk_types.h").write_text(
             "#define SK_C_INCREMENT 7\n", encoding="utf-8"
         )
+        (self.root / "externals" / "skia" / "DEPS").write_text(
+            "deps = {\n"
+            + "".join(
+                f'  "third_party/externals/{dependency_name}": '
+                f'"https://example.test/{TRACKED_SKIA_DEPENDENCIES[dependency_name]}@'
+                f'{"old-vma-sha" if dependency_name == "vulkanmemoryallocator" else dependency_name + "-sha"}",\n'
+                for dependency_name in TRACKED_SKIA_DEPENDENCIES
+            )
+            + "}\n",
+            encoding="utf-8",
+        )
         (self.root / "cgmanifest.json").write_text(
             json.dumps(
                 {
@@ -55,6 +72,22 @@ class UpdateVersionsTests(unittest.TestCase):
                             "upstream_merge_commit": "old",
                         },
                     ]
+                    + [
+                        {
+                            "component": {
+                                "type": "other",
+                                "other": {
+                                    "name": manifest_name,
+                                    "version": (
+                                        "3.2.1"
+                                        if dependency_name == "vulkanmemoryallocator"
+                                        else "1.0.0"
+                                    ),
+                                },
+                            }
+                        }
+                        for dependency_name, manifest_name in TRACKED_SKIA_DEPENDENCIES.items()
+                    ]
                 }
             ),
             encoding="utf-8",
@@ -67,9 +100,48 @@ class UpdateVersionsTests(unittest.TestCase):
         subprocess.run(["git", "add", "."], cwd=skia, check=True)
         subprocess.run(["git", "commit", "--quiet", "-m", "fixture"], cwd=skia, check=True)
         subprocess.run(["git", "branch", "upstream/chrome/m152"], cwd=skia, check=True)
+        self.skia_base_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=skia,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+        subprocess.run(["git", "init", "--quiet"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "config", "user.email", "fixture@example.test"],
+            cwd=self.root,
+            check=True,
+        )
+        subprocess.run(
+            ["git", "config", "user.name", "fixture"],
+            cwd=self.root,
+            check=True,
+        )
+        subprocess.run(["git", "add", "cgmanifest.json"], cwd=self.root, check=True)
+        subprocess.run(
+            ["git", "commit", "--quiet", "-m", "parent fixture"],
+            cwd=self.root,
+            check=True,
+        )
+        self.parent_base_sha = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=self.root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
 
     def tearDown(self) -> None:
         self.temporary_directory.cleanup()
+
+    def registration(self, manifest: dict, name: str) -> dict:
+        return next(
+            registration
+            for registration in manifest["registrations"]
+            if registration.get("component", {}).get("other", {}).get("name") == name
+        )
 
     def test_updates_all_version_surfaces(self) -> None:
         update_versions(self.root, 151, 152, "chrome/m152")
@@ -221,6 +293,204 @@ class UpdateVersionsTests(unittest.TestCase):
             cgmanifest["registrations"][1]["upstream_merge_commit"],
         )
 
+    def test_dependency_change_requires_and_records_version_review(self) -> None:
+        deps_path = self.root / "externals" / "skia" / "DEPS"
+        deps_path.write_text(
+            deps_path.read_text(encoding="utf-8").replace(
+                "old-vma-sha", "new-vma-sha"
+            ),
+            encoding="utf-8",
+        )
+        artifact_dir = self.root / "artifacts"
+
+        with self.assertRaises(DependencyReviewRequired):
+            update_versions(
+                self.root,
+                151,
+                152,
+                "chrome/m152",
+                parent_base_sha=self.parent_base_sha,
+                skia_base_sha=self.skia_base_sha,
+                artifact_dir=artifact_dir,
+            )
+
+        manifest_path = self.root / "cgmanifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        registration = self.registration(manifest, "VulkanMemoryAllocator")
+        metadata = registration["skia_dependency"]
+        self.assertEqual("new-vma-sha", metadata["revision"])
+        self.assertEqual(
+            "https://example.test/VulkanMemoryAllocator@old-vma-sha",
+            metadata["version_reviewed_identity"],
+        )
+
+        changes = json.loads(
+            (artifact_dir / "skia-dependency-changes.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual("vulkanmemoryallocator", changes["changes"][0]["name"])
+        self.assertEqual("new-vma-sha", changes["changes"][0]["final"]["revision"])
+
+        registration["component"]["other"]["version"] = "3.4.0"
+        metadata["version_reviewed_identity"] = (
+            "https://example.test/VulkanMemoryAllocator@new-vma-sha"
+        )
+        metadata["version_source"] = (
+            "CMakeLists.txt: project(VMA VERSION 3.4.0 LANGUAGES CXX)"
+        )
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            parent_base_sha=self.parent_base_sha,
+            skia_base_sha=self.skia_base_sha,
+            artifact_dir=artifact_dir,
+        )
+
+    def test_dependency_change_can_keep_version_after_explicit_review(self) -> None:
+        deps_path = self.root / "externals" / "skia" / "DEPS"
+        deps_path.write_text(
+            deps_path.read_text(encoding="utf-8").replace(
+                "old-vma-sha", "new-vma-sha"
+            ),
+            encoding="utf-8",
+        )
+        with self.assertRaises(DependencyReviewRequired):
+            update_versions(
+                self.root,
+                151,
+                152,
+                "chrome/m152",
+                parent_base_sha=self.parent_base_sha,
+                skia_base_sha=self.skia_base_sha,
+            )
+
+        manifest_path = self.root / "cgmanifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        metadata = self.registration(
+            manifest, "VulkanMemoryAllocator"
+        )["skia_dependency"]
+        metadata["version_reviewed_identity"] = (
+            "https://example.test/VulkanMemoryAllocator@new-vma-sha"
+        )
+        metadata["version_source"] = "README.md: release remains 3.2.1"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            parent_base_sha=self.parent_base_sha,
+            skia_base_sha=self.skia_base_sha,
+        )
+
+    def test_rejects_manifest_version_bump_without_dependency_change(self) -> None:
+        manifest_path = self.root / "cgmanifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.registration(
+            manifest, "VulkanMemoryAllocator"
+        )["component"]["other"]["version"] = "9.9.9"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        with self.assertRaisesRegex(
+            DependencyReviewRequired,
+            "without a vulkanmemoryallocator DEPS change",
+        ):
+            update_versions(
+                self.root,
+                151,
+                152,
+                "chrome/m152",
+                parent_base_sha=self.parent_base_sha,
+                skia_base_sha=self.skia_base_sha,
+            )
+
+    def test_disabled_dependency_requires_manifest_registration_removal(self) -> None:
+        deps_path = self.root / "externals" / "skia" / "DEPS"
+        deps_path.write_text(
+            "\n".join(
+                line
+                for line in deps_path.read_text(encoding="utf-8").splitlines()
+                if "vulkanmemoryallocator" not in line
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            DependencyReviewRequired,
+            "disabled or removed from final DEPS",
+        ):
+            update_versions(
+                self.root,
+                151,
+                152,
+                "chrome/m152",
+                parent_base_sha=self.parent_base_sha,
+                skia_base_sha=self.skia_base_sha,
+            )
+
+        manifest_path = self.root / "cgmanifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["registrations"] = [
+            registration
+            for registration in manifest["registrations"]
+            if registration.get("component", {}).get("other", {}).get("name")
+            != "VulkanMemoryAllocator"
+        ]
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+        update_versions(
+            self.root,
+            151,
+            152,
+            "chrome/m152",
+            parent_base_sha=self.parent_base_sha,
+            skia_base_sha=self.skia_base_sha,
+        )
+
+    def test_reenabled_dependency_reports_stale_base_metadata(self) -> None:
+        base_manifest = {
+            "registrations": [
+                {
+                    "component": {
+                        "type": "other",
+                        "other": {
+                            "name": "VulkanMemoryAllocator",
+                            "version": "3.2.1",
+                        },
+                    },
+                    "skia_dependency": {
+                        "name": "vulkanmemoryallocator",
+                        "revision": "old-vma-sha",
+                    },
+                }
+            ]
+        }
+        final_manifest = json.loads(json.dumps(base_manifest))
+        final_deps = {
+            "vulkanmemoryallocator": {
+                "path": "third_party/externals/vulkanmemoryallocator",
+                "url": "https://example.test/VulkanMemoryAllocator",
+                "revision": "new-vma-sha",
+            }
+        }
+
+        _, errors = reconcile_dependency_metadata(
+            final_manifest,
+            base_manifest,
+            {},
+            final_deps,
+        )
+
+        self.assertIn(
+            "Base cgmanifest metadata for vulkanmemoryallocator does not match base DEPS.",
+            errors,
+        )
+
     def test_automation_uses_environment_without_arguments(self) -> None:
         exact_sha = subprocess.run(
             ["git", "rev-parse", "upstream/chrome/m152"],
@@ -235,6 +505,9 @@ class UpdateVersionsTests(unittest.TestCase):
             "SKIA_SYNC_TARGET": "152",
             "SKIA_SYNC_UPSTREAM_REF": "chrome/m152",
             "SKIA_SYNC_TARGET_UPSTREAM_SHA": exact_sha,
+            "SKIA_SYNC_PARENT_BASE_SHA": self.parent_base_sha,
+            "SKIA_SYNC_SKIA_BASE_SHA": self.skia_base_sha,
+            "SKIA_SYNC_ARTIFACT_DIR": str(self.root / "artifacts"),
         }
         arguments = [
             "update_versions.py",

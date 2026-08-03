@@ -31,6 +31,7 @@ SKIA_DIR="${WORKSPACE}/externals/skia"
 
 echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
 git -C "$WORKSPACE" fetch origin "$BASE_BRANCH" 2>&1
+PARENT_BASE_SHA=$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")
 BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
 if [ -z "$BASE_SUB_SHA" ]; then
   echo "::error::origin/${BASE_BRANCH} does not contain the externals/skia submodule."
@@ -82,6 +83,7 @@ git -C "$SKIA_DIR" cat-file -e "${BASE_UPSTREAM_SHA}^{commit}"
 TARGET_UPSTREAM_SHA=$(git -C "$SKIA_DIR" rev-parse "upstream/${UPSTREAM_REF}^{commit}")
 
 {
+  echo "SKIA_SYNC_PARENT_BASE_SHA=$PARENT_BASE_SHA"
   echo "SKIA_BASE_UPSTREAM_SHA=$BASE_UPSTREAM_SHA"
   echo "SKIA_TARGET_UPSTREAM_REF=upstream/$UPSTREAM_REF"
   echo "SKIA_SYNC_BASE_UPSTREAM_SHA=$BASE_UPSTREAM_SHA"

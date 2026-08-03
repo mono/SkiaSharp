@@ -32,6 +32,7 @@ names.
 | `{TARGET}` | `SKIA_SYNC_TARGET` | Requested target milestone |
 | `{UPSTREAM_REF}` | `SKIA_SYNC_UPSTREAM_REF` | `chrome/m{TARGET}` or `main` |
 | `{BASE_BRANCH}` | `SKIA_SYNC_BASE_BRANCH` | Parent PR base |
+| `{PARENT_BASE_SHA}` | `SKIA_SYNC_PARENT_BASE_SHA` | Exact parent base commit used for metadata comparison |
 | `{SKIA_BASE_BRANCH}` | `SKIA_SYNC_SKIA_BASE_BRANCH` | mono/skia PR base |
 | `{SKIA_BASE_SHA}` | `SKIA_SYNC_SKIA_BASE_SHA` | Exact mono/skia commit recorded by the parent base |
 | `{HEAD_BRANCH}` | `SKIA_SYNC_HEAD_BRANCH` | Feature branch used in both repositories |
@@ -76,6 +77,12 @@ An update is complete only when:
 - Treat final `DEPS` as ground truth: every enabled revision that differs from the fork base must
   have a matching final decision, exact-SHA evidence, and reconciled Component Governance metadata.
   A dependency recorded as preserved must still equal the fork-base revision.
+- Let `update_versions.py` identify dependency changes from exact base/final DEPS. For every tracked
+  changed dependency, derive the semantic version from checked-out source and complete the
+  `skia_dependency` verification fields before the helper can pass. Never update an unrelated
+  manifest version when its DEPS identity did not change.
+- Components not sourced from Skia DEPS, including ANGLE and its dependencies, are updated in
+  separate dependency PRs rather than bundled into a Skia upstream sync.
 - Never use `externals-download` after a submodule/native/C API change.
 - Never hand-edit `*.generated.cs`; regenerate it.
 - Keep public managed ABI additive.
@@ -121,7 +128,8 @@ needed for that phase.
 
 ## Deterministic helpers
 
-- `scripts/update_versions.py` updates and validates version surfaces and Skia hashes.
+- `scripts/update_versions.py` updates and validates version surfaces, Skia hashes, and deterministic
+  DEPS-to-Component-Governance identity/review signals.
 - `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,
   and reports new native functions.
 - `scripts/audit_fork_patches.py` compares the old and new fork deltas and fails while any

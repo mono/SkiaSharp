@@ -135,8 +135,8 @@ After applying fixes:
 1. Build native for the current host from source
 2. Regenerate: `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Reconcile `cgmanifest.json` semantic versions for every tracked dependency whose revision or
-   enabled state changed and whose final state is enabled
+4. Run `update_versions.py`; reconcile every `skia-dependency-changes.json` row and satisfy its
+   source-backed `cgmanifest.json` semantic-version gate
 5. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` unfiltered
 6. If it fails, use the owning host project for filtered diagnostics
 7. Rerun the unfiltered solution; only that run is final validation

@@ -86,6 +86,11 @@ this report during conflict resolution; Phase 07 updates it when a build disprov
 Treat enabled/commented state and revision choice as separate decisions: preserving the fork's
 dependency shape does not by itself prove that an upstream revision roll is safe.
 
+The final table must contain: dependency, base URL/SHA/state, final URL/SHA/state, decision,
+cgmanifest component (or `not tracked`), authoritative version source, derived semantic version,
+and manifest action. Phase 07 fills the final URL/SHA/version columns from the deterministic
+`skia-dependency-changes.json` signal rather than relying on memory of earlier merge work.
+
 ## Phase 03 — independent discrepancy review
 
 Launch one synchronous, read-only validator using

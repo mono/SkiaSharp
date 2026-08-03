@@ -16,8 +16,26 @@ reads the workflow-resolved `SKIA_SYNC_*` values in automation and implements al
 - Same-milestone bug-fix: keep versions and advance Skia hashes.
 - Upstream `main`: keep versions and advance the submodule/hash while still checking APIs.
 
-It is idempotent. Run it again after the final mono/skia fix commit so the parent records the exact
-tested submodule tip.
+It also compares exact fork-base and working-tree `DEPS`, writes
+`$ARTIFACT_DIR/skia-dependency-changes.json`, and mechanically synchronizes each tracked
+registration's `skia_dependency.revision` while recording old/new URLs and SHAs in the artifact.
+A changed tracked dependency intentionally
+causes the helper to fail until you:
+
+1. Read the checked-out dependency's authoritative version constant, header, CMake project,
+   changelog, README, or tag.
+2. Update `component.other.version` when needed.
+3. Set `skia_dependency.version_reviewed_identity` to the final DEPS `URL@revision`.
+4. Set `skia_dependency.version_source` to the exact source and value inspected.
+5. Update the corresponding `skia-dependency-decisions.md` row.
+6. Rerun the helper and require its gate to pass.
+
+A revision-only roll may retain the same semantic version, but still requires the final verified
+identity and source evidence. The helper rejects a manifest version bump when that dependency's
+DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
+and after the final mono/skia fix commit so the parent records the exact tested state.
+The script proves coverage and consistency; the independent review must re-read each cited source
+to validate the agent's semantic-version claim.
 
 ## Phase 07 — build the updated native source
 
@@ -79,17 +97,11 @@ new or changed rows and require `--validate` to pass again. Reuse the exact Phas
 `python3 .agents/skills/update-skia/scripts/audit_fork_patches.py` command rather than searching
 for another copy of the helper.
 
-Before Phase 08, run `git -C externals/skia diff "$SKIA_SYNC_SKIA_BASE_SHA..HEAD" -- DEPS` and
-reconcile the main decision table with the built file. Rewrite any affected row and delete
-superseded provisional text; do not leave contradictory preserve/accept/compatibility conclusions.
-
-For every dependency whose revision or enabled/commented state changed and whose final state is
-enabled, check whether `cgmanifest.json` tracks that component. If it does, update the registration
-to the semantic version declared by the checked-out dependency's authoritative version constant,
-header, tag, or release metadata. The semantic version may legitimately remain unchanged across a
-revision-only roll; record that it was verified unchanged. A registration that differs from the
-derived version is a gate failure. Record the version source and manifest action in
-`skia-dependency-decisions.md`.
+Before Phase 08, rerun `update_versions.py` against final `DEPS`, then reconcile every row in
+`skia-dependency-changes.json` with the main decision table and the built source. Rewrite affected
+rows and delete superseded provisional text; do not leave contradictory
+preserve/accept/compatibility conclusions. The helper must pass with no unverified tracked
+dependency.
 
 ## Gate
 
@@ -97,6 +109,6 @@ derived version is a gate failure. Record the version source and manifest action
 - Updated target native library builds from source.
 - Every build failure is resolved rather than bypassed.
 - Dependency and analysis artifacts match the built tree.
-- Component Governance registrations match every tracked dependency whose revision or enabled
-  state changed and whose final state is enabled.
+- `update_versions.py` passes: every tracked changed dependency has source-backed semantic-version
+  evidence, and no unrelated Component Governance version changed.
 - The refreshed fork-patch audit validates.
