@@ -15,10 +15,10 @@ namespace SkiaSharp.Benchmarks;
 // static holder (HandleDictionary.SkipObjectRegistration<T>.Value).
 //
 // This benchmark faithfully reproduces the common "wrapper already registered" branch of
-// GetInstance<T>: the type-check followed by the read-locked dictionary lookup. Old performs the
-// reflection check (current shipped behaviour, copied verbatim); New performs the cached-bool read.
-// Everything after the check is identical, so the Ratio is an honest measure of the change's effect
-// on the real managed lookup path — not a synthetic isolated micro-loop.
+// GetInstance<T>: the type-check followed by the read-locked dictionary lookup. The current shipped
+// implementation is the baseline. The other methods compare the three requested alternatives.
+// Everything after the check is identical, so the ratios measure the type-check layout on the real
+// managed lookup path — not a synthetic isolated micro-loop.
 [MemoryDiagnoser]
 public class HandleDictionaryTypeCheckBenchmark
 {
@@ -45,37 +45,68 @@ public class HandleDictionaryTypeCheckBenchmark
 		instances[handle] = new WeakReference (target);
 	}
 
-	// Old: current shipped behaviour — reflection type-check on every call, then the locked lookup.
-	[Benchmark(Baseline = true)]
-	public int Old()
+	// Current shipped behaviour: cache the interface Type, but perform IsAssignableFrom on every call.
+	[Benchmark (Baseline = true)]
+	public int CachedType ()
 	{
 		var found = 0;
 		for (var i = 0; i < N; i++)
 		{
 			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (SampleObject)))
 				continue;
-			if (LookupOld (handle) != null)
+			if (Lookup (handle) != null)
 				found++;
 		}
 		return found;
 	}
 
-	// New: cached type-check (a plain static-field read), then the identical locked lookup.
+	// Original inline form: typeof expressions are resolved by the JIT, but assignability is still
+	// checked on every call.
 	[Benchmark]
-	public int New()
+	public int InlineTypeof ()
+	{
+		var found = 0;
+		for (var i = 0; i < N; i++)
+		{
+			if (typeof (ISKSkipObjectRegistration).IsAssignableFrom (typeof (SampleObject)))
+				continue;
+			if (Lookup (handle) != null)
+				found++;
+		}
+		return found;
+	}
+
+	// PR form: cache the completed predicate in a generic static holder.
+	[Benchmark]
+	public int PrStaticCache ()
 	{
 		var found = 0;
 		for (var i = 0; i < N; i++)
 		{
 			if (SkipCache<SampleObject>.Value)
 				continue;
-			if (LookupNew (handle) != null)
+			if (Lookup (handle) != null)
 				found++;
 		}
 		return found;
 	}
 
-	private object LookupOld (IntPtr h)
+	// Same generic static cache as the PR, with the interface typeof expression in the holder.
+	[Benchmark]
+	public int InlineTypeofStaticCache ()
+	{
+		var found = 0;
+		for (var i = 0; i < N; i++)
+		{
+			if (InlineTypeofSkipCache<SampleObject>.Value)
+				continue;
+			if (Lookup (handle) != null)
+				found++;
+		}
+		return found;
+	}
+
+	private object Lookup (IntPtr h)
 	{
 		instancesLock.EnterReadLock ();
 		try
@@ -90,14 +121,25 @@ public class HandleDictionaryTypeCheckBenchmark
 		}
 	}
 
-	private object LookupNew (IntPtr h) => LookupOld (h);
-
-	private sealed class SampleObject
+	private sealed class SampleObject : SKObject
 	{
-		public IntPtr Handle => IntPtr.Zero;
+		public SampleObject ()
+			: base (IntPtr.Zero, owns: false)
+		{
+		}
+
+		protected override void DisposeNative ()
+		{
+		}
 	}
 
 	private static class SkipCache<T>
+	{
+		internal static readonly bool Value =
+			SkipObjectRegistrationType.IsAssignableFrom (typeof (T));
+	}
+
+	private static class InlineTypeofSkipCache<T>
 	{
 		internal static readonly bool Value =
 			typeof (ISKSkipObjectRegistration).IsAssignableFrom (typeof (T));
