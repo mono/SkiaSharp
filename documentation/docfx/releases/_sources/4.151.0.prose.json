@@ -1,26 +1,16 @@
 {
-  "theme": "Skia m151 and performance",
-  "highlights_headline": "SkiaSharp 4.151.0 updates the engine to Skia milestone m151 and ships a wave of managed-code performance improvements.",
-  "highlights_body": "Key wins include zero-allocation HarfBuzz UTF-8 encoding, zero-copy SKShaper glyph spans, and managed-code colour conversions. WebAssembly gains Emscripten 5.0.6 libraries for .NET 11 WASM. Several upstream chrome/m151 bug-fix syncs are included.",
+  "theme": "Performance and memory hardening",
+  "highlights_headline": "SkiaSharp 4.151.0 delivers targeted performance wins, memory-safety fixes, and the Graphite GPU backend for Vulkan, Metal, and Dawn.",
+  "highlights_body": "This release adds the new Skia Graphite rendering backend (Vulkan, Metal, Dawn), fixes several native use-after-free and memory leaks, reduces allocations across hot paths, and pulls in the latest chrome/m151 upstream stability fixes. WASM gains .NET 11 support via Emscripten 5.0.6.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Upgraded to Skia milestone m151",
-          "detail": "The bundled Skia engine is now built from the m151 branch, bringing the latest upstream rendering features and fixes.",
-          "prs": [4294]
-        },
-        {
-          "lead": "Four rounds of chrome/m151 upstream bug fixes",
-          "detail": "Stability and correctness patches from the Skia team's chrome/m151 branch have been merged in four incremental syncs.",
-          "prs": [4312, 4382, 4443, 4489]
-        },
-        {
-          "lead": "CPU raster regression fixed",
-          "detail": "Restored SK_ENABLE_LEGACY_SHADERCONTEXT to resolve a CPU-side rasterisation regression introduced after the m151 upgrade.",
-          "prs": [4428]
+          "lead": "Skia milestone m151 and upstream stability syncs",
+          "detail": "Multiple rounds of upstream chrome/m151 bug fixes have been applied, pulling in correctness and stability improvements from the Skia team.",
+          "prs": [4294, 4312, 4382, 4443, 4489]
         }
       ]
     },
@@ -28,14 +18,29 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKColor hex parsing optimised with ReadOnlySpan<char> overloads",
-          "detail": "Parsing SKColor from hex strings is faster and allocation-free, and new ReadOnlySpan<char> overloads avoid string allocation at call sites.",
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+          "detail": "Full C# bindings for Skia's next-generation Graphite rendering backend are now available, enabling hardware-accelerated rendering via Vulkan, Metal, and Dawn on supported platforms.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async RequestReadPixels for SKImage and SKSurface",
+          "detail": "A new async pixel-read API lets callers request pixel data from any GPU backend without stalling the GPU pipeline.",
+          "prs": [4545]
+        },
+        {
+          "lead": "SKColor hex parsing optimized with ReadOnlySpan<char> overloads",
+          "detail": "Hex color parsing is faster and allocates less, and new ReadOnlySpan<char> overloads let callers parse colors from stack or sliced buffers.",
           "prs": [4345]
         },
         {
-          "lead": "Unsafe modifier removed from GRContextOptions",
-          "detail": "The unnecessary unsafe modifier has been removed from GRContextOptions, making it usable in projects without unsafe code enabled.",
-          "prs": [3991]
+          "lead": "SkiaSharp.Vulkan.Silk.NET package",
+          "detail": "A new SkiaSharp.Vulkan.Silk.NET convenience package wires up Silk.NET Vulkan interop so consumers can create a GRContext with minimal boilerplate.",
+          "prs": [4527]
+        },
+        {
+          "lead": "Containerized test targets: Azure Linux, Alpine/musl, Nano Server",
+          "detail": "CI now validates SkiaSharp on Azure Linux, Alpine (musl libc), and Windows Nano Server, and these targets are included in the shipped native asset set.",
+          "prs": [4515]
         }
       ]
     },
@@ -43,14 +48,19 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Native resource leak fixed in SKImage.FromEncodedData",
-          "detail": "SKImage.FromEncodedData(SKData, SKRectI) leaked a native handle when the crop rectangle was outside the image bounds. The leak has been fixed.",
-          "prs": [3997]
+          "lead": "Native use-after-free in SKPixmap.ExtractSubset and With* fixed",
+          "detail": "The pixel-source SKBitmap or SKData could be collected before the derived SKPixmap finished using it; the root object is now kept alive for the lifetime of the pixmap.",
+          "prs": [4558]
         },
         {
-          "lead": "WASM build compatibility restored for SK_BUILD_FOR_WASM",
-          "detail": "A macro redefinition that broke WASM builds in certain toolchain configurations has been removed from the Skia submodule.",
-          "prs": [3788]
+          "lead": "Native use-after-free in SKRegion.SpanIterator fixed",
+          "detail": "The parent SKRegion could be garbage-collected mid-iteration; it is now rooted for the iterator's lifetime.",
+          "prs": [4355]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak in SKImage.Create raster failure path fixed",
+          "detail": "When the native raster image creation failed, the unmanaged pixel buffer was not freed; the leak is now closed.",
+          "prs": [4455]
         }
       ]
     },
@@ -58,9 +68,9 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Broad managed-code performance improvements across hot paths",
-          "detail": "SKColor-to-SKColorF conversion, SKPMColor premultiply/unpremultiply, SKFourByteTag.Parse, and HarfBuzzSharp.Tag.Parse are all ported to managed integer math, eliminating P/Invoke round-trips on each call. HarfBuzzSharp.Buffer.AddUtf8(string) now uses pooled UTF-8 encoding with no per-call allocation, and SKShaper glyph results are read via zero-copy spans.",
-          "prs": [4370, 4385, 4396, 4376, 4408, 4388]
+          "lead": "Binding generation is now deterministic across platforms",
+          "detail": "The P/Invoke binding generator produces bit-identical output regardless of the build machine OS, eliminating spurious diffs in generated files.",
+          "prs": [4612]
         }
       ]
     },
@@ -68,20 +78,57 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "WebAssembly support for .NET 11 via Emscripten 5.0.6",
-          "detail": "Pre-built Emscripten 5.0.6 static libraries are now included, enabling SkiaSharp to run on .NET 11 WASM with the new exnref exception-handling model. A CI test job validates WASM behaviour on preview .NET builds.",
-          "prs": [4459, 4487, 4488]
+          "lead": "WASM .NET 11 support via Emscripten 5.0.6",
+          "detail": "New Emscripten 5.0.6 static libraries with the new exnref exception-handling ABI are included, enabling SkiaSharp on .NET 11 WASM.",
+          "prs": [4487, 4459]
+        },
+        {
+          "lead": "Windows native build MSVC environment initialized once",
+          "detail": "The MSVC toolchain environment is now set up once per native build invocation instead of per-target, reducing build time on Windows.",
+          "prs": [4570]
+        },
+        {
+          "lead": "FreeType font support for Windows Nano Server",
+          "detail": "Nano Server now uses FreeType for font rendering, giving text-layout workloads a working font engine on that platform.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "SKData.SaveTo double-copy eliminated",
+          "detail": "SKData.SaveTo previously copied data into an intermediate buffer before writing; it now writes directly, halving peak memory use for large payloads.",
+          "prs": [4550]
+        },
+        {
+          "lead": "HandleDictionary skip-registration check cached",
+          "detail": "The per-type reflection check that decides whether to skip handle registration is now cached, removing a recurring reflection cost from the hot path.",
+          "prs": [4630]
+        },
+        {
+          "lead": "GetEncodedText null-terminated path allocation removed",
+          "detail": "The null-terminated text encoding path no longer allocates an intermediate string, reducing allocations in text measurement loops.",
+          "prs": [4498]
+        },
+        {
+          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
+          "detail": "The uniform-name lookup dictionary is now pre-sized to the known uniform count, avoiding rehash allocations on first populate.",
+          "prs": [4512]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "WASM compatibility work: Emscripten 5.0.6 static libraries for .NET 11 and the SK_BUILD_FOR_WASM macro fix"
+    "jeffska": "FreeType font support for Windows Nano Server",
+    "mmitche": "Windows native build MSVC environment initialization fix",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn; Emscripten 5.0.6 WASM libraries; and the cross-backend visual regression test harness"
   },
   "preview_summaries": {
-    "v4.151.0-preview.1.1": "Preview 1 opened the 4.151.0 line with the Skia m151 engine upgrade.",
-    "v4.151.0-preview.2.1": "Preview 2 delivered a broad performance sweep — allocation-free HarfBuzz encoding, zero-copy SKShaper spans, managed colour conversions, and an upstream m151 bug-fix sync.",
-    "v4.151.0-rc.1.1": "Release Candidate 1 added .NET 11 WASM support via Emscripten 5.0.6, fixed the native resource leak in SKImage.FromEncodedData, resolved the CPU raster regression, and pulled in the final chrome/m151 upstream fixes."
+    "v4.151.0-preview.1.1": "Opened the 4.151.0 line with the Skia m151 milestone update.",
+    "v4.151.0-preview.2.1": "Performance sprint: allocation-free HarfBuzz UTF-8 encoding, zero-copy SKShaper glyph reads, and per-call char[] eliminations across the hot path.",
+    "v4.151.0-rc.1.1": "Release-candidate hardening: additional upstream m151 bug-fix syncs, managed SKColor/SKPMColor math, and Emscripten 5.0.6 exnref WASM libraries."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships with this release; the Tag.Parse hot path is now allocation-free."
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships with this release; highlights include an allocation-free AddUtf8(string) via pooled UTF-8 encoding and per-call char[] elimination in Tag.Parse."
 }
