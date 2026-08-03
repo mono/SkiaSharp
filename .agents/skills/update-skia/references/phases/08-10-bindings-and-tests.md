@@ -110,20 +110,45 @@ rm -f "$ARTIFACT_DIR/test-exit-code.txt"
 )
 ```
 
-### Finalize tested commits
+### Final deterministic reconciliation
 
-After the final full solution passes:
+After the final full solution passes, complete every deterministic gate against the exact tested
+mono/skia tree before moving to Phase 11:
 
 1. Ensure every post-merge mono/skia adaptation is committed and the worktree is clean.
-2. Rerun `update_versions.py` with no arguments so it records the final tested submodule tip while
-   retaining workflow-resolved upstream provenance and revalidating the final DEPS/version signal.
-3. Require `skia-dependency-changes.json`, `cgmanifest.json`, and
-   `skia-dependency-decisions.md` to agree on every changed URL/SHA, semantic version, version
-   source, and manifest action.
-4. Commit version, binding, wrapper, test, and submodule changes in the parent.
-5. Verify no build-time side effects or unrelated files are staged.
-6. Verify the parent gitlink equals the mono/skia commit used by the green run.
-7. Refresh and validate `skia-fork-patch-audit.md` against the final mono/skia tip.
+2. From the parent root, run the metadata finalizer:
+
+   ```bash
+   python3 .agents/skills/update-skia/scripts/update_versions.py
+   ```
+
+   If it fails, reconcile every `skia-dependency-changes.json` row with checked-out source,
+   `cgmanifest.json`, and `skia-dependency-decisions.md`, then rerun until it passes.
+3. Refresh the fork audit against the **current final mono/skia HEAD**:
+
+   ```bash
+   python3 .agents/skills/update-skia/scripts/audit_fork_patches.py \
+     --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
+     --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
+     --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \
+     --merged-head HEAD \
+     --output "$ARTIFACT_DIR/skia-fork-patch-audit.md" \
+     --validate
+   ```
+
+   The command rewrites stale fingerprints as `TODO` before validating. If it fails, inspect the
+   final old/new patches for every regenerated row, replace each `TODO` with a valid disposition
+   and concrete evidence, and rerun this exact command until it passes.
+4. Confirm `skia-dependency-changes.json`, `cgmanifest.json`, and
+   `skia-dependency-decisions.md` agree on every changed URL/SHA, semantic version, version source,
+   and manifest action.
+5. Confirm `skia-fork-patch-audit.md` has no `TODO` and describes the exact current mono/skia HEAD.
+6. Commit version, binding, wrapper, test, and submodule changes in the parent.
+7. Verify no build-time side effects or unrelated files are staged.
+8. Verify the parent gitlink equals the mono/skia commit used by the green run.
+
+Any subsequent mono/skia or dependency change invalidates this reconciliation: return to step 1.
+Do not read Phase 11 until both commands above pass against final state.
 
 ## Gate
 
@@ -134,4 +159,5 @@ After the final full solution passes:
 - Parent points to the exact tested mono/skia commit.
 - The deterministic dependency metadata gate passes with source-backed version verification for
   every tracked DEPS change and no version-only manifest drift.
-- Every final fork-delta change has one non-contradictory evidence-backed disposition.
+- `audit_fork_patches.py --validate` passes against final mono/skia HEAD, and every final fork-delta
+  change has one non-contradictory evidence-backed disposition.
