@@ -351,7 +351,7 @@ post-steps:
         git config user.email "devnull@localhost"
         git commit -m "[skia-sync] Finalize deterministic metadata"
       fi
-      git diff --quiet
+      git diff --quiet -- . ':(exclude)externals/depot_tools'
       git diff --cached --quiet
   - name: Push branches and create PRs
     env:
