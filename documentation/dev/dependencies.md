@@ -102,11 +102,12 @@ Registrations backed by an enabled `externals/skia/DEPS` entry include a
 
 `.agents/skills/update-skia/scripts/update_versions.py` synchronizes `revision` mechanically from
 final DEPS.
-When the URL or revision changes, the Skia update must derive the semantic version from checked-out
-source, update the registration if needed, advance `version_reviewed_identity` to the final
-`URL@revision`, and record the exact evidence in `version_source`. The helper blocks publication
-until every changed tracked dependency is reviewed. It also rejects a manifest version change when
-the corresponding DEPS identity did not change.
+Every tracked registration records the authoritative version evidence in `version_source`. When
+the URL or revision changes, the Skia update must re-read checked-out source, update the registration
+if needed, advance `version_reviewed_identity` to the final `URL@revision`, and refresh that
+evidence. The helper blocks publication when evidence is missing or a changed tracked dependency
+has not been reviewed. It also rejects a manifest version change when the corresponding DEPS
+identity did not change.
 
 ---
 

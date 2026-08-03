@@ -30,10 +30,12 @@ causes the helper to fail until you:
 5. Update the corresponding `skia-dependency-decisions.md` row.
 6. Rerun the helper and require its gate to pass.
 
-A revision-only roll may retain the same semantic version, but still requires the final verified
+A revision-only roll may retain the same semantic version, but still requires the final reviewed
 identity and source evidence. The helper rejects a manifest version bump when that dependency's
 DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
 and after the final mono/skia fix commit so the parent records the exact tested state.
+Every tracked registration, including an unchanged baseline entry, must retain non-empty
+`version_source` evidence.
 The script proves coverage and consistency; the independent review must re-read each cited source
 to validate the agent's semantic-version claim.
 

@@ -84,7 +84,24 @@ class UpdateVersionsTests(unittest.TestCase):
                                         else "1.0.0"
                                     ),
                                 },
-                            }
+                            },
+                            "skia_dependency": {
+                                "name": dependency_name,
+                                "revision": (
+                                    "old-vma-sha"
+                                    if dependency_name == "vulkanmemoryallocator"
+                                    else dependency_name + "-sha"
+                                ),
+                                "version_reviewed_identity": (
+                                    f"https://example.test/{manifest_name}@"
+                                    + (
+                                        "old-vma-sha"
+                                        if dependency_name == "vulkanmemoryallocator"
+                                        else dependency_name + "-sha"
+                                    )
+                                ),
+                                "version_source": "fixture: authoritative version",
+                            },
                         }
                         for dependency_name, manifest_name in TRACKED_SKIA_DEPENDENCIES.items()
                     ]
@@ -407,6 +424,46 @@ class UpdateVersionsTests(unittest.TestCase):
                 parent_base_sha=self.parent_base_sha,
                 skia_base_sha=self.skia_base_sha,
             )
+
+    def test_rejects_missing_version_source_without_dependency_change(self) -> None:
+        dependency = {
+            "path": "third_party/externals/vulkanmemoryallocator",
+            "url": "https://example.test/VulkanMemoryAllocator",
+            "revision": "vma-sha",
+        }
+        manifest = {
+            "registrations": [
+                {
+                    "component": {
+                        "type": "other",
+                        "other": {
+                            "name": "VulkanMemoryAllocator",
+                            "version": "3.2.1",
+                        },
+                    },
+                    "skia_dependency": {
+                        "name": "vulkanmemoryallocator",
+                        "revision": "vma-sha",
+                        "version_reviewed_identity": (
+                            "https://example.test/VulkanMemoryAllocator@vma-sha"
+                        ),
+                    },
+                }
+            ]
+        }
+
+        _, errors = reconcile_dependency_metadata(
+            json.loads(json.dumps(manifest)),
+            manifest,
+            {"vulkanmemoryallocator": dependency},
+            {"vulkanmemoryallocator": dependency},
+        )
+
+        self.assertIn(
+            "vulkanmemoryallocator lacks skia_dependency.version_source for its "
+            "current semantic version.",
+            errors,
+        )
 
     def test_disabled_dependency_requires_manifest_registration_removal(self) -> None:
         deps_path = self.root / "externals" / "skia" / "DEPS"

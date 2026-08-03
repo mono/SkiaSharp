@@ -275,8 +275,11 @@ def reconcile_dependency_metadata(
             metadata["version_reviewed_identity"] = final_identity
             if base_metadata and base_metadata.get("version_source"):
                 metadata["version_source"] = base_metadata["version_source"]
-            else:
-                metadata.pop("version_source", None)
+            elif not metadata.get("version_source"):
+                errors.append(
+                    f"{dependency_name} lacks skia_dependency.version_source for its "
+                    "current semantic version."
+                )
             if final_version != base_version:
                 errors.append(
                     f"{manifest_name} version changed from {base_version} to {final_version} "
