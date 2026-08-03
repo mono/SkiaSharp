@@ -1,16 +1,16 @@
 {
-  "theme": "Graphite GPU backends and new platform support",
-  "highlights_headline": "SkiaSharp 4.151.0 introduces Graphite GPU backend bindings and expands platform support to Nano Server, Alpine, and Azure Linux.",
-  "highlights_body": "This release brings the next-generation Graphite GPU pipeline to .NET with bindings for Vulkan, Metal, and Dawn, alongside a backend-neutral async ReadPixels API. Platform coverage expands significantly with FreeType-backed font rendering on Nano Server and new containerised Linux targets. Several memory and allocation fixes land too.",
+  "theme": "Graphite GPU backend and new packages",
+  "highlights_headline": "SkiaSharp 4.151.0 (unreleased) adds the Graphite GPU backend, async pixel reads, and a dedicated Vulkan/Silk.NET package.",
+  "highlights_body": "The new Graphite bindings expose Vulkan, Metal, and Dawn GPU backends under the next-generation Skia renderer. An async `RequestReadPixels` API lands on SKImage and SKSurface, a new `SkiaSharp.Vulkan.Silk.NET` integration package ships, FreeType brings fonts to Nano Server, and several performance and memory fixes round out the release.",
   "breaking": [],
   "categories": [
     {
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Upstream chrome/m151 bug fixes merged",
-          "detail": "Two upstream Skia syncs from the chrome/m151 branch apply engine-level stability and rendering correctness improvements.",
-          "prs": [4537, 4538]
+          "lead": "Upstream Skia m151 stability fixes",
+          "detail": "Additional chrome/m151 upstream syncs harden the engine and keep the submodule current with the latest stability fixes.",
+          "prs": [4537, 4538, 4568]
         }
       ]
     },
@@ -19,18 +19,28 @@
       "bullets": [
         {
           "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
-          "detail": "New bindings expose Skia's next-generation Graphite rendering pipeline. Consumers can now create Graphite GPU contexts for Vulkan, Metal, and Dawn backends, unlocking the modern, lower-overhead GPU path.",
+          "detail": "The new next-generation Skia Graphite renderer is now bound in SkiaSharp, exposing Vulkan, Metal, and Dawn backends alongside the existing Ganesh path.",
           "prs": [3968]
         },
         {
-          "lead": "Backend-neutral async RequestReadPixels on SKImage and SKSurface",
-          "detail": "A new async ReadPixels API lets callers read pixel data from GPU-backed images and surfaces without blocking the render thread, working across all supported GPU backends.",
+          "lead": "Async RequestReadPixels on SKImage and SKSurface",
+          "detail": "A new backend-neutral `RequestReadPixels` API lets callers schedule an asynchronous pixel readback without blocking the rendering thread.",
           "prs": [4545]
         },
         {
-          "lead": "New SkiaSharp.Vulkan.Silk.NET package",
-          "detail": "A dedicated NuGet package wraps the Silk.NET Vulkan interop layer, making it straightforward to wire up Vulkan contexts without custom P/Invoke boilerplate.",
+          "lead": "SkiaSharp.Vulkan.Silk.NET integration package",
+          "detail": "A new NuGet package wires SkiaSharp's Vulkan backend directly to the Silk.NET Vulkan bindings, simplifying setup for Silk.NET-based applications.",
           "prs": [4527]
+        },
+        {
+          "lead": "FreeType font support on Nano Server",
+          "detail": "Nano Server (which lacks the GDI font stack) now ships FreeType-backed font management, unblocking SkiaSharp text rendering in containerized Windows workloads.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Deterministic binding generation across platforms",
+          "detail": "The binding generator now produces identical output regardless of the host OS, so checked-in generated files no longer drift between Windows and Linux CI agents.",
+          "prs": [4612]
         }
       ]
     },
@@ -38,14 +48,34 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Memory leak in SKImage.Create raster failure path fixed",
-          "detail": "A CoTaskMem pixel buffer allocated during raster image creation was not freed when the native call failed, leading to a silent native memory leak. The buffer is now correctly released on failure.",
+          "lead": "CoTaskMem pixel-buffer leak in SKImage.Create raster failure path",
+          "detail": "When the raster image creation path failed after allocating a CoTaskMem pixel buffer, the buffer was leaked. The failure path now correctly frees the allocation.",
           "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKData.SaveTo avoids double buffer copy",
+          "detail": "The `SaveTo` path now writes directly to the output stream without an intermediate buffer copy, halving allocations for large data exports.",
+          "prs": [4550]
         },
         {
-          "lead": "Reduced allocations in text and shader hot paths",
-          "detail": "GetEncodedText no longer allocates an intermediate string on the null-terminated fast path, and SKRuntimeEffectUniforms pre-sizes its uniform lookup map to the known uniform count, eliminating resizing overhead.",
-          "prs": [4498, 4512]
+          "lead": "String allocation eliminated in GetEncodedText null-terminated path",
+          "detail": "The null-terminated fast path in `GetEncodedText` now reuses a buffer instead of allocating an intermediate string on every call.",
+          "prs": [4498]
+        },
+        {
+          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
+          "detail": "The uniform-name lookup map is pre-sized to the known uniform count at construction, eliminating resizes during effect setup.",
+          "prs": [4512]
+        },
+        {
+          "lead": "Windows MSVC environment initialized once per native build",
+          "detail": "The MSVC toolchain environment is now set up once rather than once per target, cutting Windows native build times significantly.",
+          "prs": [4570]
         }
       ]
     },
@@ -53,21 +83,23 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "FreeType font rendering on Windows Nano Server",
-          "detail": "Nano Server environments lack the GDI font stack. SkiaSharp now falls back to FreeType on Nano Server, enabling text rendering in containerised Windows workloads that was previously broken.",
-          "prs": [4280]
+          "lead": "Containerized test targets: Azure Linux, Alpine/musl, Nano Server",
+          "detail": "Three new containerized CI test legs verify SkiaSharp on Azure Linux, Alpine (musl libc), and Nano Server, expanding the supported platform matrix.",
+          "prs": [4515]
         },
         {
-          "lead": "Azure Linux, Alpine/musl, and Nano Server test targets added",
-          "detail": "Containerised CI test legs for Azure Linux, Alpine (musl libc), and Nano Server ensure SkiaSharp is continuously validated across these production-relevant environments.",
-          "prs": [4515]
+          "lead": "Solutions converted to .slnx format",
+          "detail": "All .sln solution files are converted to the lighter .slnx format, reducing churn and improving IDE load times.",
+          "prs": [4528]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "jeffska": "Implemented FreeType font support for Windows Nano Server, unblocking text rendering in GDI-less container environments.",
-    "ramezgerges": "Authored the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+    "jeffska": "FreeType font support for Nano Server, enabling text rendering in containerized Windows workloads",
+    "mmitche": "Windows native build speedup by initializing the MSVC environment once per build instead of once per target",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn — the new next-generation renderer path"
   },
-  "preview_summaries": {}
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
