@@ -69,11 +69,10 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 2. **Make all commits on the feature branch** — Never commit directly to protected branches
 3. **Submit a Pull Request** — Fill in the PR template (`.github/pull_request_template.md`) completely; changes must be reviewed before merging
 
-Repository-owned automation may use the branch convention explicitly defined by its workflow.
-For example, the Skia sync workflow uses `skia-sync/*` in both repositories. This exception
-does not permit direct commits to a protected branch. Because a sync branch is intentionally
-recomputed from its base, that workflow may update only its own `skia-sync/*` branches with
-`--force-with-lease`; an unguarded `--force` remains forbidden.
+Repository-owned automation may use a dedicated branch convention explicitly defined by its
+workflow. It may update only branches owned by that workflow and must use `--force-with-lease`
+for any approved force update; an unguarded `--force` remains forbidden. This never permits
+direct commits to a protected branch.
 
 ```bash
 # CORRECT — Always create a feature branch first
@@ -92,11 +91,9 @@ git checkout skiasharp && git commit  # FORBIDDEN (in skia submodule)
 
 **Always use the PR template.** When opening a pull request, populate every section of the repository's `.github/pull_request_template.md` — do **not** open a PR with an empty or default body. Keep the ABI-critical **Changes** and **Required skia PR** sections (write `None.` instead of deleting them), tick the relevant **Areas Affected**, describe how you verified the change under **Testing**, and attach before/after screenshots for any rendering change. The `externals/skia` submodule ships its own matching template for C API PRs.
 
-An automated workflow may use a dedicated template only when the workflow owns and renders
-the complete body deterministically. The Skia sync workflow uses
-`.github/scripts/skia-sync-pr-skiasharp.md` and
-`.github/scripts/skia-sync-pr-skia.md`; those templates are the automation-specific
-equivalent of the two repositories' contributor templates.
+An automated workflow may use a dedicated PR body only when the workflow owns and renders the
+complete body deterministically. That body must satisfy the same requirements as the repository's
+contributor template.
 
 ---
 

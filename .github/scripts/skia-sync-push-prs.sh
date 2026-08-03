@@ -196,7 +196,41 @@ changed_check() {
   fi
 }
 
-SKIA_PR_TEMPLATE=$(cat <<'EOF'
+render_template() {
+  local template="$1"
+  local values_path="$2"
+  local output_path="$3"
+
+  jq -nr \
+    --arg template "$template" \
+    --slurpfile values "$values_path" \
+    '
+      if ($values | length) != 1 or ($values[0] | type) != "object" then
+        error("template values must be a JSON object")
+      else
+        $values[0] as $values
+        | $template
+        | gsub("\\{\\{(?<key>[A-Z0-9_]+)\\}\\}";
+            .key as $key
+            | if ($values | has($key) | not) then
+                error("missing template value: \($key)")
+              elif ($values[$key] | type) != "string" then
+                error("template value \($key) must be a string")
+              else
+                $values[$key]
+              end)
+        | sub("[[:space:]]+$"; "")
+      end
+    ' >"$output_path"
+}
+
+render_skia_body() {
+  local companion_url="$1"
+  local output="$2"
+  local values="$ARTIFACT_DIR/skia-pr-values.json"
+  local template
+
+  template=$(cat <<'EOF'
 ## Description
 
 {{BODY_INTRO}}
@@ -232,7 +266,41 @@ _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
 )
 
-SKIASHARP_PR_TEMPLATE=$(cat <<'EOF'
+  jq -n \
+    --arg BODY_INTRO "$SKIA_BODY_INTRO" \
+    --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
+    --arg COMPANION_PR_URL "$companion_url" \
+    --arg CAPI_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
+    --arg DEPS_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" DEPS)" \
+    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" BUILD.gn third_party)" \
+    --arg RENDERING_CHECK " " \
+    --arg BASE_BRANCH "$SKIA_BASE" \
+    --rawfile AUTOMATED_REPORT "$SKIA_SUMMARY_FILE" \
+    --arg UPDATED_AT "$UPDATED_AT" \
+    '{
+      BODY_INTRO: $BODY_INTRO,
+      WORKFLOW_LINK: $WORKFLOW_LINK,
+      COMPANION_PR_URL: $COMPANION_PR_URL,
+      CAPI_CHECK: $CAPI_CHECK,
+      DEPS_CHECK: $DEPS_CHECK,
+      BUILD_CHECK: $BUILD_CHECK,
+      RENDERING_CHECK: $RENDERING_CHECK,
+      BASE_BRANCH: $BASE_BRANCH,
+      AUTOMATED_REPORT: $AUTOMATED_REPORT,
+      UPDATED_AT: $UPDATED_AT
+    }' >"$values"
+
+  render_template "$template" "$values" "$output"
+}
+
+render_skiasharp_body() {
+  local companion_url="$1"
+  local output="$2"
+  local values="$ARTIFACT_DIR/skiasharp-pr-values.json"
+  local generated_check
+  local template
+
+  template=$(cat <<'EOF'
 ## Description
 
 {{BODY_INTRO}}
@@ -272,73 +340,6 @@ Requires {{COMPANION_PR_URL}}
 _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
 )
-readonly SKIA_PR_TEMPLATE SKIASHARP_PR_TEMPLATE
-
-render_template() {
-  local template="$1"
-  local values_path="$2"
-  local output_path="$3"
-
-  jq -nr \
-    --arg template "$template" \
-    --slurpfile values "$values_path" \
-    '
-      if ($values | length) != 1 or ($values[0] | type) != "object" then
-        error("template values must be a JSON object")
-      else
-        $values[0] as $values
-        | $template
-        | gsub("\\{\\{(?<key>[A-Z0-9_]+)\\}\\}";
-            .key as $key
-            | if ($values | has($key) | not) then
-                error("missing template value: \($key)")
-              elif ($values[$key] | type) != "string" then
-                error("template value \($key) must be a string")
-              else
-                $values[$key]
-              end)
-        | sub("[[:space:]]+$"; "")
-      end
-    ' >"$output_path"
-}
-
-render_skia_body() {
-  local companion_url="$1"
-  local output="$2"
-  local values="$ARTIFACT_DIR/skia-pr-values.json"
-
-  jq -n \
-    --arg BODY_INTRO "$SKIA_BODY_INTRO" \
-    --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
-    --arg COMPANION_PR_URL "$companion_url" \
-    --arg CAPI_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
-    --arg DEPS_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" DEPS)" \
-    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" BUILD.gn third_party)" \
-    --arg RENDERING_CHECK " " \
-    --arg BASE_BRANCH "$SKIA_BASE" \
-    --rawfile AUTOMATED_REPORT "$SKIA_SUMMARY_FILE" \
-    --arg UPDATED_AT "$UPDATED_AT" \
-    '{
-      BODY_INTRO: $BODY_INTRO,
-      WORKFLOW_LINK: $WORKFLOW_LINK,
-      COMPANION_PR_URL: $COMPANION_PR_URL,
-      CAPI_CHECK: $CAPI_CHECK,
-      DEPS_CHECK: $DEPS_CHECK,
-      BUILD_CHECK: $BUILD_CHECK,
-      RENDERING_CHECK: $RENDERING_CHECK,
-      BASE_BRANCH: $BASE_BRANCH,
-      AUTOMATED_REPORT: $AUTOMATED_REPORT,
-      UPDATED_AT: $UPDATED_AT
-    }' >"$values"
-
-  render_template "$SKIA_PR_TEMPLATE" "$values" "$output"
-}
-
-render_skiasharp_body() {
-  local companion_url="$1"
-  local output="$2"
-  local values="$ARTIFACT_DIR/skiasharp-pr-values.json"
-  local generated_check
 
   generated_check=$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" ':(glob)**/*.generated.cs')
   jq -n \
@@ -373,7 +374,7 @@ render_skiasharp_body() {
       UPDATED_AT: $UPDATED_AT
     }' >"$values"
 
-  render_template "$SKIASHARP_PR_TEMPLATE" "$values" "$output"
+  render_template "$template" "$values" "$output"
 }
 
 find_pr() {
