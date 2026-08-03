@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests.Visual
 	/// Resolves and loads golden images for the visual-regression matrix, and
 	/// encodes captured pixels to PNG for emission into the test log.
 	///
-	/// <para><b>Layered lookup, generalizing over platform only.</b> A cell
+	/// <para><b>Layered lookup, generalizing over platform only.</b> A test
 	/// resolves the first of:</para>
 	/// <list type="number">
 	///   <item><c>Content/Goldens/{renderer}.{platform}/{scene}.png</c> —
@@ -23,11 +23,11 @@ namespace SkiaSharp.Tests.Visual
 	///
 	/// <para>The fallback deliberately generalizes only over <b>platform</b>, never
 	/// over <b>renderer</b>: different backends legitimately differ (antialiasing,
-	/// driver), so a cell never falls back to another backend's bytes. That is what
-	/// keeps a GPU cell from ever being compared against the CPU baseline.</para>
+	/// driver), so a test never falls back to another backend's bytes and a GPU
+	/// result is never compared against the CPU baseline.</para>
 	///
 	/// <para><b>No record mode.</b> Goldens are seeded by harvesting the captured
-	/// PNGs that every cell emits into the test results (TRX) and committing them
+	/// PNGs that every test emits into the test results (TRX) and committing them
 	/// (see <c>scripts/infra/tests/extract-visual-goldens.py</c>). That works
 	/// uniformly for desktop, device, and browser hosts — including the
 	/// device/browser hosts where the filesystem is sandboxed/embedded and an
@@ -61,17 +61,17 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		/// <summary>
-		/// The default golden key for a cell, relative to the <c>Goldens</c> root:
+		/// The default golden key for a test, relative to the <c>Goldens</c> root:
 		/// <c>{renderer}.{platform}/{scene}.png</c> using the most-specific platform
-		/// tag. This is the path the captured-image marker carries and the harvest
-		/// script writes to by default; a promoted, platform-portable golden lives at
-		/// the shared <c>{renderer}/{scene}.png</c> key instead.
+		/// tag. This is the path the image markers carry and the harvest script
+		/// writes to by default; a promoted, platform-portable golden lives at the
+		/// shared <c>{renderer}/{scene}.png</c> key instead.
 		/// </summary>
 		public static string Key(string rendererName, string sceneName) =>
 			$"{rendererName}.{VisualPlatform.Tags[0]}/{sceneName}.png";
 
 		/// <summary>
-		/// Golden keys for a cell in lookup order (most specific first):
+		/// Golden keys for a test in lookup order (most specific first):
 		/// each per-platform tag, then the platform-portable renderer golden.
 		/// </summary>
 		public static IEnumerable<string> Candidates(string rendererName, string sceneName)
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests.Visual
 		}
 
 		// Returns the decoded golden (RGBA8888/Premul, sized to info) or null when
-		// no golden exists for this cell on this platform.
+		// no golden exists for this test on this platform.
 		public static ResolvedGolden? TryLoad(string rendererName, string sceneName, SKImageInfo info)
 		{
 			foreach (var key in Candidates(rendererName, sceneName))
@@ -232,7 +232,7 @@ namespace SkiaSharp.Tests.Visual
 				// On the MAUI device hosts Assembly.GetEntryAssembly() is null, and the
 				// Content resources are embedded in the host app assembly (e.g.
 				// SkiaSharp.Tests.Devices) — not in this shared assembly. Without this
-				// fallback no golden is ever found on device and every cell fails as
+				// fallback no golden is ever found on device and every test fails as
 				// unseeded. Scan every loaded assembly so the goldens are located
 				// regardless of which host embeds them.
 				foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())

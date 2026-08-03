@@ -296,10 +296,19 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 > - Do NOT claim completion if tests fail
 > - Do NOT use `SkipException` to work around failures
 >
-> **Skipping is ONLY acceptable for hardware limitations:**
-> - No GPU drivers available
-> - No display attached
-> - Platform doesn't support the feature (e.g., Metal on Windows)
+> **A skip must always be DECLARED, never inferred from an exception.**
+>
+> For **GPU tests** the rule is enforced by `GpuPolicy` — see
+> [documentation/dev/gpu-test-policy.md](documentation/dev/gpu-test-policy.md).
+> A backend is *required* on every platform we build it for; "no device", "no
+> driver", "no ICD" and "no display" are **failures**. The only legitimate skips
+> are the platform matrix (Metal off Apple, Vulkan on macOS) and an explicit
+> `SKIASHARP_TEST_SKIP_GPU` opt-out for a specific agent. Never wrap a GPU
+> bring-up in `try/catch { Assert.Skip }`.
+>
+> For **non-GPU** tests, skipping is acceptable only for a genuine capability
+> gap that is checked explicitly (no system font manager, no XPS support, no
+> display for GTK).
 
 ### Writing Tests
 
@@ -315,7 +324,8 @@ public void FeatureWorks()
 
 **BaseTest helpers:** `PathToImages`, `PathToFonts`, `IsWindows/Mac/Linux`
 
-**Philosophy:** Tests FAIL when wrong, never skip (except missing hardware).
+**Philosophy:** Tests fail when wrong. GPU tests skip only when `GpuPolicy`
+declares it; other tests skip only for an explicitly checked capability gap.
 
 ### Debugging Methodology
 

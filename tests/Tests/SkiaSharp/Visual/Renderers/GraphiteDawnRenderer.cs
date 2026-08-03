@@ -8,8 +8,8 @@ namespace SkiaSharp.Tests.Visual
 {
 	/// <summary>
 	/// Graphite GPU backend over Dawn (WebGPU), for the Blazor WASM host.
-	/// Only reports available when running in a browser environment; every
-	/// other host skips the cell. Bring-up walks
+	/// <see cref="GpuPolicy"/> reports Dawn as not built anywhere but the browser,
+	/// so every other host skips before reaching this code. Bring-up walks
 	/// <c>JSHost.DotnetInstance → Module → WebGPU → mgr{Device,Queue,Texture}</c>
 	/// (the Emscripten-internal manager tables that vend integer handles for
 	/// WGPU* objects across the C ABI) and dispatches JS method calls through a
@@ -22,12 +22,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GraphiteDawnRenderer : IRenderer
 	{
-		public string Name => "graphite-dawn";
-
-		public bool IsAvailable => TestConfig.Current.IsBrowser;
-
-		public string UnavailableReason =>
-			IsAvailable ? null : "graphite-dawn requires a WebGPU-capable browser host.";
+		public string Name => GpuBackends.GraphiteDawn;
 
 		// Non-yielding mode disallows SKGraphiteContext.Dispose() while any GPU
 		// work is in flight; keep the Context + Recorder alive for the WASM
@@ -41,66 +36,59 @@ namespace SkiaSharp.Tests.Visual
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			if (!IsAvailable)
-				throw new RendererUnavailableException(UnavailableReason);
-
 			if (!s_dawnReady)
 			{
 				// SKWebGpu's static ctor walks JSHost.DotnetInstance → Module → WebGPU →
 				// mgr{Device,Queue,Texture}. Any failure there (Module.WebGPU missing
 				// because EXPORTED_RUNTIME_METHODS lacks 'WebGPU', browser without
 				// WebGPU support, etc.) becomes a TypeInitializationException on the
-				// first SKWebGpu call. Convert it to an unavailable signal so the
-				// matrix skips the cell cleanly instead of failing hard.
-				try
+				// first SKWebGpu call. Dawn is required on the browser host, so that is
+				// a hard failure: a browser that cannot drive WebGPU is a coverage gap
+				// to fix (or to declare via SKIASHARP_TEST_SKIP_GPU), not something to
+				// discover as a silent skip.
+				var adapter = await SKWebGpu.RequestAdapter()
+					?? throw new InvalidOperationException(
+						"navigator.gpu.requestAdapter returned null — WebGPU is unavailable in this browser.");
+				var device = await SKWebGpu.RequestDevice(adapter)
+					?? throw new InvalidOperationException(
+						"adapter.requestDevice returned null.");
+				s_offscreenDevice = device;
+
+				// SkiaSharp.NativeAssets.WebAssembly.targets exports
+				// _wgpuCreateInstance so we can allocate a real WGPUInstanceImpl
+				// under the emdawnwebgpu port. wgpu::Instance(...) inside
+				// sk_graphite_context_make_dawn calls AddRef on this handle,
+				// which dereferences it — a fake sentinel would hang.
+				int instanceId = SKWebGpu.CreateInstance();
+				if (instanceId == 0)
+					throw new InvalidOperationException("Module._wgpuCreateInstance not exported — cannot obtain a real WGPUInstance.");
+
+				// The imported device/queue must carry the instance ID as
+				// EventSource parent, otherwise EventManager::WaitAny fires
+				// assert(event->mInstanceId == instance) on the first async
+				// wait (buffer.mapAsync, createRenderPipelineAsync, ...).
+				var queue = SKWebGpu.GetDeviceQueue(device);
+				int queueId = SKWebGpu.RegisterQueue(queue, instanceId);
+				int deviceId = SKWebGpu.RegisterDevice(device, instanceId);
+
+				var bc = new SKGraphiteDawnBackendContext
 				{
-					var adapter = await SKWebGpu.RequestAdapter()
-						?? throw new RendererUnavailableException("navigator.gpu.requestAdapter returned null — WebGPU unavailable.");
-					var device = await SKWebGpu.RequestDevice(adapter)
-						?? throw new RendererUnavailableException("adapter.requestDevice returned null.");
-					s_offscreenDevice = device;
-
-					// SkiaSharp.NativeAssets.WebAssembly.targets exports
-					// _wgpuCreateInstance so we can allocate a real WGPUInstanceImpl
-					// under the emdawnwebgpu port. wgpu::Instance(...) inside
-					// sk_graphite_context_make_dawn calls AddRef on this handle,
-					// which dereferences it — a fake sentinel would hang.
-					int instanceId = SKWebGpu.CreateInstance();
-					if (instanceId == 0)
-						throw new InvalidOperationException("Module._wgpuCreateInstance not exported — cannot obtain a real WGPUInstance.");
-
-					// The imported device/queue must carry the instance ID as
-					// EventSource parent, otherwise EventManager::WaitAny fires
-					// assert(event->mInstanceId == instance) on the first async
-					// wait (buffer.mapAsync, createRenderPipelineAsync, ...).
-					var queue = SKWebGpu.GetDeviceQueue(device);
-					int queueId = SKWebGpu.RegisterQueue(queue, instanceId);
-					int deviceId = SKWebGpu.RegisterDevice(device, instanceId);
-
-					var bc = new SKGraphiteDawnBackendContext
-					{
-						WgpuInstance = (IntPtr)instanceId,
-						WgpuDevice = (IntPtr)deviceId,
-						WgpuQueue = (IntPtr)queueId,
-					};
-					s_ctx = SKGraphiteContext.CreateDawn(bc)
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
-					// Register a findOrCreate image-provider callback so raster
-					// SkImages (glyph atlases, cached surfaces, XAML Image controls)
-					// upload to Graphite-backed textures on first use. Without a
-					// callback, Skia's Graphite has no way to convert a raster
-					// SkImage and every DrawImage / DrawText / ... path hits
-					// "Couldn't convert SkImage to a Graphite-backed representation"
-					// and the draw is silently dropped.
-					s_recorder = s_ctx.CreateRecorder(-1, (recorder, image, mipmapped) => image.ToTextureImage(recorder, mipmapped))
-						?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
-					s_dawnReady = true;
-				}
-				catch (TypeInitializationException ex)
-				{
-					throw new RendererUnavailableException(
-						$"WebGPU host bring-up failed: {ex.InnerException?.Message ?? ex.Message}", ex);
-				}
+					WgpuInstance = (IntPtr)instanceId,
+					WgpuDevice = (IntPtr)deviceId,
+					WgpuQueue = (IntPtr)queueId,
+				};
+				s_ctx = SKGraphiteContext.CreateDawn(bc)
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateDawn returned null.");
+				// Register a findOrCreate image-provider callback so raster
+				// SKImages (glyph atlases, cached surfaces, XAML Image controls)
+				// upload to Graphite-backed textures on first use. Without a
+				// callback, Skia's Graphite has no way to convert a raster
+				// SkImage and every DrawImage / DrawText / ... path hits
+				// "Couldn't convert SkImage to a Graphite-backed representation"
+				// and the draw is silently dropped.
+				s_recorder = s_ctx.CreateRecorder(-1, (recorder, image, mipmapped) => image.ToTextureImage(recorder, mipmapped))
+					?? throw new InvalidOperationException("SKGraphiteContext.CreateRecorder returned null.");
+				s_dawnReady = true;
 			}
 
 			var texture = SKWebGpu.CreateTexture(s_offscreenDevice, info.Width, info.Height);

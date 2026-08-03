@@ -13,6 +13,7 @@ namespace SkiaSharpGenerator
 			: base(skiaRoot, configFile)
 		{
 			OutputWriter = outputWriter ?? throw new ArgumentNullException(nameof(outputWriter));
+			OutputWriter.NewLine = "\n";
 			PreviousDocumentation = docStore;
 		}
 
@@ -79,10 +80,11 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Delegates");
 			writer.WriteLine($"#if !USE_LIBRARY_IMPORT");
 
-			var delegates = compilation.Typedefs
+			var delegates = StableOrdering.ByName(
+				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
-				.Where(t => IncludeNamespace(t.GetDisplayName()))
-				.OrderBy(t => t.GetDisplayName())
+				.Where(t => IncludeNamespace(t.GetDisplayName())),
+				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
 			foreach (var group in delegates)
@@ -139,10 +141,11 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region Structs");
 
-			var classes = compilation.Classes
+			var classes = StableOrdering.ByName(
+				compilation.Classes
 				.Where(c => c.SizeOf != 0)
-				.Where(c => IncludeNamespace(c.GetDisplayName()))
-				.OrderBy(c => c.GetDisplayName())
+				.Where(c => IncludeNamespace(c.GetDisplayName())),
+				c => c.GetDisplayName())
 				.GroupBy(c => GetNamespace(c.GetDisplayName()));
 
 			foreach (var group in classes)
@@ -340,9 +343,10 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region Enums");
 
-			var enums = compilation.Enums
-				.Where(e => IncludeNamespace(e.GetDisplayName()))
-				.OrderBy(e => e.GetDisplayName())
+			var enums = StableOrdering.ByName(
+				compilation.Enums
+				.Where(e => IncludeNamespace(e.GetDisplayName())),
+				e => e.GetDisplayName())
 				.GroupBy(e => GetNamespace(e.GetDisplayName()));
 
 			foreach (var group in enums)
@@ -421,8 +425,10 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Namespaces");
 			writer.WriteLine();
 
-			var namspaces = config.Namespaces.Values;
-			foreach (var ns in namspaces)
+			var namespaces = StableOrdering.ByName(
+				config.Namespaces.Values,
+				ns => $"{config.Namespace}.{ns.CsName}");
+			foreach (var ns in namespaces)
 			{
 				if (string.IsNullOrEmpty(ns.CsName))
 					continue;
@@ -445,8 +451,9 @@ namespace SkiaSharpGenerator
 			writer.WriteLine($"#region Class declarations");
 			writer.WriteLine();
 
-			var classes = compilation.Classes
-				.OrderBy(c => c.GetDisplayName())
+			var classes = StableOrdering.ByName(
+				compilation.Classes,
+				c => c.GetDisplayName())
 				.ToList();
 			foreach (var klass in classes)
 			{
@@ -467,16 +474,18 @@ namespace SkiaSharpGenerator
 		{
 			Log?.LogVerbose("  Writing p/invokes...");
 
-			var functionGroups = compilation.Functions
-				.Where(f => IncludeNamespace(f.Name))
-				.OrderBy(f => f.Name)
-				.GroupBy(f => f.Span.Start.File.ToLower().Replace("\\", "/"))
-				.OrderBy(g => Path.GetDirectoryName(g.Key) + "/" + Path.GetFileName(g.Key));
+			var functions = StableOrdering.ByPathThenName(
+				compilation.Functions.Where(f => IncludeNamespace(f.Name)),
+				SkiaRoot,
+				f => f.Span.Start.File,
+				f => f.Name);
+			var functionGroups = functions.GroupBy(
+				f => StableOrdering.NormalizePath(SkiaRoot, f.Span.Start.File),
+				StringComparer.Ordinal);
 
 			foreach (var group in functionGroups)
 			{
-				var fullPath = Path.GetFullPath(group.Key).ToLower();
-				if (excludedFiles.Any(e => Path.GetFullPath(e).ToLower() == fullPath))
+				if (excludedFiles.Contains(group.Key))
 				{
 					Log?.LogVerbose($"    Skipping file '{group.Key}' because it was in the exclude list.");
 					continue;
@@ -579,10 +588,11 @@ namespace SkiaSharpGenerator
 
 			writer.WriteLine($"#region DelegateProxies");
 
-			var delegates = compilation.Typedefs
+			var delegates = StableOrdering.ByName(
+				compilation.Typedefs
 				.Where(t => t.ElementType.TypeKind == CppTypeKind.Pointer)
-				.Where(t => IncludeNamespace(t.GetDisplayName()))
-				.OrderBy(t => t.GetDisplayName())
+				.Where(t => IncludeNamespace(t.GetDisplayName())),
+				t => t.GetDisplayName())
 				.GroupBy(t => GetNamespace(t.GetDisplayName()));
 
 			foreach (var group in delegates)

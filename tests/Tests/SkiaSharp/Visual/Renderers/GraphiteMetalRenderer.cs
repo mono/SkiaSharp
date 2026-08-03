@@ -9,41 +9,15 @@ namespace SkiaSharp.Tests.Visual
 	/// Graphite GPU backend over Apple Metal. Uses the same Metal.framework
 	/// + libobjc runtime bring-up as <see cref="GaneshMetalRenderer"/> — system
 	/// default MTLDevice + a fresh MTLCommandQueue — feeding
-	/// <see cref="SKGraphiteContext.CreateMetal"/> instead of the Ganesh
-	/// factory. Compiled into every host; the Apple-only check gates the P/Invoke
-	/// surface so non-Apple hosts skip cleanly.
+	/// <see cref="SKGraphiteContext.CreateMetal"/> instead of the Ganesh factory.
 	/// </summary>
 	public sealed class GraphiteMetalRenderer : IRenderer
 	{
-		public string Name => "graphite-metal";
-
-		public bool IsAvailable => UnavailableReason is null;
-
-		public string UnavailableReason =>
-			TestConfig.Current.IsApple
-				? null
-				: "Metal is only available on Apple platforms (macOS, iOS, Mac Catalyst, tvOS).";
-
-		// See GaneshMetalRenderer.IsAzureDevOpsX64Host — same reasoning.
-		private static bool IsAzureDevOpsX64Host =>
-			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase) &&
-			RuntimeInformation.OSArchitecture == Architecture.X64;
+		public string Name => GpuBackends.GraphiteMetal;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
-
-			if (!IsAvailable)
-				throw new RendererUnavailableException(UnavailableReason);
-
-			// Short-circuit before touching Metal at all on the x64 Azure DevOps
-			// macOS agents: the virtualized Metal driver leaves state that hangs
-			// the test host's post-session shutdown, even when Skia never actually
-			// renders. See GaneshMetalRenderer for the full rationale.
-			if (IsAzureDevOpsX64Host)
-				throw new RendererUnavailableException(
-					"Metal is skipped on x64 Azure DevOps macOS agents (virtualized " +
-					"Metal driver leaves state that hangs the test host on shutdown).");
 
 			// GPU work is serialized by the GpuRenderingCollection the driving test
 			// class joins (xUnit DisableParallelization), so no in-renderer lock.
@@ -53,17 +27,18 @@ namespace SkiaSharp.Tests.Visual
 			{
 				device = MTLCreateSystemDefaultDevice();
 				if (device == IntPtr.Zero)
-					throw new RendererUnavailableException("MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
+					throw new InvalidOperationException(
+						"MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 
 				// Probe the device BEFORE allocating a command queue. Skia's Graphite
 				// Metal init walks MTLGPUFamilyApple9..7 and Mac2 and SK_ABORTs the
 				// process if none is supported; the newCommandQueue call itself is
 				// also what leaves the dispatch-queue state that hangs shutdown on
-				// virtualized Metal, so we skip it if the probe fails.
+				// virtualized Metal, so we never reach it if the probe fails.
 				if (!MetalCanDriveGraphite(device))
-					throw new RendererUnavailableException(
+					throw new InvalidOperationException(
 						"MTLDevice does not support any MTLGPUFamily that Skia Graphite requires " +
-						"(Apple7+, Mac2). Likely a virtualized/software Metal on the CI runner.");
+						"(Apple7+, Mac2). This is usually a virtualized/software Metal driver.");
 
 				queue = ObjcSendVoid(device, "newCommandQueue");
 				if (queue == IntPtr.Zero)
@@ -84,17 +59,14 @@ namespace SkiaSharp.Tests.Visual
 				{
 					// The Apple simulator's Metal cannot compile every pipeline Graphite
 					// emits — notably the gradient-shader pipeline (GradientBlend) — so
-					// Recorder.Snap() returns null there for those scenes. Ganesh/Metal
-					// renders the same scene on the simulator and Graphite/Metal renders
-					// it on macOS/device, so this is a simulator-only Graphite gap, not a
-					// regression: skip the cell (RendererUnavailableException) rather than
-					// fail. On real hardware a null Snap is still a hard error.
-					if (IsRunningOnAppleSimulator)
-						throw new RendererUnavailableException(
-							"Graphite/Metal Recorder.Snap() returned null on the Apple simulator for this " +
-							"scene — the simulator's Metal cannot compile the pipeline Graphite emits (e.g. " +
-							"gradient shaders). Ganesh/Metal on the simulator and Graphite/Metal on macOS/device render it.");
-					throw new InvalidOperationException("Recorder.Snap() returned null.");
+					// Snap() returns null there for those scenes.
+					throw new InvalidOperationException(
+						"Graphite/Metal Recorder.Snap() returned null" +
+						(IsRunningOnAppleSimulator
+							? " on the Apple simulator, whose Metal cannot compile some pipelines Graphite " +
+							  "emits (e.g. gradient shaders). Ganesh/Metal renders this scene on the " +
+							  "simulator, and Graphite/Metal renders it on macOS and real devices."
+							: "."));
 				}
 
 				using (recording)
@@ -143,11 +115,9 @@ namespace SkiaSharp.Tests.Visual
 
 		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
 		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
-		// Apple simulator is a proven exception: it under-reports its GPU family
-		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
-		// Silicon GPU and drives Graphite Metal correctly, so it is whitelisted
-		// rather than skipped. (The virtualized x64 Azure DevOps Metal host, which
-		// genuinely cannot, is already skipped earlier via IsAzureDevOpsX64Host.)
+		// Apple simulator under-reports its GPU family (typically Apple1/Apple2/
+		// Common1) yet is backed by the host Apple Silicon GPU and drives Graphite
+		// Metal correctly, so it is whitelisted.
 		private static bool MetalCanDriveGraphite(IntPtr device) =>
 			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
 

@@ -233,15 +233,9 @@ namespace SkiaSharp.Tests
 
 		protected GlContext CreateGlContext()
 		{
-			try
-			{
-				return TestConfig.Current.CreateGlContext();
-			}
-			catch (Exception ex)
-			{
-				Assert.Skip($"Unable to create GL context: {ex.Message}");
-				throw;
-			}
+			GpuPolicy.RequireOrSkip(GpuBackends.GaneshGl);
+
+			return TestConfig.Current.CreateGlContext();
 		}
 
 		public static IEnumerable<object[]> GetAllColorTypes()
