@@ -1,4 +1,6 @@
-﻿using Xunit;
+﻿using System;
+using System.Runtime.CompilerServices;
+using Xunit;
 
 namespace SkiaSharp.Tests
 {
@@ -280,6 +282,46 @@ namespace SkiaSharp.Tests
 			Assert.False(iterator.Next(out left, out right));
 			Assert.Equal(0, left);
 			Assert.Equal(0, right);
+		}
+
+		// Regression test for the SKRegion.SpanIterator native use-after-free.
+		//
+		// The native SkRegion::Spanerator keeps a raw pointer into the region's run data, so
+		// the managed SpanIterator must root its SKRegion for the iterator's whole lifetime -
+		// exactly like the sibling RectIterator and ClipIterator already do. If it does not,
+		// the region can be finalized while the iterator is still alive, freeing the native
+		// runs the spanerator still points at -> use-after-free.
+		[Fact]
+		public void SpanIteratorKeepsItsRegionAlive()
+		{
+			var iterator = CreateDoomedSpanIterator(out var weakRegion);
+
+			// Finalize anything unrooted. Without the fix the region has no root once the
+			// helper returns, so it is collected here even though the iterator lives on.
+			CollectGarbage();
+
+			// The live iterator must keep its source region rooted (as its siblings do).
+			Assert.True(weakRegion.IsAlive, "The SKRegion was collected while its SpanIterator was still alive.");
+
+			// The iterator must also still be usable: reading it must not touch freed memory.
+			Assert.True(iterator.Next(out var left, out var right));
+			Assert.Equal(10, left);
+			Assert.Equal(110, right);
+
+			iterator.Dispose();
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		private static SKRegion.SpanIterator CreateDoomedSpanIterator(out WeakReference weakRegion)
+		{
+			// A two-rect (complex) region so the native spanerator points into real run data.
+			var region = new SKRegion(SKRectI.Create(10, 10, 100, 100));
+			region.Op(SKRectI.Create(50, 50, 100, 100), SKRegionOperation.Union);
+
+			weakRegion = new WeakReference(region);
+
+			// Only the returned iterator can keep `region` alive from here on.
+			return region.CreateSpanIterator(30, 5, 200);
 		}
 	}
 }

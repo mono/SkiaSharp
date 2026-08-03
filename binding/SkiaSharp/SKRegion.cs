@@ -312,12 +312,10 @@ namespace SkiaSharp
 
 		public class RectIterator : SKObject, ISKSkipObjectRegistration
 		{
-			private readonly SKRegion region;
-
 			internal RectIterator (SKRegion region)
 				: base (SkiaApi.sk_region_iterator_new (region.Handle), true)
 			{
-				this.region = region;
+				Referenced (this, region);
 			}
 
 			protected override void DisposeNative () =>
@@ -344,13 +342,12 @@ namespace SkiaSharp
 
 		public class ClipIterator : SKObject, ISKSkipObjectRegistration
 		{
-			private readonly SKRegion region;
 			private readonly SKRectI clip;
 
 			internal ClipIterator (SKRegion region, SKRectI clip)
 				: base (SkiaApi.sk_region_cliperator_new (region.Handle, &clip), true)
 			{
-				this.region = region;
+				Referenced (this, region);
 				this.clip = clip;
 			}
 
@@ -381,6 +378,7 @@ namespace SkiaSharp
 			internal SpanIterator (SKRegion region, int y, int left, int right)
 				: base (SkiaApi.sk_region_spanerator_new (region.Handle, y, left, right), true)
 			{
+				Referenced (this, region);
 			}
 
 			protected override void DisposeNative () =>
