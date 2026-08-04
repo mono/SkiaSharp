@@ -50,7 +50,12 @@ namespace SkiaSharp.Views.WPF
 		private void Initialize()
 		{
 			designMode = DesignerProperties.GetIsInDesignMode(this);
-			var settings = new GLWpfControlSettings() { MajorVersion = 2, MinorVersion = 1, RenderContinuously = false };
+#if NETCOREAPP
+			var settings = new GLWpfControlSettings() { MajorVersion = 2, MinorVersion = 1, RenderContinuously = false, TransparentBackground = true};
+#else
+			var settings = new GLWpfControlSettings() { MajorVersion = 2, MinorVersion = 1, RenderContinuously = false};
+
+#endif
 
 			this.Render += OnPaint;
 
