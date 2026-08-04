@@ -44,6 +44,18 @@ Before writing, capture consequential facts in a scratch ledger:
 CLAIM | <claim> | <public scope/version/platform> | <evidence> | VERIFIED / QUALIFIED / UNVERIFIED
 ```
 
+Classify each selected type/member `<Docs>` block before editing:
+
+```text
+EVIDENCE | <file> | <docId> | MANAGED / NATIVE | <reason>
+```
+
+Use `NATIVE` whenever the documentation would explain a native-backed status, ownership transfer,
+callback lifetime/failure, backend constraint, or behavior that the managed method body delegates.
+Do not author that claim until the pinned native declaration or implementation is available. If it
+cannot be inspected, leave the field as a placeholder and report it as deferred rather than inferring
+from an enum/member name.
+
 At minimum check:
 
 - Exact signatures, overloads, accessors, and public identifiers.
@@ -89,9 +101,24 @@ platform, or unsupported native variant.
 
 - State behavior in terms of public parameters, return values, properties, and observable effects.
 - Add `<exception>` entries for explicit managed exceptions; do not hide them only in remarks.
+- Use the actual framework DocId for BCL types, such as `T:System.ObjectDisposedException`; never place
+  `System` types under the `SkiaSharp` namespace.
 - Say when a callback can receive `null`, when a status must be checked, and when data expires.
 - Use source paths and line numbers in review findings and internal ledgers, not as a substitute for clear
   public-facing prose.
 - Do not make a stronger claim than the evidence. "Returns `InvalidRecording` for invalid input" is safer
   than inventing an exhaustive list of invalid states when the wrapper/native contract does not provide
   one.
+
+For each native-backed claim that is authored, preserve a machine-readable evidence row:
+
+```text
+NATIVE | <file> | <docId> | managed:<path:lines> | native:<path:lines> | <claim verified>
+```
+
+The native path must identify the pinned source actually read. A type or member name, generated enum
+value, or an initialized-but-unread submodule is not evidence.
+
+Machine-readable citations use repository-relative POSIX paths and one-based inclusive ranges:
+`binding/SkiaSharp/Foo.cs:20-34`. Separate multiple citations with semicolons. Do not use absolute paths,
+backslashes, `NONE`, or a path without line numbers.

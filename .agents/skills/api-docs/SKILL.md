@@ -52,8 +52,10 @@ the requested artifact or repository location. Ask only when neither the artifac
 resolves the route.
 
 One agent does the whole pass. Read only the selected route and shared technical references, resolve scope
-into an explicit file list, then work in batches of ~25–40 files so each pass stays auditable and
-resumable.
+into an explicit file list, then work in reviewable waves. Interactive review can use batches of
+~25–40 straightforward files. Automated authoring is stricter: one coherent wave may contain at most
+10 files and 60 placeholder-bearing members, whichever limit comes first, and should be smaller when
+status, ownership, callbacks, native backends, or resource lifetimes need cross-layer evidence.
 
 | If the task is… | Read |
 |---|---|

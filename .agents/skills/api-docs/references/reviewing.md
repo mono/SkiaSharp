@@ -5,7 +5,9 @@ dual of [`adding.md`](adding.md) (which fills blanks); review improves what is a
 **report-only by default**; fixing is a separate, gated step.
 
 You run this yourself, end to end — resolve scope, read source, compare, report, and (if approved) fix.
-One agent does the whole pass. Work in batches of ~25–40 files so each pass stays auditable and resumable.
+One agent does the whole pass. Interactive review can use batches of ~25–40 straightforward files.
+Automated authoring reviews only the current authoring wave: at most 10 files and 60
+placeholder-bearing members, with smaller waves for cross-layer native evidence.
 
 ## Required reading (first)
 
@@ -37,8 +39,8 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    **select the matching files yourself** — e.g. expand "font" to `SKFont`, `SKTypeface`, `SKFontMetrics`,
    `SKTextBlob`, and the text APIs on `SKPaint`/`SKCanvas`, judging by each type's purpose not just its
    filename. For "whatever changed" use `git -C docs diff --name-only origin/main...HEAD`; for the whole
-   library review every file. Shard into ~25–40-file batches; review is incremental against the
-   `last-reviewed` marker.
+   library review every file. Interactive review uses ~25–40-file batches and is incremental against the
+   `last-reviewed` marker; automated authoring uses only the smaller current wave defined above.
 
 2. **Run the deterministic checks** on the batch with `docs-format-docs` ([`validation.md`](validation.md)).
    It finds objective defects with no model cost and emits findings in the shared contract.
@@ -52,6 +54,9 @@ across many files almost certainly skimmed. Every factual finding must cite sour
 4. **Collect and dedupe findings** in the shared contract. Deduplicate by `(file, docId, class)` plus
    fuzzy message match; when the linter and your own review report the same defect, keep one row. On a
    severity disagreement, take the **highest**.
+   A zero-finding result is valid only after every selected file has a complete source range, every
+   deterministic managed exception has been reconciled with member-level `<exception>` tags, and every
+   native-backed claim has either a `NATIVE` evidence row or remains deferred.
 
 5. **(Gated) Fix.** If fixing is approved, edit the XML directly for CRITICAL (and chosen IMPORTANT)
    findings, and expand examples where types are example-poor — port the `SKCanvas`/`SKShader` bar to
@@ -157,8 +162,15 @@ SEVERITY | class | <file> | <docId> | <message — what it says vs what source s
 source (so a skim is detectable):
 
 ```
-TRACE | <file> | source:<binding/...cs lines a-b or NONE> | checked:<n> | issues:<n>
+TRACE | <file> | source:<binding/...cs:a-b> | checked:<n> | issues:<n>
 ```
+
+`source:` must contain real line ranges covering the members checked; a path without ranges is incomplete.
+`checked` is the number of selected `EVIDENCE` DocIds in the file, and `issues` is the number of
+machine-readable finding rows for that file.
+Include the `EVIDENCE` classifications and `NATIVE` rows required by
+[`technical-fact-checking.md`](technical-fact-checking.md). Missing evidence is a coverage gap, not proof
+of zero findings.
 
 After deduplication, write a single Markdown report plus the machine block (one line per deduped finding)
 to `output/docs-review/` (gitignored). Nothing in `docs/` changes unless the gated fix step runs.

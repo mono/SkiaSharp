@@ -36,25 +36,37 @@ own recollection.
    git -C docs diff --name-only --diff-filter=ACM
    ```
    Map each `<Type>.xml` to its source at `binding/<Namespace>/<Type>.cs` (if the guess is wrong, `grep`
-   for the type). Shard the result into ~25–40-file batches.
+   for the type). For automated authoring, select one coherent wave of at most 10 files and 60
+   placeholder-bearing members, whichever limit comes first; do not split a type merely to reach the
+   limit. Reduce the wave further for native-backed status, ownership, callback, backend, or lifetime
+   documentation. Leave every unselected placeholder intact and summarize each unselected file:
+   ```text
+   UNSELECTED | <file> | members:<n> | <reason>
+   ```
 
 3. **Write (per file).** A field is **in scope to fill** when it is empty, self-closing, or still a
    placeholder (`To be added.`, or a bracketed remarks scaffold like `[Describe …]`). Do not rewrite
    already-written prose.
-   1. **Read the managed source first.** From the filename, locate the type in `binding/` and read it.
+   1. **Read the managed source first.** From the filename, locate the type in `binding/` and read it
+      completely; do not truncate required references with `head`, partial-range reads, or a combined
+      output cap that silently omits later files.
       Build the fact sheet from `technical-fact-checking.md`: exact public surface, validation,
       exceptions, nullable failures/callback payloads, status results, ownership, lifetimes, constants,
       and defaults. Never document from the member name alone.
-   2. **Close the evidence chain when managed source delegates semantics.** Read focused tests and the
+   2. **Classify and close the evidence chain.** Emit one `EVIDENCE` classification from
+      `technical-fact-checking.md` for every selected type/member DocId. When managed source delegates
+      semantics, read focused tests and the
       checked-out native declaration/implementation for native-backed enums, status values, ownership,
-      callbacks, or behavior the wrapper does not define. A native name or enum value is not enough to
-      invent a behavioral explanation.
+      callbacks, or behavior the wrapper does not define, and retain a `NATIVE` row for each authored
+      claim. A native name or enum value is not enough to invent a behavioral explanation. If native
+      evidence is unavailable, do not fill that field.
    3. **Open the `.xml` and locate each `<Docs>` block.** Each `<Member>`/type carries a
       `MemberSignature[@Language='DocId']` you use as the stable id. Fill the in-scope children:
       `<summary>`, `<param>`, `<returns>`, `<value>`, `<typeparam>`, `<exception>`, and `<remarks>`.
-      Include an `<exception>` entry for each deterministic managed exception identified by the fact
-      sheet, including verified checked arithmetic and deliberate failures from directly invoked
-      helpers. Do not add a possible exception without locating the exact throwing operation.
+      Include an `<exception>` entry on each affected member for every deterministic managed exception
+      identified by the fact sheet, including verified checked arithmetic and deliberate failures from
+      directly invoked helpers. Type-level prose does not replace member-level exception contracts.
+      Do not add a possible exception without locating the exact throwing operation.
    4. **Match the accessor verb to the signature**, not to intuition: `{ get; set; }` → "Gets or sets …",
       `{ get; }` → "Gets …". Many struct properties look read-only but are settable — check the signature.
    5. **Defaults come from the source.** A struct property with no field initializer defaults to
@@ -74,8 +86,10 @@ own recollection.
       content. Search the touched file for placeholders. Fill each in-scope field, replace a
       non-applicable remarks placeholder with `<remarks />`, or emit a `DEFERRED` row for that exact field.
 
-4. **Review** the files just written with the review checks ([`reviewing.md`](reviewing.md) §Checks), then
-   fix CRITICAL findings by editing the XML directly.
+4. **Review** the files just written with the review checks ([`reviewing.md`](reviewing.md) §Checks).
+   Every self-introduced CRITICAL or IMPORTANT finding must be fixed before landing. If the evidence or
+   time needed to fix it is unavailable, restore the affected field to its original placeholder and emit
+   a `DEFERRED` row; never keep weak prose merely to reduce the placeholder count.
 
 5. **Validate & format** ([`validation.md`](validation.md)): run `docs-format-docs` — it formats and runs
    the deterministic checks; fix any build-failing broken-XML errors and reconcile every remaining
@@ -89,15 +103,28 @@ own recollection.
 After all files, emit a compact manifest — one line per file:
 
 ```
-WROTE | <file> | summaries:<n> params:<n> returns:<n> remarks:<n> | source:<binding path or NONE>
+WROTE | <file> | members:<n> fields:<n> exceptions:<n> | source:<binding path:lines> | native:<n>
 ```
 
-Counts must come from the final XML, not memory. Then list every field intentionally left as a placeholder
-(ran out of certainty/time) so the next run re-detects it:
+Counts must come from the semantic `<Docs>` diff, not memory: `members` is the number of type/member
+`<Docs>` blocks changed, `fields` is the number of changed `<Docs>` children, and `exceptions` is the
+number of changed `<exception>` children. `source:` uses repository-relative POSIX paths and real line
+ranges, and `native:<n>` must
+equal the number of `NATIVE` rows for the file. A file cannot receive a `WROTE` row while it has an
+unresolved self-introduced CRITICAL/IMPORTANT finding or unsupported native claim. For every selected
+DocId, list each field intentionally left as a placeholder because evidence or time was insufficient:
 
 ```
 DEFERRED | <file> | <docId> | <field> | <reason>
 ```
+
+Use `summary`, `returns`, `value`, or `remarks` for singleton fields; `param:<name>` and
+`typeparam:<name>` for named fields; and `exception:<cref>` for exceptions. Unselected DocIds use the
+file-level `UNSELECTED` row instead of one `DEFERRED` row per field.
+
+Include the `EVIDENCE` and `NATIVE` rows from `technical-fact-checking.md`, the `TRACE` and finding rows
+from `reviewing.md`, and the `UNSELECTED` rows in the PR body. This evidence block is part of the
+completion gate, not optional review commentary.
 
 ## Boundaries
 

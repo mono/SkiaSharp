@@ -41,6 +41,19 @@ For each touched type file, separately search for `To be added.`, TODO, empty re
 scaffolds. Every remaining in-scope field must be filled or listed as `DEFERRED`; do not call a file or type
 complete merely because the Cake target exits successfully.
 
+Before landing, also reject:
+
+- A BCL DocId incorrectly nested under SkiaSharp, such as `T:SkiaSharp.System.*`.
+- A `WROTE` row without real managed source ranges, final member/exception counts, or the expected number
+  of `NATIVE` rows.
+- A native-backed status, ownership, callback, backend, or lifetime claim without a pinned native
+  path-and-line citation.
+- A zero-finding report that has not reconciled deterministic exceptions for every touched member.
+
+These completion checks depend on the evidence block and source audit; `docs-format-docs` does not perform
+them. Treat missing evidence or inconsistent counts as validation failure, not as a warning. They do not
+replace human/source review of whether a claim or exception list is complete.
+
 ## What FAILS the build (errors)
 
 Two things stop a doc from parsing or rendering on the published Learn site, so both fail the target:
