@@ -186,31 +186,6 @@ steps:
         printf 'SKIA_SYNC_ARCH=x64\n'
         printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
       } >> "$GITHUB_ENV"
-  - name: Compute native cache key
-    id: native-cache-key
-    run: |
-      set -euo pipefail
-      BASE_SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
-      BUILD_HASH=$(
-        find native/linux scripts/infra/native -type f -print0 |
-          sort -z |
-          xargs -0 sha256sum |
-          sha256sum |
-          awk '{print $1}'
-      )
-      PREFIX="skia-sync-linux-x64-${BUILD_HASH}-"
-      echo "key=${PREFIX}${BASE_SKIA_SHA}" >> "$GITHUB_OUTPUT"
-      echo "restore-key=${PREFIX}" >> "$GITHUB_OUTPUT"
-  - name: Restore native base cache
-    id: restore-native-cache
-    uses: actions/cache/restore@v6
-    with:
-      path: |
-        externals/skia/third_party/externals
-        externals/skia/out/linux/x64
-        output/native/linux/x64
-      key: ${{ steps.native-cache-key.outputs.key }}
-      restore-keys: ${{ steps.native-cache-key.outputs.restore-key }}
   - name: Copy post-step assets
     run: |
       RUNTIME_DIR="$RUNNER_TEMP/skia-sync-runtime"
@@ -294,22 +269,6 @@ pre-agent-steps:
         exit 1
       fi
       echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
-  - name: Build native base for incremental reuse
-    run: |
-      set -euo pipefail
-      dotnet tool restore
-      dotnet cake --target=externals-linux --arch=x64 \
-        2>&1 | tee /tmp/gh-aw/agent/base-native-build.log
-  - name: Save native base cache
-    if: steps.restore-native-cache.outputs.cache-hit != 'true'
-    uses: actions/cache/save@v6
-    with:
-      path: |
-        externals/skia/third_party/externals
-        externals/skia/out/linux/x64
-        output/native/linux/x64
-      key: ${{ steps.native-cache-key.outputs.key }}
-
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
@@ -380,10 +339,11 @@ the supplied values.
 
 ## 2. Provisioned environment
 
-- The parent and submodule are aligned to the selected bases; the target upstream ref and exact
-  recorded base-upstream SHA are fetched.
-- The exact base native tree was built before the agent. Reuse its hydrated dependencies and Ninja
-  objects, but still perform the mandatory merged-target source build.
+- The selected parent base is fetched, the submodule is aligned to that base's exact recorded
+  pointer, and the target upstream ref and recorded base-upstream SHA are fetched.
+- No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
+  takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
+  cancel it, or restart it solely because of its duration.
 - Clang, libc++, fontconfig/fonts, Ninja, Android workload, Xvfb, and Mesa software GL/Vulkan are
   installed. Mesa softpipe and the lavapipe ICD are pinned so every Linux backend required by
   `GpuPolicy` executes deterministically.
@@ -393,6 +353,9 @@ the supplied values.
 ## 3. Execution contract
 
 - Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
+- In Phase 04, create or check out the parent feature branch from the resolved parent base and the
+  submodule feature branch from its exact recorded pointer before merging or building. Never build
+  from the workflow checkout when it differs from the resolved parent base.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
