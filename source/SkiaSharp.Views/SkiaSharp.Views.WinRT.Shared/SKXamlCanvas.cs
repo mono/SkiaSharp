@@ -1,7 +1,9 @@
 ﻿using System;
 using Windows.ApplicationModel;
+using Windows.Foundation.Metadata;
+using Windows.Graphics.Display;
 
-#if WINDOWS
+#if WINUI
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,7 +19,7 @@ using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 #endif
 
-#if WINDOWS
+#if WINUI
 namespace SkiaSharp.Views.Windows
 #else
 namespace SkiaSharp.Views.UWP
@@ -26,6 +28,13 @@ namespace SkiaSharp.Views.UWP
 	public partial class SKXamlCanvas : Canvas
 	{
 		private const float DpiBase = 96.0f;
+
+#if WINUI
+		private const bool HasXamlRoot = true;
+#else
+		private static readonly bool HasXamlRoot =
+			ApiInformation.IsPropertyPresent("Windows.UI.Xaml.UIElement", "XamlRoot");
+#endif
 
 		private static readonly DependencyProperty ProxyVisibilityProperty =
 			DependencyProperty.Register(
@@ -50,10 +59,8 @@ namespace SkiaSharp.Views.UWP
 			if (designMode)
 				return;
 
-#if !WINDOWS
-			var display = DisplayInformation.GetForCurrentView();
-			OnDpiChanged(display);
-#endif
+			if (!HasXamlRoot)
+				OnDpiChanged(DisplayInformation.GetForCurrentView());
 
 			Loaded += OnLoaded;
 			Unloaded += OnUnloaded;
@@ -97,7 +104,6 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-#if WINDOWS
 		private void OnXamlRootChanged(XamlRoot xamlRoot = null, XamlRootChangedEventArgs e = null)
 		{
 			var root = xamlRoot ?? XamlRoot;
@@ -109,13 +115,13 @@ namespace SkiaSharp.Views.UWP
 				Invalidate();
 			}
 		}
-#else
+
 		private void OnDpiChanged(DisplayInformation sender, object args = null)
 		{
 			Dpi = sender.LogicalDpi / DpiBase;
+			UpdateBrushScale();
 			Invalidate();
 		}
-#endif
 
 		private void OnSizeChanged(object sender, SizeChangedEventArgs e)
 		{
@@ -128,15 +134,20 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 1)
 				return;
 
-#if WINDOWS
-			XamlRoot.Changed += OnXamlRootChanged;
-			OnXamlRootChanged();
-#else
-			var display = DisplayInformation.GetForCurrentView();
-			display.DpiChanged += OnDpiChanged;
+			if (HasXamlRoot)
+			{
+				if (XamlRoot != null)
+					XamlRoot.Changed += OnXamlRootChanged;
 
-			OnDpiChanged(display);
-#endif
+				OnXamlRootChanged();
+			}
+			else
+			{
+				var display = DisplayInformation.GetForCurrentView();
+				display.DpiChanged += OnDpiChanged;
+
+				OnDpiChanged(display);
+			}
 		}
 
 		private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -145,25 +156,26 @@ namespace SkiaSharp.Views.UWP
 			if (loadUnloadCounter != 0)
 				return;
 
-#if WINDOWS
-			if (XamlRoot != null)
+			if (HasXamlRoot)
 			{
-				XamlRoot.Changed -= OnXamlRootChanged;
+				if (XamlRoot != null)
+					XamlRoot.Changed -= OnXamlRootChanged;
 			}
-#else
-			var display = DisplayInformation.GetForCurrentView();
-			display.DpiChanged -= OnDpiChanged;
-#endif
+			else
+			{
+				var display = DisplayInformation.GetForCurrentView();
+				display.DpiChanged -= OnDpiChanged;
+			}
 
 			FreeBitmap();
 		}
 
 		public void Invalidate()
 		{
-#if WINDOWS
+#if WINUI
 			DispatcherQueue?.TryEnqueue(DispatcherQueuePriority.Normal, DoInvalidate);
 #else
-			Dispatcher?.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
+			_ = Dispatcher?.RunAsync(CoreDispatcherPriority.Normal, DoInvalidate);
 #endif
 		}
 

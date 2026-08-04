@@ -136,9 +136,13 @@ namespace SkiaSharp.Views.Mac
 				lastSize = newSize;
 
 				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				int framebuffer, stencil, samples;
+				unsafe
+				{
+					Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, &framebuffer);
+					Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, &stencil);
+					Gles.glGetIntegerv(Gles.GL_SAMPLES, &samples);
+				}
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
