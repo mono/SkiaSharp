@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check companion SkiaSharp PR: categorize changed files and produce diffs.
 
-Compares the companion PR branch against the SkiaSharp main branch.
+Compares the companion PR branch against the companion PR's actual base commit.
 Filters out generated files (*Api.generated.cs) and produces the same
 sourceFile structure used by upstream/interop integrity checks.
 """
@@ -67,7 +67,7 @@ def run_check(
     """
     eprint("▸ Companion PR file analysis")
 
-    # Find the merge base between main and the PR
+    # Find the merge base between the companion base and the PR head.
     merge_base = git_run(
         ["merge-base", base_ref, pr_ref],
         cwd=repo_root,

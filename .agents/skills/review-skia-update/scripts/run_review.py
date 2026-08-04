@@ -542,7 +542,7 @@ def main():
         companion_result = check_companion.run_check(
             repo_root=repo_root,
             base_ref=companion_base_sha,
-            pr_ref="HEAD",
+            pr_ref=companion_head_sha,
             output_dir=output_dir,
         )
     except Exception as exc:
