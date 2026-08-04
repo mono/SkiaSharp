@@ -70,6 +70,15 @@ namespace SkiaSharp
 
 		public bool ProtectedContext { get; set; }
 
+		// Optional caller-provided memory allocator. When null, the C shim
+		// auto-creates Skia's default VMA-backed allocator at context creation
+		// time (see gr_context.cpp / gr_vk_allocator.cpp) so pre-#4567 callers
+		// keep working. Callers who need to share or tune the allocator can
+		// build one via GRVkMemoryAllocator.CreateDefault and assign it here;
+		// the Context takes its own internal ref, so it is safe to dispose the
+		// wrapper immediately after GRContext.CreateVulkan returns.
+		public GRVkMemoryAllocator MemoryAllocator { get; set; }
+
 		internal GRVkBackendContextNative ToNative () =>
 			new GRVkBackendContextNative {
 				fInstance = VkInstance,
@@ -83,6 +92,7 @@ namespace SkiaSharp
 				fDeviceFeatures2 = VkPhysicalDeviceFeatures2,
 				fGetProcUserData = getProcContext,
 				fGetProc = getProcContext is not null ? DelegateProxies.GRVkGetProcProxy : null,
+				fMemoryAllocator = MemoryAllocator?.Handle ?? IntPtr.Zero,
 				fProtectedContext = ProtectedContext ? (byte)1 : (byte)0
 			};
 	}

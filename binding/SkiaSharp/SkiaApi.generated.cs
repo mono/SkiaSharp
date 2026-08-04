@@ -1451,6 +1451,67 @@ namespace SkiaSharp
 
 		#endregion
 
+		#region gr_vk_allocator.h
+
+		// gr_vk_memory_allocator_t* gr_vk_memory_allocator_make_default(const gr_vk_allocator_default_options_t options)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_vk_memory_allocator_t gr_vk_memory_allocator_make_default (GRVkAllocatorDefaultOptionsNative options);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vk_memory_allocator_t gr_vk_memory_allocator_make_default (GRVkAllocatorDefaultOptionsNative options);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_vk_memory_allocator_t gr_vk_memory_allocator_make_default (GRVkAllocatorDefaultOptionsNative options);
+		}
+		private static Delegates.gr_vk_memory_allocator_make_default gr_vk_memory_allocator_make_default_delegate;
+		internal static gr_vk_memory_allocator_t gr_vk_memory_allocator_make_default (GRVkAllocatorDefaultOptionsNative options) =>
+			(gr_vk_memory_allocator_make_default_delegate ??= GetSymbol<Delegates.gr_vk_memory_allocator_make_default> ("gr_vk_memory_allocator_make_default")).Invoke (options);
+		#endif
+
+		// void gr_vk_memory_allocator_ref(gr_vk_memory_allocator_t* allocator)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_vk_memory_allocator_ref (gr_vk_memory_allocator_t allocator);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_memory_allocator_ref (gr_vk_memory_allocator_t allocator);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_vk_memory_allocator_ref (gr_vk_memory_allocator_t allocator);
+		}
+		private static Delegates.gr_vk_memory_allocator_ref gr_vk_memory_allocator_ref_delegate;
+		internal static void gr_vk_memory_allocator_ref (gr_vk_memory_allocator_t allocator) =>
+			(gr_vk_memory_allocator_ref_delegate ??= GetSymbol<Delegates.gr_vk_memory_allocator_ref> ("gr_vk_memory_allocator_ref")).Invoke (allocator);
+		#endif
+
+		// void gr_vk_memory_allocator_unref(gr_vk_memory_allocator_t* allocator)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_vk_memory_allocator_unref (gr_vk_memory_allocator_t allocator);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_memory_allocator_unref (gr_vk_memory_allocator_t allocator);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_vk_memory_allocator_unref (gr_vk_memory_allocator_t allocator);
+		}
+		private static Delegates.gr_vk_memory_allocator_unref gr_vk_memory_allocator_unref_delegate;
+		internal static void gr_vk_memory_allocator_unref (gr_vk_memory_allocator_t allocator) =>
+			(gr_vk_memory_allocator_unref_delegate ??= GetSymbol<Delegates.gr_vk_memory_allocator_unref> ("gr_vk_memory_allocator_unref")).Invoke (allocator);
+		#endif
+
+		#endregion
+
 		#region sk_bitmap.h
 
 		// void sk_bitmap_destructor(sk_bitmap_t* cbitmap)
@@ -19259,6 +19320,67 @@ namespace SkiaSharp {
 
 	}
 
+	// gr_vk_allocator_default_options_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkAllocatorDefaultOptionsNative : IEquatable<GRVkAllocatorDefaultOptionsNative> {
+		// public vk_instance_t* fInstance
+		public vk_instance_t fInstance;
+
+		// public vk_physical_device_t* fPhysicalDevice
+		public vk_physical_device_t fPhysicalDevice;
+
+		// public vk_device_t* fDevice
+		public vk_device_t fDevice;
+
+		// public uint32_t fMaxAPIVersion
+		public UInt32 fMaxAPIVersion;
+
+		// public gr_vk_get_proc fGetProc
+#if USE_LIBRARY_IMPORT
+		public delegate* unmanaged[Cdecl] <void*, /* char */ void*, vk_instance_t, vk_device_t, IntPtr> fGetProc;
+#else
+		public GRVkGetProcProxyDelegate fGetProc;
+#endif
+
+		// public void* fGetProcUserData
+		public void* fGetProcUserData;
+
+		// public bool fProtectedContext
+		public Byte fProtectedContext;
+
+		// public bool fThreadSafe
+		public Byte fThreadSafe;
+
+		public readonly bool Equals (GRVkAllocatorDefaultOptionsNative obj) =>
+#pragma warning disable CS8909
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fThreadSafe == obj.fThreadSafe;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkAllocatorDefaultOptionsNative f && Equals (f);
+
+		public static bool operator == (GRVkAllocatorDefaultOptionsNative left, GRVkAllocatorDefaultOptionsNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkAllocatorDefaultOptionsNative left, GRVkAllocatorDefaultOptionsNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fInstance);
+			hash.Add (fPhysicalDevice);
+			hash.Add (fDevice);
+			hash.Add (fMaxAPIVersion);
+			hash.Add (fGetProc);
+			hash.Add (fGetProcUserData);
+			hash.Add (fProtectedContext);
+			hash.Add (fThreadSafe);
+			return hash.ToHashCode ();
+		}
+
+	}
+
 	// gr_vk_backendcontext_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRVkBackendContextNative : IEquatable<GRVkBackendContextNative> {
@@ -20831,9 +20953,12 @@ namespace SkiaSharp {
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
+		// public gr_vk_memory_allocator_t* fMemoryAllocator
+		public gr_vk_memory_allocator_t fMemoryAllocator;
+
 		public readonly bool Equals (SKGraphiteVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fMemoryAllocator == obj.fMemoryAllocator;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -20857,6 +20982,7 @@ namespace SkiaSharp {
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
 			hash.Add (fProtectedContext);
+			hash.Add (fMemoryAllocator);
 			return hash.ToHashCode ();
 		}
 
