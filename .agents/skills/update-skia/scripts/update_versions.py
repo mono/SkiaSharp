@@ -467,7 +467,7 @@ def update_versions(
         sk_types_path.write_text(sk_types, encoding="utf-8", newline="")
 
     cgmanifest_path.write_text(
-        json.dumps(cgmanifest, indent=2) + "\n",
+        json.dumps(cgmanifest, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
         newline="",
     )

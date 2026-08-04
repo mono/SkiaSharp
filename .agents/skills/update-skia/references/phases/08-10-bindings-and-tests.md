@@ -5,7 +5,8 @@
 The native build must run first so dependency headers exist:
 
 ```bash
-python3 .agents/skills/update-skia/scripts/regenerate_bindings.py
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/regenerate_bindings.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
@@ -119,7 +120,8 @@ mono/skia tree before moving to Phase 11:
 2. From the parent root, run the metadata finalizer:
 
    ```bash
-   python3 .agents/skills/update-skia/scripts/update_versions.py
+   python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
+     --repo-root "${GITHUB_WORKSPACE:-$PWD}"
    ```
 
    If it fails, reconcile every `skia-dependency-changes.json` row with checked-out source,
@@ -127,7 +129,7 @@ mono/skia tree before moving to Phase 11:
 3. Refresh the fork audit against the **current final mono/skia HEAD**:
 
    ```bash
-   python3 .agents/skills/update-skia/scripts/audit_fork_patches.py \
+   python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
      --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
      --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
      --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \

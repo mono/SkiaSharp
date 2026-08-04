@@ -78,9 +78,9 @@ An update is complete only when:
   have a matching final decision, exact-SHA evidence, and reconciled Component Governance metadata.
   A dependency recorded as preserved must still equal the fork-base revision.
 - Let `update_versions.py` identify dependency changes from exact base/final DEPS. For every tracked
-  changed dependency, derive the semantic version from checked-out source and complete the
-  `skia_dependency` verification fields before the helper can pass. Never update an unrelated
-  manifest version when its DEPS identity did not change.
+  changed dependency, and every legacy tracked registration missing verification evidence, derive
+  the semantic version from checked-out source and complete the `skia_dependency` fields before the
+  helper can pass. Never update a manifest version when its DEPS identity did not change.
 - Components not sourced from Skia DEPS, including ANGLE and its dependencies, are updated in
   separate dependency PRs rather than bundled into a Skia upstream sync.
 - Never use `externals-download` after a submodule/native/C API change.
@@ -128,6 +128,9 @@ needed for that phase.
 
 ## Deterministic helpers
 
+- Automation stages this entire skill outside the mutable product checkout and exports its path as
+  `SKIA_SYNC_SKILL_DIR`. After changing the product branch, continue reading phase references and
+  running helpers from that staged directory rather than the branch-local `.agents` tree.
 - `scripts/update_versions.py` updates and validates version surfaces, Skia hashes, and deterministic
   DEPS-to-Component-Governance identity/review signals.
 - `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,

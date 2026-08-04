@@ -2,10 +2,19 @@
 
 ## Phase 06 — update version surfaces
 
-From the parent repository, run the maintained helper:
+Hydrate the dependencies recorded by the merged Skia `DEPS` before inspecting their
+semantic-version evidence:
 
 ```bash
-python3 .agents/skills/update-skia/scripts/update_versions.py
+python3 externals/skia/tools/git-sync-deps
+```
+
+This synchronizes dependency source only; it does not build native binaries. Then run the
+maintained version helper from the parent repository:
+
+```bash
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
@@ -34,8 +43,9 @@ A revision-only roll may retain the same semantic version, but still requires th
 identity and source evidence. The helper rejects a manifest version bump when that dependency's
 DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
 and after the final mono/skia fix commit so the parent records the exact tested state.
-Every tracked registration, including an unchanged baseline entry, must retain non-empty
-`version_source` evidence.
+Every tracked registration, including an unchanged legacy entry, must have non-empty
+`version_source` evidence. Backfill missing `skia_dependency` evidence from the hydrated source so
+supported branches become compliant over time without changing semantic versions unnecessarily.
 The script proves coverage and consistency; the independent review must re-read each cited source
 to validate the agent's semantic-version claim.
 
@@ -96,7 +106,8 @@ explanatory commit.
 
 After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
 new or changed rows and require `--validate` to pass again. Reuse the exact Phase 05
-`python3 .agents/skills/update-skia/scripts/audit_fork_patches.py` command rather than searching
+`python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py"`
+command rather than searching
 for another copy of the helper.
 
 Before Phase 08, rerun `update_versions.py` against final `DEPS`, then reconcile every row in

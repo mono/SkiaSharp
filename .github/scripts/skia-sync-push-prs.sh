@@ -7,7 +7,8 @@ set -euo pipefail
 
 ARTIFACT_DIR="${SKIA_SYNC_ARTIFACT_DIR:-/tmp/gh-aw/agent}"
 RUNTIME_DIR="${SKIA_SYNC_RUNTIME_DIR:-/tmp/gh-aw}"
-readonly ARTIFACT_DIR RUNTIME_DIR
+SKILL_DIR="${SKIA_SYNC_SKILL_DIR:-$RUNTIME_DIR/update-skia}"
+readonly ARTIFACT_DIR RUNTIME_DIR SKILL_DIR
 SKIA_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skia-summary.md"
 SS_SUMMARY_FILE="$ARTIFACT_DIR/skia-sync-skiasharp-summary.md"
 
@@ -113,7 +114,7 @@ IS_RELEASE="${IS_RELEASE:-false}"
 UPDATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
 
-python3 "$RUNTIME_DIR/audit-fork-patches.py" \
+python3 "$SKILL_DIR/scripts/audit_fork_patches.py" \
   --skia-root "$GITHUB_WORKSPACE/externals/skia" \
   --old-upstream "$BASE_UPSTREAM_SHA" \
   --new-upstream "$TARGET_UPSTREAM_SHA" \
@@ -233,6 +234,12 @@ render_skia_body() {
   local template
 
   template=$(cat <<'EOF'
+> [!NOTE]
+> **Required merge method**
+>
+> **Merge commit only. Do not squash or rebase this PR.** The two-parent merge ancestry is required
+> so future syncs can prove which upstream commits are already integrated.
+
 ## Description
 
 {{BODY_INTRO}}
