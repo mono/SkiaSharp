@@ -23,6 +23,14 @@ namespace SkiaSharp
 		// would deadlock — see SKGraphiteDawnBackendContext remarks.
 		private bool isNonYielding;
 
+		// GCHandle pinning the caller's SKGraphiteShaderErrorHandlerDelegate for the Context's
+		// lifetime, and the native bridge handle allocated by
+		// sk_graphite_shader_error_handler_new that Skia's ContextOptions references. Both are
+		// released in DisposeNative AFTER the native context is deleted, so drain-time compile
+		// failures still find a live handler.
+		private GCHandle pinnedShaderErrorHandler;
+		private IntPtr nativeShaderErrorHandler;
+
 		internal SKGraphiteContext (IntPtr handle, bool owns)
 			: base (handle, owns)
 		{
@@ -37,24 +45,14 @@ namespace SkiaSharp
 		public static bool IsBackendAvailable (SKGraphiteBackend backend) =>
 			SkiaApi.sk_graphite_backend_is_available (backend);
 
-		// default(SKGraphiteContextOptions) zero-initialises every field, but a 0
-		// GpuBudgetInBytes is an *explicit* 0-byte GPU resource cache, not "use Skia's
-		// default" — the C shim's sentinel for the latter is a negative value (see
-		// sk_graphite.h: "-1 to use Skia's default"). Left as default, the no-options
-		// factories would silently disable Skia's 256 MB resource cache and thrash. Seed
-		// -1 so they get Skia's real default budget. (InternalMultisampleCount 0 is
-		// already the "use Skia default" sentinel and the bool fields match Skia's
-		// release defaults, so only the budget needs seeding here.)
-		private static readonly SKGraphiteContextOptions DefaultOptions = new () { GpuBudgetInBytes = -1 };
-
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext) =>
-			CreateVulkan (backendContext, DefaultOptions);
+			CreateVulkan (backendContext, new SKGraphiteContextOptions ());
 
 		public static SKGraphiteContext CreateMetal (SKGraphiteMtlBackendContext backendContext) =>
-			CreateMetal (backendContext, DefaultOptions);
+			CreateMetal (backendContext, new SKGraphiteContextOptions ());
 
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext) =>
-			CreateDawn (backendContext, DefaultOptions);
+			CreateDawn (backendContext, new SKGraphiteContextOptions ());
 
 		public static SKGraphiteContext CreateDawn (SKGraphiteDawnBackendContext backendContext, SKGraphiteContextOptions options)
 		{
@@ -62,13 +60,19 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
+
 			var init = backendContext.ToNative ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (&init, &options);
-			if (handle == IntPtr.Zero)
+			IntPtr handle = SkiaApi.sk_graphite_context_make_dawn (&init, &native);
+			if (handle == IntPtr.Zero) {
+				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);
 				return null;
+			}
 
 			return new SKGraphiteContext (handle, true) {
 				isNonYielding = backendContext.IsNonYielding,
+				pinnedShaderErrorHandler = pinnedHandler,
+				nativeShaderErrorHandler = nativeHandler,
 			};
 		}
 
@@ -78,12 +82,19 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var init = backendContext.ToNative ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (&init, &options);
-			if (handle == IntPtr.Zero)
-				return null;
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
 
-			return new SKGraphiteContext (handle, true);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_metal (&init, &native);
+			if (handle == IntPtr.Zero) {
+				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);
+				return null;
+			}
+
+			return new SKGraphiteContext (handle, true) {
+				pinnedShaderErrorHandler = pinnedHandler,
+				nativeShaderErrorHandler = nativeHandler,
+			};
 		}
 
 		public static SKGraphiteContext CreateVulkan (SKGraphiteVkBackendContext backendContext, SKGraphiteContextOptions options)
@@ -92,12 +103,19 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (backendContext));
 			ValidateOptions (options);
 
-			var init = backendContext.ToNative ();
-			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &options);
-			if (handle == IntPtr.Zero)
-				return null;
+			var native = options.ToNative (out var pinnedHandler, out var nativeHandler);
 
-			var ctx = new SKGraphiteContext (handle, true);
+			var init = backendContext.ToNative ();
+			IntPtr handle = SkiaApi.sk_graphite_context_make_vulkan (init, &native);
+			if (handle == IntPtr.Zero) {
+				DisposeShaderErrorHandler (pinnedHandler, nativeHandler);
+				return null;
+			}
+
+			var ctx = new SKGraphiteContext (handle, true) {
+				pinnedShaderErrorHandler = pinnedHandler,
+				nativeShaderErrorHandler = nativeHandler,
+			};
 
 			// The Skia context's Vulkan dispatch lambda captured the function
 			// pointer + userData by value, so SKGraphiteContext takes over keeping
@@ -105,6 +123,18 @@ namespace SkiaSharp
 			ctx.AttachPinnedBackendDelegate (backendContext.TransferGetProcHandle ());
 
 			return ctx;
+		}
+
+		// Paired teardown for SKGraphiteContextOptions.ToNative. Frees the native bridge
+		// first (releasing Skia's raw non-owning reference target), then the GCHandle
+		// pinning the managed delegate. Caller must guarantee the Context has already
+		// been destroyed.
+		private static void DisposeShaderErrorHandler (GCHandle pinned, IntPtr nativeHandle)
+		{
+			if (nativeHandle != IntPtr.Zero)
+				SkiaApi.sk_graphite_shader_error_handler_delete (nativeHandle);
+			if (pinned.IsAllocated)
+				pinned.Free ();
 		}
 
 		// Reject options values the native shim's validator would refuse so the
@@ -130,6 +160,9 @@ namespace SkiaSharp
 				pinnedBackendDelegate.Free ();
 				pinnedBackendDelegate = default;
 			}
+			DisposeShaderErrorHandler (pinnedShaderErrorHandler, nativeShaderErrorHandler);
+			pinnedShaderErrorHandler = default;
+			nativeShaderErrorHandler = IntPtr.Zero;
 		}
 
 		// Properties

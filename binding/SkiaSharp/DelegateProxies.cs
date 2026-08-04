@@ -28,6 +28,8 @@ namespace SkiaSharp
 
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	public delegate void SKGraphiteShaderErrorHandlerDelegate (string shader, string errors, bool shaderWasCached);
+
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal static unsafe partial class DelegateProxies
@@ -116,6 +118,26 @@ namespace SkiaSharp
 				del.Invoke ();
 			} finally {
 				gch.Free ();
+			}
+		}
+
+		private static partial void SKGraphiteShaderErrorHandlerProxyImplementation (void* userData, void* shader, void* errors, bool shaderWasCached)
+		{
+			// userData is a GCHandle pinned by SKGraphiteContext for the Context's lifetime and
+			// freed in DisposeNative — this callback can fire many times, so we must NOT free here.
+			// Never throw across FFI: any managed exception inside the user's handler is swallowed
+			// so a bad diagnostic hook can't crash Skia's shader-compile path.
+			//
+			// The C ABI's `const char*` args are non-null in the current Skia path, but the type
+			// is nullable in principle; normalize to empty string so user handlers can always
+			// assume a non-null value without adding their own guards.
+			try {
+				var del = Get<SKGraphiteShaderErrorHandlerDelegate> ((IntPtr)userData, out _);
+				del.Invoke (
+					Marshal.PtrToStringAnsi ((IntPtr)shader) ?? string.Empty,
+					Marshal.PtrToStringAnsi ((IntPtr)errors) ?? string.Empty,
+					shaderWasCached);
+			} catch {
 			}
 		}
 

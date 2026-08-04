@@ -45,6 +45,7 @@ using sk_graphite_context_t = System.IntPtr;
 using sk_graphite_image_provider_t = System.IntPtr;
 using sk_graphite_recorder_t = System.IntPtr;
 using sk_graphite_recording_t = System.IntPtr;
+using sk_graphite_shader_error_handler_t = System.IntPtr;
 using sk_graphite_texture_info_t = System.IntPtr;
 using sk_image_async_read_result_t = System.IntPtr;
 using sk_image_t = System.IntPtr;
@@ -7195,18 +7196,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+		internal static partial void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+		internal static extern void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out);
+			internal delegate void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out);
 		}
 		private static Delegates.sk_graphite_context_options_init_defaults sk_graphite_context_options_init_defaults_delegate;
-		internal static void sk_graphite_context_options_init_defaults (SKGraphiteContextOptions* @out) =>
+		internal static void sk_graphite_context_options_init_defaults (SKGraphiteContextOptionsNative* @out) =>
 			(sk_graphite_context_options_init_defaults_delegate ??= GetSymbol<Delegates.sk_graphite_context_options_init_defaults> ("sk_graphite_context_options_init_defaults")).Invoke (@out);
 		#endif
 
@@ -7501,6 +7502,44 @@ namespace SkiaSharp
 			(sk_graphite_recording_delete_delegate ??= GetSymbol<Delegates.sk_graphite_recording_delete> ("sk_graphite_recording_delete")).Invoke (recording);
 		#endif
 
+		// void sk_graphite_shader_error_handler_delete(sk_graphite_shader_error_handler_t* handler)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler);
+		}
+		private static Delegates.sk_graphite_shader_error_handler_delete sk_graphite_shader_error_handler_delete_delegate;
+		internal static void sk_graphite_shader_error_handler_delete (sk_graphite_shader_error_handler_t handler) =>
+			(sk_graphite_shader_error_handler_delete_delegate ??= GetSymbol<Delegates.sk_graphite_shader_error_handler_delete> ("sk_graphite_shader_error_handler_delete")).Invoke (handler);
+		#endif
+
+		// sk_graphite_shader_error_handler_t* sk_graphite_shader_error_handler_new(sk_graphite_shader_error_handler_proc proc, void* userData)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (void* proc, void* userData);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData);
+		}
+		private static Delegates.sk_graphite_shader_error_handler_new sk_graphite_shader_error_handler_new_delegate;
+		internal static sk_graphite_shader_error_handler_t sk_graphite_shader_error_handler_new (SKGraphiteShaderErrorHandlerProxyDelegate proc, void* userData) =>
+			(sk_graphite_shader_error_handler_new_delegate ??= GetSymbol<Delegates.sk_graphite_shader_error_handler_new> ("sk_graphite_shader_error_handler_new")).Invoke (proc, userData);
+		#endif
+
 		// sk_surface_t* sk_graphite_surface_make_render_target(sk_graphite_recorder_t* recorder, const sk_imageinfo_t* info, bool mipmapped, const sk_surfaceprops_t* props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7648,18 +7687,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		}
 		private static Delegates.sk_graphite_context_make_dawn sk_graphite_context_make_dawn_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptions* opts) =>
+		internal static sk_graphite_context_t sk_graphite_context_make_dawn (SKGraphiteDawnBackendContextInit* init, SKGraphiteContextOptionsNative* opts) =>
 			(sk_graphite_context_make_dawn_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_dawn> ("sk_graphite_context_make_dawn")).Invoke (init, opts);
 		#endif
 
@@ -7690,18 +7729,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptionsNative* opts);
 		}
 		private static Delegates.sk_graphite_context_make_metal sk_graphite_context_make_metal_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptions* opts) =>
+		internal static sk_graphite_context_t sk_graphite_context_make_metal (SKGraphiteMtlBackendContextInit* init, SKGraphiteContextOptionsNative* opts) =>
 			(sk_graphite_context_make_metal_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_metal> ("sk_graphite_context_make_metal")).Invoke (init, opts);
 		#endif
 
@@ -7732,18 +7771,18 @@ namespace SkiaSharp
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
-		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+		internal static partial sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+		internal static extern sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts);
+			internal delegate sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts);
 		}
 		private static Delegates.sk_graphite_context_make_vulkan sk_graphite_context_make_vulkan_delegate;
-		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptions* opts) =>
+		internal static sk_graphite_context_t sk_graphite_context_make_vulkan (SKGraphiteVkBackendContextNative init, SKGraphiteContextOptionsNative* opts) =>
 			(sk_graphite_context_make_vulkan_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_vulkan> ("sk_graphite_context_make_vulkan")).Invoke (init, opts);
 		#endif
 
@@ -18768,6 +18807,10 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteReleaseProxyDelegate(void* releaseContext);
 
+	// typedef void (*)(void* userData, const char* shader, const char* errors, bool shaderWasCached)* sk_graphite_shader_error_handler_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKGraphiteShaderErrorHandlerProxyDelegate(void* userData, /* char */ void* shader, /* char */ void* errors, [MarshalAs (UnmanagedType.I1)] bool shaderWasCached);
+
 	// typedef void (*)()* sk_graphite_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGraphiteVkFuncPtr();
@@ -20522,54 +20565,37 @@ namespace SkiaSharp {
 
 	// sk_graphite_context_options_t
 	[StructLayout (LayoutKind.Sequential)]
-	public unsafe partial struct SKGraphiteContextOptions : IEquatable<SKGraphiteContextOptions> {
+	internal unsafe partial struct SKGraphiteContextOptionsNative : IEquatable<SKGraphiteContextOptionsNative> {
 		// public bool fDisableDriverCorrectnessWorkarounds
-		private Byte fDisableDriverCorrectnessWorkarounds;
-		public bool DisableDriverCorrectnessWorkarounds {
-			readonly get => fDisableDriverCorrectnessWorkarounds > 0;
-			set => fDisableDriverCorrectnessWorkarounds = value ? (byte)1 : (byte)0;
-		}
+		public Byte fDisableDriverCorrectnessWorkarounds;
 
 		// public int32_t fInternalMultisampleCount
-		private Int32 fInternalMultisampleCount;
-		public Int32 InternalMultisampleCount {
-			readonly get => fInternalMultisampleCount;
-			set => fInternalMultisampleCount = value;
-		}
+		public Int32 fInternalMultisampleCount;
 
 		// public int64_t fGpuBudgetInBytes
-		private Int64 fGpuBudgetInBytes;
-		public Int64 GpuBudgetInBytes {
-			readonly get => fGpuBudgetInBytes;
-			set => fGpuBudgetInBytes = value;
-		}
+		public Int64 fGpuBudgetInBytes;
 
 		// public bool fRequireOrderedRecordings
-		private Byte fRequireOrderedRecordings;
-		public bool RequireOrderedRecordings {
-			readonly get => fRequireOrderedRecordings > 0;
-			set => fRequireOrderedRecordings = value ? (byte)1 : (byte)0;
-		}
+		public Byte fRequireOrderedRecordings;
 
 		// public bool fSetBackendLabels
-		private Byte fSetBackendLabels;
-		public bool SetBackendLabels {
-			readonly get => fSetBackendLabels > 0;
-			set => fSetBackendLabels = value ? (byte)1 : (byte)0;
-		}
+		public Byte fSetBackendLabels;
 
-		public readonly bool Equals (SKGraphiteContextOptions obj) =>
+		// public sk_graphite_shader_error_handler_t* fShaderErrorHandler
+		public sk_graphite_shader_error_handler_t fShaderErrorHandler;
+
+		public readonly bool Equals (SKGraphiteContextOptionsNative obj) =>
 #pragma warning disable CS8909
-			fDisableDriverCorrectnessWorkarounds == obj.fDisableDriverCorrectnessWorkarounds && fInternalMultisampleCount == obj.fInternalMultisampleCount && fGpuBudgetInBytes == obj.fGpuBudgetInBytes && fRequireOrderedRecordings == obj.fRequireOrderedRecordings && fSetBackendLabels == obj.fSetBackendLabels;
+			fDisableDriverCorrectnessWorkarounds == obj.fDisableDriverCorrectnessWorkarounds && fInternalMultisampleCount == obj.fInternalMultisampleCount && fGpuBudgetInBytes == obj.fGpuBudgetInBytes && fRequireOrderedRecordings == obj.fRequireOrderedRecordings && fSetBackendLabels == obj.fSetBackendLabels && fShaderErrorHandler == obj.fShaderErrorHandler;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
-			obj is SKGraphiteContextOptions f && Equals (f);
+			obj is SKGraphiteContextOptionsNative f && Equals (f);
 
-		public static bool operator == (SKGraphiteContextOptions left, SKGraphiteContextOptions right) =>
+		public static bool operator == (SKGraphiteContextOptionsNative left, SKGraphiteContextOptionsNative right) =>
 			left.Equals (right);
 
-		public static bool operator != (SKGraphiteContextOptions left, SKGraphiteContextOptions right) =>
+		public static bool operator != (SKGraphiteContextOptionsNative left, SKGraphiteContextOptionsNative right) =>
 			!left.Equals (right);
 
 		public readonly override int GetHashCode ()
@@ -20580,6 +20606,7 @@ namespace SkiaSharp {
 			hash.Add (fGpuBudgetInBytes);
 			hash.Add (fRequireOrderedRecordings);
 			hash.Add (fSetBackendLabels);
+			hash.Add (fShaderErrorHandler);
 			return hash.ToHashCode ();
 		}
 
@@ -23316,6 +23343,16 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (SKGraphiteReleaseProxyDelegate))]
 #endif
 	private static partial void SKGraphiteReleaseProxyImplementation(void* releaseContext);
+
+	/// Proxy for sk_graphite_shader_error_handler_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, /* char */ void*, /* char */ void*, bool, void> SKGraphiteShaderErrorHandlerProxy = &SKGraphiteShaderErrorHandlerProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKGraphiteShaderErrorHandlerProxyDelegate SKGraphiteShaderErrorHandlerProxy = SKGraphiteShaderErrorHandlerProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKGraphiteShaderErrorHandlerProxyDelegate))]
+#endif
+	private static partial void SKGraphiteShaderErrorHandlerProxyImplementation(void* userData,/* char */ void* shader,/* char */ void* errors,[MarshalAs (UnmanagedType.I1)] bool shaderWasCached);
 
 	/// Proxy for sk_graphite_vk_get_proc native function.
 #if USE_LIBRARY_IMPORT
