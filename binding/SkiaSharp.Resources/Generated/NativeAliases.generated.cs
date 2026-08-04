@@ -9,6 +9,7 @@ global using gr_d3d_memory_allocator_t = System.IntPtr;
 global using gr_direct_context_t = System.IntPtr;
 global using gr_glinterface_t = System.IntPtr;
 global using gr_recording_context_t = System.IntPtr;
+global using gr_vk_device_lost_handler_t = System.IntPtr;
 global using gr_vk_extensions_t = System.IntPtr;
 global using gr_vk_memory_allocator_t = System.IntPtr;
 global using gr_vkinterface_t = System.IntPtr;
