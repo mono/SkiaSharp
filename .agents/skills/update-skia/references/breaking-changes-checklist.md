@@ -8,22 +8,23 @@ layer **before** you start merging.
 
 ## Step 1: Gather Release Notes
 
-For each milestone between current and target:
+Use the authoritative range prepared by Phase 2:
 
 ```bash
-# Fetch and read the official release notes
-curl -s https://raw.githubusercontent.com/google/skia/main/RELEASE_NOTES.md | \
-  sed -n '/^Milestone {N}$/,/^\* \* \*$/p'
+git log --oneline "$DIFF_RANGE"
+git diff --stat "$DIFF_RANGE" -- src/ include/ BUILD.gn DEPS
 ```
+
+Read the official release-note section for every milestone crossed as additional context.
 
 ## Step 2: Filter by Relevance
 
-Relevance is about whether **our C API or a build we ship** touches the code — not
-which backend it belongs to. Filter changes:
+Relevance is whether our C API or a build we ship touches the code, not which backend family
+owns it:
 
 | Prefix/Keyword | Relevant? | Notes |
 |----------------|-----------|-------|
-| `Gr*`, `skgpu::`, `Dawn*`, `wgpu::` | ✅ Yes | GPU code — which platforms compile it is set by `native/*/build.cake` |
+| `Gr*`, `skgpu::`, `Dawn*`, `wgpu::` | ✅ Yes | GPU code — inspect the affected C shim and `native/*/build.cake` consumers |
 | `SkImage`, `SkSurface`, `SkCanvas` | ✅ Yes | Core APIs — always check |
 | `SkTypeface`, `SkFont` | ✅ Yes | Text/font APIs — always check |
 | `SkPath`, `SkPaint` | ✅ Yes | Drawing APIs — always check |
@@ -32,9 +33,8 @@ which backend it belongs to. Filter changes:
 
 **Two common misclassification traps:**
 
-1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): a change here reaches
-   every consumer tree — check `include/gpu/ganesh/` *and* `include/gpu/graphite/`, e.g.
-   `GrFlushInfo` uses types from `GpuTypes.h`.
+1. **Shared GPU headers** (`include/gpu/GpuTypes.h`, `include/gpu/*.h`): check consumers in both
+   `include/gpu/ganesh/` and `include/gpu/graphite/` before classifying a change as local.
 
 2. **Struct field changes in asserted types**: `sk_structs.cpp` has `static_assert(sizeof(...))`
    for every C API struct mapped via `reinterpret_cast`. A field addition to any of these
@@ -66,7 +66,7 @@ git show upstream/chrome/m{TARGET}:include/encode/SkPngEncoder.h | grep -A30 "st
 
 **Check for moved files** (Skia relocates, it rarely deletes):
 ```bash
-git diff upstream/chrome/m{CURRENT}..upstream/chrome/m{TARGET} --diff-filter=D --name-only
+git diff "$DIFF_RANGE" --diff-filter=D --name-only
 # For each deleted file our C API references:
 git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
 ```
@@ -86,6 +86,30 @@ cd externals/skia
 grep -rn "SYMBOL_NAME" src/c/ include/c/
 ```
 
+For every wrapped factory or context-creation path touched by the range, inspect implementation
+changes as well as public headers. An unchanged signature can still gain a new null-return
+precondition or lose default/fallback behavior:
+
+```bash
+git log --oneline "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
+git diff "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
+```
+
+Do not classify a backend update as low risk solely because the public header and C API
+signature are unchanged.
+
+## Step 6: Dependency Compatibility Audit
+
+Diff the fork base against the target; an upstream-to-upstream diff hides fork-specific pins:
+
+```bash
+git diff origin/{SKIA_BASE_BRANCH}..{TARGET_UPSTREAM_REF} -- DEPS
+```
+
+For each changed revision or enabled/commented state, inspect both fork history and the
+upstream roll commit. A dependency roll and wrapper-source change in the same commit are
+presumed coupled until the older fork revision is proven to expose the target API.
+
 ### Recurring patterns across milestone bumps
 
 | Pattern | Risk | C API Fix | C# Fix |
@@ -98,20 +122,24 @@ grep -rn "SYMBOL_NAME" src/c/ include/c/
 | **Enum value inserted mid-sequence** (renumbers everything after) | 🟡 MED | Regenerate bindings — never hand-edit | Regenerate + update mappings |
 | **File moved to new module** (e.g., `src/utils/` → `modules/`) | 🟡 MED | Update `#include` path | None |
 
-## Step 6: C# Impact Analysis
+## Step 7: C# Impact Analysis
 
 ```bash
 grep -rn "ENUM_NAME\|FUNCTION_NAME" binding/SkiaSharp/
 grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 ```
 
-## Step 7: Build & Verify
+## Step 8: Build & Verify
 
 After applying fixes:
-1. Build native: `dotnet cake --target=externals-macos --arch=arm64`
-2. Regenerate: `pwsh ./utils/generate.ps1`
+1. Build native for the current host from source
+2. Regenerate: `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py`
 3. Build C#: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-4. Test: `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`
+4. Run `update_versions.py`; reconcile every `skia-dependency-changes.json` row and satisfy its
+   source-backed `cgmanifest.json` semantic-version gate
+5. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` unfiltered
+6. If it fails, use the owning host project for filtered diagnostics
+7. Rerun the unfiltered solution; only that run is final validation
 
 ## Historical Examples
 
@@ -130,7 +158,7 @@ After applying fixes:
 - `SkJSON.h` deletion was a **relocation** to `modules/jsonreader/` — always search for moves
 - `SkPngEncoder::Options` field addition broke `static_assert` — always audit asserted structs
 - `fSuppressPrints` appeared "removed" in diff but was reordered — verify on target branch
-- `GpuTypes.h` is shared: a change there reaches Ganesh (`GrFlushInfo`) and Graphite alike — trace consumers
+- `GpuTypes.h` changes looked backend-local but `GrFlushInfo` (Ganesh) uses them — trace consumers
 
 ### m118 → m119 Changes Required
 

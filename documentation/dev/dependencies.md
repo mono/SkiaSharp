@@ -85,6 +85,30 @@ Enables Microsoft Component Governance CVE detection.
 | wuffs | `wuffs` | github.com/google/wuffs-mirror-release-c |
 | dng_sdk | `dng_sdk` | android.googlesource.com/.../dng_sdk |
 
+### Skia DEPS Identity Signals
+
+Registrations backed by an enabled `externals/skia/DEPS` entry include a
+`skia_dependency` object:
+
+```json
+{
+  "skia_dependency": {
+    "name": "vulkanmemoryallocator",
+    "revision": "c788c52156f3ef7bc7ab769cb03c110a53ac8fcb",
+    "version_reviewed_identity": "https://chromium.googlesource.com/...@c788c521..."
+  }
+}
+```
+
+`.agents/skills/update-skia/scripts/update_versions.py` synchronizes `revision` mechanically from
+final DEPS.
+Every tracked registration records the authoritative version evidence in `version_source`. When
+the URL or revision changes, the Skia update must re-read checked-out source, update the registration
+if needed, advance `version_reviewed_identity` to the final `URL@revision`, and refresh that
+evidence. The helper blocks publication when evidence is missing or a changed tracked dependency
+has not been reviewed. It also rejects a manifest version change when the corresponding DEPS
+identity did not change.
+
 ---
 
 ## Skia — Special CVE Tracking Notes
