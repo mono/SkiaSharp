@@ -3,7 +3,7 @@
 
 Assumes the working tree is already checked out to the correct state
 (SkiaSharp companion PR + skia submodule at PR head — done by the orchestrator).
-Runs the maintained update-skia Python binding helper, then uses git diff to
+Runs the local Python binding helper, then uses git diff to
 check if the regenerated files match what's checked in. Any diff = FAIL.
 The generator owns deterministic ordering across hosts. The helper restores
 HarfBuzzSharp because HarfBuzz updates are separate.
@@ -38,12 +38,12 @@ def run_check(repo_root: str, output_dir: str) -> dict:
         repo_root,
         ".agents",
         "skills",
-        "update-skia",
+        "review-skia-update",
         "scripts",
         "regenerate_bindings.py",
     )
     eprint(
-        "🔄 Running update-skia/scripts/regenerate_bindings.py "
+        "🔄 Running review-skia-update/scripts/regenerate_bindings.py "
         f"(capturing output to {generator_log})..."
     )
     try:
