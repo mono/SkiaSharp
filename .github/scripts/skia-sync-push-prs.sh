@@ -234,6 +234,12 @@ render_skia_body() {
   local template
 
   template=$(cat <<'EOF'
+> [!NOTE]
+> **Required merge method**
+>
+> **Merge commit only. Do not squash or rebase this PR.** The two-parent merge ancestry is required
+> so future syncs can prove which upstream commits are already integrated.
+
 ## Description
 
 {{BODY_INTRO}}
@@ -247,11 +253,6 @@ N/A — automated upstream synchronization.
 **Required SkiaSharp PR**
 
 Requires {{COMPANION_PR_URL}}
-
-**Required merge method**
-
-**Merge commit only. Do not squash or rebase this PR.** The two-parent merge ancestry is required
-so future syncs can prove which upstream commits are already integrated.
 
 **Areas affected**
 
@@ -267,7 +268,6 @@ so future syncs can prove which upstream commits are already integrated.
 ## Checklist
 
 - [x] Targets the `{{BASE_BRANCH}}` branch
-- [x] Must be merged with a merge commit to preserve upstream ancestry
 - [x] `Changes` above lists every added/changed C API export or states that none changed
 - [x] Companion `mono/SkiaSharp` PR linked above
 

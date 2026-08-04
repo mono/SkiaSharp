@@ -5,38 +5,27 @@ Read only `DEPS: Fork-Customized Dependencies`, `Genuine Merge Required`,
 `Conflict Resolution by File Category`, and `Verify-Upstream-or-Reapply` in
 [../known-gotchas.md](../known-gotchas.md).
 
-## Phase 04 — branch from the resolved bases
+## Phase 04 — create matched feature branches
 
-Create or verify the parent feature branch:
-
-```bash
-git fetch origin "{BASE_BRANCH}"
-git checkout -b "{HEAD_BRANCH}" "origin/{BASE_BRANCH}"
-if [[ -n "${SKIA_SYNC_SUBMODULE_HELPER:-}" ]]; then
-  python3 "$SKIA_SYNC_SUBMODULE_HELPER" \
-    --repo-root "${GITHUB_WORKSPACE:-$PWD}" \
-    --align-submodules
-else
-  git submodule update --init --recursive -- docs
-fi
-```
-
-Create or verify the mono/skia feature branch at the exact submodule pointer recorded by the
-parent base:
+Use the deterministic branch helper for a new update. It consumes the exact parent and Skia SHAs
+resolved in Phase 01; do not replace them with current branch tips or reproduce its Git operations
+manually.
 
 ```bash
-BASE_SUB_SHA=$(git ls-tree "origin/{BASE_BRANCH}" -- externals/skia | awk '{print $3}')
-export SKIA_SYNC_SKIA_BASE_SHA="$BASE_SUB_SHA"
-git -C externals/skia fetch origin "{SKIA_BASE_BRANCH}"
-git -C externals/skia checkout "$BASE_SUB_SHA"
-git -C externals/skia branch -r --contains "$BASE_SUB_SHA" |
-  grep "origin/{SKIA_BASE_BRANCH}"
-git -C externals/skia checkout -b "{HEAD_BRANCH}"
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/prepare_branches.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
 ```
 
-If a branch already exists, inspect its base and commits before continuing. Reuse only the
-intended update branch; never reset or overwrite unrelated work. Automation may start with the
-submodule already aligned, but must still verify the pointer and bases.
+The helper fails instead of resetting existing branches or dirty files. On success:
+
+- the parent feature branch starts at `{PARENT_BASE_SHA}`;
+- every recursive submodule matches that parent commit;
+- the mono/skia pointer is verified against `{SKIA_BASE_SHA}` and
+  `origin/{SKIA_BASE_BRANCH}`; and
+- the mono/skia feature branch is created from that exact pointer.
+
+If either feature branch already exists, stop and inspect its base and commits. Reuse it only when
+it is the intended continuation; never reset or overwrite unrelated work.
 
 ## Phase 05 — genuine upstream merge
 

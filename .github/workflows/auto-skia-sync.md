@@ -189,10 +189,13 @@ steps:
   - name: Stage immutable workflow assets
     run: |
       RUNTIME_DIR="$RUNNER_TEMP/gh-aw/skia-sync-runtime"
-      python3 .github/scripts/skia_sync_stage_runtime.py \
-        --repo-root "$GITHUB_WORKSPACE" \
-        --runtime-dir "$RUNTIME_DIR" \
-        --github-env "$GITHUB_ENV"
+      mkdir -p "$RUNTIME_DIR"
+      cp -a .agents/skills/update-skia "$RUNTIME_DIR/update-skia"
+      cp -a .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      {
+        printf 'SKIA_SYNC_RUNTIME_DIR=%s\n' "$RUNTIME_DIR"
+        printf 'SKIA_SYNC_SKILL_DIR=%s\n' "$RUNTIME_DIR/update-skia"
+      } >> "$GITHUB_ENV"
       chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
@@ -281,10 +284,6 @@ post-steps:
       test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
       test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
 
-      python3 "$SKIA_SYNC_SUBMODULE_HELPER" \
-        --repo-root "$GITHUB_WORKSPACE" \
-        --align-submodules
-
       UNEXPECTED_CHANGES=$(
         {
           git diff --name-only
@@ -297,7 +296,7 @@ post-steps:
         exit 1
       fi
 
-      python3 "$SKIA_SYNC_VERSION_HELPER" --repo-root "$GITHUB_WORKSPACE"
+      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
 
       if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
         echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
@@ -359,16 +358,6 @@ the supplied values.
 ## 3. Execution contract
 
 - Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
-- Read phase references and run helper scripts only from `$SKIA_SYNC_SKILL_DIR`. In particular,
-  run `python3 "$SKIA_SYNC_VERSION_HELPER" --repo-root "$GITHUB_WORKSPACE"` for every version
-  reconciliation. Never fall back to branch-local `.agents/skills/update-skia` assets after the
-  product checkout changes branches.
-- In Phase 04, create or check out the parent feature branch from the resolved parent base and the
-  submodule feature branch from its exact recorded pointer before merging or building. Immediately
-  after changing the parent branch, run
-  `python3 "$SKIA_SYNC_SUBMODULE_HELPER" --repo-root "$GITHUB_WORKSPACE" --align-submodules`
-  so immutable parent submodules such as `docs` match that branch's gitlinks. Never build from the
-  workflow checkout when it differs from the resolved parent base.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
