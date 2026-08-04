@@ -251,6 +251,7 @@ class UpdateVersionsTests(unittest.TestCase):
         skia_registration = manifest["registrations"][1]
         skia_registration["component"]["other"]["version"] = "chrome/m150"
         skia_registration["chrome_milestone"] = 150
+        manifest["registrations"][0]["comment"] = "Existing provenance — unchanged"
         manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
         expected_manifest = json.loads(json.dumps(manifest))
 
@@ -282,6 +283,10 @@ class UpdateVersionsTests(unittest.TestCase):
             self.assertEqual(content, path.read_bytes())
         updated_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(expected_manifest, updated_manifest)
+        self.assertIn(
+            "Existing provenance — unchanged",
+            manifest_path.read_text(encoding="utf-8"),
+        )
 
     def test_unchanged_legacy_dependency_requires_compliance_evidence(self) -> None:
         manifest = json.loads(
