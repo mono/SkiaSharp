@@ -397,6 +397,8 @@ namespace SkiaSharp
 			var extracted = SkiaApi.sk_pixmap_extract_subset (Handle, result.Handle, &subset);
 			GC.KeepAlive (this);
 			GC.KeepAlive (result);
+			if (extracted)
+				result.pixelSource = pixelSource ?? this;
 			return extracted;
 		}
 
@@ -434,12 +436,20 @@ namespace SkiaSharp
 		// With*
 
 		public SKPixmap WithColorType (SKColorType newColorType) =>
-			new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);
+			WithPixelSource (new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes));
 
 		public SKPixmap WithColorSpace (SKColorSpace newColorSpace) =>
-			new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes);
+			WithPixelSource (new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes));
 
 		public SKPixmap WithAlphaType (SKAlphaType newAlphaType) =>
-			new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes);
+			WithPixelSource (new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes));
+
+		private SKPixmap WithPixelSource (SKPixmap pixmap)
+		{
+			// the returned pixmap wraps this pixmap's pixel memory, so it must root
+			// the ultimate pixel owner for its whole lifetime
+			pixmap.pixelSource = pixelSource ?? this;
+			return pixmap;
+		}
 	}
 }

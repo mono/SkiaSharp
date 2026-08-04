@@ -54,7 +54,9 @@ Skia updates often change platform behavior. Check:
 Check `tests/Tests/` for:
 - New tests covering new APIs
 - Updated tests reflecting changed behavior
-- No skipped tests (except hardware-dependent: GPU, display)
+- No skipped tests, except an explicitly checked capability gap. GPU tests skip only
+  through `GpuPolicy` — the platform matrix or a declared `SKIASHARP_TEST_SKIP_GPU`
+  opt-out; missing hardware or a failed bring-up is a failure.
 
 ## Output Format
 

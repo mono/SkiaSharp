@@ -18,20 +18,7 @@ namespace SkiaSharp.Tests
 	{
 		protected override SKColorType ColorType => SKColorType.Bgra8888;
 
-		protected override string UnsupportedReason
-		{
-			get
-			{
-				if (!TestConfig.Current.IsApple)
-					return "Metal is only available on Apple platforms.";
-				// x64 Azure DevOps macOS agents run a virtualized Metal driver that
-				// leaves state hanging the host on shutdown (see the Graphite/Ganesh
-				// Metal renderers for the full rationale).
-				if (IsAzureDevOpsX64Host)
-					return "Metal is skipped on x64 Azure DevOps macOS agents.";
-				return null;
-			}
-		}
+		protected override string Backend => GpuBackends.GraphiteMetal;
 
 		protected override Task<GraphiteReleaseHarness> CreateHarnessAsync() =>
 			Task.FromResult(CreateHarness());
@@ -40,11 +27,14 @@ namespace SkiaSharp.Tests
 		{
 			var device = MTLCreateSystemDefaultDevice();
 			if (device == IntPtr.Zero)
-				Assert.Skip("No Metal device on this host.");
+				throw new InvalidOperationException(
+					"MTLCreateSystemDefaultDevice returned null; no Metal device on this host.");
 			if (!MetalCanDriveGraphite(device))
 			{
 				ObjcRelease(device);
-				Assert.Skip("MTLDevice does not support a Skia-Graphite MTLGPUFamily (Apple7+, Mac2).");
+				throw new InvalidOperationException(
+					"MTLDevice does not support a Skia-Graphite MTLGPUFamily (Apple7+, Mac2). " +
+					"This is usually a virtualized/software Metal driver.");
 			}
 
 			var queue = ObjcSend(device, "newCommandQueue");
@@ -164,13 +154,9 @@ namespace SkiaSharp.Tests
 
 		// Whether this MTLDevice can drive Skia Graphite. Real hardware must
 		// advertise Apple7+ or Mac2 (below that, Skia's Metal init SK_ABORTs). The
-		// Apple *simulator* is a proven exception: it under-reports its GPU family
-		// (typically only Apple1/Apple2/Common1) yet is backed by the host Apple
-		// Silicon GPU and drives Graphite Metal correctly — verified running the
-		// full wrap/insert/submit/release scenario green on an iOS simulator — so
-		// it is whitelisted rather than skipped. (The virtualized x64 Azure DevOps
-		// Metal host, which genuinely cannot, is already skipped earlier via
-		// IsAzureDevOpsX64Host.)
+		// Apple simulator under-reports its GPU family (typically Apple1/Apple2/
+		// Common1) yet is backed by the host Apple Silicon GPU and drives Graphite
+		// Metal correctly, so it is whitelisted.
 		private static bool MetalCanDriveGraphite(IntPtr device) =>
 			MetalHasGraphiteCapableFamily(device) || IsRunningOnAppleSimulator;
 
@@ -178,10 +164,6 @@ namespace SkiaSharp.Tests
 		private static bool IsRunningOnAppleSimulator =>
 			!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_UDID"))
 			|| !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIMULATOR_DEVICE_NAME"));
-
-		private static bool IsAzureDevOpsX64Host =>
-			string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "True", StringComparison.OrdinalIgnoreCase)
-			&& RuntimeInformation.OSArchitecture == Architecture.X64;
 
 		private static IntPtr ObjcSend(IntPtr obj, string selector) =>
 			objc_msgSend(obj, sel_registerName(selector));

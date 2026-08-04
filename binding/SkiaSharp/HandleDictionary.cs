@@ -15,6 +15,20 @@ namespace SkiaSharp
 	{
 		private static readonly Type SkipObjectRegistrationType = typeof (ISKSkipObjectRegistration);
 
+		// Whether a given wrapper type skips registration in the global dictionary is a compile-time
+		// invariant (it depends only on whether the type implements ISKSkipObjectRegistration), yet the
+		// original code re-evaluated it with a reflection call (Type.IsAssignableFrom) on EVERY
+		// GetObject/GetOrAddObject/GetInstance — i.e. on every native-object wrap. Cache the result per
+		// TSkiaObject in a generic static holder so the reflection runs exactly once per type and every
+		// subsequent lookup is a plain static-field read. Behaviour is identical: the cached value is
+		// exactly what IsAssignableFrom returned.
+		internal static class SkipObjectRegistration<TSkiaObject>
+			where TSkiaObject : SKObject
+		{
+			internal static readonly bool Value =
+				SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject));
+		}
+
 #if THROW_OBJECT_EXCEPTIONS
 		internal static readonly ConcurrentBag<Exception> exceptions = new ConcurrentBag<Exception> ();
 #endif
@@ -38,7 +52,7 @@ namespace SkiaSharp
 				return false;
 			}
 
-			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
+			if (SkipObjectRegistration<TSkiaObject>.Value) {
 				instance = null;
 				return false;
 			}
@@ -74,7 +88,7 @@ namespace SkiaSharp
 			if (handle == IntPtr.Zero)
 				return null;
 
-			if (SkipObjectRegistrationType.IsAssignableFrom (typeof (TSkiaObject))) {
+			if (SkipObjectRegistration<TSkiaObject>.Value) {
 #if THROW_OBJECT_EXCEPTIONS
 				throw new InvalidOperationException (
 					$"For some reason, the object was constructed using a factory function instead of the constructor. " +

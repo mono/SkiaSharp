@@ -19,20 +19,15 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class GaneshGlRenderer : IRenderer
 	{
-		public string Name => "ganesh-gl";
-
-		public bool IsAvailable => UnavailableReason is null;
-
-		public string UnavailableReason =>
-			TestConfig.Current.IsMac || TestConfig.Current.IsWindows || TestConfig.Current.IsLinux
-				? null
-				: "OpenGL is only wired up for the desktop test hosts (macOS, Windows, Linux).";
+		public string Name => GpuBackends.GaneshGl;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 
-			using var glContext = CreateContextOrSkip();
+			// No catch: the policy already decided GL is required on this host, so
+			// a context we cannot create is a failure to investigate, not a skip.
+			using var glContext = TestConfig.Current.CreateGlContext();
 			glContext.MakeCurrent();
 
 			using var grContext = GRContext.CreateGl()
@@ -48,23 +43,6 @@ namespace SkiaSharp.Tests.Visual
 
 		public void Dispose()
 		{
-		}
-
-		// Distinguishes "GL genuinely absent on this host" (legit skip) from a
-		// broken binding (real failure). A missing native entry point or method
-		// is a regression and MUST fail; an absent display/driver is an honest
-		// skip.
-		private static GlContext CreateContextOrSkip()
-		{
-			try
-			{
-				return TestConfig.Current.CreateGlContext();
-			}
-			catch (Exception ex) when (ex is not EntryPointNotFoundException and not MissingMethodException)
-			{
-				throw new RendererUnavailableException(
-					$"Unable to create an OpenGL context on this host: {ex.Message}", ex);
-			}
 		}
 	}
 }

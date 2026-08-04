@@ -191,7 +191,8 @@ See [documentation/dev/building.md](../../../documentation/dev/building.md#build
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
-# Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
+# Run all tests (core + Vulkan + Direct3D). GPU backends are required per
+# GpuPolicy — a backend that cannot come up fails.
 dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 

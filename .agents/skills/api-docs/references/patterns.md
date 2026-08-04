@@ -256,7 +256,7 @@ The opening verb is decided by the accessor, which is shown verbatim in the entr
 <summary>Darkens the backdrop color to reflect the source color. [Separable Blend Modes]</summary>
 
 <!-- Status parentheticals -->
-<summary>Use the Vulkan 3D backend (not yet supported)</summary>
+<summary>Draws using the legacy compatibility path (deprecated)</summary>
 
 <!-- Technical notation -->
 <summary>Swizzles pixels, swapping R and B (RGBA ↔ BGRA)</summary>
