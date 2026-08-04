@@ -9,12 +9,14 @@ One agent does the whole pass. Work in batches of ~25–40 files so each pass st
 
 ## Required reading (first)
 
-1. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
+1. [`technical-fact-checking.md`](technical-fact-checking.md) — evidence hierarchy, public managed
+   contract boundary, and cross-layer verification.
+2. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
    standard-based enums, caller-owned vs parent-owned). If a doc claim matches this file, it is correct —
    do **not** "correct" it from your own reasoning about how a macro "should" expand.
-2. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
-3. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
-4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
+3. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
+4. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
+5. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
    §1 lists members that are always obsolete; §2 lists methods whose name also exists on the modern API
    (disambiguate by signature). Using an obsolete member in an example is a compile failure → CRITICAL.
 
@@ -78,11 +80,23 @@ across many files almost certainly skimmed. Every factual finding must cite sour
   (RP 431-2 ≠ "432-2"; ST 428-1 transfer is gamma ~2.6, not "linear"). Provide header path + line.
 - **Cross-library:** SkiaSharp (Skia/C++) and HarfBuzzSharp (HarfBuzz/C) have different conventions —
   never assume one behaves like the other.
+- **Public-contract boundary:** flag private fields/locals written as though readers can access them, and
+  native capabilities described as managed features when no public wrapper exposes them. Verify every
+  identifier against the managed public surface and DocId.
+- **Native-backed semantics:** for statuses, backend behavior, callback contracts, and nontrivial native
+  enums, read the native declaration/implementation. Names and values alone do not prove the explanation.
+- **Failure completeness:** check nullable factory and callback results, meaningful Boolean/status returns,
+  and deterministic managed exceptions identified by the shared fact sheet, including checked arithmetic
+  and deliberate failures from directly invoked helpers. Public failure behavior omitted from all of
+  summary/returns/remarks/exception tags is an accuracy gap.
+- **Borrowed-data lifetime:** for callback-owned spans/pointers, verify the native lifetime contract as well
+  as the managed disposal boundary, including early invalidation on context abandonment or destruction.
 - **Trust hierarchy for native facts:** native header in repo > `skia-patterns.md` > your own knowledge
   (never use the last for byte layouts). Cannot find the header → flag `UNVERIFIED`, not wrong.
 
 Classes: `factual` (a stated fact contradicts source), `fabricated-member` (docs/example reference a
-type, member, or overload that does **not** exist in source).
+type, member, overload, or reader-accessible identifier that does **not** exist in the public source),
+`unsupported-capability` (native behavior is presented as managed API without a public entry point).
 
 ### B. Examples — compile, real APIs, no obsolete members
 
@@ -114,6 +128,7 @@ Class: `example`.
 ### C. Quality — .NET conventions, completeness, style
 
 - Remaining placeholders (`To be added.`, TODO, bracketed remarks scaffolds like `[Describe …]`).
+- A type/file reported as complete while any placeholder remains in an in-scope `<Docs>` field.
 - Type-level `<remarks>` has real content, not a template blank.
 - Summaries add value beyond restating the member name.
 - `<see cref>` uses the correct prefix (`T:`/`M:`/`P:`/`F:`); CDATA `<xref:…>` uses the **bare UID, no
@@ -162,7 +177,7 @@ to `output/docs-review/` (gitignored). Nothing in `docs/` changes unless the gat
 ## Extra findings (uncorroborated leads)
 ...
 
-FINDING | <severity> | <class> | <file> | <docId> | <message>
+<SEVERITY> | <class> | <file> | <docId> | <message>
 ```
 
 ## Boundaries

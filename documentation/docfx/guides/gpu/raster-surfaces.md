@@ -1,13 +1,11 @@
 ---
-title: "Raster Surfaces"
-description: "Create CPU-backed SKSurface objects for offscreen and headless rendering with SkiaSharp, draw into memory you own with a raster-direct surface, and read the result back as an SKImage or encoded bytes."
+title: "Raster surfaces"
+description: "Create CPU-backed SKSurface objects for offscreen and headless rendering, draw into caller-owned memory, and save or read pixels."
 ---
 
-# Raster Surfaces
+# Raster surfaces
 
-_Draw into CPU memory with `SKSurface.Create`_
-
-A **raster** surface keeps its pixels in ordinary system (CPU) memory. It is the simplest kind of surface, it needs no GPU, and it behaves identically on every platform SkiaSharp supports. Raster surfaces are the right choice whenever you are rendering offscreen: generating images or thumbnails, building a PDF or print pipeline, rendering on a server, or drawing in a unit test.
+A **raster** surface keeps its pixels in system (CPU) memory. It needs no GPU and is available on every platform SkiaSharp supports. Use a raster surface when you want a portable CPU rendering path for images, thumbnails, PDF or print pipelines, server workloads, or tests.
 
 ## Creating a raster surface
 
@@ -16,11 +14,13 @@ The most common way to create a raster surface is to describe the image you want
 ```csharp
 var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var surface = SKSurface.Create(info);
+using var surface = SKSurface.Create(info)
+    ?? throw new InvalidOperationException("Unable to create the raster surface.");
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 var canvas = surface.Canvas;
 
 canvas.Clear(SKColors.White);
-canvas.DrawCircle(128, 128, 100, new SKPaint { Color = SKColors.CornflowerBlue });
+canvas.DrawCircle(128, 128, 100, paint);
 ```
 
 `SKImageInfo` describes the width, height, color type, and alpha type of the surface. `SKColorType.Rgba8888` with `SKAlphaType.Premul` is a common, portable choice, but you can pick whatever format your pipeline needs.
@@ -34,14 +34,16 @@ Once you've finished drawing, there are two common ways to get the pixels back.
 The simplest is to take an immutable snapshot as an [`SKImage`](xref:SkiaSharp.SKImage), which you can then encode to PNG, JPEG, or another format:
 
 ```csharp
-using var image = surface.Snapshot();
-using var data = image.Encode(SKEncodedImageFormat.Png, 100);
+using var image = surface.Snapshot()
+    ?? throw new InvalidOperationException("Unable to snapshot the surface.");
+using var data = image.Encode(SKEncodedImageFormat.Png, 100)
+    ?? throw new InvalidOperationException("Unable to encode the image.");
 
 using var stream = File.OpenWrite("output.png");
 data.SaveTo(stream);
 ```
 
-If you need the raw pixels rather than an encoded image, read them back into a buffer with [`ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*). Because a raster surface already lives in CPU memory, this read is synchronous and cheap:
+If you need the raw pixels rather than an encoded image, read them back into a buffer with [`ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*). Because a raster surface already lives in CPU memory, this read is synchronous and does not cross a GPU boundary:
 
 ```csharp
 var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
@@ -50,7 +52,8 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
+    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
+        throw new InvalidOperationException("Unable to read the surface pixels.");
 }
 finally
 {
@@ -59,7 +62,7 @@ finally
 ```
 
 > [!NOTE]
-> Synchronous `ReadPixels` is a raster and Ganesh convenience. Graphite surfaces do **not** support it — see [Graphite Offscreen Surfaces](graphite-surfaces.md#reading-pixels-back).
+> Synchronous `ReadPixels` is a raster and Ganesh convenience. Graphite surfaces do **not** support it — see [Graphite offscreen surfaces](graphite-surfaces.md#reading-pixels-back).
 
 ## Raster-direct: drawing into memory you own
 
@@ -73,11 +76,13 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    using var surface = SKSurface.Create(info, handle.AddrOfPinnedObject(), info.RowBytes);
+    using var surface = SKSurface.Create(info, handle.AddrOfPinnedObject(), info.RowBytes)
+        ?? throw new InvalidOperationException("Unable to create the raster-direct surface.");
+    using var paint = new SKPaint { Color = SKColors.Red };
 
     // every draw call writes straight into `pixels`
     surface.Canvas.Clear(SKColors.White);
-    surface.Canvas.DrawCircle(128, 128, 100, new SKPaint { Color = SKColors.Red });
+    surface.Canvas.DrawCircle(128, 128, 100, paint);
     surface.Canvas.Flush();
 }
 finally
@@ -93,8 +98,10 @@ You can also wrap an [`SKPixmap`](xref:SkiaSharp.SKPixmap) — which already bun
 
 ```csharp
 using var bitmap = new SKBitmap(info);
-using var pixmap = bitmap.PeekPixels();
-using var surface = SKSurface.Create(pixmap);
+using var pixmap = bitmap.PeekPixels()
+    ?? throw new InvalidOperationException("Unable to access the bitmap pixels.");
+using var surface = SKSurface.Create(pixmap)
+    ?? throw new InvalidOperationException("Unable to create a surface for the pixmap.");
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw ...
@@ -108,14 +115,14 @@ This is a convenient way to draw straight into an `SKBitmap` you already have.
 Reach for a raster surface when:
 
 - You are rendering **offscreen** or **headless** — no window, no GPU context.
-- You want **deterministic, portable** output that is identical across platforms.
+- You want a portable CPU rendering path without a graphics API or driver dependency.
 - You are producing images to save, stream, or process further (thumbnails, tiles, reports).
 - You need to draw directly into a buffer you already own (raster-direct).
 
-If you need GPU acceleration — because you are rendering many frames per second, compositing with other GPU content, or drawing very large scenes — use a GPU-backed surface instead. See [Ganesh GPU Surfaces](ganesh-surfaces.md) and [Graphite Offscreen Surfaces](graphite-surfaces.md).
+If you need GPU acceleration — because you are rendering many frames per second, compositing with other GPU content, or drawing very large scenes — use a GPU-backed surface instead. See [Ganesh GPU surfaces](ganesh-surfaces.md) and [Graphite offscreen surfaces](graphite-surfaces.md).
 
-## Related Links
+## Related links
 
-- [SkiaSharp APIs](/dotnet/api/skiasharp)
-- [Creating and Drawing on Bitmaps](../bitmaps/drawing.md)
+- [SkiaSharp APIs](xref:SkiaSharp)
+- [Creating and drawing on bitmaps](../bitmaps/drawing.md)
 - [Skia canvas creation, Raster backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

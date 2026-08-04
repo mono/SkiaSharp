@@ -1,11 +1,9 @@
 ---
-title: "Ganesh GPU Surfaces"
-description: "Create GPU-backed SKSurface objects with the Ganesh backend in SkiaSharp. Build a GRContext for OpenGL, Vulkan, Metal, or Direct3D, then render fully offscreen or wrap an existing render target or texture."
+title: "Ganesh GPU surfaces"
+description: "Create Ganesh GPU surfaces with OpenGL, Vulkan, Metal, or Direct3D, then render offscreen or wrap a render target or texture."
 ---
 
-# Ganesh GPU Surfaces
-
-_Render on the GPU with a `GRContext` and the Ganesh backend_
+# Ganesh GPU surfaces
 
 *Ganesh* is Skia's classic GPU backend. To draw on the GPU with Ganesh you create a [`GRContext`](xref:SkiaSharp.GRContext) — a handle to a live graphics API context — and then create an [`SKSurface`](xref:SkiaSharp.SKSurface) from it. There are two shapes of GPU surface:
 
@@ -14,8 +12,7 @@ _Render on the GPU with a `GRContext` and the Ganesh backend_
 
 Ganesh supports four graphics APIs: **OpenGL**, **Vulkan**, **Metal**, and **Direct3D**. The context creation differs per API; everything after that — creating the surface, drawing, flushing, and reading back — is the same.
 
-> [!NOTE]
-> A `GRContext` is bound to the graphics context that was current when you created it, and neither it nor its surfaces are thread-safe. Create and use them on the thread that owns the graphics context.
+A `GRContext` and the resources created from it are not thread-safe, so use them from one thread at a time. OpenGL has an additional requirement: the GL context used to create the `GRContext` must be current whenever Skia makes GL calls, including during resource cleanup.
 
 ## Creating a context
 
@@ -25,8 +22,10 @@ For OpenGL, a GL context must already be *current* on the calling thread — Ski
 
 ```csharp
 // a platform GL context (WGL / GLX / EGL / CGL) is already current on this thread
-using var glInterface = GRGlInterface.Create();
-using var context = GRContext.CreateGl(glInterface);
+using var glInterface = GRGlInterface.Create()
+    ?? throw new InvalidOperationException("Unable to create the OpenGL interface.");
+using var context = GRContext.CreateGl(glInterface)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh OpenGL context.");
 ```
 
 `GRContext.CreateGl()` also has a parameterless overload that assembles the interface from the current context for you.
@@ -46,7 +45,8 @@ using var backendContext = new GRVkBackendContext
     GetProcedureAddress = (name, instance, device) => /* vkGetXxxProcAddr */,
 };
 
-using var context = GRContext.CreateVulkan(backendContext);
+using var context = GRContext.CreateVulkan(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh Vulkan context.");
 ```
 
 For a typed binding that hands you `IntPtr`s to fill in, the recommended managed Vulkan binding is [Silk.NET](https://www.nuget.org/packages/Silk.NET.Vulkan). The **SkiaSharp.Vulkan.Silk.NET** package provides a typed `GRSilkNetBackendContext` that accepts Silk.NET objects directly, so you don't marshal handles yourself:
@@ -61,15 +61,16 @@ using var backendContext = new GRSilkNetBackendContext
     VkDevice = device,                   // Device
     VkQueue = graphicsQueue,             // Queue
     GraphicsQueueIndex = graphicsFamily,
+    MaxAPIVersion = apiVersion,
     GetProcedureAddress = getProc,       // (name, Instance, Device) => IntPtr
     VkPhysicalDeviceFeatures = features, // PhysicalDeviceFeatures
 };
 
-using var context = GRContext.CreateVulkan(backendContext);
+using var context = GRContext.CreateVulkan(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh Vulkan context.");
 ```
 
-> [!NOTE]
-> Silk.NET is the maintained, cross-platform binding and is the recommended choice for new Vulkan code. An older **SkiaSharp.Vulkan.SharpVk** package with a `GRSharpVkBackendContext` still exists, but SharpVk is effectively unmaintained and only works on Windows and Linux (it throws on Android). Because `GRVkBackendContext` takes raw handles, you can also pair it with any other binding — or raw `libvulkan` P/Invoke — without a wrapper package.
+Silk.NET is the maintained, cross-platform binding and is the recommended choice for new Vulkan code. The legacy **SkiaSharp.Vulkan.SharpVk** package still provides `GRSharpVkBackendContext`, but new code should not take a dependency on the unmaintained SharpVk binding. Because `GRVkBackendContext` takes raw handles, you can also pair it with another binding or raw `libvulkan` P/Invoke.
 
 ### Metal
 
@@ -82,7 +83,8 @@ using var backendContext = new GRMtlBackendContext
     QueueHandle = mtlCommandQueueHandle,
 };
 
-using var context = GRContext.CreateMetal(backendContext);
+using var context = GRContext.CreateMetal(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh Metal context.");
 ```
 
 ### Direct3D
@@ -97,7 +99,8 @@ using var backendContext = new GRD3DBackendContext
     Queue = commandQueueHandle,
 };
 
-using var context = GRContext.CreateDirect3D(backendContext);
+using var context = GRContext.CreateDirect3D(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh Direct3D context.");
 ```
 
 ## Rendering offscreen
@@ -107,23 +110,26 @@ The simplest GPU surface is an offscreen one: describe the image with an [`SKIma
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var surface = SKSurface.Create(context, budgeted: true, info);
+using var surface = SKSurface.Create(context, budgeted: true, info)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh surface.");
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
-surface.Canvas.DrawCircle(256, 256, 200, new SKPaint { Color = SKColors.CornflowerBlue });
+surface.Canvas.DrawCircle(256, 256, 200, paint);
 
 // push the recorded work to the GPU and wait for it to finish
 context.Flush(submit: true, synchronous: true);
 ```
 
-After flushing, you can read the pixels back synchronously — GPU readback with Ganesh works exactly like the [raster case](raster-surfaces.md#getting-the-result-out):
+After flushing, you can read the pixels back synchronously with the same `ReadPixels` call used in the [raster case](raster-surfaces.md#getting-the-result-out):
 
 ```csharp
 var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
+    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
+        throw new InvalidOperationException("Unable to read the surface pixels.");
 }
 finally
 {
@@ -134,9 +140,12 @@ finally
 The whole offscreen loop looks the same regardless of which API you created the context with. For example, over OpenGL:
 
 ```csharp
-using var glInterface = GRGlInterface.Create();
-using var context = GRContext.CreateGl(glInterface);
-using var surface = SKSurface.Create(context, budgeted: true, info);
+using var glInterface = GRGlInterface.Create()
+    ?? throw new InvalidOperationException("Unable to create the OpenGL interface.");
+using var context = GRContext.CreateGl(glInterface)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh OpenGL context.");
+using var surface = SKSurface.Create(context, budgeted: true, info)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh surface.");
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw ...
@@ -155,7 +164,8 @@ For OpenGL, you build the backend render target from the currently bound framebu
 var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
 using var renderTarget = new GRBackendRenderTarget(width, height, samples, stencil, glInfo);
 
-using var surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType);
+using var surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType)
+    ?? throw new InvalidOperationException("Unable to wrap the render target.");
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw the frame ...
@@ -173,19 +183,20 @@ If instead of a render target you have a GPU **texture**, describe it with a [`G
 
 ```csharp
 using var surface = SKSurface.Create(
-    context, backendTexture, GRSurfaceOrigin.TopLeft, sampleCount: 0, colorType);
+    context, backendTexture, GRSurfaceOrigin.TopLeft, sampleCount: 0, colorType: colorType)
+    ?? throw new InvalidOperationException("Unable to wrap the backend texture.");
 ```
 
 You can also wrap a texture as a *sampling* [`SKImage`](xref:SkiaSharp.SKImage) with [`SKImage.FromTexture`](xref:SkiaSharp.SKImage.FromTexture*) when you want to draw an existing GPU texture *onto* a surface rather than *into* it.
 
 ## Cleaning up
 
-Dispose your surfaces and the `GRContext` when you are done, and make sure the graphics context they were created against is still current at disposal time. Disposing the `GRContext` frees all the GPU resources Skia allocated through it.
+Dispose your surfaces and the `GRContext` when you are done. If you use OpenGL, keep the GL context current while disposing the SkiaSharp objects that use it. Disposing the `GRContext` frees the GPU resources Skia allocated through it.
 
-## Related Links
+## Related links
 
-- [SkiaSharp APIs](/dotnet/api/skiasharp)
-- [Raster Surfaces](raster-surfaces.md)
+- [SkiaSharp APIs](xref:SkiaSharp)
+- [Raster surfaces](raster-surfaces.md)
 - [Surfaces in the SkiaSharp Views](views-surfaces.md)
-- [Graphite Offscreen Surfaces](graphite-surfaces.md)
+- [Graphite offscreen surfaces](graphite-surfaces.md)
 - [Skia canvas creation, GPU backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

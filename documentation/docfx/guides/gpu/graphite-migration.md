@@ -1,11 +1,9 @@
 ---
-title: "Migrating from Ganesh to Graphite"
-description: "Map your existing SkiaSharp Ganesh GPU code onto the newer Graphite backend — context creation, the recorder and recording drawing model, submission, and the asynchronous pixel readback that replaces synchronous ReadPixels."
+title: "Migrate from Ganesh to Graphite"
+description: "Migrate Ganesh GPU code to Graphite by replacing context flushing, synchronous readback, and automatic CPU-image uploads."
 ---
 
-# Migrating from Ganesh to Graphite
-
-_Map your existing Ganesh code onto the Graphite model_
+# Migrate from Ganesh to Graphite
 
 If you already render on the GPU with [Ganesh](ganesh-surfaces.md) — a [`GRContext`](xref:SkiaSharp.GRContext), an `SKSurface`, and `Flush` — this page shows the equivalent [Graphite](graphite-surfaces.md) calls. The concepts line up closely. Two **behaviour** changes matter most, and they are the parts most likely to bite when you port working code:
 
@@ -38,18 +36,23 @@ Notice the pattern: wherever Ganesh takes the **context**, Graphite's per-surfac
 
 ## Before and after
 
-Here is a complete offscreen render + readback in each backend.
+These snippets compare the core offscreen render and readback flow in each backend. The Graphite version
+calls the `ReadPixelsFromGraphite` helper from [Reading pixels back](graphite-surfaces.md#reading-pixels-back);
+that helper is omitted here so the migration steps remain easy to compare.
 
 ### Ganesh
 
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var context = GRContext.CreateMetal(backendContext);
-using var surface = SKSurface.Create(context, budgeted: true, info);
+using var context = GRContext.CreateMetal(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh Metal context.");
+using var surface = SKSurface.Create(context, budgeted: true, info)
+    ?? throw new InvalidOperationException("Unable to create the Ganesh surface.");
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
-surface.Canvas.DrawCircle(256, 256, 200, new SKPaint { Color = SKColors.CornflowerBlue });
+surface.Canvas.DrawCircle(256, 256, 200, paint);
 
 context.Flush(submit: true, synchronous: true);
 
@@ -58,7 +61,8 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
+    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
+        throw new InvalidOperationException("Unable to read the surface pixels.");
 }
 finally
 {
@@ -71,22 +75,28 @@ finally
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var context = SKGraphiteContext.CreateMetal(backendContext);
-using var recorder = context.CreateRecorder();
-using var surface = SKSurface.Create(recorder, info);
+using var context = SKGraphiteContext.CreateMetal(backendContext)
+    ?? throw new InvalidOperationException("Unable to create the Graphite Metal context.");
+using var recorder = context.CreateRecorder()
+    ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
+using var surface = SKSurface.Create(recorder, info)
+    ?? throw new InvalidOperationException("Unable to create the Graphite surface.");
+using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
-surface.Canvas.DrawCircle(256, 256, 200, new SKPaint { Color = SKColors.CornflowerBlue });
+surface.Canvas.DrawCircle(256, 256, 200, paint);
 
-using (var recording = recorder.Snap())
+using (var recording = recorder.Snap()
+    ?? throw new InvalidOperationException("Graphite Snap did not succeed."))
 {
     if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
         throw new InvalidOperationException("InsertRecording did not succeed.");
 }
-context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
+    throw new InvalidOperationException("Graphite Submit did not succeed.");
 
-// asynchronous readback — see the Graphite Offscreen Surfaces guide for the full helper
-var pixels = ReadPixelsAsync(context, surface, info);
+// asynchronous readback — helper defined in the Graphite offscreen surfaces guide
+var pixels = ReadPixelsFromGraphite(context, surface, info);
 ```
 
 The drawing calls are identical. What changes is the plumbing around them.
@@ -120,14 +130,14 @@ Per-surface and per-image creation moves from the context to the recorder:
 
 - **No OpenGL or Direct3D.** Graphite targets Vulkan, Metal, and Dawn. There is no Direct3D Graphite backend — on Windows, Graphite means Vulkan. If your Ganesh code uses GL or D3D, there is no direct Graphite equivalent; keep using Ganesh, or move to Vulkan/Metal/Dawn.
 - **Apple uses Metal, not Vulkan.** On macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal; Vulkan Graphite is Linux/Android/Windows. See the [platform matrix](graphite-surfaces.md#backend-platform-support).
-- **New Vulkan code should use Silk.NET.** For both Ganesh and Graphite, prefer Silk.NET (or raw `libvulkan`) over the unmaintained, Windows/Linux-only SharpVk. For Graphite there is no typed wrapper at all — feed raw handles into `SKGraphiteVkBackendContext`.
+- **New Vulkan code should use Silk.NET.** For both Ganesh and Graphite, prefer Silk.NET or raw `libvulkan` over the unmaintained SharpVk binding. Graphite has no typed wrapper, so pass raw handles to `SKGraphiteVkBackendContext`.
 - **CPU images need a provider.** The single easiest thing to miss — a raster `SKImage` drawn without an image provider simply doesn't appear. See change 3 above.
 - **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Dawn in the browser](graphite-surfaces.md#dawn-in-the-browser).
 - **Check backend availability.** Use `SKGraphiteContext.IsBackendAvailable` before creating a context, since not every build includes every backend.
-- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite Offscreen Surfaces](graphite-surfaces.md).
+- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite offscreen surfaces](graphite-surfaces.md).
 
-## Related Links
+## Related links
 
-- [SkiaSharp APIs](/dotnet/api/skiasharp)
-- [Ganesh GPU Surfaces](ganesh-surfaces.md)
-- [Graphite Offscreen Surfaces](graphite-surfaces.md)
+- [SkiaSharp APIs](xref:SkiaSharp)
+- [Ganesh GPU surfaces](ganesh-surfaces.md)
+- [Graphite offscreen surfaces](graphite-surfaces.md)
