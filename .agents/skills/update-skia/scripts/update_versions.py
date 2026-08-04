@@ -224,6 +224,22 @@ def reconcile_dependency_metadata(
                     f"Base cgmanifest metadata for {dependency_name} does not match base DEPS."
                 )
 
+        base_version = (
+            base_registration["component"]["other"]["version"]
+            if base_registration
+            else None
+        )
+        final_version = registration["component"]["other"]["version"]
+        changed = dependency_name in changed_names
+        if not changed and not base_metadata:
+            registration.pop("skia_dependency", None)
+            if final_version != base_version:
+                errors.append(
+                    f"{manifest_name} version changed from {base_version} to {final_version} "
+                    f"without a {dependency_name} DEPS change."
+                )
+            continue
+
         metadata = registration.setdefault("skia_dependency", {})
         base_identity = (
             f"{base_dependency['url']}@{base_dependency['revision']}"
@@ -237,13 +253,6 @@ def reconcile_dependency_metadata(
         metadata.setdefault("version_reviewed_identity", reviewed_identity)
         metadata.pop("version_verified_identity", None)
 
-        base_version = (
-            base_registration["component"]["other"]["version"]
-            if base_registration
-            else None
-        )
-        final_version = registration["component"]["other"]["version"]
-        changed = dependency_name in changed_names
         if changed:
             review_required = (
                 reviewed_identity != final_identity

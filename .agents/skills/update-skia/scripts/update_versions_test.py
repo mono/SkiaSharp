@@ -247,6 +247,8 @@ class UpdateVersionsTests(unittest.TestCase):
 
         manifest_path = self.root / "cgmanifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        for registration in manifest["registrations"]:
+            registration.pop("skia_dependency", None)
         skia_registration = manifest["registrations"][1]
         skia_registration["component"]["other"]["version"] = "chrome/m150"
         skia_registration["chrome_milestone"] = 150

@@ -2,7 +2,15 @@
 
 ## Phase 06 — update version surfaces
 
-From the parent repository, run the maintained helper:
+Hydrate the dependencies recorded by the merged Skia `DEPS` before inspecting their
+semantic-version evidence:
+
+```bash
+python3 externals/skia/tools/git-sync-deps
+```
+
+This synchronizes dependency source only; it does not build native binaries. Then run the
+maintained version helper from the parent repository:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
@@ -35,8 +43,9 @@ A revision-only roll may retain the same semantic version, but still requires th
 identity and source evidence. The helper rejects a manifest version bump when that dependency's
 DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
 and after the final mono/skia fix commit so the parent records the exact tested state.
-Every tracked registration, including an unchanged baseline entry, must retain non-empty
-`version_source` evidence.
+Existing `skia_dependency` metadata on an unchanged baseline entry must retain non-empty
+`version_source` evidence. Do not backfill that metadata onto an unchanged legacy registration
+that did not already contain it; dependency metadata migrations are separate work.
 The script proves coverage and consistency; the independent review must re-read each cited source
 to validate the agent's semantic-version claim.
 
