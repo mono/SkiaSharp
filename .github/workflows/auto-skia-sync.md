@@ -186,13 +186,13 @@ steps:
         printf 'SKIA_SYNC_ARCH=x64\n'
         printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
       } >> "$GITHUB_ENV"
-  - name: Copy post-step assets
+  - name: Stage immutable workflow assets
     run: |
-      RUNTIME_DIR="$RUNNER_TEMP/skia-sync-runtime"
-      mkdir -p "$RUNTIME_DIR"
-      cp .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
-      cp .agents/skills/update-skia/scripts/update_versions.py "$RUNTIME_DIR/update_versions.py"
-      cp .agents/skills/update-skia/scripts/audit_fork_patches.py "$RUNTIME_DIR/audit-fork-patches.py"
+      RUNTIME_DIR="$RUNNER_TEMP/gh-aw/skia-sync-runtime"
+      python3 .github/scripts/skia_sync_stage_runtime.py \
+        --repo-root "$GITHUB_WORKSPACE" \
+        --runtime-dir "$RUNTIME_DIR" \
+        --github-env "$GITHUB_ENV"
       chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
@@ -275,7 +275,7 @@ pre-agent-steps:
 post-steps:
   - name: Finalize sync metadata
     env:
-      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
     run: |
       set -euo pipefail
       test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
@@ -293,7 +293,7 @@ post-steps:
         exit 1
       fi
 
-      python3 "$SKIA_SYNC_RUNTIME_DIR/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+      python3 "$SKIA_SYNC_VERSION_HELPER" --repo-root "$GITHUB_WORKSPACE"
 
       if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
         echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
@@ -311,14 +311,14 @@ post-steps:
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/skia-sync-runtime
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
     run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
 ---
 
 # Sync - Skia Upstream
 
-Read `.agents/skills/update-skia/SKILL.md` and use it as the complete engineering process.
-Load one numbered phase reference at a time.
+Read `$SKIA_SYNC_SKILL_DIR/SKILL.md` and use that immutable staged copy as the complete
+engineering process. Load one numbered phase reference at a time from the same directory.
 
 ## 1. Resolved runtime state
 
@@ -341,6 +341,8 @@ the supplied values.
 
 - The selected parent base is fetched, the submodule is aligned to that base's exact recorded
   pointer, and the target upstream ref and recorded base-upstream SHA are fetched.
+- The exact update-skia skill from the triggering workflow revision is staged read-only at
+  `$SKIA_SYNC_SKILL_DIR`. It remains authoritative after the product checkout switches branches.
 - No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
   takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
   cancel it, or restart it solely because of its duration.
@@ -353,6 +355,10 @@ the supplied values.
 ## 3. Execution contract
 
 - Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
+- Read phase references and run helper scripts only from `$SKIA_SYNC_SKILL_DIR`. In particular,
+  run `python3 "$SKIA_SYNC_VERSION_HELPER" --repo-root "$GITHUB_WORKSPACE"` for every version
+  reconciliation. Never fall back to branch-local `.agents/skills/update-skia` assets after the
+  product checkout changes branches.
 - In Phase 04, create or check out the parent feature branch from the resolved parent base and the
   submodule feature branch from its exact recorded pointer before merging or building. Never build
   from the workflow checkout when it differs from the resolved parent base.

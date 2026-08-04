@@ -117,7 +117,7 @@ fork patch. Return to the parent repository root and generate the diff-of-diffs 
 merge:
 
 ```bash
-python3 .agents/skills/update-skia/scripts/audit_fork_patches.py \
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
   --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
   --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_SYNC_SKIA_BASE_SHA" \

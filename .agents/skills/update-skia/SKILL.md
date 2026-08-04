@@ -128,6 +128,9 @@ needed for that phase.
 
 ## Deterministic helpers
 
+- Automation stages this entire skill outside the mutable product checkout and exports its path as
+  `SKIA_SYNC_SKILL_DIR`. After changing the product branch, continue reading phase references and
+  running helpers from that staged directory rather than the branch-local `.agents` tree.
 - `scripts/update_versions.py` updates and validates version surfaces, Skia hashes, and deterministic
   DEPS-to-Component-Governance identity/review signals.
 - `scripts/regenerate_bindings.py` runs every binding configuration, restores HarfBuzz,

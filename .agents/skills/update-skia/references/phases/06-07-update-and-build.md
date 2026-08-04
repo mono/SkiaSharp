@@ -5,7 +5,8 @@
 From the parent repository, run the maintained helper:
 
 ```bash
-python3 .agents/skills/update-skia/scripts/update_versions.py
+python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
+  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
@@ -96,7 +97,8 @@ explanatory commit.
 
 After every mono/skia adaptation, rerun `audit_fork_patches.py` with the Phase 05 arguments. Fill
 new or changed rows and require `--validate` to pass again. Reuse the exact Phase 05
-`python3 .agents/skills/update-skia/scripts/audit_fork_patches.py` command rather than searching
+`python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py"`
+command rather than searching
 for another copy of the helper.
 
 Before Phase 08, rerun `update_versions.py` against final `DEPS`, then reconcile every row in

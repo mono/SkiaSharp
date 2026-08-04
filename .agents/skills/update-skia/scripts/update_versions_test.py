@@ -224,6 +224,64 @@ class UpdateVersionsTests(unittest.TestCase):
         self.assertEqual("main", cgmanifest["registrations"][1]["upstream_ref"])
         self.assertNotEqual("old", cgmanifest["registrations"][1]["upstream_merge_commit"])
 
+    def test_release_line_preserves_servicing_version_surfaces(self) -> None:
+        versions_path = self.root / "scripts" / "VERSIONS.txt"
+        pipeline_path = self.root / "scripts" / "azure-templates-variables.yml"
+        sk_types_path = (
+            self.root / "externals" / "skia" / "include" / "c" / "sk_types.h"
+        )
+        versions_path.write_text(
+            "skia release m150\n"
+            "libSkiaSharp milestone 150\n"
+            "libSkiaSharp increment 7\n"
+            "libSkiaSharp soname 150.0.0\n"
+            "SkiaSharp assembly 4.150.2.0\n"
+            "SkiaSharp file 4.150.2.0\n"
+            "SkiaSharp nuget 4.150.2\n",
+            encoding="utf-8",
+        )
+        pipeline_path.write_text(
+            "SKIASHARP_VERSION: 4.150.2\n", encoding="utf-8"
+        )
+        sk_types_path.write_text("#define SK_C_INCREMENT 7\n", encoding="utf-8")
+
+        manifest_path = self.root / "cgmanifest.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        skia_registration = manifest["registrations"][1]
+        skia_registration["component"]["other"]["version"] = "chrome/m150"
+        skia_registration["chrome_milestone"] = 150
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        expected_manifest = json.loads(json.dumps(manifest))
+
+        skia_root = self.root / "externals" / "skia"
+        subprocess.run(
+            ["git", "branch", "upstream/chrome/m150"], cwd=skia_root, check=True
+        )
+        upstream_hash = subprocess.run(
+            ["git", "rev-parse", "upstream/chrome/m150"],
+            cwd=skia_root,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        expected_manifest["registrations"][0]["component"]["git"][
+            "commitHash"
+        ] = upstream_hash
+        expected_skia = expected_manifest["registrations"][1]
+        expected_skia["upstream_ref"] = "chrome/m150"
+        expected_skia["upstream_merge_commit"] = upstream_hash
+        before = {
+            path: path.read_bytes()
+            for path in (versions_path, pipeline_path, sk_types_path)
+        }
+
+        update_versions(self.root, 150, 150, "chrome/m150")
+
+        for path, content in before.items():
+            self.assertEqual(content, path.read_bytes())
+        updated_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertEqual(expected_manifest, updated_manifest)
+
     def test_missing_upstream_ref_does_not_modify_files(self) -> None:
         tracked = (
             self.root / "scripts" / "VERSIONS.txt",
