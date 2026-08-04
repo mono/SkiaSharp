@@ -281,6 +281,10 @@ post-steps:
       test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
       test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
 
+      python3 "$SKIA_SYNC_SUBMODULE_HELPER" \
+        --repo-root "$GITHUB_WORKSPACE" \
+        --align-submodules
+
       UNEXPECTED_CHANGES=$(
         {
           git diff --name-only
@@ -360,8 +364,11 @@ the supplied values.
   reconciliation. Never fall back to branch-local `.agents/skills/update-skia` assets after the
   product checkout changes branches.
 - In Phase 04, create or check out the parent feature branch from the resolved parent base and the
-  submodule feature branch from its exact recorded pointer before merging or building. Never build
-  from the workflow checkout when it differs from the resolved parent base.
+  submodule feature branch from its exact recorded pointer before merging or building. Immediately
+  after changing the parent branch, run
+  `python3 "$SKIA_SYNC_SUBMODULE_HELPER" --repo-root "$GITHUB_WORKSPACE" --align-submodules`
+  so immutable parent submodules such as `docs` match that branch's gitlinks. Never build from the
+  workflow checkout when it differs from the resolved parent base.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution

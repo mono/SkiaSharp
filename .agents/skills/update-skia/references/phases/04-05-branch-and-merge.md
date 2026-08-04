@@ -12,6 +12,13 @@ Create or verify the parent feature branch:
 ```bash
 git fetch origin "{BASE_BRANCH}"
 git checkout -b "{HEAD_BRANCH}" "origin/{BASE_BRANCH}"
+if [[ -n "${SKIA_SYNC_SUBMODULE_HELPER:-}" ]]; then
+  python3 "$SKIA_SYNC_SUBMODULE_HELPER" \
+    --repo-root "${GITHUB_WORKSPACE:-$PWD}" \
+    --align-submodules
+else
+  git submodule update --init --recursive -- docs
+fi
 ```
 
 Create or verify the mono/skia feature branch at the exact submodule pointer recorded by the
