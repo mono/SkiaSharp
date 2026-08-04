@@ -1,0 +1,124 @@
+{
+  "theme": "Graphite GPU, Skia m152, and memory fixes",
+  "highlights_headline": "SkiaSharp 4.152.0 updates the engine to Skia m152 and ships Graphite GPU backend bindings for Vulkan, Metal, and Dawn.",
+  "highlights_body": "The new Graphite rendering pipeline is now available for all three GPU backends. Several native memory safety fixes land alongside further performance improvements and Nano Server FreeType font support.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "The engine is now built from Skia chrome/m152, bringing the latest upstream rendering improvements and GPU fixes.",
+          "prs": [4651]
+        },
+        {
+          "lead": "Upstream chrome/m151 stability fixes merged",
+          "detail": "An additional upstream sync from the chrome/m151 branch applies engine stability improvements before the m152 update.",
+          "prs": [4568]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+          "detail": "New bindings expose Skia's next-generation Graphite rendering pipeline. Consumers can now create Graphite GPU contexts for Vulkan, Metal, and Dawn backends, unlocking the modern lower-overhead GPU path.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async RequestReadPixels on SKImage and SKSurface",
+          "detail": "A new async ReadPixels API lets callers read pixel data from GPU-backed images and surfaces without blocking the render thread, working across all supported GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "SkiaSharp.Vulkan.Silk.NET package added",
+          "detail": "A new NuGet package wraps the Silk.NET Vulkan interop layer, making it straightforward to wire up Vulkan contexts without custom P/Invoke boilerplate.",
+          "prs": [4527]
+        },
+        {
+          "lead": "Solution files converted to .slnx format",
+          "detail": "All .sln solution files are converted to the new .slnx format, improving IDE compatibility and reducing merge conflicts.",
+          "prs": [4528]
+        },
+        {
+          "lead": "Binding generation is now deterministic across platforms",
+          "detail": "The binding generator now produces identical output regardless of the host OS, eliminating spurious diffs when regenerating on different machines.",
+          "prs": [4612]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free in SKRegion.SpanIterator fixed",
+          "detail": "The SpanIterator held a raw pointer into the parent SKRegion. If the parent was collected first the pointer dangled. The region is now kept alive for the iterator's lifetime.",
+          "prs": [4355]
+        },
+        {
+          "lead": "Native use-after-free in SKPixmap.ExtractSubset and With* fixed",
+          "detail": "SKPixmap methods that return a derived pixmap were not rooting the pixel-source object, allowing it to be collected while the derived pixmap was still in use.",
+          "prs": [4558]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak in SKImage.Create raster failure path fixed",
+          "detail": "A native pixel buffer allocated during raster image creation was not freed when the native call failed, causing a silent native memory leak.",
+          "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "HandleDictionary skip-registration reflection check cached",
+          "detail": "The per-type reflection check that decides whether to skip handle registration was repeated on every object construction. It is now cached per type, eliminating repeated reflection overhead in object-creation hot paths.",
+          "prs": [4630]
+        },
+        {
+          "lead": "SKData.SaveTo avoids double buffer copy",
+          "detail": "SKData.SaveTo previously copied data into an intermediate buffer before writing. The copy is now avoided, halving memory usage on this path.",
+          "prs": [4550]
+        },
+        {
+          "lead": "GetEncodedText avoids intermediate string allocation",
+          "detail": "The null-terminated fast path in GetEncodedText no longer allocates an intermediate string.",
+          "prs": [4498]
+        },
+        {
+          "lead": "SKRuntimeEffectUniforms pre-sizes uniform lookup map",
+          "detail": "The uniform lookup map is now pre-sized to the known uniform count, eliminating resizing overhead.",
+          "prs": [4512]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "FreeType font rendering on Windows Nano Server",
+          "detail": "Nano Server environments lack the GDI font stack. SkiaSharp now falls back to FreeType on Nano Server, enabling text rendering in containerised Windows workloads that was previously broken.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Azure Linux, Alpine/musl, and Nano Server test targets added",
+          "detail": "Containerised CI test legs for Azure Linux, Alpine (musl libc), and Nano Server validate SkiaSharp on production-relevant Linux environments.",
+          "prs": [4515]
+        },
+        {
+          "lead": "Windows MSVC environment initialized once per native build",
+          "detail": "The MSVC toolchain environment is now set up once per build rather than once per compilation unit, significantly reducing native build times on Windows.",
+          "prs": [4570]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Implemented FreeType font support for Windows Nano Server, unblocking text rendering in GDI-less container environments.",
+    "mmitche": "Fixed native build performance on Windows by initializing the MSVC environment once per build instead of per compilation unit.",
+    "ramezgerges": "Authored the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+  },
+  "preview_summaries": {}
+}
