@@ -11,6 +11,7 @@ from update_versions import (
     TRACKED_SKIA_DEPENDENCIES,
     DependencyReviewRequired,
     main,
+    parse_deps,
     reconcile_dependency_metadata,
     update_versions,
 )
@@ -247,8 +248,6 @@ class UpdateVersionsTests(unittest.TestCase):
 
         manifest_path = self.root / "cgmanifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        for registration in manifest["registrations"]:
-            registration.pop("skia_dependency", None)
         skia_registration = manifest["registrations"][1]
         skia_registration["component"]["other"]["version"] = "chrome/m150"
         skia_registration["chrome_milestone"] = 150
@@ -283,6 +282,43 @@ class UpdateVersionsTests(unittest.TestCase):
             self.assertEqual(content, path.read_bytes())
         updated_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         self.assertEqual(expected_manifest, updated_manifest)
+
+    def test_unchanged_legacy_dependency_requires_compliance_evidence(self) -> None:
+        manifest = json.loads(
+            (self.root / "cgmanifest.json").read_text(encoding="utf-8")
+        )
+        registration = next(
+            registration
+            for registration in manifest["registrations"]
+            if registration.get("component", {}).get("other", {}).get("name")
+            == "libpng"
+        )
+        registration.pop("skia_dependency")
+        base_manifest = json.loads(json.dumps(manifest))
+        deps = parse_deps(
+            (self.root / "externals" / "skia" / "DEPS").read_text(encoding="utf-8")
+        )
+
+        changes, errors = reconcile_dependency_metadata(
+            manifest, base_manifest, deps, deps
+        )
+
+        self.assertEqual([], changes)
+        self.assertEqual("1.0.0", registration["component"]["other"]["version"])
+        self.assertEqual(
+            {
+                "name": "libpng",
+                "revision": "libpng-sha",
+                "version_reviewed_identity": (
+                    "https://example.test/libpng@libpng-sha"
+                ),
+            },
+            registration["skia_dependency"],
+        )
+        self.assertIn(
+            "libpng lacks skia_dependency.version_source for its current semantic version.",
+            errors,
+        )
 
     def test_missing_upstream_ref_does_not_modify_files(self) -> None:
         tracked = (

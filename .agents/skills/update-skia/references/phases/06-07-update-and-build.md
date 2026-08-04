@@ -43,9 +43,9 @@ A revision-only roll may retain the same semantic version, but still requires th
 identity and source evidence. The helper rejects a manifest version bump when that dependency's
 DEPS identity did not change. It is idempotent; rerun it after every final DEPS/native adaptation
 and after the final mono/skia fix commit so the parent records the exact tested state.
-Existing `skia_dependency` metadata on an unchanged baseline entry must retain non-empty
-`version_source` evidence. Do not backfill that metadata onto an unchanged legacy registration
-that did not already contain it; dependency metadata migrations are separate work.
+Every tracked registration, including an unchanged legacy entry, must have non-empty
+`version_source` evidence. Backfill missing `skia_dependency` evidence from the hydrated source so
+supported branches become compliant over time without changing semantic versions unnecessarily.
 The script proves coverage and consistency; the independent review must re-read each cited source
 to validate the agent's semantic-version claim.
 
