@@ -10,6 +10,11 @@ on:
         required: false
         default: main
         type: string
+      skia_branch:
+        description: "mono/skia branch to sync from"
+        required: false
+        default: skiasharp
+        type: string
 
 permissions:
   contents: write
@@ -24,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'main' }}
+      SKIA_BRANCH: ${{ github.event.inputs.skia_branch || 'skiasharp' }}
 
     steps:
       - name: Checkout SkiaSharp
@@ -33,7 +39,7 @@ jobs:
           submodules: false
           ref: ${{ env.TARGET_BRANCH }}
 
-      - name: Validate target branch
+      - name: Validate branches
         run: |
           git check-ref-format --branch "$TARGET_BRANCH"
           if ! git show-ref --verify --quiet "refs/remotes/origin/$TARGET_BRANCH"; then
@@ -41,12 +47,29 @@ jobs:
             exit 1
           fi
 
+          git check-ref-format --branch "$SKIA_BRANCH"
+          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
+          if ! git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" >/dev/null; then
+            echo "Skia branch does not exist on origin: $SKIA_BRANCH"
+            exit 1
+          fi
+
       - name: Update Skia submodule and cgmanifest
         id: update
         run: |
-          git submodule update --init --remote --depth 1 -- externals/skia
+          git submodule update --init --depth 1 -- externals/skia
+          git -C externals/skia fetch --no-tags --depth 1 origin \
+            "+refs/heads/$SKIA_BRANCH:refs/remotes/origin/$SKIA_BRANCH"
+          git -C externals/skia checkout --detach "refs/remotes/origin/$SKIA_BRANCH"
 
           SKIA_SHA=$(git -C externals/skia rev-parse HEAD)
+          SKIA_URL=$(git config -f .gitmodules --get submodule.externals/skia.url)
+          EXPECTED_SKIA_SHA=$(git ls-remote --exit-code --heads "$SKIA_URL" "refs/heads/$SKIA_BRANCH" | awk '{print $1}')
+          if [ "$SKIA_SHA" != "$EXPECTED_SKIA_SHA" ]; then
+            echo "Checked out $SKIA_SHA, but mono/skia branch $SKIA_BRANCH points to $EXPECTED_SKIA_SHA"
+            exit 1
+          fi
+
           MANIFEST_MATCHES=$(jq '[.registrations[] | select(
             .component.type == "git"
             and .component.git.repositoryUrl == "https://github.com/mono/skia.git"
@@ -122,19 +145,31 @@ jobs:
           Latest: $LATEST_MSG
           Commit: $SKIA_SHA"
 
-          git push origin "$BRANCH" --force
-
-          existing=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
-          if [ -n "$existing" ]; then
-            echo "PR #$existing already exists, force-pushed update"
+          REMOTE_BRANCH_SHA=$(git ls-remote --heads origin "refs/heads/$BRANCH" | awk '{print $1}')
+          if [ -n "$REMOTE_BRANCH_SHA" ]; then
+            git push --force-with-lease="refs/heads/$BRANCH:$REMOTE_BRANCH_SHA" \
+              origin "$BRANCH"
           else
-            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" \
-              --title "Sync Skia submodule and cgmanifest into $TARGET_BRANCH" \
-              --body "Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`skiasharp\` branch.
+            git push origin "$BRANCH"
+          fi
+
+          TITLE="Sync Skia submodule and cgmanifest into $TARGET_BRANCH"
+          BODY="Automated update of the \`externals/skia/\` submodule to track \`mono/skia\`'s \`$SKIA_BRANCH\` branch.
 
           This pull request targets the \`$TARGET_BRANCH\` branch in \`${{ github.repository }}\`.
 
           The \`mono/skia\` git registration in \`cgmanifest.json\` is derived from the checked-out submodule SHA. The workflow opens a PR when either the submodule pointer or manifest hash changes, so it also repairs manifest drift.
 
           Created by [auto-skia-submodule-sync](https://github.com/${{ github.repository }}/actions/workflows/auto-skia-submodule-sync.yml)."
+
+          existing=$(gh pr list --head "$BRANCH" --base "$TARGET_BRANCH" --state open --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/pulls/$existing" \
+              -f title="$TITLE" \
+              -f body="$BODY" >/dev/null
+            echo "PR #$existing already exists, force-pushed update"
+          else
+            gh pr create --base "$TARGET_BRANCH" --head "$BRANCH" \
+              --title "$TITLE" \
+              --body "$BODY"
           fi

@@ -164,8 +164,9 @@ workflow runs daily to advance `externals/skia` to the `mono/skia` `skiasharp`
 branch and derive the Component Governance git registration's `commitHash` from
 the checked-out submodule. It opens a PR when either value changes, which also
 repairs manifest drift. The milestone fields above remain owned by the full Skia
-upstream update workflow. Scheduled runs target `main`; manual runs can set the
-`target_branch` input to sync another SkiaSharp branch instead.
+upstream update workflow. Scheduled runs sync `mono/skia`'s `skiasharp` branch
+into SkiaSharp's `main`; manual runs can set `skia_branch` and `target_branch`
+independently.
 
 ### When to Update
 
