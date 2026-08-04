@@ -1,0 +1,334 @@
+# Issue Triage Report — #4404
+
+| Field | Value |
+|-------|-------|
+| Repository | mono/SkiaSharp |
+| Analyzed | 2026-08-04T05:13:24Z |
+| Type | type/bug (0.97 (97%)) |
+| Area | area/SkiaSharp.Views (0.95 (95%)) |
+| Suggested action | ready-to-fix (0.90 (90%)) |
+
+**Issue Summary:** Three undisposed native handles in AppleExtensions.cs: SKImage.FromPicture and SKBitmap.FromImage results escape without Dispose in ToCGImage overloads, and a second PeekPixels() call in ToSKBitmap is never disposed.
+
+**Analysis:** Three locations in source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs leak native handles: (1) ToCGImage(SKPicture) discards its SKImage without Dispose; (2) ToCGImage(SKImage) discards its SKBitmap without Dispose; (3) ToSKBitmap(CIImage) calls PeekPixels() twice — the second call is passed inline and never disposed. All three cases are deterministically reproducible with any call to the affected methods. The fix is idiomatic `using` on each intermediate object.
+
+**Recommendations:** **ready-to-fix** — All three leak sites are confirmed in source code, root cause is unambiguous (missing `using` on owned intermediates), and the fix path is a one-liner for each. This is suitable for the issue-fix skill.
+
+---
+
+## Classification
+
+| Field | Value |
+|-------|-------|
+| Type | type/bug |
+| Area | area/SkiaSharp.Views |
+| Platforms | os/iOS, os/macOS |
+| Backends | — |
+| Tenets | tenet/performance |
+| Perf | perf/memory-leak |
+| Partner | — |
+| Current labels | tenet/performance, partner/agentic-workflows, perf/memory-leak |
+
+## Evidence
+
+### Reproduction
+
+**Environment:** Apple platforms (iOS, macOS, Mac Catalyst). AI-generated finding; statically reasoned, not empirically proven on a device.
+
+### Bug Signals
+
+| Field | Value |
+|-------|-------|
+| Severity | medium |
+| Regression claimed | False |
+| Error type | memory-leak |
+| Error message | — |
+| Repro quality | partial |
+| Target frameworks | net8.0-ios, net8.0-maccatalyst |
+
+## Analysis
+
+### Technical Summary
+
+Three locations in source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs leak native handles: (1) ToCGImage(SKPicture) discards its SKImage without Dispose; (2) ToCGImage(SKImage) discards its SKBitmap without Dispose; (3) ToSKBitmap(CIImage) calls PeekPixels() twice — the second call is passed inline and never disposed. All three cases are deterministically reproducible with any call to the affected methods. The fix is idiomatic `using` on each intermediate object.
+
+### Rationale
+
+The issue is filed by the memory-leak-fixer bot with static code analysis. Code inspection confirms all three leaks exist verbatim in the current source. The ownership contract for SKImage.FromPicture, SKBitmap.FromImage, and SKBitmap.PeekPixels is unambiguous: each returns a new owned object the caller must dispose. The downstream CGImage/CGDataProvider copies pixels immediately, so intermediate objects are safe to dispose after the call. Severity is medium — the leak occurs on every call to the affected helpers, but only on Apple platforms, and has no workaround for callers.
+
+### Key Signals
+
+- "var img = SKImage.FromPicture(skiaPicture, dimensions); return img.ToCGImage();" — **AppleExtensions.cs:136-137** (img is an owned SKImage — never disposed, leaks native SkImage.)
+- "var bmp = SKBitmap.FromImage(skiaImage); return bmp.ToCGImage();" — **AppleExtensions.cs:142-143** (bmp is an owned SKBitmap — never disposed, leaks native SkBitmap + pixels.)
+- "ciImage.ToSKPixmap(image.PeekPixels());" — **AppleExtensions.cs:214** (Inline PeekPixels() call creates an owned SKPixmap that is never captured or disposed.)
+
+### Code Investigation
+
+| File | Lines | Relevance | Finding |
+|------|-------|-----------|---------|
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs` | 134-138 | direct | ToCGImage(SKPicture, SKSizeI): SKImage.FromPicture returns an owned SKImage assigned to `img`; `img` is passed to ToCGImage(SKImage) and then the method returns without disposing `img`. Native SkImage allocation is leaked. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs` | 140-144 | direct | ToCGImage(SKImage): SKBitmap.FromImage returns an owned SKBitmap assigned to `bmp`; `bmp` is passed to ToCGImage(SKBitmap) and the method returns without disposing `bmp`. Native SkBitmap + pixel buffer are leaked. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs` | 207-217 | direct | ToSKBitmap(CIImage): `image.PeekPixels()` is called twice — once for the `using` block (which is the pixmap assigned to `pixmap`) and once inline inside `ciImage.ToSKPixmap(image.PeekPixels())`. The second SKPixmap is never disposed. |
+| `source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs` | 165-184 | related | ToCGImage(SKBitmap) uses CGDataProvider backed by skiaBitmap pixels and calls GC.KeepAlive(skiaBitmap) — confirms the CGDataProvider does NOT own the pixel buffer, so the intermediate SKBitmap in ToCGImage(SKImage) must stay alive through the CGDataProvider lifetime. This means the fix needs `using var bmp` scoped around the entire CGImage creation, not just the `FromImage` call. |
+
+### Workarounds
+
+- No caller-side workaround is possible — the intermediate objects are created inside the library helpers and callers have no access to them.
+
+### Next Questions
+
+- Does ToCGImage(SKImage) correctly scope the `using var bmp` to cover the lifetime of the returned CGImage (which relies on the underlying pixel buffer via GC.KeepAlive)?
+- Are there additional conversion helpers in the same file with the same pattern?
+
+### Resolution Proposals
+
+**Hypothesis:** All three leaks are fixed by scoping the intermediate objects with `using`. The CGDataProvider copies pixel data immediately in ToCGImage(SKBitmap), so disposing after CGImage construction is safe. For ToCGImage(SKImage), `bmp` can be disposed after the inner ToCGImage(SKBitmap) returns because that overload calls GC.KeepAlive(skiaBitmap) to keep it alive through the CGDataProvider scope.
+
+1. **Use `using` on intermediate SKImage in ToCGImage(SKPicture)** — fix, confidence 0.92 (92%), cost/xs, validated=yes
+   - Change `var img = ...` to `using var img = ...` so the SKImage is disposed after ToCGImage returns.
+
+```csharp
+public static CGImage ToCGImage(this SKPicture skiaPicture, SKSizeI dimensions)
+{
+    using var img = SKImage.FromPicture(skiaPicture, dimensions);
+    return img.ToCGImage();
+}
+```
+2. **Use `using` on intermediate SKBitmap in ToCGImage(SKImage)** — fix, confidence 0.88 (88%), cost/xs, validated=yes
+   - Change `var bmp = ...` to `using var bmp = ...`. Safe because ToCGImage(SKBitmap) calls GC.KeepAlive(skiaBitmap) which handles lifetime through CGDataProvider scope.
+
+```csharp
+public static CGImage ToCGImage(this SKImage skiaImage)
+{
+    using var bmp = SKBitmap.FromImage(skiaImage);
+    return bmp.ToCGImage();
+}
+```
+3. **Remove duplicate PeekPixels() call in ToSKBitmap(CIImage)** — fix, confidence 0.97 (97%), cost/xs, validated=yes
+   - Replace the inline `image.PeekPixels()` arg with the already-captured `pixmap` variable from the using block.
+
+```csharp
+public static SKBitmap ToSKBitmap(this CIImage ciImage)
+{
+    var extent = ciImage.Extent;
+    var info = new SKImageInfo((int)extent.Width, (int)extent.Height);
+    var image = new SKBitmap(info);
+    using (var pixmap = image.PeekPixels())
+    {
+        ciImage.ToSKPixmap(pixmap);
+    }
+    return image;
+}
+```
+
+**Recommended proposal:** Use `using` on intermediate SKBitmap in ToCGImage(SKImage)
+
+**Why:** All three fixes should be applied together; fix 3 (duplicate PeekPixels) is the clearest and most impactful since the bug is in the existing `using` block itself.
+
+## Recommendations
+
+### Actionability
+
+| Field | Value |
+|-------|-------|
+| Suggested action | ready-to-fix |
+| Confidence | 0.90 (90%) |
+| Reason | All three leak sites are confirmed in source code, root cause is unambiguous (missing `using` on owned intermediates), and the fix path is a one-liner for each. This is suitable for the issue-fix skill. |
+| Suggested repro platform | macos |
+
+### Automatable Actions
+
+| Type | Risk | Confidence | Description | Details |
+|------|------|------------|-------------|---------|
+| update-labels | low | 0.97 (97%) | Apply type/bug, area/SkiaSharp.Views, platform and tenet labels | labels=type/bug, area/SkiaSharp.Views, os/iOS, os/macOS, tenet/performance, perf/memory-leak |
+| add-comment | medium | 0.90 (90%) | Confirm findings and suggest fix path | — |
+
+**Comment draft for `add-comment`:**
+
+```markdown
+Code investigation confirms all three leak sites in `AppleExtensions.cs`:
+
+1. **`ToCGImage(SKPicture)`** (line 136): `SKImage.FromPicture` result is never disposed.
+2. **`ToCGImage(SKImage)`** (line 142): `SKBitmap.FromImage` result is never disposed.
+3. **`ToSKBitmap(CIImage)`** (line 214): `image.PeekPixels()` is called twice inside the `using` block — the second (inline) call creates an `SKPixmap` that is never disposed.
+
+All three are straightforward `using`-based fixes with no ABI impact. The `GC.KeepAlive(skiaBitmap)` in `ToCGImage(SKBitmap)` confirms the pixel buffer lifetime is handled correctly by the inner overload, so `using var bmp` in fix #2 is safe.
+
+Next step: **issue-fix** skill to implement, test, and open a PR.
+```
+
+<details>
+<summary>Raw JSON</summary>
+
+```json
+{
+  "meta": {
+    "schemaVersion": "1.0",
+    "number": 4404,
+    "repo": "mono/SkiaSharp",
+    "analyzedAt": "2026-08-04T05:13:24Z",
+    "currentLabels": [
+      "tenet/performance",
+      "partner/agentic-workflows",
+      "perf/memory-leak"
+    ]
+  },
+  "summary": "Three undisposed native handles in AppleExtensions.cs: SKImage.FromPicture and SKBitmap.FromImage results escape without Dispose in ToCGImage overloads, and a second PeekPixels() call in ToSKBitmap is never disposed.",
+  "classification": {
+    "type": {
+      "value": "type/bug",
+      "confidence": 0.97
+    },
+    "area": {
+      "value": "area/SkiaSharp.Views",
+      "confidence": 0.95
+    },
+    "platforms": [
+      "os/iOS",
+      "os/macOS"
+    ],
+    "tenets": [
+      "tenet/performance"
+    ],
+    "perf": [
+      "perf/memory-leak"
+    ]
+  },
+  "evidence": {
+    "bugSignals": {
+      "severity": "medium",
+      "regressionClaimed": false,
+      "errorType": "memory-leak",
+      "reproQuality": "partial",
+      "targetFrameworks": [
+        "net8.0-ios",
+        "net8.0-maccatalyst"
+      ]
+    },
+    "reproEvidence": {
+      "environmentDetails": "Apple platforms (iOS, macOS, Mac Catalyst). AI-generated finding; statically reasoned, not empirically proven on a device."
+    }
+  },
+  "analysis": {
+    "summary": "Three locations in source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs leak native handles: (1) ToCGImage(SKPicture) discards its SKImage without Dispose; (2) ToCGImage(SKImage) discards its SKBitmap without Dispose; (3) ToSKBitmap(CIImage) calls PeekPixels() twice — the second call is passed inline and never disposed. All three cases are deterministically reproducible with any call to the affected methods. The fix is idiomatic `using` on each intermediate object.",
+    "rationale": "The issue is filed by the memory-leak-fixer bot with static code analysis. Code inspection confirms all three leaks exist verbatim in the current source. The ownership contract for SKImage.FromPicture, SKBitmap.FromImage, and SKBitmap.PeekPixels is unambiguous: each returns a new owned object the caller must dispose. The downstream CGImage/CGDataProvider copies pixels immediately, so intermediate objects are safe to dispose after the call. Severity is medium — the leak occurs on every call to the affected helpers, but only on Apple platforms, and has no workaround for callers.",
+    "codeInvestigation": [
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs",
+        "lines": "134-138",
+        "finding": "ToCGImage(SKPicture, SKSizeI): SKImage.FromPicture returns an owned SKImage assigned to `img`; `img` is passed to ToCGImage(SKImage) and then the method returns without disposing `img`. Native SkImage allocation is leaked.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs",
+        "lines": "140-144",
+        "finding": "ToCGImage(SKImage): SKBitmap.FromImage returns an owned SKBitmap assigned to `bmp`; `bmp` is passed to ToCGImage(SKBitmap) and the method returns without disposing `bmp`. Native SkBitmap + pixel buffer are leaked.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs",
+        "lines": "207-217",
+        "finding": "ToSKBitmap(CIImage): `image.PeekPixels()` is called twice — once for the `using` block (which is the pixmap assigned to `pixmap`) and once inline inside `ciImage.ToSKPixmap(image.PeekPixels())`. The second SKPixmap is never disposed.",
+        "relevance": "direct"
+      },
+      {
+        "file": "source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/AppleExtensions.cs",
+        "lines": "165-184",
+        "finding": "ToCGImage(SKBitmap) uses CGDataProvider backed by skiaBitmap pixels and calls GC.KeepAlive(skiaBitmap) — confirms the CGDataProvider does NOT own the pixel buffer, so the intermediate SKBitmap in ToCGImage(SKImage) must stay alive through the CGDataProvider lifetime. This means the fix needs `using var bmp` scoped around the entire CGImage creation, not just the `FromImage` call.",
+        "relevance": "related"
+      }
+    ],
+    "keySignals": [
+      {
+        "text": "var img = SKImage.FromPicture(skiaPicture, dimensions); return img.ToCGImage();",
+        "source": "AppleExtensions.cs:136-137",
+        "interpretation": "img is an owned SKImage — never disposed, leaks native SkImage."
+      },
+      {
+        "text": "var bmp = SKBitmap.FromImage(skiaImage); return bmp.ToCGImage();",
+        "source": "AppleExtensions.cs:142-143",
+        "interpretation": "bmp is an owned SKBitmap — never disposed, leaks native SkBitmap + pixels."
+      },
+      {
+        "text": "ciImage.ToSKPixmap(image.PeekPixels());",
+        "source": "AppleExtensions.cs:214",
+        "interpretation": "Inline PeekPixels() call creates an owned SKPixmap that is never captured or disposed."
+      }
+    ],
+    "workarounds": [
+      "No caller-side workaround is possible — the intermediate objects are created inside the library helpers and callers have no access to them."
+    ],
+    "nextQuestions": [
+      "Does ToCGImage(SKImage) correctly scope the `using var bmp` to cover the lifetime of the returned CGImage (which relies on the underlying pixel buffer via GC.KeepAlive)?",
+      "Are there additional conversion helpers in the same file with the same pattern?"
+    ],
+    "resolution": {
+      "hypothesis": "All three leaks are fixed by scoping the intermediate objects with `using`. The CGDataProvider copies pixel data immediately in ToCGImage(SKBitmap), so disposing after CGImage construction is safe. For ToCGImage(SKImage), `bmp` can be disposed after the inner ToCGImage(SKBitmap) returns because that overload calls GC.KeepAlive(skiaBitmap) to keep it alive through the CGDataProvider scope.",
+      "proposals": [
+        {
+          "title": "Use `using` on intermediate SKImage in ToCGImage(SKPicture)",
+          "description": "Change `var img = ...` to `using var img = ...` so the SKImage is disposed after ToCGImage returns.",
+          "category": "fix",
+          "codeSnippet": "public static CGImage ToCGImage(this SKPicture skiaPicture, SKSizeI dimensions)\n{\n    using var img = SKImage.FromPicture(skiaPicture, dimensions);\n    return img.ToCGImage();\n}",
+          "confidence": 0.92,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Use `using` on intermediate SKBitmap in ToCGImage(SKImage)",
+          "description": "Change `var bmp = ...` to `using var bmp = ...`. Safe because ToCGImage(SKBitmap) calls GC.KeepAlive(skiaBitmap) which handles lifetime through CGDataProvider scope.",
+          "category": "fix",
+          "codeSnippet": "public static CGImage ToCGImage(this SKImage skiaImage)\n{\n    using var bmp = SKBitmap.FromImage(skiaImage);\n    return bmp.ToCGImage();\n}",
+          "confidence": 0.88,
+          "effort": "cost/xs",
+          "validated": "yes"
+        },
+        {
+          "title": "Remove duplicate PeekPixels() call in ToSKBitmap(CIImage)",
+          "description": "Replace the inline `image.PeekPixels()` arg with the already-captured `pixmap` variable from the using block.",
+          "category": "fix",
+          "codeSnippet": "public static SKBitmap ToSKBitmap(this CIImage ciImage)\n{\n    var extent = ciImage.Extent;\n    var info = new SKImageInfo((int)extent.Width, (int)extent.Height);\n    var image = new SKBitmap(info);\n    using (var pixmap = image.PeekPixels())\n    {\n        ciImage.ToSKPixmap(pixmap);\n    }\n    return image;\n}",
+          "confidence": 0.97,
+          "effort": "cost/xs",
+          "validated": "yes"
+        }
+      ],
+      "recommendedProposal": "Use `using` on intermediate SKBitmap in ToCGImage(SKImage)",
+      "recommendedReason": "All three fixes should be applied together; fix 3 (duplicate PeekPixels) is the clearest and most impactful since the bug is in the existing `using` block itself."
+    }
+  },
+  "output": {
+    "actionability": {
+      "suggestedAction": "ready-to-fix",
+      "confidence": 0.9,
+      "reason": "All three leak sites are confirmed in source code, root cause is unambiguous (missing `using` on owned intermediates), and the fix path is a one-liner for each. This is suitable for the issue-fix skill.",
+      "suggestedReproPlatform": "macos"
+    },
+    "actions": [
+      {
+        "type": "update-labels",
+        "description": "Apply type/bug, area/SkiaSharp.Views, platform and tenet labels",
+        "risk": "low",
+        "confidence": 0.97,
+        "labels": [
+          "type/bug",
+          "area/SkiaSharp.Views",
+          "os/iOS",
+          "os/macOS",
+          "tenet/performance",
+          "perf/memory-leak"
+        ]
+      },
+      {
+        "type": "add-comment",
+        "description": "Confirm findings and suggest fix path",
+        "risk": "medium",
+        "confidence": 0.9,
+        "comment": "Code investigation confirms all three leak sites in `AppleExtensions.cs`:\n\n1. **`ToCGImage(SKPicture)`** (line 136): `SKImage.FromPicture` result is never disposed.\n2. **`ToCGImage(SKImage)`** (line 142): `SKBitmap.FromImage` result is never disposed.\n3. **`ToSKBitmap(CIImage)`** (line 214): `image.PeekPixels()` is called twice inside the `using` block — the second (inline) call creates an `SKPixmap` that is never disposed.\n\nAll three are straightforward `using`-based fixes with no ABI impact. The `GC.KeepAlive(skiaBitmap)` in `ToCGImage(SKBitmap)` confirms the pixel buffer lifetime is handled correctly by the inner overload, so `using var bmp` in fix #2 is safe.\n\nNext step: **issue-fix** skill to implement, test, and open a PR."
+      }
+    ]
+  }
+}
+```
+
+</details>
