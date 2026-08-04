@@ -44,9 +44,12 @@ namespace SkiaSharp
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
+		// public gr_vk_device_lost_handler_t* fDeviceLostHandler
+		public gr_vk_device_lost_handler_t fDeviceLostHandler;
+
 		public readonly bool Equals (SKGraphiteVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fDeviceLostHandler == obj.fDeviceLostHandler;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -70,6 +73,7 @@ namespace SkiaSharp
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
 			hash.Add (fProtectedContext);
+			hash.Add (fDeviceLostHandler);
 			return hash.ToHashCode ();
 		}
 
