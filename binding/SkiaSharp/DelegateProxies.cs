@@ -28,6 +28,8 @@ namespace SkiaSharp
 
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	public delegate void GRVkDeviceLostDelegate (GRVkDeviceLostInfo info);
+
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal static unsafe partial class DelegateProxies
@@ -107,6 +109,69 @@ namespace SkiaSharp
 			var del = Get<SKGraphiteVkGetProcedureAddressDelegate> ((IntPtr)userData, out _);
 
 			return del.Invoke (Marshal.PtrToStringAnsi ((IntPtr)name), instance, device);
+		}
+
+		// Fixed-size buffer for the driver-supplied description on VkDeviceFaultVendorInfoEXT.
+		// Kept as a compile-time constant so the walk below stays independent of Vulkan.h
+		// (which SkiaSharp does not include on the managed side). Matches VK_MAX_DESCRIPTION_SIZE.
+		private const int VkDeviceFaultVendorDescriptionSize = 256;
+
+		private static partial void GRVkDeviceLostProxyImplementation (void* userData, GRVkDeviceLostInfoNative* info)
+		{
+			var infoPtr = info;
+			// userData is a GCHandle pinned by the caller (GRVkBackendContext or
+			// SKGraphiteVkBackendContext); the pin lives for the Context's lifetime.
+			// This proxy can fire from a driver-owned thread whenever Skia detects
+			// VK_ERROR_DEVICE_LOST, so we do NOT free the handle here. Never throw
+			// across the FFI boundary — Skia's device-lost path is running on a native
+			// stack; an unhandled managed exception would tear down the process.
+			//
+			// infoPtr is a gr_vk_device_lost_info_t* whose storage is only valid during
+			// this call (Skia's std::string / std::vector backing memory). We snapshot
+			// everything into a managed GRVkDeviceLostInfo so the caller may keep the
+			// object past the callback's return.
+			try {
+				if (infoPtr == null) return;
+
+				var native = *infoPtr;
+				var description = Marshal.PtrToStringAnsi ((IntPtr)native.fDescription) ?? string.Empty;
+
+				var addressInfos = new GRVkDeviceFaultAddressInfo[native.fAddressInfoCount];
+				for (int i = 0; i < native.fAddressInfoCount; i++) {
+					var a = native.fAddressInfos + i;
+					addressInfos[i] = new GRVkDeviceFaultAddressInfo (
+						(GRVkDeviceFaultAddressType)a->fAddressType,
+						a->fReportedAddress,
+						a->fAddressPrecision);
+				}
+
+				// gr_vk_device_fault_vendor_info_t carries a fixed char[256] description
+				// followed by two uint64_t fields — total 272 bytes. The generator emits
+				// the description slot as a pointer (fixed-size arrays are unsupported),
+				// so we walk the array with byte* arithmetic instead of using the
+				// generated struct's layout.
+				const int vendorInfoStride = VkDeviceFaultVendorDescriptionSize + 8 + 8;
+				var vendorInfos = new GRVkDeviceFaultVendorInfo[native.fVendorInfoCount];
+				var vendorBase = (byte*)native.fVendorInfos;
+				for (int i = 0; i < native.fVendorInfoCount; i++) {
+					var record = vendorBase + i * vendorInfoStride;
+					var desc = Marshal.PtrToStringAnsi ((IntPtr)record) ?? string.Empty;
+					var code = *(ulong*)(record + VkDeviceFaultVendorDescriptionSize);
+					var data = *(ulong*)(record + VkDeviceFaultVendorDescriptionSize + 8);
+					vendorInfos[i] = new GRVkDeviceFaultVendorInfo (desc, code, data);
+				}
+
+				var binarySize = (int)native.fVendorBinaryDataSize;
+				var binary = binarySize > 0 ? new byte[binarySize] : Array.Empty<byte> ();
+				if (binarySize > 0)
+					Marshal.Copy ((IntPtr)native.fVendorBinaryData, binary, 0, binarySize);
+
+				var managed = new GRVkDeviceLostInfo (description, addressInfos, vendorInfos, binary);
+
+				var del = Get<GRVkDeviceLostDelegate> ((IntPtr)userData, out _);
+				del.Invoke (managed);
+			} catch {
+			}
 		}
 
 		private static partial void SKGraphiteReleaseProxyImplementation (void* releaseContext)

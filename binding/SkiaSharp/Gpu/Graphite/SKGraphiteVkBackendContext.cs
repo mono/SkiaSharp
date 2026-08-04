@@ -16,6 +16,14 @@ namespace SkiaSharp
 		private GCHandle getProcHandle;
 		private void* getProcContext;
 
+		// Device-lost state — see GRVkBackendContext for the pattern. Pinned managed
+		// delegate + caller-owned native bridge (allocated via gr_vk_device_lost_handler_new).
+		// Skia holds the bridge pointer non-owning; this backend context must outlive
+		// the SKGraphiteContext it was used to create.
+		private GRVkDeviceLostDelegate deviceLost;
+		private GCHandle deviceLostHandle;
+		private IntPtr nativeDeviceLostHandler;
+
 		public IntPtr VkInstance { get; set; }
 
 		public IntPtr VkPhysicalDevice { get; set; }
@@ -61,6 +69,38 @@ namespace SkiaSharp
 			return h;
 		}
 
+		public GRVkDeviceLostDelegate DeviceLost {
+			get => deviceLost;
+			set {
+				// See GRVkBackendContext.DeviceLost for the reasoning behind the atomic
+				// swap on assignment.
+				if (nativeDeviceLostHandler != IntPtr.Zero) {
+					SkiaApi.gr_vk_device_lost_handler_delete (nativeDeviceLostHandler);
+					nativeDeviceLostHandler = IntPtr.Zero;
+				}
+				if (deviceLostHandle.IsAllocated) {
+					deviceLostHandle.Free ();
+					deviceLostHandle = default;
+				}
+
+				deviceLost = value;
+				if (value != null) {
+					DelegateProxies.Create (value, out var gch, out var ctx);
+					deviceLostHandle = gch;
+					nativeDeviceLostHandler = SkiaApi.gr_vk_device_lost_handler_new (
+						DelegateProxies.GRVkDeviceLostProxy,
+						(void*)ctx);
+					if (nativeDeviceLostHandler == IntPtr.Zero) {
+						gch.Free ();
+						deviceLostHandle = default;
+						deviceLost = null;
+						throw new InvalidOperationException (
+							"gr_vk_device_lost_handler_new failed (Vulkan not built into libSkiaSharp?)");
+					}
+				}
+			}
+		}
+
 		internal SKGraphiteVkBackendContextNative ToNative ()
 		{
 			if (VkInstance == IntPtr.Zero)
@@ -82,6 +122,7 @@ namespace SkiaSharp
 				fGetProcUserData    = getProcContext,
 				fGetProc            = getProcContext is not null ? DelegateProxies.SKGraphiteVkGetProxy : null,
 				fProtectedContext   = ProtectedContext ? (byte)1 : (byte)0,
+				fDeviceLostHandler  = nativeDeviceLostHandler,
 			};
 		}
 
@@ -103,6 +144,14 @@ namespace SkiaSharp
 
 			if (getProcHandle.IsAllocated)
 				getProcHandle.Free ();
+			if (nativeDeviceLostHandler != IntPtr.Zero) {
+				SkiaApi.gr_vk_device_lost_handler_delete (nativeDeviceLostHandler);
+				nativeDeviceLostHandler = IntPtr.Zero;
+			}
+			if (deviceLostHandle.IsAllocated) {
+				deviceLostHandle.Free ();
+				deviceLostHandle = default;
+			}
 		}
 
 		~SKGraphiteVkBackendContext () => DisposeCore ();

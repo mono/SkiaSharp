@@ -20,6 +20,7 @@ using gr_d3d_memory_allocator_t = System.IntPtr;
 using gr_direct_context_t = System.IntPtr;
 using gr_glinterface_t = System.IntPtr;
 using gr_recording_context_t = System.IntPtr;
+using gr_vk_device_lost_handler_t = System.IntPtr;
 using gr_vk_extensions_t = System.IntPtr;
 using gr_vk_memory_allocator_t = System.IntPtr;
 using gr_vkinterface_t = System.IntPtr;
@@ -1447,6 +1448,48 @@ namespace SkiaSharp
 		private static Delegates.gr_vk_extensions_new gr_vk_extensions_new_delegate;
 		internal static gr_vk_extensions_t gr_vk_extensions_new () =>
 			(gr_vk_extensions_new_delegate ??= GetSymbol<Delegates.gr_vk_extensions_new> ("gr_vk_extensions_new")).Invoke ();
+		#endif
+
+		#endregion
+
+		#region gr_vk_device_lost.h
+
+		// void gr_vk_device_lost_handler_delete(gr_vk_device_lost_handler_t* handler)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler);
+		}
+		private static Delegates.gr_vk_device_lost_handler_delete gr_vk_device_lost_handler_delete_delegate;
+		internal static void gr_vk_device_lost_handler_delete (gr_vk_device_lost_handler_t handler) =>
+			(gr_vk_device_lost_handler_delete_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_handler_delete> ("gr_vk_device_lost_handler_delete")).Invoke (handler);
+		#endif
+
+		// gr_vk_device_lost_handler_t* gr_vk_device_lost_handler_new(gr_vk_device_lost_proc proc, void* userData)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial gr_vk_device_lost_handler_t gr_vk_device_lost_handler_new (void* proc, void* userData);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern gr_vk_device_lost_handler_t gr_vk_device_lost_handler_new (GRVkDeviceLostProxyDelegate proc, void* userData);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate gr_vk_device_lost_handler_t gr_vk_device_lost_handler_new (GRVkDeviceLostProxyDelegate proc, void* userData);
+		}
+		private static Delegates.gr_vk_device_lost_handler_new gr_vk_device_lost_handler_new_delegate;
+		internal static gr_vk_device_lost_handler_t gr_vk_device_lost_handler_new (GRVkDeviceLostProxyDelegate proc, void* userData) =>
+			(gr_vk_device_lost_handler_new_delegate ??= GetSymbol<Delegates.gr_vk_device_lost_handler_new> ("gr_vk_device_lost_handler_new")).Invoke (proc, userData);
 		#endif
 
 		#endregion
@@ -18740,6 +18783,10 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, /* char */ void* name);
 
+	// typedef void (*)(void* userData, const gr_vk_device_lost_info_t* info)* gr_vk_device_lost_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void GRVkDeviceLostProxyDelegate(void* userData, GRVkDeviceLostInfoNative* info);
+
 	// typedef void (*)()* gr_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void GRVkFuncPtr();
@@ -19305,9 +19352,12 @@ namespace SkiaSharp {
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
+		// public gr_vk_device_lost_handler_t* fDeviceLostHandler
+		public gr_vk_device_lost_handler_t fDeviceLostHandler;
+
 		public readonly bool Equals (GRVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fVkExtensions == obj.fVkExtensions && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fVkExtensions == obj.fVkExtensions && fDeviceFeatures == obj.fDeviceFeatures && fDeviceFeatures2 == obj.fDeviceFeatures2 && fMemoryAllocator == obj.fMemoryAllocator && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fDeviceLostHandler == obj.fDeviceLostHandler;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -19335,6 +19385,134 @@ namespace SkiaSharp {
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
 			hash.Add (fProtectedContext);
+			hash.Add (fDeviceLostHandler);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_device_fault_address_info_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkDeviceFaultAddressInfoNative : IEquatable<GRVkDeviceFaultAddressInfoNative> {
+		// public int32_t fAddressType
+		public Int32 fAddressType;
+
+		// public uint64_t fReportedAddress
+		public UInt64 fReportedAddress;
+
+		// public uint64_t fAddressPrecision
+		public UInt64 fAddressPrecision;
+
+		public readonly bool Equals (GRVkDeviceFaultAddressInfoNative obj) =>
+#pragma warning disable CS8909
+			fAddressType == obj.fAddressType && fReportedAddress == obj.fReportedAddress && fAddressPrecision == obj.fAddressPrecision;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkDeviceFaultAddressInfoNative f && Equals (f);
+
+		public static bool operator == (GRVkDeviceFaultAddressInfoNative left, GRVkDeviceFaultAddressInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkDeviceFaultAddressInfoNative left, GRVkDeviceFaultAddressInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fAddressType);
+			hash.Add (fReportedAddress);
+			hash.Add (fAddressPrecision);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_device_fault_vendor_info_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkDeviceFaultVendorInfoNative : IEquatable<GRVkDeviceFaultVendorInfoNative> {
+		// public char[256] fDescription
+		public /* char */ void* fDescription;
+
+		// public uint64_t fVendorFaultCode
+		public UInt64 fVendorFaultCode;
+
+		// public uint64_t fVendorFaultData
+		public UInt64 fVendorFaultData;
+
+		public readonly bool Equals (GRVkDeviceFaultVendorInfoNative obj) =>
+#pragma warning disable CS8909
+			fDescription == obj.fDescription && fVendorFaultCode == obj.fVendorFaultCode && fVendorFaultData == obj.fVendorFaultData;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkDeviceFaultVendorInfoNative f && Equals (f);
+
+		public static bool operator == (GRVkDeviceFaultVendorInfoNative left, GRVkDeviceFaultVendorInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkDeviceFaultVendorInfoNative left, GRVkDeviceFaultVendorInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fDescription);
+			hash.Add (fVendorFaultCode);
+			hash.Add (fVendorFaultData);
+			return hash.ToHashCode ();
+		}
+
+	}
+
+	// gr_vk_device_lost_info_t
+	[StructLayout (LayoutKind.Sequential)]
+	internal unsafe partial struct GRVkDeviceLostInfoNative : IEquatable<GRVkDeviceLostInfoNative> {
+		// public const char* fDescription
+		public /* char */ void* fDescription;
+
+		// public const gr_vk_device_fault_address_info_t* fAddressInfos
+		public GRVkDeviceFaultAddressInfoNative* fAddressInfos;
+
+		// public int32_t fAddressInfoCount
+		public Int32 fAddressInfoCount;
+
+		// public const gr_vk_device_fault_vendor_info_t* fVendorInfos
+		public GRVkDeviceFaultVendorInfoNative* fVendorInfos;
+
+		// public int32_t fVendorInfoCount
+		public Int32 fVendorInfoCount;
+
+		// public const void* fVendorBinaryData
+		public void* fVendorBinaryData;
+
+		// public size_t fVendorBinaryDataSize
+		public /* size_t */ IntPtr fVendorBinaryDataSize;
+
+		public readonly bool Equals (GRVkDeviceLostInfoNative obj) =>
+#pragma warning disable CS8909
+			fDescription == obj.fDescription && fAddressInfos == obj.fAddressInfos && fAddressInfoCount == obj.fAddressInfoCount && fVendorInfos == obj.fVendorInfos && fVendorInfoCount == obj.fVendorInfoCount && fVendorBinaryData == obj.fVendorBinaryData && fVendorBinaryDataSize == obj.fVendorBinaryDataSize;
+#pragma warning restore CS8909
+
+		public readonly override bool Equals (object obj) =>
+			obj is GRVkDeviceLostInfoNative f && Equals (f);
+
+		public static bool operator == (GRVkDeviceLostInfoNative left, GRVkDeviceLostInfoNative right) =>
+			left.Equals (right);
+
+		public static bool operator != (GRVkDeviceLostInfoNative left, GRVkDeviceLostInfoNative right) =>
+			!left.Equals (right);
+
+		public readonly override int GetHashCode ()
+		{
+			var hash = new HashCode ();
+			hash.Add (fDescription);
+			hash.Add (fAddressInfos);
+			hash.Add (fAddressInfoCount);
+			hash.Add (fVendorInfos);
+			hash.Add (fVendorInfoCount);
+			hash.Add (fVendorBinaryData);
+			hash.Add (fVendorBinaryDataSize);
 			return hash.ToHashCode ();
 		}
 
@@ -20831,9 +21009,12 @@ namespace SkiaSharp {
 		// public bool fProtectedContext
 		public Byte fProtectedContext;
 
+		// public gr_vk_device_lost_handler_t* fDeviceLostHandler
+		public gr_vk_device_lost_handler_t fDeviceLostHandler;
+
 		public readonly bool Equals (SKGraphiteVkBackendContextNative obj) =>
 #pragma warning disable CS8909
-			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext;
+			fInstance == obj.fInstance && fPhysicalDevice == obj.fPhysicalDevice && fDevice == obj.fDevice && fQueue == obj.fQueue && fGraphicsQueueIndex == obj.fGraphicsQueueIndex && fMaxAPIVersion == obj.fMaxAPIVersion && fGetProc == obj.fGetProc && fGetProcUserData == obj.fGetProcUserData && fProtectedContext == obj.fProtectedContext && fDeviceLostHandler == obj.fDeviceLostHandler;
 #pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
@@ -20857,6 +21038,7 @@ namespace SkiaSharp {
 			hash.Add (fGetProc);
 			hash.Add (fGetProcUserData);
 			hash.Add (fProtectedContext);
+			hash.Add (fDeviceLostHandler);
 			return hash.ToHashCode ();
 		}
 
@@ -23256,6 +23438,16 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (GRGlGetProcProxyDelegate))]
 #endif
 	private static partial IntPtr GRGlGetProcProxyImplementation(void* ctx,/* char */ void* name);
+
+	/// Proxy for gr_vk_device_lost_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, GRVkDeviceLostInfoNative*, void> GRVkDeviceLostProxy = &GRVkDeviceLostProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly GRVkDeviceLostProxyDelegate GRVkDeviceLostProxy = GRVkDeviceLostProxyImplementation;
+	[MonoPInvokeCallback (typeof (GRVkDeviceLostProxyDelegate))]
+#endif
+	private static partial void GRVkDeviceLostProxyImplementation(void* userData,GRVkDeviceLostInfoNative* info);
 
 	/// Proxy for gr_vk_get_proc native function.
 #if USE_LIBRARY_IMPORT
