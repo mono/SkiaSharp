@@ -13,7 +13,7 @@ manually.
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/prepare_branches.py" \
-  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
+  --repo-root "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 ```
 
 The helper fails instead of resetting existing branches or dirty files. On success:

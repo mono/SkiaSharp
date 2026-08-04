@@ -149,6 +149,7 @@ sandbox:
     mounts:
       - "/etc/fonts:/etc/fonts:ro"
       - "/usr/share/fonts:/usr/share/fonts:ro"
+      - "/tmp/skia-sync-worktree:/tmp/skia-sync-worktree:rw"
 
 # -- Pre-agent steps (host) ------------------------------------------
 # Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
@@ -173,9 +174,14 @@ steps:
       OUT=$(mktemp)
       bash .github/scripts/skia-sync-detect.sh --resolve-only --output "$OUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
       set -a; . "$OUT"; set +a
-      bash .github/scripts/skia-sync-prepare-skia.sh
+      export SKIA_SYNC_WORKSPACE=/tmp/skia-sync-worktree
+      bash .github/scripts/skia-sync-checkout-base.sh
+      export SKIA_SYNC_PARENT_BASE_SHA
+      SKIA_SYNC_PARENT_BASE_SHA=$(git -C "$SKIA_SYNC_WORKSPACE" rev-parse HEAD)
+      GITHUB_WORKSPACE="$SKIA_SYNC_WORKSPACE" bash .github/scripts/skia-sync-prepare-skia.sh
       {
         printf 'SKIA_SYNC_AUTOMATION=1\n'
+        printf 'SKIA_SYNC_WORKSPACE=%s\n' "$SKIA_SYNC_WORKSPACE"
         printf 'SKIA_SYNC_CURRENT=%s\n' "$current"
         printf 'SKIA_SYNC_TARGET=%s\n' "$target"
         printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$upstream_ref"
@@ -185,7 +191,7 @@ steps:
         printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
         printf 'SKIA_SYNC_PLATFORM=linux\n'
         printf 'SKIA_SYNC_ARCH=x64\n'
-        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
+        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C "$SKIA_SYNC_WORKSPACE/externals/skia" rev-parse HEAD)"
       } >> "$GITHUB_ENV"
   - name: Stage immutable workflow assets
     run: |
@@ -233,6 +239,32 @@ pre-agent-steps:
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
+  - name: Compute exact native cache key
+    id: native-cache-key
+    run: |
+      set -euo pipefail
+      TOOLCHAIN_HASH=$(
+        {
+          printf 'runner=%s/%s\n' "${RUNNER_OS}" "${RUNNER_ARCH}"
+          printf 'image=%s/%s\n' "${ImageOS:-unknown}" "${ImageVersion:-unknown}"
+          uname -srm
+          clang --version
+          dotnet --info
+          dpkg-query -W -f='${Package}=${Version}\n' \
+            clang libc++-dev libc++abi-dev ninja-build
+        } | sha256sum | awk '{print $1}'
+      )
+      KEY="skia-sync-native-v2-${RUNNER_OS}-${RUNNER_ARCH}-linux-x64-${SKIA_SYNC_PARENT_BASE_SHA}-${SKIA_SYNC_SKIA_BASE_SHA}-${TOOLCHAIN_HASH}"
+      echo "key=$KEY" >> "$GITHUB_OUTPUT"
+  - name: Restore exact native base cache
+    id: restore-native-cache
+    uses: actions/cache/restore@v6
+    with:
+      path: |
+        /tmp/skia-sync-worktree/externals/skia/third_party/externals
+        /tmp/skia-sync-worktree/externals/skia/out/linux/x64
+        /tmp/skia-sync-worktree/output/native/linux/x64
+      key: ${{ steps.native-cache-key.outputs.key }}
   - name: Verify Mesa lavapipe
     run: |
       set -euo pipefail
@@ -273,6 +305,23 @@ pre-agent-steps:
         exit 1
       fi
       echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
+  - name: Build exact native base for incremental reuse
+    if: steps.restore-native-cache.outputs.cache-hit != 'true'
+    run: |
+      set -euo pipefail
+      cd "$SKIA_SYNC_WORKSPACE"
+      dotnet tool restore
+      dotnet cake --target=externals-linux --arch=x64 \
+        2>&1 | tee /tmp/gh-aw/agent/base-native-build.log
+  - name: Save exact native base cache
+    if: steps.restore-native-cache.outputs.cache-hit != 'true'
+    uses: actions/cache/save@v6
+    with:
+      path: |
+        /tmp/skia-sync-worktree/externals/skia/third_party/externals
+        /tmp/skia-sync-worktree/externals/skia/out/linux/x64
+        /tmp/skia-sync-worktree/output/native/linux/x64
+      key: ${{ steps.native-cache-key.outputs.key }}
 # -- Post-agent steps -----------------------------------------------
 # Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
 # then push branches and create/update PRs with the write credential.
@@ -282,6 +331,7 @@ post-steps:
       SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
     run: |
       set -euo pipefail
+      cd "$SKIA_SYNC_WORKSPACE"
       test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
       test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
 
@@ -297,7 +347,7 @@ post-steps:
         exit 1
       fi
 
-      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$SKIA_SYNC_WORKSPACE"
 
       if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
         echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
@@ -343,13 +393,15 @@ the supplied values.
 
 ## 2. Provisioned environment
 
-- The selected parent base is fetched, the submodule is aligned to that base's exact recorded
-  pointer, and the target upstream ref and recorded base-upstream SHA are fetched.
+- `GITHUB_WORKSPACE` remains the untouched workflow checkout. `SKIA_SYNC_WORKSPACE` is an isolated
+  checkout of `SKIA_SYNC_PARENT_BASE_SHA`, including every exact recursive submodule gitlink
+  recorded by that tree. Run all product git, merge, build, generation, and test commands there.
 - The exact update-skia skill from the triggering workflow revision is staged read-only at
-  `$SKIA_SYNC_SKILL_DIR`. It remains authoritative after the product checkout switches branches.
-- No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
-  takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
-  cancel it, or restart it solely because of its duration.
+  `$SKIA_SYNC_SKILL_DIR` and remains authoritative independently of the product branch.
+- The exact parent base native tree was built in `SKIA_SYNC_WORKSPACE` before the agent, or restored
+  there from a cache keyed by the exact parent SHA, Skia SHA, runner/toolchain, platform, and arch.
+  Phase 04 creates feature branches at those same pinned commits, so the hydrated dependencies and
+  Ninja state remain in place for the mandatory merged-target source build.
 - Clang, libc++, fontconfig/fonts, Ninja, Android workload, Xvfb, and Mesa software GL/Vulkan are
   installed. Mesa softpipe and the lavapipe ICD are pinned so every Linux backend required by
   `GpuPolicy` executes deterministically.
@@ -359,6 +411,9 @@ the supplied values.
 ## 3. Execution contract
 
 - Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
+- Use `SKIA_SYNC_WORKSPACE` as the repository root. In Phase 04, the deterministic branch helper
+  creates the parent and submodule feature branches from the already checked-out exact base SHAs;
+  it does not replace the isolated tree or move build outputs to another path.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution

@@ -29,15 +29,16 @@ WORKSPACE="${GITHUB_WORKSPACE:?GITHUB_WORKSPACE not set}"
 ENV_FILE="${GITHUB_ENV:?GITHUB_ENV not set}"
 SKIA_DIR="${WORKSPACE}/externals/skia"
 
-echo "Aligning submodule to origin/${BASE_BRANCH} (mono/skia ${SKIA_BASE_BRANCH})"
+echo "Aligning submodule to the pinned ${BASE_BRANCH} base (mono/skia ${SKIA_BASE_BRANCH})"
 git -C "$WORKSPACE" fetch origin "$BASE_BRANCH" 2>&1
-PARENT_BASE_SHA=$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")
-BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "origin/${BASE_BRANCH}" -- externals/skia | awk '{print $3}')
+PARENT_BASE_SHA="${SKIA_SYNC_PARENT_BASE_SHA:-$(git -C "$WORKSPACE" rev-parse "origin/${BASE_BRANCH}^{commit}")}"
+git -C "$WORKSPACE" cat-file -e "${PARENT_BASE_SHA}^{commit}"
+BASE_SUB_SHA=$(git -C "$WORKSPACE" ls-tree "$PARENT_BASE_SHA" -- externals/skia | awk '{print $3}')
 if [ -z "$BASE_SUB_SHA" ]; then
-  echo "::error::origin/${BASE_BRANCH} does not contain the externals/skia submodule."
+  echo "::error::Parent base ${PARENT_BASE_SHA} does not contain the externals/skia submodule."
   exit 1
 fi
-echo "origin/${BASE_BRANCH} submodule SHA: $BASE_SUB_SHA"
+echo "Parent base ${PARENT_BASE_SHA} submodule SHA: $BASE_SUB_SHA"
 git -C "$SKIA_DIR" fetch origin "$SKIA_BASE_BRANCH" 2>&1
 git -C "$SKIA_DIR" checkout "$BASE_SUB_SHA" 2>&1
 echo "Verifying SHA is on ${SKIA_BASE_BRANCH} branch:"
@@ -67,7 +68,7 @@ if [[ "$UPSTREAM_REF" != "chrome/m${CURRENT}" ]]; then
 fi
 
 BASE_UPSTREAM_SHA=$(
-  git -C "$WORKSPACE" show "origin/${BASE_BRANCH}:cgmanifest.json" |
+  git -C "$WORKSPACE" show "${PARENT_BASE_SHA}:cgmanifest.json" |
     jq -er '.registrations[]
       | select(.component.type == "other" and .component.other.name == "skia")
       | .upstream_merge_commit'

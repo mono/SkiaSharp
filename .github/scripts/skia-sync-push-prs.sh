@@ -43,6 +43,7 @@ required_file "$ARTIFACT_DIR/test-exit-code.txt"
 : "${SKIA_SYNC_TARGET_UPSTREAM_SHA:?SKIA_SYNC_TARGET_UPSTREAM_SHA is required}"
 : "${GITHUB_WORKSPACE:?GITHUB_WORKSPACE is required}"
 : "${GH_TOKEN:?GH_TOKEN is required}"
+WORKSPACE="${SKIA_SYNC_WORKSPACE:-$GITHUB_WORKSPACE}"
 
 TARGET="$SKIA_SYNC_TARGET"
 CURRENT="$SKIA_SYNC_CURRENT"
@@ -66,7 +67,7 @@ assert_resolved() {
   fi
 }
 
-MANIFEST_JSON=$(git -C "$GITHUB_WORKSPACE" show "${HEAD_BRANCH}:cgmanifest.json")
+MANIFEST_JSON=$(git -C "$WORKSPACE" show "${HEAD_BRANCH}:cgmanifest.json")
 MANIFEST_SKIA_HEAD=$(jq -er '
   .registrations[]
   | select(.component.git.repositoryUrl == "https://github.com/mono/skia.git")
@@ -92,8 +93,8 @@ MANIFEST_UPSTREAM_VERSION=$(jq -er '
   | select(.component.other.name == "skia")
   | .component.other.version
 ' <<<"$MANIFEST_JSON")
-LOCAL_SKIA_HEAD=$(git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse "${HEAD_BRANCH}^{commit}")
-PARENT_GITLINK=$(git -C "$GITHUB_WORKSPACE" ls-tree "$HEAD_BRANCH" externals/skia | awk '{print $3}')
+LOCAL_SKIA_HEAD=$(git -C "$WORKSPACE/externals/skia" rev-parse "${HEAD_BRANCH}^{commit}")
+PARENT_GITLINK=$(git -C "$WORKSPACE" ls-tree "$HEAD_BRANCH" externals/skia | awk '{print $3}')
 
 assert_resolved CGMANIFEST_SKIA_HEAD "$MANIFEST_SKIA_HEAD" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
 assert_resolved PARENT_GITLINK "$PARENT_GITLINK" LOCAL_SKIA_HEAD "$LOCAL_SKIA_HEAD"
@@ -115,7 +116,7 @@ UPDATED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 WORKFLOW_LINK="[skia-upstream-sync](https://github.com/${GITHUB_REPOSITORY:-mono/SkiaSharp}/actions/workflows/auto-skia-sync.lock.yml)"
 
 python3 "$SKILL_DIR/scripts/audit_fork_patches.py" \
-  --skia-root "$GITHUB_WORKSPACE/externals/skia" \
+  --skia-root "$WORKSPACE/externals/skia" \
   --old-upstream "$BASE_UPSTREAM_SHA" \
   --new-upstream "$TARGET_UPSTREAM_SHA" \
   --fork-base "$SKIA_BASE_SHA" \
@@ -279,9 +280,9 @@ EOF
     --arg BODY_INTRO "$SKIA_BODY_INTRO" \
     --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
     --arg COMPANION_PR_URL "$companion_url" \
-    --arg CAPI_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
-    --arg DEPS_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" DEPS)" \
-    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" BUILD.gn third_party)" \
+    --arg CAPI_CHECK "$(changed_check "$WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
+    --arg DEPS_CHECK "$(changed_check "$WORKSPACE/externals/skia" "$SKIA_BASE" DEPS)" \
+    --arg BUILD_CHECK "$(changed_check "$WORKSPACE/externals/skia" "$SKIA_BASE" BUILD.gn third_party)" \
     --arg RENDERING_CHECK " " \
     --arg BASE_BRANCH "$SKIA_BASE" \
     --rawfile AUTOMATED_REPORT "$SKIA_SUMMARY_FILE" \
@@ -350,19 +351,19 @@ _Last rendered by the sync workflow: {{UPDATED_AT}}_
 EOF
 )
 
-  generated_check=$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" ':(glob)**/*.generated.cs')
+  generated_check=$(changed_check "$WORKSPACE" "$SS_BASE" ':(glob)**/*.generated.cs')
   jq -n \
     --arg BODY_INTRO "$SS_BODY_INTRO" \
     --arg WORKFLOW_LINK "$WORKFLOW_LINK" \
     --arg COMPANION_PR_URL "$companion_url" \
-    --arg MANAGED_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" binding)" \
-    --arg NATIVE_CHECK "$(changed_check "$GITHUB_WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
+    --arg MANAGED_CHECK "$(changed_check "$WORKSPACE" "$SS_BASE" binding)" \
+    --arg NATIVE_CHECK "$(changed_check "$WORKSPACE/externals/skia" "$SKIA_BASE" include/c src/c)" \
     --arg GENERATED_CHECK "$generated_check" \
-    --arg INTEGRATIONS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" views source)" \
+    --arg INTEGRATIONS_CHECK "$(changed_check "$WORKSPACE" "$SS_BASE" views source)" \
     --arg RENDERING_CHECK " " \
-    --arg TESTS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" tests)" \
-    --arg BUILD_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" native scripts .github)" \
-    --arg DOCS_CHECK "$(changed_check "$GITHUB_WORKSPACE" "$SS_BASE" documentation samples)" \
+    --arg TESTS_CHECK "$(changed_check "$WORKSPACE" "$SS_BASE" tests)" \
+    --arg BUILD_CHECK "$(changed_check "$WORKSPACE" "$SS_BASE" native scripts .github)" \
+    --arg DOCS_CHECK "$(changed_check "$WORKSPACE" "$SS_BASE" documentation samples)" \
     --arg DOCS_FOLLOWUP_CHECK "$([[ "$generated_check" == " " ]] && printf x || printf ' ')" \
     --rawfile AUTOMATED_REPORT "$SS_SUMMARY_FILE" \
     --arg UPDATED_AT "$UPDATED_AT" \
@@ -438,10 +439,10 @@ apply_labels() {
 }
 
 echo "Pushing $BRANCH to mono/skia and mono/SkiaSharp with guarded leases..."
-git -C "$GITHUB_WORKSPACE/externals/skia" rev-parse --verify "origin/${SKIA_BASE}^{commit}" >/dev/null
-git -C "$GITHUB_WORKSPACE" rev-parse --verify "origin/${SS_BASE}^{commit}" >/dev/null
-push_branch "$GITHUB_WORKSPACE/externals/skia" mono/skia
-push_branch "$GITHUB_WORKSPACE" mono/SkiaSharp
+git -C "$WORKSPACE/externals/skia" rev-parse --verify "origin/${SKIA_BASE}^{commit}" >/dev/null
+git -C "$WORKSPACE" rev-parse --verify "origin/${SS_BASE}^{commit}" >/dev/null
+push_branch "$WORKSPACE/externals/skia" mono/skia
+push_branch "$WORKSPACE" mono/SkiaSharp
 
 SKIA_BODY="$ARTIFACT_DIR/skia-pr-body.md"
 SS_BODY="$ARTIFACT_DIR/skiasharp-pr-body.md"
