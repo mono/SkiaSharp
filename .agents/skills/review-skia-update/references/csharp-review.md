@@ -54,7 +54,9 @@ Skia updates often change platform behavior. Check:
 Check `tests/Tests/` for:
 - New tests covering new APIs
 - Updated tests reflecting changed behavior
-- No skipped tests (except hardware-dependent: GPU, display)
+- No newly skipped tests. GPU coverage is defined by the existing host/platform
+  `GpuPolicy`; missing hardware or a failed bring-up for a required backend is a failure.
+  Flag any PR that adds or expands a skip instead of fixing the environment or backend.
 
 ## Output Format
 
