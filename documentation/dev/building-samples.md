@@ -7,7 +7,7 @@ This guide explains how to build SkiaSharp samples using CI-produced NuGet packa
 All CI builds publish wrapper packages to the **SkiaSharp-CI** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:

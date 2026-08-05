@@ -197,6 +197,6 @@ replace, downgrade, or skip.
 ## Package Sources
 
 Test project uses these feeds (pre-configured in `nuget.config`):
-- SkiaSharp internal test packages: `https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json`
+- SkiaSharp internal test packages: `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json`
   (`https://aka.ms/skiasharp-eap/index.json` is the search alias used by the skill)
 - dotnet-public: `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
