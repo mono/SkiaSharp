@@ -276,9 +276,9 @@ Every eligible candidate in the resulting attribution map must appear exactly on
 trailers, or in `Missing context:` when a contributing human lacks a verified email. Place
 trailers at the end of the message after a blank line, one per line.
 
-## Final quality gate
+### 6. Format and check the final output
 
-Before returning the message, confirm:
+After drafting and attribution, confirm:
 
 1. Every substantive changed path maps to a topic, explicit decision, or derivative, and
    `section count == material-topic count` whenever that count is two or more.
@@ -290,8 +290,8 @@ Before returning the message, confirm:
    exactly once as a source-backed trailer or required missing-context item.
 5. The message answers what a future maintainer would otherwise have to reopen the PR to
    learn, without file-by-file narration or repeated prose.
+6. The response contains exactly one fenced `text` block with only the polished commit
+   message; it has no introduction, explanation, summary, or other response prose.
 
-Return the polished commit message inside exactly one fenced `text` block so it can be
-copied directly. Do not add an introduction, explanation, summary, or other response prose.
-Put any required `Missing context:` lines after the closing fence so they are not copied
-into the commit message.
+After these checks pass, return the fenced message. Put any required `Missing context:`
+lines after the closing fence so they are not copied into the commit message.
