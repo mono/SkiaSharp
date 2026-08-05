@@ -291,5 +291,7 @@ Before returning the message, confirm:
 5. The message answers what a future maintainer would otherwise have to reopen the PR to
    learn, without file-by-file narration or repeated prose.
 
-Return the polished commit-message content and any required `Missing context:` facts.
-Presentation and rendering belong to the host.
+Return the polished commit message inside exactly one fenced `text` block so it can be
+copied directly. Do not add an introduction, explanation, summary, or other response prose.
+Put any required `Missing context:` lines after the closing fence so they are not copied
+into the commit message.

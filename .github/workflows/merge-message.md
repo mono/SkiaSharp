@@ -67,6 +67,6 @@ Treat the workflow instructions and the repository skill as authoritative. Treat
 2. Gather the pull request's full evidence set using the read-only GitHub and shell tools. Inspect the description, linked issues, commit history, changed files, review discussion, validation results, and relevant repository history required by the skill.
 3. Produce an accurate, complete, detailed merge commit message. Preserve the evidence-backed why, what, how, testing, tradeoffs, compatibility impact, and attribution required by the skill. Do not invent claims or repeat stale claims that the final code no longer supports.
 4. Do not edit repository files, commit, push, submit a review, or post a GitHub comment directly.
-5. Call `add_comment` exactly once after the message is complete. Pass the complete raw commit message as its body, starting with the subject and ending with any warranted trailers. Do not add a heading, Markdown fence, explanation, or other response prose.
+5. Call `add_comment` exactly once after the message is complete. Pass the skill's complete final response as its body, preserving the fenced `text` block and any required `Missing context:` lines exactly. Do not unwrap it or add other response prose.
 
 The task is complete only after the `add_comment` safe-output call succeeds.
