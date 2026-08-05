@@ -89,7 +89,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 | Feed | URL | Purpose |
 |------|-----|---------|
 | Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing (regular packages) |
-| CI | `https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
+| CI | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
 | Stable | NuGet.org | Public releases |
 
 > **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing.
