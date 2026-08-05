@@ -17,8 +17,9 @@ The workflow only supplies resolved inputs, a prepared host, and automated PR de
 
 `Skia C++ -> SkiaSharp C API -> generated P/Invoke -> managed wrappers`
 
-Run from the mono/SkiaSharp repository root. Each phase lives in a separate reference so only
-the current work enters context.
+Run from the mono/SkiaSharp repository root. In automation, the product repository root is
+`SKIA_SYNC_WORKSPACE`, not the gh-aw `GITHUB_WORKSPACE`; begin every repository shell invocation
+there. Each phase lives in a separate reference so only the current work enters context.
 
 ## Start state
 

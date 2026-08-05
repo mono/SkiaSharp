@@ -46,6 +46,7 @@ moving remote branch ref in later integrity checks.
 Use the base branch's recorded commit, not a milestone label:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 BASE_UPSTREAM_SHA="${SKIA_BASE_UPSTREAM_SHA:-$(git show "origin/{BASE_BRANCH}:cgmanifest.json" |
   jq -r '.registrations[] | select(.component.other.name == "skia") | .upstream_merge_commit')}"
 TARGET_UPSTREAM_REF="upstream/{UPSTREAM_REF}"

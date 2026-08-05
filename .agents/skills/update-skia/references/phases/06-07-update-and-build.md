@@ -6,6 +6,7 @@ Hydrate the dependencies recorded by the merged Skia `DEPS` before inspecting th
 semantic-version evidence:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 python3 externals/skia/tools/git-sync-deps
 ```
 
@@ -14,7 +15,7 @@ maintained version helper from the parent repository:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
-  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
+  --repo-root "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 ```
 
 The helper updates and validates `scripts/VERSIONS.txt`, the Skia registrations in
@@ -63,6 +64,7 @@ platform from source:
 | macOS x64 | `dotnet cake --target=externals-macos --arch=x64` |
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 dotnet tool restore
 dotnet cake --target="externals-{PLATFORM}" --arch="{ARCH}"
 ```

@@ -32,7 +32,7 @@ it is the intended continuation; never reset or overwrite unrelated work.
 ### Snapshot the fork before merging
 
 ```bash
-cd externals/skia
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 MB=$(git merge-base "origin/{SKIA_BASE_BRANCH}" "upstream/{UPSTREAM_REF}")
 git log --oneline "$MB..origin/{SKIA_BASE_BRANCH}" \
   > "$ARTIFACT_DIR/fork-patches-before.txt"
@@ -42,6 +42,7 @@ git merge --no-commit --no-ff "upstream/{UPSTREAM_REF}"
 If conflicts occur, batch the audit before resolving any file:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git diff --name-only --diff-filter=U > "$ARTIFACT_DIR/conflicted-files.txt"
 while IFS= read -r file; do
   printf '\n## %s\n' "$file"
@@ -69,6 +70,7 @@ classifying all fork changes in it.
 Compare the complete fork and target `DEPS` files:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git show "origin/{SKIA_BASE_BRANCH}:DEPS" > "$ARTIFACT_DIR/deps-fork.txt"
 git show "upstream/{UPSTREAM_REF}:DEPS" > "$ARTIFACT_DIR/deps-target.txt"
 diff -u "$ARTIFACT_DIR/deps-fork.txt" "$ARTIFACT_DIR/deps-target.txt"
@@ -113,6 +115,7 @@ fork patch. Return to the parent repository root and generate the diff-of-diffs 
 merge:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
   --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
   --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \

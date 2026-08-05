@@ -182,6 +182,7 @@ steps:
       {
         printf 'SKIA_SYNC_AUTOMATION=1\n'
         printf 'SKIA_SYNC_WORKSPACE=%s\n' "$SKIA_SYNC_WORKSPACE"
+        printf 'SKIA_SYNC_PARENT_BASE_SHA=%s\n' "$SKIA_SYNC_PARENT_BASE_SHA"
         printf 'SKIA_SYNC_CURRENT=%s\n' "$current"
         printf 'SKIA_SYNC_TARGET=%s\n' "$target"
         printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$upstream_ref"
@@ -411,9 +412,10 @@ the supplied values.
 ## 3. Execution contract
 
 - Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
-- Use `SKIA_SYNC_WORKSPACE` as the repository root. In Phase 04, the deterministic branch helper
-  creates the parent and submodule feature branches from the already checked-out exact base SHAs;
-  it does not replace the isolated tree or move build outputs to another path.
+- Every repository shell invocation must begin in `SKIA_SYNC_WORKSPACE`; never run a product git,
+  merge, build, generation, or test command from the gh-aw `GITHUB_WORKSPACE`. In Phase 04, the
+  deterministic branch helper creates the parent and submodule feature branches from the
+  already-checked-out exact base SHAs; it does not replace the isolated tree or move build outputs.
 - The agent job starts only after upstream work is detected. It must complete or fail; never return
   `noop` or human-review output for an unresolved build/test failure.
 - Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution

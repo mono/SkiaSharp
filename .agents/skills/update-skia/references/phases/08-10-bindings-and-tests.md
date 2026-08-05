@@ -6,7 +6,8 @@ The native build must run first so dependency headers exist:
 
 ```bash
 python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/regenerate_bindings.py" \
-  --repo-root "${GITHUB_WORKSPACE:-$PWD}"
+  --repo-root "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 ```
 
@@ -18,6 +19,7 @@ changes, and lists new native functions. Never edit a generated file manually.
 For every newly generated native function:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 git diff "origin/{BASE_BRANCH}" -- binding/SkiaSharp/SkiaApi.generated.cs |
   grep '^+.*internal static'
 grep -rn "<native-function>" binding/SkiaSharp --exclude='*.generated.cs'
@@ -43,6 +45,7 @@ validation from incomplete coverage.
 ### Initial full solution
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 set -o pipefail
 dotnet test tests/SkiaSharp.Tests.Console.slnx \
@@ -70,6 +73,7 @@ After the solution identifies a failure, filter only its owning host:
 | Direct3D | `tests/SkiaSharp.Direct3D.Tests.Console/SkiaSharp.Direct3D.Tests.Console.csproj` |
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 dotnet test <owning-project> \
   -p:TargetFramework=net10.0 \
   -p:TargetFrameworks=net10.0 \
@@ -96,6 +100,7 @@ is fixed; only that final run satisfies the gate. Capture the complete final com
 manually written summary—in the canonical artifact:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 rm -f "$ARTIFACT_DIR/test-output.txt"
 rm -f "$ARTIFACT_DIR/test-exit-code.txt"
 (
@@ -121,7 +126,7 @@ mono/skia tree before moving to Phase 11:
 
    ```bash
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/update_versions.py" \
-     --repo-root "${GITHUB_WORKSPACE:-$PWD}"
+     --repo-root "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
    ```
 
    If it fails, reconcile every `skia-dependency-changes.json` row with checked-out source,
@@ -129,6 +134,7 @@ mono/skia tree before moving to Phase 11:
 3. Refresh the fork audit against the **current final mono/skia HEAD**:
 
    ```bash
+   cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
    python3 "${SKIA_SYNC_SKILL_DIR:-.agents/skills/update-skia}/scripts/audit_fork_patches.py" \
      --old-upstream "$SKIA_SYNC_BASE_UPSTREAM_SHA" \
      --new-upstream "$SKIA_SYNC_TARGET_UPSTREAM_SHA" \

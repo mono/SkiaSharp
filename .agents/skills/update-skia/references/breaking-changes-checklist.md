@@ -11,6 +11,7 @@ layer **before** you start merging.
 Use the authoritative range prepared by Phase 2:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git log --oneline "$DIFF_RANGE"
 git diff --stat "$DIFF_RANGE" -- src/ include/ BUILD.gn DEPS
 ```
@@ -59,6 +60,7 @@ The release notes don't cover everything. These checks catch what they miss.
 
 **Check struct sizes:**
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 # List all asserted structs, then compare each against the target milestone
 grep "static_assert.*sizeof" src/c/sk_structs.cpp
 git show upstream/chrome/m{TARGET}:include/encode/SkPngEncoder.h | grep -A30 "struct Options"
@@ -66,6 +68,7 @@ git show upstream/chrome/m{TARGET}:include/encode/SkPngEncoder.h | grep -A30 "st
 
 **Check for moved files** (Skia relocates, it rarely deletes):
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git diff "$DIFF_RANGE" --diff-filter=D --name-only
 # For each deleted file our C API references:
 git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
@@ -73,6 +76,7 @@ git ls-tree -r upstream/chrome/m{TARGET} --name-only | grep -i "FILENAME_STEM"
 
 **Confirm removals on the target branch** (diff `-` lines can be reorders, not deletions):
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 # Don't trust the diff — verify directly
 git show upstream/chrome/m{TARGET}:include/gpu/ganesh/GrContextOptions.h | grep "fSuppressPrints"
 ```
@@ -82,7 +86,7 @@ git show upstream/chrome/m{TARGET}:include/gpu/ganesh/GrContextOptions.h | grep 
 For each HIGH/MEDIUM risk change, check the C API:
 
 ```bash
-cd externals/skia
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 grep -rn "SYMBOL_NAME" src/c/ include/c/
 ```
 
@@ -91,6 +95,7 @@ changes as well as public headers. An unchanged signature can still gain a new n
 precondition or lose default/fallback behavior:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git log --oneline "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
 git diff "$DIFF_RANGE" -- <implementation-paths-used-by-the-C-API>
 ```
@@ -103,6 +108,7 @@ signature are unchanged.
 Diff the fork base against the target; an upstream-to-upstream diff hides fork-specific pins:
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}/externals/skia"
 git diff origin/{SKIA_BASE_BRANCH}..{TARGET_UPSTREAM_REF} -- DEPS
 ```
 
@@ -125,6 +131,7 @@ presumed coupled until the older fork revision is proven to expose the target AP
 ## Step 7: C# Impact Analysis
 
 ```bash
+cd "${SKIA_SYNC_WORKSPACE:-${GITHUB_WORKSPACE:-$PWD}}"
 grep -rn "ENUM_NAME\|FUNCTION_NAME" binding/SkiaSharp/
 grep -rn "SYMBOL" binding/SkiaSharp/SkiaApi.generated.cs
 ```
