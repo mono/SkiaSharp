@@ -287,7 +287,10 @@ COMPARE_REF="$SKIA_BASE_BRANCH"
 if [ -n "$SYNC_SHA" ]; then
   COMPARE_REF="$HEAD_BRANCH"
 fi
-BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by')
+if ! BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by'); then
+  echo "::error::Unable to compare upstream ${UPSTREAM_REF} (${UPSTREAM_SHA}) against mono/skia ${COMPARE_REF}; ancestry is unknown, refusing to start sync."
+  exit 1
+fi
 if [ "$BEHIND" = 0 ]; then
   echo "::notice::${UPSTREAM_REF} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
   emit skip true

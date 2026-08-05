@@ -27,6 +27,10 @@ case "$endpoint" in
     ;;
   repos/mono/skia/compare/*)
     printf '%s\n' "$endpoint" >>"$TEST_COMPARE_LOG"
+    if [ "${TEST_COMPARE_FAIL:-false}" = true ]; then
+      echo "gh: HTTP 503 Service Unavailable" >&2
+      exit 1
+    fi
     if [ -n "${TEST_SYNC_BRANCH:-}" ] &&
         [ "$endpoint" = "repos/mono/skia/compare/${TEST_UPSTREAM_SHA}...${TEST_SYNC_BRANCH}" ]; then
       printf '%s\n' "$TEST_SYNC_BEHIND"
@@ -152,6 +156,50 @@ run_case() {
   echo "PASS: $name"
 }
 
+run_compare_failure_case() {
+  local name=compare-api-failure
+  local case_dir="${TMP_DIR}/${name}"
+  local output="${case_dir}/output"
+  local log="${case_dir}/log"
+  local compare_log="${case_dir}/compare"
+  local upstream_sha="upstream-${name}"
+
+  mkdir -p "$case_dir"
+  : >"$compare_log"
+
+  if env \
+      PATH="${MOCK_BIN}:$PATH" \
+      GITHUB_REPOSITORY=mono/SkiaSharp \
+      GITHUB_SHA=trigger-sha \
+      GITHUB_REF=refs/heads/main \
+      TEST_MAIN_MS=152 \
+      TEST_RELEASE_BRANCH="" \
+      TEST_RELEASE_SHA=release-sha \
+      TEST_SYNC_BRANCH="" \
+      TEST_SYNC_SHA=sync-sha \
+      TEST_SKIA_BASE_BRANCH=skiasharp \
+      TEST_BASE_SHA=base-sha \
+      TEST_UPSTREAM_SHA="$upstream_sha" \
+      TEST_BASE_BEHIND=0 \
+      TEST_SYNC_BEHIND=0 \
+      TEST_COMPARE_FAIL=true \
+      TEST_COMPARE_LOG="$compare_log" \
+      bash "$DETECTOR" --output "$output" --target 152 --base-branch "" \
+      >"$log" 2>&1; then
+    fail "$name: detector unexpectedly succeeded"
+  fi
+
+  if grep -q '^skip=' "$output"; then
+    fail "$name: emitted a skip output while ancestry was unknown"
+  fi
+  grep -Fq "gh: HTTP 503 Service Unavailable" "$log" ||
+    fail "$name: did not preserve gh stderr"
+  grep -Fq "::error::Unable to compare upstream chrome/m152 (${upstream_sha}) against mono/skia skiasharp; ancestry is unknown, refusing to start sync." "$log" ||
+    fail "$name: missing actionable error annotation"
+
+  echo "PASS: $name"
+}
+
 run_case same-milestone-main-noop 152 152 "" "" 0 0 true skiasharp
 run_case same-milestone-main-work 152 152 "" "" 3 0 false skiasharp
 run_case existing-sync-needs-refresh 152 152 "" skia-sync/m152 0 2 false skia-sync/m152
@@ -159,5 +207,6 @@ run_case existing-sync-up-to-date 152 152 "" skia-sync/m152 4 0 true skia-sync/m
 run_case release-base-noop 151 152 release/3.151.x "" 0 0 true release/3.151.x
 run_case true-milestone-bump-work 153 152 "" "" 5 0 false skiasharp
 run_case explicit-work-output 152 152 "" "" 1 0 false skiasharp
+run_compare_failure_case
 
 echo "All skia-sync detector tests passed."
