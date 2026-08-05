@@ -1,24 +1,22 @@
 #!/usr/bin/env python3
 
-"""Fetch curated SkiaSharp API documentation issue context deterministically."""
+"""Fetch curated API documentation issue context deterministically."""
 
 import argparse
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, TextIO
 from urllib.parse import quote
 
 
 SCHEMA_VERSION = 1
-REPOSITORY = "mono/SkiaSharp-API-docs"
-LABEL = "approved-for-context"
-DEFAULT_MAX_ISSUES = 100
-DEFAULT_MAX_COMMENTS_PER_ISSUE = 500
-DEFAULT_MAX_BYTES = 4 * 1024 * 1024
+DEFAULT_MAX_ISSUES = 50
+DEFAULT_MAX_BYTES = 1024 * 1024
 
 
 class ContextFetchError(RuntimeError):
@@ -115,21 +113,28 @@ def _required(item: dict[str, Any], key: str, kind: type) -> Any:
 
 def fetch_context(
     client: GhApiClient,
+    repository: str,
+    label: str,
     *,
-    max_issues: int = DEFAULT_MAX_ISSUES,
-    max_comments_per_issue: int = DEFAULT_MAX_COMMENTS_PER_ISSUE,
+    max_issues: int,
 ) -> dict[str, Any]:
-    if max_issues < 1 or max_comments_per_issue < 0:
-        raise ContextFetchError("Issue and comment bounds must be positive.")
+    if max_issues < 0:
+        raise ContextFetchError("Issue limit must not be negative.")
+    if repository.count("/") != 1 or any(
+        not segment for segment in repository.split("/")
+    ):
+        raise ContextFetchError("Repository must use owner/name form.")
+    if not label:
+        raise ContextFetchError("Label must not be empty.")
 
-    label = quote(LABEL, safe="")
     issue_endpoint = (
-        f"repos/{REPOSITORY}/issues?state=all&labels={label}&per_page=100"
+        f"repos/{repository}/issues?state=all&labels={quote(label, safe='')}"
+        "&per_page=100"
     )
     raw_issues = [
         issue
         for issue in client.get_pages(issue_endpoint)
-        if "pull_request" not in issue and LABEL in _labels(issue)
+        if "pull_request" not in issue and label in _labels(issue)
     ]
     if len(raw_issues) > max_issues:
         raise ContextFetchError(
@@ -140,15 +145,7 @@ def fetch_context(
     for raw_issue in raw_issues:
         number = _required(raw_issue, "number", int)
         expected_comments = _required(raw_issue, "comments", int)
-        if expected_comments > max_comments_per_issue:
-            raise ContextFetchError(
-                f"Issue #{number} comment count {expected_comments} exceeds "
-                f"limit {max_comments_per_issue}."
-            )
-
-        comment_endpoint = (
-            f"repos/{REPOSITORY}/issues/{number}/comments?per_page=100"
-        )
+        comment_endpoint = f"repos/{repository}/issues/{number}/comments?per_page=100"
         raw_comments = client.get_pages(comment_endpoint)
         if len(raw_comments) != expected_comments:
             raise ContextFetchError(
@@ -158,37 +155,37 @@ def fetch_context(
 
         comments = [
             {
+                "id": _required(comment, "id", int),
                 "author": _author(comment),
-                "body": comment.get("body") or "",
-                "created_at": _required(comment, "created_at", str),
-                "updated_at": _required(comment, "updated_at", str),
                 "url": _required(comment, "html_url", str),
+                "createdAt": _required(comment, "created_at", str),
+                "updatedAt": _required(comment, "updated_at", str),
+                "body": comment.get("body") or "",
             }
             for comment in raw_comments
         ]
-        comments.sort(key=lambda comment: (comment["created_at"], comment["url"]))
+        comments.sort(key=lambda comment: (comment["createdAt"], comment["id"]))
 
         issues.append(
             {
-                "author": _author(raw_issue),
-                "body": raw_issue.get("body") or "",
-                "closed_at": raw_issue.get("closed_at"),
-                "comments": comments,
-                "created_at": _required(raw_issue, "created_at", str),
-                "labels": _labels(raw_issue),
                 "number": number,
-                "state": _required(raw_issue, "state", str),
                 "title": _required(raw_issue, "title", str),
-                "updated_at": _required(raw_issue, "updated_at", str),
                 "url": _required(raw_issue, "html_url", str),
+                "state": _required(raw_issue, "state", str),
+                "author": _author(raw_issue),
+                "createdAt": _required(raw_issue, "created_at", str),
+                "updatedAt": _required(raw_issue, "updated_at", str),
+                "labels": _labels(raw_issue),
+                "body": raw_issue.get("body") or "",
+                "comments": comments,
             }
         )
 
     issues.sort(key=lambda issue: issue["number"])
     return {
-        "schema_version": SCHEMA_VERSION,
-        "repository": REPOSITORY,
-        "label": LABEL,
+        "schemaVersion": SCHEMA_VERSION,
+        "repository": repository,
+        "label": label,
         "issues": issues,
     }
 
@@ -209,7 +206,7 @@ def write_context(
     context: dict[str, Any],
     output: Path,
     *,
-    max_bytes: int = DEFAULT_MAX_BYTES,
+    max_bytes: int,
 ) -> int:
     if max_bytes < 1:
         raise ContextFetchError("Byte limit must be positive.")
@@ -220,7 +217,6 @@ def write_context(
             f"Context size {len(payload)} bytes exceeds limit {max_bytes} bytes."
         )
 
-    output = output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary_path: Path | None = None
     try:
@@ -236,49 +232,87 @@ def write_context(
             temporary.flush()
             os.fsync(temporary.fileno())
         os.replace(temporary_path, output)
-    except Exception:
+    except Exception as error:
         if temporary_path is not None:
             temporary_path.unlink(missing_ok=True)
-        raise
+        raise ContextFetchError(f"Could not write output: {error}") from error
     return len(payload)
+
+
+def _single_line(value: str) -> str:
+    value = re.sub(r"[\x00-\x1f\x7f-\x9f]+", " ", value)
+    return " ".join(value.split())
+
+
+def emit_manifest(
+    context: dict[str, Any],
+    byte_count: int,
+    output: Path,
+    stream: TextIO,
+) -> None:
+    issues = context["issues"]
+    print(
+        "CONTEXT | "
+        f"{context['repository']} | {context['label']} | {len(issues)} | "
+        f"{byte_count} | {output}",
+        file=stream,
+    )
+    for issue in issues:
+        print(
+            "ISSUE | "
+            f"{issue['number']} | {issue['state']} | {issue['updatedAt']} | "
+            f"{issue['url']} | {_single_line(issue['title'])}",
+            file=stream,
+        )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Fetch approved SkiaSharp API documentation issue context as "
-            "canonical JSON."
+            "Fetch approved API documentation issue context as canonical JSON."
         )
     )
+    parser.add_argument("--repository", required=True)
+    parser.add_argument("--label", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-issues", type=int, default=DEFAULT_MAX_ISSUES)
-    parser.add_argument(
-        "--max-comments-per-issue",
-        type=int,
-        default=DEFAULT_MAX_COMMENTS_PER_ISSUE,
-    )
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
     return parser.parse_args(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = parse_args(argv)
+def run(
+    args: argparse.Namespace,
+    *,
+    client: GhApiClient,
+    stdout: TextIO,
+    stderr: TextIO,
+) -> int:
+    output = args.output.resolve()
     try:
+        output.unlink(missing_ok=True)
         context = fetch_context(
-            GhApiClient(),
+            client,
+            args.repository,
+            args.label,
             max_issues=args.max_issues,
-            max_comments_per_issue=args.max_comments_per_issue,
         )
-        size = write_context(context, args.output, max_bytes=args.max_bytes)
-    except ContextFetchError as error:
-        print(f"error: {error}", file=sys.stderr)
+        size = write_context(context, output, max_bytes=args.max_bytes)
+    except (ContextFetchError, OSError) as error:
+        output.unlink(missing_ok=True)
+        print(f"error: {error}", file=stderr)
         return 1
 
-    print(
-        f"Wrote {len(context['issues'])} approved issues ({size} bytes) "
-        f"to {args.output}."
-    )
+    emit_manifest(context, size, output, stdout)
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    return run(
+        parse_args(argv),
+        client=GhApiClient(),
+        stdout=sys.stdout,
+        stderr=sys.stderr,
+    )
 
 
 if __name__ == "__main__":
