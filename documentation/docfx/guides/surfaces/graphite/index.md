@@ -1,15 +1,15 @@
 ---
-title: "Graphite offscreen surfaces"
+title: "Graphite GPU surfaces"
 description: "Create Graphite GPU surfaces for Vulkan, Metal, or WebGPU, submit recordings, wrap textures, and read pixels asynchronously."
 ---
 
-# Graphite offscreen surfaces
+# Graphite GPU surfaces
 
-*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](views-surfaces.md).
+*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](../../views/index.md).
 
-Where the older [Ganesh](ganesh-surfaces.md) backend issues GPU work as you draw and auto-flushes it, Graphite separates **recording** from **submission**: drawing is captured into a *recording* that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.
+Where the older [Ganesh](../ganesh/index.md) backend issues GPU work as you draw and auto-flushes it, Graphite separates **recording** from **submission**: drawing is captured into a *recording* that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.
 
-Graphite differs from [Ganesh](ganesh-surfaces.md) in two important ways:
+Graphite differs from [Ganesh](../ganesh/index.md) in two important ways:
 
 - **Drawing is recorded, not flushed.** You draw onto a surface's canvas as usual, but instead of flushing a context you *snap* a **recording** from a **recorder** and *insert* that recording into the context, then *submit* it.
 - **Reading pixels back is asynchronous.** Graphite surfaces do not support the synchronous `SKSurface.ReadPixels` you use with raster and Ganesh surfaces. You request a readback and drive it to completion. This is the single most important thing to get right — see [Reading pixels back](#reading-pixels-back).
@@ -24,15 +24,15 @@ Which Graphite backend you use is determined by the platform:
 
 | Backend | Platforms |
 | --- | --- |
-| **Metal** | macOS, iOS (including the iOS Simulator on Apple Silicon, with one caveat below), Mac Catalyst, tvOS |
-| **Vulkan** | Linux, Android, Windows |
-| **Dawn** (WebGPU) | WebAssembly / browser only |
+| [**Metal**](metal.md) | macOS, iOS (including the iOS Simulator on Apple Silicon, with one caveat), Mac Catalyst, tvOS |
+| [**Vulkan**](vulkan.md) | Linux, Android, Windows |
+| [**Dawn**](dawn.md) (WebGPU) | WebAssembly / browser only |
 
 A few consequences worth calling out:
 
 - **Apple platforms use Metal, not Vulkan.** The native Skia build for Apple is not compiled with Vulkan, so on macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal.
-- **On Windows, Graphite means Vulkan.** There is **no Direct3D Graphite backend** in SkiaSharp — a D3D path would only exist as Graphite→Dawn→D3D12, which is not exposed. If you need D3D specifically, use [Ganesh](ganesh-surfaces.md) with `GRContext.CreateDirect3D`.
-- **Dawn is browser-only.** It is the WebAssembly path and carries an extra submission constraint — see [Dawn in the browser](#dawn-in-the-browser).
+- **On Windows, Graphite means Vulkan.** There is **no Direct3D Graphite backend** in SkiaSharp — a D3D path would only exist as Graphite→Dawn→D3D12, which is not exposed. If you need D3D specifically, use [Ganesh with Direct3D](../ganesh/direct3d.md).
+- **Dawn is browser-only.** It is the WebAssembly path and cannot submit synchronously; see [Graphite with Dawn](dawn.md).
 
 ## Checking a backend is available
 
@@ -45,91 +45,15 @@ if (SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal))
 }
 ```
 
-## Creating a context
+## Choose and create a backend
 
-You create a context from a backend context that carries the native device objects for your API. Each factory also has an overload that takes an [`SKGraphiteContextOptions`](#context-options).
+Create the context from the native device objects owned by your host:
 
-### Vulkan
+- [Vulkan](vulkan.md) — raw Vulkan handles on Linux, Android, or Windows, including the render-target usage flags and release ordering required for wrapped images.
+- [Metal](metal.md) — an `MTLDevice` and `MTLCommandQueue` on Apple platforms, including iOS Simulator caveats.
+- [Dawn](dawn.md) — WebGPU handles in a browser/WebAssembly host, including its asynchronous submission constraint.
 
-Graphite Vulkan is available on **Linux, Android, and Windows** (not Apple — see the [platform matrix](#backend-platform-support)). There is no typed Graphite-specific Vulkan wrapper: you fill in the binding-neutral `SKGraphiteVkBackendContext` with raw handles and a `GetProcedureAddress` delegate that resolves Vulkan functions.
-
-```csharp
-using var backendContext = new SKGraphiteVkBackendContext
-{
-    VkInstance = instanceHandle,
-    VkPhysicalDevice = physicalDeviceHandle,
-    VkDevice = deviceHandle,
-    VkQueue = graphicsQueueHandle,
-    GraphicsQueueIndex = graphicsFamilyIndex,
-    MaxApiVersion = apiVersion,
-    GetProcedureAddress = (name, instance, device) =>
-        throw new System.NotImplementedException("Configure Vulkan function lookup."),
-};
-
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
-```
-
-Because the handles are raw `IntPtr`s, you can source them from any Vulkan binding. The recommended one is [Silk.NET](https://www.nuget.org/packages/Silk.NET.Vulkan) — feed its objects' `.Handle` values straight in:
-
-```csharp
-using Silk.NET.Vulkan;
-
-using var backendContext = new SKGraphiteVkBackendContext
-{
-    VkInstance = instance.Handle,
-    VkPhysicalDevice = physicalDevice.Handle,
-    VkDevice = device.Handle,
-    VkQueue = graphicsQueue.Handle,
-    GraphicsQueueIndex = graphicsFamily,
-    MaxApiVersion = apiVersion,
-    GetProcedureAddress = getProc,
-};
-
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
-```
-
-Use Silk.NET or raw `libvulkan` P/Invoke for new Vulkan code. There is no typed Graphite wrapper for either Silk.NET or the legacy, unmaintained SharpVk binding; Graphite takes the raw handles shown above.
-
-### Metal
-
-On Apple platforms, supply an `MTLDevice` and `MTLCommandQueue`. From the Apple target frameworks you can assign the typed `Device`/`Queue` (`IMTLDevice`/`IMTLCommandQueue`) properties; from other targets, assign the native handles:
-
-```csharp
-using var backendContext = new SKGraphiteMtlBackendContext
-{
-    MtlDevice = mtlDeviceHandle,
-    MtlQueue = mtlCommandQueueHandle,
-};
-
-using var context = SKGraphiteContext.CreateMetal(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Metal context.");
-```
-
-#### Simulator caveats
-
-Graphite Metal works on the **iOS and tvOS Simulator on Apple Silicon** because it uses the host GPU. The simulator's `MTLDevice` under-reports its capabilities, so don't reject the simulator only because `supportsFamily:` does not report `Apple7+` or `Mac2`.
-
-The simulator's Metal shader compiler cannot build some Graphite pipelines, including some gradient shaders. In that case, `recorder.Snap()` returns `null` for the frame. The same content renders with Graphite/Metal on macOS and real iOS hardware, and with Ganesh/Metal on the simulator. See [mono/SkiaSharp#4555](https://github.com/mono/SkiaSharp/issues/4555), and always check the result of `Snap()`.
-
-### Dawn (WebGPU)
-
-For Dawn, supply the WebGPU instance, device, and queue handles:
-
-```csharp
-using var backendContext = new SKGraphiteDawnBackendContext
-{
-    WgpuInstance = instanceHandle,
-    WgpuDevice = deviceHandle,
-    WgpuQueue = queueHandle,
-};
-
-using var context = SKGraphiteContext.CreateDawn(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Dawn context.");
-```
-
-Dawn is the backend used in the browser (WebAssembly), which imposes an extra constraint on submission — see [Dawn in the browser](#dawn-in-the-browser).
+Each backend page returns the same `SKGraphiteContext`. Return here after context creation for the shared recorder, surface, submission, readback, texture, image-provider, and resource-management flow. Every factory also has an overload that takes [`SKGraphiteContextOptions`](#context-options).
 
 ## The render loop
 
@@ -171,7 +95,7 @@ A few things to note:
 ## Reading pixels back
 
 > [!IMPORTANT]
-> Graphite surfaces do **not** support the synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) used with [raster](raster-surfaces.md) and [Ganesh](ganesh-surfaces.md) surfaces — it returns `false`. To get pixels off a Graphite surface you must use the **asynchronous** readback path. This is the number-one thing to get right when porting existing code.
+> Graphite surfaces do **not** support the synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) used with [raster](../raster/index.md) and [Ganesh](../ganesh/index.md) surfaces — it returns `false`. To get pixels off a Graphite surface you must use the **asynchronous** readback path. This is the number-one thing to get right when porting existing code.
 
 Call `RequestReadPixels` with the surface, the destination `SKImageInfo`, the source rectangle, and a callback. Then drive the request to completion by submitting and repeatedly calling `CheckAsyncWorkCompletion` until the callback fires. This bounded helper is for native hosts, where synchronous submission is supported:
 
@@ -214,7 +138,7 @@ var dstInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKA
 var pixels = ReadPixelsFromGraphite(context, surface, dstInfo);
 ```
 
-The iteration limit is only a guard for this focused sample, not a completion guarantee. In a production renderer, pump completion from the host's render or event loop and apply a time-based timeout or cancellation policy. Browser hosts cannot use `Sync = true`; see [Dawn in the browser](#dawn-in-the-browser).
+The iteration limit is only a guard for this focused sample, not a completion guarantee. In a production renderer, pump completion from the host's render or event loop and apply a time-based timeout or cancellation policy. Browser hosts cannot use `Sync = true`; see [Graphite with Dawn](dawn.md).
 
 The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `SKGraphiteContext` read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws `ObjectDisposedException`. Keep the context and surface undisposed until the callback completes.
 
@@ -229,113 +153,23 @@ A shorter `RequestReadPixels` overload uses default rescaling; a longer overload
 
 ## Wrapping an external GPU texture
 
-Instead of letting Skia allocate the surface's texture, you can render into a GPU texture your own code created. Describe it with an `SKGraphiteBackendTexture` and create a surface that wraps it:
+Instead of letting Skia allocate the surface's texture, you can render into a GPU texture your own code created. Build an `SKGraphiteBackendTexture` as shown on the [Vulkan](vulkan.md#wrap-and-release-vulkan-images), [Metal](metal.md#wrap-metal-textures), or [Dawn](dawn.md#wrap-dawn-textures) page, then create a surface that wraps it:
 
 ```csharp
-// Metal example: wrap an existing MTLTexture handle
-using var backendTexture = SKGraphiteBackendTexture.CreateMetal(width, height, mtlTextureHandle)
-    ?? throw new InvalidOperationException("Unable to describe the Metal texture.");
 using var surface = SKSurface.Create(recorder, backendTexture, SKColorType.Rgba8888)
-    ?? throw new InvalidOperationException("Unable to wrap the Metal texture.");
+    ?? throw new InvalidOperationException("Unable to wrap the backend texture.");
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw, then Snap / InsertRecording / Submit as above ...
 ```
 
-There are matching factory methods for each backend:
-
-- `SKGraphiteBackendTexture.CreateVulkan(width, height, info, imageLayout, queueFamilyIndex, vkImage)`
-- `SKGraphiteBackendTexture.CreateMetal(width, height, mtlTexture)`
-- `SKGraphiteBackendTexture.CreateDawn(wgpuTexture)`
-
-**Vulkan render targets require input-attachment usage.** When you wrap an external Vulkan `VkImage` as a Graphite surface, `SKGraphiteVkTextureInfo.ImageUsageFlags` must include both `VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT` (`0x10`) and `VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT` (`0x80`). Without them, `SKSurface.Create` returns `null`. A typical renderable mask is `TRANSFER_SRC | TRANSFER_DST | SAMPLED | COLOR_ATTACHMENT | INPUT_ATTACHMENT` (`0x97`). A texture used only as an image needs `SAMPLED`, not `INPUT_ATTACHMENT`.
-
 ### Releasing a wrapped texture
 
 When Skia is done with a wrapped backend texture it can notify you through the parameterless `SKGraphiteReleaseDelegate` accepted by the wrap overloads. The callback means Skia no longer needs the texture; it does not automatically delete a texture allocated through `CreateBackendTexture`.
 
-The callback fires after the wrapping surface or image is disposed and pending GPU work has drained. Disposing the wrapper alone is not enough. The following example waits for the callback before it deletes the Skia-allocated backend texture:
+The callback fires after the wrapping surface or image is disposed and pending GPU work has drained. Disposing the wrapper alone is not enough. Delete a Skia-allocated backend texture only after the callback fires, and release an externally allocated texture through the API that created it. The [Vulkan page](vulkan.md#release-a-wrapped-texture) contains the complete wrapper-dispose, GPU-drain, callback, delete, and failure sequence.
 
-```csharp
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
-using var recorder = context.CreateRecorder()
-    ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
-
-// A RENDERABLE backend texture needs COLOR_ATTACHMENT (0x10) + INPUT_ATTACHMENT (0x80).
-var vkInfo = new SKGraphiteVkTextureInfo
-{
-    Format = 37,           // VK_FORMAT_R8G8B8A8_UNORM
-    ImageTiling = 0,       // VK_IMAGE_TILING_OPTIMAL
-    SampleCount = 1,
-    AspectMask = 1,        // VK_IMAGE_ASPECT_COLOR_BIT
-    SharingMode = 0,       // VK_SHARING_MODE_EXCLUSIVE
-    ImageUsageFlags = 0x1 | 0x2 | 0x4 | 0x10 | 0x80, // = 0x97
-};
-using var texInfo = SKGraphiteTextureInfo.CreateVulkan(vkInfo)
-    ?? throw new InvalidOperationException("Unable to create the Vulkan texture info.");
-using var backendTexture = recorder.CreateBackendTexture(width, height, texInfo)
-    ?? throw new InvalidOperationException("Unable to create the backend texture.");
-
-var released = false;
-var wrapped = false;
-var contextUsable = true;
-SKSurface surface = null;
-try
-{
-    surface = SKSurface.Create(
-        recorder, backendTexture, SKColorType.Rgba8888,
-        colorSpace: null, props: null,
-        releaseProc: () => released = true);
-    if (surface is null)
-        throw new InvalidOperationException("Unable to wrap the backend texture.");
-
-    wrapped = true;
-    surface.Canvas.Clear(SKColors.Red);
-    using var recording = recorder.Snap()
-        ?? throw new InvalidOperationException("Graphite Snap did not succeed.");
-
-    var status = context.InsertRecording(recording);
-    if (status != SKGraphiteInsertStatus.Success)
-    {
-        contextUsable = false;
-        throw new InvalidOperationException($"Graphite InsertRecording failed: {status}.");
-    }
-
-    if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-    {
-        contextUsable = false;
-        throw new InvalidOperationException("Graphite Submit did not succeed.");
-    }
-}
-finally
-{
-    // Drop the surface wrapper before draining and deleting the GPU allocation.
-    surface?.Dispose();
-
-    if (wrapped && !released && contextUsable)
-    {
-        contextUsable = context.Submit(new SKGraphiteSubmitInfo { Sync = true });
-        if (contextUsable)
-        {
-            for (var i = 0; i < 100 && !released; i++)
-                context.CheckAsyncWorkCompletion();
-            context.FreeGpuResources();
-        }
-    }
-
-    if (!wrapped || released)
-        recorder.DeleteBackendTexture(backendTexture);
-}
-
-if (!released)
-    throw new InvalidOperationException(
-        "Skia still has work using the backend texture; tear down the failed GPU context.");
-```
-
-The `finally` block covers exceptions as well as the success path. It disposes the surface, drains a usable context, and deletes the texture through the still-live recorder only after Skia has released it. The `using` declarations then dispose the backend-texture wrapper and recorder. If insertion or submission fails, the context might no longer be safe to submit or drain. Do not delete the texture while Skia might still reference it; tear down and re-create the owning Graphite context and native GPU device instead.
-
-The example above uses `recorder.CreateBackendTexture` for brevity. To wrap a texture your own code allocated, build the `SKGraphiteBackendTexture` with `SKGraphiteBackendTexture.CreateVulkan/CreateMetal/CreateDawn` instead. The callback timing is the same, but you must release the native allocation through the API that created it. `SKImage.FromTexture` has the same release-callback overload and fires after image disposal and GPU drain; a sample-only image needs only `SAMPLED` usage, not `INPUT_ATTACHMENT`.
+`SKImage.FromTexture` has the same release-callback overload and fires after image disposal and GPU drain.
 
 ## Using textures as images
 
@@ -363,7 +197,7 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
 > [!IMPORTANT]
 > Unlike Ganesh, Graphite does **not** automatically upload a non-Graphite `SKImage` to the GPU. If you draw a raster/CPU-backed `SKImage` — for example one you decoded with `SKImage.FromEncodedData` — onto a Graphite surface **without an image provider, the draw is silently dropped**: nothing appears and no error is raised.
 
-There are two ways to handle this. You can upload each image yourself with [`ToTextureImage`](#using-textures-as-images) and draw the GPU-backed result. Or you can give the recorder an *image provider* callback that uploads CPU images on demand, so ordinary `DrawImage` calls just work.
+There are two ways to handle this. You can upload each image yourself with [`ToTextureImage`](#using-textures-as-images) and draw the GPU-backed result. Or you can give the recorder an *image provider* callback that uploads CPU images on demand when ordinary `DrawImage` calls need them.
 
 Pass the callback to the `CreateRecorder` overload that accepts one. SkiaSharp ships a ready-made `SKGraphiteImageCache` whose `FindOrCreate` method implements the callback (uploading via `ToTextureImage`) and caches the results — an LRU cache (capped at 256 entries, keyed on the image's unique id and mipmap flag) so repeated draws of the same image don't re-upload every frame:
 
@@ -399,25 +233,6 @@ surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provi
 
 The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache.FindOrCreate` throws `ArgumentNullException` if the recorder or image is null, and is `IDisposable` — pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released while the recorder is still alive. If recorder creation fails, the caller still owns and must dispose the cache, as the helper shows. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest correct default.
 
-## Dawn in the browser
-
-When Graphite runs over Dawn in a browser/WebAssembly host, the Dawn event loop cannot be pumped from inside a managed call, so **synchronous submission is not allowed**. Calling `Submit` with `Sync = true` there throws an `InvalidOperationException`.
-
-In that environment, submit without syncing and drive any readbacks with `CheckAsyncWorkCompletion`:
-
-```csharp
-// browser / WASM (non-yielding Dawn)
-if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-    throw new InvalidOperationException("Graphite InsertRecording did not succeed.");
-if (!context.Submit(new SKGraphiteSubmitInfo { Sync = false }))
-    throw new InvalidOperationException("Graphite Submit did not succeed.");
-
-// later, pump completion instead of blocking
-context.CheckAsyncWorkCompletion();
-```
-
-When building `SKGraphiteDawnBackendContext` in a browser with the emdawnwebgpu port, create a real `WGPUInstance` through `wgpuCreateInstance`. Register the device and queue under that instance as their event-source parent. A placeholder or mismatched instance can cause `SKGraphiteContext.CreateDawn` to wait indefinitely.
-
 ## Context options
 
 The `Create*` factories accept an optional `SKGraphiteContextOptions`. The most commonly useful field is `InternalMultisampleCount` (the internal MSAA sample count), which must be `0` (use Skia's default) or one of `1`, `2`, `4`, `8`, or `16`; other values are rejected. Other options include a GPU byte budget (`GpuBudgetInBytes`) and driver-workaround toggles.
@@ -451,9 +266,9 @@ Graphite renders by building a GPU **pipeline** (a compiled shader program) for 
 Two practical consequences follow:
 
 - **The first frame that uses a new combination can be slower**, because the pipeline is compiled on demand (during `Snap`/`InsertRecording`). Subsequent frames can reuse the cached pipeline and avoid that first-use compilation cost.
-- **If the driver cannot compile the pipeline, `recorder.Snap()` returns `null`** for that frame. This is exactly the [iOS Simulator gradient limitation](#metal) — the simulator's Metal compiler rejects the pipeline Graphite emits for gradient shaders. Always null-check `Snap()`.
+- **If the driver cannot compile the pipeline, `recorder.Snap()` returns `null`** for that frame. This is exactly the [iOS Simulator gradient limitation](metal.md#simulator-caveats) — the simulator's Metal compiler rejects the pipeline Graphite emits for gradient shaders. Always null-check `Snap()`.
 
-Skia itself supports *pipeline precompilation* — warming the pipeline cache before the first frame so there is no first-use hitch — but that is not yet surfaced in SkiaSharp, so for now just be aware that first use of a new draw/paint combination pays a one-time compilation cost.
+Skia itself supports *pipeline precompilation* — warming the pipeline cache before the first frame so there is no first-use hitch — but that is not yet surfaced in SkiaSharp. The first use of a new draw/paint combination therefore pays a one-time compilation cost.
 
 ## Status and enums
 
@@ -468,6 +283,7 @@ Graphite uses a handful of enums and one shared result type:
 ## Related links
 
 - [SkiaSharp APIs](xref:SkiaSharp)
-- [Ganesh GPU surfaces](ganesh-surfaces.md)
-- [Migrate from Ganesh to Graphite](graphite-migration.md)
+- [Surface overview](../index.md)
+- [Ganesh GPU surfaces](../ganesh/index.md)
+- [Migrate from Ganesh to Graphite](migrate-from-ganesh.md)
 - [Skia GPU documentation (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

@@ -1,19 +1,19 @@
 ---
-title: "Surfaces in the SkiaSharp Views"
-description: "Learn which SkiaSharp view controls provide raster or Ganesh GPU surfaces across .NET MAUI, native platforms, Uno, and Blazor."
+title: "Rendering in SkiaSharp Views"
+description: "Choose a raster or Ganesh-backed SkiaSharp view and draw through paint events across .NET MAUI, native platforms, Uno, and Blazor."
 ---
 
-# Surfaces in the SkiaSharp Views
+# Rendering in SkiaSharp Views
 
-The [Raster](raster-surfaces.md), [Ganesh](ganesh-surfaces.md), and [Graphite](graphite-surfaces.md) pages show how to create an [`SKSurface`](xref:SkiaSharp.SKSurface) by hand. When you are building an app UI you usually don't need to: the SkiaSharp **view controls** create the surface, size it to the control, and hand it to you in a paint event. Your job is just to draw.
+The [Raster](../surfaces/raster/index.md), [Ganesh](../surfaces/ganesh/index.md), and [Graphite](../surfaces/graphite/index.md) pages show how to create an [`SKSurface`](xref:SkiaSharp.SKSurface) by hand. When you are building an app UI you usually don't need to: the SkiaSharp **view controls** create the surface, size it to the control, and hand it to you in a paint event. Draw with the canvas provided by that event.
 
 There are two families of view control, and the difference between them is exactly the difference between the surface types:
 
-- **Raster views** create a CPU [raster surface](raster-surfaces.md) each frame and blit the result into the control. They provide the broadest platform support and need no GPU.
-- **GPU views** create and manage a GPU context and a surface that [wraps the control's render target](ganesh-surfaces.md#wrapping-an-existing-render-target), so your drawing goes straight to the GPU and is presented without a CPU copy.
+- **Raster views** create a CPU [raster surface](../surfaces/raster/index.md) each frame and blit the result into the control. They provide the broadest platform support and need no GPU.
+- **GPU views** create and manage a GPU context and a surface that [wraps the control's render target](../surfaces/ganesh/index.md#wrapping-an-existing-render-target), so your drawing goes straight to the GPU and is presented without a CPU copy.
 
 > [!NOTE]
-> The view controls are **raster + Ganesh only** today. **None of them drive Graphite yet** — in this release [Graphite](graphite-surfaces.md) is an offscreen-only path with no view control. Onscreen Graphite views are **not yet available and are under active investigation**, so treat this as "not wired up yet," not "impossible."
+> The view controls are **raster + Ganesh only** today. **None of them drive Graphite yet** — in this release [Graphite](../surfaces/graphite/index.md) is an offscreen-only path with no view control. Onscreen Graphite views are **not yet available and are under active investigation**, so treat this as "not wired up yet," not "impossible."
 
 ## The paint event
 
@@ -37,7 +37,7 @@ void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
 }
 ```
 
-The GPU views raise a different event-argument type, but the drawing code is identical — you still just draw on `e.Surface.Canvas`. A **GL view** (`SKGLView` / `SKGLSurfaceView`) raises `SKPaintGLSurfaceEventArgs`:
+The GPU views raise a different event-argument type, but the drawing code is identical — you still draw on `e.Surface.Canvas`. A **GL view** (`SKGLView` / `SKGLSurfaceView`) raises `SKPaintGLSurfaceEventArgs`:
 
 ```csharp
 void OnPaintGLSurface(object sender, SKPaintGLSurfaceEventArgs e)
@@ -95,7 +95,7 @@ The **SkiaSharp.Views** package contains the native controls that MAUI wraps, an
 
 On Apple platforms, `SKMetalView` is a Metal-backed alternative to the OpenGL `SKGLView`; it raises an `SKPaintMetalSurfaceEventArgs`. The Windows `SKSwapChainPanel` is the GPU counterpart to the raster `SKXamlCanvas`.
 
-Internally, the GPU controls do exactly what the [Ganesh wrapping example](ganesh-surfaces.md#wrapping-an-existing-render-target) shows: they create a `GRContext`, describe the control's framebuffer as a `GRBackendRenderTarget`, and call `SKSurface.Create(context, renderTarget, origin, colorType)` for you each frame.
+Internally, the GPU controls do exactly what the [Ganesh wrapping flow](../surfaces/ganesh/index.md#wrapping-an-existing-render-target) shows: they create a `GRContext`, describe the control's framebuffer as a `GRBackendRenderTarget`, and call `SKSurface.Create(context, renderTarget, origin, colorType)` for you each frame.
 
 ## Uno Platform
 
@@ -129,4 +129,5 @@ The **SkiaSharp.Views.Blazor** package provides two Razor components for Blazor 
 
 - [SkiaSharp APIs](xref:SkiaSharp)
 - [Integrating with .NET MAUI](../basics/integration.md)
-- [Ganesh GPU surfaces](ganesh-surfaces.md)
+- [Surface overview](../surfaces/index.md)
+- [Ganesh GPU surfaces](../surfaces/ganesh/index.md)

@@ -62,7 +62,7 @@ finally
 ```
 
 > [!NOTE]
-> Synchronous `ReadPixels` is a raster and Ganesh convenience. Graphite surfaces do **not** support it — see [Graphite offscreen surfaces](graphite-surfaces.md#reading-pixels-back).
+> Synchronous `ReadPixels` is a raster and Ganesh convenience. Graphite surfaces do **not** support it — see [Graphite GPU surfaces](../graphite/index.md#reading-pixels-back).
 
 ## Raster-direct: drawing into memory you own
 
@@ -119,10 +119,11 @@ Reach for a raster surface when:
 - You are producing images to save, stream, or process further (thumbnails, tiles, reports).
 - You need to draw directly into a buffer you already own (raster-direct).
 
-If you need GPU acceleration — because you are rendering many frames per second, compositing with other GPU content, or drawing very large scenes — use a GPU-backed surface instead. See [Ganesh GPU surfaces](ganesh-surfaces.md) and [Graphite offscreen surfaces](graphite-surfaces.md).
+If you need GPU acceleration — because you are rendering many frames per second, compositing with other GPU content, or drawing very large scenes — use a GPU-backed surface instead. See [Ganesh GPU surfaces](../ganesh/index.md) and [Graphite GPU surfaces](../graphite/index.md).
 
 ## Related links
 
 - [SkiaSharp APIs](xref:SkiaSharp)
-- [Creating and drawing on bitmaps](../bitmaps/drawing.md)
+- [Surface overview](../index.md)
+- [Creating and drawing on bitmaps](../../bitmaps/drawing.md)
 - [Skia canvas creation, Raster backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

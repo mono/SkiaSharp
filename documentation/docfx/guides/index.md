@@ -47,9 +47,13 @@ Bitmaps are rectangular arrays of bits corresponding to the pixels of a display 
 
 Effects are properties that alter the normal display of graphics, including linear and circular gradients, bitmap tiling, blend modes, blur, and others.
 
-## [GPU and offscreen surfaces](gpu/index.md)
+## [Surfaces](surfaces/index.md)
 
-Create an `SKSurface` for CPU raster rendering, Ganesh GPU rendering, or the newer Graphite offscreen backend, and learn when a view control should manage the surface for you.
+Create an `SKSurface` for CPU raster rendering, Ganesh GPU rendering, or the newer Graphite backend, with direct setup guides for each graphics API.
+
+## [Rendering in SkiaSharp Views](views/index.md)
+
+Choose a raster or Ganesh-backed view control and draw through its paint event while the view manages the surface, GPU context, and presentation.
 
 ## Related Links
 

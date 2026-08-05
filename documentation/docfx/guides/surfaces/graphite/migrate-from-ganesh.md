@@ -5,7 +5,7 @@ description: "Migrate Ganesh GPU code to Graphite by replacing context flushing,
 
 # Migrate from Ganesh to Graphite
 
-If you already render on the GPU with [Ganesh](ganesh-surfaces.md) — a [`GRContext`](xref:SkiaSharp.GRContext), an `SKSurface`, and `Flush` — this page shows the equivalent [Graphite](graphite-surfaces.md) calls. The concepts line up closely. Two **behaviour** changes matter most, and they are the parts most likely to bite when you port working code:
+If you already render on the GPU with [Ganesh](../ganesh/index.md) — a [`GRContext`](xref:SkiaSharp.GRContext), an `SKSurface`, and `Flush` — this page shows the equivalent [Graphite](index.md) calls. The concepts line up closely. Two **behaviour** changes matter most, and they are the parts most likely to bite when you port working code:
 
 1. **Reading pixels back is asynchronous.** Graphite has no synchronous `SKSurface.ReadPixels`; you use `context.RequestReadPixels(...)` and pump `CheckAsyncWorkCompletion()`.
 2. **CPU images need an image provider.** Ganesh auto-uploads a raster `SKImage` when you draw it; Graphite does not — without a provider the draw is silently dropped.
@@ -13,7 +13,7 @@ If you already render on the GPU with [Ganesh](ganesh-surfaces.md) — a [`GRCon
 There is also a **structural** shift: Ganesh records a draw stream on one `GRContext` and auto-flushes it, whereas Graphite is explicit — you record into a `Recorder`, `Snap` a `Recording`, `InsertRecording`, then `Submit`. The `Recorder` is **per-thread**, so a multi-threaded renderer gives each thread its own recorder.
 
 > [!NOTE]
-> Graphite is currently an **offscreen** path in SkiaSharp. If your Ganesh code renders into a view control's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no Graphite equivalent for that view yet — the [view controls](views-surfaces.md) still use Ganesh. This migration applies to offscreen rendering.
+> Graphite is currently an **offscreen** path in SkiaSharp. If your Ganesh code renders into a view control's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no Graphite equivalent for that view yet — the [view controls](../../views/index.md) still use Ganesh. This migration applies to offscreen rendering.
 
 ## Concept mapping
 
@@ -27,7 +27,7 @@ There is also a **structural** shift: Ganesh records a draw stream on one `GRCon
 | Draw on `surface.Canvas` | Draw on `surface.Canvas` (unchanged) |
 | `context.Flush(submit: true, synchronous: true)` | `recorder.Snap()` + `context.InsertRecording(recording)` + `context.Submit(new SKGraphiteSubmitInfo { Sync = true })` |
 | `surface.ReadPixels(...)` (synchronous) | `context.RequestReadPixels(...)` + `context.CheckAsyncWorkCompletion()` (asynchronous) |
-| Draw a CPU `SKImage` (auto-uploaded) | Draw a CPU `SKImage` (needs an image provider — see below) |
+| Draw a CPU `SKImage` (auto-uploaded) | Draw a CPU `SKImage` (needs an [image provider](index.md#drawing-cpu-images-the-image-provider)) |
 | `GRBackendTexture` / `SKSurface.Create(context, texture, ...)` | `SKGraphiteBackendTexture` / `SKSurface.Create(recorder, backendTexture, colorType)` |
 | `SKImage.FromTexture(context, texture, ...)` | `SKImage.FromTexture(recorder, backendTexture, ...)` |
 | `image.ToTextureImage(context)` | `image.ToTextureImage(recorder)` |
@@ -37,7 +37,7 @@ Notice the pattern: wherever Ganesh takes the **context**, Graphite's per-surfac
 ## Before and after
 
 These snippets compare the core offscreen render and readback flow in each backend. The Graphite version
-calls the `ReadPixelsFromGraphite` helper from [Reading pixels back](graphite-surfaces.md#reading-pixels-back);
+calls the `ReadPixelsFromGraphite` helper from [Reading pixels back](index.md#reading-pixels-back);
 that helper is omitted here so the migration steps remain easy to compare.
 
 ### Ganesh
@@ -95,7 +95,7 @@ using (var recording = recorder.Snap()
 if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
     throw new InvalidOperationException("Graphite Submit did not succeed.");
 
-// asynchronous readback — helper defined in the Graphite offscreen surfaces guide
+// asynchronous readback — helper defined in the Graphite GPU surfaces guide
 var pixels = ReadPixelsFromGraphite(context, surface, info);
 ```
 
@@ -111,11 +111,11 @@ Always check that `InsertRecording` returns `SKGraphiteInsertStatus.Success`, an
 
 ### 2. Replace synchronous `ReadPixels` with asynchronous readback
 
-This is the most important change. Graphite surfaces do **not** support synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) in shipping builds — it returns `false`. Replace it with `RequestReadPixels`, then drive the request to completion with `Submit` and repeated `CheckAsyncWorkCompletion` calls. The callback receives a backend-neutral `SKImageReadPixelsResult`; call `ToArray()`, `ToBitmap()`, or `CopyPlaneTo(...)` on it to get tightly-packed pixels (row padding is stripped for you). See [Reading pixels back](graphite-surfaces.md#reading-pixels-back) for the complete helper.
+This is the most important change. Graphite surfaces do **not** support synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) in shipping builds — it returns `false`. Replace it with `RequestReadPixels`, then drive the request to completion with `Submit` and repeated `CheckAsyncWorkCompletion` calls. The callback receives a backend-neutral `SKImageReadPixelsResult`; call `ToArray()`, `ToBitmap()`, or `CopyPlaneTo(...)` on it to get tightly-packed pixels (row padding is stripped for you). See [Reading pixels back](index.md#reading-pixels-back) for the complete helper.
 
 ### 3. Give the recorder an image provider for CPU images
 
-Ganesh silently uploads a raster `SKImage` to the GPU the first time you draw it. Graphite does **not** — drawing a non-Graphite image without an *image provider* drops the draw with no error. If your Ganesh code draws decoded/CPU images, create the recorder with an image provider (the ready-made `SKGraphiteImageCache` is the simplest option), or upload each image yourself with `ToTextureImage` first. See [Drawing CPU images](graphite-surfaces.md#drawing-cpu-images-the-image-provider).
+Ganesh silently uploads a raster `SKImage` to the GPU the first time you draw it. Graphite does **not** — drawing a non-Graphite image without an *image provider* drops the draw with no error. If your Ganesh code draws decoded/CPU images, create the recorder with an image provider (the ready-made `SKGraphiteImageCache` is the simplest option), or upload each image yourself with `ToTextureImage` first. See [Drawing CPU images](index.md#drawing-cpu-images-the-image-provider).
 
 ### 4. Pass the recorder where you used to pass the context
 
@@ -129,15 +129,15 @@ Per-surface and per-image creation moves from the context to the recorder:
 ## Watch out for
 
 - **No OpenGL or Direct3D.** Graphite targets Vulkan, Metal, and Dawn. There is no Direct3D Graphite backend — on Windows, Graphite means Vulkan. If your Ganesh code uses GL or D3D, there is no direct Graphite equivalent; keep using Ganesh, or move to Vulkan/Metal/Dawn.
-- **Apple uses Metal, not Vulkan.** On macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal; Vulkan Graphite is Linux/Android/Windows. See the [platform matrix](graphite-surfaces.md#backend-platform-support).
+- **Apple uses Metal, not Vulkan.** On macOS/iOS/Mac Catalyst/tvOS the only Graphite backend is Metal; Vulkan Graphite is Linux/Android/Windows. See the [platform matrix](index.md#backend-platform-support).
 - **New Vulkan code should use Silk.NET.** For both Ganesh and Graphite, prefer Silk.NET or raw `libvulkan` over the unmaintained SharpVk binding. Graphite has no typed wrapper, so pass raw handles to `SKGraphiteVkBackendContext`.
-- **CPU images need a provider.** The single easiest thing to miss — a raster `SKImage` drawn without an image provider simply doesn't appear. See change 3 above.
-- **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Dawn in the browser](graphite-surfaces.md#dawn-in-the-browser).
+- **CPU images need a provider.** A raster `SKImage` drawn without an image provider does not appear. See [Drawing CPU images](index.md#drawing-cpu-images-the-image-provider).
+- **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Graphite with Dawn](dawn.md#submit-from-the-browser-loop).
 - **Check backend availability.** Use `SKGraphiteContext.IsBackendAvailable` before creating a context, since not every build includes every backend.
-- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite offscreen surfaces](graphite-surfaces.md).
+- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite GPU surfaces](index.md).
 
 ## Related links
 
 - [SkiaSharp APIs](xref:SkiaSharp)
-- [Ganesh GPU surfaces](ganesh-surfaces.md)
-- [Graphite offscreen surfaces](graphite-surfaces.md)
+- [Ganesh GPU surfaces](../ganesh/index.md)
+- [Graphite GPU surfaces](index.md)
