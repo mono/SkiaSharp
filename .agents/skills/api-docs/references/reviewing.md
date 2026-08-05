@@ -5,20 +5,16 @@ dual of [`adding.md`](adding.md) (which fills blanks); review improves what is a
 **report-only by default**; fixing is a separate, gated step.
 
 You run this yourself, end to end — resolve scope, read source, compare, report, and (if approved) fix.
-One agent does the whole pass. Interactive review can use batches of ~25–40 straightforward files.
-Automated authoring reviews only the current authoring wave: at most 10 files and 60
-placeholder-bearing members, with smaller waves for cross-layer native evidence.
+One agent does the whole pass. Work in batches of ~25–40 files so each pass stays auditable and resumable.
 
 ## Required reading (first)
 
-1. [`technical-fact-checking.md`](technical-fact-checking.md) — evidence hierarchy, public managed
-   contract boundary, and cross-layer verification.
-2. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
+1. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
    standard-based enums, caller-owned vs parent-owned). If a doc claim matches this file, it is correct —
    do **not** "correct" it from your own reasoning about how a macro "should" expand.
-3. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
-4. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
-5. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
+2. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
+3. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
+4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
    §1 lists members that are always obsolete; §2 lists methods whose name also exists on the modern API
    (disambiguate by signature). Using an obsolete member in an example is a compile failure → CRITICAL.
 
@@ -39,8 +35,8 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    **select the matching files yourself** — e.g. expand "font" to `SKFont`, `SKTypeface`, `SKFontMetrics`,
    `SKTextBlob`, and the text APIs on `SKPaint`/`SKCanvas`, judging by each type's purpose not just its
    filename. For "whatever changed" use `git -C docs diff --name-only origin/main...HEAD`; for the whole
-   library review every file. Interactive review uses ~25–40-file batches and is incremental against the
-   `last-reviewed` marker; automated authoring uses only the smaller current wave defined above.
+   library review every file. Shard into ~25–40-file batches; review is incremental against the
+   `last-reviewed` marker.
 
 2. **Run the deterministic checks** on the batch with `docs-format-docs` ([`validation.md`](validation.md)).
    It finds objective defects with no model cost and emits findings in the shared contract.
@@ -54,9 +50,6 @@ across many files almost certainly skimmed. Every factual finding must cite sour
 4. **Collect and dedupe findings** in the shared contract. Deduplicate by `(file, docId, class)` plus
    fuzzy message match; when the linter and your own review report the same defect, keep one row. On a
    severity disagreement, take the **highest**.
-   A zero-finding result is valid only after every selected file has a complete source range, every
-   deterministic managed exception has been reconciled with member-level `<exception>` tags, and every
-   native-backed claim has either a `NATIVE` evidence row or remains deferred.
 
 5. **(Gated) Fix.** If fixing is approved, edit the XML directly for CRITICAL (and chosen IMPORTANT)
    findings, and expand examples where types are example-poor — port the `SKCanvas`/`SKShader` bar to
@@ -85,23 +78,11 @@ across many files almost certainly skimmed. Every factual finding must cite sour
   (RP 431-2 ≠ "432-2"; ST 428-1 transfer is gamma ~2.6, not "linear"). Provide header path + line.
 - **Cross-library:** SkiaSharp (Skia/C++) and HarfBuzzSharp (HarfBuzz/C) have different conventions —
   never assume one behaves like the other.
-- **Public-contract boundary:** flag private fields/locals written as though readers can access them, and
-  native capabilities described as managed features when no public wrapper exposes them. Verify every
-  identifier against the managed public surface and DocId.
-- **Native-backed semantics:** for statuses, backend behavior, callback contracts, and nontrivial native
-  enums, read the native declaration/implementation. Names and values alone do not prove the explanation.
-- **Failure completeness:** check nullable factory and callback results, meaningful Boolean/status returns,
-  and deterministic managed exceptions identified by the shared fact sheet, including checked arithmetic
-  and deliberate failures from directly invoked helpers. Public failure behavior omitted from all of
-  summary/returns/remarks/exception tags is an accuracy gap.
-- **Borrowed-data lifetime:** for callback-owned spans/pointers, verify the native lifetime contract as well
-  as the managed disposal boundary, including early invalidation on context abandonment or destruction.
 - **Trust hierarchy for native facts:** native header in repo > `skia-patterns.md` > your own knowledge
   (never use the last for byte layouts). Cannot find the header → flag `UNVERIFIED`, not wrong.
 
 Classes: `factual` (a stated fact contradicts source), `fabricated-member` (docs/example reference a
-type, member, overload, or reader-accessible identifier that does **not** exist in the public source),
-`unsupported-capability` (native behavior is presented as managed API without a public entry point).
+type, member, or overload that does **not** exist in source).
 
 ### B. Examples — compile, real APIs, no obsolete members
 
@@ -133,7 +114,6 @@ Class: `example`.
 ### C. Quality — .NET conventions, completeness, style
 
 - Remaining placeholders (`To be added.`, TODO, bracketed remarks scaffolds like `[Describe …]`).
-- A type/file reported as complete while any placeholder remains in an in-scope `<Docs>` field.
 - Type-level `<remarks>` has real content, not a template blank.
 - Summaries add value beyond restating the member name.
 - `<see cref>` uses the correct prefix (`T:`/`M:`/`P:`/`F:`); CDATA `<xref:…>` uses the **bare UID, no
@@ -162,15 +142,8 @@ SEVERITY | class | <file> | <docId> | <message — what it says vs what source s
 source (so a skim is detectable):
 
 ```
-TRACE | <file> | source:<binding/...cs:a-b> | checked:<n> | issues:<n>
+TRACE | <file> | source:<binding/...cs lines a-b or NONE> | checked:<n> | issues:<n>
 ```
-
-`source:` must contain real line ranges covering the members checked; a path without ranges is incomplete.
-`checked` is the number of selected `EVIDENCE` DocIds in the file, and `issues` is the number of
-machine-readable finding rows for that file.
-Include the `EVIDENCE` classifications and `NATIVE` rows required by
-[`technical-fact-checking.md`](technical-fact-checking.md). Missing evidence is a coverage gap, not proof
-of zero findings.
 
 After deduplication, write a single Markdown report plus the machine block (one line per deduped finding)
 to `output/docs-review/` (gitignored). Nothing in `docs/` changes unless the gated fix step runs.
@@ -189,7 +162,7 @@ to `output/docs-review/` (gitignored). Nothing in `docs/` changes unless the gat
 ## Extra findings (uncorroborated leads)
 ...
 
-<SEVERITY> | <class> | <file> | <docId> | <message>
+FINDING | <severity> | <class> | <file> | <docId> | <message>
 ```
 
 ## Boundaries

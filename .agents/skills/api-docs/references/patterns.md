@@ -373,8 +373,7 @@ The best SkiaSharp docs use markdown-in-CDATA for rich content. This is the conv
 
 | API type | Remarks level |
 |----------|--------------|
-| Primary user-facing classes/structs | Rich: overview, focused usage example when honest and self-contained, disposal notes, threading |
-| Enums, delegates, and infrastructural callback types | Brief remarks or `<remarks />`; do not fabricate a standalone example |
+| Types (classes/structs) | Rich: overview, usage example, disposal notes, threading |
 | Factory methods (`Create*`) | Rich: code example showing common usage |
 | Important methods (`Draw*`, `Save`/`Restore`) | Brief explanation + link to related concepts |
 | Simple properties, getters, overloads | `<remarks />` (empty) is fine |
@@ -469,6 +468,4 @@ Types that wrap native resources (`IDisposable`) should have remarks that cover:
 - **Keep it short** — 5-15 lines, enough to understand the pattern
 - **Be self-contained and compilable** — every variable referenced must be declared in the snippet; a stray identifier (e.g. `bitmap2` when only `bitmap` was created) is a compile error
 - **Only use real APIs** — verify every method/overload exists in source before using in an example
-- **Only use public identifiers** — do not expose private fields or locals such as `info`/`handle` as if a
-  reader can access them; express the fact through public parameters, properties, or prose
 - **Never use obsolete APIs** — a member marked `[Obsolete("...", true)]` is a compile error, so an example using it is broken. Check every example against `references/obsolete-api-map.md`, which names the replacement (and in §2 disambiguates the overloads that share a name with the modern API). The classic SkiaSharp trap is legacy text rendering (see skia-patterns.md "Obsolete APIs").

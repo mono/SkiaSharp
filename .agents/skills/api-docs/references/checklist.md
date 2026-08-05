@@ -9,11 +9,6 @@ Classify issues by severity when reviewing documentation.
 Issues that damage credibility or break functionality:
 
 - **Fabricated APIs** — code examples that reference methods, overloads, or types that don't exist. Always verify against actual C# source before writing examples.
-- **Private identifiers presented as API** — prose or examples tell readers to use an implementation-only
-  field/local/property that is absent from the public managed surface.
-- **Invented native semantics or unsupported managed capabilities** — docs infer behavior from a native
-  name/value without checking its contract, or describe native functionality that SkiaSharp does not
-  publicly expose.
 - **Obsolete APIs in examples** — using a member marked `[Obsolete("...", true)]` in a code example. These are compile errors, so the example never builds. Most common: legacy text rendering (`SKPaint.TextSize`/`Typeface`/`TextAlign`, old `SKCanvas.DrawText(string,float,float,SKPaint)`) — use `SKFont` instead. Check examples against `references/obsolete-api-map.md`; mind §2 there, where the obsolete and modern calls share a method name and differ only by signature.
 - **Wrong standard values or behavior** — enum descriptions citing the wrong standard number, or mischaracterizing the standard (e.g. calling a gamma-2.6 transfer "linear"). Cross-reference against `MemberValue` **and the member name**, which usually encodes the exact standard (`SmpteRp4312` = SMPTE RP 431-2, not 432-2; `SmpteSt4281` in `SKColorspaceTransferFnCicp` = SMPTE ST 428-1, a gamma-2.6 transfer, not linear). Note the same member name can mean different things in sibling enums (`SmpteSt4281` is also a *primaries* member). Verify both the identifier and the described behavior against the member's own enum.
 - **Spelling errors** in public-facing text (teh, recieve, seperate, occured, paramter, retreive, initalize)
@@ -43,8 +38,6 @@ Issues that violate standards or leave gaps:
 - **Invalid cref references** - wrong prefix (T:, M:, P:, F:) or nonexistent target
 - **DocId prefix inside a CDATA xref** — `<xref:T:...>`, `<xref:M:...>`, `<xref:P:...>` are broken links. Inside CDATA an xref takes the bare UID (`<xref:SkiaSharp.SKPath>`); the prefix is only for `<see cref>` outside CDATA.
 - **Missing required documentation** - public APIs without summaries
-- **Missing failure contract** — nullable factory/callback results, meaningful status/Boolean failures, or
-  explicit managed exceptions are omitted where readers need them to use the API safely.
 - **Incomplete overloads** - params filled on one overload but "To be added." on another overload of the same method
 - **Wrong default-value claims** — stating "the default is X" for a struct property that has no field initializer. C# structs zero-initialize, so the default is `0` / `null` / `false` unless the source explicitly sets it. A "typical" constant exposed elsewhere (e.g. `SKDocument.DefaultRasterDpi` = 72) is NOT the struct's default and must be documented separately. Verify against the C# source in `binding/`, not against a value that "looks typical". (Recurring error: `SKDocumentXpsOptions.Dpi` documented as "default 72" — it is actually 0.)
 - **Examples that won't compile** — a code example is broken (so it never builds) when it:
