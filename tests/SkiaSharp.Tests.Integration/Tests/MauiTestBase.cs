@@ -206,6 +206,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
                 <Grid HorizontalOptions="Center" VerticalOptions="Center">
                     <skia:{canvasView} x:Name="CanvasView" 
                                        AutomationId="SkiaCanvas"
+                                       SemanticProperties.Description="SkiaCanvas"
                                        WidthRequest="{CanvasWidth}"
                                        HeightRequest="{CanvasHeight}"
                                        IgnorePixelScaling="True"
