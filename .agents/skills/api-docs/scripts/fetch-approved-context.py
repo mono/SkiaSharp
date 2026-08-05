@@ -16,6 +16,7 @@ from urllib.parse import quote
 
 SCHEMA_VERSION = 1
 DEFAULT_MAX_ISSUES = 50
+DEFAULT_MAX_COMMENTS_PER_ISSUE = 500
 DEFAULT_MAX_BYTES = 1024 * 1024
 
 
@@ -117,9 +118,12 @@ def fetch_context(
     label: str,
     *,
     max_issues: int,
+    max_comments_per_issue: int,
 ) -> dict[str, Any]:
     if max_issues < 0:
         raise ContextFetchError("Issue limit must not be negative.")
+    if max_comments_per_issue < 0:
+        raise ContextFetchError("Comment limit must not be negative.")
     if repository.count("/") != 1 or any(
         not segment for segment in repository.split("/")
     ):
@@ -145,6 +149,11 @@ def fetch_context(
     for raw_issue in raw_issues:
         number = _required(raw_issue, "number", int)
         expected_comments = _required(raw_issue, "comments", int)
+        if expected_comments > max_comments_per_issue:
+            raise ContextFetchError(
+                f"Issue #{number} comment count {expected_comments} exceeds "
+                f"limit {max_comments_per_issue}."
+            )
         comment_endpoint = f"repos/{repository}/issues/{number}/comments?per_page=100"
         raw_comments = client.get_pages(comment_endpoint)
         if len(raw_comments) != expected_comments:
@@ -166,20 +175,26 @@ def fetch_context(
         ]
         comments.sort(key=lambda comment: (comment["createdAt"], comment["id"]))
 
-        issues.append(
-            {
-                "number": number,
-                "title": _required(raw_issue, "title", str),
-                "url": _required(raw_issue, "html_url", str),
-                "state": _required(raw_issue, "state", str),
-                "author": _author(raw_issue),
-                "createdAt": _required(raw_issue, "created_at", str),
-                "updatedAt": _required(raw_issue, "updated_at", str),
-                "labels": _labels(raw_issue),
-                "body": raw_issue.get("body") or "",
-                "comments": comments,
-            }
-        )
+        normalized_issue = {
+            "number": number,
+            "title": _required(raw_issue, "title", str),
+            "url": _required(raw_issue, "html_url", str),
+            "state": _required(raw_issue, "state", str),
+            "author": _author(raw_issue),
+            "createdAt": _required(raw_issue, "created_at", str),
+            "updatedAt": _required(raw_issue, "updated_at", str),
+            "labels": _labels(raw_issue),
+            "body": raw_issue.get("body") or "",
+            "comments": comments,
+        }
+        closed_at = raw_issue.get("closed_at")
+        if closed_at is not None:
+            if not isinstance(closed_at, str):
+                raise ContextFetchError(
+                    f"Issue #{number} returned an invalid closed_at timestamp."
+                )
+            normalized_issue["closedAt"] = closed_at
+        issues.append(normalized_issue)
 
     issues.sort(key=lambda issue: issue["number"])
     return {
@@ -276,6 +291,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--label", required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--max-issues", type=int, default=DEFAULT_MAX_ISSUES)
+    parser.add_argument(
+        "--max-comments-per-issue",
+        type=int,
+        default=DEFAULT_MAX_COMMENTS_PER_ISSUE,
+    )
     parser.add_argument("--max-bytes", type=int, default=DEFAULT_MAX_BYTES)
     return parser.parse_args(argv)
 
@@ -295,6 +315,7 @@ def run(
             args.repository,
             args.label,
             max_issues=args.max_issues,
+            max_comments_per_issue=args.max_comments_per_issue,
         )
         size = write_context(context, output, max_bytes=args.max_bytes)
     except (ContextFetchError, OSError) as error:

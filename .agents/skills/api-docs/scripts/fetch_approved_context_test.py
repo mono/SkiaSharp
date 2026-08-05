@@ -3,9 +3,11 @@ import importlib.util
 import io
 import json
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPT = Path(__file__).with_name("fetch-approved-context.py")
@@ -77,12 +79,19 @@ class FakeClient:
         return self.responses.get(endpoint, [])
 
 
-def args(output, *, max_issues=50, max_bytes=1048576):
+def args(
+    output,
+    *,
+    max_issues=50,
+    max_comments_per_issue=500,
+    max_bytes=1048576,
+):
     return argparse.Namespace(
         repository=REPOSITORY,
         label=LABEL,
         output=output,
         max_issues=max_issues,
+        max_comments_per_issue=max_comments_per_issue,
         max_bytes=max_bytes,
     )
 
@@ -110,7 +119,11 @@ class FetchApprovedContextTests(unittest.TestCase):
         ]
 
         context = MODULE.fetch_context(
-            client, REPOSITORY, LABEL, max_issues=50
+            client,
+            REPOSITORY,
+            LABEL,
+            max_issues=50,
+            max_comments_per_issue=500,
         )
         first = MODULE.canonical_json(context)
         second = MODULE.canonical_json(json.loads(first))
@@ -167,6 +180,22 @@ class FetchApprovedContextTests(unittest.TestCase):
             )
             self.assertEqual(1, result)
             self.assertFalse(output.exists())
+
+    def test_comment_bound_fails_before_comment_fetch(self):
+        client = FakeClient({ISSUE_ENDPOINT: [issue(1, comments=2)]})
+
+        with self.assertRaisesRegex(
+            MODULE.ContextFetchError, "comment count 2 exceeds limit 1"
+        ):
+            MODULE.fetch_context(
+                client,
+                REPOSITORY,
+                LABEL,
+                max_issues=50,
+                max_comments_per_issue=1,
+            )
+
+        self.assertEqual([ISSUE_ENDPOINT], client.calls)
 
     def test_api_and_pagination_failures_remove_stale_output(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -242,6 +271,79 @@ class FetchApprovedContextTests(unittest.TestCase):
             self.assertEqual(2, len(log.splitlines()))
             self.assertIn("ISSUE | 1 | open |", log)
             self.assertIn("Issue 1 with title", log)
+            self.assertNotIn("issue secret body", log)
+            self.assertNotIn("comment secret body", log)
+
+    def test_exact_workflow_cli_shape_with_fake_gh(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            output = root / "api-docs-approved-context.json"
+            comment_endpoint = (
+                f"repos/{REPOSITORY}/issues/1/comments?per_page=100"
+            )
+            client = FakeClient(
+                {
+                    ISSUE_ENDPOINT: [
+                        issue(1, comments=1, body="issue secret body")
+                    ],
+                    comment_endpoint: [
+                        comment(1, 101, "2026-04-01T00:00:00Z")
+                    ],
+                }
+            )
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            command_line = [
+                    "--repository",
+                    REPOSITORY,
+                    "--label",
+                    LABEL,
+                    "--output",
+                    str(output),
+                    "--max-issues",
+                    "50",
+                    "--max-bytes",
+                    "1048576",
+            ]
+            with (
+                patch.object(MODULE, "GhApiClient", return_value=client),
+                patch.object(sys, "stdout", stdout),
+                patch.object(sys, "stderr", stderr),
+            ):
+                result = MODULE.main(command_line)
+
+            self.assertEqual(0, result, stderr.getvalue())
+            context = json.loads(output.read_text(encoding="utf-8"))
+            self.assertEqual(
+                {"schemaVersion", "repository", "label", "issues"},
+                set(context),
+            )
+            self.assertEqual(
+                {
+                    "number",
+                    "title",
+                    "url",
+                    "state",
+                    "author",
+                    "createdAt",
+                    "updatedAt",
+                    "labels",
+                    "body",
+                    "comments",
+                },
+                set(context["issues"][0]),
+            )
+            self.assertEqual(
+                {"id", "author", "url", "createdAt", "updatedAt", "body"},
+                set(context["issues"][0]["comments"][0]),
+            )
+            log = stdout.getvalue()
+            self.assertEqual(2, len(log.splitlines()))
+            self.assertIn(
+                f"CONTEXT | {REPOSITORY} | {LABEL} | 1 | ",
+                log,
+            )
+            self.assertIn("ISSUE | 1 | open |", log)
             self.assertNotIn("issue secret body", log)
             self.assertNotIn("comment secret body", log)
 
