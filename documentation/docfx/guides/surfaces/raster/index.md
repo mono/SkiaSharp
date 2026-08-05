@@ -5,7 +5,7 @@ description: "Create CPU-backed SKSurface objects for offscreen and headless ren
 
 # Raster surfaces
 
-A **raster** surface keeps its pixels in system (CPU) memory. It needs no GPU and is available on every platform SkiaSharp supports. Use a raster surface when you want a portable CPU rendering path for images, thumbnails, PDF or print pipelines, server workloads, or tests.
+A **raster** surface keeps its pixels in system (CPU) memory. It needs no GPU and is available on every platform SkiaSharp supports. Use a raster surface when you want a portable CPU rendering path for images, thumbnails, raster assets for document or print pipelines, server workloads, or tests.
 
 ## Creating a raster surface
 

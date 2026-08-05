@@ -38,7 +38,7 @@ Notice the pattern: wherever Ganesh takes the **context**, Graphite's per-surfac
 
 These snippets compare the core offscreen render and readback flow in each backend. The Graphite version
 calls the `ReadPixelsFromGraphite` helper from [Reading pixels back](index.md#reading-pixels-back);
-that helper is omitted here so the migration steps remain easy to compare.
+that helper is omitted here so the migration steps stay focused on the lifecycle differences.
 
 ### Ganesh
 

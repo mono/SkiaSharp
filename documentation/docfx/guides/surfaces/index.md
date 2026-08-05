@@ -9,11 +9,13 @@ You draw with an [`SKCanvas`](xref:SkiaSharp.SKCanvas). An [`SKSurface`](xref:Sk
 
 Most of the other guides use an `SKCanvasView` and never create a surface directly — the view does that for you. This section is about the layer underneath: how to create a surface yourself for offscreen rendering, custom hosting, image processing pipelines, and server-side or headless rendering.
 
+PDF, SVG, and XPS output also provide an `SKCanvas`, but they serialize drawing to a stream instead of exposing an `SKSurface`. See [Documents](../documents/index.md) for those workflows.
+
 ## Choose how the surface is managed
 
 SkiaSharp exposes one CPU surface family and two GPU surface families.
 
-- **Raster surfaces** live in CPU memory. They are always available and need no GPU. Use them for image generation, thumbnails, PDF/print pipelines, unit tests, and headless workloads. See [Raster surfaces](raster/index.md).
+- **Raster surfaces** live in CPU memory. They are always available and need no GPU. Use them for image generation, thumbnails, raster assets for document or print pipelines, unit tests, and headless workloads. See [Raster surfaces](raster/index.md).
 
 - **Ganesh GPU surfaces** are backed by a GPU texture through the classic Skia GPU backend, *Ganesh*. Create a [`GRContext`](xref:SkiaSharp.GRContext) for [OpenGL](ganesh/opengl.md), [Vulkan](ganesh/vulkan.md), [Metal](ganesh/metal.md), or [Direct3D](ganesh/direct3d.md), then create an offscreen surface or wrap an existing render target. See [Ganesh GPU surfaces](ganesh/index.md).
 
@@ -59,4 +61,5 @@ Map your existing Ganesh code — context creation, flushing, and readback — o
 ## Related links
 
 - [SkiaSharp APIs](xref:SkiaSharp)
+- [Documents](../documents/index.md)
 - [Rendering in SkiaSharp Views](../views/index.md)
