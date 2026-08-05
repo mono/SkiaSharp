@@ -68,24 +68,43 @@ class PipelineStatusTests(unittest.TestCase):
 
     @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
     @patch.object(pipeline_status.subprocess, "run")
-    def test_azure_cli_uses_checked_utf8_execution(
+    def test_azure_cli_uses_checked_binary_execution(
         self, run: Mock, cli_command: Mock
     ) -> None:
         run.return_value = subprocess.CompletedProcess(
-            ["az", "test"], 0, stdout="[]\n", stderr=""
+            ["az", "test"], 0, stdout=b"[]\n", stderr=b""
         )
 
         self.assertEqual("[]", pipeline_status.az(["test"]))
 
         cli_command.assert_called_once_with("az", ["test"])
         self.assertTrue(run.call_args.kwargs["check"])
-        self.assertEqual("utf-8", run.call_args.kwargs["encoding"])
+        self.assertNotIn("text", run.call_args.kwargs)
+        self.assertNotIn("encoding", run.call_args.kwargs)
+
+    @patch.object(pipeline_status.locale, "getencoding", return_value="cp1252")
+    @patch.object(pipeline_status, "cli_command")
+    def test_azure_cli_preserves_cp1252_subprocess_bytes(
+        self, cli_command: Mock, _: Mock
+    ) -> None:
+        payload = "Café".encode("cp1252")
+        cli_command.return_value = [
+            sys.executable,
+            "-c",
+            f"import sys; sys.stdout.buffer.write({payload!r})",
+        ]
+
+        output = pipeline_status.az(["test"])
+
+        self.assertEqual("Café", output)
+        self.assertNotIn("\ufffd", output)
+        output.encode("cp1252")
 
     @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
     @patch.object(pipeline_status.subprocess, "run")
     def test_azure_cli_error_includes_stderr(self, run: Mock, _: Mock) -> None:
         run.side_effect = subprocess.CalledProcessError(
-            2, ["az", "test"], stderr="authentication required"
+            2, ["az", "test"], stderr=b"authentication required"
         )
 
         with self.assertRaisesRegex(
@@ -93,11 +112,26 @@ class PipelineStatusTests(unittest.TestCase):
         ):
             pipeline_status.az(["test"])
 
+    @patch.object(pipeline_status.locale, "getencoding", return_value="cp1252")
+    @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
+    @patch.object(pipeline_status.subprocess, "run")
+    def test_azure_cli_error_preserves_cp1252_stderr(
+        self, run: Mock, _: Mock, __: Mock
+    ) -> None:
+        run.side_effect = subprocess.CalledProcessError(
+            2, ["az", "test"], stderr="échec d'authentification".encode("cp1252")
+        )
+
+        with self.assertRaisesRegex(
+            RuntimeError, "exit code 2: échec d'authentification"
+        ):
+            pipeline_status.az(["test"])
+
     @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
     @patch.object(pipeline_status.subprocess, "run")
     def test_azure_cli_rejects_empty_stdout(self, run: Mock, _: Mock) -> None:
         run.return_value = subprocess.CompletedProcess(
-            ["az", "test"], 0, stdout="  ", stderr="unexpected response"
+            ["az", "test"], 0, stdout=b"  ", stderr=b"unexpected response"
         )
 
         with self.assertRaisesRegex(

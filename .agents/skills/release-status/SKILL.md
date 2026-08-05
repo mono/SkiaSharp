@@ -56,8 +56,8 @@ This outputs:
 - Direct ADO links for each build
 
 The script resolves the platform's Azure CLI launcher (`az` or `az.cmd`), fails when the CLI
-returns an error or no data, and falls back to ASCII status markers when the output encoding
-cannot represent the Unicode display.
+returns an error or no data, decodes native CLI bytes without replacement corruption, and falls
+back to ASCII status markers when the output encoding cannot represent the Unicode display.
 
 ---
 

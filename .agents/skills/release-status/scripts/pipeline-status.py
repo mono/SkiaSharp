@@ -10,6 +10,8 @@ Examples:
 """
 
 import json
+import locale
+import os
 import re
 import shutil
 import subprocess
@@ -103,27 +105,61 @@ def cli_command(executable: str, args: list[str]) -> list[str]:
     return [resolved, *args]
 
 
+def decode_subprocess_output(value: bytes | str | None, source: str) -> str:
+    """Decode subprocess bytes without silently replacing characters."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+
+    encodings = ["utf-8-sig"]
+    try:
+        encodings.append(locale.getencoding())
+    except AttributeError:
+        encodings.append(locale.getpreferredencoding(False))
+    if os.name == "nt":
+        encodings.append("mbcs")
+
+    attempted = []
+    for encoding in encodings:
+        normalized = encoding.lower()
+        if normalized in attempted:
+            continue
+        attempted.append(normalized)
+        try:
+            return value.decode(encoding, errors="strict")
+        except (LookupError, UnicodeDecodeError):
+            continue
+
+    raise RuntimeError(
+        f"Could not decode {source} using {', '.join(attempted)}."
+    )
+
+
 def az(args: list[str], timeout: int = 30) -> str:
     command = cli_command("az", args)
     try:
         result = subprocess.run(
             command,
             capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
             timeout=timeout,
             check=True,
         )
     except subprocess.CalledProcessError as error:
-        detail = (error.stderr or "").strip() or "no error output"
+        detail = (
+            decode_subprocess_output(error.stderr, "Azure CLI stderr").strip()
+            or "no error output"
+        )
         raise RuntimeError(
             f"Azure CLI failed with exit code {error.returncode}: {detail}"
         ) from error
 
-    output = result.stdout.strip()
+    output = decode_subprocess_output(result.stdout, "Azure CLI stdout").strip()
     if not output:
-        detail = result.stderr.strip() or "no error output"
+        detail = (
+            decode_subprocess_output(result.stderr, "Azure CLI stderr").strip()
+            or "no error output"
+        )
         raise RuntimeError(f"Azure CLI returned no output: {detail}")
     return output
 
@@ -233,15 +269,22 @@ def icon_for(run: dict, style: OutputStyle) -> str:
 
 def resolve_branch(ref: str, style: OutputStyle) -> str:
     if re.match(r"^[0-9a-f]{7,40}$", ref):
-        result = subprocess.run(
-            ["git", "branch", "-r", "--contains", ref],
-            capture_output=True,
-            text=True,
-            encoding="utf-8",
-            errors="replace",
-            check=True,
-        )
-        for line in result.stdout.splitlines():
+        try:
+            result = subprocess.run(
+                ["git", "branch", "-r", "--contains", ref],
+                capture_output=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as error:
+            detail = (
+                decode_subprocess_output(error.stderr, "Git stderr").strip()
+                or "no error output"
+            )
+            raise RuntimeError(
+                f"Git failed with exit code {error.returncode}: {detail}"
+            ) from error
+        stdout = decode_subprocess_output(result.stdout, "Git stdout")
+        for line in stdout.splitlines():
             m = re.search(r"origin/(release/\S+)", line)
             if m:
                 print(f"Resolved SHA {ref} {style.resolved} branch: {m.group(1)}")

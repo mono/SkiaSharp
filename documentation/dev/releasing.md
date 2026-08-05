@@ -247,29 +247,48 @@ flowchart TB
     SKIP -->|Yes| TAG
     SKIP -->|No| PUBLISH
     
-    PUBLISH["Publish to NuGet.org
-    ∙ Trigger publish pipeline
-    ∙ Wait for completion
-    ∙ Verify packages visible"]
+    PUBLISH["Queue publish pipeline
+    ∙ Verify managed run ID
+    ∙ Select resource by build-number string
+    ∙ Confirm branch, commit, label, no active run"]
     
-    PUBLISH --> STATUS{Success?}
+    PUBLISH --> APPROVE["Human approval in Azure DevOps
+    ∙ Verify renamed run
+    ∙ Verify Push Stable / Push Preview
+    ∙ Agent never approves"]
+
+    APPROVE --> STATUS{Completed / succeeded?}
     STATUS -->|No| FAILED([Fix and retry])
-    STATUS -->|Yes| TAG
+    STATUS -->|Yes| VERIFY["Verify packages visible
+    ∙ Only after terminal pipeline success"]
+
+    VERIFY --> TAG
     
     TAG["Create Git Tag
     ∙ Preview: vX.Y.Z-preview.N.build
     ∙ Stable: vX.Y.Z
     ∙ Push tag to origin"]
     
-    TAG --> RELEASE
+    TAG --> NOTES["Refresh website notes
+    ∙ Reuse suitable active post-tag run
+    ∙ Follow newer run if superseded
+    ∙ Verify bot/release-notes when changed"]
+
+    NOTES --> RELEASE
     
     RELEASE["Create GitHub Release
     ∙ Set title and notes
     ∙ Mark pre-release if preview
     ∙ Attach samples if stable"]
     
-    RELEASE --> MILESTONE[Close this version's GitHub milestone]
-    MILESTONE --> DONE([Complete])
+    RELEASE --> STABLE{Stable release?}
+    STABLE -->|No| DONE([Complete])
+    STABLE -->|Yes| MILESTONE{Exact stable milestone exists?}
+    MILESTONE -->|No| DONE([Complete])
+    MILESTONE -->|Yes, no open issues| CLOSE[Close exact milestone]
+    MILESTONE -->|Yes, open issues| ASK[Surface issues and ask user]
+    CLOSE --> DONE
+    ASK --> DONE
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
