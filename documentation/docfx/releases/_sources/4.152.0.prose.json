@@ -1,0 +1,75 @@
+{
+  "theme": "Skia m152 and Graphite backends",
+  "highlights_headline": "SkiaSharp 4.152.0 updates to Skia m152 and adds Graphite GPU backend bindings for Vulkan, Metal, and Dawn.",
+  "highlights_body": "It ports more math to managed C# for a performance boost, fixes several native use-after-free and memory-leak bugs, adds async pixel readback and Vulkan via Silk.NET, and switches all solutions to the .slnx format.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Updated to Skia milestone m152",
+          "detail": "Bundles Chrome milestone m152 along with follow-up upstream m151/m152 bug-fix merges.",
+          "prs": [4651, 4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds bindings for the Graphite GPU backend across Vulkan, Metal, and Dawn, giving consumers an early path to Skia's next-generation renderer.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "Adds RequestReadPixels to SKImage and SKSurface for asynchronous pixel reads that work across GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan via Silk.NET and containerized test coverage",
+          "detail": "Ships the SkiaSharp.Vulkan.Silk.NET package with Vulkan tests running on Android and Linux, plus new containerized test legs for Azure Linux, Alpine/musl, and Nano Server, and FreeType-based font support on Nano Server.",
+          "prs": [4527, 4515, 4280]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free and leak fixes",
+          "detail": "Fixes native use-after-free crashes in SKRegion.SpanIterator and SKPixmap.ExtractSubset/With* by rooting the owning object, and fixes a CoTaskMem pixel-buffer leak in SKImage.Create's raster failure path.",
+          "prs": [4355, 4558, 4455]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Managed math and hot-path optimizations",
+          "detail": "Caches a HandleDictionary reflection check, optimizes SKData.SaveTo to skip a double buffer copy, avoids an intermediate string allocation in encoded-text reads, and pre-sizes the SKRuntimeEffectUniforms lookup map.",
+          "prs": [4630, 4550, 4498, 4512]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Deterministic binding generation and Windows SDK flexibility",
+          "detail": "Makes binding generation deterministic across build platforms, converts all .sln solutions to .slnx, initializes the MSVC environment once per native build, and stops pinning a default Windows SDK version.",
+          "prs": [4612, 4528, 4570, 4588]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-based font support for Nano Server",
+    "mmitche": "Initialized the MSVC build environment once per native build on Windows",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": "Refreshes the bundled HarfBuzz binding alongside the .slnx solution conversion and the new containerized test infrastructure."
+}
