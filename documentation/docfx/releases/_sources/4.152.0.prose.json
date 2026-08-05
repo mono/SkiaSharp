@@ -1,0 +1,105 @@
+{
+  "theme": "Skia m152 and Graphite GPU backend",
+  "highlights_headline": "SkiaSharp 4.152.0 upgrades to Skia m152 and adds Graphite GPU backend bindings for Vulkan, Metal, and Dawn.",
+  "highlights_body": "This release introduces the new Graphite GPU backend with full Vulkan, Metal, and Dawn support, adds async read-pixels APIs, fixes native use-after-free memory leaks, and delivers several performance improvements. Nano Server now supports FreeType-based font rendering.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia upgraded to milestone m152",
+          "detail": "The bundled Skia engine is now built from chrome/m152, incorporating upstream rendering fixes and the Graphite GPU backend.",
+          "prs": [4651]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+          "detail": "SkiaSharp now exposes Skia's next-generation Graphite rendering backend, with bindings for the Vulkan, Metal, and Dawn (WebGPU) backends. A new SkiaSharp.Vulkan.Silk.NET package provides Silk.NET-based Vulkan integration and is tested on Android and Linux.",
+          "prs": [3968, 4527]
+        },
+        {
+          "lead": "Async RequestReadPixels for SKImage and SKSurface",
+          "detail": "A new backend-neutral async pixel-readback API (RequestReadPixels) is available on both SKImage and SKSurface, enabling GPU-to-CPU pixel transfer without blocking the rendering thread.",
+          "prs": [4545]
+        },
+        {
+          "lead": "FreeType font support on Nano Server",
+          "detail": "Nano Server can now render text using FreeType, enabling SkiaSharp font functionality in minimal Windows container environments.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free in SKRegion.SpanIterator fixed",
+          "detail": "The SpanIterator was not rooting its parent SKRegion, allowing the GC to collect and finalize it while iteration was still in progress. The region is now kept alive for the iterator's lifetime.",
+          "prs": [4355]
+        },
+        {
+          "lead": "Native use-after-free in SKPixmap.ExtractSubset and With* fixed",
+          "detail": "ExtractSubset and the With* overloads were not rooting the pixel source, causing use-after-free when the source was collected during the operation.",
+          "prs": [4558]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak in SKImage.Create raster failure path fixed",
+          "detail": "When SKImage.Create failed to create a raster image from a pixel buffer, the CoTaskMem-allocated buffer was not freed. The buffer is now correctly released on the failure path.",
+          "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "HandleDictionary skip-registration check cached",
+          "detail": "The reflection check that determines whether a type should be skip-registered in the handle dictionary is now cached, eliminating repeated reflection overhead in object creation hot paths.",
+          "prs": [4630]
+        },
+        {
+          "lead": "SKData.SaveTo optimized to avoid double buffer copy",
+          "detail": "SKData.SaveTo previously copied data twice when writing to a managed stream. It now writes directly from the native buffer, halving the copy overhead.",
+          "prs": [4550]
+        },
+        {
+          "lead": "GetEncodedText null-terminated path avoids intermediate string allocation",
+          "detail": "The null-terminated string path in GetEncodedText now reads directly from the native pointer without constructing an intermediate managed string.",
+          "prs": [4498]
+        },
+        {
+          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
+          "detail": "The uniform lookup dictionary is now pre-sized to the known uniform count, avoiding resize allocations during uniform assignment.",
+          "prs": [4512]
+        },
+        {
+          "lead": "Solutions converted to .slnx format and binding generation made deterministic",
+          "detail": "All .sln solution files have been converted to the new .slnx format, and the binding code generator now produces identical output regardless of the platform it runs on.",
+          "prs": [4528, 4612]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Containerized test legs: Azure Linux, Alpine/musl, Nano Server",
+          "detail": "CI now runs SkiaSharp tests in containerized environments for Azure Linux, Alpine (musl libc), and Nano Server, broadening the tested platform matrix.",
+          "prs": [4515]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType font support on Nano Server",
+    "mmitche": "Windows native build environment initialization improvements",
+    "ramezgerges": "Graphite backend bindings, async read-pixels API, and the SKRegion SpanIterator memory-leak fix"
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships with this release, with the .slnx solution migration and containerized test infrastructure included."
+}

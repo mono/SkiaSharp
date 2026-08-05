@@ -1,47 +1,57 @@
 {
   "theme": "First stable v4 release",
-  "highlights_headline": "SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148.",
-  "highlights_body": "This release rolls up all 4.147.x preview work and lands it as stable. It adds variable fonts with color palette support, animated WebP encoding, and zero-copy stream and shaper APIs. This is a breaking release — review the changes below before upgrading from v3.",
+  "highlights_headline": "SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148 with variable fonts and animated WebP.",
+  "highlights_body": "This release rolls up everything from the 4.147.x preview line: Skia m148, variable font and color palette support, animated WebP encoding, new stream and surface APIs, and a completely reworked singleton lifecycle. It is a breaking release — review the changes below before upgrading from v3.",
   "breaking": [
     {
-      "title": "SKFont() default typeface is now SKTypeface.Empty, not null",
-      "body": "Upstream m132 removed lazy typeface resolution. new SKFont() now eagerly stores SKTypeface.Empty, so MeasureText returns 0 and nothing is drawn. Migration: always construct with an explicit typeface (new SKFont(SKTypeface.Default)) and detect an unset typeface with font.Typeface.IsEmpty instead of a null check.",
-      "prs": [3735]
+      "title": "SKPaint text/font members promoted to compile errors",
+      "body": "Legacy SKPaint text and font members that were deprecated in v3 now emit compile errors. Move typeface selection and text-size configuration onto SKFont instead.",
+      "prs": [4068, 4205]
     },
     {
-      "title": "SKPaint.Typeface returns SKTypeface.Default instead of null",
-      "body": "new SKPaint().Typeface is now SKTypeface.Default (non-null). Text drawing still works, but paint.Typeface == null checks no longer fire. Use paint.Typeface.IsEmpty or remove the null guard.",
-      "prs": [3736]
+      "title": "Remaining pre-v4 obsolete APIs promoted to compile errors",
+      "body": "Any pre-v4 obsoleted members not already covered above now fail to compile. Check your build output and follow the migration hints in each diagnostic.",
+      "prs": [4195]
     },
     {
-      "title": "SKTypeface.FromFamilyName returns Default on all platforms for missing families",
-      "body": "Android previously returned null for an unknown font family; all platforms now return SKTypeface.Default. For strict null semantics use SKFontManager.Default.MatchFamily(name) which still returns null on no match.",
-      "prs": [3737]
-    },
-    {
-      "title": "SKStream.Move(long) is obsolete and throws OverflowException for out-of-range offsets",
-      "body": "The cast to the underlying 32-bit int is now checked. Out-of-range values throw OverflowException and the overload is marked [Obsolete]. Migration: call Move(int) with a validated in-range value.",
-      "prs": [3740]
-    },
-    {
-      "title": "GrVkYcbcrConversionInfo lost value-equality; GRVkImageInfo.YcbcrConversionInfo retyped",
-      "body": "GrVkYcbcrConversionInfo no longer implements IEquatable<T> or == / !=. GRVkImageInfo.YcbcrConversionInfo is now typed as GRVkYcbcrConversionInfo. Update any equality comparisons and struct assignments accordingly.",
-      "prs": [3741]
-    },
-    {
-      "title": "GRVkBackendContextNative — five interop fields removed",
-      "body": "fMinAPIVersion, fInstanceVersion, fExtensions, fFeatures, and fOwnsInstanceAndDevice were removed from the native Vulkan backend context struct. Delete those assignments and use fVkExtensions in place of fExtensions, fDeviceFeatures / fDeviceFeatures2 in place of fFeatures.",
-      "prs": [3741]
-    },
-    {
-      "title": "SKNativeObject.IgnorePublicDispose setter removed",
-      "body": "The protected setter on SKNativeObject.IgnorePublicDispose is gone; the property is now read-only. Subclasses that assigned this field must be updated.",
+      "title": "new SKFont() now uses an empty typeface",
+      "body": "Upstream m132 removed lazy default-typeface resolution. new SKFont() now stores SKTypeface.Empty instead of resolving the platform default at draw time, so MeasureText returns 0 and nothing is drawn unless you pass an explicit typeface. Migrate: new SKFont(SKTypeface.Default). Detect unset with font.Typeface.IsEmpty instead of == null.",
       "prs": []
     },
     {
-      "title": "SKPaint legacy text/font members promoted to compile errors",
-      "body": "All SKPaint text/font properties that were obsoleted in v3 (TextSize, Typeface on paint, etc.) are now compile errors in v4. Migrate to SKFont and pass the font to drawing calls.",
-      "prs": [4068, 4114]
+      "title": "new SKPaint().Typeface returns Default instead of null",
+      "body": "SKPaint now seeds its font with SKTypeface.Default on construction and after Reset(), so paint.Typeface is never null. Code that checked paint.Typeface == null to detect no typeface set will no longer fire; use paint.Typeface.IsEmpty instead.",
+      "prs": []
+    },
+    {
+      "title": "SKTypeface.FromFamilyName now returns Default (not null) for missing families on Android",
+      "body": "The per-platform legacy lookup path that returned null on Android for unknown families has been replaced by a consistent font-manager lookup. FromFamilyName is now never null on any platform. Use SKFontManager.Default.MatchFamily(name) if you need strict null-on-miss semantics.",
+      "prs": []
+    },
+    {
+      "title": "SKStream.Move(long) now throws OverflowException and is obsolete",
+      "body": "The native offset is a 32-bit int. The long overload now uses a checked cast and is marked [Obsolete]. Large out-of-range offsets now throw instead of silently truncating. Migrate: call Move(int) with a validated in-range offset.",
+      "prs": []
+    },
+    {
+      "title": "GRContext.CreateVulkan aborts on Vulkan 1.0 instead of returning null",
+      "body": "Ganesh now requires Vulkan 1.1. On a Vulkan 1.0 instance or device the process terminates via SK_ABORT — this is not a catchable exception. Declare VK_API_VERSION_1_1 in your VkApplicationInfo.apiVersion AND set GRVkBackendContext.MaxAPIVersion to the same value. Devices that only support Vulkan 1.0 must use the raster or another non-Ganesh backend.",
+      "prs": []
+    },
+    {
+      "title": "GRVkBackendContextNative: five fields removed",
+      "body": "fMinAPIVersion, fInstanceVersion, fExtensions, fFeatures, and fOwnsInstanceAndDevice have been removed from GRVkBackendContextNative. Replace fExtensions with fVkExtensions and fFeatures with fDeviceFeatures / fDeviceFeatures2. Remove the other three assignments.",
+      "prs": []
+    },
+    {
+      "title": "GRVkImageInfo.YcbcrConversionInfo retype and GrVkYcbcrConversionInfo loses value-equality",
+      "body": "GRVkImageInfo.YcbcrConversionInfo is now typed GRVkYcbcrConversionInfo (was GrVkYcbcrConversionInfo). The old struct no longer implements IEquatable or equality operators. Update any == / != comparisons or Equals calls to use the new type.",
+      "prs": []
+    },
+    {
+      "title": "SKNativeObject.IgnorePublicDispose setter removed",
+      "body": "The protected setter for IgnorePublicDispose has been removed. Subclasses that set this property must migrate to the constructor parameter or another lifecycle mechanism.",
+      "prs": []
     }
   ],
   "categories": [
@@ -49,9 +59,9 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia upgraded from m132 through m148",
-          "detail": "The bundled Skia engine spans milestones 132, 133, 147, and 148, bringing upstream bug fixes, performance improvements, and layout improvements across all platforms.",
-          "prs": [3560, 3660, 3702, 4044, 4081, 4125]
+          "lead": "Skia upgraded through milestones m132 → m147 → m148",
+          "detail": "The bundled engine progresses from the v3 Skia pin all the way to chrome/m148, incorporating over a year of upstream rendering fixes, performance improvements, and backend updates.",
+          "prs": [3560, 3660, 3702, 4125]
         }
       ]
     },
@@ -59,29 +69,39 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "Variable font support with color palette API",
-          "detail": "Variable fonts are now fully supported through axis value APIs. Color font palettes can be enumerated and selected, enabling rich typographic effects without extra libraries.",
+          "lead": "Variable font and color palette support",
+          "detail": "SKTypeface gains variable-font axis enumeration and coordinate APIs, and a new SKFontStyleSet enables palette iteration. HarfBuzzSharp receives matching variable-font support.",
           "prs": [3703, 3742]
         },
         {
-          "lead": "Animated WebP encoding via SKWebpEncoder",
-          "detail": "SKWebpEncoder now supports multi-frame animated WebP output, filling a long-standing gap between SkiaSharp and the upstream Skia encoder.",
+          "lead": "Animated WebP encoding (SKWebpEncoder)",
+          "detail": "A new SKWebpEncoder class supports encoding multi-frame animated WebP streams directly from SkiaSharp.",
           "prs": [3771]
         },
         {
-          "lead": "Zero-copy stream-to-data conversion with SKStream.GetData()",
-          "detail": "SKStream.GetData() wraps the underlying buffer as an SKData without copying, enabling efficient conversion from streams to data objects in hot paths.",
+          "lead": "SKStream.GetData() for zero-copy stream-to-data access",
+          "detail": "A new GetData() method returns the underlying data of a seekable stream as SKData without copying, enabling zero-copy workflows for in-memory streams.",
           "prs": [3772]
         },
         {
-          "lead": "SKSurface.Draw and SKCanvas.DrawSurface gain SKSamplingOptions overloads",
-          "detail": "Both drawing methods now accept an SKSamplingOptions parameter for fine-grained control over resampling quality when blitting surfaces.",
+          "lead": "SKSamplingOptions support for SKSurface.Draw and SKCanvas.DrawSurface",
+          "detail": "DrawSurface and the surface Draw overloads now accept SKSamplingOptions, giving callers control over filtering quality when compositing surfaces.",
           "prs": [3491]
         },
         {
-          "lead": "HarfBuzzSharp HBColor struct and missing API wrappers added",
-          "detail": "A proper HBColor struct replaces raw uint for hb_color_t, and several missing HarfBuzz API wrappers were added along with naming-convention fixes.",
+          "lead": "HarfBuzz API completeness and HBColor struct",
+          "detail": "Missing HarfBuzz API wrappers were added, naming-convention violations fixed, and a new HBColor struct properly represents hb_color_t values in managed code.",
           "prs": [4000, 4001]
+        },
+        {
+          "lead": "Linux Bionic native assets",
+          "detail": "SkiaSharp now ships native assets for Linux Bionic (Android-style libc), enabling Android-NDK-linked Linux environments.",
+          "prs": [3217]
+        },
+        {
+          "lead": "Tizen x64 and arm64 native build support",
+          "detail": "Native Tizen builds are now produced for both x64 and arm64 architectures.",
+          "prs": [3620]
         }
       ]
     },
@@ -89,34 +109,34 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKPixmap and SKBitmap GetPixelSpan offsets corrected",
-          "detail": "GetPixelSpan(x, y) previously used Height instead of Width for the x offset and ignored RowBytes for stride. Both are now correct, fixing pixel-access bugs on non-packed bitmaps.",
-          "prs": [4128, 4148]
+          "lead": "SKPixmap/SKBitmap GetPixelSpan stride and offset corrections",
+          "detail": "GetPixelSpan now uses RowBytes for stride (not Width * bytesPerPixel), and the GetPixelSpan<T>(x, y) overload was using Height instead of Width for the offset calculation — both are now fixed.",
+          "prs": [4148, 4128]
         },
         {
           "lead": "SKPath finalizer crash when SKPathBuilder is collected first",
-          "detail": "A race between the SKPath finalizer and an already-collected SKPathBuilder caused native crashes. The object graph is now managed correctly.",
+          "detail": "A race condition between SKPath and its builder during GC finalization caused a native crash. The finalizer ordering is now safe.",
           "prs": [3796]
         },
         {
-          "lead": "Default typeface resolution moved to the managed layer",
-          "detail": "The native sk_typeface_ref_default path was replaced by font-manager resolution in managed code, fixing a crash on Android API 36+ and ensuring a non-null default on every platform.",
+          "lead": "Default typeface resolution on Android API 36+",
+          "detail": "A null-dereference on Android API 36+ when the font manager returned null for the default typeface is fixed; the fallback now yields SKTypeface.Empty instead of crashing.",
           "prs": [3730]
         },
         {
-          "lead": "SKGLView renders correctly after tab switch in MAUI TabBar on Android",
-          "detail": "The GL surface was not being re-initialized after the view was detached and re-attached during a tab switch, causing a blank canvas. This is now handled correctly.",
-          "prs": [3076]
-        },
-        {
-          "lead": "WinUI: Projection DLL resolution fixed for .NET 9 consumers",
-          "detail": "The WinUI3 projection DLL was not found at runtime under .NET 9, causing startup failures. The reference has been corrected.",
+          "lead": "WinUI Projection DLL not found for .NET 9 consumers",
+          "detail": "The WinUI native projection DLL was not being located correctly for .NET 9 consumers. The asset resolution is now correct.",
           "prs": [4084]
         },
         {
-          "lead": "Native compatibility check moved from ModuleInitializer to SkiaApi constructor",
-          "detail": "The native-compat gate now runs at first use rather than module load, avoiding spurious failures in environments that load the assembly without invoking SkiaSharp.",
-          "prs": [4133]
+          "lead": "Android SKGLView not rendering after tab switch in MAUI TabBar",
+          "detail": "SKGLView on Android lost its rendering surface when the containing MAUI TabBar tab was switched and then restored. The surface is now recreated correctly.",
+          "prs": [3076]
+        },
+        {
+          "lead": "Apple platform TFMs corrected",
+          "detail": "Library TFMs now use versioned targets (e.g. ios26.0) and application TFMs use unversioned forms, matching the Apple platform conventions and fixing downstream build warnings.",
+          "prs": [3798]
         }
       ]
     },
@@ -124,9 +144,19 @@
       "heading": "Lifecycle & Internals",
       "bullets": [
         {
-          "lead": "Singleton instance lifecycle fully reworked",
-          "detail": "SKObject singleton instances (shared handles that must not be disposed by their wrapper) are now tracked through a proper weak-reference registry, eliminating a class of use-after-free bugs.",
+          "lead": "Singleton lifecycle reworked",
+          "detail": "The lifecycle of singleton instances (SKTypeface.Default, SKColorSpace.Srgb, and similar cached singletons) has been redesigned to avoid finalizer-ordering issues and to be safe across AppDomain unload and process teardown.",
           "prs": [4080]
+        },
+        {
+          "lead": "Native-compat gate moved from ModuleInitializer to SkiaApi constructor",
+          "detail": "The runtime check that guards against loading an incompatible native library now runs in the SkiaApi static constructor instead of a module initializer, avoiding initialization-order edge cases.",
+          "prs": [4133]
+        },
+        {
+          "lead": "WASM: pre-.NET 8 Emscripten builds dropped",
+          "detail": "Native WASM builds for Emscripten versions prior to .NET 8 are no longer produced, reducing build surface.",
+          "prs": [4022]
         }
       ]
     },
@@ -134,24 +164,9 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Linux Bionic (Android NDK sysroot) native assets added",
-          "detail": "Native binaries for the Linux Bionic ABI are now included, enabling SkiaSharp on environments that use the Android NDK sysroot on Linux.",
-          "prs": [3217]
-        },
-        {
-          "lead": "Tizen x64 and arm64 native builds added",
-          "detail": "The Tizen platform now ships native builds for both x64 and arm64 architectures.",
-          "prs": [3620]
-        },
-        {
-          "lead": "Apple TFMs corrected: versioned for libraries, unversioned for apps",
-          "detail": "Apple-platform TFMs are now set to 26.0 for library projects and the unversioned form for app projects, aligning with Apple SDK and .NET conventions.",
-          "prs": [3798]
-        },
-        {
-          "lead": "WASM pre-.NET 8 Emscripten builds dropped",
-          "detail": "Native WASM builds targeting Emscripten versions before the .NET 8 baseline have been removed, reducing CI surface and aligning with the minimum supported toolchain.",
-          "prs": [4022]
+          "lead": "Linux Docker builds migrated to .NET official cross-compilation images",
+          "detail": "Linux native build containers now use the .NET team's official cross-compilation Docker images, ensuring consistent toolchains and faster build setup.",
+          "prs": [4062]
         }
       ]
     },
@@ -159,25 +174,25 @@
       "heading": "Security",
       "bullets": [
         {
-          "lead": "Native dependency refreshes: libexpat, libpng, zlib, freetype, libjpeg-turbo, expat, harfbuzz",
-          "detail": "All bundled native libraries were updated to their latest releases, addressing known CVEs and bringing upstream security fixes.",
-          "prs": [3717, 3718, 3720, 3726, 4012, 4035, 4079]
+          "lead": "Native dependency refreshes: expat, libjpeg-turbo, freetype, zlib, libpng, libexpat, HarfBuzz",
+          "detail": "expat updated to 2.8.1, libjpeg-turbo to 3.1.4.1, freetype to 2.14.3, zlib to 1.3.2.1-motley, libpng to 1.6.58, libexpat to 2.7.5, and HarfBuzz to 14.2.0.",
+          "prs": [4079, 4012, 3726, 3720, 3718, 3717, 4035]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "Variable font axis and color palette APIs, singleton lifecycle rework, SKPath finalizer fix, HarfBuzz buffer improvements, and Uno gallery sample updates",
-    "4Darmygeometry": "Linux Bionic native asset support and HarfBuzz color API additions",
-    "ebariche": "Uno gallery Skottie package fix",
-    "sasakrsmanovic": "API naming convention audit and fixes",
-    "SimonvBez": "SKGLView MAUI TabBar re-render fix on Android"
+    "ramezgerges": "Singleton lifecycle rework, SKPath finalizer fix, SKPixmap pixel-access fixes, variable font and palette support, HarfBuzzSharp API additions, and Uno sample maintenance",
+    "4Darmygeometry": "Linux Bionic native assets and PolySharp C# 13 support on legacy TFMs",
+    "ebariche": "WinUI Projection DLL resolution fix for .NET 9",
+    "sasakrsmanovic": "Default typeface resolution fix",
+    "SimonvBez": "Android SKGLView tab-switch rendering fix"
   },
   "preview_summaries": {
-    "v4.148.0-rc.1.2": "Release Candidate 1 landed the final Skia m148 upgrade, the singleton lifecycle rework, SKPaint legacy API promotion to errors, pixel-access bug fixes, and the WinUI .NET 9 projection fix. It also completed the variable font and animated WebP work from earlier previews.",
-    "v4.147.0-preview.3.1": "Preview 3 added HarfBuzz 14.2.0, animated WebP encoding, zero-copy SKStream.GetData(), SKSamplingOptions overloads for DrawSurface, HBColor struct, libjpeg-turbo and expat refreshes, and merged the chrome/m147 upstream bug-fix sync.",
-    "v4.147.0-preview.2.1": "Preview 2 delivered animated WebP encoding groundwork, Tizen native builds, Apple TFM corrections, and the SKPath finalizer fix, along with a broad round of CI and infrastructure improvements.",
-    "v4.147.0-preview.1.1": "Preview 1 opened the v4 line: Skia milestones 132 through 147, variable fonts and color palettes, Linux Bionic assets, the managed default-typeface rework, PolySharp for C# 13 on legacy TFMs, and the SKGLView TabBar fix."
+    "v4.148.0-rc.1.2": "RC 1 landed the Skia m148 engine upgrade, SKPixmap GetPixelSpan fixes, the remaining v4 obsolete promotions to compile errors, the singleton lifecycle rework, WinUI .NET 9 fix, expat 2.8.1, and HarfBuzz 14.2.0.",
+    "v4.147.0-preview.3.1": "Preview 3 added libjpeg-turbo 3.1.4.1, freetype 2.14.3, zlib and libpng/libexpat security updates, the HarfBuzz HBColor struct and missing API wrappers, and dropped pre-.NET 8 WASM builds.",
+    "v4.147.0-preview.2.1": "Preview 2 introduced animated WebP encoding, SKStream.GetData(), the SKPath finalizer fix, Apple platform TFM corrections, and the Uno gallery fix.",
+    "v4.147.0-preview.1.1": "Preview 1 opened the v4 line with Skia milestones m132 through m147, variable fonts and color palette APIs, SKSamplingOptions for surface drawing, Linux Bionic assets, Tizen x64/arm64 builds, and the Android tab-switch rendering fix."
   },
-  "harfbuzz_summary": "HarfBuzzSharp 14.2.0 ships with this release, adding the HBColor struct for proper color type representation, missing API wrappers, and the underlying harfbuzz library updated to 14.2.0."
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.0 ships with this release, adding variable font axis support, a new HBColor struct, missing API wrappers, and the 14.2.0 upstream update."
 }
