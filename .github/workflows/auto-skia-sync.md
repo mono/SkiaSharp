@@ -37,7 +37,7 @@ on:
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Check out detection scripts
-      uses: actions/checkout@v7
+      uses: actions/checkout@v7.0.1
       with:
         sparse-checkout: .github/scripts
     - name: Detect milestone
@@ -172,7 +172,10 @@ steps:
     run: |
       OUT=$(mktemp)
       bash .github/scripts/skia-sync-detect.sh --resolve-only --output "$OUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
-      set -a; . "$OUT"; set +a
+      set -a
+      # shellcheck disable=SC1090
+      . "$OUT"
+      set +a
       bash .github/scripts/skia-sync-prepare-skia.sh
       {
         printf 'SKIA_SYNC_AUTOMATION=1\n'
