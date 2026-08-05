@@ -279,22 +279,22 @@ if [ -z "$UPSTREAM_SHA" ]; then
   exit 0
 fi
 
-# Compare upstream HEAD against the existing sync branch if present; otherwise, for a
-# release line, against the release base branch. A main milestone bump has no sync
-# branch yet and always has work, so it proceeds.
+# Compare upstream HEAD against the existing sync branch if present; otherwise against
+# the resolved mono/skia base. This applies to both main and release destinations: a new
+# milestone naturally has work when its upstream HEAD is not contained in the base.
 SYNC_SHA=$(git ls-remote https://github.com/mono/skia.git "refs/heads/${HEAD_BRANCH}" | awk '{print $1}')
-COMPARE_REF=""
+COMPARE_REF="$SKIA_BASE_BRANCH"
 if [ -n "$SYNC_SHA" ]; then
   COMPARE_REF="$HEAD_BRANCH"
-elif [ "$IS_RELEASE" = true ]; then
-  COMPARE_REF="$SKIA_BASE_BRANCH"
 fi
-if [ -n "$COMPARE_REF" ]; then
-  BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by' 2>/dev/null || echo unknown)
-  if [ "$BEHIND" = 0 ]; then
-    echo "::notice::${UPSTREAM_REF} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
-    emit skip true
-    exit 0
-  fi
-  echo "${COMPARE_REF} exists but is ${BEHIND} commits behind upstream"
+if ! BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...${COMPARE_REF}" --jq '.behind_by'); then
+  echo "::error::Unable to compare upstream ${UPSTREAM_REF} (${UPSTREAM_SHA}) against mono/skia ${COMPARE_REF}; ancestry is unknown, refusing to start sync."
+  exit 1
 fi
+if [ "$BEHIND" = 0 ]; then
+  echo "::notice::${UPSTREAM_REF} already fully merged into ${COMPARE_REF} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
+  emit skip true
+  exit 0
+fi
+echo "${COMPARE_REF} is ${BEHIND} commits behind upstream"
+emit skip false

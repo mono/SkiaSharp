@@ -32,7 +32,8 @@ on:
   # .github/scripts/skia-sync-detect.sh (the single source of truth,
   # sparse-checked-out below).
   # Exit 1 = hard failure (explicit milestone input doesn't exist / branch missing).
-  # skip=true output = nothing to sync (graceful skip, workflow shows green).
+  # skip=true output = nothing to sync; skip=false = verified work to do.
+  # A missing output never activates the agent.
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
     - name: Check out detection scripts
@@ -70,8 +71,8 @@ jobs:
       head_branch: ${{ steps.detect.outputs.head_branch }}
 
 # -- Agent job gate --------------------------------------------------
-# Only run the agent if pre-activation succeeded and there's work to do.
-if: needs.pre_activation.outputs.detect_result == 'success' && needs.pre_activation.outputs.skip != 'true'
+# Only run the agent if pre-activation succeeded and explicitly found work to do.
+if: needs.pre_activation.outputs.detect_result == 'success' && needs.pre_activation.outputs.skip == 'false'
 
 # -- Checkout --------------------------------------------------------
 checkout:
