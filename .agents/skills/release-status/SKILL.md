@@ -44,9 +44,9 @@ Packages appear on the internal feed after pipeline #2 (`SkiaSharp`) completes.
 ## Step 1: Run the Status Script
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 # Or pass a commit SHA:
-python3 .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
+python .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
 ```
 
 This outputs:
@@ -54,6 +54,10 @@ This outputs:
 - Build IDs and build numbers
 - Trigger relationships proving which upstream build caused each downstream run
 - Direct ADO links for each build
+
+The script resolves the platform's Azure CLI launcher (`az` or `az.cmd`), fails when the CLI
+returns an error or no data, and falls back to ASCII status markers when the output encoding
+cannot represent the Unicode display.
 
 ---
 
@@ -149,14 +153,15 @@ relationships via `triggerInfo.pipelineId` to confirm the chain is connected.
 
 ---
 
-## Extracting the NuGet Version
+## Extracting the Test Package Version
 
 From the `buildNumber` in the script output:
 
-| Release Type | buildNumber Example | NuGet Version |
-|--------------|---------------------|---------------|
-| Preview | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` |
-| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4` (no build suffix) |
+| Release Type | buildNumber Example | Internal package to test | Public version after publish |
+|--------------|---------------------|--------------------------|------------------------------|
+| Preview | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` | `3.119.4-preview.1.1` |
+| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4-stable.2` | `3.119.4` |
 
-For stable releases, the internal feed has `{base}-stable.{build}` but the published NuGet
-version is always just the base (e.g., `3.119.4`).
+Release integration tests run before public publication, so stable testing must use the exact
+`{base}-stable.{build}` package from the internal feed. The bare base version is the final
+NuGet.org version, not the prepublication test input.

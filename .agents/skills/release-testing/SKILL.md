@@ -74,19 +74,22 @@ the pipeline that signs and publishes packages to the internal feed.
 See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
 manual queries, and troubleshooting.
 
-### Extracting NuGet Version
+### Extracting Package Versions
 
-The build description contains the internal version in format: `#{base}-{label}.{build}+{branch}`
+The build description contains the exact internal package version in format:
+`#{base}-{label}.{build}+{branch}`.
 
 **Preview example:** `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
-- Internal version: `3.119.2-preview.2.3`
-- NuGet version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
+- Internal test package: `3.119.2-preview.2.3`
+- Public version if published: `3.119.2-preview.2.3`
 
 **Stable example:** `#3.119.2-stable.3+3.119.2 succeeded`
-- Internal version: `3.119.2-stable.3`
-- NuGet version: `3.119.2` (base only — build number is NEVER appended to stable versions)
+- Internal test package: `3.119.2-stable.3`
+- Final public version after publication: `3.119.2`
 
-⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.) but the published NuGet version is always just `3.119.2`.
+⚠️ **Integration tests run before public publication and MUST consume the exact internal package.**
+For a stable release, pass `3.119.2-stable.3` to the tests. The bare `3.119.2` version does not
+identify the prepublication build and is reserved for the final NuGet.org publication and tag.
 
 ---
 
@@ -107,7 +110,7 @@ The build description contains the internal version in format: `#{base}-{label}.
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
    - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
-2. **Search and filter for the SPECIFIC version:**
+2. **Search and filter for the SPECIFIC internal test package:**
 
    **For preview releases** (`PREVIEW_LABEL` is NOT `stable`):
 
@@ -118,53 +121,74 @@ The build description contains the internal version in format: `#{base}-{label}.
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
      | grep "^{base}-{label}\."
+
+   dotnet package search HarfBuzzSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
+     | grep "^{harfbuzz-base}-{label}\."
    
    # Example: Find 3.119.2-preview.3.* versions
    ... | grep "^3.119.2-preview.3\."
    ```
 
-   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This IS the NuGet version.
+   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This is the exact package
+   version to test and, for a preview, the version that may later be published.
 
    **For stable releases** (`PREVIEW_LABEL` is `stable`):
 
    ```bash
-   # Verify a stable build exists on the internal feed
+   # Find the exact stable packages available on the internal feed
    dotnet package search SkiaSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
      | grep "^{base}-stable\."
+
+   dotnet package search HarfBuzzSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
+     | grep "^{harfbuzz-base}-stable\."
    
    # Example: Find 3.119.2-stable.* internal packages
    ... | grep "^3.119.2-stable\."
    ```
 
-   The internal feed has `{base}-stable.{build}` packages (e.g., `3.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `3.119.2`). The build number is never appended to stable versions.
+   Pick the highest matching internal package (e.g., `3.119.2-stable.3`) and pass that exact
+   version to the integration tests. The final public version remains `{base}` (e.g.,
+   `3.119.2`), but it is not the package under test before publication.
 
    ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
    The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
    by the base version and preview label from the release branch.
 
-3. Pick the NuGet version:
-   - **Preview:** Highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
-   - **Stable:** Just the base version (e.g., `3.119.2`) — no build number appended
+3. Resolve both exact test package versions:
+   - **Preview:** Highest matching versions (e.g., `3.119.2-preview.3.1` and
+     `8.3.1.3-preview.3.1`)
+   - **Stable:** Highest matching internal versions (e.g., `3.119.2-stable.3` and
+     `8.3.1.3-stable.3`)
+   - **Build correlation:** The trailing CI build number MUST match for SkiaSharp and
+     HarfBuzzSharp. A mismatch means the packages came from different builds; stop and resolve it.
 
 4. Report to user:
 
    **Preview:**
    ```
    Resolved versions:
-     SkiaSharp:     3.119.2-preview.3.1
-     HarfBuzzSharp: 8.3.1.3-preview.3.1
-     Build number:  1
+     SkiaSharp test package:     3.119.2-preview.3.1
+     HarfBuzzSharp test package: 8.3.1.3-preview.3.1
+     Public version if published: 3.119.2-preview.3.1
+     CI build number:             1
    ```
 
    **Stable:**
    ```
    Resolved versions:
-     SkiaSharp:     3.119.2
-     HarfBuzzSharp: 8.3.1.3
-     Internal build: 3.119.2-stable.3 (on feed)
+     SkiaSharp test package:      3.119.2-stable.3
+     HarfBuzzSharp test package:  8.3.1.3-stable.3
+     Final public versions:       3.119.2 / 8.3.1.3
+     CI build number:             3
    ```
 
 **No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
@@ -175,12 +199,29 @@ The build description contains the internal version in format: `#{base}-{label}.
 
 **Before running tests**, determine and confirm the test matrix with the user.
 
+### Inspect the Environment First
+
+Follow [setup.md](references/setup.md) and run its read-only preflight before proposing changes.
+If a workload, Appium component, driver, SDK image, emulator, browser, or system prerequisite is
+missing or incompatible:
+
+1. Report the installed and required versions.
+2. Show the exact proposed install, update, or replacement.
+3. Ask the user for explicit approval.
+
+Do not turn a release-test request into permission to mutate the machine.
+
 ### Device Requirements
 
 | Platform | Old Version | New Version |
 |----------|-------------|-------------|
-| Android | API 21-23 (5.0-6.0) | API 35-36 (15-16) |
+| Android | API 26 (Android 8/Oreo) | API 35-36 (Android 15-16) |
 | iOS | Oldest available runtime | Newest available runtime |
+| Mac Catalyst | Current macOS host | - |
+| Windows | Current Windows host | - |
+
+Current UiAutomator2 releases support API 26 or newer. Do not downgrade Appium or install a
+legacy driver to retain API 21-25 coverage; API 26 is the supported old-device boundary.
 
 👉 **See [setup.md](references/setup.md)** for device selection details and emulator creation.
 
@@ -190,9 +231,10 @@ The build description contains the internal version in format: `#{base}-{label}.
 Planned test matrix:
   - iOS (old):     [device] ([oldest available iOS runtime])
   - iOS (new):     [device] ([newest available iOS runtime])
-  - Android (old): [device] (Android 6.0 / API 23)
+  - Android (old): [device] (Android 8.0 / API 26)
   - Android (new): [device] (Android 16 / API 36)
   - Mac Catalyst:  Current macOS
+  - Windows:       Current Windows host
   - Blazor:        Chromium
   - Console:       .NET runtime
   - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
@@ -228,7 +270,7 @@ ls output/logs/testlogs/integration/  # Should be empty
 
 ```bash
 cd tests/SkiaSharp.Tests.Integration
-dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+dotnet test -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={harfbuzz-test-version}
 ```
 
 ### Test Commands
@@ -242,17 +284,20 @@ dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
 
 ```bash
 # Run by category
+# In every command, "..." means:
+# -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={harfbuzz-test-version}
 dotnet test ... -- --filter-class "*SmokeTests"
 dotnet test ... -- --filter-class "*ConsoleTests"
 dotnet test ... -- --filter-class "*LinuxConsoleTests"
 dotnet test ... -- --filter-class "*BlazorTests"
 dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
 dotnet test ... -- --filter-class "*MauiMacCatalystTests"
+dotnet test ... -- --filter-class "*MauiWindowsTests"
 
 # Android: specify device ID and expected API level for validation
 dotnet test ... \
   -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23" \
+  -p:AndroidApiLevel="26" \
   -- --filter-class "*MauiAndroidTests"
 ```
 
@@ -288,14 +333,14 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
 2. **Start emulator with WIPE and boot verification:**
    ```bash
    # Start emulator with -wipe-data to ensure clean state (use mode="async" to keep it running)
-   emulator -avd Pixel_API_23 -wipe-data -no-snapshot -no-audio
+   emulator -avd Pixel_API_26 -wipe-data -no-snapshot -no-audio
    
    # Wait for boot (check every 10s until returns "1")
    # This can take 60-120s for a fresh wipe
    adb shell getprop sys.boot_completed
    
    # Verify correct API level
-   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "23")
+   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "26")
    ```
 
    ⚠️ **The `-wipe-data` flag is REQUIRED** to ensure a clean emulator state. Without it,
@@ -309,8 +354,8 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
    dotnet test \
      -p:AndroidDeviceId="$DEVICE_ID" \
      -p:AndroidApiLevel="$API_LEVEL" \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={harfbuzz-test-version} \
      -- --filter-class "*MauiAndroidTests"
    ```
 
@@ -330,26 +375,29 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
 native `.a` libs), boots it headless in Playwright/Chromium, and screenshot-diffs the canvas. Run it
 once per .NET band you're validating.
 
-1. **Install the Playwright browser (one-time):**
+1. **Inspect the Playwright browser, then install only with approval if missing:**
    ```bash
    cd tests/SkiaSharp.Tests.Integration
-   dotnet build -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+   dotnet build -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={harfbuzz-test-version}
    pwsh bin/Debug/*/playwright.ps1 install chromium
    ```
+
+   The install writes to the user's browser cache. Do not run it until inspection shows Chromium
+   is missing and the user approves the exact command.
 
 2. **Run on the default .NET band:**
    ```bash
    dotnet test \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={harfbuzz-test-version} \
      -- --filter-class "*BlazorTests"
    ```
 
 3. **Run on another band** (e.g. a preview) — change `BaseFramework` + `SdkVersion` (see [Test Properties](#test-properties)):
    ```bash
    dotnet test \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={harfbuzz-test-version} \
      -p:BaseFramework=netX.0 \
      -p:SdkVersion=X.0.100 \
      -p:SdkAllowPrerelease=true \
@@ -371,6 +419,7 @@ once per .NET band you're validating.
 | LinuxConsoleTests | Once (Docker) | - | ~2min |
 | BlazorTests | Once | - | ~2min |
 | MauiMacCatalystTests | Once | - | ~2min |
+| MauiWindowsTests | Once | - | ~2min |
 | MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
 | MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
 
@@ -400,7 +449,8 @@ Proceed to **release-publish** ONLY when:
 
 - ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
-- ✅ Android tests pass on BOTH oldest (API 21-23) and newest (API 35-36)
+- ✅ Android tests pass on BOTH oldest supported (API 26) and newest (API 35-36)
+- ✅ Windows tests pass on Windows hardware, or are explicitly reported as a hardware skip on non-Windows hosts
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
 ### Skip Policy
@@ -410,17 +460,23 @@ Proceed to **release-publish** ONLY when:
 - Windows tests on non-Windows → Skip (hardware unavailable)
 
 **NOT valid skips:**
-- "No Android emulator" → Create one
+- "No Android emulator" → Report the required AVD and ask before creating it
 - "Android SDK not found" → Ask user for path
-- "No iOS simulators" → Install via Xcode
-- "Tool X not installed" → Install it
+- "No iOS simulators" → Report the missing runtime and ask before installing via Xcode
+- "Tool X not installed" → Report the exact proposed machine change and ask before installing it
 
-**If environment is broken, FIX IT. Do not skip tests.**
+**If the environment is incomplete, do not infer a skip and do not mutate the machine
+automatically. Report the gap, ask for approval for the exact setup change, then retry.**
 
 ### Final Report Format
 
 ```
 ✅ Release Testing Complete
+
+Packages tested:
+  SkiaSharp:      3.119.2-stable.3
+  HarfBuzzSharp:  8.3.1.3-stable.3
+Final public versions if approved: 3.119.2 / 8.3.1.3
 
 | Test | Platform | Version | Status |
 |------|----------|---------|--------|
@@ -429,13 +485,17 @@ Proceed to **release-publish** ONLY when:
 | LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
+| MauiWindowsTests | Windows | Current host | ✅ Passed |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
 | MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
-| MauiAndroidTests | Android 6.0 (API 23) | Pixel_API_23 | ✅ Passed |
+| MauiAndroidTests | Android 8.0 (API 26) | Pixel_API_26 | ✅ Passed |
 | MauiAndroidTests | Android 16 (API 36) | Pixel_API_36 | ✅ Passed |
 
 Ready for publishing.
 ```
+
+On a non-Windows host, report `MauiWindowsTests` as a hardware skip with the host reason rather
+than omitting the row. Apply the same rule to iOS/Mac tests on non-macOS hosts.
 
 ---
 
