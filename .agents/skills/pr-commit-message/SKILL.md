@@ -11,275 +11,287 @@ description: >
 
 # PR Commit Message Skill
 
-Write commit messages that preserve the *reason* for the change, not just the diff.
+Write a historical record, not a diff summary. A future maintainer should be able to
+recover what changed, why it mattered, what failed or constrained the design, why this
+approach was chosen, and where the supporting evidence lives without reopening the PR.
 
-A strong merge commit message should let a future maintainer answer:
+Optimize for **durable understanding**, not assistant-response brevity. Remove repetition
+and development chronology, but preserve every independently useful root cause, design
+decision, compatibility rule, limitation, and proof point.
 
-- What changed?
-- Why was it needed now?
-- What bug, regression, release, or design constraint motivated it?
-- What approach or tradeoff was chosen?
-- Where should I look for more context later?
+## Non-negotiable evidence contract
 
-Use this skill for merge commits, squash commits, and "please write a better commit
-message for this PR" requests.
+PR prose and early commit bodies often preserve useful history, but they can also preserve
+stale constraints, mistaken link interpretations, and superseded absolutes. Prevent those
+high-cost failures before drafting:
 
-For calibration and examples drawn from Jon Pryor's commit history in `dotnet/android`,
-see [`references/pryor-style-guide.md`](references/pryor-style-guide.md).
+- Count the private ledger's material topics. With two or more topics, the final draft must
+  have the same number of named topic sections; do not count the overview, and do not let a
+  continuous narrative or overview stand in for those sections.
+- For each candidate reference, privately record the target's actual entity type, title, and
+  exact relationship after opening it. Omit the reference when that relationship is not
+  supported, even when the PR description labels or explains it.
+- For each candidate universal, bound, count, or inequality, privately record the complete
+  search universe and check it for counterexamples. Proof over a subset cannot support a
+  claim about the whole API, repository, platform set, or generated surface. One outlier
+  means the quantified wording must be narrowed or removed.
+- Inspect human discussion on the current PR and every related or superseded PR whose work or
+  feedback is carried forward. Adopted feedback needs source-backed attribution or a required
+  `Missing context:` line when the contributor's email cannot be verified.
 
 ## Workflow
 
-### 1. Gather the real context first
+### 1. Gather first-party evidence
 
-Before writing anything, inspect the available evidence:
+Inspect at least:
 
-- PR title and description
-- linked issues, related PRs, and references in comments
-- changed files and diff summary
-- error messages, stack traces, logs, or repro steps
-- dependency compare links or upstream commit summaries for bump PRs
-- release announcements or API docs for platform/update PRs
+1. the current PR title, body, URL, closing issues, commits, reviews, inline comments,
+   complete changed-path list, and every substantive current-head diff hunk
+2. linked issues, related or superseded PRs, required companion PRs, compare links,
+   failure logs, repro steps, validation runs, and relevant release or API documentation;
+   for carried-forward PRs, inspect their issue comments, reviews, and inline comments too
+3. commit bodies and adopted review feedback that explain non-obvious final code
+4. recent target-repository merge messages for subject, reference, section, bullet, and
+   wrapping conventions
 
-When working inside a repo with PR context available, prefer first-party context over
-guessing:
+Useful commands include:
 
-1. Read the current PR or branch summary.
-2. Review the changed files and diffstat.
-3. Pull in the linked issue(s) or related PR(s).
-4. Identify the core problem, user impact, and notable implementation details.
+```bash
+gh pr view <number> --json number,title,body,url,commits,files,comments,reviews,closingIssuesReferences
+gh api repos/<owner>/<repo>/pulls/<number>/comments --paginate
+gh api repos/<owner>/<repo>/issues/<number>/comments --paginate
+```
 
-If a crucial piece of context is missing, either:
+Use the final diff and current head as the strongest evidence for shipped behavior. Use
+the PR base or a specific referenced revision for the old side of a before/after claim.
+Treat PR prose, commit bodies, review comments, and code comments as leads that still need
+verification.
 
-- ask one focused question, or
-- produce the best possible draft and call out the missing context briefly after it.
+For dependency or submodule pointers, separate the parent PR's intent from the range the
+pointer happens to cross. A required companion change or intentionally adopted dependency
+behavior can be relevant. Unrelated intervening commits are not parent-PR topics merely
+because the new pointer includes them; preserve the range with a compare link instead of
+narrating it.
 
-### 2. Match the length to the change
+### 2. Build one private evidence ledger
 
-Do not force every commit into the same size.
+Use these definitions before classifying the diff:
 
-- **Tiny or mechanical change:** the subject alone can be enough when it is truly
-  self-explanatory; otherwise add one short explanatory paragraph.
-- **Bug fix or regression:** include the symptom, why it happened, and how the fix works.
-- **Dependency bump or submodule update:** include a compare link and the important upstream changes.
-- **Multi-part change or platform update:** use a narrative body with section headers or bullets.
+- **Material topic:** an independently searchable causal or design unit with both its own
+  why boundary (motivation, failure, root cause, constraint, compatibility consequence, or
+  decision) and at least one decisive anchor not derived from another topic.
+- **Explicit decision:** a non-trivial correction, exception, safety rule, or design choice
+  that shares a material topic's root cause and lacks independent search intent. It remains
+  a named sub-point under that topic.
+- **Mechanical derivative:** generated output, lock or compiled artifacts, repeated
+  documentation, ordinary verification, or iterative fixups that only implement or repeat
+  a parent topic.
 
-The message should be as detailed as the change needs, not as short as possible.
-For bump commits in particular, a shorter body is fine if the compare link and a few
-upstream bullets already carry the important context.
+Walk every changed path and substantive hunk once. Map each coherent change to exactly one
+material topic, explicit decision under a named topic, or mechanical derivative under a
+named topic. A hunk is substantive when it changes runtime, build, packaging, test, or
+workflow behavior; an API or design decision; an emitted artifact; or rationale needed to
+maintain one of those. Build, project, packaging, workflow, and configuration changes are
+candidate topics just like source code.
 
-### 3. Write a durable subject line
+For each material topic, record:
 
-Prefer the repo's existing conventions. Good defaults are:
+- need or user-visible symptom
+- root cause or triggering condition
+- chosen correction or design
+- important tradeoff, compatibility rule, limitation, or rejected alternative
+- verification evidence
+- decisive anchors and their exact sources: errors, symbols, predicates, fallback order,
+  counterexamples, measurements, revisions, or review-found semantic corrections
+- related issue, PR, run, compare view, or commit
+
+Then perform one history-only pass over the parent PR's commits, reviews, linked context,
+validation notes, and specifically adopted upstream changes. Capture information the final
+tree cannot explain by itself: the original failure, a rejected obvious alternative, a
+regression that changed the design, a compatibility exception, a review-found correction,
+or a measurement that governs how evidence should be read. Do not walk an entire traversed
+dependency range. Verify useful historical facts before adding them to the ledger.
+
+Apply these boundary rules:
+
+- Sharing a subsystem, umbrella feature, or final goal does not merge topics with different
+  why boundaries or corrections.
+- Do not split a topic merely because its implementation crosses files, commits, workflow
+  stages, generated outputs, or tests.
+- Multiple manifestations of one root cause remain one topic only when they share the same
+  correction and compatibility rules.
+- A feature's public programming model is a topic when its API, lifetime, interoperability,
+  or compatibility design itself meets the material-topic definition; when it does, the
+  overview is not a substitute for its section.
+- Tests or benchmarks become a topic when they correct misleading prior evidence,
+  introduce a distinct validation architecture, or independently establish a performance
+  or compatibility decision. Ordinary verification stays with its parent.
+- Correctness or equivalence evidence and performance evidence are separate topics when
+  each independently justifies safe adoption.
+- Review-found correctness or safety changes remain explicit decisions, or become topics
+  when they have independent search intent.
+
+Use a counterfactual independence test before collapsing any candidate: if its correction
+were reverted while the proposed parent remained, would a distinct failure, constraint, or
+maintenance question return? If so, keep it as a material topic. A path is not a derivative
+merely because it supports the same feature; it must share the parent's why and correction.
+A shared goal or symptom category is not a shared root cause. Do not demote a candidate that
+passes the material-topic definition merely to shorten the message. If the returning problem
+shares the parent's why and lacks independent search intent, keep it as an explicit decision
+rather than promoting it.
+
+After collapsing derivatives, choose the shape:
+
+- **Mechanical change:** subject only or one short explanatory paragraph.
+- **One material topic:** focused causal narrative; no forced section heading.
+- **Two or more material topics:** overview followed by exactly one named section per
+  topic. In SkiaSharp, use the established `~~ Topic ~~` syntax.
+
+Every topic, explicit decision, and marked anchor gets one visible home. A section preserves
+its causal chain; naming a file or category is not coverage. Collapsing a derivative removes
+its separate heading, not useful evidence it contributes to the parent.
+
+Use a counterfactual anchor test: retain the smallest observed fact that shows why the
+chosen design is necessary, why an obvious alternative is unsafe, or what made the evidence
+credible. Compress repetition, not the condition, counterexample, scope, or measurement
+that carries the proof.
+
+### 3. Draft in the repository's voice
+
+Prefer the repository's established subject form:
 
 - `[Area] Imperative summary (#PR)`
 - `Area: imperative summary (#PR)`
-- `Imperative summary (#PR)` if there is no area prefix convention
+- `Imperative summary (#PR)` when no area prefix is established
 
-Subject-line rules:
+Use an imperative verb, identify the real subsystem when useful, preserve the established
+area spelling, and avoid vague subjects such as `Fix review comments` or `Misc changes`.
 
-- use an imperative verb: `Add`, `Fix`, `Update`, `Bind`, `Remove`, `Use`, `Bump`
-- mention the subsystem or component when it is clear from the diff
-- avoid vague summaries such as `address review comments`, `misc fixes`, or `merge PR`
-- include the PR number when it is available and fits the repo style
+Start the body with verified references. Use labels only for the relationship they express:
 
-### 4. Structure the body around understanding
+- `Fixes:` for an issue the PR closes
+- `Context:` for related issues, PRs, runs, announcements, documentation, URLs, or exact
+  commit SHAs
+- `Requires:` for a companion PR or dependency that must land
+- `Changes:` for dependency compare views or upstream ranges
+- another label only when recent repository history establishes both its spelling and use
 
-Use the following pattern when it fits the change:
+Fetch every target. Do not convert a PR URL to an issue URL, call a related PR an issue,
+claim a PR is completed without evidence, or attach a correct URL to the wrong relationship.
 
-```text
-Context: <issue/doc/announcement/compare URL or commit SHA>
-Fixes: <issue URL or #NNNN>
-Changes: <compare URL or related PR/commit>
+Preserve the content expected for the kind of change:
 
-<1-2 paragraphs describing the problem or motivation>
-<show the symptom, failure mode, or external trigger when that helps>
+- **Bug fix:** symptom, investigation evidence, root cause, and correction
+- **Dependency or submodule bump:** repository and revision, compare link, and only the
+  upstream changes relevant to this repository
+- **Release or platform update:** capability gap or release trigger, compatibility impact,
+  project response, and authoritative links
+- **Public API:** programming model, ownership or lifetime rules, native dependency, and
+  platform limitations
 
-<1-3 paragraphs explaining the solution and the reasoning behind it>
-
-- <optional bullets for notable sub-changes>
-- <optional bullets for tradeoffs, risks, or follow-up work>
-```
-
-For large or multi-part changes, add section headers named after the actual topic or
-sub-problem, not generic template headings. For example:
-
-```text
-~~ Fix assertion failure in <CheckApiCompatibility/> ~~
-~~ Changes: Minor SDK Versions ~~
-~~ Stable API-36.1 ~~
-```
-
-If there are many references, use numbered links at the end. `Context:` may also point
-at a prior commit SHA when the lineage of the fix matters.
-
-### 5. What good messages include
-
-Include concrete, durable context when it exists:
-
-- linked issue numbers and URLs
-- external docs or release announcements
-- compare links for dependency bumps
-- prior commits or bare SHAs when the new change builds on earlier work
-- crash signatures, error snippets, stack traces, or test failures
-- the decision-making behind the chosen fix
-- compatibility notes, migration notes, or limitations
-
-Translate review feedback into the underlying change. For example:
-
-- **Bad:** `Address PR comments`
-- **Good:** `Use explicit bounds checks in SKBitmap.Resize to avoid overflow`
-
-The point is to preserve the engineering story, not the review choreography.
-
-### 6. What to avoid
-
-Avoid commit messages that:
-
-- only restate filenames or the diff
-- assume the reader has the PR open
-- hide the real issue behind generic phrasing
-- include filler with no durable value
-
-Specifically avoid subjects or bodies like:
-
-- `Fix review comments`
-- `More changes`
-- `PR feedback`
-- `Update after discussion`
-
-These help nobody once the PR is merged.
-
-Also keep the formatting in-family for the target repo. If its history favors `  *`
-bullets, numbered link references, or indented code/log blocks over fenced ones, keep
-that local style instead of forcing a new template.
-
-## Repository-aware heuristics
-
-### Bug fixes
-
-Explain:
-
-1. what broke
-2. how it showed up
-3. why the bug existed
-4. what changed to fix it
-
-If there is a meaningful exception, assertion, or failing log line, include a short
-snippet. Evidence makes the message more trustworthy and more searchable later.
-
-### Dependency or submodule bumps
-
-At minimum, include:
-
-- the repository and commit/tag being pulled in
-- a compare link
-- 1-3 notable upstream changes or fixes relevant to this repo
-
-Do not leave these as anonymous bump commits unless the repo already has a strict
-mechanical bump format.
-
-### Release / API / platform updates
-
-State:
-
-- the release or platform milestone
-- why the project needs to respond now
-- any compatibility or stability implications
-- relevant docs or announcement links
-
-### Multi-part PRs
-
-When one PR contains multiple tightly related changes, organize the body so each part
-has a name and purpose. Use bullets or short section headers instead of a wall of text.
-
-## Co-authored-by trailers
-
-Every commit message **must** end with `Co-authored-by:` trailers listing all people
-who contributed to the PR. This includes:
-
-- commit authors (from `git log`)
-- co-authors already present in commit trailers
-- PR reviewers who approved or left substantive feedback
-
-To collect the full list, run:
-
-```bash
-gh pr view <number> --json commits --jq '[.commits[].authors[]| "Co-authored-by: \(.name) <\(.email)>"] | unique | .[]'
-```
-
-Deduplicate by email. Do not include bots (e.g. `github-actions`) unless they authored
-real code. Always include `Copilot` if any commit has the Copilot co-author trailer.
-
-Place the trailers at the very end of the message, after a blank line, one per line:
+For multiple topics, use this shape:
 
 ```text
-Co-authored-by: Alice Smith <alice@example.com>
-Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
+<imperative subject>
+
+<verified reference lines>
+
+<overview: what changes, why it matters, and the governing design>
+
+~~ <material topic or failure mode 1> ~~
+
+<symptom/need -> cause/constraint -> chosen change -> evidence>
+
+  * <optional explicit decision with cause, consequence, and anchor>
+
+~~ <material topic or failure mode 2> ~~
+
+<symptom/need -> cause/constraint -> chosen change -> evidence>
+
+<trailers>
 ```
 
-## Output format
+Name sections after the actual problem or decision, not `Changes` or `Implementation`.
+Use bullets for explicit decisions inside a topic, not as a substitute for topic sections.
+Keep exception snippets, logs, reference lists, bullets, and wrapping in-family for the
+target repository.
 
-When the user asks for a commit message, return:
+### 4. Run one claim-proof pass
 
-1. **One polished commit message** in a fenced code block, ready to paste.
-2. Co-authored-by trailers at the end (see above).
-3. **Optional `Missing context:` bullets** only if important context could not be found.
+Check the final draft by claim type:
 
-Do not dump brainstorming notes unless the user explicitly asks for alternatives.
+- **References and relationships:** fetch and read each target, then record its actual entity
+  type, title, and exact relationship to the PR. A resolving URL or its appearance in PR
+  prose is not proof. Omit a reference whose relationship is unsupported. For a compare URL,
+  verify its endpoints; do not walk every commit merely to validate the range.
+- **Before/after behavior:** verify both sides in the artifacts that actually changed. If
+  code already behaved that way and only guidance or validation changed, attribute the
+  change to the guidance or validation.
+- **Quantifiers and bounds:** scan for `all`, `every`, `only`, `no`, `always`, `never`,
+  `exactly`, counts, minimums, maximums, and inequality symbols. Record the search universe
+  and check the complete relevant set, including generated or aggregate surfaces, for an
+  outlier. Narrow or remove the qualifier when any counterexample exists.
+- **Precision:** verify exception names, predicates, revisions, versions, test counts,
+  benchmark values, platform claims, and validation results against their exact sources.
+  Prefer durable validation evidence; omit transient pending, queued, or action-required
+  status unless it explains a shipped design decision.
+- **Causal rationale:** verify reasons copied from PR descriptions, commits, or comments.
+  Preserve meaningful non-goals and limitations, but label inference as inference or omit
+  uncertain precision.
+- **Mixed-truth sentences:** split a verified fact from an unsupported qualifier instead of
+  accepting the whole sentence because half is true.
 
-## Quality bar
+### 5. Build source-backed attribution
 
-Before finalizing, make sure the message answers:
+For the current PR and any related or superseded PR whose implementation or adopted human
+feedback is carried forward, combine:
 
-- Why was this PR worth merging?
-- What would a future maintainer need to know without reopening the PR?
-- What specific issue, failure mode, release, or behavior change does this correspond to?
+1. every `.commits[].authors[]` entry, including the primary PR author
+2. every case-insensitive `Co-authored-by:` trailer in each commit `messageBody`
+3. human reviewers or commenters whose approval or substantive feedback contributed to the
+   final change
 
-If the answer is still "you had to be there," the message needs more context.
+For each current, related, or superseded PR in scope, fetch issue comments, reviews, and
+inline review comments rather than checking only the current PR. Deduplicate
+case-insensitively by email. If the same display name used two distinct recorded emails,
+retain both.
 
-## Examples
-
-**Weak**
+Accept a `(name, email)` pair only when that exact email appears in a relevant commit author
+entry, a co-author trailer, or the non-null `email` field returned by
+`gh api users/<login>`. Never infer an address from a name or organization, construct a
+GitHub noreply address, or mine unrelated commits. If a contributing human reviewer has no
+verified email, omit the trailer and report:
 
 ```text
-Fix NativeAOT issue
+Missing context: verified email for @login
 ```
 
-**Better**
+A dependency author is not a parent-PR co-author merely because a pointer traverses their
+commit. Credit copied or cherry-picked work only when authorship is preserved or an allowed
+parent-PR source records it. Exclude routine automation identities, including dependency
+updaters and automated review accounts; they are not missing human contributors. Include
+coding agents when they authored code or appear in a co-author trailer.
 
-```text
-[NativeAOT] Wait for GC bridge processing via JNIEnv value manager (#12345)
+Every eligible candidate in the resulting attribution map must appear exactly once in the
+trailers, or in `Missing context:` when a contributing human lacks a verified email. Place
+trailers at the end of the message after a blank line, one per line.
 
-Context: https://github.com/org/repo/issues/12340
-Context: abcdef1234567890abcdef1234567890abcdef12
+### 6. Format and check the final output
 
-Apps using NativeAOT could abort during JNI wrapper creation while startup code
-was still waiting on pending GC bridge work. The failures were intermittent, but
-the stack traces consistently pointed at wrapper initialization before the active
-value manager had finished processing queued state.
+After drafting and attribution, confirm:
 
-Route the wait through `JNIEnv.ValueManager?.WaitForGCBridgeProcessing()` instead
-of the older runtime-specific path. This keeps the synchronization aligned with
-the current value manager implementation and removes the startup crash without
-changing the existing wrapper call pattern.
-```
+1. Every substantive changed path maps to a topic, explicit decision, or derivative, and
+   `section count == material-topic count` whenever that count is two or more.
+2. Every topic explains need or symptom, cause or constraint, chosen change, and evidence;
+   every explicit decision and decisive anchor has one visible home.
+3. Every precise, relational, causal, quantified, and validation claim has its completed
+   proof entry; no proof over a subset is worded as a whole-surface claim.
+4. Every eligible attribution candidate, including relevant PR and commit authors, appears
+   exactly once as a source-backed trailer or required missing-context item.
+5. The message answers what a future maintainer would otherwise have to reopen the PR to
+   learn, without file-by-file narration or repeated prose.
+6. The response contains exactly one fenced `text` block with only the polished commit
+   message; it has no introduction, explanation, summary, or other response prose.
 
-**Weak**
-
-```text
-Bump submodule
-```
-
-**Better**
-
-```text
-Bump to org/dependency@abc12345 (#4567)
-
-Changes: https://github.com/org/dependency/compare/oldsha...abc12345
-
-  * pull in the upstream fix for manifest parsing on Windows
-  * include the follow-up change that avoids duplicate resolver entries during restore
-
-These are the only behavior changes used by this PR; the remaining updates are
-mechanical fallout from the bump.
-```
+After these checks pass, return the fenced message. Put any required `Missing context:`
+lines after the closing fence so they are not copied into the commit message.
