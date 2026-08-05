@@ -213,8 +213,16 @@ For multiple topics, use this shape:
 
 Name sections after the actual problem or decision, not `Changes` or `Implementation`.
 Use bullets for explicit decisions inside a topic, not as a substitute for topic sections.
-Keep exception snippets, logs, reference lists, bullets, and wrapping in-family for the
-target repository.
+Keep exception snippets, logs, reference lists, and bullets in-family for the target
+repository.
+
+Hard-wrap ordinary prose with literal newline characters at the width observed in recent
+target-repository merge messages; SkiaSharp's established cap is 80 columns. Code fences and
+commit-message renderers do not add this formatting, so visual wrapping in a UI is not a
+substitute. Preserve constructs that should remain on one line: the subject when reasonable,
+reference and compare URLs, section markers, code or log lines, and attribution trailers.
+Indivisible tokens may exceed the cap. Reflow bullet continuations using the repository's
+established indentation.
 
 ### 4. Run one claim-proof pass
 
@@ -290,7 +298,10 @@ After drafting and attribution, confirm:
    exactly once as a source-backed trailer or required missing-context item.
 5. The message answers what a future maintainer would otherwise have to reopen the PR to
    learn, without file-by-file narration or repeated prose.
-6. The response contains exactly one fenced `text` block with only the polished commit
+6. Scan the fenced message after all other edits and reflow every ordinary prose line over
+   the observed cap. Exempt one-line constructs and indivisible tokens only where splitting
+   would damage them.
+7. The response contains exactly one fenced `text` block with only the polished commit
    message; it has no introduction, explanation, summary, or other response prose.
 
 After these checks pass, return the fenced message. Put any required `Missing context:`
