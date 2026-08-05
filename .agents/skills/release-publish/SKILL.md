@@ -43,7 +43,7 @@ Publish packages to NuGet.org and finalize releases.
 │  2. Publish to NuGet.org → Confirm queue, human approves push      │
 │  3. Verify Published     → After pipeline success, poll NuGet.org  │
 │  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Refresh Web Notes    → Reuse/dispatch one post-tag notes run   │
+│  5. Refresh Web Notes    → Dispatch once from main; do not wait    │
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
 │  8. Milestone Hygiene    → Stable: close exact match if it exists  │
@@ -56,7 +56,7 @@ Publish packages to NuGet.org and finalize releases.
 | 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
 | 2. Publish stage | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
+| 5. Website notes refresh | Dispatch once; do not wait | Dispatch once; do not wait |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
 | 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
 | 8. Milestone | Skip | Close exact milestone if one exists |
@@ -194,10 +194,7 @@ git tag {tag}
 **Confirm with `ask_user`** before pushing tag (cannot be undone):
 ```bash
 git push origin {tag} || exit 1
-TAG_PUSHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
-
-Keep `TAG_PUSHED_AT`; Step 5 uses it to reject release-notes runs that predate the tag.
 
 ---
 
@@ -206,30 +203,20 @@ Keep `TAG_PUSHED_AT`; Step 5 uses it to reject release-notes runs that predate t
 The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
 produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
 **daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
-tags** — so after pushing the tag in Step 4, ensure one suitable post-tag run completes
-instead of waiting up to ~24h for the next daily run.
+tags** — so after pushing the tag in Step 4, dispatch it once from `main`:
 
-This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
-version's page from "preview / unreleased" to **stable**.
+```bash
+gh workflow run update-release-notes.lock.yml \
+  --repo mono/SkiaSharp \
+  --ref main || exit 1
+echo "Started Sync - Release Notes & API Diffs from main."
+```
 
-Follow [references/website-notes-refresh.md](references/website-notes-refresh.md):
-
-1. Before dispatching, look for a suitable active `main` run created strictly after
-   `TAG_PUSHED_AT`. If none exists, look for a suitable successful run after the same boundary.
-   Watch or verify it instead of creating a duplicate.
-2. If no suitable active or successful run exists, dispatch from `main` and identify the new run
-   from the set of run IDs that did not exist before dispatch. Never select an unfiltered latest
-   run.
-3. Because the workflow has `cancel-in-progress: true`, follow a newer superseding run when the
-   selected run is canceled. Redispatch only if no suitable active or newer successful run exists.
-4. Accept only a successful post-tag run. When its `agent` job ran, verify it created or updated
-   `bot/release-notes`. When `agent` was skipped, download the `release-notes-prepare` artifact:
-   accept a no-op only if `prepare.patch` is empty; a non-empty patch means a gate such as the daily
-   AI-credit limit prevented required work.
-
-If anything changed, the workflow opens (or updates) the rolling `[docs]`
-**`bot/release-notes`** PR with the refreshed pages — review and merge it like any
-docs PR. If nothing changed, no PR is opened.
+Once GitHub accepts the dispatch, report that it was started and treat this step as complete.
+Do not inspect existing runs, identify the new run, wait, retry, follow a superseding run, or
+verify `bot/release-notes`. The workflow's `cancel-in-progress` concurrency and its daily/main
+triggers may cancel or supersede this dispatch during simultaneous releases; that is expected and
+is not a release blocker.
 
 > ⚠️ These **website** release notes are separate from the **GitHub Release** notes
 > created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub
@@ -416,5 +403,4 @@ If you've partially completed and need to resume:
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
 - [references/azure-publish.md](references/azure-publish.md) — Validated REST queue and human approval boundary
-- [references/website-notes-refresh.md](references/website-notes-refresh.md) — Concurrency-safe post-tag notes refresh
 - [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser playbook: classification rules + template

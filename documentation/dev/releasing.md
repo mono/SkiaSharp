@@ -270,9 +270,9 @@ flowchart TB
     ∙ Push tag to origin"]
     
     TAG --> NOTES["Refresh website notes
-    ∙ Reuse suitable active post-tag run
-    ∙ Follow newer run if superseded
-    ∙ Verify bot/release-notes when changed"]
+    ∙ Dispatch once from main
+    ∙ Report started
+    ∙ Do not wait or monitor"]
 
     NOTES --> RELEASE
     
