@@ -1,0 +1,118 @@
+{
+  "theme": "Skia m152 and Graphite GPU backends",
+  "highlights_headline": "SkiaSharp 4.152.0 updates to Skia m152 and adds Graphite GPU backend bindings for Vulkan, Metal, and Dawn.",
+  "highlights_body": "This release introduces the new Graphite rendering backend with full Vulkan, Metal, and Dawn bindings, adds async ReadPixels for SKImage and SKSurface, and fixes memory leaks in SKRegion and SKImage raster paths.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Updated to Skia milestone m152",
+          "detail": "The bundled engine advances to m152, including upstream m151 bug-fix cherry-picks and the latest Ganesh and Graphite stability improvements.",
+          "prs": [
+            4651,
+            4538,
+            4537
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+          "detail": "New bindings expose the Skia Graphite rendering backend through SkiaSharp, with backend contexts for Vulkan, Metal, and Dawn (WebGPU). Graphite is the modern replacement for Ganesh and offers improved multi-threading and GPU memory management.",
+          "prs": [
+            3968
+          ]
+        },
+        {
+          "lead": "Async RequestReadPixels added to SKImage and SKSurface",
+          "detail": "New backend-neutral async RequestReadPixels API allows GPU-side pixel reads without blocking the calling thread, improving responsiveness in GPU-heavy applications.",
+          "prs": [
+            4545
+          ]
+        },
+        {
+          "lead": ".slnx solution format adopted",
+          "detail": "All .sln solution files are converted to the new .slnx format, improving compatibility with modern .NET tooling.",
+          "prs": [
+            4528
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free in SKRegion.SpanIterator fixed",
+          "detail": "The SKRegion backing the SpanIterator was not kept alive for the iterator's lifetime, causing a use-after-free. The SKRegion is now rooted to the iterator.",
+          "prs": [
+            4355
+          ]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak in SKImage.Create raster failure path fixed",
+          "detail": "When SKImage.Create(SKImageInfo, IntPtr, int) failed after allocating the pixel buffer, the CoTaskMem buffer was leaked. The buffer is now freed on failure.",
+          "prs": [
+            4455
+          ]
+        },
+        {
+          "lead": "Intermediate string allocation removed in GetEncodedText null-terminated path",
+          "detail": "GetEncodedText no longer allocates an intermediate string in the null-terminated fast path.",
+          "prs": [
+            4498
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Containerized test legs added: Azure Linux, Alpine/musl, Nano Server",
+          "detail": "New Docker-based CI test legs for Azure Linux, Alpine (musl libc), and Windows Nano Server ensure SkiaSharp works correctly in containerized server environments.",
+          "prs": [
+            4515
+          ]
+        },
+        {
+          "lead": "FreeType font support for Nano Server",
+          "detail": "Nano Server has no system font stack; SkiaSharp now bundles FreeType as the font provider for that target, enabling text rendering in Nano Server containers.",
+          "prs": [
+            4280
+          ]
+        },
+        {
+          "lead": "SkiaSharp.Vulkan.Silk.NET package added; Vulkan tests on Android and Linux",
+          "detail": "A new SkiaSharp.Vulkan.Silk.NET NuGet package exposes the Vulkan backend through the Silk.NET interop layer, and the Vulkan test suite now runs on Android and Linux CI legs.",
+          "prs": [
+            4527
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "SKRuntimeEffectUniforms lookup map pre-sized",
+          "detail": "The uniform lookup map is now pre-allocated to the known count, avoiding rehashing on every shader use.",
+          "prs": [
+            4512
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType font support for Nano Server containers",
+    "mmitche": "Infrastructure and CI improvements",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {}
+}
