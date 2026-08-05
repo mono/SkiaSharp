@@ -141,6 +141,13 @@ public class RoslynFiddleCompiler : IFiddleCompiler
         sb.AppendLine(setupCode);
         sb.AppendLine("#line hidden");
         sb.AppendLine("public void Draw(SkiaSharp.SKCanvas canvas, int width, int height, double t) {");
+        // Inject the selected asset variables, mirroring fiddle.skia.org. These read
+        // the live selection so switching the image/font updates the next frame. They
+        // sit under "#line hidden" so they never show up in diagnostics, and the
+        // discards keep them from warning when a snippet doesn't use them.
+        sb.AppendLine("var image = global::SkiaFiddle.Fiddle.FiddleAssets.Image;");
+        sb.AppendLine("var typeface = global::SkiaFiddle.Fiddle.FiddleAssets.Typeface;");
+        sb.AppendLine("_ = image; _ = typeface;");
         sb.AppendLine("#line 1 \"Draw\"");
         sb.AppendLine(drawCode);
         sb.AppendLine("#line hidden");
