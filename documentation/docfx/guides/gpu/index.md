@@ -9,17 +9,17 @@ You draw with an [`SKCanvas`](xref:SkiaSharp.SKCanvas). An [`SKSurface`](xref:Sk
 
 Most of the other guides use an `SKCanvasView` and never create a surface directly — the view does that for you. This section is about the layer underneath: how to create a surface yourself, which is what you need for offscreen rendering, custom hosting, image processing pipelines, and server-side or headless rendering.
 
-## The three ways to get a surface
+## Choose how the surface is managed
 
-SkiaSharp has three families of surface, and this section has a page for each.
+This section covers raster surfaces, two GPU backends, and the view-managed surfaces used by app UI controls.
 
 - **Raster surfaces** live in CPU memory. They are always available and need no GPU. Use them for image generation, thumbnails, PDF/print pipelines, unit tests, and headless workloads. See [Raster surfaces](raster-surfaces.md).
 
 - **Ganesh GPU surfaces** are backed by a GPU texture through the classic Skia GPU backend, *Ganesh*. You create a [`GRContext`](xref:SkiaSharp.GRContext) for an API — OpenGL, Vulkan, Metal, or Direct3D — and then create a surface from it, either fully offscreen or wrapping an existing render target. See [Ganesh GPU surfaces](ganesh-surfaces.md).
 
-- **Graphite offscreen surfaces** use Skia's newer GPU backend, *Graphite*, built on modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU). Graphite records drawing into a *recorder*, snaps it into a *recording*, and submits that recording to the GPU. See [Graphite offscreen surfaces](graphite-surfaces.md).
+- **View-managed surfaces** are usually the right choice for app UI. SkiaSharp *Views* create the surface and hand you a ready-to-draw canvas in a paint event. See [Surfaces in the SkiaSharp Views](views-surfaces.md).
 
-Separately, if you are building an app UI you usually don't create any of these by hand — the SkiaSharp *Views* do it for you and hand you a ready-to-draw surface in a paint event. See [Surfaces in the SkiaSharp Views](views-surfaces.md).
+- **Graphite offscreen surfaces** use Skia's newer GPU backend, *Graphite*, built on modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU). Graphite records drawing into a *recorder*, snaps it into a *recording*, and submits that recording to the GPU. See [Graphite offscreen surfaces](graphite-surfaces.md).
 
 ## Ganesh or Graphite?
 

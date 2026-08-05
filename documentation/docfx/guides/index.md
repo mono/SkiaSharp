@@ -1,6 +1,6 @@
 ---
 title: "Overview"
-description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products such as Google Chrome, ChromeOS, and Android, in Chromium-based products like Microsoft Edge, in applications like LibreOffice, and in .NET UI frameworks like Uno Platform. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications."
+description: "Learn how to use SkiaSharp in .NET MAUI applications, from drawing in views to working with surfaces, bitmaps, paths, shaders, and text."
 ---
 
 # SkiaSharp Graphics in .NET MAUI

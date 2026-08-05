@@ -42,7 +42,8 @@ using var backendContext = new GRVkBackendContext
     VkDevice = deviceHandle,
     VkQueue = graphicsQueueHandle,
     GraphicsQueueIndex = graphicsFamilyIndex,
-    GetProcedureAddress = (name, instance, device) => /* vkGetXxxProcAddr */,
+    GetProcedureAddress = (name, instance, device) =>
+        throw new System.NotImplementedException("Configure Vulkan function lookup."),
 };
 
 using var context = GRContext.CreateVulkan(backendContext)

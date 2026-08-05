@@ -62,7 +62,8 @@ using var backendContext = new SKGraphiteVkBackendContext
     VkQueue = graphicsQueueHandle,
     GraphicsQueueIndex = graphicsFamilyIndex,
     MaxApiVersion = apiVersion,
-    GetProcedureAddress = (name, instance, device) => /* vkGetInstance/DeviceProcAddr */,
+    GetProcedureAddress = (name, instance, device) =>
+        throw new System.NotImplementedException("Configure Vulkan function lookup."),
 };
 
 using var context = SKGraphiteContext.CreateVulkan(backendContext)
@@ -215,7 +216,7 @@ var pixels = ReadPixelsFromGraphite(context, surface, dstInfo);
 
 The iteration limit is only a guard for this focused sample, not a completion guarantee. In a production renderer, pump completion from the host's render or event loop and apply a time-based timeout or cancellation policy. Browser hosts cannot use `Sync = true`; see [Dawn in the browser](#dawn-in-the-browser).
 
-The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `GRContext` read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws `ObjectDisposedException`. Keep the context and surface undisposed until the callback completes.
+The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `SKGraphiteContext` read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws `ObjectDisposedException`. Keep the context and surface undisposed until the callback completes.
 
 It offers a few ways to extract pixels:
 
@@ -309,9 +310,8 @@ try
 }
 finally
 {
-    // Drop every Skia wrapper and recorder reference before deleting the GPU allocation.
+    // Drop the surface wrapper before draining and deleting the GPU allocation.
     surface?.Dispose();
-    recorder.Dispose();
 
     if (wrapped && !released && contextUsable)
     {
@@ -325,7 +325,7 @@ finally
     }
 
     if (!wrapped || released)
-        context.DeleteBackendTexture(backendTexture);
+        recorder.DeleteBackendTexture(backendTexture);
 }
 
 if (!released)
@@ -333,7 +333,7 @@ if (!released)
         "Skia still has work using the backend texture; tear down the failed GPU context.");
 ```
 
-The `finally` block covers exceptions as well as the success path. It disposes the surface and recorder, drains a usable context, and deletes the texture only after Skia has released it. If insertion or submission fails, the context might no longer be safe to submit or drain. Do not delete the texture while Skia might still reference it; tear down and re-create the owning Graphite context and native GPU device instead.
+The `finally` block covers exceptions as well as the success path. It disposes the surface, drains a usable context, and deletes the texture through the still-live recorder only after Skia has released it. The `using` declarations then dispose the backend-texture wrapper and recorder. If insertion or submission fails, the context might no longer be safe to submit or drain. Do not delete the texture while Skia might still reference it; tear down and re-create the owning Graphite context and native GPU device instead.
 
 The example above uses `recorder.CreateBackendTexture` for brevity. To wrap a texture your own code allocated, build the `SKGraphiteBackendTexture` with `SKGraphiteBackendTexture.CreateVulkan/CreateMetal/CreateDawn` instead. The callback timing is the same, but you must release the native allocation through the API that created it. `SKImage.FromTexture` has the same release-callback overload and fires after image disposal and GPU drain; a sample-only image needs only `SAMPLED` usage, not `INPUT_ATTACHMENT`.
 
