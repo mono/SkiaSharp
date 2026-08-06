@@ -195,6 +195,7 @@ flowchart TB
     START([CI Build Complete]) --> RESOLVE
     
     RESOLVE["Resolve Test Package Versions
+    ∙ Fetch release branch
     ∙ Read selected SkiaSharp CI build
     ∙ Read VERSIONS.txt (both packages)
     ∙ Derive exact label + build suffix

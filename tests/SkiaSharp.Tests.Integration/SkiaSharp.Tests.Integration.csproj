@@ -83,9 +83,9 @@
   <!-- Error if versions not specified -->
   <Target Name="ValidateVersions" BeforeTargets="Restore;Build">
     <Error Condition="'$(SkiaSharpVersion)' == ''" 
-         Text="SkiaSharpVersion must be the exact package version from the selected CI build. Example: -p:SkiaSharpVersion=4.150.2-stable.1" />
+         Text="SkiaSharpVersion must be the exact package version from the selected CI build. Use: dotnet test -p:SkiaSharpVersion=4.150.2-stable.1 -p:HarfBuzzSharpVersion=14.2.1.2-stable.1" />
     <Error Condition="'$(HarfBuzzSharpVersion)' == ''" 
-         Text="HarfBuzzSharpVersion must be the exact package version from the selected CI build. Example: -p:HarfBuzzSharpVersion=14.2.1.2-stable.1" />
+         Text="HarfBuzzSharpVersion must be the exact package version from the selected CI build. Use: dotnet test -p:SkiaSharpVersion=4.150.2-stable.1 -p:HarfBuzzSharpVersion=14.2.1.2-stable.1" />
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
 

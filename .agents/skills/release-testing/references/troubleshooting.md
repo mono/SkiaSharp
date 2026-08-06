@@ -10,7 +10,8 @@ Quick reference for common errors and fixes.
 
 **Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
 matching feed package instead of the exact package from the selected CI build. The feed contains
-multiple version streams and CI builds, so either approach can return the wrong one.
+multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
+return the wrong one.
 
 **Fix:** Use `.version` and match the exact test package version derived from the selected
 `SkiaSharp` pipeline build:
@@ -24,11 +25,25 @@ dotnet package search SkiaSharp \
   | grep -Fx "$SKIA_TEST_VERSION"
 ```
 
+If the exact match returns nothing, list the matching stream to see what the feed actually has:
+
+```bash
+# Diagnostic only — never select the version to test from this list
+... | grep -F "3.119.2-stable."
+```
+
+**`ERROR: Could not read release versions from ...`** — fetch the release branch and confirm
+`RELEASE_REF` points at `origin/release/{version}`.
+
+**`ERROR: Selected buildNumber ... does not match ...`** — the selected run is not from that
+release branch, or the release ref contains different version values. Re-check the run selected in
+Step 1 and the `RELEASE_REF` value before deriving the versions again.
+
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
 | Newest matching build | Exact selected CI build |
-| Prefix filtering | Exact version match |
+| Prefix filtering to select a version | Exact version match |
 
 ---
 
@@ -38,7 +53,8 @@ dotnet package search SkiaSharp \
 |-------|-------|-----|
 | `MAUI workload is required` | Missing workload | `dotnet workload install maui` |
 | `wasm-tools workload is required` | Missing workload | `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Pass both exact test package versions from the selected CI build |
+| `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
+| `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
 | Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
 
 ## Appium Errors

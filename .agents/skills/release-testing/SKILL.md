@@ -94,6 +94,10 @@ The selected `SkiaSharp` run has a `buildNumber` in format:
 build.** The bare version (for example, `3.119.2`) is only the eventual NuGet.org version and may
 not exist before publication.
 
+Every CI build — including a re-run of the same release branch — produces a distinct internal
+package pair (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.). If the selected run changes, repeat
+release testing against the exact packages from the new run.
+
 ---
 
 ## Step 2: Resolve Package Versions
@@ -103,12 +107,20 @@ build:
 
 1. Fetch release branch and read version files:
    ```bash
+   git fetch origin
+   RELEASE_REF="origin/release/{version}"
+
    # Read base versions (format: "PackageName  nuget  version")
-   grep "^SkiaSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
-   grep "^HarfBuzzSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
-   
+   SKIA_BASE="$(git show "${RELEASE_REF}:scripts/VERSIONS.txt" | awk '$1 == "SkiaSharp" && $2 == "nuget" {print $3; exit}')"
+   HB_BASE="$(git show "${RELEASE_REF}:scripts/VERSIONS.txt" | awk '$1 == "HarfBuzzSharp" && $2 == "nuget" {print $3; exit}')"
+
    # Read preview label (remove surrounding quotes)
-   grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'"
+   PREVIEW_LABEL="$(git show "${RELEASE_REF}:scripts/azure-templates-variables.yml" | awk '$1 == "PREVIEW_LABEL:" {print $2; exit}' | tr -d "'")"
+
+   if [ -z "$SKIA_BASE" ] || [ -z "$HB_BASE" ] || [ -z "$PREVIEW_LABEL" ]; then
+     echo "ERROR: Could not read release versions from $RELEASE_REF." >&2
+     exit 1
+   fi
    ```
    - `SkiaSharp ... nuget` line → base version (e.g., `3.119.2`)
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
@@ -119,12 +131,21 @@ build:
 
    ```bash
    # Example selected buildNumber: 3.119.2-stable.3+3.119.2
+   SELECTED_BUILD_ID="{selected SkiaSharp build ID}"
    BUILD_NUMBER="{selected SkiaSharp buildNumber}"
-   SKIA_BASE="{SkiaSharp base from VERSIONS.txt}"
-   HB_BASE="{HarfBuzzSharp base from VERSIONS.txt}"
 
    SKIA_TEST_VERSION="${BUILD_NUMBER%%+*}"
-   BUILD_SUFFIX="${SKIA_TEST_VERSION#${SKIA_BASE}-}"
+   EXPECTED_PREFIX="${SKIA_BASE}-${PREVIEW_LABEL}."
+
+   case "$SKIA_TEST_VERSION" in
+     "$EXPECTED_PREFIX"*) ;;
+     *)
+       echo "ERROR: Selected buildNumber '$BUILD_NUMBER' does not match $RELEASE_REF ($SKIA_BASE, $PREVIEW_LABEL)." >&2
+       exit 1
+       ;;
+   esac
+
+   BUILD_SUFFIX="${SKIA_TEST_VERSION#*-}"
    HB_TEST_VERSION="${HB_BASE}-${BUILD_SUFFIX}"
    ```
 
@@ -152,6 +173,23 @@ build:
    The feed contains multiple version streams and CI builds, so you MUST match the exact versions
    derived from the selected pipeline run.
 
+   If either exact match returns nothing, list the candidates to see what the feed actually has:
+
+   ```bash
+   # Diagnostic only — never select the version to test from this list
+   dotnet package search SkiaSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
+     | grep -F "${SKIA_BASE}-${PREVIEW_LABEL}."
+
+   dotnet package search HarfBuzzSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
+     | grep -F "${HB_BASE}-${PREVIEW_LABEL}."
+   ```
+
 4. Record the eventual public versions separately:
    - **Preview / RC:** Same exact prerelease versions as the test packages
    - **Stable:** Base versions from `VERSIONS.txt` (for example, `3.119.2` and `8.3.1.3`)
@@ -161,28 +199,38 @@ build:
    **Preview / RC:**
    ```
    Resolved package versions:
+     Selected CI run:
+       Build ID:       {ado-build-id}
+       buildNumber:    3.119.2-preview.3.1+3.119.2-preview.3
      Test packages:
        SkiaSharp:     3.119.2-preview.3.1
        HarfBuzzSharp: 8.3.1.3-preview.3.1
      Eventual public versions:
        SkiaSharp:     3.119.2-preview.3.1
        HarfBuzzSharp: 8.3.1.3-preview.3.1
-     Selected build:  1
+     Package build:    1
+     Feed check:       both exact test packages confirmed
    ```
 
    **Stable:**
    ```
    Resolved package versions:
+     Selected CI run:
+       Build ID:       {ado-build-id}
+       buildNumber:    3.119.2-stable.3+3.119.2
      Test packages:
        SkiaSharp:     3.119.2-stable.3
        HarfBuzzSharp: 8.3.1.3-stable.3
      Eventual public versions:
        SkiaSharp:     3.119.2
        HarfBuzzSharp: 8.3.1.3
-     Selected build:  3
+     Package build:    3
+     Feed check:       both exact test packages confirmed
    ```
 
-**No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
+**Exact package missing?** Verify the selected run and release branch first; CI may not have
+completed, or the version inputs may not match that run. See
+[troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
 
 ---
 
@@ -440,6 +488,10 @@ Proceed to **release-publish** ONLY when:
 ```
 ✅ Release Testing Complete
 
+Selected CI run:
+  Build ID:       {ado-build-id}
+  buildNumber:    {buildNumber}
+
 Test packages:
   SkiaSharp:     {skia-test-version}
   HarfBuzzSharp: {hb-test-version}
@@ -447,6 +499,8 @@ Test packages:
 Eventual public versions:
   SkiaSharp:     {skia-public-version}
   HarfBuzzSharp: {hb-public-version}
+
+Feed check: both exact test packages confirmed
 
 | Test | Platform | Version | Status |
 |------|----------|---------|--------|

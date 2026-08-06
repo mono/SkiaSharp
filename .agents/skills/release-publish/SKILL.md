@@ -74,15 +74,18 @@ When identifying which version to publish, use **semver ordering**, not alphabet
 **Prerequisite:** release-testing must have passed. Its final report should identify both the exact
 test package versions and the separate eventual public versions.
 
-The user should provide the public version:
-- **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
-- **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
+Use both public versions from the release-testing report:
+- **Preview / RC:** Exact SkiaSharp and HarfBuzzSharp prerelease versions (e.g.,
+  `3.119.2-preview.2.3` and `8.3.1.3-preview.2.3`)
+- **Stable:** Bare SkiaSharp and HarfBuzzSharp base versions (e.g., `3.119.2` and `8.3.1.3`)
 
 ⚠️ **Public stable versions never include a build number.** The exact package tested before
 publication does include the internal stable tag (e.g., `3.119.2-stable.3`); the version published
-to NuGet.org is the bare base (e.g., `3.119.2`).
+to NuGet.org is the bare base (e.g., `3.119.2`). The build number only ever appears in the
+prerelease component or internal stable tag; it is never appended to the base version directly.
+`3.119.2.3` is a different hotfix version, not build 3 of `3.119.2`.
 
-If not provided, ask for them using `ask_user`.
+If they are not available from the testing report, ask for them using `ask_user`.
 
 **Quick verification** — confirm both exact packages tested exist on the preview feed:
 ```bash
@@ -124,7 +127,8 @@ packages on the internal feed. See [release-status](../release-status/SKILL.md) 
 6. Click **"Next: Resources"**
 7. In **"Pipeline artifacts"**, click the **SkiaSharp** artifact selector
 8. From the **branch dropdown**, select `release/{version}` (the release branch)
-9. From the **pipeline runs list**, select the correct build by checking the build number
+9. From the **pipeline runs list**, select the same run recorded by release-testing; verify both its
+   build ID and `buildNumber`
 10. Click **"Use selected run"**
 11. Click **"Run"**
 
@@ -149,8 +153,8 @@ Ask user to follow these steps and wait for completion.
 
 ```bash
 # Check if packages exist - HTTP 200 = success
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec"
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec"
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec"
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{hb-public-version}/harfbuzzsharp.nuspec"
 ```
 
 **If packages not yet indexed**, poll until available (NuGet.org can take 5-15 minutes):
@@ -158,8 +162,8 @@ curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/h
 ```bash
 # Poll every 30 seconds, max 10 minutes
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec")
-  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec")
+  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec")
+  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{hb-public-version}/harfbuzzsharp.nuspec")
   echo "$(date +%H:%M:%S) - SkiaSharp: $skia, HarfBuzzSharp: $hb"
   if [ "$skia" = "200" ] && [ "$hb" = "200" ]; then
     echo "✅ Both packages available on NuGet.org!"
@@ -171,7 +175,8 @@ done
 
 > **Note:** Use explicit list `1 2 3...` instead of `{1..20}` brace expansion for better compatibility with async shell execution.
 
-Or manually check: `https://www.nuget.org/packages/SkiaSharp/{version}`
+Or manually check `https://www.nuget.org/packages/SkiaSharp/{skia-public-version}` and
+`https://www.nuget.org/packages/HarfBuzzSharp/{hb-public-version}`.
 
 ---
 

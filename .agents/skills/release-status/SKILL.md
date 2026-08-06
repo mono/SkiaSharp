@@ -97,14 +97,15 @@ Present a summary table:
 ```
 Pipeline Chain Status: release/3.119.4
 
-| Pipeline | Status | Build | ADO Link |
-|----------|--------|-------|----------|
-| SkiaSharp-Native | [WARN] partiallySucceeded | 3.119.4-stable.2 | [link] |
-| SkiaSharp | [RUNNING] inProgress | 3.119.4-stable.2 | [link] |
-| SkiaSharp-Tests | [WAITING] not triggered | - | - |
+| Pipeline | Status | Run ID | buildNumber | ADO Link |
+|----------|--------|--------|-------------|----------|
+| SkiaSharp-Native | [WARN] partiallySucceeded | 14361035 | 3.119.4-stable.2+3.119.4 | [link] |
+| SkiaSharp | [OK] succeeded | 14361102 | 3.119.4-stable.2+3.119.4 | [link] |
+| SkiaSharp-Tests | [RUNNING] inProgress | 14361241 | 3.119.4-stable.2+3.119.4 | [link] |
 
-Packages will be available after SkiaSharp (10789) completes.
+Packages are available from the selected SkiaSharp (10789) run.
 
+Selected SkiaSharp run: 14361102 (3.119.4-stable.2+3.119.4)
 Selected SkiaSharp test package: 3.119.4-stable.2
 Eventual public SkiaSharp version: 3.119.4
 ```
