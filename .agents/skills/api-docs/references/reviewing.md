@@ -9,8 +9,8 @@ One agent does the whole pass. Work in batches of ~25–40 files so each pass st
 
 ## Required reading (first)
 
-1. [`issue-context.md`](issue-context.md) — prepare the shared bounded issue artifact and apply its
-   untrusted-reference boundary. If the allowlist is empty, continue with the existing procedure.
+1. [`issue-context.md`](issue-context.md) — read the shared prepared context, apply its untrusted-reference
+   boundary, and track any issue that materially informs the documentation.
 2. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
    standard-based enums, caller-owned vs parent-owned). If a doc claim matches this file, it is correct —
    do **not** "correct" it from your own reasoning about how a macro "should" expand.

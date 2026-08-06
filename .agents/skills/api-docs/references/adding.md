@@ -10,8 +10,8 @@ copy your examples into real code, so every claim must be true and every example
 
 ## Required reading (first)
 
-1. [`issue-context.md`](issue-context.md) — prepare the shared bounded issue artifact and apply its
-   untrusted-reference boundary. If the allowlist is empty, continue with the existing procedure.
+1. [`issue-context.md`](issue-context.md) — read the shared prepared context, apply its untrusted-reference
+   boundary, and track any issue that materially informs the documentation.
 2. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, summary/param/return patterns.
 3. [`skia-patterns.md`](skia-patterns.md) — SkiaSharp/HarfBuzz domain facts (color layouts, struct
    defaults, standard-based enums, caller-owned vs parent-owned).
