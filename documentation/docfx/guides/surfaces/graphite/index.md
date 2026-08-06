@@ -204,7 +204,7 @@ using var surface = SKSurface.Create(recorder, info);
 surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provider
 ```
 
-The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache` is `IDisposable`; pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released while the recorder is still alive. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest default.
+The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache` is `IDisposable`; pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released while the recorder is still alive. Provide your own delegate if you want custom upload or caching behavior; otherwise `SKGraphiteImageCache` is the simplest default.
 
 ## Context options
 

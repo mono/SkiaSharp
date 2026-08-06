@@ -5,7 +5,7 @@ description: "Migrate Ganesh GPU code to Graphite by replacing context flushing,
 
 # Migrate from Ganesh to Graphite
 
-If you already render on the GPU with [Ganesh](../ganesh/index.md) — a [`GRContext`](xref:SkiaSharp.GRContext), an `SKSurface`, and `Flush` — this page shows the equivalent [Graphite](index.md) calls. The concepts line up closely. Two **behaviour** changes matter most, and they are the parts most likely to bite when you port working code:
+If you already render on the GPU with [Ganesh](../ganesh/index.md) — a [`GRContext`](xref:SkiaSharp.GRContext), an `SKSurface`, and `Flush` — this page shows the equivalent [Graphite](index.md) calls. The concepts line up closely. Two **behavior** changes matter most, and they are the parts most likely to bite when you port working code:
 
 1. **Reading pixels back is asynchronous.** Graphite has no synchronous `SKSurface.ReadPixels`; you use `context.RequestReadPixels(...)` and pump `CheckAsyncWorkCompletion()`.
 2. **CPU images need an image provider.** Ganesh auto-uploads a raster `SKImage` when you draw it; Graphite does not — without a provider the draw is silently dropped.
