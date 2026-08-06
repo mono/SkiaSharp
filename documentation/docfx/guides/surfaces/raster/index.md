@@ -34,6 +34,8 @@ Once you've finished drawing, there are two common ways to get the pixels back.
 The simplest is to take an immutable snapshot as an [`SKImage`](xref:SkiaSharp.SKImage), which you can then encode to PNG, JPEG, or another format:
 
 ```csharp
+using System.IO;
+
 using var image = surface.Snapshot()
     ?? throw new InvalidOperationException("Unable to snapshot the surface.");
 using var data = image.Encode(SKEncodedImageFormat.Png, 100)
@@ -46,6 +48,8 @@ data.SaveTo(stream);
 If you need the raw pixels rather than an encoded image, read them back into a buffer with [`ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*). Because a raster surface already lives in CPU memory, this read is synchronous and does not cross a GPU boundary:
 
 ```csharp
+using System.Runtime.InteropServices;
+
 var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 var pixels = new byte[info.BytesSize];
 
@@ -71,6 +75,8 @@ The `SKSurface.Create(SKImageInfo)` overload lets Skia allocate the pixel buffer
 Pass the address of your buffer along with the info and row stride:
 
 ```csharp
+using System.Runtime.InteropServices;
+
 var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
@@ -83,7 +89,6 @@ try
     // every draw call writes straight into `pixels`
     surface.Canvas.Clear(SKColors.White);
     surface.Canvas.DrawCircle(128, 128, 100, paint);
-    surface.Canvas.Flush();
 }
 finally
 {
@@ -92,7 +97,7 @@ finally
 ```
 
 > [!IMPORTANT]
-> The memory you pass must stay alive and pinned for as long as the surface uses it. If you pin a managed array with `GCHandle`, keep the handle allocated until you are done drawing and have flushed the canvas; freeing it too early lets the garbage collector move the buffer out from under Skia.
+> The memory you pass must stay alive and pinned until the `SKSurface` and every image or pixmap that still shares the buffer have been disposed. Flushing a raster canvas does not release the pointer. Freeing a `GCHandle` earlier lets the garbage collector move the buffer while Skia can still access it.
 
 You can also wrap an [`SKPixmap`](xref:SkiaSharp.SKPixmap) — which already bundles an `SKImageInfo` with a pixel pointer — using the [`SKSurface.Create(SKPixmap)`](xref:SkiaSharp.SKSurface.Create(SkiaSharp.SKPixmap)) overload:
 

@@ -11,7 +11,7 @@ The `SkiaSharp.Views` package includes native Android controls in the `SkiaSharp
 | --- | --- | --- | --- |
 | `SKCanvasView` | `View` | CPU raster | `SKPaintSurfaceEventArgs` |
 | `SKGLSurfaceView` | `GLSurfaceView` | Ganesh over OpenGL ES | `SKPaintGLSurfaceEventArgs` |
-| `SKGLTextureView` | `GLTextureView` | Ganesh over OpenGL ES | `SKPaintGLSurfaceEventArgs` |
+| `SKGLTextureView` | `TextureView` through SkiaSharp's `GLTextureView` | Ganesh over OpenGL ES | `SKPaintGLSurfaceEventArgs` |
 
 Use `SKCanvasView` for the default raster path. The two GPU controls expose the same SkiaSharp drawing model but inherit from different Android view primitives. Choose between surface-view and texture-view behavior based on the composition needs of the Android layout.
 

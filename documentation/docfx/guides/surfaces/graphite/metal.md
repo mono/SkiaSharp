@@ -12,7 +12,12 @@ if (!SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal))
     throw new PlatformNotSupportedException("Graphite Metal is unavailable.");
 ```
 
+This check only confirms that the Metal factory was compiled into the native library. It does not validate the selected `MTLDevice`.
+
 ## Create the Graphite context
+
+> [!WARNING]
+> Before creating the command queue or calling `CreateMetal`, use the platform binding for `supportsFamily:` to confirm that the device reports a GPU family accepted by the current Skia build. Current macOS builds check Apple 7 through 9 and Mac 2; iOS-family builds also check Apple 2 through 6. If none of those families is reported, Skia calls `SK_ABORT` instead of returning `null`, which terminates the process.
 
 Supply an `MTLDevice` and `MTLCommandQueue`. On Apple target frameworks you can assign typed `IMTLDevice` and `IMTLCommandQueue` objects; from other targets, assign their native handles:
 
@@ -43,7 +48,7 @@ The native `MTLTexture` remains owned by the code that created it. If you supply
 
 ## Simulator caveats
 
-Graphite Metal works on the iOS and tvOS Simulator on Apple Silicon because it uses the host GPU. The simulator's `MTLDevice` under-reports its capabilities, so do not reject it only because `supportsFamily:` omits `Apple7+` or `Mac2`.
+Graphite Metal works on the iOS and tvOS Simulator on Apple Silicon because it uses the host GPU. The simulator's `MTLDevice` can under-report its family, so detect the Apple Simulator explicitly and allow it as an exception to the family probe. Do not apply that exception to other devices or virtualized Metal environments.
 
 The simulator's Metal shader compiler cannot build some Graphite pipelines, including some gradient shaders. In that case, `recorder.Snap()` returns `null` for the frame. The same content renders with Graphite Metal on macOS and physical iOS hardware, and with Ganesh Metal on the simulator. See [mono/SkiaSharp#4555](https://github.com/mono/SkiaSharp/issues/4555), and always check the result of `Snap()`.
 

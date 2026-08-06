@@ -43,6 +43,8 @@ that helper is omitted here so the migration steps stay focused on the lifecycle
 ### Ganesh
 
 ```csharp
+using System.Runtime.InteropServices;
+
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
 using var context = GRContext.CreateMetal(backendContext)

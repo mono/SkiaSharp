@@ -12,6 +12,12 @@ Use Vulkan when your host owns the Vulkan instance, physical device, logical dev
 Supply the queue-family index and a delegate that resolves instance and device functions:
 
 ```csharp
+GRVkGetProcedureAddressDelegate getProc = (name, instance, device) =>
+    System.IntPtr.Zero; // TODO: Forward to vkGetInstanceProcAddr or vkGetDeviceProcAddr.
+
+using var extensions = new GRVkExtensions();
+extensions.Initialize(getProc, instanceHandle, physicalDeviceHandle);
+
 using var backendContext = new GRVkBackendContext
 {
     VkInstance = instanceHandle,
@@ -19,15 +25,18 @@ using var backendContext = new GRVkBackendContext
     VkDevice = deviceHandle,
     VkQueue = graphicsQueueHandle,
     GraphicsQueueIndex = graphicsFamilyIndex,
-    GetProcedureAddress = (name, instance, device) =>
-        throw new System.NotImplementedException("Configure Vulkan function lookup."),
+    MaxAPIVersion = apiVersion,
+    Extensions = extensions,
+    GetProcedureAddress = getProc,
 };
 
 using var context = GRContext.CreateVulkan(backendContext)
     ?? throw new InvalidOperationException("Unable to create the Ganesh Vulkan context.");
 ```
 
-Replace the `NotImplementedException` with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
+Replace the zero-returning placeholder with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
+
+Initialize `GRVkExtensions` with the same function resolver before creating the context. If `Extensions` is `null`, Skia uses an empty extension set and cannot detect extension-dependent capabilities. `MaxAPIVersion` should describe the maximum Vulkan API version the host enabled; if it remains `0`, Skia falls back to the instance version it queries.
 
 ## Use the Silk.NET adapter
 
@@ -35,6 +44,9 @@ For new managed Vulkan code, [Silk.NET](https://www.nuget.org/packages/Silk.NET.
 
 ```csharp
 using Silk.NET.Vulkan;
+
+using var extensions = new GRVkExtensions();
+extensions.Initialize(getProc, instance, physicalDevice);
 
 using var backendContext = new GRSilkNetBackendContext
 {
@@ -44,6 +56,7 @@ using var backendContext = new GRSilkNetBackendContext
     VkQueue = graphicsQueue,
     GraphicsQueueIndex = graphicsFamily,
     MaxAPIVersion = apiVersion,
+    Extensions = extensions,
     GetProcedureAddress = getProc,
     VkPhysicalDeviceFeatures = features,
 };

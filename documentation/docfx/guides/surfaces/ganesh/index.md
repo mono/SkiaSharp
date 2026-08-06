@@ -46,6 +46,8 @@ context.Flush(submit: true, synchronous: true);
 After flushing, you can read the pixels back synchronously with the same `ReadPixels` call used in the [raster case](../raster/index.md#getting-the-result-out):
 
 ```csharp
+using System.Runtime.InteropServices;
+
 var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
@@ -72,7 +74,6 @@ using var surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.Bott
 surface.Canvas.Clear(SKColors.White);
 // ... draw the frame ...
 
-surface.Canvas.Flush();
 context.Flush();
 // then present/swap buffers with your windowing code
 ```
@@ -98,6 +99,6 @@ Dispose your surfaces and the `GRContext` when you are done. If you use OpenGL, 
 - [SkiaSharp APIs](xref:SkiaSharp)
 - [Surface overview](../index.md)
 - [Raster surfaces](../raster/index.md)
-- [Rendering in SkiaSharp Views](../views/index.md)
+- [Choose a SkiaSharp view](../views/index.md)
 - [Graphite GPU surfaces](../graphite/index.md)
 - [Skia canvas creation, GPU backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

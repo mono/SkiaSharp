@@ -41,9 +41,11 @@ A given build of SkiaSharp may not include every Graphite backend. Before creati
 ```csharp
 if (SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal))
 {
-    // The Metal factory is compiled in. Context creation can still return null.
+    // The Metal factory is compiled in. Validate the device before creating a context.
 }
 ```
+
+The check does not validate native devices, queues, or required capabilities. Most factory failures return `null`, but the current Metal backend terminates the process if its `MTLDevice` reports none of the GPU families Skia supports. Follow each backend page's preflight requirements before calling its factory.
 
 ## Choose and create a backend
 

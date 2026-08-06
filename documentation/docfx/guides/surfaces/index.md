@@ -56,17 +56,13 @@ Create a `GRContext` for OpenGL, Vulkan, Metal, or Direct3D, then make an offscr
 
 ### [Graphite GPU surfaces](graphite/index.md)
 
-Create an `SKGraphiteContext`, record and submit drawing, wrap external GPU textures, and read pixels back through the asynchronous readback path.
-
-### [Migrate from Ganesh to Graphite](graphite/migrate-from-ganesh.md)
-
-Map your existing Ganesh code — context creation, flushing, and readback — onto the Graphite recorder/recording model.
+Create an `SKGraphiteContext`, record and submit drawing, wrap external GPU textures, and read pixels back through the asynchronous readback path. If you are porting existing code, [map the Ganesh lifecycle to Graphite](graphite/migrate-from-ganesh.md).
 
 ### [Documents](documents/index.md)
 
 Create and finalize PDF, SVG, or XPS output through a canvas backed by a document stream.
 
-### [Rendering in SkiaSharp Views](views/index.md)
+### [Choose a SkiaSharp view](views/index.md)
 
 Choose a raster or Ganesh-backed control for .NET MAUI, native platforms, Uno Platform, or Blazor WebAssembly.
 

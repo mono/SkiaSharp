@@ -26,14 +26,14 @@ using var backendContext = new SKGraphiteVkBackendContext
     GraphicsQueueIndex = graphicsFamilyIndex,
     MaxApiVersion = apiVersion,
     GetProcedureAddress = (name, instance, device) =>
-        throw new System.NotImplementedException("Configure Vulkan function lookup."),
+        System.IntPtr.Zero, // TODO: Forward to vkGetInstanceProcAddr or vkGetDeviceProcAddr.
 };
 
 using var context = SKGraphiteContext.CreateVulkan(backendContext)
     ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
 ```
 
-Replace the `NotImplementedException` with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
+Replace the zero-returning placeholder with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
 
 There is no typed Graphite-specific Vulkan adapter. With [Silk.NET](https://www.nuget.org/packages/Silk.NET.Vulkan), pass each object's `.Handle` value:
 
@@ -67,9 +67,12 @@ When Skia is done with a wrapped texture, the parameterless `SKGraphiteReleaseDe
 
 ### Release a wrapped texture
 
-This complete sequence allocates a backend texture through the recorder, wraps it, submits work, waits for the release callback, and deletes the allocation while the recorder is still alive:
+Starting with an initialized Vulkan `backendContext`, this sequence allocates a backend texture through the recorder, wraps it, submits work, waits for the release callback, and deletes the allocation while the recorder is still alive:
 
 ```csharp
+const int width = 256;
+const int height = 256;
+
 using var context = SKGraphiteContext.CreateVulkan(backendContext)
     ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
 using var recorder = context.CreateRecorder()
