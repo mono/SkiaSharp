@@ -76,7 +76,7 @@ Once SDK is located, verify:
 1. Install system image: `sdkmanager "system-images;android-{API};google_apis;arm64-v8a"`
 2. Create AVD: `avdmanager create avd -n {name} -k "system-images;android-{API};google_apis;arm64-v8a" -d pixel`
 
-For the old automation target, use API 26 and an AVD such as `Pixel_API_26`.
+For the old target, use API 26 and an AVD such as `Pixel_API_26`.
 
 For API 36+, use `google_apis_playstore` instead of `google_apis`.
 
@@ -118,7 +118,7 @@ To find devices for a runtime: `xcrun simctl list devices available | grep -A10 
 Before running release tests, verify:
 
 1. **Android SDK found** — `adb version` works
-2. **Old Android automation emulator exists** — AVD with API 26
+2. **Old Android emulator exists** — AVD with API 26
 3. **New Android emulator exists** — AVD with API 35-36
 4. **iOS runtimes available** — at least 2 different versions
 5. **Appium installed** — `which appium` returns path

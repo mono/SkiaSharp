@@ -376,7 +376,7 @@ once per .NET band you're validating.
 | LinuxConsoleTests | Once (Docker) | - | ~2min |
 | BlazorTests | Once | - | ~2min |
 | MauiMacCatalystTests | Once | - | ~2min |
-| MauiWindowsTests | Once (Windows host) | - | ~2min |
+| MauiWindowsTests | Once | - | ~2min |
 | MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
 | MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
 
@@ -407,6 +407,7 @@ Proceed to **release-publish** ONLY when:
 - ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
 - ✅ Android tests pass on BOTH oldest (API 26) and newest (API 35-36)
+- ✅ Windows tests pass on Windows hosts
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
 ### Skip Policy
