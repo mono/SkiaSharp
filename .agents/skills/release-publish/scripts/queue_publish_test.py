@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -60,9 +61,14 @@ class QueuePublishTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "Managed build number must match"):
                     queue_publish.build_queue_body(build_number)
 
-    @patch.object(queue_publish, "run_az_json")
-    def test_queue_returns_run_id_and_url(self, run_az_json: Mock) -> None:
-        run_az_json.return_value = {"id": 14890000}
+    @patch.object(queue_publish.shutil, "which", return_value=r"C:\Tools\az.cmd")
+    @patch.object(queue_publish.subprocess, "run")
+    def test_queue_returns_run_id_and_url(
+        self, run: Mock, _: Mock
+    ) -> None:
+        run.return_value = subprocess.CompletedProcess(
+            ["az"], 0, stdout="14890000\n", stderr=""
+        )
 
         run_id, url = queue_publish.queue_publish(
             "4.151.1-stable.1+4.151.1"
@@ -73,9 +79,32 @@ class QueuePublishTests(unittest.TestCase):
             "https://dev.azure.com/devdiv/DevDiv/_build/results?buildId=14890000",
             url,
         )
-        queue_args = run_az_json.call_args.args[0]
+        queue_args = run.call_args.args[0]
         self.assertIn("POST", queue_args)
         self.assertIn("pipelineId=25298", queue_args)
+        self.assertIn("--query", queue_args)
+        self.assertTrue(run.call_args.kwargs["text"])
+        self.assertTrue(run.call_args.kwargs["check"])
+
+    @patch.object(queue_publish.shutil, "which", return_value="az")
+    @patch.object(queue_publish.subprocess, "run")
+    def test_queue_propagates_cli_failure(self, run: Mock, _: Mock) -> None:
+        run.side_effect = subprocess.CalledProcessError(
+            1, ["az"], stderr="permission denied"
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "permission denied"):
+            queue_publish.queue_publish("4.151.1-stable.1+4.151.1")
+
+    @patch.object(queue_publish.shutil, "which", return_value="az")
+    @patch.object(queue_publish.subprocess, "run")
+    def test_queue_rejects_missing_run_id(self, run: Mock, _: Mock) -> None:
+        run.return_value = subprocess.CompletedProcess(
+            ["az"], 0, stdout="", stderr=""
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "numeric publish run ID"):
+            queue_publish.queue_publish("4.151.1-stable.1+4.151.1")
 
 
 if __name__ == "__main__":

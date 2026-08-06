@@ -124,9 +124,8 @@ numeric ID is only for querying and validating the source run.
 Show the validated source summary and JSON body, then use `ask_user` for explicit confirmation.
 Before asking, verify that pipeline `25298` has no active run as documented in
 [references/azure-publish.md](references/azure-publish.md). Only after confirmation, invoke
-`scripts/queue-publish.py` with the verified build-number string and `--confirm-queue`. The script
-validates the build-number shape, infers `pushStable`, queues pipeline `25298`, and prints the new
-run ID and URL.
+`scripts/queue-publish.py` with the verified build-number string. The script validates the
+build-number shape, infers `pushStable`, queues pipeline `25298`, and prints the new run ID and URL.
 
 ### Verification During Pipeline Run
 

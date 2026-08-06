@@ -60,25 +60,8 @@ if ($activeRuns.Count -ne 0) {
 
 ## 3. Obtain confirmation and queue
 
-Show the user the numeric lookup ID, managed build number, exact branch/commit, expected
-`Push Stable` or `Push Preview` stage, and this request shape:
-
-```json
-{
-  "resources": {
-    "pipelines": {
-      "SkiaSharp": {
-        "version": "4.151.1-stable.1+4.151.1"
-      }
-    }
-  },
-  "templateParameters": {
-    "selectedResource": "SkiaSharp",
-    "pushPackages": true,
-    "pushStable": true
-  }
-}
-```
+Show the user the numeric lookup ID, managed build number, exact branch/commit, and expected
+`Push Stable` or `Push Preview` stage.
 
 Use `ask_user` for explicit confirmation immediately before invocation. Only after confirmation,
 invoke the small
@@ -86,37 +69,12 @@ cross-platform queue script:
 
 ```powershell
 python .agents/skills/release-publish/scripts/queue-publish.py `
-  "{managed-build-number}" `
-  --confirm-queue
+  "{managed-build-number}"
 if ($LASTEXITCODE -ne 0) { throw "Publish pipeline was not queued." }
 ```
 
-The script:
-
-- accepts a managed **build number**, never a numeric run ID;
-- rejects malformed, mismatched, or `+main` build numbers;
-- infers `pushStable` from the validated `stable`/`preview`/`rc` label;
-- propagates Azure CLI/API errors;
-- posts the request and prints the publish run ID and URL.
-
-Capture the returned publish run ID. Query it and verify the selected build number and parameters:
-
-```powershell
-az devops invoke `
-  --org https://dev.azure.com/devdiv `
-  --area pipelines `
-  --resource runs `
-  --route-parameters project=DevDiv pipelineId=25298 runId={publish-run-id} `
-  --api-version 7.1 `
-  --query "{id:id,name:name,state:state,result:result,resources:resources.pipelines.SkiaSharp,templateParameters:templateParameters}" `
-  --only-show-errors `
-  -o json
-if ($LASTEXITCODE -ne 0) { throw "Could not verify queued publish run." }
-```
-
-Require `resources.version` to equal the confirmed managed build number. Require
-`selectedResource == "SkiaSharp"`, `pushPackages == "true"`, and `pushStable` to match the
-confirmed release type.
+The script accepts only the verified build-number string, infers `pushStable`, performs one
+`az devops invoke` POST, and prints the publish run ID and URL.
 
 ## 4. Respect the human approval boundary
 
@@ -161,6 +119,5 @@ stops the publish workflow.
   defines `version` as the specified run number.
 - Successful publish run `14883940` selected source run `14874440` by build number
   `4.151.1-stable.1+4.151.1`, exposed `Push Stable`, and completed `succeeded`.
-- Failed run `14883922` had no selected resources, while duplicate run `14885403` selected the same
-  stable resource and was later canceled. These runs demonstrate why build-number selection and
-  the active-run guard both matter.
+- Failed run `14883922` had no selected resources. Duplicate run `14885403` demonstrates why the
+  active-run check matters.
