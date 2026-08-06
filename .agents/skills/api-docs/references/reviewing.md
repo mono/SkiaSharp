@@ -9,12 +9,14 @@ One agent does the whole pass. Work in batches of ~25–40 files so each pass st
 
 ## Required reading (first)
 
-1. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
+1. [`issue-context.md`](issue-context.md) — read the shared prepared context, apply its untrusted-reference
+   boundary, and track any issue that materially informs the documentation.
+2. [`skia-patterns.md`](skia-patterns.md) — pre-verified domain facts (color layouts, struct defaults,
    standard-based enums, caller-owned vs parent-owned). If a doc claim matches this file, it is correct —
    do **not** "correct" it from your own reasoning about how a macro "should" expand.
-2. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
-3. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
-4. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
+3. [`checklist.md`](checklist.md) — the CRITICAL/IMPORTANT/MINOR severity taxonomy you classify against.
+4. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, `cref` vs `xref` rules.
+5. [`obsolete-api-map.md`](obsolete-api-map.md) — obsolete members and the modern API to use instead.
    §1 lists members that are always obsolete; §2 lists methods whose name also exists on the modern API
    (disambiguate by signature). Using an obsolete member in an example is a compile failure → CRITICAL.
 
