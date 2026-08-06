@@ -9,35 +9,38 @@ Use this procedure for publish pipeline `25298`. It separates three trust bounda
 Azure Pipelines documents `resources.pipelines.<alias>.version` as the run number, and the
 Pipelines Runs API defines that value as a string. Never put the numeric managed run ID there.
 
-## 1. Prepare and validate the queue request
+## 1. Verify the managed source run
 
-Use the exact release branch commit that passed release testing:
+The release-status output reports the managed run ID and build number. Query that numeric ID:
 
 ```powershell
-$request = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-publish-run.json"
-
-python .agents/skills/release-publish/scripts/prepare-publish-run.py `
-  --managed-run-id {managed-run-id} `
-  --release-version {release-version} `
-  --release-commit {full-40-character-release-commit} `
-  --output $request
-if ($LASTEXITCODE -ne 0) { throw "Publish request validation failed." }
+az pipelines runs show `
+  --org https://dev.azure.com/devdiv `
+  --project DevDiv `
+  --id {managed-run-id} `
+  --query "{id:id,definitionId:definition.id,buildNumber:buildNumber,status:status,result:result,sourceBranch:sourceBranch,sourceVersion:sourceVersion}" `
+  --only-show-errors `
+  -o json
+if ($LASTEXITCODE -ne 0) { throw "Could not verify managed run {managed-run-id}." }
 ```
 
-`--release-version` is the release **branch suffix**, without the final CI build number: use
-`4.151.1` or `4.152.0-preview.1`, not `4.152.0-preview.1.1`.
+Before queueing, verify every field:
 
-The helper performs read-only Azure CLI calls and refuses to produce a request unless:
+- `definitionId` is managed pipeline `10789`;
+- `status/result` is exactly `completed/succeeded`;
+- `sourceBranch` is exactly `refs/heads/release/{release-version}`;
+- `sourceVersion` is the full 40-character commit that passed release testing;
+- `buildNumber` has the expected release label:
+  - stable: `X.Y.Z[.F]-stable.B+X.Y.Z[.F]`;
+  - preview: `X.Y.Z[.F]-preview.N.B+X.Y.Z[.F]-preview.N`;
+  - RC: `X.Y.Z[.F]-rc.N.B+X.Y.Z[.F]-rc.N`.
 
-- the run belongs to managed pipeline `10789`;
-- it is `completed/succeeded`;
-- its branch is exactly `refs/heads/release/{release-version}`;
-- its source commit exactly matches the supplied full commit SHA;
-- its build number has the expected `stable`, `preview.N`, or `rc.N` label;
-- publish pipeline `25298` has no active run (`notStarted`, `inProgress`, `postponed`,
-  `cancelling`, or `queued`).
+The numeric ID is lookup/evidence only. The next step receives only the verified build number.
 
-It writes this shape:
+## 2. Obtain confirmation and queue
+
+Show the user the numeric lookup ID, managed build number, exact branch/commit, expected
+`Push Stable` or `Push Preview` stage, and this request shape:
 
 ```json
 {
@@ -56,82 +59,43 @@ It writes this shape:
 }
 ```
 
-For previews and RCs, `pushStable` is `false`. The numeric managed run ID is deliberately absent
-from the body.
-
-## 2. Obtain confirmation and queue
-
-Show the helper's complete summary and JSON body to the user. Use `ask_user` to obtain explicit
-confirmation of all of these values:
-
-- numeric managed run ID used for validation;
-- managed build number used as the resource version;
-- exact release branch and commit;
-- expected `Push Stable` or `Push Preview` stage.
-
-After confirmation, rerun the helper once to close the active-run race, then queue with the tested
-Pipelines Runs REST route:
+Use `ask_user` for explicit confirmation. Only after confirmation, invoke the small
+cross-platform queue script:
 
 ```powershell
-python .agents/skills/release-publish/scripts/prepare-publish-run.py `
-  --managed-run-id {managed-run-id} `
-  --release-version {release-version} `
-  --release-commit {full-40-character-release-commit} `
-  --output $request
-if ($LASTEXITCODE -ne 0) { throw "Publish request revalidation failed; do not queue." }
+python .agents/skills/release-publish/scripts/queue-publish-run.py `
+  "{managed-build-number}" `
+  --confirm-queue
+if ($LASTEXITCODE -ne 0) { throw "Publish pipeline was not queued." }
+```
 
-$queuedJson = az devops invoke `
+The script:
+
+- accepts a managed **build number**, never a numeric run ID;
+- rejects malformed, mismatched, or `+main` build numbers;
+- infers `pushStable` from the validated `stable`/`preview`/`rc` label;
+- refuses to queue while pipeline `25298` has an active run;
+- propagates Azure CLI/API errors;
+- posts the request and prints the publish run ID and URL.
+
+Capture the returned publish run ID. Query it and verify the selected build number and parameters:
+
+```powershell
+az devops invoke `
   --org https://dev.azure.com/devdiv `
   --area pipelines `
   --resource runs `
-  --route-parameters project=DevDiv pipelineId=25298 `
-  --http-method POST `
+  --route-parameters project=DevDiv pipelineId=25298 runId={publish-run-id} `
   --api-version 7.1 `
-  --in-file $request `
-  --encoding utf-8 `
+  --query "{id:id,name:name,state:state,result:result,resources:resources.pipelines.SkiaSharp,templateParameters:templateParameters}" `
   --only-show-errors `
   -o json
-if ($LASTEXITCODE -ne 0) { throw "Azure rejected the publish queue request." }
-
-$publishRunId = ($queuedJson | ConvertFrom-Json).id
-if (-not $publishRunId) { throw "Azure did not return a publish run ID." }
+if ($LASTEXITCODE -ne 0) { throw "Could not verify queued publish run." }
 ```
 
-The helper deletes any previous request before revalidation. If another publish run appeared,
-the stale body is no longer available to queue.
-
-Capture the returned publish run ID. Immediately query it and verify the selected resource:
-
-```powershell
-$verifiedJson = az devops invoke `
-  --org https://dev.azure.com/devdiv `
-  --area pipelines `
-  --resource runs `
-  --route-parameters project=DevDiv pipelineId=25298 runId=$publishRunId `
-  --api-version 7.1 `
-  --query "{id:id,name:name,state:state,result:result,resources:resources,templateParameters:templateParameters}" `
-  --only-show-errors `
-  -o json
-if ($LASTEXITCODE -ne 0) { throw "Could not verify queued publish run $publishRunId." }
-
-$expected = Get-Content -Raw $request | ConvertFrom-Json
-$verified = $verifiedJson | ConvertFrom-Json
-$selected = $verified.resources.pipelines.SkiaSharp
-if ($selected.version -ne $expected.resources.pipelines.SkiaSharp.version) {
-  throw "Queued run selected the wrong managed build number."
-}
-if ($verified.templateParameters.selectedResource -ne "SkiaSharp" -or
-    [string]$verified.templateParameters.pushPackages -ne
-      [string]$expected.templateParameters.pushPackages -or
-    [string]$verified.templateParameters.pushStable -ne
-      [string]$expected.templateParameters.pushStable) {
-  throw "Queued run template parameters do not match the validated request."
-}
-```
-
-The numeric run ID was already verified before queueing. These post-queue checks use Azure's
-documented response fields to prove that the expected build-number string and confirmed release
-type were selected.
+Require `resources.version` to equal the confirmed managed build number. Require
+`selectedResource == "SkiaSharp"`, `pushPackages == "true"`, and `pushStable` to match the
+confirmed release type.
 
 ## 3. Respect the human approval boundary
 
@@ -177,5 +141,5 @@ stops the publish workflow.
 - Successful publish run `14883940` selected source run `14874440` by build number
   `4.151.1-stable.1+4.151.1`, exposed `Push Stable`, and completed `succeeded`.
 - Failed run `14883922` had no selected resources, while duplicate run `14885403` selected the same
-  stable resource and was later canceled. These runs demonstrate why the request body and
-  duplicate-active-run check both matter.
+  stable resource and was later canceled. These runs demonstrate why build-number selection and
+  the active-run guard both matter.

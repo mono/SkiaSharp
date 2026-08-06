@@ -113,17 +113,18 @@ packages on the internal feed. See [release-status](../release-status/SKILL.md) 
 ### Pipeline Steps
 
 Use the tested CLI/REST path in
-[references/azure-publish.md](references/azure-publish.md). Its helper verifies the numeric
-managed run ID, succeeded state, exact release branch and commit, expected release label, and
-absence of an active publish run before writing the request.
+[references/azure-publish.md](references/azure-publish.md). Use the numeric managed run ID from
+release-status to verify pipeline `10789`, `completed/succeeded`, the exact release branch and
+full commit, and the expected stable/preview/RC build-number label.
 
 ⚠️ `resources.pipelines.SkiaSharp.version` is the managed pipeline **build number string**, for
 example `4.151.1-stable.1+4.151.1`. Never put the numeric managed run/build ID in that field; the
 numeric ID is only for querying and validating the source run.
 
-Show the complete validated summary and JSON body, then use `ask_user` for explicit confirmation
-before queueing pipeline `25298`. After confirmation, rerun the helper to refresh the active-run
-check and then invoke the queue request.
+Show the validated source summary and JSON body, then use `ask_user` for explicit confirmation.
+Only after confirmation, invoke `scripts/queue-publish-run.py` with the verified build-number
+string and `--confirm-queue`. The script validates the build-number shape, infers `pushStable`,
+blocks an active duplicate, queues pipeline `25298`, and prints the new run ID and URL.
 
 ### Verification During Pipeline Run
 
