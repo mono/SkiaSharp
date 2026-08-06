@@ -8,22 +8,42 @@ Quick reference for common errors and fixes.
 
 **Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
+**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
+matching feed package instead of the exact package from the selected CI build. The feed contains
+multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
+return the wrong one.
 
-**Fix:** Use `.version` and filter by base version + label from the release branch:
+**Fix:** Use `.version` and match the exact test package version derived from the selected
+`SkiaSharp` pipeline build:
 
 ```bash
+SKIA_TEST_VERSION="3.119.2-stable.3"
 dotnet package search SkiaSharp \
   --source "https://aka.ms/skiasharp-eap/index.json" \
   --exact-match --prerelease --format json \
   | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-  | grep "^3.119.2-preview.3\."
+  | grep -Fx "$SKIA_TEST_VERSION"
 ```
+
+If the exact match returns nothing, list the matching stream to see what the feed actually has:
+
+```bash
+# Diagnostic only — never select the version to test from this list
+... | grep -F "3.119.2-stable."
+```
+
+**`ERROR: Could not read release versions from ...`** — fetch the release branch and confirm
+`RELEASE_REF` points at `origin/release/{version}`.
+
+**`ERROR: Selected buildNumber ... does not match ...`** — the selected run is not from that
+release branch, or the release ref contains different version values. Re-check the run selected in
+Step 1 and the `RELEASE_REF` value before deriving the versions again.
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
-| No filtering | Filter by `{base}-{label}.*` |
+| Newest matching build | Exact selected CI build |
+| Prefix filtering to select a version | Exact version match |
 
 ---
 
@@ -33,7 +53,9 @@ dotnet package search SkiaSharp \
 |-------|-------|-----|
 | `MAUI workload is required` | Missing workload | `dotnet workload install maui` |
 | `wasm-tools workload is required` | Missing workload | `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Add `-p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N` |
+| `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
+| `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
+| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
 
 ## Appium Errors
 

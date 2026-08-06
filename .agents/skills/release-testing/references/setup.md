@@ -27,9 +27,13 @@ The `LinuxConsoleTests` use `SkiaSharp.NativeAssets.Linux.NoDependencies` (stati
 
 ```bash
 cd tests/SkiaSharp.Tests.Integration
-dotnet build -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
+dotnet build -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}
 pwsh bin/Debug/net8.0/playwright.ps1 install chromium
 ```
+
+Use the exact package versions resolved from the selected CI build. Stable prepublication testing
+uses versions such as `4.150.2-stable.1` and `14.2.1.2-stable.1`, not the eventual bare public
+versions.
 
 ### macOS Additional
 

@@ -29,15 +29,17 @@ Each skill confirms with `ask_user` before executing destructive operations.
 
 ### Version Patterns
 
-| Release Type | Version Format | Branch | NuGet Pattern | Tag |
-|--------------|----------------|--------|---------------|-----|
-| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
-| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
-| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `vX.Y.Z` |
-| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
-| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `vX.Y.Z.F` |
+| Release Type | Version Format | Branch | Test Package | Public Version | Tag |
+|--------------|----------------|--------|--------------|----------------|-----|
+| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
+| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
+| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `X.Y.Z` | `vX.Y.Z` |
+| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
+| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
-The `{build}` number is auto-assigned by CI.
+The `{build}` number is auto-assigned by CI. Release testing uses the exact test packages produced
+by the selected CI build. Stable public versions drop the `-stable.{build}` suffix only when they
+are published to NuGet.org.
 
 ### Release Type → Base Branch
 
@@ -92,7 +94,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 | CI | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing.
+> **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for testing, including exact `*-stable.{build}` packages before stable publication.
 > The CI feed contains internal build artifacts prefixed with `_` (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline and is not intended for public consumption.
 
 ### Pipelines
@@ -192,15 +194,16 @@ Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
 flowchart TB
     START([CI Build Complete]) --> RESOLVE
     
-    RESOLVE["Resolve Package Versions
+    RESOLVE["Resolve Test Package Versions
     ∙ Fetch release branch
+    ∙ Read selected SkiaSharp CI build
     ∙ Read VERSIONS.txt (both packages)
-    ∙ Search preview feed
-    ∙ Pick latest build"]
+    ∙ Derive exact label + build suffix
+    ∙ Verify exact packages on preview feed"]
     
     RESOLVE --> FOUND{Packages found?}
     FOUND -->|No| WAIT([Wait - CI not done])
-    FOUND -->|Yes| REPORT[Report versions to user]
+    FOUND -->|Yes| REPORT[Report test and public versions separately]
     
     REPORT --> STABLE{Stable release?}
     STABLE -->|No| TESTS
