@@ -8,10 +8,6 @@ from pathlib import Path
 
 REPOSITORY = "mono/SkiaSharp-API-docs"
 LABEL = "approved-for-context"
-MAX_ISSUES = 20
-MAX_TITLE_CHARS = 300
-MAX_BODY_CHARS = 6000
-MARKER = "\n\n[TRUNCATED]"
 DEFAULT_OUTPUT = (
     Path(__file__).resolve().parents[4]
     / "output"
@@ -33,7 +29,7 @@ def fetch_issues():
             "--state",
             "open",
             "--limit",
-            str(MAX_ISSUES),
+            "1000",
             "--json",
             "number,title,body,url",
         ],
@@ -46,12 +42,6 @@ def fetch_issues():
     if not isinstance(issues, list):
         raise ValueError("GitHub issue response must be an array")
     return issues
-
-
-def truncate(value, limit):
-    if len(value) <= limit:
-        return value
-    return value[: limit - len(MARKER)] + MARKER
 
 
 def render(issues):
@@ -87,11 +77,11 @@ def render(issues):
     for number, title, body, url in sorted(normalized):
         lines.extend(
             [
-                f"## #{number}: {truncate(title, MAX_TITLE_CHARS)}",
+                f"## #{number}: {title}",
                 "",
                 f"Source: {url}",
                 "",
-                truncate(body, MAX_BODY_CHARS),
+                body,
                 "",
             ]
         )
