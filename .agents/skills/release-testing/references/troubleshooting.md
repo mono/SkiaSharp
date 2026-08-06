@@ -75,14 +75,14 @@ adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
 | `FATAL EXCEPTION` | Unhandled exception | **Bug - investigate** |
 | `Native crash` | Native library issue | **Bug - investigate** |
 
-### Old Android (API 21-23) Crashes
+### Old Android (API 26) Crashes
 
-Old Android may crash due to:
+API 26 may crash due to:
 - Missing APIs that MAUI expects
 - Different permission behavior
 - Slower startup causing timeouts
 
-If crash only on old Android: get full stack trace, check if known MAUI/SkiaSharp issue.
+If crash only on API 26: get full stack trace, check if known MAUI/SkiaSharp issue.
 
 ## iOS Diagnostics
 
