@@ -184,11 +184,11 @@ flowchart TB
 After the branch is pushed, track the pipeline chain until packages are available:
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
 The pipeline chain is: `SkiaSharp-Native` → `SkiaSharp` (signs & publishes) → `SkiaSharp-Tests`.
-Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
+Packages appear on the internal test feed after `SkiaSharp` (ID 10789) completes.
 
 ### Stage 3: Testing (release-testing skill)
 
@@ -197,16 +197,17 @@ flowchart TB
     START([CI Build Complete]) --> RESOLVE
     
     RESOLVE["Resolve Package Versions
-    ∙ Fetch release branch
-    ∙ Read VERSIONS.txt (both packages)
-    ∙ Search internal test feed
-    ∙ Pick exact matching internal build"]
+    ∙ Select managed build number
+    ∙ Read both base versions + label
+    ∙ Derive Skia package before '+'
+    ∙ Apply same suffix to HarfBuzz"]
     
-    RESOLVE --> FOUND{Packages found?}
+    RESOLVE --> FOUND{Both exact packages found?}
     FOUND -->|No| WAIT([Wait - CI not done])
-    FOUND -->|Yes| REPORT["Report versions
-    ∙ Exact internal test packages
-    ∙ Final public version"]
+    FOUND -->|Yes| REPORT["Verify and report versions
+    ∙ Exact packages exist on internal test feed
+    ∙ Preview/RC public = exact packages
+    ∙ Stable public = base versions"]
     
     REPORT --> TESTS
     
@@ -259,7 +260,7 @@ flowchart TB
 
     APPROVE --> STATUS{Completed / succeeded?}
     STATUS -->|No| FAILED([Fix and retry])
-    STATUS -->|Yes| VERIFY["Verify packages visible
+    STATUS -->|Yes| VERIFY["Verify both public package versions
     ∙ Only after terminal pipeline success"]
 
     VERIFY --> TAG
@@ -289,7 +290,7 @@ flowchart TB
     MILESTONE -->|Yes, no open issues| CLOSE[Close exact milestone]
     MILESTONE -->|Yes, open issues| ASK[Surface issues and ask user]
     CLOSE --> DONE
-    ASK --> DONE
+    ASK --> CLOSE
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2

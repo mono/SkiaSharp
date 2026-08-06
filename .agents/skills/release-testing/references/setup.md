@@ -30,11 +30,11 @@ developer machine.
 
 As verified from official upstream metadata on 2026-08-05:
 
-| Component | Current stable | Compatibility |
-|-----------|----------------|---------------|
+| Component | Verified baseline (2026-08-05) | Compatibility |
+|-----------|--------------------------------|---------------|
 | Appium core | [3.6.0](https://github.com/appium/appium/releases/tag/appium%403.6.0) | Node `^20.19.0 \|\| ^22.12.0 \|\| >=24.0.0`, npm `>=10` |
 | UiAutomator2 driver | [8.2.2](https://github.com/appium/appium-uiautomator2-driver/releases/tag/v8.2.2) | Appium 3; Android API 26+ |
-| Windows driver | [6.1.0](https://github.com/appium/appium-windows-driver/releases/tag/v6.1.0) | Appium 3; official README documents Windows 10 host support |
+| Windows driver | [6.1.0](https://github.com/appium/appium-windows-driver/releases/tag/v6.1.0) | Appium 3 |
 
 Sources: [Appium requirements](https://appium.io/docs/en/latest/quickstart/requirements/),
 [UiAutomator2 requirements](https://github.com/appium/appium-uiautomator2-driver#requirements),
@@ -57,15 +57,8 @@ The supported SkiaSharp path remains Appium's official `windows` driver because 
 [#3969](https://github.com/mono/SkiaSharp/pull/3969) validated that path. Preserve a working
 installation rather than replacing it during a release.
 
-- The Node.js driver wrapper is maintained, but Microsoft has not maintained the WinAppDriver
-  backend since 2022. Appium documents this limitation in its
-  [driver catalog](https://appium.io/docs/en/latest/ecosystem/drivers/#windows).
 - Windows driver 3.0.0+ no longer installs WinAppDriver automatically. After user approval, the
   supported setup command is `appium driver run windows install-wad [optional-version]`.
-- The upstream README explicitly documents Windows 10 hosts. PR #3969 also validated SkiaSharp's
-  tests on Windows 11; record the actual host version in the release report.
-- Appium lists NovaWindows as a community drop-in replacement. Treat switching to it as a
-  separate, user-approved compatibility decision, not an automatic release setup step.
 
 ## Prerequisites
 
@@ -104,7 +97,6 @@ which writes to the user's browser cache.
 2. Verify WinAppDriver is already installed and can start.
 3. Verify Developer Mode is enabled in Settings.
 4. If WinAppDriver is missing, ask before running `appium driver run windows install-wad`.
-5. Do not replace a working WinAppDriver or switch to NovaWindows without explicit approval.
 
 ---
 

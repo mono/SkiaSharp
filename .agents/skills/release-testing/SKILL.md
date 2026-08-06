@@ -63,7 +63,7 @@ When identifying which release branch to test, you **MUST** use semver ordering,
 Before testing, verify CI builds have completed using the **release-status** skill:
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
 **Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
@@ -95,90 +95,100 @@ identify the prepublication build and is reserved for the final NuGet.org public
 
 ## Step 2: Resolve Package Versions
 
-**DO NOT ask user for exact NuGet versions.** Resolve automatically:
+**DO NOT ask the user for exact NuGet versions or select package versions independently.** Derive
+both packages from the managed build number selected by release-status:
 
 1. Fetch release branch and read version files:
    ```bash
    # Read base versions (format: "PackageName  nuget  version")
-   grep "^SkiaSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
-   grep "^HarfBuzzSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
+   SKIA_BASE=$(awk '$1 == "SkiaSharp" && $2 == "nuget" {print $3; exit}' scripts/VERSIONS.txt)
+   HARFBUZZ_BASE=$(awk '$1 == "HarfBuzzSharp" && $2 == "nuget" {print $3; exit}' scripts/VERSIONS.txt)
    
    # Read preview label (remove surrounding quotes)
-   grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'"
+   PREVIEW_LABEL=$(grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'")
    ```
    - `SkiaSharp ... nuget` line → base version (e.g., `3.119.2`)
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
    - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
-2. **Search and filter for the SPECIFIC internal test package:**
+2. Capture the exact managed build number reported for the selected `SkiaSharp` run (for example,
+   `3.119.2-stable.3+3.119.2`). Derive and validate the package versions:
 
-   **For preview releases** (`PREVIEW_LABEL` is NOT `stable`):
+   - The exact SkiaSharp test package is the managed build-number text before `+`.
+   - It must start with `{skia-base}-` and match `{skia-base}-{PREVIEW_LABEL}.{build}`. Stop if the
+     base version or stable/preview/RC label does not match the release branch.
+   - Remove `{skia-base}-` to obtain the complete suffix (for example, `stable.3`,
+     `preview.3.1`, or `rc.1.2`).
+   - The exact HarfBuzzSharp test package is `{harfbuzz-base}-{same-suffix}`. This shared suffix
+     proves that both packages came from the same managed build.
 
    ```bash
-   # Get ALL versions, then filter to match {base}-{label}.*
+   MANAGED_BUILD_NUMBER="{managed-build-number-from-release-status}"
+   SKIA_TEST_VERSION="${MANAGED_BUILD_NUMBER%%+*}"
+   EXPECTED_PREFIX="${SKIA_BASE}-${PREVIEW_LABEL}."
+
+   case "$PREVIEW_LABEL" in
+     stable) ;;
+     preview.*|rc.*)
+       LABEL_NUMBER="${PREVIEW_LABEL#*.}"
+       case "$LABEL_NUMBER" in
+         ''|*[!0-9]*) echo "PREVIEW_LABEL has an invalid release number." >&2; exit 1 ;;
+       esac
+       ;;
+     *) echo "PREVIEW_LABEL is not stable, preview.N, or rc.N." >&2; exit 1 ;;
+   esac
+   case "$MANAGED_BUILD_NUMBER" in
+     *+*) ;;
+     *) echo "Managed build number has no + branch suffix." >&2; exit 1 ;;
+   esac
+   case "$SKIA_TEST_VERSION" in
+     "$EXPECTED_PREFIX"*) ;;
+     *) echo "Managed build does not match the SkiaSharp base and release label." >&2; exit 1 ;;
+   esac
+
+   BUILD_NUMBER="${SKIA_TEST_VERSION#"$EXPECTED_PREFIX"}"
+   case "$BUILD_NUMBER" in
+     ''|*[!0-9]*) echo "Managed build has an invalid numeric build suffix." >&2; exit 1 ;;
+   esac
+
+   PACKAGE_SUFFIX="${SKIA_TEST_VERSION#"$SKIA_BASE-"}"
+   HARFBUZZ_TEST_VERSION="${HARFBUZZ_BASE}-${PACKAGE_SUFFIX}"
+   ```
+
+   | Managed build number | SkiaSharp test package | HarfBuzzSharp test package | Public versions |
+   |----------------------|------------------------|----------------------------|-----------------|
+   | `3.119.2-stable.3+3.119.2` | `3.119.2-stable.3` | `8.3.1.3-stable.3` | `3.119.2` / `8.3.1.3` |
+   | `3.119.2-preview.3.1+3.119.2-preview.3` | `3.119.2-preview.3.1` | `8.3.1.3-preview.3.1` | Same as test packages |
+   | `3.119.2-rc.1.2+3.119.2-rc.1` | `3.119.2-rc.1.2` | `8.3.1.3-rc.1.2` | Same as test packages |
+
+3. Verify both derived versions exist exactly on the internal test (EAP) feed. Use `.version`,
+   never `.latestVersion`, and exact matching — do not choose the "highest" result:
+
+   ```bash
    dotnet package search SkiaSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-{label}\."
+     | grep -Fx -- "{skia-test-version}"
 
    dotnet package search HarfBuzzSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
-     | grep "^{harfbuzz-base}-{label}\."
-   
-   # Example: Find 3.119.2-preview.3.* versions
-   ... | grep "^3.119.2-preview.3\."
+     | grep -Fx -- "{harfbuzz-test-version}"
    ```
 
-   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This is the exact package
-   version to test and, for a preview, the version that may later be published.
+   For preview and RC releases, each public version is its exact test-package version. For stable
+   releases, the public versions are the two base versions from `scripts/VERSIONS.txt`.
 
-   **For stable releases** (`PREVIEW_LABEL` is `stable`):
-
-   ```bash
-   # Find the exact stable packages available on the internal feed
-   dotnet package search SkiaSharp \
-     --source "https://aka.ms/skiasharp-eap/index.json" \
-     --exact-match --prerelease --format json \
-     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-stable\."
-
-   dotnet package search HarfBuzzSharp \
-     --source "https://aka.ms/skiasharp-eap/index.json" \
-     --exact-match --prerelease --format json \
-     | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
-     | grep "^{harfbuzz-base}-stable\."
-   
-   # Example: Find 3.119.2-stable.* internal packages
-   ... | grep "^3.119.2-stable\."
-   ```
-
-   Pick the highest matching internal package (e.g., `3.119.2-stable.3`) and pass that exact
-   version to the integration tests. The final public version remains `{base}` (e.g.,
-   `3.119.2`), but it is not the package under test before publication.
-
-   ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
-   The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
-   by the base version and preview label from the release branch.
-
-3. Resolve both exact test package versions:
-   - **Preview:** Highest matching versions (e.g., `3.119.2-preview.3.1` and
-     `8.3.1.3-preview.3.1`)
-   - **Stable:** Highest matching internal versions (e.g., `3.119.2-stable.3` and
-     `8.3.1.3-stable.3`)
-   - **Build correlation:** The trailing CI build number MUST match for SkiaSharp and
-     HarfBuzzSharp. A mismatch means the packages came from different builds; stop and resolve it.
-
-4. Report to user:
+4. Report to the user:
 
    **Preview:**
    ```
    Resolved versions:
      SkiaSharp test package:     3.119.2-preview.3.1
      HarfBuzzSharp test package: 8.3.1.3-preview.3.1
-     Public version if published: 3.119.2-preview.3.1
+     Public versions if published: 3.119.2-preview.3.1 / 8.3.1.3-preview.3.1
      CI build number:             1
    ```
 
@@ -191,7 +201,9 @@ identify the prepublication build and is reserved for the final NuGet.org public
      CI build number:             3
    ```
 
-**No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
+**Either exact package missing?** Stop: the selected managed build is not fully available on the
+internal test (EAP) feed. See
+[troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
 
 ---
 

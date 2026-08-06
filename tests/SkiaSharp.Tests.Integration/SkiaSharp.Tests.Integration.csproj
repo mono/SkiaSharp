@@ -15,8 +15,8 @@
     
     <!-- Package versions must be specified explicitly; there is no default and no floating ("*")
          version. The release pipeline / release-testing skill passes the exact version under test
-         (e.g. dotnet test -p:SkiaSharpVersion=X.Y.Z-stable.B
-         -p:HarfBuzzSharpVersion=X.Y.Z.N-stable.B). A bare run with no version fails fast via the
+         (e.g. dotnet test -p:SkiaSharpVersion={exact-skia-test-version}
+         -p:HarfBuzzSharpVersion={exact-harfbuzz-test-version}). A bare run with no version fails fast via the
          ValidateVersions target below. -->
     <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
     <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
@@ -83,9 +83,9 @@
   <!-- Error if versions not specified -->
   <Target Name="ValidateVersions" BeforeTargets="Restore;Build">
     <Error Condition="'$(SkiaSharpVersion)' == ''" 
-           Text="SkiaSharpVersion must be specified. Use the exact internal package: dotnet test -p:SkiaSharpVersion=X.Y.Z-stable.B -p:HarfBuzzSharpVersion=X.Y.Z.N-stable.B" />
+           Text="SkiaSharpVersion must be specified. Use the exact versions under test: dotnet test -p:SkiaSharpVersion={exact-skia-test-version} -p:HarfBuzzSharpVersion={exact-harfbuzz-test-version}" />
     <Error Condition="'$(HarfBuzzSharpVersion)' == ''" 
-           Text="HarfBuzzSharpVersion must be specified. Use the exact internal package: dotnet test -p:SkiaSharpVersion=X.Y.Z-stable.B -p:HarfBuzzSharpVersion=X.Y.Z.N-stable.B" />
+           Text="HarfBuzzSharpVersion must be specified. Use the exact versions under test: dotnet test -p:SkiaSharpVersion={exact-skia-test-version} -p:HarfBuzzSharpVersion={exact-harfbuzz-test-version}" />
     <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
   </Target>
 

@@ -10,21 +10,22 @@ Quick reference for common errors and fixes.
 
 **Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
 
-**Fix:** Use `.version` and filter by base version + label from the release branch. Pass the
-selected exact internal version to the tests, including `-stable.{build}` for stable releases:
+**Fix:** Derive the exact SkiaSharp version from the managed build number and the exact
+HarfBuzzSharp version from the same suffix, as described in release-testing Step 2. Use `.version`
+and exact matching to verify that derived version; never pick a feed result independently:
 
 ```bash
 dotnet package search SkiaSharp \
   --source "https://aka.ms/skiasharp-eap/index.json" \
   --exact-match --prerelease --format json \
   | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-  | grep "^3.119.2-preview.3\."
+  | grep -Fx -- "3.119.2-preview.3.1"
 ```
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
-| No filtering | Filter by `{base}-{label}.*` |
+| Prefix filtering and picking a result | Exact match for the build-derived version |
 
 ---
 
@@ -34,7 +35,7 @@ dotnet package search SkiaSharp \
 |-------|-------|-----|
 | `MAUI workload is required` | Missing workload | Inspect `dotnet workload list`, then ask before proposing `dotnet workload install maui` |
 | `wasm-tools workload is required` | Missing workload | Inspect `dotnet workload list`, then ask before proposing `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Pass the resolved exact internal versions, e.g. `-p:SkiaSharpVersion=X.Y.Z-stable.B -p:HarfBuzzSharpVersion=X.Y.Z.N-stable.B` |
+| `SkiaSharpVersion must be specified` | Missing version param | Pass the exact build-derived versions: `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={harfbuzz-test-version}` |
 
 ## Appium Errors
 
@@ -55,10 +56,8 @@ before running package-manager, workload, driver, SDK, or system setup commands.
 
 1. Inspect `appium --version` and `appium driver list --installed`.
 2. Preserve a working Appium 3 + `windows` driver setup.
-3. If WinAppDriver is missing, explain that Microsoft has not maintained it since 2022 and ask
-   before running `appium driver run windows install-wad [optional-version]`.
-4. Do not switch to NovaWindows or replace an existing driver during a release without a separate
-   user-approved compatibility decision.
+3. If WinAppDriver is missing, ask before running
+   `appium driver run windows install-wad [optional-version]`.
 
 ## Simulator/Emulator Errors
 

@@ -169,8 +169,10 @@ xcrun simctl list devices booted
 Get-Process WinAppDriver -ErrorAction SilentlyContinue
 ```
 
-If the Windows driver or WinAppDriver is absent, report the missing prerequisite and ask before
-installing or replacing it.
+Run this process check only while a Windows test is active; it shows whether WinAppDriver is
+running, not whether the prerequisite is installed. If no process is running, inspect the active
+test and Appium logs. Verify installation separately through the setup preflight before proposing
+any user-approved remediation.
 
 ---
 
