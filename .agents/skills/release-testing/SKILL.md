@@ -153,7 +153,7 @@ build:
    - **Preview / RC:** `3.119.2-preview.3.1` and `8.3.1.3-preview.3.1`
    - **Stable:** `3.119.2-stable.3` and `8.3.1.3-stable.3`
 
-3. **Verify both exact test package versions exist on the internal feed:**
+3. **Verify both exact test package versions exist on the preview feed:**
 
    ```bash
    dotnet package search SkiaSharp \

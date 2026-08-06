@@ -89,9 +89,9 @@ If they are not available from the testing report, ask for them using `ask_user`
 
 **Quick verification** — confirm both exact packages tested exist on the preview feed:
 ```bash
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep -Fx "{skia-test-version}"
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' | grep -Fx "{skia-test-version}"
 
-dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep -Fx "{hb-test-version}"
+dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' | grep -Fx "{hb-test-version}"
 ```
 
 For stable releases, these exact test versions include `-stable.{build}` while the public versions
