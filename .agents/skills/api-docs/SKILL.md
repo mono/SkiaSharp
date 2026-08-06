@@ -62,6 +62,9 @@ validate factual and structural correctness; inspect the semantic diff, evidence
 formatted result; correct every defect; then repeat the review-validation-inspection cycle until that
 wave is trustworthy. A green command or CI job proves only that its checks ran successfully. It is not
 evidence that prose, examples, member mappings, ownership, or platform claims are correct.
+Before reporting completion, reconcile reachable deterministic exception paths, run an ownership pass
+over every sample, check every meaningful nullable/Boolean/status result, compare each platform/backend
+tuple with its evidence, and recompute file/member/field totals from explicit sets and the final diff.
 
 | If the task is… | Read |
 |---|---|

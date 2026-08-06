@@ -35,6 +35,8 @@ CLAIM | <claim> | <source path:line or first-party URL> | VERIFIED / QUALIFIED /
 
 Include API signatures, return/failure behavior, defaults, ownership, callback lifetime, threading,
 platform/backend support, and external setup. Do not draft a warning from an unverified assumption.
+Represent a platform matrix as exact backend/platform tuples; do not merge backends whose verified target
+sets differ.
 
 ## 3. Design the reader journey
 
@@ -66,7 +68,10 @@ Apply [`code-samples.md`](code-samples.md). In particular:
 
 - Verify every SkiaSharp member and overload in current source.
 - Declare what host-specific values the reader must supply.
-- Check nullable factories and meaningful `bool`/status results.
+- Emit the shared `RESOURCE` and `RESULT` ledgers, and check every meaningful nullable factory,
+  `bool`, or status result before dependent use, including later operations such as encode, submit, flush,
+  insert, and readback. Reconcile one `RESULT` row per call-site occurrence against the final code; repeated
+  calls to the same method each need their own check.
 - Dispose caller-owned native wrappers and keep parent-owned objects alive.
 - Model pinning, callbacks, asynchronous work, and GPU cleanup for their complete lifetimes.
 - Pair intentionally incorrect code with an explicit explanation and a corrected version.
@@ -97,6 +102,10 @@ Run [`validation.md`](validation.md), then review the article against its bluepr
 - Are all changed links, heading fragments, and TOC entries valid?
 
 Inspect the source-backed claim ledger, final Markdown diff, built page, and sample results together.
+Mechanically compare platform/backend tuples with their evidence and reconcile reported rendered counts
+(headings, tables, code blocks, alerts) with the retained rendered artifact rather than counting from
+memory. Generate the counts from the artifact and verify that the prose label and enumerated items agree
+before reporting them.
 Correct every factual, structural, navigation, ownership, or sample defect and repeat the validation and
 self-review pass until the selected article wave is trustworthy. A green DocFX build proves structure,
 not that a reader can safely complete the task.

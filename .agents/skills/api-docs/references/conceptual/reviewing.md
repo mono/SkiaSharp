@@ -39,7 +39,8 @@ contract and [`fact-checking.md`](fact-checking.md):
 - Verify signatures, overloads, nullability, defaults, validation, and result values in managed source.
 - Verify ownership, disposal order, pinning, callbacks, and threading through wrappers, tests, and native
   contracts as needed.
-- Verify every platform/backend row from its implementation or build configuration.
+- Verify every platform/backend tuple from its implementation or build configuration. Do not accept a
+  combined row until the named backends have identical verified target sets.
 - Qualify version-sensitive and external claims with current first-party evidence.
 
 No source means `UNVERIFIED`, not "wrong."
@@ -49,7 +50,9 @@ No source means `UNVERIFIED`, not "wrong."
 Use [`code-samples.md`](code-samples.md):
 
 - Determine whether each block claims to be a complete sample or an illustrative snippet.
-- Confirm members, overloads, variables, imports, result checks, ownership, and lifetimes.
+- Confirm members, overloads, variables, imports, the shared `RESOURCE`/`RESULT` ledgers, every meaningful
+  nullable/Boolean/status check, ownership, and lifetimes. Reconcile ledger rows to call-site occurrences,
+  including repeated calls to the same method.
 - Check that deliberately wrong code is unmistakably marked in prose and code.
 - Confirm commands match the repository and target platform.
 - Run or compile representative complete samples when practical.
@@ -109,7 +112,10 @@ MINOR | structure | guide.md | Overview | The heading does not describe the deci
 ```
 
 Every CRITICAL or IMPORTANT finding needs a repository `path:line`, focused test, or current first-party
-source. Deduplicate overlapping symptoms into the root finding.
+source. For a structural finding, cite the applicable blueprint/reference path and line range. For an
+unsupported-advice or absence finding, record the searched source scope and cite the closest contract
+paths/ranges that show the supported behavior; "no source basis" alone is not a complete evidence record.
+Deduplicate overlapping symptoms into the root finding.
 
 ## Output
 

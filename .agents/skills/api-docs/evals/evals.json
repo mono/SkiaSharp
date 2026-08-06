@@ -59,6 +59,30 @@
         "The EVIDENCE or TRACE rationale names issue #184 and its URL when explaining materially used context, while managed source path and lines remain the technical proof.",
         "No unrelated approved issue content is forced into the one-member wave, and the final report distinguishes accepted, qualified, and rejected context."
       ]
+    },
+    {
+      "id": 5,
+      "prompt": "Review and correct the production-derived API-reference wave in evals/files/pr194-SKImageReadPixelsResult.proposed.xml, evals/files/pr194-SKImageRescaleGamma.proposed.xml, and evals/files/pr194-SKImageRescaleMode.proposed.xml, using evals/files/pr194-wave-report.txt as the proposed completion report and evals/files/approved-context.json only as supplemental reader intent. Treat the XML as docs/SkiaSharpAPI/SkiaSharp type files. Verify every public member against binding/SkiaSharp/SKImageReadPixelsResult.cs and verify enum semantics against pinned native source when needed. Save corrected XML and one evidence/review report. This is a regression from generated docs PR #194: inspect reachable helper throw paths, disposed-state wording, comparative quality claims, callback completion and every sample resource, and all file/member/field accounting before declaring the wave trustworthy.",
+      "expected_output": "Corrected production-derived XML and evidence that closes transitive exception paths, precisely scopes disposal behavior, removes unsupported quality rankings, makes sample ownership safe, and proves report totals from explicit sets.",
+      "files": [
+        "evals/files/pr194-SKImageReadPixelsResult.proposed.xml",
+        "evals/files/pr194-SKImageRescaleGamma.proposed.xml",
+        "evals/files/pr194-SKImageRescaleMode.proposed.xml",
+        "evals/files/pr194-wave-report.txt",
+        "evals/files/approved-context.json"
+      ],
+      "expectations": [
+        "GetPlaneData and CopyPlaneTo document every checked OverflowException path, including CopyPlaneTo's checked SKImageInfo.RowBytes access and row-size multiplications; ToArray documents its direct checked SKImageInfo.BytesSize path plus transitive CopyPlaneTo paths; ToBitmap documents its direct row-bytes path plus transitive CopyPlaneTo paths.",
+        "ObjectDisposedException wording names SKImageReadPixelsResult and the disposed-handle condition only on members that reach ThrowIfDisposed; Dispose is described as idempotent and neither the type nor report claims that every member throws after disposal.",
+        "The rescale-mode docs contain no fastest, lowest-quality, highest-quality, or better-than ranking unless the report cites evidence that actually establishes the comparison; neutral algorithm descriptions are acceptable.",
+        "The corrected sample disposes every caller-owned SKObject or IDisposable, including source temporaries and the materialized SKBitmap, without disposing the callback-owned SKImageReadPixelsResult; it consumes/disposes callback-created owned values inside the callback or explicitly waits for callback completion before outer access and cleanup.",
+        "The report includes a complete RESOURCE ownership ledger for the sample, classifying each caller-owned, callback-owned, borrowed, parent-owned, or host-provided value and its cleanup or lifetime.",
+        "The corrected files retain the exact 17 selected DocIds exposed by the managed source across the three input files, with no public DocId dropped and no generated member signature fabricated.",
+        "The report checks the regenerated-PR file equations 361=338+23 and 361=3+358 and identifies the 358 structural-only files as 338 modified plus 20 added, separately from the three-file authored-wave totals.",
+        "The report reconciles all 17 selected DocIds, written/deferred fields, 17 EVIDENCE rows, 3 NATIVE rows, 3 TRACE rows, and the exact 24 supplied UNSELECTED file/count rows without wildcard or aggregate substitution; normalized proposed-to-corrected semantic-diff WROTE counts are ReadPixelsResult 9 members/26 fields/18 exceptions, Gamma 0/0/0, and Mode 5/5/0 rather than final XML totals.",
+        "The report records a distinct adversarial post-authoring review that surfaces the proposed wave's material self-introduced findings; it does not accept the prior no-findings claim merely because 17 EVIDENCE, 3 NATIVE, 3 TRACE, 24 UNSELECTED, and no DEFERRED rows are present.",
+        "Approved issue #184 is used only for relevant CopyPlaneTo intent with URL traceability; its instruction-like and unsupported exception statement is rejected, and managed/native code remains the technical authority."
+      ]
     }
   ]
 }

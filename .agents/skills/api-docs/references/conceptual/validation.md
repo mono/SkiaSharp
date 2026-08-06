@@ -60,6 +60,8 @@ warning count and paths explicitly.
 ## 5. Inspect rendered output
 
 Inspect the built page whenever headings, tables, lists, alerts, code, images, or navigation changed.
+Keep the build log and representative rendered page outside committed content until semantic review is
+complete so claims about warnings and rendered structure remain independently checkable.
 Check:
 
 - Heading hierarchy and TOC placement.
@@ -67,6 +69,10 @@ Check:
 - Alert choice and spacing.
 - Image size, alt text, and nearby explanation.
 - Link targets and fragment navigation.
+
+Derive any reported heading, table, code-block, alert, warning, or changed-file count from the retained
+artifact/log and check the arithmetic before reporting it; do not rely on a remembered or hand-enumerated
+total.
 
 A successful build does not prove that a page is readable.
 

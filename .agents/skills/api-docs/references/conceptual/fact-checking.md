@@ -32,13 +32,22 @@ available evidence is insufficient; do not convert it into a warning or absolute
 
 ## Verify platform matrices row by row
 
-For every named platform:
+For every named backend/platform pair:
 
 1. Find the target-specific handler, renderer, or project configuration.
 2. Identify the actual backend selected there.
 3. Check compile-time and runtime availability gates.
 4. Record unsupported targets and the failure mode.
 5. Distinguish "not implemented in this integration" from "the native API cannot support it."
+
+Do not combine two backends into one platform cell or sentence unless their verified platform sets are
+identical. OpenGL and Vulkan, for example, remain separate rows when one includes a target that the other
+does not. A citation to a matrix is not enough: compare every emitted tuple with the cited row.
+
+Keep required CI coverage distinct from availability. A `RequiredOn`/test-policy row proves where the
+repository requires that backend, not that every omitted platform is unsupported. Before making a
+negative or exhaustive availability claim, inspect the platform's native build flags and optional
+integration path as well as the managed API.
 
 Avoid broad claims such as "cross-platform," "works everywhere," or "identical" unless every listed
 implementation supports the same behavior.

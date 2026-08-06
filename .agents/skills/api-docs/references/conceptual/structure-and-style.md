@@ -17,6 +17,8 @@ description: "Describe the reader outcome, approach, and meaningful scope."
 - Do not add `ms.author`, `ms.date`, `ms.topic`, `ms.service`, or other Learn-only fields.
 - Use one H1 after front matter. Keep it aligned with the metadata title.
 - Make the title specific enough to distinguish the article in search and the TOC.
+- For a section-landing `index.md`, use the section/topic noun phrase readers see in the TOC; use a
+  verb-led task title only when the landing page itself is a procedure.
 - Keep the description concise and natural. Roughly 115-160 characters often works, but do not pad it to
   reach a target.
 - Open with the outcome, use case, and most consequential constraint. Do not repeat the title as an

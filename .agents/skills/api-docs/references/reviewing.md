@@ -32,6 +32,10 @@ AI doc writers confidently state "facts" without checking source — wrong param
 channel names, wrong byte layouts, invented overloads, wrong defaults — and frequently write examples
 that call obsolete members or undeclared variables. **Assume errors exist.** A review that finds 0 issues
 across many files almost certainly skimmed. Every factual finding must cite source (`path:line`).
+When reviewing a wave you authored, treat the final XML as untrusted input and separate the review pass
+from the writing rationale. Complete manifests can coexist with wrong prose: independently rederive the
+exact exception type/condition set, disposal behavior, sample ownership and failure results, native
+claims, and arithmetic, and report self-introduced defects before correcting them.
 
 ## Procedure
 
@@ -57,7 +61,8 @@ across many files almost certainly skimmed. Every factual finding must cite sour
    fuzzy message match; when the linter and your own review report the same defect, keep one row. On a
    severity disagreement, take the **highest**.
    A zero-finding result is valid only after every selected file has a complete source range, every
-   deterministic managed exception has been reconciled with member-level `<exception>` tags, and every
+   deterministic managed exception (including reachable helper and checked-arithmetic paths) has been
+   reconciled by both type and public condition with member-level `<exception>` tags, and every
    native-backed claim has either a `NATIVE` evidence row or remains deferred.
 
 5. **(Gated) Fix.** If fixing is approved, edit the XML directly for CRITICAL (and chosen IMPORTANT)
@@ -99,8 +104,17 @@ across many files almost certainly skimmed. Every factual finding must cite sour
   enums, read the native declaration/implementation. Names and values alone do not prove the explanation.
 - **Failure completeness:** check nullable factory and callback results, meaningful Boolean/status returns,
   and deterministic managed exceptions identified by the shared fact sheet, including checked arithmetic
-  and deliberate failures from directly invoked helpers. Public failure behavior omitted from all of
+  or conversions and deliberate failures from reachable helpers/constructors. Build a per-member call
+  path: if a public method calls a helper that deterministically throws, reconcile that exception on the
+  public caller too. Compare the exact `EXCEPTION` ledger with the final member: one
+  `InvalidOperationException` entry does not cover a second deterministic null-data or state condition
+  unless its text names both. Public failure behavior omitted from all of
   summary/returns/remarks/exception tags is an accuracy gap.
+- **Disposed-state precision:** verify which exact public members reach a disposal guard and which receiver
+  or resource the guard checks. Reject type-level "any/every member throws after disposal" wording unless
+  every member, including `Dispose`, actually does. State an `ObjectDisposedException` only for members and
+  conditions demonstrated by managed code, and name the exact public receiver/resource type in the
+  exception text.
 - **Borrowed-data lifetime:** for callback-owned spans/pointers, verify the native lifetime contract as well
   as the managed disposal boundary, including early invalidation on context abandonment or destruction.
 - **Trust hierarchy for native facts:** native header in repo > `skia-patterns.md` > your own knowledge
@@ -134,6 +148,13 @@ property access, and:
   `bitmap` was declared is a compile error).
 - Ownership: never `using`/`Dispose` a parent-owned object (the canvas from `SKDocument.BeginPage` and
   `SKSurface.Canvas` are parent-owned).
+- Run the `RESOURCE` ledger from `technical-fact-checking.md` for every sample. Every caller-owned
+  `SKObject`/`IDisposable`—including inline temporaries and callback-created results—must have cleanup after
+  its final use; borrowed and parent-owned values must not be disposed. For a potentially deferred
+  callback, reject outer access/disposal of a captured result unless the sample first demonstrates a real
+  completion signal or await; using and disposing the owned copy inside the callback is often safer.
+- Run the `RESULT` ledger for every sample and require a check or explicit justification for each
+  meaningful nullable, Boolean, or status-returning operation before dependent state is used.
 
 Class: `example`.
 
@@ -151,6 +172,9 @@ Class: `example`.
 - Boolean wording: parameters "true to…"; returns and property `<value>` "true if…".
 - Nullable params use `<see langword="null" />`, not "default".
 - Remarks make no false cross-type comparisons ("Unlike X, which is immutable…" — verify first).
+- Comparative or superlative quality/performance claims ("fastest", "best", "highest quality", "better
+  than") require a cited source or standard that establishes that ordering under the documented
+  conditions. Otherwise replace them with neutral algorithm/behavior descriptions.
 - Empty tags (`<summary />`, `<value />`, `<returns />`) that should have content (`<remarks />` is OK).
 - Member-to-doc mismatches: compare each `<Docs>` block with its own DocId and signature, not just the
   surrounding method name. Reject copied prose for another member and reject `<returns>` on `void`
@@ -181,6 +205,17 @@ machine-readable finding rows for that file.
 Include the `EVIDENCE` classifications and `NATIVE` rows required by
 [`technical-fact-checking.md`](technical-fact-checking.md). Missing evidence is a coverage gap, not proof
 of zero findings.
+Include the three `ACCOUNTING` rows from [`adding.md`](adding.md) when reviewing an authored wave. Derive
+all operands from explicit final-diff sets and reject any summary whose file/member/field arithmetic does
+not satisfy those equations. If an input completion report also describes a larger regenerated PR,
+independently retain and verify that whole-PR status/accounting scope plus the exact supplied `UNSELECTED`
+row set; do not substitute the smaller reviewed-file scope.
+
+For an authored wave, include a distinct **Post-authoring falsification** section after the corrected
+outputs exist. Re-run the exact exception-path, RESOURCE/RESULT, native-claim, signature, and normalized
+semantic-diff accounting checks against those saved outputs; record any self-introduced findings and their
+fixes. The section must reflect this second pass, not merely rename the initial review. A readiness verdict
+is invalid when that pass exposes stale counts or missed paths.
 
 After deduplication, write a single Markdown report plus the machine block (one line per deduped finding)
 to `output/docs-review/` (gitignored). Nothing in `docs/` changes unless the gated fix step runs.

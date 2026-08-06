@@ -24,7 +24,9 @@ For every C# block:
 2. Confirm every variable is declared or explicitly identified as host-provided.
 3. Check [`../obsolete-api-map.md`](../obsolete-api-map.md) and source attributes.
 4. Confirm platform-only APIs are shown in the correct target context.
-5. State whether the block is complete or what setup it intentionally omits.
+5. Emit the shared `RESOURCE` and `RESULT` ledgers from
+   [`../technical-fact-checking.md`](../technical-fact-checking.md).
+6. State whether the block is complete or what setup it intentionally omits.
 
 Do not use ellipses where omitted code controls ownership, failure handling, synchronization, or cleanup.
 
@@ -33,7 +35,10 @@ Do not use ellipses where omitted code controls ownership, failure handling, syn
 A complete workflow should:
 
 - Check nullable factories before dereferencing the result.
-- Check `bool`, enum, and status results when failure changes the outcome.
+- Check every meaningful `bool`, enum, and status result when failure changes the outcome, including
+  secondary calls such as encode, submit, flush, insert, and readback rather than only the first factory.
+- Match every nullable/Boolean/status-returning call-site occurrence in the final snippet to one `RESULT`
+  row and one visible check or justified omission; do not deduplicate repeated calls by method name.
 - Catch only specific exceptions the example can recover from.
 - Surface unrecoverable failures instead of silently returning success-shaped data.
 - Show an expected result or verification so readers know the code worked.
