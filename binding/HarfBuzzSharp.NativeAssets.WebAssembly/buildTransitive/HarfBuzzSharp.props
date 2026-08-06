@@ -3,6 +3,13 @@
 
   <PropertyGroup>
     <HarfBuzzSharpStaticLibraryPath>$(MSBuildThisFileDirectory)libHarfBuzzSharp.a</HarfBuzzSharpStaticLibraryPath>
+    <!--
+      Consumed by HarfBuzzSharp.targets' _HarfBuzzSharpCheckWasmAssetsReferenced
+      target, shipped from the main HarfBuzzSharp package. When set, the
+      WASM-project error is suppressed — indicates that the WebAssembly native
+      assets are wired up.
+    -->
+    <_HarfBuzzSharpWasmAssetsReferenced>true</_HarfBuzzSharpWasmAssetsReferenced>
   </PropertyGroup>
 
   <ItemGroup>

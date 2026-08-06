@@ -1,0 +1,45 @@
+<Project>
+
+  <!--
+    Ships in SkiaSharp.nupkg at buildTransitive/net10.0/SkiaSharp.targets and
+    auto-imports into every consumer. Two independent workarounds live here:
+
+      1. _SkiaSharpTrimUntargetedRuntimes — filter build-time bin/runtimes/*
+         copies by the consumer's declared <RuntimeIdentifiers> (plural).
+         Patches an SDK gap that #2520 hit for years.
+
+      2. _SkiaSharpCheckWasmAssetsReferenced — turn a mysterious emcc link
+         failure into an actionable error for Blazor/WASM projects that forgot
+         SkiaSharp.NativeAssets.WebAssembly. The WebAssembly package sets
+         $(_SkiaSharpWasmAssetsReferenced)=true via its own .props to
+         suppress this error once the caller has added it.
+  -->
+
+  <Target Name="_SkiaSharpCheckWasmAssetsReferenced" BeforeTargets="PrepareForBuild"
+          Condition=" ('$(UsingMicrosoftNETSdkBlazorWebAssembly)' == 'true' or '$(UsingMicrosoftNETSdkWebAssembly)' == 'true'
+                       or ('$(IsUnoHead)' == 'True' and '$(UnoRuntimeIdentifier)' == 'WebAssembly'))
+                      and '$(_SkiaSharpWasmAssetsReferenced)' != 'true' ">
+    <Error Text="SkiaSharp on WebAssembly requires the SkiaSharp.NativeAssets.WebAssembly package. Add a matching &lt;PackageReference Include=&quot;SkiaSharp.NativeAssets.WebAssembly&quot; Version=&quot;...&quot; /&gt; alongside your existing SkiaSharp reference." />
+  </Target>
+
+  <!--
+    <RuntimeIdentifiers> (plural) is documented as a restore hint / list of
+    valid publish RIDs — build doesn't use it as a filter. Result: build copies
+    every runtimes/<rid>/native/* from every restored package into bin/, even
+    RIDs the consumer never declared. See mono/SkiaSharp#2520 for user impact.
+
+    Only fires when the consumer set plural RIDs and NOT a singular
+    <RuntimeIdentifier>. Singular already produces a flat, correctly-filtered
+    layout via MSBuild's normal RID selection. Empty-RID (RID-less) builds
+    must NOT hit this — they need runtimes/*/native/* in place so the .NET
+    native library loader finds the host RID's binary at runtime.
+  -->
+  <Target Name="_SkiaSharpTrimUntargetedRuntimes" AfterTargets="ResolvePackageAssets"
+          Condition=" '$(RuntimeIdentifiers)' != '' and '$(RuntimeIdentifier)' == '' ">
+    <ItemGroup>
+      <RuntimeTargetsCopyLocalItems Remove="@(RuntimeTargetsCopyLocalItems)"
+          Condition="!$([System.Text.RegularExpressions.Regex]::Match($(RuntimeIdentifiers), '(^|;)\s*%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)\s*(;|$)').Success)" />
+    </ItemGroup>
+  </Target>
+
+</Project>
