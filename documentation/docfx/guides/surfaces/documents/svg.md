@@ -53,7 +53,7 @@ static void DrawBadge(SKCanvas canvas, SKRect bounds, SKPaint paint)
 }
 ```
 
-The SVG output represents drawing commands rather than a pixel snapshot. Open the result in the browsers or SVG renderers your application supports. If you require exact raster pixels instead, [render to a raster surface](../surfaces/raster/index.md) and encode the resulting image.
+The SVG output represents drawing commands rather than a pixel snapshot. Open the result in the browsers or SVG renderers your application supports. If you require exact raster pixels instead, [render to a raster surface](../raster/index.md) and encode the resulting image.
 
 ## Verify the result
 
@@ -63,4 +63,4 @@ The file should parse as XML with an `svg` root element whose width and height a
 
 - [Documents](index.md)
 - [Create a PDF document](pdf.md)
-- [SVG path data in SkiaSharp](../curves/path-data.md)
+- [SVG path data in SkiaSharp](../../curves/path-data.md)

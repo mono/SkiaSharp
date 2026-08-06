@@ -100,3 +100,4 @@ The resulting file should be non-empty and open as a two-page XPS document in th
 
 - [Documents](index.md)
 - [Create a PDF document](pdf.md)
+- [Create an SVG document](svg.md)

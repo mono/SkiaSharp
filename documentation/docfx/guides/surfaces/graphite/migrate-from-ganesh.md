@@ -13,7 +13,7 @@ If you already render on the GPU with [Ganesh](../ganesh/index.md) — a [`GRCon
 There is also a **structural** shift: Ganesh records a draw stream on one `GRContext` and auto-flushes it, whereas Graphite is explicit — you record into a `Recorder`, `Snap` a `Recording`, `InsertRecording`, then `Submit`. The `Recorder` is **per-thread**, so a multi-threaded renderer gives each thread its own recorder.
 
 > [!NOTE]
-> Graphite is currently an **offscreen** path in SkiaSharp. If your Ganesh code renders into a view control's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no Graphite equivalent for that view yet — the [view controls](../../views/index.md) still use Ganesh. This migration applies to offscreen rendering.
+> Graphite is currently an **offscreen** path in SkiaSharp. If your Ganesh code renders into a view control's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no Graphite equivalent for that view yet — the [view controls](../views/index.md) still use Ganesh. This migration applies to offscreen rendering.
 
 ## Concept mapping
 

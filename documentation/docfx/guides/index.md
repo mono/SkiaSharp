@@ -49,15 +49,7 @@ Effects are properties that alter the normal display of graphics, including line
 
 ## [Surfaces](surfaces/index.md)
 
-Create an `SKSurface` for CPU raster rendering, Ganesh GPU rendering, or the newer Graphite backend, with direct setup guides for each graphics API.
-
-## [Documents](documents/index.md)
-
-Create PDF, SVG, or XPS output by drawing through a document canvas, with the correct page, stream, platform, and finalization lifecycle for each format.
-
-## [Rendering in SkiaSharp Views](views/index.md)
-
-Choose a raster or Ganesh-backed view control and draw through its paint event while the view manages the surface, GPU context, and presentation.
+Choose a manually managed raster, Ganesh, or Graphite surface; draw into PDF, SVG, or XPS documents; or let a platform view manage its surface and presentation.
 
 ## Related Links
 

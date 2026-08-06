@@ -44,5 +44,5 @@ A `GRContext` and its resources are not thread-safe. Keep the same platform GL c
 ## Related links
 
 - [Ganesh GPU surfaces](index.md)
-- [Rendering in SkiaSharp Views](../../views/index.md)
+- [Rendering in SkiaSharp Views](../views/index.md)
 - [Skia canvas creation, GPU backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

@@ -33,6 +33,6 @@ This distinction lets you reuse drawing code. Put the drawing itself in a method
 
 ## Related output paths
 
-- To produce PNG, JPEG, WebP, or another raster image, [render and encode bitmap pixels](../bitmaps/saving.md).
+- To produce PNG, JPEG, WebP, or another raster image, [render and encode bitmap pixels](../../bitmaps/saving.md).
 - To record Skia drawing commands for replay or Skia-specific serialization, use [`SKPictureRecorder`](xref:SkiaSharp.SKPictureRecorder) and [`SKPicture`](xref:SkiaSharp.SKPicture). An `SKPicture` is not a standard document format.
-- To render into pixels rather than a document stream, [choose a SkiaSharp surface](../surfaces/index.md).
+- To render into pixels rather than a document stream, [choose a SkiaSharp surface](../index.md).

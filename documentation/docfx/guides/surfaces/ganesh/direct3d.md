@@ -32,4 +32,4 @@ After constructing the backend target or texture, return to [wrapping an existin
 ## Related links
 
 - [Ganesh GPU surfaces](index.md)
-- [Rendering in SkiaSharp Views](../../views/index.md)
+- [Rendering in SkiaSharp Views](../views/index.md)

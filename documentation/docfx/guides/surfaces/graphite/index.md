@@ -5,7 +5,7 @@ description: "Create Graphite GPU surfaces for Vulkan, Metal, or WebGPU, submit 
 
 # Graphite GPU surfaces
 
-*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](../../views/index.md).
+*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](../views/index.md).
 
 Where the older [Ganesh](../ganesh/index.md) backend issues GPU work as you draw and auto-flushes it, Graphite separates **recording** from **submission**: drawing is captured into a *recording* that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.
 

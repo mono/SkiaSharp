@@ -98,6 +98,6 @@ Dispose your surfaces and the `GRContext` when you are done. If you use OpenGL, 
 - [SkiaSharp APIs](xref:SkiaSharp)
 - [Surface overview](../index.md)
 - [Raster surfaces](../raster/index.md)
-- [Rendering in SkiaSharp Views](../../views/index.md)
+- [Rendering in SkiaSharp Views](../views/index.md)
 - [Graphite GPU surfaces](../graphite/index.md)
 - [Skia canvas creation, GPU backend (skia.org)](https://skia.org/docs/user/api/skcanvas_creation/)

@@ -103,4 +103,4 @@ The resulting file should be non-empty, begin with the PDF header `%PDF-`, and o
 
 - [Documents](index.md)
 - [Create an XPS document](xps.md)
-- [Save SkiaSharp bitmaps to files](../bitmaps/saving.md)
+- [Save SkiaSharp bitmaps to files](../../bitmaps/saving.md)
