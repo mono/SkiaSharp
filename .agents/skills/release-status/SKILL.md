@@ -50,7 +50,7 @@ python .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
 ```
 
 This outputs:
-- All three pipelines with ASCII status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUN]`, `[WAIT]`)
+- All three pipelines with ASCII status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUNNING]`, `[WAITING]`)
 - Build IDs and build numbers
 - Trigger relationships proving which upstream build caused each downstream run
 - Direct ADO links for each build
@@ -67,8 +67,8 @@ are rendered as deterministic backslash escapes (for example, `Caf\xe9`).
 | Scenario | Meaning | Next Action |
 |----------|---------|-------------|
 | All `[OK]` | Packages are on the internal feed | Proceed to `release-testing` |
-| Native `[OK]`, SkiaSharp `[RUN]` | Managed build in progress | Wait |
-| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUN]` | Tests running (packages already available) | Can start `release-testing` |
+| Native `[OK]`, SkiaSharp `[RUNNING]` | Managed build in progress | Wait |
+| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUNNING]` | Tests running (packages already available) | Can start `release-testing` |
 | Any `[FAIL]` | Pipeline failed | Investigate via ADO link, retry or fix |
 | Native `[WARN]` (`partiallySucceeded`) | Some native platforms had warnings | Usually OK - check which platforms |
 
@@ -79,9 +79,9 @@ breakdown below the pipeline entry:
 
 ```
 +- SkiaSharp-Native (ID 26493) - native binaries
-|  [RUN] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+|  [RUNNING] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
 |
-|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUN] running | 3 [WAIT] pending
+|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUNNING] running | 3 [WAITING] pending
 |  Failed: Job_Name_1, Job_Name_2
 |  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
 |  Pending: Wasm, Linux ARM, Linux ARM64
@@ -105,8 +105,8 @@ Pipeline Chain Status: release/3.119.4
 | Pipeline | Status | Build | ADO Link |
 |----------|--------|-------|----------|
 | SkiaSharp-Native | `[WARN] partiallySucceeded` | 3.119.4-stable.2 | [link] |
-| SkiaSharp | `[RUN] inProgress` | 3.119.4-stable.2 | [link] |
-| SkiaSharp-Tests | `[WAIT] not triggered` | - | - |
+| SkiaSharp | `[RUNNING] inProgress` | 3.119.4-stable.2 | [link] |
+| SkiaSharp-Tests | `[WAITING] not triggered` | - | - |
 
 Packages will be available after SkiaSharp (10789) completes.
 ```

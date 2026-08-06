@@ -107,7 +107,7 @@ Before triggering the publish pipeline, confirm builds completed using the **rel
 python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
+The `SkiaSharp` pipeline (ID 10789) must show `[OK]` - this is the pipeline that produced the
 packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
 
 ### Pipeline Steps
@@ -122,9 +122,11 @@ example `4.151.1-stable.1+4.151.1`. Never put the numeric managed run/build ID i
 numeric ID is only for querying and validating the source run.
 
 Show the validated source summary and JSON body, then use `ask_user` for explicit confirmation.
-Only after confirmation, invoke `scripts/queue-publish-run.py` with the verified build-number
-string and `--confirm-queue`. The script validates the build-number shape, infers `pushStable`,
-blocks an active duplicate, queues pipeline `25298`, and prints the new run ID and URL.
+Before asking, verify that pipeline `25298` has no active run as documented in
+[references/azure-publish.md](references/azure-publish.md). Only after confirmation, invoke
+`scripts/queue-publish.py` with the verified build-number string and `--confirm-queue`. The script
+validates the build-number shape, infers `pushStable`, queues pipeline `25298`, and prints the new
+run ID and URL.
 
 ### Verification During Pipeline Run
 
@@ -201,10 +203,7 @@ git push origin {tag} || exit 1
 
 ## Step 5: Refresh Website Release Notes & API Diffs
 
-The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
-produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
-**daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
-tags** — so after pushing the tag in Step 4, dispatch it once from `main`:
+After pushing the tag in Step 4, dispatch **Sync - Release Notes & API Diffs** once from `main`:
 
 ```bash
 gh workflow run update-release-notes.lock.yml \
@@ -214,10 +213,6 @@ echo "Started Sync - Release Notes & API Diffs from main."
 ```
 
 Once GitHub accepts the dispatch, report that it was started and treat this step as complete.
-Do not inspect existing runs, identify the new run, wait, retry, follow a superseding run, or
-verify `bot/release-notes`. The workflow's `cancel-in-progress` concurrency and its daily/main
-triggers may cancel or supersede this dispatch during simultaneous releases; that is expected and
-is not a release blocker.
 
 > ⚠️ These **website** release notes are separate from the **GitHub Release** notes
 > created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub

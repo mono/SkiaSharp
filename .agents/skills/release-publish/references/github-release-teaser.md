@@ -12,7 +12,7 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
 - **One input: the generated release log.** The teaser is built *only* from the
   `--generate-notes` body created in Step 6 of the publish skill. Do **not** read
   `documentation/docfx/releases/*`, do **not** run git commands, and do **not** wait on
-  the website release-notes workflow or its `bot/release-notes` PR.
+  the website release-notes workflow.
 - **Keep the auto-gen list.** It already carries every PR number and author handle for
   free. We never hand-rebuild it — we just **fold it into a `<details>` block** under the
   teaser.

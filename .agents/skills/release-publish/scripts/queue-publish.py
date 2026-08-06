@@ -17,7 +17,6 @@ ORG = "https://dev.azure.com/devdiv"
 PROJECT = "DevDiv"
 PUBLISH_PIPELINE_ID = 25298
 PUBLISH_RUN_URL = "https://dev.azure.com/devdiv/DevDiv/_build/results?buildId={run_id}"
-ACTIVE_STATUSES = {"cancelling", "inprogress", "notstarted", "postponed", "queued"}
 VERSION = r"\d+\.\d+\.\d+(?:\.\d+)?"
 STABLE_BUILD = re.compile(rf"^(?P<base>{VERSION})-stable\.\d+\+(?P=base)$")
 PRERELEASE_BUILD = re.compile(
@@ -107,39 +106,8 @@ def build_queue_body(build_number: str) -> dict[str, Any]:
     }
 
 
-def find_active_runs(runs: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [
-        run
-        for run in runs
-        if str(run.get("status", "")).replace("_", "").lower() in ACTIVE_STATUSES
-    ]
-
-
 def queue_publish(build_number: str) -> tuple[int, str]:
     body = build_queue_body(build_number)
-    runs = run_az_json(
-        [
-            "pipelines", "runs", "list",
-            "--org", ORG, "--project", PROJECT,
-            "--pipeline-ids", str(PUBLISH_PIPELINE_ID),
-            "--top", "100", "--query",
-            "[].{id:id,status:status,buildNumber:buildNumber}",
-            "--only-show-errors", "-o", "json",
-        ]
-    )
-    if not isinstance(runs, list):
-        raise RuntimeError("Azure CLI returned an invalid publish-runs response.")
-    active = find_active_runs(runs)
-    if active:
-        details = ", ".join(
-            f"{run.get('id')} ({run.get('status')}, {run.get('buildNumber')})"
-            for run in active
-        )
-        raise RuntimeError(
-            f"Publish pipeline {PUBLISH_PIPELINE_ID} already has active run(s): "
-            f"{details}. Do not queue a duplicate."
-        )
-
     with tempfile.TemporaryDirectory(prefix="skiasharp-publish-") as directory:
         request = Path(directory) / "request.json"
         request.write_text(json.dumps(body), encoding="utf-8")
@@ -168,7 +136,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
             "Queue publish pipeline 25298 using a verified managed build number. "
-            "Source-run verification and user confirmation happen before this command."
+            "Source and duplicate-run verification happen before this command."
         )
     )
     parser.add_argument("managed_build_number")

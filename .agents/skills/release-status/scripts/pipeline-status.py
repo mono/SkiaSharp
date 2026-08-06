@@ -31,8 +31,8 @@ STATUS_MARKERS = {
     "partiallySucceeded": "[WARN]",
     "failed": "[FAIL]",
     "canceled": "[FAIL]",
-    "inProgress": "[RUN]",
-    "notStarted": "[WAIT]",
+    "inProgress": "[RUNNING]",
+    "notStarted": "[WAITING]",
     "unknown": "[WARN]",
 }
 
@@ -267,8 +267,8 @@ def main():
     links: list[str] = []
 
     for i, pipe in enumerate(PIPELINES):
-        prefix = "+-" if i < len(PIPELINES) - 1 else "`-"
-        cont = "| " if i < len(PIPELINES) - 1 else "  "
+        prefix = "+-"
+        cont = "| "
 
         emit(f"{prefix} {pipe['name']} (ID {pipe['id']}) - {pipe['desc']}")
 
@@ -299,7 +299,7 @@ def main():
                 if trigger and trigger.get("source"):
                     src = trigger.get("source", "?")
                     pid = trigger.get("pipelineId", "?")
-                    emit(f"{cont} ^ triggered by {src} build {pid}")
+                    emit(f"{cont} -> triggered by {src} build {pid}")
             links.append(f"  {pipe['name']}: https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={runs[0]['id']}")
 
         emit(cont if i < len(PIPELINES) - 1 else "")
@@ -312,11 +312,11 @@ def main():
     if all(r and r["status"] == "completed" and r.get("result") in ("succeeded", "partiallySucceeded") for r in latest):
         emit("Summary: [OK] All pipelines completed. Packages should be on internal feed.")
     elif latest[0] and not latest[1]:
-        emit("Summary: [WAIT] Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
+        emit("Summary: [WAITING] Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
     elif not latest[0]:
-        emit("Summary: [WAIT] No native build found yet.")
+        emit("Summary: [WAITING] No native build found yet.")
     else:
-        emit("Summary: [RUN] Pipeline chain in progress or has failures.")
+        emit("Summary: [RUNNING] Pipeline chain in progress or has failures.")
 
     if links:
         emit()

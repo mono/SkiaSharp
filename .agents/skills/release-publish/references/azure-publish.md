@@ -37,7 +37,28 @@ Before queueing, verify every field:
 
 The numeric ID is lookup/evidence only. The next step receives only the verified build number.
 
-## 2. Obtain confirmation and queue
+## 2. Check for active publish runs
+
+Before asking the user to queue, fail if pipeline `25298` already has any non-completed run:
+
+```powershell
+$activeRunsJson = az pipelines runs list `
+  --org https://dev.azure.com/devdiv `
+  --project DevDiv `
+  --pipeline-ids 25298 `
+  --top 100 `
+  --query "[?status!='completed'].{id:id,status:status,buildNumber:buildNumber}" `
+  --only-show-errors `
+  -o json
+if ($LASTEXITCODE -ne 0) { throw "Could not check active publish runs." }
+$activeRuns = @($activeRunsJson | ConvertFrom-Json)
+if ($activeRuns.Count -ne 0) {
+  $activeRuns | Format-Table
+  throw "Publish pipeline 25298 already has an active run; do not queue a duplicate."
+}
+```
+
+## 3. Obtain confirmation and queue
 
 Show the user the numeric lookup ID, managed build number, exact branch/commit, expected
 `Push Stable` or `Push Preview` stage, and this request shape:
@@ -59,11 +80,12 @@ Show the user the numeric lookup ID, managed build number, exact branch/commit, 
 }
 ```
 
-Use `ask_user` for explicit confirmation. Only after confirmation, invoke the small
+Use `ask_user` for explicit confirmation immediately before invocation. Only after confirmation,
+invoke the small
 cross-platform queue script:
 
 ```powershell
-python .agents/skills/release-publish/scripts/queue-publish-run.py `
+python .agents/skills/release-publish/scripts/queue-publish.py `
   "{managed-build-number}" `
   --confirm-queue
 if ($LASTEXITCODE -ne 0) { throw "Publish pipeline was not queued." }
@@ -74,7 +96,6 @@ The script:
 - accepts a managed **build number**, never a numeric run ID;
 - rejects malformed, mismatched, or `+main` build numbers;
 - infers `pushStable` from the validated `stable`/`preview`/`rc` label;
-- refuses to queue while pipeline `25298` has an active run;
 - propagates Azure CLI/API errors;
 - posts the request and prints the publish run ID and URL.
 
@@ -97,7 +118,7 @@ Require `resources.version` to equal the confirmed managed build number. Require
 `selectedResource == "SkiaSharp"`, `pushPackages == "true"`, and `pushStable` to match the
 confirmed release type.
 
-## 3. Respect the human approval boundary
+## 4. Respect the human approval boundary
 
 The agent may queue the run only after user confirmation. The NuGet.org push approval is a separate
 Azure DevOps check and is always **human/manual**:
