@@ -335,29 +335,54 @@ example. Process:
 
 ---
 
-## Step 8: Release Milestone Hygiene (Every Release)
+## Step 8: Milestone Hygiene (Every Release)
 
-Run milestone hygiene for preview, RC, and stable releases. First audit the whole release line
-using its base version (`X.Y.Z`, without preview/RC or CI build suffixes):
+Because the tag now exists (Step 4), this release counts as **shipped** — so this is the
+moment to (8a) sync every milestone assignment for the line, then (8b) close this version's
+milestone. Do both, in order.
+
+### 8a. Sync milestone assignments (run the audit)
+
+[`audit-milestones.ps1`](../../../scripts/infra/milestones/audit-milestones.ps1) walks the
+release branches for the line and assigns every merged PR — and the issues it closed — to the
+milestone of the release it actually **shipped** in. It's idempotent and self-correcting, so
+running it at every publish keeps milestones clean incrementally (an unshipped preview's PRs
+roll forward to the next shipped release; commits not yet in any shipped release are left alone).
+
+Pass the **base line** version (`X.Y.Z`, no `-preview`/`-rc` suffix — the script audits the
+whole line). Dry-run first, review, then apply:
 
 ```bash
-# Review assignment changes first.
+# Review what would change (read-only)
 pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun -Version {X.Y.Z}
 
-# After showing the dry-run and receiving user confirmation, apply it.
+# Apply
 pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
 ```
 
-Then derive the exact public release milestone title, without a `v` prefix or CI build suffix:
+> See [`scripts/infra/milestones/README.md`](../../../scripts/infra/milestones/README.md) for
+> the full algorithm. The header prints which cadence branches shipped (have a tag) vs. rolled
+> forward, so you can sanity-check before applying.
 
-| Release type | Exact milestone title |
-|--------------|-----------------------|
-| Preview | `X.Y.Z-preview.N` |
-| RC | `X.Y.Z-rc.N` |
-| Stable | `X.Y.Z` |
+### 8b. Close this version's milestone
+
+**Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
+GitHub milestone for every version in the cadence, so each published version has its
+own milestone that must be closed once that version ships (otherwise it lingers open
+forever). The milestone title is the **exact release version** (no `v` prefix or CI build suffix):
+
+| Release type | Milestone to close |
+|--------------|--------------------|
+| Preview | `X.Y.Z-preview.N` (e.g. `4.151.0-preview.1`) |
+| RC | `X.Y.Z-rc.N` (e.g. `4.151.0-rc.1`) |
+| Stable | `X.Y.Z` (e.g. `4.151.0`) |
+
+⚠️ **Move still-open issues forward first.** Never silently close a milestone that
+still has open issues. Reassign any open issues to the next appropriate milestone (the
+next preview/rc, or the stable milestone), or confirm with the user, **before** closing.
 
 Never use a substring or nearest match, and never create a milestone during publishing. Query all
-pages and match the exact title:
+pages and match the exact release version:
 
 ```bash
 RELEASE_VERSION="{exact-release-version}"
@@ -372,7 +397,7 @@ gh api "repos/mono/SkiaSharp/milestones?state=all&per_page=100" --paginate --slu
 - **More than one exact match:** stop and ask which milestone is authoritative.
 - **One open exact match with open issues:** list them with
   `gh issue list --repo mono/SkiaSharp --milestone "{exact-release-version}" --state open`.
-  Move them to the next appropriate release milestone or ask the user before closing.
+  Move them to the next preview/RC/stable milestone or explicitly confirm before closing.
 - **One open exact match with zero open issues:** close that exact milestone number:
 
   ```bash
