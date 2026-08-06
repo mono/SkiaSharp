@@ -46,9 +46,6 @@ Docker tests require `SkiaSharp.NativeAssets.Linux.NoDependencies` which bundles
 
 ### MAUI Platform Tests (iOS, Android, MacCatalyst, Windows)
 
-On Windows hosts, `MauiWindowsTests` follows these phases and is required to pass. On non-Windows
-hosts, its result is an explicit hardware/platform skip.
-
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
 | Build test project | 5-10s | "Determining projects to restore..." |
@@ -165,11 +162,6 @@ adb logcat -d | grep -E "(FATAL|crash|died)" | tail -10
 **iOS:**
 ```bash
 xcrun simctl list devices booted
-```
-
-**Windows:**
-```powershell
-Get-Process WinAppDriver -ErrorAction SilentlyContinue
 ```
 
 ---

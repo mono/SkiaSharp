@@ -182,9 +182,8 @@ The build description contains the internal version in format: `#{base}-{label}.
 | Android | API 26 (8.0/Oreo) | API 35-36 (15-16) |
 | iOS | Oldest available runtime | Newest available runtime |
 
-> **Automation scope:** API 26 is the oldest target supported by the current release-test
-> automation/UiAutomator2 stack. This does not change SkiaSharp's or MAUI's minimum Android
-> product support.
+> API 26 is the floor for the current release-test automation/UiAutomator2 stack, not the
+> minimum Android version supported by SkiaSharp or MAUI.
 
 👉 **See [setup.md](references/setup.md)** for device selection details and emulator creation.
 
@@ -197,7 +196,7 @@ Planned test matrix:
   - Android (old): [device] (Android 8.0 / API 26)
   - Android (new): [device] (Android 16 / API 36)
   - Mac Catalyst:  Current macOS
-  - MauiWindowsTests: Current Windows (required on Windows; explicit hardware/platform skip on non-Windows)
+  - Windows:       Current Windows
   - Blazor:        Chromium
   - Console:       .NET runtime
   - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
@@ -382,8 +381,6 @@ once per .NET band you're validating.
 | MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
 
 **iOS and Android run TWICE:** once on oldest, once on newest.
-`MauiWindowsTests` is required on Windows hosts. On non-Windows hosts, keep it in the matrix and
-record an explicit hardware/platform skip.
 
 ### Providing User Feedback
 
@@ -409,16 +406,14 @@ Proceed to **release-publish** ONLY when:
 
 - ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
-- ✅ Android tests pass on BOTH oldest automation target (API 26) and newest (API 35-36)
-- ✅ `MauiWindowsTests` pass on Windows hosts, or are explicitly reported as a hardware/platform
-  skip on non-Windows hosts
+- ✅ Android tests pass on BOTH oldest (API 26) and newest (API 35-36)
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
 ### Skip Policy
 
 **Hardware skips only:**
 - iOS/Mac tests on non-macOS → Skip (hardware unavailable)
-- `MauiWindowsTests` on non-Windows → Explicit hardware/platform skip
+- Windows tests on non-Windows → Skip (hardware unavailable)
 
 **NOT valid skips:**
 - "No Android emulator" → Create one
@@ -440,7 +435,7 @@ Proceed to **release-publish** ONLY when:
 | LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
-| MauiWindowsTests | Windows | Current host | ✅ Passed |
+| MauiWindowsTests | Windows | - | ⏭️ Skipped (non-Windows hardware) |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
 | MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
 | MauiAndroidTests | Android 8.0 (API 26) | Pixel_API_26 | ✅ Passed |
@@ -448,9 +443,6 @@ Proceed to **release-publish** ONLY when:
 
 Ready for publishing.
 ```
-
-On a non-Windows host, keep the `MauiWindowsTests` row and report
-`⏭️ Skipped — non-Windows hardware/platform` instead of omitting it.
 
 ---
 

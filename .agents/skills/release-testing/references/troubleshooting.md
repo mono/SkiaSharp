@@ -43,7 +43,6 @@ dotnet package search SkiaSharp \
 | `Mac2 driver requires Carthage` | Carthage missing | `brew install carthage` |
 | `Connection refused` | Port conflict | Appium auto-starts on 4723; check for conflicts |
 | `Session creation timeout` | First run building WDA | Wait - WebDriverAgent builds on first iOS/Mac run |
-| UiAutomator2 rejects the Android version during session creation | Emulator is below the current API 26 automation floor | Use an Android 8/Oreo API 26 AVD for the old target |
 | `Invalid bundle identifier` | Wrong bundleId | Tests extract from csproj automatically |
 
 ## Simulator/Emulator Errors
@@ -76,18 +75,14 @@ adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
 | `FATAL EXCEPTION` | Unhandled exception | **Bug - investigate** |
 | `Native crash` | Native library issue | **Bug - investigate** |
 
-### Old Android Automation Target (API 26) Failures
+### Old Android (API 26) Crashes
 
-API 26 is the oldest target supported by the current release-test automation/UiAutomator2 stack.
-This is not a change to SkiaSharp's or MAUI's minimum Android product support.
-
-The API 26 test app may fail due to:
+API 26 may crash due to:
 - Missing APIs that MAUI expects
 - Different permission behavior
 - Slower startup causing timeouts
 
-If the failure occurs only on the old automation target, get the full stack trace and check whether
-it is a known MAUI/SkiaSharp issue.
+If crash only on API 26: get full stack trace, check if known MAUI/SkiaSharp issue.
 
 ## iOS Diagnostics
 

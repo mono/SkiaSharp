@@ -41,9 +41,6 @@ pwsh bin/Debug/net8.0/playwright.ps1 install chromium
 1. Install [WinAppDriver](https://github.com/microsoft/WinAppDriver/releases)
 2. Enable Developer Mode in Settings
 
-`MauiWindowsTests` is required on Windows hosts. On non-Windows hosts, keep it in the matrix and
-report an explicit hardware/platform skip.
-
 ---
 
 ## Android Setup
@@ -69,11 +66,8 @@ Once SDK is located, verify:
 
 | Type | API Level | Purpose |
 |------|-----------|---------|
-| Old | 26 | Android 8/Oreo; oldest target supported by the current release-test automation stack |
+| Old | 26 | Oldest release-test automation target (Android 8/Oreo) |
 | New | 35-36 | Latest Android |
-
-API 26 is an automation/UiAutomator2 floor only. It does not change SkiaSharp's or MAUI's minimum
-Android product support.
 
 **To check existing AVDs:** List with `emulator -list-avds`, then check each AVD's `config.ini` for `image.sysdir` containing `android-XX` where XX is the API level.
 
@@ -130,8 +124,6 @@ Before running release tests, verify:
 5. **Appium installed** — `which appium` returns path
 6. **Appium drivers installed** — `appium driver list --installed` shows uiautomator2, xcuitest
 7. **Docker available** — `docker info` succeeds (for Linux console tests)
-8. **Windows MAUI path accounted for** — run `MauiWindowsTests` on Windows, or record an explicit
-   hardware/platform skip on non-Windows
 
 **If any check fails:** Fix before proceeding. Do not skip tests.
 
