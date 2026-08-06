@@ -41,6 +41,9 @@ pwsh bin/Debug/net8.0/playwright.ps1 install chromium
 1. Install [WinAppDriver](https://github.com/microsoft/WinAppDriver/releases)
 2. Enable Developer Mode in Settings
 
+`MauiWindowsTests` is required on Windows hosts. On non-Windows hosts, keep it in the matrix and
+report an explicit hardware/platform skip.
+
 ---
 
 ## Android Setup
@@ -66,8 +69,11 @@ Once SDK is located, verify:
 
 | Type | API Level | Purpose |
 |------|-----------|---------|
-| Old | 21-23 | Minimum supported Android |
+| Old | 26 | Android 8/Oreo; oldest target supported by the current release-test automation stack |
 | New | 35-36 | Latest Android |
+
+API 26 is an automation/UiAutomator2 floor only. It does not change SkiaSharp's or MAUI's minimum
+Android product support.
 
 **To check existing AVDs:** List with `emulator -list-avds`, then check each AVD's `config.ini` for `image.sysdir` containing `android-XX` where XX is the API level.
 
@@ -75,6 +81,8 @@ Once SDK is located, verify:
 
 1. Install system image: `sdkmanager "system-images;android-{API};google_apis;arm64-v8a"`
 2. Create AVD: `avdmanager create avd -n {name} -k "system-images;android-{API};google_apis;arm64-v8a" -d pixel`
+
+For the old automation target, use API 26 and an AVD such as `Pixel_API_26`.
 
 For API 36+, use `google_apis_playstore` instead of `google_apis`.
 
@@ -116,12 +124,14 @@ To find devices for a runtime: `xcrun simctl list devices available | grep -A10 
 Before running release tests, verify:
 
 1. **Android SDK found** — `adb version` works
-2. **Old Android emulator exists** — AVD with API 21-23
+2. **Old Android automation emulator exists** — AVD with API 26
 3. **New Android emulator exists** — AVD with API 35-36
 4. **iOS runtimes available** — at least 2 different versions
 5. **Appium installed** — `which appium` returns path
 6. **Appium drivers installed** — `appium driver list --installed` shows uiautomator2, xcuitest
 7. **Docker available** — `docker info` succeeds (for Linux console tests)
+8. **Windows MAUI path accounted for** — run `MauiWindowsTests` on Windows, or record an explicit
+   hardware/platform skip on non-Windows
 
 **If any check fails:** Fix before proceeding. Do not skip tests.
 

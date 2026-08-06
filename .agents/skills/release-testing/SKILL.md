@@ -179,8 +179,12 @@ The build description contains the internal version in format: `#{base}-{label}.
 
 | Platform | Old Version | New Version |
 |----------|-------------|-------------|
-| Android | API 21-23 (5.0-6.0) | API 35-36 (15-16) |
+| Android | API 26 (8.0/Oreo) | API 35-36 (15-16) |
 | iOS | Oldest available runtime | Newest available runtime |
+
+> **Automation scope:** API 26 is the oldest target supported by the current release-test
+> automation/UiAutomator2 stack. This does not change SkiaSharp's or MAUI's minimum Android
+> product support.
 
 👉 **See [setup.md](references/setup.md)** for device selection details and emulator creation.
 
@@ -190,9 +194,10 @@ The build description contains the internal version in format: `#{base}-{label}.
 Planned test matrix:
   - iOS (old):     [device] ([oldest available iOS runtime])
   - iOS (new):     [device] ([newest available iOS runtime])
-  - Android (old): [device] (Android 6.0 / API 23)
+  - Android (old): [device] (Android 8.0 / API 26)
   - Android (new): [device] (Android 16 / API 36)
   - Mac Catalyst:  Current macOS
+  - MauiWindowsTests: Current Windows (required on Windows; explicit hardware/platform skip on non-Windows)
   - Blazor:        Chromium
   - Console:       .NET runtime
   - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
@@ -248,11 +253,12 @@ dotnet test ... -- --filter-class "*LinuxConsoleTests"
 dotnet test ... -- --filter-class "*BlazorTests"
 dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
 dotnet test ... -- --filter-class "*MauiMacCatalystTests"
+dotnet test ... -- --filter-class "*MauiWindowsTests"
 
 # Android: specify device ID and expected API level for validation
 dotnet test ... \
   -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23" \
+  -p:AndroidApiLevel="26" \
   -- --filter-class "*MauiAndroidTests"
 ```
 
@@ -288,14 +294,14 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
 2. **Start emulator with WIPE and boot verification:**
    ```bash
    # Start emulator with -wipe-data to ensure clean state (use mode="async" to keep it running)
-   emulator -avd Pixel_API_23 -wipe-data -no-snapshot -no-audio
+   emulator -avd Pixel_API_26 -wipe-data -no-snapshot -no-audio
    
    # Wait for boot (check every 10s until returns "1")
    # This can take 60-120s for a fresh wipe
    adb shell getprop sys.boot_completed
    
    # Verify correct API level
-   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "23")
+   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "26")
    ```
 
    ⚠️ **The `-wipe-data` flag is REQUIRED** to ensure a clean emulator state. Without it,
@@ -371,10 +377,13 @@ once per .NET band you're validating.
 | LinuxConsoleTests | Once (Docker) | - | ~2min |
 | BlazorTests | Once | - | ~2min |
 | MauiMacCatalystTests | Once | - | ~2min |
+| MauiWindowsTests | Once (Windows host) | - | ~2min |
 | MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
 | MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
 
 **iOS and Android run TWICE:** once on oldest, once on newest.
+`MauiWindowsTests` is required on Windows hosts. On non-Windows hosts, keep it in the matrix and
+record an explicit hardware/platform skip.
 
 ### Providing User Feedback
 
@@ -400,14 +409,16 @@ Proceed to **release-publish** ONLY when:
 
 - ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
-- ✅ Android tests pass on BOTH oldest (API 21-23) and newest (API 35-36)
+- ✅ Android tests pass on BOTH oldest automation target (API 26) and newest (API 35-36)
+- ✅ `MauiWindowsTests` pass on Windows hosts, or are explicitly reported as a hardware/platform
+  skip on non-Windows hosts
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
 ### Skip Policy
 
 **Hardware skips only:**
 - iOS/Mac tests on non-macOS → Skip (hardware unavailable)
-- Windows tests on non-Windows → Skip (hardware unavailable)
+- `MauiWindowsTests` on non-Windows → Explicit hardware/platform skip
 
 **NOT valid skips:**
 - "No Android emulator" → Create one
@@ -429,13 +440,17 @@ Proceed to **release-publish** ONLY when:
 | LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
+| MauiWindowsTests | Windows | Current host | ✅ Passed |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
 | MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
-| MauiAndroidTests | Android 6.0 (API 23) | Pixel_API_23 | ✅ Passed |
+| MauiAndroidTests | Android 8.0 (API 26) | Pixel_API_26 | ✅ Passed |
 | MauiAndroidTests | Android 16 (API 36) | Pixel_API_36 | ✅ Passed |
 
 Ready for publishing.
 ```
+
+On a non-Windows host, keep the `MauiWindowsTests` row and report
+`⏭️ Skipped — non-Windows hardware/platform` instead of omitting it.
 
 ---
 
