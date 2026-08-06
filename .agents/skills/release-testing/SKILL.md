@@ -436,7 +436,7 @@ Proceed to **release-publish** ONLY when:
 | LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
-| MauiWindowsTests | Windows | - | ⏭️ Skipped (non-Windows hardware) |
+| MauiWindowsTests | Windows | - | ✅ Passed |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
 | MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
 | MauiAndroidTests | Android 8.0 (API 26) | Pixel_API_26 | ✅ Passed |
