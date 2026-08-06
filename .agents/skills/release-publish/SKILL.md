@@ -6,7 +6,7 @@ description: >
   Use when user says "publish X", "finalize X", "tag X", or "finish release X".
   
   This is the FINAL step - after release-testing passes.
-  Publishes to NuGet.org, creates tag and GitHub release, and closes an exact stable
+  Publishes to NuGet.org, creates tag and GitHub release, and closes the exact release
   milestone when one exists.
   
   Triggers: "publish the release", "push to nuget", "create github release",
@@ -46,7 +46,7 @@ Publish packages to NuGet.org and finalize releases.
 │  5. Refresh Web Notes    → Dispatch once from main; do not wait    │
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
-│  8. Milestone Hygiene    → Stable: close exact match if it exists  │
+│  8. Milestone Hygiene    → Audit and close exact release milestone │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -59,7 +59,7 @@ Publish packages to NuGet.org and finalize releases.
 | 5. Website notes refresh | Dispatch once; do not wait | Dispatch once; do not wait |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
 | 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
-| 8. Milestone | Skip | Close exact milestone if one exists |
+| 8. Milestone | Close exact preview/RC milestone if it exists | Close exact milestone if it exists |
 
 ---
 
@@ -112,20 +112,28 @@ packages on the internal feed. See [release-status](../release-status/SKILL.md) 
 
 ### Pipeline Steps
 
-Use the tested CLI/REST path in
-[references/azure-publish.md](references/azure-publish.md). Use the numeric managed run ID from
-release-status to verify pipeline `10789`, `completed/succeeded`, the exact release branch and
-full commit, and the expected stable/preview/RC build-number label.
+Capture the managed run ID and build number from release-status. Query that numeric run ID:
+
+```bash
+az pipelines runs show --id {managed-run-id} \
+  --org https://dev.azure.com/devdiv --project DevDiv \
+  --query "{id:id,definitionId:definition.id,buildNumber:buildNumber,status:status,result:result,sourceBranch:sourceBranch,sourceVersion:sourceVersion}" \
+  --only-show-errors -o json
+```
+
+Verify pipeline `10789`, `completed/succeeded`, the exact release branch and full commit, and the
+expected stable/preview/RC build-number label.
 
 ⚠️ `resources.pipelines.SkiaSharp.version` is the managed pipeline **build number string**, for
 example `4.151.1-stable.1+4.151.1`. Never put the numeric managed run/build ID in that field; the
 numeric ID is only for querying and validating the source run.
 
-Show the validated source summary and JSON body, then use `ask_user` for explicit confirmation.
-Before asking, verify that pipeline `25298` has no active run as documented in
-[references/azure-publish.md](references/azure-publish.md). Only after confirmation, invoke
-`scripts/queue-publish.py` with the verified build-number string. The script validates the
-build-number shape, infers `pushStable`, queues pipeline `25298`, and prints the new run ID and URL.
+Show the validated source summary, then use `ask_user` for explicit confirmation. Only after
+confirmation, invoke the tiny queue wrapper and capture its returned publish run ID:
+
+```bash
+python .agents/skills/release-publish/scripts/queue-publish.py "{managed-build-number}"
+```
 
 ### Verification During Pipeline Run
 
@@ -327,28 +335,44 @@ example. Process:
 
 ---
 
-## Step 8: Stable Milestone Hygiene (Optional)
+## Step 8: Release Milestone Hygiene (Every Release)
 
-Preview and RC releases skip milestone closure. For stable releases, a milestone is optional and
-must match the exact public version title (`X.Y.Z` or `X.Y.Z.F`, no `v` prefix). Never use a
-substring/nearest match and never create a milestone during publishing.
+Run milestone hygiene for preview, RC, and stable releases. First audit the whole release line
+using its base version (`X.Y.Z`, without preview/RC or CI build suffixes):
 
 ```bash
-# Slurp all pages before exact matching so similarly named milestones cannot qualify.
-STABLE_VERSION="{stable-version}"
+# Review assignment changes first.
+pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun -Version {X.Y.Z}
+
+# After showing the dry-run and receiving user confirmation, apply it.
+pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
+```
+
+Then derive the exact public release milestone title, without a `v` prefix or CI build suffix:
+
+| Release type | Exact milestone title |
+|--------------|-----------------------|
+| Preview | `X.Y.Z-preview.N` |
+| RC | `X.Y.Z-rc.N` |
+| Stable | `X.Y.Z` |
+
+Never use a substring or nearest match, and never create a milestone during publishing. Query all
+pages and match the exact title:
+
+```bash
+RELEASE_VERSION="{exact-release-version}"
 gh api "repos/mono/SkiaSharp/milestones?state=all&per_page=100" --paginate --slurp \
-  | jq --arg version "$STABLE_VERSION" \
+  | jq --arg version "$RELEASE_VERSION" \
       '[.[][] | select(.title == $version) |
         {number,title,state,open_issues,closed_issues}]'
 ```
 
 - **No exact match:** report `No milestone exists; nothing to close` and succeed.
 - **Already closed:** report it and succeed.
-- **More than one exact match:** stop and ask the user which milestone is authoritative.
+- **More than one exact match:** stop and ask which milestone is authoritative.
 - **One open exact match with open issues:** list them with
-  `gh issue list --repo mono/SkiaSharp --milestone "{stable-version}" --state open`, then ask the
-  user before closing or reassigning anything. Leaving the optional milestone open does not fail
-  the release.
+  `gh issue list --repo mono/SkiaSharp --milestone "{exact-release-version}" --state open`.
+  Move them to the next appropriate release milestone or ask the user before closing.
 - **One open exact match with zero open issues:** close that exact milestone number:
 
   ```bash
@@ -397,5 +421,4 @@ If you've partially completed and need to resume:
 ## Resources
 
 - [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/azure-publish.md](references/azure-publish.md) — Validated REST queue and human approval boundary
 - [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser playbook: classification rules + template

@@ -281,9 +281,10 @@ flowchart TB
     ∙ Mark pre-release if preview
     ∙ Attach samples if stable"]
     
-    RELEASE --> STABLE{Stable release?}
-    STABLE -->|No| DONE([Complete])
-    STABLE -->|Yes| MILESTONE{Exact stable milestone exists?}
+    RELEASE --> AUDIT["Audit milestone assignments
+    ∙ Dry-run, review, then apply
+    ∙ Preview, RC, and stable"]
+    AUDIT --> MILESTONE{Exact release milestone exists?}
     MILESTONE -->|No| DONE([Complete])
     MILESTONE -->|Yes, no open issues| CLOSE[Close exact milestone]
     MILESTONE -->|Yes, open issues| ASK[Surface issues and ask user]
