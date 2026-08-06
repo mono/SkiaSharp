@@ -46,6 +46,9 @@ Docker tests require `SkiaSharp.NativeAssets.Linux.NoDependencies` which bundles
 
 ### MAUI Platform Tests (iOS, Android, MacCatalyst, Windows)
 
+On Windows hosts, `MauiWindowsTests` follows these phases and is required to pass. On non-Windows
+hosts, its result is an explicit hardware/platform skip.
+
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
 | Build test project | 5-10s | "Determining projects to restore..." |
@@ -99,10 +102,6 @@ Use a detailed checklist showing sub-steps for MAUI tests:
   - [ ] Deploying to simulator
   - [ ] Running test
 ```
-
-Always include `MauiWindowsTests` in the checklist. On Windows hosts, monitor the same build,
-Appium, deploy, screenshot, and verification phases and require it to pass. On non-Windows hosts,
-mark it explicitly as a hardware/platform skip instead of omitting it.
 
 ### During Long Waits
 
