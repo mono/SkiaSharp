@@ -242,7 +242,7 @@ def resolve_branch(ref: str) -> str:
                 return m.group(1)
         sys.exit(
             "ERROR: No release branch found containing SHA "
-            f"{ref.encode('ascii', 'backslashreplace').decode('ascii')}"
+            f"{ref}"
         )
     return ref
 

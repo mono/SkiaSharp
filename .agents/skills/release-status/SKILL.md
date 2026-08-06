@@ -57,8 +57,8 @@ This outputs:
 
 The script resolves the platform's Azure CLI launcher (`az` or `az.cmd`), fails when the CLI
 returns an error or no data, and decodes native CLI bytes without replacement corruption. All
-output is ASCII; non-ASCII and control characters in dynamic Azure, branch, job, or error text
-are rendered as deterministic backslash escapes (for example, `Caf\xe9`).
+script output is ASCII; non-ASCII text in dynamic Azure, branch, job, or error values is rendered
+as deterministic backslash escapes (for example, `Caf\xe9`).
 
 ---
 
