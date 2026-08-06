@@ -10,10 +10,12 @@ copy your examples into real code, so every claim must be true and every example
 
 ## Required reading (first)
 
-1. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, summary/param/return patterns.
-2. [`skia-patterns.md`](skia-patterns.md) — SkiaSharp/HarfBuzz domain facts (color layouts, struct
+1. [`issue-context.md`](issue-context.md) — prepare the shared bounded issue artifact and apply its
+   untrusted-reference boundary. If the allowlist is empty, continue with the existing procedure.
+2. [`patterns.md`](patterns.md) — .NET XML doc syntax, verb conventions, summary/param/return patterns.
+3. [`skia-patterns.md`](skia-patterns.md) — SkiaSharp/HarfBuzz domain facts (color layouts, struct
    defaults, standard-based enums, caller-owned vs parent-owned).
-3. [`obsolete-api-map.md`](obsolete-api-map.md) — members that must never appear in an example, and
+4. [`obsolete-api-map.md`](obsolete-api-map.md) — members that must never appear in an example, and
    replacements.
 
 Apply these facts; do not restate them in the docs. If a fact is in a reference file, trust it over your

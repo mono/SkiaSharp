@@ -62,6 +62,9 @@ All findings use one machine-parseable contract: `SEVERITY | class | file | docI
 
 ## Tooling & validation
 
+- Supplemental issue context is prepared once for either procedure from the skill-owned allowlist and
+  consumed through the shared trust contract in
+  [`references/issue-context.md`](references/issue-context.md). An empty allowlist is a no-op.
 - Format + checks (one Cake target in `scripts/infra/docs/docs.cake`): `docs-format-docs` formats every
   type file and runs the deterministic content checks — warnings for missing/quality issues, build-failing
   errors for broken XML/CDATA. See [`references/validation.md`](references/validation.md).
