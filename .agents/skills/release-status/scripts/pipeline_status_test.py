@@ -1,9 +1,11 @@
 import importlib.util
+import io
 import os
 import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -17,12 +19,10 @@ sys.modules[SPEC.name] = pipeline_status
 SPEC.loader.exec_module(pipeline_status)
 
 
-class Stream:
-    def __init__(self, encoding: str):
-        self.encoding = encoding
-
-
 class PipelineStatusTests(unittest.TestCase):
+    def test_script_source_is_ascii_only(self) -> None:
+        SCRIPT_PATH.read_bytes().decode("ascii")
+
     @patch.object(pipeline_status.shutil, "which", return_value="/usr/bin/az")
     def test_resolves_native_cli(self, which: Mock) -> None:
         command = pipeline_status.cli_command("az", ["--version"])
@@ -98,7 +98,14 @@ class PipelineStatusTests(unittest.TestCase):
 
         self.assertEqual("Café", output)
         self.assertNotIn("\ufffd", output)
-        output.encode("cp1252")
+
+        buffer = io.BytesIO()
+        stream = io.TextIOWrapper(buffer, encoding="ascii", errors="strict")
+        with redirect_stdout(stream):
+            pipeline_status.emit(output)
+        stream.flush()
+
+        self.assertEqual(b"Caf\\xe9", buffer.getvalue().rstrip(b"\r\n"))
 
     @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
     @patch.object(pipeline_status.subprocess, "run")
@@ -122,10 +129,14 @@ class PipelineStatusTests(unittest.TestCase):
             2, ["az", "test"], stderr="échec d'authentification".encode("cp1252")
         )
 
-        with self.assertRaisesRegex(
-            RuntimeError, "exit code 2: échec d'authentification"
-        ):
+        with self.assertRaises(RuntimeError) as context:
             pipeline_status.az(["test"])
+
+        self.assertEqual(
+            "Azure CLI failed with exit code 2: "
+            r"\xe9chec d'authentification",
+            str(context.exception),
+        )
 
     @patch.object(pipeline_status, "cli_command", return_value=["az", "test"])
     @patch.object(pipeline_status.subprocess, "run")
@@ -139,22 +150,25 @@ class PipelineStatusTests(unittest.TestCase):
         ):
             pipeline_status.az(["test"])
 
-    def test_cp1252_output_uses_ascii_fallback(self) -> None:
-        style = pipeline_status.output_style(Stream("cp1252"))
-        output = "".join(style.icons.values()) + (
-            style.first_prefix
-            + style.middle_prefix
-            + style.last_prefix
-            + style.continuation
-            + style.horizontal
-            + style.separator
-            + style.upstream
-            + style.resolved
-            + style.ellipsis
-        )
+    def test_dynamic_output_uses_single_ascii_safe_path(self) -> None:
+        records = [
+            {
+                "type": "Job",
+                "name": "Café\njob",
+                "state": "inProgress",
+                "result": "",
+            }
+        ]
 
-        output.encode("cp1252")
-        self.assertIs(pipeline_status.ASCII_STYLE, style)
+        buffer = io.BytesIO()
+        stream = io.TextIOWrapper(buffer, encoding="ascii", errors="strict")
+        with redirect_stdout(stream):
+            pipeline_status.format_job_summary(records, "| ")
+        stream.flush()
+
+        output = buffer.getvalue().decode("ascii")
+        self.assertIn(r"Running: Caf\xe9\njob", output)
+        self.assertNotIn("\ufffd", output)
 
 
 if __name__ == "__main__":

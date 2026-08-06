@@ -14,7 +14,7 @@ description: >
   "pipeline status", "is the build done", "check CI", "how is the run doing",
   "are packages ready", "build progress".
   
-  This is Step 2 of 4 in the release pipeline — after release-branch creates the branch
+  This is Step 2 of 4 in the release pipeline - after release-branch creates the branch
   and before release-testing runs integration tests.
 ---
 
@@ -22,9 +22,9 @@ description: >
 
 Check the status of the SkiaSharp release pipeline chain on Azure DevOps.
 
-⚠️ This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+[WARN] This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → **Step 2 (this skill)** → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) -> **Step 2 (this skill)** -> [Step 3: release-testing](../release-testing/SKILL.md) -> [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## Pipeline Chain
 
@@ -50,14 +50,15 @@ python .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
 ```
 
 This outputs:
-- All three pipelines with status icons (✅ ❌ 🔄 ⏳)
+- All three pipelines with ASCII status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUN]`, `[WAIT]`)
 - Build IDs and build numbers
 - Trigger relationships proving which upstream build caused each downstream run
 - Direct ADO links for each build
 
 The script resolves the platform's Azure CLI launcher (`az` or `az.cmd`), fails when the CLI
-returns an error or no data, decodes native CLI bytes without replacement corruption, and falls
-back to ASCII status markers when the output encoding cannot represent the Unicode display.
+returns an error or no data, and decodes native CLI bytes without replacement corruption. All
+output is ASCII; non-ASCII and control characters in dynamic Azure, branch, job, or error text
+are rendered as deterministic backslash escapes (for example, `Caf\xe9`).
 
 ---
 
@@ -65,11 +66,11 @@ back to ASCII status markers when the output encoding cannot represent the Unico
 
 | Scenario | Meaning | Next Action |
 |----------|---------|-------------|
-| All ✅ | Packages are on the internal feed | Proceed to `release-testing` |
-| Native ✅, SkiaSharp 🔄 | Managed build in progress | Wait |
-| Native ✅, SkiaSharp ✅, Tests 🔄 | Tests running (packages already available) | Can start `release-testing` |
-| Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
-| Native ⚠️ (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
+| All `[OK]` | Packages are on the internal feed | Proceed to `release-testing` |
+| Native `[OK]`, SkiaSharp `[RUN]` | Managed build in progress | Wait |
+| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUN]` | Tests running (packages already available) | Can start `release-testing` |
+| Any `[FAIL]` | Pipeline failed | Investigate via ADO link, retry or fix |
+| Native `[WARN]` (`partiallySucceeded`) | Some native platforms had warnings | Usually OK - check which platforms |
 
 ### Job-Level Details (In-Progress Builds)
 
@@ -77,20 +78,20 @@ When a pipeline is `inProgress`, the script queries the ADO timeline API and sho
 breakdown below the pipeline entry:
 
 ```
-┌─ SkiaSharp-Native (ID 26493) — native binaries
-│  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
-│  
-│  Jobs: 35 ✅ completed | 2 ❌ failed | 8 🔄 running | 3 ⏳ pending
-│  Failed: Job_Name_1, Job_Name_2
-│  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
-│  Pending: Wasm, Linux ARM, Linux ARM64
++- SkiaSharp-Native (ID 26493) - native binaries
+|  [RUN] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+|
+|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUN] running | 3 [WAIT] pending
+|  Failed: Job_Name_1, Job_Name_2
+|  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
+|  Pending: Wasm, Linux ARM, Linux ARM64
 ```
 
 **Reading job status:**
-- **Completed count** — jobs that finished successfully (or with warnings)
-- **Failed list** — jobs that failed (names shown so you can investigate)
-- **Running list** — jobs actively executing (tells you what's left)
-- **Pending list** — jobs not yet started (queued or waiting for agents)
+- **Completed count** - jobs that finished successfully (or with warnings)
+- **Failed list** - jobs that failed (names shown so you can investigate)
+- **Running list** - jobs actively executing (tells you what's left)
+- **Pending list** - jobs not yet started (queued or waiting for agents)
 
 ---
 
@@ -103,9 +104,9 @@ Pipeline Chain Status: release/3.119.4
 
 | Pipeline | Status | Build | ADO Link |
 |----------|--------|-------|----------|
-| SkiaSharp-Native | ✅ partiallySucceeded | 3.119.4-stable.2 | [link] |
-| SkiaSharp | 🔄 inProgress | 3.119.4-stable.2 | [link] |
-| SkiaSharp-Tests | ⏳ not triggered | — | — |
+| SkiaSharp-Native | `[WARN] partiallySucceeded` | 3.119.4-stable.2 | [link] |
+| SkiaSharp | `[RUN] inProgress` | 3.119.4-stable.2 | [link] |
+| SkiaSharp-Tests | `[WAIT] not triggered` | - | - |
 
 Packages will be available after SkiaSharp (10789) completes.
 ```
