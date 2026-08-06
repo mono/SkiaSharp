@@ -14,7 +14,7 @@ description: >
   "pipeline status", "is the build done", "check CI", "how is the run doing",
   "are packages ready", "build progress".
   
-  This is Step 2 of 4 in the release pipeline - after release-branch creates the branch
+  This is Step 2 of 4 in the release pipeline — after release-branch creates the branch
   and before release-testing runs integration tests.
 ---
 
@@ -22,9 +22,9 @@ description: >
 
 Check the status of the SkiaSharp release pipeline chain on Azure DevOps.
 
-[WARN] This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+⚠️ This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
 
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) -> **Step 2 (this skill)** -> [Step 3: release-testing](../release-testing/SKILL.md) -> [Step 4: release-publish](../release-publish/SKILL.md)
+**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → **Step 2 (this skill)** → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
 
 ## Pipeline Chain
 
@@ -66,11 +66,11 @@ are rendered as deterministic backslash escapes (for example, `Caf\xe9`).
 
 | Scenario | Meaning | Next Action |
 |----------|---------|-------------|
-| All `[OK]` | Packages are on the internal feed | Proceed to `release-testing` |
-| Native `[OK]`, SkiaSharp `[RUNNING]` | Managed build in progress | Wait |
-| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUNNING]` | Tests running (packages already available) | Can start `release-testing` |
-| Any `[FAIL]` | Pipeline failed | Investigate via ADO link, retry or fix |
-| Native `[WARN]` (`partiallySucceeded`) | Some native platforms had warnings | Usually OK - check which platforms |
+| All ✅ | Packages are on the internal feed | Proceed to `release-testing` |
+| Native ✅, SkiaSharp 🔄 | Managed build in progress | Wait |
+| Native ✅, SkiaSharp ✅, Tests 🔄 | Tests running (packages already available) | Can start `release-testing` |
+| Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
+| Native ⚠️ (`partiallySucceeded`) | Some native platforms had warnings | Usually OK — check which platforms |
 
 ### Job-Level Details (In-Progress Builds)
 
@@ -88,10 +88,10 @@ breakdown below the pipeline entry:
 ```
 
 **Reading job status:**
-- **Completed count** - jobs that finished successfully (or with warnings)
-- **Failed list** - jobs that failed (names shown so you can investigate)
-- **Running list** - jobs actively executing (tells you what's left)
-- **Pending list** - jobs not yet started (queued or waiting for agents)
+- **Completed count** — jobs that finished successfully (or with warnings)
+- **Failed list** — jobs that failed (names shown so you can investigate)
+- **Running list** — jobs actively executing (tells you what's left)
+- **Pending list** — jobs not yet started (queued or waiting for agents)
 
 ---
 
@@ -104,9 +104,9 @@ Pipeline Chain Status: release/3.119.4
 
 | Pipeline | Status | Build | ADO Link |
 |----------|--------|-------|----------|
-| SkiaSharp-Native | `[WARN] partiallySucceeded` | 3.119.4-stable.2 | [link] |
-| SkiaSharp | `[RUNNING] inProgress` | 3.119.4-stable.2 | [link] |
-| SkiaSharp-Tests | `[WAITING] not triggered` | - | - |
+| SkiaSharp-Native | ✅ partiallySucceeded | 3.119.4-stable.2 | [link] |
+| SkiaSharp | 🔄 inProgress | 3.119.4-stable.2 | [link] |
+| SkiaSharp-Tests | ⏳ not triggered | — | — |
 
 Packages will be available after SkiaSharp (10789) completes.
 ```
