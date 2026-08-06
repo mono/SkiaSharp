@@ -8,22 +8,27 @@ Quick reference for common errors and fixes.
 
 **Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
+**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
+matching feed package instead of the exact package from the selected CI build. The feed contains
+multiple version streams and CI builds, so either approach can return the wrong one.
 
-**Fix:** Use `.version` and filter by base version + label from the release branch:
+**Fix:** Use `.version` and match the exact test package version derived from the selected
+`SkiaSharp` pipeline build:
 
 ```bash
+SKIA_TEST_VERSION="3.119.2-stable.3"
 dotnet package search SkiaSharp \
   --source "https://aka.ms/skiasharp-eap/index.json" \
   --exact-match --prerelease --format json \
   | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-  | grep "^3.119.2-preview.3\."
+  | grep -Fx "$SKIA_TEST_VERSION"
 ```
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
-| No filtering | Filter by `{base}-{label}.*` |
+| Newest matching build | Exact selected CI build |
+| Prefix filtering | Exact version match |
 
 ---
 
@@ -33,7 +38,8 @@ dotnet package search SkiaSharp \
 |-------|-------|-----|
 | `MAUI workload is required` | Missing workload | `dotnet workload install maui` |
 | `wasm-tools workload is required` | Missing workload | `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Add `-p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N` |
+| `SkiaSharpVersion must be specified` | Missing version param | Pass both exact test package versions from the selected CI build |
+| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
 
 ## Appium Errors
 

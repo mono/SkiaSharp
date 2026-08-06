@@ -52,7 +52,7 @@ Publish packages to NuGet.org and finalize releases.
 **Preview vs Stable differences:**
 | Step | Preview | Stable |
 |------|---------|--------|
-| 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
+| 1. Public NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
 | 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
 | 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
@@ -71,24 +71,28 @@ When identifying which version to publish, use **semver ordering**, not alphabet
 - Always verify you are publishing from the correct branch
 - If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
 
-**Prerequisite:** release-testing must have passed. Versions should be known from testing.
+**Prerequisite:** release-testing must have passed. Its final report should identify both the exact
+test package versions and the separate eventual public versions.
 
-The user should provide:
+The user should provide the public version:
 - **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
 - **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
 
-⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `3.119.2-preview.2.3`) or in the internal stable tag (e.g., `3.119.2-stable.3`). It is never appended to the base version directly.
+⚠️ **Public stable versions never include a build number.** The exact package tested before
+publication does include the internal stable tag (e.g., `3.119.2-stable.3`); the version published
+to NuGet.org is the bare base (e.g., `3.119.2`).
 
 If not provided, ask for them using `ask_user`.
 
-**Quick verification** — confirm packages exist on preview feed:
+**Quick verification** — confirm both exact packages tested exist on the preview feed:
 ```bash
-# Preview: search for the exact NuGet version
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-version}"
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep -Fx "{skia-test-version}"
 
-# Stable: search for internal stable builds (NuGet version is just the base, e.g., 3.119.2)
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "^{base}-stable\."
+dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep -Fx "{hb-test-version}"
 ```
+
+For stable releases, these exact test versions include `-stable.{build}` while the public versions
+remain the bare bases.
 
 If missing, STOP and ask user to verify testing was completed.
 

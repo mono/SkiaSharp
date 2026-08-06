@@ -69,30 +69,37 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 **Prerequisite:** The `SkiaSharp` pipeline (ID 10789) must have completed successfully — this is
 the pipeline that signs and publishes packages to the internal feed.
 
+Record the selected successful `SkiaSharp` run's build ID and `buildNumber`. All package versions
+used for testing must come from that exact run.
+
 `SkiaSharp-Tests` (ID 15756) should pass but does not block testing/publishing.
 
 See the [release-status skill](../release-status/SKILL.md) for full pipeline chain documentation,
 manual queries, and troubleshooting.
 
-### Extracting NuGet Version
+### Extracting Package Versions
 
-The build description contains the internal version in format: `#{base}-{label}.{build}+{branch}`
+The selected `SkiaSharp` run has a `buildNumber` in format:
+`{base}-{label}.{build}+{branch}`.
 
-**Preview example:** `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
-- Internal version: `3.119.2-preview.2.3`
-- NuGet version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
+**Preview example:** `3.119.2-preview.2.3+3.119.2-preview.2`
+- Test package version: `3.119.2-preview.2.3`
+- Eventual public version: `3.119.2-preview.2.3` (same — build number is part of the prerelease tag)
 
-**Stable example:** `#3.119.2-stable.3+3.119.2 succeeded`
-- Internal version: `3.119.2-stable.3`
-- NuGet version: `3.119.2` (base only — build number is NEVER appended to stable versions)
+**Stable example:** `3.119.2-stable.3+3.119.2`
+- Test package version: `3.119.2-stable.3`
+- Eventual public version: `3.119.2` (base only)
 
-⚠️ **Stable versions never include a build number.** Each CI build of a stable release produces a different internal package (`3.119.2-stable.1`, `3.119.2-stable.2`, etc.) but the published NuGet version is always just `3.119.2`.
+⚠️ **Stable release testing MUST use the exact `*-stable.{build}` package from the selected CI
+build.** The bare version (for example, `3.119.2`) is only the eventual NuGet.org version and may
+not exist before publication.
 
 ---
 
 ## Step 2: Resolve Package Versions
 
-**DO NOT ask user for exact NuGet versions.** Resolve automatically:
+**DO NOT ask user for exact package versions.** Resolve them automatically from the selected CI
+build:
 
 1. Fetch release branch and read version files:
    ```bash
@@ -107,64 +114,72 @@ The build description contains the internal version in format: `#{base}-{label}.
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
    - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
-2. **Search and filter for the SPECIFIC version:**
-
-   **For preview releases** (`PREVIEW_LABEL` is NOT `stable`):
+2. Use the `SkiaSharp` pipeline run selected in Step 1. Its `buildNumber` identifies the exact
+   package build to test; do not substitute the newest matching package from the feed.
 
    ```bash
-   # Get ALL versions, then filter to match {base}-{label}.*
+   # Example selected buildNumber: 3.119.2-stable.3+3.119.2
+   BUILD_NUMBER="{selected SkiaSharp buildNumber}"
+   SKIA_BASE="{SkiaSharp base from VERSIONS.txt}"
+   HB_BASE="{HarfBuzzSharp base from VERSIONS.txt}"
+
+   SKIA_TEST_VERSION="${BUILD_NUMBER%%+*}"
+   BUILD_SUFFIX="${SKIA_TEST_VERSION#${SKIA_BASE}-}"
+   HB_TEST_VERSION="${HB_BASE}-${BUILD_SUFFIX}"
+   ```
+
+   The suffix must match `{PREVIEW_LABEL}.{build}` from the selected build:
+   - **Preview / RC:** `3.119.2-preview.3.1` and `8.3.1.3-preview.3.1`
+   - **Stable:** `3.119.2-stable.3` and `8.3.1.3-stable.3`
+
+3. **Verify both exact test package versions exist on the internal feed:**
+
+   ```bash
    dotnet package search SkiaSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
      | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-{label}\."
-   
-   # Example: Find 3.119.2-preview.3.* versions
-   ... | grep "^3.119.2-preview.3\."
-   ```
+     | grep -Fx "$SKIA_TEST_VERSION"
 
-   Pick the highest build number (e.g., `3.119.2-preview.3.1`). This IS the NuGet version.
-
-   **For stable releases** (`PREVIEW_LABEL` is `stable`):
-
-   ```bash
-   # Verify a stable build exists on the internal feed
-   dotnet package search SkiaSharp \
+   dotnet package search HarfBuzzSharp \
      --source "https://aka.ms/skiasharp-eap/index.json" \
      --exact-match --prerelease --format json \
-     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-     | grep "^{base}-stable\."
-   
-   # Example: Find 3.119.2-stable.* internal packages
-   ... | grep "^3.119.2-stable\."
+     | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
+     | grep -Fx "$HB_TEST_VERSION"
    ```
-
-   The internal feed has `{base}-stable.{build}` packages (e.g., `3.119.2-stable.3`), but the **NuGet version is just `{base}`** (e.g., `3.119.2`). The build number is never appended to stable versions.
 
    ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
-   The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
-   by the base version and preview label from the release branch.
+   The feed contains multiple version streams and CI builds, so you MUST match the exact versions
+   derived from the selected pipeline run.
 
-3. Pick the NuGet version:
-   - **Preview:** Highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
-   - **Stable:** Just the base version (e.g., `3.119.2`) — no build number appended
+4. Record the eventual public versions separately:
+   - **Preview / RC:** Same exact prerelease versions as the test packages
+   - **Stable:** Base versions from `VERSIONS.txt` (for example, `3.119.2` and `8.3.1.3`)
 
-4. Report to user:
+5. Report to user:
 
-   **Preview:**
+   **Preview / RC:**
    ```
-   Resolved versions:
-     SkiaSharp:     3.119.2-preview.3.1
-     HarfBuzzSharp: 8.3.1.3-preview.3.1
-     Build number:  1
+   Resolved package versions:
+     Test packages:
+       SkiaSharp:     3.119.2-preview.3.1
+       HarfBuzzSharp: 8.3.1.3-preview.3.1
+     Eventual public versions:
+       SkiaSharp:     3.119.2-preview.3.1
+       HarfBuzzSharp: 8.3.1.3-preview.3.1
+     Selected build:  1
    ```
 
    **Stable:**
    ```
-   Resolved versions:
-     SkiaSharp:     3.119.2
-     HarfBuzzSharp: 8.3.1.3
-     Internal build: 3.119.2-stable.3 (on feed)
+   Resolved package versions:
+     Test packages:
+       SkiaSharp:     3.119.2-stable.3
+       HarfBuzzSharp: 8.3.1.3-stable.3
+     Eventual public versions:
+       SkiaSharp:     3.119.2
+       HarfBuzzSharp: 8.3.1.3
+     Selected build:  3
    ```
 
 **No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
@@ -228,8 +243,11 @@ ls output/logs/testlogs/integration/  # Should be empty
 
 ```bash
 cd tests/SkiaSharp.Tests.Integration
-dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+dotnet test -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}
 ```
+
+Always pass the exact test package versions resolved in Step 2. For stable releases, these include
+the `-stable.{build}` suffix; never pass the eventual public bare versions before publication.
 
 ### Test Commands
 
@@ -262,8 +280,8 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
 
 | Property | What it's for |
 |----------|---------------|
-| `SkiaSharpVersion` | SkiaSharp package version under test (**required**) |
-| `HarfBuzzSharpVersion` | HarfBuzzSharp package version under test (**required**) |
+| `SkiaSharpVersion` | Exact SkiaSharp test package version from the selected CI build (**required**) |
+| `HarfBuzzSharpVersion` | Exact HarfBuzzSharp test package version from the selected CI build (**required**) |
 | `BaseFramework` | TFM the generated temp apps target (`dotnet new … -f`) |
 | `SdkVersion` | SDK feature band pinned in the temp apps' `global.json` |
 | `SdkAllowPrerelease` | allow a prerelease SDK for that band (`true` for previews) |
@@ -309,8 +327,8 @@ MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
    dotnet test \
      -p:AndroidDeviceId="$DEVICE_ID" \
      -p:AndroidApiLevel="$API_LEVEL" \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={hb-test-version} \
      -- --filter-class "*MauiAndroidTests"
    ```
 
@@ -333,23 +351,23 @@ once per .NET band you're validating.
 1. **Install the Playwright browser (one-time):**
    ```bash
    cd tests/SkiaSharp.Tests.Integration
-   dotnet build -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+   dotnet build -p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}
    pwsh bin/Debug/*/playwright.ps1 install chromium
    ```
 
 2. **Run on the default .NET band:**
    ```bash
    dotnet test \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={hb-test-version} \
      -- --filter-class "*BlazorTests"
    ```
 
 3. **Run on another band** (e.g. a preview) — change `BaseFramework` + `SdkVersion` (see [Test Properties](#test-properties)):
    ```bash
    dotnet test \
-     -p:SkiaSharpVersion={version} \
-     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:SkiaSharpVersion={skia-test-version} \
+     -p:HarfBuzzSharpVersion={hb-test-version} \
      -p:BaseFramework=netX.0 \
      -p:SdkVersion=X.0.100 \
      -p:SdkAllowPrerelease=true \
@@ -421,6 +439,14 @@ Proceed to **release-publish** ONLY when:
 
 ```
 ✅ Release Testing Complete
+
+Test packages:
+  SkiaSharp:     {skia-test-version}
+  HarfBuzzSharp: {hb-test-version}
+
+Eventual public versions:
+  SkiaSharp:     {skia-public-version}
+  HarfBuzzSharp: {hb-public-version}
 
 | Test | Platform | Version | Status |
 |------|----------|---------|--------|

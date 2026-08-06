@@ -104,6 +104,9 @@ Pipeline Chain Status: release/3.119.4
 | SkiaSharp-Tests | [WAITING] not triggered | - | - |
 
 Packages will be available after SkiaSharp (10789) completes.
+
+Selected SkiaSharp test package: 3.119.4-stable.2
+Eventual public SkiaSharp version: 3.119.4
 ```
 
 ---
@@ -149,14 +152,15 @@ relationships via `triggerInfo.pipelineId` to confirm the chain is connected.
 
 ---
 
-## Extracting the NuGet Version
+## Extracting Package Versions
 
-From the `buildNumber` in the script output:
+From the selected `SkiaSharp` run's `buildNumber` in the script output:
 
-| Release Type | buildNumber Example | NuGet Version |
-|--------------|---------------------|---------------|
-| Preview | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` |
-| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4` (no build suffix) |
+| Release Type | buildNumber Example | Test Package Version | Eventual Public Version |
+|--------------|---------------------|----------------------|-------------------------|
+| Preview / RC | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` | `3.119.4-preview.1.1` |
+| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4-stable.2` | `3.119.4` |
 
-For stable releases, the internal feed has `{base}-stable.{build}` but the published NuGet
-version is always just the base (e.g., `3.119.4`).
+Pass the exact test package version to `release-testing`. For HarfBuzzSharp, combine its base
+version from `VERSIONS.txt` with the same label and build suffix. Stable release testing must not
+use the bare eventual public version.
