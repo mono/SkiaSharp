@@ -5,8 +5,9 @@ description: >
   
   Use when user says "publish X", "finalize X", "tag X", or "finish release X".
   
-  This is the FINAL step - after release-testing passes.
-  Publishes to NuGet.org, creates tag, GitHub release, and closes milestone.
+  This is the FINAL step — after release-testing passes.
+  Publishes to NuGet.org, creates tag and GitHub release, and closes the exact release
+  milestone when one exists.
   
   Triggers: "publish the release", "push to nuget", "create github release",
   "tag the release", "close the milestone", "annotate release notes",
@@ -38,11 +39,11 @@ Publish packages to NuGet.org and finalize releases.
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│  1. Confirm Versions     → Verify packages exist on preview feed   │
-│  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
-│  3. Verify Published     → Poll NuGet.org until indexed            │
+│  1. Confirm Versions     → Verify exact internal test packages     │
+│  2. Publish to NuGet.org → Confirm queue, human approves push      │
+│  3. Verify Published     → After pipeline success, poll NuGet.org  │
 │  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
+│  5. Refresh Web Notes    → Dispatch once from main; do not wait    │
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
 │  8. Milestone Hygiene    → Audit/sync assignments, then close      │
@@ -52,13 +53,13 @@ Publish packages to NuGet.org and finalize releases.
 **Preview vs Stable differences:**
 | Step | Preview | Stable |
 |------|---------|--------|
-| 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
-| 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
+| 1. Public versions | Exact test-package versions | Base versions (no build number) |
+| 2. Publish stage | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
+| 5. Website notes refresh | Dispatch once; do not wait | Dispatch once; do not wait |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
 | 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
-| 8. Milestone | Close its milestone (`X.Y.Z-preview.N`) | Close its milestone (`X.Y.Z`) |
+| 8. Milestone | Close exact preview/RC milestone if it exists | Close exact milestone if it exists |
 
 ---
 
@@ -71,23 +72,30 @@ When identifying which version to publish, use **semver ordering**, not alphabet
 - Always verify you are publishing from the correct branch
 - If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
 
-**Prerequisite:** release-testing must have passed. Versions should be known from testing.
+**Prerequisite:** release-testing must have passed. Consume all four exact values from its completed
+report:
 
-The user should provide:
-- **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
-- **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
+- SkiaSharp internal test package
+- HarfBuzzSharp internal test package
+- SkiaSharp public version
+- HarfBuzzSharp public version
 
-⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `3.119.2-preview.2.3`) or in the internal stable tag (e.g., `3.119.2-stable.3`). It is never appended to the base version directly.
+Do not ask for only the SkiaSharp version or re-resolve a "latest" package. If any value is
+missing, return to release-status and release-testing to identify and test the complete package
+pair.
 
-If not provided, ask for them using `ask_user`.
+⚠️ **Stable public versions never include a build number.** The build number appears in the
+internal package suffix (for example, `3.119.2-stable.3`) but not in its public version
+(`3.119.2`). Preview and RC public versions remain the exact internal package versions.
 
-**Quick verification** — confirm packages exist on preview feed:
+**Quick verification** — confirm both exact packages exist on the internal test (EAP) feed:
 ```bash
-# Preview: search for the exact NuGet version
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-version}"
-
-# Stable: search for internal stable builds (NuGet version is just the base, e.g., 3.119.2)
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "^{base}-stable\."
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json \
+  | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
+  | grep -Fx -- "{skia-test-version}"
+dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json \
+  | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' \
+  | grep -Fx -- "{harfbuzz-test-version}"
 ```
 
 If missing, STOP and ask user to verify testing was completed.
@@ -103,71 +111,106 @@ Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?defini
 Before triggering the publish pipeline, confirm builds completed using the **release-status** skill:
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
-packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
+The `SkiaSharp` pipeline (ID 10789) must show `[OK]` — this is the pipeline that produced the
+packages on the internal test (EAP) feed. See [release-status](../release-status/SKILL.md) for
+details.
 
 ### Pipeline Steps
 
-1. Open the [NuGet.org publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298)
-2. Click **"Run pipeline"**
-3. Select **"SkiaSharp"** from the radio buttons
-4. Check **"Confirm push to NuGet.org"** checkbox
-5. **For stable releases ONLY:** Check **"Push stable packages"** checkbox
-   - ⚠️ Do NOT check this for preview releases
-6. Click **"Next: Resources"**
-7. In **"Pipeline artifacts"**, click the **SkiaSharp** artifact selector
-8. From the **branch dropdown**, select `release/{version}` (the release branch)
-9. From the **pipeline runs list**, select the correct build by checking the build number
-10. Click **"Use selected run"**
-11. Click **"Run"**
+Capture the managed run ID and build number from release-status. Query that numeric run ID:
+
+```bash
+az pipelines runs show --id {managed-run-id} \
+  --org https://dev.azure.com/devdiv --project DevDiv \
+  --query "{id:id,definitionId:definition.id,buildNumber:buildNumber,status:status,result:result,sourceBranch:sourceBranch,sourceVersion:sourceVersion}" \
+  --only-show-errors -o json
+```
+
+Verify pipeline `10789`, `completed/succeeded`, the exact release branch and full commit, and the
+expected stable/preview/RC build-number label.
+
+Before asking for confirmation, list non-completed publish runs:
+
+```bash
+az pipelines runs list --pipeline-ids 25298 --top 100 \
+  --org https://dev.azure.com/devdiv --project DevDiv \
+  --query "[?status!='completed'].{id:id,status:status,buildNumber:buildNumber,queueTime:queueTime}" \
+  --only-show-errors -o table
+```
+
+If this returns any runs, stop and inspect them with the user rather than queueing a duplicate.
+
+⚠️ `resources.pipelines.SkiaSharp.version` is the managed pipeline **build number string**, for
+example `4.151.1-stable.1+4.151.1`. Never put the numeric managed run/build ID in that field; the
+numeric ID is only for querying and validating the source run.
+
+Show the validated source summary, then use `ask_user` for explicit confirmation. Only after
+confirmation, invoke the tiny queue wrapper and capture its returned publish run ID:
+
+```bash
+python .agents/skills/release-publish/scripts/queue-publish.py "{managed-build-number}"
+```
 
 ### Verification During Pipeline Run
 
-⚠️ **Before approving the push step, verify BOTH:**
+Queue confirmation and push approval are separate trust boundaries:
 
-1. **Run name** — The pipeline run will rename itself to the version being released. Confirm this matches your expected version.
-2. **Push type** — The publish step will indicate **"Push Preview"** or **"Push Stable"**. Verify this matches your release type:
+1. **Run name** — Wait for the queued run to rename itself to
+   `SkiaSharp {managed-build-number}` and verify it exactly.
+2. **Push type** — Verify the timeline stage is **"Push Preview"** or **"Push Stable"**:
    - Preview release → should show "Push Preview"
    - Stable release → should show "Push Stable"
+3. **Human approval** — Ask the user to open Azure DevOps and approve the push.
 
-**Only approve the push step when both are correct.** Wait for pipeline completion (typically 5-10 minutes after approval).
-
-Ask user to follow these steps and wait for completion.
+The agent may queue after confirmation, but it must never approve the Azure DevOps push through a
+UI, CLI, or approvals API. Poll the publish run until it reaches `completed/succeeded`; stop on any
+other terminal result.
 
 ---
 
 ## Step 3: Verify Packages Published
 
+Do not start this step until publish pipeline `25298` is terminal `completed/succeeded`. In
+particular, do not poll NuGet.org while the run is waiting for human approval: an existing public
+version can create a false success signal for a rerun.
+
 **Use curl to verify** (more reliable than `dotnet package search` which has version limits):
 
 ```bash
-# Check if packages exist - HTTP 200 = success
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec"
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec"
+# Check if packages exist — HTTP 200 = success
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec"
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{harfbuzz-public-version}/harfbuzzsharp.nuspec"
 ```
 
 **If packages not yet indexed**, poll until available (NuGet.org can take 5-15 minutes):
 
 ```bash
 # Poll every 30 seconds, max 10 minutes
+published=false
 for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec")
-  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec")
-  echo "$(date +%H:%M:%S) - SkiaSharp: $skia, HarfBuzzSharp: $hb"
+  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec")
+  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{harfbuzz-public-version}/harfbuzzsharp.nuspec")
+  echo "$(date +%H:%M:%S) — SkiaSharp: $skia, HarfBuzzSharp: $hb"
   if [ "$skia" = "200" ] && [ "$hb" = "200" ]; then
     echo "✅ Both packages available on NuGet.org!"
+    published=true
     break
   fi
   sleep 30
 done
+if [ "$published" != true ]; then
+  echo "Packages were not both available after 10 minutes." >&2
+  exit 1
+fi
 ```
 
 > **Note:** Use explicit list `1 2 3...` instead of `{1..20}` brace expansion for better compatibility with async shell execution.
 
-Or manually check: `https://www.nuget.org/packages/SkiaSharp/{version}`
+Or manually check: `https://www.nuget.org/packages/SkiaSharp/{skia-public-version}` and
+`https://www.nuget.org/packages/HarfBuzzSharp/{harfbuzz-public-version}`.
 
 ---
 
@@ -186,38 +229,24 @@ git tag {tag}
 
 **Confirm with `ask_user`** before pushing tag (cannot be undone):
 ```bash
-git push origin {tag}
+git push origin {tag} || exit 1
 ```
 
 ---
 
 ## Step 5: Refresh Website Release Notes & API Diffs
 
-The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
-produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
-**daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
-tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
-site immediately instead of waiting up to ~24h for the next daily run.
-
-This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
-version's page from "preview / unreleased" to **stable**, and the page cannot flip
-until the workflow runs again with that tag in place — so dispatch it after tagging.
-For previews it is usually a no-op (the release-branch push already refreshed the
-pages), and the workflow opens no PR when nothing changed, so this step is always
-safe to run.
+The **Sync - Release Notes & API Diffs** workflow runs daily and on pushes to `main`, not on release
+tag pushes. After pushing the tag in Step 4, dispatch it once from `main`:
 
 ```bash
-# Always dispatch from main (it regenerates every release's pages, including the
-# tag you just pushed). Do NOT dispatch from the release branch.
-gh workflow run "Sync - Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
-
-# Optional: follow the run to completion.
-gh run watch "$(gh run list --workflow 'Sync - Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+gh workflow run update-release-notes.lock.yml \
+  --repo mono/SkiaSharp \
+  --ref main || exit 1
+echo "Started Sync - Release Notes & API Diffs from main."
 ```
 
-If anything changed, the workflow opens (or updates) the rolling `[docs]`
-**`bot/release-notes`** PR with the refreshed pages — review and merge it like any
-docs PR. If nothing changed, no PR is opened.
+Once GitHub accepts the dispatch, report that it was started and treat this step as complete.
 
 > ⚠️ These **website** release notes are separate from the **GitHub Release** notes
 > created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub
@@ -367,7 +396,7 @@ pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
 **Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
 GitHub milestone for every version in the cadence, so each published version has its
 own milestone that must be closed once that version ships (otherwise it lingers open
-forever). The milestone title is the **exact release version** (no `v` prefix):
+forever). The milestone title is the **exact release version** (no `v` prefix or CI build suffix):
 
 | Release type | Milestone to close |
 |--------------|--------------------|
@@ -379,16 +408,28 @@ forever). The milestone title is the **exact release version** (no `v` prefix):
 still has open issues. Reassign any open issues to the next appropriate milestone (the
 next preview/rc, or the stable milestone), or confirm with the user, **before** closing.
 
+Never use a substring or nearest match, and never create a milestone during publishing. Query all
+pages and match the exact release version:
+
 ```bash
-# 1. Find the milestone whose title matches the exact release version
-gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number): \(.title)"'
-
-# 2. Check for still-open issues in that milestone (should be empty before closing)
-gh issue list --repo mono/SkiaSharp --milestone "{version}" --state open
-
-# 3. After moving/confirming any open issues, close this version's milestone
-gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
+RELEASE_VERSION="{exact-release-version}"
+gh api "repos/mono/SkiaSharp/milestones?state=all&per_page=100" --paginate --slurp \
+  | jq --arg version "$RELEASE_VERSION" \
+      '[.[][] | select(.title == $version) |
+        {number,title,state,open_issues,closed_issues}]'
 ```
+
+- **No exact match:** report `No milestone exists; nothing to close` and succeed.
+- **Already closed:** report it and succeed.
+- **More than one exact match:** stop and ask which milestone is authoritative.
+- **One open exact match with open issues:** list them with
+  `gh issue list --repo mono/SkiaSharp --milestone "{exact-release-version}" --state open`.
+  Move them to the next preview/RC/stable milestone or explicitly confirm before closing.
+- **One open exact match with zero open issues:** close that exact milestone number:
+
+  ```bash
+  gh api repos/mono/SkiaSharp/milestones/{number} -X PATCH -f state=closed
+  ```
 
 ---
 
@@ -400,7 +441,7 @@ gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
 |---------------|----------|
 | Pipeline won't start | Verify branch name, check Azure DevOps permissions |
 | Build fails mid-run | Check logs, fix issue on release branch, re-run pipeline |
-| Approval rejected | Re-trigger pipeline with correct settings |
+| Human approval rejected | Stop; verify the selected build and ask before queueing a replacement |
 | Push step fails | Check NuGet.org status, retry pipeline |
 
 ### NuGet.org Issues

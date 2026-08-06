@@ -10,7 +10,7 @@ namespace SkiaSharp.Tests.Integration;
 /// Tests that verify SkiaSharp packages work in MAUI Android applications.
 /// Device and version can be configured via MSBuild properties:
 ///   dotnet test -p:AndroidDevice="Pixel 8" -p:AndroidVersion="14"
-///   dotnet test -p:AndroidDeviceId="emulator-5554" -p:AndroidApiLevel="23"
+///   dotnet test -p:AndroidDeviceId="emulator-5554" -p:AndroidApiLevel="26"
 /// </summary>
 public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
 {
@@ -92,7 +92,7 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
 
     /// <summary>
     /// Get the actual API level of the connected device for screenshot naming.
-    /// Returns format like "api23" or "api36".
+    /// Returns format like "api26" or "api36".
     /// </summary>
     protected override async Task<string?> GetDeviceVersionAsync()
     {

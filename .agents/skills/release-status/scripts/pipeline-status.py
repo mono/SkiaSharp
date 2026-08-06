@@ -10,7 +10,10 @@ Examples:
 """
 
 import json
+import locale
+import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -23,20 +26,95 @@ PIPELINES = [
     {"name": "SkiaSharp-Tests", "id": 15756, "desc": "device & unit tests"},
 ]
 
-ICONS = {
-    "succeeded": "✅",
-    "partiallySucceeded": "⚠️",
-    "failed": "❌",
-    "canceled": "🚫",
-    "inProgress": "🔄",
-    "notStarted": "⏳",
+STATUS_MARKERS = {
+    "succeeded": "[OK]",
+    "partiallySucceeded": "[WARN]",
+    "failed": "[FAIL]",
+    "canceled": "[FAIL]",
+    "inProgress": "[RUNNING]",
+    "notStarted": "[WAITING]",
+    "unknown": "[WARN]",
 }
 
-def az(args: list[str], timeout: int = 30) -> str:
-    result = subprocess.run(
-        ["az"] + args, capture_output=True, text=True, timeout=timeout
+
+def emit(value: object = "") -> None:
+    """Print text safely on every console encoding."""
+    print(str(value).encode("ascii", "backslashreplace").decode("ascii"))
+
+
+def cli_command(executable: str, args: list[str]) -> list[str]:
+    """Resolve the platform's official CLI launcher."""
+    resolved = shutil.which(executable)
+    if not resolved:
+        raise FileNotFoundError(f"Required CLI '{executable}' was not found on PATH.")
+    return [resolved, *args]
+
+
+def decode_subprocess_output(value: bytes | str | None, source: str) -> str:
+    """Decode subprocess bytes without silently replacing characters."""
+    if value is None:
+        return ""
+    if isinstance(value, str):
+        return value
+
+    encodings = ["utf-8-sig"]
+    try:
+        encodings.append(locale.getencoding())
+    except AttributeError:
+        encodings.append(locale.getpreferredencoding(False))
+    if os.name == "nt":
+        encodings.append("mbcs")
+
+    attempted = []
+    for encoding in encodings:
+        normalized = encoding.lower()
+        if normalized in attempted:
+            continue
+        attempted.append(normalized)
+        try:
+            return value.decode(encoding, errors="strict")
+        except (LookupError, UnicodeDecodeError):
+            continue
+
+    raise RuntimeError(
+        f"Could not decode {source} using {', '.join(attempted)}."
     )
-    return result.stdout.strip()
+
+
+def az(args: list[str], timeout: int = 30) -> str:
+    command = cli_command("az", args)
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            timeout=timeout,
+            check=True,
+        )
+    except subprocess.CalledProcessError as error:
+        detail = (
+            decode_subprocess_output(error.stderr, "Azure CLI stderr").strip()
+            or "no error output"
+        )
+        raise RuntimeError(
+            f"Azure CLI failed with exit code {error.returncode}: "
+            f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
+        ) from error
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(
+            f"Azure CLI timed out after {timeout} seconds."
+        ) from error
+
+    output = decode_subprocess_output(result.stdout, "Azure CLI stdout").strip()
+    if not output:
+        detail = (
+            decode_subprocess_output(result.stderr, "Azure CLI stderr").strip()
+            or "no error output"
+        )
+        raise RuntimeError(
+            "Azure CLI returned no output: "
+            f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
+        )
+    return output
 
 
 def get_runs(pipeline_id: int, branch: str) -> list[dict]:
@@ -48,7 +126,7 @@ def get_runs(pipeline_id: int, branch: str) -> list[dict]:
         "--query", "[].{id:id, status:status, result:result, buildNumber:buildNumber}",
         "--top", "5", "-o", "json",
     ])
-    return json.loads(out) if out else []
+    return json.loads(out)
 
 
 def get_trigger_info(build_id: int) -> dict:
@@ -58,7 +136,7 @@ def get_trigger_info(build_id: int) -> dict:
         "--org", ORG, "--project", PROJECT,
         "--query", "triggerInfo", "-o", "json",
     ])
-    return json.loads(out) if out else {}
+    return json.loads(out)
 
 
 def get_timeline(build_id: int) -> list[dict]:
@@ -72,10 +150,7 @@ def get_timeline(build_id: int) -> list[dict]:
         "--api-version", "7.0",
         "-o", "json",
     ], timeout=60)
-    if not out:
-        return []
-    data = json.loads(out)
-    return data.get("records", [])
+    return json.loads(out).get("records", [])
 
 
 def format_job_summary(records: list[dict], cont: str) -> None:
@@ -109,51 +184,66 @@ def format_job_summary(records: list[dict], cont: str) -> None:
     # Build the summary line
     parts = []
     if completed:
-        parts.append(f"{len(completed)} ✅ completed")
+        parts.append(f"{len(completed)} {STATUS_MARKERS['succeeded']} completed")
     if failed:
-        parts.append(f"{len(failed)} ❌ failed")
+        parts.append(f"{len(failed)} {STATUS_MARKERS['failed']} failed")
     if running:
-        parts.append(f"{len(running)} 🔄 running")
+        parts.append(f"{len(running)} {STATUS_MARKERS['inProgress']} running")
     if pending:
-        parts.append(f"{len(pending)} ⏳ pending")
+        parts.append(f"{len(pending)} {STATUS_MARKERS['notStarted']} pending")
 
-    print(f"{cont}")
-    print(f"{cont} Jobs: {' | '.join(parts)}")
+    emit(cont)
+    emit(f"{cont} Jobs: {' | '.join(parts)}")
 
     if failed:
         names = ", ".join(failed[:8])
-        suffix = f", … (+{len(failed) - 8} more)" if len(failed) > 8 else ""
-        print(f"{cont} Failed: {names}{suffix}")
+        suffix = f", ... (+{len(failed) - 8} more)" if len(failed) > 8 else ""
+        emit(f"{cont} Failed: {names}{suffix}")
 
     if running:
         names = ", ".join(running[:8])
-        suffix = f", … (+{len(running) - 8} more)" if len(running) > 8 else ""
-        print(f"{cont} Running: {names}{suffix}")
+        suffix = f", ... (+{len(running) - 8} more)" if len(running) > 8 else ""
+        emit(f"{cont} Running: {names}{suffix}")
 
     if pending:
         names = ", ".join(pending[:8])
-        suffix = f", … (+{len(pending) - 8} more)" if len(pending) > 8 else ""
-        print(f"{cont} Pending: {names}{suffix}")
+        suffix = f", ... (+{len(pending) - 8} more)" if len(pending) > 8 else ""
+        emit(f"{cont} Pending: {names}{suffix}")
 
 
-def icon_for(run: dict) -> str:
+def marker_for(run: dict) -> str:
     if run["status"] == "completed":
-        return ICONS.get(run.get("result", ""), "❓")
-    return ICONS.get(run["status"], "⏳")
+        return STATUS_MARKERS.get(run.get("result", ""), STATUS_MARKERS["unknown"])
+    return STATUS_MARKERS.get(run["status"], STATUS_MARKERS["notStarted"])
 
 
 def resolve_branch(ref: str) -> str:
     if re.match(r"^[0-9a-f]{7,40}$", ref):
-        result = subprocess.run(
-            ["git", "branch", "-r", "--contains", ref],
-            capture_output=True, text=True,
-        )
-        for line in result.stdout.splitlines():
+        try:
+            result = subprocess.run(
+                ["git", "branch", "-r", "--contains", ref],
+                capture_output=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as error:
+            detail = (
+                decode_subprocess_output(error.stderr, "Git stderr").strip()
+                or "no error output"
+            )
+            raise RuntimeError(
+                f"Git failed with exit code {error.returncode}: "
+                f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
+            ) from error
+        stdout = decode_subprocess_output(result.stdout, "Git stdout")
+        for line in stdout.splitlines():
             m = re.search(r"origin/(release/\S+)", line)
             if m:
-                print(f"Resolved SHA {ref} → branch: {m.group(1)}")
+                emit(f"Resolved SHA {ref} -> branch: {m.group(1)}")
                 return m.group(1)
-        sys.exit(f"ERROR: No release branch found containing SHA {ref}")
+        sys.exit(
+            "ERROR: No release branch found containing SHA "
+            f"{ref}"
+        )
     return ref
 
 
@@ -163,66 +253,72 @@ def main():
 
     branch = resolve_branch(sys.argv[1])
 
-    print(f"\n{'═' * 63}")
-    print(f" Pipeline Chain Status: {branch}")
-    print(f"{'═' * 63}\n")
+    emit()
+    emit("=" * 63)
+    emit(f" Pipeline Chain Status: {branch}")
+    emit("=" * 63)
+    emit()
 
     all_runs: list[tuple[dict, list[dict]]] = []
     links: list[str] = []
 
     for i, pipe in enumerate(PIPELINES):
-        prefix = "┌─" if i == 0 else "├─" if i < len(PIPELINES) - 1 else "└─"
-        cont = "│ " if i < len(PIPELINES) - 1 else "  "
+        prefix = "+-"
+        cont = "| "
 
-        print(f"{prefix} {pipe['name']} (ID {pipe['id']}) — {pipe['desc']}")
+        emit(f"{prefix} {pipe['name']} (ID {pipe['id']}) - {pipe['desc']}")
 
         runs = get_runs(pipe["id"], branch)
         all_runs.append((pipe, runs))
 
         if not runs:
-            print(f"{cont} No runs found — not yet triggered")
+            emit(f"{cont} No runs found - not yet triggered")
         else:
             for r in runs:
-                print(f"{cont} {icon_for(r)} id={r['id']:<10}  {r['status']:<12}  "
-                      f"{r.get('result') or 'pending':<20}  {r['buildNumber']}")
+                emit(
+                    f"{cont} {marker_for(r)} id={r['id']!s:<10}  "
+                    f"{r['status']!s:<12}  "
+                    f"{(r.get('result') or 'pending')!s:<20}  "
+                    f"{r['buildNumber']}"
+                )
 
             # Show job-level details for in-progress builds
             latest_run = runs[0]
             if latest_run["status"] == "inProgress":
-                try:
-                    records = get_timeline(latest_run["id"])
-                    if records:
-                        format_job_summary(records, cont)
-                except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
-                    print(f"{cont} (could not fetch job details)")
+                records = get_timeline(latest_run["id"])
+                if records:
+                    format_job_summary(records, cont)
 
-            # Show trigger info (skip for first pipeline — it has no upstream)
+            # Show trigger info (skip for first pipeline - it has no upstream)
             if i > 0:
                 trigger = get_trigger_info(runs[0]["id"])
                 if trigger and trigger.get("source"):
                     src = trigger.get("source", "?")
                     pid = trigger.get("pipelineId", "?")
-                    print(f"{cont} ↑ triggered by {src} build {pid}")
+                    emit(f"{cont} -> triggered by {src} build {pid}")
             links.append(f"  {pipe['name']}: https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={runs[0]['id']}")
 
-        print(f"{cont}" if i < len(PIPELINES) - 1 else "")
+        emit(cont if i < len(PIPELINES) - 1 else "")
 
-    print(f"{'═' * 63}\n")
+    emit("=" * 63)
+    emit()
 
     # Summary
     latest = [(runs[0] if runs else None) for _, runs in all_runs]
     if all(r and r["status"] == "completed" and r.get("result") in ("succeeded", "partiallySucceeded") for r in latest):
-        print("Summary: ✅ All pipelines completed. Packages should be on internal feed.")
+        emit("Summary: [OK] All pipelines completed. Packages should be on internal feed.")
     elif latest[0] and not latest[1]:
-        print("Summary: ⏳ Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
+        emit("Summary: [WAITING] Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
     elif not latest[0]:
-        print("Summary: ⏳ No native build found yet.")
+        emit("Summary: [WAITING] No native build found yet.")
     else:
-        print("Summary: 🔄 Pipeline chain in progress or has failures.")
+        emit("Summary: [RUNNING] Pipeline chain in progress or has failures.")
 
     if links:
-        print(f"\nADO Links:")
-        print("\n".join(links))
+        emit()
+        emit("ADO Links:")
+        for link in links:
+            emit(link)
 
 
 if __name__ == "__main__":

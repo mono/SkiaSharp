@@ -10,20 +10,22 @@ Quick reference for common errors and fixes.
 
 **Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
 
-**Fix:** Use `.version` and filter by base version + label from the release branch:
+**Fix:** Derive the exact SkiaSharp version from the managed build number and the exact
+HarfBuzzSharp version from the same suffix, as described in release-testing Step 2. Use `.version`
+and exact matching to verify that derived version; never pick a feed result independently:
 
 ```bash
 dotnet package search SkiaSharp \
   --source "https://aka.ms/skiasharp-eap/index.json" \
   --exact-match --prerelease --format json \
   | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-  | grep "^3.119.2-preview.3\."
+  | grep -Fx -- "3.119.2-preview.3.1"
 ```
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
-| No filtering | Filter by `{base}-{label}.*` |
+| Prefix filtering and picking a result | Exact match for the build-derived version |
 
 ---
 
@@ -31,19 +33,31 @@ dotnet package search SkiaSharp \
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `MAUI workload is required` | Missing workload | `dotnet workload install maui` |
-| `wasm-tools workload is required` | Missing workload | `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Add `-p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N` |
+| `MAUI workload is required` | Missing workload | Inspect `dotnet workload list`, then ask before proposing `dotnet workload install maui` |
+| `wasm-tools workload is required` | Missing workload | Inspect `dotnet workload list`, then ask before proposing `dotnet workload install wasm-tools` |
+| `SkiaSharpVersion must be specified` | Missing version param | Pass the exact build-derived versions: `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={harfbuzz-test-version}` |
 
 ## Appium Errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Cannot start process 'appium'` | Appium not installed | `npm install -g appium` |
-| `Mac2 driver requires Carthage` | Carthage missing | `brew install carthage` |
+| `Cannot start process 'appium'` | Appium missing or not on PATH | Inspect Node/npm/PATH, report the proposed compatible Appium install, and ask before `npm install -g appium` |
+| Driver not found | Required platform driver missing | Inspect `appium driver list --installed` and ask before installing or replacing a driver |
+| Appium/driver rejected by npm | Incompatible Appium, driver, Node, or npm versions | Compare against current official metadata; do not downgrade silently |
+| `Mac2 driver requires Carthage` | Carthage missing | Inspect `carthage version`, then ask before proposing `brew install carthage` |
 | `Connection refused` | Port conflict | Appium auto-starts on 4723; check for conflicts |
 | `Session creation timeout` | First run building WDA | Wait - WebDriverAgent builds on first iOS/Mac run |
 | `Invalid bundle identifier` | Wrong bundleId | Tests extract from csproj automatically |
+
+Installation commands in this table are proposed remediations only. Obtain explicit approval
+before running package-manager, workload, driver, SDK, or system setup commands.
+
+### Windows driver or WinAppDriver missing
+
+1. Inspect `appium --version` and `appium driver list --installed`.
+2. Preserve a working Appium 3 + `windows` driver setup.
+3. If WinAppDriver is missing, ask before running
+   `appium driver run windows install-wad [optional-version]`.
 
 ## Simulator/Emulator Errors
 
@@ -51,7 +65,7 @@ dotnet package search SkiaSharp \
 |-------|-------|-----|
 | `No Android devices found` | No emulator running | Start emulator first |
 | `Simulator not found` | Wrong device name | Check `xcrun simctl list devices available` |
-| `iOS version not available` | Missing runtime | Install via Xcode → Platforms |
+| `iOS version not available` | Missing runtime | Report the missing runtime and ask before installing it via Xcode → Platforms |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
 
 ## Android Crash Diagnostics
@@ -75,14 +89,15 @@ adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
 | `FATAL EXCEPTION` | Unhandled exception | **Bug - investigate** |
 | `Native crash` | Native library issue | **Bug - investigate** |
 
-### Old Android (API 21-23) Crashes
+### Minimum Android (API 26) Crashes
 
-Old Android may crash due to:
+API 26 is the oldest Android version supported by current UiAutomator2. It may expose:
 - Missing APIs that MAUI expects
 - Different permission behavior
 - Slower startup causing timeouts
 
-If crash only on old Android: get full stack trace, check if known MAUI/SkiaSharp issue.
+If the crash occurs only on API 26, get the full stack trace and check for a MAUI/SkiaSharp issue.
+Do not use API 21-25 with a legacy Appium/driver stack as a release-testing workaround.
 
 ## iOS Diagnostics
 
@@ -116,7 +131,7 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Executable doesn't exist` | Browsers not installed | `pwsh playwright.ps1 install chromium` |
+| `Executable doesn't exist` | Browsers not installed | Report the missing browser and ask before running `pwsh playwright.ps1 install chromium` |
 | `Target page, context or browser has been closed` | Server crashed | Check app build output |
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
 | `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |
@@ -125,7 +140,7 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Docker is not available` | Docker not installed/running | Install Docker Desktop, start it |
+| `Docker is not available` | Docker not installed/running | Inspect the installation; ask before installing Docker Desktop, or start it if already installed |
 | `undefined symbol: uuid_generate_random` | Using `NativeAssets.Linux` instead of `NoDependencies` | Use `SkiaSharp.NativeAssets.Linux.NoDependencies` |
 | `Fontconfig error: Cannot load default config file` | No fontconfig in container | Expected with `NoDependencies` — not an error |
 | `Cannot connect to the Docker daemon` | Docker Desktop not running | Start Docker Desktop |

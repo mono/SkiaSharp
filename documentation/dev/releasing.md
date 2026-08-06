@@ -29,15 +29,19 @@ Each skill confirms with `ask_user` before executing destructive operations.
 
 ### Version Patterns
 
-| Release Type | Version Format | Branch | NuGet Pattern | Tag |
-|--------------|----------------|--------|---------------|-----|
-| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
-| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
-| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `vX.Y.Z` |
-| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
-| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `vX.Y.Z.F` |
+| Release Type | Version Format | Branch | Internal package tested | Public NuGet version | Tag |
+|--------------|----------------|--------|-------------------------|----------------------|-----|
+| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
+| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
+| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `X.Y.Z` | `vX.Y.Z` |
+| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
+| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
 The `{build}` number is auto-assigned by CI.
+
+Release integration tests consume the exact internal package before publication. For stable and
+stable hotfix releases, do not substitute the bare public version in test commands:
+`X.Y.Z-stable.{build}` is tested first, then that approved build is published as `X.Y.Z`.
 
 ### Release Type → Base Branch
 
@@ -88,18 +92,18 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing (regular packages) |
+| Internal test | `https://aka.ms/skiasharp-eap/index.json` | Prepublication CI builds, including `-stable.{build}` packages |
 | CI | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing.
+> **Note:** The internal test feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for prepublication testing.
 > The CI feed contains internal build artifacts prefixed with `_` (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline and is not intended for public consumption.
 
 ### Pipelines
 
 | Pipeline | Purpose |
 |----------|---------|
-| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25328) | Builds + auto-publishes to preview feed |
+| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25328) | Builds + auto-publishes to the internal test feed |
 | [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual trigger) |
 
 ---
@@ -180,11 +184,11 @@ flowchart TB
 After the branch is pushed, track the pipeline chain until packages are available:
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
 The pipeline chain is: `SkiaSharp-Native` → `SkiaSharp` (signs & publishes) → `SkiaSharp-Tests`.
-Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
+Packages appear on the internal test feed after `SkiaSharp` (ID 10789) completes.
 
 ### Stage 3: Testing (release-testing skill)
 
@@ -193,27 +197,19 @@ flowchart TB
     START([CI Build Complete]) --> RESOLVE
     
     RESOLVE["Resolve Package Versions
-    ∙ Fetch release branch
-    ∙ Read VERSIONS.txt (both packages)
-    ∙ Search preview feed
-    ∙ Pick latest build"]
+    ∙ Select managed build number
+    ∙ Read both base versions + label
+    ∙ Derive Skia package before '+'
+    ∙ Apply same suffix to HarfBuzz"]
     
-    RESOLVE --> FOUND{Packages found?}
+    RESOLVE --> FOUND{Both exact packages found?}
     FOUND -->|No| WAIT([Wait - CI not done])
-    FOUND -->|Yes| REPORT[Report versions to user]
+    FOUND -->|Yes| REPORT["Verify and report versions
+    ∙ Exact packages exist on internal test feed
+    ∙ Preview/RC public = exact packages
+    ∙ Stable public = base versions"]
     
-    REPORT --> STABLE{Stable release?}
-    STABLE -->|No| TESTS
-    STABLE -->|Yes| SOURCE{Test source?}
-    
-    SOURCE -->|Preview feed| TESTS
-    SOURCE -->|Local artifacts| SETUP
-    
-    SETUP["Setup Local Testing
-    ∙ Create local nuget.config
-    ∙ Clear NuGet cache"]
-    
-    SETUP --> TESTS
+    REPORT --> TESTS
     
     TESTS["Run Integration Tests
     ∙ Console, Blazor, MAUI
@@ -252,29 +248,49 @@ flowchart TB
     SKIP -->|Yes| TAG
     SKIP -->|No| PUBLISH
     
-    PUBLISH["Publish to NuGet.org
-    ∙ Trigger publish pipeline
-    ∙ Wait for completion
-    ∙ Verify packages visible"]
+    PUBLISH["Queue publish pipeline
+    ∙ Verify managed run ID
+    ∙ Select resource by build-number string
+    ∙ Confirm branch, commit, label, no active run"]
     
-    PUBLISH --> STATUS{Success?}
+    PUBLISH --> APPROVE["Human approval in Azure DevOps
+    ∙ Verify renamed run
+    ∙ Verify Push Stable / Push Preview
+    ∙ Agent never approves"]
+
+    APPROVE --> STATUS{Completed / succeeded?}
     STATUS -->|No| FAILED([Fix and retry])
-    STATUS -->|Yes| TAG
+    STATUS -->|Yes| VERIFY["Verify both public package versions
+    ∙ Only after terminal pipeline success"]
+
+    VERIFY --> TAG
     
     TAG["Create Git Tag
     ∙ Preview: vX.Y.Z-preview.N.build
     ∙ Stable: vX.Y.Z
     ∙ Push tag to origin"]
     
-    TAG --> RELEASE
+    TAG --> NOTES["Refresh website notes
+    ∙ Dispatch once from main
+    ∙ Report started
+    ∙ Do not wait or monitor"]
+
+    NOTES --> RELEASE
     
     RELEASE["Create GitHub Release
     ∙ Set title and notes
     ∙ Mark pre-release if preview
     ∙ Attach samples if stable"]
     
-    RELEASE --> MILESTONE[Close this version's GitHub milestone]
-    MILESTONE --> DONE([Complete])
+    RELEASE --> AUDIT["Audit milestone assignments
+    ∙ Dry-run, review, then apply
+    ∙ Preview, RC, and stable"]
+    AUDIT --> MILESTONE{Exact release milestone exists?}
+    MILESTONE -->|No| DONE([Complete])
+    MILESTONE -->|Yes, no open issues| CLOSE[Close exact milestone]
+    MILESTONE -->|Yes, open issues| ASK[Surface issues and ask user]
+    CLOSE --> DONE
+    ASK --> CLOSE
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2

@@ -44,16 +44,21 @@ Packages appear on the internal feed after pipeline #2 (`SkiaSharp`) completes.
 ## Step 1: Run the Status Script
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+python .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 # Or pass a commit SHA:
-python3 .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
+python .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
 ```
 
 This outputs:
-- All three pipelines with status icons (✅ ❌ 🔄 ⏳)
+- All three pipelines with ASCII status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUNNING]`, `[WAITING]`)
 - Build IDs and build numbers
 - Trigger relationships proving which upstream build caused each downstream run
 - Direct ADO links for each build
+
+The script resolves the platform's Azure CLI launcher (`az` or `az.cmd`), fails when the CLI
+returns an error or no data, and decodes native CLI bytes without replacement corruption. All
+script output is ASCII; non-ASCII text in dynamic Azure, branch, job, or error values is rendered
+as deterministic backslash escapes (for example, `Caf\xe9`).
 
 ---
 
@@ -65,7 +70,7 @@ This outputs:
 | Native ✅, SkiaSharp 🔄 | Managed build in progress | Wait |
 | Native ✅, SkiaSharp ✅, Tests 🔄 | Tests running (packages already available) | Can start `release-testing` |
 | Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
-| Native ⚠️ (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
+| Native ⚠️ (`partiallySucceeded`) | Some native platforms had warnings | Usually OK — check which platforms |
 
 ### Job-Level Details (In-Progress Builds)
 
@@ -73,13 +78,13 @@ When a pipeline is `inProgress`, the script queries the ADO timeline API and sho
 breakdown below the pipeline entry:
 
 ```
-┌─ SkiaSharp-Native (ID 26493) — native binaries
-│  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
-│  
-│  Jobs: 35 ✅ completed | 2 ❌ failed | 8 🔄 running | 3 ⏳ pending
-│  Failed: Job_Name_1, Job_Name_2
-│  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
-│  Pending: Wasm, Linux ARM, Linux ARM64
++- SkiaSharp-Native (ID 26493) - native binaries
+|  [RUNNING] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+|
+|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUNNING] running | 3 [WAITING] pending
+|  Failed: Job_Name_1, Job_Name_2
+|  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
+|  Pending: Wasm, Linux ARM, Linux ARM64
 ```
 
 **Reading job status:**
@@ -149,14 +154,15 @@ relationships via `triggerInfo.pipelineId` to confirm the chain is connected.
 
 ---
 
-## Extracting the NuGet Version
+## Extracting the Test Package Version
 
 From the `buildNumber` in the script output:
 
-| Release Type | buildNumber Example | NuGet Version |
-|--------------|---------------------|---------------|
-| Preview | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` |
-| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4` (no build suffix) |
+| Release Type | buildNumber Example | Internal package to test | Public version after publish |
+|--------------|---------------------|--------------------------|------------------------------|
+| Preview | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` | `3.119.4-preview.1.1` |
+| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4-stable.2` | `3.119.4` |
 
-For stable releases, the internal feed has `{base}-stable.{build}` but the published NuGet
-version is always just the base (e.g., `3.119.4`).
+Release integration tests run before public publication, so stable testing must use the exact
+`{base}-stable.{build}` package from the internal feed. The bare base version is the final
+NuGet.org version, not the prepublication test input.

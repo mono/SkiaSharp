@@ -44,7 +44,7 @@ Update the TODO checklist at each phase. When using `read_bash` during long oper
 **First run is slower** (~90s) due to Docker image layer caching. Subsequent runs use cached layers (~10s).
 Docker tests require `SkiaSharp.NativeAssets.Linux.NoDependencies` which bundles all native deps statically.
 
-### MAUI Platform Tests (iOS, Android, MacCatalyst)
+### MAUI Platform Tests (iOS, Android, MacCatalyst, Windows)
 
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
@@ -71,6 +71,7 @@ The **Build MAUI app** phase is the longest and provides **no output**. This is 
 | iOS | 60-90 seconds |
 | Android | 90-120 seconds |
 | MacCatalyst | 45-60 seconds |
+| Windows | 45-90 seconds |
 
 **This silence is expected.** The user needs to know this.
 
@@ -162,6 +163,16 @@ adb logcat -d | grep -E "(FATAL|crash|died)" | tail -10
 ```bash
 xcrun simctl list devices booted
 ```
+
+**Windows:**
+```powershell
+Get-Process WinAppDriver -ErrorAction SilentlyContinue
+```
+
+Run this process check only while a Windows test is active; it shows whether WinAppDriver is
+running, not whether the prerequisite is installed. If no process is running, inspect the active
+test and Appium logs. Verify installation separately through the setup preflight before proposing
+any user-approved remediation.
 
 ---
 
