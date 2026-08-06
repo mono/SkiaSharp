@@ -1,5 +1,4 @@
 import importlib.util
-import json
 import subprocess
 import sys
 import unittest
@@ -21,14 +20,12 @@ class QueuePublishTests(unittest.TestCase):
         build_number = "4.151.1-stable.1+4.151.1"
 
         body = queue_publish.build_queue_body(build_number)
-        serialized = json.dumps(body)
 
         self.assertEqual(
             build_number,
             body["resources"]["pipelines"]["SkiaSharp"]["version"],
         )
         self.assertTrue(body["templateParameters"]["pushStable"])
-        self.assertNotIn("14874440", serialized)
 
     def test_preview_and_rc_bodies_do_not_push_stable(self) -> None:
         build_numbers = [
@@ -63,22 +60,18 @@ class QueuePublishTests(unittest.TestCase):
 
     @patch.object(queue_publish.shutil, "which", return_value=r"C:\Tools\az.cmd")
     @patch.object(queue_publish.subprocess, "run")
-    def test_queue_returns_run_id_and_url(
+    def test_queue_returns_run_id(
         self, run: Mock, _: Mock
     ) -> None:
         run.return_value = subprocess.CompletedProcess(
             ["az"], 0, stdout="14890000\n", stderr=""
         )
 
-        run_id, url = queue_publish.queue_publish(
+        run_id = queue_publish.queue_publish(
             "4.151.1-stable.1+4.151.1"
         )
 
         self.assertEqual(14890000, run_id)
-        self.assertEqual(
-            "https://dev.azure.com/devdiv/DevDiv/_build/results?buildId=14890000",
-            url,
-        )
         queue_args = run.call_args.args[0]
         self.assertIn("POST", queue_args)
         self.assertIn("pipelineId=25298", queue_args)

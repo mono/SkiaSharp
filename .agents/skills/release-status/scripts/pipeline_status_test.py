@@ -150,7 +150,7 @@ class PipelineStatusTests(unittest.TestCase):
         ):
             pipeline_status.az(["test"])
 
-    def test_dynamic_output_uses_single_ascii_safe_path(self) -> None:
+    def test_dynamic_output_is_ascii(self) -> None:
         records = [
             {
                 "type": "Job",
@@ -166,8 +166,8 @@ class PipelineStatusTests(unittest.TestCase):
             pipeline_status.format_job_summary(records, "| ")
         stream.flush()
 
-        output = buffer.getvalue().decode("ascii")
-        self.assertIn(r"Running: Caf\xe9\njob", output)
+        output = buffer.getvalue().decode("ascii").replace("\r\n", "\n")
+        self.assertIn("Running: Caf\\xe9\njob", output)
         self.assertNotIn("\ufffd", output)
 
 

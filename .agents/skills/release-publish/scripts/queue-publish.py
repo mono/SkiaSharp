@@ -21,21 +21,18 @@ PRERELEASE_BUILD = re.compile(
 )
 
 
-def classify_build_number(build_number: str) -> bool:
-    if STABLE_BUILD.fullmatch(build_number):
-        return True
-    if PRERELEASE_BUILD.fullmatch(build_number):
-        return False
-    if build_number.isdigit():
-        raise ValueError("Expected a build number, not a numeric run/build ID.")
-    raise ValueError(
-        "Managed build number must match X.Y.Z[.F]-stable.B+X.Y.Z[.F], "
-        "X.Y.Z[.F]-preview.N.B+X.Y.Z[.F]-preview.N, or the equivalent RC form."
-    )
-
-
 def build_queue_body(build_number: str) -> dict:
-    push_stable = classify_build_number(build_number)
+    if STABLE_BUILD.fullmatch(build_number):
+        push_stable = True
+    elif PRERELEASE_BUILD.fullmatch(build_number):
+        push_stable = False
+    elif build_number.isdigit():
+        raise ValueError("Expected a build number, not a numeric run/build ID.")
+    else:
+        raise ValueError(
+            "Managed build number must match X.Y.Z[.F]-stable.B+X.Y.Z[.F], "
+            "X.Y.Z[.F]-preview.N.B+X.Y.Z[.F]-preview.N, or the equivalent RC form."
+        )
     return {
         "resources": {"pipelines": {"SkiaSharp": {"version": build_number}}},
         "templateParameters": {
@@ -46,7 +43,7 @@ def build_queue_body(build_number: str) -> dict:
     }
 
 
-def queue_publish(build_number: str) -> tuple[int, str]:
+def queue_publish(build_number: str) -> int:
     az = shutil.which("az")
     if not az:
         raise FileNotFoundError("Required CLI 'az' was not found on PATH.")
@@ -78,8 +75,7 @@ def queue_publish(build_number: str) -> tuple[int, str]:
     output = result.stdout.strip()
     if not output.isdigit():
         raise RuntimeError("Azure CLI did not return a numeric publish run ID.")
-    run_id = int(output)
-    return run_id, RUN_URL.format(run_id=run_id)
+    return int(output)
 
 
 def main() -> None:
@@ -89,9 +85,9 @@ def main() -> None:
     parser.add_argument("managed_build_number")
     args = parser.parse_args()
 
-    run_id, url = queue_publish(args.managed_build_number)
+    run_id = queue_publish(args.managed_build_number)
     print(f"Publish run ID: {run_id}")
-    print(f"Publish run URL: {url}")
+    print(f"Publish run URL: {RUN_URL.format(run_id=run_id)}")
 
 
 if __name__ == "__main__":

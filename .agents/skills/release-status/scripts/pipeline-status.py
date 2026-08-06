@@ -37,14 +37,9 @@ STATUS_MARKERS = {
 }
 
 
-def ascii_safe(value: object) -> str:
-    """Escape text so it is printable on every console encoding."""
-    return str(value).encode("unicode_escape").decode("ascii")
-
-
 def emit(value: object = "") -> None:
-    """Print one line through the single ASCII-safe output path."""
-    print(ascii_safe(value))
+    """Print text safely on every console encoding."""
+    print(str(value).encode("ascii", "backslashreplace").decode("ascii"))
 
 
 def cli_command(executable: str, args: list[str]) -> list[str]:
@@ -101,7 +96,8 @@ def az(args: list[str], timeout: int = 30) -> str:
             or "no error output"
         )
         raise RuntimeError(
-            f"Azure CLI failed with exit code {error.returncode}: {ascii_safe(detail)}"
+            f"Azure CLI failed with exit code {error.returncode}: "
+            f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
         ) from error
     except subprocess.TimeoutExpired as error:
         raise RuntimeError(
@@ -115,7 +111,8 @@ def az(args: list[str], timeout: int = 30) -> str:
             or "no error output"
         )
         raise RuntimeError(
-            f"Azure CLI returned no output: {ascii_safe(detail)}"
+            "Azure CLI returned no output: "
+            f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
         )
     return output
 
@@ -129,7 +126,7 @@ def get_runs(pipeline_id: int, branch: str) -> list[dict]:
         "--query", "[].{id:id, status:status, result:result, buildNumber:buildNumber}",
         "--top", "5", "-o", "json",
     ])
-    return json.loads(out) if out else []
+    return json.loads(out)
 
 
 def get_trigger_info(build_id: int) -> dict:
@@ -139,7 +136,7 @@ def get_trigger_info(build_id: int) -> dict:
         "--org", ORG, "--project", PROJECT,
         "--query", "triggerInfo", "-o", "json",
     ])
-    return json.loads(out) if out else {}
+    return json.loads(out)
 
 
 def get_timeline(build_id: int) -> list[dict]:
@@ -153,10 +150,7 @@ def get_timeline(build_id: int) -> list[dict]:
         "--api-version", "7.0",
         "-o", "json",
     ], timeout=60)
-    if not out:
-        return []
-    data = json.loads(out)
-    return data.get("records", [])
+    return json.loads(out).get("records", [])
 
 
 def format_job_summary(records: list[dict], cont: str) -> None:
@@ -237,7 +231,8 @@ def resolve_branch(ref: str) -> str:
                 or "no error output"
             )
             raise RuntimeError(
-                f"Git failed with exit code {error.returncode}: {ascii_safe(detail)}"
+                f"Git failed with exit code {error.returncode}: "
+                f"{detail.encode('ascii', 'backslashreplace').decode('ascii')}"
             ) from error
         stdout = decode_subprocess_output(result.stdout, "Git stdout")
         for line in stdout.splitlines():
@@ -246,7 +241,8 @@ def resolve_branch(ref: str) -> str:
                 emit(f"Resolved SHA {ref} -> branch: {m.group(1)}")
                 return m.group(1)
         sys.exit(
-            f"ERROR: No release branch found containing SHA {ascii_safe(ref)}"
+            "ERROR: No release branch found containing SHA "
+            f"{ref.encode('ascii', 'backslashreplace').decode('ascii')}"
         )
     return ref
 
