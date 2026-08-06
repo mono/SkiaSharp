@@ -18,8 +18,7 @@ using var backendContext = new GRMtlBackendContext
     QueueHandle = mtlCommandQueueHandle,
 };
 
-using var context = GRContext.CreateMetal(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh Metal context.");
+using var context = GRContext.CreateMetal(backendContext);
 ```
 
 ## Describe Metal textures

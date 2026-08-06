@@ -13,10 +13,8 @@ Once the platform GL context is current, create a [`GRGlInterface`](xref:SkiaSha
 
 ```csharp
 // A platform GL context is already current on this thread.
-using var glInterface = GRGlInterface.Create()
-    ?? throw new InvalidOperationException("Unable to create the OpenGL interface.");
-using var context = GRContext.CreateGl(glInterface)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh OpenGL context.");
+using var glInterface = GRGlInterface.Create();
+using var context = GRContext.CreateGl(glInterface);
 ```
 
 `GRContext.CreateGl()` also has a parameterless overload that assembles the interface from the current context.
@@ -31,8 +29,7 @@ using var renderTarget = new GRBackendRenderTarget(
     width, height, sampleCount, stencilBits, glInfo);
 
 using var surface = SKSurface.Create(
-    context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType)
-    ?? throw new InvalidOperationException("Unable to wrap the OpenGL framebuffer.");
+    context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType);
 ```
 
 Draw and flush the surface as described in the [shared Ganesh surface flow](index.md#rendering-offscreen), then present or swap buffers with your windowing API.

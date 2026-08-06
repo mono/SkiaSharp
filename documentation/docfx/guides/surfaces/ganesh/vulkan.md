@@ -30,8 +30,7 @@ using var backendContext = new GRVkBackendContext
     GetProcedureAddress = getProc,
 };
 
-using var context = GRContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh Vulkan context.");
+using var context = GRContext.CreateVulkan(backendContext);
 ```
 
 Replace the zero-returning placeholder with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
@@ -61,8 +60,7 @@ using var backendContext = new GRSilkNetBackendContext
     VkPhysicalDeviceFeatures = features,
 };
 
-using var context = GRContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh Vulkan context.");
+using var context = GRContext.CreateVulkan(backendContext);
 ```
 
 The legacy **SkiaSharp.Vulkan.SharpVk** package still exposes `GRSharpVkBackendContext`, but SharpVk is unmaintained and should not be a new dependency.

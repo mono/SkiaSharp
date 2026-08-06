@@ -47,10 +47,8 @@ using System.Runtime.InteropServices;
 
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var context = GRContext.CreateMetal(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh Metal context.");
-using var surface = SKSurface.Create(context, budgeted: true, info)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh surface.");
+using var context = GRContext.CreateMetal(backendContext);
+using var surface = SKSurface.Create(context, budgeted: true, info);
 using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
@@ -63,8 +61,7 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
-        throw new InvalidOperationException("Unable to read the surface pixels.");
+    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
 }
 finally
 {
@@ -77,25 +74,19 @@ finally
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var context = SKGraphiteContext.CreateMetal(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Metal context.");
-using var recorder = context.CreateRecorder()
-    ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
-using var surface = SKSurface.Create(recorder, info)
-    ?? throw new InvalidOperationException("Unable to create the Graphite surface.");
+using var context = SKGraphiteContext.CreateMetal(backendContext);
+using var recorder = context.CreateRecorder();
+using var surface = SKSurface.Create(recorder, info);
 using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
 surface.Canvas.DrawCircle(256, 256, 200, paint);
 
-using (var recording = recorder.Snap()
-    ?? throw new InvalidOperationException("Graphite Snap did not succeed."))
+using (var recording = recorder.Snap())
 {
-    if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-        throw new InvalidOperationException("InsertRecording did not succeed.");
+    context.InsertRecording(recording);
 }
-if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-    throw new InvalidOperationException("Graphite Submit did not succeed.");
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 
 // asynchronous readback — helper defined in the Graphite GPU surfaces guide
 var pixels = ReadPixelsFromGraphite(context, surface, info);
@@ -109,7 +100,7 @@ The drawing calls are identical. What changes is the plumbing around them.
 
 Ganesh flushes the context directly. Graphite splits this into three steps: `recorder.Snap()` captures the recorded commands into an `SKGraphiteRecording`, `context.InsertRecording(recording)` hands them to the context, and `context.Submit(new SKGraphiteSubmitInfo { Sync = true })` sends them to the GPU and (with `Sync = true`) waits.
 
-Always check that `InsertRecording` returns `SKGraphiteInsertStatus.Success`, and note that `Snap` **resets** the recorder for the next frame. Because the recorder is per-thread, a multi-threaded renderer creates one recorder per thread and submits their recordings to the shared context.
+`InsertRecording` returns an `SKGraphiteInsertStatus` that production code can inspect when it needs to recover from submission problems. `Snap` **resets** the recorder for the next frame. Because the recorder is per-thread, a multi-threaded renderer creates one recorder per thread and submits their recordings to the shared context.
 
 ### 2. Replace synchronous `ReadPixels` with asynchronous readback
 

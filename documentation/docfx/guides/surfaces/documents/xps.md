@@ -1,6 +1,6 @@
 ---
 title: "Create an XPS document with SkiaSharp"
-description: "Create and finalize a multi-page XPS document on supported Windows systems, including COM setup, point-based pages, and null handling."
+description: "Create and finalize a multi-page XPS document on supported Windows systems, including COM setup and point-based pages."
 ---
 
 # Create an XPS document with SkiaSharp
@@ -14,81 +14,55 @@ XPS document creation is supported on desktop and server Windows where the XPS O
 Keep [`SKAutoCoInitialize`](xref:SkiaSharp.SKAutoCoInitialize) alive for the complete XPS document lifetime. The following complete example writes a two-page US Letter XPS file:
 
 ```csharp
-using System;
 using System.IO;
 using SkiaSharp;
-
-if (!OperatingSystem.IsWindows())
-    throw new PlatformNotSupportedException("XPS output requires Windows.");
 
 const string outputPath = "sample.xps";
 
 using (var com = new SKAutoCoInitialize())
 {
-    if (!com.Initialized)
-        throw new InvalidOperationException("Unable to initialize COM for XPS output.");
-
     using var output = File.Create(outputPath);
-    using var document = SKDocument.CreateXps(output)
-        ?? throw new InvalidOperationException(
-            "XPS document creation is unavailable on this Windows system.");
+    using var document = SKDocument.CreateXps(output);
 
     const float pageWidth = 612;  // 8.5 inches * 72 points
     const float pageHeight = 792; // 11 inches * 72 points
 
-    var completed = false;
-    try
+    using var paint = new SKPaint
     {
-        using var paint = new SKPaint
-        {
-            IsAntialias = true,
-            Color = SKColors.CornflowerBlue,
-        };
+        IsAntialias = true,
+        Color = SKColors.CornflowerBlue,
+    };
 
-        for (var pageNumber = 1; pageNumber <= 2; pageNumber++)
-        {
-            using (var canvas = document.BeginPage(pageWidth, pageHeight)
-                ?? throw new InvalidOperationException("Unable to begin the XPS page."))
-            {
-                canvas.Clear(SKColors.White);
-                canvas.DrawRect(
-                    SKRect.Create(96, 96 + pageNumber * 80, 420, 180),
-                    paint);
-            }
-
-            document.EndPage();
-        }
-
-        document.Close();
-        completed = true;
-    }
-    finally
+    for (var pageNumber = 1; pageNumber <= 2; pageNumber++)
     {
-        if (!completed)
-            document.Abort();
+        var canvas = document.BeginPage(pageWidth, pageHeight);
+        canvas.Clear(SKColors.White);
+        canvas.DrawRect(
+            SKRect.Create(96, 96 + pageNumber * 80, 420, 180),
+            paint);
+
+        document.EndPage();
     }
+
+    document.Close();
 }
-
-if (new FileInfo(outputPath).Length == 0)
-    throw new InvalidOperationException("The XPS file is empty.");
 ```
 
-The `using` order keeps COM and the output stream alive while the XPS document and its page canvases use them. The page canvas is invalid after `EndPage`.
+The `using` order keeps COM and the output stream alive while the XPS document uses them. The page canvas is invalid after `EndPage`.
 
 ## Set the raster DPI
 
 XPS page dimensions use points, where 72 points equal one inch. Within the Windows and COM scope shown in the complete example, the optional `dpi` argument to `CreateXps` controls the resolution used when document content must be rasterized; it does not change the page coordinate system. Keep the writable `Stream output` alive for the document lifetime:
 
 ```csharp
-using var document = SKDocument.CreateXps(output, dpi: 144)
-    ?? throw new InvalidOperationException("Unable to create the XPS document.");
+using var document = SKDocument.CreateXps(output, dpi: 144);
 ```
 
 The default raster DPI is `SKDocument.DefaultRasterDpi`, which is 72. Increase it only when rasterized content needs more detail and the additional document size and processing cost are acceptable.
 
 ## Handle unavailable or incomplete output
 
-Check the nullable result from every `CreateXps` overload. A Windows operating-system check alone does not prove that the XPS Object Model factory is available.
+Production code can check the nullable result from `CreateXps` when it needs to handle systems where the XPS Object Model factory is unavailable.
 
 If generation fails after document creation, call `Abort` and discard the stream contents. Call `Close` after the final page before reading or publishing the file.
 

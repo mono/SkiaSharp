@@ -12,7 +12,6 @@ Use [`SKSvgCanvas`](xref:SkiaSharp.SKSvgCanvas) to translate `SKCanvas` draw cal
 The bounds passed to `SKSvgCanvas.Create` define the initial SVG viewport. This complete example writes a 640 by 480 SVG:
 
 ```csharp
-using System;
 using System.IO;
 using SkiaSharp;
 
@@ -20,8 +19,7 @@ const string outputPath = "drawing.svg";
 var bounds = SKRect.Create(640, 480);
 
 using (var output = File.Create(outputPath))
-using (var canvas = SKSvgCanvas.Create(bounds, output)
-    ?? throw new InvalidOperationException("Unable to create the SVG canvas."))
+using (var canvas = SKSvgCanvas.Create(bounds, output))
 using (var backgroundPaint = new SKPaint { Color = SKColors.White })
 using (var paint = new SKPaint
 {
@@ -32,10 +30,6 @@ using (var paint = new SKPaint
     canvas.DrawRect(bounds, backgroundPaint);
     canvas.DrawCircle(bounds.MidX, bounds.MidY, 140, paint);
 }
-
-var xml = File.ReadAllText(outputPath);
-if (!xml.Contains("<svg", StringComparison.Ordinal))
-    throw new InvalidOperationException("The output does not contain an SVG root element.");
 ```
 
 The SVG canvas may buffer output. Its closing XML is not guaranteed to be present until the canvas is disposed. Keep the output stream alive for the full canvas lifetime and dispose the canvas before reading, sending, or closing the stream.

@@ -14,8 +14,7 @@ The most common way to create a raster surface is to describe the image you want
 ```csharp
 var info = new SKImageInfo(256, 256, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var surface = SKSurface.Create(info)
-    ?? throw new InvalidOperationException("Unable to create the raster surface.");
+using var surface = SKSurface.Create(info);
 using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 var canvas = surface.Canvas;
 
@@ -25,7 +24,7 @@ canvas.DrawCircle(128, 128, 100, paint);
 
 `SKImageInfo` describes the width, height, color type, and alpha type of the surface. `SKColorType.Rgba8888` with `SKAlphaType.Premul` is a common, portable choice, but you can pick whatever format your pipeline needs.
 
-The [`SKSurface.Create(SKImageInfo)`](xref:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo)) overload returns `null` if the surface could not be created (for example, if the dimensions are invalid), so it's good practice to check the result before using it.
+The [`SKSurface.Create(SKImageInfo)`](xref:SkiaSharp.SKSurface.Create(SkiaSharp.SKImageInfo)) overload returns `null` if the surface could not be created, for example when dimensions are invalid. The snippets in this guide use valid inputs and focus on the successful rendering flow.
 
 ## Getting the result out
 
@@ -36,10 +35,8 @@ The simplest is to take an immutable snapshot as an [`SKImage`](xref:SkiaSharp.S
 ```csharp
 using System.IO;
 
-using var image = surface.Snapshot()
-    ?? throw new InvalidOperationException("Unable to snapshot the surface.");
-using var data = image.Encode(SKEncodedImageFormat.Png, 100)
-    ?? throw new InvalidOperationException("Unable to encode the image.");
+using var image = surface.Snapshot();
+using var data = image.Encode(SKEncodedImageFormat.Png, 100);
 
 using var stream = File.OpenWrite("output.png");
 data.SaveTo(stream);
@@ -56,8 +53,7 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
-        throw new InvalidOperationException("Unable to read the surface pixels.");
+    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
 }
 finally
 {
@@ -82,8 +78,7 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    using var surface = SKSurface.Create(info, handle.AddrOfPinnedObject(), info.RowBytes)
-        ?? throw new InvalidOperationException("Unable to create the raster-direct surface.");
+    using var surface = SKSurface.Create(info, handle.AddrOfPinnedObject(), info.RowBytes);
     using var paint = new SKPaint { Color = SKColors.Red };
 
     // every draw call writes straight into `pixels`
@@ -103,10 +98,8 @@ You can also wrap an [`SKPixmap`](xref:SkiaSharp.SKPixmap) — which already bun
 
 ```csharp
 using var bitmap = new SKBitmap(info);
-using var pixmap = bitmap.PeekPixels()
-    ?? throw new InvalidOperationException("Unable to access the bitmap pixels.");
-using var surface = SKSurface.Create(pixmap)
-    ?? throw new InvalidOperationException("Unable to create a surface for the pixmap.");
+using var pixmap = bitmap.PeekPixels();
+using var surface = SKSurface.Create(pixmap);
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw ...

@@ -1,6 +1,6 @@
 ---
 title: "Create a PDF document with SkiaSharp"
-description: "Create and finalize a multi-page PDF with SKDocument, point-based page sizes, metadata, safe stream ownership, and failure handling."
+description: "Create and finalize a multi-page PDF with SKDocument, point-based page sizes, metadata, and safe stream ownership."
 ---
 
 # Create a PDF document with SkiaSharp
@@ -12,7 +12,6 @@ Use [`SKDocument`](xref:SkiaSharp.SKDocument) to draw a multi-page PDF into a fi
 The following complete example writes a two-page US Letter PDF. The page canvas is valid only until `EndPage` or `Close` is called.
 
 ```csharp
-using System;
 using System.IO;
 using SkiaSharp;
 
@@ -23,9 +22,6 @@ using (var output = File.Create(outputPath))
     WritePdf(output);
 }
 
-if (new FileInfo(outputPath).Length == 0)
-    throw new InvalidOperationException("The PDF file is empty.");
-
 static void WritePdf(Stream output)
 {
     const float pageWidth = 612;  // 8.5 inches * 72 points
@@ -35,42 +31,27 @@ static void WritePdf(Stream output)
     metadata.Title = "SkiaSharp PDF example";
     metadata.Author = "Example application";
 
-    using var document = SKDocument.CreatePdf(output, metadata)
-        ?? throw new InvalidOperationException("Unable to create the PDF document.");
-
-    var completed = false;
-    try
+    using var document = SKDocument.CreatePdf(output, metadata);
+    using var paint = new SKPaint
     {
-        using var paint = new SKPaint
-        {
-            IsAntialias = true,
-            Color = SKColors.CornflowerBlue,
-        };
+        IsAntialias = true,
+        Color = SKColors.CornflowerBlue,
+    };
 
-        for (var pageNumber = 1; pageNumber <= 2; pageNumber++)
-        {
-            using (var canvas = document.BeginPage(pageWidth, pageHeight)
-                ?? throw new InvalidOperationException("Unable to begin the PDF page."))
-            {
-                canvas.Clear(SKColors.White);
-                canvas.DrawCircle(
-                    pageWidth / 2,
-                    220 + pageNumber * 120,
-                    100,
-                    paint);
-            }
-
-            document.EndPage();
-        }
-
-        document.Close();
-        completed = true;
-    }
-    finally
+    for (var pageNumber = 1; pageNumber <= 2; pageNumber++)
     {
-        if (!completed)
-            document.Abort();
+        var canvas = document.BeginPage(pageWidth, pageHeight);
+        canvas.Clear(SKColors.White);
+        canvas.DrawCircle(
+            pageWidth / 2,
+            220 + pageNumber * 120,
+            100,
+            paint);
+
+        document.EndPage();
     }
+
+    document.Close();
 }
 ```
 

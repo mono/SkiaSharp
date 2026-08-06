@@ -5,14 +5,7 @@ description: "Create a Graphite Metal context, wrap Metal textures, and account 
 
 # Use Graphite with Metal
 
-Graphite Metal is available on macOS, iOS, Mac Catalyst, and tvOS, including Apple Silicon simulators. Before creating a context, confirm the backend is compiled into the current native library:
-
-```csharp
-if (!SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal))
-    throw new PlatformNotSupportedException("Graphite Metal is unavailable.");
-```
-
-This check only confirms that the Metal factory was compiled into the native library. It does not validate the selected `MTLDevice`.
+Graphite Metal is available on macOS, iOS, Mac Catalyst, and tvOS, including Apple Silicon simulators. `SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Metal)` reports whether the Metal factory was compiled into the current native library; it does not validate the selected `MTLDevice`.
 
 ## Create the Graphite context
 
@@ -28,8 +21,7 @@ using var backendContext = new SKGraphiteMtlBackendContext
     MtlQueue = mtlCommandQueueHandle,
 };
 
-using var context = SKGraphiteContext.CreateMetal(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Metal context.");
+using var context = SKGraphiteContext.CreateMetal(backendContext);
 ```
 
 ## Wrap Metal textures
@@ -38,10 +30,9 @@ Describe an existing `MTLTexture` with `SKGraphiteBackendTexture.CreateMetal`, t
 
 ```csharp
 using var backendTexture = SKGraphiteBackendTexture.CreateMetal(
-    width, height, mtlTextureHandle)
-    ?? throw new InvalidOperationException("Unable to describe the Metal texture.");
-using var surface = SKSurface.Create(recorder, backendTexture, SKColorType.Rgba8888)
-    ?? throw new InvalidOperationException("Unable to wrap the Metal texture.");
+    width, height, mtlTextureHandle);
+using var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888);
 ```
 
 The native `MTLTexture` remains owned by the code that created it. If you supply a release callback, release the native allocation only after the callback fires.

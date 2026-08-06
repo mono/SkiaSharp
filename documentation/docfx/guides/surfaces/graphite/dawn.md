@@ -5,12 +5,7 @@ description: "Create a Graphite Dawn context for WebAssembly, submit without blo
 
 # Use Graphite with Dawn
 
-Graphite Dawn is the WebGPU backend used by SkiaSharp in browser/WebAssembly hosts. Before creating a context, confirm the backend is compiled into the current native library:
-
-```csharp
-if (!SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Dawn))
-    throw new PlatformNotSupportedException("Graphite Dawn is unavailable.");
-```
+Graphite Dawn is the WebGPU backend used by SkiaSharp in browser/WebAssembly hosts. `SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Dawn)` reports whether the Dawn factory was compiled into the current native library.
 
 ## Create the Graphite context
 
@@ -24,8 +19,7 @@ using var backendContext = new SKGraphiteDawnBackendContext
     WgpuQueue = queueHandle,
 };
 
-using var context = SKGraphiteContext.CreateDawn(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Dawn context.");
+using var context = SKGraphiteContext.CreateDawn(backendContext);
 ```
 
 With the emdawnwebgpu port, create a real `WGPUInstance` through `wgpuCreateInstance`. Register the device and queue under that instance as their event-source parent. A placeholder or mismatched instance can cause `SKGraphiteContext.CreateDawn` to wait indefinitely.
@@ -37,10 +31,8 @@ The browser event loop cannot be pumped from inside a managed call, so synchrono
 Submit without blocking, then drive completion from the host render or event loop:
 
 ```csharp
-if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-    throw new InvalidOperationException("Graphite InsertRecording did not succeed.");
-if (!context.Submit(new SKGraphiteSubmitInfo { Sync = false }))
-    throw new InvalidOperationException("Graphite Submit did not succeed.");
+context.InsertRecording(recording);
+context.Submit(new SKGraphiteSubmitInfo { Sync = false });
 
 // Later, from the host loop:
 context.CheckAsyncWorkCompletion();

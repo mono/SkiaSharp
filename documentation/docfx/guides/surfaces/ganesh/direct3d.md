@@ -19,8 +19,7 @@ using var backendContext = new GRD3DBackendContext
     Queue = commandQueueHandle,
 };
 
-using var context = GRContext.CreateDirect3D(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh Direct3D context.");
+using var context = GRContext.CreateDirect3D(backendContext);
 ```
 
 ## Describe Direct3D resources

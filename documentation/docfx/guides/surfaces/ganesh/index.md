@@ -32,8 +32,7 @@ The simplest GPU surface is an offscreen one: describe the image with an [`SKIma
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var surface = SKSurface.Create(context, budgeted: true, info)
-    ?? throw new InvalidOperationException("Unable to create the Ganesh surface.");
+using var surface = SKSurface.Create(context, budgeted: true, info);
 using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 surface.Canvas.Clear(SKColors.White);
@@ -52,8 +51,7 @@ var pixels = new byte[info.BytesSize];
 var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
 try
 {
-    if (!surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0))
-        throw new InvalidOperationException("Unable to read the surface pixels.");
+    surface.ReadPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, 0, 0);
 }
 finally
 {
@@ -68,8 +66,8 @@ To draw SkiaSharp content into a render target that already exists — most ofte
 Construct the `GRBackendRenderTarget` from the API-specific descriptor shown on the [OpenGL](opengl.md#wrap-the-current-framebuffer), [Vulkan](vulkan.md#describe-vulkan-images), [Metal](metal.md#describe-metal-textures), or [Direct3D](direct3d.md#describe-direct3d-resources) page. Once you have it, the wrapping call is shared:
 
 ```csharp
-using var surface = SKSurface.Create(context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType)
-    ?? throw new InvalidOperationException("Unable to wrap the render target.");
+using var surface = SKSurface.Create(
+    context, renderTarget, GRSurfaceOrigin.BottomLeft, colorType);
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw the frame ...
@@ -84,8 +82,7 @@ If instead of a render target you have a GPU **texture**, describe it with a [`G
 
 ```csharp
 using var surface = SKSurface.Create(
-    context, backendTexture, GRSurfaceOrigin.TopLeft, sampleCount: 0, colorType: colorType)
-    ?? throw new InvalidOperationException("Unable to wrap the backend texture.");
+    context, backendTexture, GRSurfaceOrigin.TopLeft, sampleCount: 0, colorType: colorType);
 ```
 
 You can also wrap a texture as a *sampling* [`SKImage`](xref:SkiaSharp.SKImage) with [`SKImage.FromTexture`](xref:SkiaSharp.SKImage.FromTexture*) when you want to draw an existing GPU texture *onto* a surface rather than *into* it.

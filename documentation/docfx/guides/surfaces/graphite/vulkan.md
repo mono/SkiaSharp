@@ -5,12 +5,7 @@ description: "Create a Graphite Vulkan context, wrap Vulkan images with the requ
 
 # Use Graphite with Vulkan
 
-Graphite Vulkan is available on Linux, Android, and Windows. Apple builds use [Metal](metal.md), not Vulkan. Before creating a context, confirm the backend is compiled into the current SkiaSharp native library:
-
-```csharp
-if (!SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Vulkan))
-    throw new PlatformNotSupportedException("Graphite Vulkan is unavailable.");
-```
+Graphite Vulkan is available on Linux, Android, and Windows. Apple builds use [Metal](metal.md), not Vulkan. `SKGraphiteContext.IsBackendAvailable(SKGraphiteBackend.Vulkan)` reports whether the Vulkan factory was compiled into the current native library.
 
 ## Create the Graphite context
 
@@ -29,8 +24,7 @@ using var backendContext = new SKGraphiteVkBackendContext
         System.IntPtr.Zero, // TODO: Forward to vkGetInstanceProcAddr or vkGetDeviceProcAddr.
 };
 
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
 ```
 
 Replace the zero-returning placeholder with your `vkGetInstanceProcAddr` and `vkGetDeviceProcAddr` integration.
@@ -51,8 +45,7 @@ using var backendContext = new SKGraphiteVkBackendContext
     GetProcedureAddress = getProc,
 };
 
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
 ```
 
 Use Silk.NET or raw `libvulkan` P/Invoke for new code. The legacy SharpVk binding is unmaintained.
@@ -67,16 +60,14 @@ When Skia is done with a wrapped texture, the parameterless `SKGraphiteReleaseDe
 
 ### Release a wrapped texture
 
-Starting with an initialized Vulkan `backendContext`, this sequence allocates a backend texture through the recorder, wraps it, submits work, waits for the release callback, and deletes the allocation while the recorder is still alive:
+Starting with an initialized Vulkan `backendContext`, this successful-path sequence allocates a backend texture through the recorder, wraps it, submits work, waits for the release callback, and deletes the allocation while the recorder is still alive:
 
 ```csharp
 const int width = 256;
 const int height = 256;
 
-using var context = SKGraphiteContext.CreateVulkan(backendContext)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Vulkan context.");
-using var recorder = context.CreateRecorder()
-    ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
+using var context = SKGraphiteContext.CreateVulkan(backendContext);
+using var recorder = context.CreateRecorder();
 
 var vkInfo = new SKGraphiteVkTextureInfo
 {
@@ -87,67 +78,30 @@ var vkInfo = new SKGraphiteVkTextureInfo
     SharingMode = 0,       // VK_SHARING_MODE_EXCLUSIVE
     ImageUsageFlags = 0x1 | 0x2 | 0x4 | 0x10 | 0x80, // = 0x97
 };
-using var textureInfo = SKGraphiteTextureInfo.CreateVulkan(vkInfo)
-    ?? throw new InvalidOperationException("Unable to create the Vulkan texture info.");
-using var backendTexture = recorder.CreateBackendTexture(width, height, textureInfo)
-    ?? throw new InvalidOperationException("Unable to create the backend texture.");
+using var textureInfo = SKGraphiteTextureInfo.CreateVulkan(vkInfo);
+using var backendTexture = recorder.CreateBackendTexture(width, height, textureInfo);
 
 var released = false;
-var wrapped = false;
-var contextUsable = true;
-SKSurface surface = null;
-try
+using (var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888,
+    colorSpace: null, props: null,
+    releaseProc: () => released = true))
 {
-    surface = SKSurface.Create(
-        recorder, backendTexture, SKColorType.Rgba8888,
-        colorSpace: null, props: null,
-        releaseProc: () => released = true);
-    if (surface is null)
-        throw new InvalidOperationException("Unable to wrap the backend texture.");
-
-    wrapped = true;
     surface.Canvas.Clear(SKColors.Red);
-    using var recording = recorder.Snap()
-        ?? throw new InvalidOperationException("Graphite Snap did not succeed.");
-
-    var status = context.InsertRecording(recording);
-    if (status != SKGraphiteInsertStatus.Success)
-    {
-        contextUsable = false;
-        throw new InvalidOperationException($"Graphite InsertRecording failed: {status}.");
-    }
-
-    if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-    {
-        contextUsable = false;
-        throw new InvalidOperationException("Graphite Submit did not succeed.");
-    }
-}
-finally
-{
-    surface?.Dispose();
-
-    if (wrapped && !released && contextUsable)
-    {
-        contextUsable = context.Submit(new SKGraphiteSubmitInfo { Sync = true });
-        if (contextUsable)
-        {
-            for (var i = 0; i < 100 && !released; i++)
-                context.CheckAsyncWorkCompletion();
-            context.FreeGpuResources();
-        }
-    }
-
-    if (!wrapped || released)
-        recorder.DeleteBackendTexture(backendTexture);
+    using var recording = recorder.Snap();
+    context.InsertRecording(recording);
+    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 }
 
-if (!released)
-    throw new InvalidOperationException(
-        "Skia still has work using the backend texture; tear down the failed GPU context.");
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+while (!released)
+    context.CheckAsyncWorkCompletion();
+
+context.FreeGpuResources();
+recorder.DeleteBackendTexture(backendTexture);
 ```
 
-The `finally` block also covers failed wrapping. If insertion or submission fails, the context might no longer be safe to submit or drain. Do not delete an allocation while Skia might still reference it; tear down and recreate the owning Graphite context and native Vulkan device instead.
+The sample assumes wrapping and submission succeed so the release ordering is easy to see. Production code should bound the callback wait. If insertion or submission fails, do not delete an allocation while Skia might still reference it; tear down and recreate the owning Graphite context and native Vulkan device instead.
 
 For a `VkImage` allocated by your own Vulkan code, construct the wrapper with `SKGraphiteBackendTexture.CreateVulkan` and release the native image through Vulkan after the callback. `SKImage.FromTexture` uses the same callback timing.
 

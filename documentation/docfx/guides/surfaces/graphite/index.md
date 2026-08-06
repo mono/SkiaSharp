@@ -64,10 +64,8 @@ Once you have a context, the Graphite drawing loop is: create a **recorder**, cr
 ```csharp
 var info = new SKImageInfo(512, 512, SKColorType.Rgba8888, SKAlphaType.Premul);
 
-using var recorder = context.CreateRecorder()
-    ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
-using var surface = SKSurface.Create(recorder, info)
-    ?? throw new InvalidOperationException("Unable to create the Graphite surface.");
+using var recorder = context.CreateRecorder();
+using var surface = SKSurface.Create(recorder, info);
 using var paint = new SKPaint { Color = SKColors.CornflowerBlue };
 
 // draw exactly as you would on any other surface
@@ -76,22 +74,17 @@ surface.Canvas.DrawCircle(256, 256, 200, paint);
 
 // capture everything recorded so far
 using var recording = recorder.Snap();
-if (recording is null)
-    throw new InvalidOperationException("Graphite Snap() returned null.");
 
 // hand the recording to the context and submit it to the GPU
-if (context.InsertRecording(recording) != SKGraphiteInsertStatus.Success)
-    throw new InvalidOperationException("Graphite InsertRecording did not succeed.");
-
-if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-    throw new InvalidOperationException("Graphite Submit did not succeed.");
+context.InsertRecording(recording);
+context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 ```
 
 A few things to note:
 
 - `CreateRecorder` returns an `SKGraphiteRecorder`. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly. If you draw raster (CPU-backed) `SKImage`s, create the recorder with an image provider instead — see [Drawing CPU images](#drawing-cpu-images-the-image-provider).
-- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It returns **`null`** if the recording could not be built (for example, if the driver could not compile a pipeline for something you drew — see [Pipeline compilation](#pipeline-compilation)), so check the result before inserting it.
-- `InsertRecording` returns an [`SKGraphiteInsertStatus`](#status-and-enums); always confirm it is `Success`.
+- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It can return **`null`** if the recording could not be built, for example if the driver could not compile a pipeline for something you drew; see [Pipeline compilation](#pipeline-compilation).
+- `InsertRecording` returns an [`SKGraphiteInsertStatus`](#status-and-enums) that production code can inspect when it needs to recover from submission problems.
 - `Submit(new SKGraphiteSubmitInfo { Sync = true })` flushes the work to the GPU and, with `Sync = true`, waits for it to finish. It returns `false` if submission failed.
 
 ## Reading pixels back
@@ -116,31 +109,25 @@ static byte[] ReadPixelsFromGraphite(
         new SKRectI(0, 0, dstInfo.Width, dstInfo.Height),
         result =>
         {
-            done = true;
-            if (result is null || result.PlaneCount < 1)
-                return;
-
             // ToArray copies the plane into a tightly-packed byte[] that outlives the
             // callback, stripping any per-row transfer padding for you.
             pixels = result.ToArray();
+            done = true;
         });
 
     // Flush the queued readback and wait, then pump until the callback runs.
-    if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
-        throw new InvalidOperationException("Graphite Submit did not succeed.");
-    for (var i = 0; i < 10_000 && !done; i++)
+    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
+    while (!done)
         context.CheckAsyncWorkCompletion();
 
-    return done && pixels is not null
-        ? pixels
-        : throw new InvalidOperationException("Graphite async readback did not complete.");
+    return pixels;
 }
 
 var dstInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKAlphaType.Premul);
 var pixels = ReadPixelsFromGraphite(context, surface, dstInfo);
 ```
 
-The iteration limit is only a guard for this focused sample, not a completion guarantee. In a production renderer, pump completion from the host's render or event loop and apply a time-based timeout or cancellation policy. Browser hosts cannot use `Sync = true`; see [Graphite with Dawn](dawn.md).
+The focused helper waits for the callback so the sequence is easy to see. In a production renderer, pump completion from the host's render or event loop and apply the timeout or cancellation policy appropriate for the application. Browser hosts cannot use `Sync = true`; see [Graphite with Dawn](dawn.md).
 
 The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `SKGraphiteContext` read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws `ObjectDisposedException`. Keep the context and surface undisposed until the callback completes.
 
@@ -158,8 +145,8 @@ A shorter `RequestReadPixels` overload uses default rescaling; a longer overload
 Instead of letting Skia allocate the surface's texture, you can render into a GPU texture your own code created. Build an `SKGraphiteBackendTexture` as shown on the [Vulkan](vulkan.md#wrap-and-release-vulkan-images), [Metal](metal.md#wrap-metal-textures), or [Dawn](dawn.md#wrap-dawn-textures) page, then create a surface that wraps it:
 
 ```csharp
-using var surface = SKSurface.Create(recorder, backendTexture, SKColorType.Rgba8888)
-    ?? throw new InvalidOperationException("Unable to wrap the backend texture.");
+using var surface = SKSurface.Create(
+    recorder, backendTexture, SKColorType.Rgba8888);
 
 surface.Canvas.Clear(SKColors.White);
 // ... draw, then Snap / InsertRecording / Submit as above ...
@@ -181,8 +168,7 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
 
   ```csharp
   using var image = SKImage.FromTexture(
-      recorder, backendTexture, SKColorType.Rgba8888, SKAlphaType.Premul)
-      ?? throw new InvalidOperationException("Unable to wrap the texture as an image.");
+      recorder, backendTexture, SKColorType.Rgba8888, SKAlphaType.Premul);
   ```
 
   A longer overload also takes a color space and a parameterless `SKGraphiteReleaseDelegate` that fires once when Skia releases the wrapped texture.
@@ -190,8 +176,7 @@ You can also move between GPU textures and [`SKImage`](xref:SkiaSharp.SKImage) o
 - [`ToTextureImage`](xref:SkiaSharp.SKImage.ToTextureImage*) uploads an existing image (for example, one decoded on the CPU) into a GPU-backed image on the recorder:
 
   ```csharp
-  using var gpuImage = cpuImage.ToTextureImage(recorder)
-      ?? throw new InvalidOperationException("Unable to upload the image.");
+  using var gpuImage = cpuImage.ToTextureImage(recorder);
   ```
 
 ## Drawing CPU images: the image provider
@@ -207,33 +192,19 @@ Pass the callback to the `CreateRecorder` overload that accepts one. SkiaSharp s
 static SKGraphiteRecorder CreateRecorderWithImageCache(SKGraphiteContext context)
 {
     var imageCache = new SKGraphiteImageCache();
-    SKGraphiteRecorder recorder = null;
-    try
-    {
-        recorder = context.CreateRecorder(
-            recorderBudgetBytes: -1,                   // -1 = use Skia's default budget
-            findOrCreate: imageCache.FindOrCreate,     // uploads + caches CPU images on demand
-            findOrCreateDispose: imageCache.Dispose);  // released with the recorder
-
-        return recorder
-            ?? throw new InvalidOperationException("Unable to create the Graphite recorder.");
-    }
-    finally
-    {
-        // Ownership transfers to the recorder only when recorder creation succeeds.
-        if (recorder is null)
-            imageCache.Dispose();
-    }
+    return context.CreateRecorder(
+        recorderBudgetBytes: -1,                   // -1 = use Skia's default budget
+        findOrCreate: imageCache.FindOrCreate,     // uploads + caches CPU images on demand
+        findOrCreateDispose: imageCache.Dispose);  // released with the recorder
 }
 
 using var recorder = CreateRecorderWithImageCache(context);
 
-using var surface = SKSurface.Create(recorder, info)
-    ?? throw new InvalidOperationException("Unable to create the Graphite surface.");
+using var surface = SKSurface.Create(recorder, info);
 surface.Canvas.DrawImage(cpuImage, 0, 0);      // now uploaded through the provider
 ```
 
-The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache.FindOrCreate` throws `ArgumentNullException` if the recorder or image is null, and is `IDisposable` — pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released while the recorder is still alive. If recorder creation fails, the caller still owns and must dispose the cache, as the helper shows. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest correct default.
+The callback has the signature `SKImage SKGraphiteFindOrCreateImageDelegate(SKGraphiteRecorder recorder, SKImage image, bool mipmapped)`, and returning `null` drops that image's draw. `SKGraphiteImageCache` is `IDisposable`; pass its `Dispose` as `findOrCreateDispose` so its cached GPU images are released while the recorder is still alive. Provide your own delegate if you want custom upload or caching behaviour; otherwise `SKGraphiteImageCache` is the simplest default.
 
 ## Context options
 
@@ -245,8 +216,7 @@ var options = new SKGraphiteContextOptions
     InternalMultisampleCount = 4,
     GpuBudgetInBytes = -1, // preserve Skia's default 256 MB resource budget
 };
-using var context = SKGraphiteContext.CreateMetal(backendContext, options)
-    ?? throw new InvalidOperationException("Unable to create the Graphite Metal context.");
+using var context = SKGraphiteContext.CreateMetal(backendContext, options);
 ```
 
 The factory overloads that **don't** take options use Skia's defaults, including its default GPU resource budget (256 MB). If you build an `SKGraphiteContextOptions` yourself and want that same default budget, set `GpuBudgetInBytes = -1` (the "use Skia's default" sentinel). A literal `0` creates a zero-byte resource cache.
