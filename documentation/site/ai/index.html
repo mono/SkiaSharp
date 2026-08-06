@@ -47,15 +47,15 @@
             <strong>AI does not write the graphics engine.</strong> It does the toil: syncing
             upstream, diffing APIs, scaffolding docs, triaging issues, and auditing for CVEs. The
             mechanical steps run as plain scripts, the agent does the judgement work, and every
-            change lands as a normal pull request that a maintainer reviews.
+            code or documentation change is proposed through a normal, reviewable pull request.
           </p>
           <div class="stat-row">
             <div class="stat">
-              <span class="stat-num">4</span>
+              <span class="stat-num">7</span>
               <span class="stat-label">agentic workflows across two repositories</span>
             </div>
             <div class="stat">
-              <span class="stat-num">21</span>
+              <span class="stat-num">23</span>
               <span class="stat-label">reusable skills the workflows and maintainers share</span>
             </div>
             <div class="stat">
@@ -64,7 +64,7 @@
             </div>
             <div class="stat">
               <span class="stat-num">100%</span>
-              <span class="stat-label">changes shipped as human-reviewed PRs</span>
+              <span class="stat-label">code and docs changes proposed as reviewable PRs</span>
             </div>
           </div>
         </div>
@@ -115,14 +115,14 @@
             </footer>
           </article>
 
-          <!-- Panel 3 — What the automation costs (per run) -->
+          <!-- Panel 3 — What the automation costs (rolling week) -->
           <article class="dash-panel" data-panel="cost" aria-busy="true">
             <header class="dash-head">
               <h3>What the automation costs</h3>
               <span class="dash-asof" data-asof>&nbsp;</span>
             </header>
             <div class="dash-body" data-body>
-              <p class="dash-loading">Loading per-run cost&hellip;</p>
+              <p class="dash-loading">Loading weekly cost&hellip;</p>
             </div>
             <footer class="dash-foot">
               <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener" data-source-link>The workflows &rarr;</a>
@@ -143,8 +143,8 @@
 
         <p class="loop-note dash-footer">
           Every figure here is auditable: the downloads come from NuGet, the milestone dates from
-          the Chromium schedule and our own merged bump PRs, and the run costs from the workflow
-          logs. Read the machinery in the
+          the Chromium schedule and our own merged bump PRs, and the run costs from gh-aw usage
+          artifacts. Read the machinery in the
           <a href="https://github.com/mono/SkiaSharp/tree/main/.github/workflows" target="_blank" rel="noopener">mono/SkiaSharp workflows</a>
           directory.
         </p>
@@ -267,7 +267,7 @@
         <p class="section-kicker">Where we use AI</p>
         <h2 class="section-title">The agentic workflows</h2>
         <p class="section-lead">
-          Four workflows run an AI agent. Each one is wired so the agent can only emit a small set
+          Seven workflows run an AI agent. Each one is wired so the agent can only emit a small set
           of constrained outputs, listed as "allowed outputs" below. Everything else is read-only.
         </p>
 
@@ -277,7 +277,7 @@
             <div class="wf-head">
               <h3>Sync - Skia Upstream</h3>
               <span class="badge badge-agentic">Agentic</span>
-              <span class="badge badge-model">claude-opus-4.7</span>
+              <span class="badge badge-model">claude-opus-4.8</span>
             </div>
             <p class="wf-desc">
               Merges new commits from Google's upstream Skia, resolves the conflicts, regenerates
@@ -286,7 +286,7 @@
               which is why it runs on the strongest model.
             </p>
             <dl class="wf-meta">
-              <dt>When</dt><dd>00:00, 06:00, 12:00, and 18:00 UTC daily (every 6 hours), plus manual dispatch</dd>
+              <dt>When</dt><dd>Every 6 hours on a fuzzy schedule, plus manual dispatch</dd>
               <dt>Engine</dt><dd>GitHub Copilot</dd>
               <dt>Allowed outputs</dt><dd>open pull requests (mono/skia submodule + mono/SkiaSharp)</dd>
               <dt>Skill</dt><dd><code>update-skia</code></dd>
@@ -302,7 +302,7 @@
             <div class="wf-head">
               <h3>Sync - Issue Triage</h3>
               <span class="badge badge-agentic">Agentic</span>
-              <span class="badge badge-model">claude-sonnet-4.6</span>
+              <span class="badge badge-model">Copilot default</span>
             </div>
             <p class="wf-desc">
               Reads new and untriaged issues, classifies them by type, area, platform, and backend,
@@ -310,9 +310,9 @@
               a triage report as an artifact rather than posting noise on the issue.
             </p>
             <dl class="wf-meta">
-              <dt>When</dt><dd>04:05 UTC daily, plus manual dispatch for a single issue</dd>
+              <dt>When</dt><dd>Daily on a fuzzy schedule, plus manual dispatch for a single issue</dd>
               <dt>Engine</dt><dd>GitHub Copilot</dd>
-              <dt>Allowed outputs</dt><dd>add labels (up to 10), update the project board</dd>
+              <dt>Allowed outputs</dt><dd>add labels (up to 12), update the project board</dd>
               <dt>Skill</dt><dd><code>issue-triage</code></dd>
               <dt>Repo</dt><dd>mono/SkiaSharp</dd>
             </dl>
@@ -326,7 +326,7 @@
             <div class="wf-head">
               <h3>Sync - Release Notes &amp; API Diffs</h3>
               <span class="badge badge-agentic">Agentic</span>
-              <span class="badge badge-model">claude-sonnet-4.6</span>
+              <span class="badge badge-model">Copilot default</span>
             </div>
             <p class="wf-desc">
               A deterministic prepare job computes the public API diff over every NuGet and
@@ -336,7 +336,7 @@
             <dl class="wf-meta">
               <dt>When</dt><dd>Every push to main and 00:00 UTC daily, plus manual dispatch</dd>
               <dt>Engine</dt><dd>GitHub Copilot</dd>
-              <dt>Allowed outputs</dt><dd>open a pull request to main (<code>[docs]</code> title, documentation label)</dd>
+              <dt>Allowed outputs</dt><dd>open a pull request to main (<code>[docs]</code> title, <code>area/Docs</code> label)</dd>
               <dt>Skill</dt><dd><code>release-notes</code></dd>
               <dt>Repo</dt><dd>mono/SkiaSharp</dd>
             </dl>
@@ -367,6 +367,78 @@
             </dl>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/auto-api-docs-writer.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- Memory leak fixer -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Fixer - Memory Leak</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-opus-4.8</span>
+            </div>
+            <p class="wf-desc">
+              Rotates through native-ownership and disposal risk areas in the managed bindings.
+              A candidate must be proven with a red-to-green regression test before the workflow
+              can file the finding and propose a fix; a quiet run is an explicit success.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>Every 12 hours, plus manual dispatch and pull-request dry runs</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>open one issue and one draft pull request, or report no finding</dd>
+              <dt>Skill</dt><dd><code>memory-leak-fixer</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/memory-leak-fixer.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- Performance fixer -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Fixer - Performance</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">claude-opus-4.8</span>
+            </div>
+            <p class="wf-desc">
+              Searches the managed layer for measurable hot-path overhead. It must prove both a
+              BenchmarkDotNet improvement and behavior parity before it can file the finding and
+              propose a focused optimization.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>Every 12 hours, plus manual dispatch and pull-request dry runs</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>open one issue and one draft pull request, or report no finding</dd>
+              <dt>Skill</dt><dd><code>performance-fixer</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/performance-fixer.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
+            </p>
+          </article>
+
+          <!-- Merge message -->
+          <article class="wf-card">
+            <div class="wf-head">
+              <h3>Merge Message</h3>
+              <span class="badge badge-agentic">Agentic</span>
+              <span class="badge badge-model">gpt-5.6-terra</span>
+            </div>
+            <p class="wf-desc">
+              Reads a pull request's issue links, code changes, commits, reviews, and validation
+              evidence, then drafts a durable merge message that preserves the why for git history.
+              It never edits the branch or submits the review.
+            </p>
+            <dl class="wf-meta">
+              <dt>When</dt><dd>When a maintainer comments <code>/merge-message</code> on a pull request</dd>
+              <dt>Engine</dt><dd>GitHub Copilot</dd>
+              <dt>Allowed outputs</dt><dd>add or refresh one pull-request comment</dd>
+              <dt>Skill</dt><dd><code>pr-commit-message</code></dd>
+              <dt>Repo</dt><dd>mono/SkiaSharp</dd>
+            </dl>
+            <p class="wf-foot">
+              <a href="https://github.com/mono/SkiaSharp/blob/main/.github/workflows/merge-message.md" target="_blank" rel="noopener">View workflow source &rarr;</a>
             </p>
           </article>
         </div>
@@ -420,14 +492,15 @@
           <article class="wf-card">
             <div class="wf-head">
               <h3>Auto-merge docs PR</h3>
-              <span class="badge badge-auto">Automation</span>
+              <span class="badge badge-auto">Paused</span>
             </div>
             <p class="wf-desc">
-              Watches the docs writer's pull request branch and waits for the
+              This optional workflow is currently paused. When enabled, it watches the docs writer's
+              pull request branch and waits for the
               <code>OpenPublishing.Build</code> and <code>PoliCheck Scan</code> checks to pass with
               no new warnings. When they do, it squash-merges the PR. The AI proposes the
-              documentation, and deterministic gates verify it builds and passes policy before it
-              ships.
+              documentation, deterministic gates verify it before it lands on <code>main</code>,
+              and the separate Go Live gate controls publication.
             </p>
             <p class="wf-foot">
               <a href="https://github.com/mono/SkiaSharp-API-docs/blob/main/.github/workflows/automerge-docs.yml" target="_blank" rel="noopener">View workflow source &rarr;</a>
@@ -512,6 +585,14 @@
           </div>
 
           <div class="skill-group">
+            <h3>Performance &amp; reliability</h3>
+            <ul class="skill-list">
+              <li><span class="skill-name">memory-leak-fixer <span class="skill-auto">Automated</span></span><br>Find and fix native ownership or disposal leaks with a red-to-green regression test.</li>
+              <li><span class="skill-name">performance-fixer <span class="skill-auto">Automated</span></span><br>Find managed hot-path overhead and prove a behavior-preserving win with a benchmark.</li>
+            </ul>
+          </div>
+
+          <div class="skill-group">
             <h3>Security &amp; dependencies</h3>
             <ul class="skill-list">
               <li><span class="skill-name">security-audit</span><br>Audit native dependencies for CVEs and Component Governance alerts. Read-only.</li>
@@ -549,8 +630,8 @@
         <p class="section-kicker">How we keep it safe</p>
         <h2 class="section-title">Guardrails</h2>
         <p class="section-lead">
-          The trust story is deliberate. The agents are boxed in by design, and a human signs off
-          on everything that lands.
+          The trust story is deliberate. The agents are boxed in by design, and nothing reaches
+          the public API or documentation site without a human-controlled gate.
         </p>
 
         <div class="guard-grid">
@@ -574,8 +655,8 @@
             <div class="guard-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
             </div>
-            <h3>Human review</h3>
-            <p>Every agentic change arrives as an ordinary pull request. A maintainer reads it, asks for changes, and merges it. Nothing the agent produces ships unreviewed.</p>
+            <h3>Reviewable outputs</h3>
+            <p>Code and documentation edits arrive as ordinary pull requests. Library changes require maintainer review; API docs pass deterministic gates and still need a deliberate go-live step.</p>
           </div>
 
           <div class="guard">
@@ -589,7 +670,7 @@
 
         <p class="loop-note">
           <strong>Transparency.</strong> Everything here runs as public GitHub Actions you can
-          open and inspect, and every agentic run persists its artifacts to the
+          open and inspect, and SkiaSharp's agentic report artifacts are also copied to the
           <a href="https://github.com/mono/SkiaSharp/tree/aw-data" target="_blank" rel="noopener"><code>aw-data</code></a>
           branch. The machinery is not a black box; it is in the open, in the same repositories as
           the code.
