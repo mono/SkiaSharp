@@ -365,6 +365,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
     next_action = states["nextAction"]
     if (
         args.publish_run
+        and nuget["state"] != "ready"
         and latest
         and latest.get("status") == "completed"
         and latest.get("result") != "succeeded"
