@@ -66,7 +66,7 @@ repairs safe environment problems, and retries only the affected items.
 - Carries forward immutable managed/test run metadata and exact test/public
   package versions.
 - Selects the default matrix for the current host OS.
-- Generates one exact `run-tests.py` command per matrix item.
+- Generates one exact host, Android, or Apple runner command per matrix item.
 - Selects the fullest host-appropriate matrix by default.
 
 If CI tests are not ready, the planner returns no matrix. Use
@@ -86,21 +86,24 @@ ready.
 ### Test-run preparation
 
 `prepare-test-run.py` runs only after matrix approval. It restores the pinned
-local .NET tools, verifies them, and safely clears
+local .NET tools and safely clears
 `output/logs/testlogs/integration/`.
+It does not probe Docker, workloads, Appium, SDKs, runtimes, or devices; each
+platform runner checks its own volatile prerequisites so one platform failure
+cannot block unrelated coverage.
 
 ### Manual execution
 
 Test execution remains agent-driven because it requires progress reporting,
 device observation, failure investigation, screenshot review, and user
 decisions. Each selected matrix item has one host-quoted `command` that invokes a
-`run-tests.py` subcommand with the two exact package versions. Run that command
+platform-specific runner with the two exact package versions. Run that command
 from the repository root. The runner discovers its concrete device/runtime,
 resolves safe process-local configuration, checks prerequisites, and performs
 cleanup after failure. A nonzero exit records one failed item; it must not end
 the agent's loop over the approved matrix.
 
-`run-tests.py` emits machine-recognizable `[release-test]` records when the item
+Every runner emits machine-recognizable `[release-test]` records when the item
 starts, whenever a child command starts, every five seconds while that command
 is silent, when it exits, and when the item passes or fails. Run each matrix
 command in a dedicated terminal canvas and read its rendered output every five
@@ -213,9 +216,9 @@ Never dump raw planner JSON. Render:
 | Warning | Include every `release.warnings[]` entry |
 ```
 
-Mark IDs in `defaultSelection` as the recommended matrix. Explain that each
-approved item restores pinned tools and resolves process-local paths, while
-leaving broader SDK/runtime/workload installation under user control.
+Mark IDs in `defaultSelection` as the recommended matrix. Explain that
+preparation restores pinned tools once, while each item checks its own
+workloads, services, SDK/runtime, device, and process-local paths.
 
 ## Result policy
 
@@ -264,13 +267,17 @@ The final report must include:
 
 - [scripts/plan-release-tests.py](scripts/plan-release-tests.py) — read-only
   status handoff and host-specific matrix planning.
-- [scripts/prepare-test-run.py](scripts/prepare-test-run.py) — verify pinned
-  tools and reset test output.
-- [scripts/run-tests.py](scripts/run-tests.py) — checked setup, execution, and
-  cleanup subcommands for every matrix item.
+- [scripts/prepare-test-run.py](scripts/prepare-test-run.py) — restore pinned
+  tools and reset test output once per matrix.
+- [scripts/run-host-tests.py](scripts/run-host-tests.py) — smoke, console,
+  Docker/Linux, Blazor, and Windows host tests.
+- [scripts/run-android-tests.py](scripts/run-android-tests.py) — Android SDK,
+  emulator, Appium, execution, and cleanup.
+- [scripts/run-apple-tests.py](scripts/run-apple-tests.py) — iOS simulator and
+  Mac Catalyst Appium execution and cleanup.
 - [scripts/release_test_common.py](scripts/release_test_common.py) — shared
-  release-test version policy, checked process execution, repository lookup,
-  and JSON parsing.
+  version policy, heartbeat process execution, workload/Appium validation,
+  package arguments, test invocation, repository lookup, and JSON parsing.
 - [scripts/tests/](scripts/tests/) — planner, preparation, and runner tests.
 - [references/setup.md](references/setup.md) — prerequisite details.
 - [references/monitoring.md](references/monitoring.md) — long-running test
@@ -310,7 +317,7 @@ Run the preparation script directly:
 python3 .agents/skills/release-testing/scripts/prepare-test-run.py
 ```
 
-It restores/verifies pinned tools and clears old integration-test artifacts.
+It restores pinned tools and clears old integration-test artifacts.
 
 ### 4. Run approved items sequentially
 

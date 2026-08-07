@@ -37,23 +37,11 @@ def main() -> int:
     try:
         root = common.repository_root(cwd=Path.cwd())
         run(["dotnet", "tool", "restore"], cwd=root)
-        run(
-            ["dotnet", "tool", "run", "android", "--", "--help"],
-            cwd=root,
-        )
-        tools = ["android"]
-        if sys.platform == "darwin":
-            run(
-                ["dotnet", "tool", "run", "apple", "--", "--help"],
-                cwd=root,
-            )
-            tools.append("apple")
         output = reset_output(root)
         print(
             json.dumps(
                 {
                     "toolsRestored": True,
-                    "toolsVerified": tools,
                     "outputDirectory": str(output),
                     "outputReset": True,
                 },

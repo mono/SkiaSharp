@@ -203,7 +203,7 @@ When a command fails:
 
 1. Capture the command, exit code, failing phase, last useful output, and
    artifact/log paths.
-2. Let `run-tests.py` finish its cleanup. Repair only leaked runner-owned
+2. Let the platform runner finish its cleanup. Repair only leaked runner-owned
    resources that would prevent the next item from starting.
 3. Mark that item failed in the progress table.
 4. Start the next approved item, even when Docker, Appium, one runtime, or one

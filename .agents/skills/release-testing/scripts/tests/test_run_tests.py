@@ -14,16 +14,26 @@ from unittest import mock
 
 SCRIPTS = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(SCRIPTS))
-SCRIPT_PATH = SCRIPTS / "run-tests.py"
-SPEC = importlib.util.spec_from_file_location("run_tests", SCRIPT_PATH)
-runner = importlib.util.module_from_spec(SPEC)
-sys.modules[SPEC.name] = runner
-SPEC.loader.exec_module(runner)
+
+
+def load(name: str, filename: str):
+    path = SCRIPTS / filename
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+common = load("release_test_common", "release_test_common.py")
+host = load("run_host_tests", "run-host-tests.py")
+android = load("run_android_tests", "run-android-tests.py")
+apple = load("run_apple_tests", "run-apple-tests.py")
 
 
 class ReleaseTestRunnerTests(unittest.TestCase):
     def test_exact_test_filter_does_not_overlap_linux_console(self):
-        args = runner.test_args(
+        args = common.test_args(
             "ConsoleTests",
             skia="4.152.0-preview.1.1",
             harfbuzz="14.2.1-preview.1.1",
@@ -59,7 +69,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             },
         ]
         self.assertEqual(
-            runner.select_android_image(
+            android.select_android_image(
                 packages,
                 selector="37.2",
                 architecture="arm64-v8a",
@@ -71,7 +81,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            runner.select_android_image(
+            android.select_android_image(
                 packages,
                 selector="37.1",
                 architecture="arm64-v8a",
@@ -79,63 +89,45 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             "37.1",
         )
         with self.assertRaisesRegex(
-            runner.TestRunError,
+            common.ReleaseTestError,
             "Android 37 is not installed",
         ):
-            runner.select_android_image(
+            android.select_android_image(
                 packages,
                 selector="37",
                 architecture="arm64-v8a",
             )
 
-    def test_ios_runtime_check_uses_installed_simulators(self):
+    def test_ios_runtime_and_device_selection(self):
         simulators = [
             {
-                "runtime": {"name": f"iOS {version}"},
+                "isAvailable": True,
+                "runtime": {"name": "iOS 18.6", "version": "18.6"},
+                "deviceType": {
+                    "name": name,
+                    "productFamily": "iPhone",
+                },
             }
-            for version in ("18.6", "26.5")
+            for name in ("iPhone 16", "iPhone 16 Pro")
         ]
         with mock.patch.object(
-            runner,
+            apple,
             "apple_simulators",
             return_value=simulators,
         ):
             self.assertEqual(
-                runner.installed_ios_versions(Path.cwd()),
-                {
-                    "18.6",
-                    "26.5",
-                },
+                apple.installed_ios_versions(Path.cwd()),
+                {"18.6"},
             )
-
-    def test_ios_device_selection_uses_runtime_compatible_phone(self):
-        simulators = [
-            {
-                "isAvailable": True,
-                "runtime": {"name": "iOS 18.6", "version": "18.6"},
-                "deviceType": {
-                    "name": "iPhone 16 Pro",
-                    "productFamily": "iPhone",
-                },
-            },
-            {
-                "isAvailable": True,
-                "runtime": {"name": "iOS 18.6", "version": "18.6"},
-                "deviceType": {
-                    "name": "iPhone 16",
-                    "productFamily": "iPhone",
-                },
-            },
-        ]
         self.assertEqual(
-            runner.resolve_ios_device_type(simulators, "18.6", None),
+            apple.resolve_ios_device_type(simulators, "18.6", None),
             "iPhone 16",
         )
         with self.assertRaisesRegex(
-            runner.TestRunError,
+            common.ReleaseTestError,
             "does not support device type iPhone 13",
         ):
-            runner.resolve_ios_device_type(
+            apple.resolve_ios_device_type(
                 simulators,
                 "18.6",
                 "iPhone 13",
@@ -154,34 +146,31 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         ]
         args = SimpleNamespace(device=None)
         with (
-            mock.patch.object(runner.sys, "platform", "darwin"),
-            mock.patch.object(runner, "require_workload"),
-            mock.patch.object(runner, "require_appium_driver"),
+            mock.patch.object(apple.sys, "platform", "darwin"),
+            mock.patch.object(apple.common, "require_workload"),
+            mock.patch.object(apple.common, "require_appium_driver"),
             mock.patch.object(
-                runner,
+                apple,
                 "apple_simulators",
                 return_value=simulators,
             ),
             mock.patch.object(
-                runner,
+                apple.common,
                 "run_json",
                 return_value={"udid": "SIM-123"},
             ) as create,
-            mock.patch.object(runner, "run") as command,
+            mock.patch.object(apple.common, "run_streaming") as command,
             mock.patch.object(
-                runner,
+                apple.common,
                 "run_test",
-                side_effect=runner.TestRunError("test failed"),
+                side_effect=common.ReleaseTestError("test failed"),
             ),
-            self.assertRaisesRegex(runner.TestRunError, "test failed"),
+            self.assertRaisesRegex(common.ReleaseTestError, "test failed"),
         ):
-            runner.run_ios(Path.cwd(), args, "18.6")
+            apple.run_ios(Path.cwd(), args, "18.6")
 
         create_args = create.call_args.args[0]
-        self.assertEqual(
-            create_args[5:8],
-            ["simulator", "create", create_args[7]],
-        )
+        self.assertEqual(create_args[5:7], ["simulator", "create"])
         self.assertTrue(
             create_args[7].startswith("SkiaSharp Release iOS 18.6 ")
         )
@@ -199,11 +188,10 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             )
         )
 
-    def test_parser_supports_versioned_mobile_commands_and_device(self):
-        parser = runner.create_parser()
-        android = parser.parse_args(
+    def test_split_parsers_accept_their_platform_options(self):
+        android_args = android.create_parser().parse_args(
             [
-                "android-37.1",
+                "37.1",
                 "--skiasharp",
                 "s",
                 "--harfbuzzsharp",
@@ -214,33 +202,29 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                 "emulator-5554",
             ]
         )
-        ios = parser.parse_args(
+        apple_args = apple.create_parser().parse_args(
             [
-                "ios-26.3",
+                "ios-26.5",
                 "--skiasharp",
                 "s",
                 "--harfbuzzsharp",
                 "h",
             ]
         )
-        self.assertEqual(android.command, "android-37.1")
-        self.assertEqual(android.skia, "s")
-        self.assertEqual(android.harfbuzz, "h")
-        self.assertEqual(android.device, "pixel_9")
-        self.assertEqual(android.device_id, "emulator-5554")
-        self.assertEqual(ios.command, "ios-26.3")
-        self.assertEqual(
-            runner.mobile_command(android.command),
-            ("android", "37.1"),
+        host_args = host.create_parser().parse_args(
+            [
+                "linux",
+                "--skiasharp",
+                "s",
+                "--harfbuzzsharp",
+                "h",
+            ]
         )
-        self.assertEqual(
-            runner.mobile_command(ios.command),
-            ("ios", "26.3"),
-        )
-
-    def test_unversioned_mobile_commands_are_not_supported(self):
-        self.assertIsNone(runner.mobile_command("android"))
-        self.assertIsNone(runner.mobile_command("ios"))
+        self.assertEqual(android_args.version, "37.1")
+        self.assertEqual(android_args.device, "pixel_9")
+        self.assertEqual(android_args.device_id, "emulator-5554")
+        self.assertEqual(apple_args.command, "ios-26.5")
+        self.assertEqual(host_args.command, "linux")
 
     def test_appium_versions_are_exact(self):
         drivers = {
@@ -249,25 +233,25 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                 "version": "8.2.2",
             }
         }
-        runner.validate_appium_driver(
+        common.validate_appium_driver(
             "3.6.0",
             drivers,
             "uiautomator2",
         )
         with self.assertRaisesRegex(
-            runner.TestRunError,
+            common.ReleaseTestError,
             "Appium 3.6.0 is required",
         ):
-            runner.validate_appium_driver(
+            common.validate_appium_driver(
                 "3.5.0",
                 drivers,
                 "uiautomator2",
             )
         with self.assertRaisesRegex(
-            runner.TestRunError,
+            common.ReleaseTestError,
             "uiautomator2 8.2.2 is required",
         ):
-            runner.validate_appium_driver(
+            common.validate_appium_driver(
                 "3.6.0",
                 {
                     "uiautomator2": {
@@ -278,41 +262,14 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                 "uiautomator2",
             )
 
-    def test_android_environment_is_discovered_with_pinned_tool(self):
-        with tempfile.TemporaryDirectory() as directory:
-            sdk = Path(directory) / "android"
-            jdk = Path(directory) / "java"
-            sdk.mkdir()
-            jdk.mkdir()
-            results = [
-                subprocess.CompletedProcess([], 0, f"{sdk}\n", ""),
-                subprocess.CompletedProcess([], 0, f"{jdk}\n", ""),
-            ]
-            environ = {}
-            with mock.patch.object(
-                runner,
-                "run",
-                side_effect=results,
-            ) as command:
-                resolved = runner.configure_android_environment(
-                    Path.cwd(),
-                    environ,
-                )
-        self.assertEqual(resolved["ANDROID_HOME"], str(sdk))
-        self.assertEqual(resolved["JAVA_HOME"], str(jdk))
-        self.assertEqual(environ, resolved)
-        self.assertEqual(command.call_count, 2)
-
     def test_android_environment_is_refreshed_each_run(self):
         with tempfile.TemporaryDirectory() as directory:
             sdk = Path(directory) / "android"
             jdk = Path(directory) / "java"
             old_sdk = Path(directory) / "old-android"
             old_jdk = Path(directory) / "old-java"
-            sdk.mkdir()
-            jdk.mkdir()
-            old_sdk.mkdir()
-            old_jdk.mkdir()
+            for path in (sdk, jdk, old_sdk, old_jdk):
+                path.mkdir()
             environ = {
                 "ANDROID_HOME": str(old_sdk),
                 "JAVA_HOME": str(old_jdk),
@@ -322,33 +279,33 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                 subprocess.CompletedProcess([], 0, f"{jdk}\n", ""),
             ]
             with mock.patch.object(
-                runner,
-                "run",
+                android.common,
+                "run_streaming",
                 side_effect=results,
             ) as command:
-                resolved = runner.configure_android_environment(
+                resolved = android.configure_android_environment(
                     Path.cwd(),
                     environ,
                 )
         self.assertEqual(command.call_count, 2)
         self.assertEqual(resolved["ANDROID_HOME"], str(sdk))
         self.assertEqual(resolved["JAVA_HOME"], str(jdk))
-        self.assertEqual(environ["ANDROID_HOME"], str(sdk))
+        self.assertEqual(environ, resolved)
 
     def test_missing_executable_has_clear_error(self):
         with (
-            mock.patch.object(runner.shutil, "which", return_value=None),
+            mock.patch.object(common.shutil, "which", return_value=None),
             mock.patch.object(
-                runner.subprocess,
+                common.subprocess,
                 "Popen",
                 side_effect=FileNotFoundError,
             ),
             self.assertRaisesRegex(
-                runner.TestRunError,
+                common.ReleaseTestError,
                 "missing-tool was not found on PATH",
             ),
         ):
-            runner.run(["missing-tool"], cwd=Path.cwd())
+            common.run_streaming(["missing-tool"], cwd=Path.cwd())
 
     def test_silent_command_reports_heartbeat_and_result(self):
         class SlowProcess:
@@ -365,11 +322,15 @@ class ReleaseTestRunnerTests(unittest.TestCase):
 
         output = io.StringIO()
         with (
-            mock.patch.object(runner.subprocess, "Popen", return_value=SlowProcess()),
-            mock.patch.object(runner.time, "monotonic", side_effect=[0, 5, 6]),
+            mock.patch.object(
+                common.subprocess,
+                "Popen",
+                return_value=SlowProcess(),
+            ),
+            mock.patch.object(common.time, "monotonic", side_effect=[0, 5, 6]),
             contextlib.redirect_stdout(output),
         ):
-            result = runner.run(
+            result = common.run_streaming(
                 ["slow-tool"],
                 cwd=Path.cwd(),
                 capture=True,
@@ -387,23 +348,18 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         )
 
     def test_item_reports_start_and_pass(self):
-        parser = mock.Mock()
-        parser.parse_args.return_value = SimpleNamespace(
-            command="smoke",
-            skia="s",
-            harfbuzz="h",
-            device=None,
-            device_id=None,
-        )
+        args = SimpleNamespace(command="smoke", skia="s", harfbuzz="h")
         output = io.StringIO()
         with (
-            mock.patch.object(runner, "create_parser", return_value=parser),
-            mock.patch.object(runner, "repo_root", return_value=Path.cwd()),
-            mock.patch.object(runner, "run_test"),
-            mock.patch.object(runner.time, "monotonic", side_effect=[0, 7]),
+            mock.patch.object(
+                common,
+                "repository_root",
+                return_value=Path.cwd(),
+            ),
+            mock.patch.object(common.time, "monotonic", side_effect=[0, 7]),
             contextlib.redirect_stdout(output),
         ):
-            result = runner.main()
+            result = common.execute_item(args, mock.Mock())
 
         self.assertEqual(result, 0)
         self.assertIn("item started: smoke", output.getvalue())
@@ -417,10 +373,10 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             }.get(command)
 
         with (
-            mock.patch.object(runner.sys, "platform", "win32"),
-            mock.patch.object(runner.shutil, "which", side_effect=which),
+            mock.patch.object(common.sys, "platform", "win32"),
+            mock.patch.object(common.shutil, "which", side_effect=which),
         ):
-            resolved = runner.resolve_command(["appium", "--version"])
+            resolved = common.resolve_command(["appium", "--version"])
         self.assertEqual(
             resolved[:4],
             [
@@ -433,18 +389,29 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertIn("appium.cmd", resolved[4])
 
     def test_scripts_are_ascii_only(self):
-        SCRIPT_PATH.read_text(encoding="ascii")
+        for filename in (
+            "release_test_common.py",
+            "run-host-tests.py",
+            "run-android-tests.py",
+            "run-apple-tests.py",
+        ):
+            (SCRIPTS / filename).read_text(encoding="ascii")
         Path(__file__).read_text(encoding="ascii")
 
-    def test_runner_has_no_provisioning_commands(self):
-        source = SCRIPT_PATH.read_text(encoding="ascii")
-        for command in (
-            '"install"',
-            '"restore"',
-            '"update"',
-            '"downloadPlatform"',
+    def test_runners_have_no_provisioning_commands(self):
+        for filename in (
+            "run-host-tests.py",
+            "run-android-tests.py",
+            "run-apple-tests.py",
         ):
-            self.assertNotIn(command, source)
+            source = (SCRIPTS / filename).read_text(encoding="ascii")
+            for command in (
+                '"install"',
+                '"restore"',
+                '"update"',
+                '"downloadPlatform"',
+            ):
+                self.assertNotIn(command, source)
 
 
 if __name__ == "__main__":

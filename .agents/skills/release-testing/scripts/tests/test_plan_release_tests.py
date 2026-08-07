@@ -15,14 +15,27 @@ planner = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = planner
 SPEC.loader.exec_module(planner)
 
-RUNNER_PATH = Path(__file__).resolve().parent.parent / "run-tests.py"
-RUNNER_SPEC = importlib.util.spec_from_file_location(
-    "release_test_runner",
-    RUNNER_PATH,
-)
-runner = importlib.util.module_from_spec(RUNNER_SPEC)
-sys.modules[RUNNER_SPEC.name] = runner
-RUNNER_SPEC.loader.exec_module(runner)
+
+def load_runner(name: str, filename: str):
+    path = SCRIPTS / filename
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+RUNNERS = {
+    "run-host-tests.py": load_runner("run_host_tests", "run-host-tests.py"),
+    "run-android-tests.py": load_runner(
+        "run_android_tests",
+        "run-android-tests.py",
+    ),
+    "run-apple-tests.py": load_runner(
+        "run_apple_tests",
+        "run-apple-tests.py",
+    ),
+}
 
 
 STATUS = {
@@ -78,12 +91,15 @@ class ReleaseTestPlanTests(unittest.TestCase):
             ],
         )
 
-    def test_matrix_commands_use_one_python_runner(self):
+    def test_matrix_commands_use_platform_runners(self):
         matrix, _ = planner.build_matrix(STATUS, "macOS")
         for item in matrix:
             self.assertNotIn("selectedByDefault", item)
             command = item["command"]
-            self.assertIn("run-tests.py", command)
+            self.assertRegex(
+                command,
+                r"run-(?:host|android|apple)-tests\.py",
+            )
             self.assertIn(
                 "--skiasharp 4.152.0-preview.1.1",
                 command,
@@ -95,11 +111,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         android = next(
             item for item in matrix if item["id"] == "android-26"
         )
-        self.assertIn("android-26", android["command"])
+        self.assertIn("run-android-tests.py 26", android["command"])
         android_max = next(
             item for item in matrix if item["id"] == "android-37.1"
         )
-        self.assertIn("android-37.1", android_max["command"])
+        self.assertIn("run-android-tests.py 37.1", android_max["command"])
         ios_min = next(item for item in matrix if item["id"] == "ios-18.6")
         self.assertIn("ios-18.6", ios_min["command"])
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
@@ -118,12 +134,18 @@ class ReleaseTestPlanTests(unittest.TestCase):
             script_index = next(
                 index
                 for index, value in enumerate(argv)
-                if value.endswith("run-tests.py")
+                if Path(value).name in RUNNERS
             )
-            parsed = runner.create_parser().parse_args(
+            script_name = Path(argv[script_index]).name
+            parsed = RUNNERS[script_name].create_parser().parse_args(
                 argv[script_index + 1 :]
             )
-            self.assertEqual(parsed.command, item["id"])
+            parsed_id = (
+                f"android-{parsed.version}"
+                if script_name == "run-android-tests.py"
+                else parsed.command
+            )
+            self.assertEqual(parsed_id, item["id"])
             self.assertEqual(parsed.skia, "4.152.0-preview.1.1")
             self.assertEqual(parsed.harfbuzz, "14.2.1-preview.1.1")
 
@@ -199,7 +221,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
 
     def test_windows_command_uses_call_operator_for_quoted_executable(self):
         result = planner.format_command(
-            ["C:\\Program Files\\Python\\python.exe", "run-tests.py"],
+            ["C:\\Program Files\\Python\\python.exe", "run-host-tests.py"],
             platform_name="win32",
         )
         self.assertTrue(result.startswith("& 'C:\\Program Files"))

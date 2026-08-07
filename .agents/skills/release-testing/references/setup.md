@@ -5,13 +5,10 @@ what the runner requires and checks.
 
 ## Pinned local tools
 
-The approved preparation step restores the repository tool manifest, then
-verifies the Android tool and, on macOS, the Apple tool:
+The approved preparation step restores the repository tool manifest once:
 
 ```bash
 dotnet tool restore
-dotnet tool run android -- --help
-dotnet tool run apple -- --help
 ```
 
 The repository pins:
@@ -25,6 +22,8 @@ JSON output, boot waiting, and timeout behavior are stable inputs for the agent.
 Tool restore is deterministic because versions are pinned in
 `.config/dotnet-tools.json`. The agent should run preparation rather than
 treating a missing local tool as a user blocker.
+Each platform runner then checks only the tool it owns, so an unavailable mobile
+tool does not block unrelated host coverage.
 
 ## Workloads
 

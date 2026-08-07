@@ -57,6 +57,7 @@ def status_report(root: Path, target: str) -> dict:
 
 
 def runner_command(
+    runner_script: str,
     runner_args: list[str],
     *,
     skia_version: str,
@@ -65,7 +66,7 @@ def runner_command(
     return format_command(
         [
             sys.executable,
-            ".agents/skills/release-testing/scripts/run-tests.py",
+            f".agents/skills/release-testing/scripts/{runner_script}",
             *runner_args,
             "--skiasharp",
             skia_version,
@@ -80,6 +81,7 @@ def matrix_item(
     item_id: str,
     label: str,
     target: str,
+    runner_script: str,
     runner_args: list[str],
     skia_version: str,
     harfbuzz_version: str,
@@ -92,6 +94,7 @@ def matrix_item(
         "target": target,
         "estimatedMinutes": estimated_minutes,
         "command": runner_command(
+            runner_script,
             runner_args,
             skia_version=skia_version,
             harfbuzz_version=harfbuzz_version,
@@ -118,6 +121,7 @@ def build_matrix(
         item_id: str,
         label: str,
         target: str,
+        runner_script: str,
         runner_args: list[str],
         minutes: int,
         visual: bool = False,
@@ -127,6 +131,7 @@ def build_matrix(
                 item_id=item_id,
                 label=label,
                 target=target,
+                runner_script=runner_script,
                 runner_args=runner_args,
                 skia_version=skia,
                 harfbuzz_version=harfbuzz,
@@ -135,13 +140,35 @@ def build_matrix(
             )
         )
 
-    add("smoke", "Native loading smoke tests", ".NET", ["smoke"], 1)
-    add("console", "Console application tests", ".NET", ["console"], 1)
-    add("linux", "Linux container tests", "Docker Linux", ["linux"], 2)
+    add(
+        "smoke",
+        "Native loading smoke tests",
+        ".NET",
+        "run-host-tests.py",
+        ["smoke"],
+        1,
+    )
+    add(
+        "console",
+        "Console application tests",
+        ".NET",
+        "run-host-tests.py",
+        ["console"],
+        1,
+    )
+    add(
+        "linux",
+        "Linux container tests",
+        "Docker Linux",
+        "run-host-tests.py",
+        ["linux"],
+        2,
+    )
     add(
         "blazor",
         "Blazor WebAssembly rendering tests",
         "Chromium",
+        "run-host-tests.py",
         ["blazor"],
         3,
         True,
@@ -150,7 +177,8 @@ def build_matrix(
         f"android-{common.ANDROID_MIN_VERSION}",
         "MAUI Android minimum",
         f"Android {common.ANDROID_MIN_VERSION}",
-        [f"android-{common.ANDROID_MIN_VERSION}"],
+        "run-android-tests.py",
+        [common.ANDROID_MIN_VERSION],
         5,
         True,
     )
@@ -158,7 +186,8 @@ def build_matrix(
         f"android-{common.ANDROID_MAX_VERSION}",
         "MAUI Android maximum",
         f"Android {common.ANDROID_MAX_VERSION}",
-        [f"android-{common.ANDROID_MAX_VERSION}"],
+        "run-android-tests.py",
+        [common.ANDROID_MAX_VERSION],
         5,
         True,
     )
@@ -168,6 +197,7 @@ def build_matrix(
             "maccatalyst",
             "MAUI Mac Catalyst rendering tests",
             "Current macOS",
+            "run-apple-tests.py",
             ["maccatalyst"],
             3,
             True,
@@ -176,6 +206,7 @@ def build_matrix(
             f"ios-{common.IOS_MIN_VERSION}",
             "MAUI iOS minimum test target",
             f"iOS {common.IOS_MIN_VERSION}",
+            "run-apple-tests.py",
             [f"ios-{common.IOS_MIN_VERSION}"],
             4,
             True,
@@ -184,6 +215,7 @@ def build_matrix(
             f"ios-{common.IOS_MAX_VERSION}",
             "MAUI iOS maximum test target",
             f"iOS {common.IOS_MAX_VERSION}",
+            "run-apple-tests.py",
             [f"ios-{common.IOS_MAX_VERSION}"],
             4,
             True,
@@ -196,6 +228,7 @@ def build_matrix(
             "windows",
             "MAUI Windows rendering tests",
             "Windows",
+            "run-host-tests.py",
             ["windows"],
             4,
             True,
