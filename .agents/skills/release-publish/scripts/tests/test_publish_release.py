@@ -100,16 +100,16 @@ class PublishReleaseTests(unittest.TestCase):
             "v4.152.0",
         )
 
-    def test_azure_request_pins_exact_managed_run(self):
+    def test_azure_request_uses_managed_build_number_as_resource_version(self):
         request = push.AzurePublish.request_body(
-            12345,
+            "4.152.0-preview.1.1+4.152.0-preview.1",
             stable=True,
             preview=True,
         )
         self.assertTrue(request["previewRun"])
         self.assertEqual(
             request["resources"]["pipelines"]["SkiaSharp"]["version"],
-            "12345",
+            "4.152.0-preview.1.1+4.152.0-preview.1",
         )
         self.assertEqual(
             request["templateParameters"],

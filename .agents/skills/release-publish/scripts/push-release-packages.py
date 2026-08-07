@@ -9,7 +9,6 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
-import time
 
 import release_publish as publish
 
@@ -17,6 +16,7 @@ import release_publish as publish
 AZURE_ORG = "https://devdiv.visualstudio.com"
 AZURE_PROJECT = "DevDiv"
 PUBLISH_PIPELINE_ID = 25298
+AZURE_WEB_ORG = "devdiv"
 
 
 class AzurePublish:
@@ -33,7 +33,7 @@ class AzurePublish:
 
     @staticmethod
     def request_body(
-        managed_run_id: int,
+        managed_build_number: str,
         *,
         stable: bool,
         preview: bool,
@@ -43,7 +43,7 @@ class AzurePublish:
             "resources": {
                 "pipelines": {
                     "SkiaSharp": {
-                        "version": str(managed_run_id),
+                        "version": managed_build_number,
                     }
                 }
             },
@@ -93,20 +93,30 @@ class AzurePublish:
             if path:
                 path.unlink(missing_ok=True)
 
-    def preview(self, managed_run_id: int, *, stable: bool) -> bool:
+    def preview(
+        self,
+        managed_build_number: str,
+        *,
+        stable: bool,
+    ) -> bool:
         response = self.invoke_run(
             self.request_body(
-                managed_run_id,
+                managed_build_number,
                 stable=stable,
                 preview=True,
             )
         )
         return response.get("id") == -1 and bool(response.get("finalYaml"))
 
-    def queue(self, managed_run_id: int, *, stable: bool) -> dict:
+    def queue(
+        self,
+        managed_build_number: str,
+        *,
+        stable: bool,
+    ) -> dict:
         return self.invoke_run(
             self.request_body(
-                managed_run_id,
+                managed_build_number,
                 stable=stable,
                 preview=False,
             )
@@ -195,10 +205,7 @@ class AzurePublish:
                     "status": build.get("status"),
                     "result": build.get("result"),
                     "queueTime": build.get("queueTime"),
-                    "url": (
-                        f"{AZURE_ORG}/{AZURE_PROJECT}/_build/results"
-                        f"?buildId={build['id']}"
-                    ),
+                    "url": run_url(int(build["id"])),
                 }
             )
         return sorted(
@@ -206,6 +213,13 @@ class AzurePublish:
             key=lambda item: item["runId"],
             reverse=True,
         )
+
+
+def run_url(run_id: int) -> str:
+    return (
+        f"https://dev.azure.com/{AZURE_WEB_ORG}/{AZURE_PROJECT}/"
+        f"_build/results?buildId={run_id}&view=results"
+    )
 
 
 def load_release(args):
@@ -237,10 +251,27 @@ def execution_command(args, source_sha: str) -> str:
         str(args.expect_managed_run),
         "--expect-tests-run",
         str(args.expect_tests_run),
-        "--wait-minutes",
-        str(args.wait_minutes),
     ]
     return publish.shell_command(command)
+
+
+def wait_command(args, source_sha: str, publish_run_id: int) -> str:
+    return publish.shell_command(
+        [
+            sys.executable,
+            ".agents/skills/release-publish/scripts/"
+            "wait-release-packages.py",
+            args.release_branch,
+            "--expect-source-sha",
+            source_sha,
+            "--expect-managed-run",
+            str(args.expect_managed_run),
+            "--expect-tests-run",
+            str(args.expect_tests_run),
+            "--publish-run",
+            str(publish_run_id),
+        ]
+    )
 
 
 def package_states(nuget_state: str, latest: dict | None) -> dict:
@@ -258,7 +289,7 @@ def package_states(nuget_state: str, latest: dict | None) -> dict:
             "detail": (
                 "Exact publish run is queued/running and may await approval"
             ),
-            "nextAction": "approve-or-wait-for-publish",
+            "nextAction": "approve-publish-run",
         }
     if latest and latest["result"] == "succeeded":
         return {
@@ -293,7 +324,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         None
         if nuget["state"] == "ready"
         else azure.preview(
-            args.expect_managed_run,
+            handoff["managed"]["buildNumber"],
             stable=release.stable,
         )
         if validate_request
@@ -346,6 +377,15 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             if next_action != "start-release-draft"
             else None
         ),
+        "waitCommand": (
+            wait_command(args, source_sha, latest["runId"])
+            if latest
+            and next_action in {
+                "approve-publish-run",
+                "wait-for-nuget",
+            }
+            else None
+        ),
     }
 
 
@@ -359,43 +399,48 @@ def execute(args) -> dict:
         latest.get("status") == "completed"
         and latest.get("result") != "succeeded"
     )
+    azure = AzurePublish()
     if should_queue:
-        AzurePublish().queue(
-            args.expect_managed_run,
+        queued = azure.queue(
+            state["release"]["buildNumber"],
             stable=publish.ReleaseVersion.parse(
                 args.release_branch
             ).stable,
         )
-
-    deadline = time.monotonic() + args.wait_minutes * 60
-    while True:
-        state = current_state(args, validate_request=False)
-        state["dryRun"] = False
-        if state["nuget"]["state"] == "ready":
-            return state
-        latest = state.get("publishRun")
-        if latest and latest.get("status") == "completed":
-            if latest.get("result") != "succeeded":
-                raise publish.PublishError(
-                    f"publish run {latest['runId']} "
-                    f"{latest.get('result')}"
-                )
-        if time.monotonic() >= deadline:
-            raise publish.PublishError(
-                f"timed out after {args.wait_minutes} minutes waiting for "
-                "the publish run and NuGet.org"
-            )
-        phase = (
-            f"run {latest['runId']} {latest.get('status')}"
-            if latest
-            else "waiting for queued publish run"
-        )
+        queued_run_id = int(queued["id"])
+        url = run_url(queued_run_id)
         print(
-            f"Waiting: {phase}; NuGet={state['nuget']['state']}",
+            f"Queued protected Azure publication run {queued_run_id}: "
+            f"{url}",
             file=sys.stderr,
             flush=True,
         )
-        time.sleep(args.poll_seconds)
+        state["dryRun"] = False
+        state["publishRun"] = {
+            "runId": queued_run_id,
+            "name": queued.get("name"),
+            "status": queued.get("state"),
+            "result": queued.get("result"),
+            "url": url,
+        }
+        state["operations"][0] = publish.operation(
+            "publish-packages",
+            "running",
+            "Exact publish run is queued and requires human approval",
+            url=url,
+        )
+        state["nextAction"] = "approve-publish-run"
+        state["executionCommand"] = None
+        state["waitCommand"] = wait_command(
+            args,
+            state["release"]["sourceSha"],
+            queued_run_id,
+        )
+        return state
+    if latest:
+        state["dryRun"] = False
+        return state
+    raise publish.PublishError("failed to queue the Azure publication run")
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -405,21 +450,12 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--expect-managed-run", required=True, type=int)
     parser.add_argument("--expect-tests-run", required=True, type=int)
     parser.add_argument("--dry-run", action="store_true")
-    parser.add_argument("--wait-minutes", type=int, default=60)
-    parser.add_argument(
-        "--poll-seconds",
-        type=int,
-        default=30,
-        help=argparse.SUPPRESS,
-    )
     return parser
 
 
 def main() -> int:
     args = create_parser().parse_args()
     try:
-        if args.wait_minutes <= 0 or args.poll_seconds <= 0:
-            raise publish.PublishError("wait and poll values must be positive")
         report = current_state(args) if args.dry_run else execute(args)
         print(json.dumps(report, indent=2))
     except (publish.PublishError, OSError) as error:

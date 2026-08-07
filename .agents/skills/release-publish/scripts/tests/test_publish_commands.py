@@ -22,6 +22,7 @@ def load(name: str, filename: str):
 
 
 push = load("push_release_packages", "push-release-packages.py")
+wait = load("wait_release_packages", "wait-release-packages.py")
 draft = load("create_release_draft", "create-release-draft.py")
 release = load("publish_release_command", "publish-release.py")
 github = load("release_github_command", "release_github.py")
@@ -92,7 +93,7 @@ class PublishCommandTests(unittest.TestCase):
                 "missing",
                 {"status": "inProgress", "result": None},
             )["nextAction"],
-            "approve-or-wait-for-publish",
+            "approve-publish-run",
         )
         self.assertEqual(
             push.package_states(
@@ -104,6 +105,87 @@ class PublishCommandTests(unittest.TestCase):
         self.assertEqual(
             push.package_states("missing", None)["nextAction"],
             "confirm-publish-packages",
+        )
+
+    def test_wait_validates_exact_managed_resource(self):
+        report = {
+            "release": {
+                "buildNumber": "4.152.0-preview.1.1+4.152.0-preview.1",
+                "type": "preview",
+            }
+        }
+        detail = {
+            "resources": {
+                "pipelines": {
+                    "SkiaSharp": {
+                        "pipeline": {"id": 10},
+                        "version": (
+                            "4.152.0-preview.1.1+4.152.0-preview.1"
+                        ),
+                    }
+                }
+            },
+            "templateParameters": {
+                "selectedResource": "SkiaSharp",
+                "pushPackages": "true",
+                "pushStable": "false",
+            },
+        }
+        args = SimpleNamespace(expect_managed_run=10)
+        wait.validate_run(detail, report, args)
+        detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]["id"] = 11
+        with self.assertRaisesRegex(
+            wait.publish.PublishError,
+            "different managed run",
+        ):
+            wait.validate_run(detail, report, args)
+
+    def test_queue_returns_approval_url_and_wait_command(self):
+        args = SimpleNamespace(
+            release_branch="release/4.152.0-preview.1",
+            expect_source_sha="a" * 40,
+            expect_managed_run=10,
+            expect_tests_run=20,
+        )
+        state = {
+            "dryRun": False,
+            "release": {
+                "sourceSha": "a" * 40,
+                "buildNumber": (
+                    "4.152.0-preview.1.1+4.152.0-preview.1"
+                ),
+            },
+            "nuget": {"state": "missing"},
+            "publishRun": None,
+            "operations": [{}, {}],
+        }
+
+        class FakeAzure:
+            def queue(self, build_number, *, stable):
+                self.build_number = build_number
+                self.stable = stable
+                return {
+                    "id": 14911788,
+                    "name": "SkiaSharp preview",
+                    "state": "inProgress",
+                    "result": None,
+                }
+
+        with (
+            mock.patch.object(push, "current_state", return_value=state),
+            mock.patch.object(push, "AzurePublish", FakeAzure),
+        ):
+            result = push.execute(args)
+
+        self.assertEqual(result["publishRun"]["runId"], 14911788)
+        self.assertEqual(
+            result["publishRun"]["url"],
+            "https://dev.azure.com/devdiv/DevDiv/_build/results"
+            "?buildId=14911788&view=results",
+        )
+        self.assertIn(
+            "--publish-run 14911788",
+            result["waitCommand"],
         )
 
     def test_create_script_pushes_tag_then_creates_draft(self):

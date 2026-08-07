@@ -239,11 +239,15 @@ flowchart TB
     ∙ Check exact NuGet versions"] --> APPROVE1{Queue publish pipeline?}
     APPROVE1 -->|No| STOP([Stop])
     APPROVE1 -->|Yes| PUSH
-    PUSH["Push package script
+    PUSH["Queue package script
     ∙ Queue exact managed resource
-    ∙ Human reviews versions/destination in Azure
-    ∙ Wait for protected approval/run
-    ∙ Wait for both NuGet packages"] --> DRAFT_AUDIT
+    ∙ Return run ID + approval URL"] --> AZURE_APPROVAL{Human approves versions/destination?}
+    AZURE_APPROVAL -->|No| STOP
+    AZURE_APPROVAL -->|Yes| WAIT
+    WAIT["Wait package script
+    ∙ Pin exact publication run
+    ∙ Wait for protected run
+    ∙ Verify both NuGet packages"] --> DRAFT_AUDIT
     DRAFT_AUDIT["Draft dry-run
     ∙ Select immediate previous release tag
     ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}

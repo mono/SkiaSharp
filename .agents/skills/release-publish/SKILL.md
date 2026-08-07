@@ -41,7 +41,8 @@ This skill is **Step 4 of 5**:
 | Script | Responsibility |
 |--------|----------------|
 | `scripts/detect-release-publish.py` | Read-only exact release/testing/package handoff. |
-| `scripts/push-release-packages.py` | Audit or execute pipeline 25298, wait for Azure, and verify both NuGet.org packages. |
+| `scripts/push-release-packages.py` | Audit or queue one exact pipeline 25298 run, then return its approval URL. |
+| `scripts/wait-release-packages.py` | Wait for that approved run and verify both NuGet.org packages. |
 | `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
 | `scripts/publish-release.py` | Validate the teaser and publish the draft. |
 | `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
@@ -57,8 +58,9 @@ the pinned audit commands; every confirmation report emits its exact
 |--------|--------------|----------|
 | Detector | `audit-package-publication` | Run `pushAuditCommand`. |
 | Packages | `confirm-publish-packages` | Approve and run package execution. |
-| Packages | `approve-or-wait-for-publish` | Show the protected Azure run; a human approves while execution waits. |
-| Packages | `wait-for-nuget` | Wait for both exact versions to index. |
+| Packages | `approve-publish-run` | Show `publishRun.url` and stop for human review/approval. |
+| Packages | `wait-for-nuget` | Continue the pinned wait command until both versions index. |
+| Packages | `retry-publish-run` | Show the failed exact run and return to package audit. |
 | Packages | `start-release-draft` | Run `draftAuditCommand`. |
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
 | Draft | `write-release-teaser` | Classify `generated-log.md` and fill `teaser.md`. |
@@ -97,10 +99,13 @@ HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 
 For `confirm-publish-packages`, obtain approval and run `executionCommand`.
 Verify that Azure selected the exact managed resource/run and the Stable or
-Preview push stage. A human reviews its versions/destination and approves the
-protected stage; the executing script waits without acting on that decision. It
-returns only after both exact public packages are available on NuGet.org or a
-clear failure/timeout occurs.
+Preview destination. The queue command returns immediately: show
+`publishRun.runId` and `publishRun.url`, then stop so a human can review the
+versions/destination and approve the protected stage.
+
+After the user confirms that decision, run the emitted `waitCommand`. It remains
+pinned to that publication run ID, waits for completion, and verifies both exact
+public packages on NuGet.org.
 
 ### 3. Create the generated-notes draft
 
