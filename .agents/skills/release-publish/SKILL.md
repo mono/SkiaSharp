@@ -69,28 +69,6 @@ the pinned audit commands; every confirmation report emits its exact
 
 ## Workflow
 
-### Resume after losing all local context
-
-Start every recovery from only the exact release branch:
-
-```bash
-python3 .agents/skills/release-publish/scripts/detect-release-publish.py \
-  release/{version}
-```
-
-The detector reconstructs the source SHA, managed/tests runs, package versions,
-and pinned audit commands from Git/Azure state. Then:
-
-1. Run `pushAuditCommand`; it recovers an exact Azure publication run and emits
-   its URL/resume command without queueing a duplicate.
-2. When packages are ready, run the detector's `draftAuditCommand`; it detects
-   the tag/draft and re-downloads `generated-log.md`.
-3. Follow the draft's `publishAuditCommand`; it detects draft/published state.
-4. Continue from the reported `nextAction`.
-
-Never reconstruct `--expect-*` values manually during recovery. Only unsaved
-human edits to `teaser.md` cannot be recovered from remote state.
-
 ### 1. Detect
 
 ```bash
@@ -98,7 +76,10 @@ python3 .agents/skills/release-publish/scripts/detect-release-publish.py \
   {release-branch-or-tested-sha}
 ```
 
-Preserve all returned release/run/package pins.
+Preserve all returned release/run/package pins. Detection is also the recovery
+entry point after lost context: rerun it from only `release/{version}` to
+reconstruct every `--expect-*` value and pinned audit command. Never reconstruct
+those values manually.
 
 ### 2. Publish packages
 
@@ -117,6 +98,10 @@ HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 |-----------|--------|--------|
 | `{operations[].id}` | `{operations[].status}` | `{operations[].detail}` |
 ```
+
+The emitted audit command already includes `--dry-run`. Use it whenever status
+must be read or recovered without queueing anything; it detects an exact
+queued/running/succeeded publication and returns its URL/resume command.
 
 For `confirm-publish-packages`, obtain approval and run `executionCommand`.
 Verify that Azure selected the exact managed resource/run and the Stable or
@@ -161,6 +146,9 @@ exact generated notes, then downloads that body into ignored local artifacts:
 | `generated-log.md` | Body downloaded from the GitHub draft; classification input only. |
 | `teaser.md` | Agent edits customer-facing sections. |
 
+Rerunning this dry-run detects an existing remote tag/draft and re-downloads
+`generated-log.md`.
+
 ### 4. Prepare the teaser
 
 For `write-release-teaser`, follow
@@ -168,7 +156,8 @@ For `write-release-teaser`, follow
 `teaser.md`, and preserve exactly one `<!-- RELEASE_LINKS -->` marker.
 
 This step is editorial and local only. It does not audit, modify, or publish the
-GitHub Release.
+GitHub Release. Unsaved edits to `teaser.md` are the only publication state that
+cannot be recovered remotely.
 
 ### 5. Finish the release
 
