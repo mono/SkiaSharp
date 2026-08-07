@@ -104,4 +104,4 @@ The [`Sync - Issue Template Versions`](../../../.github/workflows/auto-update-is
 workflow runs `update-bug-template.py` daily (09:00 UTC) and opens/updates a PR
 when the dropdowns drift. It can also be triggered manually via
 **workflow_dispatch**. The release-milestones paths are not scheduled; run them
-through the skill or the manual Azure release coordinator.
+through the release-milestones skill.
