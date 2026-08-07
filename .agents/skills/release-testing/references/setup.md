@@ -55,6 +55,13 @@ missing/mismatched version or an existing server on port 4723 fails the item for
 user action. Required doctor findings that remain after deterministic path
 resolution also fail clearly.
 
+For Mac Catalyst, the host runner temporarily selects the newest installed
+Xcode 26.x using `dotnet apple xcode list`. Mac2's bundled WebDriverAgentMac
+currently targets macOS 10.15 and cannot build with Xcode 27
+([appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410)).
+The override is process-local; if Xcode 26.x is unavailable, the runner leaves
+the default Xcode unchanged.
+
 ## Android
 
 The Android runner reads installed SDK packages with:

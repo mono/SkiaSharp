@@ -218,6 +218,73 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertEqual(ios_args.version, "26.5")
         self.assertEqual(host_args.command, "linux")
 
+    def test_mac2_selects_latest_xcode_26(self):
+        selected = host.select_mac2_xcode(
+            [
+                {"Path": "/Applications/Xcode.app", "Version": "27.0"},
+                {
+                    "Path": "/Applications/Xcode-26.5.app",
+                    "Version": "26.5",
+                },
+                {
+                    "Path": "/Applications/Xcode-26.6.app",
+                    "Version": "26.6",
+                },
+            ]
+        )
+        self.assertEqual(selected["Version"], "26.6")
+
+    def test_mac2_falls_back_when_xcode_26_is_missing(self):
+        self.assertIsNone(
+            host.select_mac2_xcode(
+                [{"Path": "/Applications/Xcode.app", "Version": "27.0"}]
+            )
+        )
+
+    def test_mac2_xcode_selection_is_process_local(self):
+        with tempfile.TemporaryDirectory() as directory:
+            xcode = Path(directory) / "Xcode-26.6.app"
+            developer = xcode / "Contents" / "Developer"
+            developer.mkdir(parents=True)
+            with (
+                mock.patch.object(
+                    host.common,
+                    "run_json",
+                    return_value=[
+                        {"Path": str(xcode), "Version": "26.6"}
+                    ],
+                ),
+                mock.patch.dict(host.os.environ, {}, clear=False),
+            ):
+                result = host.configure_mac2_xcode(Path.cwd())
+                self.assertEqual(host.os.environ["DEVELOPER_DIR"], result)
+        self.assertEqual(result, str(developer))
+
+    def test_mac2_missing_xcode_26_keeps_default(self):
+        with (
+            mock.patch.object(
+                host.common,
+                "run_json",
+                return_value=[
+                    {
+                        "Path": "/Applications/Xcode.app",
+                        "Version": "27.0",
+                    }
+                ],
+            ),
+            mock.patch.dict(
+                host.os.environ,
+                {"DEVELOPER_DIR": "/default/Xcode"},
+                clear=False,
+            ),
+        ):
+            result = host.configure_mac2_xcode(Path.cwd())
+            self.assertIsNone(result)
+            self.assertEqual(
+                host.os.environ["DEVELOPER_DIR"],
+                "/default/Xcode",
+            )
+
     def test_appium_versions_are_exact(self):
         drivers = {
             "uiautomator2": {
