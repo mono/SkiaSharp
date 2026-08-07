@@ -1,167 +1,172 @@
 ---
 name: release-status
 description: >
-  Check the status of a SkiaSharp release build pipeline chain.
-  
-  Use when user asks to:
-  - Check release build status
-  - See where the release pipeline is at
-  - Track CI progress for a release
-  - Find out if packages are ready
-  - Get ADO build links for a release
-  
-  Triggers: "check release status", "how is the build", "where is the release",
-  "pipeline status", "is the build done", "check CI", "how is the run doing",
-  "are packages ready", "build progress".
-  
-  This is Step 2 of 4 in the release pipeline — after release-branch creates the branch
-  and before release-testing runs integration tests.
+  Check the current SkiaSharp release pipeline status. Use when the user asks
+  how a release build is progressing, whether packages are ready, which build
+  will be released, or what to do next. This is the second release step: resolve
+  a release branch to its latest commit (or accept a commit directly), follow
+  its latest connected pipeline chain, verify packages, and wait for tests.
 ---
 
-# Release Status Skill
+# Release Status
 
-Check the status of the SkiaSharp release pipeline chain on Azure DevOps.
+This skill is **Step 2 of 5**:
 
-⚠️ This is **Step 2 of 4** in the release pipeline. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+[release-branch](../release-branch/SKILL.md) → **release-status** →
+[release-testing](../release-testing/SKILL.md) →
+[release-publish](../release-publish/SKILL.md) →
+[release-milestones](../release-milestones/SKILL.md)
 
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → **Step 2 (this skill)** → [Step 3: release-testing](../release-testing/SKILL.md) → [Step 4: release-publish](../release-publish/SKILL.md)
+Use `pipeline-status.py` for all Azure DevOps and package-feed queries. The
+agent's role is to choose the target, turn JSON into a concise human summary,
+and follow the reported `nextAction`.
 
-## Pipeline Chain
+## Safety and selection rules
 
-Release builds flow through a **3-pipeline chain** on Azure DevOps (devdiv/DevDiv org):
+- This skill is read-only. It never queues, cancels, or retries a build.
+- It fetches Git refs but never checks out or moves a branch.
+- A release branch is a shortcut to its current tip commit.
+- A commit SHA checks that exact commit.
+- Only runs whose `sourceVersion` equals the resolved commit are considered.
+- The newest `SkiaSharp-Native` run for that commit is authoritative.
+- The selected `SkiaSharp` run must be a successful child of that native run.
+- The selected `SkiaSharp-Tests` run must be a child of the selected managed
+  run.
+- Do not combine runs from different native retries.
+- Do not proceed merely because managed packages were produced. Wait for the
+  selected tests run to complete successfully by default.
+- The user may explicitly override the test wait, but report that this departs
+  from the release best practice and preserve the selected run/package metadata.
 
-| Order | Pipeline Name | Definition ID | Role |
-|-------|---------------|---------------|------|
-| 1 | `SkiaSharp-Native` | 26493 | Builds native binaries for all platforms |
-| 2 | `SkiaSharp` | 10789 | Builds managed code, signs & publishes to internal feed |
-| 3 | `SkiaSharp-Tests` | 15756 | Runs device & unit tests |
+## Pipeline chain
 
-Each pipeline is triggered by completion of the previous via Azure DevOps pipeline resources.
-Packages appear on the internal feed after pipeline #2 (`SkiaSharp`) completes.
+```text
+SkiaSharp-Native
+  -> SkiaSharp
+      -> SkiaSharp-Tests
+```
 
----
+| Pipeline | ID | Purpose |
+|----------|----|---------|
+| `SkiaSharp-Native` | 26493 | Build native binaries. |
+| `SkiaSharp` | 10789 | Build managed code, sign, and publish internal packages. |
+| `SkiaSharp-Tests` | 15756 | Run device and unit tests. |
 
-## Step 1: Run the Status Script
+## What the script guarantees
+
+`pipeline-status.py` accepts an exact `release/{version}` branch or commit SHA.
+For a branch, it resolves the current remote tip and then performs the same
+commit-based query.
+
+It:
+
+- Selects the newest native run for the resolved commit.
+- Selects the latest successful managed child of that native run.
+- Selects the latest tests child of the managed run.
+- Links downstream runs through `triggerInfo.pipelineId`.
+- Reports failed/running/pending jobs when relevant.
+- Reads release version inputs from the exact source commit.
+- Derives exact SkiaSharp and HarfBuzzSharp test package versions.
+- Separates stable internal test versions from eventual public versions.
+- Verifies both exact test packages on the preview feed.
+
+Script stdout is JSON for reliable agent parsing. Errors go to stderr and return
+a nonzero exit code.
+
+## Status and next actions
+
+| `nextAction` | Meaning |
+|--------------|---------|
+| `wait-for-native` | No native run exists yet, or it is still running. |
+| `retry-native` | The latest native run failed/canceled; tell the user to retry it. |
+| `wait-for-managed-trigger` | Native succeeded, but managed has not started. |
+| `wait-for-managed` | Managed is running. |
+| `retry-managed` | No successful managed child exists; retry/investigate managed. |
+| `wait-for-tests-trigger` | Managed succeeded, but tests have not started. |
+| `wait-for-tests` | Tests are running; wait by default. |
+| `retry-tests` | Tests failed/canceled; retry/investigate them. |
+| `retry-package-check` | Package-feed verification failed; rerun status later. |
+| `wait-for-packages` | One or both exact packages are not indexed yet. |
+| `start-release-testing` | Native, managed, tests, and both packages are ready. |
+
+Only `start-release-testing` is ready by default.
+
+## Presenting status to the user
+
+Never dump raw JSON. Render:
+
+```markdown
+## Release status
+
+**Release:** `{branch}`
+**Commit:** `{commit}`
+**State:** `{state}`
+
+### Pipeline
+
+| Pipeline | Status | Run | Build number |
+|----------|--------|-----|--------------|
+| SkiaSharp-Native | `{nativeRun.state}` | [run `{nativeRun.runId}`]({nativeRun.url}) | `{nativeRun.buildNumber}` |
+| SkiaSharp | `{managedRun.state}` | [run `{managedRun.runId}`]({managedRun.url}) | `{managedRun.buildNumber}` |
+| SkiaSharp-Tests | `{testsRun.state}` | [run `{testsRun.runId}`]({testsRun.url}) | `{testsRun.buildNumber}` |
+
+### Packages
+- Test: SkiaSharp `{packageVersions.test.SkiaSharp}`,
+  HarfBuzzSharp `{packageVersions.test.HarfBuzzSharp}`
+- Feed: show each `packageFeed.packages` availability.
+- Public: SkiaSharp `{packageVersions.public.SkiaSharp}`,
+  HarfBuzzSharp `{packageVersions.public.HarfBuzzSharp}`
+
+### Active or failed jobs
+- Include failed/running/pending job names when present.
+
+### Warnings
+- Include every `warnings[]` entry.
+
+### Next
+- Translate `nextAction` using the table above.
+```
+
+Omit empty sections and missing run links. Highlight the latest native failure
+even if an older managed build succeeded; the latest native attempt must have a
+successful managed child before the release can advance.
+
+When ready, retain the complete `managedRun`, `testsRun`, and
+`packageVersions` objects for the release-testing handoff.
+
+## Files
+
+- [scripts/pipeline-status.py](scripts/pipeline-status.py) — latest connected
+  chain and package-feed status.
+- [scripts/tests/test_pipeline_status.py](scripts/tests/test_pipeline_status.py)
+  — representative status scenarios.
+- [releasing.md](../../../documentation/dev/releasing.md) — complete release
+  process reference.
+
+## Runbook
+
+### 1. Choose the target
+
+Prefer the exact release branch from release-branch. A commit SHA may be used to
+inspect that exact commit.
+
+### 2. Query status
 
 ```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
-# Or pass a commit SHA:
-python3 .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
+python3 .agents/skills/release-status/scripts/pipeline-status.py \
+  {release-branch-or-commit}
 ```
 
-This outputs:
-- All three pipelines with status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUNNING]`, `[WAITING]`)
-- Build IDs and build numbers
-- Trigger relationships proving which upstream build caused each downstream run
-- Direct ADO links for each build
+### 3. Present the result
 
----
+Render the JSON using the summary above. Do not independently query or combine
+other pipeline runs.
 
-## Step 2: Interpret Results
+### 4. Follow `nextAction`
 
-| Scenario | Meaning | Next Action |
-|----------|---------|-------------|
-| All `[OK]` | Packages are on the internal feed | Proceed to `release-testing` |
-| Native `[OK]`, SkiaSharp `[RUNNING]` | Managed build in progress | Wait |
-| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUNNING]` | Tests running (packages already available) | Can start `release-testing` |
-| Any `[FAIL]` | Pipeline failed | Investigate via ADO link, retry or fix |
-| Native `[WARN]` (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
-
-### Job-Level Details (In-Progress Builds)
-
-When a pipeline is `inProgress`, the script queries the ADO timeline API and shows job-level
-breakdown below the pipeline entry:
-
-```
-+- SkiaSharp-Native (ID 26493) - native binaries
-|  [RUNNING] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
-|
-|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUNNING] running | 3 [WAITING] pending
-|  Failed: Job_Name_1, Job_Name_2
-|  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
-|  Pending: Wasm, Linux ARM, Linux ARM64
-```
-
-**Reading job status:**
-- **Completed count** — jobs that finished successfully (or with warnings)
-- **Failed list** — jobs that failed (names shown so you can investigate)
-- **Running list** — jobs actively executing (tells you what's left)
-- **Pending list** — jobs not yet started (queued or waiting for agents)
-
----
-
-## Step 3: Report to User
-
-Present a summary table:
-
-```
-Pipeline Chain Status: release/3.119.4
-
-| Pipeline | Status | Run ID | buildNumber | ADO Link |
-|----------|--------|--------|-------------|----------|
-| SkiaSharp-Native | [WARN] partiallySucceeded | 14361035 | 3.119.4-stable.2+3.119.4 | [link] |
-| SkiaSharp | [OK] succeeded | 14361102 | 3.119.4-stable.2+3.119.4 | [link] |
-| SkiaSharp-Tests | [RUNNING] inProgress | 14361241 | 3.119.4-stable.2+3.119.4 | [link] |
-
-Packages are available from the selected SkiaSharp (10789) run.
-
-Selected SkiaSharp run: 14361102 (3.119.4-stable.2+3.119.4)
-Selected SkiaSharp test package: 3.119.4-stable.2
-Eventual public SkiaSharp version: 3.119.4
-```
-
----
-
-## Manual Queries
-
-If the script is unavailable, query pipelines individually:
-
-```bash
-# Check any pipeline by ID and branch
-az pipelines runs list --pipeline-ids {id} --branch release/{version} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "[].{id:id, status:status, result:result, buildNumber:buildNumber}" --top 5
-
-# Verify trigger relationship (proves which build triggered this one)
-az pipelines runs show --id {build-id} \
-  --org https://devdiv.visualstudio.com --project DevDiv \
-  --query "triggerInfo"
-```
-
-### GitHub Commit Statuses
-
-Only `SkiaSharp-Native` reports back to GitHub:
-
-```bash
-gh api "repos/mono/SkiaSharp/commits/release/{version}/statuses" \
-  --jq '.[] | "\(.context) | \(.state) | \(.description // "")"'
-```
-
----
-
-## Identifying the Correct Run
-
-Multiple runs may exist on the same branch (retries, new commits). Match by `buildNumber`:
-
-```
-buildNumber format: {base}-{label}.{build}+{branch-version}
-Example:            3.119.4-stable.2+3.119.4
-```
-
-All pipelines in the same chain share the same buildNumber. The script traces trigger
-relationships via `triggerInfo.pipelineId` to confirm the chain is connected.
-
----
-
-## Extracting Package Versions
-
-From the selected `SkiaSharp` run's `buildNumber` in the script output:
-
-| Release Type | buildNumber Example | Test Package Version | Eventual Public Version |
-|--------------|---------------------|----------------------|-------------------------|
-| Preview / RC | `3.119.4-preview.1.1+3.119.4-preview.1` | `3.119.4-preview.1.1` | `3.119.4-preview.1.1` |
-| Stable | `3.119.4-stable.2+3.119.4` | `3.119.4-stable.2` | `3.119.4` |
-
-Pass the exact test package version to `release-testing`. For HarfBuzzSharp, combine its base
-version from `VERSIONS.txt` with the same label and build suffix. Stable release testing must not
-use the bare eventual public version.
+- For wait actions, report progress and stop.
+- For retry actions, show the failed pipeline/jobs and Azure DevOps URL.
+- Invoke [release-testing](../release-testing/SKILL.md) only for
+  `start-release-testing`, unless the user explicitly overrides the test wait.
+- Pass release-testing the `managedRun`, `testsRun`, and both exact test/public
+  package-version pairs.
