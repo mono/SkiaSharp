@@ -25,15 +25,6 @@ STATUS_SCRIPT = (
 PlanError = common.ReleaseTestError
 
 
-def run(
-    args: list[str],
-    *,
-    cwd: Path | None = None,
-    timeout: int = 180,
-):
-    return common.run_checked(args, cwd=cwd, timeout=timeout)
-
-
 parse_json_output = common.parse_json_output
 
 
@@ -57,9 +48,10 @@ def format_command(
 
 def status_report(root: Path, target: str) -> dict:
     return parse_json_output(
-        run(
+        common.run_checked(
             [sys.executable, str(STATUS_SCRIPT), target],
             cwd=root,
+            timeout=180,
         ).stdout
     )
 
@@ -271,9 +263,7 @@ def main() -> int:
     args = parser.parse_args()
 
     try:
-        root = Path(
-            run(["git", "rev-parse", "--show-toplevel"]).stdout.strip()
-        )
+        root = common.repository_root()
         status = status_report(root, args.release_branch_or_commit)
         eligible, status_override = plan_eligibility(
             status,
