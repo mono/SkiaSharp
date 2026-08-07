@@ -61,9 +61,9 @@ host-inapplicable coverage must be explicit in the approved plan.
 |--------|----------------|
 | `scripts/plan-release-tests.py` | Read-only release-status handoff and exact host matrix. |
 | `scripts/prepare-test-run.py` | Restore pinned local tools and clear prior integration output once. |
-| `scripts/run-host-tests.py` | Smoke, console, Docker/Linux, Blazor, and Windows items. |
+| `scripts/run-host-tests.py` | Smoke, console, Docker/Linux, Blazor, Mac Catalyst, and Windows host items. |
 | `scripts/run-android-tests.py` | Android environment, Appium, temporary/reused emulator, test, and cleanup. |
-| `scripts/run-apple-tests.py` | Fresh iOS simulator or Mac Catalyst Appium test and cleanup. |
+| `scripts/run-ios-tests.py` | Fresh iOS simulator, Appium test, and cleanup. |
 | `scripts/release_test_common.py` | Shared versions, heartbeat execution, validation, package arguments, and test invocation. |
 
 Planner actions:

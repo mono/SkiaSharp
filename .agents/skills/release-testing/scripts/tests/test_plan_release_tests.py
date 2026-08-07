@@ -31,9 +31,9 @@ RUNNERS = {
         "run_android_tests",
         "run-android-tests.py",
     ),
-    "run-apple-tests.py": load_runner(
-        "run_apple_tests",
-        "run-apple-tests.py",
+    "run-ios-tests.py": load_runner(
+        "run_ios_tests",
+        "run-ios-tests.py",
     ),
 }
 
@@ -98,7 +98,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             command = item["command"]
             self.assertRegex(
                 command,
-                r"run-(?:host|android|apple)-tests\.py",
+                r"run-(?:host|android|ios)-tests\.py",
             )
             self.assertIn(
                 "--skiasharp 4.152.0-preview.1.1",
@@ -117,9 +117,9 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
         self.assertIn("run-android-tests.py 37.1", android_max["command"])
         ios_min = next(item for item in matrix if item["id"] == "ios-18.6")
-        self.assertIn("ios-18.6", ios_min["command"])
+        self.assertIn("run-ios-tests.py 18.6", ios_min["command"])
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
-        self.assertIn("ios-26.5", ios["command"])
+        self.assertIn("run-ios-tests.py 26.5", ios["command"])
 
     def test_plan_contract_has_no_global_setup_commands(self):
         self.assertNotIn(
@@ -143,6 +143,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
             parsed_id = (
                 f"android-{parsed.version}"
                 if script_name == "run-android-tests.py"
+                else f"ios-{parsed.version}"
+                if script_name == "run-ios-tests.py"
                 else parsed.command
             )
             self.assertEqual(parsed_id, item["id"])

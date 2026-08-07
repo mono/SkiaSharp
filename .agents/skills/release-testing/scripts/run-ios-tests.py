@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run one approved Apple SkiaSharp release-test matrix item."""
+"""Run one approved iOS SkiaSharp release-test matrix item."""
 
 import argparse
 from pathlib import Path
@@ -37,10 +37,10 @@ def ios_simulator_version(simulator: dict) -> str:
     return name.removeprefix("iOS ") if name.startswith("iOS ") else ""
 
 
-def installed_ios_versions(root: Path) -> set[str]:
+def ios_versions(simulators: list[dict]) -> set[str]:
     return {
         version
-        for simulator in apple_simulators(root)
+        for simulator in simulators
         if (version := ios_simulator_version(simulator))
         and str((simulator.get("runtime") or {}).get("name") or "").startswith(
             "iOS "
@@ -100,10 +100,7 @@ def run_ios(root: Path, args, version: str) -> None:
     common.require_workload(root, "maui")
     common.require_appium_driver(root, "xcuitest")
     simulators = apple_simulators(root)
-    if version not in {
-        ios_simulator_version(simulator)
-        for simulator in simulators
-    }:
+    if version not in ios_versions(simulators):
         raise common.ReleaseTestError(f"iOS {version} is not installed")
     runtime = f"iOS {version}"
     device_type = resolve_ios_device_type(
@@ -190,33 +187,19 @@ def run_ios(root: Path, args, version: str) -> None:
 
 def execute(root: Path, args) -> None:
     if sys.platform != "darwin":
-        raise common.ReleaseTestError(
-            "Apple release tests require macOS"
-        )
-    if args.command == "maccatalyst":
-        if args.device:
-            raise common.ReleaseTestError(
-                "--device is supported only for iOS commands"
-            )
-        common.require_workload(root, "maui")
-        common.require_appium_driver(root, "mac2")
-        common.run_test(root, "MauiMacCatalystTests", args)
-        return
-    match = re.fullmatch(r"ios-(\d+(?:\.\d+)*)", args.command)
-    if not match:
-        raise common.ReleaseTestError(
-            f"unsupported Apple command: {args.command}"
-        )
-    run_ios(root, args, match.group(1))
+        raise common.ReleaseTestError("iOS release tests require macOS")
+    run_ios(root, args, args.version)
 
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command")
+    parser.add_argument("version")
     parser.add_argument("--device")
     common.add_package_arguments(parser)
     return parser
 
 
 if __name__ == "__main__":
-    sys.exit(common.execute_item(create_parser().parse_args(), execute))
+    args = create_parser().parse_args()
+    args.command = f"ios-{args.version}"
+    sys.exit(common.execute_item(args, execute))

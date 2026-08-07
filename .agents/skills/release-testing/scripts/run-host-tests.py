@@ -26,6 +26,14 @@ def execute(root: Path, args) -> None:
     elif args.command == "blazor":
         common.require_workload(root, "wasm-tools")
         common.run_test(root, "BlazorTests", args)
+    elif args.command == "maccatalyst":
+        if sys.platform != "darwin":
+            raise common.ReleaseTestError(
+                "Mac Catalyst release tests require macOS"
+            )
+        common.require_workload(root, "maui")
+        common.require_appium_driver(root, "mac2")
+        common.run_test(root, "MauiMacCatalystTests", args)
     elif args.command == "windows":
         if sys.platform != "win32":
             raise common.ReleaseTestError(
@@ -47,7 +55,14 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "command",
-        choices=("smoke", "console", "linux", "blazor", "windows"),
+        choices=(
+            "smoke",
+            "console",
+            "linux",
+            "blazor",
+            "maccatalyst",
+            "windows",
+        ),
     )
     common.add_package_arguments(parser)
     return parser

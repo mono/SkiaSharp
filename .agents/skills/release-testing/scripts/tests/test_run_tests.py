@@ -28,7 +28,7 @@ def load(name: str, filename: str):
 common = load("release_test_common", "release_test_common.py")
 host = load("run_host_tests", "run-host-tests.py")
 android = load("run_android_tests", "run-android-tests.py")
-apple = load("run_apple_tests", "run-apple-tests.py")
+ios = load("run_ios_tests", "run-ios-tests.py")
 
 
 class ReleaseTestRunnerTests(unittest.TestCase):
@@ -110,24 +110,16 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             }
             for name in ("iPhone 16", "iPhone 16 Pro")
         ]
-        with mock.patch.object(
-            apple,
-            "apple_simulators",
-            return_value=simulators,
-        ):
-            self.assertEqual(
-                apple.installed_ios_versions(Path.cwd()),
-                {"18.6"},
-            )
+        self.assertEqual(ios.ios_versions(simulators), {"18.6"})
         self.assertEqual(
-            apple.resolve_ios_device_type(simulators, "18.6", None),
+            ios.resolve_ios_device_type(simulators, "18.6", None),
             "iPhone 16",
         )
         with self.assertRaisesRegex(
             common.ReleaseTestError,
             "does not support device type iPhone 13",
         ):
-            apple.resolve_ios_device_type(
+            ios.resolve_ios_device_type(
                 simulators,
                 "18.6",
                 "iPhone 13",
@@ -146,28 +138,28 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         ]
         args = SimpleNamespace(device=None)
         with (
-            mock.patch.object(apple.sys, "platform", "darwin"),
-            mock.patch.object(apple.common, "require_workload"),
-            mock.patch.object(apple.common, "require_appium_driver"),
+            mock.patch.object(ios.sys, "platform", "darwin"),
+            mock.patch.object(ios.common, "require_workload"),
+            mock.patch.object(ios.common, "require_appium_driver"),
             mock.patch.object(
-                apple,
+                ios,
                 "apple_simulators",
                 return_value=simulators,
             ),
             mock.patch.object(
-                apple.common,
+                ios.common,
                 "run_json",
                 return_value={"udid": "SIM-123"},
             ) as create,
-            mock.patch.object(apple.common, "run_streaming") as command,
+            mock.patch.object(ios.common, "run_streaming") as command,
             mock.patch.object(
-                apple.common,
+                ios.common,
                 "run_test",
                 side_effect=common.ReleaseTestError("test failed"),
             ),
             self.assertRaisesRegex(common.ReleaseTestError, "test failed"),
         ):
-            apple.run_ios(Path.cwd(), args, "18.6")
+            ios.run_ios(Path.cwd(), args, "18.6")
 
         create_args = create.call_args.args[0]
         self.assertEqual(create_args[5:7], ["simulator", "create"])
@@ -202,9 +194,9 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                 "emulator-5554",
             ]
         )
-        apple_args = apple.create_parser().parse_args(
+        ios_args = ios.create_parser().parse_args(
             [
-                "ios-26.5",
+                "26.5",
                 "--skiasharp",
                 "s",
                 "--harfbuzzsharp",
@@ -223,7 +215,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         self.assertEqual(android_args.version, "37.1")
         self.assertEqual(android_args.device, "pixel_9")
         self.assertEqual(android_args.device_id, "emulator-5554")
-        self.assertEqual(apple_args.command, "ios-26.5")
+        self.assertEqual(ios_args.version, "26.5")
         self.assertEqual(host_args.command, "linux")
 
     def test_appium_versions_are_exact(self):
@@ -393,7 +385,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             "release_test_common.py",
             "run-host-tests.py",
             "run-android-tests.py",
-            "run-apple-tests.py",
+            "run-ios-tests.py",
         ):
             (SCRIPTS / filename).read_text(encoding="ascii")
         Path(__file__).read_text(encoding="ascii")
@@ -402,7 +394,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         for filename in (
             "run-host-tests.py",
             "run-android-tests.py",
-            "run-apple-tests.py",
+            "run-ios-tests.py",
         ):
             source = (SCRIPTS / filename).read_text(encoding="ascii")
             for command in (
