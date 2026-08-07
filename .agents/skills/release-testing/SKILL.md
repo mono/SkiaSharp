@@ -5,7 +5,8 @@ description: >
   publishing. Use when the user asks to test or verify a release, run the
   release matrix, test packages on Android/iOS/Mac/Windows/Blazor/Linux, or
   continue after release-status. This is the third release step: plan the
-  fullest host-appropriate matrix, obtain user approval, then execute it manually.
+  host-appropriate matrix, obtain approval, execute every item, repair
+  environment failures, and report the final release gate.
 ---
 
 # Release Testing
@@ -17,349 +18,138 @@ This skill is **Step 3 of 5**:
 [release-publish](../release-publish/SKILL.md) →
 [release-milestones](../release-milestones/SKILL.md)
 
-Use the scripts for status/package handoff, host-specific matrix generation,
-pinned-tool restoration, test setup/execution/cleanup, and output cleanup. The agent
-presents the proposed matrix, obtains user approval, and executes the approved
-items sequentially in a complete collection pass. It then reports all failures,
-repairs safe environment problems, and retries only the affected items.
+## Contract
 
-## Safety and ownership
+- Run the read-only planner first and preserve its exact source commit, managed
+  run, tests run, and paired package versions throughout testing.
+- Obtain user approval for the matrix before preparation or execution.
+- Test stable releases with exact `*-stable.{build}` packages, never the future
+  bare public version.
+- Execute every approved item once even when earlier items fail. A failed item
+  blocks publication but does not stop collection of unrelated results.
+- Never turn a failure into a skip or silently substitute a runtime, image,
+  device, package version, or expected artifact.
+- Each platform runner checks its own prerequisites and owns setup/cleanup.
+  Do not manually duplicate its SDK, Appium, device, Docker, or test commands.
+- Run mobile items sequentially. Runners must not delete user-owned devices.
+- Invoke release-publish only after every approved item and artifact check has a
+  final passing result.
+- This skill never publishes packages, creates tags/releases, or merges code.
 
-- The user must approve the test matrix before any setup or test command runs.
-- The default is the fullest platform matrix for the current host; runtime and
-  tool prerequisites are checked only after approval.
-- A failed test, timeout, crash, or screenshot mismatch blocks the release.
-  Only a concrete environment repair followed by a successful rerun can clear
-  an environment failure; product/test failures remain release failures.
-- A failed matrix item does not stop the collection pass. Record it, preserve
-  diagnostics, clean up its owned resources, and continue with every other
-  approved item.
-- Never convert a failure into a skip.
-- Hardware/platform omissions must be explicit in the approved matrix.
-- Do not use eventual bare stable versions before publication. Test the exact
-  `*-stable.{build}` packages selected by release-status.
-- Every command must use the same managed run, source commit, and package
-  versions from the approved plan.
-- Run mobile tests sequentially. Only one Android emulator should run at a
-  time.
-- Never hide a test behind one long blocking call. Prefer a dedicated visible
-  terminal canvas so the user sees stdout live. If no terminal canvas is
-  available, use an attached asynchronous shell job. Report new output plus the
-  matrix state every five seconds until it exits.
-- Each per-test script owns setup, test execution, and cleanup in one checked
-  operation.
-- Stop the matrix only when continuing would invalidate every result, such as
-  losing the pinned source/package identity. A crashed Docker daemon, Appium
-  failure, missing runtime, or broken device affects its item, not unrelated
-  items.
-- This skill never publishes packages, tags a release, or merges a PR.
+## Fixed matrix
 
-## What is scripted
+| ID | Coverage | Host |
+|----|----------|------|
+| `smoke` | Native loading | All |
+| `console` | Console and HarfBuzzSharp | All |
+| `linux` | Linux packages in Docker | All |
+| `blazor` | Native WASM in Chromium | All |
+| `android-26` | Minimum Android test target | All |
+| `android-37.1` | Maximum Android test target | All |
+| `maccatalyst` | Mac Catalyst rendering | macOS |
+| `ios-18.6` | Minimum iOS test target | macOS |
+| `ios-26.5` | Maximum iOS test target | macOS |
+| `windows` | MAUI Windows rendering | Windows |
 
-### Matrix planning
+iOS 18.6 and Android 26 are minimum **release-test targets**, not product
+support minimums. Exact mobile targets must already be installed. Missing or
+host-inapplicable coverage must be explicit in the approved plan.
 
-`plan-release-tests.py` is read-only. It:
+## Script contract
 
-- Runs release-status for the requested release branch or commit.
-- Requires native, managed, tests, and both exact packages to be ready by
-  default.
-- Carries forward immutable managed/test run metadata and exact test/public
-  package versions.
-- Selects the default matrix for the current host OS.
-- Generates one exact host, Android, or Apple runner command per matrix item.
-- Selects the fullest host-appropriate matrix by default.
+| Script | Responsibility |
+|--------|----------------|
+| `scripts/plan-release-tests.py` | Read-only release-status handoff and exact host matrix. |
+| `scripts/prepare-test-run.py` | Restore pinned local tools and clear prior integration output once. |
+| `scripts/run-host-tests.py` | Smoke, console, Docker/Linux, Blazor, and Windows items. |
+| `scripts/run-android-tests.py` | Android environment, Appium, temporary/reused emulator, test, and cleanup. |
+| `scripts/run-apple-tests.py` | Fresh iOS simulator or Mac Catalyst Appium test and cleanup. |
+| `scripts/release_test_common.py` | Shared versions, heartbeat execution, validation, package arguments, and test invocation. |
 
-If CI tests are not ready, the planner returns no matrix. Use
-`--allow-incomplete-ci` only after the user explicitly overrides the normal
-release-status wait. Managed packages and both feed packages must still be
-ready.
+Planner actions:
 
-### Planner actions
+| `nextAction` | Response |
+|--------------|----------|
+| `approve-test-matrix` | Present and obtain approval. |
+| `wait-for-tests-trigger` / `wait-for-tests` | Return to release-status, unless the user explicitly overrides only this wait with `--allow-incomplete-ci`. |
+| `retry-tests` | Investigate/retry failed CI tests; never override them here. |
+| Anything else | Return to release-status. |
 
-| `nextAction` | Meaning |
-|--------------|---------|
-| `approve-test-matrix` | Render the host matrix and obtain user approval. |
-| `wait-for-tests-trigger` / `wait-for-tests` | Return to release-status or explicitly override only this wait. |
-| `retry-tests` | Investigate/retry the connected CI tests; failed CI tests cannot be overridden here. |
-| Any other release-status action | Return to release-status; native/managed/package readiness cannot be overridden here. |
+Use [setup.md](references/setup.md) for prerequisites,
+[monitoring.md](references/monitoring.md) for live progress, and
+[troubleshooting.md](references/troubleshooting.md) only after failures.
 
-### Test-run preparation
+## Workflow
 
-`prepare-test-run.py` runs only after matrix approval. It restores the pinned
-local .NET tools and safely clears
-`output/logs/testlogs/integration/`.
-It does not probe Docker, workloads, Appium, SDKs, runtimes, or devices; each
-platform runner checks its own volatile prerequisites so one platform failure
-cannot block unrelated coverage.
-
-### Manual execution
-
-Test execution remains agent-driven because it requires progress reporting,
-device observation, failure investigation, screenshot review, and user
-decisions. Each selected matrix item has one host-quoted `command` that invokes a
-platform-specific runner with the two exact package versions. Run that command
-from the repository root. The runner discovers its concrete device/runtime,
-resolves safe process-local configuration, checks prerequisites, and performs
-cleanup after failure. A nonzero exit records one failed item; it must not end
-the agent's loop over the approved matrix.
-
-Every runner emits machine-recognizable `[release-test]` records when the item
-starts, whenever a child command starts, every five seconds while that command
-is silent, when it exits, and when the item passes or fails. Run each matrix
-command in a dedicated terminal canvas and read its rendered output every five
-seconds. Reuse that terminal for sequential items. If the canvas is unavailable,
-use an attached asynchronous Bash session and read that same shell ID. Do not
-detach it, launch it through a background agent, rerun it while active, or wait
-silently for completion.
-
-The runner does not broadly provision workloads, Appium, Android SDK packages,
-Playwright browsers, or Apple runtimes. It does restore repository-pinned
-`.NET` tools. For every Android run, it resolves `ANDROID_HOME` and `JAVA_HOME`
-with the pinned `dotnet android` tool and applies them only to the runner
-process and its children.
-
-Treat a missing deterministic configuration as something to resolve, not a
-reason to end the collection pass. Restore pinned tools and discover SDK/JDK
-paths before reporting a blocker. Ask the user only when an actual workload,
-SDK image/runtime, Appium installation, or host capability is absent.
-
-## Default matrix policy
-
-| ID | Coverage | Default |
-|----|----------|---------|
-| `smoke` | Native library loading | Yes |
-| `console` | Console apps and HarfBuzzSharp | Yes |
-| `linux` | Linux container packages | Yes; runner checks Docker Linux |
-| `blazor` | Native WASM app in preinstalled Chromium | Yes |
-| `maccatalyst` | MAUI Mac Catalyst | On macOS |
-| `android-26` | Exact Android 26 image (UiAutomator2 minimum) | Yes |
-| `android-37.1` | Exact Android 37.1 image | Yes |
-| `ios-18.6` | Exact iOS 18.6 minimum test target | On macOS |
-| `ios-26.5` | Exact iOS 26.5 maximum test target | On macOS |
-| `windows` | MAUI Windows | On Windows |
-
-Minimum/maximum mobile coverage must use distinct versions. Report missing
-coverage rather than silently collapsing the matrix.
-
-## Mobile tooling
-
-Use the pinned local tools from `.config/dotnet-tools.json`:
-
-- `dotnet tool run android -- sdk list`
-- `dotnet tool run android -- avd create/start/delete`
-- `dotnet tool run apple -- simulator create/list/boot/delete`
-
-Mobile selectors are exact versions:
-
-| Selector | Required installed target |
-|----------|---------------------------|
-| `android-26` | Android 26 system image |
-| `android-37.1` | Android 37.1 system image |
-| `ios-18.6` | iOS 18.6 simulator runtime |
-| `ios-26.5` | iOS 26.5 simulator runtime |
-
-iOS 18.6 is the minimum **release-test target**, not SkiaSharp's supported
-minimum. This mirrors Android 26 test coverage while the product still supports
-Android 21. The exact iOS runtimes must already be installed; the runner does
-not substitute another minor version.
-
-Use optional `--device {hardware-profile}` to override the default `pixel`
-Android profile or the automatically selected compatible iPhone type. Use
-Android-only `--device-id {serial}` to target an already connected
-emulator/physical device.
-
-The runner reads only installed Android packages and Apple simulators. It
-requires the exact target, validates the selected iPhone type against that
-runtime, creates a uniquely named temporary device, boots it with a wait and
-timeout, and deletes it in `finally`. Android accepts Google APIs, Google Play,
-and their 16 KB-page image variants for the host architecture.
-
-If exactly one Android emulator is already running, the runner validates its API
-and reuses it instead of demanding shutdown. With multiple devices, select one
-using `--device-id`. User-owned devices are never deleted.
-
-All Android SDK, AVD, device-list, and device-property operations go through the
-pinned `dotnet android` tool. All simulator lifecycle operations go through
-`dotnet apple`.
-
-For MAUI items, the runner requires Appium and the platform driver to already be
-installed at the pinned release-test versions, rejects an existing server on
-port 4723, and runs
-`appium driver doctor {driver}`. Before Android doctor checks, the runner
-discovers SDK/JDK paths and exports them process-locally.
-
-Do not replace these commands with raw `adb`, `sdkmanager`, `avdmanager`, `emulator`,
-or `xcrun simctl` flows unless the pinned tool itself is broken and the user
-approves the fallback.
-
-## Presenting the proposed matrix
-
-Never dump raw planner JSON. Render:
-
-```markdown
-## Release test plan
-
-**Release:** `{release.branch}`
-**Commit:** `{release.commit}`
-**Managed run:** `{release.managedRunId}`
-**Tests run:** `{release.testsRunId}`
-**Packages:** SkiaSharp `{test version}`, HarfBuzzSharp `{test version}`
-**Host:** `{host.os}` / `{host.architecture}`
-
-| ID | Test | Target | Estimate |
-|----|------|--------|----------|
-| `{id}` | `{label}` | `{target}` | `{estimatedMinutes}` min |
-
-| Kind | Detail |
-|------|--------|
-| Missing coverage | Include every `missingCoverage[]` entry |
-| Warning | Include every `release.warnings[]` entry |
-```
-
-Mark IDs in `defaultSelection` as the recommended matrix. Explain that
-preparation restores pinned tools once, while each item checks its own
-workloads, services, SDK/runtime, device, and process-local paths.
-
-## Result policy
-
-Record each approved item as `pending`, `passed`, or `failed`, including its
-target, duration, failure phase, diagnostic artifact paths, and every attempt.
-
-Use two passes:
-
-1. **Collection pass:** Run every approved item once. Do not perform deep repair
-   between items; only preserve diagnostics and restore isolation needed by the
-   next item.
-2. **Repair pass:** Present the complete failure inventory, group failures by
-   root cause, make safe deterministic environment repairs, and retry only
-   affected failed items.
-
-Safe repairs include restoring pinned tools, rediscovering process-local paths,
-starting or restarting an already-installed service such as Docker, and
-cleaning resources created by the runner. Ask before installing/upgrading
-workloads, SDKs, runtimes, Appium, or system software, changing permissions, or
-touching user-owned devices.
-
-Do not blindly retry. Each retry must follow a concrete diagnosis or repair.
-Keep the first failure in the report even when a retry passes. Product failures,
-assertion failures, and rendering differences stay failed; never change
-versions, expectations, or skips to make the matrix green.
-
-Proceed to release-publish only when:
-
-- Every approved item has a final `passed` result.
-- Both minimum/maximum Android items passed when available.
-- Both minimum/maximum iOS items passed when available.
-- Expected screenshots were produced and visually reviewed.
-- Any omitted platform or unavailable coverage is explicitly recorded.
-
-The final report must include:
-
-- Managed and tests run IDs, build number, source branch, and source commit.
-- Exact test package versions and eventual public versions.
-- The approved matrix, initial result, repair action, retry result, and final
-  result for each item.
-- A consolidated failure table from the collection pass.
-- Missing/omitted coverage.
-- Screenshot paths for visual tests.
-
-## Files
-
-- [scripts/plan-release-tests.py](scripts/plan-release-tests.py) — read-only
-  status handoff and host-specific matrix planning.
-- [scripts/prepare-test-run.py](scripts/prepare-test-run.py) — restore pinned
-  tools and reset test output once per matrix.
-- [scripts/run-host-tests.py](scripts/run-host-tests.py) — smoke, console,
-  Docker/Linux, Blazor, and Windows host tests.
-- [scripts/run-android-tests.py](scripts/run-android-tests.py) — Android SDK,
-  emulator, Appium, execution, and cleanup.
-- [scripts/run-apple-tests.py](scripts/run-apple-tests.py) — iOS simulator and
-  Mac Catalyst Appium execution and cleanup.
-- [scripts/release_test_common.py](scripts/release_test_common.py) — shared
-  version policy, heartbeat process execution, workload/Appium validation,
-  package arguments, test invocation, repository lookup, and JSON parsing.
-- [scripts/tests/](scripts/tests/) — planner, preparation, and runner tests.
-- [references/setup.md](references/setup.md) — prerequisite details.
-- [references/monitoring.md](references/monitoring.md) — long-running test
-  progress and diagnostics.
-- [references/troubleshooting.md](references/troubleshooting.md) — failure
-  investigation.
-
-## Runbook
-
-### 1. Plan the matrix
+### 1. Plan and approve
 
 ```bash
 python3 .agents/skills/release-testing/scripts/plan-release-tests.py \
   {release-branch-or-commit}
 ```
 
-If `readyToPlan` is false, report `nextAction` and stop. If the user explicitly
-overrides only the CI tests wait, rerun with
-`--allow-incomplete-ci`.
+If `readyToPlan` is false, report `nextAction` and stop. Otherwise render:
 
-### 2. Present and approve
+```markdown
+## Release test plan
 
-Render the proposed matrix using the table above. Use `ask_user`:
+**Release:** `{release.branch}`
+**Commit:** `{release.commit}`
+**Managed/tests runs:** `{release.managedRunId}` / `{release.testsRunId}`
+**Packages:** SkiaSharp `{test version}`, HarfBuzzSharp `{test version}`
+**Host:** `{host.os}` / `{host.architecture}`
+
+| ID | Test | Target | Estimate |
+|----|------|--------|----------|
+| `{id}` | `{label}` | `{target}` | `{estimatedMinutes}` min |
+```
+
+Include every `missingCoverage[]` and release warning. Use `ask_user`:
 
 1. `Run the full available matrix (Recommended)`
 2. `Customize the matrix`
 3. `Cancel release testing`
 
-For customization, ask which matrix IDs to include or omit. Confirm the final
-list before running anything.
+Confirm the exact final IDs after customization.
 
-### 3. Prepare the approved run
-
-Run the preparation script directly:
+### 2. Prepare once
 
 ```bash
 python3 .agents/skills/release-testing/scripts/prepare-test-run.py
 ```
 
-It restores pinned tools and clears old integration-test artifacts.
+### 3. Collect every result
 
-### 4. Run approved items sequentially
+For each approved item, run its emitted `command` sequentially:
 
-For each approved matrix item:
+1. Show the exact command and the full pending/running/passed/failed table.
+2. Run it in a visible terminal canvas; use an attached async shell only when
+   the canvas is unavailable.
+3. Relay new `[release-test]` output and refresh done/failed/remaining state
+   every five seconds. Never launch a duplicate command after a delayed read.
+4. Record duration, failure phase, diagnostics, artifacts, and result.
+5. Continue after failure once runner-owned cleanup finishes.
 
-1. Show the full matrix table with completed, failed, running, and remaining
-   items.
-2. Announce the item, target, exact command, and estimate.
-3. Start its single `command` in a visible terminal canvas. Keep its instance ID
-   for output reads and later matrix items. Fall back to an attached
-   asynchronous Bash job only when the canvas is unavailable.
-4. Every five seconds, read newly rendered terminal output (or output from the
-   fallback shell ID) and report:
-   current item/phase, elapsed time, completed count, failures, and remaining
-   item IDs. Do not repeat old log lines.
-5. On exit, show the command result and immediately refresh the matrix table.
-6. Record the result, failure phase, diagnostics, duration, and artifact paths.
-7. On failure, perform only cleanup/isolation needed for subsequent items, then
-   continue to the next approved item.
+### 4. Repair and retry
 
-Follow [monitoring.md](references/monitoring.md) for progress during silent MAUI
-builds. The runner heartbeat means five seconds without either runner output or
-an agent update is itself a monitoring problem. Do not let a nonzero command
-exit terminate the collection pass.
+After all initial attempts, present the complete failure inventory and group
+shared root causes. Apply only concrete, safe environment repairs, then retry
+affected failed items. Ask before installing/upgrading software, changing
+permissions, or touching user-owned devices. Preserve initial failures and all
+retry outcomes.
 
-### 5. Diagnose, repair, and retry failures
+Product assertions and rendering differences remain failures; do not alter
+expectations, skips, or package pins to make them pass.
 
-After every approved item has an initial result:
+### 5. Report the gate
 
-1. Present all failures together.
-2. Group shared causes so one repair can cover every affected item.
-3. Apply safe repairs, asking only for changes that require user approval.
-4. Retry only the affected failed items.
-5. Repeat only when new evidence identifies another concrete repair.
+Review expected screenshots under `output/logs/testlogs/integration/`. The final
+report must include:
 
-Use [troubleshooting.md](references/troubleshooting.md) to distinguish host
-infrastructure failures from package/product failures.
+- Immutable release/run/package identity.
+- Every approved ID with initial, repair, retry, and final result.
+- Missing or intentionally omitted coverage.
+- Screenshot paths and review status.
 
-### 6. Verify and report
-
-Review screenshots under `output/logs/testlogs/integration/`, ensure every
-approved item has a result, and present the final report described above.
-
-Invoke [release-publish](../release-publish/SKILL.md) only when all approved
-tests and artifact checks pass.
+Proceed to [release-publish](../release-publish/SKILL.md) only when all final
+results and artifact checks pass.
