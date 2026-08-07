@@ -14,6 +14,7 @@ import sys
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+PREPARE_SCRIPT = SCRIPT_DIR / "prepare-test-run.py"
 STATUS_SCRIPT = (
     SCRIPT_DIR.parent.parent
     / "release-status"
@@ -94,6 +95,19 @@ def status_report(root: Path, target: str) -> dict:
     )
 
 
+def apple_targets_report(root: Path) -> dict:
+    return parse_json_output(
+        run(
+            [
+                sys.executable,
+                str(PREPARE_SCRIPT),
+                "--detect-apple-targets",
+            ],
+            cwd=root,
+        ).stdout
+    )
+
+
 def runner_command(
     runner_args: list[str],
     *,
@@ -142,7 +156,13 @@ def matrix_item(
     return item
 
 
-def build_matrix(status: dict, host_os: str) -> tuple[list[dict], list[str]]:
+def build_matrix(
+    status: dict,
+    host_os: str,
+    *,
+    apple_targets: dict | None = None,
+    apple_error: str | None = None,
+) -> tuple[list[dict], list[str]]:
     versions = status["packageVersions"]["test"]
     skia = versions["SkiaSharp"]
     harfbuzz = versions["HarfBuzzSharp"]
@@ -207,22 +227,25 @@ def build_matrix(status: dict, host_os: str) -> tuple[list[dict], list[str]]:
             3,
             True,
         )
-        add(
-            "ios-15.0",
-            "MAUI iOS minimum",
-            "iOS 15.0",
-            ["ios-15.0"],
-            4,
-            True,
-        )
-        add(
-            "ios-26.5",
-            "MAUI iOS maximum",
-            "iOS 26.5",
-            ["ios-26.5"],
-            4,
-            True,
-        )
+        if apple_targets:
+            for coverage in ("minimum", "maximum"):
+                target = apple_targets[coverage]
+                version = target["version"]
+                device = target["device"]
+                item_id = f"ios-{version}"
+                add(
+                    item_id,
+                    f"MAUI iOS {coverage}",
+                    f"iOS {version} / {device}",
+                    [item_id, "--device", device],
+                    4,
+                    True,
+                )
+        else:
+            missing.append(
+                "iOS simulator coverage could not be resolved"
+                + (f": {apple_error}" if apple_error else "")
+            )
     else:
         missing.append("iOS and Mac Catalyst require a macOS host")
 
@@ -239,6 +262,29 @@ def build_matrix(status: dict, host_os: str) -> tuple[list[dict], list[str]]:
         missing.append("MAUI Windows requires a Windows host")
 
     return matrix, missing
+
+
+def preparation_command(apple_targets: dict | None) -> str:
+    command = [
+        sys.executable,
+        ".agents/skills/release-testing/scripts/prepare-test-run.py",
+    ]
+    if apple_targets:
+        command.extend(
+            [
+                "--expect-xcode",
+                apple_targets["xcodeVersion"],
+                "--expect-ios-min",
+                apple_targets["minimum"]["version"],
+                "--expect-ios-min-device",
+                apple_targets["minimum"]["device"],
+                "--expect-ios-max",
+                apple_targets["maximum"]["version"],
+                "--expect-ios-max-device",
+                apple_targets["maximum"]["device"],
+            ]
+        )
+    return format_command(command)
 
 
 def release_summary(status: dict, *, status_override: bool) -> dict:
@@ -310,7 +356,7 @@ def main() -> int:
             print(
                 json.dumps(
                     {
-                        "schemaVersion": 5,
+                        "schemaVersion": 6,
                         "release": release_summary(
                             status,
                             status_override=False,
@@ -332,11 +378,23 @@ def main() -> int:
             if sys.platform == "win32"
             else "Linux"
         )
-        matrix, missing = build_matrix(status, host_os)
+        apple_targets = None
+        apple_error = None
+        if host_os == "macOS":
+            try:
+                apple_targets = apple_targets_report(root)
+            except PlanError as error:
+                apple_error = str(error)
+        matrix, missing = build_matrix(
+            status,
+            host_os,
+            apple_targets=apple_targets,
+            apple_error=apple_error,
+        )
         print(
             json.dumps(
                 {
-                    "schemaVersion": 5,
+                    "schemaVersion": 6,
                     "release": release_summary(
                         status,
                         status_override=status_override,
@@ -346,12 +404,14 @@ def main() -> int:
                     "host": {
                         "os": host_os,
                         "architecture": platform.machine().lower(),
+                        "apple": apple_targets,
                     },
                     "matrix": matrix,
                     "defaultSelection": [
                         item["id"] for item in matrix
                     ],
                     "missingCoverage": missing,
+                    "preparationCommand": preparation_command(apple_targets),
                 },
                 indent=2,
             )

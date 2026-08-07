@@ -7,7 +7,9 @@ import sys
 import unittest
 
 
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "plan-release-tests.py"
+SCRIPTS = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SCRIPTS))
+SCRIPT_PATH = SCRIPTS / "plan-release-tests.py"
 SPEC = importlib.util.spec_from_file_location("plan_release_tests", SCRIPT_PATH)
 planner = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = planner
@@ -31,11 +33,22 @@ STATUS = {
         }
     }
 }
+APPLE_TARGETS = {
+    "xcodeVersion": "27.0",
+    "minimum": {"version": "18.2", "device": "iPhone 16"},
+    "maximum": {"version": "27.0", "device": "iPhone 17"},
+    "availableVersions": ["18.2", "26.5", "27.0"],
+    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
+}
 
 
 class ReleaseTestPlanTests(unittest.TestCase):
     def test_full_macos_matrix(self):
-        matrix, missing = planner.build_matrix(STATUS, "macOS")
+        matrix, missing = planner.build_matrix(
+            STATUS,
+            "macOS",
+            apple_targets=APPLE_TARGETS,
+        )
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -46,8 +59,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 "android-26",
                 "android-37.1",
                 "maccatalyst",
-                "ios-15.0",
-                "ios-26.5",
+                "ios-18.2",
+                "ios-27.0",
             ],
         )
         self.assertEqual(
@@ -77,7 +90,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_matrix_commands_use_one_python_runner(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            STATUS,
+            "macOS",
+            apple_targets=APPLE_TARGETS,
+        )
         for item in matrix:
             self.assertNotIn("selectedByDefault", item)
             command = item["command"]
@@ -98,10 +115,18 @@ class ReleaseTestPlanTests(unittest.TestCase):
             item for item in matrix if item["id"] == "android-37.1"
         )
         self.assertIn("android-37.1", android_max["command"])
-        ios_min = next(item for item in matrix if item["id"] == "ios-15.0")
-        self.assertIn("ios-15.0", ios_min["command"])
-        ios = next(item for item in matrix if item["id"] == "ios-26.5")
-        self.assertIn("ios-26.5", ios["command"])
+        ios_min = next(item for item in matrix if item["id"] == "ios-18.2")
+        self.assertIn("ios-18.2 --device 'iPhone 16'", ios_min["command"])
+        ios = next(item for item in matrix if item["id"] == "ios-27.0")
+        self.assertIn("ios-27.0 --device 'iPhone 17'", ios["command"])
+
+    def test_preparation_command_pins_detected_apple_targets(self):
+        command = planner.preparation_command(APPLE_TARGETS)
+        self.assertIn("--expect-xcode 27.0", command)
+        self.assertIn("--expect-ios-min 18.2", command)
+        self.assertIn("--expect-ios-min-device 'iPhone 16'", command)
+        self.assertIn("--expect-ios-max 27.0", command)
+        self.assertIn("--expect-ios-max-device 'iPhone 17'", command)
 
     def test_plan_contract_has_no_global_setup_commands(self):
         self.assertNotIn(
@@ -110,7 +135,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            STATUS,
+            "macOS",
+            apple_targets=APPLE_TARGETS,
+        )
         for item in matrix:
             argv = shlex.split(item["command"])
             script_index = next(

@@ -5,14 +5,32 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 
 
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "prepare-test-run.py"
+SCRIPTS = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SCRIPTS))
+SCRIPT_PATH = SCRIPTS / "prepare-test-run.py"
 SPEC = importlib.util.spec_from_file_location("prepare_test_run", SCRIPT_PATH)
 preparer = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = preparer
 SPEC.loader.exec_module(preparer)
+
+
+def simulator(version: str, device: str) -> dict:
+    return {
+        "isAvailable": True,
+        "deviceType": {
+            "name": device,
+            "productFamily": "iPhone",
+        },
+        "runtime": {
+            "name": f"iOS {version}",
+            "version": version,
+            "isAvailable": True,
+        },
+    }
 
 
 class PrepareTestRunTests(unittest.TestCase):
@@ -39,10 +57,70 @@ class PrepareTestRunTests(unittest.TestCase):
         Path(__file__).read_text(encoding="ascii")
 
     def test_preparation_restores_pinned_tools(self):
+        source = SCRIPT_PATH.read_text(encoding="ascii")
         self.assertIn(
             '["dotnet", "tool", "restore"]',
-            SCRIPT_PATH.read_text(encoding="ascii"),
+            source,
         )
+        self.assertIn('"xcode",', source)
+
+    def test_xcode_26_selects_ios_15_and_26(self):
+        targets = preparer.select_apple_targets(
+            "26.6",
+            "/Applications/Xcode-26.6.0.app",
+            [
+                simulator("15.8", "iPhone 13 Pro"),
+                simulator("15.0", "iPhone 13"),
+                simulator("26.0", "iPhone 16"),
+                simulator("26.5", "iPhone 17"),
+            ],
+        )
+
+        self.assertEqual(targets["minimum"]["version"], "15.0")
+        self.assertEqual(targets["minimum"]["device"], "iPhone 13")
+        self.assertEqual(targets["maximum"]["version"], "26.5")
+        self.assertEqual(targets["maximum"]["device"], "iPhone 17")
+
+    def test_xcode_27_selects_ios_18_and_27(self):
+        targets = preparer.select_apple_targets(
+            "27.0",
+            "/Applications/Xcode.app",
+            [
+                simulator("16.2", "iPhone 14"),
+                simulator("18.2", "iPhone 16"),
+                simulator("18.5", "iPhone 16 Pro"),
+                simulator("26.5", "iPhone 17"),
+                simulator("27.0", "iPhone 17 Pro"),
+                simulator("27.0", "iPhone 17"),
+            ],
+        )
+
+        self.assertEqual(targets["minimum"]["version"], "18.2")
+        self.assertEqual(targets["minimum"]["device"], "iPhone 16")
+        self.assertEqual(targets["maximum"]["version"], "27.0")
+        self.assertEqual(targets["maximum"]["device"], "iPhone 17")
+
+    def test_apple_targets_must_match_approved_plan(self):
+        args = SimpleNamespace(
+            expect_xcode="27.0",
+            expect_ios_min="18.2",
+            expect_ios_min_device="iPhone 16",
+            expect_ios_max="27.0",
+            expect_ios_max_device="iPhone 17",
+        )
+        targets = {
+            "xcodeVersion": "27.0",
+            "minimum": {"version": "18.2", "device": "iPhone 16"},
+            "maximum": {"version": "27.0", "device": "iPhone 17"},
+        }
+
+        preparer.validate_apple_expectations(args, targets)
+        targets["minimum"]["version"] = "18.3"
+        with self.assertRaisesRegex(
+            preparer.PreparationError,
+            "minimum iOS changed after matrix approval",
+        ):
+            preparer.validate_apple_expectations(args, targets)
 
     def test_help_is_inert(self):
         result = subprocess.run(

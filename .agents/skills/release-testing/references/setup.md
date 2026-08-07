@@ -116,12 +116,23 @@ paths selected by the pinned tool.
 
 ## Apple simulators
 
-Default coverage uses two exact runtimes:
+Planning detects the selected Xcode and available simulators through the pinned
+`dotnet apple` tool and resolves two exact runtimes:
 
-| Matrix item | Selection |
-|-------------|-----------|
-| `ios-15.0` | Exact iOS 15.0 runtime |
-| `ios-26.5` | Exact iOS 26.5 runtime |
+```bash
+dotnet tool run apple -- xcode list --format json
+dotnet tool run apple -- simulator list --available --format json
+```
+
+| Selected Xcode | Minimum coverage | Maximum coverage |
+|----------------|------------------|------------------|
+| 26.x | Oldest installed iOS 15.x | Newest installed iOS 26.x |
+| 27.x or newer | Oldest installed iOS 18.x | Newest installed runtime matching the Xcode major |
+
+The planner also selects an iPhone device type available for each exact runtime,
+preferring a standard numbered iPhone. Its emitted preparation command pins the
+Xcode version, both runtimes, and both device types. Preparation redetects all
+five values after restoring tools and fails if they changed after approval.
 
 The runner checks installed simulators with `dotnet apple`. It does not query
 Apple's downloadable catalog or download a missing runtime.
@@ -130,7 +141,9 @@ It then creates a uniquely named release-owned simulator, boots with
 `--wait --timeout 180`, and deletes the simulator afterward. Existing
 developer-owned simulators are not erased or deleted.
 
-Use `--device "{device-type}"` to replace the default `iPhone 13` type.
+Use `--device "{device-type}"` to override the automatically selected compatible
+iPhone type. The runner rejects a device type that is unavailable for the exact
+runtime.
 
 ## Docker
 

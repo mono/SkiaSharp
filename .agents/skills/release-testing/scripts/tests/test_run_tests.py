@@ -12,7 +12,9 @@ import unittest
 from unittest import mock
 
 
-SCRIPT_PATH = Path(__file__).resolve().parent.parent / "run-tests.py"
+SCRIPTS = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(SCRIPTS))
+SCRIPT_PATH = SCRIPTS / "run-tests.py"
 SPEC = importlib.util.spec_from_file_location("run_tests", SCRIPT_PATH)
 runner = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = runner
@@ -104,6 +106,39 @@ class ReleaseTestRunnerTests(unittest.TestCase):
                     "15.0",
                     "26.5",
                 },
+            )
+
+    def test_ios_device_selection_uses_runtime_compatible_phone(self):
+        simulators = [
+            {
+                "isAvailable": True,
+                "runtime": {"name": "iOS 18.2", "version": "18.2"},
+                "deviceType": {
+                    "name": "iPhone 16 Pro",
+                    "productFamily": "iPhone",
+                },
+            },
+            {
+                "isAvailable": True,
+                "runtime": {"name": "iOS 18.2", "version": "18.2"},
+                "deviceType": {
+                    "name": "iPhone 16",
+                    "productFamily": "iPhone",
+                },
+            },
+        ]
+        self.assertEqual(
+            runner.resolve_ios_device_type(simulators, "18.2", None),
+            "iPhone 16",
+        )
+        with self.assertRaisesRegex(
+            runner.TestRunError,
+            "does not support device type iPhone 13",
+        ):
+            runner.resolve_ios_device_type(
+                simulators,
+                "18.2",
+                "iPhone 13",
             )
 
     def test_parser_supports_versioned_mobile_commands_and_device(self):

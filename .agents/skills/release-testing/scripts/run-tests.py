@@ -673,16 +673,72 @@ def apple_simulators(root: Path) -> list[dict]:
     )
 
 
+def ios_simulator_version(simulator: dict) -> str:
+    runtime = simulator.get("runtime") or {}
+    version = str(runtime.get("version") or "")
+    if version:
+        return version
+    name = str(runtime.get("name") or "")
+    return name.removeprefix("iOS ") if name.startswith("iOS ") else ""
+
+
 def installed_ios_versions(root: Path) -> set[str]:
     return {
-        str((simulator.get("runtime") or {}).get("name") or "").removeprefix(
-            "iOS "
-        )
+        version
         for simulator in apple_simulators(root)
-        if str((simulator.get("runtime") or {}).get("name") or "").startswith(
+        if (version := ios_simulator_version(simulator))
+        and str((simulator.get("runtime") or {}).get("name") or "").startswith(
             "iOS "
         )
+        and simulator.get("isAvailable", True)
+        and (simulator.get("runtime") or {}).get("isAvailable", True)
     }
+
+
+def ios_device_types(simulators: list[dict], version: str) -> set[str]:
+    devices = {
+        str((simulator.get("deviceType") or {}).get("name") or "")
+        for simulator in simulators
+        if ios_simulator_version(simulator) == version
+        and (simulator.get("deviceType") or {}).get("productFamily") == "iPhone"
+        and simulator.get("isAvailable", True)
+    }
+    devices.discard("")
+    return devices
+
+
+def resolve_ios_device_type(
+    simulators: list[dict],
+    version: str,
+    requested: str | None,
+) -> str:
+    devices = ios_device_types(simulators, version)
+    if requested:
+        if requested not in devices:
+            available = ", ".join(sorted(devices)) or "none"
+            raise TestRunError(
+                f"iOS {version} does not support device type {requested}; "
+                f"available iPhones: {available}"
+            )
+        return requested
+    if not devices:
+        raise TestRunError(
+            f"iOS {version} has no available iPhone simulator device type"
+        )
+
+    def score(name: str) -> tuple:
+        standard = re.fullmatch(r"iPhone\s+(\d+)", name)
+        if standard:
+            return 4, int(standard.group(1)), name
+        compact = re.fullmatch(r"iPhone\s+(\d+)e", name)
+        if compact:
+            return 3, int(compact.group(1)), name
+        numbered = re.search(r"iPhone\s+(\d+)", name)
+        if numbered:
+            return 2, int(numbered.group(1)), name
+        return 1, 0, name
+
+    return max(devices, key=score)
 
 
 def run_ios(root: Path, args, selector: str) -> None:
@@ -691,12 +747,20 @@ def run_ios(root: Path, args, selector: str) -> None:
     require_workload(root, "maui")
     require_appium_driver(root, "xcuitest")
     version = selector
-    if version not in installed_ios_versions(root):
+    simulators = apple_simulators(root)
+    if version not in {
+        ios_simulator_version(simulator)
+        for simulator in simulators
+    }:
         raise TestRunError(
             f"iOS {version} is not installed"
         )
     runtime = f"iOS {version}"
-    device_type = args.device or "iPhone 13"
+    device_type = resolve_ios_device_type(
+        simulators,
+        version,
+        args.device,
+    )
     simulator_name = (
         f"SkiaSharp Release iOS {version} {uuid.uuid4().hex[:8]}"
     )
