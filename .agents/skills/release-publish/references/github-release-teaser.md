@@ -10,7 +10,7 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
 ## Principles
 
 - **One input: the generated release log.** The teaser is built *only* from the
-  `--generate-notes` body created in Step 6 of the publish skill. Do **not** read
+  GitHub Release Notes API body saved by `finalize-release.py`. Do **not** read
   `documentation/docfx/releases/*`, do **not** run git commands, and do **not** wait on
   the website release-notes workflow or its `bot/release-notes` PR.
 - **Keep the auto-gen list.** It already carries every PR number and author handle for
@@ -45,47 +45,46 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
   inside the folded log.
 - **Section emojis only.** Use ⚠️ / ✨ / 🐛 / 📦 on the section headers. There is **no**
   per-PR platform-emoji decoration (that older scheme is retired).
-- **Link out for the full story.** The teaser links to the categorized website release
-  notes; that page is produced separately (Step 5) and the link is a stable permalink
-  that resolves once Pages publishes — we link it but never read or wait on it.
+- **Link out for the full story.** The script links to the categorized website
+  release notes using the stable base-version permalink. The teaser never reads
+  or waits on that page.
 
 ---
 
 ## Process
 
-```bash
-# 1. Capture the generated log produced by Step 6 (the ONLY input).
-mkdir -p /tmp/skiasharp/release
-gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
-```
+`finalize-release.py --dry-run` writes:
 
-2. **Build** the teaser from `generated-log.md` per [Classifying the PRs](#classifying-the-prs):
-   drop the plumbing, classify the rest into ⚠️ / ✨ / 🐛 / 📦, and credit each bullet. This is
-   the part above the folded log.
-3. **Assemble** the final body using the [teaser template](#teaser-template): the extracted
-   teaser on top, then the captured log folded into `<details>` — **stripped** of its
-   `## What's Changed` heading and its `**Full Changelog**:` line (keep the raw PR bullets
-   and the `## New Contributors` block). The compare URL from that stripped line moves up
-   into the header links row (🔀 Full changelog), so it appears exactly once. Write it to
-   `/tmp/skiasharp/release/release-body.md`.
+| File | Owner |
+|------|-------|
+| `output/release/{tag}/generated-log.md` | Script; never edit. This is the only classification input. |
+| `output/release/{tag}/teaser.md` | Agent; replace the subtitle placeholder and add selected sections. |
+| `output/release/{tag}/release-body.md` | Script; generated only after teaser approval. |
 
-```bash
-# 4. Update the release in place.
-gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
-```
+1. **Read every entry** in `generated-log.md`.
+2. **Edit `teaser.md`** using the teaser-input template below. Drop plumbing,
+   classify customer-visible changes into ⚠️ / ✨ / 🐛 / 📦, and credit each
+   promoted change.
+3. Preserve exactly one `<!-- RELEASE_LINKS -->` marker. Do not add NuGet,
+   website-notes, or changelog URLs yourself.
+4. Rerun `finalize-release.py --teaser-file ... --dry-run`. The script inserts
+   the exact links, strips duplicate generated headings, counts PRs, folds the
+   generated log, and reports the expected final-body SHA.
+5. After final approval, the script writes `release-body.md` and publishes the
+   GitHub Release through the finalization command.
 
 ---
 
-## Teaser template
+## Teaser-input template
 
-Emit the final release body in **exactly** this shape. Sections with no qualifying items
-are **omitted entirely** (no "*None.*" placeholders). The release **title** is already set
-by `gh release create --title`, so the body has no top-level `#` heading.
+Edit `teaser.md` into exactly this shape. Sections with no qualifying items are
+omitted entirely (no "*None.*" placeholders). The script owns everything below
+the teaser, including links and the folded log.
 
 ```markdown
 {one-line, plain-language subtitle of the release}
 
-📦 [NuGet](https://www.nuget.org/packages/SkiaSharp/{nuget-version}) · 📖 [Release notes](https://mono.github.io/SkiaSharp/docs/releases/{notes-version}.html) · 🔀 [Full changelog]({compare-url})
+<!-- RELEASE_LINKS -->
 
 ## ⚠️ Breaking Changes
 - {what changed and what a consumer must do} by @{author} (#{pr})
@@ -101,34 +100,20 @@ by `gh release create --title`, so the body has no top-level `#` heading.
 - Updated {dependency} to {version} by @{author} (#{pr})
 
 Thanks to our contributors: @{handle}, @{handle}
-
----
-
-<details><summary>All changes ({N} pull requests)</summary>
-
-{the generated log's raw PR bullets — plus the `## New Contributors` block if present —
-with the `## What's Changed` heading and the duplicate `**Full Changelog**:` line removed}
-
-</details>
 ```
-Notes on the placeholders:
 
-- `{nuget-version}` — the **NuGet package version**: the tag without the leading `v`,
-  keeping the full pre-release suffix (tag `v4.147.0-preview.1.1` → `4.147.0-preview.1.1`;
-  tag `v3.119.2` → `3.119.2`). This must exactly match the version published to nuget.org.
-- `{notes-version}` — the **website release-notes page**, which is keyed by the **base
-  release line**, not the package version. Take the tag, drop the leading `v`, and **strip
-  any `-preview.N.M` / `-rc.N.M` pre-release suffix** (tag `v4.147.0-preview.1.1` →
-  `4.147.0`; `v4.148.0-rc.1.2` → `4.148.0`; `v3.119.4` → `3.119.4`). There are **no
-  preview/rc-specific pages** — `documentation/docfx/releases/` and `scripts/infra/docs/
-  versions.json` only ever key pages by the `X.Y.Z` line, so a preview-named link is a dead
-  404. The page may not exist yet at publish time; the base-line link still resolves once it
-  publishes.
-- `{N}` — count of `* … by @… in …` lines in the generated log.
-- `{compare-url}` — the `…/compare/…` URL from the generated log's `**Full Changelog**:`
-  line. It goes in the header links row as 🔀 [Full changelog]; **remove the
-  `**Full Changelog**:` line from inside the fold** so the compare URL appears exactly once.
-  Drop the 🔀 link only if the generated log has none.
+The script derives and validates:
+
+- NuGet version from the exact public SkiaSharp package.
+- Website page from the numeric release version.
+- Compare URL from GitHub's generated `**Full Changelog**:` line.
+- Pull-request count from the generated `What's Changed` list only; New
+  Contributors entries are not double-counted.
+- Folded content from the generated log, preserving its raw PR bullets and New
+  Contributors block.
+
+Notes on teaser content:
+
 - Every teaser bullet ends with `by @{author} (#{pr})`. One PR per bullet so each author is
   credited; combine only closely-related PRs and credit every author as
   `by @a, @b (#{pr1}, #{pr2})`.
@@ -207,7 +192,7 @@ remain.
 **Full Changelog**: https://github.com/mono/SkiaSharp/compare/v3.119.1...v3.119.2
 ```
 
-**Assembled release body (output):**
+**Script-assembled release body (output):**
 
 ```markdown
 Adds tvOS Metal support and a RISC-V build, and fixes WBMP encoding.

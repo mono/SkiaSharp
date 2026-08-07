@@ -1,8 +1,9 @@
 # Release Guide
 
-How to release SkiaSharp: create branch → wait for CI → test → publish → tag.
+How to release SkiaSharp: create branch → wait for CI → test → publish →
+maintain milestones.
 
-## ⚠️ NO UNDO WARNING
+## Irreversible operations
 
 **Tags and releases cannot be deleted.** Once a tag is pushed or a release is published, it's permanent. Each skill confirms before destructive operations - always review carefully before proceeding.
 
@@ -12,7 +13,7 @@ How to release SkiaSharp: create branch → wait for CI → test → publish →
 
 ## Skills
 
-The release process is handled by four skills in order:
+The release process is handled by five skills in order:
 
 | Step | Skill | Purpose | Trigger |
 |------|-------|---------|---------|
@@ -20,8 +21,77 @@ The release process is handled by four skills in order:
 | 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
 | 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
 | 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+| 5 | [release-milestones](../../.agents/skills/release-milestones/SKILL.md) | Audit/sync/close milestones | "audit milestones", "sync milestone schedule" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
+`done` and `pending` have the same meaning throughout; additional statuses such
+as `running`, `failed`, `blocked`, `awaiting-user`, and `skipped` are
+skill-specific and documented by the script that emits them.
+
+### Azure Release Coordinator
+
+[`scripts/azure-pipelines-release-coordinator.yml`](../../scripts/azure-pipelines-release-coordinator.yml)
+provides a manual **Run pipeline** button over the same scripts and contracts.
+It has two operations because release CI runs between them:
+
+| Operation | Input | Result |
+|-----------|-------|--------|
+| `start` | Integration branch (`main` / `release/X.Y.x`) and optional exact version | Dry-run, approval, then exact release-branch creation. |
+| `complete` | Exact release branch or tested source SHA | Exact package push/wait, tool-free Copilot teaser, tag/docs/release, samples, and release-milestones audit/closure. |
+
+`skipReleaseTesting=true` skips only the external device/host matrix. The
+connected `SkiaSharp-Tests` CI run must still succeed because the publication
+detector preserves the release-status gate.
+
+The coordinator uses Azure `ManualValidation@1` server jobs for branch,
+NuGet.org, immutable release, and milestone approvals. The protected NuGet.org
+pipeline retains its own approval. The package step waits for that approval/run
+and both exact public packages before finalization starts.
+
+Customer teaser generation runs Copilot CLI in an isolated directory with:
+
+- Built-in MCP servers disabled.
+- An empty available-tools list.
+- Custom instructions disabled.
+- No GitHub/Azure write token in the process.
+- A dedicated Copilot-enabled PAT exposed only as
+  `COPILOT_GITHUB_TOKEN`.
+
+The generated log is treated as untrusted data, validated by the finalization
+script, and shown in a manual approval before publication.
+
+One-time pipeline setup after the YAML is merged:
+
+```bash
+az pipelines create \
+  --name "SkiaSharp Release Coordinator" \
+  --description "Start or complete an exact SkiaSharp release" \
+  --folder-path "\\Xamarin\\SkiaSharp" \
+  --repository mono/SkiaSharp \
+  --repository-type github \
+  --service-connection a764c27f-52a2-4b84-b1ca-48b8af3b5990 \
+  --branch main \
+  --yaml-path scripts/azure-pipelines-release-coordinator.yml \
+  --skip-run true \
+  --org https://devdiv.visualstudio.com \
+  --project DevDiv
+```
+
+Then:
+
+1. Authorize variable group `Xamarin-Secrets`.
+2. Add secret pipeline variable `CopilotGitHubToken` with
+   **Copilot Requests: read**.
+3. Grant the pipeline build identity permission to queue pipeline `25298`.
+4. Confirm the release-manager GitHub PAT can push both `mono/SkiaSharp` and
+   `mono/skia`, create releases/workflow dispatches, and edit issues/milestones.
+5. Have a maintainer with **Edit build pipeline** permission create/modify the
+   coordinator definition; Azure requires that permission even for modified-YAML
+   preview compilation.
+
+Stable post-cut bump PR merges remain maintainer decisions. If a tagged
+milestone has open issues but no later unshipped milestone, the coordinator
+stops clearly and resumes safely after the schedule is extended.
 
 ---
 
@@ -68,8 +138,9 @@ references (skia branch HEAD **==** submodule SHA). This locks the Skia source f
 the release so it stays auditable, reproducible, and safe from garbage collection.
 
 - Created by the [release-branch](../../.agents/skills/release-branch/SKILL.md) skill
-  right after the SkiaSharp branch is pushed (its Step 5) — for **every** cut
-  (preview, rc, stable, and `release/X.Y.x` integration forks).
+  alongside the local SkiaSharp branch, validated at the pinned gitlink, then pushed
+  first by the paired-branch script — for **every** cut (preview, rc, stable,
+  and `release/X.Y.x` integration forks).
 - `main` is the exception: it tracks the `skiasharp` integration branch, not a
   `release/*` counterpart.
 
@@ -101,7 +172,9 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Pipeline | Purpose |
 |----------|---------|
-| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25328) | Builds + auto-publishes to preview feed |
+| [SkiaSharp-Native](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493) | Builds native binaries. |
+| [SkiaSharp](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789) | Builds/signs managed packages and publishes the preview feed. |
+| [SkiaSharp-Tests](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15756) | Runs the connected CI test suite. |
 | [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual trigger) |
 
 ---
@@ -112,61 +185,48 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 ```mermaid
 flowchart TB
-    START([User requests release]) --> PROVIDED{Version provided?}
-    
-    PROVIDED -->|Yes| PARSE
-    PROVIDED -->|No| AUTO
-    
-    AUTO["Auto-detect Version
-    ∙ Read SKIASHARP_VERSION from main
-    ∙ Check existing release branches
-    ∙ Calculate next preview number"]
-    
-    AUTO --> CONFIRM{User confirms?}
-    CONFIRM -->|No| ABORT([Abort])
-    CONFIRM -->|Yes| PARSE
-    
-    PARSE["Parse Version String"] --> TYPE{Release type?}
-    
-    TYPE -->|Preview / RC| BASE_INTEG["Base: integration branch
-    (release/X.Y.x, or main)"]
-    TYPE -->|Stable| BASE_STABLE["Base: integration branch
-    (release/X.Y.x)"]
-    TYPE -->|Hotfix Preview| BASE_TAG["Base: tag"]
-    TYPE -->|Hotfix Stable| BASE_HOTFIX["Base: hotfix preview"]
-    
-    BASE_INTEG --> EXISTS{Base exists?}
-    BASE_STABLE --> EXISTS
-    BASE_TAG --> EXISTS
-    BASE_HOTFIX --> EXISTS
-    EXISTS -->|No| ERROR([Error])
-    
-    EXISTS -->|Yes| CREATE
-    
-    CREATE["Create Branch
-    ∙ Checkout base
-    ∙ Create release branch
-    ∙ Set PREVIEW_LABEL
-    ∙ Commit and push"]
-    
-    CREATE --> SKIA
-    SKIA["Create mono/skia
-    counterpart branch
-    ∙ Read externals/skia SHA
-    ∙ gh api git/refs at that SHA
-    ∙ Same release/{version} name"]
+    START([User requests release]) --> PROVIDED{Exact version supplied?}
+    PROVIDED -->|Yes| EXACT[Use exact version]
+    PROVIDED -->|No| DETECT
 
-    SKIA --> CI([CI Build Started])
-    SKIA --> IS_STABLE{Stable cut?}
+    DETECT["Read-Only Detector
+    ∙ Accept only main or release/X.Y.x
+    ∙ Validate integration-line version state
+    ∙ Calculate exact next preview
+    ∙ No execution capability"]
+    DETECT --> EXACT
+    EXACT --> DRYRUN
+
+    DRYRUN["Exact-Version Executor Dry Run
+    ∙ Reject integration-branch arguments
+    ∙ Select and validate immutable base refs
+    ∙ Check SkiaSharp + mono/skia remote state
+    ∙ Plan stable post-cut bump when needed
+    ∙ No checkout, commit, submodule, or remote changes"]
+
+    DRYRUN --> VALID{Plan valid?}
+    VALID -->|No| ERROR([Error])
+    VALID -->|Yes| CONFIRM{User confirms complete plan?}
+    CONFIRM -->|No| ABORT([Abort])
+    CONFIRM -->|Yes| EXECUTE
+
+    EXECUTE["Release Script Execute
+    ∙ Initialize submodules recursively
+    ∙ Create matching local release branches
+    ∙ Update + commit version files
+    ∙ Validate gitlink and both refs
+    ∙ Push mono/skia, then SkiaSharp"]
+
+    EXECUTE --> CI([CI Build Started])
+    EXECUTE --> IS_STABLE{Stable cut?}
     IS_STABLE -->|No| DONE([Done - wait 2-4 hours])
     IS_STABLE -->|Yes| BUMP
 
-    BUMP["Bump Integration Branch (now,
-    in parallel with CI)
-    ∙ Edit SKIASHARP_VERSION
-    ∙ Edit VERSIONS.txt
-    ∙ Increment HarfBuzzSharp
-    ∙ Create and merge PR"]
+    BUMP["Automate Integration Bump
+    ∙ Create + push next-version branch
+    ∙ Update SkiaSharp + HarfBuzzSharp versions
+    ∙ Open complete-template PR
+    ∙ Leave merge to a maintainer"]
     
     CI --> DONE
     BUMP --> DONE
@@ -179,68 +239,55 @@ flowchart TB
 
 ### Stage 2: Status Tracking (release-status skill)
 
-After the branch is pushed, track the pipeline chain until packages are available:
+After the branch is pushed, query one connected pipeline chain for the exact
+release commit:
 
 ```bash
 python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-The pipeline chain is: `SkiaSharp-Native` → `SkiaSharp` (signs & publishes) → `SkiaSharp-Tests`.
-Packages appear on the internal feed after `SkiaSharp` (ID 10789) completes.
+The JSON report links downstream runs through `triggerInfo.pipelineId`, provides
+immutable source/run metadata, and derives exact test/public package versions.
+Packages appear on the internal feed after the selected `SkiaSharp` (ID 10789)
+run completes. Wait for the selected `SkiaSharp-Tests` run and both exact
+packages before beginning release-testing unless the user explicitly overrides
+the test wait.
 
 ### Stage 3: Testing (release-testing skill)
 
 ```mermaid
 flowchart TB
-    START([CI Build Complete]) --> RESOLVE
-    
-    RESOLVE["Resolve Test Package Versions
-    ∙ Fetch release branch
-    ∙ Read selected SkiaSharp CI build
-    ∙ Read VERSIONS.txt (both packages)
-    ∙ Derive exact label + build suffix
-    ∙ Verify exact packages on preview feed"]
-    
-    RESOLVE --> FOUND{Packages found?}
-    FOUND -->|No| WAIT([Wait - CI not done])
-    FOUND -->|Yes| REPORT[Report test and public versions separately]
-    
-    REPORT --> STABLE{Stable release?}
-    STABLE -->|No| TESTS
-    STABLE -->|Yes| SOURCE{Test source?}
-    
-    SOURCE -->|Preview feed| TESTS
-    SOURCE -->|Local artifacts| SETUP
-    
-    SETUP["Setup Local Testing
-    ∙ Create local nuget.config
-    ∙ Clear NuGet cache"]
-    
-    SETUP --> TESTS
-    
-    TESTS["Run Integration Tests
-    ∙ Console, Blazor, MAUI
-    ∙ iOS, Android, Mac, Windows"]
-    
-    TESTS --> RESULT{All pass?}
-    RESULT -->|No| FIX([Fix and retest])
-    RESULT -->|Yes| CHECK{Stable release?}
-    
-    CHECK -->|No| READY([Ready for publish])
-    CHECK -->|Yes| CHECKLIST
-    
-    CHECKLIST["Stable Checklist
-    ∙ Verify packages
-    ∙ Check native assets
-    ∙ Validate metadata"]
-    
-    CHECKLIST --> OK{Passes?}
-    OK -->|No| FIX2([Fix issues])
-    OK -->|Yes| READY
+    START([Release status ready]) --> PLAN
+
+    PLAN["Read-Only Matrix Planner
+    ∙ Carry exact run/package metadata
+    ∙ Select exact policy versions
+    ∙ Select the host-specific matrix
+    ∙ Generate one runner command per item"]
+
+    PLAN --> APPROVE{User approves matrix?}
+    APPROVE -->|No| STOP([Stop or customize])
+    APPROVE -->|Yes| PREPARE
+
+    PREPARE["Prepare Approved Run
+    ∙ Verify pinned .NET tools
+    ∙ Clear prior test output"]
+
+    PREPARE --> TESTS
+    TESTS["Run Approved Items Sequentially
+    ∙ Check exact target prerequisites
+    ∙ Run exact-package test command
+    ∙ Always clean up"]
+
+    TESTS --> RESULT{All approved items pass?}
+    RESULT -->|No| FAIL([Release testing failed])
+    RESULT -->|Yes| ARTIFACTS{Screenshots and coverage complete?}
+    ARTIFACTS -->|No| FAIL
+    ARTIFACTS -->|Yes| READY([Ready for publish])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class WAIT,FIX,FIX2 error
+    class STOP,FAIL error
     class START,READY endpoint
 ```
 
@@ -248,42 +295,80 @@ flowchart TB
 
 ```mermaid
 flowchart TB
-    START([Tests Passed]) --> REQ{Publish to NuGet.org?}
-    
-    REQ -->|Stable - Required| PUBLISH
-    REQ -->|Preview| SKIP{Skip NuGet.org?}
-    SKIP -->|Yes| TAG
-    SKIP -->|No| PUBLISH
-    
-    PUBLISH["Publish to NuGet.org
-    ∙ Trigger publish pipeline
-    ∙ Wait for completion
-    ∙ Verify packages visible"]
-    
-    PUBLISH --> STATUS{Success?}
-    STATUS -->|No| FAILED([Fix and retry])
-    STATUS -->|Yes| TAG
-    
-    TAG["Create Git Tag
-    ∙ Preview: vX.Y.Z-preview.N.build
-    ∙ Stable: vX.Y.Z
-    ∙ Push tag to origin"]
-    
-    TAG --> RELEASE
-    
-    RELEASE["Create GitHub Release
-    ∙ Set title and notes
-    ∙ Mark pre-release if preview
-    ∙ Attach samples if stable"]
-    
-    RELEASE --> MILESTONE[Close this version's GitHub milestone]
-    MILESTONE --> DONE([Complete])
+    START([Tests passed]) --> DETECT
+    DETECT["Read-only detector
+    ∙ Pin source SHA
+    ∙ Pin managed/tests runs
+    ∙ Pin test/public versions"] --> PUSH_AUDIT
+    PUSH_AUDIT["Package-push dry-run
+    ∙ Preview exact Azure request
+    ∙ Reconcile publish run
+    ∙ Check exact NuGet versions"] --> APPROVE1{Approve package push?}
+    APPROVE1 -->|No| STOP([Stop])
+    APPROVE1 -->|Yes| PUSH
+    PUSH["Push package script
+    ∙ Queue exact managed resource
+    ∙ Wait for Azure approval/run
+    ∙ Wait for both NuGet packages"] --> FINAL_AUDIT1
+    FINAL_AUDIT1["Finalization dry-run
+    ∙ Validate previous tag
+    ∙ Generate local release log
+    ∙ Reconcile tag/release/milestone"] --> TEASER
+    TEASER["Human teaser
+    ∙ Read generated PR log
+    ∙ Write customer-facing teaser
+    ∙ Script assembles final body"] --> FINAL_AUDIT
+    FINAL_AUDIT["Final dry-run
+    ∙ Review body SHA
+    ∙ Review tag + release operations"] --> APPROVE2{Publish immutable release?}
+    APPROVE2 -->|No| STOP
+    APPROVE2 -->|Yes| FINALIZE
+    FINALIZE["Finalize
+    ∙ Push tag + dispatch website notes
+    ∙ Publish GitHub Release
+    ∙ Observe sample sync"] --> HANDOFF([Release milestones])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class FAILED error
+    class STOP error
+    class START,HANDOFF endpoint
+```
+
+### Stage 5: Release Milestones (release-milestones skill)
+
+```mermaid
+flowchart TB
+    START([GitHub Release published]) --> AUDIT
+    AUDIT["Assignment dry-run
+    ∙ Detect shipped tagged releases
+    ∙ Roll unshipped ranges forward
+    ∙ Reconcile PRs + linked issues"] --> AUDIT_DECIDE{Assignments?}
+    AUDIT_DECIDE -->|Warnings| BLOCKED([Investigate boundaries/missing milestones])
+    AUDIT_DECIDE -->|Pending| AUDIT_APPROVE{Approve assignments?}
+    AUDIT_APPROVE -->|No| STOP([Stop])
+    AUDIT_APPROVE -->|Yes| AUDIT_APPLY[Apply shipped assignments]
+    AUDIT_APPLY --> AUDIT
+    AUDIT_DECIDE -->|Complete| SYNC
+    SYNC["Schedule + closure dry-run
+    ∙ Sync upcoming Chromium dates
+    ∙ Detect milestones with release tags
+    ∙ Move open issues to next unshipped milestone
+    ∙ Close shipped milestones"] --> SYNC_DECIDE{Changes?}
+    SYNC_DECIDE -->|Warnings| BLOCKED
+    SYNC_DECIDE -->|Pending| SYNC_APPROVE{Approve sync + closure?}
+    SYNC_APPROVE -->|No| STOP
+    SYNC_APPROVE -->|Yes| SYNC_APPLY[Apply sync, moves, and closure]
+    SYNC_APPLY --> SYNC
+    SYNC_DECIDE -->|Complete| DONE([Release complete])
+
+    classDef error fill:#ffebee,stroke:#c62828
+    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
+    class BLOCKED,STOP error
     class START,DONE endpoint
 ```
+
+The same skill can run independently to synchronize upcoming milestones from
+the Chromium schedule or audit shipped assignments at any time.
 
 ---
 

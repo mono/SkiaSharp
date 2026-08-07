@@ -1,444 +1,324 @@
 ---
 name: release-publish
 description: >
-  Publish SkiaSharp packages and finalize the release.
-  
-  Use when user says "publish X", "finalize X", "tag X", or "finish release X".
-  
-  This is the FINAL step - after release-testing passes.
-  Publishes to NuGet.org, creates tag, GitHub release, and closes milestone.
-  
-  Triggers: "publish the release", "push to nuget", "create github release",
-  "tag the release", "close the milestone", "annotate release notes",
-  "testing passed what's next", "finalize 3.119.2", "release is ready".
+  Publish SkiaSharp packages and finalize the release. Use when the user says
+  "publish X", "finalize X", "tag X", "finish release X", or says release
+  testing passed. This is the fourth release step: detect the exact tested
+  handoff, dry-run and publish the exact packages, then dry-run and finalize the
+  tag, GitHub release, website notes, and sample automation.
 ---
 
-# Release Publish Skill
+# Release Publish
 
-Publish packages to NuGet.org and finalize releases.
+This skill is **Step 4 of 5**:
 
-⚠️ **NO UNDO:** This is **Step 4 of 4** in the release pipeline (final step). See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+[release-branch](../release-branch/SKILL.md) →
+[release-status](../release-status/SKILL.md) →
+[release-testing](../release-testing/SKILL.md) → **release-publish** →
+[release-milestones](../release-milestones/SKILL.md)
 
-**Pipeline:** [Step 1: release-branch](../release-branch/SKILL.md) → [Step 2: release-status](../release-status/SKILL.md) → [Step 3: release-testing](../release-testing/SKILL.md) → **Step 4 (this skill)**
+The agent confirms manual release-testing passed, renders script JSON, obtains
+approval, and runs exact commands. Scripts own deterministic mechanics. The
+agent owns only customer-teaser classification.
 
-## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+## Safety and ownership
 
-> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
+- Publishing packages, pushing a release tag, and publishing a GitHub Release
+  are irreversible. Never infer approval.
+- Ask before running any command without `--dry-run`.
+- The Azure publish stage has its own human approval. Verify its run name,
+  selected resource, and Stable/Preview stage before approving it.
+- Never delete or move a remote release tag.
+- Never checkout or move the current branch. Finalization pushes a lightweight
+  tag directly to the exact tested source SHA.
+- Never select a newer package or pipeline run. Every command is pinned to the
+  detector's source SHA, managed run ID, and tests run ID.
+- The GitHub Release is created only after teaser review.
+- Publishing the GitHub Release triggers **Sync - Samples** automatically; no
+  sample ZIP upload is needed.
 
-| Repository | Protected Branches | Required Action |
-|------------|-------------------|-----------------|
-| SkiaSharp (parent) | `main` | Tags/releases created from release branches, never modify main directly |
-| externals/skia (submodule) | `main`, `skiasharp` | Never modify directly |
+## Command model
 
-**Publishing creates tags on existing release branches — it does NOT modify protected branches.**
+The workflow has three user-facing scripts:
 
----
+| Script | Default behavior | `--dry-run` |
+|--------|------------------|-------------|
+| `detect-release-publish.py` | Read-only detection | Not needed; always read-only |
+| `push-release-packages.py` | Queue/wait for exact Azure publish and both NuGet packages | Audit/preview only |
+| `finalize-release.py` | Reconcile tag, docs, release, and samples | Audit plus ignored local teaser artifacts |
 
-## Workflow Overview
+The publication/finalization scripts follow the release-branch convention:
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│  1. Confirm Versions     → Verify packages exist on preview feed   │
-│  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
-│  3. Verify Published     → Poll NuGet.org until indexed            │
-│  4. Tag Release          → Push git tag (ask_user first!)          │
-│  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
-│  6. Create GitHub Release→ Generate notes, set prerelease flag     │
-│  7. Customer Teaser      → Extract key bits from the generated log │
-│  8. Milestone Hygiene    → Audit/sync assignments, then close      │
-└────────────────────────────────────────────────────────────────────┘
-```
+| Invocation | Behavior |
+|------------|----------|
+| Omit `--dry-run` | Execute |
+| Pass `--dry-run` | Audit |
 
-**Preview vs Stable differences:**
-| Step | Preview | Stable |
-|------|---------|--------|
-| 1. Public NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
-| 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
-| 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
-| 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
-| 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
-| 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
-| 8. Milestone | Close its milestone (`X.Y.Z-preview.N`) | Close its milestone (`X.Y.Z`) |
+## What is deterministic
 
----
+### Detector
 
-## Step 1: Confirm Versions
+`detect-release-publish.py` accepts one exact `release/{version}` branch or
+tested source commit. It runs release-status, resolves the exact release branch,
+and emits:
 
-### ⚠️ Semver Version Ordering
+- Tested source SHA.
+- Exact managed and tests run IDs.
+- Managed build number.
+- Exact test and public package versions.
+- Pinned package-push and finalization dry-run commands.
 
-When identifying which version to publish, use **semver ordering**, not alphabetical:
-- `3.119.2` (bare) is NEWER than `3.119.2-preview.3` — it's the stable/final release
-- Always verify you are publishing from the correct branch
-- If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
+It never queues, tags, publishes, or writes files.
 
-**Prerequisite:** release-testing must have passed. Its final report should identify both the exact
-test package versions and the separate eventual public versions.
+### Package publication
 
-Use both public versions from the release-testing report:
-- **Preview / RC:** Exact SkiaSharp and HarfBuzzSharp prerelease versions (e.g.,
-  `3.119.2-preview.2.3` and `8.3.1.3-preview.2.3`)
-- **Stable:** Bare SkiaSharp and HarfBuzzSharp base versions (e.g., `3.119.2` and `8.3.1.3`)
+`push-release-packages.py --dry-run`:
 
-⚠️ **Public stable versions never include a build number.** The exact package tested before
-publication does include the internal stable tag (e.g., `3.119.2-stable.3`); the version published
-to NuGet.org is the bare base (e.g., `3.119.2`). The build number only ever appears in the
-prerelease component or internal stable tag; it is never appended to the base version directly.
-`3.119.2.3` is a different hotfix version, not build 3 of `3.119.2`.
+- Revalidates release-status and the current remote release-branch tip.
+- Revalidates the exact tested package versions on the preview feed.
+- Compiles Azure pipeline 25298 in `previewRun` mode.
+- Pins resource `SkiaSharp` to the exact managed run ID.
+- Pins `selectedResource=SkiaSharp`, `pushPackages=true`, and the exact
+  `pushStable` value.
+- Reconciles any matching live run and exact NuGet.org package state.
 
-If they are not available from the testing report, ask for them using `ask_user`.
+After approval, run the same command without `--dry-run`. It queues only when
+needed, waits while the Azure approval/run completes, then waits until both exact
+public packages are indexed on NuGet.org. Default timeout is 60 minutes.
+An unchanged package version may already be public; the pipeline uses
+`--skip-duplicate`, so the exact remaining package can still be published safely.
 
-**Quick verification** — confirm both exact packages tested exist on the preview feed:
-```bash
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' | grep -Fx "{skia-test-version}"
+### Release finalization
 
-dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[] | select(.id == "HarfBuzzSharp") | .version' | grep -Fx "{hb-test-version}"
-```
+`finalize-release.py --dry-run`:
 
-For stable releases, these exact test versions include `-stable.{build}` while the public versions
-remain the bare bases.
+- Requires both exact public packages on NuGet.org.
+- Revalidates the source SHA and selected CI chain.
+- Validates an explicit previous tag and reports ordered candidates.
+- Generates GitHub release notes from that exact previous tag.
+- Reconciles the exact remote tag, GitHub Release, title, prerelease
+  flag, and sample run.
 
-If missing, STOP and ask user to verify testing was completed.
+With `--dry-run`, it also refreshes only the ignored local teaser artifacts
+under `output/release/{tag}/`; it makes no remote changes.
 
----
+Without `--dry-run`, one call performs all currently valid finalization work:
 
-## Step 2: Publish to NuGet.org
+| Current state | Execution |
+|---------------|-----------|
+| Unpublished + approved teaser | Push exact tag, dispatch targeted website notes, and publish the GitHub Release. |
+| Published release | Validate exact state and report sample automation. |
 
-Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) to push packages to NuGet.org.
+If a command fails, rerun the dry-run and then rerun the same execution command;
+completed exact operations are skipped.
 
-### Verifying Source Build Before Publishing
+## Human-owned work
 
-Before triggering the publish pipeline, confirm builds completed using the **release-status** skill:
+| Work | Reason |
+|------|--------|
+| Confirm release-testing passed | Manual matrix results are not stored in CI. |
+| Select previous tag when candidates are ambiguous | First preview/hotfix boundaries may require maintainer intent. |
+| Approve Azure push stage | Azure protected resource gate. |
+| Classify customer teaser | Consumer relevance is editorial judgment. |
 
-```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
-```
+## Status values
 
-The `SkiaSharp` pipeline (ID 10789) must show ✅ — this is the pipeline that produced the
-packages on the internal feed. See [release-status](../release-status/SKILL.md) for details.
+| Status | Meaning |
+|--------|---------|
+| `done` | Exact state exists and validates. |
+| `pending` | Approved execution can perform it. |
+| `running` | External automation is queued/running/indexing. |
+| `awaiting-user` | Human approval or decision is required. |
+| `blocked` | A dependency or unsafe state prevents execution. |
+| `failed` | External automation completed unsuccessfully and needs investigation. |
 
-### Pipeline Steps
+## Package-push actions
 
-1. Open the [NuGet.org publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298)
-2. Click **"Run pipeline"**
-3. Select **"SkiaSharp"** from the radio buttons
-4. Check **"Confirm push to NuGet.org"** checkbox
-5. **For stable releases ONLY:** Check **"Push stable packages"** checkbox
-   - ⚠️ Do NOT check this for preview releases
-6. Click **"Next: Resources"**
-7. In **"Pipeline artifacts"**, click the **SkiaSharp** artifact selector
-8. From the **branch dropdown**, select `release/{version}` (the release branch)
-9. From the **pipeline runs list**, select the same run recorded by release-testing; verify both its
-   build ID and `buildNumber`
-10. Click **"Use selected run"**
-11. Click **"Run"**
+| `nextAction` | Meaning |
+|--------------|---------|
+| `audit-package-publication` | Detector completed; run `pushAuditCommand`. |
+| `confirm-publish-packages` | Ask approval, then run `executionCommand`. |
+| `approve-or-wait-for-publish` | Verify/approve the reported Azure run; the executing script continues waiting. |
+| `wait-for-nuget` | Publish succeeded; wait for both package versions. |
+| `start-release-finalization` | Both exact public packages are ready. |
 
-### Verification During Pipeline Run
+## Finalization actions
 
-⚠️ **Before approving the push step, verify BOTH:**
+| `nextAction` | Meaning |
+|--------------|---------|
+| `select-previous-tag` | Select a candidate and rerun with `--previous-tag`. |
+| `write-release-teaser` | Edit the generated `teaser.md`. |
+| `confirm-finalize-release` | Teaser is ready for tag/docs/release finalization. |
+| `wait-for-samples` | Release-triggered sample synchronization is pending/running. |
+| `investigate-samples` | Sample synchronization failed or was canceled. |
+| `start-release-milestones` | GitHub Release is published; run the emitted release-milestones dry-run. |
 
-1. **Run name** — The pipeline run will rename itself to the version being released. Confirm this matches your expected version.
-2. **Push type** — The publish step will indicate **"Push Preview"** or **"Push Stable"**. Verify this matches your release type:
-   - Preview release → should show "Push Preview"
-   - Stable release → should show "Push Stable"
+## Presenting audits
 
-**Only approve the push step when both are correct.** Wait for pipeline completion (typically 5-10 minutes after approval).
+Never dump raw JSON. Render:
 
-Ask user to follow these steps and wait for completion.
+```markdown
+## Publication audit
 
----
+**Release:** `{release.version}` ({release.type})
+**Commit:** `{release.sourceSha}`
+**CI:** managed `{release.managedRunId}`, tests `{release.testsRunId}`
+**Packages:** SkiaSharp `{release.publicPackages.SkiaSharp}`,
+HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 
-## Step 3: Verify Packages Published
-
-**Use curl to verify** (more reliable than `dotnet package search` which has version limits):
-
-```bash
-# Check if packages exist - HTTP 200 = success
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec"
-curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{hb-public-version}/harfbuzzsharp.nuspec"
-```
-
-**If packages not yet indexed**, poll until available (NuGet.org can take 5-15 minutes):
-
-```bash
-# Poll every 30 seconds, max 10 minutes
-for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
-  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{skia-public-version}/skiasharp.nuspec")
-  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{hb-public-version}/harfbuzzsharp.nuspec")
-  echo "$(date +%H:%M:%S) - SkiaSharp: $skia, HarfBuzzSharp: $hb"
-  if [ "$skia" = "200" ] && [ "$hb" = "200" ]; then
-    echo "✅ Both packages available on NuGet.org!"
-    break
-  fi
-  sleep 30
-done
-```
-
-> **Note:** Use explicit list `1 2 3...` instead of `{1..20}` brace expansion for better compatibility with async shell execution.
-
-Or manually check `https://www.nuget.org/packages/SkiaSharp/{skia-public-version}` and
-`https://www.nuget.org/packages/HarfBuzzSharp/{hb-public-version}`.
-
----
-
-## Step 4: Tag Release
-
-Tag formats:
-- **Preview:** `vX.Y.Z-preview.N.{build}` (e.g., `v3.119.2-preview.2.5`)
-- **Stable:** `vX.Y.Z` (e.g., `v3.119.2`)
-
-```bash
-git fetch origin
-git checkout release/{branch-version}
-git pull
-git tag {tag}
+| Operation | Status | Detail |
+|-----------|--------|--------|
+| `{operations[].id}` | `{operations[].status}` | `{operations[].detail}` |
 ```
 
-**Confirm with `ask_user`** before pushing tag (cannot be undone):
-```bash
-git push origin {tag}
+For package publication, add:
+
+```markdown
+| Check | Result |
+|-------|--------|
+| Azure request | Valid, not required, or invalid |
+| NuGet.org | `{nuget.state}` |
 ```
 
----
+For finalization, add:
 
-## Step 5: Refresh Website Release Notes & API Diffs
-
-The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
-produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
-**daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
-tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
-site immediately instead of waiting up to ~24h for the next daily run.
-
-This matters most for **stable** releases: a clean `vX.Y.Z` tag is what flips that
-version's page from "preview / unreleased" to **stable**, and the page cannot flip
-until the workflow runs again with that tag in place — so dispatch it after tagging.
-For previews it is usually a no-op (the release-branch push already refreshed the
-pages), and the workflow opens no PR when nothing changed, so this step is always
-safe to run.
-
-```bash
-# Always dispatch from main (it regenerates every release's pages, including the
-# tag you just pushed). Do NOT dispatch from the release branch.
-gh workflow run "Sync - Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
-
-# Optional: follow the run to completion.
-gh run watch "$(gh run list --workflow 'Sync - Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+```markdown
+| Check | Result |
+|-------|--------|
+| Tag | `{release.tag}` |
+| Release | draft/published/not created |
+| Body | expected body SHA/match |
+| Samples | workflow state when present |
 ```
 
-If anything changed, the workflow opens (or updates) the rolling `[docs]`
-**`bot/release-notes`** PR with the refreshed pages — review and merge it like any
-docs PR. If nothing changed, no PR is opened.
+Include every warning and link operations that include a URL.
 
-> ⚠️ These **website** release notes are separate from the **GitHub Release** notes
-> created in Step 6. This step updates the docfx site; Step 6 publishes the GitHub
-> Release. Do both.
+Ask for approval only when `nextAction` begins with `confirm-`, then run the exact
+`executionCommand` (which intentionally has no `--dry-run`).
 
----
+## Customer teaser
 
-## Step 6: Create GitHub Release
+Finalization creates:
 
-### Title Format
+| Artifact | Purpose |
+|----------|---------|
+| `output/release/{tag}/generated-log.md` | GitHub's generated PR log; only classification input. |
+| `output/release/{tag}/teaser.md` | Agent-owned teaser with one links marker. |
+| `output/release/{tag}/release-body.md` | Script-assembled final body. |
 
-| Release Type | Title Format | Example |
-|--------------|--------------|---------|
-| Preview | `Version X.Y.Z (Preview N)` | `Version 3.119.2 (Preview 2)` |
-| Stable | `Version X.Y.Z` | `Version 3.119.2` |
-| Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 3.119.2.1 (Preview 1)` |
-| Hotfix Stable | `Version X.Y.Z.F` | `Version 3.119.2.1` |
+Follow [github-release-teaser.md](references/github-release-teaser.md). Edit only
+`teaser.md`; preserve exactly one `<!-- RELEASE_LINKS -->` marker. The script
+adds exact links and folds the unedited generated log.
 
-### Finding the Previous Release Tag
+## Runbook
 
-**Always use `--notes-start-tag` to explicitly specify the previous release.** The auto-selection may pick the wrong tag.
+### 1. Confirm testing handoff
+
+Do not start unless release-testing reported every approved item passed and
+provided the exact branch, source SHA, managed run ID, and tests run ID.
+
+### 2. Detect exact inputs
 
 ```bash
-# List recent tags to find the previous release
-git tag -l "v3.119*" --sort=-v:refname | head -10
+python3 .agents/skills/release-publish/scripts/detect-release-publish.py \
+  release/{version}
 ```
 
-| Current Release | Previous Tag (--notes-start-tag) |
-|-----------------|----------------------------------|
-| `v3.119.2-preview.2.3` | `v3.119.2-preview.1.2` (previous preview) |
-| `v3.119.2-preview.1.1` | `v3.119.1` (last stable) |
-| `v3.119.2` (stable) | `v3.119.2-preview.N.X` (last preview of this version) |
-| `v3.119.2.1-preview.1.1` (hotfix) | `v3.119.2` (stable being hotfixed) |
+Render the detector output.
 
-### Commands
+### 3. Dry-run and publish packages
 
-```bash
-# Preview (e.g., v3.119.2-preview.2.3)
-gh release create {tag} \
-  --title "Version {X.Y.Z} (Preview {N})" \
-  --generate-notes \
-  --notes-start-tag {previous-tag} \
-  --prerelease \
-  --verify-tag
+Run `pushAuditCommand`. For `confirm-publish-packages`, obtain approval and run
+the returned `executionCommand`.
 
-# Stable (e.g., v3.119.2)
-gh release create {tag} \
-  --title "Version {X.Y.Z}" \
-  --generate-notes \
-  --notes-start-tag {previous-tag} \
-  --verify-tag
+The script waits while the protected Azure stage is approved and executed. In
+the Azure run, verify:
 
-# Upload samples for stable releases (if available)
-gh release upload {tag} samples.zip
-```
-
-- `--title` sets the release title (use format above)
-- `--generate-notes` auto-generates release notes from PRs/commits
-- `--notes-start-tag` specifies the previous release to diff from (required)
-- `--prerelease` marks as prerelease (preview only)
-- `--verify-tag` ensures the tag exists before creating the release
-
-> The generated notes are the **raw input** for Step 7, which extracts a short,
-> customer-facing teaser from them and keeps this full list folded below it.
-
----
-
-## Step 7: Add a Customer-Facing Teaser
-
-The auto-generated notes from Step 6 are a flat wall of **every** merged PR (CI,
-version bumps, dependency refreshes, backports — 100+ lines). Maintainers told us this
-is "too heavy and hard to find things." So we keep that full list (it carries the PR
-numbers + author handles for free) but **fold it into a `<details>` block** and add a
-short **customer teaser** on top with only the bits a package consumer cares about.
-
-The teaser is generated **only from the release log we just created** — no website
-release-notes, no `documentation/docfx/` files, no git operations, no waiting.
-
-👉 **See [references/github-release-teaser.md](references/github-release-teaser.md)** — the
-canonical playbook with the full classification rules, teaser template, and a worked
-example. Process:
-
-1. **Capture** the generated log:
-   ```bash
-   gh release view {tag} --json body -q '.body' > /tmp/skiasharp/release/generated-log.md
-   ```
-2. **Build the teaser** from `generated-log.md` following the doc's *Classifying the PRs*
-   section. In short: drop the plumbing (CI/build/test, build-tooling and version bumps,
-   docs/notes automation, backport, internal refactors), then classify the rest into these
-   sections **in this order** and omit any that are empty:
-   - **⚠️ Breaking Changes** — removed/renamed/retyped public APIs, newly `[Obsolete]`/
-     deprecated APIs (incl. promoted to warning/error), changed defaults, min-version or TFM
-     drops.
-   - **✨ What's New** — new features/APIs, perf wins, new platform support, and the **Skia
-     engine milestone bump** (a headline, not a dependency).
-   - **🐛 Fixes** — consumer-visible bug fixes on public types/scenarios (fold CI/docs/sample
-     fixes and vague `[skia-sync]` engine-sync fixes).
-   - **📦 Dependency Updates** — bundled **native** library bumps (libpng, freetype, …) as
-     `Updated <dep> to <version>`. **Never** write "security" or name a CVE.
-
-   End each bullet with `by @author (#NNNN)`, then add a `Thanks to our contributors:` line
-   of the unique community handles. Open with one neutral subtitle line.
-3. **Assemble** the final body — teaser on top, then the captured log folded below —
-   per the template, and write it to `/tmp/skiasharp/release/release-body.md`.
-4. **Update** the release:
-   ```bash
-   gh release edit {tag} --notes-file /tmp/skiasharp/release/release-body.md
-   ```
-
-> This is the **only** content step for the GitHub Release. The richer, categorized
-> website release notes are produced separately by the workflow dispatched in Step 5;
-> the teaser links out to them but never reads or waits on them.
-
----
-
-## Step 8: Milestone Hygiene (Every Release)
-
-Because the tag now exists (Step 4), this release counts as **shipped** — so this is the
-moment to (8a) sync every milestone assignment for the line, then (8b) close this version's
-milestone. Do both, in order.
-
-### 8a. Sync milestone assignments (run the audit)
-
-[`audit-milestones.ps1`](../../../scripts/infra/milestones/audit-milestones.ps1) walks the
-release branches for the line and assigns every merged PR — and the issues it closed — to the
-milestone of the release it actually **shipped** in. It's idempotent and self-correcting, so
-running it at every publish keeps milestones clean incrementally (an unshipped preview's PRs
-roll forward to the next shipped release; commits not yet in any shipped release are left alone).
-
-Pass the **base line** version (`X.Y.Z`, no `-preview`/`-rc` suffix — the script audits the
-whole line). Dry-run first, review, then apply:
-
-```bash
-# Review what would change (read-only)
-pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun -Version {X.Y.Z}
-
-# Apply
-pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
-```
-
-> See [`scripts/infra/milestones/README.md`](../../../scripts/infra/milestones/README.md) for
-> the full algorithm. The header prints which cadence branches shipped (have a tag) vs. rolled
-> forward, so you can sanity-check before applying.
-
-### 8b. Close this version's milestone
-
-**Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
-GitHub milestone for every version in the cadence, so each published version has its
-own milestone that must be closed once that version ships (otherwise it lingers open
-forever). The milestone title is the **exact release version** (no `v` prefix):
-
-| Release type | Milestone to close |
-|--------------|--------------------|
-| Preview | `X.Y.Z-preview.N` (e.g. `4.151.0-preview.1`) |
-| RC | `X.Y.Z-rc.N` (e.g. `4.151.0-rc.1`) |
-| Stable | `X.Y.Z` (e.g. `4.151.0`) |
-
-⚠️ **Move still-open issues forward first.** Never silently close a milestone that
-still has open issues. Reassign any open issues to the next appropriate milestone (the
-next preview/rc, or the stable milestone), or confirm with the user, **before** closing.
-
-```bash
-# 1. Find the milestone whose title matches the exact release version
-gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number): \(.title)"'
-
-# 2. Check for still-open issues in that milestone (should be empty before closing)
-gh issue list --repo mono/SkiaSharp --milestone "{version}" --state open
-
-# 3. After moving/confirming any open issues, close this version's milestone
-gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
-```
-
----
-
-## Error Recovery
-
-### Pipeline Fails
-
-| Failure Point | Recovery |
-|---------------|----------|
-| Pipeline won't start | Verify branch name, check Azure DevOps permissions |
-| Build fails mid-run | Check logs, fix issue on release branch, re-run pipeline |
-| Approval rejected | Re-trigger pipeline with correct settings |
-| Push step fails | Check NuGet.org status, retry pipeline |
-
-### NuGet.org Issues
-
-| Issue | Recovery |
+| Check | Expected |
 |-------|----------|
-| Indexing takes >15 min | Normal for large packages. Keep polling. |
-| Package shows 404 after publish | Wait up to 30 min. NuGet CDN propagation delay. |
-| Wrong version published | **Cannot unpublish.** Release new corrected version. |
+| Run name | `SkiaSharp {buildNumber}` |
+| Stage | `Push Stable` for stable; `Push Preview` otherwise |
+| Resource | Exact managed run ID/build number from detector |
 
-### Git/GitHub Issues
+It returns only after both exact public package versions are on NuGet.org, or
+fails/times out clearly.
 
-| Issue | Recovery |
-|-------|----------|
-| Tag push rejected | Check if tag exists: `git ls-remote --tags origin \| grep {tag}` |
-| Tag already exists | **Cannot delete.** Must use different tag or release new version. |
-| GitHub release fails | Re-run `gh release create` with `--verify-tag` |
-| Release notes wrong | Edit with `gh release edit {tag} --notes-file ...` |
+### 4. Dry-run finalization and select previous tag
 
-### General Recovery
+Run `finalizeAuditCommand`. If it reports `select-previous-tag`, show
+`release.previousTagCandidates`.
 
-If you've partially completed and need to resume:
-1. Check what's done: `gh release view {tag}` (release exists?), `git ls-remote --tags origin` (tag exists?)
-2. Skip completed steps
-3. Continue from where you left off
+Prefer the latest same-version preview/RC. If none exists, confirm the intended
+prior stable tag with the user. Rerun with:
 
----
+```bash
+--previous-tag {exact-tag} --dry-run
+```
 
-## Resources
+### 5. Prepare and audit the teaser
 
-- [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, tag formats, workflow diagrams
-- [references/github-release-teaser.md](references/github-release-teaser.md) — Customer teaser playbook: classification rules + template
+The previous-tag dry-run writes `generated-log.md` and the `teaser.md` template
+locally without changing remote release state.
+
+Read `generated-log.md`, edit `teaser.md` according to the reference, then rerun:
+
+```bash
+python3 .agents/skills/release-publish/scripts/finalize-release.py \
+  {pinned arguments} \
+  --previous-tag {tag} \
+  --teaser-file output/release/{release-tag}/teaser.md \
+  --dry-run
+```
+
+Review the expected body SHA and all publication operations.
+
+### 6. Final approval
+
+For `confirm-finalize-release`, show:
+
+- Exact tag, title, and prerelease state.
+- Teaser path and expected body SHA.
+
+Obtain approval, then run `executionCommand`. In one resumable call the script
+pushes the tag, dispatches website notes, and publishes the GitHub Release.
+
+### 7. Hand off release milestones
+
+Once `nextAction` is `start-release-milestones`, invoke the emitted
+`milestonesCommand` using
+[release-milestones](../release-milestones/SKILL.md). The release-milestones
+workflow completes its Audit path from that command, then runs its normal Sync
+path to update upcoming milestones and automatically close tagged milestones
+after moving open issues forward. Report the sample workflow state during the
+handoff.
+
+## Recovery
+
+Both write scripts are resumable:
+
+1. Rerun the detector.
+2. Rerun the relevant dry-run.
+3. Review exact operations and `nextAction`.
+4. Run the returned execution command only after approval.
+
+Never delete a tag or published release to recover. Correct mistakes with a new
+release version.
+
+## Files
+
+- [scripts/detect-release-publish.py](scripts/detect-release-publish.py) —
+  read-only tested-run handoff.
+- [scripts/push-release-packages.py](scripts/push-release-packages.py) — exact
+  Azure publish preview/queue/wait and NuGet verification.
+- [scripts/finalize-release.py](scripts/finalize-release.py) — exact tag, docs,
+  release, and sample reconciliation.
+- [scripts/release_publish.py](scripts/release_publish.py) — shared deterministic
+  clients and validation helpers; not a user-facing command.
+- [scripts/tests/](scripts/tests/) — version, handoff, Azure request, CLI mode,
+  tag, and body-assembly tests.
+- [references/github-release-teaser.md](references/github-release-teaser.md) —
+  human teaser classification rules.
+- [Azure release coordinator](../../../scripts/azure-pipelines-release-coordinator.yml)
+  — manual start/complete pipeline over the same script contracts.
+- [releasing.md](../../../documentation/dev/releasing.md) — complete release
+  pipeline reference.
