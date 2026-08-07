@@ -12,9 +12,8 @@ import shlex
 import subprocess
 import sys
 
-
 SCRIPT_DIR = Path(__file__).resolve().parent
-PREPARE_SCRIPT = SCRIPT_DIR / "prepare-test-run.py"
+SCRIPT_DIR = Path(__file__).resolve().parent
 STATUS_SCRIPT = (
     SCRIPT_DIR.parent.parent
     / "release-status"
@@ -68,6 +67,128 @@ def parse_json_output(text: str):
     raise PlanError("command returned no valid JSON")
 
 
+def numeric_version(value: str) -> tuple[int, ...]:
+    if not re.fullmatch(r"\d+(?:\.\d+)*", value):
+        raise PlanError(f"invalid Apple version: {value}")
+    return tuple(int(part) for part in value.split("."))
+
+
+def xcode_target_majors(xcode_version: str) -> tuple[int, int]:
+    major = numeric_version(xcode_version)[0]
+    if major == 26:
+        return 15, 26
+    if major >= 27:
+        return 18, 26
+    raise PlanError(
+        f"Xcode {xcode_version} has no release-test target policy"
+    )
+
+
+def simulator_runtime_version(simulator: dict) -> str | None:
+    runtime = simulator.get("runtime") or {}
+    version = str(runtime.get("version") or "")
+    if not version:
+        name = str(runtime.get("name") or "")
+        version = name.removeprefix("iOS ") if name.startswith("iOS ") else ""
+    try:
+        numeric_version(version)
+    except PlanError:
+        return None
+    return version
+
+
+def available_ios_versions(simulators: list[dict]) -> list[str]:
+    versions = {
+        version
+        for simulator in simulators
+        if (version := simulator_runtime_version(simulator))
+        and str((simulator.get("runtime") or {}).get("name") or "").startswith(
+            "iOS "
+        )
+        and simulator.get("isAvailable", True)
+        and (simulator.get("runtime") or {}).get("isAvailable", True)
+    }
+    return sorted(versions, key=numeric_version)
+
+
+def ios_device_types(simulators: list[dict], version: str) -> set[str]:
+    devices = {
+        str((simulator.get("deviceType") or {}).get("name") or "")
+        for simulator in simulators
+        if simulator_runtime_version(simulator) == version
+        and (simulator.get("deviceType") or {}).get("productFamily") == "iPhone"
+        and simulator.get("isAvailable", True)
+    }
+    devices.discard("")
+    return devices
+
+
+def preferred_device_type(simulators: list[dict], version: str) -> str:
+    devices = ios_device_types(simulators, version)
+    if not devices:
+        raise PlanError(
+            f"iOS {version} has no available iPhone simulator device type"
+        )
+
+    def score(name: str) -> tuple:
+        standard = re.fullmatch(r"iPhone\s+(\d+)", name)
+        if standard:
+            return 4, int(standard.group(1)), name
+        compact = re.fullmatch(r"iPhone\s+(\d+)e", name)
+        if compact:
+            return 3, int(compact.group(1)), name
+        numbered = re.search(r"iPhone\s+(\d+)", name)
+        if numbered:
+            return 2, int(numbered.group(1)), name
+        return 1, 0, name
+
+    return max(devices, key=score)
+
+
+def select_apple_targets(
+    xcode_version: str,
+    xcode_path: str,
+    simulators: list[dict],
+) -> dict:
+    minimum_major, maximum_major = xcode_target_majors(xcode_version)
+    versions = available_ios_versions(simulators)
+
+    def select(major: int, *, maximum: bool) -> str:
+        matches = [
+            version
+            for version in versions
+            if numeric_version(version)[0] == major
+        ]
+        if not matches:
+            raise PlanError(
+                f"Xcode {xcode_version} requires an installed iOS {major}.x "
+                f"runtime for {'maximum' if maximum else 'minimum'} coverage"
+            )
+        return (
+            max(matches, key=numeric_version)
+            if maximum
+            else min(matches, key=numeric_version)
+        )
+
+    minimum = select(minimum_major, maximum=False)
+    maximum = select(maximum_major, maximum=True)
+    return {
+        "xcodeVersion": xcode_version,
+        "minimum": {
+            "version": minimum,
+            "device": preferred_device_type(simulators, minimum),
+        },
+        "maximum": {
+            "version": maximum,
+            "device": preferred_device_type(simulators, maximum),
+        },
+        "availableVersions": versions,
+        "developerDirectory": str(
+            Path(xcode_path) / "Contents" / "Developer"
+        ),
+    }
+
+
 def format_command(
     argv: list[str],
     *,
@@ -95,17 +216,58 @@ def status_report(root: Path, target: str) -> dict:
     )
 
 
-def apple_targets_report(root: Path) -> dict:
-    return parse_json_output(
+def detect_apple_targets(root: Path) -> dict:
+    xcodes = parse_json_output(
         run(
             [
-                sys.executable,
-                str(PREPARE_SCRIPT),
-                "--detect-apple-targets",
+                "dotnet",
+                "tool",
+                "run",
+                "apple",
+                "--",
+                "xcode",
+                "list",
+                "--format",
+                "json",
             ],
             cwd=root,
         ).stdout
     )
+    selected = next(
+        (
+            item
+            for item in xcodes
+            if item.get("Selected") is True
+            or item.get("selected") is True
+        ),
+        None,
+    )
+    if not selected:
+        raise PlanError("dotnet apple did not report a selected Xcode")
+    xcode_version = str(
+        selected.get("Version") or selected.get("version") or ""
+    )
+    xcode_path = str(selected.get("Path") or selected.get("path") or "")
+    if not xcode_version or not xcode_path:
+        raise PlanError("selected Xcode is missing its version or path")
+    simulators = parse_json_output(
+        run(
+            [
+                "dotnet",
+                "tool",
+                "run",
+                "apple",
+                "--",
+                "simulator",
+                "list",
+                "--available",
+                "--format",
+                "json",
+            ],
+            cwd=root,
+        ).stdout
+    )
+    return select_apple_targets(xcode_version, xcode_path, simulators)
 
 
 def runner_command(
@@ -359,7 +521,7 @@ def main() -> int:
         apple_error = None
         if host_os == "macOS":
             try:
-                apple_targets = apple_targets_report(root)
+                apple_targets = detect_apple_targets(root)
             except PlanError as error:
                 apple_error = str(error)
         matrix, missing = build_matrix(
