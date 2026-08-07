@@ -374,7 +374,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         "warnings": status.get("warnings") or [],
         "executionCommand": (
             execution_command(args, source_sha)
-            if next_action != "start-release-draft"
+            if next_action == "confirm-publish-packages"
             else None
         ),
         "waitCommand": (

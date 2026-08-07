@@ -188,6 +188,76 @@ class PublishCommandTests(unittest.TestCase):
             result["waitCommand"],
         )
 
+    def test_pending_run_recovers_with_wait_only(self):
+        args = SimpleNamespace(
+            release_branch="release/4.152.0-preview.1",
+            expect_source_sha="a" * 40,
+            expect_managed_run=10,
+            expect_tests_run=20,
+            dry_run=True,
+        )
+        release_version = push.publish.ReleaseVersion.parse(
+            args.release_branch
+        )
+        handoff = {
+            "managed": {
+                "runId": 10,
+                "buildNumber": (
+                    "4.152.0-preview.1.1+4.152.0-preview.1"
+                ),
+            },
+            "versions": {
+                "test": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "14.2.1-preview.1.1",
+                },
+                "public": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "14.2.1-preview.1.1",
+                },
+            },
+        }
+
+        class FakeNuGet:
+            def check(self, versions):
+                return {"state": "missing", "packages": {}}
+
+        class FakeAzure:
+            def matching_runs(self, *unused, **kwargs):
+                return [
+                    {
+                        "runId": 14911788,
+                        "name": "SkiaSharp preview",
+                        "status": "inProgress",
+                        "result": None,
+                        "url": push.run_url(14911788),
+                    }
+                ]
+
+            def preview(self, *unused, **kwargs):
+                return True
+
+        with (
+            mock.patch.object(
+                push,
+                "load_release",
+                return_value=(
+                    object(),
+                    release_version,
+                    {"warnings": []},
+                    handoff,
+                    "a" * 40,
+                ),
+            ),
+            mock.patch.object(push.publish, "NuGet", FakeNuGet),
+            mock.patch.object(push, "AzurePublish", FakeAzure),
+        ):
+            result = push.current_state(args)
+
+        self.assertEqual(result["nextAction"], "approve-publish-run")
+        self.assertIsNone(result["executionCommand"])
+        self.assertIn("--publish-run 14911788", result["waitCommand"])
+
     def test_create_script_pushes_tag_then_creates_draft(self):
         events = []
 

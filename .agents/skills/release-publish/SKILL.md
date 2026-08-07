@@ -107,6 +107,11 @@ After the user confirms that decision, run the emitted `waitCommand`. It remains
 pinned to that publication run ID, waits for completion, and verifies both exact
 public packages on NuGet.org.
 
+After interruption or restart, rerun the detector and `pushAuditCommand`. An
+exact queued/running/succeeded publication is recovered by its managed run,
+build number, destination, and parameters. The audit returns its existing URL
+and `waitCommand` with no queue `executionCommand`.
+
 ### 3. Create the generated-notes draft
 
 Run `draftAuditCommand`. It parses all release tags using SkiaSharp's
