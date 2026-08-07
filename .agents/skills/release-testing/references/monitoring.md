@@ -147,7 +147,7 @@ timed out, and never use a background agent to own the command.
 ### Example: Full Test Feedback Flow
 
 ```
-🔄 Running MauiiOSTests (detected minimum iOS)
+🔄 Running MauiiOSTests (iOS 18.6)
   ✅ Test project compiled
   ✅ Created MauiiOSSKCanvasView project
   ⏳ Building iOS app (~60-90s expected)...
@@ -157,7 +157,7 @@ timed out, and never use a background agent to own the command.
   ⏳ Deploying to iPhone 14 Pro simulator...
   ✅ App deployed, running test...
   ✅ Screenshot captured and verified
-  ✅ MauiiOSTests (detected minimum iOS) passed!
+  ✅ MauiiOSTests (iOS 18.6) passed!
 ```
 
 ---

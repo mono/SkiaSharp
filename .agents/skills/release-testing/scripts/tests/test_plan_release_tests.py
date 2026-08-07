@@ -33,72 +33,11 @@ STATUS = {
         }
     }
 }
-APPLE_TARGETS = {
-    "xcodeVersion": "27.0",
-    "minimum": {"version": "18.2", "device": "iPhone 16"},
-    "maximum": {"version": "26.5", "device": "iPhone 17"},
-    "availableVersions": ["18.2", "26.5", "27.0"],
-    "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
-}
-
-
-def simulator(version: str, device: str) -> dict:
-    return {
-        "isAvailable": True,
-        "deviceType": {
-            "name": device,
-            "productFamily": "iPhone",
-        },
-        "runtime": {
-            "name": f"iOS {version}",
-            "version": version,
-            "isAvailable": True,
-        },
-    }
 
 
 class ReleaseTestPlanTests(unittest.TestCase):
-    def test_xcode_26_selects_ios_15_and_26(self):
-        targets = planner.select_apple_targets(
-            "26.6",
-            "/Applications/Xcode-26.6.0.app",
-            [
-                simulator("15.8", "iPhone 13 Pro"),
-                simulator("15.0", "iPhone 13"),
-                simulator("26.0", "iPhone 16"),
-                simulator("26.5", "iPhone 17"),
-            ],
-        )
-
-        self.assertEqual(targets["minimum"]["version"], "15.0")
-        self.assertEqual(targets["minimum"]["device"], "iPhone 13")
-        self.assertEqual(targets["maximum"]["version"], "26.5")
-        self.assertEqual(targets["maximum"]["device"], "iPhone 17")
-
-    def test_xcode_27_selects_ios_18_and_26(self):
-        targets = planner.select_apple_targets(
-            "27.0",
-            "/Applications/Xcode.app",
-            [
-                simulator("16.2", "iPhone 14"),
-                simulator("18.2", "iPhone 16"),
-                simulator("18.5", "iPhone 16 Pro"),
-                simulator("26.5", "iPhone 17"),
-                simulator("27.0", "iPhone 17 Pro"),
-            ],
-        )
-
-        self.assertEqual(targets["minimum"]["version"], "18.2")
-        self.assertEqual(targets["minimum"]["device"], "iPhone 16")
-        self.assertEqual(targets["maximum"]["version"], "26.5")
-        self.assertEqual(targets["maximum"]["device"], "iPhone 17")
-
     def test_full_macos_matrix(self):
-        matrix, missing = planner.build_matrix(
-            STATUS,
-            "macOS",
-            apple_targets=APPLE_TARGETS,
-        )
+        matrix, missing = planner.build_matrix(STATUS, "macOS")
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -109,7 +48,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 "android-26",
                 "android-37.1",
                 "maccatalyst",
-                "ios-18.2",
+                "ios-18.6",
                 "ios-26.5",
             ],
         )
@@ -140,11 +79,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_matrix_commands_use_one_python_runner(self):
-        matrix, _ = planner.build_matrix(
-            STATUS,
-            "macOS",
-            apple_targets=APPLE_TARGETS,
-        )
+        matrix, _ = planner.build_matrix(STATUS, "macOS")
         for item in matrix:
             self.assertNotIn("selectedByDefault", item)
             command = item["command"]
@@ -165,10 +100,10 @@ class ReleaseTestPlanTests(unittest.TestCase):
             item for item in matrix if item["id"] == "android-37.1"
         )
         self.assertIn("android-37.1", android_max["command"])
-        ios_min = next(item for item in matrix if item["id"] == "ios-18.2")
-        self.assertIn("ios-18.2 --device 'iPhone 16'", ios_min["command"])
+        ios_min = next(item for item in matrix if item["id"] == "ios-18.6")
+        self.assertIn("ios-18.6", ios_min["command"])
         ios = next(item for item in matrix if item["id"] == "ios-26.5")
-        self.assertIn("ios-26.5 --device 'iPhone 17'", ios["command"])
+        self.assertIn("ios-26.5", ios["command"])
 
     def test_plan_contract_has_no_global_setup_commands(self):
         self.assertNotIn(
@@ -177,11 +112,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
-        matrix, _ = planner.build_matrix(
-            STATUS,
-            "macOS",
-            apple_targets=APPLE_TARGETS,
-        )
+        matrix, _ = planner.build_matrix(STATUS, "macOS")
         for item in matrix:
             argv = shlex.split(item["command"])
             script_index = next(
@@ -272,14 +203,6 @@ class ReleaseTestPlanTests(unittest.TestCase):
             platform_name="win32",
         )
         self.assertTrue(result.startswith("& 'C:\\Program Files"))
-
-    def test_json_parser_ignores_command_noise(self):
-        self.assertEqual(
-            planner.parse_json_output(
-                "WARN [status] not JSON\n{\"ready\": true}\n"
-            ),
-            {"ready": True},
-        )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

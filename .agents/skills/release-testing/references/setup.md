@@ -116,24 +116,16 @@ paths selected by the pinned tool.
 
 ## Apple simulators
 
-Planning detects the selected Xcode and available simulators through the pinned
-`dotnet apple` tool and resolves two exact runtimes:
+Default coverage requires two exact installed runtimes:
 
-```bash
-dotnet tool run apple -- xcode list --format json
-dotnet tool run apple -- simulator list --available --format json
-```
+| Matrix item | Required runtime |
+|-------------|------------------|
+| `ios-18.6` | iOS 18.6 |
+| `ios-26.5` | iOS 26.5 |
 
-| Selected Xcode | Minimum coverage | Maximum coverage |
-|----------------|------------------|------------------|
-| 26.x | Oldest installed iOS 15.x | Newest installed iOS 26.x |
-| 27.x or newer | Oldest installed iOS 18.x | Newest installed iOS 26.x |
-
-The planner also selects an iPhone device type available for each exact runtime,
-preferring a standard numbered iPhone. Xcode 27 deliberately stops at iOS 26
-because the current MAUI/Appium test app cannot launch reliably on iOS 27
-simulators. The resolved runtime and device values are already present in the
-matrix commands.
+iOS 18.6 is the minimum release-test target only. It does not change
+SkiaSharp's declared product minimum, just as Android release tests start at API
+26 while the product supports API 21.
 
 The runner checks installed simulators with `dotnet apple`. It does not query
 Apple's downloadable catalog or download a missing runtime.
@@ -142,9 +134,9 @@ It then creates a uniquely named release-owned simulator, boots with
 `--wait --timeout 180`, and deletes the simulator afterward. Existing
 developer-owned simulators are not erased or deleted.
 
-Use `--device "{device-type}"` to override the automatically selected compatible
-iPhone type. The runner rejects a device type that is unavailable for the exact
-runtime.
+The runner automatically selects a compatible standard numbered iPhone type.
+Use `--device "{device-type}"` to override it; the runner rejects a type that is
+unavailable for the exact runtime.
 
 ## Docker
 

@@ -93,7 +93,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             {
                 "runtime": {"name": f"iOS {version}"},
             }
-            for version in ("15.0", "26.5")
+            for version in ("18.6", "26.5")
         ]
         with mock.patch.object(
             runner,
@@ -103,7 +103,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             self.assertEqual(
                 runner.installed_ios_versions(Path.cwd()),
                 {
-                    "15.0",
+                    "18.6",
                     "26.5",
                 },
             )
@@ -112,7 +112,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         simulators = [
             {
                 "isAvailable": True,
-                "runtime": {"name": "iOS 18.2", "version": "18.2"},
+                "runtime": {"name": "iOS 18.6", "version": "18.6"},
                 "deviceType": {
                     "name": "iPhone 16 Pro",
                     "productFamily": "iPhone",
@@ -120,7 +120,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             },
             {
                 "isAvailable": True,
-                "runtime": {"name": "iOS 18.2", "version": "18.2"},
+                "runtime": {"name": "iOS 18.6", "version": "18.6"},
                 "deviceType": {
                     "name": "iPhone 16",
                     "productFamily": "iPhone",
@@ -128,7 +128,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             },
         ]
         self.assertEqual(
-            runner.resolve_ios_device_type(simulators, "18.2", None),
+            runner.resolve_ios_device_type(simulators, "18.6", None),
             "iPhone 16",
         )
         with self.assertRaisesRegex(
@@ -137,9 +137,67 @@ class ReleaseTestRunnerTests(unittest.TestCase):
         ):
             runner.resolve_ios_device_type(
                 simulators,
-                "18.2",
+                "18.6",
                 "iPhone 13",
             )
+
+    def test_ios_run_creates_and_deletes_fresh_simulator_on_failure(self):
+        simulators = [
+            {
+                "isAvailable": True,
+                "runtime": {"name": "iOS 18.6", "version": "18.6"},
+                "deviceType": {
+                    "name": "iPhone 16",
+                    "productFamily": "iPhone",
+                },
+            }
+        ]
+        args = SimpleNamespace(device=None)
+        with (
+            mock.patch.object(runner.sys, "platform", "darwin"),
+            mock.patch.object(runner, "require_workload"),
+            mock.patch.object(runner, "require_appium_driver"),
+            mock.patch.object(
+                runner,
+                "apple_simulators",
+                return_value=simulators,
+            ),
+            mock.patch.object(
+                runner,
+                "run_json",
+                return_value={"udid": "SIM-123"},
+            ) as create,
+            mock.patch.object(runner, "run") as command,
+            mock.patch.object(
+                runner,
+                "run_test",
+                side_effect=runner.TestRunError("test failed"),
+            ),
+            self.assertRaisesRegex(runner.TestRunError, "test failed"),
+        ):
+            runner.run_ios(Path.cwd(), args, "18.6")
+
+        create_args = create.call_args.args[0]
+        self.assertEqual(
+            create_args[5:8],
+            ["simulator", "create", create_args[7]],
+        )
+        self.assertTrue(
+            create_args[7].startswith("SkiaSharp Release iOS 18.6 ")
+        )
+        commands = [call.args[0] for call in command.call_args_list]
+        self.assertTrue(
+            any(
+                values[5:8] == ["simulator", "boot", "SIM-123"]
+                for values in commands
+            )
+        )
+        self.assertTrue(
+            any(
+                values[5:8] == ["simulator", "delete", "SIM-123"]
+                for values in commands
+            )
+        )
 
     def test_parser_supports_versioned_mobile_commands_and_device(self):
         parser = runner.create_parser()
@@ -373,14 +431,6 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             ],
         )
         self.assertIn("appium.cmd", resolved[4])
-
-    def test_json_parser_ignores_command_noise(self):
-        self.assertEqual(
-            runner.parse_json_output(
-                "WARN [Appium] not JSON\nstatus\n{\"ready\": true}\n"
-            ),
-            {"ready": True},
-        )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

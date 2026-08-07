@@ -68,9 +68,6 @@ repairs safe environment problems, and retries only the affected items.
 - Selects the default matrix for the current host OS.
 - Generates one exact `run-tests.py` command per matrix item.
 - Selects the fullest host-appropriate matrix by default.
-- On macOS, reads the selected Xcode and installed simulator inventory, applies
-  the Xcode/Appium compatibility policy, and pins exact minimum/maximum iOS
-  runtimes plus compatible iPhone device types.
 
 If CI tests are not ready, the planner returns no matrix. Use
 `--allow-incomplete-ci` only after the user explicitly overrides the normal
@@ -134,8 +131,8 @@ SDK image/runtime, Appium installation, or host capability is absent.
 | `maccatalyst` | MAUI Mac Catalyst | On macOS |
 | `android-26` | Exact Android 26 image (UiAutomator2 minimum) | Yes |
 | `android-37.1` | Exact Android 37.1 image | Yes |
-| `ios-{minimum}` | Oldest installed runtime in the Xcode-compatible minimum major | On macOS |
-| `ios-{maximum}` | Newest installed iOS 26 runtime | On macOS |
+| `ios-18.6` | Exact iOS 18.6 minimum test target | On macOS |
+| `ios-26.5` | Exact iOS 26.5 maximum test target | On macOS |
 | `windows` | MAUI Windows | On Windows |
 
 Minimum/maximum mobile coverage must use distinct versions. Report missing
@@ -149,20 +146,19 @@ Use the pinned local tools from `.config/dotnet-tools.json`:
 - `dotnet tool run android -- avd create/start/delete`
 - `dotnet tool run apple -- simulator create/list/boot/delete`
 
-Mobile selectors are exact versions. Android targets are fixed; iOS targets are
-resolved from the selected Xcode:
+Mobile selectors are exact versions:
 
-| Selected toolchain | Minimum iOS major | Maximum iOS major |
-|--------------------|-------------------|-------------------|
-| Xcode 26.x | iOS 15 | iOS 26 |
-| Xcode 27.x or newer | iOS 18 | iOS 26 |
+| Selector | Required installed target |
+|----------|---------------------------|
+| `android-26` | Android 26 system image |
+| `android-37.1` | Android 37.1 system image |
+| `ios-18.6` | iOS 18.6 simulator runtime |
+| `ios-26.5` | iOS 26.5 simulator runtime |
 
-Within each major, planning chooses the oldest installed minimum runtime and
-newest installed maximum runtime. Xcode 27 currently uses iOS 26 as its maximum
-because the MAUI/Appium test app cannot launch reliably on iOS 27 simulators.
-For example, this machine resolves to iOS 18.2 and iOS 26.5. This is release-test
-coverage policy only; it does not change SkiaSharp's declared iOS product
-minimum.
+iOS 18.6 is the minimum **release-test target**, not SkiaSharp's supported
+minimum. This mirrors Android 26 test coverage while the product still supports
+Android 21. The exact iOS runtimes must already be installed; the runner does
+not substitute another minor version.
 
 Use optional `--device {hardware-profile}` to override the default `pixel`
 Android profile or the automatically selected compatible iPhone type. Use
@@ -272,6 +268,9 @@ The final report must include:
   tools and reset test output.
 - [scripts/run-tests.py](scripts/run-tests.py) — checked setup, execution, and
   cleanup subcommands for every matrix item.
+- [scripts/release_test_common.py](scripts/release_test_common.py) — shared
+  release-test version policy, checked process execution, repository lookup,
+  and JSON parsing.
 - [scripts/tests/](scripts/tests/) — planner, preparation, and runner tests.
 - [references/setup.md](references/setup.md) — prerequisite details.
 - [references/monitoring.md](references/monitoring.md) — long-running test

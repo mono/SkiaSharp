@@ -9,10 +9,10 @@ from pathlib import Path
 import platform
 import re
 import shlex
-import subprocess
 import sys
 
-SCRIPT_DIR = Path(__file__).resolve().parent
+import release_test_common as common
+
 SCRIPT_DIR = Path(__file__).resolve().parent
 STATUS_SCRIPT = (
     SCRIPT_DIR.parent.parent
@@ -22,8 +22,7 @@ STATUS_SCRIPT = (
 )
 
 
-class PlanError(RuntimeError):
-    """The test matrix could not be planned safely."""
+PlanError = common.ReleaseTestError
 
 
 def run(
@@ -31,162 +30,11 @@ def run(
     *,
     cwd: Path | None = None,
     timeout: int = 180,
-) -> subprocess.CompletedProcess[str]:
-    try:
-        result = subprocess.run(
-            args,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except FileNotFoundError as error:
-        raise PlanError(f"{args[0]} was not found on PATH") from error
-    except subprocess.TimeoutExpired as error:
-        raise PlanError(
-            f"command timed out after {timeout}s: {' '.join(args)}"
-        ) from error
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or "no output"
-        raise PlanError(
-            f"command failed ({result.returncode}): {' '.join(args)}\n{detail}"
-        )
-    return result
+):
+    return common.run_checked(args, cwd=cwd, timeout=timeout)
 
 
-def parse_json_output(text: str):
-    decoder = json.JSONDecoder()
-    for index, character in enumerate(text):
-        if character not in "[{":
-            continue
-        try:
-            value, _ = decoder.raw_decode(text[index:])
-            return value
-        except json.JSONDecodeError:
-            pass
-    raise PlanError("command returned no valid JSON")
-
-
-def numeric_version(value: str) -> tuple[int, ...]:
-    if not re.fullmatch(r"\d+(?:\.\d+)*", value):
-        raise PlanError(f"invalid Apple version: {value}")
-    return tuple(int(part) for part in value.split("."))
-
-
-def xcode_target_majors(xcode_version: str) -> tuple[int, int]:
-    major = numeric_version(xcode_version)[0]
-    if major == 26:
-        return 15, 26
-    if major >= 27:
-        return 18, 26
-    raise PlanError(
-        f"Xcode {xcode_version} has no release-test target policy"
-    )
-
-
-def simulator_runtime_version(simulator: dict) -> str | None:
-    runtime = simulator.get("runtime") or {}
-    version = str(runtime.get("version") or "")
-    if not version:
-        name = str(runtime.get("name") or "")
-        version = name.removeprefix("iOS ") if name.startswith("iOS ") else ""
-    try:
-        numeric_version(version)
-    except PlanError:
-        return None
-    return version
-
-
-def available_ios_versions(simulators: list[dict]) -> list[str]:
-    versions = {
-        version
-        for simulator in simulators
-        if (version := simulator_runtime_version(simulator))
-        and str((simulator.get("runtime") or {}).get("name") or "").startswith(
-            "iOS "
-        )
-        and simulator.get("isAvailable", True)
-        and (simulator.get("runtime") or {}).get("isAvailable", True)
-    }
-    return sorted(versions, key=numeric_version)
-
-
-def ios_device_types(simulators: list[dict], version: str) -> set[str]:
-    devices = {
-        str((simulator.get("deviceType") or {}).get("name") or "")
-        for simulator in simulators
-        if simulator_runtime_version(simulator) == version
-        and (simulator.get("deviceType") or {}).get("productFamily") == "iPhone"
-        and simulator.get("isAvailable", True)
-    }
-    devices.discard("")
-    return devices
-
-
-def preferred_device_type(simulators: list[dict], version: str) -> str:
-    devices = ios_device_types(simulators, version)
-    if not devices:
-        raise PlanError(
-            f"iOS {version} has no available iPhone simulator device type"
-        )
-
-    def score(name: str) -> tuple:
-        standard = re.fullmatch(r"iPhone\s+(\d+)", name)
-        if standard:
-            return 4, int(standard.group(1)), name
-        compact = re.fullmatch(r"iPhone\s+(\d+)e", name)
-        if compact:
-            return 3, int(compact.group(1)), name
-        numbered = re.search(r"iPhone\s+(\d+)", name)
-        if numbered:
-            return 2, int(numbered.group(1)), name
-        return 1, 0, name
-
-    return max(devices, key=score)
-
-
-def select_apple_targets(
-    xcode_version: str,
-    xcode_path: str,
-    simulators: list[dict],
-) -> dict:
-    minimum_major, maximum_major = xcode_target_majors(xcode_version)
-    versions = available_ios_versions(simulators)
-
-    def select(major: int, *, maximum: bool) -> str:
-        matches = [
-            version
-            for version in versions
-            if numeric_version(version)[0] == major
-        ]
-        if not matches:
-            raise PlanError(
-                f"Xcode {xcode_version} requires an installed iOS {major}.x "
-                f"runtime for {'maximum' if maximum else 'minimum'} coverage"
-            )
-        return (
-            max(matches, key=numeric_version)
-            if maximum
-            else min(matches, key=numeric_version)
-        )
-
-    minimum = select(minimum_major, maximum=False)
-    maximum = select(maximum_major, maximum=True)
-    return {
-        "xcodeVersion": xcode_version,
-        "minimum": {
-            "version": minimum,
-            "device": preferred_device_type(simulators, minimum),
-        },
-        "maximum": {
-            "version": maximum,
-            "device": preferred_device_type(simulators, maximum),
-        },
-        "availableVersions": versions,
-        "developerDirectory": str(
-            Path(xcode_path) / "Contents" / "Developer"
-        ),
-    }
+parse_json_output = common.parse_json_output
 
 
 def format_command(
@@ -214,60 +62,6 @@ def status_report(root: Path, target: str) -> dict:
             cwd=root,
         ).stdout
     )
-
-
-def detect_apple_targets(root: Path) -> dict:
-    xcodes = parse_json_output(
-        run(
-            [
-                "dotnet",
-                "tool",
-                "run",
-                "apple",
-                "--",
-                "xcode",
-                "list",
-                "--format",
-                "json",
-            ],
-            cwd=root,
-        ).stdout
-    )
-    selected = next(
-        (
-            item
-            for item in xcodes
-            if item.get("Selected") is True
-            or item.get("selected") is True
-        ),
-        None,
-    )
-    if not selected:
-        raise PlanError("dotnet apple did not report a selected Xcode")
-    xcode_version = str(
-        selected.get("Version") or selected.get("version") or ""
-    )
-    xcode_path = str(selected.get("Path") or selected.get("path") or "")
-    if not xcode_version or not xcode_path:
-        raise PlanError("selected Xcode is missing its version or path")
-    simulators = parse_json_output(
-        run(
-            [
-                "dotnet",
-                "tool",
-                "run",
-                "apple",
-                "--",
-                "simulator",
-                "list",
-                "--available",
-                "--format",
-                "json",
-            ],
-            cwd=root,
-        ).stdout
-    )
-    return select_apple_targets(xcode_version, xcode_path, simulators)
 
 
 def runner_command(
@@ -321,9 +115,6 @@ def matrix_item(
 def build_matrix(
     status: dict,
     host_os: str,
-    *,
-    apple_targets: dict | None = None,
-    apple_error: str | None = None,
 ) -> tuple[list[dict], list[str]]:
     versions = status["packageVersions"]["test"]
     skia = versions["SkiaSharp"]
@@ -364,18 +155,18 @@ def build_matrix(
         True,
     )
     add(
-        "android-26",
+        f"android-{common.ANDROID_MIN_VERSION}",
         "MAUI Android minimum",
-        "Android 26",
-        ["android-26"],
+        f"Android {common.ANDROID_MIN_VERSION}",
+        [f"android-{common.ANDROID_MIN_VERSION}"],
         5,
         True,
     )
     add(
-        "android-37.1",
+        f"android-{common.ANDROID_MAX_VERSION}",
         "MAUI Android maximum",
-        "Android 37.1",
-        ["android-37.1"],
+        f"Android {common.ANDROID_MAX_VERSION}",
+        [f"android-{common.ANDROID_MAX_VERSION}"],
         5,
         True,
     )
@@ -389,25 +180,22 @@ def build_matrix(
             3,
             True,
         )
-        if apple_targets:
-            for coverage in ("minimum", "maximum"):
-                target = apple_targets[coverage]
-                version = target["version"]
-                device = target["device"]
-                item_id = f"ios-{version}"
-                add(
-                    item_id,
-                    f"MAUI iOS {coverage}",
-                    f"iOS {version} / {device}",
-                    [item_id, "--device", device],
-                    4,
-                    True,
-                )
-        else:
-            missing.append(
-                "iOS simulator coverage could not be resolved"
-                + (f": {apple_error}" if apple_error else "")
-            )
+        add(
+            f"ios-{common.IOS_MIN_VERSION}",
+            "MAUI iOS minimum test target",
+            f"iOS {common.IOS_MIN_VERSION}",
+            [f"ios-{common.IOS_MIN_VERSION}"],
+            4,
+            True,
+        )
+        add(
+            f"ios-{common.IOS_MAX_VERSION}",
+            "MAUI iOS maximum test target",
+            f"iOS {common.IOS_MAX_VERSION}",
+            [f"ios-{common.IOS_MAX_VERSION}"],
+            4,
+            True,
+        )
     else:
         missing.append("iOS and Mac Catalyst require a macOS host")
 
@@ -517,19 +305,7 @@ def main() -> int:
             if sys.platform == "win32"
             else "Linux"
         )
-        apple_targets = None
-        apple_error = None
-        if host_os == "macOS":
-            try:
-                apple_targets = detect_apple_targets(root)
-            except PlanError as error:
-                apple_error = str(error)
-        matrix, missing = build_matrix(
-            status,
-            host_os,
-            apple_targets=apple_targets,
-            apple_error=apple_error,
-        )
+        matrix, missing = build_matrix(status, host_os)
         print(
             json.dumps(
                 {

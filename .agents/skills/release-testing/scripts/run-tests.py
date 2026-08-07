@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import os
 from pathlib import Path
 import platform
@@ -16,6 +15,8 @@ import subprocess
 import sys
 import time
 import uuid
+
+import release_test_common as common
 
 
 TEST_PROJECT = (
@@ -37,8 +38,7 @@ ANDROID_IMAGE_FLAVORS = {
 }
 
 
-class TestRunError(RuntimeError):
-    """A release test setup, execution, or cleanup step failed."""
+TestRunError = common.ReleaseTestError
 
 
 def display(args: list[str]) -> str:
@@ -142,17 +142,7 @@ def run(
     return result
 
 
-def parse_json_output(text: str):
-    decoder = json.JSONDecoder()
-    for index, character in enumerate(text):
-        if character not in "[{":
-            continue
-        try:
-            value, _ = decoder.raw_decode(text[index:])
-            return value
-        except json.JSONDecodeError:
-            pass
-    raise TestRunError("command returned no valid JSON")
+parse_json_output = common.parse_json_output
 
 
 def run_json(args: list[str], *, cwd: Path):
@@ -160,14 +150,7 @@ def run_json(args: list[str], *, cwd: Path):
 
 
 def repo_root() -> Path:
-    result = subprocess.run(
-        ["git", "rev-parse", "--show-toplevel"],
-        capture_output=True,
-        text=True,
-    )
-    if result.returncode != 0:
-        raise TestRunError("could not locate the repository root")
-    return Path(result.stdout.strip())
+    return common.repository_root()
 
 
 def installed_workloads(root: Path) -> set[str]:

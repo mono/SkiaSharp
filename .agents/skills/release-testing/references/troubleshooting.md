@@ -94,10 +94,8 @@ by release-status and its `sourceVersion`.
 | `Android SDK package ... is not installed` | Emulator or platform tools are absent | Record affected Android items, continue, then ask whether to install the missing package |
 | `hvf is not enabled` / `mprotect failed: Permission denied` | Android emulator installation/acceleration is unhealthy despite host support | Check `emulator -accel-check`, reinstall/update the Android emulator package through `dotnet android`, then retry |
 | Multiple Android emulators are running | Automatic target selection is ambiguous | Rerun with `--device-id <serial>` |
-| `Xcode ... has no release-test target policy` | Selected Xcode predates the maintained release-test policies | Select a supported Xcode or add an explicit reviewed policy before planning |
-| `Xcode ... requires an installed iOS ... runtime` | The compatibility-policy major is missing | Install that runtime or explicitly omit the missing coverage before approval |
 | `iOS ... is not installed` | The exact runtime has no available installed simulator | Record that item, continue, then ask whether to install it or explicitly amend the matrix |
-| Temporary simulator creation fails | The approved device type is no longer compatible with the selected runtime | Rerun planning; do not silently substitute another device after approval |
+| Temporary simulator creation fails | No compatible iPhone type is available for the exact runtime | Inspect `dotnet apple simulator list --runtime "iOS {version}"`; install a compatible device profile or explicitly choose one with `--device` |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
 
 ## Android Crash Diagnostics

@@ -5,35 +5,16 @@ import argparse
 import json
 from pathlib import Path
 import shutil
-import subprocess
 import sys
+
+import release_test_common as common
 
 
 OUTPUT_PATH = Path("output/logs/testlogs/integration")
 
 
-class PreparationError(RuntimeError):
-    pass
-
-
-def run(args, *, cwd):
-    try:
-        result = subprocess.run(
-            args,
-            cwd=cwd,
-            capture_output=True,
-            text=True,
-        )
-    except FileNotFoundError as error:
-        raise PreparationError(
-            f"{args[0]} was not found on PATH"
-        ) from error
-    if result.returncode != 0:
-        detail = result.stderr.strip() or result.stdout.strip() or "no output"
-        raise PreparationError(
-            f"command failed ({result.returncode}): {' '.join(args)}\n{detail}"
-        )
-    return result
+PreparationError = common.ReleaseTestError
+run = common.run_checked
 
 
 def reset_output(root: Path) -> Path:
@@ -54,12 +35,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args()
     try:
-        root = Path(
-            run(
-                ["git", "rev-parse", "--show-toplevel"],
-                cwd=Path.cwd(),
-            ).stdout.strip()
-        )
+        root = common.repository_root(cwd=Path.cwd())
         run(["dotnet", "tool", "restore"], cwd=root)
         run(
             ["dotnet", "tool", "run", "android", "--", "--help"],
