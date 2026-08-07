@@ -6,7 +6,7 @@ Proactive diagnostics and user feedback during test execution.
 
 > **Users should never wait more than 30 seconds without knowing what's happening.**
 
-Update the TODO checklist at each phase. When using `read_bash` during long operations, acknowledge progress even if there's no new output.
+Update the progress table at each phase. When using `read_bash` during long operations, acknowledge progress even if there's no new output.
 
 ---
 
@@ -14,9 +14,11 @@ Update the TODO checklist at each phase. When using `read_bash` during long oper
 
 | Action | When |
 |--------|------|
-| Update TODO checklist | At each phase transition |
+| Update progress table | At each phase transition |
 | Acknowledge progress | Every 30s during silent periods |
 | Check device/build status | If no output for 60+ seconds |
+| Record and continue | When one matrix item fails |
+| Diagnose and retry | After every approved item has an initial result |
 
 ---
 
@@ -86,24 +88,28 @@ If you see a `dotnet build` process, the test is progressing normally.
 
 ## Providing User Feedback
 
-### TODO Checklist Format
+### Progress Table Format
 
-Use a detailed checklist showing sub-steps for MAUI tests:
+Use a flat table rather than nested checklist items:
 
 ```markdown
-- [ ] MauiiOSTests (iOS 16.2 - oldest)
-  - [x] Test project compiled
-  - [x] Created temp MAUI project
-  - [ ] Building iOS app (~60-90s)...
-  - [ ] Deploying to simulator
-  - [ ] Running test
+| Test | Phase | Status |
+|------|-------|--------|
+| MauiiOSTests (iOS 15.0) | Test project compiled | Done |
+| MauiiOSTests (iOS 15.0) | Temp MAUI project created | Done |
+| MauiiOSTests (iOS 15.0) | Building iOS app | Running (~60-90s) |
+| MauiiOSTests (iOS 15.0) | Deploying to simulator | Pending |
+| MauiiOSTests (iOS 15.0) | Running test | Pending |
 ```
+
+Keep one summary row per matrix item as well. A failed row remains visible while
+later items run; do not replace it with a generic stopped state.
 
 ### During Long Waits
 
 When using `read_bash` to wait for a long operation:
 
-1. **Before the wait:** Update checklist to show current phase
+1. **Before the wait:** Update the progress table to show the current phase
 2. **After each read (if still running):** Add progress note with elapsed time
 3. **On completion:** Mark step done, move to next
 
@@ -125,7 +131,7 @@ When using `read_bash` to wait for a long operation:
 ### Example: Full Test Feedback Flow
 
 ```
-🔄 Running MauiiOSTests (iOS 16.2)
+🔄 Running MauiiOSTests (iOS 15.0)
   ✅ Test project compiled
   ✅ Created MauiiOSSKCanvasView project
   ⏳ Building iOS app (~60-90s expected)...
@@ -135,7 +141,7 @@ When using `read_bash` to wait for a long operation:
   ⏳ Deploying to iPhone 14 Pro simulator...
   ✅ App deployed, running test...
   ✅ Screenshot captured and verified
-  ✅ MauiiOSTests (iOS 16.2) passed!
+  ✅ MauiiOSTests (iOS 15.0) passed!
 ```
 
 ---
@@ -154,13 +160,13 @@ When using `read_bash` to wait for a long operation:
 
 **Android:**
 ```bash
-adb devices -l
-adb logcat -d | grep -E "(FATAL|crash|died)" | tail -10
+dotnet tool run android -- device list --format json
+dotnet tool run android -- device logcat
 ```
 
 **iOS:**
 ```bash
-xcrun simctl list devices booted
+dotnet tool run apple -- simulator list --booted --format json
 ```
 
 ---
@@ -172,5 +178,20 @@ xcrun simctl list devices booted
 | Build running, < 2 minutes | Wait — builds are slow, this is normal |
 | Build running, > 3 minutes | Something may be wrong, check logs |
 | No build process, > 60s silence | Check for errors in test output |
-| App crashes repeatedly | Stop, investigate (see [troubleshooting.md](troubleshooting.md)) |
-| Device unresponsive | Kill device/emulator, restart, retry |
+| App crashes repeatedly | Preserve logs, mark the item failed, clean up, and continue; investigate in the repair pass |
+| Device unresponsive | Clean up the runner-owned device, mark the item failed, and continue; restart/retry in the repair pass |
+
+## Collection-pass failure handling
+
+When a command fails:
+
+1. Capture the command, exit code, failing phase, last useful output, and
+   artifact/log paths.
+2. Let `run-tests.py` finish its cleanup. Repair only leaked runner-owned
+   resources that would prevent the next item from starting.
+3. Mark that item failed in the progress table.
+4. Start the next approved item, even when Docker, Appium, one runtime, or one
+   device is unavailable.
+
+After the final initial attempt, show the consolidated failures before beginning
+the repair pass. Group repeated symptoms under one likely root cause.
