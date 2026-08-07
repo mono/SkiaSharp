@@ -19,8 +19,9 @@ This skill is **Step 4 of 5**:
 
 ## Contract
 
-- Start only from a passing release-testing handoff with the exact branch,
-  source SHA, managed run ID, tests run ID, and paired package versions.
+- Start from a passing release-testing handoff unless the user explicitly
+  overrides that gate. Preserve the exact branch, source SHA, managed run ID,
+  tests run ID, and paired package versions.
 - Use scripts for detection, Azure publication, NuGet verification, draft
   creation, and final publication.
 - Package publication, tag push, and GitHub Release publication are
@@ -112,13 +113,6 @@ versions/destination and approve the protected stage.
 After the user confirms that decision, run the emitted `resumeCommand`. It is
 the same script with `--wait --publish-run {id}`, waits for completion, and
 verifies both exact public packages on NuGet.org.
-
-After interruption or restart, rerun the detector and `pushAuditCommand`. An
-exact queued/running/succeeded publication is recovered by its managed run,
-build number, destination, and parameters. The audit returns its existing URL
-and pinned `resumeCommand` with no queue `executionCommand`. `--publish-run` is
-optional for discovery but included in emitted resume commands to preserve the
-specific human-approved run.
 
 For unattended automation, invoke the approved execution command with `--wait`.
 It queues or recovers the exact run, prints its URL immediately, then waits

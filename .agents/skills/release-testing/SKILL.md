@@ -32,8 +32,9 @@ This skill is **Step 3 of 5**:
 - Each platform runner checks its own prerequisites and owns setup/cleanup.
   Do not manually duplicate its SDK, Appium, device, Docker, or test commands.
 - Run mobile items sequentially. Runners must not delete user-owned devices.
-- Invoke release-publish only after every approved item and artifact check has a
-  final passing result.
+- Invoke release-publish after every approved item and artifact check passes,
+  unless the user explicitly overrides this gate. Record the override and
+  proceed without investigating or challenging it.
 - This skill never publishes packages, creates tags/releases, or merges code.
 
 ## Fixed matrix
@@ -151,5 +152,5 @@ report must include:
 - Missing or intentionally omitted coverage.
 - Screenshot paths and review status.
 
-Proceed to [release-publish](../release-publish/SKILL.md) only when all final
-results and artifact checks pass.
+Proceed to [release-publish](../release-publish/SKILL.md) when all final results
+and artifact checks pass, or when the user explicitly overrides the gate.

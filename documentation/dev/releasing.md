@@ -224,6 +224,9 @@ flowchart TB
     class START,READY endpoint
 ```
 
+The release manager may explicitly override the testing gate. Record the
+override and continue without searching for additional evidence.
+
 ### Stage 4: Publishing (release-publish skill)
 
 ```mermaid
