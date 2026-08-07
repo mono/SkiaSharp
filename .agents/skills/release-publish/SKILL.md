@@ -69,6 +69,28 @@ the pinned audit commands; every confirmation report emits its exact
 
 ## Workflow
 
+### Resume after losing all local context
+
+Start every recovery from only the exact release branch:
+
+```bash
+python3 .agents/skills/release-publish/scripts/detect-release-publish.py \
+  release/{version}
+```
+
+The detector reconstructs the source SHA, managed/tests runs, package versions,
+and pinned audit commands from Git/Azure state. Then:
+
+1. Run `pushAuditCommand`; it recovers an exact Azure publication run and emits
+   its URL/resume command without queueing a duplicate.
+2. When packages are ready, run the detector's `draftAuditCommand`; it detects
+   the tag/draft and re-downloads `generated-log.md`.
+3. Follow the draft's `publishAuditCommand`; it detects draft/published state.
+4. Continue from the reported `nextAction`.
+
+Never reconstruct `--expect-*` values manually during recovery. Only unsaved
+human edits to `teaser.md` cannot be recovered from remote state.
+
 ### 1. Detect
 
 ```bash
