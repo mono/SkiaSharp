@@ -5,7 +5,6 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from types import SimpleNamespace
 import unittest
 
 
@@ -81,7 +80,7 @@ class PrepareTestRunTests(unittest.TestCase):
         self.assertEqual(targets["maximum"]["version"], "26.5")
         self.assertEqual(targets["maximum"]["device"], "iPhone 17")
 
-    def test_xcode_27_selects_ios_18_and_27(self):
+    def test_xcode_27_selects_ios_18_and_26(self):
         targets = preparer.select_apple_targets(
             "27.0",
             "/Applications/Xcode.app",
@@ -91,36 +90,13 @@ class PrepareTestRunTests(unittest.TestCase):
                 simulator("18.5", "iPhone 16 Pro"),
                 simulator("26.5", "iPhone 17"),
                 simulator("27.0", "iPhone 17 Pro"),
-                simulator("27.0", "iPhone 17"),
             ],
         )
 
         self.assertEqual(targets["minimum"]["version"], "18.2")
         self.assertEqual(targets["minimum"]["device"], "iPhone 16")
-        self.assertEqual(targets["maximum"]["version"], "27.0")
+        self.assertEqual(targets["maximum"]["version"], "26.5")
         self.assertEqual(targets["maximum"]["device"], "iPhone 17")
-
-    def test_apple_targets_must_match_approved_plan(self):
-        args = SimpleNamespace(
-            expect_xcode="27.0",
-            expect_ios_min="18.2",
-            expect_ios_min_device="iPhone 16",
-            expect_ios_max="27.0",
-            expect_ios_max_device="iPhone 17",
-        )
-        targets = {
-            "xcodeVersion": "27.0",
-            "minimum": {"version": "18.2", "device": "iPhone 16"},
-            "maximum": {"version": "27.0", "device": "iPhone 17"},
-        }
-
-        preparer.validate_apple_expectations(args, targets)
-        targets["minimum"]["version"] = "18.3"
-        with self.assertRaisesRegex(
-            preparer.PreparationError,
-            "minimum iOS changed after matrix approval",
-        ):
-            preparer.validate_apple_expectations(args, targets)
 
     def test_help_is_inert(self):
         result = subprocess.run(

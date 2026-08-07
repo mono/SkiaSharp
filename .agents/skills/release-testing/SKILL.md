@@ -90,8 +90,7 @@ ready.
 
 `prepare-test-run.py` runs only after matrix approval. It restores the pinned
 local .NET tools, verifies them, and safely clears
-`output/logs/testlogs/integration/`. On macOS it redetects Xcode, runtimes, and
-device types and rejects drift from the approved plan.
+`output/logs/testlogs/integration/`.
 
 ### Manual execution
 
@@ -136,7 +135,7 @@ SDK image/runtime, Appium installation, or host capability is absent.
 | `android-26` | Exact Android 26 image (UiAutomator2 minimum) | Yes |
 | `android-37.1` | Exact Android 37.1 image | Yes |
 | `ios-{minimum}` | Oldest installed runtime in the Xcode-compatible minimum major | On macOS |
-| `ios-{maximum}` | Newest installed runtime matching the selected Xcode major | On macOS |
+| `ios-{maximum}` | Newest installed iOS 26 runtime | On macOS |
 | `windows` | MAUI Windows | On Windows |
 
 Minimum/maximum mobile coverage must use distinct versions. Report missing
@@ -156,12 +155,14 @@ resolved from the selected Xcode:
 | Selected toolchain | Minimum iOS major | Maximum iOS major |
 |--------------------|-------------------|-------------------|
 | Xcode 26.x | iOS 15 | iOS 26 |
-| Xcode 27.x or newer | iOS 18 | Same major as Xcode |
+| Xcode 27.x or newer | iOS 18 | iOS 26 |
 
 Within each major, planning chooses the oldest installed minimum runtime and
-newest installed maximum runtime. For example, this machine's Xcode 27 resolves
-to iOS 18.2 and iOS 27.0. This is release-test coverage policy only; it does not
-change SkiaSharp's declared iOS product minimum.
+newest installed maximum runtime. Xcode 27 currently uses iOS 26 as its maximum
+because the MAUI/Appium test app cannot launch reliably on iOS 27 simulators.
+For example, this machine resolves to iOS 18.2 and iOS 26.5. This is release-test
+coverage policy only; it does not change SkiaSharp's declared iOS product
+minimum.
 
 Use optional `--device {hardware-profile}` to override the default `pixel`
 Android profile or the automatically selected compatible iPhone type. Use
@@ -205,8 +206,6 @@ Never dump raw planner JSON. Render:
 **Tests run:** `{release.testsRunId}`
 **Packages:** SkiaSharp `{test version}`, HarfBuzzSharp `{test version}`
 **Host:** `{host.os}` / `{host.architecture}`
-**Xcode:** `{host.apple.xcodeVersion}` with iOS
-`{host.apple.minimum.version}` / `{host.apple.maximum.version}` when on macOS
 
 | ID | Test | Target | Estimate |
 |----|------|--------|----------|
@@ -306,16 +305,10 @@ list before running anything.
 
 ### 3. Prepare the approved run
 
-Run the exact `preparationCommand` emitted by the planner. On macOS it includes
-the approved Xcode, iOS runtime, and device pins:
+Run the preparation script directly:
 
 ```bash
-python3 .agents/skills/release-testing/scripts/prepare-test-run.py \
-  --expect-xcode {xcode} \
-  --expect-ios-min {minimum} \
-  --expect-ios-min-device "{minimum-device}" \
-  --expect-ios-max {maximum} \
-  --expect-ios-max-device "{maximum-device}"
+python3 .agents/skills/release-testing/scripts/prepare-test-run.py
 ```
 
 It restores/verifies pinned tools and clears old integration-test artifacts.

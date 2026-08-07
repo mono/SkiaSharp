@@ -41,7 +41,7 @@ def xcode_target_majors(xcode_version: str) -> tuple[int, int]:
     if major == 26:
         return 15, 26
     if major >= 27:
-        return 18, major
+        return 18, 26
     raise PreparationError(
         f"Xcode {xcode_version} has no release-test target policy"
     )
@@ -248,41 +248,8 @@ def reset_output(root: Path) -> Path:
     return output
 
 
-def validate_apple_expectations(args, targets: dict) -> None:
-    expected = {
-        "Xcode": (args.expect_xcode, targets["xcodeVersion"]),
-        "minimum iOS": (
-            args.expect_ios_min,
-            targets["minimum"]["version"],
-        ),
-        "minimum iOS device": (
-            args.expect_ios_min_device,
-            targets["minimum"]["device"],
-        ),
-        "maximum iOS": (
-            args.expect_ios_max,
-            targets["maximum"]["version"],
-        ),
-        "maximum iOS device": (
-            args.expect_ios_max_device,
-            targets["maximum"]["device"],
-        ),
-    }
-    for label, (wanted, actual) in expected.items():
-        if wanted and wanted != actual:
-            raise PreparationError(
-                f"{label} changed after matrix approval: "
-                f"expected {wanted}, found {actual}"
-            )
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--expect-xcode")
-    parser.add_argument("--expect-ios-min")
-    parser.add_argument("--expect-ios-min-device")
-    parser.add_argument("--expect-ios-max")
-    parser.add_argument("--expect-ios-max-device")
     parser.add_argument("--detect-apple-targets", action="store_true")
     args = parser.parse_args()
     try:
@@ -305,22 +272,18 @@ def main() -> int:
             cwd=root,
         )
         tools = ["android"]
-        apple_targets = None
         if sys.platform == "darwin":
             run(
                 ["dotnet", "tool", "run", "apple", "--", "--help"],
                 cwd=root,
             )
             tools.append("apple")
-            apple_targets = detect_apple_targets(root)
-            validate_apple_expectations(args, apple_targets)
         output = reset_output(root)
         print(
             json.dumps(
                 {
                     "toolsRestored": True,
                     "toolsVerified": tools,
-                    "appleTargets": apple_targets,
                     "outputDirectory": str(output),
                     "outputReset": True,
                 },

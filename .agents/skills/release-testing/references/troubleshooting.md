@@ -96,7 +96,6 @@ by release-status and its `sourceVersion`.
 | Multiple Android emulators are running | Automatic target selection is ambiguous | Rerun with `--device-id <serial>` |
 | `Xcode ... has no release-test target policy` | Selected Xcode predates the maintained release-test policies | Select a supported Xcode or add an explicit reviewed policy before planning |
 | `Xcode ... requires an installed iOS ... runtime` | The compatibility-policy major is missing | Install that runtime or explicitly omit the missing coverage before approval |
-| `... changed after matrix approval` | Xcode, runtime, or device inventory drifted between planning and preparation | Rerun the planner and approve the newly resolved exact matrix |
 | `iOS ... is not installed` | The exact runtime has no available installed simulator | Record that item, continue, then ask whether to install it or explicitly amend the matrix |
 | Temporary simulator creation fails | The approved device type is no longer compatible with the selected runtime | Rerun planning; do not silently substitute another device after approval |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |

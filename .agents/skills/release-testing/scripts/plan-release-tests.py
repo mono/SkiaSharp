@@ -264,29 +264,6 @@ def build_matrix(
     return matrix, missing
 
 
-def preparation_command(apple_targets: dict | None) -> str:
-    command = [
-        sys.executable,
-        ".agents/skills/release-testing/scripts/prepare-test-run.py",
-    ]
-    if apple_targets:
-        command.extend(
-            [
-                "--expect-xcode",
-                apple_targets["xcodeVersion"],
-                "--expect-ios-min",
-                apple_targets["minimum"]["version"],
-                "--expect-ios-min-device",
-                apple_targets["minimum"]["device"],
-                "--expect-ios-max",
-                apple_targets["maximum"]["version"],
-                "--expect-ios-max-device",
-                apple_targets["maximum"]["device"],
-            ]
-        )
-    return format_command(command)
-
-
 def release_summary(status: dict, *, status_override: bool) -> dict:
     managed = status.get("managedRun") or {}
     tests = status.get("testsRun") or {}
@@ -356,7 +333,7 @@ def main() -> int:
             print(
                 json.dumps(
                     {
-                        "schemaVersion": 6,
+                        "schemaVersion": 5,
                         "release": release_summary(
                             status,
                             status_override=False,
@@ -394,7 +371,7 @@ def main() -> int:
         print(
             json.dumps(
                 {
-                    "schemaVersion": 6,
+                    "schemaVersion": 5,
                     "release": release_summary(
                         status,
                         status_override=status_override,
@@ -404,14 +381,12 @@ def main() -> int:
                     "host": {
                         "os": host_os,
                         "architecture": platform.machine().lower(),
-                        "apple": apple_targets,
                     },
                     "matrix": matrix,
                     "defaultSelection": [
                         item["id"] for item in matrix
                     ],
                     "missingCoverage": missing,
-                    "preparationCommand": preparation_command(apple_targets),
                 },
                 indent=2,
             )

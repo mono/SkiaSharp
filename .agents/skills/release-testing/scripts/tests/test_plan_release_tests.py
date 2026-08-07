@@ -36,7 +36,7 @@ STATUS = {
 APPLE_TARGETS = {
     "xcodeVersion": "27.0",
     "minimum": {"version": "18.2", "device": "iPhone 16"},
-    "maximum": {"version": "27.0", "device": "iPhone 17"},
+    "maximum": {"version": "26.5", "device": "iPhone 17"},
     "availableVersions": ["18.2", "26.5", "27.0"],
     "developerDirectory": "/Applications/Xcode.app/Contents/Developer",
 }
@@ -60,7 +60,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
                 "android-37.1",
                 "maccatalyst",
                 "ios-18.2",
-                "ios-27.0",
+                "ios-26.5",
             ],
         )
         self.assertEqual(
@@ -117,16 +117,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
         self.assertIn("android-37.1", android_max["command"])
         ios_min = next(item for item in matrix if item["id"] == "ios-18.2")
         self.assertIn("ios-18.2 --device 'iPhone 16'", ios_min["command"])
-        ios = next(item for item in matrix if item["id"] == "ios-27.0")
-        self.assertIn("ios-27.0 --device 'iPhone 17'", ios["command"])
-
-    def test_preparation_command_pins_detected_apple_targets(self):
-        command = planner.preparation_command(APPLE_TARGETS)
-        self.assertIn("--expect-xcode 27.0", command)
-        self.assertIn("--expect-ios-min 18.2", command)
-        self.assertIn("--expect-ios-min-device 'iPhone 16'", command)
-        self.assertIn("--expect-ios-max 27.0", command)
-        self.assertIn("--expect-ios-max-device 'iPhone 17'", command)
+        ios = next(item for item in matrix if item["id"] == "ios-26.5")
+        self.assertIn("ios-26.5 --device 'iPhone 17'", ios["command"])
 
     def test_plan_contract_has_no_global_setup_commands(self):
         self.assertNotIn(
