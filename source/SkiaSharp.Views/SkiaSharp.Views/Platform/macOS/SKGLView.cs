@@ -137,8 +137,19 @@ namespace SkiaSharp.Views.Mac
 
 				// read the info from the buffer
 				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
 				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+
+				// Read stencil bits from the pixel format rather than GL.
+				// On macOS, glGetIntegerv(GL_STENCIL_BITS) returns 0 for the default
+				// framebuffer even when the pixel format has allocated stencil bits.
+				// The native Skia sample app reads from NSOpenGLPixelFormat to get the
+				// correct value. Without stencil, Skia cannot use TessellationPathRenderer
+				// and falls back to the much slower DefaultPathRenderer.
+				var stencil = 0;
+				if (PixelFormat is not null)
+					PixelFormat.GetValue(ref stencil, NSOpenGLPixelFormatAttribute.StencilSize, 0);
+				if (stencil == 0)
+					Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out stencil);
 				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
 				if (samples > maxSamples)
 					samples = maxSamples;
