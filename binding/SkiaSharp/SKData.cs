@@ -207,9 +207,14 @@ namespace SkiaSharp
 			var del = releaseProc != null && context != null
 				? new SKDataReleaseDelegate ((addr, _) => releaseProc (addr, context))
 				: releaseProc;
-			DelegateProxies.Create (del, out _, out var ctx);
+			DelegateProxies.Create (del, out var gch, out var ctx);
 			var proxy = del is not null ? DelegateProxies.SKDataReleaseProxy : null;
-			return GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
+			var data = GetObject (SkiaApi.sk_data_new_with_proc ((void*)address, (IntPtr)length, proxy, (void*)ctx));
+			// if the native data was not created, the release proc will never be
+			// invoked by native code, so we must free the GC handle here to avoid a leak
+			if (data is null && del is not null)
+				gch.Free ();
+			return data;
 		}
 
 		internal static SKData FromCString (string str)
