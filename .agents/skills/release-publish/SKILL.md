@@ -41,8 +41,7 @@ This skill is **Step 4 of 5**:
 | Script | Responsibility |
 |--------|----------------|
 | `scripts/detect-release-publish.py` | Read-only exact release/testing/package handoff. |
-| `scripts/push-release-packages.py` | Audit or queue one exact pipeline 25298 run, then return its approval URL. |
-| `scripts/wait-release-packages.py` | Wait for that approved run and verify both NuGet.org packages. |
+| `scripts/push-release-packages.py` | Audit, queue/recover one exact pipeline 25298 run, and optionally wait through NuGet verification. |
 | `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
 | `scripts/publish-release.py` | Validate the teaser and publish the draft. |
 | `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
@@ -59,7 +58,7 @@ the pinned audit commands; every confirmation report emits its exact
 | Detector | `audit-package-publication` | Run `pushAuditCommand`. |
 | Packages | `confirm-publish-packages` | Approve and run package execution. |
 | Packages | `approve-publish-run` | Show `publishRun.url` and stop for human review/approval. |
-| Packages | `wait-for-nuget` | Continue the pinned wait command until both versions index. |
+| Packages | `wait-for-nuget` | Continue the pinned resume command until both versions index. |
 | Packages | `retry-publish-run` | Show the failed exact run and return to package audit. |
 | Packages | `start-release-draft` | Run `draftAuditCommand`. |
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
@@ -103,14 +102,20 @@ Preview destination. The queue command returns immediately: show
 `publishRun.runId` and `publishRun.url`, then stop so a human can review the
 versions/destination and approve the protected stage.
 
-After the user confirms that decision, run the emitted `waitCommand`. It remains
-pinned to that publication run ID, waits for completion, and verifies both exact
-public packages on NuGet.org.
+After the user confirms that decision, run the emitted `resumeCommand`. It is
+the same script with `--wait --publish-run {id}`, waits for completion, and
+verifies both exact public packages on NuGet.org.
 
 After interruption or restart, rerun the detector and `pushAuditCommand`. An
 exact queued/running/succeeded publication is recovered by its managed run,
 build number, destination, and parameters. The audit returns its existing URL
-and `waitCommand` with no queue `executionCommand`.
+and pinned `resumeCommand` with no queue `executionCommand`. `--publish-run` is
+optional for discovery but included in emitted resume commands to preserve the
+specific human-approved run.
+
+For unattended automation, invoke the approved execution command with `--wait`.
+It queues or recovers the exact run, prints its URL immediately, then waits
+through protected approval and NuGet indexing in one process.
 
 ### 3. Create the generated-notes draft
 

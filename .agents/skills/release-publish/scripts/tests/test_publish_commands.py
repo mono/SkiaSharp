@@ -22,7 +22,6 @@ def load(name: str, filename: str):
 
 
 push = load("push_release_packages", "push-release-packages.py")
-wait = load("wait_release_packages", "wait-release-packages.py")
 draft = load("create_release_draft", "create-release-draft.py")
 release = load("publish_release_command", "publish-release.py")
 github = load("release_github_command", "release_github.py")
@@ -132,13 +131,23 @@ class PublishCommandTests(unittest.TestCase):
             },
         }
         args = SimpleNamespace(expect_managed_run=10)
-        wait.validate_run(detail, report, args)
+        push.validate_run_detail(
+            detail,
+            managed_run_id=args.expect_managed_run,
+            managed_build_number=report["release"]["buildNumber"],
+            stable=False,
+        )
         detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]["id"] = 11
         with self.assertRaisesRegex(
-            wait.publish.PublishError,
+            push.publish.PublishError,
             "different managed run",
         ):
-            wait.validate_run(detail, report, args)
+            push.validate_run_detail(
+                detail,
+                managed_run_id=args.expect_managed_run,
+                managed_build_number=report["release"]["buildNumber"],
+                stable=False,
+            )
 
     def test_queue_returns_approval_url_and_wait_command(self):
         args = SimpleNamespace(
@@ -146,6 +155,8 @@ class PublishCommandTests(unittest.TestCase):
             expect_source_sha="a" * 40,
             expect_managed_run=10,
             expect_tests_run=20,
+            publish_run=None,
+            wait_minutes=60,
         )
         state = {
             "dryRun": False,
@@ -185,7 +196,7 @@ class PublishCommandTests(unittest.TestCase):
         )
         self.assertIn(
             "--publish-run 14911788",
-            result["waitCommand"],
+            result["resumeCommand"],
         )
 
     def test_pending_run_recovers_with_wait_only(self):
@@ -195,6 +206,8 @@ class PublishCommandTests(unittest.TestCase):
             expect_managed_run=10,
             expect_tests_run=20,
             dry_run=True,
+            publish_run=None,
+            wait_minutes=60,
         )
         release_version = push.publish.ReleaseVersion.parse(
             args.release_branch
@@ -256,7 +269,7 @@ class PublishCommandTests(unittest.TestCase):
 
         self.assertEqual(result["nextAction"], "approve-publish-run")
         self.assertIsNone(result["executionCommand"])
-        self.assertIn("--publish-run 14911788", result["waitCommand"])
+        self.assertIn("--publish-run 14911788", result["resumeCommand"])
 
     def test_create_script_pushes_tag_then_creates_draft(self):
         events = []

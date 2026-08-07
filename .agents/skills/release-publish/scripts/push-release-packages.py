@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import sys
 import tempfile
+import time
 
 import release_publish as publish
 
@@ -255,12 +256,11 @@ def execution_command(args, source_sha: str) -> str:
     return publish.shell_command(command)
 
 
-def wait_command(args, source_sha: str, publish_run_id: int) -> str:
+def resume_command(args, source_sha: str, publish_run_id: int) -> str:
     return publish.shell_command(
         [
             sys.executable,
-            ".agents/skills/release-publish/scripts/"
-            "wait-release-packages.py",
+            ".agents/skills/release-publish/scripts/push-release-packages.py",
             args.release_branch,
             "--expect-source-sha",
             source_sha,
@@ -270,6 +270,9 @@ def wait_command(args, source_sha: str, publish_run_id: int) -> str:
             str(args.expect_tests_run),
             "--publish-run",
             str(publish_run_id),
+            "--wait",
+            "--wait-minutes",
+            str(args.wait_minutes),
         ]
     )
 
@@ -314,15 +317,40 @@ def current_state(args, *, validate_request: bool = True) -> dict:
     repo, release, status, handoff, source_sha = load_release(args)
     nuget = publish.NuGet().check(handoff["versions"])
     azure = AzurePublish()
-    runs = azure.matching_runs(
-        args.expect_managed_run,
-        handoff["managed"]["buildNumber"],
-        stable=release.stable,
+    if args.publish_run:
+        detail = azure.run_detail(args.publish_run)
+        validate_run_detail(
+            detail,
+            managed_run_id=args.expect_managed_run,
+            managed_build_number=handoff["managed"]["buildNumber"],
+            stable=release.stable,
+        )
+        latest = {
+            "runId": args.publish_run,
+            "name": detail.get("name"),
+            "status": detail.get("state"),
+            "result": detail.get("result"),
+            "url": run_url(args.publish_run),
+        }
+    else:
+        runs = azure.matching_runs(
+            args.expect_managed_run,
+            handoff["managed"]["buildNumber"],
+            stable=release.stable,
+        )
+        latest = runs[0] if runs else None
+    needs_queue = (
+        args.publish_run is None
+        and nuget["state"] != "ready"
+        and (
+            not latest
+            or latest.get("status") == "completed"
+            and latest.get("result") != "succeeded"
+        )
     )
-    latest = runs[0] if runs else None
     preview_valid = (
         None
-        if nuget["state"] == "ready"
+        if not needs_queue
         else azure.preview(
             handoff["managed"]["buildNumber"],
             stable=release.stable,
@@ -335,6 +363,13 @@ def current_state(args, *, validate_request: bool = True) -> dict:
 
     states = package_states(nuget["state"], latest)
     next_action = states["nextAction"]
+    if (
+        args.publish_run
+        and latest
+        and latest.get("status") == "completed"
+        and latest.get("result") != "succeeded"
+    ):
+        next_action = "retry-publish-run"
 
     return {
         "schemaVersion": 1,
@@ -377,8 +412,8 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             if next_action == "confirm-publish-packages"
             else None
         ),
-        "waitCommand": (
-            wait_command(args, source_sha, latest["runId"])
+        "resumeCommand": (
+            resume_command(args, source_sha, latest["runId"])
             if latest
             and next_action in {
                 "approve-publish-run",
@@ -395,9 +430,12 @@ def execute(args) -> dict:
         state["dryRun"] = False
         return state
     latest = state.get("publishRun")
-    should_queue = not latest or (
-        latest.get("status") == "completed"
-        and latest.get("result") != "succeeded"
+    should_queue = args.publish_run is None and (
+        not latest
+        or (
+            latest.get("status") == "completed"
+            and latest.get("result") != "succeeded"
+        )
     )
     azure = AzurePublish()
     if should_queue:
@@ -431,7 +469,7 @@ def execute(args) -> dict:
         )
         state["nextAction"] = "approve-publish-run"
         state["executionCommand"] = None
-        state["waitCommand"] = wait_command(
+        state["resumeCommand"] = resume_command(
             args,
             state["release"]["sourceSha"],
             queued_run_id,
@@ -443,20 +481,122 @@ def execute(args) -> dict:
     raise publish.PublishError("failed to queue the Azure publication run")
 
 
+def validate_run_detail(
+    detail: dict,
+    *,
+    managed_run_id: int,
+    managed_build_number: str,
+    stable: bool,
+) -> None:
+    resource = (
+        (detail.get("resources") or {})
+        .get("pipelines", {})
+        .get("SkiaSharp", {})
+    )
+    if not resource:
+        if detail.get("state") == "completed":
+            return
+        raise publish.PublishError(
+            "publication run has not resolved its SkiaSharp resource"
+        )
+    pipeline = resource.get("pipeline") or {}
+    parameters = detail.get("templateParameters") or {}
+    if int(pipeline.get("id") or 0) != managed_run_id:
+        raise publish.PublishError(
+            "publication run uses a different managed run"
+        )
+    if resource.get("version") != managed_build_number:
+        raise publish.PublishError(
+            f"publication run uses {resource.get('version')}, "
+            f"expected {managed_build_number}"
+        )
+    if parameters.get("selectedResource") != "SkiaSharp":
+        raise publish.PublishError(
+            "publication run selected a different pipeline resource"
+        )
+    if str(parameters.get("pushPackages")).lower() != "true":
+        raise publish.PublishError("publication run does not push packages")
+    if (
+        str(parameters.get("pushStable")).lower()
+        != str(stable).lower()
+    ):
+        raise publish.PublishError(
+            "publication run has the wrong Stable/Preview destination"
+        )
+
+
+def execute_and_wait(args) -> dict:
+    state = execute(args)
+    if state["nuget"]["state"] == "ready":
+        return state
+    run = state.get("publishRun")
+    if not run:
+        raise publish.PublishError("no exact publication run is available")
+    args.publish_run = int(run["runId"])
+    url = run_url(args.publish_run)
+    print(
+        f"Waiting for protected Azure publication run "
+        f"{args.publish_run}: {url}",
+        file=sys.stderr,
+        flush=True,
+    )
+    deadline = time.monotonic() + args.wait_minutes * 60
+    while True:
+        state = current_state(args, validate_request=False)
+        state["dryRun"] = False
+        if state["nextAction"] == "start-release-draft":
+            return state
+        run = state["publishRun"]
+        if run.get("status") == "completed":
+            raise publish.PublishError(
+                f"publish run {args.publish_run} "
+                f"{run.get('result')}: {url}"
+            )
+        if time.monotonic() >= deadline:
+            raise publish.PublishError(
+                f"timed out after {args.wait_minutes} minutes waiting for "
+                f"run {args.publish_run} and NuGet.org: {url}"
+            )
+        print(
+            f"Waiting: run {args.publish_run} {run.get('status')}; "
+            f"NuGet={state['nuget']['state']}; {url}",
+            file=sys.stderr,
+            flush=True,
+        )
+        time.sleep(args.poll_seconds)
+
+
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("release_branch")
     parser.add_argument("--expect-source-sha", required=True)
     parser.add_argument("--expect-managed-run", required=True, type=int)
     parser.add_argument("--expect-tests-run", required=True, type=int)
+    parser.add_argument("--publish-run", type=int)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--wait", action="store_true")
+    parser.add_argument("--wait-minutes", type=int, default=60)
+    parser.add_argument(
+        "--poll-seconds",
+        type=int,
+        default=30,
+        help=argparse.SUPPRESS,
+    )
     return parser
 
 
 def main() -> int:
     args = create_parser().parse_args()
     try:
-        report = current_state(args) if args.dry_run else execute(args)
+        if args.wait_minutes <= 0 or args.poll_seconds <= 0:
+            raise publish.PublishError("wait and poll values must be positive")
+        report = (
+            current_state(args)
+            if args.dry_run
+            else execute_and_wait(args)
+            if args.wait
+            else execute(args)
+        )
         print(json.dumps(report, indent=2))
     except (publish.PublishError, OSError) as error:
         print(f"ERROR: {error}", file=sys.stderr)

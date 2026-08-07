@@ -244,7 +244,7 @@ flowchart TB
     ∙ Return run ID + approval URL"] --> AZURE_APPROVAL{Human approves versions/destination?}
     AZURE_APPROVAL -->|No| STOP
     AZURE_APPROVAL -->|Yes| WAIT
-    WAIT["Wait package script
+    WAIT["Same script with --wait
     ∙ Pin exact publication run
     ∙ Wait for protected run
     ∙ Verify both NuGet packages"] --> DRAFT_AUDIT
