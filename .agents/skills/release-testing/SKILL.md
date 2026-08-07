@@ -42,6 +42,10 @@ repairs safe environment problems, and retries only the affected items.
   versions from the approved plan.
 - Run mobile tests sequentially. Only one Android emulator should run at a
   time.
+- Never hide a test behind one long blocking call. Prefer a dedicated visible
+  terminal canvas so the user sees stdout live. If no terminal canvas is
+  available, use an attached asynchronous shell job. Report new output plus the
+  matrix state every five seconds until it exits.
 - Each per-test script owns setup, test execution, and cleanup in one checked
   operation.
 - Stop the matrix only when continuing would invalidate every result, such as
@@ -95,6 +99,15 @@ from the repository root. The runner discovers its concrete device/runtime,
 resolves safe process-local configuration, checks prerequisites, and performs
 cleanup after failure. A nonzero exit records one failed item; it must not end
 the agent's loop over the approved matrix.
+
+`run-tests.py` emits machine-recognizable `[release-test]` records when the item
+starts, whenever a child command starts, every five seconds while that command
+is silent, when it exits, and when the item passes or fails. Run each matrix
+command in a dedicated terminal canvas and read its rendered output every five
+seconds. Reuse that terminal for sequential items. If the canvas is unavailable,
+use an attached asynchronous Bash session and read that same shell ID. Do not
+detach it, launch it through a background agent, rerun it while active, or wait
+silently for completion.
 
 The runner does not broadly provision workloads, Appium, Android SDK packages,
 Playwright browsers, or Apple runtimes. It does restore repository-pinned
@@ -293,14 +306,25 @@ It restores/verifies pinned tools and clears old integration-test artifacts.
 
 For each approved matrix item:
 
-1. Announce the item and target.
-2. Execute its single `command` with a long synchronous wait.
-3. Record the result, failure phase, diagnostics, duration, and artifact paths.
-4. On failure, perform only cleanup/isolation needed for subsequent items, then
+1. Show the full matrix table with completed, failed, running, and remaining
+   items.
+2. Announce the item, target, exact command, and estimate.
+3. Start its single `command` in a visible terminal canvas. Keep its instance ID
+   for output reads and later matrix items. Fall back to an attached
+   asynchronous Bash job only when the canvas is unavailable.
+4. Every five seconds, read newly rendered terminal output (or output from the
+   fallback shell ID) and report:
+   current item/phase, elapsed time, completed count, failures, and remaining
+   item IDs. Do not repeat old log lines.
+5. On exit, show the command result and immediately refresh the matrix table.
+6. Record the result, failure phase, diagnostics, duration, and artifact paths.
+7. On failure, perform only cleanup/isolation needed for subsequent items, then
    continue to the next approved item.
 
 Follow [monitoring.md](references/monitoring.md) for progress during silent MAUI
-builds. Do not let a nonzero command exit terminate the collection pass.
+builds. The runner heartbeat means five seconds without either runner output or
+an agent update is itself a monitoring problem. Do not let a nonzero command
+exit terminate the collection pass.
 
 ### 5. Diagnose, repair, and retry failures
 

@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import contextlib
 import importlib.util
+import io
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest import mock
 
@@ -244,7 +247,7 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             mock.patch.object(runner.shutil, "which", return_value=None),
             mock.patch.object(
                 runner.subprocess,
-                "run",
+                "Popen",
                 side_effect=FileNotFoundError,
             ),
             self.assertRaisesRegex(
@@ -253,6 +256,65 @@ class ReleaseTestRunnerTests(unittest.TestCase):
             ),
         ):
             runner.run(["missing-tool"], cwd=Path.cwd())
+
+    def test_silent_command_reports_heartbeat_and_result(self):
+        class SlowProcess:
+            returncode = 0
+
+            def __init__(self):
+                self.calls = 0
+
+            def communicate(self, timeout):
+                self.calls += 1
+                if self.calls == 1:
+                    raise subprocess.TimeoutExpired("slow-tool", timeout)
+                return "captured output", ""
+
+        output = io.StringIO()
+        with (
+            mock.patch.object(runner.subprocess, "Popen", return_value=SlowProcess()),
+            mock.patch.object(runner.time, "monotonic", side_effect=[0, 5, 6]),
+            contextlib.redirect_stdout(output),
+        ):
+            result = runner.run(
+                ["slow-tool"],
+                cwd=Path.cwd(),
+                capture=True,
+            )
+
+        self.assertEqual(result.stdout, "captured output")
+        self.assertIn("command started: slow-tool", output.getvalue())
+        self.assertIn(
+            "command still running after 5s: slow-tool",
+            output.getvalue(),
+        )
+        self.assertIn(
+            "command finished after 6s (exit 0): slow-tool",
+            output.getvalue(),
+        )
+
+    def test_item_reports_start_and_pass(self):
+        parser = mock.Mock()
+        parser.parse_args.return_value = SimpleNamespace(
+            command="smoke",
+            skia="s",
+            harfbuzz="h",
+            device=None,
+            device_id=None,
+        )
+        output = io.StringIO()
+        with (
+            mock.patch.object(runner, "create_parser", return_value=parser),
+            mock.patch.object(runner, "repo_root", return_value=Path.cwd()),
+            mock.patch.object(runner, "run_test"),
+            mock.patch.object(runner.time, "monotonic", side_effect=[0, 7]),
+            contextlib.redirect_stdout(output),
+        ):
+            result = runner.main()
+
+        self.assertEqual(result, 0)
+        self.assertIn("item started: smoke", output.getvalue())
+        self.assertIn("item passed after 7s: smoke", output.getvalue())
 
     def test_windows_command_shims_run_through_cmd(self):
         def which(command):

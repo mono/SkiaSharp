@@ -4,9 +4,13 @@ Proactive diagnostics and user feedback during test execution.
 
 ## Golden Rule
 
-> **Users should never wait more than 30 seconds without knowing what's happening.**
+> **During an active release-test command, users should never wait more than
+> five seconds without knowing what is running and what remains.**
 
-Update the progress table at each phase. When using `read_bash` during long operations, acknowledge progress even if there's no new output.
+Run each item in a dedicated visible terminal canvas so stdout streams directly
+to the user. Read the rendered terminal output every five seconds, forward new
+runner records, and refresh matrix progress even when the child tool itself is
+silent. Use an attached asynchronous Bash job only as a fallback.
 
 ---
 
@@ -14,8 +18,9 @@ Update the progress table at each phase. When using `read_bash` during long oper
 
 | Action | When |
 |--------|------|
-| Update progress table | At each phase transition |
-| Acknowledge progress | Every 30s during silent periods |
+| Show command and full matrix | Before starting each item |
+| Update progress table | Every five seconds and at each phase transition |
+| Acknowledge progress | Every runner heartbeat during silent periods |
 | Check device/build status | If no output for 60+ seconds |
 | Record and continue | When one matrix item fails |
 | Diagnose and retry | After every approved item has an initial result |
@@ -90,28 +95,40 @@ If you see a `dotnet build` process, the test is progressing normally.
 
 ### Progress Table Format
 
-Use a flat table rather than nested checklist items:
+Every update must show the whole approved matrix, including what is done and
+what remains:
 
 ```markdown
-| Test | Phase | Status |
-|------|-------|--------|
-| MauiiOSTests (iOS 15.0) | Test project compiled | Done |
-| MauiiOSTests (iOS 15.0) | Temp MAUI project created | Done |
-| MauiiOSTests (iOS 15.0) | Building iOS app | Running (~60-90s) |
-| MauiiOSTests (iOS 15.0) | Deploying to simulator | Pending |
-| MauiiOSTests (iOS 15.0) | Running test | Pending |
+| ID | Target | Status | Current phase/result |
+|----|--------|--------|----------------------|
+| smoke | Native load | Passed | 12s |
+| linux | Docker Linux | Running | Building image, 35s |
+| blazor | Chromium | Pending | Remaining |
+| android-26 | API 26 | Failed | Emulator boot timeout |
+| android-37.1 | API 37.1 | Pending | Remaining |
 ```
 
-Keep one summary row per matrix item as well. A failed row remains visible while
-later items run; do not replace it with a generic stopped state.
+Include `Completed {done}/{total}; failed {failed}; remaining: {ids}` below the
+table. A failed row remains visible while later items run; do not replace it
+with a generic stopped state.
 
 ### During Long Waits
 
-When using `read_bash` to wait for a long operation:
+Use this loop for every long operation:
 
-1. **Before the wait:** Update the progress table to show the current phase
-2. **After each read (if still running):** Add progress note with elapsed time
-3. **On completion:** Mark step done, move to next
+1. **Before launch:** Show the command and progress table.
+2. **Launch:** Call `open_canvas` with `canvasId: terminal`, a stable
+   `release-testing` instance ID, and the exact command. Reuse that terminal for
+   later items with `send_terminal_input`.
+3. **While running:** Read `since_last_input` terminal output every five seconds,
+   using `read_terminal_output`, compare it with the previous read, and report
+   only new log lines plus the refreshed progress table.
+4. **On completion:** Read the final output once, record pass/fail and duration,
+   refresh the table, then move to the next item.
+
+If a terminal canvas is unavailable, use an attached asynchronous Bash job and
+`read_bash` with the same shell ID. Never launch a second copy because a read
+timed out, and never use a background agent to own the command.
 
 ### Phase-Specific Feedback Messages
 
@@ -120,8 +137,7 @@ When using `read_bash` to wait for a long operation:
 | Build test project | "Building test project..." |
 | Create temp project | "Creating MAUI app from template..." |
 | Build MAUI app | "Building for {platform} (~60-90s)..." |
-| Still building (30s check) | "⏳ Still building (~30s elapsed)" |
-| Still building (60s check) | "⏳ Still building (~60s elapsed)" |
+| Silent command heartbeat | "Still running: {command/phase} ({elapsed})" |
 | Build complete | "✅ Build complete" |
 | Deploy | "Deploying app to {device}..." |
 | Run test | "Running Appium test..." |
@@ -135,8 +151,8 @@ When using `read_bash` to wait for a long operation:
   ✅ Test project compiled
   ✅ Created MauiiOSSKCanvasView project
   ⏳ Building iOS app (~60-90s expected)...
-     ⏳ Still building (~30s elapsed)
-     ⏳ Still building (~60s elapsed)
+     ⏳ Still building (~5s elapsed)
+     ⏳ Still building (~10s elapsed)
   ✅ Build complete (~75s)
   ⏳ Deploying to iPhone 14 Pro simulator...
   ✅ App deployed, running test...

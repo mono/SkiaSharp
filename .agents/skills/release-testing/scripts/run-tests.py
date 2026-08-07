@@ -14,6 +14,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import time
 import uuid
 
 
@@ -22,6 +23,7 @@ TEST_PROJECT = (
     "SkiaSharp.Tests.Integration.csproj"
 )
 REQUIRED_APPIUM_VERSION = "3.6.0"
+HEARTBEAT_SECONDS = 5
 REQUIRED_APPIUM_DRIVERS = {
     "mac2": "4.0.5",
     "uiautomator2": "8.2.2",
@@ -45,6 +47,17 @@ def display(args: list[str]) -> str:
         if sys.platform == "win32"
         else shlex.join(args)
     )
+
+
+def display_duration(seconds: float) -> str:
+    total = max(0, int(seconds))
+    minutes, seconds = divmod(total, 60)
+    hours, minutes = divmod(minutes, 60)
+    if hours:
+        return f"{hours}h {minutes:02d}m {seconds:02d}s"
+    if minutes:
+        return f"{minutes}m {seconds:02d}s"
+    return f"{seconds}s"
 
 
 def resolve_command(args: list[str]) -> list[str]:
@@ -74,16 +87,49 @@ def run(
     check: bool = True,
 ) -> subprocess.CompletedProcess[str]:
     args = resolve_command(args)
-    print(f"> {display(args)}", flush=True)
+    command = display(args)
+    started = time.monotonic()
+    print(f"[release-test] command started: {command}", flush=True)
     try:
-        result = subprocess.run(
+        process = subprocess.Popen(
             args,
             cwd=cwd,
             text=True,
-            capture_output=capture,
+            stdout=subprocess.PIPE if capture else None,
+            stderr=subprocess.PIPE if capture else None,
         )
     except FileNotFoundError as error:
         raise TestRunError(f"{args[0]} was not found on PATH") from error
+    while True:
+        try:
+            stdout, stderr = process.communicate(timeout=HEARTBEAT_SECONDS)
+            break
+        except subprocess.TimeoutExpired:
+            elapsed = display_duration(time.monotonic() - started)
+            print(
+                f"[release-test] command still running after {elapsed}: "
+                f"{command}",
+                flush=True,
+            )
+        except KeyboardInterrupt:
+            process.terminate()
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+            raise
+    result = subprocess.CompletedProcess(
+        args=args,
+        returncode=process.returncode,
+        stdout=stdout,
+        stderr=stderr,
+    )
+    elapsed = display_duration(time.monotonic() - started)
+    print(
+        f"[release-test] command finished after {elapsed} "
+        f"(exit {result.returncode}): {command}",
+        flush=True,
+    )
     if check and result.returncode != 0:
         detail = (
             (result.stderr or "").strip()
@@ -754,6 +800,12 @@ def mobile_command(command: str) -> tuple[str, str] | None:
 
 def main() -> int:
     args = create_parser().parse_args()
+    started = time.monotonic()
+    print(
+        f"[release-test] item started: {args.command}; "
+        f"SkiaSharp={args.skia}; HarfBuzzSharp={args.harfbuzz}",
+        flush=True,
+    )
     try:
         root = repo_root()
         mobile = mobile_command(args.command)
@@ -802,8 +854,21 @@ def main() -> int:
         else:
             raise TestRunError(f"unsupported command: {args.command}")
     except TestRunError as error:
+        elapsed = display_duration(time.monotonic() - started)
+        summary = str(error).splitlines()[0]
+        print(
+            f"[release-test] item failed after {elapsed}: "
+            f"{args.command}: {summary}",
+            file=sys.stderr,
+            flush=True,
+        )
         print(f"ERROR: {error}", file=sys.stderr)
         return 1
+    elapsed = display_duration(time.monotonic() - started)
+    print(
+        f"[release-test] item passed after {elapsed}: {args.command}",
+        flush=True,
+    )
     return 0
 
 
