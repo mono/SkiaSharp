@@ -70,6 +70,17 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         self.assertIn("current_sync = json.loads(", text)
         self.assertIn("current_sync[field] != approved_sync[field]", text)
 
+    def test_plans_are_visible_without_using_artifacts_for_review(self):
+        text = PIPELINE.read_text(encoding="utf-8")
+        self.assertEqual(text.count("##vso[task.uploadsummary]"), 4)
+        self.assertIn("##vso[task.uploadfile]", text)
+        self.assertIn("plan.json", text)
+        self.assertIn("push-plan.json", text)
+        self.assertIn("finalize-plan.json", text)
+        self.assertIn("milestones-plan.json", text)
+        self.assertIn("PublishPipelineArtifact@1", text)
+        self.assertIn("DownloadPipelineArtifact@2", text)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -39,6 +39,28 @@ It has two operations because release CI runs between them:
 | `start` | Integration branch (`main` / `release/X.Y.x`) and optional exact version | Dry-run, approval, then exact release-branch creation. |
 | `complete` | Exact release branch or tested source SHA | Exact package push/wait, tool-free Copilot teaser, tag/docs/release, samples, and release-milestones audit/closure. |
 
+| Operation | Stage | Purpose |
+|-----------|-------|---------|
+| Start | `PlanStart` | Detect the exact version and build an immutable paired-branch dry-run. |
+| Start | `ApproveStart` | Review the base SHA, Skia SHA, and remote branch operations. |
+| Start | `ExecuteStart` | Reconcile and push the approved SkiaSharp and mono/skia release branches. |
+| Complete | `PlanComplete` | Resolve the tested pipeline chain and build the exact NuGet.org push plan. |
+| Complete | `ConfirmTesting` | Optionally confirm the external release-testing matrix; omitted when testing is explicitly skipped. |
+| Complete | `ApprovePackages` | Approve the exact managed run and stable/preview package publication mode. |
+| Complete | `PushPackages` | Queue pipeline `25298`, wait through its protected approval/run, and verify both packages on NuGet.org. |
+| Complete | `PlanFinalization` | Generate and validate release notes, the isolated Copilot teaser, tag, and GitHub Release plan. |
+| Complete | `ApproveFinalization` | Approve immutable publication; skipped when the release already exists. |
+| Complete | `ExecuteFinalization` | Push the tag, dispatch website notes, publish the GitHub Release, and wait for sample synchronization. |
+| Complete | `PlanMilestones` | Audit shipped assignments and plan schedule updates, issue rollover, and closure. |
+| Complete | `ApproveMilestones` | Approve pending milestone writes; skipped when no changes are needed. |
+| Complete | `ExecuteMilestones` | Apply approved assignments and the unchanged revalidated sync/closure plan. |
+
+Planning steps publish Markdown through `task.uploadsummary`, so approval reports
+appear on the run's **Extensions** tab. Their raw JSON and generated Markdown
+files use `task.uploadfile`, making them downloadable with the planning task
+logs without creating another user-facing artifact. Pipeline artifacts remain
+only where later stages must consume the exact approved files.
+
 `skipReleaseTesting=true` skips only the external device/host matrix. The
 connected `SkiaSharp-Tests` CI run must still succeed because the publication
 detector preserves the release-status gate.

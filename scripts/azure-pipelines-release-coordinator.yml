@@ -116,6 +116,10 @@ stages:
                   (root / "summary.md").write_text("\n".join(lines) + "\n")
                   PY
                   echo "##vso[task.uploadsummary]$(Build.ArtifactStagingDirectory)/release-start/summary.md"
+                  echo "##vso[task.uploadfile]$(Build.ArtifactStagingDirectory)/release-start/plan.json"
+                  if [ -f "$(Build.ArtifactStagingDirectory)/release-start/detect.json" ]; then
+                    echo "##vso[task.uploadfile]$(Build.ArtifactStagingDirectory)/release-start/detect.json"
+                  fi
                 displayName: Build immutable start plan
                 env:
                   TARGET: ${{ parameters.target }}
@@ -141,9 +145,10 @@ stages:
                 inputs:
                   notifyUsers: ''
                   instructions: >
-                    Review the Release branch audit in the run summary/artifact.
-                    Resume only if the exact version, base SHA, Skia SHA, and
-                    pending remote operations are correct.
+                    Review the Release branch audit on the Extensions tab and
+                    the raw JSON attached to the planning task logs. Resume only
+                    if the exact version, base SHA, Skia SHA, and pending remote
+                    operations are correct.
                   onTimeout: reject
 
       - stage: ExecuteStart
@@ -244,6 +249,8 @@ stages:
                   (root / "summary.md").write_text("\n".join(lines) + "\n")
                   PY
                   echo "##vso[task.uploadsummary]$(Build.ArtifactStagingDirectory)/release-complete/summary.md"
+                  echo "##vso[task.uploadfile]$(Build.ArtifactStagingDirectory)/release-complete/context.json"
+                  echo "##vso[task.uploadfile]$(Build.ArtifactStagingDirectory)/release-complete/push-plan.json"
                 displayName: Build exact package plan
                 env:
                   TARGET: ${{ parameters.target }}
@@ -269,7 +276,8 @@ stages:
                       instructions: >
                         Confirm the approved release-testing device/host matrix
                         passed against the exact packages shown in the package
-                        publication audit. CI tests remain mandatory regardless.
+                        publication audit on the Extensions tab. CI tests remain
+                        mandatory regardless.
                       onTimeout: reject
 
       - stage: ApprovePackages
@@ -288,7 +296,8 @@ stages:
                 inputs:
                   notifyUsers: ''
                   instructions: >
-                    Review the exact package plan. Resume to queue the selected
+                    Review the exact package plan on the Extensions tab and its
+                    raw JSON task attachments. Resume to queue the selected
                     managed run into the protected NuGet.org publish pipeline.
                   onTimeout: reject
 
@@ -584,6 +593,26 @@ stages:
                       shutil.copytree(source, destination, dirs_exist_ok=True)
                   PY
                   echo "##vso[task.uploadsummary]$(Build.ArtifactStagingDirectory)/release-finalize/summary.md"
+                  for file in \
+                    context.json \
+                    initial-finalize-plan.json \
+                    finalize-plan.json \
+                    teaser-prompt.md
+                  do
+                    path="$(Build.ArtifactStagingDirectory)/release-finalize/$file"
+                    if [ -f "$path" ]; then
+                      echo "##vso[task.uploadfile]$path"
+                    fi
+                  done
+                  if [ -f "$(Build.ArtifactStagingDirectory)/release-finalize/artifact-paths.json" ]; then
+                    for key in generated teaser body; do
+                      path="$(jq -r --arg key "$key" '.[$key]' \
+                        "$(Build.ArtifactStagingDirectory)/release-finalize/artifact-paths.json")"
+                      if [ -f "$path" ]; then
+                        echo "##vso[task.uploadfile]$path"
+                      fi
+                    done
+                  fi
                 displayName: Validate teaser and final release plan
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
@@ -608,9 +637,9 @@ stages:
                 inputs:
                   notifyUsers: ''
                   instructions: >
-                    Review the generated teaser, exact tag/commit, body SHA, and
-                    final operation table. Resume to publish the immutable
-                    GitHub Release.
+                    Review the generated teaser, exact tag/commit, body SHA,
+                    final operation table, and raw task attachments. Resume to
+                    publish the immutable GitHub Release.
                   onTimeout: reject
 
       - stage: ExecuteFinalization
@@ -691,6 +720,7 @@ stages:
                           )
                       time.sleep(30)
                   PY
+                  echo "##vso[task.uploadfile]$(Pipeline.Workspace)/release-finalization-plan/final-result.json"
                 displayName: Finalize release and wait for samples
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
@@ -812,6 +842,7 @@ stages:
                   )
                   PY
                   echo "##vso[task.uploadsummary]$(Pipeline.Workspace)/release-final-result/milestones-summary.md"
+                  echo "##vso[task.uploadfile]$(Pipeline.Workspace)/release-final-result/milestones-plan.json"
                 name: state
                 displayName: Build milestone plan
                 env:
@@ -838,8 +869,8 @@ stages:
                   notifyUsers: ''
                   instructions: >
                     Review shipped assignment updates, schedule changes,
-                    automatic issue moves, and milestone closures in the run
-                    summary. Resume to apply them.
+                    automatic issue moves, and milestone closures on the
+                    Extensions tab. Resume to apply them.
                   onTimeout: reject
 
       - stage: ExecuteMilestones
