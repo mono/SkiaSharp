@@ -296,7 +296,9 @@ namespace SkiaSharp
 			if (data.Size == 0)
 				return;
 
+			var previous = data;
 			data = SKData.Create (data.Size);
+			previous.Dispose ();
 		}
 
 		public bool Contains (string name) =>
