@@ -249,7 +249,7 @@ def package_states(nuget_state: str, latest: dict | None) -> dict:
             "publish": "done",
             "verify": "done",
             "detail": "Both exact public packages are on NuGet.org",
-            "nextAction": "start-release-finalization",
+            "nextAction": "start-release-draft",
         }
     if latest and latest["status"] != "completed":
         return {
@@ -343,7 +343,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         "warnings": status.get("warnings") or [],
         "executionCommand": (
             execution_command(args, source_sha)
-            if next_action != "start-release-finalization"
+            if next_action != "start-release-draft"
             else None
         ),
     }

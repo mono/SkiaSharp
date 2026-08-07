@@ -37,7 +37,7 @@ It has two operations because release CI runs between them:
 | Operation | Input | Result |
 |-----------|-------|--------|
 | `start` | Integration branch (`main` / `release/X.Y.x`) and optional exact version | Dry-run, approval, then exact release-branch creation. |
-| `complete` | Exact release branch or tested source SHA | Exact package push/wait, tool-free Copilot teaser, tag/docs/release, samples, and release-milestones audit/closure. |
+| `complete` | Exact release branch or tested source SHA | Exact package push/wait, tag/draft, tool-free Copilot teaser, publication, and release-milestones audit/closure. |
 
 | Operation | Stage | Purpose |
 |-----------|-------|---------|
@@ -46,11 +46,15 @@ It has two operations because release CI runs between them:
 | Start | `ExecuteStart` | Reconcile and push the approved SkiaSharp and mono/skia release branches. |
 | Complete | `PlanComplete` | Resolve the tested pipeline chain and build the exact NuGet.org push plan. |
 | Complete | `ConfirmTesting` | Optionally confirm the external release-testing matrix; omitted when testing is explicitly skipped. |
-| Complete | `ApprovePackages` | Approve the exact managed run and stable/preview package publication mode. |
-| Complete | `PushPackages` | Queue pipeline `25298`, wait through its protected approval/run, and verify both packages on NuGet.org. |
-| Complete | `PlanFinalization` | Generate and validate release notes, the isolated Copilot teaser, tag, and GitHub Release plan. |
-| Complete | `ApproveFinalization` | Approve immutable publication; skipped when the release already exists. |
-| Complete | `ExecuteFinalization` | Push the tag, dispatch website notes, publish the GitHub Release, and wait for sample synchronization. |
+| Complete | `ApprovePackages` | Approve queueing the exact managed run and stable/preview mode. |
+| Complete | `PushPackages` | Queue pipeline `25298`, wait for its separate human-protected push stage, and verify both packages on NuGet.org. |
+| Complete | `PlanDraft` | Audit the exact tag, previous tag, and generated-notes draft. |
+| Complete | `ApproveDraft` | Approve the immutable tag and GitHub draft creation. |
+| Complete | `CreateDraft` | Push the tag, create the draft, and download its generated notes. |
+| Complete | `PrepareTeaser` | Generate the isolated customer teaser from the downloaded draft notes. |
+| Complete | `PlanPublication` | Consume the teaser and validate the final draft body. |
+| Complete | `ApprovePublication` | Review the draft, teaser, and body SHA before publication. |
+| Complete | `PublishRelease` | Dispatch website notes, upload the approved body, and publish the draft. |
 | Complete | `PlanMilestones` | Audit shipped assignments and plan schedule updates, issue rollover, and closure. |
 | Complete | `ApproveMilestones` | Approve pending milestone writes; skipped when no changes are needed. |
 | Complete | `ExecuteMilestones` | Apply approved assignments and the unchanged revalidated sync/closure plan. |
@@ -65,10 +69,11 @@ only where later stages must consume the exact approved files.
 connected `SkiaSharp-Tests` CI run must still succeed because the publication
 detector preserves the release-status gate.
 
-The coordinator uses Azure `ManualValidation@1` server jobs for branch,
-NuGet.org, immutable release, and milestone approvals. The protected NuGet.org
-pipeline retains its own approval. The package step waits for that approval/run
-and both exact public packages before finalization starts.
+The coordinator's `ApprovePackages` gate authorizes only queueing the selected
+managed run. Pipeline `25298` then pauses at its protected push stage so a human
+can review the exact versions and destination. The coordinator/agent never
+approves that downstream gate; `PushPackages` waits for the human decision, the
+run, and both exact public packages before draft creation starts.
 
 Customer teaser generation runs Copilot CLI in an isolated directory with:
 
@@ -79,8 +84,8 @@ Customer teaser generation runs Copilot CLI in an isolated directory with:
 - A dedicated Copilot-enabled PAT exposed only as
   `COPILOT_GITHUB_TOKEN`.
 
-The generated log is treated as untrusted data, validated by the finalization
-script, and shown in a manual approval before publication.
+The generated log is treated as untrusted data, validated by the publication
+script, and shown in a manual approval before the draft is published.
 
 One-time pipeline setup after the YAML is merged:
 
@@ -325,30 +330,35 @@ flowchart TB
     PUSH_AUDIT["Package-push dry-run
     ∙ Preview exact Azure request
     ∙ Reconcile publish run
-    ∙ Check exact NuGet versions"] --> APPROVE1{Approve package push?}
+    ∙ Check exact NuGet versions"] --> APPROVE1{Queue publish pipeline?}
     APPROVE1 -->|No| STOP([Stop])
     APPROVE1 -->|Yes| PUSH
     PUSH["Push package script
     ∙ Queue exact managed resource
-    ∙ Wait for Azure approval/run
-    ∙ Wait for both NuGet packages"] --> FINAL_AUDIT1
-    FINAL_AUDIT1["Finalization dry-run
-    ∙ Validate previous tag
-    ∙ Generate local release log
-    ∙ Reconcile tag/release/milestone"] --> TEASER
-    TEASER["Human teaser
-    ∙ Read generated PR log
-    ∙ Write customer-facing teaser
-    ∙ Script assembles final body"] --> FINAL_AUDIT
-    FINAL_AUDIT["Final dry-run
-    ∙ Review body SHA
-    ∙ Review tag + release operations"] --> APPROVE2{Publish immutable release?}
+    ∙ Human reviews versions/destination in Azure
+    ∙ Wait for protected approval/run
+    ∙ Wait for both NuGet packages"] --> DRAFT_AUDIT
+    DRAFT_AUDIT["Draft dry-run
+    ∙ Select immediate previous release tag
+    ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}
     APPROVE2 -->|No| STOP
-    APPROVE2 -->|Yes| FINALIZE
-    FINALIZE["Finalize
-    ∙ Push tag + dispatch website notes
-    ∙ Publish GitHub Release
-    ∙ Observe sample sync"] --> HANDOFF([Release milestones])
+    APPROVE2 -->|Yes| DRAFT
+    DRAFT["Create release draft
+    ∙ Push exact tag
+    ∙ Create generated-notes draft
+    ∙ Download draft body"] --> TEASER
+    TEASER["Human teaser
+    ∙ Read downloaded draft notes
+    ∙ Write customer-facing teaser
+    ∙ Script assembles final body"] --> PUBLICATION_AUDIT
+    PUBLICATION_AUDIT["Publication dry-run
+    ∙ Review body SHA
+    ∙ Review draft + publication operations"] --> APPROVE3{Publish draft?}
+    APPROVE3 -->|No| STOP
+    APPROVE3 -->|Yes| PUBLISH
+    PUBLISH["Publish
+    ∙ Dispatch website notes
+    ∙ Upload body + publish draft"] --> HANDOFF([Release milestones])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2

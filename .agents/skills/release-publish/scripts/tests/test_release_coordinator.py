@@ -22,11 +22,12 @@ class ReleaseCoordinatorTests(unittest.TestCase):
 
     def test_pipeline_has_all_irreversible_approvals(self):
         text = PIPELINE.read_text(encoding="utf-8")
-        self.assertEqual(text.count("ManualValidation@1"), 5)
+        self.assertEqual(text.count("ManualValidation@1"), 6)
         for stage in (
             "ApproveStart",
             "ApprovePackages",
-            "ApproveFinalization",
+            "ApproveDraft",
+            "ApprovePublication",
             "ApproveMilestones",
         ):
             self.assertIn(f"- stage: {stage}", text)
@@ -57,6 +58,21 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             text,
         )
 
+    def test_downstream_package_approval_remains_human_owned(self):
+        text = PIPELINE.read_text(encoding="utf-8")
+        self.assertIn(
+            "A human must separately review versions and",
+            text,
+        )
+        self.assertIn(
+            "Wait for human-approved package push",
+            text,
+        )
+        self.assertIn(
+            "Queue, wait for protected approval, and verify NuGet.org",
+            text,
+        )
+
     def test_milestone_stage_composes_audit_and_sync_paths(self):
         text = PIPELINE.read_text(encoding="utf-8")
         self.assertIn('audit_command = shlex.split(final["milestonesCommand"])', text)
@@ -72,14 +88,27 @@ class ReleaseCoordinatorTests(unittest.TestCase):
 
     def test_plans_are_visible_without_using_artifacts_for_review(self):
         text = PIPELINE.read_text(encoding="utf-8")
-        self.assertEqual(text.count("##vso[task.uploadsummary]"), 4)
+        self.assertEqual(text.count("##vso[task.uploadsummary]"), 5)
         self.assertIn("##vso[task.uploadfile]", text)
         self.assertIn("plan.json", text)
         self.assertIn("push-plan.json", text)
-        self.assertIn("finalize-plan.json", text)
+        self.assertIn("draft-plan.json", text)
+        self.assertIn("publication-plan.json", text)
         self.assertIn("milestones-plan.json", text)
         self.assertIn("PublishPipelineArtifact@1", text)
         self.assertIn("DownloadPipelineArtifact@2", text)
+
+    def test_draft_precedes_teaser_and_publication(self):
+        text = PIPELINE.read_text(encoding="utf-8")
+        create = text.index("- stage: CreateDraft")
+        teaser = text.index("- stage: PrepareTeaser")
+        plan = text.index("- stage: PlanPublication")
+        publish = text.index("- stage: PublishRelease")
+        self.assertLess(create, teaser)
+        self.assertLess(teaser, plan)
+        self.assertLess(plan, publish)
+        self.assertIn('context["draftAuditCommand"]', text)
+        self.assertIn('draft["publishAuditCommand"]', text)
 
 
 if __name__ == "__main__":

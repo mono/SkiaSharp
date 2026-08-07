@@ -59,8 +59,8 @@ class DetectReleasePublishTests(unittest.TestCase):
         self.assertIn("--expect-tests-run 20", result["pushAuditCommand"])
         self.assertTrue(result["pushAuditCommand"].endswith("--dry-run"))
         self.assertIn(
-            "finalize-release.py",
-            result["finalizeAuditCommand"],
+            "create-release-draft.py",
+            result["draftAuditCommand"],
         )
 
     def test_detector_requires_ready_status(self):

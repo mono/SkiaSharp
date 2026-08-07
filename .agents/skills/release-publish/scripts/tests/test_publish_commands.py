@@ -22,7 +22,9 @@ def load(name: str, filename: str):
 
 
 push = load("push_release_packages", "push-release-packages.py")
-finalize = load("finalize_release", "finalize-release.py")
+draft = load("create_release_draft", "create-release-draft.py")
+release = load("publish_release_command", "publish-release.py")
+github = load("release_github_command", "release_github.py")
 
 
 COMMON = [
@@ -39,256 +41,195 @@ COMMON = [
 class PublishCommandTests(unittest.TestCase):
     def test_no_flag_means_execution(self):
         self.assertFalse(push.create_parser().parse_args(COMMON).dry_run)
-        self.assertFalse(finalize.create_parser().parse_args(COMMON).dry_run)
+        self.assertFalse(draft.create_parser().parse_args(COMMON).dry_run)
+        self.assertFalse(release.create_parser().parse_args(COMMON).dry_run)
 
     def test_dry_run_is_explicit(self):
-        self.assertTrue(
-            push.create_parser().parse_args([*COMMON, "--dry-run"]).dry_run
-        )
-        self.assertTrue(
-            finalize.create_parser()
-            .parse_args([*COMMON, "--dry-run"])
-            .dry_run
-        )
+        for module in (push, draft, release):
+            self.assertTrue(
+                module.create_parser()
+                .parse_args([*COMMON, "--dry-run"])
+                .dry_run
+            )
 
     def test_execution_commands_omit_dry_run(self):
         push_args = push.create_parser().parse_args(
             [*COMMON, "--dry-run"]
         )
-        push_command = push.execution_command(push_args, "a" * 40)
-        self.assertNotIn("--dry-run", push_command)
+        self.assertNotIn(
+            "--dry-run",
+            push.execution_command(push_args, "a" * 40),
+        )
 
-        finalize_args = finalize.create_parser().parse_args(
+        draft_args = draft.create_parser().parse_args(
+            [*COMMON, "--dry-run"]
+        )
+        draft_command = draft.execution_command(draft_args, "a" * 40)
+        self.assertNotIn("--dry-run", draft_command)
+
+        release_args = release.create_parser().parse_args(
             [
                 *COMMON,
-                "--previous-tag",
-                "v4.151.0",
                 "--teaser-file",
                 "teaser.md",
                 "--dry-run",
             ]
         )
-        finalize_command = finalize.execution_command(
-            finalize_args,
+        release_command = release.execution_command(
+            release_args,
             "a" * 40,
         )
-        self.assertNotIn("--dry-run", finalize_command)
-        self.assertIn("--teaser-file teaser.md", finalize_command)
-
-    def test_finalization_statuses_match_actionable_state(self):
-        missing_previous = finalize.finalization_states(
-            previous_tag=False,
-            body_ready=False,
-            tag_exists=False,
-            published=False,
-            sample_run=None,
-        )
-        self.assertEqual(
-            missing_previous,
-            {
-                "tag": "blocked",
-                "docs": "blocked",
-                "teaser": "blocked",
-                "release": "blocked",
-                "samples": "blocked",
-                "nextAction": "select-previous-tag",
-            },
-        )
-
-        needs_teaser = finalize.finalization_states(
-            previous_tag=True,
-            body_ready=False,
-            tag_exists=False,
-            published=False,
-            sample_run=None,
-        )
-        self.assertEqual(needs_teaser["tag"], "blocked")
-        self.assertEqual(needs_teaser["teaser"], "awaiting-user")
-        self.assertEqual(
-            needs_teaser["nextAction"],
-            "write-release-teaser",
-        )
-
-        ready = finalize.finalization_states(
-            previous_tag=True,
-            body_ready=True,
-            tag_exists=False,
-            published=False,
-            sample_run=None,
-        )
-        self.assertEqual(ready["tag"], "pending")
-        self.assertEqual(ready["docs"], "pending")
-        self.assertEqual(ready["release"], "pending")
-        self.assertEqual(
-            ready["nextAction"],
-            "confirm-finalize-release",
-        )
-
-        samples_done = finalize.finalization_states(
-            previous_tag=True,
-            body_ready=False,
-            tag_exists=True,
-            published=True,
-            sample_run={
-                "status": "completed",
-                "conclusion": "success",
-            },
-        )
-        self.assertEqual(samples_done["samples"], "done")
-        self.assertEqual(
-            samples_done["nextAction"],
-            "start-release-milestones",
-        )
-
-        published_without_previous = finalize.finalization_states(
-            previous_tag=False,
-            body_ready=False,
-            tag_exists=True,
-            published=True,
-            sample_run={
-                "status": "completed",
-                "conclusion": "success",
-            },
-        )
-        self.assertEqual(
-            published_without_previous["nextAction"],
-            "start-release-milestones",
-        )
-
-    def test_sample_failure_stays_with_publish_skill(self):
-        failed = finalize.finalization_states(
-            previous_tag=True,
-            body_ready=False,
-            tag_exists=True,
-            published=True,
-            sample_run={
-                "status": "completed",
-                "conclusion": "failure",
-            },
-        )
-        self.assertEqual(failed["samples"], "failed")
-        self.assertEqual(failed["nextAction"], "investigate-samples")
+        self.assertNotIn("--dry-run", release_command)
+        self.assertIn("--teaser-file teaser.md", release_command)
 
     def test_package_statuses_match_external_state(self):
-        ready = push.package_states("ready", None)
-        self.assertEqual(ready["publish"], "done")
-        self.assertEqual(ready["verify"], "done")
         self.assertEqual(
-            ready["nextAction"],
-            "start-release-finalization",
+            push.package_states("ready", None)["nextAction"],
+            "start-release-draft",
         )
-
-        active = push.package_states(
-            "missing",
-            {"status": "inProgress", "result": None},
-        )
-        self.assertEqual(active["publish"], "running")
-        self.assertEqual(active["verify"], "running")
         self.assertEqual(
-            active["nextAction"],
+            push.package_states(
+                "missing",
+                {"status": "inProgress", "result": None},
+            )["nextAction"],
             "approve-or-wait-for-publish",
         )
-
-        indexing = push.package_states(
-            "partial",
-            {"status": "completed", "result": "succeeded"},
-        )
-        self.assertEqual(indexing["publish"], "running")
-        self.assertEqual(indexing["verify"], "running")
-        self.assertEqual(indexing["nextAction"], "wait-for-nuget")
-
-        pending = push.package_states("missing", None)
-        self.assertEqual(pending["publish"], "pending")
-        self.assertEqual(pending["verify"], "blocked")
         self.assertEqual(
-            pending["nextAction"],
+            push.package_states(
+                "partial",
+                {"status": "completed", "result": "succeeded"},
+            )["nextAction"],
+            "wait-for-nuget",
+        )
+        self.assertEqual(
+            push.package_states("missing", None)["nextAction"],
             "confirm-publish-packages",
         )
 
-    def test_scripts_are_ascii_only(self):
-        for path in SCRIPTS.glob("*.py"):
-            path.read_text(encoding="ascii")
-        Path(__file__).read_text(encoding="ascii")
-
-    def test_helpers_live_with_their_owning_command(self):
-        shared = (SCRIPTS / "release_publish.py").read_text(encoding="ascii")
-        push_source = (SCRIPTS / "push-release-packages.py").read_text(
-            encoding="ascii"
-        )
-        finalize_source = (SCRIPTS / "finalize-release.py").read_text(
-            encoding="ascii"
-        )
-        self.assertNotIn("class AzurePublish", shared)
-        self.assertNotIn("class GitHub", shared)
-        self.assertNotIn("class TagVersion", shared)
-        self.assertIn("class AzurePublish", push_source)
-        self.assertIn("class GitHub", finalize_source)
-        self.assertIn("class TagVersion", finalize_source)
-
-    def test_finalizer_completes_all_remote_work_in_one_call(self):
+    def test_create_script_pushes_tag_then_creates_draft(self):
         events = []
 
         class FakeRepository:
-            def __init__(self, root):
-                self.root = root
-
-            def remote_tags(self):
-                return {}
-
             def push_tag(self, tag, sha):
                 events.append(("tag", tag, sha))
 
         class FakeGitHub:
-            def release(self, tag):
-                return None
+            def create_draft(self, **kwargs):
+                events.append(("draft", kwargs["tag"]))
 
-            def dispatch_docs(self, version):
-                events.append(("docs", version))
-
-            def create_release(self, **kwargs):
-                events.append(("release", kwargs["tag"]))
-
-        release = finalize.publish.ReleaseVersion.parse(
-            "release/4.152.0"
-        )
-        context = finalize.FinalizeContext(
+        context = SimpleNamespace(
             root=Path.cwd(),
-            release=release,
+            repository=FakeRepository(),
+            release=SimpleNamespace(
+                title="Version 4.152.0",
+                stable=True,
+            ),
             source_sha="a" * 40,
             tag="v4.152.0",
-            previous_tag="v4.151.0",
-            generated_log="generated",
-            expected_body="body",
-            report={},
+            tags={},
+            github=FakeGitHub(),
+            github_release=None,
         )
-        args = SimpleNamespace(
-            previous_tag="v4.151.0",
-            teaser_file=Path("teaser.md"),
-        )
+        args = SimpleNamespace()
         with (
             mock.patch.object(
-                finalize.publish,
-                "GitRepository",
-                FakeRepository,
+                draft.github_release,
+                "write_generated_artifacts",
+                return_value={"generated": Path("generated-log.md")},
             ),
-            mock.patch.object(finalize, "GitHub", FakeGitHub),
             mock.patch.object(
-                finalize,
-                "write_artifacts",
-                return_value={"body": Path("release-body.md")},
+                draft,
+                "audit",
+                return_value=(context, {}, "generated"),
             ),
-            mock.patch.object(finalize, "audit", return_value=context),
         ):
-            finalize.execute(args, context)
+            draft.execute(args, context, "generated")
 
         self.assertEqual(
             events,
             [
                 ("tag", "v4.152.0", "a" * 40),
-                ("docs", "4.152.0"),
-                ("release", "v4.152.0"),
+                ("draft", "v4.152.0"),
             ],
         )
+
+    def test_github_release_is_created_as_draft(self):
+        with (
+            mock.patch.object(
+                github.shutil,
+                "which",
+                return_value="/usr/bin/gh",
+            ),
+            mock.patch.object(github.publish, "run") as command,
+        ):
+            github.GitHub().create_draft(
+                tag="v4.152.0",
+                title="Version 4.152.0",
+                source_sha="a" * 40,
+                notes_file=Path("generated-log.md"),
+                prerelease=False,
+            )
+
+        argv = command.call_args.args[0]
+        self.assertIn("--draft", argv)
+        self.assertIn("--verify-tag", argv)
+        self.assertNotIn("--draft=false", argv)
+
+    def test_publish_script_updates_draft_after_teaser(self):
+        events = []
+
+        class FakeGitHub:
+            def dispatch_docs(self, version):
+                events.append(("docs", version))
+
+            def publish_draft(self, **kwargs):
+                events.append(("publish", kwargs["tag"]))
+
+        context = SimpleNamespace(
+            root=Path.cwd(),
+            release=SimpleNamespace(numeric="4.152.0", title="Version 4.152.0"),
+            tag="v4.152.0",
+            github=FakeGitHub(),
+            github_release={"isDraft": True},
+        )
+        args = SimpleNamespace(teaser_file=Path("teaser.md"))
+        completed = (
+            context,
+            {"nextAction": "start-release-milestones"},
+            "body",
+        )
+        with (
+            mock.patch.object(
+                release.github_release,
+                "write_release_body",
+                return_value={"body": Path("release-body.md")},
+            ),
+            mock.patch.object(release, "audit", return_value=completed),
+        ):
+            release.execute(args, context, "body")
+
+        self.assertEqual(
+            events,
+            [
+                ("docs", "4.152.0"),
+                ("publish", "v4.152.0"),
+            ],
+        )
+
+    def test_helpers_live_with_github_release_domain(self):
+        shared = (SCRIPTS / "release_publish.py").read_text(encoding="ascii")
+        github_source = (SCRIPTS / "release_github.py").read_text(
+            encoding="ascii"
+        )
+        self.assertNotIn("class GitHub", shared)
+        self.assertNotIn("class TagVersion", shared)
+        self.assertIn("class GitHub", github_source)
+        self.assertIn("class TagVersion", github_source)
+
+    def test_scripts_are_ascii_only(self):
+        for path in SCRIPTS.glob("*.py"):
+            path.read_text(encoding="ascii")
+        Path(__file__).read_text(encoding="ascii")
 
 
 if __name__ == "__main__":

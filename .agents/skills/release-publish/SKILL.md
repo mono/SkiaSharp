@@ -4,8 +4,8 @@ description: >
   Publish SkiaSharp packages and finalize the release. Use when the user says
   "publish X", "finalize X", "tag X", "finish release X", or says release
   testing passed. This is the fourth release step: detect the exact tested
-  handoff, audit and publish its packages, prepare the customer teaser, then
-  audit and publish the immutable tag and GitHub Release.
+  handoff, publish its packages, create the immutable tag and generated-notes
+  draft, prepare the customer teaser, then publish the approved draft.
 ---
 
 # Release Publish
@@ -21,18 +21,20 @@ This skill is **Step 4 of 5**:
 
 - Start only from a passing release-testing handoff with the exact branch,
   source SHA, managed run ID, tests run ID, and paired package versions.
-- Use scripts for detection, Azure publication, NuGet verification, tag/notes/
-  release reconciliation, and sample-workflow observation.
+- Use scripts for detection, Azure publication, NuGet verification, draft
+  creation, and final publication.
 - Package publication, tag push, and GitHub Release publication are
   irreversible. Present the corresponding dry-run and obtain approval first.
 - Preserve the detector's source SHA and run IDs; never select newer packages or
   pipeline runs.
-- Keep the checkout unchanged. Finalization pushes a lightweight tag directly
+- Keep the checkout unchanged. Draft creation pushes a lightweight tag directly
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
-- The Azure package stage retains its own human approval.
-- The agent owns only customer-teaser classification; scripts assemble and
-  validate the final release body.
+- The coordinator approval authorizes only queueing pipeline 25298. Its protected
+  push stage then waits for a human to review the exact versions and destination.
+  The agent never approves that downstream gate.
+- The agent owns customer-teaser classification between draft creation and
+  publication; scripts assemble and validate the final release body.
 
 ## Script contract
 
@@ -40,7 +42,9 @@ This skill is **Step 4 of 5**:
 |--------|----------------|
 | `scripts/detect-release-publish.py` | Read-only exact release/testing/package handoff. |
 | `scripts/push-release-packages.py` | Audit or execute pipeline 25298, wait for Azure, and verify both NuGet.org packages. |
-| `scripts/finalize-release.py` | Audit or execute tag, website notes, GitHub Release, and sample synchronization. |
+| `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
+| `scripts/publish-release.py` | Validate the teaser and publish the draft. |
+| `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
 | `scripts/release_publish.py` | Shared clients and validation; not a user command. |
 
 Write scripts audit with `--dry-run` and execute without it. The detector emits
@@ -53,15 +57,14 @@ the pinned audit commands; every confirmation report emits its exact
 |--------|--------------|----------|
 | Detector | `audit-package-publication` | Run `pushAuditCommand`. |
 | Packages | `confirm-publish-packages` | Approve and run package execution. |
-| Packages | `approve-or-wait-for-publish` | Verify/approve the reported Azure run; execution continues waiting. |
+| Packages | `approve-or-wait-for-publish` | Show the protected Azure run; a human approves while execution waits. |
 | Packages | `wait-for-nuget` | Wait for both exact versions to index. |
-| Packages | `start-release-finalization` | Run `finalizeAuditCommand`. |
-| Finalization | `select-previous-tag` | Choose a candidate and rerun with `--previous-tag`. |
-| Finalization | `write-release-teaser` | Fill `teaser.md`, then rerun the dry-run. |
-| Finalization | `confirm-finalize-release` | Approve and run finalization. |
-| Finalization | `wait-for-samples` | Continue observing sample synchronization. |
-| Finalization | `investigate-samples` | Report failed/canceled sample automation. |
-| Finalization | `start-release-milestones` | Hand off the emitted milestone audit command. |
+| Packages | `start-release-draft` | Run `draftAuditCommand`. |
+| Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
+| Draft | `write-release-teaser` | Classify `generated-log.md` and fill `teaser.md`. |
+| Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
+| Publication | `confirm-publish-release` | Approve and publish the completed draft. |
+| Publication | `start-release-milestones` | Hand off the emitted milestone audit command. |
 
 ## Workflow
 
@@ -94,60 +97,66 @@ HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 
 For `confirm-publish-packages`, obtain approval and run `executionCommand`.
 Verify that Azure selected the exact managed resource/run and the Stable or
-Preview push stage. The script returns only after both exact public packages are
-available on NuGet.org or a clear failure/timeout occurs.
+Preview push stage. A human reviews its versions/destination and approves the
+protected stage; the executing script waits without acting on that decision. It
+returns only after both exact public packages are available on NuGet.org or a
+clear failure/timeout occurs.
 
-### 3. Prepare finalization
+### 3. Create the generated-notes draft
 
-Run `finalizeAuditCommand`. For `select-previous-tag`, show ordered candidates:
-prefer the latest same-version preview/RC; ask for maintainer intent when the
-first preview/hotfix boundary is ambiguous.
-
-Rerun with the exact choice:
+Run `draftAuditCommand`. It parses all release tags using SkiaSharp's
+NuGet-compatible ordering (including four-part hotfixes) and selects the greatest
+tag below the current release as `previousTag`.
 
 ```bash
-python3 .agents/skills/release-publish/scripts/finalize-release.py \
+python3 .agents/skills/release-publish/scripts/create-release-draft.py \
   {pinned arguments} \
-  --previous-tag {tag} \
   --dry-run
 ```
 
-The dry-run creates ignored local artifacts under `output/release/{release-tag}`:
+For `confirm-create-release-draft`, present the exact tag, source SHA, title,
+prerelease state, previous tag, and operation table. Obtain approval and run
+`executionCommand`. It pushes the tag, creates a GitHub draft containing the
+exact generated notes, then downloads that body into ignored local artifacts:
 
 | File | Ownership |
 |------|-----------|
-| `generated-log.md` | Script-generated PR log; classification input only. |
+| `generated-log.md` | Body downloaded from the GitHub draft; classification input only. |
 | `teaser.md` | Agent edits customer-facing sections. |
-| `release-body.md` | Script-assembled final body. |
+
+### 4. Prepare the teaser
 
 For `write-release-teaser`, follow
 [github-release-teaser.md](references/github-release-teaser.md), edit only
-`teaser.md`, preserve exactly one `<!-- RELEASE_LINKS -->` marker, and rerun the
-dry-run with `--teaser-file`.
+`teaser.md`, and preserve exactly one `<!-- RELEASE_LINKS -->` marker.
 
-### 4. Publish the release
+This step is editorial and local only. It does not audit, modify, or publish the
+GitHub Release.
 
-For `confirm-finalize-release`, present the exact tag/title/prerelease state,
-expected body SHA, teaser, and operation table. Obtain approval and run
-`executionCommand`.
+### 5. Finish the release
 
-One resumable execution pushes the exact tag, dispatches targeted website notes,
-publishes the GitHub Release, and observes the release-triggered sample workflow.
-Rerun the dry-run after interruption; validated completed operations are skipped.
+Run the draft result's emitted `publishAuditCommand`. The publication dry-run
+consumes `teaser.md`, creates `release-body.md`, and validates its exact SHA.
 
-### 5. Hand off milestones
+| File | Ownership |
+|------|-----------|
+| `release-body.md` | Script-assembled final body uploaded to the draft after approval. |
+
+For `confirm-publish-release`, present the draft URL, expected body SHA, teaser,
+and operation table. Obtain approval and run `executionCommand`. One execution
+dispatches targeted website notes, uploads the approved body, and publishes the
+draft.
+
+### 6. Hand off milestones
 
 For `start-release-milestones`, invoke the emitted `milestonesCommand` with
 [release-milestones](../release-milestones/SKILL.md), complete its Audit path,
-then run its normal Sync path. Include the sample-workflow result in the handoff.
+then run its normal Sync path.
 
 ## Reporting
 
 Never dump raw JSON. Include every warning and link any operation URL. Ask for
 approval only for `confirm-*` actions.
 
-Use the manual
-[Azure release coordinator](../../../scripts/azure-pipelines-release-coordinator.yml)
-for button-driven start/complete execution over the same script contracts.
 See [releasing.md](../../../documentation/dev/releasing.md) for the complete
 release process.

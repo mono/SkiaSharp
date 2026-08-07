@@ -52,9 +52,9 @@ def detect(root: Path, target: str) -> dict:
         *common,
         "--dry-run",
     ]
-    finalize_command = [
+    draft_command = [
         sys.executable,
-        ".agents/skills/release-publish/scripts/finalize-release.py",
+        ".agents/skills/release-publish/scripts/create-release-draft.py",
         *common,
         "--dry-run",
     ]
@@ -70,7 +70,7 @@ def detect(root: Path, target: str) -> dict:
         "publicPackages": versions["public"],
         "warnings": status.get("warnings") or [],
         "pushAuditCommand": publish.shell_command(push_command),
-        "finalizeAuditCommand": publish.shell_command(finalize_command),
+        "draftAuditCommand": publish.shell_command(draft_command),
         "nextAction": "audit-package-publication",
     }
 

@@ -21,7 +21,7 @@ def load(name: str, filename: str):
 
 publish = load("publish_release", "release_publish.py")
 push = load("push_release_packages_test", "push-release-packages.py")
-finalize = load("finalize_release_test", "finalize-release.py")
+github = load("release_github_test", "release_github.py")
 
 
 class PublishReleaseTests(unittest.TestCase):
@@ -63,12 +63,8 @@ class PublishReleaseTests(unittest.TestCase):
         ):
             stable.validate_public_version("4.152.0-stable.1")
 
-    def test_previous_tag_candidates_exclude_newer_releases(self):
-        release = publish.ReleaseVersion.parse(
-            "release/4.152.0-preview.2"
-        )
-        candidates = finalize.previous_tag_candidates(
-            release,
+    def test_previous_tag_is_immediate_version_predecessor(self):
+        previous = github.previous_release_tag(
             "v4.152.0-preview.2.2",
             [
                 "v4.152.0-preview.2.3",
@@ -78,16 +74,31 @@ class PublishReleaseTests(unittest.TestCase):
                 "v4.151.0",
             ],
         )
+        self.assertEqual(previous, "v4.152.0-preview.2.1")
+
+    def test_previous_tag_orders_stable_and_hotfix_releases(self):
         self.assertEqual(
-            candidates[:4],
-            [
-                "v4.152.0-preview.2.1",
-                "v4.152.0-preview.1.4",
-                "v4.151.1",
-                "v4.151.0",
-            ],
+            github.previous_release_tag(
+                "v4.152.0",
+                [
+                    "v4.151.1",
+                    "v4.152.0-preview.2.1",
+                    "v4.152.0-rc.1.1",
+                ],
+            ),
+            "v4.152.0-rc.1.1",
         )
-        self.assertNotIn("v4.152.0-preview.2.3", candidates)
+        self.assertEqual(
+            github.previous_release_tag(
+                "v4.152.0.1-preview.1.1",
+                [
+                    "v4.152.0-preview.2.1",
+                    "v4.152.0-rc.1.1",
+                    "v4.152.0",
+                ],
+            ),
+            "v4.152.0",
+        )
 
     def test_azure_request_pins_exact_managed_run(self):
         request = push.AzurePublish.request_body(
@@ -119,7 +130,7 @@ class PublishReleaseTests(unittest.TestCase):
 
 **Full Changelog**: https://github.com/mono/SkiaSharp/compare/v1...v2
 """
-        compare, changes, count = finalize.generated_log_parts(generated)
+        compare, changes, count = github.generated_log_parts(generated)
         self.assertEqual(
             compare,
             "https://github.com/mono/SkiaSharp/compare/v1...v2",
@@ -132,7 +143,7 @@ class PublishReleaseTests(unittest.TestCase):
     def test_release_body_assembly_is_deterministic(self):
         teaser = (
             "A focused release.\n\n"
-            f"{finalize.TEASER_LINKS_MARKER}\n\n"
+            f"{github.TEASER_LINKS_MARKER}\n\n"
             "## What's New\n- Added a feature by @one (#1)\n"
         )
         generated = """## What's Changed
@@ -140,7 +151,7 @@ class PublishReleaseTests(unittest.TestCase):
 
 **Full Changelog**: https://github.com/mono/SkiaSharp/compare/v1...v2
 """
-        body = finalize.assemble_release_body(
+        body = github.assemble_release_body(
             teaser,
             generated,
             public_version="4.152.0-preview.1.1",
@@ -157,7 +168,7 @@ class PublishReleaseTests(unittest.TestCase):
         )
         self.assertIn("All changes (1 pull requests)", body)
         self.assertEqual(body.count("Full changelog"), 1)
-        self.assertNotIn(finalize.TEASER_LINKS_MARKER, body)
+        self.assertNotIn(github.TEASER_LINKS_MARKER, body)
 
     def test_release_body_rejects_unsafe_teaser_output(self):
         generated = "## What's Changed\n"
@@ -176,10 +187,10 @@ class PublishReleaseTests(unittest.TestCase):
             ),
         ):
             with self.assertRaisesRegex(
-                finalize.publish.PublishError,
+                github.publish.PublishError,
                 message,
             ):
-                finalize.assemble_release_body(
+                github.assemble_release_body(
                     teaser,
                     generated,
                     public_version="4.152.0",

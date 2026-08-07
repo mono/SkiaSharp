@@ -10,7 +10,7 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
 ## Principles
 
 - **One input: the generated release log.** The teaser is built *only* from the
-  GitHub Release Notes API body saved by `finalize-release.py`. Do **not** read
+  generated-notes draft body downloaded by `create-release-draft.py`. Do **not** read
   `documentation/docfx/releases/*`, do **not** run git commands, and do **not** wait on
   the website release-notes workflow or its `bot/release-notes` PR.
 - **Keep the auto-gen list.** It already carries every PR number and author handle for
@@ -53,13 +53,12 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
 
 ## Process
 
-`finalize-release.py --dry-run` writes:
+`create-release-draft.py` execution writes:
 
 | File | Owner |
 |------|-------|
 | `output/release/{tag}/generated-log.md` | Script; never edit. This is the only classification input. |
 | `output/release/{tag}/teaser.md` | Agent; replace the subtitle placeholder and add selected sections. |
-| `output/release/{tag}/release-body.md` | Script; generated only after teaser approval. |
 
 1. **Read every entry** in `generated-log.md`.
 2. **Edit `teaser.md`** using the teaser-input template below. Drop plumbing,
@@ -67,11 +66,11 @@ package consumer cares about, then fold GitHub's full auto-generated PR list ben
    promoted change.
 3. Preserve exactly one `<!-- RELEASE_LINKS -->` marker. Do not add NuGet,
    website-notes, or changelog URLs yourself.
-4. Rerun `finalize-release.py --teaser-file ... --dry-run`. The script inserts
+4. Run `publish-release.py --teaser-file ... --dry-run`. The script inserts
    the exact links, strips duplicate generated headings, counts PRs, folds the
    generated log, and reports the expected final-body SHA.
-5. After final approval, the script writes `release-body.md` and publishes the
-   GitHub Release through the finalization command.
+5. After final approval, `publish-release.py` uploads `release-body.md` and
+   publishes the GitHub draft.
 
 ---
 
