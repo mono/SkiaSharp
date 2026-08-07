@@ -10,13 +10,13 @@ All three read the shared source of truth in
 
 | Script | Language | What it manages | Automated? |
 |--------|----------|-----------------|------------|
-| [`sync-chrome-milestones.ps1`](sync-chrome-milestones.ps1) | PowerShell | Creates/updates the *upcoming* GitHub milestones from the Chromium release schedule. | No — run manually. |
-| [`audit-milestones.ps1`](audit-milestones.ps1) | PowerShell | Fixes the milestone assigned to already-shipped PRs and their linked issues. | No — run manually. |
+| [`sync-milestones.py`](../../../.agents/skills/release-milestones/scripts/sync-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues forward, and closes tagged milestones. | No — use release-milestones. |
+| [`audit-milestones.py`](../../../.agents/skills/release-milestones/scripts/audit-milestones.py) | Python | Fixes shipped PR/linked-issue assignments. | No — use release-milestones. |
 | [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily workflow. |
 
 ---
 
-## `sync-chrome-milestones.ps1`
+## `sync-milestones.py`
 
 Fetches the Chromium release schedule from `chromiumdash.appspot.com` and
 creates/updates GitHub milestones for the next few Skia milestones, with due
@@ -31,29 +31,40 @@ dates derived from the Chrome cadence:
 
 ```bash
 # preview the next 3 milestones without touching anything
-pwsh scripts/infra/milestones/sync-chrome-milestones.ps1 -DryRun -Count 3
+python3 .agents/skills/release-milestones/scripts/sync-milestones.py \
+  --dry-run --count 3
 
 # create/update them
-pwsh scripts/infra/milestones/sync-chrome-milestones.ps1
+python3 .agents/skills/release-milestones/scripts/sync-milestones.py
 ```
 
-Flags: `-DryRun`, `-Count <n>` (default 5), `-Repo <owner/repo>` (default `mono/SkiaSharp`).
+Flags: `--dry-run`, `--count <n>` (default 5), `--repo <owner/repo>`
+(default `mono/SkiaSharp`).
 
-## `audit-milestones.ps1`
+During the same sync, exact release tags make their matching milestones
+shipped. Open issues move to the next unshipped milestone in release order,
+then the shipped milestone closes.
 
-Determines what shipped in each release by comparing the merge-bases of
-consecutive release branches on `main`, then ensures every PR in that range —
-and any issues it closed — is assigned to the correct milestone.
+## `audit-milestones.py`
+
+Detects shipped releases from exact remote tags, uses release-branch merge-bases
+as first-parent commit-range boundaries, and rolls unshipped preview/RC ranges
+forward to the next shipped release. Every PR in those ranges — and any issues
+it closed — is assigned to the milestone where it actually shipped.
 
 ```bash
 # report what would change
-pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun
+python3 .agents/skills/release-milestones/scripts/audit-milestones.py \
+  --dry-run
 
 # audit a specific version instead of the one in VERSIONS.txt
-pwsh scripts/infra/milestones/audit-milestones.ps1 -Version 4.150.0
+python3 .agents/skills/release-milestones/scripts/audit-milestones.py \
+  --version 4.150.0 --dry-run
+
 ```
 
-Flags: `-DryRun`, `-Version <x.y.z>` (defaults to VERSIONS.txt), `-Repo <owner/repo>`.
+Flags: `--dry-run`, `--version <x.y.z>` (defaults to VERSIONS.txt), and
+`--repo <owner/repo>`.
 
 ## `update-bug-template.py`
 
@@ -90,7 +101,7 @@ used to validate the result.
 ### Automation
 
 The [`Sync - Issue Template Versions`](../../../.github/workflows/auto-update-issue-template-versions.yml)
-workflow runs `update-bug-template.py` daily (09:00 UTC) and
-opens/updates a PR when the dropdowns drift. It can also be triggered manually
-via **workflow_dispatch**. The milestone scripts above have no such workflow —
-run them by hand when preparing releases.
+workflow runs `update-bug-template.py` daily (09:00 UTC) and opens/updates a PR
+when the dropdowns drift. It can also be triggered manually via
+**workflow_dispatch**. The release-milestones paths are not scheduled; run them
+through the skill or the manual Azure release coordinator.
