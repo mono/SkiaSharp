@@ -81,14 +81,6 @@ def add_flag(command: list[str], name: str) -> None:
         command.append(name)
 
 
-def replace_file_option(
-    command: list[str],
-    name: str,
-    value: Path,
-) -> None:
-    set_option(command, name, str(value.resolve()))
-
-
 def detect_publication(target: str) -> dict:
     return run_json(
         [
@@ -212,7 +204,7 @@ def release_phase(args) -> dict:
     draft = run_json(shlex.split(context["draftAuditCommand"]))
     allowed = {
         "confirm-create-release-draft",
-        "write-release-teaser",
+        "confirm-publish-release",
         "audit-release-publication",
     }
     if draft["nextAction"] not in allowed:
@@ -232,34 +224,8 @@ def release_phase(args) -> dict:
     publication = None
     publication_result = None
     publication_command = draft_result.get("publishAuditCommand")
-    default_teaser = (
-        ROOT / draft_result["artifacts"]["teaser"]
-        if draft_result.get("artifacts")
-        else None
-    )
-    teaser_ready = bool(
-        default_teaser
-        and default_teaser.is_file()
-        and "Replace this comment"
-        not in default_teaser.read_text(encoding="utf-8")
-    )
-    should_plan_publication = bool(
-        args.teaser_file
-        or teaser_ready
-        or draft_result["nextAction"] == "audit-release-publication"
-    )
-    if publication_command and not draft_created and should_plan_publication:
+    if publication_command and not draft_created:
         command = shlex.split(publication_command)
-        if args.teaser_file:
-            if not args.teaser_file.is_file():
-                raise CoordinatorError(
-                    f"teaser file does not exist: {args.teaser_file}"
-                )
-            replace_file_option(
-                command,
-                "--teaser-file",
-                args.teaser_file,
-            )
         publication = run_json(command)
         if args.publish:
             execution = publication.get("executionCommand")
@@ -281,8 +247,7 @@ def release_phase(args) -> dict:
                 )
     elif args.publish:
         raise CoordinatorError(
-            "publication plan is unavailable; create the draft and complete "
-            "the teaser first"
+            "publication plan is unavailable; create the draft first"
         )
 
     return {
@@ -425,11 +390,10 @@ def create_parser() -> argparse.ArgumentParser:
     release = subparsers.add_parser(
         "release",
         aliases=["c"],
-        help="C: create the draft, validate the teaser, and publish",
+        help="C: create the draft and publish the release",
     )
     release.add_argument("target")
     release.add_argument("--execute-draft", action="store_true")
-    release.add_argument("--teaser-file", type=Path)
     release.add_argument("--publish", action="store_true")
     release.set_defaults(handler=release_phase)
 

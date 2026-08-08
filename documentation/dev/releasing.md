@@ -38,11 +38,11 @@ creation and publication:
 | Operation | Input | Result |
 |-----------|-------|--------|
 | `start` | Integration branch (`main` / `release/X.Y.x`) and optional exact version | Plan, approve, then create the exact paired release branches. |
-| `complete` | Exact release branch or tested source SHA | Recover/publish exact packages, create the tag/draft, prepare and publish the release, reconcile assignments, then advance milestones. |
+| `complete` | Exact release branch or tested source SHA | Recover/publish exact packages, create the tag/draft, publish the marked generated notes, dispatch release notes, reconcile assignments, then advance milestones. |
 
 Every irreversible phase has its own visible dry-run summary and
 `ManualValidation` gate. Plans are persisted between stages so execution uses
-the exact approved SHA, runs, versions, tag, release body, assignments, and
+the exact approved SHA, runs, versions, tag, generated notes, assignments, and
 milestone operations. Rerunning `complete` is resumable: it recovers an exact
 queued publication, remote tag/draft/release, and completed milestone state
 instead of creating duplicates.
@@ -59,10 +59,10 @@ for that decision and successful Azure completion before draft creation.
 Interactive/local publication retains the safer default of waiting for both
 exact NuGet.org packages to be indexed.
 
-Customer teaser generation runs Copilot CLI in an isolated directory with no
-available tools, built-in MCP servers, custom instructions, GitHub write token,
-or Azure token. The generated log is treated as untrusted input. The assembled
-release body and SHA remain behind the publication approval.
+The coordinator publishes the marked raw GitHub-generated notes, then
+idempotently dispatches the targeted release-notes workflow. Customer teaser
+application is asynchronous: it happens only after the reviewed release-notes
+PR merges, through the deterministic zero-AI updater.
 
 One-time setup after this YAML reaches the default branch:
 
@@ -84,12 +84,10 @@ az pipelines create \
 Then:
 
 1. Authorize variable group `Xamarin-Secrets`.
-2. Add secret pipeline variable `CopilotGitHubToken` with **Copilot Requests:
-   read**.
-3. Grant the pipeline build identity permission to queue pipeline `25298`.
-4. Confirm the release-manager GitHub PAT can push `mono/SkiaSharp` and
+2. Grant the pipeline build identity permission to queue pipeline `25298`.
+3. Confirm the release-manager GitHub PAT can push `mono/SkiaSharp` and
    `mono/skia`, create releases/workflow dispatches, and edit milestones.
-5. Have a maintainer with **Edit build pipeline** permission create or modify
+4. Have a maintainer with **Edit build pipeline** permission create or modify
    the coordinator definition.
 
 Stable post-cut bump PR merges remain maintainer decisions.
@@ -104,7 +102,7 @@ read-only unless its explicit execution flag is supplied:
 |-------|---------|----------------|
 | A / `start` | `python3 scripts/release-coordinator.py a main` | Resolve and plan paired release branches. |
 | B / `packages` | `python3 scripts/release-coordinator.py b release/X.Y.Z` | Recover or plan the exact protected package publication. |
-| C / `release` | `python3 scripts/release-coordinator.py c release/X.Y.Z` | Create/audit the draft, validate the teaser, and publish. |
+| C / `release` | `python3 scripts/release-coordinator.py c release/X.Y.Z` | Create/audit the marked generated-notes draft, publish it, and dispatch release notes. |
 | D / `finish` | `python3 scripts/release-coordinator.py d release/X.Y.Z` | Reconcile shipped assignments, then advance milestones. |
 
 Review a phase's JSON before adding its execution option:
@@ -120,10 +118,8 @@ python3 scripts/release-coordinator.py b release/X.Y.Z --execute
 
 # C: draft creation and publication remain separate approval boundaries
 python3 scripts/release-coordinator.py c release/X.Y.Z --execute-draft
-python3 scripts/release-coordinator.py c release/X.Y.Z \
-  --teaser-file path/to/teaser.md
-python3 scripts/release-coordinator.py c release/X.Y.Z \
-  --teaser-file path/to/teaser.md --publish
+python3 scripts/release-coordinator.py c release/X.Y.Z
+python3 scripts/release-coordinator.py c release/X.Y.Z --publish
 
 # D
 python3 scripts/release-coordinator.py d release/X.Y.Z
@@ -403,8 +399,8 @@ later adds the exact-tag teaser to the line's single prose file; after merge, a
 deterministic zero-AI workflow updates only that marked teaser region while
 preserving the original generated changelog payload byte-for-byte.
 
-The future coordinator therefore needs no Copilot token/model and no
-`PrepareTeaser` phase. Its Release phase is only tag/draft creation plus final
+The coordinator therefore needs no Copilot token/model and no `PrepareTeaser`
+phase. Its Release phase is only tag/draft creation plus final
 publication approval; reviewed teaser convergence is asynchronous and owned by
 the release-notes PR and deterministic updater.
 

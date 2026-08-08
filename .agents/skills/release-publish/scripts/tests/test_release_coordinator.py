@@ -112,6 +112,81 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             "4.152.0.1",
         )
 
+    def test_local_release_plans_marked_generated_notes_publication(self):
+        context = {
+            "releaseBranch": "release/4.152.0-preview.1",
+            "draftAuditCommand": "python3 draft.py release --dry-run",
+        }
+        draft = {
+            "nextAction": "confirm-publish-release",
+            "publishAuditCommand": "python3 publish.py release --dry-run",
+        }
+        publication = {
+            "nextAction": "confirm-publish-release",
+            "executionCommand": "python3 publish.py release",
+        }
+        args = SimpleNamespace(
+            target=context["releaseBranch"],
+            execute_draft=False,
+            publish=False,
+        )
+        with (
+            mock.patch.object(
+                local,
+                "detect_publication",
+                return_value=context,
+            ),
+            mock.patch.object(
+                local,
+                "run_json",
+                side_effect=[draft, publication],
+            ) as run,
+        ):
+            result = local.release_phase(args)
+
+        self.assertEqual(run.call_count, 2)
+        self.assertEqual(result["draft"], draft)
+        self.assertEqual(result["publication"], publication)
+        self.assertIsNone(result["publicationResult"])
+
+    def test_local_release_recovers_docs_dispatch_after_publication(self):
+        context = {
+            "releaseBranch": "release/4.152.0",
+            "draftAuditCommand": "python3 draft.py release --dry-run",
+        }
+        draft = {
+            "nextAction": "audit-release-publication",
+            "publishAuditCommand": "python3 publish.py release --dry-run",
+        }
+        publication = {
+            "nextAction": "dispatch-release-notes",
+            "executionCommand": "python3 publish.py release",
+        }
+        completed = {
+            "nextAction": "start-release-milestones",
+        }
+        args = SimpleNamespace(
+            target=context["releaseBranch"],
+            execute_draft=False,
+            publish=True,
+        )
+        with (
+            mock.patch.object(
+                local,
+                "detect_publication",
+                return_value=context,
+            ),
+            mock.patch.object(
+                local,
+                "run_json",
+                side_effect=[draft, publication, completed],
+            ) as run,
+        ):
+            result = local.release_phase(args)
+
+        self.assertEqual(run.call_count, 3)
+        self.assertEqual(result["publicationResult"], completed)
+
     def test_pipeline_has_all_irreversible_approvals(self):
         text = PIPELINE.read_text(encoding="utf-8")
         self.assertEqual(text.count("ManualValidation@1"), 7)
@@ -125,28 +200,13 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         ):
             self.assertIn(f"- stage: {stage}", text)
 
-    def test_copilot_teaser_is_tool_free_and_bounded(self):
+    def test_pipeline_has_no_coordinator_owned_teaser_generation(self):
         text = PIPELINE.read_text(encoding="utf-8")
-        self.assertIn("@github/copilot@1.0.78-1", text)
-        self.assertIn("--available-tools=''", text)
-        self.assertIn("--disable-builtin-mcps", text)
-        self.assertIn("--no-custom-instructions", text)
-        self.assertIn("--max-ai-credits 3", text)
-        self.assertNotIn("--allow-all-tools", text)
-        self.assertNotIn("--yolo", text)
-
-    def test_pipeline_uses_separate_copilot_and_release_tokens(self):
-        text = PIPELINE.read_text(encoding="utf-8")
-        teaser_start = text.index(
-            "displayName: Generate isolated customer teaser"
-        )
-        teaser_end = text.index(
-            "              - bash: |",
-            teaser_start,
-        )
-        teaser_step = text[teaser_start:teaser_end]
-        self.assertIn("COPILOT_GITHUB_TOKEN", teaser_step)
-        self.assertNotRegex(teaser_step, r"(?m)^\s+GH_TOKEN:")
+        self.assertNotIn("CopilotGitHubToken", text)
+        self.assertNotIn("copilotModel", text)
+        self.assertNotIn("PrepareTeaser", text)
+        self.assertNotIn("release-teaser", text)
+        self.assertNotIn("teaser-file", text)
         self.assertIn(
             "GH_TOKEN: $(github--pat--xamarinreleasemanager)",
             text,
@@ -244,17 +304,16 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         self.assertIn("artifact: release-package-result", text[push:draft])
         self.assertIn("artifact: release-package-result", text[draft:])
 
-    def test_draft_precedes_teaser_and_publication(self):
+    def test_draft_precedes_short_publication_phase(self):
         text = PIPELINE.read_text(encoding="utf-8")
         create = text.index("- stage: CreateDraft")
-        teaser = text.index("- stage: PrepareTeaser")
         plan = text.index("- stage: PlanPublication")
         publish = text.index("- stage: PublishRelease")
-        self.assertLess(create, teaser)
-        self.assertLess(teaser, plan)
+        self.assertLess(create, plan)
         self.assertLess(plan, publish)
         self.assertIn('context["draftAuditCommand"]', text)
         self.assertIn('draft["publishAuditCommand"]', text)
+        self.assertIn('"dispatch-release-notes"', text)
 
 
 if __name__ == "__main__":
