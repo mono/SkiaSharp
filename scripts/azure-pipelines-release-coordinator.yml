@@ -113,6 +113,7 @@ stages:
                   TARGET: ${{ parameters.target }}
                   RELEASE_VERSION: ${{ parameters.releaseVersion }}
                   ARTIFACT_DIR: $(Build.ArtifactStagingDirectory)/release-start
+                  GH_TOKEN: $(github--pat--xamarinreleasemanager)
               - task: PublishPipelineArtifact@1
                 displayName: Publish start plan
                 inputs:
@@ -415,6 +416,9 @@ stages:
               - bash: |
                   set -euo pipefail
                   test -n "${GH_TOKEN:-}" || exit 1
+                  test -n "${AZURE_DEVOPS_EXT_PAT:-}" || exit 1
+                  az extension add --name azure-devops --only-show-errors 2>/dev/null || \
+                    az extension update --name azure-devops --only-show-errors
                   gh auth setup-git
                   mkdir -p "$(Build.ArtifactStagingDirectory)/release-draft"
 
@@ -428,7 +432,27 @@ stages:
                   source = Path("$(Pipeline.Workspace)/release-package-result/context.json")
                   root = Path("$(Build.ArtifactStagingDirectory)/release-draft")
                   context = json.loads(source.read_text())
+                  publication = json.loads(
+                      Path(
+                          "$(Pipeline.Workspace)/release-package-result/"
+                          "push-result.json"
+                      ).read_text()
+                  )
                   command = shlex.split(context["draftAuditCommand"])
+                  if publication["nuget"]["state"] != "ready":
+                      run = publication.get("publishRun")
+                      if not run:
+                          raise SystemExit(
+                              "Azure package verification has no publication run"
+                          )
+                      command.extend(
+                          [
+                              "--verification",
+                              "azure",
+                              "--publish-run",
+                              str(run["runId"]),
+                          ]
+                      )
                   initial = json.loads(
                       subprocess.run(
                           command,
@@ -485,6 +509,7 @@ stages:
                 displayName: Build tag and draft plan
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
+                  AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
               - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Build.ArtifactStagingDirectory)/release-draft
@@ -536,6 +561,9 @@ stages:
               - bash: |
                   set -euo pipefail
                   test -n "${GH_TOKEN:-}" || exit 1
+                  test -n "${AZURE_DEVOPS_EXT_PAT:-}" || exit 1
+                  az extension add --name azure-devops --only-show-errors 2>/dev/null || \
+                    az extension update --name azure-devops --only-show-errors
                   gh auth setup-git
                   python3 - <<'PY'
                   import json
@@ -580,6 +608,7 @@ stages:
                 displayName: Create release tag and draft
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
+                  AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
               - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Pipeline.Workspace)/release-draft-plan
@@ -605,6 +634,9 @@ stages:
               - bash: |
                   set -euo pipefail
                   test -n "${GH_TOKEN:-}" || exit 1
+                  test -n "${AZURE_DEVOPS_EXT_PAT:-}" || exit 1
+                  az extension add --name azure-devops --only-show-errors 2>/dev/null || \
+                    az extension update --name azure-devops --only-show-errors
                   gh auth setup-git
                   if [ -d "$(Pipeline.Workspace)/release-draft-result/output" ]; then
                     mkdir -p output
@@ -675,6 +707,7 @@ stages:
                 displayName: Build publication and docs dispatch plan
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
+                  AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
               - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Build.ArtifactStagingDirectory)/release-publication
@@ -726,6 +759,9 @@ stages:
               - bash: |
                   set -euo pipefail
                   test -n "${GH_TOKEN:-}" || exit 1
+                  test -n "${AZURE_DEVOPS_EXT_PAT:-}" || exit 1
+                  az extension add --name azure-devops --only-show-errors 2>/dev/null || \
+                    az extension update --name azure-devops --only-show-errors
                   gh auth setup-git
                   python3 - <<'PY'
                   import json
@@ -768,6 +804,7 @@ stages:
                 displayName: Publish approved GitHub Release
                 env:
                   GH_TOKEN: $(github--pat--xamarinreleasemanager)
+                  AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
               - task: PublishPipelineArtifact@1
                 inputs:
                   targetPath: $(Pipeline.Workspace)/release-publication-plan

@@ -128,7 +128,11 @@ python3 scripts/release-coordinator.py d release/X.Y.Z --execute
 
 Phase B also supports `--verification azure`. The Azure coordinator uses that
 explicit policy and proceeds when the protected publication run succeeds.
-Without it, local operation continues to require exact NuGet.org indexing.
+Its emitted phase-C command carries the exact successful publication run so
+draft and publication audits can revalidate it. Without that explicit mode,
+local operation continues to require exact NuGet.org indexing. Phase D refuses
+to reconcile or advance milestones until publication and the recoverable
+release-notes dispatch are complete.
 
 ## Reference Tables
 

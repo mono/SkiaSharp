@@ -288,6 +288,56 @@ class ReleaseContext:
     github_release: dict | None
 
 
+def package_verification_warning(
+    args,
+    release: publish.ReleaseVersion,
+    handoff: dict,
+    nuget: dict,
+) -> str | None:
+    if nuget["state"] == "ready":
+        return None
+    if args.verification == "nuget":
+        raise publish.PublishError(
+            "both exact public packages must be on NuGet.org before "
+            "GitHub release publication"
+        )
+    if args.publish_run is None:
+        raise publish.PublishError(
+            "--publish-run is required for Azure package verification"
+        )
+    runs = publish.AzurePublish().matching_runs(
+        handoff["managed"]["runId"],
+        handoff["managed"]["buildNumber"],
+        stable=release.stable,
+    )
+    exact = next(
+        (
+            run
+            for run in runs
+            if run["runId"] == args.publish_run
+        ),
+        None,
+    )
+    if not exact:
+        raise publish.PublishError(
+            f"Azure publication run {args.publish_run} does not match "
+            "the exact managed release"
+        )
+    if (
+        exact.get("status") != "completed"
+        or exact.get("result") != "succeeded"
+    ):
+        raise publish.PublishError(
+            f"Azure publication run {args.publish_run} is "
+            f"{exact.get('status')}/{exact.get('result')}, expected "
+            "completed/succeeded"
+        )
+    return (
+        "Azure publication succeeded; exact NuGet.org indexing was not "
+        "verified"
+    )
+
+
 def load_release(args) -> ReleaseContext:
     repo = publish.GitRepository.discover()
     release = publish.ReleaseVersion.parse(args.release_branch)
@@ -304,11 +354,16 @@ def load_release(args) -> ReleaseContext:
         args.expect_source_sha,
     )
     nuget = publish.NuGet().check(handoff["versions"])
-    if nuget["state"] != "ready":
-        raise publish.PublishError(
-            "both exact public packages must be on NuGet.org before "
-            "GitHub release publication"
-        )
+    warnings = list(status.get("warnings") or [])
+    verification_warning = package_verification_warning(
+        args,
+        release,
+        handoff,
+        nuget,
+    )
+    if verification_warning:
+        warnings.append(verification_warning)
+        status = status | {"warnings": warnings}
     public_skia = handoff["versions"]["public"]["SkiaSharp"]
     tag = f"v{public_skia}"
     tags = repo.remote_tags()
@@ -350,7 +405,7 @@ def load_release(args) -> ReleaseContext:
 
 
 def pinned_arguments(args, source_sha: str | None = None) -> list[str]:
-    return [
+    arguments = [
         args.release_branch,
         "--expect-source-sha",
         source_sha or args.expect_source_sha,
@@ -359,6 +414,16 @@ def pinned_arguments(args, source_sha: str | None = None) -> list[str]:
         "--expect-tests-run",
         str(args.expect_tests_run),
     ]
+    if args.verification == "azure":
+        arguments.extend(
+            [
+                "--verification",
+                "azure",
+                "--publish-run",
+                str(args.publish_run),
+            ]
+        )
+    return arguments
 
 
 def add_release_arguments(parser) -> None:
@@ -366,6 +431,12 @@ def add_release_arguments(parser) -> None:
     parser.add_argument("--expect-source-sha", required=True)
     parser.add_argument("--expect-managed-run", required=True, type=int)
     parser.add_argument("--expect-tests-run", required=True, type=int)
+    parser.add_argument(
+        "--verification",
+        choices=("nuget", "azure"),
+        default="nuget",
+    )
+    parser.add_argument("--publish-run", type=int)
 
 
 def artifact_paths(root: Path, tag: str) -> dict[str, Path]:

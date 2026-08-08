@@ -36,6 +36,14 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         self.assertIn("- name: target", text)
         self.assertIn("- name: overrideReleaseTesting", text)
         self.assertIn("    default: false", text)
+        plan_start = text[
+            text.index("displayName: Build immutable start plan") :
+            text.index("- stage: ApproveStart")
+        ]
+        self.assertIn(
+            "GH_TOKEN: $(github--pat--xamarinreleasemanager)",
+            plan_start,
+        )
 
     def test_local_coordinator_exposes_four_phases_and_aliases(self):
         parser = local.create_parser()
@@ -66,7 +74,10 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             "executionCommand": "python3 push.py release",
             "resumeCommand": None,
         }
-        completed = {"nextAction": "start-release-draft"}
+        completed = {
+            "nextAction": "start-release-draft",
+            "publishRun": {"runId": 14911788},
+        }
         args = SimpleNamespace(
             target=context["releaseBranch"],
             verification="azure",
@@ -101,6 +112,10 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             "azure",
         )
         self.assertEqual(result["result"], completed)
+        self.assertIn(
+            "--verification azure --publish-run 14911788",
+            result["nextCommand"],
+        )
 
     def test_local_release_numeric_supports_hotfixes(self):
         self.assertEqual(
@@ -129,6 +144,8 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             target=context["releaseBranch"],
             execute_draft=False,
             publish=False,
+            verification="nuget",
+            publish_run=None,
         )
         with (
             mock.patch.object(
@@ -148,6 +165,7 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         self.assertEqual(result["draft"], draft)
         self.assertEqual(result["publication"], publication)
         self.assertIsNone(result["publicationResult"])
+        self.assertIsNone(result["nextCommand"])
 
     def test_local_release_recovers_docs_dispatch_after_publication(self):
         context = {
@@ -169,6 +187,8 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             target=context["releaseBranch"],
             execute_draft=False,
             publish=True,
+            verification="nuget",
+            publish_run=None,
         )
         with (
             mock.patch.object(
@@ -186,6 +206,52 @@ class ReleaseCoordinatorTests(unittest.TestCase):
 
         self.assertEqual(run.call_count, 3)
         self.assertEqual(result["publicationResult"], completed)
+        self.assertIn(" finish ", result["nextCommand"])
+
+    def test_local_finish_recovers_docs_dispatch_before_milestones(self):
+        context = {
+            "releaseBranch": "release/4.152.0",
+            "draftAuditCommand": "python3 draft.py release --dry-run",
+        }
+        draft = {
+            "nextAction": "audit-release-publication",
+            "publishAuditCommand": "python3 publish.py release --dry-run",
+        }
+        publication = {
+            "nextAction": "dispatch-release-notes",
+            "executionCommand": "python3 publish.py release",
+        }
+        args = SimpleNamespace(
+            target=context["releaseBranch"],
+            verification="nuget",
+            publish_run=None,
+            execute=True,
+        )
+        completed = {"nextAction": "start-release-milestones"}
+        with (
+            mock.patch.object(
+                local,
+                "detect_publication",
+                return_value=context,
+            ),
+            mock.patch.object(
+                local,
+                "run_json",
+                side_effect=[draft, publication, completed],
+            ) as run,
+            mock.patch.object(
+                local,
+                "release_numeric",
+                side_effect=local.CoordinatorError("stop after dispatch"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                local.CoordinatorError,
+                "stop after dispatch",
+            ):
+                local.finish_phase(args)
+
+        self.assertEqual(run.call_args_list[2].args[0][1], "publish.py")
 
     def test_pipeline_has_all_irreversible_approvals(self):
         text = PIPELINE.read_text(encoding="utf-8")
@@ -236,6 +302,11 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             'result["nextAction"] != "start-release-draft"',
             text,
         )
+        self.assertIn(
+            'publication["nuget"]["state"] != "ready"',
+            text,
+        )
+        self.assertIn('"--publish-run"', text)
 
     def test_milestones_reconcile_before_advancement(self):
         text = PIPELINE.read_text(encoding="utf-8")

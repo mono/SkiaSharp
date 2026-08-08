@@ -184,6 +184,16 @@ def packages_phase(args) -> dict:
                 f"package publication ended at {result['nextAction']}; "
                 "rerun this phase to resume"
             )
+    next_command = (
+        f"{PYTHON} scripts/release-coordinator.py release "
+        f"{context['releaseBranch']}"
+    )
+    package_state = result or plan
+    publish_run = package_state.get("publishRun")
+    if args.verification == "azure" and publish_run:
+        next_command += (
+            f" --verification azure --publish-run {publish_run['runId']}"
+        )
     return {
         "schemaVersion": 1,
         "phase": "packages",
@@ -192,16 +202,25 @@ def packages_phase(args) -> dict:
         "context": context,
         "plan": plan,
         "result": result,
-        "nextCommand": (
-            f"{PYTHON} scripts/release-coordinator.py release "
-            f"{context['releaseBranch']}"
-        ),
+        "nextCommand": next_command,
     }
 
 
 def release_phase(args) -> dict:
     context = detect_publication(args.target)
-    draft = run_json(shlex.split(context["draftAuditCommand"]))
+    draft_command = shlex.split(context["draftAuditCommand"])
+    if args.verification == "azure":
+        if args.publish_run is None:
+            raise CoordinatorError(
+                "--publish-run is required with --verification azure"
+            )
+        set_option(draft_command, "--verification", "azure")
+        set_option(
+            draft_command,
+            "--publish-run",
+            str(args.publish_run),
+        )
+    draft = run_json(draft_command)
     allowed = {
         "confirm-create-release-draft",
         "confirm-publish-release",
@@ -250,6 +269,21 @@ def release_phase(args) -> dict:
             "publication plan is unavailable; create the draft first"
         )
 
+    completed_publication = publication_result or publication
+    next_command = None
+    if (
+        completed_publication
+        and completed_publication["nextAction"]
+        == "start-release-milestones"
+    ):
+        next_command = (
+            f"{PYTHON} scripts/release-coordinator.py finish "
+            f"{context['releaseBranch']}"
+        )
+        if args.verification == "azure":
+            next_command += (
+                f" --verification azure --publish-run {args.publish_run}"
+            )
     return {
         "schemaVersion": 1,
         "phase": "release",
@@ -259,10 +293,7 @@ def release_phase(args) -> dict:
         "draftResult": draft_result,
         "publication": publication,
         "publicationResult": publication_result,
-        "nextCommand": (
-            f"{PYTHON} scripts/release-coordinator.py finish "
-            f"{context['releaseBranch']}"
-        ),
+        "nextCommand": next_command,
     }
 
 
@@ -277,6 +308,51 @@ def release_numeric(branch: str) -> str:
 
 def finish_phase(args) -> dict:
     context = detect_publication(args.target)
+    draft_command = shlex.split(context["draftAuditCommand"])
+    if args.verification == "azure":
+        if args.publish_run is None:
+            raise CoordinatorError(
+                "--publish-run is required with --verification azure"
+            )
+        set_option(draft_command, "--verification", "azure")
+        set_option(
+            draft_command,
+            "--publish-run",
+            str(args.publish_run),
+        )
+    draft = run_json(draft_command)
+    publication_command = draft.get("publishAuditCommand")
+    if not publication_command:
+        raise CoordinatorError(
+            f"release publication is not complete: {draft['nextAction']}"
+        )
+    publication = run_json(shlex.split(publication_command))
+    allowed_publication = {
+        "dispatch-release-notes",
+        "start-release-milestones",
+    }
+    if publication["nextAction"] not in allowed_publication:
+        raise CoordinatorError(
+            "release publication is not complete: "
+            f"{publication['nextAction']}"
+        )
+    publication_result = None
+    if (
+        args.execute
+        and publication["nextAction"] == "dispatch-release-notes"
+    ):
+        publication_result = run_json(
+            shlex.split(publication["executionCommand"]),
+            stream_stderr=True,
+        )
+        if (
+            publication_result["nextAction"]
+            != "start-release-milestones"
+        ):
+            raise CoordinatorError(
+                "release-notes dispatch ended at "
+                f"{publication_result['nextAction']}"
+            )
     numeric = release_numeric(context["releaseBranch"])
     reconcile_command = [
         PYTHON,
@@ -352,6 +428,8 @@ def finish_phase(args) -> dict:
         "phase": "finish",
         "dryRun": not args.execute,
         "context": context,
+        "publication": publication,
+        "publicationResult": publication_result,
         "reconcile": reconcile,
         "advance": advance,
         "reconcileResult": reconcile_result,
@@ -395,6 +473,12 @@ def create_parser() -> argparse.ArgumentParser:
     release.add_argument("target")
     release.add_argument("--execute-draft", action="store_true")
     release.add_argument("--publish", action="store_true")
+    release.add_argument(
+        "--verification",
+        choices=("nuget", "azure"),
+        default="nuget",
+    )
+    release.add_argument("--publish-run", type=int)
     release.set_defaults(handler=release_phase)
 
     finish = subparsers.add_parser(
@@ -404,6 +488,12 @@ def create_parser() -> argparse.ArgumentParser:
     )
     finish.add_argument("target")
     finish.add_argument("--execute", action="store_true")
+    finish.add_argument(
+        "--verification",
+        choices=("nuget", "azure"),
+        default="nuget",
+    )
+    finish.add_argument("--publish-run", type=int)
     finish.set_defaults(handler=finish_phase)
     return parser
 

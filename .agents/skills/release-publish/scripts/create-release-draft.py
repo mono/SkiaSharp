@@ -23,17 +23,12 @@ def execution_command(args, source_sha: str) -> str:
 
 def publication_audit_command(
     context: github_release.ReleaseContext,
+    args,
 ) -> str:
     command = [
         sys.executable,
         ".agents/skills/release-publish/scripts/publish-release.py",
-        context.release.branch,
-        "--expect-source-sha",
-        context.source_sha,
-        "--expect-managed-run",
-        str(context.handoff["managed"]["runId"]),
-        "--expect-tests-run",
-        str(context.handoff["tests"]["runId"]),
+        *github_release.pinned_arguments(args, context.source_sha),
     ]
     command.append("--dry-run")
     return publish.shell_command(command)
@@ -134,7 +129,7 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict, str | None]:
             else None
         ),
         "publishAuditCommand": (
-            publication_audit_command(context)
+            publication_audit_command(context, args)
             if next_action in {
                 "confirm-publish-release",
                 "audit-release-publication",

@@ -84,6 +84,84 @@ class PublishCommandTests(unittest.TestCase):
         self.assertNotIn("--dry-run", release_command)
         self.assertNotIn("--teaser-file", release_command)
 
+        azure_draft_args = draft.create_parser().parse_args(
+            [
+                *COMMON,
+                "--verification",
+                "azure",
+                "--publish-run",
+                "14911788",
+                "--dry-run",
+            ]
+        )
+        azure_draft_command = draft.execution_command(
+            azure_draft_args,
+            "a" * 40,
+        )
+        self.assertIn("--verification azure", azure_draft_command)
+        self.assertIn("--publish-run 14911788", azure_draft_command)
+
+    def test_github_release_accepts_only_exact_successful_azure_run(self):
+        args = SimpleNamespace(
+            verification="azure",
+            publish_run=14911788,
+        )
+        release_version = push.publish.ReleaseVersion.parse(
+            "release/4.152.0-preview.1"
+        )
+        handoff = {
+            "managed": {
+                "runId": 10,
+                "buildNumber": (
+                    "4.152.0-preview.1.1+4.152.0-preview.1"
+                ),
+            },
+        }
+        nuget = {"state": "partial"}
+
+        class FakeAzure:
+            def matching_runs(self, run_id, build_number, *, stable):
+                self.request = (run_id, build_number, stable)
+                return [
+                    {
+                        "runId": 14911788,
+                        "status": "completed",
+                        "result": "succeeded",
+                    }
+                ]
+
+        with mock.patch.object(
+            github.publish,
+            "AzurePublish",
+            FakeAzure,
+        ):
+            warning = github.package_verification_warning(
+                args,
+                release_version,
+                handoff,
+                nuget,
+            )
+
+        self.assertIn("not verified", warning)
+        args.publish_run = 14911789
+        with (
+            mock.patch.object(
+                github.publish,
+                "AzurePublish",
+                FakeAzure,
+            ),
+            self.assertRaisesRegex(
+                github.publish.PublishError,
+                "does not match",
+            ),
+        ):
+            github.package_verification_warning(
+                args,
+                release_version,
+                handoff,
+                nuget,
+            )
+
     def test_package_statuses_match_external_state(self):
         self.assertEqual(
             push.package_states("ready", None)["nextAction"],
@@ -140,21 +218,20 @@ class PublishCommandTests(unittest.TestCase):
                 "pushStable": "false",
             },
         }
-        args = SimpleNamespace(expect_managed_run=10)
         push.validate_run_detail(
             detail,
-            managed_run_id=args.expect_managed_run,
+            managed_run_id=10,
             managed_build_number=report["release"]["buildNumber"],
             stable=False,
         )
-        detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]["id"] = 11
+        detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]["id"] = 1
         with self.assertRaisesRegex(
             push.publish.PublishError,
             "different managed run",
         ):
             push.validate_run_detail(
                 detail,
-                managed_run_id=args.expect_managed_run,
+                managed_run_id=10,
                 managed_build_number=report["release"]["buildNumber"],
                 stable=False,
             )

@@ -59,7 +59,8 @@ the pinned audit commands; every confirmation report emits its exact
 Package verification defaults to `--verification nuget`, which waits for both
 exact package versions to be indexed. Automated coordination may explicitly use
 `--verification azure` to continue after the protected publication run
-succeeds; that mode reports that NuGet.org indexing was not verified.
+succeeds; that mode reports that NuGet.org indexing was not verified and carries
+the exact successful `--publish-run` through draft creation and publication.
 
 ## Actions
 

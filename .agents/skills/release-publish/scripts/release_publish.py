@@ -11,6 +11,7 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -22,12 +23,220 @@ STATUS_SCRIPT = (
     / "scripts"
     / "pipeline-status.py"
 )
+AZURE_ORG = "https://devdiv.visualstudio.com"
+AZURE_PROJECT = "DevDiv"
+PUBLISH_PIPELINE_ID = 25298
+AZURE_WEB_ORG = "devdiv"
 RELEASE_BRANCH_RE = re.compile(
     r"^release/(?P<numeric>\d+\.\d+\.\d+(?:\.\d+)?)"
     r"(?:-(?P<channel>preview|rc)\.(?P<iteration>\d+))?$"
 )
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
+
+
+def azure_publish_run_url(run_id: int) -> str:
+    return (
+        f"https://dev.azure.com/{AZURE_WEB_ORG}/{AZURE_PROJECT}/"
+        f"_build/results?buildId={run_id}&view=results"
+    )
+
+
+class AzurePublish:
+    def __init__(self) -> None:
+        self.az_path = shutil.which("az")
+        if not self.az_path:
+            raise PublishError("Azure CLI 'az' was not found on PATH")
+
+    def json(self, args: list[str], *, timeout: int = 120):
+        return run_json(
+            [self.az_path, *args],
+            timeout=timeout,
+        )
+
+    @staticmethod
+    def request_body(
+        managed_build_number: str,
+        *,
+        stable: bool,
+        preview: bool,
+    ) -> dict:
+        return {
+            "previewRun": preview,
+            "resources": {
+                "pipelines": {
+                    "SkiaSharp": {
+                        "version": managed_build_number,
+                    }
+                }
+            },
+            "templateParameters": {
+                "selectedResource": "SkiaSharp",
+                "pushPackages": True,
+                "pushStable": stable,
+            },
+        }
+
+    def invoke_run(self, body: dict) -> dict:
+        path: Path | None = None
+        try:
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                encoding="utf-8",
+                suffix=".json",
+                delete=False,
+            ) as stream:
+                json.dump(body, stream)
+                path = Path(stream.name)
+            return self.json(
+                [
+                    "devops",
+                    "invoke",
+                    "--org",
+                    AZURE_ORG,
+                    "--area",
+                    "pipelines",
+                    "--resource",
+                    "runs",
+                    "--route-parameters",
+                    f"project={AZURE_PROJECT}",
+                    f"pipelineId={PUBLISH_PIPELINE_ID}",
+                    "--http-method",
+                    "POST",
+                    "--in-file",
+                    str(path),
+                    "--api-version",
+                    "7.1",
+                    "-o",
+                    "json",
+                ],
+                timeout=240,
+            )
+        finally:
+            if path:
+                path.unlink(missing_ok=True)
+
+    def preview(
+        self,
+        managed_build_number: str,
+        *,
+        stable: bool,
+    ) -> bool:
+        response = self.invoke_run(
+            self.request_body(
+                managed_build_number,
+                stable=stable,
+                preview=True,
+            )
+        )
+        return response.get("id") == -1 and bool(response.get("finalYaml"))
+
+    def queue(
+        self,
+        managed_build_number: str,
+        *,
+        stable: bool,
+    ) -> dict:
+        return self.invoke_run(
+            self.request_body(
+                managed_build_number,
+                stable=stable,
+                preview=False,
+            )
+        )
+
+    def run_detail(self, run_id: int) -> dict:
+        return self.json(
+            [
+                "devops",
+                "invoke",
+                "--org",
+                AZURE_ORG,
+                "--area",
+                "pipelines",
+                "--resource",
+                "runs",
+                "--route-parameters",
+                f"project={AZURE_PROJECT}",
+                f"pipelineId={PUBLISH_PIPELINE_ID}",
+                f"runId={run_id}",
+                "--api-version",
+                "7.1",
+                "-o",
+                "json",
+            ]
+        )
+
+    def matching_runs(
+        self,
+        managed_run_id: int,
+        build_number: str,
+        *,
+        stable: bool,
+    ) -> list[dict]:
+        expected_name = f"SkiaSharp {build_number}"
+        builds = self.json(
+            [
+                "pipelines",
+                "runs",
+                "list",
+                "--pipeline-ids",
+                str(PUBLISH_PIPELINE_ID),
+                "--org",
+                AZURE_ORG,
+                "--project",
+                AZURE_PROJECT,
+                "--top",
+                "100",
+                "-o",
+                "json",
+            ]
+        )
+        candidates = [
+            build
+            for build in builds
+            if build.get("buildNumber") == expected_name
+            or build.get("status") != "completed"
+        ]
+        matched = []
+        for build in candidates:
+            detail = self.run_detail(int(build["id"]))
+            resource = (
+                (detail.get("resources") or {})
+                .get("pipelines", {})
+                .get("SkiaSharp", {})
+            )
+            pipeline = resource.get("pipeline") or {}
+            parameters = detail.get("templateParameters") or {}
+            # Pipeline resources expose the selected run ID in pipeline.id.
+            if int(pipeline.get("id") or 0) != managed_run_id:
+                continue
+            if resource.get("version") != build_number:
+                continue
+            if parameters.get("selectedResource") != "SkiaSharp":
+                continue
+            if str(parameters.get("pushPackages")).lower() != "true":
+                continue
+            if (
+                str(parameters.get("pushStable")).lower()
+                != str(stable).lower()
+            ):
+                continue
+            matched.append(
+                {
+                    "runId": int(build["id"]),
+                    "name": build.get("buildNumber"),
+                    "status": build.get("status"),
+                    "result": build.get("result"),
+                    "queueTime": build.get("queueTime"),
+                    "url": azure_publish_run_url(int(build["id"])),
+                }
+            )
+        return sorted(
+            matched,
+            key=lambda item: item["runId"],
+            reverse=True,
+        )
 
 
 def display(args: list[str]) -> str:
