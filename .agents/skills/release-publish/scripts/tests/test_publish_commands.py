@@ -271,6 +271,62 @@ class PublishCommandTests(unittest.TestCase):
         self.assertIsNone(result["executionCommand"])
         self.assertIn("--publish-run 14911788", result["resumeCommand"])
 
+    def test_successful_run_nuget_timeout_is_resumable(self):
+        args = SimpleNamespace(
+            publish_run=14912429,
+            wait_minutes=60,
+            poll_seconds=30,
+        )
+        state = {
+            "dryRun": False,
+            "nextAction": "wait-for-nuget",
+            "publishRun": {
+                "runId": 14912429,
+                "status": "completed",
+                "result": "succeeded",
+                "url": push.run_url(14912429),
+            },
+            "nuget": {
+                "state": "partial",
+                "packages": {
+                    "SkiaSharp": {
+                        "version": "4.152.0-preview.1.1",
+                        "available": False,
+                    },
+                    "HarfBuzzSharp": {
+                        "version": "14.2.1-preview.1.1",
+                        "available": True,
+                    },
+                },
+            },
+            "warnings": [],
+            "resumeCommand": "resume",
+        }
+        with (
+            mock.patch.object(push, "execute", return_value=state),
+            mock.patch.object(push, "current_state", return_value=state),
+            mock.patch.object(
+                push.time,
+                "monotonic",
+                side_effect=[0, 60 * 60 + 1],
+            ),
+        ):
+            result = push.execute_and_wait(args)
+
+        self.assertEqual(result["nextAction"], "wait-for-nuget")
+        self.assertTrue(result["wait"]["timedOut"])
+        self.assertEqual(
+            result["wait"]["missingPackages"],
+            [
+                {
+                    "package": "SkiaSharp",
+                    "version": "4.152.0-preview.1.1",
+                }
+            ],
+        )
+        self.assertIn("succeeded", result["warnings"][0])
+        self.assertEqual(result["resumeCommand"], "resume")
+
     def test_create_script_pushes_tag_then_creates_draft(self):
         events = []
 

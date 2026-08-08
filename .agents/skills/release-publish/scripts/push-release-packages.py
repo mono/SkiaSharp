@@ -548,16 +548,39 @@ def execute_and_wait(args) -> dict:
         if state["nextAction"] == "start-release-draft":
             return state
         run = state["publishRun"]
-        if run.get("status") == "completed":
+        if (
+            run.get("status") == "completed"
+            and run.get("result") != "succeeded"
+        ):
             raise publish.PublishError(
                 f"publish run {args.publish_run} "
                 f"{run.get('result')}: {url}"
             )
         if time.monotonic() >= deadline:
-            raise publish.PublishError(
-                f"timed out after {args.wait_minutes} minutes waiting for "
-                f"run {args.publish_run} and NuGet.org: {url}"
+            missing = [
+                {
+                    "package": package_id,
+                    "version": package["version"],
+                }
+                for package_id, package in state["nuget"]["packages"].items()
+                if not package["available"]
+            ]
+            state["wait"] = {
+                "timedOut": True,
+                "minutes": args.wait_minutes,
+                "missingPackages": missing,
+            }
+            state["warnings"].append(
+                (
+                    f"Azure run {args.publish_run} succeeded, but NuGet.org "
+                    "indexing"
+                    if run.get("status") == "completed"
+                    and run.get("result") == "succeeded"
+                    else f"Azure run {args.publish_run} and NuGet.org indexing"
+                )
+                + f" did not complete within {args.wait_minutes} minutes"
             )
+            return state
         print(
             f"Waiting: run {args.publish_run} {run.get('status')}; "
             f"NuGet={state['nuget']['state']}; {url}",

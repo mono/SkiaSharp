@@ -114,6 +114,10 @@ After the user confirms that decision, run the emitted `resumeCommand`. It is
 the same script with `--wait --publish-run {id}`, waits for completion, and
 verifies both exact public packages on NuGet.org.
 
+If Azure succeeds but indexing exceeds the wait window, treat the returned
+`wait-for-nuget` report as resumable status, not a publication failure. Show
+`wait.missingPackages` and reuse `resumeCommand`.
+
 For unattended automation, invoke the approved execution command with `--wait`.
 It queues or recovers the exact run, prints its URL immediately, then waits
 through protected approval and NuGet indexing in one process.
