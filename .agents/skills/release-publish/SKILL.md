@@ -69,6 +69,7 @@ the pinned audit commands; every confirmation report emits its exact
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
 | Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
 | Draft | `confirm-publish-release` | Approve and publish the useful generated-notes draft. |
+| Publication | `dispatch-release-notes` | Retry the idempotent docs dispatch for an already-published release. |
 | Publication | `start-release-milestones` | Hand off the emitted milestone reconciliation command. |
 
 ## Workflow
@@ -145,7 +146,7 @@ later automation may update only the separate managed teaser region above it.
 
 | File | Ownership |
 |------|-----------|
-| `generated-log.md` | Exact marked body used to create or audit the GitHub draft. |
+| `generated-release-body.md` | Exact marked body used to create or audit the GitHub draft. |
 
 Rerunning this dry-run detects an existing remote tag/draft and verifies its
 managed markers.
@@ -157,6 +158,11 @@ Run the draft result's emitted `publishAuditCommand`. For
 table. Obtain approval and run `executionCommand`. One execution publishes the
 marked generated-notes body unchanged and then dispatches the targeted agentic
 release-notes workflow.
+
+If publication succeeds but dispatch fails, rerun the audit. An already-published
+release reports `dispatch-release-notes`; run its `executionCommand` without a new
+approval. The dispatch is safe to retry and successful execution advances to
+milestones without republishing or rewriting the release.
 
 Publication does not wait for teaser review. Continue immediately to milestones.
 The release-notes workflow adds the exact-tag teaser entry to the line's single

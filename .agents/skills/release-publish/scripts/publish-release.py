@@ -41,18 +41,14 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
     elif draft:
         next_action = "confirm-publish-release"
     else:
-        next_action = "start-release-milestones"
+        next_action = "dispatch-release-notes"
 
     operations = [
         publish.operation(
             "dispatch-release-notes",
-            "done" if published else (
-                "pending"
-                if next_action == "confirm-publish-release"
-                else "blocked"
-            ),
+            "pending" if existing else "blocked",
             (
-                "Targeted docs workflow dispatched after publication"
+                "Dispatch the targeted docs workflow idempotently"
                 if published
                 else f"Dispatch {github_release.DOCS_WORKFLOW} for "
                 f"{context.release.numeric}"
@@ -101,7 +97,10 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
         "warnings": context.status.get("warnings") or [],
         "executionCommand": (
             execution_command(args, context.source_sha)
-            if next_action == "confirm-publish-release"
+            if next_action in (
+                "confirm-publish-release",
+                "dispatch-release-notes",
+            )
             else None
         ),
         "milestonesCommand": (
@@ -127,9 +126,21 @@ def execute(
             tag=context.tag,
             title=context.release.title,
         )
-        context.github.dispatch_docs(context.release.numeric)
+    # Dispatch is intentionally retried for an already-published release. If the
+    # first attempt failed after publication, a rerun can recover without trying
+    # to recreate or republish the release.
+    context.github.dispatch_docs(context.release.numeric)
 
-    return audit(args)
+    context, report = audit(args)
+    for operation in report["operations"]:
+        if operation["id"] == "dispatch-release-notes":
+            operation["status"] = "done"
+            operation["detail"] = "Targeted docs workflow dispatched after publication"
+            break
+    report["nextAction"] = "start-release-milestones"
+    report["executionCommand"] = None
+    report["milestonesCommand"] = github_release.milestones_command(context.release)
+    return context, report
 
 
 def create_parser() -> argparse.ArgumentParser:

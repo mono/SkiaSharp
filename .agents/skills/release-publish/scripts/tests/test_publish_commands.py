@@ -351,7 +351,7 @@ class PublishCommandTests(unittest.TestCase):
             mock.patch.object(
                 draft.github_release,
                 "write_generated_artifacts",
-                return_value={"generated": Path("generated-log.md")},
+                return_value={"generated": Path("generated-release-body.md")},
             ),
             mock.patch.object(
                 draft,
@@ -382,7 +382,7 @@ class PublishCommandTests(unittest.TestCase):
                 tag="v4.152.0",
                 title="Version 4.152.0",
                 source_sha="a" * 40,
-                notes_file=Path("generated-log.md"),
+                notes_file=Path("generated-release-body.md"),
                 prerelease=False,
             )
 
@@ -411,7 +411,18 @@ class PublishCommandTests(unittest.TestCase):
         args = SimpleNamespace()
         completed = (
             context,
-            {"nextAction": "start-release-milestones"},
+            {
+                "operations": [
+                    {
+                        "id": "dispatch-release-notes",
+                        "status": "pending",
+                        "detail": "dispatch",
+                    }
+                ],
+                "nextAction": "dispatch-release-notes",
+                "executionCommand": "retry",
+                "milestonesCommand": None,
+            },
         )
         with mock.patch.object(
             release,
@@ -427,6 +438,52 @@ class PublishCommandTests(unittest.TestCase):
                 ("docs", "4.152.0"),
             ],
         )
+
+    def test_publish_script_retries_docs_dispatch_after_publication(self):
+        events = []
+
+        class FakeGitHub:
+            def dispatch_docs(self, version):
+                events.append(("docs", version))
+
+            def publish_draft(self, **kwargs):
+                events.append(("publish", kwargs["tag"]))
+
+        context = SimpleNamespace(
+            root=Path.cwd(),
+            release=SimpleNamespace(numeric="4.152.0", title="Version 4.152.0"),
+            tag="v4.152.0",
+            github=FakeGitHub(),
+            github_release={"isDraft": False},
+        )
+        args = SimpleNamespace()
+        completed = (
+            context,
+            {
+                "operations": [
+                    {
+                        "id": "dispatch-release-notes",
+                        "status": "pending",
+                        "detail": "retry",
+                    }
+                ],
+                "nextAction": "dispatch-release-notes",
+                "executionCommand": "retry",
+                "milestonesCommand": None,
+            },
+        )
+        with mock.patch.object(
+            release,
+            "audit",
+            return_value=completed,
+        ):
+            _, report = release.execute(args, context)
+
+        self.assertEqual(events, [("docs", "4.152.0")])
+        self.assertEqual(report["operations"][0]["status"], "done")
+        self.assertEqual(report["nextAction"], "start-release-milestones")
+        self.assertIsNone(report["executionCommand"])
+        self.assertIsNotNone(report["milestonesCommand"])
 
     def test_helpers_live_with_github_release_domain(self):
         shared = (SCRIPTS / "release_publish.py").read_text(encoding="ascii")

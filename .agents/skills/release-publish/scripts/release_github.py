@@ -372,7 +372,7 @@ def artifact_paths(root: Path, tag: str) -> dict[str, Path]:
     directory = root / "output" / "release" / tag
     return {
         "directory": directory,
-        "generated": directory / "generated-log.md",
+        "generated": directory / "generated-release-body.md",
     }
 
 
