@@ -10,7 +10,7 @@
     "breaking",
     "categories",
     "contributor_summaries",
-    "preview_summaries"
+    "release_teasers"
   ],
   "properties": {
     "theme": {
@@ -114,10 +114,88 @@
     },
     "preview_summaries": {
       "type": "object",
-      "description": "One entry per preview/RC key in data.previews. Value = 1-2 sentences summarising what that milestone shipped. The template adds the heading, date and changelog link.",
+      "description": "Website summaries for rolled-up preview tags owned by another numeric page core, plus compatibility for pre-format-4 pages. A preview owned by this page uses release_teasers[tag].website_summary.",
       "additionalProperties": {
         "type": "string",
         "maxLength": 500
+      }
+    },
+    "release_teasers": {
+      "type": "object",
+      "description": "Immutable reviewed teaser prose keyed by the exact leading-v shipment tag. Polish changes only keys explicitly listed in the Prepare task manifest.",
+      "propertyNames": {
+        "pattern": "^v[0-9]+(?:\\.[0-9]+){2,3}(?:-(?:alpha|beta|preview|rc)(?:\\.[0-9]+)+)?$"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subtitle",
+          "categories"
+        ],
+        "properties": {
+          "subtitle": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 240,
+            "description": "Neutral one-line release subtitle. Do not mention CVEs, security fixes, or vulnerabilities."
+          },
+          "website_summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "description": "Optional 1-2 sentence summary used by the cumulative website preview/RC section when this exact tag is its key."
+          },
+          "categories": {
+            "type": "array",
+            "description": "Curated non-empty teaser categories. The renderer emits them in canonical order and omits absent headings.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "heading",
+                "bullets"
+              ],
+              "properties": {
+                "heading": {
+                  "enum": [
+                    "Breaking Changes",
+                    "What's New",
+                    "Fixes",
+                    "Dependency Updates"
+                  ]
+                },
+                "bullets": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "text",
+                      "prs"
+                    ],
+                    "properties": {
+                      "text": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 240
+                      },
+                      "prs": {
+                        "type": "array",
+                        "minItems": 1,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "harfbuzz_summary": {

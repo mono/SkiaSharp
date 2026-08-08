@@ -38,14 +38,13 @@ prepare.sh   →   (you write prose.json per page)   →   render.sh
 
 1. **`.agents/skills/release-notes/scripts/prepare.sh`** — regenerates the API diffs
    (Cake), the per-page `_sources/<version>.data.json` facts, and `_sources/index.json`,
-   and writes the list of pages needing prose to `output/files-to-polish.txt`. **When a
-   page's facts changed, Prepare DELETES that page's `prose.json`** so there is nothing
-   stale to keep — every page on the list starts from a blank prose slate.
-2. **You** read each listed page's `data.json` and write its `prose.json` from scratch
-   (below). Each page in the list has **no `prose.json`** — do not go looking for an old
-   one to "check if it still matches"; the facts moved (new/removed PRs, re-tags), so you
-   author fresh. Cover every `product` PR you'd expect a consumer to notice — a page that
-   silently drops a real change is the failure this design prevents.
+   and writes a JSON task manifest to `output/files-to-polish.txt`. Each task has
+   `cumulative` and `release_teasers` axes. Prepare preserves every existing reviewed
+   exact-tag teaser; it invalidates cumulative slots only when cumulative facts changed.
+2. **You** read each task and update only the requested portions of its `prose.json`.
+   Re-author cumulative slots only when `cumulative` is true. For
+   `release_teasers`, author only the exact tags listed by the task. Every unlisted
+   teaser is immutable: do not alter, normalize, or remove it.
 3. **`.agents/skills/release-notes/scripts/render.sh`** — renders every page from
    `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It **fails loudly** if
    any page on the list still lacks a `prose.json` (you missed one) or if prose is invalid.
@@ -79,9 +78,8 @@ tool allowlist permits `python3` for exactly this).
 
 ## How to work
 
-You are given a list of pages to write (in CI, `output/files-to-polish.txt`; one
-`documentation/docfx/releases/<version>.md` path per line). The list **may be
-empty** — that just means no page needs new prose this run, but you must still run
+You are given a JSON task manifest (in CI, `output/files-to-polish.txt`). Its
+`tasks` array **may be empty** — that just means no page needs new prose this run, but you must still run
 the final render (`render.sh`, or `release-notes-render.py --all` in CI) to materialize the
 deterministic pages and rebuild the TOC/index; don't exit early. Every input for a
 page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
@@ -92,7 +90,8 @@ ships inside each SkiaSharp release, so it renders as a `## HarfBuzzSharp X.Y.Z`
 section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
 1. Read its `_sources/<version>.data.json`. It has:
-   `prs` (title, author, community, tag), `previews` (each with its PR list),
+   `prs` (title, author, community, tag), `shipments` (every exact published tag
+   and its exact-delta PR list), `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
    and the banner/link facts.
 2. Read the breaking sources it points at, if present: the version's
@@ -194,13 +193,29 @@ credit even though it never became a category bullet.
 - Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
 - Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
 
-### `preview_summaries` — one line per preview key
-`data.previews` lists each preview/RC with the PRs that first shipped in it. Give
-each `key` a 1-2 sentence summary of what that milestone delivered. When a preview
-only carried internal work, describe the milestone itself (e.g. "opened the line"
-or "cut the release candidate") rather than forcing a product story.
-- Good: `"4.148.0-p2": "Preview 2 added animated WebP encoding and the SKPath finalizer fix."`
-- Bad: leaving a preview key out (the renderer fails), or restating every PR.
+### `release_teasers` — reviewed prose per exact shipment tag
+This map is keyed by `data.shipments[].tag`, including the leading `v` and every
+build segment. Author only keys named in the task manifest. Each entry has:
+
+- `subtitle`: one neutral plain-language line.
+- `website_summary` (optional): required when the same tag is a `data.previews[].key`;
+  this replaces the old `preview_summaries` website slot.
+- `categories`: zero or more `{heading, bullets}` entries. `heading` is exactly one
+  of `Breaking Changes`, `What's New`, `Fixes`, `Dependency Updates`. Each bullet
+  is `{"text": "...", "prs": [123]}` and every PR must belong to that shipment's
+  exact `prs` delta.
+
+Never mention a CVE, vulnerability, or security fix/release in teaser prose.
+Dependency updates must be neutral version updates. Do not copy the cumulative
+website `Security` section into `Dependency Updates`; independently curate only
+native dependency PRs from the exact shipment. The renderer owns Markdown
+escaping, headings, links, author credits, contributor thanks, and deterministic
+wording for stable tags with an empty delta (those require no teaser entry).
+
+When a cumulative page rolls up a preview whose exact tag belongs to another
+numeric page core (and therefore is absent from this page's `shipments`), keep
+that one website-only sentence in `preview_summaries[tag]`. Never duplicate the
+other page's reviewed teaser merely to provide the rollup summary.
 
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a

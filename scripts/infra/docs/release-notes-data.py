@@ -22,7 +22,7 @@ from. All of this is deterministic and lives in code (see the page model below +
 the docstrings on _page_filename, determine_diff_range, and the live-head set that
 release-notes-index.py records for release-notes-render.py to prune against).
 
-AI / SKILL.md: reads each file in the final "Files to polish:" list, reads that
+AI / SKILL.md: reads each task in the final Polish manifest, reads that
 page's ``_sources/<version>.data.json``, and writes ``_sources/<version>.prose.json``
 (prose only — theme, highlights, breaking summaries, category bullets, contributor
 and preview summaries). Nothing structural — it never edits this script and never
@@ -38,9 +38,9 @@ disk/timeout failure) as it happens (spec §2.2/§2.3). Nothing is printed to ST
 
 The machine-readable result the Polish phase consumes — the list of pages whose
 ``data.json`` changed — is ALWAYS written to a file: ``output/files-to-polish.txt``
-by default, or the path given to ``--polish-list``. It is a plain list, one
-repo-relative path per line; an empty file means nothing changed. Because the list
-lives in a file (not a stream), verbose progress can flow freely (spec §2.3).
+by default, or the path given to ``--polish-list``. It is a JSON task manifest
+which separates cumulative website prose from exact-tag teaser prose. Because the
+manifest lives in a file (not a stream), verbose progress can flow freely.
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
-# The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
+# The Prepare phase ALWAYS writes the machine-readable Polish task manifest to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
 # out of the working-tree patch the Prepare job hands to the Polish agent.
 DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
@@ -352,7 +352,7 @@ def log(*args, **kwargs):
 
     This generator is verbose: ``log()`` is the ONLY output stream (nothing goes to
     STDOUT), so a long download or a disk/timeout failure is visible in the CI job
-    log as it happens (spec §2.2). The machine-readable "Files to polish" list does
+    log as it happens (spec §2.2). The machine-readable Polish task manifest does
     NOT ride on a stream — it is always written to a file (spec §2.3) — so callers
     never have to parse it out of progress text.
     """
@@ -360,25 +360,24 @@ def log(*args, **kwargs):
     print(*args, **kwargs)
 
 
-def write_polish_list(files, path=None):
+def write_polish_list(tasks, path=None):
     # type: (list, ...) -> None
-    """Write the machine-readable "Files to polish" list to a file (spec §2.3).
+    """Write the machine-readable Polish task manifest.
 
     Always writes a file — ``output/files-to-polish.txt`` by default, or *path* if
-    given. One repo-relative page path per line; an **empty file** means nothing
-    changed this run. This is the Prepare phase's only machine-readable output, so
-    the Polish agent reads a file instead of scraping stdout. The parent directory
-    is created if needed.
+    given. Cumulative page prose and exact-tag teaser prose are independent task
+    axes. An omitted teaser tag is immutable: Polish must not rewrite it.
     """
     path = Path(path) if path else DEFAULT_POLISH_LIST
     path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as fh:
-        for f in files:
-            fh.write("{}\n".format(f))
-    log("Wrote files-to-polish list ({} file{}) -> {}".format(
-        len(files), "" if len(files) == 1 else "s", path))
-    for f in files:
-        log(f)
+    manifest = {"format": 1, "tasks": tasks}
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    log("Wrote Polish task manifest ({} task{}) -> {}".format(
+        len(tasks), "" if len(tasks) == 1 else "s", path))
+    for task in tasks:
+        log("  {} cumulative={} teasers={}".format(
+            task["page"], task["cumulative"],
+            ", ".join(t["tag"] for t in task["release_teasers"]) or "none"))
 
 
 def run(args, check=True):
@@ -1009,11 +1008,14 @@ def _parse_tag(tag):
     if len(parts) < 2 or not parts[0].isdigit() or not parts[1].isdigit():
         return None
     stage = num = None
+    label_numbers = ()
     if label:
         m = re.match(r"([A-Za-z]+)", label)
         stage = m.group(1).lower() if m else None
         nums = re.findall(r"\d+", label)
         num = int(nums[0]) if nums else 0
+        label_numbers = tuple(int(n) for n in nums)
+    branch_key = release_branch_sort_key("release/" + name)
     return {
         "tag": tag,
         "core": core,
@@ -1021,7 +1023,12 @@ def _parse_tag(tag):
         "label": label,
         "stage": stage,
         "num": num,
-        "key": release_branch_sort_key("release/" + name),
+        "label_numbers": label_numbers,
+        "key": branch_key,
+        # release_branch_sort_key intentionally stops after the prerelease number
+        # because branches do not encode package builds. Exact tags do, so append
+        # every label number and the tag as a deterministic tiebreaker.
+        "shipment_key": (branch_key, label_numbers, tag),
     }
 
 
@@ -1030,6 +1037,87 @@ def _tag_date(tag):
     """ISO date (YYYY-MM-DD) of a tag's commit, or '' when unknown."""
     return run(["git", "log", "-1", "--format=%ad", "--date=short", tag],
                check=False).strip()
+
+
+def _tag_target_sha(tag):
+    # type: (str) -> str
+    """The commit an exact tag resolves to (annotated tags are peeled)."""
+    return run(["git", "rev-parse", "{}^{{commit}}".format(tag)],
+               check=False).strip()
+
+
+def _shipment_channel(parsed):
+    # type: (dict) -> str
+    return parsed.get("stage") or "stable"
+
+
+def _shipment_label(parsed):
+    # type: (dict) -> str
+    stage = parsed.get("stage")
+    if not stage:
+        return "Stable"
+    label = "{} {}".format(
+        _FRIENDLY_STAGE.get(stage, stage.title()), parsed.get("num") or 0)
+    numbers = parsed.get("label_numbers") or ()
+    if len(numbers) > 1:
+        label += " (Build {})".format(".".join(str(n) for n in numbers[1:]))
+    return label
+
+
+def collect_shipments(page_version, base_version):
+    # type: (str, Optional[str]) -> tuple[list[dict], list[dict]]
+    """Collect every exact published tag owned by one numeric page core.
+
+    Unlike preview buckets, exact shipments are never collapsed by stage/number:
+    preview.1.1 and preview.1.2 are distinct publications with distinct deltas.
+    The returned tuple is ``(shipment facts, exact-delta PR detail records)``.
+    """
+    parsed = []
+    for raw_tag in run(["git", "tag", "-l", "v*"], check=False).splitlines():
+        item = _parse_tag(raw_tag.strip())
+        if item:
+            parsed.append(item)
+    parsed.sort(key=lambda p: p["shipment_key"])
+
+    # Exact publication ownership follows the exact numeric page core, not the
+    # cumulative website diff window. A 4.151 page must not absorb 4.150.1
+    # servicing tags merely because they sort between its base and target; nor may
+    # a superseding page duplicate a skipped preview line's tags.
+    page_core = _core_tuple(page_version)
+    selected = [item for item in parsed if item["core_tuple"] == page_core]
+
+    shipments = []
+    exact_prs = []
+    seen_prs = set()
+    for item in selected:
+        idx = parsed.index(item)
+        previous_tag = parsed[idx - 1]["tag"] if idx else None
+        delta = get_prs_from_diff(previous_tag, item["tag"]) if previous_tag else []
+        numbers = []
+        for pr in delta:
+            number = pr.get("number")
+            if not number:
+                continue
+            numbers.append(number)
+            if number not in seen_prs:
+                seen_prs.add(number)
+                exact_prs.append(pr)
+        shipments.append({
+            "tag": item["tag"],
+            "core_version": item["core"],
+            "public_version": item["tag"][1:],
+            "channel": _shipment_channel(item),
+            "label": _shipment_label(item),
+            "previous_tag": previous_tag,
+            "target_sha": _tag_target_sha(item["tag"]),
+            "date": _tag_date(item["tag"]),
+            "changelog_url": (
+                "https://github.com/{}/compare/{}...{}".format(
+                    REPO, previous_tag, item["tag"])
+                if previous_tag else None),
+            "prs": numbers,
+        })
+    return shipments, exact_prs
 
 
 def collect_preview_milestones(page_version, base_version):
@@ -1067,7 +1155,7 @@ def collect_preview_milestones(page_version, base_version):
 
     # Global ascending order — used to find the earliest milestone's predecessor
     # (the diff-base tag it should compare from).
-    parsed.sort(key=lambda p: p["key"])
+    parsed.sort(key=lambda p: p["shipment_key"])
 
     page_core = _core_tuple(page_version)
     base_core = _core_tuple(base_version) if base_version else (0, 0, 0, 0)
@@ -1081,13 +1169,14 @@ def collect_preview_milestones(page_version, base_version):
             continue
         ident = (p["core_tuple"], p["stage"], p["num"])
         cur = milestones.get(ident)
-        if cur is None or p["key"] > cur["key"]:
+        if cur is None or p["shipment_key"] > cur["shipment_key"]:
             milestones[ident] = p
 
     if not milestones:
         return []
 
-    ordered = sorted(milestones.values(), key=lambda m: m["key"])  # ascending
+    ordered = sorted(
+        milestones.values(), key=lambda m: m["shipment_key"])  # ascending
 
     # Predecessor (compare-from) for the EARLIEST milestone: the highest global
     # tag strictly below it. For a page based on a shipped stable this is that
@@ -1095,10 +1184,10 @@ def collect_preview_milestones(page_version, base_version):
     # that predecessor's latest prerelease tag (v4.148.0-rc.1.N). Later
     # milestones chain to the prior MILESTONE (not the prior build) so re-tagged
     # builds never produce a tiny intra-milestone diff link.
-    earliest_key = ordered[0]["key"]
+    earliest_key = ordered[0]["shipment_key"]
     global_pred = None
     for p in parsed:
-        if p["key"] < earliest_key:
+        if p["shipment_key"] < earliest_key:
             global_pred = p["tag"]
         else:
             break
@@ -1698,7 +1787,7 @@ def _release_date_display(version):
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
-_DATA_JSON_FORMAT_VERSION = 3
+_DATA_JSON_FORMAT_VERSION = 4
 
 
 def _pr_is_community(pr):
@@ -1803,7 +1892,8 @@ def build_data_json(prs, metadata):
             # git guarantees it is globally unique, so it never collides across
             # rolled-up lines, and it lets downstream tooling map PRs → the exact
             # milestone/release with no key-parsing. It is also the handle
-            # prose.json.preview_summaries is keyed on. m["tag"] is guaranteed
+            # prose.json.release_teasers[tag].website_summary is keyed on.
+            # m["tag"] is guaranteed
             # present by the guard above.
             "key": m.get("tag"),
             "label": label,
@@ -1821,6 +1911,15 @@ def build_data_json(prs, metadata):
             "duplicate preview keys for {}: {} — previews {}".format(
                 metadata.get("version"), _dup,
                 [(p["label"], p["key"]) for p in previews]))
+
+    shipments = list(metadata.get("shipments") or [])
+    shipment_tags = [s.get("tag") for s in shipments]
+    duplicate_shipments = sorted(
+        {tag for tag in shipment_tags if tag and shipment_tags.count(tag) > 1})
+    if duplicate_shipments:
+        raise ValueError(
+            "duplicate exact shipment tags for {}: {}".format(
+                metadata.get("version"), duplicate_shipments))
 
     # Breaking-change *sources* the agent turns into prose: the API breaking diff
     # (signature removals) and the manual notes sidecar (behavioural breaks that
@@ -1900,6 +1999,7 @@ def build_data_json(prs, metadata):
         "tallies": tallies,
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
+        "shipments": shipments,
         "previews": previews,
         "prs": pr_map,
     }
@@ -1931,6 +2031,239 @@ def _prose_json_path(page_path):
     """The agent-authored prose for a page: ``_sources/<stem>.prose.json``."""
     p = Path(str(page_path))
     return _sources_dir(p) / (p.stem + ".prose.json")
+
+
+TEASER_CATEGORIES = (
+    "Breaking Changes", "What's New", "Fixes", "Dependency Updates",
+)
+_TEASER_SECURITY_RE = re.compile(
+    r"\b(?:CVE-\d|security(?:\s+(?:fix|release|update))?|vulnerabilit)",
+    re.IGNORECASE,
+)
+
+
+def shipment_is_empty_stable(shipment):
+    # type: (dict) -> bool
+    return shipment.get("channel") == "stable" and not shipment.get("prs")
+
+
+def validate_release_teaser(shipment, teaser):
+    # type: (dict, object) -> list[str]
+    """Validate one AI-authored teaser against its exact shipment delta."""
+    errors = []
+    tag = shipment.get("tag", "<unknown>")
+    if not isinstance(teaser, dict):
+        return ["{} teaser must be an object".format(tag)]
+    unknown_fields = sorted(set(teaser) - {
+        "subtitle", "website_summary", "categories",
+    })
+    if unknown_fields:
+        errors.append("{} teaser has unknown fields: {}".format(
+            tag, ", ".join(unknown_fields)))
+    subtitle = teaser.get("subtitle")
+    if not isinstance(subtitle, str) or not subtitle.strip():
+        errors.append("{} teaser subtitle is required".format(tag))
+    elif len(subtitle) > 240:
+        errors.append("{} teaser subtitle exceeds 240 characters".format(tag))
+    website_summary = teaser.get("website_summary")
+    if website_summary is not None:
+        if not isinstance(website_summary, str) or not website_summary.strip():
+            errors.append(
+                "{} teaser website_summary must be non-empty text".format(tag))
+        elif len(website_summary) > 500:
+            errors.append(
+                "{} teaser website_summary exceeds 500 characters".format(tag))
+
+    categories = teaser.get("categories")
+    if not isinstance(categories, list):
+        errors.append("{} teaser categories must be an array".format(tag))
+        categories = []
+    headings = [c.get("heading") for c in categories if isinstance(c, dict)]
+    duplicates = sorted({h for h in headings if headings.count(h) > 1})
+    if duplicates:
+        errors.append("{} teaser has duplicate categories: {}".format(
+            tag, ", ".join(str(h) for h in duplicates)))
+    for heading in headings:
+        if heading not in TEASER_CATEGORIES:
+            errors.append("{} teaser category '{}' is not one of: {}".format(
+                tag, heading, ", ".join(TEASER_CATEGORIES)))
+
+    allowed_prs = set(shipment.get("prs") or [])
+    strings = [subtitle, teaser.get("website_summary")]
+    for category in categories:
+        if not isinstance(category, dict):
+            errors.append("{} teaser category entries must be objects".format(tag))
+            continue
+        unknown_fields = sorted(set(category) - {"heading", "bullets"})
+        if unknown_fields:
+            errors.append("{} teaser category has unknown fields: {}".format(
+                tag, ", ".join(unknown_fields)))
+        bullets = category.get("bullets")
+        if not isinstance(bullets, list) or not bullets:
+            errors.append("{} teaser category '{}' needs at least one bullet".format(
+                tag, category.get("heading")))
+            continue
+        for bullet in bullets:
+            if not isinstance(bullet, dict):
+                errors.append("{} teaser bullets must be objects".format(tag))
+                continue
+            unknown_fields = sorted(set(bullet) - {"text", "prs"})
+            if unknown_fields:
+                errors.append("{} teaser bullet has unknown fields: {}".format(
+                    tag, ", ".join(unknown_fields)))
+            text = bullet.get("text")
+            strings.append(text)
+            if not isinstance(text, str) or not text.strip():
+                errors.append("{} teaser bullet text is required".format(tag))
+            elif len(text) > 240:
+                errors.append(
+                    "{} teaser bullet text exceeds 240 characters".format(tag))
+            refs = bullet.get("prs")
+            if not isinstance(refs, list) or not refs:
+                errors.append("{} teaser bullets need at least one PR".format(tag))
+                continue
+            invalid = [n for n in refs if type(n) is not int or n <= 0]
+            if invalid:
+                errors.append(
+                    "{} teaser bullet PRs must be positive integers".format(tag))
+                continue
+            if len(refs) != len(set(refs)):
+                errors.append("{} teaser bullet PRs must be unique".format(tag))
+            unknown = [n for n in refs if n not in allowed_prs]
+            if unknown:
+                errors.append(
+                    "{} teaser references PRs outside its exact delta: {}".format(
+                        tag, ", ".join("#{}".format(n) for n in unknown)))
+    for text in strings:
+        if isinstance(text, str) and _TEASER_SECURITY_RE.search(text):
+            errors.append(
+                "{} teaser must not advertise CVE/security/vulnerability details"
+                .format(tag))
+            break
+    return errors
+
+
+def validate_shipments(data):
+    # type: (dict) -> list[str]
+    tags = [s.get("tag") for s in data.get("shipments") or []]
+    duplicates = sorted({tag for tag in tags if tag and tags.count(tag) > 1})
+    return (["duplicate exact shipment tags: " + ", ".join(duplicates)]
+            if duplicates else [])
+
+
+def _load_json(path):
+    # type: (Path) -> Optional[dict]
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+        return value if isinstance(value, dict) else None
+    except (ValueError, OSError):
+        return None
+
+
+def _cumulative_facts(data):
+    # type: (Optional[dict]) -> Optional[dict]
+    if data is None:
+        return None
+    result = dict(data)
+    result.pop("shipments", None)
+    return result
+
+
+def _shipment_map(data):
+    # type: (Optional[dict]) -> dict[str, dict]
+    return {
+        shipment.get("tag"): shipment
+        for shipment in (data or {}).get("shipments") or []
+        if shipment.get("tag")
+    }
+
+
+def _cumulative_prose_valid(data, prose):
+    # type: (dict, Optional[dict]) -> bool
+    """Enough validation to make a failed/partial Polish run self-healing."""
+    if not isinstance(prose, dict):
+        return False
+    if not isinstance(prose.get("theme"), str) or not prose["theme"].strip():
+        return False
+    headline = prose.get("highlights_headline")
+    if not isinstance(headline, str) or not headline.strip():
+        return False
+    if not isinstance(prose.get("breaking"), list):
+        return False
+    if not isinstance(prose.get("categories"), list):
+        return False
+    summaries = prose.get("contributor_summaries")
+    if not isinstance(summaries, dict):
+        return False
+    if any(not isinstance(summaries.get(c.get("login")), str)
+           or not summaries[c["login"]].strip()
+           for c in data.get("contributors") or []):
+        return False
+    teasers = prose.get("release_teasers")
+    teasers = teasers if isinstance(teasers, dict) else {}
+    preview_summaries = prose.get("preview_summaries")
+    preview_summaries = (
+        preview_summaries if isinstance(preview_summaries, dict) else {})
+    for preview in data.get("previews") or []:
+        key = preview.get("key")
+        website_summary = (teasers.get(key) or {}).get("website_summary")
+        if not website_summary:
+            website_summary = preview_summaries.get(key)
+        if not isinstance(website_summary, str) or not website_summary.strip():
+            return False
+    harfbuzz = data.get("harfbuzz") or {}
+    if harfbuzz.get("prs"):
+        summary = prose.get("harfbuzz_summary")
+        if not isinstance(summary, str) or not summary.strip():
+            return False
+    return True
+
+
+def build_polish_task(page, old_data, new_data, prose, force=False):
+    # type: (str, Optional[dict], dict, Optional[dict], bool) -> Optional[dict]
+    """Return exactly the cumulative/teaser work Polish must perform."""
+    cumulative = (
+        force
+        or
+        _cumulative_facts(old_data) != _cumulative_facts(new_data)
+        or not _cumulative_prose_valid(new_data, prose)
+    )
+    teasers = (prose or {}).get("release_teasers")
+    teasers = teasers if isinstance(teasers, dict) else {}
+    old_shipments = _shipment_map(old_data)
+    teaser_tasks = []
+    for shipment in new_data.get("shipments") or []:
+        tag = shipment["tag"]
+        if shipment_is_empty_stable(shipment):
+            continue
+        reason = None
+        if tag not in teasers:
+            reason = "missing"
+        elif old_shipments.get(tag) != shipment:
+            reason = "facts-changed"
+        elif validate_release_teaser(shipment, teasers[tag]):
+            reason = "invalid"
+        if reason:
+            teaser_tasks.append({"tag": tag, "reason": reason})
+    if not cumulative and not teaser_tasks:
+        return None
+    return {
+        "page": str(page),
+        "cumulative": cumulative,
+        "release_teasers": teaser_tasks,
+    }
+
+
+def preserve_teasers_for_cumulative_rewrite(prose_path, prose):
+    # type: (Path, Optional[dict]) -> None
+    """Invalidate cumulative slots without changing reviewed teaser semantics."""
+    teasers = (prose or {}).get("release_teasers")
+    preserved = teasers if isinstance(teasers, dict) else {}
+    prose_path.parent.mkdir(parents=True, exist_ok=True)
+    prose_path.write_text(
+        json.dumps({"release_teasers": preserved}, indent=2) + "\n",
+        encoding="utf-8",
+    )
 
 
 def _prune_page_and_sources(page_path):
@@ -2158,15 +2491,15 @@ def _canonical_branches_by_version(all_branches):
 
 def _write_page(branch, all_branches, verbose=False, force=False,
                 min_core=None, max_core=None):
-    # type: (str, list[str], bool, bool, Optional[str]) -> Optional[str]
-    """Generate one release page's data from a branch. Returns its page path, or None.
+    # type: (str, list[str], bool, bool, Optional[str]) -> Optional[dict]
+    """Generate one release page's data and return its Polish task, if any.
 
     Resolves the diff range, status and supersession links, then writes the page's
     ``_sources/<stem>.data.json`` facts unless the committed data.json already
     encodes an identical dict (idempotent — data.json is the change key, §4.6). It
     NEVER writes the ``.md`` (release-notes-render.py does). Returns the page path (added to
-    the Files-to-polish list), or None when the page was skipped (unchanged), pruned
-    (empty unreleased delta), or the diff range could not be determined.
+    the Polish task manifest), or None when no AI prose work remains, the page was
+    pruned (empty unreleased delta), or the diff range could not be determined.
 
     ``min_core``/``max_core`` (inclusive ``(maj, min, patch, sub)`` tuples from
     ``_core_tuple``) bound the run to a version RANGE, so the back-catalogue can
@@ -2266,16 +2599,6 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     breaking_comp = (load_breaking_companions(version, RELEASES_DIR)
                      if not is_head else None)
 
-    # Resolve the true GitHub handles (API, cached in pr-authors.json). This is
-    # needed to build data.json, and it's cheap in steady state — only genuinely
-    # new PRs miss the cache and hit the network; every old version is a cache hit.
-    resolve_pr_authors(prs)
-    resolve_skia_links(prs)
-    # Resolve the issues each PR closes (linked-issue graph ∪ body keywords,
-    # cached in pr-fixed-issues.json) so data.json records them for downstream
-    # milestone tooling. Same steady-state cost profile as author resolution.
-    resolve_fixed_issues(prs)
-
     # Enumerate the preview/rc milestones this page rolls up (regression R3), so
     # the trailing "## Preview N (date)" sections render. The lower bound is the
     # diff base, so a page naturally includes a skipped predecessor minor's
@@ -2295,12 +2618,29 @@ def _write_page(branch, all_branches, verbose=False, force=False,
             base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
 
+    # Publication is exact-tag scoped even though the website page is cumulative.
+    # Keep every build tag and its own predecessor/delta; never collapse re-tags.
+    shipments, exact_prs = (
+        collect_shipments(version, base_version) if not is_head else ([], []))
+    page_pr_numbers = {p.get("number") for p in prs}
+    for pr in exact_prs:
+        if pr.get("number") not in page_pr_numbers:
+            prs.append(pr)
+            page_pr_numbers.add(pr.get("number"))
+
+    # Resolve facts after adding any exact-delta-only PRs so teaser rendering has
+    # authoritative authors, URLs, classifications and issue links in data.prs.
+    resolve_pr_authors(prs)
+    resolve_skia_links(prs)
+    resolve_fixed_issues(prs)
+
     metadata = {
         "branch": branch,
         "version": version,
         "status": status,
         "from": from_display,
         "to": to_display,
+        "shipments": shipments,
     }
     if superseded_by:
         metadata["superseded_by"] = superseded_by
@@ -2333,30 +2673,26 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # data.json + prose.json during Polish.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
+    old_data = _load_json(data_path)
+    prose_path = _prose_json_path(output_path)
+    old_prose = _load_json(prose_path)
     changed = not _data_json_unchanged(data_path, data)
+    task = build_polish_task(
+        str(output_path), old_data, data, old_prose, force=force)
     if not force and not changed:
         log("  Skipping {} (unchanged)".format(output_path))
-        return None
+        return task
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
     log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    if changed:
-        # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
-        # prose is stale by definition. DELETE it to FORCE the Polish agent to
-        # re-author the page from the fresh data.json — instead of letting it judge
-        # whether the old prose still "matches", which silently dropped brand-new
-        # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
-        # place. render --all then hard-fails until fresh prose exists, so a changed
-        # page can never ship with stale prose. Scoped to a genuine change (not a bare
-        # --force re-render) so re-rendering after a format/skill tweak does not throw
-        # away good prose. The .md itself is not deleted — render overwrites it wholesale
-        # from the new prose.
-        prose_path = _prose_json_path(output_path)
-        if prose_path.exists():
-            prose_path.unlink()
-            log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
-    return str(output_path)
+    if task and task["cumulative"]:
+        preserve_teasers_for_cumulative_rewrite(prose_path, old_prose)
+        log("  Invalidated cumulative prose in {} (preserved {} teaser{})".format(
+            prose_path,
+            len((old_prose or {}).get("release_teasers") or {}),
+            "" if len((old_prose or {}).get("release_teasers") or {}) == 1 else "s"))
+    return task
 
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -2414,7 +2750,7 @@ def cmd_generate(force=False, polish_list_path=None,
 
     branches_to_process = ["main"] + servicing_branches + canonical_branches
 
-    files_to_polish = []
+    polish_tasks = []
     skipped_count = 0
     processed_count = 0
 
@@ -2424,10 +2760,10 @@ def cmd_generate(force=False, polish_list_path=None,
             continue
 
         log("\n--- Processing: {} ---".format(branch))
-        path = _write_page(branch, all_branches, force=force,
+        task = _write_page(branch, all_branches, force=force,
                            min_core=min_core, max_core=max_core)
-        if path:
-            files_to_polish.append(path)
+        if task:
+            polish_tasks.append(task)
             processed_count += 1
         else:
             skipped_count += 1
@@ -2445,7 +2781,7 @@ def cmd_generate(force=False, polish_list_path=None,
     log("")
     log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
-    write_polish_list(files_to_polish, polish_list_path)
+    write_polish_list(polish_tasks, polish_list_path)
 
 
 def main():
@@ -2471,8 +2807,7 @@ def main():
              "re-render the whole back-catalogue after a format or skill change)")
     parser.add_argument(
         "--polish-list", metavar="FILE", default=None,
-        help="Write the 'Files to polish' list to FILE (one repo-relative path "
-             "per line; empty file = nothing changed). Defaults to "
+        help="Write the JSON Polish task manifest to FILE. Defaults to "
              "output/files-to-polish.txt.")
     parser.add_argument(
         "--min-version", metavar="CORE", default=None,

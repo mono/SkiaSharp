@@ -3,6 +3,7 @@
 
     release-notes-render.py <data.json> <prose.json> [out.md]   # normal page
     release-notes-render.py --all                                # regenerate every page + TOC.yml + index.md
+    release-notes-render.py --teaser TAG data.json prose.json [out.md]
 
 `data.json`  — facts emitted by release-notes-data.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
@@ -24,6 +25,7 @@ The page structure below is the single source of truth for the layout.
 from __future__ import annotations
 
 import importlib.util
+import html
 import json
 import re
 import sys
@@ -67,6 +69,18 @@ RELEASE_CATEGORIES = [
     "Engine", "API Surface", "Bug Fixes",
     "Lifecycle & Internals", "Platform", "Security",
 ]
+TEASER_CATEGORIES = _gen.TEASER_CATEGORIES
+TEASER_HEADINGS = {
+    "Breaking Changes": "## ⚠️ Breaking Changes",
+    "What's New": "## ✨ What's New",
+    "Fixes": "## 🐛 Fixes",
+    "Dependency Updates": "## 📦 Dependency Updates",
+}
+RELEASE_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
+EMPTY_STABLE_SUBTITLE = (
+    "This stable release matches the release candidate with no additional "
+    "package changes."
+)
 
 # The one fixed line a "no changes" HarfBuzz page carries as its whole body.
 NO_CHANGES_BODY = (
@@ -138,6 +152,83 @@ def credit(nums, data):
     if links:
         return " ({})".format(links)
     return ""
+
+
+def _markdown_escape(text):
+    """Escape AI prose so it cannot create Markdown structure or links."""
+    text = html.escape(" ".join(str(text or "").split()), quote=False)
+    return re.sub(r"([\\`*_\[\]{}<>#])", r"\\\1", text)
+
+
+def _teaser_authors(nums, data):
+    authors = []
+    seen = set()
+    for number in nums or []:
+        pr = _pr(data, number)
+        login = pr.get("author") if pr else None
+        if login and login not in seen:
+            seen.add(login)
+            authors.append(
+                "[@{0}](https://github.com/{0})".format(login))
+    return authors
+
+
+def _teaser_credit(nums, data):
+    authors = _teaser_authors(nums, data)
+    links = pr_links(nums, data)
+    if authors and links:
+        return " by {} ({})".format(", ".join(authors), links)
+    if links:
+        return " ({})".format(links)
+    return ""
+
+
+def render_release_teaser(data, prose, tag):
+    """Render the managed GitHub Release teaser for one exact shipment."""
+    shipment = next(
+        (s for s in data.get("shipments") or [] if s.get("tag") == tag), None)
+    if not shipment:
+        raise ValueError("unknown exact shipment tag: {}".format(tag))
+    if _gen.shipment_is_empty_stable(shipment):
+        return _finish_text([EMPTY_STABLE_SUBTITLE, "", RELEASE_LINKS_MARKER])
+
+    teaser = (prose.get("release_teasers") or {}).get(tag)
+    errors = _gen.validate_release_teaser(shipment, teaser)
+    if errors:
+        raise ValueError("; ".join(errors))
+
+    lines = [_markdown_escape(teaser["subtitle"]), "", RELEASE_LINKS_MARKER]
+    categories = {
+        category["heading"]: category.get("bullets") or []
+        for category in teaser.get("categories") or []
+    }
+    selected_prs = []
+    for heading in TEASER_CATEGORIES:
+        bullets = categories.get(heading) or []
+        if not bullets:
+            continue
+        lines.extend(["", TEASER_HEADINGS[heading], ""])
+        for bullet in bullets:
+            refs = bullet.get("prs") or []
+            selected_prs.extend(refs)
+            lines.append("- {}{}".format(
+                _markdown_escape(bullet["text"]), _teaser_credit(refs, data)))
+
+    community = []
+    seen = set()
+    for number in selected_prs:
+        pr = _pr(data, number)
+        login = pr.get("author") if pr and pr.get("community") else None
+        if login and login not in seen:
+            seen.add(login)
+            community.append(
+                "[@{0}](https://github.com/{0})".format(login))
+    if community:
+        lines.extend([
+            "",
+            "Thanks to our contributors: {}".format(", ".join(community)),
+        ])
+    return _finish_text(lines)
 
 
 def banner_line(data, prose):
@@ -259,7 +350,8 @@ def render(data, prose):
         for l in data["links"]:
             L.append("- [{}]({})".format(l["label"], l["href"]))
 
-    prev_summaries = prose.get("preview_summaries") or {}
+    release_teasers = prose.get("release_teasers") or {}
+    legacy_preview_summaries = prose.get("preview_summaries") or {}
     for p in data.get("previews") or []:
         L.append("")
         head = "## {}".format(p["label"])
@@ -267,7 +359,14 @@ def render(data, prose):
             head += " ({})".format(p["date"])
         L.append(head)
         L.append("")
-        L.append(prev_summaries.get(p["key"], ""))
+        teaser = release_teasers.get(p["key"]) or {}
+        # Old committed pages predate exact shipments. Keep their summary readable
+        # until Prepare upgrades their data/prose; all format-4 pages use the exact
+        # teaser entry as the single source of preview website prose.
+        summary = teaser.get("website_summary")
+        if summary is None:
+            summary = legacy_preview_summaries.get(p["key"], "")
+        L.append(summary or "")
         if p.get("changelog_url"):
             L.append("")
             L.append("[Full changelog]({})".format(p["changelog_url"]))
@@ -330,6 +429,7 @@ def validate(data, prose):
 
 
 def _finish_validate(errors, data, prose):
+    errors.extend(_gen.validate_shipments(data))
     roster = {c["login"] for c in data.get("contributors", [])}
     summaries = prose.get("contributor_summaries") or {}
     missing = sorted(roster - set(summaries))
@@ -355,11 +455,35 @@ def _finish_validate(errors, data, prose):
     if prev_dups:
         errors.append("duplicate preview keys (data.json bug — keys must be unique "
                       "per preview): " + ", ".join(prev_dups))
-    prev_sum = prose.get("preview_summaries") or {}
-    missing_prev = sorted({k for k in prev_list if k not in prev_sum})
+    teasers = prose.get("release_teasers") or {}
+    legacy = prose.get("preview_summaries") or {}
+    missing_prev = []
+    for key in prev_list:
+        summary = (teasers.get(key) or {}).get("website_summary")
+        if summary is None:
+            summary = legacy.get(key)
+        if not isinstance(summary, str) or not summary.strip():
+            missing_prev.append(key)
+    missing_prev = sorted(set(missing_prev))
     if missing_prev:
-        errors.append("every preview/RC needs a one-line summary; missing: "
+        errors.append("every preview/RC needs release_teasers[tag].website_summary; missing: "
                       + ", ".join(missing_prev))
+
+    shipment_map = {
+        s.get("tag"): s for s in data.get("shipments") or [] if s.get("tag")
+    }
+    unknown_teasers = sorted(set(teasers) - set(shipment_map))
+    if unknown_teasers and data.get("shipments"):
+        errors.append("release_teasers contains tags absent from data.shipments: "
+                      + ", ".join(unknown_teasers))
+    for tag, shipment in shipment_map.items():
+        if _gen.shipment_is_empty_stable(shipment):
+            continue
+        teaser = teasers.get(tag)
+        if teaser is None:
+            errors.append("missing release teaser for exact shipment {}".format(tag))
+            continue
+        errors.extend(_gen.validate_release_teaser(shipment, teaser))
 
     hb = data.get("harfbuzz") or {}
     if hb.get("prs") and not (prose.get("harfbuzz_summary") or "").strip():
@@ -916,12 +1040,23 @@ def render_all():
     src_dirs = [RELEASES_DIR / "_sources"]
     rendered = 0
     invalid = []  # pages whose committed prose.json does not validate — a hard error
+    shipment_owners = {}
     for sd in src_dirs:
         if not sd.is_dir():
             continue
         for dp in sorted(sd.glob("*.data.json")):
             data = json.loads(dp.read_text())
             page = _page_for_data(dp)
+            for shipment in data.get("shipments") or []:
+                tag = shipment.get("tag")
+                if tag in shipment_owners:
+                    invalid.append((page, [
+                        "exact shipment {} is also owned by {}"
+                        .format(tag, shipment_owners[tag])]))
+                    log("  ERROR: exact shipment {} is duplicated across {} and {}"
+                        .format(tag, shipment_owners[tag], page))
+                elif tag:
+                    shipment_owners[tag] = page
             pp = dp.with_name(dp.name[:-len(".data.json")] + ".prose.json")
             if not pp.is_file():
                 # Missing prose.json is now a HARD ERROR (§4.6). After Prepare every
@@ -973,6 +1108,26 @@ def main(argv):
     # committed prose.json failed validation (a bad page must never ship).
     if "--all" in flags:
         return 1 if render_all() else 0
+
+    if "--teaser" in flags:
+        if len(args) < 3:
+            print(__doc__)
+            return 2
+        tag, data_path, prose_path = args[:3]
+        data = json.loads(Path(data_path).read_text())
+        prose = json.loads(Path(prose_path).read_text())
+        try:
+            text = render_release_teaser(data, prose, tag)
+        except ValueError as exc:
+            print("TEASER VALIDATION FAILED: {}".format(exc), file=sys.stderr)
+            return 1
+        out = args[3] if len(args) >= 4 else None
+        if out:
+            Path(out).write_text(text)
+            print("wrote {}".format(out))
+        else:
+            sys.stdout.write(text)
+        return 0
 
     if not args:
         print(__doc__)
