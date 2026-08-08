@@ -1261,8 +1261,9 @@ Always the same incremental Prepare + offline Polish sequence:
 
 5. **Reviewed teasers converge asynchronously after merge.** Publishing never waits
    for teaser prose. A separate zero-AI workflow watches merged `*.prose.json`
-   changes, semantically diffs old/new `release_teasers` maps, and updates only the
-   changed exact tags. It also runs on `release: published` and manual dispatch to
+   changes (plus exact `*.data.json` shipment changes needed by deterministic
+   no-delta stable teasers), semantically diffs old/new `release_teasers` maps, and
+   updates only the changed exact tags. It also runs on `release: published` and manual dispatch to
    close publication/merge ordering races. It resolves each tag through
    `shipments[]`, preflights every target before any PATCH, requires the expected
    current body hash/ETag, is idempotent, and uses non-canceling concurrency.

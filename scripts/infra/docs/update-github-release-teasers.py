@@ -33,11 +33,10 @@ REPOSITORY_RE = re.compile(
     r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
 )
 TAG_RE = re.compile(
-    r"^v\d+(?:\.\d+){2,3}(?:-(?:preview|rc)(?:\.\d+)+)?$"
+    r"^v\d+(?:\.\d+){2,3}"
+    r"(?:-(?:alpha|beta|preview|rc)(?:\.\d+)+)?$"
 )
-VERSION_RE = re.compile(
-    r"^\d+(?:\.\d+){2,3}(?:-(?:preview|rc)(?:\.\d+)+)?$"
-)
+CORE_VERSION_RE = re.compile(r"^\d+(?:\.\d+){2,3}$")
 
 TEASER_START_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:START -->"
 TEASER_END_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:END -->"
@@ -166,7 +165,9 @@ class RepositoryView:
             ]) or ""
         paths = []
         for path in output.splitlines():
-            if not path.endswith(".prose.json"):
+            if path.endswith(".data.json"):
+                path = path[:-len(".data.json")] + ".prose.json"
+            elif not path.endswith(".prose.json"):
                 continue
             self._validate_prose_path(path)
             paths.append(path)
@@ -284,9 +285,18 @@ def _candidate(
             "{} shipment public_version is {!r}, expected {!r}".format(
                 tag, public_version, tag[1:])
         )
-    if not isinstance(core_version, str) or not VERSION_RE.fullmatch(core_version):
+    if (
+        not isinstance(core_version, str)
+        or not CORE_VERSION_RE.fullmatch(core_version)
+    ):
         raise UpdateError(
             "{} shipment has invalid core_version {!r}".format(tag, core_version)
+        )
+    source_version = PROSE_NAME_RE.fullmatch(prose_path).group("version")
+    if source_version != core_version:
+        raise UpdateError(
+            "{} shipment core_version {!r} does not match {}".format(
+                tag, core_version, prose_path)
         )
     return Candidate(
         tag=tag,
@@ -695,6 +705,17 @@ def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     result = UpdateResult()
     try:
+        if (
+            args.event == "release"
+            and (not args.tag or not TAG_RE.fullmatch(args.tag))
+        ):
+            result.add(
+                args.tag or "(missing tag)",
+                "skipped",
+                "release tag is outside the managed SkiaSharp version format",
+            )
+            _write_summary(result)
+            return 0
         repository = RepositoryView(args.root.resolve())
         if args.event == "push":
             if not args.before or not args.after:

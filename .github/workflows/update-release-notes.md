@@ -87,8 +87,8 @@ if: needs.prepare.outputs.has_changes == 'true'
 # hosted runner's disk on the first post-merge run (issue #4191). So Prepare gets
 # its OWN job with its OWN timeout and a free-disk-space step, runs verbose (all
 # progress visible in the job log), and hands its result to the agent as an
-# artifact — a git patch of every working-tree change plus the files-to-polish
-# list. See documentation/dev/release-notes-and-api-diffs.md §2.2/§2.3.
+# artifact — a git patch of every working-tree change plus the Polish task
+# manifest. See documentation/dev/release-notes-and-api-diffs.md §2.2/§2.3.
 # ---------------------------------------------------------------------------
 jobs:
   prepare:
@@ -154,7 +154,7 @@ jobs:
           # already current (a shipped api diff never changes), so a daily run is cheap
           # without any "notes-only" flag. A dispatch may bound to a version RANGE
           # (--min-version/--max-version, for a single version or a chunk) and/or force
-          # a total rewrite (--force). The "Files to polish" list lands at
+          # a total rewrite (--force). The JSON Polish task manifest lands at
           # output/files-to-polish.txt.
           flags=()
           if [ "${FORCE_REGEN:-false}" = "true" ]; then flags+=(--force); fi
@@ -174,7 +174,7 @@ jobs:
           git reset -q
           cp output/files-to-polish.txt "$RUNNER_TEMP/prepare-out/files-to-polish.txt"
           echo "Patch size: $(wc -c < "$RUNNER_TEMP/prepare-out/prepare.patch") bytes"
-          echo "Files to polish:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
+          echo "Polish task manifest:"; cat "$RUNNER_TEMP/prepare-out/files-to-polish.txt" || true
           # Drive the top-level agent `if:`: a non-empty patch means something
           # changed and the agent should polish + open the PR; an empty patch is a
           # no-op run, so skip the agent and the PR entirely.
@@ -269,14 +269,14 @@ Before you (the agent) started, a **separate `prepare` job** ran the skill's
 **Prepare** phase on its own disk-managed runner — the single script
 `.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then the
 per-page `_sources/<version>.data.json` facts, then the network-sourced
-`_sources/index.json` and the **"Files to polish"** list). See the skill's "Running
+`_sources/index.json` and the **JSON Polish task manifest**). See the skill's "Running
 the full pipeline" section and `documentation/dev/release-notes-and-api-diffs.md` §2
 for exactly what it produces.
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
-list as an artifact, and a host step **already restored both** into this checkout:
+manifest as an artifact, and a host step **already restored both** into this checkout:
 the regenerated files (every `_sources/<version>.data.json` and `_sources/index.json`)
-are on disk, and the list is at `output/files-to-polish.txt`. **You have no network —
+are on disk, and the manifest is at `output/files-to-polish.txt`. **You have no network —
 do not re-run `prepare.sh`, `dotnet cake`, `release-notes-data.py`, or `release-notes-index.py`.**
 Your job is to write the prose and render the pages (below), then commit and open the PR.
 
@@ -298,11 +298,19 @@ so you only ever write prose.
 
 This run's **CI-specific deltas** on top of the skill:
 
-1. Your page list is `output/files-to-polish.txt` (one repo-relative
-   `documentation/docfx/releases/<version>.md` per line). It **may be empty** — that
-   means no page needs prose, but there is still deterministic work to materialize
-   (a rebuilt no-changes HarfBuzz section, a refreshed API diff, or the TOC/index), so
-   do **not** exit early; go straight to the final render.
+1. Read `output/files-to-polish.txt` as JSON. Its `tasks` array names each page and
+   separates `cumulative` page work from exact-tag `release_teasers` work. For every
+   task:
+   - Rewrite cumulative prose only when `cumulative` is `true`.
+   - Author only the teaser tags listed in `release_teasers`, following each entry's
+     `reason` (`missing`, `invalid`, or `facts-changed`).
+   - Preserve every other existing `release_teasers` entry semantically unchanged.
+     Never replace the whole teaser map with only this run's tasks, and never rewrite
+     reviewed historical entries just because cumulative prose changed.
+   The task array **may be empty** — that means no prose needs authoring, but there is
+   still deterministic work to materialize (a rebuilt no-changes HarfBuzz section, a
+   refreshed API diff, or the TOC/index), so do **not** exit early; go straight to the
+   final render.
 2. You have **no network**, and Prepare already ran — never re-run it (above).
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
    running the renderer directly: `release-notes-render.py` per page to validate as you go

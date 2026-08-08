@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parent.parent / "update-github-release-teasers.py"
@@ -151,6 +152,14 @@ class CandidateSelectionTests(unittest.TestCase):
     BEFORE = "1" * 40
     AFTER = "2" * 40
 
+    def test_data_only_push_maps_to_owning_prose_file(self):
+        changed = data_path("4.151.0")
+        with mock.patch.object(updater, "_run_git", return_value=changed + "\n"):
+            paths = updater.RepositoryView(REPO_ROOT).changed_prose_paths(
+                self.BEFORE, self.AFTER)
+
+        self.assertEqual(paths, [prose_path("4.151.0")])
+
     def test_push_selects_batch_changes_and_multiple_tags_per_line(self):
         repo = FakeRepository()
         first = prose_path("4.151.0")
@@ -277,6 +286,55 @@ class CandidateSelectionTests(unittest.TestCase):
             updater.UpdateError, "no exact shipment facts"
         ):
             updater.select_current_candidates(repo, tag=tag)
+
+    def test_alpha_and_beta_exact_tags_are_supported(self):
+        repo = FakeRepository()
+        path = prose_path("4.151.0")
+        alpha = "v4.151.0-alpha.1.1"
+        beta = "v4.151.0-beta.2.3"
+        repo.current_paths = [path]
+        repo.current[path] = prose({
+            alpha: {"subtitle": "Alpha", "categories": []},
+            beta: {"subtitle": "Beta", "categories": []},
+        })
+        repo.current[data_path("4.151.0")] = data(
+            shipment(alpha, channel="alpha"),
+            shipment(beta, channel="beta"),
+        )
+
+        selected = updater.select_current_candidates(repo)
+
+        self.assertEqual([item.tag for item in selected], [alpha, beta])
+
+    def test_shipment_core_must_match_owning_prose_file(self):
+        repo = FakeRepository()
+        path = prose_path("4.151.0")
+        tag = "v4.151.0-preview.1.1"
+        wrong = shipment(tag)
+        wrong["core_version"] = "4.152.0"
+        repo.current_paths = [path]
+        repo.current[path] = prose({
+            tag: {"subtitle": "Reviewed", "categories": []},
+        })
+        repo.current[data_path("4.151.0")] = data(wrong)
+
+        with self.assertRaisesRegex(updater.UpdateError, "does not match"):
+            updater.select_current_candidates(repo, tag=tag)
+
+    def test_release_event_skips_unmanaged_tag(self):
+        with (
+            mock.patch.object(updater, "_write_summary") as summary,
+            mock.patch.object(updater, "RepositoryView") as repository,
+        ):
+            status = updater.main([
+                "--event", "release",
+                "--tag", "native-assets",
+            ])
+
+        self.assertEqual(status, 0)
+        repository.assert_not_called()
+        result = summary.call_args.args[0]
+        self.assertEqual(result.entries[0].status, "skipped")
 
 
 class BodyModelTests(unittest.TestCase):
