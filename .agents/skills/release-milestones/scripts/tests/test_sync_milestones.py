@@ -212,6 +212,13 @@ class SyncMilestonesTests(unittest.TestCase):
 
     def test_execution_moves_open_issues_then_closes(self):
         events = []
+        remaining = [
+            [
+                {"number": 99, "kind": "issue"},
+                {"number": 100, "kind": "pull-request"},
+            ],
+            [],
+        ]
 
         class FakeGitHub:
             def __init__(self, repo):
@@ -229,7 +236,7 @@ class SyncMilestonesTests(unittest.TestCase):
                 events.append(("move", issue, milestone))
 
             def open_milestone_items(self, number):
-                return []
+                return remaining.pop(0)
 
             def close_milestone(self, number):
                 events.append(("close", number))
@@ -250,7 +257,10 @@ class SyncMilestonesTests(unittest.TestCase):
                 }
             ],
         }
-        with mock.patch.object(sync.common, "GitHub", FakeGitHub):
+        with (
+            mock.patch.object(sync.common, "GitHub", FakeGitHub),
+            mock.patch.object(sync.time, "sleep") as sleep,
+        ):
             sync.execute(
                 SimpleNamespace(repo="mono/SkiaSharp"),
                 plan,
@@ -259,6 +269,54 @@ class SyncMilestonesTests(unittest.TestCase):
             events,
             [("move", 99, 2), ("move", 100, 2), ("close", 1)],
         )
+        sleep.assert_called_once_with(2)
+
+    def test_execution_rejects_new_items_during_move(self):
+        class FakeGitHub:
+            def __init__(self, repo):
+                self.repo = repo
+
+            def milestone_map(self):
+                return {
+                    "4.152.0-preview.2": {
+                        "number": 2,
+                        "state": "open",
+                    }
+                }
+
+            def update_issue_milestone(self, issue, milestone):
+                pass
+
+            def open_milestone_items(self, number):
+                return [{"number": 101, "kind": "issue"}]
+
+            def close_milestone(self, number):
+                raise AssertionError("must not close")
+
+        plan = {
+            "schedule": [],
+            "closures": [
+                {
+                    "title": "4.152.0-preview.1",
+                    "number": 1,
+                    "tag": "v4.152.0-preview.1.2",
+                    "status": "pending",
+                    "openItems": [{"number": 99, "kind": "issue"}],
+                    "moveTo": "4.152.0-preview.2",
+                }
+            ],
+        }
+        with (
+            mock.patch.object(sync.common, "GitHub", FakeGitHub),
+            self.assertRaisesRegex(
+                sync.common.MilestoneError,
+                "gained open items.*issue #101",
+            ),
+        ):
+            sync.execute(
+                SimpleNamespace(repo="mono/SkiaSharp"),
+                plan,
+            )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

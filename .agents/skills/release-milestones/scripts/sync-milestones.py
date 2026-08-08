@@ -9,6 +9,7 @@ from datetime import date, datetime, timezone
 import json
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -31,6 +32,8 @@ RELEASE_MILESTONE_RE = re.compile(
     r"^(?P<numeric>\d+\.\d+\.\d+(?:\.\d+)?)"
     r"(?:-(?P<channel>preview|rc)\.(?P<iteration>\d+))?$"
 )
+MOVE_SETTLE_ATTEMPTS = 5
+MOVE_SETTLE_DELAY_SECONDS = 2
 
 
 @dataclass(frozen=True)
@@ -385,6 +388,35 @@ def build_plan(args) -> tuple[dict, list[dict]]:
     }
 
 
+def wait_for_milestone_moves(
+    github: common.GitHub,
+    milestone_number: int,
+    moved_numbers: set[int],
+) -> None:
+    for attempt in range(1, MOVE_SETTLE_ATTEMPTS + 1):
+        remaining = github.open_milestone_items(milestone_number)
+        if not remaining:
+            return
+        unexpected = [
+            item for item in remaining if int(item["number"]) not in moved_numbers
+        ]
+        if unexpected:
+            detail = ", ".join(
+                f"{item['kind']} #{item['number']}" for item in unexpected
+            )
+            raise common.MilestoneError(
+                f"milestone gained open items during sync: {detail}"
+            )
+        if attempt < MOVE_SETTLE_ATTEMPTS:
+            time.sleep(MOVE_SETTLE_DELAY_SECONDS)
+    detail = ", ".join(
+        f"{item['kind']} #{item['number']}" for item in remaining
+    )
+    raise common.MilestoneError(
+        f"milestone moves did not settle: {detail}"
+    )
+
+
 def execute(args, plan: dict[str, list[dict]]) -> None:
     github = common.GitHub(args.repo)
     for item in plan["schedule"]:
@@ -405,6 +437,9 @@ def execute(args, plan: dict[str, list[dict]]) -> None:
         if item["status"] != "pending":
             continue
         target_title = item["moveTo"]
+        moved_numbers = {
+            int(child["number"]) for child in item["openItems"]
+        }
         if item["openItems"]:
             target = milestones.get(target_title)
             if not target:
@@ -416,11 +451,11 @@ def execute(args, plan: dict[str, list[dict]]) -> None:
                     int(child["number"]),
                     int(target["number"]),
                 )
-        remaining = github.open_milestone_items(item["number"])
-        if remaining:
-            raise common.MilestoneError(
-                f"milestone {item['title']} still has open items"
-            )
+        wait_for_milestone_moves(
+            github,
+            item["number"],
+            moved_numbers,
+        )
         github.close_milestone(item["number"])
 
 

@@ -27,6 +27,8 @@ This skill is **Step 5 of 5**:
 - A real remote release tag makes its matching milestone eligible for closure.
 - Sync moves open issues and pull requests to the next unshipped milestone
   before closing.
+- After moving items, Sync waits for GitHub to reflect those exact moves before
+  closure; a newly added item still blocks closure.
 - Audit assigns merged PRs and linked issues to the release where they shipped;
   unshipped preview/RC ranges roll into the next shipped release.
 - Main commits after the last release cut remain unassigned.

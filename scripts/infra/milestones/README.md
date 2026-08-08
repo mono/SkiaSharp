@@ -43,7 +43,8 @@ Flags: `--dry-run`, `--count <n>` (default 3), `--repo <owner/repo>`
 
 During the same sync, exact release tags make their matching milestones
 shipped. Open issues and pull requests move to the next unshipped milestone in
-release order, then the shipped milestone closes.
+release order. The script waits for GitHub to reflect those moves, verifies no
+new open item appeared, then closes the shipped milestone.
 
 ## `audit-milestones.py`
 
