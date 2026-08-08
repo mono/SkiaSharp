@@ -60,13 +60,6 @@ class PublishCommandTests(unittest.TestCase):
             "--dry-run",
             push.execution_command(push_args, "a" * 40),
         )
-        azure_args = push.create_parser().parse_args(
-            [*COMMON, "--verification", "azure", "--dry-run"]
-        )
-        self.assertIn(
-            "--verification azure",
-            push.execution_command(azure_args, "a" * 40),
-        )
 
         draft_args = draft.create_parser().parse_args(
             [*COMMON, "--dry-run"]
@@ -111,14 +104,6 @@ class PublishCommandTests(unittest.TestCase):
         self.assertEqual(
             push.package_states("missing", None)["nextAction"],
             "confirm-publish-packages",
-        )
-        self.assertEqual(
-            push.package_states(
-                "partial",
-                {"status": "completed", "result": "succeeded"},
-                verification="azure",
-            )["nextAction"],
-            "start-release-draft",
         )
 
     def test_wait_validates_exact_managed_resource(self):
@@ -172,7 +157,6 @@ class PublishCommandTests(unittest.TestCase):
             expect_tests_run=20,
             publish_run=None,
             wait_minutes=60,
-            verification="nuget",
         )
         state = {
             "dryRun": False,
@@ -214,10 +198,6 @@ class PublishCommandTests(unittest.TestCase):
             "--publish-run 14911788",
             result["resumeCommand"],
         )
-        self.assertIn(
-            "--verification nuget",
-            result["resumeCommand"],
-        )
 
     def test_pending_run_recovers_with_wait_only(self):
         args = SimpleNamespace(
@@ -228,7 +208,6 @@ class PublishCommandTests(unittest.TestCase):
             dry_run=True,
             publish_run=None,
             wait_minutes=60,
-            verification="nuget",
         )
         release_version = push.publish.ReleaseVersion.parse(
             args.release_branch
@@ -257,16 +236,16 @@ class PublishCommandTests(unittest.TestCase):
                 return {"state": "missing", "packages": {}}
 
         class FakeAzure:
-            run = {
-                "runId": 14911788,
-                "name": "SkiaSharp preview",
-                "status": "inProgress",
-                "result": None,
-                "url": push.run_url(14911788),
-            }
-
             def matching_runs(self, *unused, **kwargs):
-                return [self.run]
+                return [
+                    {
+                        "runId": 14911788,
+                        "name": "SkiaSharp preview",
+                        "status": "inProgress",
+                        "result": None,
+                        "url": push.run_url(14911788),
+                    }
+                ]
 
             def preview(self, *unused, **kwargs):
                 return True
@@ -292,41 +271,11 @@ class PublishCommandTests(unittest.TestCase):
         self.assertIsNone(result["executionCommand"])
         self.assertIn("--publish-run 14911788", result["resumeCommand"])
 
-        args.verification = "azure"
-        FakeAzure.run = FakeAzure.run | {
-            "status": "completed",
-            "result": "succeeded",
-        }
-        with (
-            mock.patch.object(
-                push,
-                "load_release",
-                return_value=(
-                    object(),
-                    release_version,
-                    {"warnings": []},
-                    handoff,
-                    "a" * 40,
-                ),
-            ),
-            mock.patch.object(push.publish, "NuGet", FakeNuGet),
-            mock.patch.object(push, "AzurePublish", FakeAzure),
-        ):
-            azure_result = push.current_state(args)
-
-        self.assertEqual(
-            azure_result["nextAction"],
-            "start-release-draft",
-        )
-        self.assertEqual(azure_result["verificationMode"], "azure")
-        self.assertIn("not verified", azure_result["warnings"][0])
-
     def test_successful_run_nuget_timeout_is_resumable(self):
         args = SimpleNamespace(
             publish_run=14912429,
             wait_minutes=60,
             poll_seconds=30,
-            verification="nuget",
         )
         state = {
             "dryRun": False,

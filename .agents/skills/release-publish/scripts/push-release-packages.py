@@ -253,8 +253,6 @@ def execution_command(args, source_sha: str) -> str:
         "--expect-tests-run",
         str(args.expect_tests_run),
     ]
-    if args.verification == "azure":
-        command.extend(["--verification", "azure"])
     return publish.shell_command(command)
 
 
@@ -275,37 +273,16 @@ def resume_command(args, source_sha: str, publish_run_id: int) -> str:
             "--wait",
             "--wait-minutes",
             str(args.wait_minutes),
-            "--verification",
-            args.verification,
         ]
     )
 
 
-def package_states(
-    nuget_state: str,
-    latest: dict | None,
-    verification: str = "nuget",
-) -> dict:
+def package_states(nuget_state: str, latest: dict | None) -> dict:
     if nuget_state == "ready":
         return {
             "publish": "done",
             "verify": "done",
             "detail": "Both exact public packages are on NuGet.org",
-            "nextAction": "start-release-draft",
-        }
-    if (
-        verification == "azure"
-        and latest
-        and latest["status"] == "completed"
-        and latest["result"] == "succeeded"
-    ):
-        return {
-            "publish": "done",
-            "verify": "done",
-            "detail": (
-                "Exact Azure publication run succeeded; NuGet.org indexing "
-                "was not required"
-            ),
             "nextAction": "start-release-draft",
         }
     if latest and latest["status"] != "completed":
@@ -384,11 +361,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
     if preview_valid is False:
         raise publish.PublishError("Azure publish pipeline preview failed")
 
-    states = package_states(
-        nuget["state"],
-        latest,
-        verification=args.verification,
-    )
+    states = package_states(nuget["state"], latest)
     next_action = states["nextAction"]
     if (
         args.publish_run
@@ -398,17 +371,6 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         and latest.get("result") != "succeeded"
     ):
         next_action = "retry-publish-run"
-
-    warnings = list(status.get("warnings") or [])
-    if (
-        args.verification == "azure"
-        and next_action == "start-release-draft"
-        and nuget["state"] != "ready"
-    ):
-        warnings.append(
-            "Azure publication succeeded; exact NuGet.org indexing was not "
-            "verified"
-        )
 
     return {
         "schemaVersion": 1,
@@ -425,7 +387,6 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             "publicPackages": handoff["versions"]["public"],
         },
         "pipelineRequestValid": preview_valid,
-        "verificationMode": args.verification,
         "publishRun": latest,
         "nuget": nuget,
         "operations": [
@@ -441,20 +402,12 @@ def current_state(args, *, validate_request: bool = True) -> dict:
                 (
                     "Both exact public package versions are indexed"
                     if nuget["state"] == "ready"
-                    else (
-                        "Exact Azure publication run succeeded; NuGet.org "
-                        "indexing was not required"
-                    )
-                    if args.verification == "azure"
-                    and latest
-                    and latest.get("status") == "completed"
-                    and latest.get("result") == "succeeded"
                     else f"NuGet.org state is {nuget['state']}"
                 ),
             ),
         ],
         "nextAction": next_action,
-        "warnings": warnings,
+        "warnings": status.get("warnings") or [],
         "executionCommand": (
             execution_command(args, source_sha)
             if next_action == "confirm-publish-packages"
@@ -604,42 +557,28 @@ def execute_and_wait(args) -> dict:
                 f"{run.get('result')}: {url}"
             )
         if time.monotonic() >= deadline:
-            missing = (
-                [
-                    {
-                        "package": package_id,
-                        "version": package["version"],
-                    }
-                    for package_id, package in state["nuget"][
-                        "packages"
-                    ].items()
-                    if not package["available"]
-                ]
-                if args.verification == "nuget"
-                else []
-            )
+            missing = [
+                {
+                    "package": package_id,
+                    "version": package["version"],
+                }
+                for package_id, package in state["nuget"]["packages"].items()
+                if not package["available"]
+            ]
             state["wait"] = {
                 "timedOut": True,
                 "minutes": args.wait_minutes,
                 "missingPackages": missing,
             }
-            if args.verification == "azure":
-                wait_subject = f"Azure run {args.publish_run}"
-            elif (
-                run.get("status") == "completed"
-                and run.get("result") == "succeeded"
-            ):
-                wait_subject = (
+            state["warnings"].append(
+                (
                     f"Azure run {args.publish_run} succeeded, but NuGet.org "
                     "indexing"
+                    if run.get("status") == "completed"
+                    and run.get("result") == "succeeded"
+                    else f"Azure run {args.publish_run} and NuGet.org indexing"
                 )
-            else:
-                wait_subject = (
-                    f"Azure run {args.publish_run} and NuGet.org indexing"
-                )
-            state["warnings"].append(
-                f"{wait_subject} did not complete within "
-                f"{args.wait_minutes} minutes"
+                + f" did not complete within {args.wait_minutes} minutes"
             )
             return state
         print(
@@ -660,15 +599,6 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("--publish-run", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--wait", action="store_true")
-    parser.add_argument(
-        "--verification",
-        choices=("nuget", "azure"),
-        default="nuget",
-        help=(
-            "Require exact NuGet.org indexing (default), or treat a successful "
-            "protected Azure publication run as sufficient"
-        ),
-    )
     parser.add_argument("--wait-minutes", type=int, default=60)
     parser.add_argument(
         "--poll-seconds",
