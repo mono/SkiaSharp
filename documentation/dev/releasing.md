@@ -28,6 +28,71 @@ Each skill confirms with `ask_user` before executing destructive operations.
 as `running`, `failed`, `blocked`, `awaiting-user`, and `skipped` are
 skill-specific and documented by the script that emits them.
 
+### Azure Release Coordinator
+
+[`scripts/azure-pipelines-release-coordinator.yml`](../../scripts/azure-pipelines-release-coordinator.yml)
+provides a manual **Run pipeline** entry point over the same scripts and
+contracts. It has two operations because release CI runs between branch
+creation and publication:
+
+| Operation | Input | Result |
+|-----------|-------|--------|
+| `start` | Integration branch (`main` / `release/X.Y.x`) and optional exact version | Plan, approve, then create the exact paired release branches. |
+| `complete` | Exact release branch or tested source SHA | Recover/publish exact packages, create the tag/draft, prepare and publish the release, reconcile assignments, then advance milestones. |
+
+Every irreversible phase has its own visible dry-run summary and
+`ManualValidation` gate. Plans are persisted between stages so execution uses
+the exact approved SHA, runs, versions, tag, release body, assignments, and
+milestone operations. Rerunning `complete` is resumable: it recovers an exact
+queued publication, remote tag/draft/release, and completed milestone state
+instead of creating duplicates.
+
+By default, `complete` requires a human to confirm that the approved external
+release-testing matrix passed. Setting `overrideReleaseTesting=true` records an
+explicit release-manager override; it does not weaken the mandatory connected
+CI test gate enforced by release detection.
+
+The coordinator's package approval authorizes only queueing pipeline `25298`.
+That pipeline then pauses at its own protected stage so a human can review the
+exact package versions and Stable/Preview destination. The coordinator waits
+for that decision, Azure completion, and both exact NuGet.org packages before
+draft creation.
+
+Customer teaser generation runs Copilot CLI in an isolated directory with no
+available tools, built-in MCP servers, custom instructions, GitHub write token,
+or Azure token. The generated log is treated as untrusted input. The assembled
+release body and SHA remain behind the publication approval.
+
+One-time setup after this YAML reaches the default branch:
+
+```bash
+az pipelines create \
+  --name "SkiaSharp Release Coordinator" \
+  --description "Start or complete an exact SkiaSharp release" \
+  --folder-path "\\Xamarin\\SkiaSharp" \
+  --repository mono/SkiaSharp \
+  --repository-type github \
+  --service-connection a764c27f-52a2-4b84-b1ca-48b8af3b5990 \
+  --branch main \
+  --yaml-path scripts/azure-pipelines-release-coordinator.yml \
+  --skip-run true \
+  --org https://dev.azure.com/devdiv \
+  --project DevDiv
+```
+
+Then:
+
+1. Authorize variable group `Xamarin-Secrets`.
+2. Add secret pipeline variable `CopilotGitHubToken` with **Copilot Requests:
+   read**.
+3. Grant the pipeline build identity permission to queue pipeline `25298`.
+4. Confirm the release-manager GitHub PAT can push `mono/SkiaSharp` and
+   `mono/skia`, create releases/workflow dispatches, and edit milestones.
+5. Have a maintainer with **Edit build pipeline** permission create or modify
+   the coordinator definition.
+
+Stable post-cut bump PR merges remain maintainer decisions.
+
 ## Reference Tables
 
 ### Version Patterns
