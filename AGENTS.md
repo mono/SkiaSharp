@@ -404,7 +404,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Check release status (Step 2/5) | `/release-status` | "check release status", "how is the build", "pipeline status" |
 | Test release (Step 3/5) | `/release-testing` | "test the release", "verify packages" |
 | Publish release (Step 4/5) | `/release-publish` | "push to nuget", "tag release" |
-| Release milestones (Step 5/5) | `/release-milestones` | "audit milestones", "sync milestone schedule", "close release milestone" |
+| Release milestones (Step 5/5) | `/release-milestones` | "reconcile milestones", "advance milestone schedule", "close release milestone" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Synchronize and close SkiaSharp release milestones."""
+"""Advance the SkiaSharp release milestone schedule and lifecycle."""
 
 from __future__ import annotations
 
@@ -191,7 +191,10 @@ def desired_milestones(
 def execution_command(args) -> str:
     command = [
         sys.executable,
-        ".agents/skills/release-milestones/scripts/sync-milestones.py",
+        (
+            ".agents/skills/release-milestones/scripts/"
+            "advance-release-milestones.py"
+        ),
         "--count",
         str(args.count),
         "--repo",
@@ -339,9 +342,9 @@ def build_plan(args) -> tuple[dict, list[dict]]:
         item for item in closure_operations if item["status"] == "pending"
     ]
     if warnings:
-        next_action = "resolve-sync-warnings"
+        next_action = "resolve-advance-warnings"
     elif pending or pending_closures:
-        next_action = "confirm-sync"
+        next_action = "confirm-advance-milestones"
     else:
         next_action = "complete"
     report = {
@@ -378,7 +381,7 @@ def build_plan(args) -> tuple[dict, list[dict]]:
         "nextAction": next_action,
         "executionCommand": (
             execution_command(args)
-            if next_action == "confirm-sync"
+            if next_action == "confirm-advance-milestones"
             else None
         ),
     }
@@ -405,7 +408,7 @@ def wait_for_milestone_moves(
                 f"{item['kind']} #{item['number']}" for item in unexpected
             )
             raise common.MilestoneError(
-                f"milestone gained open items during sync: {detail}"
+                f"milestone gained open items during advancement: {detail}"
             )
         if attempt < MOVE_SETTLE_ATTEMPTS:
             time.sleep(MOVE_SETTLE_DELAY_SECONDS)

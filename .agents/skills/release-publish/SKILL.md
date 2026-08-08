@@ -67,7 +67,7 @@ the pinned audit commands; every confirmation report emits its exact
 | Draft | `write-release-teaser` | Classify `generated-log.md` and fill `teaser.md`. |
 | Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
 | Publication | `confirm-publish-release` | Approve and publish the completed draft. |
-| Publication | `start-release-milestones` | Hand off the emitted milestone audit command. |
+| Publication | `start-release-milestones` | Hand off the emitted milestone reconciliation command. |
 
 ## Workflow
 
@@ -175,8 +175,8 @@ draft.
 ### 6. Hand off milestones
 
 For `start-release-milestones`, invoke the emitted `milestonesCommand` with
-[release-milestones](../release-milestones/SKILL.md), complete its Audit path,
-then run its normal Sync path.
+[release-milestones](../release-milestones/SKILL.md), complete its Reconcile
+path, then run its normal Advance path.
 
 ## Reporting
 

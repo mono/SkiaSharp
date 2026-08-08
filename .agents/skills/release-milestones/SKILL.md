@@ -1,11 +1,11 @@
 ---
 name: release-milestones
 description: >
-  Audit, synchronize, and close SkiaSharp GitHub milestones. Use whenever the
-  user asks to audit shipped PR/issue assignments, sync upcoming Chromium/Skia
-  milestone dates, close released milestones, check milestone hygiene, or
-  continue after release-publish. This is the final release step and a
-  standalone maintenance workflow.
+  Reconcile and advance SkiaSharp GitHub milestones. Use whenever the user asks
+  to correct shipped PR/issue assignments, maintain upcoming Chromium/Skia
+  milestone dates, roll open work forward, close released milestones, check
+  milestone hygiene, or continue after release-publish. This is the final
+  release step and a standalone maintenance workflow.
 ---
 
 # Release Milestones
@@ -25,12 +25,12 @@ This skill is **Step 5 of 5**:
 - Run the selected path with `--dry-run`, present every operation/warning, and
   obtain approval before executing its emitted command.
 - A real remote release tag makes its matching milestone eligible for closure.
-- Sync moves open issues and pull requests to the next unshipped milestone
+- Advance moves open issues and pull requests to the next unshipped milestone
   before closing.
-- After moving items, Sync waits for GitHub to reflect those exact moves before
-  closure; a newly added item still blocks closure.
-- Audit assigns merged PRs and linked issues to the release where they shipped;
-  unshipped preview/RC ranges roll into the next shipped release.
+- After moving items, Advance waits for GitHub to reflect those exact moves
+  before closure; a newly added item still blocks closure.
+- Reconcile assigns merged PRs and linked issues to the release where they
+  shipped; unshipped preview/RC ranges roll into the next shipped release.
 - Main commits after the last release cut remain unassigned.
 - These scripts never modify release branches, tags, packages, or GitHub
   Releases.
@@ -39,31 +39,31 @@ This skill is **Step 5 of 5**:
 
 | Path | Script | Responsibility |
 |------|--------|----------------|
-| **Audit** | `scripts/audit-milestones.py` | Reconcile shipped PR/linked-issue assignments for a numeric release line. |
-| **Sync** | `scripts/sync-milestones.py` | Synchronize upcoming dates, move open issues/PRs, and close tagged milestones. |
+| **Reconcile** | `scripts/reconcile-release-assignments.py` | Reconcile shipped PR/linked-issue assignments for a numeric release line. |
+| **Advance** | `scripts/advance-release-milestones.py` | Maintain upcoming dates, move open issues/PRs, and close tagged milestones. |
 
-The release-publish handoff runs Audit first from its emitted command, then
-runs Sync. Either path can also run independently.
+The release-publish handoff runs Reconcile first from its emitted command, then
+runs Advance. Either path can also run independently.
 
 ## Actions
 
 | Path | `nextAction` | Response |
 |------|--------------|----------|
-| Audit | `resolve-audit-warnings` | Investigate a missing milestone/release boundary. |
-| Audit | `confirm-apply` | Approve and run assignment updates. |
-| Audit | `complete` | Assignments are correct. |
-| Sync | `resolve-sync-warnings` | Create/identify a future unshipped destination. |
-| Sync | `confirm-sync` | Approve schedule, item-move, and closure operations. |
-| Sync | `complete` | Schedule matches and all tagged milestones are closed. |
+| Reconcile | `resolve-reconciliation-warnings` | Investigate a missing milestone/release boundary. |
+| Reconcile | `confirm-reconcile-assignments` | Approve and run assignment updates. |
+| Reconcile | `complete` | Assignments are correct. |
+| Advance | `resolve-advance-warnings` | Create/identify a future unshipped destination. |
+| Advance | `confirm-advance-milestones` | Approve schedule, item-move, and closure operations. |
+| Advance | `complete` | Schedule matches and all tagged milestones are closed. |
 
 ## Workflow
 
-### Audit
+### Reconcile assignments
 
 Use the numeric release line from release-publish when available:
 
 ```bash
-python3 .agents/skills/release-milestones/scripts/audit-milestones.py \
+python3 .agents/skills/release-milestones/scripts/reconcile-release-assignments.py \
   --version {X.Y.Z} \
   --dry-run
 ```
@@ -73,7 +73,7 @@ Without `--version`, the script uses `scripts/VERSIONS.txt`.
 Render:
 
 ```markdown
-## Milestone assignment audit
+## Milestone assignment reconciliation
 
 **Version:** `{version}`
 **Previous boundary:** `{previousBoundary}`
@@ -83,10 +83,10 @@ Render:
 | `{kind} #{number}` | `{fromMilestone}` | `{toMilestone}` |
 ```
 
-### Sync
+### Advance milestones
 
 ```bash
-python3 .agents/skills/release-milestones/scripts/sync-milestones.py \
+python3 .agents/skills/release-milestones/scripts/advance-release-milestones.py \
   --count 3 \
   --dry-run
 ```

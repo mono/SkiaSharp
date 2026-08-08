@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit shipped milestone assignments."""
+"""Reconcile shipped release milestone assignments."""
 
 from __future__ import annotations
 
@@ -192,7 +192,10 @@ def linked_issues(github: common.GitHub, pull_request: int) -> list[int]:
 def execution_command(args, version: str) -> str:
     command = [
         sys.executable,
-        ".agents/skills/release-milestones/scripts/audit-milestones.py",
+        (
+            ".agents/skills/release-milestones/scripts/"
+            "reconcile-release-assignments.py"
+        ),
         "--version",
         version,
         "--repo",
@@ -294,9 +297,9 @@ def build_plan(args) -> tuple[dict, list[dict]]:
                     )
 
     if warnings:
-        next_action = "resolve-audit-warnings"
+        next_action = "resolve-reconciliation-warnings"
     elif operations:
-        next_action = "confirm-apply"
+        next_action = "confirm-reconcile-assignments"
     else:
         next_action = "complete"
     report = {
@@ -326,7 +329,7 @@ def build_plan(args) -> tuple[dict, list[dict]]:
         "nextAction": next_action,
         "executionCommand": (
             execution_command(args, version)
-            if next_action == "confirm-apply"
+            if next_action == "confirm-reconcile-assignments"
             else None
         ),
     }
@@ -357,7 +360,10 @@ def main() -> int:
     args = create_parser().parse_args()
     try:
         report, operations = build_plan(args)
-        if not args.dry_run and report["nextAction"] == "confirm-apply":
+        if (
+            not args.dry_run
+            and report["nextAction"] == "confirm-reconcile-assignments"
+        ):
             execute(args, operations)
             report, _ = build_plan(args)
             report["dryRun"] = False

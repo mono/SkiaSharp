@@ -461,7 +461,7 @@ def milestones_command(release: publish.ReleaseVersion) -> str:
         [
             sys.executable,
             ".agents/skills/release-milestones/scripts/"
-            "audit-milestones.py",
+            "reconcile-release-assignments.py",
             "--version",
             release.numeric,
             "--dry-run",

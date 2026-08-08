@@ -21,7 +21,7 @@ The release process is handled by five skills in order:
 | 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
 | 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
 | 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish packages, create tag/draft, publish release | "publish X.Y.Z", "finalize" |
-| 5 | [release-milestones](../../.agents/skills/release-milestones/SKILL.md) | Audit/sync/close milestones | "audit milestones", "sync milestone schedule" |
+| 5 | [release-milestones](../../.agents/skills/release-milestones/SKILL.md) | Reconcile assignments and advance milestones | "reconcile milestones", "advance milestone schedule" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
 `done` and `pending` have the same meaning throughout; additional statuses such
@@ -298,28 +298,28 @@ resumable `wait-for-nuget` state.
 
 ```mermaid
 flowchart TB
-    START([GitHub Release published]) --> AUDIT
-    AUDIT["Assignment dry-run
+    START([GitHub Release published]) --> RECONCILE
+    RECONCILE["Assignment reconciliation dry-run
     ∙ Detect shipped tagged releases
     ∙ Roll unshipped ranges forward
-    ∙ Reconcile PRs + linked issues"] --> AUDIT_DECIDE{Assignments?}
-    AUDIT_DECIDE -->|Warnings| BLOCKED([Investigate boundaries/missing milestones])
-    AUDIT_DECIDE -->|Pending| AUDIT_APPROVE{Approve assignments?}
-    AUDIT_APPROVE -->|No| STOP([Stop])
-    AUDIT_APPROVE -->|Yes| AUDIT_APPLY[Apply shipped assignments]
-    AUDIT_APPLY --> AUDIT
-    AUDIT_DECIDE -->|Complete| SYNC
-    SYNC["Schedule + closure dry-run
-    ∙ Sync upcoming Chromium dates
+    ∙ Reconcile PRs + linked issues"] --> RECONCILE_DECIDE{Assignments?}
+    RECONCILE_DECIDE -->|Warnings| BLOCKED([Investigate boundaries/missing milestones])
+    RECONCILE_DECIDE -->|Pending| RECONCILE_APPROVE{Approve assignments?}
+    RECONCILE_APPROVE -->|No| STOP([Stop])
+    RECONCILE_APPROVE -->|Yes| RECONCILE_APPLY[Apply shipped assignments]
+    RECONCILE_APPLY --> RECONCILE
+    RECONCILE_DECIDE -->|Complete| ADVANCE
+    ADVANCE["Milestone advancement dry-run
+    ∙ Maintain upcoming Chromium dates
     ∙ Detect milestones with release tags
     ∙ Move open issues/PRs to next unshipped milestone
-    ∙ Close shipped milestones"] --> SYNC_DECIDE{Changes?}
-    SYNC_DECIDE -->|Warnings| BLOCKED
-    SYNC_DECIDE -->|Pending| SYNC_APPROVE{Approve sync + closure?}
-    SYNC_APPROVE -->|No| STOP
-    SYNC_APPROVE -->|Yes| SYNC_APPLY[Apply sync, moves, and closure]
-    SYNC_APPLY --> SYNC
-    SYNC_DECIDE -->|Complete| DONE([Release complete])
+    ∙ Close shipped milestones"] --> ADVANCE_DECIDE{Changes?}
+    ADVANCE_DECIDE -->|Warnings| BLOCKED
+    ADVANCE_DECIDE -->|Pending| ADVANCE_APPROVE{Approve advancement?}
+    ADVANCE_APPROVE -->|No| STOP
+    ADVANCE_APPROVE -->|Yes| ADVANCE_APPLY[Apply schedule, moves, and closure]
+    ADVANCE_APPLY --> ADVANCE
+    ADVANCE_DECIDE -->|Complete| DONE([Release complete])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
@@ -327,8 +327,8 @@ flowchart TB
     class START,DONE endpoint
 ```
 
-The same skill can run independently to synchronize upcoming milestones from
-the Chromium schedule or audit shipped assignments at any time.
+The same skill can run independently to advance upcoming milestones from the
+Chromium schedule or reconcile shipped assignments at any time.
 
 ---
 

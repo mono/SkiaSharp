@@ -10,13 +10,13 @@ All three read the shared source of truth in
 
 | Script | Language | What it manages | Automated? |
 |--------|----------|-----------------|------------|
-| [`sync-milestones.py`](../../../.agents/skills/release-milestones/scripts/sync-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues and PRs forward, and closes tagged milestones. | No — use release-milestones. |
-| [`audit-milestones.py`](../../../.agents/skills/release-milestones/scripts/audit-milestones.py) | Python | Fixes shipped PR/linked-issue assignments. | No — use release-milestones. |
+| [`advance-release-milestones.py`](../../../.agents/skills/release-milestones/scripts/advance-release-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues and PRs forward, and closes tagged milestones. | No — use release-milestones. |
+| [`reconcile-release-assignments.py`](../../../.agents/skills/release-milestones/scripts/reconcile-release-assignments.py) | Python | Fixes shipped PR/linked-issue assignments. | No — use release-milestones. |
 | [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily workflow. |
 
 ---
 
-## `sync-milestones.py`
+## `advance-release-milestones.py`
 
 Fetches the Chromium release schedule from `chromiumdash.appspot.com` and
 creates/updates GitHub milestones for the next few Skia milestones, with due
@@ -31,22 +31,22 @@ dates derived from the Chrome cadence:
 
 ```bash
 # preview the next 3 milestones without touching anything
-python3 .agents/skills/release-milestones/scripts/sync-milestones.py \
+python3 .agents/skills/release-milestones/scripts/advance-release-milestones.py \
   --dry-run --count 3
 
 # create/update them
-python3 .agents/skills/release-milestones/scripts/sync-milestones.py
+python3 .agents/skills/release-milestones/scripts/advance-release-milestones.py
 ```
 
 Flags: `--dry-run`, `--count <n>` (default 3), `--repo <owner/repo>`
 (default `mono/SkiaSharp`).
 
-During the same sync, exact release tags make their matching milestones
+During the same advancement, exact release tags make their matching milestones
 shipped. Open issues and pull requests move to the next unshipped milestone in
 release order. The script waits for GitHub to reflect those moves, verifies no
 new open item appeared, then closes the shipped milestone.
 
-## `audit-milestones.py`
+## `reconcile-release-assignments.py`
 
 Detects shipped releases from exact remote tags, uses release-branch merge-bases
 as first-parent commit-range boundaries, and rolls unshipped preview/RC ranges
@@ -55,11 +55,11 @@ it closed — is assigned to the milestone where it actually shipped.
 
 ```bash
 # report what would change
-python3 .agents/skills/release-milestones/scripts/audit-milestones.py \
+python3 .agents/skills/release-milestones/scripts/reconcile-release-assignments.py \
   --dry-run
 
-# audit a specific version instead of the one in VERSIONS.txt
-python3 .agents/skills/release-milestones/scripts/audit-milestones.py \
+# reconcile a specific version instead of the one in VERSIONS.txt
+python3 .agents/skills/release-milestones/scripts/reconcile-release-assignments.py \
   --version 4.150.0 --dry-run
 
 ```
