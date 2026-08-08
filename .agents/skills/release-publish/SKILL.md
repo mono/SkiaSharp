@@ -56,6 +56,11 @@ Write scripts audit with `--dry-run` and execute without it. The detector emits
 the pinned audit commands; every confirmation report emits its exact
 `executionCommand`.
 
+Package verification defaults to `--verification nuget`, which waits for both
+exact package versions to be indexed. Automated coordination may explicitly use
+`--verification azure` to continue after the protected publication run
+succeeds; that mode reports that NuGet.org indexing was not verified.
+
 ## Actions
 
 | Source | `nextAction` | Response |
@@ -123,8 +128,9 @@ If Azure succeeds but indexing exceeds the wait window, treat the returned
 `wait.missingPackages` and reuse `resumeCommand`.
 
 For unattended automation, invoke the approved execution command with `--wait`.
-It queues or recovers the exact run, prints its URL immediately, then waits
-through protected approval and NuGet indexing in one process.
+It queues or recovers the exact run and prints its URL immediately. Keep the
+default `--verification nuget` to wait through indexing, or explicitly use
+`--verification azure` to stop waiting when the protected run succeeds.
 
 ### 3. Create the generated-notes draft
 
