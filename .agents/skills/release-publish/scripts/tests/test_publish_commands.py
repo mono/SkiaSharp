@@ -68,19 +68,14 @@ class PublishCommandTests(unittest.TestCase):
         self.assertNotIn("--dry-run", draft_command)
 
         release_args = release.create_parser().parse_args(
-            [
-                *COMMON,
-                "--teaser-file",
-                "teaser.md",
-                "--dry-run",
-            ]
+            [*COMMON, "--dry-run"]
         )
         release_command = release.execution_command(
             release_args,
             "a" * 40,
         )
         self.assertNotIn("--dry-run", release_command)
-        self.assertIn("--teaser-file teaser.md", release_command)
+        self.assertNotIn("--teaser-file", release_command)
 
     def test_package_statuses_match_external_state(self):
         self.assertEqual(
@@ -396,7 +391,7 @@ class PublishCommandTests(unittest.TestCase):
         self.assertIn("--verify-tag", argv)
         self.assertNotIn("--draft=false", argv)
 
-    def test_publish_script_updates_draft_after_teaser(self):
+    def test_publish_script_publishes_before_dispatching_docs(self):
         events = []
 
         class FakeGitHub:
@@ -413,27 +408,23 @@ class PublishCommandTests(unittest.TestCase):
             github=FakeGitHub(),
             github_release={"isDraft": True},
         )
-        args = SimpleNamespace(teaser_file=Path("teaser.md"))
+        args = SimpleNamespace()
         completed = (
             context,
             {"nextAction": "start-release-milestones"},
-            "body",
         )
-        with (
-            mock.patch.object(
-                release.github_release,
-                "write_release_body",
-                return_value={"body": Path("release-body.md")},
-            ),
-            mock.patch.object(release, "audit", return_value=completed),
+        with mock.patch.object(
+            release,
+            "audit",
+            return_value=completed,
         ):
-            release.execute(args, context, "body")
+            release.execute(args, context)
 
         self.assertEqual(
             events,
             [
-                ("docs", "4.152.0"),
                 ("publish", "v4.152.0"),
+                ("docs", "4.152.0"),
             ],
         )
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import json
-from pathlib import Path
 import sys
 
 import release_github as github_release
@@ -24,8 +23,6 @@ def execution_command(args, source_sha: str) -> str:
 
 def publication_audit_command(
     context: github_release.ReleaseContext,
-    *,
-    teaser_file: Path | None,
 ) -> str:
     command = [
         sys.executable,
@@ -38,8 +35,6 @@ def publication_audit_command(
         "--expect-tests-run",
         str(context.handoff["tests"]["runId"]),
     ]
-    if teaser_file:
-        command.extend(["--teaser-file", str(teaser_file)])
     command.append("--dry-run")
     return publish.shell_command(command)
 
@@ -57,11 +52,12 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict, str | None]:
     generated_log = None
     generated_metadata = None
     if draft:
-        generated_log = existing.get("body") or ""
-        if not generated_log:
+        body = existing.get("body") or ""
+        if not body:
             raise publish.PublishError(
                 "GitHub draft has no generated release notes"
             )
+        generated_log = github_release.extract_generated_notes(body)
         generated_metadata = github_release.generated_log_metadata(
             generated_log
         )
@@ -79,7 +75,7 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict, str | None]:
     if published:
         next_action = "audit-release-publication"
     elif draft:
-        next_action = "write-release-teaser"
+        next_action = "confirm-publish-release"
     else:
         next_action = "confirm-create-release-draft"
 
@@ -138,16 +134,9 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict, str | None]:
             else None
         ),
         "publishAuditCommand": (
-            publication_audit_command(
-                context,
-                teaser_file=(
-                    paths["teaser"]
-                    if next_action == "write-release-teaser"
-                    else None
-                ),
-            )
+            publication_audit_command(context)
             if next_action in {
-                "write-release-teaser",
+                "confirm-publish-release",
                 "audit-release-publication",
             }
             else None
@@ -176,7 +165,7 @@ def execute(
     if context.github_release is None:
         paths = github_release.write_generated_artifacts(
             context,
-            generated_log,
+            github_release.mark_generated_notes(generated_log),
         )
         context.github.create_draft(
             tag=context.tag,
@@ -207,12 +196,15 @@ def main() -> int:
             )
             report["dryRun"] = False
         if (
-            report["nextAction"] == "write-release-teaser"
+            report["nextAction"] == "confirm-publish-release"
             and generated_log is not None
         ):
             # A remote draft is the source of truth; refresh its ignored local
             # editorial files even during a read-only remote audit.
-            github_release.write_generated_artifacts(context, generated_log)
+            github_release.write_generated_artifacts(
+                context,
+                github_release.mark_generated_notes(generated_log),
+            )
         print(json.dumps(report, indent=2))
     except (publish.PublishError, OSError) as error:
         print(f"ERROR: {error}", file=sys.stderr)

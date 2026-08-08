@@ -140,62 +140,23 @@ class PublishReleaseTests(unittest.TestCase):
         self.assertNotIn("## What's Changed", changes)
         self.assertNotIn("**Full Changelog**:", changes)
 
-    def test_release_body_assembly_is_deterministic(self):
-        teaser = (
-            "A focused release.\n\n"
-            f"{github.TEASER_LINKS_MARKER}\n\n"
-            "## What's New\n- Added a feature by @one (#1)\n"
-        )
+    def test_marked_body_preserves_generated_notes_exactly(self):
         generated = """## What's Changed
 * Add feature by @one in https://github.com/mono/SkiaSharp/pull/1
 
 **Full Changelog**: https://github.com/mono/SkiaSharp/compare/v1...v2
 """
-        body = github.assemble_release_body(
-            teaser,
-            generated,
-            public_version="4.152.0-preview.1.1",
-            notes_version="4.152.0",
-        )
-        self.assertIn(
-            "https://www.nuget.org/packages/SkiaSharp/"
-            "4.152.0-preview.1.1",
-            body,
-        )
-        self.assertIn(
-            "docs/releases/4.152.0.html",
-            body,
-        )
-        self.assertIn("All changes (1 pull requests)", body)
-        self.assertEqual(body.count("Full changelog"), 1)
-        self.assertNotIn(github.TEASER_LINKS_MARKER, body)
+        body = github.mark_generated_notes(generated)
+        self.assertEqual(github.extract_generated_notes(body), generated)
+        self.assertEqual(body.count(github.TEASER_START_MARKER), 1)
+        self.assertEqual(body.count(github.TEASER_END_MARKER), 1)
 
-    def test_release_body_rejects_unsafe_teaser_output(self):
-        generated = "## What's Changed\n"
-        for teaser, message in (
-            (
-                "```markdown\nsubtitle\n```\n\n<!-- RELEASE_LINKS -->",
-                "code fence",
-            ),
-            (
-                "Security fix for CVE-1234\n\n<!-- RELEASE_LINKS -->",
-                "security",
-            ),
-            (
-                "## What's New\n\n<!-- RELEASE_LINKS -->",
-                "plain-language subtitle",
-            ),
+    def test_unmarked_generated_notes_are_rejected(self):
+        with self.assertRaisesRegex(
+            github.publish.PublishError,
+            "not a valid managed",
         ):
-            with self.assertRaisesRegex(
-                github.publish.PublishError,
-                message,
-            ):
-                github.assemble_release_body(
-                    teaser,
-                    generated,
-                    public_version="4.152.0",
-                    notes_version="4.152.0",
-                )
+            github.extract_generated_notes("## What's Changed\n")
 
     def test_status_handoff_rejects_changed_run(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")

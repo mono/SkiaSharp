@@ -5,8 +5,8 @@ description: >
   "publish X", "finalize X", "tag X", "finish release X", says release testing
   passed, or explicitly overrides the testing gate. This is the fourth release
   step: detect the exact testing handoff, publish its packages, create the
-  immutable tag and generated-notes draft, prepare the customer teaser, then
-  publish the approved draft.
+  immutable tag and marked generated-notes draft, then publish the approved
+  draft and dispatch reviewed release notes.
 ---
 
 # Release Publish
@@ -35,8 +35,11 @@ This skill is **Step 4 of 5**:
 - Approval of the queue command authorizes only queueing pipeline 25298. Its
   protected push stage then waits for a human to review the exact versions and
   destination. The agent never approves that downstream gate.
-- The agent owns customer-teaser classification between draft creation and
-  publication; scripts assemble and validate the final release body.
+- The initial and published GitHub Release body is the useful GitHub-generated
+  notes wrapped in explicit managed markers. Never publish an empty placeholder.
+- Customer teaser prose is owned by the later agentic release-notes PR. A
+  deterministic workflow applies reviewed exact-tag teaser entries after merge
+  without reconstructing or rewriting GitHub's generated payload.
 
 ## Script contract
 
@@ -45,7 +48,7 @@ This skill is **Step 4 of 5**:
 | `scripts/detect-release-publish.py` | Read-only exact release/testing/package handoff. |
 | `scripts/push-release-packages.py` | Audit, queue/recover one exact pipeline 25298 run, and optionally wait through NuGet verification. |
 | `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
-| `scripts/publish-release.py` | Validate the teaser and publish the draft. |
+| `scripts/publish-release.py` | Publish the marked generated-notes draft, then dispatch release notes. |
 | `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
 | `scripts/release_publish.py` | Shared clients and validation; not a user command. |
 
@@ -64,9 +67,8 @@ the pinned audit commands; every confirmation report emits its exact
 | Packages | `retry-publish-run` | Show the failed exact run and return to package audit. |
 | Packages | `start-release-draft` | Run `draftAuditCommand`. |
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
-| Draft | `write-release-teaser` | Classify `generated-log.md` and fill `teaser.md`. |
 | Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
-| Publication | `confirm-publish-release` | Approve and publish the completed draft. |
+| Draft | `confirm-publish-release` | Approve and publish the useful generated-notes draft. |
 | Publication | `start-release-milestones` | Hand off the emitted milestone reconciliation command. |
 
 ## Workflow
@@ -137,42 +139,32 @@ python3 .agents/skills/release-publish/scripts/create-release-draft.py \
 
 For `confirm-create-release-draft`, present the exact tag, source SHA, title,
 prerelease state, previous tag, and operation table. Obtain approval and run
-`executionCommand`. It pushes the tag, creates a GitHub draft containing the
-exact generated notes, then downloads that body into ignored local artifacts:
+`executionCommand`. It pushes the tag and creates a GitHub draft containing the
+exact generated notes inside managed markers. The generated payload is frozen:
+later automation may update only the separate managed teaser region above it.
 
 | File | Ownership |
 |------|-----------|
-| `generated-log.md` | Body downloaded from the GitHub draft; classification input only. |
-| `teaser.md` | Agent edits customer-facing sections. |
+| `generated-log.md` | Exact marked body used to create or audit the GitHub draft. |
 
-Rerunning this dry-run detects an existing remote tag/draft and re-downloads
-`generated-log.md`.
+Rerunning this dry-run detects an existing remote tag/draft and verifies its
+managed markers.
 
-### 4. Prepare the teaser
+### 4. Finish the release
 
-For `write-release-teaser`, follow
-[github-release-teaser.md](references/github-release-teaser.md), edit only
-`teaser.md`, and preserve exactly one `<!-- RELEASE_LINKS -->` marker.
+Run the draft result's emitted `publishAuditCommand`. For
+`confirm-publish-release`, present the draft URL, current body SHA, and operation
+table. Obtain approval and run `executionCommand`. One execution publishes the
+marked generated-notes body unchanged and then dispatches the targeted agentic
+release-notes workflow.
 
-This step is editorial and local only. It does not audit, modify, or publish the
-GitHub Release. Unsaved edits to `teaser.md` are the only publication state that
-cannot be recovered remotely.
+Publication does not wait for teaser review. Continue immediately to milestones.
+The release-notes workflow adds the exact-tag teaser entry to the line's single
+`prose.json`; after that PR is reviewed and merged, the zero-AI updater changes
+only the managed teaser region. Manual content outside managed markers and the
+original generated payload remain byte-for-byte intact.
 
-### 5. Finish the release
-
-Run the draft result's emitted `publishAuditCommand`. The publication dry-run
-consumes `teaser.md`, creates `release-body.md`, and validates its exact SHA.
-
-| File | Ownership |
-|------|-----------|
-| `release-body.md` | Script-assembled final body uploaded to the draft after approval. |
-
-For `confirm-publish-release`, present the draft URL, expected body SHA, teaser,
-and operation table. Obtain approval and run `executionCommand`. One execution
-dispatches targeted website notes, uploads the approved body, and publishes the
-draft.
-
-### 6. Hand off milestones
+### 5. Hand off milestones
 
 For `start-release-milestones`, invoke the emitted `milestonesCommand` with
 [release-milestones](../release-milestones/SKILL.md), complete its Reconcile

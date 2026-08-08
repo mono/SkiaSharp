@@ -265,20 +265,16 @@ flowchart TB
     APPROVE2 -->|Yes| DRAFT
     DRAFT["Create release draft
     ∙ Push exact tag
-    ∙ Create generated-notes draft
-    ∙ Download draft body"] --> TEASER
-    TEASER["Human teaser
-    ∙ Read downloaded draft notes
-    ∙ Write customer-facing teaser"] --> PUBLICATION_AUDIT
+    ∙ Create marked generated-notes draft
+    ∙ Preserve GitHub payload verbatim"] --> PUBLICATION_AUDIT
     PUBLICATION_AUDIT["Publication dry-run
-    ∙ Assemble final body
-    ∙ Review body SHA
+    ∙ Review useful generated-notes body
     ∙ Review draft + publication operations"] --> APPROVE3{Publish draft?}
     APPROVE3 -->|No| STOP
     APPROVE3 -->|Yes| PUBLISH
     PUBLISH["Publish
-    ∙ Dispatch website notes
-    ∙ Upload body + publish draft"] --> HANDOFF([Release milestones])
+    ∙ Publish marked generated notes
+    ∙ Dispatch agentic release notes"] --> HANDOFF([Release milestones])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
@@ -293,6 +289,18 @@ its approval URL immediately; run the emitted pinned resume command after human
 approval, or add `--wait` to the approved execution command in unattended
 automation. Successful Azure completion with delayed NuGet indexing remains a
 resumable `wait-for-nuget` state.
+
+The release is useful immediately: its initial body is GitHub-generated notes,
+never an empty placeholder. Publication dispatches the agentic release-notes
+workflow and milestone reconciliation proceeds immediately. The reviewed notes PR
+later adds the exact-tag teaser to the line's single prose file; after merge, a
+deterministic zero-AI workflow updates only that marked teaser region while
+preserving the original generated changelog payload byte-for-byte.
+
+The future coordinator therefore needs no Copilot token/model and no
+`PrepareTeaser` phase. Its Release phase is only tag/draft creation plus final
+publication approval; reviewed teaser convergence is asynchronous and owned by
+the release-notes PR and deterministic updater.
 
 ### Stage 5: Release Milestones (release-milestones skill)
 

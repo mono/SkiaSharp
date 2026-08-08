@@ -15,7 +15,14 @@ import release_publish as publish
 
 GITHUB_REPOSITORY = "mono/SkiaSharp"
 DOCS_WORKFLOW = "Sync - Release Notes & API Diffs"
-TEASER_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
+TEASER_START_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:START -->"
+TEASER_END_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:END -->"
+GENERATED_NOTES_START_MARKER = (
+    "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
+)
+GENERATED_NOTES_END_MARKER = (
+    "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->"
+)
 TAG_RE = re.compile(
     r"^v(?P<numeric>\d+\.\d+\.\d+(?:\.\d+)?)"
     r"(?:-(?P<channel>preview|rc)(?P<suffix>(?:\.\d+)+))?$"
@@ -188,7 +195,6 @@ class GitHub:
         *,
         tag: str,
         title: str,
-        body_file: Path,
     ) -> None:
         publish.run(
             [
@@ -200,8 +206,6 @@ class GitHub:
                 GITHUB_REPOSITORY,
                 "--title",
                 title,
-                "--notes-file",
-                str(body_file),
                 "--verify-tag",
                 "--draft=false",
             ]
@@ -236,64 +240,33 @@ def generated_log_parts(body: str) -> tuple[str | None, str, int]:
     return compare_url, changes, count
 
 
-def assemble_release_body(
-    teaser: str,
-    generated_log: str,
-    *,
-    public_version: str,
-    notes_version: str,
-) -> str:
-    if teaser.count(TEASER_LINKS_MARKER) != 1:
-        raise publish.PublishError(
-            f"teaser must contain exactly one {TEASER_LINKS_MARKER}"
-        )
-    if "<details" in teaser or "**Full Changelog**:" in teaser:
-        raise publish.PublishError(
-            "teaser must not contain the folded log or full changelog line"
-        )
-    if "```" in teaser:
-        raise publish.PublishError("teaser must not contain a code fence")
-    if re.search(
-        r"\b(?:CVE-\d|security (?:fix|release)|vulnerabilit)",
-        teaser,
-        re.IGNORECASE,
+def mark_generated_notes(generated_notes: str) -> str:
+    """Wrap GitHub's exact generated payload without normalizing its bytes."""
+    return (
+        f"{TEASER_START_MARKER}\n"
+        f"{TEASER_END_MARKER}\n\n"
+        f"{GENERATED_NOTES_START_MARKER}\n"
+        f"{generated_notes}"
+        f"{GENERATED_NOTES_END_MARKER}\n"
+    )
+
+
+def extract_generated_notes(body: str) -> str:
+    start_token = f"{GENERATED_NOTES_START_MARKER}\n"
+    start = body.find(start_token)
+    end = body.find(GENERATED_NOTES_END_MARKER)
+    if (
+        body.count(TEASER_START_MARKER) != 1
+        or body.count(TEASER_END_MARKER) != 1
+        or body.count(GENERATED_NOTES_START_MARKER) != 1
+        or body.count(GENERATED_NOTES_END_MARKER) != 1
+        or start < 0
+        or end < start + len(start_token)
     ):
         raise publish.PublishError(
-            "teaser must not advertise security or vulnerability details"
+            "GitHub release body is not a valid managed generated-notes body"
         )
-    if "Replace this comment" in teaser:
-        raise publish.PublishError("teaser subtitle has not been written")
-    first_line = next(
-        (line.strip() for line in teaser.splitlines() if line.strip()),
-        "",
-    )
-    if not first_line or first_line.startswith(("#", "<!--")):
-        raise publish.PublishError(
-            "teaser must start with a plain-language subtitle"
-        )
-    compare_url, changes, count = generated_log_parts(generated_log)
-    links = [
-        (
-            "\U0001f4e6 [NuGet]"
-            f"(https://www.nuget.org/packages/SkiaSharp/{public_version})"
-        ),
-        (
-            "\U0001f4d6 [Release notes]"
-            "(https://mono.github.io/SkiaSharp/docs/releases/"
-            f"{notes_version}.html)"
-        ),
-    ]
-    if compare_url:
-        links.append(f"\U0001f500 [Full changelog]({compare_url})")
-    top = teaser.strip().replace(
-        TEASER_LINKS_MARKER,
-        " \u00b7 ".join(links),
-    )
-    return (
-        f"{top}\n\n---\n\n"
-        f"<details><summary>All changes ({count} pull requests)</summary>"
-        f"\n\n{changes}\n\n</details>\n"
-    )
+    return body[start + len(start_token) : end]
 
 
 def body_sha256(body: str) -> str:
@@ -400,8 +373,6 @@ def artifact_paths(root: Path, tag: str) -> dict[str, Path]:
     return {
         "directory": directory,
         "generated": directory / "generated-log.md",
-        "teaser": directory / "teaser.md",
-        "body": directory / "release-body.md",
     }
 
 
@@ -412,24 +383,6 @@ def write_generated_artifacts(
     paths = artifact_paths(context.root, context.tag)
     paths["directory"].mkdir(parents=True, exist_ok=True)
     paths["generated"].write_text(generated_log, encoding="utf-8")
-    if not paths["teaser"].exists():
-        paths["teaser"].write_text(
-            (
-                "<!-- Replace this comment with one neutral subtitle line. -->"
-                f"\n\n{TEASER_LINKS_MARKER}\n"
-            ),
-            encoding="utf-8",
-        )
-    return paths
-
-
-def write_release_body(
-    context: ReleaseContext,
-    body: str,
-) -> dict[str, Path]:
-    paths = artifact_paths(context.root, context.tag)
-    paths["directory"].mkdir(parents=True, exist_ok=True)
-    paths["body"].write_text(body, encoding="utf-8")
     return paths
 
 
