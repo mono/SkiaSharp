@@ -1,0 +1,73 @@
+name: Update GitHub Release teasers
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "documentation/docfx/releases/_sources/*.prose.json"
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional exact tag to converge (empty updates every reviewed teaser)"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-github-release-teasers
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Apply reviewed teasers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout reviewed source with history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Push runs must use their exact after commit so queued runs cannot
+          # render an older semantic diff with a newer checkout. Other events
+          # deliberately converge from the currently reviewed main branch.
+          ref: ${{ github.event_name == 'push' && github.sha || 'main' }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Update managed GitHub Release bodies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          AFTER_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          DISPATCH_TAG: ${{ inputs.tag }}
+          REPOSITORY: ${{ github.repository }}
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          set -euo pipefail
+          args=(
+            --event "$EVENT_NAME"
+            --repository "$REPOSITORY"
+          )
+          case "$EVENT_NAME" in
+            push)
+              args+=(--before "$BEFORE_SHA" --after "$AFTER_SHA")
+              ;;
+            release)
+              args+=(--tag "$RELEASE_TAG")
+              ;;
+            workflow_dispatch)
+              if [ -n "${DISPATCH_TAG:-}" ]; then
+                args+=(--tag "$DISPATCH_TAG")
+              fi
+              ;;
+            *)
+              echo "Unsupported event: $EVENT_NAME" >&2
+              exit 2
+              ;;
+          esac
+          python3 scripts/infra/docs/update-github-release-teasers.py "${args[@]}"
