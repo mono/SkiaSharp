@@ -2,10 +2,11 @@
 name: release-publish
 description: >
   Publish SkiaSharp packages and finalize the release. Use when the user says
-  "publish X", "finalize X", "tag X", "finish release X", or says release
-  testing passed. This is the fourth release step: detect the exact tested
-  handoff, publish its packages, create the immutable tag and generated-notes
-  draft, prepare the customer teaser, then publish the approved draft.
+  "publish X", "finalize X", "tag X", "finish release X", says release testing
+  passed, or explicitly overrides the testing gate. This is the fourth release
+  step: detect the exact testing handoff, publish its packages, create the
+  immutable tag and generated-notes draft, prepare the customer teaser, then
+  publish the approved draft.
 ---
 
 # Release Publish
@@ -31,9 +32,9 @@ This skill is **Step 4 of 5**:
 - Keep the checkout unchanged. Draft creation pushes a lightweight tag directly
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
-- The coordinator approval authorizes only queueing pipeline 25298. Its protected
-  push stage then waits for a human to review the exact versions and destination.
-  The agent never approves that downstream gate.
+- Approval of the queue command authorizes only queueing pipeline 25298. Its
+  protected push stage then waits for a human to review the exact versions and
+  destination. The agent never approves that downstream gate.
 - The agent owns customer-teaser classification between draft creation and
   publication; scripts assemble and validate the final release body.
 

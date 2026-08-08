@@ -20,7 +20,7 @@ The release process is handled by five skills in order:
 | 1 | [release-branch](../../.agents/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
 | 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
 | 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
-| 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+| 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish packages, create tag/draft, publish release | "publish X.Y.Z", "finalize" |
 | 5 | [release-milestones](../../.agents/skills/release-milestones/SKILL.md) | Audit/sync/close milestones | "audit milestones", "sync milestone schedule" |
 
 Each skill confirms with `ask_user` before executing destructive operations.
@@ -108,7 +108,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 | [SkiaSharp-Native](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493) | Builds native binaries. |
 | [SkiaSharp](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789) | Builds/signs managed packages and publishes the preview feed. |
 | [SkiaSharp-Tests](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15756) | Runs the connected CI test suite. |
-| [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual trigger) |
+| [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org after protected human approval. |
 
 ---
 
@@ -203,7 +203,7 @@ flowchart TB
     APPROVE -->|Yes| PREPARE
 
     PREPARE["Prepare Approved Run
-    ∙ Verify pinned .NET tools
+    ∙ Restore pinned .NET tools
     ∙ Clear prior test output"]
 
     PREPARE --> TESTS
@@ -227,11 +227,18 @@ flowchart TB
 The release manager may explicitly override the testing gate. Record the
 override and continue without searching for additional evidence.
 
+| Mobile coverage | Exact test target |
+|-----------------|-------------------|
+| Android minimum / maximum | `26` / `37.1` |
+| iOS minimum / maximum | `18.6` / `26.5` |
+
+These are release-test targets, not product support minimums.
+
 ### Stage 4: Publishing (release-publish skill)
 
 ```mermaid
 flowchart TB
-    START([Tests passed]) --> DETECT
+    START([Testing gate satisfied]) --> DETECT
     DETECT["Read-only detector
     ∙ Pin source SHA
     ∙ Pin managed/tests runs
@@ -262,9 +269,9 @@ flowchart TB
     ∙ Download draft body"] --> TEASER
     TEASER["Human teaser
     ∙ Read downloaded draft notes
-    ∙ Write customer-facing teaser
-    ∙ Script assembles final body"] --> PUBLICATION_AUDIT
+    ∙ Write customer-facing teaser"] --> PUBLICATION_AUDIT
     PUBLICATION_AUDIT["Publication dry-run
+    ∙ Assemble final body
     ∙ Review body SHA
     ∙ Review draft + publication operations"] --> APPROVE3{Publish draft?}
     APPROVE3 -->|No| STOP
@@ -278,6 +285,14 @@ flowchart TB
     class STOP error
     class START,HANDOFF endpoint
 ```
+
+`detect-release-publish.py release/{version}` is also the recovery entry point:
+it reconstructs all immutable pins and audit commands. The package publication
+dry-run detects an exact existing Azure run without queueing. Execution returns
+its approval URL immediately; run the emitted pinned resume command after human
+approval, or add `--wait` to the approved execution command in unattended
+automation. Successful Azure completion with delayed NuGet indexing remains a
+resumable `wait-for-nuget` state.
 
 ### Stage 5: Release Milestones (release-milestones skill)
 
