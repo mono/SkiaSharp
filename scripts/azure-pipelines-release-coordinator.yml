@@ -223,6 +223,7 @@ stages:
                   root = Path("$(Build.ArtifactStagingDirectory)/release-complete")
                   context = json.loads((root / "context.json").read_text())
                   command = shlex.split(context["pushAuditCommand"])
+                  command.extend(["--verification", "azure"])
                   with (root / "push-plan.json").open("w") as output:
                       subprocess.run(command, check=True, stdout=output, text=True)
 
@@ -258,6 +259,11 @@ stages:
                   for item in plan["operations"]:
                       lines.append(
                           f"| {item['id']} | {item['status']} | {item['detail']} |"
+                      )
+                  warnings = plan.get("warnings") or []
+                  if warnings:
+                      lines.extend(
+                          ["", "## Warnings", *[f"- {item}" for item in warnings]]
                       )
                   (root / "summary.md").write_text("\n".join(lines) + "\n")
                   PY
@@ -388,7 +394,7 @@ stages:
                   )
                   PY
                   echo "##vso[task.uploadfile]$(Pipeline.Workspace)/release-complete-plan/push-result.json"
-                displayName: Queue, wait for protected approval, and verify NuGet.org
+                displayName: Queue and wait for protected Azure publication
                 env:
                   AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
               - task: PublishPipelineArtifact@1

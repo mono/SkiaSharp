@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
+import importlib.util
 from pathlib import Path
+import sys
+from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 
 PIPELINE = (
@@ -9,6 +13,18 @@ PIPELINE = (
     / "scripts"
     / "azure-pipelines-release-coordinator.yml"
 )
+LOCAL_COORDINATOR = (
+    Path(__file__).resolve().parents[5]
+    / "scripts"
+    / "release-coordinator.py"
+)
+SPEC = importlib.util.spec_from_file_location(
+    "local_release_coordinator",
+    LOCAL_COORDINATOR,
+)
+local = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = local
+SPEC.loader.exec_module(local)
 
 
 class ReleaseCoordinatorTests(unittest.TestCase):
@@ -20,6 +36,81 @@ class ReleaseCoordinatorTests(unittest.TestCase):
         self.assertIn("- name: target", text)
         self.assertIn("- name: overrideReleaseTesting", text)
         self.assertIn("    default: false", text)
+
+    def test_local_coordinator_exposes_four_phases_and_aliases(self):
+        parser = local.create_parser()
+        cases = (
+            (["start"], local.start_phase),
+            (["a"], local.start_phase),
+            (["packages", "release/4.152.0"], local.packages_phase),
+            (["b", "release/4.152.0"], local.packages_phase),
+            (["release", "release/4.152.0"], local.release_phase),
+            (["c", "release/4.152.0"], local.release_phase),
+            (["finish", "release/4.152.0"], local.finish_phase),
+            (["d", "release/4.152.0"], local.finish_phase),
+        )
+        for arguments, handler in cases:
+            with self.subTest(arguments=arguments):
+                self.assertIs(
+                    parser.parse_args(arguments).handler,
+                    handler,
+                )
+
+    def test_local_package_azure_mode_waits_only_for_pipeline(self):
+        context = {
+            "releaseBranch": "release/4.152.0-preview.1",
+            "pushAuditCommand": "python3 push.py release --dry-run",
+        }
+        plan = {
+            "nextAction": "confirm-publish-packages",
+            "executionCommand": "python3 push.py release",
+            "resumeCommand": None,
+        }
+        completed = {"nextAction": "start-release-draft"}
+        args = SimpleNamespace(
+            target=context["releaseBranch"],
+            verification="azure",
+            execute=True,
+        )
+        with (
+            mock.patch.object(
+                local,
+                "detect_publication",
+                return_value=context,
+            ),
+            mock.patch.object(
+                local,
+                "run_json",
+                side_effect=[plan, completed],
+            ) as run,
+        ):
+            result = local.packages_phase(args)
+
+        audit_command = run.call_args_list[0].args[0]
+        execution_command = run.call_args_list[1].args[0]
+        self.assertIn("--dry-run", audit_command)
+        self.assertEqual(
+            audit_command[audit_command.index("--verification") + 1],
+            "azure",
+        )
+        self.assertIn("--wait", execution_command)
+        self.assertEqual(
+            execution_command[
+                execution_command.index("--verification") + 1
+            ],
+            "azure",
+        )
+        self.assertEqual(result["result"], completed)
+
+    def test_local_release_numeric_supports_hotfixes(self):
+        self.assertEqual(
+            local.release_numeric("release/4.152.0-preview.1"),
+            "4.152.0",
+        )
+        self.assertEqual(
+            local.release_numeric("release/4.152.0.1"),
+            "4.152.0.1",
+        )
 
     def test_pipeline_has_all_irreversible_approvals(self):
         text = PIPELINE.read_text(encoding="utf-8")
@@ -72,7 +163,11 @@ class ReleaseCoordinatorTests(unittest.TestCase):
             text,
         )
         self.assertIn(
-            "Queue, wait for protected approval, and verify NuGet.org",
+            "Queue and wait for protected Azure publication",
+            text,
+        )
+        self.assertIn(
+            'command.extend(["--verification", "azure"])',
             text,
         )
         self.assertIn('or plan.get("resumeCommand")', text)

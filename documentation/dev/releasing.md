@@ -55,8 +55,9 @@ CI test gate enforced by release detection.
 The coordinator's package approval authorizes only queueing pipeline `25298`.
 That pipeline then pauses at its own protected stage so a human can review the
 exact package versions and Stable/Preview destination. The coordinator waits
-for that decision, Azure completion, and both exact NuGet.org packages before
-draft creation.
+for that decision and successful Azure completion before draft creation.
+Interactive/local publication retains the safer default of waiting for both
+exact NuGet.org packages to be indexed.
 
 Customer teaser generation runs Copilot CLI in an isolated directory with no
 available tools, built-in MCP servers, custom instructions, GitHub write token,
@@ -92,6 +93,46 @@ Then:
    the coordinator definition.
 
 Stable post-cut bump PR merges remain maintainer decisions.
+
+#### Local four-phase coordinator
+
+[`scripts/release-coordinator.py`](../../scripts/release-coordinator.py) wraps
+the same deterministic scripts into four resumable local phases. Each phase is
+read-only unless its explicit execution flag is supplied:
+
+| Phase | Command | Responsibility |
+|-------|---------|----------------|
+| A / `start` | `python3 scripts/release-coordinator.py a main` | Resolve and plan paired release branches. |
+| B / `packages` | `python3 scripts/release-coordinator.py b release/X.Y.Z` | Recover or plan the exact protected package publication. |
+| C / `release` | `python3 scripts/release-coordinator.py c release/X.Y.Z` | Create/audit the draft, validate the teaser, and publish. |
+| D / `finish` | `python3 scripts/release-coordinator.py d release/X.Y.Z` | Reconcile shipped assignments, then advance milestones. |
+
+Review a phase's JSON before adding its execution option:
+
+```bash
+# A
+python3 scripts/release-coordinator.py a main
+python3 scripts/release-coordinator.py a main --execute
+
+# B: local safety default waits for both exact NuGet.org packages
+python3 scripts/release-coordinator.py b release/X.Y.Z
+python3 scripts/release-coordinator.py b release/X.Y.Z --execute
+
+# C: draft creation and publication remain separate approval boundaries
+python3 scripts/release-coordinator.py c release/X.Y.Z --execute-draft
+python3 scripts/release-coordinator.py c release/X.Y.Z \
+  --teaser-file path/to/teaser.md
+python3 scripts/release-coordinator.py c release/X.Y.Z \
+  --teaser-file path/to/teaser.md --publish
+
+# D
+python3 scripts/release-coordinator.py d release/X.Y.Z
+python3 scripts/release-coordinator.py d release/X.Y.Z --execute
+```
+
+Phase B also supports `--verification azure`. The Azure coordinator uses that
+explicit policy and proceeds when the protected publication run succeeds.
+Without it, local operation continues to require exact NuGet.org indexing.
 
 ## Reference Tables
 
