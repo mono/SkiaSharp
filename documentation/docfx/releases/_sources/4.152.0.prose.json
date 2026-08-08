@@ -1,0 +1,77 @@
+{
+  "theme": "Skia m152 and Graphite bindings",
+  "highlights_headline": "SkiaSharp 4.152.0 updates the engine to Skia milestone m152 and adds Graphite GPU backend bindings for Vulkan, Metal, and Dawn.",
+  "highlights_body": "Preview 1 also ships a backend-neutral async RequestReadPixels API, a new SkiaSharp.Vulkan.Silk.NET package, FreeType-backed font rendering on Windows Nano Server, and several native memory-leak and allocation fixes.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Upgraded to Skia milestone m152",
+          "detail": "The bundled Skia engine now tracks the m152 branch, including subsequent upstream chrome/m151 and m152 stability fixes merged in during the preview.",
+          "prs": [4651, 4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+          "detail": "New bindings expose Skia's next-generation Graphite rendering pipeline, letting consumers create Graphite GPU contexts across Vulkan, Metal, and Dawn.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async RequestReadPixels on SKImage and SKSurface",
+          "detail": "A new async ReadPixels API reads pixel data from GPU-backed images and surfaces without blocking the render thread, across all supported GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "New SkiaSharp.Vulkan.Silk.NET package",
+          "detail": "A dedicated NuGet package wraps the Silk.NET Vulkan interop layer, simplifying Vulkan context setup without custom P/Invoke boilerplate.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free fixes in region, pixmap, and image APIs",
+          "detail": "SKRegion.SpanIterator, SKPixmap.ExtractSubset/With*, and SKImage.Create's raster failure path could reference or leak native memory after the owning object went away. All three are now rooted or freed correctly.",
+          "prs": [4355, 4558, 4455]
+        },
+        {
+          "lead": "Reduced allocations in hot text and rendering paths",
+          "detail": "SKData.SaveTo, GetEncodedText, SKRuntimeEffectUniforms lookup, and HandleDictionary's skip-registration check all avoid unnecessary copies, allocations, or repeated reflection checks.",
+          "prs": [4550, 4498, 4512, 4630]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "FreeType font rendering on Windows Nano Server",
+          "detail": "Nano Server lacks the GDI font stack, so SkiaSharp now falls back to FreeType there, enabling text rendering in containerised Windows workloads that was previously broken.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Windows native builds no longer pin a fixed SDK version",
+          "detail": "The Windows native build stops pinning a specific Windows SDK version by default, and now initializes the MSVC environment once per build for more reliable native builds.",
+          "prs": [4588, 4570]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Implemented FreeType font support for Windows Nano Server, unblocking text rendering in GDI-less container environments.",
+    "mmitche": "Fixed MSVC environment initialization to run once per native Windows build.",
+    "ramezgerges": "Authored the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 opened the 4.152.0 line with the Skia m152 engine upgrade, Graphite GPU backend bindings, the async RequestReadPixels API, FreeType support on Nano Server, and a round of native memory-leak and allocation fixes."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships with this release, carrying the same infrastructure and build hardening as the SkiaSharp preview."
+}
