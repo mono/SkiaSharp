@@ -25,7 +25,8 @@ This skill is **Step 5 of 5**:
 - Run the selected path with `--dry-run`, present every operation/warning, and
   obtain approval before executing its emitted command.
 - A real remote release tag makes its matching milestone eligible for closure.
-- Sync moves open issues to the next unshipped milestone before closing.
+- Sync moves open issues and pull requests to the next unshipped milestone
+  before closing.
 - Audit assigns merged PRs and linked issues to the release where they shipped;
   unshipped preview/RC ranges roll into the next shipped release.
 - Main commits after the last release cut remain unassigned.
@@ -37,7 +38,7 @@ This skill is **Step 5 of 5**:
 | Path | Script | Responsibility |
 |------|--------|----------------|
 | **Audit** | `scripts/audit-milestones.py` | Reconcile shipped PR/linked-issue assignments for a numeric release line. |
-| **Sync** | `scripts/sync-milestones.py` | Synchronize upcoming dates, move open issues, and close tagged milestones. |
+| **Sync** | `scripts/sync-milestones.py` | Synchronize upcoming dates, move open issues/PRs, and close tagged milestones. |
 
 The release-publish handoff runs Audit first from its emitted command, then
 runs Sync. Either path can also run independently.
@@ -50,7 +51,7 @@ runs Sync. Either path can also run independently.
 | Audit | `confirm-apply` | Approve and run assignment updates. |
 | Audit | `complete` | Assignments are correct. |
 | Sync | `resolve-sync-warnings` | Create/identify a future unshipped destination. |
-| Sync | `confirm-sync` | Approve schedule, issue-move, and closure operations. |
+| Sync | `confirm-sync` | Approve schedule, item-move, and closure operations. |
 | Sync | `complete` | Schedule matches and all tagged milestones are closed. |
 
 ## Workflow
@@ -100,14 +101,14 @@ Render:
 |-----------|--------|-----|---------|
 | `{operations[].title}` | `{action}` | `{dueOn}` | summarize `changes[]` |
 
-| Shipped milestone | Tag | Move open issues to | Status |
-|-------------------|-----|---------------------|--------|
+| Shipped milestone | Tag | Move open items to | Status |
+|-------------------|-----|--------------------|--------|
 | `{closureOperations[].title}` | `{tag}` | `{moveTo}` | `{status}` |
 ```
 
 For either path:
 
-1. Include every warning and each open issue URL/title that will move.
+1. Include every warning and each open item kind, URL, and title that will move.
 2. For a confirmation action, obtain approval and run `executionCommand`.
 3. Rerun the same dry-run until it reports `complete`.
 

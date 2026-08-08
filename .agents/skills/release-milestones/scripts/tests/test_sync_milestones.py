@@ -103,7 +103,14 @@ class SyncMilestonesTests(unittest.TestCase):
             existing,
             milestones,
             ["v4.152.0-preview.1.2"],
-            lambda title: [{"number": 99, "title": "Bug", "url": "url"}],
+            lambda number: [
+                {
+                    "number": 99,
+                    "title": "Bug",
+                    "url": "url",
+                    "kind": "issue",
+                }
+            ],
         )
 
         self.assertEqual(warnings, [])
@@ -127,7 +134,14 @@ class SyncMilestonesTests(unittest.TestCase):
             existing,
             milestones,
             ["v4.152.0"],
-            lambda title: [{"number": 100, "title": "Bug", "url": "url"}],
+            lambda number: [
+                {
+                    "number": 100,
+                    "title": "Bug",
+                    "url": "url",
+                    "kind": "issue",
+                }
+            ],
         )
 
         self.assertEqual(warnings, [])
@@ -143,7 +157,14 @@ class SyncMilestonesTests(unittest.TestCase):
             {"4.152.0": {"number": 4, "state": "open"}},
             milestones,
             ["v4.152.0"],
-            lambda title: [{"number": 100, "title": "Bug", "url": "url"}],
+            lambda number: [
+                {
+                    "number": 100,
+                    "title": "Bug",
+                    "url": "url",
+                    "kind": "issue",
+                }
+            ],
             creatable_titles={"4.153.0-preview.1"},
         )
 
@@ -160,7 +181,14 @@ class SyncMilestonesTests(unittest.TestCase):
             {"4.152.0": {"number": 4, "state": "open"}},
             milestones,
             ["v4.152.0"],
-            lambda title: [{"number": 100, "title": "Bug", "url": "url"}],
+            lambda number: [
+                {
+                    "number": 100,
+                    "title": "Bug",
+                    "url": "url",
+                    "kind": "issue",
+                }
+            ],
         )
 
         self.assertEqual(operations[0]["status"], "blocked")
@@ -175,7 +203,7 @@ class SyncMilestonesTests(unittest.TestCase):
             {"4.152.0": {"number": 4, "state": "open"}},
             [milestone],
             ["v4.152.0"],
-            lambda title: [],
+            lambda number: [],
         )
 
         self.assertEqual(warnings, [])
@@ -200,7 +228,7 @@ class SyncMilestonesTests(unittest.TestCase):
             def update_issue_milestone(self, issue, milestone):
                 events.append(("move", issue, milestone))
 
-            def open_milestone_issues(self, title):
+            def open_milestone_items(self, number):
                 return []
 
             def close_milestone(self, number):
@@ -214,7 +242,10 @@ class SyncMilestonesTests(unittest.TestCase):
                     "number": 1,
                     "tag": "v4.152.0-preview.1.2",
                     "status": "pending",
-                    "openIssues": [{"number": 99}],
+                    "openItems": [
+                        {"number": 99, "kind": "issue"},
+                        {"number": 100, "kind": "pull-request"},
+                    ],
                     "moveTo": "4.152.0-preview.2",
                 }
             ],
@@ -224,7 +255,10 @@ class SyncMilestonesTests(unittest.TestCase):
                 SimpleNamespace(repo="mono/SkiaSharp"),
                 plan,
             )
-        self.assertEqual(events, [("move", 99, 2), ("close", 1)])
+        self.assertEqual(
+            events,
+            [("move", 99, 2), ("move", 100, 2), ("close", 1)],
+        )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

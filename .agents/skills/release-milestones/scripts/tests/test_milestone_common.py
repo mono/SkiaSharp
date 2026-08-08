@@ -48,6 +48,60 @@ class MilestoneCommonTests(unittest.TestCase):
             self.assertEqual(github.json(["api", "example"]), {"ok": True})
         self.assertEqual(runner.call_count, 2)
 
+    def test_open_milestone_items_includes_issues_and_pull_requests(self):
+        github = object.__new__(common.GitHub)
+        github.repository = "mono/SkiaSharp"
+        response = [
+            [
+                {
+                    "number": 10,
+                    "title": "Issue",
+                    "html_url": "https://example/issues/10",
+                },
+                {
+                    "number": 20,
+                    "title": "Pull request",
+                    "html_url": "https://example/pull/20",
+                    "pull_request": {"url": "https://api.example/pulls/20"},
+                },
+            ]
+        ]
+        with mock.patch.object(
+            github,
+            "json",
+            return_value=response,
+        ) as request:
+            items = github.open_milestone_items(70)
+
+        self.assertEqual(
+            items,
+            [
+                {
+                    "number": 10,
+                    "title": "Issue",
+                    "url": "https://example/issues/10",
+                    "kind": "issue",
+                },
+                {
+                    "number": 20,
+                    "title": "Pull request",
+                    "url": "https://example/pull/20",
+                    "kind": "pull-request",
+                },
+            ],
+        )
+        request.assert_called_once_with(
+            [
+                "api",
+                "--paginate",
+                "--slurp",
+                (
+                    "repos/mono/SkiaSharp/issues"
+                    "?milestone=70&state=open&per_page=100"
+                ),
+            ]
+        )
+
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")
         Path(__file__).read_text(encoding="ascii")

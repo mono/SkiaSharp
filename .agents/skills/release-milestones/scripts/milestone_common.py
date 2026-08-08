@@ -315,20 +315,27 @@ query($owner: String!, $name: String!, $number: Int!) {
         nodes = references.get("nodes") or []
         return [int(node["number"]) for node in nodes]
 
-    def open_milestone_issues(self, title: str) -> list[dict]:
-        return self.json(
+    def open_milestone_items(self, number: int) -> list[dict]:
+        pages = self.json(
             [
-                "issue",
-                "list",
-                "--repo",
-                self.repository,
-                "--milestone",
-                title,
-                "--state",
-                "open",
-                "--limit",
-                "1000",
-                "--json",
-                "number,title,url",
+                "api",
+                "--paginate",
+                "--slurp",
+                (
+                    f"repos/{self.repository}/issues"
+                    f"?milestone={number}&state=open&per_page=100"
+                ),
             ]
         )
+        return [
+            {
+                "number": int(item["number"]),
+                "title": item.get("title") or "",
+                "url": item.get("html_url"),
+                "kind": (
+                    "pull-request" if "pull_request" in item else "issue"
+                ),
+            }
+            for page in pages
+            for item in page
+        ]

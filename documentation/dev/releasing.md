@@ -312,7 +312,7 @@ flowchart TB
     SYNC["Schedule + closure dry-run
     ∙ Sync upcoming Chromium dates
     ∙ Detect milestones with release tags
-    ∙ Move open issues to next unshipped milestone
+    ∙ Move open issues/PRs to next unshipped milestone
     ∙ Close shipped milestones"] --> SYNC_DECIDE{Changes?}
     SYNC_DECIDE -->|Warnings| BLOCKED
     SYNC_DECIDE -->|Pending| SYNC_APPROVE{Approve sync + closure?}

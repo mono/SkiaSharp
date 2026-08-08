@@ -201,7 +201,7 @@ def plan_closures(
     existing: dict[str, dict],
     milestones: list[ReleaseMilestone],
     tags: list[str],
-    open_issues_for,
+    open_items_for,
     *,
     creatable_titles: set[str] | None = None,
 ) -> tuple[list[dict], list[str]]:
@@ -214,7 +214,7 @@ def plan_closures(
         tag = common.shipped_tag(current_item.title, tags)
         if not found or found.get("state") != "open" or not tag:
             continue
-        open_issues = open_issues_for(current_item.title)
+        open_items = open_items_for(int(found["number"]))
         target = next(
             (
                 candidate
@@ -228,10 +228,10 @@ def plan_closures(
             ),
             None,
         )
-        if open_issues and target is None:
+        if open_items and target is None:
             warnings.append(
                 f"{current_item.title} shipped as {tag} but has "
-                f"{len(open_issues)} open issue(s) and no future milestone"
+                f"{len(open_items)} open item(s) and no future milestone"
             )
             status = "blocked"
         else:
@@ -242,7 +242,7 @@ def plan_closures(
                 "number": int(found["number"]),
                 "tag": tag,
                 "status": status,
-                "openIssues": open_issues,
+                "openItems": open_items,
                 "moveTo": target.title if target else None,
             }
         )
@@ -324,7 +324,7 @@ def build_plan(args) -> tuple[dict, list[dict]]:
         existing,
         [item for item in known.values() if item is not None],
         tags,
-        github.open_milestone_issues,
+        github.open_milestone_items,
         creatable_titles={
             item["title"]
             for item in operations
@@ -360,7 +360,14 @@ def build_plan(args) -> tuple[dict, list[dict]]:
                 item["status"] == "skipped" for item in operations
             ),
             "moveIssues": sum(
-                len(item["openIssues"]) for item in pending_closures
+                child["kind"] == "issue"
+                for item in pending_closures
+                for child in item["openItems"]
+            ),
+            "movePullRequests": sum(
+                child["kind"] == "pull-request"
+                for item in pending_closures
+                for child in item["openItems"]
             ),
             "close": len(pending_closures),
         },
@@ -398,21 +405,21 @@ def execute(args, plan: dict[str, list[dict]]) -> None:
         if item["status"] != "pending":
             continue
         target_title = item["moveTo"]
-        if item["openIssues"]:
+        if item["openItems"]:
             target = milestones.get(target_title)
             if not target:
                 raise common.MilestoneError(
                     f"future milestone {target_title} does not exist"
                 )
-            for issue in item["openIssues"]:
+            for child in item["openItems"]:
                 github.update_issue_milestone(
-                    int(issue["number"]),
+                    int(child["number"]),
                     int(target["number"]),
                 )
-        remaining = github.open_milestone_issues(item["title"])
+        remaining = github.open_milestone_items(item["number"])
         if remaining:
             raise common.MilestoneError(
-                f"milestone {item['title']} still has open issues"
+                f"milestone {item['title']} still has open items"
             )
         github.close_milestone(item["number"])
 

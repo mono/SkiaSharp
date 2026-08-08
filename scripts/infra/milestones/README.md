@@ -10,7 +10,7 @@ All three read the shared source of truth in
 
 | Script | Language | What it manages | Automated? |
 |--------|----------|-----------------|------------|
-| [`sync-milestones.py`](../../../.agents/skills/release-milestones/scripts/sync-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues forward, and closes tagged milestones. | No — use release-milestones. |
+| [`sync-milestones.py`](../../../.agents/skills/release-milestones/scripts/sync-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues and PRs forward, and closes tagged milestones. | No — use release-milestones. |
 | [`audit-milestones.py`](../../../.agents/skills/release-milestones/scripts/audit-milestones.py) | Python | Fixes shipped PR/linked-issue assignments. | No — use release-milestones. |
 | [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily workflow. |
 
@@ -42,8 +42,8 @@ Flags: `--dry-run`, `--count <n>` (default 3), `--repo <owner/repo>`
 (default `mono/SkiaSharp`).
 
 During the same sync, exact release tags make their matching milestones
-shipped. Open issues move to the next unshipped milestone in release order,
-then the shipped milestone closes.
+shipped. Open issues and pull requests move to the next unshipped milestone in
+release order, then the shipped milestone closes.
 
 ## `audit-milestones.py`
 
