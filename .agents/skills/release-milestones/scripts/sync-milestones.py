@@ -419,7 +419,7 @@ def execute(args, plan: dict[str, list[dict]]) -> None:
 
 def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--count", type=int, default=5)
+    parser.add_argument("--count", type=int, default=3)
     parser.add_argument("--repo", default=common.GITHUB_REPOSITORY)
     parser.add_argument("--dry-run", action="store_true")
     return parser

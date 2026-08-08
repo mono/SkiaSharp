@@ -54,7 +54,9 @@ class SyncMilestonesTests(unittest.TestCase):
 
     def test_default_executes_and_dry_run_is_explicit(self):
         parser = sync.create_parser()
-        self.assertFalse(parser.parse_args([]).dry_run)
+        defaults = parser.parse_args([])
+        self.assertEqual(defaults.count, 3)
+        self.assertFalse(defaults.dry_run)
         self.assertTrue(parser.parse_args(["--dry-run"]).dry_run)
 
     def test_execution_command_drops_dry_run(self):

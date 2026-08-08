@@ -84,7 +84,7 @@ Render:
 
 ```bash
 python3 .agents/skills/release-milestones/scripts/sync-milestones.py \
-  --count 5 \
+  --count 3 \
   --dry-run
 ```
 

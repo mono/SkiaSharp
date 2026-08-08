@@ -38,7 +38,7 @@ python3 .agents/skills/release-milestones/scripts/sync-milestones.py \
 python3 .agents/skills/release-milestones/scripts/sync-milestones.py
 ```
 
-Flags: `--dry-run`, `--count <n>` (default 5), `--repo <owner/repo>`
+Flags: `--dry-run`, `--count <n>` (default 3), `--repo <owner/repo>`
 (default `mono/SkiaSharp`).
 
 During the same sync, exact release tags make their matching milestones
