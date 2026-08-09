@@ -1,0 +1,87 @@
+{
+  "theme": "Graphite backend and memory-leak fixes",
+  "highlights_headline": "SkiaSharp 4.152.0 previews Graphite GPU backend bindings and fixes two native use-after-free leaks.",
+  "highlights_body": "Alongside the Skia m152 bump, this preview adds Graphite GPU backend bindings for Vulkan/Metal/Dawn, a new SkiaSharp.Vulkan.Silk.NET package, backend-neutral async pixel readback, and fixes native use-after-free bugs in SKRegion and SKPixmap subsetting.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to Chrome milestone m152",
+          "detail": "The bundled engine is bumped to Chrome milestone m152, with follow-up merges of upstream m151/m152 stability fixes.",
+          "prs": [4651, 4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings",
+          "detail": "Adds SkiaSharp bindings for Skia's Graphite GPU backend across Vulkan, Metal and Dawn, alongside a new SkiaSharp.Vulkan.Silk.NET package and Vulkan test coverage on Android/Linux.",
+          "prs": [3968, 4527]
+        },
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "Adds an async RequestReadPixels API to SKImage and SKSurface that works consistently across GPU backends.",
+          "prs": [4545]
+        },
+        {
+          "lead": "FreeType-based font support for Nano Server",
+          "detail": "Nano Server now resolves fonts through FreeType instead of relying on unavailable platform font APIs.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free fixes in SKRegion and SKPixmap",
+          "detail": "Fixes a use-after-free in SKRegion.SpanIterator by rooting the owning SKRegion, and a similar bug in SKPixmap.ExtractSubset/With* by rooting the source pixel buffer.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak on SKImage.Create failure",
+          "detail": "Fixes a native memory leak that occurred when SKImage.Create's raster failure path left an allocated CoTaskMem pixel buffer undisposed.",
+          "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Containerized test legs and slnx solution format",
+          "detail": "Adds Azure Linux, Alpine/musl and Nano Server containerized test coverage, and converts all .sln solutions to the newer .slnx format.",
+          "prs": [4515, 4528]
+        },
+        {
+          "lead": "Windows native build hardening",
+          "detail": "Stops pinning a default Windows SDK version and initializes the MSVC environment once per native build instead of per invocation.",
+          "prs": [4588, 4570]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Faster and more deterministic binding generation",
+          "detail": "Caches the HandleDictionary skip-registration reflection check for lower per-call overhead, optimizes SKData.SaveTo to avoid a double buffer copy, and makes generated bindings deterministic across build platforms.",
+          "prs": [4630, 4550, 4612]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-based font support for Nano Server",
+    "mmitche": "Initialized the MSVC environment once per native build on Windows",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 updated Skia to milestone m152, added Graphite GPU backend bindings and the SkiaSharp.Vulkan.Silk.NET package, introduced backend-neutral async pixel readback, and fixed use-after-free bugs in SKRegion and SKPixmap."
+  },
+  "harfbuzz_summary": "No functional HarfBuzzSharp binding changes; the touched files were solution-format conversion and CI test-leg infrastructure work."
+}
