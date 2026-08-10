@@ -30,13 +30,14 @@ stages:
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native
-        - template: /scripts/azure-templates-jobs-merger.yml@self
-          parameters:
-            name: native_msvc
-            displayName: Re-upload Native MSVC Artifacts
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_msvc
+        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+          - template: /scripts/azure-templates-jobs-merger.yml@self
+            parameters:
+              name: native_msvc
+              displayName: Re-upload Native MSVC Artifacts
+              buildAgent: ${{ parameters.buildAgentHost }}
+              requiredArtifacts:
+                - name: native_msvc
 
   - stage: package
     displayName: Package NuGets
