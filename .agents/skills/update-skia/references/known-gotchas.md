@@ -1,6 +1,8 @@
 # Known Gotchas & Troubleshooting
 
-Hard-won findings from past Skia milestone updates. Check these proactively — they will save hours of debugging.
+Hard-won findings from past Skia milestone updates. Read the dependency and merge-strategy
+sections before resolving an upstream merge; they are preventive requirements, not fallback
+troubleshooting after a build fails.
 
 ## C++ ↔ C API Layer
 
@@ -37,7 +39,8 @@ Upstream progressively deprecates legacy APIs behind flags (e.g., `SK_DEFAULT_TY
 
 1. **Check what the flag removes** — read the upstream commit that added it
 2. **If the C API uses the removed behavior**, update the C API to use the replacement API. This is the real fix — upstream is signaling that the old API will be removed entirely in a future milestone.
-3. **Only as a short-term bridge** (with a TODO comment and tracking issue), you may comment out the flag to unblock the build while you work on the proper fix. Never leave a commented-out flag without a plan to address it.
+3. If the replacement cannot be implemented in this update, leave the gate failed and report the
+   blocker. Never comment out the flag merely to unblock the build.
 
 Also watch for renamed/removed GN flags between milestones — obsolete flags cause `Unknown GN flag` errors. Always diff the target `BUILD.gn` against the current one.
 
@@ -63,26 +66,41 @@ Upstream may move previously-core modules into separate optional targets. If the
 
 ### 23. Required New Upstream GN Arg → `build.cake` (not a one-off flag)
 
-Upstream sometimes introduces a build dependency our fork deliberately does **not** vendor. The fix is a durable gn arg in `build.cake` — not a CLI flag, and not a hack to silence the error.
+Upstream sometimes introduces an optional dependency our fork deliberately does not vendor. Before
+changing GN configuration, inspect the target declaration, default, source guards, and documented
+embedder path. Disable the feature only when existing fork policy already establishes that choice
+(for example, the dependency is deliberately absent/commented or the same feature family is
+already disabled in `native/**/build.cake`). Add the durable arg to every affected platform and
+report it under `## Human review` in both repository summaries. Without existing policy, add the
+supported dependency path or report the unresolved product decision instead of making it during
+the update.
 
-**Worked example — `skia_use_partition_alloc`.** Upstream's `gn/skia.gni` defaults `skia_use_partition_alloc = is_clang` (true on clang). When true, `BUILD.gn` imports `third_party/externals/partition_alloc/partition_alloc.gni` — but our fork's `DEPS` keeps that entry commented out, so the folder is never fetched and the build aborts. Skia ships an official zero-overhead **noop `raw_ptr`** for exactly this case ("because the partition_alloc dependency is missing"), gated on `SK_USE_PARTITION_ALLOC`, so building with `skia_use_partition_alloc=false` is the *supported embedder path*, not a workaround — it disables Chromium's MiraclePtr/BackupRefPtr hardening (irrelevant to SkiaSharp's trusted-app threat model) with no runtime regression. Vendoring the allocator instead would add a large Chromium dependency across the whole platform matrix for marginal benefit.
-
-**Resolution:**
-- Add the gn arg to **every affected clang platform's** `native/**/build.cake` gn-args list, next to the existing `skia_use_*` toggles — that file is the single source of truth. Do **not** rely on a one-off `dotnet cake … --gnArgs` flag (non-durable, and easily lost).
-- **Sequencing:** a gn arg added upstream *after* a milestone's branch point does not exist in that milestone. Adding it to `build.cake` before the submodule actually carries it fails the build with `Unknown build argument`. Only add it in the same change that advances the submodule to a tree that has the arg (e.g. a tip/`main` sync, or the milestone bump that introduces it).
-- This is **only** for a genuinely required arg. Never add a gn arg — or change compiler/linker flags — merely to silence a build error on one host; that is a missing-dependency problem (the host toolchain/packages), not a build-config one.
+Do not use a one-off Cake/CLI GN argument, and do not add an argument before the selected upstream
+tree defines it. Never change GN or compiler/linker flags merely to hide a missing host package,
+source file, or dependency decision.
 
 ## Dependencies & Bindings
 
 ### 8. DEPS: Fork-Customized Dependencies
 
-SkiaSharp's fork often has **newer** dependency versions than upstream. When resolving DEPS conflicts, do NOT blindly take upstream's hashes — you may downgrade and break the build.
+SkiaSharp's fork often has **newer** dependency versions or deliberately different enabled
+states. When resolving `DEPS`, do not blindly take upstream's hashes or comment state.
 
 ```bash
 git log --oneline skiasharp | grep -i "update\|bump\|libpng\|zlib\|expat\|brotli\|webp\|harfbuzz\|vulkan"
 ```
 
-Keep fork's hash for customized deps. Common ones: libwebp, brotli, expat, libpng, zlib, vulkanmemoryallocator, **harfbuzz**.
+Classify every changed active entry:
+
+- Preserve the fork revision and enabled/commented state when a fork build file or patch
+  depends on it. Common customized entries include libwebp, brotli, expat, libpng, zlib,
+  vulkanmemoryallocator, spirv-cross, and **harfbuzz**.
+- Accept an upstream revision only after verifying no fork customization depends on the old
+  revision.
+- Roll for compatibility when target Skia source uses API absent from the fork revision.
+  Record the exact target source/API dependency and prove the older revision lacks it.
+
+Preserving every pin unconditionally is as unsafe as taking every upstream pin.
 
 ### 9. HarfBuzz — ALWAYS Separate
 
@@ -164,7 +182,7 @@ you can cross-reference every conflict against them:
 ```bash
 # before the merge — list our fork's commits on top of the merge base (the patches at risk)
 MB=$(git merge-base {SKIA_BASE_BRANCH} upstream/{UPSTREAM_REF})
-git log --oneline "$MB..{SKIA_BASE_BRANCH}" > /tmp/fork-patches-before.txt
+git log --oneline "$MB..{SKIA_BASE_BRANCH}" > "$ARTIFACT_DIR/fork-patches-before.txt"
 ```
 
 For **every conflicted file**, find which fork patch(es) from that list touch it and classify each as
@@ -188,7 +206,20 @@ Upstream periodically improves color conversion precision, shifting expected pix
 
 ### 18. Test Runner
 
-Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full suite. GPU backends are gated by `GpuPolicy`: failed bring-up is a failure unless the platform table or an explicit `SKIASHARP_TEST_SKIP_GPU` agent opt-out declares the skip.
+Run `dotnet test tests/SkiaSharp.Tests.Console.slnx` for the full solution. Every host must run
+and all tests must pass. Do not filter the solution because projects with zero matches fail.
+After the solution identifies a failing host, use that host's project for focused diagnostic
+runs, then rerun the unfiltered solution. A focused project run is never final validation.
+GPU backends are gated by `GpuPolicy`: every backend required on the validation platform must
+initialize and pass.
+
+### 24. Satellite Test Hosts Are Part of the Gate
+
+The base test host does not contain every maintained test. Always run
+`tests/SkiaSharp.Tests.Console.slnx`, which includes singleton, Vulkan, Direct3D, and future
+satellite hosts, for initial and final validation. A project filter is permitted only after the
+solution exposes a failure in that host and must be followed by another unfiltered solution run.
+Confirm the final output reports results for every maintained host.
 
 ---
 
@@ -197,7 +228,7 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 | Error | Cause | Fix |
 |-------|-------|-----|
 | `EntryPointNotFoundException` | Native lib not rebuilt after C API change | `dotnet cake --target=externals-{platform}` |
-| `error CS0246` missing type | Binding not regenerated | `pwsh ./utils/generate.ps1` |
+| `error CS0246` missing type | Binding not regenerated | `python3 .agents/skills/update-skia/scripts/regenerate_bindings.py` |
 | `static_assert` sizeof failure | Upstream struct gained/lost fields | Update C API struct in `sk_types.h` |
 | `#include` file not found | Upstream moved file to new path | Search target branch, update path |
 | `LNK2001 unresolved external` | C function name mismatch or missing lib | Verify names; check system library linkage |
@@ -206,5 +237,8 @@ Tests use `Skip.If()` for unsupported platforms. Run `dotnet test tests/SkiaShar
 | Merge conflict in DEPS | Both forks updated deps | Keep our pins, accept upstream structure |
 | Enum values don't match | Mid-sequence insertion | Regenerate bindings — never hand-edit |
 | Pixel mismatch by ±1 | Upstream precision change | Update expected test values |
-| GPU context C API returns nullptr | Backend defines not reaching `:core` | Add defines to `:core` in BUILD.gn |
-| Vulkan GRContext returns null | VMA fallback compiled out | Check `SK_USE_VMA` is defined in GN build |
+| GPU context C API returns nullptr | Backend compile flags, a newly required backend-context field, removed fallback behavior, or native initialization failure | Trace the managed→C API→native factory return path and diff its implementation before treating nearby warnings as causal; search analogous C shims for the established include/ownership pattern |
+
+If an exact build or test failure repeats after a supposed fix, first prove the changed code
+was compiled and loaded (compile command/define, object or library content, runtime binary
+timestamp). Do not start a second root-cause theory until deployment of the first fix is verified.

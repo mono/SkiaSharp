@@ -44,7 +44,7 @@ Update the TODO checklist at each phase. When using `read_bash` during long oper
 **First run is slower** (~90s) due to Docker image layer caching. Subsequent runs use cached layers (~10s).
 Docker tests require `SkiaSharp.NativeAssets.Linux.NoDependencies` which bundles all native deps statically.
 
-### MAUI Platform Tests (iOS, Android, MacCatalyst)
+### MAUI Platform Tests (iOS, Android, MacCatalyst, Windows)
 
 | Phase | Duration | Output Indicator |
 |-------|----------|------------------|
@@ -71,6 +71,7 @@ The **Build MAUI app** phase is the longest and provides **no output**. This is 
 | iOS | 60-90 seconds |
 | Android | 90-120 seconds |
 | MacCatalyst | 45-60 seconds |
+| Windows | 45-120 seconds |
 
 **This silence is expected.** The user needs to know this.
 

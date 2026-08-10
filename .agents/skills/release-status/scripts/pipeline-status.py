@@ -11,6 +11,7 @@ Examples:
 
 import json
 import re
+import shutil
 import subprocess
 import sys
 
@@ -24,17 +25,26 @@ PIPELINES = [
 ]
 
 ICONS = {
-    "succeeded": "✅",
-    "partiallySucceeded": "⚠️",
-    "failed": "❌",
-    "canceled": "🚫",
-    "inProgress": "🔄",
-    "notStarted": "⏳",
+    "succeeded": "[OK]",
+    "partiallySucceeded": "[WARN]",
+    "failed": "[FAIL]",
+    "canceled": "[CANCELED]",
+    "inProgress": "[RUNNING]",
+    "notStarted": "[WAITING]",
 }
 
+
+def output(value="") -> None:
+    print(str(value).encode("ascii", "backslashreplace").decode("ascii"))
+
+
 def az(args: list[str], timeout: int = 30) -> str:
+    az_path = shutil.which("az")
+    if not az_path:
+        sys.exit("ERROR: Azure CLI 'az' was not found on PATH.")
+
     result = subprocess.run(
-        ["az"] + args, capture_output=True, text=True, timeout=timeout
+        [az_path] + args, capture_output=True, text=True, timeout=timeout
     )
     return result.stdout.strip()
 
@@ -109,37 +119,37 @@ def format_job_summary(records: list[dict], cont: str) -> None:
     # Build the summary line
     parts = []
     if completed:
-        parts.append(f"{len(completed)} ✅ completed")
+        parts.append(f"{len(completed)} [OK] completed")
     if failed:
-        parts.append(f"{len(failed)} ❌ failed")
+        parts.append(f"{len(failed)} [FAIL] failed")
     if running:
-        parts.append(f"{len(running)} 🔄 running")
+        parts.append(f"{len(running)} [RUNNING] running")
     if pending:
-        parts.append(f"{len(pending)} ⏳ pending")
+        parts.append(f"{len(pending)} [WAITING] pending")
 
-    print(f"{cont}")
-    print(f"{cont} Jobs: {' | '.join(parts)}")
+    output(cont)
+    output(f"{cont} Jobs: {' | '.join(parts)}")
 
     if failed:
         names = ", ".join(failed[:8])
-        suffix = f", … (+{len(failed) - 8} more)" if len(failed) > 8 else ""
-        print(f"{cont} Failed: {names}{suffix}")
+        suffix = f", ... (+{len(failed) - 8} more)" if len(failed) > 8 else ""
+        output(f"{cont} Failed: {names}{suffix}")
 
     if running:
         names = ", ".join(running[:8])
-        suffix = f", … (+{len(running) - 8} more)" if len(running) > 8 else ""
-        print(f"{cont} Running: {names}{suffix}")
+        suffix = f", ... (+{len(running) - 8} more)" if len(running) > 8 else ""
+        output(f"{cont} Running: {names}{suffix}")
 
     if pending:
         names = ", ".join(pending[:8])
-        suffix = f", … (+{len(pending) - 8} more)" if len(pending) > 8 else ""
-        print(f"{cont} Pending: {names}{suffix}")
+        suffix = f", ... (+{len(pending) - 8} more)" if len(pending) > 8 else ""
+        output(f"{cont} Pending: {names}{suffix}")
 
 
 def icon_for(run: dict) -> str:
     if run["status"] == "completed":
-        return ICONS.get(run.get("result", ""), "❓")
-    return ICONS.get(run["status"], "⏳")
+        return ICONS.get(run.get("result", ""), "[UNKNOWN]")
+    return ICONS.get(run["status"], "[WAITING]")
 
 
 def resolve_branch(ref: str) -> str:
@@ -151,7 +161,7 @@ def resolve_branch(ref: str) -> str:
         for line in result.stdout.splitlines():
             m = re.search(r"origin/(release/\S+)", line)
             if m:
-                print(f"Resolved SHA {ref} → branch: {m.group(1)}")
+                output(f"Resolved SHA {ref} -> branch: {m.group(1)}")
                 return m.group(1)
         sys.exit(f"ERROR: No release branch found containing SHA {ref}")
     return ref
@@ -163,28 +173,28 @@ def main():
 
     branch = resolve_branch(sys.argv[1])
 
-    print(f"\n{'═' * 63}")
-    print(f" Pipeline Chain Status: {branch}")
-    print(f"{'═' * 63}\n")
+    output(f"\n{'=' * 63}")
+    output(f" Pipeline Chain Status: {branch}")
+    output(f"{'=' * 63}\n")
 
     all_runs: list[tuple[dict, list[dict]]] = []
     links: list[str] = []
 
     for i, pipe in enumerate(PIPELINES):
-        prefix = "┌─" if i == 0 else "├─" if i < len(PIPELINES) - 1 else "└─"
-        cont = "│ " if i < len(PIPELINES) - 1 else "  "
+        prefix = "+-"
+        cont = "| " if i < len(PIPELINES) - 1 else "  "
 
-        print(f"{prefix} {pipe['name']} (ID {pipe['id']}) — {pipe['desc']}")
+        output(f"{prefix} {pipe['name']} (ID {pipe['id']}) - {pipe['desc']}")
 
         runs = get_runs(pipe["id"], branch)
         all_runs.append((pipe, runs))
 
         if not runs:
-            print(f"{cont} No runs found — not yet triggered")
+            output(f"{cont} No runs found - not yet triggered")
         else:
             for r in runs:
-                print(f"{cont} {icon_for(r)} id={r['id']:<10}  {r['status']:<12}  "
-                      f"{r.get('result') or 'pending':<20}  {r['buildNumber']}")
+                output(f"{cont} {icon_for(r)} id={r['id']:<10}  {r['status']:<12}  "
+                       f"{r.get('result') or 'pending':<20}  {r['buildNumber']}")
 
             # Show job-level details for in-progress builds
             latest_run = runs[0]
@@ -194,35 +204,35 @@ def main():
                     if records:
                         format_job_summary(records, cont)
                 except (json.JSONDecodeError, subprocess.TimeoutExpired, OSError):
-                    print(f"{cont} (could not fetch job details)")
+                    output(f"{cont} (could not fetch job details)")
 
-            # Show trigger info (skip for first pipeline — it has no upstream)
+            # Show trigger info (skip for first pipeline - it has no upstream)
             if i > 0:
                 trigger = get_trigger_info(runs[0]["id"])
                 if trigger and trigger.get("source"):
                     src = trigger.get("source", "?")
                     pid = trigger.get("pipelineId", "?")
-                    print(f"{cont} ↑ triggered by {src} build {pid}")
+                    output(f"{cont} -> triggered by {src} build {pid}")
             links.append(f"  {pipe['name']}: https://devdiv.visualstudio.com/DevDiv/_build/results?buildId={runs[0]['id']}")
 
-        print(f"{cont}" if i < len(PIPELINES) - 1 else "")
+        output(cont if i < len(PIPELINES) - 1 else "")
 
-    print(f"{'═' * 63}\n")
+    output(f"{'=' * 63}\n")
 
     # Summary
     latest = [(runs[0] if runs else None) for _, runs in all_runs]
     if all(r and r["status"] == "completed" and r.get("result") in ("succeeded", "partiallySucceeded") for r in latest):
-        print("Summary: ✅ All pipelines completed. Packages should be on internal feed.")
+        output("Summary: [OK] All pipelines completed. Packages should be on internal feed.")
     elif latest[0] and not latest[1]:
-        print("Summary: ⏳ Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
+        output("Summary: [WAITING] Waiting for SkiaSharp to be triggered by SkiaSharp-Native.")
     elif not latest[0]:
-        print("Summary: ⏳ No native build found yet.")
+        output("Summary: [WAITING] No native build found yet.")
     else:
-        print("Summary: 🔄 Pipeline chain in progress or has failures.")
+        output("Summary: [RUNNING] Pipeline chain in progress or has failures.")
 
     if links:
-        print(f"\nADO Links:")
-        print("\n".join(links))
+        output("\nADO Links:")
+        output("\n".join(links))
 
 
 if __name__ == "__main__":

@@ -54,9 +54,9 @@ Classification rules:
       "risk": "low",
       "pipelines": [
         {
-          "name": "SkiaSharp (Public)",
-          "definitionId": 4,
-          "org": "xamarin/public",
+          "name": "mono-SkiaSharp",
+          "definitionId": 345,
+          "org": "dnceng-public/public",
           "latestResult": "succeeded",
           "latestIcon": "✅",
           "passRate": 100.0,
@@ -84,7 +84,7 @@ Classification rules:
   "regressions": [
     {
       "branch": "main",
-      "pipeline": "SkiaSharp (Public)",
+      "pipeline": "mono-SkiaSharp",
       "lastGreenId": 157980,
       "lastGreenBuildNumber": "6.0.0-preview.3.24300.1",
       "firstRedId": 157985,
@@ -136,7 +136,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
   "severity": "high",
   "footprint": {
     "branches": ["release/3.119.x"],
-    "pipelines": ["SkiaSharp (Public)", "SkiaSharp-Tests"]
+    "pipelines": ["mono-SkiaSharp", "SkiaSharp-Tests"]
   },
   "firstSeen": "2026-05-25T10:00:00Z",
   "lastSeen": "2026-05-29T10:00:00Z",
@@ -232,7 +232,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
 ```json
 {
   "branch": "main",
-  "pipeline": "SkiaSharp (Public)",
+  "pipeline": "mono-SkiaSharp",
   "pattern": "✅❌✅❌✅",
   "confidence": "high",
   "description": "Alternating pass/fail on NUnit runner timeout"

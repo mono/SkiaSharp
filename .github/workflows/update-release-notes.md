@@ -103,7 +103,7 @@ jobs:
       has_changes: ${{ steps.package.outputs.has_changes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v5.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
       - name: Free up disk space
@@ -136,7 +136,7 @@ jobs:
           git fetch origin "$SOURCE_BRANCH" --quiet
           git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
       - name: Setup .NET
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           global-json-file: global.json
       - name: Generate (verbose)
