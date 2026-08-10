@@ -10,8 +10,6 @@ parameters:
     type: boolean
   - name: enableSigning
     type: boolean
-  - name: forceRealSigning
-    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -150,16 +148,9 @@ stages:
               path: '.\output\nugets-special'
 
   - ${{ if eq(parameters.enableSigning, 'true') }}:
-    - stage: signing
-      displayName: Sign NuGets
-      dependsOn: package
-      jobs:
-        - template: sign-artifacts/jobs/v4.yml@yaml-templates
-          parameters:
-            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-              signType: 'Real'
-            ${{ else }}:
-              signType: 'Test'
-            usePipelineArtifactTasks: true
-            checkoutType: 'self'
-            dotnetUseGlobalJson: true
+    - template: /scripts/azure-templates-stages-signing.yml@self
+      parameters:
+        buildAgent: ${{ parameters.buildAgentWindows }}
+        # Keep the spike test-only. After ESRP onboarding, set this from a
+        # protected main/release branch policy rather than a queue parameter.
+        useRealSigning: false
