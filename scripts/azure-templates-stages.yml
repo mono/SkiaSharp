@@ -30,9 +30,6 @@ parameters:
   - name: enableSigning
     type: boolean
     default: false
-  - name: forceRealSigning
-    type: boolean
-    default: false
   - name: enableCaching
     type: boolean
     default: false
@@ -61,7 +58,6 @@ stages:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableSigning: ${{ parameters.enableSigning }}
-        forceRealSigning: ${{ parameters.forceRealSigning }}
         enableCaching: ${{ parameters.enableCaching }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:

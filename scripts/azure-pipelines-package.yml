@@ -50,8 +50,8 @@ parameters:
     displayName: 'Run API Scan'
     type: boolean
     default: false
-  - name: forceRealSigning
-    displayName: 'Ignore all logic and force Real signing on binaries'
+  - name: enableSigning
+    displayName: 'Run the experimental repository-owned NuGet signing stage'
     type: boolean
     default: false
   - name: testsPipelineId
@@ -115,8 +115,7 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'package'
-          # Phase 2 (dnceng): signing OFF until MicroBuild-native signing is wired
-          # up (the old DevDiv Xamarin.yaml-templates sign-artifacts job is dropped).
+          enableSigning: ${{ parameters.enableSigning }}
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
