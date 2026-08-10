@@ -56,6 +56,9 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - name: native
+          preBuildSteps:
+            - pwsh: git submodule update --init --force docs
+              displayName: Checkout API documentation
           postBuildSteps:
             - pwsh: |
                 Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
