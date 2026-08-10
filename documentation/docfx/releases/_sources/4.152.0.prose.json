@@ -1,0 +1,87 @@
+{
+  "theme": "Skia m152 with Graphite GPU bindings",
+  "highlights_headline": "SkiaSharp 4.152.0 updates the engine to Skia m152 and adds early Graphite GPU backend bindings.",
+  "highlights_body": "Alongside the milestone bump, this release fixes two native use-after-free bugs and a CoTaskMem pixel-buffer leak, adds a backend-neutral async RequestReadPixels API, and lands a new SkiaSharp.Vulkan.Silk.NET package with Vulkan tests running on Android and Linux.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "The bundled engine advances to Chrome milestone m152, picking up the upstream m151/m152 stability fixes merged during the preview.",
+          "prs": [4651, 4568, 4538, 4537]
+        },
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds early bindings for Skia's Graphite GPU backend across Vulkan, Metal, and Dawn, laying the groundwork for the next-generation GPU pipeline.",
+          "prs": [3968]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "SKImage and SKSurface gain an async RequestReadPixels API that works consistently across GPU backends instead of requiring backend-specific code.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan via Silk.NET",
+          "detail": "A new SkiaSharp.Vulkan.Silk.NET package brings Silk.NET-based Vulkan interop, now exercised by Vulkan tests running on Android and Linux.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Two native use-after-free bugs fixed",
+          "detail": "SKRegion.SpanIterator now roots its owning SKRegion, and SKPixmap.ExtractSubset/With* root their pixel source, closing native use-after-free crashes.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak fixed",
+          "detail": "SKImage.Create no longer leaks its CoTaskMem pixel buffer when raster allocation fails.",
+          "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Allocation and lookup hot paths trimmed",
+          "detail": "GetEncodedText avoids an intermediate string allocation on its null-terminated path, SKRuntimeEffectUniforms pre-sizes its uniform lookup map, SKData.SaveTo drops a double buffer copy, and the handle dictionary skip-registration reflection check is now cached.",
+          "prs": [4498, 4512, 4550, 4630]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "FreeType powers Nano Server font support",
+          "detail": "Nano Server containers now render text via FreeType instead of relying on a font stack that isn't available there.",
+          "prs": [4280]
+        },
+        {
+          "lead": "New containerized test legs and deterministic bindings",
+          "detail": "Adds Azure Linux, Alpine/musl, and Nano Server containerized test legs, and makes binding generation deterministic across build platforms.",
+          "prs": [4515, 4612]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-based font support for Nano Server (#1105).",
+    "mmitche": "Initialized the MSVC environment once per native Windows build.",
+    "ramezgerges": "Added the Graphite GPU backend bindings for Vulkan, Metal, and Dawn."
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Opened the m152 line with the Skia milestone bump, the Graphite GPU backend bindings, the async RequestReadPixels API, and the SkiaSharp.Vulkan.Silk.NET package."
+  },
+  "harfbuzz_summary": "Converts the HarfBuzzSharp solution files to .slnx format and adds the containerized Azure Linux, Alpine/musl, and Nano Server test legs."
+}
