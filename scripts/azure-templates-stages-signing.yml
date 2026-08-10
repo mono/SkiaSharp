@@ -1,0 +1,124 @@
+parameters:
+  - name: buildAgent
+    type: object
+  - name: useRealSigning
+    type: boolean
+    default: false
+
+stages:
+  - stage: signing
+    displayName: Sign NuGets
+    dependsOn: package
+    jobs:
+      - job: sign_nugets
+        displayName: Sign already-built NuGets
+        pool: ${{ parameters.buildAgent.pool }}
+        workspace:
+          clean: all
+        variables:
+          - name: _TeamName
+            value: '.NET MAUI'
+          - name: _SignType
+            ${{ if eq(parameters.useRealSigning, true) }}:
+              value: real
+            ${{ else }}:
+              value: test
+        templateContext:
+          outputs:
+            - output: pipelineArtifact
+              displayName: Publish signed NuGets
+              artifactName: nuget_signed
+              targetPath: '$(Build.ArtifactStagingDirectory)\signed'
+            - output: pipelineArtifact
+              displayName: Publish NuGet signing logs
+              artifactName: nuget_signing_logs
+              targetPath: '$(Build.ArtifactStagingDirectory)\arcade-signing\artifacts\log'
+              condition: and(always(), eq(variables['SIGNING_LOG_DIR_READY'], 'true'))
+        steps:
+          - checkout: self
+            clean: true
+            fetchDepth: 1
+            fetchTags: false
+            submodules: false
+
+          - pwsh: |
+              New-Item `
+                '$(Build.ArtifactStagingDirectory)\arcade-signing\artifacts\log\Release' `
+                -ItemType Directory `
+                -Force |
+                Out-Null
+              Write-Host '##vso[task.setvariable variable=SIGNING_LOG_DIR_READY]true'
+            displayName: Initialize signing logs
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download unsigned NuGets
+            inputs:
+              artifactName: nuget
+              targetPath: '$(Build.ArtifactStagingDirectory)\unsigned'
+
+          - task: UseDotNet@2
+            displayName: Install signing .NET SDK
+            inputs:
+              packageType: sdk
+              version: 10.0.108
+
+          - task: NuGetAuthenticate@1
+            displayName: Authenticate Arcade restore
+
+          - task: MicroBuildSigningPlugin@4
+            displayName: Install MicroBuild signing plugin
+            inputs:
+              signType: $(_SignType)
+              zipSources: false
+              feedSource: https://dnceng.pkgs.visualstudio.com/_packaging/MicroBuildToolset/nuget/v3/index.json
+              ${{ if eq(parameters.useRealSigning, true) }}:
+                ConnectedServiceName: 'MicroBuild Signing Task (DevDiv)'
+                ConnectedPMEServiceName: 248d384a-b39b-46e3-8ad5-c2c210d5e7ca
+            env:
+              TeamName: $(_TeamName)
+              MicroBuildOutputFolderOverride: '$(Agent.TempDirectory)\MicroBuild'
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          - pwsh: |
+              ./scripts/infra/signing/run-arcade-signing.ps1 `
+                -InputDirectory '$(Build.ArtifactStagingDirectory)\unsigned' `
+                -OutputDirectory '$(Build.ArtifactStagingDirectory)\signed' `
+                -SignListPath '$(Build.ArtifactStagingDirectory)\unsigned\SignList.xml' `
+                -WorkDirectory '$(Build.ArtifactStagingDirectory)\arcade-signing' `
+                -SignType '$(_SignType)' `
+                -OfficialBuildId '$(Build.BuildId)'
+            displayName: Sign prebuilt NuGets with Arcade
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          - pwsh: |
+              ./scripts/infra/signing/verify-signed-packages.ps1 `
+                -OriginalDirectory '$(Build.ArtifactStagingDirectory)\unsigned' `
+                -SignedDirectory '$(Build.ArtifactStagingDirectory)\signed' `
+                -SignListPath '$(Build.ArtifactStagingDirectory)\unsigned\SignList.xml' `
+                -OutputPath '$(Build.ArtifactStagingDirectory)\signed\verification.json' `
+                -RequireSignatures
+            displayName: Verify signed NuGet payload fidelity
+
+          - task: MicroBuildCodesignVerify@3
+            displayName: Verify nested binary signatures
+            inputs:
+              TargetFolders: '$(Build.ArtifactStagingDirectory)\signed'
+              ExcludeSNVerify: true
+
+          - ${{ if eq(parameters.useRealSigning, true) }}:
+            - pwsh: |
+                Get-ChildItem '$(Build.ArtifactStagingDirectory)\signed' -Filter '*.nupkg' -File |
+                  ForEach-Object {
+                    & dotnet nuget verify $_.FullName --all
+                    if ($LASTEXITCODE -ne 0) {
+                      throw "NuGet signature verification failed for '$($_.Name)'."
+                    }
+                  }
+              displayName: Verify real NuGet author signatures
+
+          - task: MicroBuildCleanup@1
+            displayName: Clean up MicroBuild
+            condition: always()
+            env:
+              TeamName: $(_TeamName)
