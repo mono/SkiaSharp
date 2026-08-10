@@ -4,7 +4,7 @@ using System;
 
 namespace SkiaSharp
 {
-	public unsafe class GRContextOptions
+	public class GRContextOptions
 	{
 		public bool AvoidStencilBuffers { get; set; } = false;
 

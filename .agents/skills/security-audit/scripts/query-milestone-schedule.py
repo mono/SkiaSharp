@@ -19,6 +19,9 @@ Data sources (no auth, no documented rate limit):
        -> the live milestone + exact Skia commit (hashes.skia) per channel.
 
 Default output is main-centric and lean. The full 5-channel list is included as context.
+It also drift-checks the release-notes "support" paths (scripts/infra/docs/versions.json)
+against the live channels and reports OK/WARN/DRIFT — detection only; the fix is a manual
+edit of that file (spec §3.5).
 
 Usage:
   python3 query-milestone-schedule.py                       # lean heads-up to stdout
@@ -49,8 +52,8 @@ STABLE_LIKE = {"Extended", "Stable"}  # channels that ship to non-preview users
 PLATFORM = "Windows"             # the only platform that carries all five channels
 
 KEY_DATES = ["branch_point", "stable_date", "late_stable_date"]
-LEVEL_ORDER = {"critical": 0, "urgent": 1, "unknown": 1, "watch": 2, "ok": 3, "info": 4}
-LEVEL_ICON = {"critical": "🔴", "urgent": "🟠", "unknown": "❓", "watch": "🟡", "ok": "🟢", "info": "🔵"}
+LEVEL_ORDER = {"critical": 0, "error": 0, "urgent": 1, "unknown": 1, "watch": 2, "warn": 2, "ok": 3, "info": 4}
+LEVEL_ICON = {"critical": "🔴", "error": "🔴", "urgent": "🟠", "unknown": "❓", "watch": "🟡", "warn": "🟡", "ok": "🟢", "info": "🔵"}
 
 
 def log(msg):
@@ -141,6 +144,56 @@ def read_main_versions(repo_root):
         return parse_versions(f.read())
 
 
+# --- Support tiers (versions.json) ---
+# The release-notes TOC/index groups release lines by a manually-maintained
+# "support" block in scripts/infra/docs/versions.json (two lists: stable +
+# preview). We DON'T write that file here — we only read it and report drift
+# against the live Chrome channels, so a maintainer can fix it by hand.
+
+SUPPORT_VERSIONS_REL = os.path.join("scripts", "infra", "docs", "versions.json")
+
+
+def line_milestone(line):
+    """'4.148' -> 148 (the SkiaSharp minor IS the Chrome/Skia milestone)."""
+    try:
+        return int(str(line).split(".")[1])
+    except (IndexError, ValueError):
+        return None
+
+
+def load_support_block(repo_root):
+    """Read the support paths from versions.json: {"stable": [...], "preview": [...]}.
+
+    Returns None when the file or block is absent (the grouping then degrades to
+    the legacy flat layout and there is nothing to drift-check).
+    """
+    if not repo_root:
+        return None
+    path = os.path.join(repo_root, SUPPORT_VERSIONS_REL)
+    if not os.path.isfile(path):
+        return None
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+    except (ValueError, OSError):
+        return None
+    block = data.get("support")
+    if not isinstance(block, dict):
+        return None
+
+    def as_list(value):
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [value]
+        if isinstance(value, list):
+            return [str(v) for v in value]
+        return []
+
+    return {"stable": as_list(block.get("stable")),
+            "preview": as_list(block.get("preview"))}
+
+
 # --- date math ---
 
 def parse_date(value):
@@ -213,6 +266,110 @@ def build_headsup(main_ms, beta_ms, stable_like_ms, upcoming, window, beta_stabl
     return alerts
 
 
+def build_support_alerts(support, chrome_ms):
+    """Compare versions.json support paths to the live Chrome channels (spec §3.5).
+
+    ``chrome_ms`` maps channel name -> milestone (from fetch_releases). Implements
+    the support-tier decision table:
+
+      * stable line must sit on Chrome **Stable** ``S``, or on **Extended-stable**
+        ``E`` during the promotion gap (when a preview already reaches ``S``);
+        every stable entry must be ``S`` or ``E`` — nothing older or off-channel.
+      * preview line must cover Chrome **Beta** ``B`` (newer, in Dev/Canary, is OK;
+        behind ``B`` warns; at/below ``S`` is not a real preview).
+
+    Detection only — the fix is always a manual edit of versions.json. Returns
+    ``(alerts, status)`` where status is ``ok`` | ``warn`` | ``drift`` | ``unknown``.
+    """
+    E = chrome_ms.get("Extended")
+    S = chrome_ms.get("Stable")
+    B = chrome_ms.get("Beta")
+    alerts = []
+
+    if S is None or B is None:
+        alerts.append({"level": "unknown", "message": (
+            "Could not read the Chrome Stable/Beta milestone — support-tier drift "
+            "not evaluated. Re-run before relying on this.")})
+        return alerts, "unknown"
+
+    e_label = "m%d" % E if E is not None else "m?"
+    stable_ms = sorted({m for m in (line_milestone(l) for l in support["stable"]) if m is not None})
+    preview_ms = sorted({m for m in (line_milestone(l) for l in support["preview"]) if m is not None})
+    allowed = {m for m in (E, S) if m is not None}
+    floor = E if E is not None else S
+
+    # --- stable line ---
+    if not stable_ms:
+        alerts.append({"level": "error", "message": (
+            "support.stable is empty — it must list the current Chrome Stable "
+            "milestone m%d (or Extended-stable %s during a promotion gap)." % (S, e_label))})
+    else:
+        top = max(stable_ms)
+        ptop = max(preview_ms) if preview_ms else None
+        # Additional (older) supported lines must still be on a stable-class channel.
+        for m in stable_ms:
+            if m != top and m not in allowed:
+                alerts.append({"level": "error", "message": (
+                    "support.stable also lists m%d, which is neither the Chrome Stable "
+                    "(m%d) nor Extended-stable (%s) milestone — supported lines must be "
+                    "stable or extended-stable." % (m, S, e_label))})
+        # Headline: where the newest supported stable sits vs the channels.
+        if top == S:
+            pass  # current stable — ideal
+        elif E is not None and top == E and E < S:
+            if ptop is not None and ptop >= S:
+                alerts.append({"level": "ok", "message": (
+                    "support.stable is on Extended-stable m%d while preview m%d "
+                    "(>= Chrome Stable m%d) is about to promote — the normal "
+                    "promotion gap." % (top, ptop, S))})
+            else:
+                alerts.append({"level": "error", "message": (
+                    "support.stable is on Extended-stable m%d but no preview reaches "
+                    "Chrome Stable m%d — promote a stable or add a preview at m%d." % (top, S, S))})
+        elif top > S:
+            alerts.append({"level": "warn", "message": (
+                "support.stable newest line is m%d, ahead of Chrome Stable m%d — "
+                "unusual; verify the support paths." % (top, S))})
+        elif top < floor:
+            alerts.append({"level": "error", "message": (
+                "support.stable newest line is m%d, behind even Chrome Extended-stable "
+                "%s — SkiaSharp stable is out of date." % (top, e_label))})
+        else:  # floor < top < S — not a stable-class channel
+            alerts.append({"level": "error", "message": (
+                "support.stable newest line is m%d, between Chrome Extended-stable %s "
+                "and Stable m%d and not a supported channel — use the Stable (m%d) or "
+                "Extended-stable milestone." % (top, e_label, S, S))})
+
+    # --- preview line ---
+    if not preview_ms:
+        alerts.append({"level": "warn", "message": (
+            "support.preview is empty — no in-flight preview line is documented "
+            "(Chrome Beta is m%d)." % B)})
+    else:
+        ptop = max(preview_ms)
+        for m in [m for m in preview_ms if m <= S]:
+            alerts.append({"level": "error", "message": (
+                "support.preview lists m%d, which is not newer than Chrome Stable "
+                "m%d — a preview line must be ahead of stable." % (m, S))})
+        if ptop > B:
+            alerts.append({"level": "ok", "message": (
+                "support.preview m%d is ahead of Chrome Beta m%d (Dev/Canary) — "
+                "fine, previewing ahead." % (ptop, B))})
+        elif ptop > S and ptop < B:
+            alerts.append({"level": "warn", "message": (
+                "support.preview newest line is m%d, behind Chrome Beta m%d — update "
+                "the preview line soon." % (ptop, B))})
+
+    if not alerts:
+        alerts.append({"level": "ok", "message": (
+            "support.stable/preview match the Chrome channels (Extended %s, Stable "
+            "m%d, Beta m%d)." % (e_label, S, B))})
+    status = ("drift" if any(a["level"] == "error" for a in alerts)
+              else "warn" if any(a["level"] == "warn" for a in alerts) else "ok")
+    alerts.sort(key=lambda a: LEVEL_ORDER.get(a["level"], 9))
+    return alerts, status
+
+
 def main():
     ap = argparse.ArgumentParser(description="Chromium release heads-up for SkiaSharp Skia bumps (main vs Beta).")
     ap.add_argument("--ahead", type=int, default=4,
@@ -279,6 +436,32 @@ def main():
         status = "current"
     headsup = build_headsup(main_ms, beta_ms, stable_like_ms, upcoming, args.window, beta_stable_days)
 
+    # Support-tier drift: compare the manually-maintained versions.json support
+    # paths to the live channels (read-only; the fix is a manual edit, spec §3.5).
+    chrome_ms = {c["channel"]: c.get("milestone") for c in channels}
+    support_block = load_support_block(repo_root)
+    if support_block is None:
+        support_result = {
+            "configured": False,
+            "status": "absent",
+            "alerts": [{"level": "info", "message": (
+                "No 'support' block in %s — support-tier drift not checked." % SUPPORT_VERSIONS_REL)}],
+        }
+    else:
+        support_alerts, support_status = build_support_alerts(support_block, chrome_ms)
+        support_result = {
+            "configured": True,
+            "stable_lines": support_block["stable"],
+            "preview_lines": support_block["preview"],
+            "chrome": {
+                "extended": chrome_ms.get("Extended"),
+                "stable": chrome_ms.get("Stable"),
+                "beta": chrome_ms.get("Beta"),
+            },
+            "status": support_status,
+            "alerts": support_alerts,
+        }
+
     result = {
         "meta": {
             "generated_at": now.isoformat(),
@@ -297,6 +480,7 @@ def main():
         "channels": channels,
         "upcoming": upcoming,
         "headsup": headsup,
+        "support": support_result,
     }
 
     if args.output:
@@ -349,6 +533,19 @@ def print_summary(result):
     for a in result["headsup"]:
         print(f"   {LEVEL_ICON.get(a['level'], '•')} [{a['level'].upper()}] {a['message']}")
     print()
+
+    support = result.get("support")
+    if support:
+        status = support.get("status", "absent")
+        icon = {"ok": "🟢", "warn": "🟡", "drift": "🔴", "unknown": "❓", "absent": "🔵"}.get(status, "•")
+        print(f"  Support tiers (versions.json):  {icon} {status.upper()}")
+        if support.get("configured"):
+            ch = support.get("chrome", {})
+            print(f"   stable={support.get('stable_lines')}  preview={support.get('preview_lines')}"
+                  f"   (Chrome Extended m{ch.get('extended')} / Stable m{ch.get('stable')} / Beta m{ch.get('beta')})")
+        for a in support.get("alerts", []):
+            print(f"   {LEVEL_ICON.get(a['level'], '•')} [{a['level'].upper()}] {a['message']}")
+        print()
 
 
 if __name__ == "__main__":

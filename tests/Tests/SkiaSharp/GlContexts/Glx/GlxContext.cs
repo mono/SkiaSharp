@@ -6,19 +6,29 @@ namespace SkiaSharp.Tests
 {
 	internal class GlxContext : GlContext
 	{
-		private IntPtr fDisplay;
+		// One X11 connection for the whole process. Mesa hangs its GLX and driver
+		// state off the Display, so closing one while any context minted from it is
+		// still current leaves that state dangling -- and the suite creates a
+		// context per test, so it would be opening and closing connections
+		// constantly. A single shared connection is also what XCloseDisplay was
+		// added for: there is now exactly one for the process lifetime instead of
+		// one per test. See #4590.
+		private static readonly IntPtr s_display = OpenDisplay();
+
 		private IntPtr fPixmap;
 		private IntPtr fGlxPixmap;
 		private IntPtr fContext;
 
+		private static IntPtr OpenDisplay()
+		{
+			var display = Xlib.XOpenDisplay(null);
+			if (display == IntPtr.Zero)
+				throw new Exception("Failed to open X display.");
+			return display;
+		}
+
 		public GlxContext()
 		{
-			fDisplay = Xlib.XOpenDisplay(null);
-			if (fDisplay == IntPtr.Zero) {
-				Destroy();
-				throw new Exception("Failed to open X display.");
-			}
-
 			var visualAttribs = new [] {
 				Glx.GLX_X_RENDERABLE, Xlib.True,
 				Glx.GLX_DRAWABLE_TYPE, Glx.GLX_PIXMAP_BIT,
@@ -37,14 +47,14 @@ namespace SkiaSharp.Tests
 			
 			int glxMajor, glxMinor;
 
-			if (!Glx.glXQueryVersion(fDisplay, out glxMajor, out glxMinor) ||
+			if (!Glx.glXQueryVersion(s_display, out glxMajor, out glxMinor) ||
 				(glxMajor < 1) ||
 				(glxMajor == 1 && glxMinor < 3)) {
 				Destroy();
 				throw new Exception($"GLX version 1.3 or higher required ({glxMajor}.{glxMinor} provided).");
 			}
 
-			var fbc = Glx.ChooseFBConfig(fDisplay, Xlib.XDefaultScreen(fDisplay), visualAttribs);
+			var fbc = Glx.ChooseFBConfig(s_display, Xlib.XDefaultScreen(s_display), visualAttribs);
 			if (fbc.Length == 0) {
 				Destroy();
 				throw new Exception("Failed to retrieve a framebuffer config.");
@@ -55,29 +65,29 @@ namespace SkiaSharp.Tests
 			for (int i = 0; i < fbc.Length; i++) {
 
 				int sampleBuf, samples;
-				Glx.glXGetFBConfigAttrib(fDisplay, fbc[i], Glx.GLX_SAMPLE_BUFFERS, out sampleBuf);
-				Glx.glXGetFBConfigAttrib(fDisplay, fbc[i], Glx.GLX_SAMPLES, out samples);
+				Glx.glXGetFBConfigAttrib(s_display, fbc[i], Glx.GLX_SAMPLE_BUFFERS, out sampleBuf);
+				Glx.glXGetFBConfigAttrib(s_display, fbc[i], Glx.GLX_SAMPLES, out samples);
 
 				if (bestFBC == IntPtr.Zero || (sampleBuf > 0 && samples > bestNumSamp)) {
 					bestFBC = fbc[i];
 					bestNumSamp = samples;
 				}
 			}
-			var vi = Glx.GetVisualFromFBConfig(fDisplay, bestFBC);
+			var vi = Glx.GetVisualFromFBConfig(s_display, bestFBC);
 
-			fPixmap = Xlib.XCreatePixmap(fDisplay, Xlib.XRootWindow(fDisplay, vi.screen), 10, 10, (uint)vi.depth);
+			fPixmap = Xlib.XCreatePixmap(s_display, Xlib.XRootWindow(s_display, vi.screen), 10, 10, (uint)vi.depth);
 			if (fPixmap == IntPtr.Zero) {
 				Destroy();
 				throw new Exception("Failed to create pixmap.");
 			}
 			
-			fGlxPixmap = Glx.glXCreateGLXPixmap(fDisplay, ref vi, fPixmap);
+			fGlxPixmap = Glx.glXCreateGLXPixmap(s_display, ref vi, fPixmap);
 
-			var glxExts = Glx.QueryExtensions(fDisplay, Xlib.XDefaultScreen(fDisplay));
+			var glxExts = Glx.QueryExtensions(s_display, Xlib.XDefaultScreen(s_display));
 			if (Array.IndexOf(glxExts, "GLX_ARB_create_context") == -1 ||
 				Glx.glXCreateContextAttribsARB == null) {
 				Console.WriteLine("OpenGL 3.0 doesn't seem to be available.");
-				fContext = Glx.glXCreateNewContext(fDisplay, bestFBC, Glx.GLX_RGBA_TYPE, IntPtr.Zero, Xlib.True);
+				fContext = Glx.glXCreateNewContext(s_display, bestFBC, Glx.GLX_RGBA_TYPE, IntPtr.Zero, Xlib.True);
 			} else {
 				// Let's just use OpenGL 3.0, but we could try find the highest
 				int major = 3, minor = 0;
@@ -92,21 +102,21 @@ namespace SkiaSharp.Tests
 				}
 				flags.Add(Xlib.None);
 
-				fContext = Glx.glXCreateContextAttribsARB(fDisplay, bestFBC, IntPtr.Zero, Xlib.True, flags.ToArray());
+				fContext = Glx.glXCreateContextAttribsARB(s_display, bestFBC, IntPtr.Zero, Xlib.True, flags.ToArray());
 			}
 			if (fContext == IntPtr.Zero) {
 				Destroy();
 				throw new Exception("Failed to create an OpenGL context.");
 			}
 
-			if (!Glx.glXIsDirect(fDisplay, fContext)) {
+			if (!Glx.glXIsDirect(s_display, fContext)) {
 				Console.WriteLine("Obtained indirect GLX rendering context.");
 			}
 		}
 
 		public override void MakeCurrent()
 		{
-			if (!Glx.glXMakeCurrent(fDisplay, fGlxPixmap, fContext)) {
+			if (!Glx.glXMakeCurrent(s_display, fGlxPixmap, fContext)) {
 				Destroy();
 				throw new Exception("Failed to set the context.");
 			}
@@ -114,30 +124,28 @@ namespace SkiaSharp.Tests
 
 		public override void SwapBuffers()
 		{
-			Glx.glXSwapBuffers(fDisplay, fGlxPixmap);
+			Glx.glXSwapBuffers(s_display, fGlxPixmap);
 		}
 
 		public override void Destroy()
 		{
-			if (fDisplay != IntPtr.Zero) {
-				Glx.glXMakeCurrent(fDisplay, IntPtr.Zero, IntPtr.Zero);
+			// Unbind first: destroying a context or its drawable while either is
+			// still current is undefined, and the driver keeps the state per thread.
+			Glx.glXMakeCurrent(s_display, IntPtr.Zero, IntPtr.Zero);
 
-				if (fContext != IntPtr.Zero) {
-					Glx.glXDestroyContext(fDisplay, fContext);
-					fContext = IntPtr.Zero;
-				}
+			if (fContext != IntPtr.Zero) {
+				Glx.glXDestroyContext(s_display, fContext);
+				fContext = IntPtr.Zero;
+			}
 
-				if (fGlxPixmap != IntPtr.Zero) {
-					Glx.glXDestroyGLXPixmap(fDisplay, fGlxPixmap);
-					fGlxPixmap = IntPtr.Zero;
-				}
+			if (fGlxPixmap != IntPtr.Zero) {
+				Glx.glXDestroyGLXPixmap(s_display, fGlxPixmap);
+				fGlxPixmap = IntPtr.Zero;
+			}
 
-				if (fPixmap != IntPtr.Zero) {
-					Xlib.XFreePixmap(fDisplay, fPixmap);
-					fPixmap = IntPtr.Zero;
-				}
-				
-				fDisplay = IntPtr.Zero;
+			if (fPixmap != IntPtr.Zero) {
+				Xlib.XFreePixmap(s_display, fPixmap);
+				fPixmap = IntPtr.Zero;
 			}
 		}
 

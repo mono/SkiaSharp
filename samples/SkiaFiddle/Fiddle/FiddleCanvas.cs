@@ -74,6 +74,9 @@ public class FiddleCanvas : SKCanvasElement
         else if (_drawDelegate is not null) StartAnimation();
     }
 
+    /// <summary>Forces a single repaint — used when the selected asset changes while paused.</summary>
+    public void RequestRedraw() => Invalidate();
+
     private void OnFrameTick(object? sender, object e) => Invalidate();
 
     protected override void RenderOverride(SKCanvas canvas, Size area)

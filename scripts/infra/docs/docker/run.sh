@@ -14,8 +14,9 @@
 #
 # GitHub auth: GITHUB_TOKEN and GH_TOKEN are forwarded from the host environment.
 # The release-notes generator REQUIRES gh for PR author resolution — it must never
-# silently degrade — so this script errors out for the release-notes path when no
-# token is present (override with ALLOW_NO_TOKEN=1 for the API-only / docs paths).
+# silently degrade — so this script errors out for the release-notes paths (notes / all)
+# when no token is present. Set ALLOW_NO_TOKEN=1 to bypass that pre-flight check and let
+# those paths run token-less anyway (the api-diffs / api-docs paths never need a token).
 #
 # Usage:
 #   run.sh build                       Build (or rebuild) the docker image.
@@ -23,7 +24,7 @@
 #
 #   The three documentation-generation paths, each a single canonical script under
 #   scripts/infra/docs/ that local runs, CI, and this wrapper all share:
-#   run.sh api-diffs [args...]         Path 1: API diffs (generate-api-diffs.sh).
+#   run.sh api-diffs [args...]         Path 1: API diffs (cake docs-api-diff).
 #   run.sh notes [args...]             Path 2: release notes (needs a token).
 #   run.sh api-docs [args...]          Path 3: mdoc XML docs (generate-api-docs.sh).
 #   run.sh all                         All three paths, in order (needs a token).
@@ -34,7 +35,8 @@
 # Environment:
 #   COLD=1            Mount a fresh empty package cache (cold run).
 #   IMAGE=<name>      Override the image tag (default: skiasharp-docs).
-#   ALLOW_NO_TOKEN=1  Permit running without a GitHub token (non-notes paths only).
+#   ALLOW_NO_TOKEN=1  Bypass the token pre-flight check for the notes / all paths
+#                     (the api-diffs / api-docs paths never require a token).
 #
 set -euo pipefail
 
@@ -131,8 +133,10 @@ case "$cmd" in
     api-diffs)
         ensure_image
         docker_run_args
+        # Path 1: the release-notes API diffs. The shared contract is the
+        # `docs-api-diff` Cake target (same one prepare.sh runs).
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-api-diffs.sh "$@"
+            bash -lc 'dotnet tool restore && dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true "$@"' _ "$@"
         ;;
     api-docs)
         ensure_image
@@ -144,22 +148,22 @@ case "$cmd" in
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
         docker_run_args
+        # The release-notes Prepare phase (prepare.sh): API diffs (Cake, incremental —
+        # skips lines whose folder already exists) THEN release-notes-data.py (facts) THEN
+        # release-notes-index.py (index.json). Pass --force/--min-version/--max-version through.
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" \
-            scripts/infra/docs/generate-release-notes.sh "$@"
+            .agents/skills/release-notes/scripts/prepare.sh "$@"
         ;;
     all)
-        # Full local run: all three paths in one container, in dependency order. Path 1
-        # (API diffs) must precede Path 2 (notes) because the release-notes engine
-        # consumes the API diff trees + co-release sidecar Path 1 writes; Path 3
-        # (api-docs) is independent. Sharing one container (and one COLD cache, when set)
-        # means later paths reuse the packages the first path downloaded. Because it runs
-        # the notes path, 'all' requires a token (override with ALLOW_NO_TOKEN=1).
+        # Full local run: the release-notes Prepare phase (prepare.sh — API diffs then
+        # the notes engine) plus Path 3 (api-docs, independent) in one container, so
+        # later paths reuse the packages the first downloaded. Because it runs the notes
+        # path, 'all' requires a token (override with ALLOW_NO_TOKEN=1).
         [ "${ALLOW_NO_TOKEN:-0}" = "1" ] || require_token_for_notes
         ensure_image
         docker_run_args
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" bash -euo pipefail -c '
-            scripts/infra/docs/generate-api-diffs.sh
-            scripts/infra/docs/generate-release-notes.sh
+            .agents/skills/release-notes/scripts/prepare.sh
             scripts/infra/docs/generate-api-docs.sh
         '
         ;;
@@ -170,7 +174,7 @@ case "$cmd" in
         exec docker run "${RUN_ARGS[@]}" "$IMAGE" "$@"
         ;;
     ""|-h|--help|help)
-        sed -n '2,37p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+        sed -n '2,39p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
         ;;
     *)
         die "unknown command '$cmd' (try: build | shell | api-diffs | notes | api-docs | all | cake | exec | help)"

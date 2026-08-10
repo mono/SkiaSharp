@@ -89,7 +89,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 | Feed | URL | Purpose |
 |------|-----|---------|
 | Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing (regular packages) |
-| CI | `https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
+| CI | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
 | Stable | NuGet.org | Public releases |
 
 > **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing.
@@ -273,10 +273,8 @@ flowchart TB
     ∙ Mark pre-release if preview
     ∙ Attach samples if stable"]
     
-    RELEASE --> FINAL{Stable release?}
-    FINAL -->|No| DONE([Complete])
-    FINAL -->|Yes| MILESTONE[Close GitHub milestone]
-    MILESTONE --> DONE
+    RELEASE --> MILESTONE[Close this version's GitHub milestone]
+    MILESTONE --> DONE([Complete])
 
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2

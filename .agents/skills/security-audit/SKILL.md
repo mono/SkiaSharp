@@ -50,7 +50,7 @@ combined into a single unified report.
 
 1. Search GitHub issues/PRs (all deps including Skia)
 2. Query Chrome Releases blog (`query-chrome-releases.py`) — see [Chrome Releases](references/chrome-releases.md)
-3. Query Chromium release schedule (`query-milestone-schedule.py`) — main vs Beta heads-up, see [Milestone Schedule](references/milestone-schedule.md)
+3. Query Chromium release schedule (`query-milestone-schedule.py`) — main vs Beta heads-up + release-notes support-tier drift, see [Milestone Schedule](references/milestone-schedule.md)
 4. Verify dependency versions from submodule/DEPS/headers (NOT cgmanifest.json)
 5. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
 6. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
@@ -148,6 +148,23 @@ upcoming schedule, and prints prioritized heads-up alerts:
 | ❓ `unknown` | The Beta milestone couldn't be read (Chromium Dash down) — signal not evaluated. **Don't treat as OK; re-run.** |
 | 🟡 `watch` | A milestone past main branches within the window — start preparing. |
 | 🟢 `ok` | `main >= Beta` — front line current. |
+
+#### Support-tier drift (release-notes `support` block)
+
+The same run also drift-checks the release-notes **support paths** in
+`scripts/infra/docs/versions.json` (two hand-maintained lists, `stable` + `preview`) against
+the live channels — detection only, the fix is a manual edit of that file (spec §3.5). The
+verdict is in the `support` object of the JSON (`status`: `ok` | `warn` | `drift` | `absent`)
+and printed under **"Support tiers (versions.json)"**:
+
+| `support.status` | Meaning | Audit action |
+|------------------|---------|--------------|
+| 🟢 `ok` | `stable` covers Chrome Stable (or Extended-stable during the promotion gap) and `preview` tracks Beta-or-newer. | None. |
+| 🟡 `warn` | Plausible but worth noting (e.g. `stable` ahead of Chrome Stable, `preview` empty or trailing Beta). | Mention in the prose summary. |
+| 🔴 `drift` | `stable` is behind/off-channel, or `preview` is not a real preview. | **Raise a finding** in `nextSteps`: edit `versions.json` `support` to the milestones we actually ship. |
+
+This is a docs-grouping check, not a CVE — but a `drift` verdict means the website is
+mis-stating what is supported, so treat it as a finding.
 
 #### Use the result
 
@@ -425,6 +442,7 @@ Then highlight the **top actionable items** from the report:
 - Any `needs_attention` or `undiscovered` findings
 - Chrome Releases CVEs above our current milestone (especially Skia/ANGLE)
 - 🔴/🟠 release heads-up (Step 3) — `main` behind the Beta milestone, or a milestone branching/going stable soon
+- 🔴 support-tier drift (Step 3) — `versions.json` `support` block out of date with the live Chrome channels
 - Critical/High CG alerts
 
 #### Report quality rules

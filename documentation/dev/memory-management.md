@@ -115,6 +115,58 @@ The `HandleDictionary` maintains a mapping from native `IntPtr` handles to C# wr
 - On dispose: removes handle from dictionary
 - Thread-safe via reader/writer lock
 
+## Keeping Related Objects Alive (Owned / OwnedBy / Referenced)
+
+When one wrapper depends on another — because native code stores a raw pointer into it, or
+because it created a child that must be torn down with it — **do not hand-roll a
+`private readonly` field or a `List<T>`** to keep the dependency reachable. `SKObject` has three
+built-in helpers (see `binding/SkiaSharp/SKObject.cs`) that record the relationship in one of two
+per-object dictionaries, so the runtime manages it for you:
+
+| Helper | Stored in | Keeps child alive? | Disposes child with owner? | Use when |
+|--------|-----------|--------------------|-----------------------------|----------|
+| `Referenced(owner, child)` | `KeepAliveObjects` | Yes | **No** | Owner holds a raw/borrowed pointer into `child` and just needs it rooted; the caller still owns `child`. |
+| `Unreferenced(owner, child)` | `KeepAliveObjects` | — | — | Inverse of `Referenced`: drops one keep-alive root so `child` can be collected again. |
+| `UnreferencedAll(owner)` | `KeepAliveObjects` | — | — | Drops **all** keep-alive roots on `owner` (e.g. a "remove all" operation). |
+| `OwnedBy(child, owner)` | `OwnedObjects` | Yes | Yes | `child` is a native-owned sub-object (`owns:false`) that should be disposed when the owner is (e.g. a cached getter result). Returns `child`. |
+| `Owned(owner, child)` | `OwnedObjects` | Yes | Yes | `child` was created by managed code and should be disposed with the owner (e.g. a wrapped stream). Returns `owner`. |
+
+Both dictionaries are released when the owner is disposed: `OwnedObjects` entries are disposed
+then cleared, `KeepAliveObjects` entries are only cleared (never disposed).
+
+**`Referenced` — root without owning (the "avoid collection" case).** A child that holds a raw
+pointer into a parent must root that parent for its whole lifetime, or non-deterministic
+finalization can free the parent first → use-after-free. `Referenced` is exactly this:
+
+```csharp
+// Idiomatic: park the parent in this.KeepAliveObjects, rooted for the child's lifetime,
+// released automatically on dispose. No extra field needed.
+internal SpanIterator(SKRegion region, int y, int left, int right)
+    : base(SkiaApi.sk_region_spanerator_new(region.Handle, y, left, right), owns: true)
+{
+    Referenced(this, region);
+}
+```
+
+Real uses: `SKDocument` roots its output stream, `SKColorSpace` its ICC profile, `SKSVG` its
+stream — all via `Referenced(...)`. For a **mutable set** of rooted children, add with
+`Referenced(this, child)`, drop one with `Unreferenced(this, child)`, and drop them all with
+`UnreferencedAll(this)` — again, no hand-rolled `List<T>` and no reaching into the dictionaries
+from derived types.
+
+**`Owned` / `OwnedBy` — root *and* dispose.** When the owner should also dispose the child:
+
+```csharp
+// OwnedBy: borrowed getter result that must die with the owner (returns the child).
+canvas = OwnedBy(SKCanvas.GetObject(SkiaApi.sk_surface_get_canvas(Handle), owns: false), this);
+
+// Owned: managed-created child disposed with the owner (returns the owner).
+return Owned(CreatePdf(managedStream), managedStream);
+```
+
+For a **one-shot** P/Invoke that stores nothing, a plain `GC.KeepAlive(parent)` after the call is
+enough — no dictionary entry is needed.
+
 ## Common Mistakes
 
 ### 1. Wrong cleanup for ref-counted types

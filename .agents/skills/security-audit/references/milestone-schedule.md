@@ -2,6 +2,8 @@
 
 [Chromium Dash](https://chromiumdash.appspot.com/) exposes two JSON endpoints we combine to
 answer one question: **are we keeping up with what's coming, and how much time do we have?**
+The same data also drift-checks the release-notes **support** paths (see
+[Support-Tier Drift](#support-tier-drift-release-notes-support-block) below).
 
 1. **Channel releases** — which milestone *and exact Skia commit* is live in each channel
    (Extended stable, Stable, Beta, Dev, Canary).
@@ -136,7 +138,17 @@ main-vs-Beta heads-up. Progress is logged to stderr, so stdout/`--output` stay c
   ],
   "headsup": [
     { "level": "ok", "milestone": 150, "message": "main (m150) is at or ahead of Beta..." }
-  ]
+  ],
+  "support": {
+    "configured": true,
+    "stable_lines": ["4.148"],
+    "preview_lines": ["4.150"],
+    "chrome": { "extended": 148, "stable": 149, "beta": 150 },
+    "status": "ok",                 // "ok" | "warn" | "drift" | "unknown" | "absent"
+    "alerts": [
+      { "level": "ok", "message": "support.stable is on Extended-stable m148 while preview m150..." }
+    ]
+  }
 }
 ```
 
@@ -153,6 +165,38 @@ main-vs-Beta heads-up. Progress is logged to stderr, so stdout/`--output` stay c
 
 > The `critical` trigger uses the **live** Stable/Extended channel milestones from `fetch_releases`
 > (authoritative), falling back to the scheduled stable date only when channel data is missing.
+
+## Support-Tier Drift (release-notes `support` block)
+
+The same run also drift-checks the release-notes **support paths** in
+`scripts/infra/docs/versions.json` against the live channels. That block is two
+hand-maintained lists of `major.minor` lines SkiaSharp actually ships — `stable` (the
+supported stable line) and `preview` (the in-flight preview line) — and drives the
+website's TOC/index grouping (see the release-notes spec §3.5). SkiaSharp ships NuGet
+packages, not a multi-tier channel product, so this is **two lists, not a mirror of
+Chrome's five channels**.
+
+This is **detection only**: the fix is always a manual edit of `versions.json` (we don't
+ship every Chrome milestone, so the block must not be auto-derived). With `E ≤ S ≤ B` =
+Chrome Extended/Stable/Beta milestones and `stable*`/`preview*` = our newest stable/preview
+milestone:
+
+| Condition | Verdict |
+|-----------|---------|
+| `stable* = S` | 🟢 ok — current stable |
+| `stable* = E` (E<S) **and** `preview* ≥ S` | 🟢 ok — promotion gap (preview about to ship) |
+| `stable* = E` (E<S) **and** `preview* < S` | 🔴 drift — stuck on extended, nothing promoting |
+| `stable* < E`, between `E` and `S`, or any stable entry off `{E,S}` | 🔴 drift — out of date / off-channel |
+| `stable* > S` | 🟡 warn — ahead of Chrome stable, verify |
+| `preview* = B` or `preview* > B` | 🟢 ok — tracks beta / ahead in Dev/Canary |
+| `S < preview* < B` | 🟡 warn — trails beta, update soon |
+| `preview* ≤ S` | 🔴 drift — not a real preview |
+| `preview` empty | 🟡 warn — no preview documented |
+
+The verdict lands in the `support` object of the JSON (`status` = `ok`/`warn`/`drift`/
+`unknown`/`absent`) and prints under **"Support tiers (versions.json)"**. A `drift` verdict
+is an audit finding: the website is mis-stating what is supported — fix it by editing the
+`support` lists to the milestones we actually released.
 
 ## How the Audit Uses This
 

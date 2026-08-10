@@ -734,6 +734,23 @@ namespace SkiaSharp
 			return result;
 		}
 
+		// GetFastBounds
+
+		public bool GetFastBounds (SKRect bounds, out SKRect fastBounds)
+		{
+			if (!SkiaApi.sk_paint_can_compute_fast_bounds (Handle)) {
+				GC.KeepAlive (this);
+				fastBounds = SKRect.Empty;
+				return false;
+			}
+
+			fixed (SKRect* storage = &fastBounds) {
+				SkiaApi.sk_paint_compute_fast_bounds (Handle, &bounds, storage);
+			}
+			GC.KeepAlive (this);
+			return true;
+		}
+
 		// CountGlyphs
 
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.CountGlyphs)}() instead.", error: true)]

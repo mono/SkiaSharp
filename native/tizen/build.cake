@@ -44,6 +44,7 @@ Task("libSkiaSharp")
            $"skia_enable_ganesh=true " +
            $"skia_use_harfbuzz=false " +
            $"skia_use_icu=false " +
+           $"skia_use_partition_alloc=false " +
            $"skia_use_piex=true " +
            $"skia_use_system_expat=false " +
            $"skia_use_system_freetype2=true " +
@@ -52,7 +53,7 @@ Task("libSkiaSharp")
            $"skia_use_system_libwebp=false " +
            $"skia_use_system_zlib=true " +
            $"skia_enable_skottie=true " +
-           $"extra_cflags=[ '-DSKIA_C_DLL', '-DXML_DEV_URANDOM' ] " +
+           $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '-DXML_DEV_URANDOM' ] " +
            $"ncli='{TIZEN_STUDIO_HOME}' " +
            $"ncli_version='{ncliVersion}'");
 

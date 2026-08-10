@@ -45,7 +45,7 @@ Publish packages to NuGet.org and finalize releases.
 │  5. Refresh Web Notes    → Dispatch docs workflow (tag→stable flip)│
 │  6. Create GitHub Release→ Generate notes, set prerelease flag     │
 │  7. Customer Teaser      → Extract key bits from the generated log │
-│  8. Close Milestone      → Stable releases only                    │
+│  8. Milestone Hygiene    → Audit/sync assignments, then close      │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -58,7 +58,7 @@ Publish packages to NuGet.org and finalize releases.
 | 5. Website notes refresh | Dispatch (usually a no-op) | Dispatch — flips page to **stable** |
 | 6. GitHub Release | `--prerelease` flag | No flag, attach samples |
 | 7. Customer teaser | Breaking + What's New + Fixes (usually short) | + Dependency Updates + contributors |
-| 8. Milestone | Skip | Close milestone |
+| 8. Milestone | Close its milestone (`X.Y.Z-preview.N`) | Close its milestone (`X.Y.Z`) |
 
 ---
 
@@ -194,7 +194,7 @@ git push origin {tag}
 ## Step 5: Refresh Website Release Notes & API Diffs
 
 The website release-notes and API-diff pages (`documentation/docfx/releases/`) are
-produced by the **Update Release Notes & API Diffs** workflow. That workflow runs
+produced by the **Sync - Release Notes & API Diffs** workflow. That workflow runs
 **daily and on pushes to `main`** — it deliberately **no longer triggers on `v*`
 tags** — so after pushing the tag in Step 4, **dispatch it manually** to refresh the
 site immediately instead of waiting up to ~24h for the next daily run.
@@ -209,10 +209,10 @@ safe to run.
 ```bash
 # Always dispatch from main (it regenerates every release's pages, including the
 # tag you just pushed). Do NOT dispatch from the release branch.
-gh workflow run "Update Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
+gh workflow run "Sync - Release Notes & API Diffs" --repo mono/SkiaSharp --ref main
 
 # Optional: follow the run to completion.
-gh run watch "$(gh run list --workflow 'Update Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
+gh run watch "$(gh run list --workflow 'Sync - Release Notes & API Diffs' --repo mono/SkiaSharp --branch main --limit 1 --json databaseId --jq '.[0].databaseId')" --repo mono/SkiaSharp
 ```
 
 If anything changed, the workflow opens (or updates) the rolling `[docs]`
@@ -333,12 +333,60 @@ example. Process:
 
 ---
 
-## Step 8: Close Milestone (Stable only)
+## Step 8: Milestone Hygiene (Every Release)
 
-**Skip for preview releases.**
+Because the tag now exists (Step 4), this release counts as **shipped** — so this is the
+moment to (8a) sync every milestone assignment for the line, then (8b) close this version's
+milestone. Do both, in order.
+
+### 8a. Sync milestone assignments (run the audit)
+
+[`audit-milestones.ps1`](../../../scripts/infra/milestones/audit-milestones.ps1) walks the
+release branches for the line and assigns every merged PR — and the issues it closed — to the
+milestone of the release it actually **shipped** in. It's idempotent and self-correcting, so
+running it at every publish keeps milestones clean incrementally (an unshipped preview's PRs
+roll forward to the next shipped release; commits not yet in any shipped release are left alone).
+
+Pass the **base line** version (`X.Y.Z`, no `-preview`/`-rc` suffix — the script audits the
+whole line). Dry-run first, review, then apply:
 
 ```bash
+# Review what would change (read-only)
+pwsh scripts/infra/milestones/audit-milestones.ps1 -DryRun -Version {X.Y.Z}
+
+# Apply
+pwsh scripts/infra/milestones/audit-milestones.ps1 -Version {X.Y.Z}
+```
+
+> See [`scripts/infra/milestones/README.md`](../../../scripts/infra/milestones/README.md) for
+> the full algorithm. The header prints which cadence branches shipped (have a tag) vs. rolled
+> forward, so you can sanity-check before applying.
+
+### 8b. Close this version's milestone
+
+**Required for _every_ release — preview, rc, and stable.** SkiaSharp now creates a
+GitHub milestone for every version in the cadence, so each published version has its
+own milestone that must be closed once that version ships (otherwise it lingers open
+forever). The milestone title is the **exact release version** (no `v` prefix):
+
+| Release type | Milestone to close |
+|--------------|--------------------|
+| Preview | `X.Y.Z-preview.N` (e.g. `4.151.0-preview.1`) |
+| RC | `X.Y.Z-rc.N` (e.g. `4.151.0-rc.1`) |
+| Stable | `X.Y.Z` (e.g. `4.151.0`) |
+
+⚠️ **Move still-open issues forward first.** Never silently close a milestone that
+still has open issues. Reassign any open issues to the next appropriate milestone (the
+next preview/rc, or the stable milestone), or confirm with the user, **before** closing.
+
+```bash
+# 1. Find the milestone whose title matches the exact release version
 gh api repos/:owner/:repo/milestones --jq '.[] | "\(.number): \(.title)"'
+
+# 2. Check for still-open issues in that milestone (should be empty before closing)
+gh issue list --repo mono/SkiaSharp --milestone "{version}" --state open
+
+# 3. After moving/confirming any open issues, close this version's milestone
 gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
 ```
 

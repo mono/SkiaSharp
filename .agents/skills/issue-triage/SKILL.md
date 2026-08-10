@@ -134,7 +134,7 @@ Write brief internal analysis (3–5 sentences), classify the type, then read [r
 > 3. **Follow these critical constraints:**
 >    - `meta.schemaVersion` must be `"1.0"`
 >    - **Optional fields:** OMIT entirely if not applicable. Do NOT set to `null`.
->    - **String Arrays:** `platforms`, `backends`, `tenets` are simple string arrays (no confidence wrapper).
+>    - **String Arrays:** `platforms`, `backends`, `tenets`, `perf` are simple string arrays (no confidence wrapper). Any `perf/*` value implies `tenet/performance` — include it in `tenets`.
 >    - **Investigation:** `analysis.codeInvestigation` is MANDATORY. At least one entry for bugs, two for close-* actions.
 >    - **Rationale:** `analysis.rationale` is a single summary string (not per-field).
 >    - **Validation:** No extra properties allowed (`additionalProperties: false`).

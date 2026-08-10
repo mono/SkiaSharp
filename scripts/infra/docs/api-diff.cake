@@ -10,12 +10,13 @@
 // Mono.ApiTools.NuGetDiff, and writes the co-release map sidecar (spec §3.6) the
 // Python release-notes engine consumes.
 //
-// Two targets, one engine:
-//   docs-api-diff-past  — historical: regenerate the COMMITTED releases/ trees from
-//                         the feed (the Cake generator the §2.2 Prepare phase runs).
-//   docs-api-diff       — current: diff the freshly built, unpublished CI packages
-//                         against the feed as a build-pipeline gate (spec §5.3);
-//                         writes only transient output/api-diff, never releases/.
+// One target: `docs-api-diff` regenerates the COMMITTED releases/ trees from the
+// feed (the Cake generator the §2.2 Prepare phase runs). It is INCREMENTAL and
+// SCOPED — like release-notes-data.py it takes --force / --minVersion / --maxVersion:
+// by default it skips a line whose api-diff folder already exists (a shipped
+// version's diff never changes), only computing missing/forced lines in range.
+// `--force` with no scope regenerates the whole back-catalogue (e.g. after the
+// api-diff tools themselves change).
 //
 // Shared machinery (the NuGet-diff comparer, layout helpers, versions.json loading)
 // lives alongside this file in scripts/infra/docs/api-diff-tools.cake and is #loaded
@@ -44,131 +45,29 @@ bool IsHarfBuzzFamily (string id) =>
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    // working version
-    var baseDir = $"{OUTPUT_NUGETS_PATH}/api-diff";
-    CleanDirectories (baseDir);
+    // Incremental + scoped controls (forwarded by prepare.sh; mirror release-notes-data.py).
+    //   --force              rebuild a line even when its api-diff folder exists
+    //   --minVersion X       lower bound (inclusive) on the line core to process
+    //   --maxVersion Y       upper bound (inclusive); set == min for a single version
+    // By default (no --force) a line whose folder already exists is SKIPPED — a
+    // shipped version's api diff never changes, so it is a committed cache. A scoped
+    // run touches only lines in [min,max]; everything else stays exactly as committed.
+    var force = Argument ("force", false);
+    var minVersion = Argument ("minVersion", "");
+    var maxVersion = Argument ("maxVersion", "");
+    var isScoped = !string.IsNullOrEmpty (minVersion) || !string.IsNullOrEmpty (maxVersion);
 
-    // pretty version
-    var diffDir = $"{ROOT_PATH}/output/api-diff";
-    EnsureDirectoryExists (diffDir);
-    CleanDirectories (diffDir);
-
-    Information ($"Creating comparer...");
-    var comparer = await CreateNuGetDiffAsync ();
-    comparer.SaveAssemblyApiInfo = true;
-    comparer.SaveAssemblyMarkdownDiff = true;
-
-    // Shared version-comparison config — same source of truth used by
-    // docs-api-diff-past. Here it lets us pick a sensible baseline for the
-    // unpublished local build instead of blindly diffing against the newest
-    // feed version (which could be a superseded preview). Per family (spec §1.5).
-    var skiaConfig = LoadVersionsConfig ("skiasharp");
-    var hbConfig = LoadVersionsConfig ("harfbuzzsharp");
-
-    var filter = new NuGetVersions.Filter {
-        IncludePrerelease = NUGET_DIFF_PRERELEASE
-    };
-
-    foreach (var id in SUPPORTED_NUGETS.Keys) {
-        // skip doc generation for NativeAssets as that has nothing but a native binary
-        if (id.Contains ("NativeAssets"))
-            continue;
-
-        var versionsConfig = IsHarfBuzzFamily (id) ? hbConfig : skiaConfig;
-
-        Information ($"Comparing the assemblies in '{id}'...");
-
-        var version = GetVersion (id);
-        if (string.IsNullOrEmpty(version)) {
-            Information ($"Skipping '{id}' — no version found in VERSIONS.txt.");
-            continue;
-        }
-        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
-            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
-            : version;
-
-        var localNupkgPath = $"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg";
-        if (!FileExists(localNupkgPath)) {
-            Information ($"Skipping '{id}' — local nupkg not found: {localNupkgPath}");
-            continue;
-        }
-
-        // Pick the baseline to diff the local build against:
-        //   1. An explicit compare_to override in versions.json wins.
-        //   2. Otherwise use the newest published version that is NOT superseded
-        //      and is not the build's own version — this skips abandoned preview
-        //      lines (e.g. 4.147) the same way docs-api-diff-past does.
-        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
-        var latestVersion = FindCompareToBaseline (versionsConfig, version, allVersions);
-        if (latestVersion == null) {
-            foreach (var candidate in allVersions.OrderByDescending (v => v)) {
-                var normalized = candidate.ToNormalizedString ();
-                if (normalized == localNugetVersion)
-                    continue;
-                if (IsVersionSuperseded (versionsConfig, normalized))
-                    continue;
-                latestVersion = normalized;
-                break;
-            }
-        }
-        Debug ($"Version '{latestVersion}' is the baseline for '{id}'...");
-
-        // pre-cache so we can have better logs
-        string baselineRoot = null;
-        if (!string.IsNullOrEmpty (latestVersion)) {
-            Debug ($"Caching version '{latestVersion}' of '{id}'...");
-            baselineRoot = await comparer.ExtractCachedPackageAsync (id, latestVersion);
-        }
-
-        // generate the diff (current build is a transient CI gate — it writes only
-        // output/api-diff, never the committed releases/ tree, spec §5.3)
-        Debug ($"Running a diff on '{latestVersion}' vs '{localNugetVersion}' of '{id}'...");
-        var diffRoot = $"{baseDir}/{id}";
-        // Stage the baseline's own SkiaSharp/HarfBuzz dependencies (from its nuspec) so
-        // inherited types resolve to the contemporaneous assembly; remove them after.
-        var stagedSelfDeps = await StageSelfDepsFromNuspecAsync (comparer, baselineRoot);
-        try {
-        using (var reader = new PackageArchiveReader ($"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg")) {
-            comparer.MarkdownDiffFileExtension = ".breaking.md";
-            comparer.IgnoreNonBreakingChanges = true;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-
-            comparer.MarkdownDiffFileExtension = null;
-            comparer.IgnoreNonBreakingChanges = false;
-            await comparer.SaveCompleteDiffToDirectoryAsync (id, latestVersion, reader, diffRoot);
-        }
-        } finally {
-            UnstageSearchPaths (comparer, stagedSelfDeps);
-        }
-
-        // copy pretty version
-        foreach (var md in GetFiles ($"{diffRoot}/*/*.md")) {
-            var tfm = md.GetDirectory ().GetDirectoryName();
-            var prettyPath = ((DirectoryPath)diffDir).CombineWithFilePath ($"{id}/{tfm}/{md.GetFilename ()}");
-            if (!FindTextInFiles (md.FullPath, "No changes").Any ()) {
-                EnsureDirectoryExists (prettyPath.GetDirectory ());
-                CopyFile (md, prettyPath);
-            }
-        }
-
-        Information ($"Diff complete of '{id}'.");
-    }
-});
-
-Task ("docs-api-diff-past")
-    .Does (async () =>
-{
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
 
-    // Make the regenerated set authoritative: clear ONLY the API-diff folders this
-    // engine owns (spec §3.5) — the per-line <line>/ package folders and the whole
-    // harfbuzzsharp/ tree — so anything that should no longer exist (a stale
-    // *.breaking.md after a baseline change in versions.json, or a package removed
-    // from TRACKED_NUGETS) is pruned instead of left to drift. The human pages
-    // (<line>.md, <line>-unreleased.md, TOC.yml, index.md) are owned by the Python
-    // engine and MUST NOT be touched here.
-    ClearOwnedApiDiffFolders ();
+    // A FULL forced rebuild is authoritative: wipe every owned folder up front so a
+    // stale *.breaking.md (after a baseline change) or a removed package is pruned.
+    // An incremental/scoped run must NOT wipe cached lines — it clears each line's
+    // folder individually right before rebuilding it (below), leaving skipped lines
+    // (and, in a scoped run, out-of-range lines) exactly as committed. The human
+    // pages (<line>.md, TOC.yml, index.md) are owned by the Python engine either way.
+    if (force && !isScoped)
+        ClearOwnedApiDiffFolders ();
 
     // Shared version-comparison config, per family (spec §1.2/§1.5).
     Information ("Loading versions.json...");
@@ -200,6 +99,7 @@ Task ("docs-api-diff-past")
 
         var isHarfBuzz = IsHarfBuzzFamily (id);
         var versionsConfig = isHarfBuzz ? hbConfig : skiaConfig;
+        var family = isHarfBuzz ? "harfbuzzsharp" : "skiasharp";
 
         Information ($"Comparing the assemblies in '{id}'...");
 
@@ -239,11 +139,19 @@ Task ("docs-api-diff-past")
         //      drop the line's own page — a shipped preview still needs its diff; or
         //   3. it is a preview-only line ahead of the last stable (active dev line).
         // Any other preview-only line (old, never shipped, not listed) is dropped.
-        var emit = lines
+        // The history floor (spec §1.4) then removes any line below the configured
+        // minimum — the obsolete back-catalogue whose committed folders we keep but
+        // do not rebuild (ClearOwnedApiDiffFolders skips them symmetrically). We keep
+        // the pre-floor `emittable` set too: the floor line's baseline lives below the
+        // floor and must be resolvable from it (§1.3 "baselines are unaffected").
+        var emittable = lines
             .Where (l => !l.rep.IsPrerelease
                 || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
                 || latestStable == null
                 || l.rep.CompareTo (latestStable) > 0)
+            .ToList ();
+        var emit = emittable
+            .Where (l => !IsBelowHistoryFloor (l.key, family))
             .ToList ();
 
         for (var idx = 0; idx < emit.Count; idx++) {
@@ -252,6 +160,26 @@ Task ("docs-api-diff-past")
             var version = emit [idx].rep.ToNormalizedString ();
             var apiDiffVersion = emit [idx].key;
 
+            // The committed folder for this line: SkiaSharp family -> releases/<line>/<id>/…;
+            // HarfBuzz family -> releases/harfbuzzsharp/<hb-line>/<id>/… (spec §3.3/§3.4).
+            var lineDir = isHarfBuzz
+                ? RELEASES_PATH.Combine ("harfbuzzsharp").Combine (apiDiffVersion)
+                : RELEASES_PATH.Combine (apiDiffVersion);
+
+            // Incremental + scoped gating. We only skip the DIFF WORK, never the line's
+            // presence in the `emit` sequence, so a skipped/out-of-range line is still
+            // available as a baseline for the lines that roll up past it (below).
+            //   - out of [minVersion, maxVersion]  -> leave exactly as committed
+            //   - folder already exists and !force -> a shipped diff never changes; reuse
+            if (isScoped && !CoreInRange (apiDiffVersion, minVersion, maxVersion)) {
+                Debug ($"Skipping '{apiDiffVersion}' of '{id}' (outside --minVersion/--maxVersion).");
+                continue;
+            }
+            if (!force && FileExists (lineDir.CombineWithFilePath ("index.md"))) {
+                Information ($"Skipping '{apiDiffVersion}' of '{id}' (api-diff folder exists; --force to rebuild).");
+                continue;
+            }
+
             // Pick the baseline to diff against (spec §1.3):
             //   1. An explicit compare_to override in versions.json wins
             //      (e.g. 4.148 -> 3.119.4, deliberately skipping 4.147).
@@ -259,10 +187,37 @@ Task ("docs-api-diff-past")
             //      is NOT itself superseded — a superseded line still gets its own
             //      page but must never serve as a baseline (spec §1.2/§1.3), so the
             //      next line diffs past it and rolls its work up.
+            //   3. The LOWEST emitted line (the history-floor line) has no emitted
+            //      predecessor: its real baseline sits BELOW the floor and was filtered
+            //      out of `emit`. Falling through with a null baseline would diff it
+            //      against an empty assembly (0.0.0.0) and re-emit its ENTIRE API as
+            //      "new" — a huge, wrong, every-run churn. A baseline may live below the
+            //      floor (spec §1.4: "baselines are unaffected"), so resolve it from the
+            //      pre-floor `emittable` set and download it FOR COMPARISON ONLY — the
+            //      below-floor line is used as a baseline, never emitted itself. This is
+            //      one already-cached package (the floor line's immediate predecessor,
+            //      also the baseline of the next line up), so the floor's perf win — not
+            //      rebuilding the whole obsolete back-catalogue — is preserved.
             var previous = FindCompareToBaseline (versionsConfig, version, allVersions);
             if (previous == null) {
                 for (var j = idx - 1; j >= 0; j--) {
                     var candidate = emit [j].rep.ToNormalizedString ();
+                    if (!IsVersionSuperseded (versionsConfig, candidate)) {
+                        previous = candidate;
+                        break;
+                    }
+                }
+            }
+            if (previous == null) {
+                // No emitted predecessor -> this is the floor line. Reach below the
+                // floor in the pre-floor `emittable` set (lines that would ship a diff
+                // if the floor were absent) for the most recent non-superseded line.
+                var currentRep = emit [idx].rep;
+                var below = emittable
+                    .Where (l => l.rep.CompareTo (currentRep) < 0)
+                    .OrderByDescending (l => l.rep);
+                foreach (var l in below) {
+                    var candidate = l.rep.ToNormalizedString ();
                     if (!IsVersionSuperseded (versionsConfig, candidate)) {
                         previous = candidate;
                         break;
@@ -280,15 +235,16 @@ Task ("docs-api-diff-past")
                 await comparer.ExtractCachedPackageAsync (id, previous);
             }
 
-            // The committed folder for this line: SkiaSharp family -> releases/<line>/<id>/…;
-            // HarfBuzz family -> releases/harfbuzzsharp/<hb-line>/<id>/… (spec §3.3/§3.4).
-            var lineDir = isHarfBuzz
-                ? RELEASES_PATH.Combine ("harfbuzzsharp").Combine (apiDiffVersion)
-                : RELEASES_PATH.Combine (apiDiffVersion);
-
             // generate the diff and copy to the committed releases/ tree
             Debug ($"Running a diff on '{previous}' vs '{version}' of '{id}'...");
             var diffRoot = $"{baseDir}/{id}/{apiDiffVersion}";
+            // Incremental runs skipped the up-front ClearOwnedApiDiffFolders, so clear
+            // just THIS line's generated files before rebuilding it — a stale
+            // *.breaking.md must not survive when the line is regenerated. (A full
+            // forced rebuild already wiped everything up front, so this is a no-op
+            // there; a brand-new line has no folder yet, so guard on existence.)
+            if (!(force && !isScoped) && DirectoryExists (lineDir))
+                ClearGeneratedApiDiffsIn (lineDir.FullPath);
             // Stage this package's own SkiaSharp/HarfBuzz dependencies at the versions it
             // was built against (read from its nuspec) so inherited types resolve to the
             // contemporaneous assembly, then remove them so they never leak into the next
@@ -379,7 +335,9 @@ void ClearOwnedApiDiffFolders ()
             // line folder individually.
             foreach (var lineDir in GetSubDirectories (dir)) {
                 var lineKey = lineDir.GetDirectoryName ();
-                if (lineKey.Length > 0 && char.IsDigit (lineKey [0]))
+                // History floor (spec §1.4): keep committed obsolete folders intact.
+                if (lineKey.Length > 0 && char.IsDigit (lineKey [0])
+                        && !IsBelowHistoryFloor (lineKey, "harfbuzzsharp"))
                     ClearGeneratedApiDiffsIn (lineDir.FullPath);
             }
             DeleteEmptyDirectories (dir.FullPath);
@@ -387,7 +345,11 @@ void ClearOwnedApiDiffFolders ()
         }
 
         // SkiaSharp family: a line folder is a top-level directory named by a version core.
-        if (name.Length > 0 && char.IsDigit (name [0])) {
+        // A folder below the history floor (spec §1.4) is left exactly as committed —
+        // not cleared here and not re-emitted above — so the obsolete back-catalogue
+        // survives a floored regen instead of being wiped.
+        if (name.Length > 0 && char.IsDigit (name [0])
+                && !IsBelowHistoryFloor (name, "skiasharp")) {
             ClearGeneratedApiDiffsIn (dir.FullPath);
             DeleteEmptyDirectories (dir.FullPath);
         }
@@ -457,30 +419,60 @@ string ReadHarfBuzzDependencyLine (string packageRoot)
     return new NuGetVersion (token).ToNormalizedString ().Split ('-') [0];
 }
 
-// Write the co-release map sidecar (spec §3.6): one entry per emitted SkiaSharp line
-// (including the in-flight line) giving the HarfBuzz line that ships with it and the
-// site-relative link to that HarfBuzz line's API-diff index. `hb_link` is a pure
-// mechanical mirror of `hb_line` — `harfbuzzsharp/<hb-line>/index.md` (§3.3/§3.4) —
-// regardless of whether that folder exists yet; Python checks the filesystem and, when
-// the folder is absent (an in-flight HarfBuzz line, §4.5), drives an in-flight page
-// instead of linking. `hb_line` is authoritative at full §1.1 granularity. This is the
+// True iff `core` is within the inclusive [minVersion, maxVersion] range. Empty bounds
+// are open. Used to scope an incremental run to a version range (mirrors release-notes-data.py's
+// --min-version/--max-version), comparing on the NuGet version core.
+bool CoreInRange (string core, string minVersion, string maxVersion)
+{
+    var v = new NuGetVersion (core);
+    if (!string.IsNullOrEmpty (minVersion) && v.CompareTo (new NuGetVersion (minVersion)) < 0)
+        return false;
+    if (!string.IsNullOrEmpty (maxVersion) && v.CompareTo (new NuGetVersion (maxVersion)) > 0)
+        return false;
+    return true;
+}
+
+// Write the co-release map sidecar (spec §3.6): a plain { "skia_line": "hb_line" } object,
+// one entry per SkiaSharp line giving the HarfBuzz line that ships with it. The api-diff
+// LINK is pure derivation (`harfbuzzsharp/<hb_line>/index.md`), so the Python engine builds
+// it — we do not store it. `hb_line` is authoritative at full §1.1 granularity. This is the
 // only thing that crosses from this engine into the Python release-notes engine.
+//
+// MERGE, don't overwrite: an incremental/scoped run only recomputed the lines it processed;
+// every other line's mapping is immutable (a shipped package's HarfBuzz dependency never
+// changes), so preserve the committed entries and overlay only what this run recomputed.
 void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps)
 {
     EnsureDirectoryExists (RELEASES_PATH);
-    var sidecar = RELEASES_PATH.CombineWithFilePath ("co-release-map.json");
+    var sourcesDir = RELEASES_PATH.Combine ("_sources");
+    EnsureDirectoryExists (sourcesDir);
+    var sidecar = sourcesDir.CombineWithFilePath ("co-release-map.json");
 
-    var entries = new JArray ();
-    foreach (var kvp in skiaHarfBuzzDeps.OrderBy (k => k.Key)) {
-        var entry = new JObject ();
-        entry ["skia_line"] = kvp.Key;
-        entry ["hb_line"] = kvp.Value;
-        entry ["hb_link"] = $"harfbuzzsharp/{kvp.Value}/index.md";
-        entries.Add (entry);
+    var merged = new SortedDictionary<string, string> (StringComparer.Ordinal);
+    if (FileExists (sidecar)) {
+        var existing = JToken.Parse (System.IO.File.ReadAllText (sidecar.FullPath));
+        if (existing is JObject obj) {
+            foreach (var prop in obj.Properties ())
+                merged [prop.Name] = (string) prop.Value;
+        } else if (existing is JArray arr) {
+            // Legacy array-of-objects format ({skia_line, hb_line, hb_link}); read hb_line.
+            foreach (var e in arr.OfType<JObject> ()) {
+                var k = (string) e ["skia_line"];
+                var v = (string) e ["hb_line"];
+                if (!string.IsNullOrEmpty (k) && !string.IsNullOrEmpty (v))
+                    merged [k] = v;
+            }
+        }
     }
+    foreach (var kvp in skiaHarfBuzzDeps)
+        merged [kvp.Key] = kvp.Value;
 
-    System.IO.File.WriteAllText (sidecar.FullPath, entries.ToString (Newtonsoft.Json.Formatting.Indented));
-    Information ($"Wrote co-release map sidecar with {entries.Count} entries: {sidecar.FullPath}");
+    var outObj = new JObject ();
+    foreach (var kvp in merged)
+        outObj [kvp.Key] = kvp.Value;
+
+    System.IO.File.WriteAllText (sidecar.FullPath, outObj.ToString (Newtonsoft.Json.Formatting.Indented));
+    Information ($"Wrote co-release map sidecar with {outObj.Count} entries: {sidecar.FullPath}");
 }
 
 // Write the generated index.md landing page for every emitted API-diff folder (spec

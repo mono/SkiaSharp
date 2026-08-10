@@ -179,8 +179,11 @@ The build description contains the internal version in format: `#{base}-{label}.
 
 | Platform | Old Version | New Version |
 |----------|-------------|-------------|
-| Android | API 21-23 (5.0-6.0) | API 35-36 (15-16) |
+| Android | API 26 (8.0/Oreo) | API 35-36 (15-16) |
 | iOS | Oldest available runtime | Newest available runtime |
+
+> API 26 is the floor for the current release-test automation/UiAutomator2 stack, not the
+> minimum Android version supported by SkiaSharp or MAUI.
 
 👉 **See [setup.md](references/setup.md)** for device selection details and emulator creation.
 
@@ -190,9 +193,10 @@ The build description contains the internal version in format: `#{base}-{label}.
 Planned test matrix:
   - iOS (old):     [device] ([oldest available iOS runtime])
   - iOS (new):     [device] ([newest available iOS runtime])
-  - Android (old): [device] (Android 6.0 / API 23)
+  - Android (old): [device] (Android 8.0 / API 26)
   - Android (new): [device] (Android 16 / API 36)
   - Mac Catalyst:  Current macOS
+  - Windows:       Current Windows
   - Blazor:        Chromium
   - Console:       .NET runtime
   - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
@@ -248,13 +252,34 @@ dotnet test ... -- --filter-class "*LinuxConsoleTests"
 dotnet test ... -- --filter-class "*BlazorTests"
 dotnet test -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2" ... -- --filter-class "*MauiiOSTests"
 dotnet test ... -- --filter-class "*MauiMacCatalystTests"
+dotnet test ... -- --filter-class "*MauiWindowsTests"
 
 # Android: specify device ID and expected API level for validation
 dotnet test ... \
   -p:AndroidDeviceId="emulator-5554" \
-  -p:AndroidApiLevel="23" \
+  -p:AndroidApiLevel="26" \
   -- --filter-class "*MauiAndroidTests"
 ```
+
+### Test Properties
+
+MSBuild `-p:` properties the test project accepts (all go **before** the `--`):
+
+| Property | What it's for |
+|----------|---------------|
+| `SkiaSharpVersion` | SkiaSharp package version under test (**required**) |
+| `HarfBuzzSharpVersion` | HarfBuzzSharp package version under test (**required**) |
+| `BaseFramework` | TFM the generated temp apps target (`dotnet new … -f`) |
+| `SdkVersion` | SDK feature band pinned in the temp apps' `global.json` |
+| `SdkAllowPrerelease` | allow a prerelease SDK for that band (`true` for previews) |
+| `iOSDevice` / `iOSVersion` | simulator device name + iOS runtime for MAUI iOS tests |
+| `AndroidDevice` / `AndroidVersion` | device name + Android version (display metadata) |
+| `AndroidDeviceId` | target emulator/device UDID (e.g. `emulator-5554`) |
+| `AndroidApiLevel` | expected API level, validated at runtime |
+
+> **Testing a different .NET band (e.g. a preview):** change these two — `BaseFramework` to `netX.0`
+> and `SdkVersion` to the matching SDK feature band — and add `-p:SdkAllowPrerelease=true` for a
+> preview SDK. With no override they use the project defaults.
 
 ### Android Emulator Workflow
 
@@ -268,14 +293,14 @@ dotnet test ... \
 2. **Start emulator with WIPE and boot verification:**
    ```bash
    # Start emulator with -wipe-data to ensure clean state (use mode="async" to keep it running)
-   emulator -avd Pixel_API_23 -wipe-data -no-snapshot -no-audio
+   emulator -avd Pixel_API_26 -wipe-data -no-snapshot -no-audio
    
    # Wait for boot (check every 10s until returns "1")
    # This can take 60-120s for a fresh wipe
    adb shell getprop sys.boot_completed
    
    # Verify correct API level
-   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "23")
+   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "26")
    ```
 
    ⚠️ **The `-wipe-data` flag is REQUIRED** to ensure a clean emulator state. Without it,
@@ -304,6 +329,44 @@ dotnet test ... \
 
 5. **Repeat for next API level** (start from step 1)
 
+### WASM (Blazor) Workflow
+
+`BlazorTests` builds a **real** WASM app (`-p:WasmBuildNative=true`, so it exercises the shipped
+native `.a` libs), boots it headless in Playwright/Chromium, and screenshot-diffs the canvas. Run it
+once per .NET band you're validating.
+
+1. **Install the Playwright browser (one-time):**
+   ```bash
+   cd tests/SkiaSharp.Tests.Integration
+   dotnet build -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
+   pwsh bin/Debug/*/playwright.ps1 install chromium
+   ```
+
+2. **Run on the default .NET band:**
+   ```bash
+   dotnet test \
+     -p:SkiaSharpVersion={version} \
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -- --filter-class "*BlazorTests"
+   ```
+
+3. **Run on another band** (e.g. a preview) — change `BaseFramework` + `SdkVersion` (see [Test Properties](#test-properties)):
+   ```bash
+   dotnet test \
+     -p:SkiaSharpVersion={version} \
+     -p:HarfBuzzSharpVersion={hb-version} \
+     -p:BaseFramework=netX.0 \
+     -p:SdkVersion=X.0.100 \
+     -p:SdkAllowPrerelease=true \
+     -- --filter-class "*BlazorTests"
+   ```
+
+   ⚠️ **The target band needs its own `wasm-tools` workload**, and Playwright must be new enough to
+   boot that runtime (a too-old Chromium can't start preview-.NET WASM apps — they use the `exnref`
+   exception-handling feature). The required Playwright version is pinned in the test project.
+
+4. **Repeat step 3 for each additional band.**
+
 ### Test Execution Order
 
 | Test | Run on Old | Run on New | Time |
@@ -313,6 +376,7 @@ dotnet test ... \
 | LinuxConsoleTests | Once (Docker) | - | ~2min |
 | BlazorTests | Once | - | ~2min |
 | MauiMacCatalystTests | Once | - | ~2min |
+| MauiWindowsTests | Once | - | ~2min |
 | MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
 | MauiAndroidTests | ✅ Yes | ✅ Yes | ~2min each |
 
@@ -342,7 +406,8 @@ Proceed to **release-publish** ONLY when:
 
 - ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
-- ✅ Android tests pass on BOTH oldest (API 21-23) and newest (API 35-36)
+- ✅ Android tests pass on BOTH oldest (API 26) and newest (API 35-36)
+- ✅ Windows tests pass on Windows hosts
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
 ### Skip Policy
@@ -371,9 +436,10 @@ Proceed to **release-publish** ONLY when:
 | LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
+| MauiWindowsTests | Windows | - | ✅ Passed |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |
 | MauiiOSTests | iOS 18.5 (newest) | iPhone 16 Pro | ✅ Passed |
-| MauiAndroidTests | Android 6.0 (API 23) | Pixel_API_23 | ✅ Passed |
+| MauiAndroidTests | Android 8.0 (API 26) | Pixel_API_26 | ✅ Passed |
 | MauiAndroidTests | Android 16 (API 36) | Pixel_API_36 | ✅ Passed |
 
 Ready for publishing.

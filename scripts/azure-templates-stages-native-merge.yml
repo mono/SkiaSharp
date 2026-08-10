@@ -84,6 +84,10 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
+            - name: native_wasm_5_0_6_linux
+            - name: native_wasm_5_0_6_SIMD_linux
+            - name: native_wasm_5_0_6_SIMD_Threading_linux
+            - name: native_wasm_5_0_6_Threading_linux
 
       - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Linux Artifacts
         parameters:
@@ -131,6 +135,10 @@ stages:
             - name: native_wasm_3_1_56_SIMD_linux
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
+            - name: native_wasm_5_0_6_linux
+            - name: native_wasm_5_0_6_SIMD_linux
+            - name: native_wasm_5_0_6_SIMD_Threading_linux
+            - name: native_wasm_5_0_6_Threading_linux
 
       - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
         - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts

@@ -191,9 +191,15 @@ See [documentation/dev/building.md](../../../documentation/dev/building.md#build
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
-# Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
-dotnet test tests/SkiaSharp.Tests.Console.sln
+# Run all tests (core + Vulkan + Direct3D). GPU backends are required per
+# GpuPolicy — a backend that cannot come up fails.
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
+
+Use the unfiltered solution for initial and final validation. If it identifies a failure,
+use the owning core, singleton, Vulkan, or Direct3D test project for filtered diagnostic
+iterations; filtering the `.slnx` fails the other projects with zero matches. Rerun the
+unfiltered solution after the focused test passes.
 
 ### Build Retry Strategy
 

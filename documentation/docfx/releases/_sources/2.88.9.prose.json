@@ -1,0 +1,41 @@
+{
+  "theme": "Uno Skia and API fixes",
+  "highlights_headline": "SkiaSharp 2.88.9 fixes Uno Skia XamlCanvas, WinUI byte-buffer marshalling and SKTypeface kerning.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "SKXamlCanvas on Uno Skia uses Bgra8888",
+          "detail": "`SKXamlCanvas` on Uno Skia now uses `Bgra8888` colours so the on-screen surface matches what the Skia backend produces.",
+          "prs": [2919]
+        },
+        {
+          "lead": "WinUI native helper for GetByteBuffer",
+          "detail": "A WinUI-specific native helper was added so `GetByteBuffer` works reliably on the WinUI target.",
+          "prs": [3039]
+        },
+        {
+          "lead": "GetKerningPairAdjustments returns the right values",
+          "detail": "`SKTypeface.GetKerningPairAdjustments` no longer returns wrong values for kerning pairs.",
+          "prs": [2886]
+        },
+        {
+          "lead": "SKXamlCanvas tolerates null XamlRoot on unload",
+          "detail": "`SKXamlCanvas` no longer throws when its `XamlRoot` is null during unload.",
+          "prs": [2884]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeromelaban": "Added the WinUI native helper so `GetByteBuffer` works on the WinUI target"
+  },
+  "preview_summaries": {
+    "v2.88.9-preview.2.2": "Preview 2 finished the 2.88.9 fixes.",
+    "v2.88.9-preview.1.1": "Preview 1 opened the line with the Uno Skia `SKXamlCanvas` Bgra8888 fix, the kerning-adjustments fix and the XamlRoot null-tolerance fix."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 7.3.0.3 works around a spurious IDE warning alongside the SkiaSharp maintenance."
+}

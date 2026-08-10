@@ -92,7 +92,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 | **SkiaSharp.NativeAssets.MacCatalyst**<br/>**HarfBuzzSharp.NativeAssets.MacCatalyst** | Mac Catalyst universal framework bundle. Auto-included. |
 | **SkiaSharp.NativeAssets.tvOS**<br/>**HarfBuzzSharp.NativeAssets.tvOS** | Apple tvOS framework bundle (arm64, device only). Auto-included. |
 | **SkiaSharp.NativeAssets.Tizen**<br/>**HarfBuzzSharp.NativeAssets.Tizen** | Samsung Tizen (armel, x86). Auto-included. |
-| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0) and 3.1.56 (net9.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
+| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0), 3.1.56 (net9.0/net10.0), and 5.0.6 (net11.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 

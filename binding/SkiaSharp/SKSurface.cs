@@ -7,6 +7,13 @@ namespace SkiaSharp
 {
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
+		// Skia's SkSurface lazily creates its SkCanvas once and returns the same raw
+		// pointer for the surface's entire lifetime (SkSurface_Base::getCachedCanvas,
+		// shared by all backends). The managed wrapper is therefore also stable, so we
+		// cache it here to avoid a P/Invoke and a locked HandleDictionary lookup on every
+		// access — a measurable win in draw-heavy render loops that fetch Canvas per draw.
+		private SKCanvas canvas;
+
 		internal SKSurface (IntPtr h, bool owns)
 			: base (h, owns)
 		{
@@ -14,6 +21,15 @@ namespace SkiaSharp
 
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
+
+		protected override void DisposeManaged ()
+		{
+			base.DisposeManaged ();
+
+			// Drop the cached wrapper; it is an owned child and was already torn down by
+			// base disposal. A fresh surface gets its own canvas, so nothing to reuse.
+			canvas = null;
+		}
 
 		// RASTER surface
 
@@ -236,6 +252,57 @@ namespace SkiaSharp
 			return surface;
 		}
 
+		// Graphite-backed render target
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info) =>
+			Create (recorder, info, mipmapped: false, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped) =>
+			Create (recorder, info, mipmapped, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, SKSurfaceProperties props) =>
+			Create (recorder, info, mipmapped: false, props);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped, SKSurfaceProperties props)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject (SkiaApi.sk_graphite_surface_make_render_target (recorder.Handle, &cinfo, mipmapped, props?.Handle ?? IntPtr.Zero));
+		}
+
+		// Graphite-backed surface wrapping a caller-allocated GPU texture
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType) =>
+			Create (recorder, backendTexture, colorType, colorSpace: null, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props, releaseProc: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props, SKGraphiteReleaseDelegate releaseProc)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.SKGraphiteReleaseProxy : null;
+
+			return GetObject (SkiaApi.sk_graphite_surface_wrap_backend_texture (
+				recorder.Handle,
+				backendTexture.Handle,
+				colorType.ToNative (),
+				colorSpace?.Handle ?? IntPtr.Zero,
+				props?.Handle ?? IntPtr.Zero,
+				proxy,
+				(void*)ctx));
+		}
+
 #if __MACOS__ || __IOS__ || __TVOS__
 
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
@@ -290,9 +357,13 @@ namespace SkiaSharp
 
 		public SKCanvas Canvas {
 			get {
-				var result = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				// Re-fetch if not yet cached, or if the cached wrapper was disposed out from
+				// under us (e.g. a caller explicitly disposed the surface-owned canvas).
+				if (canvas == null || canvas.Handle == IntPtr.Zero) {
+					canvas = OwnedBy (SKCanvas.GetObject (SkiaApi.sk_surface_get_canvas (Handle), false, unrefExisting: false), this);
+				}
 				GC.KeepAlive (this);
-				return result;
+				return canvas;
 			}
 		}
 
@@ -384,6 +455,29 @@ namespace SkiaSharp
 			var result = SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 			GC.KeepAlive (this);
 			return result;
+		}
+
+		// RequestReadPixels
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
+			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException (nameof (callback));
+
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, info);
+				callback (result);
+				// Keep this surface alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
+			};
+			DelegateProxies.Create (handler, out _, out var ctx);
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_surface_async_rescale_and_read_pixels (Handle, &cinfo, &srcRect, rescaleGamma, rescaleMode, DelegateProxies.SKImageAsyncReadPixelsProxy, (void*)ctx);
+			GC.KeepAlive (this);
 		}
 
 		public void Flush () => Flush (true);
