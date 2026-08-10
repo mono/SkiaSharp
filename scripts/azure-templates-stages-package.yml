@@ -52,6 +52,7 @@ stages:
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          checkoutSubmodules: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
@@ -117,6 +118,7 @@ stages:
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          checkoutSubmodules: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
