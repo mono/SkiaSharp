@@ -160,7 +160,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var platformLower = PlatformName.ToLowerInvariant().Replace(" ", "");
         
         // Build screenshot name with version and timestamp
-        // e.g., maui-android-api23-20260205-161500-SKCanvasView
+        // e.g., maui-android-api26-20260205-161500-SKCanvasView
         var screenshotName = deviceVersion != null
             ? $"maui-{platformLower}-{deviceVersion}-{timestamp}-{canvasView}"
             : $"maui-{platformLower}-{timestamp}-{canvasView}";
