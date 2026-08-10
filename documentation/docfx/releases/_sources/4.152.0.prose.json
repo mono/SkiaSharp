@@ -1,0 +1,72 @@
+{
+  "theme": "Graphite GPU backend and Skia m152",
+  "highlights_headline": "4.152.0 adds Graphite GPU backend bindings for Vulkan, Metal and Dawn, built on Skia m152.",
+  "highlights_body": "It also lands async pixel readback, several native use-after-free and memory-leak fixes, a new SkiaSharp.Vulkan.Silk.NET package, and a round of interop performance work.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to Chrome milestone m152",
+          "detail": "Bundles the m152 engine along with merged upstream chrome/m151 and m152 bug fixes.",
+          "prs": [4651, 4538, 4568]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings added",
+          "detail": "Adds bindings for Skia's new Graphite GPU backend across Vulkan, Metal, and Dawn, alongside a new SkiaSharp.Vulkan.Silk.NET package and Vulkan test coverage on Android and Linux.",
+          "prs": [3968, 4527]
+        },
+        {
+          "lead": "Async pixel readback support",
+          "detail": "Adds a backend-neutral RequestReadPixels API to SKImage and SKSurface for asynchronous pixel access.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Improved Nano Server font support",
+          "detail": "Uses FreeType to provide font support on Windows Nano Server.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free fixes",
+          "detail": "Fixes crashes from a use-after-free in SKRegion.SpanIterator and in SKPixmap.ExtractSubset and its With* methods by properly rooting the source objects.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "CoTaskMem pixel-buffer leak fixed",
+          "detail": "Fixes a native memory leak on the SKImage.Create raster failure path.",
+          "prs": [4455]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Windows native build reliability improved",
+          "detail": "Stops pinning a default Windows SDK version and initializes the MSVC environment once per native build, reducing native build flakiness.",
+          "prs": [4588, 4570]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Improved Nano Server font support by switching to FreeType",
+    "mmitche": "[Windows] MSVC build environment initialization fix",
+    "ramezgerges": "Added the Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 introduced the Graphite GPU backend bindings, async pixel readback, the new SkiaSharp.Vulkan.Silk.NET package, several native use-after-free and memory-leak fixes, and updated Skia through the m151 and m152 lines."
+  },
+  "harfbuzz_summary": "Refreshes the bundled HarfBuzz engine as part of the Skia m152 update."
+}
