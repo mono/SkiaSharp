@@ -140,7 +140,7 @@ stages:
             - name: native_wasm_5_0_6_SIMD_Threading_linux
             - name: native_wasm_5_0_6_Threading_linux
 
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+      - ${{ if or(eq(variables['System.TeamProject'], 'devdiv'), eq(variables['System.TeamProject'], 'internal')) }}:
         - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
           parameters:
             name: native_msvc

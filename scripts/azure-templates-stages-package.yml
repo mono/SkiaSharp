@@ -30,7 +30,7 @@ stages:
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native
-        - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - ${{ if or(eq(variables['System.TeamProject'], 'devdiv'), eq(variables['System.TeamProject'], 'internal')) }}:
           - template: /scripts/azure-templates-jobs-merger.yml@self
             parameters:
               name: native_msvc

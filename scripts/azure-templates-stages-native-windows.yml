@@ -73,7 +73,7 @@ stages:
           cacheJob: native/windows
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --buildarch=arm64
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+      - ${{ if or(eq(variables['System.TeamProject'], 'devdiv'), eq(variables['System.TeamProject'], 'internal')) }}:
         - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Win32|x86 (Win + MSVC)
           parameters:
             name: native_win32_x86_msvc_windows
