@@ -50,7 +50,7 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py {commit-sha}
 ```
 
 This outputs:
-- All three pipelines with status icons (✅ ❌ 🔄 ⏳)
+- All three pipelines with status markers (`[OK]`, `[WARN]`, `[FAIL]`, `[RUNNING]`, `[WAITING]`)
 - Build IDs and build numbers
 - Trigger relationships proving which upstream build caused each downstream run
 - Direct ADO links for each build
@@ -61,11 +61,11 @@ This outputs:
 
 | Scenario | Meaning | Next Action |
 |----------|---------|-------------|
-| All ✅ | Packages are on the internal feed | Proceed to `release-testing` |
-| Native ✅, SkiaSharp 🔄 | Managed build in progress | Wait |
-| Native ✅, SkiaSharp ✅, Tests 🔄 | Tests running (packages already available) | Can start `release-testing` |
-| Any ❌ | Pipeline failed | Investigate via ADO link, retry or fix |
-| Native ⚠️ (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
+| All `[OK]` | Packages are on the internal feed | Proceed to `release-testing` |
+| Native `[OK]`, SkiaSharp `[RUNNING]` | Managed build in progress | Wait |
+| Native `[OK]`, SkiaSharp `[OK]`, Tests `[RUNNING]` | Tests running (packages already available) | Can start `release-testing` |
+| Any `[FAIL]` | Pipeline failed | Investigate via ADO link, retry or fix |
+| Native `[WARN]` (partiallySucceeded) | Some native platforms had warnings | Usually OK — check which platforms |
 
 ### Job-Level Details (In-Progress Builds)
 
@@ -73,13 +73,13 @@ When a pipeline is `inProgress`, the script queries the ADO timeline API and sho
 breakdown below the pipeline entry:
 
 ```
-┌─ SkiaSharp-Native (ID 26493) — native binaries
-│  🔄 id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
-│  
-│  Jobs: 35 ✅ completed | 2 ❌ failed | 8 🔄 running | 3 ⏳ pending
-│  Failed: Job_Name_1, Job_Name_2
-│  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
-│  Pending: Wasm, Linux ARM, Linux ARM64
++- SkiaSharp-Native (ID 26493) - native binaries
+|  [RUNNING] id=14361035    inProgress    pending               4.148.0-rc.1.1+4.148.0-rc.1
+|
+|  Jobs: 35 [OK] completed | 2 [FAIL] failed | 8 [RUNNING] running | 3 [WAITING] pending
+|  Failed: Job_Name_1, Job_Name_2
+|  Running: Win32 x64, Win32 arm64, iOS, macOS, Mac Catalyst, ...
+|  Pending: Wasm, Linux ARM, Linux ARM64
 ```
 
 **Reading job status:**
@@ -99,9 +99,9 @@ Pipeline Chain Status: release/3.119.4
 
 | Pipeline | Status | Build | ADO Link |
 |----------|--------|-------|----------|
-| SkiaSharp-Native | ✅ partiallySucceeded | 3.119.4-stable.2 | [link] |
-| SkiaSharp | 🔄 inProgress | 3.119.4-stable.2 | [link] |
-| SkiaSharp-Tests | ⏳ not triggered | — | — |
+| SkiaSharp-Native | [WARN] partiallySucceeded | 3.119.4-stable.2 | [link] |
+| SkiaSharp | [RUNNING] inProgress | 3.119.4-stable.2 | [link] |
+| SkiaSharp-Tests | [WAITING] not triggered | - | - |
 
 Packages will be available after SkiaSharp (10789) completes.
 ```

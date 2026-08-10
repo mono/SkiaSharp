@@ -1,1033 +1,994 @@
 <#
 .SYNOPSIS
-    Manages Azure DevOps Artifacts NuGet feed - deletes unwanted versions and moves packages.
+    Mirror (copy) SkiaSharp NuGet packages from the old xamarin Azure DevOps
+    feeds to the new dnceng feeds. Pick a feed with -Feed; the script knows the
+    source, destination, and the per-feed rules intrinsically.
 
 .DESCRIPTION
-    This script:
-    - Deletes package versions with -pr.* suffix
-    - Deletes package versions that don't match allowed patterns (-preview.*, -rc.*, -nightly.*, -stable.*, or stable releases)
-    - Moves packages starting with _ (e.g., _NuGets, _Symbols) to a destination feed
-    - Caches downloaded packages locally to avoid re-downloading on errors
-    - STOPS if it encounters an unexpected version pattern (safety first)
+    Copies every GOOD package version that exists in the source feed but is
+    missing from the destination feed. It is:
 
-.PARAMETER Organization
-    Azure DevOps organization name
+      * Rules-driven — you only choose the feed (-Feed skiasharp | skiasharp-ci).
+                      The script encodes each feed's source, destination and
+                      cleanliness rules (see FEED PROFILES below).
+      * Clean by default — known-bad versions (per-PR '-pr.*' builds and
+                      malformed '-preview-*') are NEVER copied. We do not mirror
+                      junk.
+      * Diff-first  — it inventories both feeds (metadata only, no downloads)
+                      and computes exactly what is missing BEFORE transferring
+                      anything. This is the fast "what is already there" check.
+      * Idempotent  — the destination feed IS the state. Re-running only pushes
+                      what is still missing; anything already present is skipped.
+                      Safe to run at any time, as many times as you like.
+      * Opt-in push — DRY RUN by default. Nothing is written unless you pass
+                      -Push. Dry run still does the full inventory + diff so you
+                      can see exactly what a real run would transfer.
+      * Timeout-safe — honours -MaxDurationMinutes and stops GRACEFULLY between
+                      packages (never mid-push). Whatever was copied stays valid;
+                      the next run continues where this one left off.
+      * Corruption-safe — every downloaded package is verified (valid zip + a
+                      readable .nuspec whose id/version match what we expected)
+                      BEFORE it is pushed. Corrupt downloads are skipped, never
+                      pushed. Existing destination packages are never overwritten
+                      (409/"already exists" is treated as success).
 
-.PARAMETER Project
-    Azure DevOps project name (leave empty for org-scoped feeds)
+    FEED PROFILES (intrinsic — this is "the difference" between the feeds):
 
-.PARAMETER SourceFeed
-    Source feed name or ID
+      skiasharp     PUBLIC release feed.
+                    xamarin/public/SkiaSharp  ->  dnceng/public/skiasharp
+                    Excludes the internal underscore-prefixed CI wrapper packages
+                    (_NativeAssets, _NuGets, _Symbols, ...) so the public feed only
+                    ever contains real, user-facing packages.
 
-.PARAMETER DestinationFeed
-    Destination feed name or ID (for moving _* packages)
+      skiasharp-ci  INTERNAL CI artifact feed.
+                    xamarin/public/SkiaSharp-CI  ->  dnceng/public/skiasharp-ci
+                    Keeps the underscore wrapper/artifact packages (used by the
+                    build pipeline and externals-download). Still drops the bad
+                    '-pr.*' / malformed versions like every feed.
 
-.PARAMETER PAT
-    Personal Access Token with Packaging read/write/manage permissions
+    Read access to the (public) source feed is anonymous; only the PUSH to the
+    destination needs a PAT (packaging read/write on the destination org).
 
-.PARAMETER BatchSize
-    Number of packages to fetch per API call (default: 100, max: 1000)
+.PARAMETER Feed
+    Which feed to mirror: 'skiasharp' (public) or 'skiasharp-ci' (internal).
+    This selects the source, destination and per-feed rules. Required.
 
-.PARAMETER Execute
-    Actually perform deletions and moves. Without this flag, runs in dry-run mode.
+.PARAMETER Push
+    OPT IN. Actually download+push missing packages. Without this flag the
+    script runs a DRY RUN (inventory + diff + plan only).
 
-.PARAMETER SkipMoveOperations
-    Skip the move operations for _* packages (only do deletes)
+    AUTH (environment variables only — never command-line arguments):
+      AZURE_DEVOPS_PAT        Packaging read/write on the DESTINATION org.
+                              Required only for -Push.
+      AZURE_DEVOPS_SOURCE_PAT Optional; only if the SOURCE feed is not public.
 
-.PARAMETER SkipDeleteOperations
-    Skip the delete operations (only do moves)
+    SECURITY: the PAT is never passed on a command line, never written to a
+    nuget.config, and never printed. For the push it is handed to the Azure
+    Artifacts Credential Provider via the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
+    process env var (with the on-disk session-token cache disabled); for REST
+    reads (only if the source feed is private) it goes in an Authorization
+    header. It is also registered with the GitHub Actions log masker. Dry runs
+    need no PAT at all (public feeds are read anonymously).
 
-.PARAMETER MovePhase
-    Control which phase of the move operation to execute:
-    - "All" (default): Download, upload, and delete in one pass
-    - "CopyOnly": Download and upload to destination, but DON'T delete from source
-    - "DeleteOnly": Only delete from source (packages must already be in destination)
-
-.PARAMETER VerifyBeforeDelete
-    When using DeleteOnly phase, verify each package exists in destination before deleting from source
+.PARAMETER MaxDurationMinutes
+    Wall-clock budget. The script stops starting new work once this is reached
+    and exits cleanly. Default: 330 (leaves headroom under a ~350-min CI timeout).
 
 .PARAMETER PackageFilter
-    Regex pattern to filter which packages to process. Useful for parallel runs.
-    Examples: "^_NativeAssets$", "^[A-M]", "^SkiaSharp"
+    Advanced. Optional regex to limit which package ids are considered
+    (e.g. '^SkiaSharp$' to smoke-test the push path on one package).
 
-.PARAMETER ParallelJobs
-    Number of parallel operations (default: 1 = sequential)
+.PARAMETER IncludeUnlisted
+    Also mirror versions that are unlisted in the source. Default: off.
+
+.PARAMETER Limit
+    Copy at most this many missing versions in one run (0 = no limit). Great for
+    a quick test on a huge feed, or to migrate in controlled, resumable batches —
+    the tool is idempotent, so re-running continues from where it stopped.
+
+.PARAMETER MaxPushRetries
+    Per-package download+push attempts before giving up on that package and
+    moving on. Default: 3.
+
+.PARAMETER CacheDir
+    Directory for downloaded .nupkg files. Default: a temp folder. Downloads are
+    reused across runs.
+
+.PARAMETER BatchSize
+    Page size for feed inventory listing. Default: 100.
+
+.PARAMETER SummaryFile
+    Optional path to append a GitHub-flavoured Markdown summary of the diff and
+    plan (what would be copied). In CI, point this at $env:GITHUB_STEP_SUMMARY so
+    the result shows up in the PR check summary.
 
 .EXAMPLE
-    # Dry run - see what would happen
-    ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat
+    # Dry run — see exactly what WOULD be copied to the public feed (safe)
+    ./manage-nuget-feed.ps1 -Feed skiasharp
 
 .EXAMPLE
-    # Process only _NativeAssets package
-    ./manage-nuget-feed.ps1 ... -Execute -PackageFilter "^_NativeAssets$"
+    # Real mirror of the public feed
+    $env:AZURE_DEVOPS_PAT = '<pat>'
+    ./manage-nuget-feed.ps1 -Feed skiasharp -Push
 
 .EXAMPLE
-    # Phase 1: Copy packages to destination (no delete)
-    ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat -Execute -MovePhase CopyOnly
+    # Real mirror of the internal CI artifact feed
+    ./manage-nuget-feed.ps1 -Feed skiasharp-ci -Push
 
 .EXAMPLE
-    # Phase 2: Later, after verification, delete from source
-    ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat -Execute -MovePhase DeleteOnly -VerifyBeforeDelete
+    # Smoke-test the push path end to end on a single package first
+    ./manage-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
 
 .EXAMPLE
-    # Actually execute (all phases at once)
-    ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat -Execute
+    # Quick CI-feed test: copy just 3 versions, then re-run to continue
+    ./manage-nuget-feed.ps1 -Feed skiasharp-ci -Limit 3 -Push
+
+.NOTES
+    Exit codes:
+      0  success — everything synced, dry run completed, or gracefully timed out
+         with progress and no errors (safe to re-run to continue)
+      1  one or more packages failed after retries (re-run to retry just those)
+      2  fatal setup error (bad args, feed unreachable, missing PAT for -Push)
 #>
 
-[CmdletBinding(SupportsShouldProcess)]
+[CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$Organization = "xamarin",
+    [Parameter(Mandatory = $true)]
+    [ValidateSet("skiasharp", "skiasharp-ci")]
+    [string]$Feed,
 
-    [Parameter(Mandatory = $false)]
-    [string]$Project = "public",  # Leave empty for org-scoped feeds
+    [switch]$Push,
 
-    [Parameter(Mandatory = $false)]
-    [string]$SourceFeed = "SkiaSharp",
+    [ValidateRange(13, 1440)]
+    [int]$MaxDurationMinutes = 330,
+    [string]$PackageFilter = "",
+    [switch]$IncludeUnlisted,
 
-    [Parameter(Mandatory = $false)]
-    [string]$DestinationFeed = "SkiaSharp-CI",
+    # Cap how many missing versions to copy in this run (0 = no limit). Handy for
+    # a quick test on a huge feed, or to migrate in controlled, resumable batches
+    # (the tool is idempotent, so re-running continues where it left off).
+    [ValidateRange(0, 2147483647)]
+    [int]$Limit = 0,
 
-    [Parameter(Mandatory = $false)]
-    [string]$PAT = $env:AZURE_DEVOPS_PAT,
-
-    [Parameter(Mandatory = $false)]
+    [ValidateRange(1, 10)]
+    [int]$MaxPushRetries = 3,
+    [string]$CacheDir = "",
+    [ValidateRange(1, 1000)]
     [int]$BatchSize = 100,
-
-    [Parameter(Mandatory = $false)]
-    [switch]$Execute,
-
-    [Parameter(Mandatory = $false)]
-    [switch]$SkipMoveOperations,
-
-    [Parameter(Mandatory = $false)]
-    [switch]$SkipDeleteOperations,
-
-    [Parameter(Mandatory = $false)]
-    [ValidateSet("All", "CopyOnly", "DeleteOnly")]
-    [string]$MovePhase = "All",
-
-    [Parameter(Mandatory = $false)]
-    [switch]$VerifyBeforeDelete,
-
-    [Parameter(Mandatory = $false)]
-    [string]$PackageFilter = "",  # Regex to filter package IDs (e.g., "^_NativeAssets$" or "^[A-M]")
-
-    [Parameter(Mandatory = $false)]
-    [int]$ParallelJobs = 1  # Number of parallel operations (1 = sequential)
+    [string]$SummaryFile = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-#region Configuration and Constants
+# Secrets come ONLY from the environment — never as a command-line argument (so a
+# PAT can never end up in shell history or the process command line).
+#   AZURE_DEVOPS_PAT        - packaging read/write on the destination org (push).
+#   AZURE_DEVOPS_SOURCE_PAT - optional, only if the SOURCE feed is not public.
+$Pat = $env:AZURE_DEVOPS_PAT
+$SourcePat = $env:AZURE_DEVOPS_SOURCE_PAT
 
-# Version pattern definitions
-# Main version: X.Y or X.Y.Z or X.Y.Z.W
-$MainVersionPattern = '\d+\.\d+(?:\.\d+)?(?:\.\d+)?'
+#region Helpers
 
-# Allowed prerelease suffixes (with period and numbers after)
-$AllowedPrereleasePatterns = @(
+# --- Version classification: which package versions are "real releases" vs
+# --- ephemeral CI build artifacts. Bad ones ('-pr.*', malformed '-preview-*')
+# --- are never copied.
+$script:MainVersionPattern = '\d+\.\d+(?:\.\d+)?(?:\.\d+)?'
+$script:AllowedPrereleaseSuffixes = @(
     '-alpha\.\d+(?:\.\d+)?'
     '-preview\.\d+(?:\.\d+)?'
     '-rc\.\d+(?:\.\d+)?'
     '-nightly\.\d+(?:\.\d+)?'
     '-stable\.\d+(?:\.\d+)?'
 )
-
-# Patterns to DELETE
-$DeletePrereleasePatterns = @(
-    '-pr\.\d+(?:\.\d+)?'
-    '-preview-.*'  # Poorly formatted: -preview- instead of -preview.
+$script:DeletePrereleaseSuffixes = @(
+    '-pr\..*'       # any per-PR build (e.g. -pr.1234.5, -pr.1.2.3, -pr.anything)
+    '-preview-.*'   # malformed: -preview- instead of -preview.
 )
-
-# Build the complete regex patterns
-$StableVersionRegex = "^${MainVersionPattern}$"
-$AllowedPrereleaseRegex = $AllowedPrereleasePatterns | ForEach-Object { "^${MainVersionPattern}${_}$" }
-$DeletePrereleaseRegex = $DeletePrereleasePatterns | ForEach-Object { "^${MainVersionPattern}${_}$" }
-
-# Combine all known patterns for validation
-$AllKnownPatterns = @($StableVersionRegex) + $AllowedPrereleaseRegex + $DeletePrereleaseRegex
-
-#endregion
-
-#region Helper Functions
-
-# Global cancel flag
-$script:CancelRequested = $false
-$script:IsInteractive = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
-
-function Test-CancelRequested {
-    # Check if user pressed 'Q' or 'q' to request cancel (only in interactive mode)
-    if ($script:IsInteractive) {
-        try {
-            if ([Console]::KeyAvailable) {
-                $key = [Console]::ReadKey($true)
-                if ($key.Key -eq 'Q') {
-                    $script:CancelRequested = $true
-                    Write-Host ""
-                    Write-Host "Cancel requested - finishing current operation..." -ForegroundColor Yellow
-                    return $true
-                }
-            }
-        } catch {
-            # Ignore console errors in non-interactive environments
-        }
-    }
-    return $script:CancelRequested
-}
-
-function Write-Status {
-    param(
-        [string]$Message,
-        [string]$ForegroundColor = "White"
-    )
-    # Overwrite current line (handle CI where WindowWidth may be 0)
-    $consoleWidth = try { [Console]::WindowWidth } catch { 0 }
-    $width = [Math]::Max(80, [Math]::Min($consoleWidth - 1, 120))
-    $paddedMsg = $Message.PadRight($width).Substring(0, $width)
-    Write-Host "`r$paddedMsg" -NoNewline -ForegroundColor $ForegroundColor
-}
-
-function Write-ProgressSummary {
-    param(
-        [int]$Current,
-        [int]$Total,
-        [string]$CurrentPackage,
-        [string]$Operation,
-        [int]$PackageVersionCurrent = 0,
-        [int]$PackageVersionTotal = 0
-    )
-    
-    # Overall progress
-    Write-Progress -Id 0 -Activity "Overall Progress" -Status "$Current of $Total packages" -PercentComplete (($Current / [Math]::Max($Total, 1)) * 100)
-    
-    # Current package progress (if applicable)
-    if ($PackageVersionTotal -gt 0) {
-        Write-Progress -Id 1 -ParentId 0 -Activity $CurrentPackage -Status "$Operation ($PackageVersionCurrent / $PackageVersionTotal)" -PercentComplete (($PackageVersionCurrent / [Math]::Max($PackageVersionTotal, 1)) * 100)
-    }
-}
-
-function Get-Base64Auth {
-    param([string]$Pat)
-    $bytes = [System.Text.Encoding]::ASCII.GetBytes(":$Pat")
-    return [Convert]::ToBase64String($bytes)
-}
-
-function Invoke-AzDoApi {
-    param(
-        [string]$Uri,
-        [string]$Method = "GET",
-        [object]$Body = $null,
-        [hashtable]$Headers,
-        [int]$MaxRetries = 5
-    )
-
-    $retryCount = 0
-    $baseDelay = 2
-
-    while ($retryCount -lt $MaxRetries) {
-        try {
-            $params = @{
-                Uri         = $Uri
-                Method      = $Method
-                Headers     = $Headers
-                ContentType = "application/json"
-            }
-
-            if ($Body) {
-                $params.Body = ($Body | ConvertTo-Json -Depth 10)
-            }
-
-            $response = Invoke-RestMethod @params
-            return $response
-        }
-        catch {
-            $statusCode = $_.Exception.Response.StatusCode.value__
-            
-            # Rate limiting or server errors - retry
-            if ($statusCode -in @(429, 500, 502, 503, 504)) {
-                $retryCount++
-                $delay = $baseDelay * [Math]::Pow(2, $retryCount)
-                
-                if ($statusCode -eq 429) {
-                    # Check for Retry-After header
-                    $retryAfter = $_.Exception.Response.Headers["Retry-After"]
-                    if ($retryAfter) {
-                        $delay = [int]$retryAfter
-                    }
-                }
-                
-                Write-Warning "API call failed with status $statusCode. Retrying in $delay seconds... (Attempt $retryCount/$MaxRetries)"
-                Start-Sleep -Seconds $delay
-            }
-            else {
-                throw
-            }
-        }
-    }
-
-    throw "API call failed after $MaxRetries retries"
-}
-
-function Test-VersionPattern {
-    param([string]$Version)
-
-    # Strip build metadata before pattern matching
-    $versionToMatch = Get-VersionWithoutMetadata -Version $Version
-
-    # Check if version matches any known pattern
-    foreach ($pattern in $AllKnownPatterns) {
-        if ($versionToMatch -match $pattern) {
-            return @{
-                IsKnown = $true
-                Pattern = $pattern
-            }
-        }
-    }
-
-    return @{
-        IsKnown = $false
-        Pattern = $null
-    }
-}
-
-function Get-VersionWithoutMetadata {
-    param([string]$Version)
-    
-    # Strip build metadata (+anything) from version
-    # SemVer: 1.2.3-preview.1+build.123 -> 1.2.3-preview.1
-    $plusIndex = $Version.IndexOf('+')
-    if ($plusIndex -gt 0) {
-        return $Version.Substring(0, $plusIndex)
-    }
-    return $Version
-}
+$script:StableRegex = "^$($script:MainVersionPattern)$"
+$script:AllowedRegex = $script:AllowedPrereleaseSuffixes | ForEach-Object { "^$($script:MainVersionPattern)$_`$" }
+$script:DeleteRegex  = $script:DeletePrereleaseSuffixes  | ForEach-Object { "^$($script:MainVersionPattern)$_`$" }
 
 function Get-VersionAction {
     param([string]$Version)
+    # Strip build metadata (+...) before matching.
+    $v = $Version
+    $plus = $v.IndexOf('+')
+    if ($plus -gt 0) { $v = $v.Substring(0, $plus) }
 
-    # Strip build metadata before pattern matching
-    $versionToMatch = Get-VersionWithoutMetadata -Version $Version
-
-    # First, check if it's a stable version (no prerelease)
-    if ($versionToMatch -match $StableVersionRegex) {
-        return "KEEP"
-    }
-
-    # Check if it matches allowed prerelease patterns
-    foreach ($pattern in $AllowedPrereleaseRegex) {
-        if ($versionToMatch -match $pattern) {
-            return "KEEP"
-        }
-    }
-
-    # Check if it matches delete patterns
-    foreach ($pattern in $DeletePrereleaseRegex) {
-        if ($versionToMatch -match $pattern) {
-            return "DELETE"
-        }
-    }
-
-    # Unknown pattern - this should stop the script
+    if ($v -match $script:StableRegex) { return "KEEP" }
+    foreach ($p in $script:AllowedRegex) { if ($v -match $p) { return "KEEP" } }
+    foreach ($p in $script:DeleteRegex)  { if ($v -match $p) { return "DELETE" } }
     return "UNKNOWN"
 }
 
-function Get-PackageAction {
-    param([string]$PackageName)
+function Write-Info { param([string]$M) Write-Host $M -ForegroundColor Gray }
+function Write-Head { param([string]$M) Write-Host $M -ForegroundColor Cyan }
+function Write-Good { param([string]$M) Write-Host $M -ForegroundColor Green }
+function Write-Warn2 { param([string]$M) Write-Host $M -ForegroundColor Yellow }
+function Write-Err2 { param([string]$M) Write-Host $M -ForegroundColor Red }
 
-    if ($PackageName.StartsWith("_")) {
-        return "MOVE"
+# Markdown summary accumulator (flushed to -SummaryFile / $GITHUB_STEP_SUMMARY).
+$script:SummaryLines = [System.Collections.Generic.List[string]]::new()
+function Add-Summary { param([string]$Line = "") $script:SummaryLines.Add($Line) }
+function Save-Summary {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return }
+    try { Add-Content -Path $Path -Value ($script:SummaryLines -join "`n") -Encoding UTF8 }
+    catch { Write-Warn2 "  (could not write summary file '$Path': $_)" }
+}
+
+function New-AuthHeaders {
+    param([string]$TokenPat)
+    if ([string]::IsNullOrWhiteSpace($TokenPat)) {
+        return @{}
     }
-
-    return "PROCESS_VERSIONS"
+    $bytes = [System.Text.Encoding]::ASCII.GetBytes(":$TokenPat")
+    $b64 = [Convert]::ToBase64String($bytes)
+    return @{ Authorization = "Basic $b64" }
 }
 
 function Get-FeedBaseUrl {
     param(
         [string]$Org,
         [string]$Proj,
-        [string]$UrlType  # "feeds" or "pkgs"
+        [ValidateSet("feeds", "pkgs")]
+        [string]$UrlType
     )
-
-    $subdomain = if ($UrlType -eq "feeds") { "feeds" } else { "pkgs" }
-    
+    $sub = if ($UrlType -eq "feeds") { "feeds" } else { "pkgs" }
     if ([string]::IsNullOrEmpty($Proj)) {
-        return "https://${subdomain}.dev.azure.com/${Org}"
+        return "https://${sub}.dev.azure.com/${Org}"
     }
-    else {
-        return "https://${subdomain}.dev.azure.com/${Org}/${Proj}"
+    return "https://${sub}.dev.azure.com/${Org}/${Proj}"
+}
+
+function Invoke-AzDoApi {
+    param(
+        [string]$Uri,
+        [string]$Method = "GET",
+        [hashtable]$Headers = @{},
+        [int]$MaxRetries = 5
+    )
+    $attempt = 0
+    $baseDelay = 2
+    while ($true) {
+        try {
+            return Invoke-RestMethod -Uri $Uri -Method $Method -Headers $Headers -ContentType "application/json"
+        }
+        catch {
+            $status = $null
+            try { $status = $_.Exception.Response.StatusCode.value__ } catch { }
+            if ($status -in @(429, 500, 502, 503, 504) -and $attempt -lt $MaxRetries) {
+                $attempt++
+                $delay = $baseDelay * [Math]::Pow(2, $attempt)
+                if ($status -eq 429) {
+                    try {
+                        $ra = $_.Exception.Response.Headers["Retry-After"]
+                        if ($ra) { $delay = [int]$ra }
+                    } catch { }
+                }
+                Write-Warn2 "  API $status on $Method $Uri — retrying in $delay s ($attempt/$MaxRetries)"
+                Start-Sleep -Seconds $delay
+                continue
+            }
+            throw
+        }
     }
 }
 
-function Get-AllPackages {
+# Determine working read auth for a feed: try ANONYMOUS first (public feeds work
+# without a token, and an expired/misscoped PAT must not break a read-only dry
+# run), then fall back to the PAT only if anonymous is denied.
+function Resolve-ReadHeaders {
+    param(
+        [string]$FeedsBaseUrl,
+        [string]$FeedId,
+        [string]$Pat
+    )
+    $probe = "${FeedsBaseUrl}/_apis/packaging/Feeds/${FeedId}/packages?api-version=7.1&protocolType=NuGet&`$top=1"
+    try {
+        $null = Invoke-RestMethod -Uri $probe -Method GET
+        return @{}   # anonymous works
+    }
+    catch {
+        if (-not [string]::IsNullOrWhiteSpace($Pat)) {
+            $h = New-AuthHeaders -TokenPat $Pat
+            $null = Invoke-RestMethod -Uri $probe -Method GET -Headers $h  # throws if this also fails
+            return $h
+        }
+        throw
+    }
+}
+
+# Inventory a feed: returns a list of @{ Id; Version; NVer } for all (non-deleted)
+# package versions. Metadata only — no package downloads.
+function Get-FeedInventory {
     param(
         [string]$FeedsBaseUrl,
         [string]$FeedId,
         [hashtable]$Headers,
-        [int]$BatchSize
+        [int]$BatchSize,
+        [switch]$IncludeUnlisted
     )
-
-    $allPackages = @()
+    $result = [System.Collections.Generic.List[object]]::new()
     $skip = 0
-    $hasMore = $true
-
-    Write-Host "Fetching packages from feed..." -ForegroundColor Cyan
-
-    while ($hasMore) {
+    while ($true) {
         $uri = "${FeedsBaseUrl}/_apis/packaging/Feeds/${FeedId}/packages?api-version=7.1&protocolType=NuGet&includeAllVersions=true&`$top=${BatchSize}&`$skip=${skip}"
-        
-        Write-Host "  Fetching packages $skip to $($skip + $BatchSize)..." -ForegroundColor Gray
-        
-        $response = Invoke-AzDoApi -Uri $uri -Headers $Headers
-        
-        if ($response.value -and $response.value.Count -gt 0) {
-            $allPackages += $response.value
-            $skip += $BatchSize
-            
-            Write-Host "    Found $($response.value.Count) packages (total: $($allPackages.Count))" -ForegroundColor Gray
-            
-            # If we got fewer than BatchSize, we've reached the end
-            if ($response.value.Count -lt $BatchSize) {
-                $hasMore = $false
+        $resp = Invoke-AzDoApi -Uri $uri -Headers $Headers
+        $page = @($resp.value)
+        if ($page.Count -eq 0) { break }
+        foreach ($pkg in $page) {
+            $pkgName = $pkg.name
+            $versions = @()
+            if ($pkg.PSObject.Properties.Name -contains 'versions' -and $pkg.versions) {
+                $versions = @($pkg.versions)
+            }
+            foreach ($v in $versions) {
+                # Skip deleted versions — they cannot be downloaded.
+                if (($v.PSObject.Properties.Name -contains 'isDeleted') -and $v.isDeleted) { continue }
+                if (-not $IncludeUnlisted -and ($v.PSObject.Properties.Name -contains 'isListed') -and (-not $v.isListed)) { continue }
+                $ver = $v.version
+                $nver = if ($v.PSObject.Properties.Name -contains 'normalizedVersion' -and $v.normalizedVersion) { $v.normalizedVersion } else { $ver }
+                $result.Add([pscustomobject]@{
+                    Id = $pkgName
+                    Version = $ver
+                    NVer = $nver
+                })
             }
         }
-        else {
-            $hasMore = $false
-        }
-
-        # Small delay to be nice to the API
+        if ($page.Count -lt $BatchSize) { break }
+        $skip += $BatchSize
         Start-Sleep -Milliseconds 100
     }
-
-    Write-Host "Total packages found: $($allPackages.Count)" -ForegroundColor Green
-    return $allPackages
+    # Unary comma prevents PowerShell from unrolling the list (which would turn an
+    # empty result into $null and a populated one into a bare array).
+    return ,$result
 }
 
-function Download-Package {
+function Get-EntryKey {
+    param([string]$Id, [string]$NVer)
+    return ("{0}@{1}" -f $Id, $NVer).ToLowerInvariant()
+}
+
+# Download a package version (follows AzDO 303 -> blob redirect) and verify it is
+# a real zip. Returns the local path, or throws.
+function Save-FeedPackage {
     param(
-        [string]$PackageId,
+        [string]$PkgsBaseUrl,
+        [string]$FeedId,
+        [string]$Id,
         [string]$Version,
-        [string]$DownloadUrl,
-        [hashtable]$Headers
+        [hashtable]$Headers,
+        [string]$CacheDir
     )
+    if (-not (Test-Path $CacheDir)) { New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null }
+    $safe = ("{0}.{1}.nupkg" -f $Id, $Version)
+    $nupkg = Join-Path $CacheDir $safe
+    $tmp = "$nupkg.downloading"
 
-    $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-feed-mgmt"
-    if (-not (Test-Path $tempDir)) {
-        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
+    if (Test-Path $tmp) { Remove-Item $tmp -Force }
+
+    # Reuse a previously cached, still-valid download.
+    if (Test-Path $nupkg) {
+        if (Test-IsValidZip -Path $nupkg) { return $nupkg }
+        Remove-Item $nupkg -Force
     }
-    
-    $nupkgPath = Join-Path $tempDir "${PackageId}.${Version}.nupkg"
-    $tempPath = "${nupkgPath}.downloading"
 
-    # Clean up any existing files
-    if (Test-Path $nupkgPath) { Remove-Item $nupkgPath -Force }
-    if (Test-Path $tempPath) { Remove-Item $tempPath -Force }
+    $url = "${PkgsBaseUrl}/_apis/packaging/feeds/${FeedId}/nuget/packages/${Id}/versions/${Version}/content?api-version=7.1-preview.1"
 
-    Write-Host "    Downloading..." -ForegroundColor Gray
-    
-    # Use HttpWebRequest to handle 303 redirects properly
-    # Azure DevOps returns 303 redirect to blob storage
+    $req = [System.Net.HttpWebRequest]::Create($url)
+    $req.Method = "GET"
+    if ($Headers.ContainsKey('Authorization')) { $req.Headers.Add("Authorization", $Headers.Authorization) }
+    $req.AllowAutoRedirect = $true
+    $req.MaximumAutomaticRedirections = 5
+    $req.Timeout = 600000            # 10 min headers timeout
+    $req.ReadWriteTimeout = 600000   # 10 min socket read timeout
+
+    $resp = $req.GetResponse()
+    $rs = $resp.GetResponseStream()
+    $fs = [System.IO.File]::Create($tmp)
     try {
-        $request = [System.Net.HttpWebRequest]::Create($DownloadUrl)
-        $request.Method = "GET"
-        $request.Headers.Add("Authorization", $Headers.Authorization)
-        $request.AllowAutoRedirect = $true  # Follow 303 redirects
-        $request.MaximumAutomaticRedirections = 5
-        $request.Timeout = 600000  # 10 minute timeout for large files
-        
-        $response = $request.GetResponse()
-        $responseStream = $response.GetResponseStream()
-        
-        $fileStream = [System.IO.File]::Create($tempPath)
+        $buffer = New-Object byte[] 65536
+        while (($read = $rs.Read($buffer, 0, $buffer.Length)) -gt 0) {
+            $fs.Write($buffer, 0, $read)
+        }
+    }
+    finally {
+        $fs.Close(); $rs.Close(); $resp.Close()
+    }
+
+    if (-not (Test-IsValidZip -Path $tmp)) {
+        Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+        throw "downloaded file is not a valid zip"
+    }
+    Move-Item $tmp $nupkg -Force
+    return $nupkg
+}
+
+function Test-IsValidZip {
+    param([string]$Path)
+    # Validate the whole archive, not just the central directory: decompress every
+    # entry so a truncated/corrupt payload (bad CRC, short read) is caught before
+    # the package is ever pushed.
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
         try {
-            $buffer = New-Object byte[] 65536  # 64KB buffer
-            $bytesRead = 0
-            while (($bytesRead = $responseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-                $fileStream.Write($buffer, 0, $bytesRead)
+            $buffer = New-Object byte[] 65536
+            foreach ($entry in $zip.Entries) {
+                # Directory entries have no content.
+                if ($entry.FullName.EndsWith('/')) { continue }
+                $stream = $entry.Open()
+                try {
+                    while ($stream.Read($buffer, 0, $buffer.Length) -gt 0) { }
+                }
+                finally { $stream.Dispose() }
             }
         }
-        finally {
-            $fileStream.Close()
-            $responseStream.Close()
-            $response.Close()
-        }
-        
-        # Verify it's a valid ZIP before renaming
+        finally { $zip.Dispose() }
+        return $true
+    }
+    catch { return $false }
+}
+
+# Verify the .nupkg is a valid package whose nuspec id/version match what we
+# intended to copy. Guards against corrupt or mismatched downloads.
+function Test-NupkgMatches {
+    param(
+        [string]$Path,
+        [string]$ExpectId,
+        [string]$ExpectVersion
+    )
+    try {
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+        $zip = [System.IO.Compression.ZipFile]::OpenRead($Path)
         try {
-            Add-Type -AssemblyName System.IO.Compression.FileSystem
-            $zip = [System.IO.Compression.ZipFile]::OpenRead($tempPath)
-            $zip.Dispose()
+            # The package manifest is the root-level .nuspec (no directory in its
+            # FullName). Avoid matching a nested *.nuspec bundled as content.
+            $nuspec = $zip.Entries |
+                Where-Object { $_.Name -like "*.nuspec" -and $_.FullName -eq $_.Name } |
+                Select-Object -First 1
+            if (-not $nuspec) {
+                $nuspec = $zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Select-Object -First 1
+            }
+            if (-not $nuspec) { return @{ Ok = $false; Reason = "no .nuspec in package" } }
+            $reader = New-Object System.IO.StreamReader($nuspec.Open())
+            $content = $reader.ReadToEnd()
+            $reader.Close()
         }
-        catch {
-            throw "Downloaded file is not a valid package (ZIP verification failed)"
+        finally { $zip.Dispose() }
+
+        [xml]$xml = $content
+        $id = "$($xml.package.metadata.id)"
+        $ver = "$($xml.package.metadata.version)"
+        if ($id.ToLowerInvariant() -ne $ExpectId.ToLowerInvariant()) {
+            return @{ Ok = $false; Reason = "nuspec id '$id' != expected '$ExpectId'" }
         }
-        
-        # Rename temp to final
-        Move-Item $tempPath $nupkgPath -Force
-        return $nupkgPath
+        # Compare on normalized-ish basis: exact, else case-insensitive.
+        if ($ver.ToLowerInvariant() -ne $ExpectVersion.ToLowerInvariant()) {
+            return @{ Ok = $false; Reason = "nuspec version '$ver' != expected '$ExpectVersion'" }
+        }
+        return @{ Ok = $true; Reason = ""; Id = $id; Version = $ver }
     }
     catch {
-        Write-Warning "    Failed to download package: $_"
-        if (Test-Path $tempPath) { Remove-Item $tempPath -Force }
-        throw
+        return @{ Ok = $false; Reason = "cannot read package: $_" }
     }
 }
 
-function Push-PackageToFeed {
+# Configure destination push credentials WITHOUT writing the PAT to disk or to
+# any command line. Uses the Azure Artifacts Credential Provider, which reads the
+# VSS_NUGET_EXTERNAL_FEED_ENDPOINTS process environment variable. The PAT lives
+# only in this process's memory/env for the duration of the run — never in a
+# nuget.config, never as a `dotnet` argument, never echoed. We also register it
+# with the GitHub log masker as belt-and-suspenders.
+function Set-PushCredentials {
+    param(
+        [string]$IndexUrl,
+        [string]$Pat
+    )
+    if ([string]::IsNullOrWhiteSpace($Pat)) { return }
+
+    # Defensive masking. GitHub already masks configured secrets; this also covers
+    # a -SourcePat / -Pat supplied by other means so it can never surface in logs.
+    if ($env:GITHUB_ACTIONS -eq 'true') {
+        Write-Host ("::add-mask::{0}" -f $Pat)
+    }
+
+    $endpoints = @{
+        endpointCredentials = @(
+            @{ endpoint = $IndexUrl; username = "az"; password = $Pat }
+        )
+    }
+    # -Compress keeps it single-line; this value is consumed only by the credential
+    # provider plugin and is never printed by this script.
+    $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS = ($endpoints | ConvertTo-Json -Depth 5 -Compress)
+
+    # Do NOT let the Azure Artifacts Credential Provider persist session tokens to
+    # disk — the credential should live only in this process's memory.
+    $env:NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED = "false"
+}
+
+function Clear-PushCredentials {
+    Remove-Item Env:\VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ErrorAction SilentlyContinue
+}
+
+# Push a single package. Auth comes from the credential provider (see
+# Set-PushCredentials) — no secret is passed here. Output is scrubbed of the PAT
+# before it is ever returned/logged. Exit 0 = success; because --skip-duplicate
+# makes a genuine duplicate exit 0, a NON-zero exit is always treated as a real
+# failure (never masked as "already present").
+function Publish-FeedPackage {
     param(
         [string]$NupkgPath,
-        [string]$FeedUrl,
-        [string]$PAT
+        [string]$IndexUrl,
+        [string]$ScrubValue = ""
     )
-
-    # Use dotnet nuget push
-    $pushUrl = "${FeedUrl}/nuget/v3/index.json"
-    
-    $result = & dotnet nuget push $NupkgPath --source $pushUrl --api-key "az" 2>&1 | Out-String
-    
-    if ($LASTEXITCODE -ne 0) {
-        # Check if it's a "package already exists" error - that's OK
-        if ($result -match "already exists|409|Conflict") {
-            Write-Host "    Package already exists in destination feed (OK)" -ForegroundColor Yellow
-            return $true
-        }
-        throw "Failed to push package: $result"
+    $out = & dotnet nuget push $NupkgPath --source $IndexUrl --api-key az --skip-duplicate --timeout 300 2>&1 | Out-String
+    if (-not [string]::IsNullOrEmpty($ScrubValue)) {
+        $out = $out.Replace($ScrubValue, "***")
     }
-    
-    return $true
-}
-
-function Remove-PackageVersion {
-    param(
-        [string]$PkgsBaseUrl,
-        [string]$FeedId,
-        [string]$PackageId,
-        [string]$Version,
-        [hashtable]$Headers
-    )
-
-    $uri = "${PkgsBaseUrl}/_apis/packaging/feeds/${FeedId}/nuget/packages/${PackageId}/versions/${Version}?api-version=7.1"
-    
-    $null = Invoke-AzDoApi -Uri $uri -Method "DELETE" -Headers $Headers
-}
-
-function Test-PackageExistsInFeed {
-    param(
-        [string]$PkgsBaseUrl,
-        [string]$FeedId,
-        [string]$PackageId,
-        [string]$Version,
-        [hashtable]$Headers
-    )
-
-    $uri = "${PkgsBaseUrl}/_apis/packaging/feeds/${FeedId}/nuget/packages/${PackageId}/versions/${Version}?api-version=7.1"
-    
-    try {
-        $response = Invoke-AzDoApi -Uri $uri -Headers $Headers
-        return ($null -ne $response)
+    if ($LASTEXITCODE -eq 0) {
+        $skipped = ($out -match "already exists|Conflict|Skipping|duplicate")
+        return @{ Ok = $true; Skipped = $skipped; Out = $out }
     }
-    catch {
-        $statusCode = $_.Exception.Response.StatusCode.value__
-        if ($statusCode -eq 404) {
-            return $false
-        }
-        throw
-    }
-}
-
-function Test-NupkgIntegrity {
-    param([string]$NupkgPath)
-
-    # NuGet packages are ZIP files - verify we can open and read the .nuspec
-    try {
-        Add-Type -AssemblyName System.IO.Compression.FileSystem
-        $zip = [System.IO.Compression.ZipFile]::OpenRead($NupkgPath)
-        
-        # Find .nuspec file
-        $nuspecEntry = $zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Select-Object -First 1
-        
-        if (-not $nuspecEntry) {
-            $zip.Dispose()
-            return @{ Valid = $false; Error = "No .nuspec file found in package" }
-        }
-        
-        # Try to read nuspec content
-        $stream = $nuspecEntry.Open()
-        $reader = New-Object System.IO.StreamReader($stream)
-        $content = $reader.ReadToEnd()
-        $reader.Close()
-        $stream.Close()
-        $zip.Dispose()
-        
-        # Basic XML validation
-        try {
-            [xml]$xml = $content
-            $packageId = $xml.package.metadata.id
-            $packageVersion = $xml.package.metadata.version
-            
-            # Compute SHA256 hash of the file
-            $sha256 = Get-FileHash -Path $NupkgPath -Algorithm SHA256
-            
-            return @{ 
-                Valid = $true
-                PackageId = $packageId
-                Version = $packageVersion
-                SHA256 = $sha256.Hash
-                FileSize = (Get-Item $NupkgPath).Length
-            }
-        }
-        catch {
-            return @{ Valid = $false; Error = "Invalid nuspec XML: $_" }
-        }
-    }
-    catch {
-        return @{ Valid = $false; Error = "Failed to open package: $_" }
-    }
+    return @{ Ok = $false; Skipped = $false; Out = $out }
 }
 
 #endregion
 
-#region Main Script
+#region Main
+
+# --- Feed profiles: intrinsic source/destination + per-feed cleanliness rules ---
+# VersionPolicy:
+#   'ReleasesOnly' — ALLOWLIST: push only recognized releases (KEEP). Anything
+#                    not recognized as a release is refused. Used for the PUBLIC
+#                    feed so nothing unexpected can ever land there.
+#   'ExcludeBad'   — DENYLIST: push everything EXCEPT known-bad versions
+#                    (-pr.* / malformed -preview-*). Keeps the 0.0.0-commit.* /
+#                    0.0.0-branch.* build artifacts. Used for the INTERNAL feed.
+$FeedProfiles = @{
+    'skiasharp' = @{
+        Kind                = 'public release feed'
+        SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp'
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp'
+        # Public feed: drop the internal underscore-prefixed CI wrapper packages,
+        # and only ever publish recognized releases (allowlist).
+        ExcludePackageRegex = '^_'
+        VersionPolicy       = 'ReleasesOnly'
+    }
+    'skiasharp-ci' = @{
+        Kind                = 'internal CI artifact feed'
+        SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp-CI'
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp-ci'
+        # Internal feed: keep the underscore wrapper/artifact packages and the
+        # commit/branch build versions; only drop the known-bad ones.
+        ExcludePackageRegex = ''
+        VersionPolicy       = 'ExcludeBad'
+    }
+}
+$feedProfile = $FeedProfiles[$Feed]
+
+$SourceOrg     = $feedProfile.SourceOrg
+$SourceProject = $feedProfile.SourceProject
+$SourceFeed    = $feedProfile.SourceFeed
+$DestOrg       = $feedProfile.DestOrg
+$DestProject   = $feedProfile.DestProject
+$DestFeed      = $feedProfile.DestFeed
+$ExcludePackageRegex = $feedProfile.ExcludePackageRegex
+$VersionPolicy = $feedProfile.VersionPolicy
 
 Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Azure DevOps NuGet Feed Manager" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+Write-Head "=================================================="
+Write-Head " NuGet Feed Mirror — $Feed ($($feedProfile.Kind))"
+Write-Head "=================================================="
 Write-Host ""
 
-# Validate parameters
-if ($Organization -eq "YOUR_ORGANIZATION" -or $SourceFeed -eq "YOUR_SOURCE_FEED") {
-    Write-Error "Please provide valid Organization and SourceFeed parameters"
-    exit 1
+$srcFeedsUrl = Get-FeedBaseUrl -Org $SourceOrg -Proj $SourceProject -UrlType "feeds"
+$srcPkgsUrl  = Get-FeedBaseUrl -Org $SourceOrg -Proj $SourceProject -UrlType "pkgs"
+$dstFeedsUrl = Get-FeedBaseUrl -Org $DestOrg -Proj $DestProject -UrlType "feeds"
+$dstPkgsUrl  = Get-FeedBaseUrl -Org $DestOrg -Proj $DestProject -UrlType "pkgs"
+$dstIndexUrl = "${dstPkgsUrl}/_packaging/${DestFeed}/nuget/v3/index.json"
+
+# Read auth is resolved lazily (anonymous first) so an expired/misscoped PAT
+# never breaks a read-only dry run of public feeds. Source reads use ONLY the
+# dedicated source token (AZURE_DEVOPS_SOURCE_PAT) — never the destination PAT —
+# so a destination write token is never sent to the source org.
+$srcReadPat = $SourcePat
+
+Write-Head "Configuration"
+Write-Info "  Source      : $SourceOrg/$SourceProject  feed '$SourceFeed'"
+Write-Info "  Destination : $DestOrg/$DestProject  feed '$DestFeed'"
+Write-Info "  Mode        : $(if ($Push) { 'PUSH (writes enabled)' } else { 'DRY RUN (no writes)' })"
+Write-Info "  Version rule: $(if ($VersionPolicy -eq 'ReleasesOnly') { 'releases only (allowlist)' } else { 'exclude bad -pr.* / malformed -preview-* (denylist)' })"
+if ($ExcludePackageRegex) { Write-Info "  Exclude pkgs: $ExcludePackageRegex" }
+Write-Info "  Time budget : $MaxDurationMinutes min"
+if ($PackageFilter) { Write-Warn2 "  Filter      : $PackageFilter" }
+Write-Host ""
+
+if ($Push -and [string]::IsNullOrWhiteSpace($Pat)) {
+    Write-Err2 "ERROR: -Push requires the AZURE_DEVOPS_PAT environment variable (packaging read/write on '$DestOrg')."
+    exit 2
 }
 
-if (-not $PAT) {
-    Write-Error "PAT is required. Set via -PAT parameter or AZURE_DEVOPS_PAT environment variable"
-    exit 1
+$startTime = Get-Date
+function Get-ElapsedMinutes { return ((Get-Date) - $startTime).TotalMinutes }
+
+# --- Fast phase: inventory both feeds (metadata only) --------------------------
+
+Write-Head "Inventorying source feed (metadata only)..."
+try {
+    $srcHeaders = Resolve-ReadHeaders -FeedsBaseUrl $srcFeedsUrl -FeedId $SourceFeed -Pat $srcReadPat
+    $srcInv = Get-FeedInventory -FeedsBaseUrl $srcFeedsUrl -FeedId $SourceFeed -Headers $srcHeaders -BatchSize $BatchSize -IncludeUnlisted:$IncludeUnlisted
+}
+catch {
+    Write-Err2 "ERROR: could not read source feed '$SourceFeed' in $SourceOrg/$SourceProject : $_"
+    Add-Summary "## ❌ Feed mirror failed"
+    Add-Summary ""
+    Add-Summary "Could not read **source** feed ``$SourceOrg/$SourceProject/$SourceFeed``:"
+    Add-Summary ""
+    Add-Summary "``````"
+    Add-Summary "$_"
+    Add-Summary "``````"
+    Save-Summary -Path $SummaryFile
+    exit 2
+}
+$srcTotal = $srcInv.Count
+
+# Safety: a migration tool must never treat an unexpectedly empty source read as
+# "nothing to do". A populated feed returning zero versions means something is
+# wrong (auth, wrong feed, API change) — fail loudly instead of silently.
+if ($srcTotal -eq 0) {
+    Write-Err2 "ERROR: source feed '$SourceFeed' returned 0 versions — refusing to proceed (unexpected empty read)."
+    Add-Summary "## ❌ Feed mirror aborted"
+    Add-Summary ""
+    Add-Summary "Source feed ``$SourceOrg/$SourceProject/$SourceFeed`` returned **0 versions**. Refusing to proceed."
+    Save-Summary -Path $SummaryFile
+    exit 2
 }
 
-if (-not $SkipMoveOperations -and $DestinationFeed -eq "YOUR_DESTINATION_FEED") {
-    Write-Error "Please provide valid DestinationFeed parameter or use -SkipMoveOperations"
-    exit 1
+# --- Apply intrinsic rules to the source set -----------------------------------
+# 1. Optional smoke-test include filter.
+if ($PackageFilter) {
+    $srcInv = @($srcInv | Where-Object { $_.Id -match $PackageFilter })
 }
-
-# Display mode
-if ($Execute) {
-    Write-Host "MODE: EXECUTE - Changes WILL be made!" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Press Ctrl+C within 5 seconds to cancel..." -ForegroundColor Yellow
-    Start-Sleep -Seconds 5
+# 2. Per-feed package exclusion (e.g. drop internal '_' packages from public).
+$excludedByPackage = 0
+if ($ExcludePackageRegex) {
+    $before = $srcInv.Count
+    $srcInv = @($srcInv | Where-Object { $_.Id -notmatch $ExcludePackageRegex })
+    $excludedByPackage = $before - $srcInv.Count
+}
+# 3. Per-feed version policy.
+#    - ReleasesOnly (public): ALLOWLIST — keep only recognized releases (KEEP).
+#      Anything unrecognized is refused so junk can never reach the public feed.
+#    - ExcludeBad  (internal): DENYLIST — keep everything except known-bad
+#      (-pr.* / malformed -preview-*); commit/branch build versions are kept.
+$excludedBadVersions = 0
+$excludedUnknown = 0
+$before = $srcInv.Count
+if ($VersionPolicy -eq 'ReleasesOnly') {
+    $kept = [System.Collections.Generic.List[object]]::new()
+    foreach ($e in $srcInv) {
+        $action = Get-VersionAction -Version $e.Version
+        if ($action -eq 'KEEP') { $kept.Add($e) }
+        elseif ($action -eq 'DELETE') { $excludedBadVersions++ }
+        else { $excludedUnknown++ }
+    }
+    $srcInv = @($kept)
 }
 else {
-    Write-Host "MODE: DRY RUN - No changes will be made" -ForegroundColor Green
-    Write-Host "Use -Execute flag to actually perform operations" -ForegroundColor Gray
+    $srcInv = @($srcInv | Where-Object { (Get-VersionAction -Version $_.Version) -ne 'DELETE' })
+    $excludedBadVersions = $before - $srcInv.Count
 }
+
+Write-Good "  Source versions: $srcTotal total; $($srcInv.Count) eligible after rules"
+if ($excludedByPackage -gt 0)   { Write-Info "    - excluded $excludedByPackage version(s) on '$ExcludePackageRegex' packages" }
+if ($excludedBadVersions -gt 0) { Write-Info "    - excluded $excludedBadVersions bad version(s) (-pr.* / malformed -preview-*)" }
+if ($excludedUnknown -gt 0)     { Write-Warn2 "    - excluded $excludedUnknown unrecognized version(s) (allowlist: releases only)" }
+
+Write-Head "Inventorying destination feed (metadata only)..."
+$dstIndex = [System.Collections.Generic.HashSet[string]]::new()
+try {
+    $dstHeaders = Resolve-ReadHeaders -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Pat $Pat
+    $dstInv = Get-FeedInventory -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Headers $dstHeaders -BatchSize $BatchSize -IncludeUnlisted
+    foreach ($e in $dstInv) { [void]$dstIndex.Add((Get-EntryKey -Id $e.Id -NVer $e.NVer)) }
+    Write-Good "  Destination versions: $($dstInv.Count)"
+}
+catch {
+    Write-Err2 "ERROR: could not read destination feed '$DestFeed' in $DestOrg/$DestProject : $_"
+    Write-Warn2 "  (The destination feed must exist. Create it before mirroring.)"
+    Add-Summary "## ❌ Feed mirror failed"
+    Add-Summary ""
+    Add-Summary "Could not read **destination** feed ``$DestOrg/$DestProject/$DestFeed`` — it must exist before mirroring."
+    Add-Summary ""
+    Add-Summary "``````"
+    Add-Summary "$_"
+    Add-Summary "``````"
+    Save-Summary -Path $SummaryFile
+    exit 2
+}
+
+# --- Diff: what is missing in the destination ----------------------------------
+
+$missing = [System.Collections.Generic.List[object]]::new()
+foreach ($e in $srcInv) {
+    $key = Get-EntryKey -Id $e.Id -NVer $e.NVer
+    if (-not $dstIndex.Contains($key)) { $missing.Add($e) }
+}
+
+$alreadyThere = $srcInv.Count - $missing.Count
+
+Write-Host ""
+Write-Head "Diff"
+Write-Info  "  Eligible to mirror   : $($srcInv.Count)"
+Write-Good  "  Already in dest      : $alreadyThere"
+Write-Warn2 "  Missing (to copy)    : $($missing.Count)"
 Write-Host ""
 
-# Setup
-$auth = Get-Base64Auth -Pat $PAT
-$headers = @{
-    Authorization = "Basic $auth"
+# --- Build the Markdown summary (shown in CI as the PR check step summary) ------
+Add-Summary "## Feed mirror — ``$Feed`` ($($feedProfile.Kind))"
+Add-Summary ""
+Add-Summary "``$SourceOrg/$SourceProject/$SourceFeed`` → ``$DestOrg/$DestProject/$DestFeed``"
+Add-Summary ""
+Add-Summary "**Mode:** $(if ($Push) { 'PUSH (writes enabled)' } else { '🔍 DRY RUN — no packages are downloaded or pushed' })"
+Add-Summary ""
+Add-Summary "**Rules applied:**"
+if ($ExcludePackageRegex) {
+    Add-Summary "- exclude internal packages matching ``$ExcludePackageRegex`` (dropped $excludedByPackage version(s))"
+} else {
+    Add-Summary "- keep all packages (internal ``_`` wrapper packages included)"
 }
-
-$feedsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "feeds"
-$pkgsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "pkgs"
-
-Write-Host "Configuration:" -ForegroundColor Cyan
-Write-Host "  Organization: $Organization" -ForegroundColor Gray
-Write-Host "  Project: $(if ($Project) { $Project } else { '(org-scoped)' })" -ForegroundColor Gray
-Write-Host "  Source Feed: $SourceFeed" -ForegroundColor Gray
-Write-Host "  Destination Feed: $DestinationFeed" -ForegroundColor Gray
-if ($PackageFilter) {
-    Write-Host "  Package Filter: $PackageFilter" -ForegroundColor Yellow
+if ($VersionPolicy -eq 'ReleasesOnly') {
+    Add-Summary "- allowlist: publish recognized **releases only** — dropped $excludedBadVersions bad + $excludedUnknown unrecognized version(s)"
+} else {
+    Add-Summary "- skip known-bad versions ``-pr.*`` / malformed ``-preview-*`` (dropped $excludedBadVersions version(s)); commit/branch builds kept"
 }
-Write-Host ""
+Add-Summary ""
+Add-Summary "| Metric | Count |"
+Add-Summary "|---|---:|"
+Add-Summary "| In source feed (all) | $srcTotal |"
+Add-Summary "| Eligible after rules | $($srcInv.Count) |"
+Add-Summary "| Already in destination | $alreadyThere |"
+Add-Summary "| **Missing (to copy)** | **$($missing.Count)** |"
+Add-Summary ""
 
-# Get all packages
-$packages = Get-AllPackages -FeedsBaseUrl $feedsBaseUrl -FeedId $SourceFeed -Headers $headers -BatchSize $BatchSize
-
-# Apply package filter if specified
-if ($PackageFilter) {
-    $originalCount = $packages.Count
-    $packages = @($packages | Where-Object { $_.name -match $PackageFilter })
-    Write-Host "Package filter '$PackageFilter': $($packages.Count) of $originalCount packages match" -ForegroundColor Cyan
-}
-
-# Analyze packages
-Write-Host ""
-Write-Host "Analyzing packages..." -ForegroundColor Cyan
-
-$packagesToMove = @()
-$versionsToDelete = @()
-$versionsToKeep = @()
-$unknownVersions = @()
-
-$totalVersions = 0
-$processedCount = 0
-
-foreach ($package in $packages) {
-    $processedCount++
-    $packageName = $package.name
-    $packageAction = Get-PackageAction -PackageName $packageName
-
-    Write-Progress -Activity "Analyzing packages" -Status "$packageName" -PercentComplete (($processedCount / $packages.Count) * 100)
-
-    if ($packageAction -eq "MOVE") {
-        # Package starts with _ - mark all versions for move
-        foreach ($version in $package.versions) {
-            $totalVersions++
-            $packagesToMove += @{
-                PackageId = $packageName
-                Version   = $version.version
-            }
-        }
-    }
-    else {
-        # Process each version
-        foreach ($version in $package.versions) {
-            $totalVersions++
-            $versionString = $version.version
-            $versionAction = Get-VersionAction -Version $versionString
-
-            switch ($versionAction) {
-                "KEEP" {
-                    $versionsToKeep += @{
-                        PackageId = $packageName
-                        Version   = $versionString
-                    }
-                }
-                "DELETE" {
-                    $versionsToDelete += @{
-                        PackageId = $packageName
-                        Version   = $versionString
-                    }
-                }
-                "UNKNOWN" {
-                    $unknownVersions += @{
-                        PackageId = $packageName
-                        Version   = $versionString
-                    }
-                }
-            }
-        }
-    }
-}
-
-Write-Progress -Activity "Analyzing packages" -Completed
-
-# Report findings
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Analysis Results" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Total packages: $($packages.Count)" -ForegroundColor White
-Write-Host "Total versions: $totalVersions" -ForegroundColor White
-Write-Host ""
-Write-Host "  Versions to KEEP:   $($versionsToKeep.Count)" -ForegroundColor Green
-Write-Host "  Versions to DELETE: $($versionsToDelete.Count)" -ForegroundColor Red
-Write-Host "  Packages to MOVE:   $($packagesToMove.Count) versions in $($packagesToMove | Select-Object -ExpandProperty PackageId -Unique | Measure-Object | Select-Object -ExpandProperty Count) packages" -ForegroundColor Yellow
-Write-Host "  UNKNOWN versions:   $($unknownVersions.Count)" -ForegroundColor Magenta
-Write-Host ""
-
-# Check for unknown versions - STOP if any found
-if ($unknownVersions.Count -gt 0) {
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host "STOPPING: Unknown version patterns found!" -ForegroundColor Red
-    Write-Host "========================================" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "The following versions do not match any known pattern:" -ForegroundColor Red
-    Write-Host ""
-    
-    $unknownVersions | Group-Object { $_.PackageId } | ForEach-Object {
-        Write-Host "  $($_.Name):" -ForegroundColor Yellow
-        $_.Group | ForEach-Object {
-            Write-Host "    - $($_.Version)" -ForegroundColor Gray
-        }
-    }
-    
-    Write-Host ""
-    Write-Host "Expected patterns:" -ForegroundColor Cyan
-    Write-Host "  KEEP: X.Y[.Z[.W]] (stable)" -ForegroundColor Green
-    Write-Host "  KEEP: X.Y[.Z[.W]]-alpha.N[.N]" -ForegroundColor Green
-    Write-Host "  KEEP: X.Y[.Z[.W]]-preview.N[.N]" -ForegroundColor Green
-    Write-Host "  KEEP: X.Y[.Z[.W]]-rc.N[.N]" -ForegroundColor Green
-    Write-Host "  KEEP: X.Y[.Z[.W]]-nightly.N[.N]" -ForegroundColor Green
-    Write-Host "  KEEP: X.Y[.Z[.W]]-stable.N[.N]" -ForegroundColor Green
-    Write-Host "  DELETE: X.Y[.Z[.W]]-pr.N[.N]" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Please review these versions and update the script patterns if needed." -ForegroundColor Yellow
-    
-    # Save unknown versions to a file for review
-    $unknownFile = "./unknown-versions.json"
-    $unknownVersions | ConvertTo-Json -Depth 10 | Set-Content $unknownFile -Encoding UTF8
-    Write-Host "Unknown versions saved to: $unknownFile" -ForegroundColor Gray
-    
-    exit 1
-}
-
-# Show samples of what will be deleted
-if ($versionsToDelete.Count -gt 0) {
-    Write-Host "Sample versions to DELETE (first 20):" -ForegroundColor Red
-    $versionsToDelete | Select-Object -First 20 | ForEach-Object {
-        Write-Host "  $($_.PackageId)@$($_.Version)" -ForegroundColor Gray
-    }
-    if ($versionsToDelete.Count -gt 20) {
-        Write-Host "  ... and $($versionsToDelete.Count - 20) more" -ForegroundColor Gray
-    }
-    Write-Host ""
-}
-
-# Show packages to move
-if ($packagesToMove.Count -gt 0) {
-    Write-Host "Packages to MOVE (starting with _):" -ForegroundColor Yellow
-    $packagesToMove | Group-Object { $_.PackageId } | ForEach-Object {
-        Write-Host "  $($_.Name): $($_.Count) versions" -ForegroundColor Gray
-    }
-    Write-Host ""
-}
-
-# If dry run, exit here
-if (-not $Execute) {
-    Write-Host "========================================" -ForegroundColor Green
-    Write-Host "DRY RUN COMPLETE" -ForegroundColor Green
-    Write-Host "========================================" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "To execute these changes, run again with -Execute flag" -ForegroundColor Yellow
-    Write-Host ""
+if ($missing.Count -eq 0) {
+    Write-Good "Destination is already in sync. Nothing to do."
+    Add-Summary "### ✅ Result: destination already in sync — nothing to copy."
+    Save-Summary -Path $SummaryFile
     exit 0
 }
 
-# Execute operations
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Executing Operations" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
+# Per-package grouping (all package ids that will be copied — no truncation).
+$byPkg = @($missing | Group-Object Id | Sort-Object Count -Descending)
+Add-Summary "### To copy: $($missing.Count) version(s) across $($byPkg.Count) package(s)"
+Add-Summary ""
+Add-Summary "| Package | Versions to copy |"
+Add-Summary "|---|---:|"
+foreach ($g in $byPkg) {
+    Add-Summary "| $($g.Name) | $($g.Count) |"
+}
+Add-Summary ""
+
+# Preview a sample of what would be copied.
+$previewN = [Math]::Min(15, $missing.Count)
+Write-Head "First $previewN package(s) to copy:"
+for ($i = 0; $i -lt $previewN; $i++) {
+    Write-Info ("   - {0} {1}" -f $missing[$i].Id, $missing[$i].Version)
+}
+if ($missing.Count -gt $previewN) { Write-Info "   ... and $($missing.Count - $previewN) more" }
 Write-Host ""
 
-$deleteCount = 0
-$moveCount = 0
-$errorCount = 0
+if (-not $Push) {
+    Write-Warn2 "DRY RUN complete — no packages were transferred."
+    Write-Warn2 "Re-run with -Push (and a PAT) to copy the $($missing.Count) missing package(s)."
+    Add-Summary "> 🔍 **DRY RUN** — nothing was downloaded or pushed. Re-run the workflow manually with **push: true** to copy the $($missing.Count) missing version(s)."
+    Save-Summary -Path $SummaryFile
+    exit 0
+}
 
-# Process moves first (download, push, delete)
-if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
-    
-    # Determine what phases to execute
-    $doDownloadAndUpload = $MovePhase -in @("All", "CopyOnly")
-    $doDeleteFromSource = $MovePhase -in @("All", "DeleteOnly")
-    
-    if ($MovePhase -eq "CopyOnly") {
-        Write-Host "PHASE: Copy Only - packages will be copied to destination but NOT deleted from source" -ForegroundColor Yellow
+# --- Push phase (opt-in) -------------------------------------------------------
+
+if ([string]::IsNullOrWhiteSpace($CacheDir)) {
+    $CacheDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-feed-mirror"
+}
+# Per-feed cache subdirectory so a cached download for one feed can never be
+# reused for a different feed. (CI runners start clean; this matters for local
+# re-runs across feeds.)
+$CacheDir = Join-Path $CacheDir $Feed
+
+# Configure push auth via the credential provider (no secret on disk or CLI).
+Set-PushCredentials -IndexUrl $dstIndexUrl -Pat $Pat
+
+Write-Head "Pushing $($missing.Count) missing package(s) to '$DestFeed'..."
+Write-Info  "  Cache: $CacheDir"
+Write-Host ""
+
+$copied = 0
+$failed = 0
+$skippedExisting = 0
+$processed = 0
+$failedList = [System.Collections.Generic.List[string]]::new()
+$timedOut = $false
+$limitReached = $false
+
+foreach ($item in $missing) {
+    # Stop after -Limit successfully-processed items (0 = no limit). Used for a
+    # quick test or a controlled batch; re-run to continue (idempotent).
+    if ($Limit -gt 0 -and $processed -ge $Limit) {
+        $limitReached = $true
+        Write-Warn2 "Limit of $Limit reached — stopping (re-run to continue)."
+        break
     }
-    elseif ($MovePhase -eq "DeleteOnly") {
-        Write-Host "PHASE: Delete Only - packages will be deleted from source (must already exist in destination)" -ForegroundColor Yellow
+
+    # Graceful, between-package timeout. Reserve enough headroom for one worst-case
+    # package (large native asset download + push --timeout 300s + retry backoff)
+    # so we always stop cleanly BETWEEN packages and never mid-push.
+    if ((Get-ElapsedMinutes) -ge ($MaxDurationMinutes - 12)) {
+        $timedOut = $true
+        Write-Warn2 "Time budget reached after $processed item(s) — stopping gracefully."
+        break
     }
-    else {
-        Write-Host "Moving packages to destination feed (full move)..." -ForegroundColor Yellow
-    }
-    Write-Host ""
-    
-    # NuGet push requires pkgs.dev.azure.com, not feeds.dev.azure.com
-    $destFeedUrl = "${pkgsBaseUrl}/_packaging/${DestinationFeed}"
-    
-    # Configure NuGet source for destination feed (only if uploading)
-    $sourceConfigured = $false
-    if ($doDownloadAndUpload) {
+
+    $processed++
+    $label = "[{0}/{1}] {2} {3}" -f $processed, $missing.Count, $item.Id, $item.Version
+
+    $attempt = 0
+    $done = $false
+    $path = $null
+    while (-not $done -and $attempt -lt $MaxPushRetries) {
+        $attempt++
         try {
-            # Remove existing source if present
-            & dotnet nuget remove source "AzDoDestFeed" 2>$null
-            
-            # Add the source
-            & dotnet nuget add source $destFeedUrl/nuget/v3/index.json --name "AzDoDestFeed" --username "az" --password $PAT --store-password-in-clear-text
-            $sourceConfigured = $true
-            Write-Host "  Configured NuGet source: $destFeedUrl/nuget/v3/index.json" -ForegroundColor Gray
-        }
-        catch {
-            Write-Warning "Could not configure NuGet source: $_"
-        }
-    }
+            $path = Save-FeedPackage -PkgsBaseUrl $srcPkgsUrl -FeedId $SourceFeed -Id $item.Id -Version $item.Version -Headers $srcHeaders -CacheDir $CacheDir
 
-    $copyCount = 0
-    $copySkipped = 0
-    $deleteFromSourceCount = 0
-    $moveIndex = 0
-    $totalMoves = $packagesToMove.Count
-    
-    Write-Host ""
-    Write-Host "Press 'Q' at any time to cancel after current operation completes" -ForegroundColor Cyan
-    Write-Host ""
-    
-    foreach ($item in $packagesToMove) {
-        $moveIndex++
-        $packageId = $item.PackageId
-        $version = $item.Version
-        $stateKey = "${packageId}@${version}"
-
-        # Check for cancel request
-        if (Test-CancelRequested) {
-            Write-Host ""
-            Write-Host "Cancelled by user after $moveIndex items" -ForegroundColor Yellow
-            break
-        }
-
-        # Update progress
-        Write-Progress -Id 0 -Activity "Moving packages" -Status "$packageId@$version" -PercentComplete (($moveIndex / $totalMoves) * 100) -CurrentOperation "$moveIndex of $totalMoves"
-
-        try {
-            # PHASE: Download and Upload
-            if ($doDownloadAndUpload) {
-                # Check if package already exists in destination feed (skip download if so)
-                Write-Status "  [$moveIndex/$totalMoves] Checking destination: $packageId@$version" -ForegroundColor Gray
-                $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
-                
-                if ($existsInDest) {
-                    Write-Status "  [$moveIndex/$totalMoves] Already in destination: $packageId@$version" -ForegroundColor Green
-                    $copySkipped++
+            $check = Test-NupkgMatches -Path $path -ExpectId $item.Id -ExpectVersion $item.Version
+            if (-not $check.Ok) {
+                # Corrupt / mismatched download — never push it. Drop the cached
+                # copy and retry a fresh download.
+                Write-Warn2 "  $label — integrity check failed ($($check.Reason)); re-downloading"
+                Remove-Item $path -Force -ErrorAction SilentlyContinue
+                if ($attempt -ge $MaxPushRetries) {
+                    throw "integrity check failed after $MaxPushRetries attempts: $($check.Reason)"
                 }
-                else {
-                    Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
-
-                    # Download URL
-                    $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
-
-                    # Download to temp location
-                    $downloadedPath = Download-Package -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
-
-                    try {
-                        # Verify package integrity
-                        Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
-                        $integrity = Test-NupkgIntegrity -NupkgPath $downloadedPath
-                        if (-not $integrity.Valid) {
-                            throw "Package integrity check failed: $($integrity.Error)"
-                        }
-
-                        # Push to destination feed
-                        Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
-                        if ($sourceConfigured) {
-                            Push-PackageToFeed -NupkgPath $downloadedPath -FeedUrl $destFeedUrl -PAT $PAT
-                        }
-                        else {
-                            throw "Cannot push without NuGet source configured"
-                        }
-
-                        $copyCount++
-                        
-                        Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
-                    }
-                    finally {
-                        # Clean up downloaded file immediately after push
-                        if (Test-Path $downloadedPath) {
-                            Remove-Item $downloadedPath -Force -ErrorAction SilentlyContinue
-                        }
-                    }
-                }
+                Start-Sleep -Seconds ([Math]::Pow(2, $attempt))
+                continue
             }
 
-            # PHASE: Delete from source
-            if ($doDeleteFromSource) {
-                # Verify exists in destination before deleting (if requested)
-                if ($VerifyBeforeDelete) {
-                    Write-Status "  [$moveIndex/$totalMoves] Verifying in dest: $packageId@$version" -ForegroundColor Yellow
-                    $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
-                    
-                    if (-not $existsInDest) {
-                        Write-Host ""
-                        Write-Warning "    Package NOT found in destination feed - SKIPPING DELETE: $stateKey"
-                        $errorCount++
-                        continue
-                    }
+            $pushResult = Publish-FeedPackage -NupkgPath $path -IndexUrl $dstIndexUrl -ScrubValue $Pat
+            if ($pushResult.Ok) {
+                if ($pushResult.Skipped) {
+                    $skippedExisting++
+                    Write-Good "  $label — already present (skipped)"
+                } else {
+                    $copied++
+                    Write-Good "  $label — copied"
                 }
-
-                # Delete from source
-                Write-Status "  [$moveIndex/$totalMoves] Deleting from source: $packageId@$version" -ForegroundColor Red
-                Remove-PackageVersion -PkgsBaseUrl $pkgsBaseUrl -FeedId $SourceFeed -PackageId $packageId -Version $version -Headers $headers
-                
-                $deleteFromSourceCount++
-                $moveCount++
+                $done = $true
             }
-            
-            Write-Host ""  # New line after each package
+            else {
+                if ($attempt -ge $MaxPushRetries) {
+                    throw "push failed: $($pushResult.Out.Trim())"
+                }
+                Write-Warn2 "  $label — push failed (attempt $attempt/$MaxPushRetries); retrying"
+                Start-Sleep -Seconds ([Math]::Pow(2, $attempt))
+            }
         }
         catch {
-            $errorCount++
-            Write-Host ""
-            Write-Warning "Failed to process ${packageId}@${version}: $_"
+            if ($attempt -ge $MaxPushRetries) {
+                $failed++
+                # Flatten the (often multi-line) error to a single line so it
+                # renders cleanly in the console list and the Markdown summary.
+                $errText = ([string]$_ -replace '\s+', ' ').Trim()
+                $failedList.Add("$($item.Id) $($item.Version) :: $errText")
+                Write-Err2 "  $label — FAILED after $MaxPushRetries attempt(s): $errText"
+                $done = $true
+            }
+            else {
+                Write-Warn2 "  $label — error (attempt $attempt/$MaxPushRetries): $_ — retrying"
+                Start-Sleep -Seconds ([Math]::Pow(2, $attempt))
+            }
         }
-
-        # Rate limiting
-        Start-Sleep -Milliseconds 200
     }
 
-    # Clean up NuGet source
-    if ($sourceConfigured) {
-        & dotnet nuget remove source "AzDoDestFeed" 2>$null
-    }
-    
-    Write-Host ""
-    Write-Host "Move phase summary:" -ForegroundColor Cyan
-    if ($doDownloadAndUpload) {
-        Write-Host "  Copied to destination: $copyCount (skipped: $copySkipped)" -ForegroundColor Green
-    }
-    if ($doDeleteFromSource) {
-        Write-Host "  Deleted from source: $deleteFromSourceCount" -ForegroundColor Red
-    }
+    # Reclaim disk between packages. A single run can stream tens of GB of large
+    # native-asset packages (the CI feed's _NativeAssets* are ~23 MB each), and the
+    # runner has only ~14 GB free — so a successfully-processed .nupkg must NOT be
+    # left in the cache, or the disk fills and the runner process is killed mid-run.
+    # Safe: this only removes the local download, never anything already pushed.
+    if ($path -and (Test-Path $path)) { Remove-Item $path -Force -ErrorAction SilentlyContinue }
 }
 
-# Process deletes
-if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0 -and -not $script:CancelRequested) {
-    Write-Host ""
-    Write-Host "Deleting package versions..." -ForegroundColor Red
-    Write-Host "Press 'Q' at any time to cancel after current operation completes" -ForegroundColor Cyan
-    Write-Host ""
-    
-    $deleteIndex = 0
-    $totalDeletes = $versionsToDelete.Count
-    
-    foreach ($item in $versionsToDelete) {
-        $deleteIndex++
-        $packageId = $item.PackageId
-        $version = $item.Version
+# --- Summary -------------------------------------------------------------------
 
-        # Check for cancel request
-        if (Test-CancelRequested) {
-            Write-Host ""
-            Write-Host "Cancelled by user after $deleteIndex items" -ForegroundColor Yellow
-            break
+$remaining = $missing.Count - $processed
+Write-Host ""
+Write-Head "=================================================="
+Write-Head " Summary"
+Write-Head "=================================================="
+Write-Good  "  Copied           : $copied"
+Write-Info  "  Already present  : $skippedExisting"
+Write-Err2  "  Failed           : $failed"
+if ($timedOut)     { Write-Warn2 "  Not yet attempted: $remaining (timed out — re-run to continue)" }
+if ($limitReached) { Write-Warn2 "  Not yet attempted: $remaining (-Limit $Limit reached — re-run to continue)" }
+Write-Info  "  Elapsed          : $([Math]::Round((Get-ElapsedMinutes), 1)) min"
+Write-Host ""
+
+# Push results into the Markdown summary.
+Add-Summary "### Push results"
+Add-Summary ""
+Add-Summary "| Result | Count |"
+Add-Summary "|---|---:|"
+Add-Summary "| ✅ Copied | $copied |"
+Add-Summary "| ⏭️ Already present | $skippedExisting |"
+Add-Summary "| ❌ Failed | $failed |"
+if ($timedOut -or $limitReached) { Add-Summary "| ⏳ Not yet attempted | $remaining |" }
+Add-Summary ""
+if ($timedOut)     { Add-Summary "> ⏳ Stopped on the time budget with progress and no errors — re-run to continue (idempotent)." }
+if ($limitReached) { Add-Summary "> ⏹️ Stopped at -Limit $Limit with no errors — re-run to continue (idempotent)." }
+
+if ($failed -gt 0) {
+    Write-Err2 "The following package(s) failed — re-run to retry just these:"
+    foreach ($f in $failedList) { Write-Err2 "   - $f" }
+    Add-Summary ""
+    Add-Summary "#### ❌ Failed package(s) (re-run to retry just these)"
+    Add-Summary ""
+    foreach ($f in $failedList) { Add-Summary "- ``$f``" }
+    Save-Summary -Path $SummaryFile
+    exit 1
+}
+
+if ($timedOut -or $limitReached) {
+    $why = if ($timedOut) { "time budget" } else { "-Limit $Limit" }
+    Write-Warn2 "Stopped on $why with progress and no errors. Re-run to continue (idempotent)."
+    Save-Summary -Path $SummaryFile
+    exit 0
+}
+
+# --- End-of-run verification ---------------------------------------------------
+# Independently confirm the push actually landed: re-inventory the destination and
+# assert that every version we set out to copy is now present. This catches any
+# push that reported success but did not commit (e.g. a masked/soft failure).
+Write-Head "Verifying destination now contains every copied version..."
+try {
+    $verifyHeaders = Resolve-ReadHeaders -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Pat $Pat
+    $verifyInv = Get-FeedInventory -FeedsBaseUrl $dstFeedsUrl -FeedId $DestFeed -Headers $verifyHeaders -BatchSize $BatchSize -IncludeUnlisted
+    $verifyIndex = [System.Collections.Generic.HashSet[string]]::new()
+    foreach ($e in $verifyInv) { [void]$verifyIndex.Add((Get-EntryKey -Id $e.Id -NVer $e.NVer)) }
+
+    $stillMissing = [System.Collections.Generic.List[string]]::new()
+    foreach ($item in $missing) {
+        if (-not $verifyIndex.Contains((Get-EntryKey -Id $item.Id -NVer $item.NVer))) {
+            $stillMissing.Add("$($item.Id) $($item.Version)")
         }
-
-        Write-Progress -Id 0 -Activity "Deleting versions" -Status "$packageId@$version" -PercentComplete (($deleteIndex / $totalDeletes) * 100) -CurrentOperation "$deleteIndex of $totalDeletes"
-        Write-Status "  [$deleteIndex/$totalDeletes] Deleting: $packageId@$version" -ForegroundColor Red
-
-        try {
-            Remove-PackageVersion -PkgsBaseUrl $pkgsBaseUrl -FeedId $SourceFeed -PackageId $packageId -Version $version -Headers $headers
-            $deleteCount++
-        }
-        catch {
-            $errorCount++
-            Write-Host ""
-            Write-Warning "Failed to delete ${packageId}@${version}: $_"
-        }
-
-        # Rate limiting
-        Start-Sleep -Milliseconds 100
     }
 
-    Write-Progress -Activity "Deleting versions" -Completed
+    if ($stillMissing.Count -gt 0) {
+        Write-Err2 "VERIFICATION FAILED: $($stillMissing.Count) version(s) reported pushed but are NOT in the destination."
+        Add-Summary ""
+        Add-Summary "### ❌ Verification failed"
+        Add-Summary ""
+        Add-Summary "$($stillMissing.Count) version(s) were reported as pushed but are not present in the destination on re-inventory. Re-run to retry."
+        Add-Summary ""
+        foreach ($m in ($stillMissing | Select-Object -First 50)) { Add-Summary "- ``$m``" }
+        Save-Summary -Path $SummaryFile
+        exit 1
+    }
+    Write-Good "  Verified: all $($missing.Count) version(s) are present in the destination."
+}
+catch {
+    Write-Err2 "VERIFICATION could not complete (could not re-read destination): $_"
+    Add-Summary ""
+    Add-Summary "### ⚠️ Could not verify"
+    Add-Summary ""
+    Add-Summary "The push loop completed but the destination re-inventory failed, so the result is unconfirmed. Re-run to verify (idempotent)."
+    Save-Summary -Path $SummaryFile
+    exit 1
 }
 
-# Summary
-Write-Host ""
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "Execution Complete" -ForegroundColor Cyan
-Write-Host "========================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "  Versions deleted: $deleteCount" -ForegroundColor Red
-Write-Host "  Packages moved:   $moveCount" -ForegroundColor Yellow
-Write-Host "  Errors:           $errorCount" -ForegroundColor $(if ($errorCount -gt 0) { "Red" } else { "Green" })
-Write-Host ""
-
-if ($errorCount -gt 0) {
-    Write-Host "Some operations failed. Re-run the script to retry." -ForegroundColor Yellow
-}
+Write-Good "All missing packages processed and verified successfully."
+Add-Summary ""
+Add-Summary "✅ All missing packages processed and verified present in the destination."
+Save-Summary -Path $SummaryFile
+exit 0
 
 #endregion

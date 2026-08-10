@@ -21,10 +21,9 @@ environment: gh-aw-agents
 # -- Engine ------------------------------------------------------------
 # Leak reasoning (ownership tracing + a correct minimal fix) is hard and
 # benefits from the stronger model, matching auto-skia-sync's choice.
+model: claude-opus-4.8
 engine:
   id: copilot
-  model: claude-opus-4.8
-
 # -- Triggers ----------------------------------------------------------
 # Every 12h + manual + PR-driven self-test. Every run does the same full
 # scan→prove→fix→file pipeline; the knobs are `dry_run` (do everything but open

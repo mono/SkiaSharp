@@ -23,10 +23,9 @@ environment: gh-aw-agents
 # Perf reasoning (a faithful, bit-exact optimization that must not change
 # rendering output) is hard and benefits from the stronger model, matching
 # memory-leak-fixer's choice.
+model: claude-opus-4.8
 engine:
   id: copilot
-  model: claude-opus-4.8
-
 # -- Triggers ----------------------------------------------------------
 # Every 12h + manual + PR-driven self-test. Every run does the same full
 # scan→prove-faster→prove-identical→fix→file pipeline; the knobs are `dry_run`
