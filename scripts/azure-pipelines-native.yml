@@ -3,6 +3,7 @@ trigger:
     include:
       - main
       - release/*
+      - dev/dnceng-pipelines
   paths:
     exclude:
       - .devcontainer/**
@@ -72,9 +73,10 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     # dnceng 1ES internal pools are network-isolated; SkiaSharp's native build
-    # clones external submodules (chromium depot_tools + skia), so allow egress.
+    # clones external submodules (chromium depot_tools + skia), so allow clean
+    # source endpoints used by the .NET internal pipelines.
     settings:
-      networkIsolationPolicy: Permissive
+      networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
