@@ -1024,7 +1024,12 @@ built from. It is timestamp-free and includes, at minimum:
 - `harfbuzz` on released pages — `{ "version", "api_diff_link", "prs" }` for the
   co-shipped HarfBuzzSharp section (§4.5). It is absent on `-unreleased` pages.
 - `prs` — the flat PR map, including title, URL, author, `community`, and the
-  deterministic `tag` (`product`, `mixed`, or `internal`). Each entry may also carry
+  deterministic `tag` (`product`, `mixed`, or `internal`). `[skia-sync]` entries
+  whose maintainer author was authoritatively verified may also carry a bounded
+  `details` list of upstream commit IDs and subjects parsed from recognized
+  squash-commit bullets. This gives the offline Polish agent concrete fixes hidden
+  by a generic PR title without exposing arbitrary body/report prose. Each entry may
+  also carry
   `fixes` — the sorted list of issue numbers the PR closes — emitted **only when
   non-empty** so pages with no issue-closing PRs stay byte-identical. It is the union of
   GitHub's linked-issue graph (`closingIssuesReferences`, the source of truth, batched

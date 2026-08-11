@@ -191,6 +191,11 @@ For Skia syncs, count each distinct product `prs` entry whose title starts with
 `[skia-sync]` as one sync round. Keep a targeted detail scoped to the PR that
 actually names it: if one of four rounds names Ganesh, say four rounds including
 one targeted Ganesh update, not four Ganesh rounds or fewer total rounds.
+Generic sync titles may carry a `details` list of upstream commit IDs and subjects,
+deterministically extracted from a verified maintainer squash commit. Treat those
+subjects as factual source material: when they identify specific consumer-visible
+failures or fixes, name those concrete effects instead of reducing them to generic
+"maintenance rounds."
 - Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
 - Bad: `{"heading": "Bugfixes", …}` (not one of the six) · one bullet per PR restating its title · a section that lists 20 internal PRs.
 
@@ -221,8 +226,9 @@ Never mention a CVE, vulnerability, or security fix/release in teaser prose.
 
 Curate each teaser from that shipment's exact-delta `product` PRs and any
 consumer-facing `mixed` PRs. Do not add internal/test-only work. When a generic
-sync PR title does not identify a specific consumer-visible fix, describe it
-honestly as an upstream engine maintenance round rather than inventing details.
+sync PR title has `details`, use its concrete consumer-visible fixes. Only when
+neither the title nor `details` identifies one should you describe it honestly as
+an upstream engine maintenance round rather than inventing details.
 Dependency updates must be neutral version updates. Do not copy the cumulative
 website `Security` section into `Dependency Updates`; independently curate only
 native dependency PRs from the exact shipment. The renderer owns Markdown

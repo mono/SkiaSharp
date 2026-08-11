@@ -320,7 +320,7 @@ tools:
   # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
   # mistake: the agent created a branch but never committed, so gh-aw's patch
   # generator fell back to diffing months of history and exceeded the PR file cap.
-  bash: ["cat", "grep", "sort", "head", "tail", "git", "python3"]
+  bash: ["cat", "grep", "sort", "head", "tail", "jq", "git", "python3"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}

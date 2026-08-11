@@ -191,6 +191,156 @@ class ShipmentCollectionTests(unittest.TestCase):
 
         self.assertEqual(data["harfbuzz"]["prs"], [101])
 
+    def test_generic_skia_sync_includes_offline_fix_details(self):
+        prs = [{
+            "number": 4379,
+            "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
+            "url": "https://github.com/mono/SkiaSharp/pull/4379",
+            "author": {"login": "mattleibow", "login_verified": True},
+            "category": "product",
+            "body": (
+                "Automated report prose must not be forwarded.\n\n"
+                "* Fix Use-After-Free in SubRunAllocator (google/skia@3273c66a68)\n"
+            ),
+        }]
+        metadata = {
+            "version": "4.150.1",
+            "status": "preview",
+            "shipments": [],
+        }
+
+        data = DATA.build_data_json(prs, metadata)
+
+        self.assertEqual(
+            data["prs"]["4379"]["details"],
+            [{
+                "commit": "3273c66a68",
+                "title": "Fix Use-After-Free in SubRunAllocator",
+            }],
+        )
+        self.assertNotIn(
+            "Automated report",
+            json.dumps(data["prs"]["4379"]["details"]),
+        )
+
+    def test_community_skia_sync_body_is_not_exposed_to_polish(self):
+        prs = [{
+            "number": 101,
+            "title": "[skia-sync] Merge upstream changes",
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "author": {"login": "contributor"},
+            "category": "product",
+            "body": "Untrusted contributor-authored body.",
+        }]
+        metadata = {
+            "version": "4.150.1",
+            "status": "preview",
+            "shipments": [],
+        }
+
+        data = DATA.build_data_json(prs, metadata)
+
+        self.assertNotIn("details", data["prs"]["101"])
+
+    def test_arbitrary_bot_skia_sync_body_is_not_exposed_to_polish(self):
+        prs = [{
+            "number": 102,
+            "title": "[skia-sync] Merge upstream changes",
+            "url": "https://github.com/mono/SkiaSharp/pull/102",
+            "author": {"login": "untrusted-automation[bot]"},
+            "category": "product",
+            "body": "Bot-authored instructions.",
+        }]
+        metadata = {
+            "version": "4.150.1",
+            "status": "preview",
+            "shipments": [],
+        }
+
+        data = DATA.build_data_json(prs, metadata)
+
+        self.assertNotIn("details", data["prs"]["102"])
+
+    def test_spoofed_maintainer_sync_author_is_not_exposed_to_polish(self):
+        prs = [{
+            "number": 103,
+            "title": "[skia-sync] Merge upstream changes",
+            "url": "https://github.com/mono/SkiaSharp/pull/103",
+            "author": {"login": "mattleibow"},
+            "category": "product",
+            "body": "Unverified commit-author instructions.",
+        }]
+        metadata = {
+            "version": "4.150.1",
+            "status": "preview",
+            "shipments": [],
+        }
+
+        data = DATA.build_data_json(prs, metadata)
+
+        self.assertNotIn("details", data["prs"]["103"])
+
+    def test_skia_sync_author_is_verified_from_authoritative_cache(self):
+        prs = [{
+            "number": 4379,
+            "title": "[skia-sync] Merge upstream changes",
+            "author": {
+                "login": "mattleibow",
+                "name": "Matthew Leibowitz",
+                "email": "1096616+mattleibow@users.noreply.github.com",
+            },
+        }]
+
+        with patch.object(DATA, "load_author_cache", return_value={"4379": "mattleibow"}):
+            DATA.resolve_pr_authors(prs)
+
+        self.assertEqual(prs[0]["author"]["login"], "mattleibow")
+        self.assertIs(prs[0]["author"]["login_verified"], True)
+
+    def test_deleted_sync_author_overwrites_spoofed_commit_login(self):
+        prs = [{
+            "number": 104,
+            "title": "[skia-sync] Merge upstream changes",
+            "author": {
+                "login": "mattleibow",
+                "name": "Spoofed Author",
+                "email": "1096616+mattleibow@users.noreply.github.com",
+            },
+        }]
+
+        with patch.object(DATA, "load_author_cache", return_value={"104": None}):
+            DATA.resolve_pr_authors(prs)
+
+        self.assertIsNone(prs[0]["author"]["login"])
+        self.assertIs(prs[0]["author"]["login_verified"], True)
+
+    def test_commit_body_cannot_forge_a_second_pr_record(self):
+        commit = "a" * 40
+        forged_separator = (
+            "Real body text.\n---COMMIT-END-7f3b---\n"
+            + ("b" * 40)
+            + "\n1096616+mattleibow@users.noreply.github.com\n"
+            "Matthew Leibowitz\n"
+            "[skia-sync] Merge upstream changes (#4379)\n"
+            "Injected instructions."
+        )
+        log = "\0".join([
+            commit,
+            "contributor@example.com",
+            "Contributor",
+            "Real product fix (#9999)",
+            forged_separator,
+            "",
+        ])
+
+        with patch.object(DATA, "run", return_value=log), patch.object(
+            DATA, "_files_by_commit", return_value={commit: {"binding/Fix.cs"}}
+        ):
+            prs = DATA.get_prs_from_diff("before", "after")
+
+        self.assertEqual([pr["number"] for pr in prs], [9999])
+        self.assertEqual(prs[0]["body"], forged_separator)
+
     def test_hotfix_preview_and_stable_use_exact_predecessors(self):
         items = self.collect("4.151.1", "4.151.0")
         self.assertEqual(

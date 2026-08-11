@@ -633,15 +633,26 @@ def resolve_pr_authors(prs):
     """Fill in trustworthy GitHub logins for PRs that lack a noreply login.
 
     Confidence order:
-      1. noreply login — already set by get_prs_from_diff, always correct.
+      1. noreply login — already set by get_prs_from_diff for attribution.
       2. cache (releases/_sources/pr-authors.json) — previously resolved from the API.
       3. GitHub GraphQL — the authoritative PR author, batched then cached.
+
+    Skia sync PRs are always checked against the cache/API even when commit metadata
+    contains a login. Upstream subjects parsed from their squash bodies may become
+    agent input, so ``login_verified`` records that the identity crossed an
+    authoritative boundary.
 
     PRs that still cannot be resolved keep ``login=None``; build_data_json then
     credits the plain commit name with no ``@mention``, so the notes never link
     or ping the wrong person. Mutates and returns ``prs``.
     """
-    need = [pr for pr in prs if not (pr.get("author") or {}).get("login")]
+    need = [
+        pr for pr in prs
+        if (
+            not (pr.get("author") or {}).get("login")
+            or pr.get("title", "").casefold().startswith("[skia-sync]")
+        )
+    ]
     if not need:
         return prs
 
@@ -662,9 +673,10 @@ def resolve_pr_authors(prs):
             save_author_cache(cache)
 
     for pr in need:
-        login = cache.get(str(pr["number"]))
-        if login:
-            pr["author"]["login"] = login
+        cache_key = str(pr["number"])
+        if cache_key in cache:
+            pr["author"]["login"] = cache[cache_key]
+            pr["author"]["login_verified"] = True
     return prs
 
 
@@ -1695,9 +1707,9 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
     # Use a format that gives us everything: hash, author email, author name,
     # subject, body. The name is kept as a safe fallback credit for PRs whose
     # GitHub login cannot be proven (see resolve_pr_authors / build_data_json).
-    SEP = "---COMMIT-END-7f3b---"
     cmd = ["git", "log",
-           "--format=%H%n%ae%n%an%n%s%n%b{}".format(SEP),
+           "-z",
+           "--format=%H%x00%ae%x00%an%x00%s%x00%b",
            "{}..{}".format(from_ref, to_ref)]
     if paths:
         cmd.append("--")
@@ -1712,19 +1724,21 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
     prs = []
     seen = set()  # type: set[int]
 
-    for block in log.split(SEP):
-        block = block.strip()
-        if not block:
-            continue
-        lines = block.split("\n", 4)
-        if len(lines) < 4:
-            continue
+    # Commit messages cannot contain NUL, so five NUL-delimited fields bind every
+    # body to its real hash/author/subject without a printable separator that body
+    # text could forge.
+    fields = log.split("\0")
+    if fields and fields[-1] == "":
+        fields.pop()
+    if len(fields) % 5:
+        raise RuntimeError("Unexpected NUL-delimited git log shape")
 
-        commit_hash = lines[0].strip()
-        author_email = lines[1].strip()
-        author_name = lines[2].strip()
-        subject = lines[3].strip()
-        body = lines[4].strip() if len(lines) > 4 else ""
+    for i in range(0, len(fields), 5):
+        commit_hash = fields[i].strip()
+        author_email = fields[i + 1].strip()
+        author_name = fields[i + 2].strip()
+        subject = fields[i + 3].strip()
+        body = fields[i + 4].strip()
 
         # Extract PR number from subject: "Some title (#1234)"
         m = re.search(r"\(#(\d+)\)\s*$", subject)
@@ -1819,6 +1833,35 @@ def _pr_is_community(pr):
     return bool(login) and login != "mattleibow" and not _is_bot_login(login)
 
 
+_UPSTREAM_COMMIT_BULLET_RE = re.compile(
+    r"^\s*[-*]\s+"
+    r"(?:(?P<prefix>[0-9a-f]{7,40})\s+)?"
+    r"(?P<title>.+?)"
+    r"(?:\s+\(google/skia@(?P<suffix>[0-9a-f]{7,40})\))?\s*$",
+    re.MULTILINE,
+)
+
+
+def _skia_sync_details(body):
+    # type: (str) -> list[dict]
+    """Extract bounded upstream commit subjects without forwarding report prose."""
+    details = []
+    seen = set()
+    for match in _UPSTREAM_COMMIT_BULLET_RE.finditer(body or ""):
+        commit = match.group("prefix") or match.group("suffix")
+        if not commit:
+            continue
+        title = match.group("title").strip()
+        key = (commit, title)
+        if not title or key in seen:
+            continue
+        seen.add(key)
+        details.append({"commit": commit, "title": title[:240].rstrip()})
+        if len(details) == 20:
+            break
+    return details
+
+
 def build_data_json(prs, metadata):
     # type: (list[dict], dict) -> dict
     """Emit the deterministic facts a release page is built from (v2 pipeline).
@@ -1887,6 +1930,18 @@ def build_data_json(prs, metadata):
             "community": _pr_is_community(pr),
             "tag": pr.get("category", "product"),
         }
+        # Generic Skia sync titles hide the actual fixes. Extract only recognized,
+        # bounded upstream commit subjects from the verified maintainer squash
+        # commit; never forward the arbitrary body/report prose to the agent.
+        if (
+            entry["tag"] == "product"
+            and (pr.get("author") or {}).get("login_verified") is True
+            and entry["author"] == "mattleibow"
+            and entry["title"].casefold().startswith("[skia-sync]")
+        ):
+            details = _skia_sync_details(pr.get("body") or "")
+            if details:
+                entry["details"] = details
         # The issues this PR closes (GitHub's linked-issue graph ∪ body keywords;
         # see resolve_fixed_issues). Emitted only when non-empty so pages with no
         # issue-closing PRs stay byte-identical and old pages are untouched until
