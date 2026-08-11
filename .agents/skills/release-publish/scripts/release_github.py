@@ -15,8 +15,8 @@ import release_publish as publish
 
 GITHUB_REPOSITORY = "mono/SkiaSharp"
 DOCS_WORKFLOW = "Sync - Release Notes & API Diffs"
-TEASER_START_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:START -->"
-TEASER_END_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:END -->"
+SUMMARY_START_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:START -->"
+SUMMARY_END_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:END -->"
 GENERATED_NOTES_START_MARKER = (
     "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
 )
@@ -64,6 +64,12 @@ def previous_release_tag(
     current_tag: str,
     tags: list[str],
 ) -> str:
+    """Choose the generated-notes base.
+
+    Prereleases compare to the immediately preceding exact publication. Stable
+    releases compare to the preceding stable tag so their collapsed generated
+    notes match the cumulative website rollup.
+    """
     current = TagVersion.parse(current_tag)
     if current is None:
         raise publish.PublishError(f"invalid current tag {current_tag}")
@@ -73,6 +79,7 @@ def previous_release_tag(
         if tag != current_tag
         if (item := TagVersion.parse(tag))
         if item.sort_key < current.sort_key
+        if current.channel is not None or item.channel is None
     ]
     if not previous:
         raise publish.PublishError(
@@ -243,8 +250,8 @@ def generated_log_parts(body: str) -> tuple[str | None, str, int]:
 def mark_generated_notes(generated_notes: str) -> str:
     """Wrap GitHub's exact generated payload without normalizing its bytes."""
     return (
-        f"{TEASER_START_MARKER}\n"
-        f"{TEASER_END_MARKER}\n\n"
+        f"{SUMMARY_START_MARKER}\n"
+        f"{SUMMARY_END_MARKER}\n\n"
         f"{GENERATED_NOTES_START_MARKER}\n"
         f"{generated_notes}"
         f"{GENERATED_NOTES_END_MARKER}\n"
@@ -256,8 +263,8 @@ def extract_generated_notes(body: str) -> str:
     start = body.find(start_token)
     end = body.find(GENERATED_NOTES_END_MARKER)
     if (
-        body.count(TEASER_START_MARKER) != 1
-        or body.count(TEASER_END_MARKER) != 1
+        body.count(SUMMARY_START_MARKER) != 1
+        or body.count(SUMMARY_END_MARKER) != 1
         or body.count(GENERATED_NOTES_START_MARKER) != 1
         or body.count(GENERATED_NOTES_END_MARKER) != 1
         or start < 0

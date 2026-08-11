@@ -76,7 +76,7 @@ class PublishReleaseTests(unittest.TestCase):
         )
         self.assertEqual(previous, "v4.152.0-preview.2.1")
 
-    def test_previous_tag_orders_stable_and_hotfix_releases(self):
+    def test_stable_generated_notes_roll_up_from_previous_stable(self):
         self.assertEqual(
             github.previous_release_tag(
                 "v4.152.0",
@@ -86,7 +86,7 @@ class PublishReleaseTests(unittest.TestCase):
                     "v4.152.0-rc.1.1",
                 ],
             ),
-            "v4.152.0-rc.1.1",
+            "v4.151.1",
         )
         self.assertEqual(
             github.previous_release_tag(
@@ -148,8 +148,8 @@ class PublishReleaseTests(unittest.TestCase):
 """
         body = github.mark_generated_notes(generated)
         self.assertEqual(github.extract_generated_notes(body), generated)
-        self.assertEqual(body.count(github.TEASER_START_MARKER), 1)
-        self.assertEqual(body.count(github.TEASER_END_MARKER), 1)
+        self.assertEqual(body.count(github.SUMMARY_START_MARKER), 1)
+        self.assertEqual(body.count(github.SUMMARY_END_MARKER), 1)
 
     def test_unmarked_generated_notes_are_rejected(self):
         with self.assertRaisesRegex(

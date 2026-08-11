@@ -3,7 +3,7 @@
 # prepare.sh — the release-notes PREPARE phase (network).
 #
 # This is a thin ENTRYPOINT that lives with the skill; the real engine code lives in
-# scripts/infra/docs/ (release-notes-data.py / release-notes-index.py, beside the Cake
+# scripts/infra/docs/release_notes/ (generate.py / index.py, beside the Cake
 # api-diff engine they run with). The skill always calls this stable path; edit the
 # engine under scripts/infra/docs/ and this keeps working.
 #
@@ -11,9 +11,9 @@
 # required order:
 #   1. API diffs        (Cake docs-api-diff)  — the committed releases/<line>/ trees
 #                                                + the co-release map sidecar.
-#   2. Page facts        (release-notes-data.py)   — _sources/<version>.data.json + the
-#                                                Files-to-polish page list.
-#   3. Index data        (release-notes-index.py)  — _sources/index.json (Chrome schedule
+#   2. Page inputs       (generate.py) — atomic _sources/<version>.data.json +
+#                                     _sources/<version>.context.md + polish list.
+#   3. Index data        (index.py) — _sources/index.json (Chrome schedule
 #                                                + live-head set) for the offline render.
 #
 # All three engines are INCREMENTAL: with no flags they skip work whose output is
@@ -26,8 +26,9 @@
 #   --max-version Y      Upper bound (inclusive); set equal to --min-version for a
 #                        single version.
 #
-# After this finishes, the AI fully rewrites each page named in
-# output/files-to-polish.txt, then render.sh builds the Markdown. See SKILL.md.
+# After this finishes, the AI reads each context path named in
+# output/files-to-polish.txt and rewrites its frontmatter-named prose file, then
+# render.sh builds the Markdown. See SKILL.md.
 #
 # Requires: dotnet (Cake), python3, git history, and gh (PR authors). Any missing
 # tool aborts with a clear message — do not work around it.
@@ -38,11 +39,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 cd "$REPO_ROOT"
 
-# The engine scripts live under scripts/infra/docs/ (next to the Cake api-diff engine);
+# The engine package lives under scripts/infra/docs/release_notes/;
 # this entrypoint stays in the skill and points at them.
-ENGINE_DIR="$REPO_ROOT/scripts/infra/docs"
-BUILD_DATA_PY="$ENGINE_DIR/release-notes-data.py"
-BUILD_INDEX_PY="$ENGINE_DIR/release-notes-index.py"
+ENGINE_DIR="$REPO_ROOT/scripts/infra/docs/release_notes"
+BUILD_DATA_PY="$ENGINE_DIR/generate.py"
+BUILD_INDEX_PY="$ENGINE_DIR/index.py"
 
 FORCE=""
 MIN=""
@@ -71,16 +72,17 @@ echo "==> Prepare [1/3]: API diffs (Cake docs-api-diff) — verbose"
 dotnet tool restore
 dotnet cake "${cake_args[@]}"
 
-# --- 2. Page facts (release-notes-data.py). Same flags, Python syntax. ---
+# --- 2. Page facts + agent context. Same flags, Python syntax. ---
 py_args=()
 [ -n "$FORCE" ] && py_args+=(--force)
 [ -n "$MIN" ]   && py_args+=(--min-version "$MIN")
 [ -n "$MAX" ]   && py_args+=(--max-version "$MAX")
-echo "==> Prepare [2/3]: page facts (release-notes-data.py) — verbose"
-python3 "$BUILD_DATA_PY" "${py_args[@]:+${py_args[@]}}" --polish-list output/files-to-polish.txt
+echo "==> Prepare [2/3]: page data + agent context (generate.py) — verbose"
+python3 "$BUILD_DATA_PY" "${py_args[@]:+${py_args[@]}}" \
+  --polish-list output/files-to-polish.txt
 
-# --- 3. Index data (release-notes-index.py). Network-sourced; no scope (it is repo-global). ---
-echo "==> Prepare [3/3]: index data (release-notes-index.py) — verbose"
+# --- 3. Index data. Network-sourced; no scope (it is repo-global). ---
+echo "==> Prepare [3/3]: index data (index.py) — verbose"
 python3 "$BUILD_INDEX_PY"
 
 echo "==> Prepare complete. Files to polish:"

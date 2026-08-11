@@ -10,7 +10,7 @@
     "breaking",
     "categories",
     "contributor_summaries",
-    "release_teasers"
+    "release_summaries"
   ],
   "properties": {
     "theme": {
@@ -114,15 +114,15 @@
     },
     "preview_summaries": {
       "type": "object",
-      "description": "Website summaries for rolled-up preview tags owned by another numeric page core, plus compatibility for pre-format-4 pages. A preview owned by this page uses release_teasers[tag].website_summary.",
+      "description": "Compatibility for historical prose files. New prose uses release_summaries.",
       "additionalProperties": {
         "type": "string",
         "maxLength": 500
       }
     },
-    "release_teasers": {
+    "release_summaries": {
       "type": "object",
-      "description": "Teaser prose keyed by the exact leading-v shipment tag. When a page's facts change or generation is forced, Polish recreates every non-empty shipment teaser.",
+      "description": "Evergreen present-tense summaries keyed by exact leading-v prerelease tags. These summaries serve both website milestone sections and managed GitHub Release introductions. Stable GitHub Releases use the cumulative highlights instead.",
       "propertyNames": {
         "pattern": "^v[0-9]+(?:\\.[0-9]+){2,3}(?:-(?:alpha|beta|preview|rc)(?:\\.[0-9]+)+)?$"
       },
@@ -130,69 +130,22 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "subtitle",
-          "categories"
+          "summary",
+          "prs"
         ],
         "properties": {
-          "subtitle": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 240,
-            "description": "Neutral one-line release subtitle. Do not mention CVEs, security fixes, or vulnerabilities."
-          },
-          "website_summary": {
+          "summary": {
             "type": "string",
             "minLength": 1,
             "maxLength": 500,
-            "description": "Optional 1-2 sentence summary used by the cumulative website preview/RC section when this exact tag is its key."
+            "description": "One or two timeless present-tense sentences, such as 'Adds animated WebP encoding and fixes the SKPath finalizer crash.' Avoid historical 'added/landed' and future 'will add' phrasing."
           },
-          "categories": {
+          "prs": {
             "type": "array",
-            "description": "Curated non-empty teaser categories. The renderer emits them in canonical order and omits absent headings.",
+            "description": "The most relevant PRs grounding this summary. Every number must belong to this exact release or rollup milestone.",
+            "uniqueItems": true,
             "items": {
-              "type": "object",
-              "additionalProperties": false,
-              "required": [
-                "heading",
-                "bullets"
-              ],
-              "properties": {
-                "heading": {
-                  "enum": [
-                    "Breaking Changes",
-                    "What's New",
-                    "Fixes",
-                    "Dependency Updates"
-                  ]
-                },
-                "bullets": {
-                  "type": "array",
-                  "minItems": 1,
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": [
-                      "text",
-                      "prs"
-                    ],
-                    "properties": {
-                      "text": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 240
-                      },
-                      "prs": {
-                        "type": "array",
-                        "minItems": 1,
-                        "uniqueItems": true,
-                        "items": {
-                          "type": "integer"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+              "type": "integer"
             }
           }
         }

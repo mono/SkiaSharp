@@ -92,13 +92,17 @@ drift because each path has a single canonical entry point.
 | `api-diff-tools.cake` | shared NuGet-diff comparer + layout helpers, `#load`ed by both `api-diff.cake` and `docs.cake` |
 | `versions.json` | the **only** override surface — supersession + comparison baselines, honored identically by the Cake and Python engines |
 | `generate-api-docs.sh` | **Path 3** runner → `cake update-docs` (mdoc under mono) |
-| `release-notes-data.py` | Path 2 release-notes engine (artifact **3**): per-page `_sources/<v>.data.json` facts + Files-to-polish list |
-| `release-notes-index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
-| `release-notes-render.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
-| `release-notes-schema/prose.schema.json` | the prose contract the Polish agent fills |
+| `release_notes/common.py` | shared version/config/path helpers for the package |
+| `release_notes/sources.py` | git/GitHub fact collection and exhaustive path classification |
+| `release_notes/model.py` | exact shipments, preview rollups, canonical data, and agent context |
+| `release_notes/generate.py` | Path 2 release-notes CLI (artifact **3**): atomic per-page `_sources/<v>.data.json` + `_sources/<v>.context.md` + Files-to-polish list |
+| `release_notes/index.py` | Path 2 index engine: `_sources/index.json` (Chrome schedule + live-head set) |
+| `release_notes/render.py` | Path 2 renderer: all Markdown (pages + `TOC.yml` + `index.md`) |
+| `release_notes/schema/prose.schema.json` | the prose contract the Polish agent fills |
+| `release_notes/update_github_summaries.py` | zero-AI managed GitHub Release summary convergence |
 | `docker/` | the local reproducibility image + `run.sh` wrapper; its `api-diffs` subcommand invokes `docs-api-diff` directly |
-| *(in the `release-notes` skill)* `prepare.sh` | Prepare entrypoint → `docs-api-diff` → `release-notes-data.py` → `release-notes-index.py`; accepts `--force` / `--min-version` / `--max-version` |
-| *(in the skill)* `render.sh` | Polish-Finalize entrypoint: offline `release-notes-render.py --all` (same three flags for a uniform interface) |
+| *(in the `release-notes` skill)* `prepare.sh` | Prepare entrypoint → `docs-api-diff` → `release_notes/generate.py` → `release_notes/index.py`; accepts `--force` / `--min-version` / `--max-version` |
+| *(in the skill)* `render.sh` | Polish-Finalize entrypoint: offline `release_notes/render.py --all` (same three flags for a uniform interface) |
 | *(committed under `releases/_sources/`)* `pr-authors.json` | PR-author cache for the release-notes engine (offline author resolution) |
 
 Each path's **entry point** is its single source of truth: a developer, the CI
@@ -137,10 +141,11 @@ Three Copilot skills drive or assist these paths (`.agents/skills/`):
 The `release-notes` skill exposes the whole Path 2 engine through two thin
 entrypoints under its own `scripts/`: `scripts/prepare.sh` is the Prepare
 orchestrator — it calls the `docs-api-diff` Cake target directly, then the engine's
-`release-notes-data.py` and `release-notes-index.py`; `scripts/render.sh` is the
-offline finalizer around `release-notes-render.py --all`. The engine those
-entrypoints run — `release-notes-data.py`, `release-notes-index.py`,
-`release-notes-render.py` — lives under `scripts/infra/docs/` alongside the API-diff
+`release_notes/generate.py` and `release_notes/index.py`; `scripts/render.sh` is the
+offline finalizer around `release_notes/render.py --all`. The engine those
+entrypoints run — `release_notes/generate.py`, `release_notes/index.py`,
+`release_notes/render.py` — lives together under the
+`scripts/infra/docs/release_notes/` package alongside its schema and tests; the API-diff
 and mdoc engines; the shared, general-purpose Cake machinery (`shared.cake`,
 `download.cake`) stays under `scripts/infra/shared/`.
 

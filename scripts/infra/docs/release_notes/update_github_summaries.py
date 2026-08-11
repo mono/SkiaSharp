@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Deterministically update reviewed GitHub Release teasers.
+"""Apply reviewed release summaries to managed GitHub Release bodies.
 
-The release-notes workflow owns teaser prose and Markdown rendering. This script
+The release-notes workflow owns summary prose and Markdown rendering. This script
 only selects exact tags, expands deterministic links, and replaces the managed
-teaser bytes in an already-marked GitHub Release body.
+summary bytes in an already-marked GitHub Release body.
 """
 
 from __future__ import annotations
@@ -21,6 +21,12 @@ import sys
 from typing import Callable
 from urllib import error, parse, request
 
+PACKAGE_PARENT = Path(__file__).resolve().parent.parent
+if str(PACKAGE_PARENT) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_PARENT))
+
+from release_notes import common
+
 
 REPOSITORY_DEFAULT = "mono/SkiaSharp"
 SOURCES_DIR = PurePosixPath("documentation/docfx/releases/_sources")
@@ -32,14 +38,11 @@ SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 REPOSITORY_RE = re.compile(
     r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
 )
-TAG_RE = re.compile(
-    r"^v\d+(?:\.\d+){2,3}"
-    r"(?:-(?:alpha|beta|preview|rc)(?:\.\d+)+)?$"
-)
+TAG_RE = common.EXACT_RELEASE_TAG_RE
 CORE_VERSION_RE = re.compile(r"^\d+(?:\.\d+){2,3}$")
 
-TEASER_START_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:START -->"
-TEASER_END_MARKER = "<!-- SKIASHARP:RELEASE-TEASER:END -->"
+SUMMARY_START_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:START -->"
+SUMMARY_END_MARKER = "<!-- SKIASHARP:RELEASE-SUMMARY:END -->"
 GENERATED_START_MARKER = (
     "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:START -->"
 )
@@ -98,11 +101,11 @@ class UpdateResult:
         self.entries.append(ResultEntry(tag, status, detail))
 
     def markdown(self, *, error_message: str | None = None) -> str:
-        lines = ["## GitHub Release teaser updater", ""]
+        lines = ["## GitHub Release summary updater", ""]
         if error_message:
             lines.extend(["**Failed:** {}".format(error_message), ""])
         if not self.entries:
-            lines.append("No reviewed release teaser changes were eligible.")
+            lines.append("No reviewed release summary changes were eligible.")
             return "\n".join(lines) + "\n"
         lines.extend([
             "| Tag | Result | Detail |",
@@ -220,13 +223,13 @@ def _parse_object(text: str, source: str) -> dict:
     return value
 
 
-def _teaser_map(prose: dict | None) -> dict:
-    teasers = (prose or {}).get("release_teasers")
-    if teasers is None:
+def _summary_map(prose: dict | None) -> dict:
+    summaries = (prose or {}).get("release_summaries")
+    if summaries is None:
         return {}
-    if not isinstance(teasers, dict):
-        raise UpdateError("release_teasers must be a JSON object")
-    return teasers
+    if not isinstance(summaries, dict):
+        raise UpdateError("release_summaries must be a JSON object")
+    return summaries
 
 
 def _shipment_map(data: dict | None, source: str) -> dict[str, dict]:
@@ -259,10 +262,6 @@ def _is_unreleased(prose_path: str) -> bool:
     return bool(match and match.group("version").endswith("-unreleased"))
 
 
-def _is_empty_stable(shipment: dict) -> bool:
-    return shipment.get("channel") == "stable" and not shipment.get("prs")
-
-
 def _candidate(
     tag: str,
     prose_path: str,
@@ -275,7 +274,7 @@ def _candidate(
     shipment = shipments.get(tag)
     if shipment is None:
         raise UpdateError(
-            "{} teaser has no exact shipment facts in {}".format(
+            "{} summary has no exact shipment facts in {}".format(
                 tag, _data_path(prose_path))
         )
     public_version = shipment.get("public_version")
@@ -323,41 +322,46 @@ def select_push_candidates(
         new_prose = repository.json_at(after, prose_path)
         if new_prose is None:
             continue
-        old_teasers = _teaser_map(old_prose)
-        new_teasers = _teaser_map(new_prose)
         data_path = _data_path(prose_path)
         new_data = repository.json_at(after, data_path)
         if new_data is None:
             raise UpdateError("{} is missing".format(data_path))
-
-        changed_tags = {
-            tag for tag, teaser in new_teasers.items()
-            if old_teasers.get(tag) != teaser
-        }
-
-        # Empty stable deltas have deterministic prose and deliberately need no
-        # release_teasers entry. Select them only when their exact shipment facts
-        # first appear or change, never for cumulative prose-only rewrites.
         old_data = (
             repository.json_at(before, data_path)
             if before != "0" * 40 else None
         )
+        new_shipments = _shipment_map(new_data, data_path)
         old_shipments = _shipment_map(old_data, data_path)
-        for tag, shipment in _shipment_map(new_data, data_path).items():
-            if _is_empty_stable(shipment) and old_shipments.get(tag) != shipment:
-                changed_tags.add(tag)
+        new_eligible = set(_summary_map(new_prose)) & set(new_shipments)
+        new_eligible.update(
+            tag for tag, shipment in new_shipments.items()
+            if shipment.get("channel") == "stable"
+        )
+        old_eligible = set(_summary_map(old_prose)) & set(old_shipments)
+        old_eligible.update(
+            tag for tag, shipment in old_shipments.items()
+            if shipment.get("channel") == "stable"
+        )
 
-        for tag in sorted(changed_tags):
-            if tag not in new_teasers and not _is_empty_stable(
-                _shipment_map(new_data, data_path).get(tag, {})
-            ):
+        for tag in sorted(new_eligible):
+            new_candidate = _candidate(tag, prose_path, new_prose, new_data)
+            old_rendered = None
+            if tag in old_eligible and old_prose is not None and old_data is not None:
+                try:
+                    old_rendered = render_managed_summary(
+                        _candidate(tag, prose_path, old_prose, old_data)
+                    )
+                except UpdateError:
+                    old_rendered = None
+            new_rendered = render_managed_summary(new_candidate)
+            if old_rendered == new_rendered:
                 continue
             if tag in seen_tags:
                 raise UpdateError(
                     "exact release tag {} is selected by multiple prose files".format(tag)
                 )
             seen_tags.add(tag)
-            selected.append(_candidate(tag, prose_path, new_prose, new_data))
+            selected.append(new_candidate)
     return selected
 
 
@@ -366,9 +370,11 @@ def select_current_candidates(
     *,
     tag: str | None = None,
 ) -> list[Candidate]:
-    """Select reviewed current-main teasers for release/dispatch convergence."""
+    """Select reviewed current-main summaries for release/dispatch convergence."""
     selected = []
     seen_tags = set()
+    summary_tags = set()
+    shipment_tags = set()
     for prose_path in repository.current_prose_paths():
         if _is_unreleased(prose_path):
             continue
@@ -377,13 +383,15 @@ def select_current_candidates(
         data = repository.current_json(data_path)
         if prose is None or data is None:
             continue
-        teasers = _teaser_map(prose)
+        summaries = _summary_map(prose)
         shipments = _shipment_map(data, data_path)
-        eligible = set(teasers)
+        summary_tags.update(summaries)
+        shipment_tags.update(shipments)
+        eligible = set(summaries) & set(shipments)
         eligible.update(
             shipment_tag
             for shipment_tag, shipment in shipments.items()
-            if _is_empty_stable(shipment)
+            if shipment.get("channel") == "stable"
         )
         if tag is not None:
             eligible.intersection_update({tag})
@@ -395,24 +403,30 @@ def select_current_candidates(
                 )
             seen_tags.add(exact_tag)
             selected.append(_candidate(exact_tag, prose_path, prose, data))
+    if tag is not None and tag in summary_tags and tag not in shipment_tags:
+        raise UpdateError(
+            "{} summary has no exact shipment facts in current data".format(tag)
+        )
     return selected
 
 
 def _load_renderer() -> Callable[[dict, dict, str], str]:
-    path = Path(__file__).with_name("release-notes-render.py")
+    path = Path(__file__).with_name("render.py")
     spec = importlib.util.spec_from_file_location(
-        "_release_notes_teaser_renderer", str(path))
+        "_release_notes_summary_renderer", str(path))
     if spec is None or spec.loader is None:
-        raise UpdateError("could not load release-notes teaser renderer")
+        raise UpdateError("could not load release-notes summary renderer")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    renderer = getattr(module, "render_release_teaser", None)
+    renderer = getattr(module, "render_github_release_summary", None)
     if not callable(renderer):
-        raise UpdateError("release-notes renderer has no render_release_teaser function")
+        raise UpdateError(
+            "release-notes renderer has no render_github_release_summary function"
+        )
     return renderer
 
 
-def render_managed_teaser(
+def render_managed_summary(
     candidate: Candidate,
     renderer: Callable[[dict, dict, str], str] | None = None,
 ) -> str:
@@ -421,11 +435,11 @@ def render_managed_teaser(
         rendered = renderer(candidate.data, candidate.prose, candidate.tag)
     except (KeyError, TypeError, ValueError) as exc:
         raise UpdateError(
-            "{} teaser failed validation: {}".format(candidate.tag, exc)
+            "{} summary failed validation: {}".format(candidate.tag, exc)
         ) from exc
     if rendered.count(RELEASE_LINKS_MARKER) != 1:
         raise UpdateError(
-            "{} rendered teaser must contain exactly one {}".format(
+            "{} rendered summary must contain exactly one {}".format(
                 candidate.tag, RELEASE_LINKS_MARKER)
         )
     shipment = candidate.shipment
@@ -439,6 +453,15 @@ def render_managed_teaser(
             core_version),
     ]
     changelog_url = shipment.get("changelog_url")
+    base_version = (candidate.data.get("range") or {}).get("base_version")
+    if shipment.get("channel") == "stable" and base_version:
+        changelog_url = (
+            "https://github.com/{}/compare/v{}...{}".format(
+                candidate.data.get("repository") or REPOSITORY_DEFAULT,
+                base_version,
+                candidate.tag,
+            )
+        )
     if changelog_url:
         if not isinstance(changelog_url, str) or not changelog_url.startswith(
             "https://github.com/"
@@ -452,8 +475,8 @@ def render_managed_teaser(
 
 def _marker_positions(body: str) -> tuple[int, int, int, int] | None:
     markers = (
-        TEASER_START_MARKER,
-        TEASER_END_MARKER,
+        SUMMARY_START_MARKER,
+        SUMMARY_END_MARKER,
         GENERATED_START_MARKER,
         GENERATED_END_MARKER,
     )
@@ -468,19 +491,19 @@ def _marker_positions(body: str) -> tuple[int, int, int, int] | None:
     return positions
 
 
-def replace_managed_teaser(body: str, teaser: str) -> str | None:
-    """Replace only managed teaser bytes; return None for an unmarked legacy body."""
+def replace_managed_summary(body: str, summary: str) -> str | None:
+    """Replace only managed summary bytes; return None for an unmarked legacy body."""
     positions = _marker_positions(body)
     if positions is None:
         return None
-    teaser_start, teaser_end, _, _ = positions
-    owned_start = teaser_start + len(TEASER_START_MARKER)
+    summary_start, summary_end, _, _ = positions
+    owned_start = summary_start + len(SUMMARY_START_MARKER)
     return (
         body[:owned_start]
         + "\n"
-        + teaser.strip()
+        + summary.strip()
         + "\n"
-        + body[teaser_end:]
+        + body[summary_end:]
     )
 
 
@@ -518,7 +541,7 @@ class GitHubClient:
         headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": "Bearer {}".format(self.token),
-            "User-Agent": "SkiaSharp-release-teaser-updater",
+            "User-Agent": "SkiaSharp-release-summary-updater",
             "X-GitHub-Api-Version": "2022-11-28",
         }
         if payload is not None:
@@ -613,8 +636,8 @@ def update_releases(
             if snapshot is None:
                 result.add(candidate.tag, "skipped", "GitHub Release does not exist")
                 continue
-            rendered = render_managed_teaser(candidate, renderer)
-            new_body = replace_managed_teaser(snapshot.body, rendered)
+            rendered = render_managed_summary(candidate, renderer)
+            new_body = replace_managed_summary(snapshot.body, rendered)
             if new_body is None:
                 result.add(
                     candidate.tag,
@@ -623,7 +646,7 @@ def update_releases(
                 )
                 continue
             if new_body == snapshot.body:
-                result.add(candidate.tag, "unchanged", "managed teaser is current")
+                result.add(candidate.tag, "unchanged", "managed summary is current")
                 continue
             plans.append(PlannedUpdate(candidate, snapshot, new_body))
         except UpdateError as exc:
@@ -671,7 +694,7 @@ def update_releases(
         result.add(
             plan.candidate.tag,
             "updated",
-            "managed teaser replaced (expected body sha256 {})".format(
+            "managed summary replaced (expected body sha256 {})".format(
                 plan.snapshot.body_sha256),
         )
     return result

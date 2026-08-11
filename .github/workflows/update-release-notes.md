@@ -63,7 +63,7 @@ on:
         default: ""
         type: string
       force:
-        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + release-notes-data.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
+        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + release_notes/generate.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
         required: false
         default: false
         type: boolean
@@ -227,12 +227,12 @@ jobs:
         run: |
           set -euo pipefail
           # Single entry point: prepare.sh runs the API diffs (Cake) then the release-
-          # notes data (release-notes-data.py) then the index (release-notes-index.py), all VERBOSE.
+          # notes data/context (release_notes/generate.py) then index.py, all VERBOSE.
           # Every engine is incremental — an unforced run skips work whose output is
           # already current (a shipped api diff never changes), so a daily run is cheap
           # without any "notes-only" flag. A dispatch may bound to a version RANGE
           # (--min-version/--max-version, for a single version or a chunk) and/or force
-          # a total rewrite (--force). The flat page list lands at
+          # a total rewrite (--force). The flat context list lands at
           # output/files-to-polish.txt.
           flags=()
           if [ "${FORCE_REGEN:-false}" = "true" ]; then flags+=(--force); fi
@@ -291,8 +291,6 @@ pre-agent-steps:
   - name: Restore Prepare output
     run: |
       set -euo pipefail
-      # The skill always reads output/files-to-polish.txt — put it back at that same
-      # path so the agent's Polish phase is identical to a manual run.
       mkdir -p output
       cp /tmp/gh-aw/prepare-in/files-to-polish.txt output/files-to-polish.txt
       # Replay Prepare's working-tree changes; an empty patch = nothing changed.
@@ -304,9 +302,9 @@ pre-agent-steps:
       fi
 tools:
   # The agent reads the restored _sources/<version>.data.json sidecars, writes
-  # _sources/<version>.prose.json, and runs release-notes-render.py (pure stdlib, no
+  # _sources/<version>.prose.json, and runs release_notes/render.py (pure stdlib, no
   # network) to render each page and then `--all` to rebuild the TOC/index, then
-  # commits and opens the PR. python3 is allowed ONLY for release-notes-render.py — it must NOT
+  # commits and opens the PR. python3 is allowed ONLY for release_notes/render.py — it must NOT
   # re-run the heavy generators (they already ran in the prepare job). Keep an
   # explicit allowlist: it is the only thing that stops the agent shelling out to
   # anything else. Dropping the bash block entirely makes gh-aw compile to
@@ -320,7 +318,7 @@ tools:
   # "How the PR is made" section. The earlier 2000+-file blow-up was the OPPOSITE
   # mistake: the agent created a branch but never committed, so gh-aw's patch
   # generator fell back to diffing months of history and exceeded the PR file cap.
-  bash: ["cat", "grep", "sort", "head", "tail", "jq", "git", "python3"]
+  bash: ["cat", "grep", "sort", "head", "tail", "git", "python3"]
   edit:
 # The agent has no network: it only polishes prose from already-generated files.
 network: {}
@@ -350,17 +348,18 @@ and **one** pull request ships everything.
 
 Before you (the agent) started, a **separate `prepare` job** ran the skill's
 **Prepare** phase on its own disk-managed runner — the single script
-`.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then the
-per-page `_sources/<version>.data.json` facts, then the network-sourced
-`_sources/index.json` and the **Files-to-polish page list**). See the skill's "Running
+`.agents/skills/release-notes/scripts/prepare.sh` (API diffs via Cake, then atomic
+per-page `_sources/<version>.data.json` + `.context.md`, then the network-sourced
+`_sources/index.json` and the **Files-to-polish context list**). See the skill's "Running
 the full pipeline" section and `documentation/dev/release-notes-and-api-diffs.md` §2
 for exactly what it produces.
 
 The `prepare` job uploaded its complete working-tree change as a patch plus that
 manifest as an artifact, and a host step **already restored both** into this checkout:
-the regenerated files (every `_sources/<version>.data.json` and `_sources/index.json`)
-are on disk, and the page list is at `output/files-to-polish.txt`. **You have no network —
-do not re-run `prepare.sh`, `dotnet cake`, `release-notes-data.py`, or `release-notes-index.py`.**
+the regenerated files (every changed `_sources/<version>.data.json` +
+`.context.md`, and `_sources/index.json`) are on disk, and the context list is at
+`output/files-to-polish.txt`. **You have no network —
+do not re-run `prepare.sh`, `dotnet cake`, `release_notes/generate.py`, or `release_notes/index.py`.**
 Your job is to write the prose and render the pages (below), then commit and open the PR.
 
 > This agent job is gated on Prepare having actually changed something
@@ -375,7 +374,7 @@ Follow the **release-notes skill**
 ([`.agents/skills/release-notes/SKILL.md`](../../.agents/skills/release-notes/SKILL.md))
 for **how** to write each page's prose and render it — the prose slots, the six
 categories, the breaking-change sources (`*.breaking.md` + `_sources/<version>.notes.md`),
-the per-page `release-notes-render.py` validation, and the "never hand-edit the page" rules all
+the per-page `release_notes/render.py` validation, and the "never hand-edit the page" rules all
 live there. The renderer owns every heading, table, banner, `@handle`, ❤️, and PR link,
 so you only ever write prose.
 
@@ -386,19 +385,23 @@ This run's **CI-specific deltas** on top of the skill:
    - Output PR head: `${{ needs.prepare.outputs.output_branch }}`
    These values were checked before Prepare, including open-PR ownership and
    uniqueness in validation mode. Do not substitute another branch.
-1. Read `output/files-to-polish.txt`, one repo-relative page path per line. For
-   every listed page, recreate the complete adjacent `_sources/<version>.prose.json`
-   from its fresh `data.json`, including every non-empty exact shipment in
-   `release_teasers`. The list **may be empty** — that means no prose needs
+1. Read `output/files-to-polish.txt`, one repo-relative
+   `_sources/<version>.context.md` path per line. Each committed context file's
+   frontmatter names the exact page, data input, prose output, and status; its body
+   contains the filtered, denormalized cumulative rollup, exact
+   releases, quoted merged-commit source bodies, contributors, HarfBuzz, and
+   breaking sources. Do not dump or re-join the normalized `data.json` files.
+   Recreate each named `_sources/<version>.prose.json`. The list **may be empty**
+   — that means no prose needs
    authoring, but there is
-   still deterministic work to materialize (a rebuilt no-changes HarfBuzz section, a
-   refreshed API diff, or the TOC/index), so do **not** exit early; go straight to the
+   still deterministic work to materialize (a refreshed API diff or the
+   TOC/index), so do **not** exit early; go straight to the
    final render.
 2. You have **no network**, and Prepare already ran — never re-run it (above).
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
-   running the renderer directly: `release-notes-render.py` per page to validate as you go
+   running the renderer directly: `release_notes/render.py` per page to validate as you go
    (per the skill), then **once** at the end
-   `python3 scripts/infra/docs/release-notes-render.py --all`
+   `python3 scripts/infra/docs/release_notes/render.py --all`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working

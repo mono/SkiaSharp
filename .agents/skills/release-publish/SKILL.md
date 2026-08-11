@@ -37,8 +37,8 @@ This skill is **Step 4 of 5**:
   destination. The agent never approves that downstream gate.
 - The initial and published GitHub Release body is the useful GitHub-generated
   notes wrapped in explicit managed markers. Never publish an empty placeholder.
-- Customer teaser prose is owned by the later agentic release-notes PR. A
-  deterministic workflow applies reviewed exact-tag teaser entries after merge
+- Customer summary prose is owned by the later agentic release-notes PR. A
+  deterministic workflow applies reviewed exact-tag summaries after merge
   without reconstructing or rewriting GitHub's generated payload.
 
 ## Script contract
@@ -129,8 +129,9 @@ through protected approval and NuGet indexing in one process.
 ### 3. Create the generated-notes draft
 
 Run `draftAuditCommand`. It parses all release tags using SkiaSharp's
-NuGet-compatible ordering (including four-part hotfixes) and selects the greatest
-tag below the current release as `previousTag`.
+NuGet-compatible ordering (including four-part hotfixes). A prerelease selects
+the immediately preceding exact tag; a stable release selects the preceding
+stable tag so its collapsed generated notes match the cumulative website rollup.
 
 ```bash
 python3 .agents/skills/release-publish/scripts/create-release-draft.py \
@@ -142,7 +143,7 @@ For `confirm-create-release-draft`, present the exact tag, source SHA, title,
 prerelease state, previous tag, and operation table. Obtain approval and run
 `executionCommand`. It pushes the tag and creates a GitHub draft containing the
 exact generated notes inside managed markers. The generated payload is frozen:
-later automation may update only the separate managed teaser region above it.
+later automation may update only the separate managed summary region above it.
 
 | File | Ownership |
 |------|-----------|
@@ -164,10 +165,10 @@ release reports `dispatch-release-notes`; run its `executionCommand` without a n
 approval. The dispatch is safe to retry and successful execution advances to
 milestones without republishing or rewriting the release.
 
-Publication does not wait for teaser review. Continue immediately to milestones.
-The release-notes workflow adds the exact-tag teaser entry to the line's single
+Publication does not wait for summary review. Continue immediately to milestones.
+The release-notes workflow adds the exact-tag release summary to the line's single
 `prose.json`; after that PR is reviewed and merged, the zero-AI updater changes
-only the managed teaser region. Manual content outside managed markers and the
+only the managed summary region. Manual content outside managed markers and the
 original generated payload remain byte-for-byte intact.
 
 ### 5. Hand off milestones

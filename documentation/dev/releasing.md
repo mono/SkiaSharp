@@ -293,13 +293,13 @@ resumable `wait-for-nuget` state.
 The release is useful immediately: its initial body is GitHub-generated notes,
 never an empty placeholder. Publication dispatches the agentic release-notes
 workflow and milestone reconciliation proceeds immediately. The reviewed notes PR
-later adds the exact-tag teaser to the line's single prose file; after merge, a
-deterministic zero-AI workflow updates only that marked teaser region while
+later adds the exact-tag summary to the line's single prose file; after merge, a
+deterministic zero-AI workflow updates only that marked summary region while
 preserving the original generated changelog payload byte-for-byte.
 
 The future coordinator therefore needs no Copilot token/model and no
-`PrepareTeaser` phase. Its Release phase is only tag/draft creation plus final
-publication approval; reviewed teaser convergence is asynchronous and owned by
+summary-preparation phase. Its Release phase is only tag/draft creation plus final
+publication approval; reviewed summary convergence is asynchronous and owned by
 the release-notes PR and deterministic updater.
 
 ### Stage 5: Release Milestones (release-milestones skill)

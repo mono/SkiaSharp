@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Render a release-notes page from deterministic data + agent prose.
 
-    release-notes-render.py <data.json> <prose.json> [out.md]   # normal page
-    release-notes-render.py --all                                # regenerate every page + TOC.yml + index.md
-    release-notes-render.py --teaser TAG data.json prose.json [out.md]
+    render.py <data.json> <prose.json> [out.md]   # normal page
+    render.py --all                               # regenerate every page + TOC.yml + index.md
+    render.py --summary TAG data.json prose.json [out.md]
 
-`data.json`  — facts emitted by release-notes-data.py (PRs, roster, banner
+`data.json`  — facts emitted by generate.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `prose.json` — prose the polish agent produced (theme, highlights, breaking,
                category bullets, contributor summaries, preview summaries).
@@ -24,7 +24,6 @@ The page structure below is the single source of truth for the layout.
 
 from __future__ import annotations
 
-import importlib.util
 import html
 import json
 import re
@@ -32,27 +31,23 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-# ── reuse release-notes-data.py's shared low-level helpers (one source of truth) ─────
-# release-notes-render.py owns ALL Markdown: the per-page bodies AND the TOC.yml/index.md
-# aggregates. Those aggregates need version parsing, the page-set discovery, and
-# the support config — all of which live in release-notes-data.py. Importing it is
-# offline-safe (module load does no network); the network-sourced Chrome schedule
-# arrives via _sources/index.json, which release-notes-index.py wrote in Prepare.
-_GEN = Path(__file__).with_name("release-notes-data.py")
-_spec = importlib.util.spec_from_file_location("_rn_build_data", str(_GEN))
-_gen = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_gen)
+PACKAGE_PARENT = Path(__file__).resolve().parent.parent
+if str(PACKAGE_PARENT) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_PARENT))
 
-log = _gen.log
-version_key = _gen.version_key
-minor_group = _gen.minor_group
-RELEASES_DIR = _gen.RELEASES_DIR
-VERSIONS_JSON_PATH = _gen.VERSIONS_JSON_PATH
-_MONTH_ABBR = _gen._MONTH_ABBR
-get_version_files = _gen.get_version_files
-cadence_milestones = _gen.cadence_milestones
-_data_json_path = _gen._data_json_path
-_prose_json_path = _gen._prose_json_path
+from release_notes import common, model
+
+log = common.log
+version_key = common.version_key
+minor_group = common.minor_group
+RELEASES_DIR = common.RELEASES_DIR
+VERSIONS_JSON_PATH = common.VERSIONS_JSON_PATH
+_MONTH_ABBR = common.MONTH_ABBR
+get_version_files = common.get_version_files
+cadence_milestones = common.cadence_milestones
+_data_json_path = common.data_json_path
+_context_markdown_path = common.context_markdown_path
+_prose_json_path = common.prose_json_path
 
 # Module-level cache for load_support_config (its own, not the generator's).
 _SUPPORT_CONFIG = None
@@ -69,43 +64,11 @@ RELEASE_CATEGORIES = [
     "Engine", "API Surface", "Bug Fixes",
     "Lifecycle & Internals", "Platform", "Security",
 ]
-TEASER_CATEGORIES = _gen.TEASER_CATEGORIES
-TEASER_HEADINGS = {
-    "Breaking Changes": "## ⚠️ Breaking Changes",
-    "What's New": "## ✨ What's New",
-    "Fixes": "## 🐛 Fixes",
-    "Dependency Updates": "## 📦 Dependency Updates",
-}
 RELEASE_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
-EMPTY_STABLE_SUBTITLE = (
-    "This stable release matches the release candidate with no additional "
-    "package changes."
+LEGACY_NO_HARFBUZZ_CHANGES = (
+    "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
+    "the same HarfBuzz as the previous line."
 )
-_ROUND_COUNTS = {
-    "one": 1,
-    "two": 2,
-    "three": 3,
-    "four": 4,
-    "five": 5,
-    "six": 6,
-    "seven": 7,
-    "eight": 8,
-    "nine": 9,
-    "ten": 10,
-}
-_ROUND_RE = re.compile(
-    r"\b(" + "|".join(_ROUND_COUNTS) + r"|\d+)\s+rounds?\b",
-    re.IGNORECASE,
-)
-_INTERNAL_MECHANICS_RE = re.compile(
-    r"\b(?:CI|MSVC|workflow|solution[- ]format|binding generation|"
-    r"environment initialization|test (?:leg|platform))\b",
-    re.IGNORECASE,
-)
-
-# The one fixed line a "no changes" HarfBuzz page carries as its whole body.
-NO_CHANGES_BODY = (
-    "No HarfBuzzSharp binding changes shipped in this release.")
 
 
 def page_title(data):
@@ -180,63 +143,56 @@ def _markdown_escape(text):
     return re.sub(r"([\\`*_\[\]{}<>#])", r"\\\1", text)
 
 
-def _teaser_authors(nums, data):
-    authors = []
-    seen = set()
-    for number in nums or []:
-        pr = _pr(data, number)
-        login = pr.get("author") if pr else None
-        if login and login not in seen:
-            seen.add(login)
-            authors.append(
-                "[@{0}](https://github.com/{0})".format(login))
-    return authors
+def _classification(pr):
+    return (pr or {}).get("classification") or (pr or {}).get("tag") or "product"
 
 
-def _teaser_credit(nums, data):
-    authors = _teaser_authors(nums, data)
-    links = pr_links(nums, data)
-    if authors and links:
-        return " by {} ({})".format(", ".join(authors), links)
-    if links:
-        return " ({})".format(links)
-    return ""
-
-
-def render_release_teaser(data, prose, tag):
-    """Render the managed GitHub Release teaser for one exact shipment."""
+def render_github_release_summary(data, prose, tag):
+    """Render the reviewed introduction for one exact GitHub Release."""
     shipment = next(
         (s for s in data.get("shipments") or [] if s.get("tag") == tag), None)
     if not shipment:
         raise ValueError("unknown exact shipment tag: {}".format(tag))
-    if _gen.shipment_is_empty_stable(shipment):
-        return _finish_text([EMPTY_STABLE_SUBTITLE, "", RELEASE_LINKS_MARKER])
 
-    teaser = (prose.get("release_teasers") or {}).get(tag)
-    errors = _gen.validate_release_teaser(shipment, teaser)
-    if errors:
-        raise ValueError("; ".join(errors))
+    if shipment.get("channel") == "stable":
+        summary = " ".join(filter(None, [
+            (prose.get("highlights_headline") or "").strip(),
+            (prose.get("highlights_body") or "").strip(),
+        ]))
+        refs = []
+    else:
+        release = (prose.get("release_summaries") or {}).get(tag) or {}
+        summary = (release.get("summary") or "").strip()
+        refs = release.get("prs") or []
+    if not summary:
+        raise ValueError("{} has no reviewed release summary".format(tag))
 
-    lines = [_markdown_escape(teaser["subtitle"]), "", RELEASE_LINKS_MARKER]
-    categories = {
-        category["heading"]: category.get("bullets") or []
-        for category in teaser.get("categories") or []
-    }
-    selected_prs = []
-    for heading in TEASER_CATEGORIES:
-        bullets = categories.get(heading) or []
-        if not bullets:
-            continue
-        lines.extend(["", TEASER_HEADINGS[heading], ""])
-        for bullet in bullets:
-            refs = bullet.get("prs") or []
-            selected_prs.extend(refs)
-            lines.append("- {}{}".format(
-                _markdown_escape(bullet["text"]), _teaser_credit(refs, data)))
+    lines = [
+        "{}{}".format(_markdown_escape(summary), pr_refs(refs, data)),
+        "",
+        RELEASE_LINKS_MARKER,
+    ]
+    exact_prs = (
+        [int(number) for number in (data.get("prs") or {})]
+        if shipment.get("channel") == "stable"
+        else shipment.get("prs") or []
+    )
+    relevant = [
+        number for number in exact_prs
+        if _classification(_pr(data, number)) != "internal"
+    ]
+    lines.extend([
+        "",
+        "**Release scope:** {} pull request{} · {} consumer-facing".format(
+            len(exact_prs),
+            "" if len(exact_prs) == 1 else "s",
+            len(relevant),
+        ),
+    ])
 
     community = []
     seen = set()
-    for number in selected_prs:
+    for number in relevant:
         pr = _pr(data, number)
         login = pr.get("author") if pr and pr.get("community") else None
         if login and login not in seen:
@@ -244,10 +200,7 @@ def render_release_teaser(data, prose, tag):
             community.append(
                 "[@{0}](https://github.com/{0})".format(login))
     if community:
-        lines.extend([
-            "",
-            "Thanks to our contributors: {}".format(", ".join(community)),
-        ])
+        lines.append("**Community contributors:** {}".format(", ".join(community)))
     return _finish_text(lines)
 
 
@@ -329,17 +282,18 @@ def render(data, prose):
     # changes (crediting the PRs that touched HarfBuzz), or the fixed no-changes
     # line when the binding was only rebuilt.
     hb = data.get("harfbuzz")
-    if hb and hb.get("version"):
+    hb_summary = (prose.get("harfbuzz_summary") or "").strip()
+    legacy = int(data.get("format") or 0) < 5
+    rendered_hb_summary = (
+        hb_summary
+        if not legacy or common.harfbuzz_summary_required(hb)
+        else LEGACY_NO_HARFBUZZ_CHANGES
+    )
+    if hb and hb.get("version") and rendered_hb_summary:
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        if _gen.harfbuzz_summary_required(hb):
-            # Summary only: the API diff is in the banner and the community credit
-            # is in the contributor table, so this section stays a clean narrative
-            # instead of dumping every HarfBuzz-touching build PR.
-            L.append((prose.get("harfbuzz_summary") or "").strip())
-        else:
-            L.append(NO_CHANGES_BODY)
+        L.append(rendered_hb_summary)
 
     if data.get("platform_support"):
         L.append("")
@@ -370,7 +324,7 @@ def render(data, prose):
         for l in data["links"]:
             L.append("- [{}]({})".format(l["label"], l["href"]))
 
-    release_teasers = prose.get("release_teasers") or {}
+    release_summaries = prose.get("release_summaries") or {}
     legacy_preview_summaries = prose.get("preview_summaries") or {}
     for p in data.get("previews") or []:
         L.append("")
@@ -379,14 +333,12 @@ def render(data, prose):
             head += " ({})".format(p["date"])
         L.append(head)
         L.append("")
-        teaser = release_teasers.get(p["key"]) or {}
-        # Old committed pages predate exact shipments. Keep their summary readable
-        # until Prepare upgrades their data/prose; all format-4 pages use the exact
-        # teaser entry as the single source of preview website prose.
-        summary = teaser.get("website_summary")
+        release = release_summaries.get(p["key"]) or {}
+        summary = release.get("summary")
+        refs = release.get("prs") or []
         if summary is None:
             summary = legacy_preview_summaries.get(p["key"], "")
-        L.append(summary or "")
+        L.append((summary or "") + pr_refs(refs, data))
         if p.get("changelog_url"):
             L.append("")
             L.append("[Full changelog]({})".format(p["changelog_url"]))
@@ -449,7 +401,7 @@ def validate(data, prose):
 
 
 def _finish_validate(errors, data, prose):
-    errors.extend(_gen.validate_shipments(data))
+    errors.extend(common.validate_shipments(data))
     roster = {c["login"] for c in data.get("contributors", [])}
     summaries = prose.get("contributor_summaries") or {}
     missing = sorted(roster - set(summaries))
@@ -463,121 +415,81 @@ def _finish_validate(errors, data, prose):
                       + ", ".join("@" + m for m in empty))
 
     allowed = set(RELEASE_CATEGORIES)
-    pr_facts = data.get("prs") or {}
-    cumulative_strings = [
-        prose.get("theme"),
-        prose.get("highlights_headline"),
-        prose.get("highlights_body"),
-        prose.get("harfbuzz_summary"),
-    ]
-    engine_strings = [
-        prose.get("theme"),
-        prose.get("highlights_headline"),
-        prose.get("highlights_body"),
-    ]
-    referenced_prs = set()
-    for item in prose.get("breaking") or []:
-        cumulative_strings.extend((item.get("title"), item.get("body")))
-        referenced_prs.update(item.get("prs") or [])
-    # Historical v2/v3 pages were reviewed under older repository layouts, so
-    # today's path classifier can label their product work as internal. Preserve
-    # that immutable prose; enforce current classification for v4+ pages.
-    major = re.match(r"^(\d+)\.", str(data.get("version", "")))
-    enforce_internal = bool(major and int(major.group(1)) >= 4)
-    if allowed:
-        for cat in prose.get("categories", []):
-            if cat.get("heading") not in allowed:
-                errors.append(
-                    "category heading '{}' is not one of the allowed sections: {}"
-                    .format(cat.get("heading"), ", ".join(sorted(allowed))))
-            for bullet in cat.get("bullets") or []:
-                cumulative_strings.extend(
-                    (bullet.get("lead"), bullet.get("detail")))
-                if cat.get("heading") == "Engine":
-                    engine_strings.extend(
-                        (bullet.get("lead"), bullet.get("detail")))
-                referenced_prs.update(bullet.get("prs") or [])
-                internal = sorted(
-                    number for number in bullet.get("prs") or []
-                    if (pr_facts.get(str(number)) or {}).get("tag") == "internal"
-                )
-                if internal and enforce_internal:
-                    errors.append(
-                        "consumer-facing category bullets must not reference internal "
-                        "PRs: " + ", ".join("#{}".format(number)
-                                           for number in internal))
-    cumulative_strings.extend(summaries.values())
-    cumulative_text = "\n".join(
-        text for text in cumulative_strings if isinstance(text, str)).casefold()
-    contributor_text = "\n".join(summaries.values())
-    if enforce_internal and _INTERNAL_MECHANICS_RE.search(contributor_text):
-        errors.append(
-            "contributor summaries must describe internal work broadly, "
-            "without CI, workflow, test-platform, compiler-environment, "
-            "solution-format, or binding-generation mechanics")
-
-    sync_rounds = sum(
-        1
-        for fact in pr_facts.values()
-        if (fact.get("tag") in {"product", "mixed"}
-            and fact.get("title", "").casefold().startswith("[skia-sync]")
-            and "milestone" not in fact.get("title", "").casefold())
-    )
-    if sync_rounds:
-        described_rounds = {
-            int(value) if value.isdigit() else _ROUND_COUNTS[value.casefold()]
-            for text in engine_strings
-            if isinstance(text, str)
-            and any(term in text.casefold()
-                    for term in ("skia", "sync", "upstream", "engine"))
-            for value in _ROUND_RE.findall(text)
-        }
-        wrong_rounds = sorted(described_rounds - {sync_rounds})
-        if wrong_rounds:
+    for cat in prose.get("categories", []):
+        if cat.get("heading") not in allowed:
             errors.append(
-                "cumulative prose says {} Skia sync round(s), but the facts contain {}"
-                .format(
-                    ", ".join(str(value) for value in wrong_rounds),
-                    sync_rounds,
-                ))
+                "category heading '{}' is not one of the allowed sections: {}"
+                .format(cat.get("heading"), ", ".join(sorted(allowed))))
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})
     if prev_dups:
         errors.append("duplicate preview keys (data.json bug — keys must be unique "
                       "per preview): " + ", ".join(prev_dups))
-    teasers = prose.get("release_teasers") or {}
     legacy = prose.get("preview_summaries") or {}
-    missing_prev = []
-    for key in prev_list:
-        summary = (teasers.get(key) or {}).get("website_summary")
-        if summary is None:
-            summary = legacy.get(key)
-        if not isinstance(summary, str) or not summary.strip():
-            missing_prev.append(key)
-    missing_prev = sorted(set(missing_prev))
-    if missing_prev:
-        errors.append("every preview/RC needs release_teasers[tag].website_summary; missing: "
-                      + ", ".join(missing_prev))
+    if int(data.get("format") or 0) >= 5:
+        scopes = {
+            preview["key"]: set(preview.get("prs") or [])
+            for preview in data.get("previews") or []
+            if preview.get("key")
+        }
+        for shipment in data.get("shipments") or []:
+            tag = shipment.get("tag")
+            if tag and shipment.get("channel") != "stable":
+                scopes[tag] = set(shipment.get("prs") or [])
 
-    shipment_map = {
-        s.get("tag"): s for s in data.get("shipments") or [] if s.get("tag")
-    }
-    unknown_teasers = sorted(set(teasers) - set(shipment_map))
-    if unknown_teasers and data.get("shipments"):
-        errors.append("release_teasers contains tags absent from data.shipments: "
-                      + ", ".join(unknown_teasers))
-    for tag, shipment in shipment_map.items():
-        if _gen.shipment_is_empty_stable(shipment):
-            continue
-        teaser = teasers.get(tag)
-        if teaser is None:
-            errors.append("missing release teaser for exact shipment {}".format(tag))
-            continue
-        errors.extend(_gen.validate_release_teaser(shipment, teaser))
+        releases = prose.get("release_summaries") or {}
+        missing = sorted(set(scopes) - set(releases))
+        if missing:
+            errors.append(
+                "every Preview/RC needs release_summaries[tag]; missing: "
+                + ", ".join(missing)
+            )
+        unknown = sorted(set(releases) - set(scopes))
+        if unknown:
+            errors.append(
+                "release_summaries contains tags absent from page facts: "
+                + ", ".join(unknown)
+            )
+        for tag, release in releases.items():
+            if not isinstance(release, dict):
+                errors.append("{} release summary must be an object".format(tag))
+                continue
+            summary = release.get("summary")
+            if not isinstance(summary, str) or not summary.strip():
+                errors.append("{} release summary text is required".format(tag))
+            elif len(summary) > 500:
+                errors.append("{} release summary exceeds 500 characters".format(tag))
+            refs = release.get("prs")
+            if not isinstance(refs, list):
+                errors.append("{} release summary prs must be an array".format(tag))
+                continue
+            if any(type(number) is not int or number <= 0 for number in refs):
+                errors.append(
+                    "{} release summary prs must be positive integers".format(tag)
+                )
+                continue
+            if len(refs) != len(set(refs)):
+                errors.append("{} release summary prs must be unique".format(tag))
+            outside = sorted(set(refs) - scopes.get(tag, set()))
+            if outside:
+                errors.append(
+                    "{} release summary references PRs outside its exact scope: {}"
+                    .format(tag, ", ".join("#{}".format(number) for number in outside))
+                )
+    else:
+        missing_prev = sorted(
+            key for key in prev_list
+            if not isinstance(legacy.get(key), str) or not legacy[key].strip()
+        )
+        if missing_prev:
+            errors.append(
+                "every preview/RC needs preview_summaries[tag]; missing: "
+                + ", ".join(missing_prev)
+            )
 
     hb = data.get("harfbuzz") or {}
-    if (_gen.harfbuzz_summary_required(hb)
+    if (common.harfbuzz_summary_required(hb)
             and not (prose.get("harfbuzz_summary") or "").strip()):
         errors.append(
             "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
@@ -1004,9 +916,9 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     # type: (int, int, str, str, dict) -> list[str]
     """Schedule-timeline table for the release-cadence section (offline).
 
-    The two Chrome schedules were fetched by release-notes-index.py in the Prepare phase
+    The two Chrome schedules were fetched by index.py in the Prepare phase
     and committed in _sources/index.json, so this runs with no network. A missing
-    schedule is a hard error — re-run release-notes-index.py to refresh index.json.
+    schedule is a hard error — re-run index.py to refresh index.json.
     """
     phases = [
         ("Beta Promotion", "beta", ".0-preview.1"),
@@ -1020,7 +932,7 @@ def render_cadence_timeline(cur_ms, next_ms, cur_base, next_base, schedule_by_ms
     if not cur_sched or not next_sched:
         raise RuntimeError(
             "index.json is missing the Chrome schedule for m{} or m{} - re-run "
-            "release-notes-index.py (the network Prepare step) to refresh "
+            "index.py (the network Prepare step) to refresh "
             "_sources/index.json.".format(cur_ms, next_ms))
     events = []  # type: list[tuple[str, str, str]]
     for ms_num, base, sched in (
@@ -1066,7 +978,7 @@ def _prune_stale_unreleased(live):
     # type: (set) -> int
     """Delete SkiaSharp ``<v>-unreleased.md`` pages whose line is no longer live.
 
-    ``live`` is the set of live-head version cores that release-notes-index.py recorded in
+    ``live`` is the set of live-head version cores that index.py recorded in
     index.json (it needed the remote branch list — a network the render does not
     have). We delete the page and its generated inputs (data.json, prose.json);
     the human-owned notes.md is left for the orphan warning. Released ``<v>.md``
@@ -1082,7 +994,11 @@ def _prune_stale_unreleased(live):
         if version in live:
             continue
         f.unlink()
-        for extra in (_data_json_path(f), _prose_json_path(f)):
+        for extra in (
+            _data_json_path(f),
+            _context_markdown_path(f),
+            _prose_json_path(f),
+        ):
             if extra.exists():
                 extra.unlink()
         pruned += 1
@@ -1121,7 +1037,7 @@ def render_all():
 
     The final Polish step: after the agent has written each page's prose.json,
     one --all pass prunes any now-stale ``-unreleased`` page (per the live-head set
-    release-notes-index.py recorded in index.json), re-renders every ``<version>.md`` from its
+    index.py recorded in index.json), re-renders every ``<version>.md`` from its
     data.json + prose.json (and the deterministic no-changes pages from data.json
     alone), then builds TOC.yml + index.md from the finished page set and the
     committed Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
@@ -1202,7 +1118,7 @@ def main(argv):
     if "--all" in flags:
         return 1 if render_all() else 0
 
-    if "--teaser" in flags:
+    if "--summary" in flags:
         if len(args) < 3:
             print(__doc__)
             return 2
@@ -1210,9 +1126,9 @@ def main(argv):
         data = json.loads(Path(data_path).read_text())
         prose = json.loads(Path(prose_path).read_text())
         try:
-            text = render_release_teaser(data, prose, tag)
+            text = render_github_release_summary(data, prose, tag)
         except ValueError as exc:
-            print("TEASER VALIDATION FAILED: {}".format(exc), file=sys.stderr)
+            print("RELEASE SUMMARY VALIDATION FAILED: {}".format(exc), file=sys.stderr)
             return 1
         out = args[3] if len(args) >= 4 else None
         if out:

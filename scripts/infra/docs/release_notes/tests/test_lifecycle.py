@@ -1,4 +1,3 @@
-import importlib.util
 import json
 import sys
 import tempfile
@@ -8,25 +7,15 @@ from pathlib import Path
 from unittest.mock import patch
 
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[5]
+PACKAGE_PARENT = ROOT / "scripts/infra/docs"
+if str(PACKAGE_PARENT) not in sys.path:
+    sys.path.insert(0, str(PACKAGE_PARENT))
 
-
-def load_module(name, relative):
-    spec = importlib.util.spec_from_file_location(name, ROOT / relative)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-DATA = load_module(
-    "release_notes_data",
-    "scripts/infra/docs/release-notes-data.py",
-)
-RENDER = load_module(
-    "release_notes_render",
-    "scripts/infra/docs/release-notes-render.py",
-)
+from release_notes import common as COMMON
+from release_notes import model as MODEL
+from release_notes import render as RENDER
+from release_notes import sources as SOURCES
 FIXTURE = json.loads(
     (Path(__file__).parent / "fixtures/shipment-tags.json").read_text()
 )
@@ -58,15 +47,10 @@ def shipment(tag, prs, channel="preview", previous="v4.150.0"):
     }
 
 
-def teaser(prs, **extra):
+def release_summary(prs, **extra):
     value = {
-        "subtitle": "Adds useful package updates.",
-        "categories": [
-            {
-                "heading": "What's New",
-                "bullets": [{"text": "Adds a useful API", "prs": prs}],
-            }
-        ],
+        "summary": "Adds useful package updates.",
+        "prs": prs,
     }
     value.update(extra)
     return value
@@ -75,7 +59,7 @@ def teaser(prs, **extra):
 def page_data(shipments):
     numbers = {n for item in shipments for n in item["prs"]}
     return {
-        "format": 4,
+        "format": 5,
         "version": "4.151.0",
         "status": "preview",
         "banner": {},
@@ -95,14 +79,14 @@ def page_data(shipments):
     }
 
 
-def cumulative_prose(release_teasers):
+def cumulative_prose(release_summaries):
     return {
         "theme": "Useful release",
         "highlights_headline": "Useful package updates now ship.",
         "breaking": [],
         "categories": [],
         "contributor_summaries": {},
-        "release_teasers": release_teasers,
+        "release_summaries": release_summaries,
     }
 
 
@@ -123,10 +107,10 @@ class ShipmentCollectionTests(unittest.TestCase):
         def fake_delta(previous, tag):
             return [pr(n) for n in deltas.get(f"{previous}..{tag}", [])]
 
-        with patch.object(DATA, "run", side_effect=fake_run), patch.object(
-            DATA, "get_prs_from_diff", side_effect=fake_delta
+        with patch.object(COMMON, "run", side_effect=fake_run), patch.object(
+            SOURCES, "get_prs_from_diff", side_effect=fake_delta
         ):
-            return DATA.collect_shipments(version, base)[0]
+            return MODEL.collect_shipments(version, base)[0]
 
     def test_preview_rc_stable_and_multiple_builds_are_not_deduped(self):
         items = self.collect("4.151.0", "4.150.0")
@@ -145,21 +129,40 @@ class ShipmentCollectionTests(unittest.TestCase):
         self.assertEqual(items[2]["channel"], "rc")
         self.assertEqual(items[3]["channel"], "stable")
 
-    def test_internal_title_pattern_overrides_product_path(self):
-        DATA._PATH_TAGS_CONFIG = None
-
-        category = DATA._pr_category(
+    def test_titles_do_not_override_product_paths(self):
+        category = SOURCES.pr_category(
             {"binding/SkiaSharp/SkiaSharp.csproj"},
             "[infra] Add containerized test legs",
         )
+        self.assertEqual(category, "product")
 
-        self.assertEqual(category, "internal")
-
-        deterministic = DATA._pr_category(
+        deterministic = SOURCES.pr_category(
             {"binding/SkiaSharp/SkiaApi.generated.cs"},
             "Make binding generation deterministic across platforms",
         )
-        self.assertEqual(deterministic, "internal")
+        self.assertEqual(deterministic, "product")
+
+    def test_new_repository_paths_fail_classification(self):
+        with self.assertRaisesRegex(ValueError, "Unclassified"):
+            SOURCES.pr_category({"new-shipping-area/Feature.cs"}, "Add feature")
+
+    def test_legacy_paths_are_explicitly_classified(self):
+        self.assertEqual(
+            SOURCES.pr_category({"nuget/SkiaSharp.nuspec"}),
+            "mixed",
+        )
+        self.assertEqual(SOURCES.pr_category({"VERSIONS.txt"}), "mixed")
+        for path in (
+            "cake/shared.cake",
+            "design/README.md",
+            "wiki/Versioning.md",
+            "mono.snk",
+        ):
+            self.assertEqual(SOURCES.pr_category({path}), "internal")
+
+    def test_placeholder_tag_is_not_an_exact_release(self):
+        self.assertIsNone(MODEL.parse_tag("v3.0.0-preview.2.x"))
+        self.assertIsNotNone(MODEL.parse_tag("v3.0.0-preview.2.1"))
 
     def test_harfbuzz_summary_facts_exclude_internal_only_work(self):
         prs = [
@@ -187,132 +190,65 @@ class ShipmentCollectionTests(unittest.TestCase):
             "harfbuzz": {"version": "14.2.1", "prs": [101, 102]},
         }
 
-        data = DATA.build_data_json(prs, metadata)
+        data = MODEL.build_data_json(prs, metadata)
 
         self.assertEqual(data["harfbuzz"]["prs"], [101])
 
-    def test_generic_skia_sync_includes_offline_fix_details(self):
+    def test_product_pr_keeps_generic_commit_facts(self):
         prs = [{
             "number": 4379,
             "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
             "url": "https://github.com/mono/SkiaSharp/pull/4379",
-            "author": {"login": "mattleibow", "login_verified": True},
-            "category": "product",
-            "body": (
-                "Automated report prose must not be forwarded.\n\n"
-                "* Fix Use-After-Free in SubRunAllocator (google/skia@3273c66a68)\n"
-            ),
-        }]
-        metadata = {
-            "version": "4.150.1",
-            "status": "preview",
-            "shipments": [],
-        }
-
-        data = DATA.build_data_json(prs, metadata)
-
-        self.assertEqual(
-            data["prs"]["4379"]["details"],
-            [{
-                "commit": "3273c66a68",
-                "title": "Fix Use-After-Free in SubRunAllocator",
-            }],
-        )
-        self.assertNotIn(
-            "Automated report",
-            json.dumps(data["prs"]["4379"]["details"]),
-        )
-
-    def test_community_skia_sync_body_is_not_exposed_to_polish(self):
-        prs = [{
-            "number": 101,
-            "title": "[skia-sync] Merge upstream changes",
-            "url": "https://github.com/mono/SkiaSharp/pull/101",
-            "author": {"login": "contributor"},
-            "category": "product",
-            "body": "Untrusted contributor-authored body.",
-        }]
-        metadata = {
-            "version": "4.150.1",
-            "status": "preview",
-            "shipments": [],
-        }
-
-        data = DATA.build_data_json(prs, metadata)
-
-        self.assertNotIn("details", data["prs"]["101"])
-
-    def test_arbitrary_bot_skia_sync_body_is_not_exposed_to_polish(self):
-        prs = [{
-            "number": 102,
-            "title": "[skia-sync] Merge upstream changes",
-            "url": "https://github.com/mono/SkiaSharp/pull/102",
-            "author": {"login": "untrusted-automation[bot]"},
-            "category": "product",
-            "body": "Bot-authored instructions.",
-        }]
-        metadata = {
-            "version": "4.150.1",
-            "status": "preview",
-            "shipments": [],
-        }
-
-        data = DATA.build_data_json(prs, metadata)
-
-        self.assertNotIn("details", data["prs"]["102"])
-
-    def test_spoofed_maintainer_sync_author_is_not_exposed_to_polish(self):
-        prs = [{
-            "number": 103,
-            "title": "[skia-sync] Merge upstream changes",
-            "url": "https://github.com/mono/SkiaSharp/pull/103",
             "author": {"login": "mattleibow"},
             "category": "product",
-            "body": "Unverified commit-author instructions.",
+            "commit": "a" * 40,
+            "body": "Fix Use-After-Free in SubRunAllocator.",
+            "skiaPr": 281,
         }]
-        metadata = {
-            "version": "4.150.1",
-            "status": "preview",
-            "shipments": [],
-        }
 
-        data = DATA.build_data_json(prs, metadata)
-
-        self.assertNotIn("details", data["prs"]["103"])
-
-    def test_skia_sync_author_is_verified_from_authoritative_cache(self):
-        prs = [{
-            "number": 4379,
-            "title": "[skia-sync] Merge upstream changes",
-            "author": {
-                "login": "mattleibow",
-                "name": "Matthew Leibowitz",
-                "email": "1096616+mattleibow@users.noreply.github.com",
+        data = MODEL.build_data_json(
+            prs,
+            {
+                "version": "4.150.1",
+                "status": "preview",
+                "from": "v4.150.0",
+                "to": "v4.150.1",
+                "shipments": [],
             },
-        }]
+        )
 
-        with patch.object(DATA, "load_author_cache", return_value={"4379": "mattleibow"}):
-            DATA.resolve_pr_authors(prs)
-
-        self.assertEqual(prs[0]["author"]["login"], "mattleibow")
-        self.assertIs(prs[0]["author"]["login_verified"], True)
-
-    def test_deleted_sync_author_overwrites_spoofed_commit_login(self):
-        prs = [{
-            "number": 104,
-            "title": "[skia-sync] Merge upstream changes",
-            "author": {
-                "login": "mattleibow",
-                "name": "Spoofed Author",
-                "email": "1096616+mattleibow@users.noreply.github.com",
+        fact = data["prs"]["4379"]
+        self.assertEqual(fact["tag"], "product")
+        self.assertEqual(fact["commit"], "a" * 40)
+        self.assertEqual(fact["body"], "Fix Use-After-Free in SubRunAllocator.")
+        self.assertEqual(fact["companion_pr"]["number"], 281)
+        self.assertEqual(
+            data["range"],
+            {
+                "from": "v4.150.0",
+                "to": "v4.150.1",
+                "base_version": None,
             },
+        )
+
+    def test_internal_pr_omits_body_and_contributor_credit(self):
+        prs = [{
+            "number": 101,
+            "title": "Update workflow",
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "author": {"login": "contributor"},
+            "category": "internal",
+            "commit": "b" * 40,
+            "body": "Internal implementation detail.",
         }]
 
-        with patch.object(DATA, "load_author_cache", return_value={"104": None}):
-            DATA.resolve_pr_authors(prs)
+        data = MODEL.build_data_json(
+            prs,
+            {"version": "4.150.1", "status": "preview", "shipments": []},
+        )
 
-        self.assertIsNone(prs[0]["author"]["login"])
-        self.assertIs(prs[0]["author"]["login_verified"], True)
+        self.assertNotIn("body", data["prs"]["101"])
+        self.assertEqual(data["contributors"], [])
 
     def test_commit_body_cannot_forge_a_second_pr_record(self):
         commit = "a" * 40
@@ -333,10 +269,10 @@ class ShipmentCollectionTests(unittest.TestCase):
             "",
         ])
 
-        with patch.object(DATA, "run", return_value=log), patch.object(
-            DATA, "_files_by_commit", return_value={commit: {"binding/Fix.cs"}}
+        with patch.object(COMMON, "run", return_value=log), patch.object(
+            SOURCES, "_files_by_commit", return_value={commit: {"binding/Fix.cs"}}
         ):
-            prs = DATA.get_prs_from_diff("before", "after")
+            prs = SOURCES.get_prs_from_diff("before", "after")
 
         self.assertEqual([pr["number"] for pr in prs], [9999])
         self.assertEqual(prs[0]["body"], forged_separator)
@@ -352,7 +288,7 @@ class ShipmentCollectionTests(unittest.TestCase):
         self.assertEqual(items[1]["prs"], [105])
 
 
-class TeaserValidationAndRenderingTests(unittest.TestCase):
+class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
     def test_harfbuzz_version_change_requires_authored_summary(self):
         data = page_data([])
         data["harfbuzz"] = {
@@ -374,7 +310,7 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         ))
         self.assertIn(prose["harfbuzz_summary"], RENDER.render(data, prose))
 
-    def test_unchanged_harfbuzz_uses_narrow_deterministic_statement(self):
+    def test_unchanged_harfbuzz_omits_empty_narrative(self):
         data = page_data([])
         data["harfbuzz"] = {
             "version": "14.2.1",
@@ -383,13 +319,29 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         }
         prose = cumulative_prose({})
 
-        self.assertNotIn(
-            "same HarfBuzz as the previous line",
-            RENDER.render(data, prose),
-        )
-        self.assertIn(RENDER.NO_CHANGES_BODY, RENDER.render(data, prose))
+        self.assertNotIn("## HarfBuzzSharp", RENDER.render(data, prose))
 
-    def test_preview_uses_exact_teaser_website_summary(self):
+    def test_legacy_harfbuzz_no_change_sentence_is_preserved(self):
+        data = page_data([])
+        data["format"] = 3
+        data["harfbuzz"] = {
+            "version": "14.2.1",
+            "prs": [],
+        }
+        prose = cumulative_prose({})
+        prose["preview_summaries"] = {}
+        prose["harfbuzz_summary"] = (
+            "Legacy prose that the reviewed page did not render."
+        )
+
+        rendered = RENDER.render(data, prose)
+        self.assertIn(
+            RENDER.LEGACY_NO_HARFBUZZ_CHANGES,
+            rendered,
+        )
+        self.assertNotIn(prose["harfbuzz_summary"], rendered)
+
+    def test_preview_uses_release_summary(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
         data["previews"] = [
@@ -407,36 +359,32 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
             "breaking": [],
             "categories": [],
             "contributor_summaries": {},
-            "preview_summaries": {item["tag"]: "Legacy text must not win."},
-            "release_teasers": {
-                item["tag"]: teaser(
-                    [101], website_summary="The exact shipment summary wins."
+            "release_summaries": {
+                item["tag"]: release_summary(
+                    [101], summary="Adds the exact shipment feature."
                 )
             },
         }
         self.assertEqual(RENDER.validate(data, prose), [])
         text = RENDER.render(data, prose)
-        self.assertIn("The exact shipment summary wins.", text)
-        self.assertNotIn("Legacy text must not win.", text)
+        self.assertIn("Adds the exact shipment feature.", text)
+        self.assertIn("#101", text)
 
-    def test_rc_teaser_is_structured_escaped_and_credited(self):
+    def test_rc_github_summary_is_escaped_counted_and_credited(self):
         item = shipment("v4.151.0-rc.1.1", [103], channel="rc")
         data = page_data([item])
-        prose = {
-            "release_teasers": {
-                item["tag"]: teaser(
-                    [103],
-                    subtitle="Tests [RC] *safely*.",
-                )
-            }
-        }
-        text = RENDER.render_release_teaser(data, prose, item["tag"])
+        prose = cumulative_prose({
+            item["tag"]: release_summary(
+                [103],
+                summary="Tests [RC] *safely*.",
+            )
+        })
+        text = RENDER.render_github_release_summary(data, prose, item["tag"])
         self.assertIn(r"Tests \[RC\] \*safely\*.", text)
-        self.assertIn("## ✨ What's New", text)
         self.assertIn("[@contributor]", text)
-        self.assertIn("Thanks to our contributors:", text)
+        self.assertIn("1 pull request · 1 consumer-facing", text)
 
-    def test_stable_empty_delta_is_deterministic_without_ai(self):
+    def test_stable_summary_uses_cumulative_highlights(self):
         item = shipment(
             "v4.151.0", [], channel="stable", previous="v4.151.0-rc.1.1"
         )
@@ -447,39 +395,56 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
             "breaking": [],
             "categories": [],
             "contributor_summaries": {},
-            "release_teasers": {},
+            "release_summaries": {},
         }
         self.assertEqual(RENDER.validate(data, prose), [])
-        text = RENDER.render_release_teaser(data, prose, item["tag"])
-        self.assertEqual(
-            text,
-            RENDER.EMPTY_STABLE_SUBTITLE
-            + "\n\n"
-            + RENDER.RELEASE_LINKS_MARKER
-            + "\n",
-        )
+        text = RENDER.render_github_release_summary(data, prose, item["tag"])
+        self.assertIn("The stable package now ships.", text)
+        self.assertIn("0 pull requests · 0 consumer-facing", text)
 
-    def test_teaser_prs_must_be_subset_of_exact_delta(self):
+    def test_release_summary_prs_must_be_subset_of_exact_scope(self):
         item = shipment("v4.151.0-preview.1.1", [101])
-        errors = DATA.validate_release_teaser(item, teaser([999]))
-        self.assertTrue(any("outside its exact delta" in e for e in errors))
+        data = page_data([item])
+        prose = cumulative_prose({
+            item["tag"]: release_summary([999]),
+        })
+        errors = RENDER.validate(data, prose)
+        self.assertTrue(any("outside its exact scope" in error for error in errors))
 
-    def test_security_details_are_rejected(self):
-        item = shipment("v4.151.0-preview.1.1", [101])
-        value = teaser([101])
-        value["categories"][0]["bullets"][0]["text"] = "Fixes CVE-2026-1234"
-        errors = DATA.validate_release_teaser(item, value)
-        self.assertTrue(any("security/vulnerability" in e for e in errors))
+    def test_exact_build_scope_replaces_rollup_milestone_scope(self):
+        item = shipment("v4.151.0-preview.1.2", [102])
+        data = page_data([item])
+        data["prs"]["101"] = {
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "title": "Earlier build",
+            "author": "contributor",
+            "community": True,
+            "tag": "product",
+        }
+        data["previews"] = [{
+            "key": item["tag"],
+            "label": "Preview 1",
+            "prs": [101, 102],
+        }]
+        prose = cumulative_prose({
+            item["tag"]: release_summary([101]),
+        })
 
-    def test_internal_prs_are_rejected_from_cumulative_categories(self):
+        errors = RENDER.validate(data, prose)
+
+        self.assertTrue(any("outside its exact scope" in error for error in errors))
+
+    def test_semantic_category_choices_are_not_script_policy(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
         data["prs"]["101"]["tag"] = "internal"
-        prose = cumulative_prose({item["tag"]: teaser([101])})
+        prose = cumulative_prose({
+            item["tag"]: release_summary([101]),
+        })
         prose["theme"] = "Consumer release"
         prose["highlights_headline"] = "Consumer improvements ship."
         prose["categories"] = [{
-            "heading": "Highlights",
+            "heading": "Platform",
             "bullets": [{
                 "lead": "CI mechanics",
                 "detail": "Adds a containerized test leg.",
@@ -489,22 +454,15 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
 
         errors = RENDER.validate(data, prose)
 
-        self.assertTrue(any("must not reference internal PRs: #101" in error
-                            for error in errors))
+        self.assertFalse(any("internal" in error.casefold() for error in errors))
 
-        data["version"] = "2.80.0"
-        legacy_errors = RENDER.validate(data, prose)
-        self.assertFalse(any("must not reference internal PRs: #101" in error
-                             for error in legacy_errors))
-
-    def test_sync_round_count_and_internal_mechanics_are_validated_generally(self):
+    def test_sync_round_wording_is_not_counted_by_renderer(self):
         item = shipment("v4.150.2", [101, 102], channel="stable")
         data = page_data([item])
         data["version"] = "4.150.2"
         data["prs"]["101"]["title"] = "[skia-sync] Merge upstream bug fixes"
         data["prs"]["102"]["title"] = "[skia-sync] Update with Ganesh fixes"
-        data["contributors"] = [{"login": "builder", "prs": [102]}]
-        prose = cumulative_prose({item["tag"]: teaser([101, 102])})
+        prose = cumulative_prose({})
         prose["theme"] = "Three rounds of Skia fixes"
         prose["categories"] = [{
             "heading": "Engine",
@@ -514,62 +472,36 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
                 "prs": [101, 102],
             }],
         }]
-        prose["contributor_summaries"] = {
-            "builder": "MSVC environment initialization",
-        }
 
         errors = RENDER.validate(data, prose)
 
-        self.assertTrue(any("facts contain 2" in error for error in errors))
-        self.assertTrue(any("internal work broadly" in error
-                            for error in errors))
+        self.assertFalse(any("round" in error.casefold() for error in errors))
 
     def test_duplicate_exact_tags_are_rejected(self):
         item = shipment("v4.151.0-preview.1.1", [101])
-        errors = DATA.validate_shipments(page_data([item, deepcopy(item)]))
+        errors = COMMON.validate_shipments(page_data([item, deepcopy(item)]))
         self.assertEqual(
             errors,
             ["duplicate exact shipment tags: v4.151.0-preview.1.1"],
         )
 
-    def test_website_security_prose_is_not_mapped_to_dependency_teaser(self):
-        item = shipment("v4.151.0-preview.1.1", [101])
-        data = page_data([item])
-        prose = {
-            "categories": [
-                {
-                    "heading": "Security",
-                    "bullets": [
-                        {
-                            "lead": "Dependencies refreshed",
-                            "detail": "Security fixes.",
-                            "prs": [101],
-                        }
-                    ],
-                }
-            ],
-            "release_teasers": {item["tag"]: teaser([101])},
-        }
-        text = RENDER.render_release_teaser(data, prose, item["tag"])
-        self.assertNotIn("Dependency Updates", text)
-        self.assertNotIn("Security fixes", text)
-
-
 class PreservationLifecycleTests(unittest.TestCase):
     def test_changed_facts_delete_full_prose_and_queue_page(self):
         with tempfile.TemporaryDirectory() as directory:
             page = Path(directory) / "4.150.0.md"
-            data_path = DATA._data_json_path(page)
-            prose_path = DATA._prose_json_path(page)
+            data_path = COMMON.data_json_path(page)
+            context_path = COMMON.context_markdown_path(page)
+            prose_path = COMMON.prose_json_path(page)
             data_path.parent.mkdir(parents=True)
             data_path.write_text(json.dumps({"version": "old"}) + "\n")
             prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
 
-            result = DATA._write_page_outputs(
+            result = MODEL.write_page_outputs(
                 page, {"version": "4.150.0"}, 3
             )
 
-            self.assertEqual(result, str(page))
+            self.assertEqual(result, str(context_path))
+            self.assertTrue(context_path.exists())
             self.assertFalse(prose_path.exists())
             self.assertEqual(json.loads(data_path.read_text()),
                              {"version": "4.150.0"})
@@ -577,14 +509,16 @@ class PreservationLifecycleTests(unittest.TestCase):
     def test_unchanged_facts_keep_prose_and_do_not_queue_page(self):
         with tempfile.TemporaryDirectory() as directory:
             page = Path(directory) / "4.150.0.md"
-            data_path = DATA._data_json_path(page)
-            prose_path = DATA._prose_json_path(page)
+            data_path = COMMON.data_json_path(page)
+            context_path = COMMON.context_markdown_path(page)
+            prose_path = COMMON.prose_json_path(page)
             data = {"version": "4.150.0"}
             data_path.parent.mkdir(parents=True)
             data_path.write_text(json.dumps(data, indent=2) + "\n")
+            context_path.write_text(MODEL.render_agent_context(data, page))
             prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
 
-            result = DATA._write_page_outputs(page, data, 3)
+            result = MODEL.write_page_outputs(page, data, 3)
 
             self.assertIsNone(result)
             self.assertTrue(prose_path.exists())
@@ -592,39 +526,60 @@ class PreservationLifecycleTests(unittest.TestCase):
     def test_force_deletes_full_prose_and_queues_unchanged_page(self):
         with tempfile.TemporaryDirectory() as directory:
             page = Path(directory) / "4.150.0.md"
-            data_path = DATA._data_json_path(page)
-            prose_path = DATA._prose_json_path(page)
+            data_path = COMMON.data_json_path(page)
+            context_path = COMMON.context_markdown_path(page)
+            prose_path = COMMON.prose_json_path(page)
             data = {"version": "4.150.0"}
             data_path.parent.mkdir(parents=True)
             data_path.write_text(json.dumps(data, indent=2) + "\n")
             prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
 
-            result = DATA._write_page_outputs(page, data, 3, force=True)
+            result = MODEL.write_page_outputs(page, data, 3, force=True)
 
-            self.assertEqual(result, str(page))
+            self.assertEqual(result, str(context_path))
             self.assertFalse(prose_path.exists())
 
-    def test_cumulative_prose_only_edit_does_not_change_teaser_render(self):
+    def test_missing_prose_requeues_existing_atomic_context(self):
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "4.150.0.md"
+            data = {"version": "4.150.0"}
+            data_path = COMMON.data_json_path(page)
+            context_path = COMMON.context_markdown_path(page)
+            data_path.parent.mkdir(parents=True)
+            data_path.write_text(json.dumps(data, indent=2) + "\n")
+            context_path.write_text(MODEL.render_agent_context(data, page))
+
+            result = MODEL.write_page_outputs(page, data, 3)
+
+            self.assertEqual(result, str(context_path))
+            self.assertFalse(data_path.with_name(data_path.name + ".tmp").exists())
+            self.assertFalse(
+                context_path.with_name(context_path.name + ".tmp").exists()
+            )
+
+    def test_cumulative_prose_only_edit_does_not_change_prerelease_summary(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
-        before = cumulative_prose({item["tag"]: teaser([101])})
+        before = cumulative_prose({
+            item["tag"]: release_summary([101]),
+        })
         before["theme"] = "Before"
         after = deepcopy(before)
         after["theme"] = "After"
         after["categories"] = [{"heading": "Security", "bullets": []}]
         self.assertEqual(
-            RENDER.render_release_teaser(data, before, item["tag"]),
-            RENDER.render_release_teaser(data, after, item["tag"]),
+            RENDER.render_github_release_summary(data, before, item["tag"]),
+            RENDER.render_github_release_summary(data, after, item["tag"]),
         )
 
-    def test_polish_list_contains_one_page_path_per_line(self):
+    def test_polish_list_contains_one_context_path_per_line(self):
         path = ROOT / "output/release-notes-polish-list-test.txt"
         pages = [
-            "documentation/docfx/releases/4.150.0.md",
-            "documentation/docfx/releases/4.150.1.md",
+            "documentation/docfx/releases/_sources/4.150.0.context.md",
+            "documentation/docfx/releases/_sources/4.150.1.context.md",
         ]
         try:
-            DATA.write_polish_list(pages, path)
+            COMMON.write_polish_list(pages, path)
             self.assertEqual(path.read_text().splitlines(), pages)
         finally:
             if path.exists():
@@ -633,17 +588,22 @@ class PreservationLifecycleTests(unittest.TestCase):
     def test_empty_polish_list_is_an_empty_file(self):
         path = ROOT / "output/release-notes-polish-list-test.txt"
         try:
-            DATA.write_polish_list([], path)
+            COMMON.write_polish_list([], path)
             self.assertEqual(path.read_text(), "")
         finally:
             if path.exists():
                 path.unlink()
 
-    def test_malformed_teaser_reports_validation_errors(self):
+    def test_malformed_release_summary_reports_validation_errors(self):
         item = shipment("v4.151.0-preview.1.1", [101])
-        value = teaser([101])
-        value["categories"][0]["bullets"][0]["prs"] = [101, 101, "bad"]
-        errors = DATA.validate_release_teaser(item, value)
+        data = page_data([item])
+        prose = cumulative_prose({
+            item["tag"]: {
+                "summary": "Adds useful package updates.",
+                "prs": [101, 101, "bad"],
+            }
+        })
+        errors = RENDER.validate(data, prose)
         self.assertTrue(any("positive integers" in error for error in errors))
 
 

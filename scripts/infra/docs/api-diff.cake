@@ -12,7 +12,7 @@
 //
 // One target: `docs-api-diff` regenerates the COMMITTED releases/ trees from the
 // feed (the Cake generator the §2.2 Prepare phase runs). It is INCREMENTAL and
-// SCOPED — like release-notes-data.py it takes --force / --minVersion / --maxVersion:
+// SCOPED — like release_notes/generate.py it takes --force / --minVersion / --maxVersion:
 // by default it skips a line whose api-diff folder already exists (a shipped
 // version's diff never changes), only computing missing/forced lines in range.
 // `--force` with no scope regenerates the whole back-catalogue (e.g. after the
@@ -45,7 +45,7 @@ bool IsHarfBuzzFamily (string id) =>
 Task ("docs-api-diff")
     .Does (async () =>
 {
-    // Incremental + scoped controls (forwarded by prepare.sh; mirror release-notes-data.py).
+    // Incremental + scoped controls (forwarded by prepare.sh; mirror release_notes/generate.py).
     //   --force              rebuild a line even when its api-diff folder exists
     //   --minVersion X       lower bound (inclusive) on the line core to process
     //   --maxVersion Y       upper bound (inclusive); set == min for a single version
@@ -429,7 +429,7 @@ string ReadHarfBuzzDependencyLine (string packageRoot)
 }
 
 // True iff `core` is within the inclusive [minVersion, maxVersion] range. Empty bounds
-// are open. Used to scope an incremental run to a version range (mirrors release-notes-data.py's
+// are open. Used to scope an incremental run to a version range (mirrors release_notes/generate.py's
 // --min-version/--max-version), comparing on the NuGet version core.
 bool CoreInRange (string core, string minVersion, string maxVersion)
 {

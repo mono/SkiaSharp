@@ -75,7 +75,6 @@ class PublishCommandTests(unittest.TestCase):
             "a" * 40,
         )
         self.assertNotIn("--dry-run", release_command)
-        self.assertNotIn("--teaser-file", release_command)
 
     def test_package_statuses_match_external_state(self):
         self.assertEqual(

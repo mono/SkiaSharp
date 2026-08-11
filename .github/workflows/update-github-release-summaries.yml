@@ -1,4 +1,4 @@
-name: Update GitHub Release teasers
+name: Update GitHub Release summaries
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Optional exact tag to converge (empty updates every reviewed teaser)"
+        description: "Optional exact tag to converge (empty updates every reviewed summary)"
         required: false
         type: string
 
@@ -19,12 +19,12 @@ permissions:
   contents: write
 
 concurrency:
-  group: update-github-release-teasers
+  group: update-github-release-summaries
   cancel-in-progress: false
 
 jobs:
   update:
-    name: Apply reviewed teasers
+    name: Apply reviewed summaries
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -71,4 +71,4 @@ jobs:
               exit 2
               ;;
           esac
-          python3 scripts/infra/docs/update-github-release-teasers.py "${args[@]}"
+          python3 scripts/infra/docs/release_notes/update_github_summaries.py "${args[@]}"

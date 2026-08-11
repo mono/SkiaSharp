@@ -219,7 +219,7 @@ feature branch; it still uses the feed-based committed-diff engine described abo
 ### Relationship to release notes
 
 The API-diff engine (Cake) and the release-notes prose engine
-([`release-notes-data.py`](../../scripts/infra/docs/release-notes-data.py) + [`release-notes-render.py`](../../scripts/infra/docs/release-notes-render.py))
+([`release_notes/generate.py`](../../scripts/infra/docs/release_notes/generate.py) + [`release_notes/render.py`](../../scripts/infra/docs/release_notes/render.py))
 are distinct engines — orchestrated together by `prepare.sh` — that share two
 inter-engine contracts. The first is
 [`scripts/infra/docs/versions.json`](../../scripts/infra/docs/versions.json), the single
@@ -235,7 +235,7 @@ source of truth for two decisions both systems honour identically:
 The second shared contract is
 [`co-release-map.json`](../../documentation/docfx/releases/_sources/co-release-map.json):
 the Cake api-diff engine writes the `{skia_line: harfbuzz_line}` pairing it computed
-(from the nuspec / `VERSIONS.txt`), and `release-notes-data.py` reads it to fold the matching
+(from the nuspec / `VERSIONS.txt`), and `release_notes/generate.py` reads it to fold the matching
 HarfBuzzSharp api-diff link into each SkiaSharp page. It is a one-way Cake→Python
 hand-off, merged (never overwritten) so scoped runs keep prior lines.
 
