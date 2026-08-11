@@ -1,0 +1,75 @@
+<Project>
+  <PropertyGroup>
+    <EnableDefaultArtifacts>false</EnableDefaultArtifacts>
+    <UseDotNetCertificate>false</UseDotNetCertificate>
+    <DoStrongNameCheck>false</DoStrongNameCheck>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Replace Arcade's broad defaults with the repository's explicit policy. -->
+    <ItemsToSign Remove="@(ItemsToSign)" />
+    <StrongNameSignInfo Remove="@(StrongNameSignInfo)" />
+    <FileSignInfo Remove="@(FileSignInfo)" />
+    <FileExtensionSignInfo Remove="@(FileExtensionSignInfo)" />
+
+    <ItemsToSign Include="$(ArtifactsShippingPackagesDir)**\*.nupkg" />
+
+    <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
+    <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+
+    <FirstPartyFile Include="HarfBuzzSharp.dll" />
+    <FirstPartyFile Include="DpiWatcher.js" />
+    <FirstPartyFile Include="libEGL.dll" />
+    <FirstPartyFile Include="libGLESv2.dll" />
+    <FirstPartyFile Include="libHarfBuzzSharp.dll" />
+    <FirstPartyFile Include="libSkiaSharp.dll" />
+    <FirstPartyFile Include="SkiaSharp.Direct3D.Vortice.dll" />
+    <FirstPartyFile Include="SkiaSharp.dll" />
+    <FirstPartyFile Include="SkiaSharp.HarfBuzz.dll" />
+    <FirstPartyFile Include="SkiaSharp.Resources.dll" />
+    <FirstPartyFile Include="SkiaSharp.SceneGraph.dll" />
+    <FirstPartyFile Include="SkiaSharp.Skottie.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Android.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Blazor.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Desktop.Common.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Gtk3.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Gtk4.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.iOS.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Mac.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Maui.Controls.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Maui.Core.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Tizen.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.tvOS.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.Windows.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.WindowsForms.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.WinUI.Native.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.WinUI.Native.Projection.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.WinUI.Native.winmd" />
+    <FirstPartyFile Include="SkiaSharp.Views.WPF.dll" />
+    <FirstPartyFile Include="SkiaSharp.Vulkan.SharpVk.dll" />
+    <FirstPartyFile Include="SizeWatcher.js" />
+    <FirstPartyFile Include="SKHtmlCanvas.js" />
+    <FirstPartyFile Include="SkiaSharpInterop.js" />
+
+    <MacDeveloperFile Include="libHarfBuzzSharp.dylib" />
+    <MacDeveloperFile Include="libSkiaSharp.dylib" />
+
+    <ThirdPartyFile Include="emdawnwebgpu.port.py" />
+    <ThirdPartyFile Include="library_webgpu.js" />
+    <ThirdPartyFile Include="library_webgpu_enum_tables.js" />
+    <ThirdPartyFile Include="library_webgpu_generated_sig_info.js" />
+    <ThirdPartyFile Include="library_webgpu_generated_struct_info.js" />
+    <ThirdPartyFile Include="webgpu-externs.js" />
+
+    <!-- Add ThirdPartyFile items when packages intentionally carry more third-party binaries. -->
+    <!-- Add SkippedFile items when a signable payload must retain its existing signature. -->
+
+    <FileSignInfo Include="@(FirstPartyFile)" CertificateName="Microsoft400" />
+    <FileSignInfo Include="@(MacDeveloperFile)" CertificateName="MacDeveloperVNext" />
+    <FileSignInfo Include="@(ThirdPartyFile)" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="@(SkippedFile)" CertificateName="None" />
+
+    <!-- SkiaSharp first-party binaries intentionally do not carry Microsoft copyright metadata. -->
+    <ItemsToSkip3rdPartyCheck Include="@(FirstPartyFile)" />
+  </ItemGroup>
+</Project>

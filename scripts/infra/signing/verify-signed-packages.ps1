@@ -7,7 +7,7 @@ param(
     [string] $SignedDirectory,
 
     [Parameter(Mandatory)]
-    [string] $SignListPath,
+    [string] $SigningPropsPath,
 
     [string] $OutputPath = '',
 
@@ -17,7 +17,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
-Import-Module (Join-Path $PSScriptRoot 'SkiaSharp.Signing.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot 'NuGetPayload.psm1') -Force
 
 function Assert-NoDuplicatePaths {
     param(
@@ -45,7 +45,7 @@ function Assert-NoDuplicatePaths {
 
 $originalPath = (Resolve-Path $OriginalDirectory).Path
 $signedPath = (Resolve-Path $SignedDirectory).Path
-$signList = (Resolve-Path $SignListPath).Path
+$signingProps = (Resolve-Path $SigningPropsPath).Path
 $originalPackages = @(Get-ChildItem $originalPath -Filter '*.nupkg' -File | Sort-Object Name)
 $signedPackages = @(Get-ChildItem $signedPath -Filter '*.nupkg' -File | Sort-Object Name)
 
@@ -55,8 +55,8 @@ if ($packageDifference) {
     throw 'The signed package set differs from the unsigned package set.'
 }
 
-$originalInventory = @(Get-SkiaSharpPackageInventory $originalPath)
-$signedInventory = @(Get-SkiaSharpPackageInventory $signedPath)
+$originalInventory = @(Get-NuGetPackageInventory $originalPath)
+$signedInventory = @(Get-NuGetPackageInventory $signedPath)
 Assert-NoDuplicatePaths $originalInventory 'Unsigned packages'
 Assert-NoDuplicatePaths $signedInventory 'Signed packages'
 
@@ -68,7 +68,7 @@ if ($pathDifference) {
     throw 'Signing changed the recursive NuGet payload structure.'
 }
 
-$policy = Get-SkiaSharpSigningPolicy $originalInventory $signList
+$policy = Get-ArcadeSigningPolicy $originalInventory $signingProps
 $assignmentByPath = @{}
 foreach ($file in $policy.Files) {
     foreach ($path in $file.Paths) {

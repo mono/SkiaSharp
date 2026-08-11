@@ -2,7 +2,7 @@ $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
 Add-Type -AssemblyName System.IO.Compression
-Import-Module (Join-Path $PSScriptRoot '../SkiaSharp.Signing.psm1') -Force
+Import-Module (Join-Path $PSScriptRoot '../NuGetPayload.psm1') -Force
 
 function New-ArchiveBytes {
     param(
@@ -93,8 +93,7 @@ function New-TestPackage {
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-signing-tests-$([Guid]::NewGuid().ToString('N'))"
 $unsigned = Join-Path $testRoot 'unsigned'
 $signed = Join-Path $testRoot 'signed'
-$generated = Join-Path $testRoot 'generated'
-$signList = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../package/SignList.xml'))
+$signingProps = Join-Path $testRoot 'Signing.props'
 $verifier = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../verify-signed-packages.ps1'))
 
 try {
@@ -103,23 +102,32 @@ try {
     New-TestPackage (Join-Path $unsigned 'SkiaSharp.Test.1.0.0.nupkg')
     New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed
 
-    $inventory = @(Get-SkiaSharpPackageInventory $unsigned)
-    $policy = Get-SkiaSharpSigningPolicy $inventory $signList
-    $props = Join-Path $generated 'Signing.props'
-    Write-SkiaSharpArcadeSigningProps $policy $props
+    @'
+<Project>
+  <ItemGroup>
+    <FirstPartyFile Include="HarfBuzzSharp.dll" />
+    <FirstPartyFile Include="HarfBuzzSharp.Subset.dll" />
+    <FirstPartyFile Include="libEGL.dll" />
+    <FirstPartyFile Include="libGLESv2.dll" />
+    <FirstPartyFile Include="libHarfBuzzSharp.dll" />
+    <FirstPartyFile Include="libSkiaSharp.dll" />
+    <FirstPartyFile Include="SkiaSharp.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.dll" />
+    <FirstPartyFile Include="SkiaSharp.Views.WinUI.Native.winmd" />
+    <FirstPartyFile Include="zlib1.dll" />
+    <MacDeveloperFile Include="libHarfBuzzSharp.dylib" />
+    <MacDeveloperFile Include="libSkiaSharp.dylib" />
+  </ItemGroup>
+</Project>
+'@ | Set-Content $signingProps -Encoding utf8NoBOM
 
-    [xml] $generatedProps = Get-Content $props -Raw
-    $fileSignInfo = @($generatedProps.SelectNodes(
-        "/*[local-name()='Project']/*[local-name()='ItemGroup']/*[local-name()='FileSignInfo']"))
-    $fileNames = @($fileSignInfo | ForEach-Object { $_.GetAttribute('Include') })
-    if (-not ($fileNames -contains 'SkiaSharp.dll')) {
-        throw 'Generated Arcade policy did not include SkiaSharp.dll.'
-    }
-    if (-not ($fileNames -contains 'libSkiaSharp.dylib')) {
-        throw 'Generated Arcade policy did not include libSkiaSharp.dylib.'
-    }
-    if (-not ($fileNames -contains 'SkiaSharp.Views.WinUI.Native.winmd')) {
-        throw 'Generated Arcade policy did not include SkiaSharp.Views.WinUI.Native.winmd.'
+    $inventory = @(Get-NuGetPackageInventory $unsigned)
+    $policy = Get-ArcadeSigningPolicy $inventory $signingProps
+    $fileNames = @($policy.Files.Name)
+    if (-not ($fileNames -contains 'SkiaSharp.dll') -or
+        -not ($fileNames -contains 'libSkiaSharp.dylib') -or
+        -not ($fileNames -contains 'SkiaSharp.Views.WinUI.Native.winmd')) {
+        throw 'Arcade signing policy did not include the expected payloads.'
     }
     $nestedPayloadPath = 'SkiaSharp.Test.1.0.0.nupkg!/tools/payload.nupkg!/lib/net10.0/HarfBuzzSharp.Subset.dll'
     if (-not ($inventory.Path -contains $nestedPayloadPath)) {
@@ -133,7 +141,7 @@ try {
     & $verifier `
         -OriginalDirectory $unsigned `
         -SignedDirectory $signed `
-        -SignListPath $signList `
+        -SigningPropsPath $signingProps `
         -RequireSignatures
 
     New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed -Tampered
@@ -142,7 +150,7 @@ try {
         & $verifier `
             -OriginalDirectory $unsigned `
             -SignedDirectory $signed `
-            -SignListPath $signList `
+            -SigningPropsPath $signingProps `
             -RequireSignatures
     } catch {
         $tamperDetected = $true
@@ -163,7 +171,7 @@ try {
     }
     $unclassifiedDetected = $false
     try {
-        Get-SkiaSharpSigningPolicy $unknownInventory $signList | Out-Null
+        Get-ArcadeSigningPolicy $unknownInventory $signingProps | Out-Null
     } catch {
         $unclassifiedDetected = $true
     }
