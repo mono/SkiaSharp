@@ -1,0 +1,158 @@
+{
+  "theme": "Graphite and async rendering",
+  "highlights_headline": "SkiaSharp 4.152 previews Graphite GPU rendering and asynchronous pixel readback on the Skia m152 engine.",
+  "highlights_body": "The preview also expands Vulkan integration options and enables font support on Nano Server. Native-backed views now retain their owners correctly, closing several use-after-free and failure-path leak risks.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "Moves the bundled renderer to Chrome milestone 152 and includes the latest upstream stability fixes from the preceding m151 line.",
+          "prs": [
+            4651,
+            4568,
+            4538,
+            4537
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU bindings introduced",
+          "detail": "Adds the next-generation Graphite backend for Vulkan, Metal, and Dawn, providing managed access to Skia's newer GPU architecture.",
+          "prs": [
+            3968
+          ]
+        },
+        {
+          "lead": "Asynchronous pixel readback added",
+          "detail": "SKImage and SKSurface can request pixel reads without blocking through a backend-neutral API.",
+          "prs": [
+            4545
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Native-backed views retain their owners",
+          "detail": "SKRegion span iterators and SKPixmap subsets now keep their source objects alive, preventing use-after-free failures.",
+          "prs": [
+            4355,
+            4558
+          ]
+        },
+        {
+          "lead": "Raster image failure cleanup corrected",
+          "detail": "SKImage.Create now releases its unmanaged pixel buffer when raster image creation fails.",
+          "prs": [
+            4455
+          ]
+        },
+        {
+          "lead": "Managed hot paths allocate and copy less",
+          "detail": "SKData.SaveTo avoids a duplicate buffer copy, while encoded-text and runtime-effect uniform lookups reduce recurring managed overhead.",
+          "prs": [
+            4550,
+            4498,
+            4512,
+            4630
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Nano Server font support enabled",
+          "detail": "Uses FreeType so text rendering can resolve fonts on Windows Nano Server.",
+          "prs": [
+            4280
+          ]
+        },
+        {
+          "lead": "Silk.NET Vulkan integration packaged",
+          "detail": "Adds SkiaSharp.Vulkan.Silk.NET as a supported bridge for applications using Silk.NET's Vulkan bindings.",
+          "prs": [
+            4527
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Enabled FreeType-based font support on Windows Nano Server",
+    "mmitche": "Release infrastructure maintenance",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "harfbuzz_summary": "HarfBuzzSharp received broader platform validation, including Alpine/musl and Nano Server coverage, alongside project-format modernization.",
+  "release_teasers": {
+    "v4.152.0-preview.1.1": {
+      "subtitle": "Introduces the Graphite GPU backend, async pixel readback, and Skia milestone 152.",
+      "website_summary": "Preview 1 introduces Graphite, async pixel readback, Nano Server font support, and Skia milestone 152.",
+      "categories": [
+        {
+          "heading": "What's New",
+          "bullets": [
+            {
+              "text": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+              "prs": [
+                3968
+              ]
+            },
+            {
+              "text": "Added backend-neutral async pixel readback for SKImage and SKSurface",
+              "prs": [
+                4545
+              ]
+            },
+            {
+              "text": "Added a Silk.NET Vulkan integration package",
+              "prs": [
+                4527
+              ]
+            },
+            {
+              "text": "Enabled FreeType-based font support on Nano Server",
+              "prs": [
+                4280
+              ]
+            },
+            {
+              "text": "Updated the bundled Skia engine to milestone 152",
+              "prs": [
+                4651
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Fixes",
+          "bullets": [
+            {
+              "text": "Kept SKRegion span iterators and SKPixmap subsets rooted to their native owners",
+              "prs": [
+                4355,
+                4558
+              ]
+            },
+            {
+              "text": "Released unmanaged pixel buffers when raster image creation fails",
+              "prs": [
+                4455
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
