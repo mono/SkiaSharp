@@ -111,15 +111,15 @@ stages:
                   -RequireSignatures
               displayName: Verify signed NuGet payload fidelity
 
-            - powershell: >
-                eng\common\sdk-task.ps1
-                -task SigningValidation
-                -restore
-                -msbuildEngine dotnet
-                "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping"
-              displayName: Validate nested signatures with Arcade
-
             - ${{ if eq(parameters.useRealSigning, true) }}:
+              - powershell: >
+                  eng\common\sdk-task.ps1
+                  -task SigningValidation
+                  -restore
+                  -msbuildEngine dotnet
+                  "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping"
+                displayName: Validate trusted signatures with Arcade
+
               - pwsh: |
                   Get-ChildItem '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' -Filter '*.nupkg' -File |
                     ForEach-Object {
