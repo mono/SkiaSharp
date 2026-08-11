@@ -155,6 +155,7 @@ stages:
                   -SignedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
                   -SigningPropsPath '$(Build.SourcesDirectory)\eng\Signing.props' `
                   -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\payload-verification.json' `
+                  -SignType '$(_SignType)' `
                   -RequireSignatures
               displayName: Verify signed NuGet payload fidelity
 

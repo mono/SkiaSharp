@@ -60,10 +60,13 @@ function New-TestPackage {
 
         [switch] $Signed,
 
+        [switch] $KeepMacUnsigned,
+
         [switch] $Tampered
     )
 
     $suffix = if ($Signed) { '-signed' } else { '' }
+    $macSuffix = if ($Signed -and -not $KeepMacUnsigned) { '-signed' } else { '' }
     $nested = New-ArchiveBytes -Entries @{
         'lib/net10.0/HarfBuzzSharp.Subset.dll' = "nested-managed$suffix"
         'content/keep-nested.txt' = 'keep-nested'
@@ -79,8 +82,8 @@ function New-TestPackage {
         'runtimes/win-x64/native/libEGL.dll' = "egl$suffix"
         'runtimes/win-x64/native/libGLESv2.dll' = "gles$suffix"
         'runtimes/win-x64/native/zlib1.dll' = "zlib$suffix"
-        'runtimes/osx/native/libSkiaSharp.dylib' = "mac-skia$suffix"
-        'runtimes/osx/native/libHarfBuzzSharp.dylib' = "mac-harfbuzz$suffix"
+        'runtimes/osx/native/libSkiaSharp.dylib' = "mac-skia$macSuffix"
+        'runtimes/osx/native/libHarfBuzzSharp.dylib' = "mac-harfbuzz$macSuffix"
         'tools/payload.nupkg' = $nested
         'content/keep.txt' = if ($Tampered) { 'tampered' } else { 'keep' }
     }
@@ -142,6 +145,14 @@ try {
         -OriginalDirectory $unsigned `
         -SignedDirectory $signed `
         -SigningPropsPath $signingProps `
+        -RequireSignatures
+
+    New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed -KeepMacUnsigned
+    & $verifier `
+        -OriginalDirectory $unsigned `
+        -SignedDirectory $signed `
+        -SigningPropsPath $signingProps `
+        -SignType test `
         -RequireSignatures
 
     New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed -Tampered
