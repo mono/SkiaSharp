@@ -8,16 +8,16 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: NetCore1ESPool-Internal
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: windows-2022
+        name: NetCore1ESPool-Internal
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -32,8 +32,8 @@ parameters:
     type: object
     default:
       pool:
-        name: Azure Pipelines
-        vmImage: ubuntu-22.04
+        name: NetCore1ESPool-Internal
+        image: 1es-ubuntu-2204
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -48,19 +48,27 @@ variables:
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
+  repositories:
+    - repository: 1ESPipelineTemplates
+      type: git
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
   pipelines:
     - pipeline: SkiaSharp
       source: skiasharp-package
       trigger: true
 
 extends:
-  template: /scripts/azure-template-fake-1es.yml@self
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
+    settings:
+      networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'test'
+          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
