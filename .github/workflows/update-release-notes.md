@@ -330,6 +330,7 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [area/Docs, partner/agentic-workflows]
     draft: false
+    base-branch: "${{ inputs.output_base_branch || 'main' }}"
     allowed-base-branches: ["${{ inputs.output_base_branch || 'main' }}"]
     allowed-branches: [bot/release-notes, "bot/release-notes-test-pr-*"]
     allowed-files: ["documentation/docfx/releases/**"]
