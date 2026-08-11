@@ -4,11 +4,18 @@ parameters:
   - name: useRealSigning
     type: boolean
     default: false
+  - name: dependsOn
+    type: object
+    default:
+      - package
+  - name: sourceBuildId
+    type: number
+    default: 0
 
 stages:
   - stage: signing
     displayName: Sign NuGets
-    dependsOn: package
+    dependsOn: ${{ parameters.dependsOn }}
     jobs:
       - template: /eng/common/templates-official/job/job.yml@self
         parameters:
@@ -59,11 +66,51 @@ stages:
               fetchTags: false
               submodules: false
           steps:
-            - task: DownloadPipelineArtifact@2
-              displayName: Download unsigned NuGets
-              inputs:
-                artifactName: nuget
-                targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
+            - ${{ if eq(parameters.sourceBuildId, 0) }}:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download unsigned NuGets
+                inputs:
+                  artifactName: nuget
+                  targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
+
+            - ${{ if ne(parameters.sourceBuildId, 0) }}:
+              - pwsh: |
+                  $uri = "$(System.CollectionUri)$(System.TeamProject)/_apis/build/builds/${{ parameters.sourceBuildId }}?api-version=7.1"
+                  $build = Invoke-RestMethod `
+                    -Method Get `
+                    -Uri $uri `
+                    -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" }
+
+                  if ([int]$build.definition.id -ne [int]"$(System.DefinitionId)") {
+                    throw "Build ${{ parameters.sourceBuildId }} belongs to definition $($build.definition.id), not $(System.DefinitionId)."
+                  }
+                  if ($build.repository.id -ne "$(Build.Repository.ID)") {
+                    throw "Build ${{ parameters.sourceBuildId }} belongs to repository '$($build.repository.id)', not '$(Build.Repository.ID)'."
+                  }
+                  if ($build.result -ne 'succeeded') {
+                    throw "Build ${{ parameters.sourceBuildId }} did not succeed (result: '$($build.result)')."
+                  }
+                  if ('${{ parameters.useRealSigning }}' -eq 'True' -and
+                      $build.sourceBranch -ne 'refs/heads/main' -and
+                      -not $build.sourceBranch.StartsWith('refs/heads/release/')) {
+                    throw "Real signing requires a successful main or release branch build, not '$($build.sourceBranch)'."
+                  }
+
+                  Write-Host "Validated source build $($build.id) at $($build.sourceVersion) from $($build.sourceBranch)."
+                displayName: Validate source build provenance
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+              - task: DownloadPipelineArtifact@2
+                displayName: Download unsigned NuGets from build ${{ parameters.sourceBuildId }}
+                inputs:
+                  buildType: specific
+                  project: '$(System.TeamProjectId)'
+                  pipeline: '$(System.DefinitionId)'
+                  buildVersionToDownload: specific
+                  buildId: ${{ parameters.sourceBuildId }}
+                  artifactName: nuget
+                  targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
 
             - pwsh: |
                 $source = '$(Agent.TempDirectory)\unsigned-nugets'
