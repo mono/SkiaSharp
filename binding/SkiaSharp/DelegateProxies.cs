@@ -28,6 +28,8 @@ namespace SkiaSharp
 
 	public delegate void SKGraphiteReleaseDelegate ();
 
+	public delegate void SKGraphiteFinishedDelegate (bool success);
+
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal static unsafe partial class DelegateProxies
@@ -114,6 +116,16 @@ namespace SkiaSharp
 			var del = Get<SKGraphiteReleaseDelegate> ((IntPtr)releaseContext, out var gch);
 			try {
 				del.Invoke ();
+			} finally {
+				gch.Free ();
+			}
+		}
+
+		private static partial void SKGraphiteFinishedProxyImplementation (void* finishedContext, bool success)
+		{
+			var del = Get<SKGraphiteFinishedDelegate> ((IntPtr)finishedContext, out var gch);
+			try {
+				del.Invoke (success);
 			} finally {
 				gch.Free ();
 			}

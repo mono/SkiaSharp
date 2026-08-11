@@ -29,6 +29,27 @@ namespace SkiaSharp
 			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
 		}
 
+		public static SKGraphiteBackendTexture CreateVulkan (
+			int width, int height,
+			SKGraphiteVkTextureInfo info,
+			int imageLayout,
+			uint queueFamilyIndex,
+			ulong vkImage)
+		{
+			if (vkImage == 0)
+				throw new ArgumentOutOfRangeException (
+					nameof (vkImage),
+					vkImage,
+					"Must be non-zero.");
+			if (width <= 0)
+				throw new ArgumentOutOfRangeException (nameof (width), width, "Must be positive.");
+			if (height <= 0)
+				throw new ArgumentOutOfRangeException (nameof (height), height, "Must be positive.");
+			IntPtr handle = SkiaApi.sk_graphite_vk_backend_texture_new_uint64 (
+				width, height, &info, imageLayout, queueFamilyIndex, vkImage);
+			return handle == IntPtr.Zero ? null : new SKGraphiteBackendTexture (handle, true);
+		}
+
 		public static SKGraphiteBackendTexture CreateMetal (
 			int width, int height,
 			IntPtr mtlTexture)
@@ -57,6 +78,13 @@ namespace SkiaSharp
 
 		public bool              IsValid => SkiaApi.sk_graphite_backend_texture_is_valid (Handle);
 		public SKGraphiteBackend Backend => SkiaApi.sk_graphite_backend_texture_get_backend (Handle);
+
+		public SKGraphiteTextureInfo TextureInfo {
+			get {
+				IntPtr handle = SkiaApi.sk_graphite_backend_texture_get_texture_info (Handle);
+				return handle == IntPtr.Zero ? null : new SKGraphiteTextureInfo (handle, true);
+			}
+		}
 
 		public SKSizeI Dimensions {
 			get {
