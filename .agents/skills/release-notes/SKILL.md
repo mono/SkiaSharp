@@ -221,8 +221,12 @@ not a per-version policy override. For an already-published shipment, preserve i
 curated PR selection and factual meaning while rewriting it into the current
 schema; phrasing may improve, but do not replace specific published behavior with
 a generic PR title or add internal/test-only exact-delta work that the release
-omitted. When a generic sync PR title lacks the behavior named by the published
-bullet, the published bullet supplies that missing fact. When
+omitted. Retain every named API, type, backend, dependency, data format, and
+failure mode from each selected published bullet; those names are reviewed facts,
+not expendable wording. For example, do not turn a published `Slug`
+deserialization crash into a generic "text data" fix. When a generic sync PR title
+lacks the behavior named by the published bullet, the published bullet supplies
+that missing fact. When
 `published_release` is absent, curate from the exact shipment's product PRs.
 Dependency updates must be neutral version updates. Do not copy the cumulative
 website `Security` section into `Dependency Updates`; independently curate only
