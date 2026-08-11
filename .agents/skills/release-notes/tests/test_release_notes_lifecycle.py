@@ -106,9 +106,10 @@ def cumulative_prose(release_teasers):
 
 
 class ShipmentCollectionTests(unittest.TestCase):
-    def collect(self, version, base):
+    def collect(self, version, base, published=None):
         tags = FIXTURE["tags"]
         deltas = FIXTURE["deltas"]
+        published = published or {}
 
         def fake_run(args, check=True):
             if args[:4] == ["git", "tag", "-l", "v*"]:
@@ -124,7 +125,11 @@ class ShipmentCollectionTests(unittest.TestCase):
 
         with patch.object(DATA, "run", side_effect=fake_run), patch.object(
             DATA, "get_prs_from_diff", side_effect=fake_delta
-        ), patch.object(DATA, "load_teaser_reviews", return_value={}):
+        ), patch.object(
+            DATA,
+            "get_published_release_teaser",
+            side_effect=lambda tag: published.get(tag),
+        ):
             return DATA.collect_shipments(version, base)[0]
 
     def test_preview_rc_stable_and_multiple_builds_are_not_deduped(self):
@@ -143,6 +148,21 @@ class ShipmentCollectionTests(unittest.TestCase):
         self.assertEqual(items[1]["prs"], [102])
         self.assertEqual(items[2]["channel"], "rc")
         self.assertEqual(items[3]["channel"], "stable")
+
+    def test_exact_shipment_carries_published_release_facts(self):
+        tag = "v4.151.0-rc.1.1"
+        reviewed = {
+            "subtitle": "A reviewed release.",
+            "categories": [{
+                "heading": "Fixes",
+                "bullets": [{"text": "Fixed behavior", "prs": [103]}],
+            }],
+        }
+
+        items = self.collect("4.151.0", "4.150.0", {tag: reviewed})
+
+        item = next(shipment for shipment in items if shipment["tag"] == tag)
+        self.assertEqual(item["published_release"], reviewed)
 
     def test_internal_title_pattern_overrides_product_path(self):
         DATA._PATH_TAGS_CONFIG = None
@@ -284,34 +304,34 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         errors = DATA.validate_release_teaser(item, value)
         self.assertTrue(any("security/vulnerability" in e for e in errors))
 
-    def test_reviewed_teaser_selection_and_wording_are_enforced(self):
-        item = shipment("v4.151.0-preview.2.1", [101, 102, 103])
-        item["teaser_review"] = {
-            "subtitle": "Reviewed subtitle.",
-            "website_summary": "Reviewed `SKColor` summary.",
-            "selected_prs": [101, 102],
-            "required_phrases": ["SKColor"],
-            "forbidden_phrases": ["managed color conversion"],
-            "pr_required_phrases": {
-                "101": ["specific behavior"],
-            },
-        }
-        value = teaser(
-            [101, 103],
-            subtitle="Unreviewed subtitle.",
-            website_summary="Managed color conversions.",
+    def test_published_release_parser_retains_curated_semantics_and_selection(self):
+        body = (
+            "A focused maintenance release.\n\n"
+            "📦 [NuGet](https://example.test)\n\n"
+            "## 🐛 Fixes\n"
+            "- Fixed Slug deserialization by @maintainer (#101)\n"
+            "- Fixed partial-stencil GPU rendering (#102)\n\n"
+            "---\n\n"
+            "<details><summary>All changes</summary>\n"
+            "* Internal test work (#103)\n"
         )
 
-        errors = DATA.validate_release_teaser(item, value)
+        published = DATA.parse_published_release_teaser(body)
 
-        self.assertTrue(any("subtitle must match" in error for error in errors))
-        self.assertTrue(any("website_summary must match" in error for error in errors))
-        self.assertTrue(any("omits reviewed PRs: #102" in error for error in errors))
-        self.assertTrue(any("excluded by review: #103" in error for error in errors))
-        self.assertTrue(any("must mention reviewed phrase 'SKColor'" in error
-                            for error in errors))
-        self.assertTrue(any("misattributed phrase" in error for error in errors))
-        self.assertTrue(any("PR #101 must mention" in error for error in errors))
+        self.assertEqual(published["subtitle"], "A focused maintenance release.")
+        self.assertEqual(
+            published["categories"],
+            [{
+                "heading": "Fixes",
+                "bullets": [
+                    {"text": "Fixed Slug deserialization", "prs": [101]},
+                    {
+                        "text": "Fixed partial-stencil GPU rendering",
+                        "prs": [102],
+                    },
+                ],
+            }],
+        )
 
     def test_internal_prs_are_rejected_from_cumulative_categories(self):
         item = shipment("v4.151.0-preview.1.1", [101])
@@ -339,26 +359,21 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         self.assertFalse(any("must not reference internal PRs: #101" in error
                              for error in legacy_errors))
 
-    def test_page_review_enforces_count_exclusions_and_safe_credit(self):
-        item = shipment("v4.152.0-preview.1.1", [101, 102])
+    def test_sync_round_count_and_internal_mechanics_are_validated_generally(self):
+        item = shipment("v4.150.2", [101, 102], channel="stable")
         data = page_data([item])
+        data["version"] = "4.150.2"
+        data["prs"]["101"]["title"] = "[skia-sync] Merge upstream bug fixes"
+        data["prs"]["102"]["title"] = "[skia-sync] Update with Ganesh fixes"
         data["contributors"] = [{"login": "builder", "prs": [102]}]
-        data["cumulative_review"] = {
-            "required_phrases": ["Four rounds"],
-            "forbidden_phrases": ["Three rounds"],
-            "excluded_prs": [101],
-            "contributor_summaries": {
-                "builder": "Release infrastructure maintenance",
-            },
-        }
         prose = cumulative_prose({item["tag"]: teaser([101, 102])})
-        prose["theme"] = "Three rounds"
+        prose["theme"] = "Three rounds of Skia fixes"
         prose["categories"] = [{
             "heading": "Engine",
             "bullets": [{
                 "lead": "Engine updates",
                 "detail": "Upstream updates.",
-                "prs": [101],
+                "prs": [101, 102],
             }],
         }]
         prose["contributor_summaries"] = {
@@ -367,54 +382,9 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
 
         errors = RENDER.validate(data, prose)
 
-        self.assertTrue(any("must mention reviewed phrase 'Four rounds'" in error
+        self.assertTrue(any("facts contain 2" in error for error in errors))
+        self.assertTrue(any("internal work broadly" in error
                             for error in errors))
-        self.assertTrue(any("must not use contradicted phrase 'Three rounds'"
-                            in error for error in errors))
-        self.assertTrue(any("reviewer-excluded PRs: #101" in error
-                            for error in errors))
-        self.assertTrue(any("must match reviewed text" in error
-                            for error in errors))
-
-    def test_committed_page_reviews_cover_known_regressions(self):
-        DATA._PAGE_REVIEWS_CONFIG = None
-        reviews = DATA.load_page_reviews()
-
-        self.assertEqual(reviews["4.150.2"]["required_phrases"], ["Four rounds"])
-        self.assertEqual(reviews["4.150.2"]["forbidden_phrases"], ["Three rounds"])
-        self.assertEqual(reviews["4.152.0"]["excluded_prs"], [4612])
-        self.assertIn("binding generation",
-                      reviews["4.152.0"]["forbidden_phrases"])
-        self.assertIn("MSVC", reviews["4.152.0"]["forbidden_phrases"])
-        self.assertEqual(
-            reviews["4.152.0"]["contributor_summaries"]["mmitche"],
-            "Release infrastructure maintenance",
-        )
-
-    def test_published_preview_one_review_excludes_valid_delta_pr_3788(self):
-        DATA._TEASER_REVIEWS_CONFIG = None
-        reviews = DATA.load_teaser_reviews()
-
-        selected = reviews["v4.151.0-preview.1.1"]["selected_prs"]
-
-        self.assertEqual(selected, [4294])
-        self.assertNotIn(3788, selected)
-
-    def test_published_rc_review_excludes_test_and_generic_sync_work(self):
-        DATA._TEASER_REVIEWS_CONFIG = None
-        review = DATA.load_teaser_reviews()["v4.151.0-rc.1.1"]
-
-        self.assertEqual(
-            review["selected_prs"],
-            [3997, 4370, 4385, 4428, 4459, 4487],
-        )
-        self.assertNotIn(4488, review["selected_prs"])
-        self.assertNotIn(4443, review["selected_prs"])
-        self.assertNotIn(4489, review["selected_prs"])
-        self.assertEqual(
-            review["pr_required_phrases"]["4487"],
-            ["exception-handling mismatch"],
-        )
 
     def test_duplicate_exact_tags_are_rejected(self):
         item = shipment("v4.151.0-preview.1.1", [101])

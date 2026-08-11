@@ -91,13 +91,10 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
 1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `shipments` (every exact published tag
-   and its exact-delta PR list), `previews` (each with its PR list),
+   and its exact-delta PR list plus any reviewed `published_release` teaser),
+   `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
    and the banner/link facts.
-   Some released pages also carry `cumulative_review`. These are retained human
-   decisions: use every `required_phrases` fact, avoid every
-   `forbidden_phrases` claim, omit `excluded_prs` from cumulative breaking and
-   category prose, and copy any `contributor_summaries` value exactly.
 2. Read the breaking sources it points at, if present: the version's
    `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
    are your material for the `breaking` slot — the API diff gives signature
@@ -185,6 +182,11 @@ credit — never write those yourself. A change with a migration usually belongs
 independent product value. Placement rule of thumb: ordinary fixes go under **Bug
 Fixes** even when platform-specific; use **Platform** only for platform-support
 additions or removals.
+
+For Skia syncs, count each distinct product `prs` entry whose title starts with
+`[skia-sync]` as one sync round. Keep a targeted detail scoped to the PR that
+actually names it: if one of four rounds names Ganesh, say four rounds including
+one targeted Ganesh update, not four Ganesh rounds or fewer total rounds.
 - Good: `{"heading": "Bug Fixes", "bullets": [{"lead": "Pixel access corrected", "detail": "GetPixelSpan now uses RowBytes for stride and the right axis for offsets.", "prs": [4148, 4128]}]}` (two PRs → one theme)
 - Bad: `{"heading": "Bugfixes", …}` (not one of the six) · one bullet per PR restating its title · a section that lists 20 internal PRs.
 
@@ -213,18 +215,15 @@ build segment. Author only keys named in the task manifest. Each entry has:
 
 Never mention a CVE, vulnerability, or security fix/release in teaser prose.
 
-Some shipment facts include `teaser_review`, retained from the already-published
-GitHub Release. Treat it as a hard reviewer decision, not a suggestion:
-
-- copy `subtitle` and `website_summary` exactly when present;
-- reference every `selected_prs` entry and no other PR in that teaser;
-- cover every `required_phrases` fact naturally in the subtitle, website summary,
-  or bullets; and
-- never use a `forbidden_phrases` misattribution.
-
-The renderer validates this contract. A PR can be a valid exact-delta product
-change and still be intentionally absent from `selected_prs`; published curated
-selection wins for that historical shipment.
+Some shipment facts include `published_release`, extracted from the actual
+already-published GitHub Release. This is the consumer-facing source,
+not a per-version policy override. For an already-published shipment, preserve its
+curated PR selection and factual meaning while rewriting it into the current
+schema; phrasing may improve, but do not replace specific published behavior with
+a generic PR title or add internal/test-only exact-delta work that the release
+omitted. When a generic sync PR title lacks the behavior named by the published
+bullet, the published bullet supplies that missing fact. When
+`published_release` is absent, curate from the exact shipment's product PRs.
 Dependency updates must be neutral version updates. Do not copy the cumulative
 website `Security` section into `Dependency Updates`; independently curate only
 native dependency PRs from the exact shipment. The renderer owns Markdown

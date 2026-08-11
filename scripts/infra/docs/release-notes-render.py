@@ -81,6 +81,27 @@ EMPTY_STABLE_SUBTITLE = (
     "This stable release matches the release candidate with no additional "
     "package changes."
 )
+_ROUND_COUNTS = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+}
+_ROUND_RE = re.compile(
+    r"\b(" + "|".join(_ROUND_COUNTS) + r"|\d+)\s+rounds?\b",
+    re.IGNORECASE,
+)
+_INTERNAL_MECHANICS_RE = re.compile(
+    r"\b(?:CI|MSVC|workflow|solution[- ]format|binding generation|"
+    r"environment initialization|test (?:leg|platform))\b",
+    re.IGNORECASE,
+)
 
 # The one fixed line a "no changes" HarfBuzz page carries as its whole body.
 NO_CHANGES_BODY = (
@@ -442,22 +463,18 @@ def _finish_validate(errors, data, prose):
         errors.append("these contributor summaries are blank: "
                       + ", ".join("@" + m for m in empty))
 
-    cumulative_review = data.get("cumulative_review") or {}
-    reviewed_summaries = cumulative_review.get("contributor_summaries") or {}
-    for login, expected in reviewed_summaries.items():
-        if summaries.get(login) != expected:
-            errors.append(
-                "contributor summary for @{} must match reviewed text: {}"
-                .format(login, expected))
-
     allowed = set(RELEASE_CATEGORIES)
     pr_facts = data.get("prs") or {}
-    excluded_prs = set(cumulative_review.get("excluded_prs") or [])
     cumulative_strings = [
         prose.get("theme"),
         prose.get("highlights_headline"),
         prose.get("highlights_body"),
         prose.get("harfbuzz_summary"),
+    ]
+    engine_strings = [
+        prose.get("theme"),
+        prose.get("highlights_headline"),
+        prose.get("highlights_body"),
     ]
     referenced_prs = set()
     for item in prose.get("breaking") or []:
@@ -477,6 +494,9 @@ def _finish_validate(errors, data, prose):
             for bullet in cat.get("bullets") or []:
                 cumulative_strings.extend(
                     (bullet.get("lead"), bullet.get("detail")))
+                if cat.get("heading") == "Engine":
+                    engine_strings.extend(
+                        (bullet.get("lead"), bullet.get("detail")))
                 referenced_prs.update(bullet.get("prs") or [])
                 internal = sorted(
                     number for number in bullet.get("prs") or []
@@ -487,23 +507,40 @@ def _finish_validate(errors, data, prose):
                         "consumer-facing category bullets must not reference internal "
                         "PRs: " + ", ".join("#{}".format(number)
                                            for number in internal))
-    forbidden_refs = sorted(referenced_prs & excluded_prs)
-    if forbidden_refs:
-        errors.append(
-            "cumulative prose references reviewer-excluded PRs: "
-            + ", ".join("#{}".format(number) for number in forbidden_refs))
     cumulative_strings.extend(summaries.values())
     cumulative_text = "\n".join(
         text for text in cumulative_strings if isinstance(text, str)).casefold()
-    for phrase in cumulative_review.get("required_phrases") or []:
-        if phrase.casefold() not in cumulative_text:
+    contributor_text = "\n".join(summaries.values())
+    if enforce_internal and _INTERNAL_MECHANICS_RE.search(contributor_text):
+        errors.append(
+            "contributor summaries must describe internal work broadly, "
+            "without CI, workflow, test-platform, compiler-environment, "
+            "solution-format, or binding-generation mechanics")
+
+    sync_rounds = sum(
+        1
+        for fact in pr_facts.values()
+        if (fact.get("tag") in {"product", "mixed"}
+            and fact.get("title", "").casefold().startswith("[skia-sync]")
+            and "milestone" not in fact.get("title", "").casefold())
+    )
+    if sync_rounds:
+        described_rounds = {
+            int(value) if value.isdigit() else _ROUND_COUNTS[value.casefold()]
+            for text in engine_strings
+            if isinstance(text, str)
+            and any(term in text.casefold()
+                    for term in ("skia", "sync", "upstream", "engine"))
+            for value in _ROUND_RE.findall(text)
+        }
+        wrong_rounds = sorted(described_rounds - {sync_rounds})
+        if wrong_rounds:
             errors.append(
-                "cumulative prose must mention reviewed phrase '{}'".format(phrase))
-    for phrase in cumulative_review.get("forbidden_phrases") or []:
-        if phrase.casefold() in cumulative_text:
-            errors.append(
-                "cumulative prose must not use contradicted phrase '{}'".format(
-                    phrase))
+                "cumulative prose says {} Skia sync round(s), but the facts contain {}"
+                .format(
+                    ", ".join(str(value) for value in wrong_rounds),
+                    sync_rounds,
+                ))
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})

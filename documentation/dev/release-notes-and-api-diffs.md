@@ -1116,12 +1116,15 @@ principles are fixed here.
    their reviewed prose because applying today's repository-layout classifier to
    historical changes can misclassify them. Moving current classification out of
    the LLM (and into the JSON) makes product-focus reliable run-to-run.
-   Previously reviewed page-specific facts live in
-   `scripts/infra/docs/release-page-reviews.json` and are copied into
-   `data.json.cumulative_review`. They can require or prohibit an audited phrase,
-   exclude a PR from cumulative prose, or require exact consumer-safe contributor
-   credit. The renderer enforces these decisions, so a forced re-polish cannot
-   reintroduce a known count contradiction or internal build detail.
+   For each exact published tag, Prepare reads the actual GitHub Release body and
+   copies its curated consumer-facing portion into
+   `data.json.shipments[].published_release`. This supplies behavior that generic
+   sync PR titles cannot express and preserves the reviewed selection without a
+   separate version-specific policy file. The prose agent may improve phrasing,
+   but uses the published release as the authoritative semantic source.
+   The renderer independently checks Skia sync-round counts against product PR
+   facts and rejects internal CI, workflow, test-platform, compiler-environment,
+   solution-format, and binding-generation mechanics from v4 contributor credit.
    HarfBuzz rollup facts similarly filter `internal` PRs before deciding whether
    the page needs a HarfBuzz prose summary; a rebuild, solution conversion, or
    test-platform change cannot manufacture a consumer-facing binding paragraph.
