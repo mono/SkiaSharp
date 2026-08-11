@@ -32,6 +32,11 @@ terms are semantic, not decorative: `image filter`, `color filter`, `paint bound
 `paint`, or `buffer`. Keep exact public type/member names whenever a PR title gives
 them. You may simplify surrounding prose, but not the identity of the feature.
 
+Do not claim output or behavior is unchanged, two implementations are equivalent,
+an optimization is allocation-free, or a change has no API/runtime impact unless
+the quoted source facts explicitly establish that claim. Describe only the
+improvement the evidence supports.
+
 ## Running the full pipeline (prepare → write prose → render)
 
 Producing release notes is three steps. Two are scripts you run; the middle one is

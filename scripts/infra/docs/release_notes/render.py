@@ -974,7 +974,7 @@ def _page_for_data(data_path):
     return data_path.parent.parent / (stem + ".md")
 
 
-def _prune_stale_unreleased(live):
+def _prune_stale_unreleased(live, min_core=None, max_core=None):
     # type: (set) -> int
     """Delete SkiaSharp ``<v>-unreleased.md`` pages whose line is no longer live.
 
@@ -991,6 +991,11 @@ def _prune_stale_unreleased(live):
     pruned = 0
     for f in sorted(RELEASES_DIR.glob("*-unreleased.md")):  # non-recursive: skips _sources/ + hb/
         version = f.stem[:-len("-unreleased")]
+        core = common.core_tuple(version)
+        if min_core is not None and core < min_core:
+            continue
+        if max_core is not None and core > max_core:
+            continue
         if version in live:
             continue
         f.unlink()
@@ -1031,7 +1036,7 @@ def _retire_harfbuzz_pages():
             pass
 
 
-def render_all():
+def render_all(min_core=None, max_core=None):
     # type: () -> int
     """Regenerate EVERY page and the TOC/index from committed JSON (offline).
 
@@ -1043,7 +1048,11 @@ def render_all():
     committed Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
     """
     index = load_index_json()
-    _prune_stale_unreleased(set(index.get("live_unreleased") or []))
+    _prune_stale_unreleased(
+        set(index.get("live_unreleased") or []),
+        min_core=min_core,
+        max_core=max_core,
+    )
     _retire_harfbuzz_pages()
 
     src_dirs = [RELEASES_DIR / "_sources"]
@@ -1116,7 +1125,18 @@ def main(argv):
     # committed JSON, offline. Takes no positional args. Returns non-zero if any
     # committed prose.json failed validation (a bad page must never ship).
     if "--all" in flags:
-        return 1 if render_all() else 0
+        def scope_value(name):
+            prefix = name + "="
+            value = next(
+                (flag[len(prefix):] for flag in flags if flag.startswith(prefix)),
+                "",
+            )
+            return common.core_tuple(value) if value else None
+
+        return 1 if render_all(
+            min_core=scope_value("--min-version"),
+            max_core=scope_value("--max-version"),
+        ) else 0
 
     if "--summary" in flags:
         if len(args) < 3:

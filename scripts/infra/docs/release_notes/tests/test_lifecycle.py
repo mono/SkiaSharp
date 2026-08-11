@@ -607,6 +607,41 @@ class PreservationLifecycleTests(unittest.TestCase):
         self.assertTrue(any("positive integers" in error for error in errors))
 
 
+class ScopedPruningTests(unittest.TestCase):
+    def test_scoped_render_preserves_out_of_range_unreleased_pages(self):
+        with tempfile.TemporaryDirectory() as directory:
+            releases = Path(directory)
+            pages = [
+                releases / "4.150.2-unreleased.md",
+                releases / "4.151.0-unreleased.md",
+            ]
+            for page in pages:
+                page.write_text("page")
+                COMMON.data_json_path(page).parent.mkdir(parents=True, exist_ok=True)
+                COMMON.data_json_path(page).write_text("{}")
+                COMMON.context_markdown_path(page).write_text("context")
+                COMMON.prose_json_path(page).write_text("{}")
+
+            with patch.object(RENDER, "RELEASES_DIR", releases):
+                pruned = RENDER._prune_stale_unreleased(
+                    {"4.152.0"},
+                    min_core=COMMON.core_tuple("4.150.0"),
+                    max_core=COMMON.core_tuple("4.150.0"),
+                )
+                self.assertEqual(pruned, 0)
+                self.assertTrue(all(page.exists() for page in pages))
+
+                pruned = RENDER._prune_stale_unreleased(
+                    {"4.152.0"},
+                    min_core=COMMON.core_tuple("4.150.2"),
+                    max_core=COMMON.core_tuple("4.150.2"),
+                )
+                self.assertEqual(pruned, 1)
+                self.assertFalse(pages[0].exists())
+                self.assertFalse(COMMON.context_markdown_path(pages[0]).exists())
+                self.assertTrue(pages[1].exists())
+
+
 class ApiDiffLifecycleTests(unittest.TestCase):
     def test_scoped_rebuild_clears_shared_line_once(self):
         source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()

@@ -441,8 +441,9 @@ After every changed page validates, Polish runs the offline finalizer once — e
 `release_notes/render.py --all`. `render.sh` accepts the same three flags as `prepare.sh` for
 a uniform interface; `--force` is a no-op because rendering is idempotent, and scoped
 runs first validate in-range pages individually before the authoritative `--all` pass.
-That final pass prunes any now-stale `-unreleased` page (per the `live_unreleased`
-set `release_notes/index.py` recorded in `index.json`), retires legacy standalone
+That final pass prunes stale `-unreleased` pages (per the `live_unreleased`
+set `release_notes/index.py` recorded in `index.json`) only inside the requested
+range; an unscoped production run prunes globally. It retires legacy standalone
 HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates every
 SkiaSharp page from committed `_sources/*.data.json` + `_sources/*.prose.json` (with
 folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` from

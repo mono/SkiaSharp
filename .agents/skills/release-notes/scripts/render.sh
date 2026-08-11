@@ -58,4 +58,7 @@ fi
 
 # The authoritative pass: render every page from committed JSON + rebuild TOC/index.
 echo "==> Render: full pass (every page + TOC.yml + index.md)"
-python3 "$RENDER_PY" --all
+final_flags=(--all)
+[ -n "$MIN" ] && final_flags+=("--min-version=$MIN")
+[ -n "$MAX" ] && final_flags+=("--max-version=$MAX")
+python3 "$RENDER_PY" "${final_flags[@]}"

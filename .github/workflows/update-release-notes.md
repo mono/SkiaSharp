@@ -401,9 +401,13 @@ This run's **CI-specific deltas** on top of the skill:
 3. Because the tool allowlist permits `python3` but **not** `render.sh`, finalize by
    running the renderer directly: `release_notes/render.py` per page to validate as you go
    (per the skill), then **once** at the end
-   `python3 scripts/infra/docs/release_notes/render.py --all`
+   `python3 scripts/infra/docs/release_notes/render.py --all \
+   --min-version="${{ inputs.min_version }}" \
+   --max-version="${{ inputs.max_version }}"`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
-   committed JSON). If `--all` exits non-zero, fix the reported prose and re-run.
+   committed JSON). The bounds limit stale-page pruning during a scoped validation
+   run; empty production bounds prune globally. If `--all` exits non-zero, fix the
+   reported prose and re-run.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 
