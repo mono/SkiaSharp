@@ -55,6 +55,14 @@ parameters:
     displayName: 'Sign NuGets from an existing package build ID (0 runs the normal pipeline)'
     type: number
     default: 0
+  - name: realSigning
+    displayName: 'Use ESRP real signing for a signing-only run'
+    type: boolean
+    default: false
+  - name: signingValidationOnly
+    displayName: 'Delete real-signed outputs and intentionally fail after validation'
+    type: boolean
+    default: false
   - name: testsPipelineId
     displayName: 'The downstream tests pipeline ID'
     type: number
@@ -186,4 +194,5 @@ extends:
             buildAgent: ${{ parameters.buildAgentWindows }}
             dependsOn: []
             sourceBuildId: ${{ parameters.signingSourceBuildId }}
-            useRealSigning: false
+            useRealSigning: ${{ parameters.realSigning }}
+            validationOnly: ${{ parameters.signingValidationOnly }}
