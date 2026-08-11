@@ -84,6 +84,7 @@ jobs:
       - pwsh: if ($IsLinux -or $IsMacOS) { df -h } else { Get-Volume }
         displayName: Get the volume information before the run
         condition: always()
+        retryCountOnTaskFailure: 3
 
       - task: UsePythonVersion@0
         displayName: Switch to the correct Python version
@@ -134,6 +135,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # free disk space on hosted agents - skip on cache hit (not building)
       - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:
@@ -144,6 +146,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the provisioning
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # provisioning steps
       - ${{ if ne(parameters.buildAgent.provisioningSteps, '') }}:
@@ -332,6 +335,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before downloading artifacts
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # download artifacts from other jobs in this pipeline run
       - template: /scripts/azure-templates-steps-download-artifacts.yml@self
@@ -342,6 +346,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after downloading artifacts
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # pre-build steps
       - ${{ if ne(parameters.buildAgent.preBuildSteps, '') }}:
@@ -352,6 +357,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information before the build
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # actual build
       - ${{ if ne(parameters.skipSteps, 'true') }}:
@@ -478,6 +484,7 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the build
         condition: always()
+        retryCountOnTaskFailure: 3
 
       # post-build steps
       - ${{ parameters.postBuildSteps }}
@@ -485,3 +492,4 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the entire run
         condition: always()
+        retryCountOnTaskFailure: 3
