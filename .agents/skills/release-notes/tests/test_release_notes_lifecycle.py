@@ -1,6 +1,7 @@
 import importlib.util
 import json
 import sys
+import tempfile
 import unittest
 from copy import deepcopy
 from pathlib import Path
@@ -106,10 +107,9 @@ def cumulative_prose(release_teasers):
 
 
 class ShipmentCollectionTests(unittest.TestCase):
-    def collect(self, version, base, published=None):
+    def collect(self, version, base):
         tags = FIXTURE["tags"]
         deltas = FIXTURE["deltas"]
-        published = published or {}
 
         def fake_run(args, check=True):
             if args[:4] == ["git", "tag", "-l", "v*"]:
@@ -125,10 +125,6 @@ class ShipmentCollectionTests(unittest.TestCase):
 
         with patch.object(DATA, "run", side_effect=fake_run), patch.object(
             DATA, "get_prs_from_diff", side_effect=fake_delta
-        ), patch.object(
-            DATA,
-            "get_published_release_teaser",
-            side_effect=lambda tag: published.get(tag),
         ):
             return DATA.collect_shipments(version, base)[0]
 
@@ -148,36 +144,6 @@ class ShipmentCollectionTests(unittest.TestCase):
         self.assertEqual(items[1]["prs"], [102])
         self.assertEqual(items[2]["channel"], "rc")
         self.assertEqual(items[3]["channel"], "stable")
-
-    def test_exact_shipment_carries_published_release_facts(self):
-        tag = "v4.151.0-rc.1.1"
-        reviewed = {
-            "subtitle": "A reviewed release.",
-            "categories": [{
-                "heading": "Fixes",
-                "bullets": [{"text": "Fixed behavior", "prs": [103]}],
-            }],
-        }
-
-        items = self.collect("4.151.0", "4.150.0", {tag: reviewed})
-
-        item = next(shipment for shipment in items if shipment["tag"] == tag)
-        self.assertEqual(item["published_release"], reviewed)
-
-    def test_empty_stable_does_not_import_cumulative_release_body(self):
-        stable = "v4.151.0"
-        cumulative = {
-            "subtitle": "Cumulative stable notes.",
-            "categories": [{
-                "heading": "What's New",
-                "bullets": [{"text": "Earlier preview work", "prs": [101]}],
-            }],
-        }
-
-        items = self.collect("4.151.0", "4.150.0", {stable: cumulative})
-
-        item = next(shipment for shipment in items if shipment["tag"] == stable)
-        self.assertNotIn("published_release", item)
 
     def test_internal_title_pattern_overrides_product_path(self):
         DATA._PATH_TAGS_CONFIG = None
@@ -355,35 +321,6 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         errors = DATA.validate_release_teaser(item, value)
         self.assertTrue(any("security/vulnerability" in e for e in errors))
 
-    def test_published_release_parser_retains_curated_semantics_and_selection(self):
-        body = (
-            "A focused maintenance release.\n\n"
-            "📦 [NuGet](https://example.test)\n\n"
-            "## 🐛 Fixes\n"
-            "- Fixed Slug deserialization by @maintainer (#101)\n"
-            "- Fixed partial-stencil GPU rendering (#102)\n\n"
-            "---\n\n"
-            "<details><summary>All changes</summary>\n"
-            "* Internal test work (#103)\n"
-        )
-
-        published = DATA.parse_published_release_teaser(body)
-
-        self.assertEqual(published["subtitle"], "A focused maintenance release.")
-        self.assertEqual(
-            published["categories"],
-            [{
-                "heading": "Fixes",
-                "bullets": [
-                    {"text": "Fixed Slug deserialization", "prs": [101]},
-                    {
-                        "text": "Fixed partial-stencil GPU rendering",
-                        "prs": [102],
-                    },
-                ],
-            }],
-        )
-
     def test_internal_prs_are_rejected_from_cumulative_categories(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
@@ -469,66 +406,53 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
 
 
 class PreservationLifecycleTests(unittest.TestCase):
-    def test_cumulative_change_preserves_reviewed_teasers(self):
-        tag = "v4.151.0-preview.1.1"
-        item = shipment(tag, [101])
-        old_data = page_data([item])
-        new_data = deepcopy(old_data)
-        new_data["tallies"] = {"product": 2}
-        reviewed = teaser([101], website_summary="Reviewed summary.")
-        prose = {
-            "theme": "Old",
-            "release_teasers": {tag: reviewed},
-        }
-        task = DATA.build_polish_task(
-            "documentation/docfx/releases/4.151.0.md",
-            old_data,
-            new_data,
-            prose,
-        )
-        self.assertTrue(task["cumulative"])
-        self.assertEqual(task["release_teasers"], [])
-        self.assertEqual(prose["release_teasers"][tag], reviewed)
+    def test_changed_facts_delete_full_prose_and_queue_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "4.150.0.md"
+            data_path = DATA._data_json_path(page)
+            prose_path = DATA._prose_json_path(page)
+            data_path.parent.mkdir(parents=True)
+            data_path.write_text(json.dumps({"version": "old"}) + "\n")
+            prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
 
-        path = ROOT / "output/release-notes-preservation-test.prose.json"
-        try:
-            DATA.preserve_teasers_for_cumulative_rewrite(path, prose)
-            persisted = json.loads(path.read_text())
-            self.assertEqual(persisted, {"release_teasers": {tag: reviewed}})
-        finally:
-            if path.exists():
-                path.unlink()
+            result = DATA._write_page_outputs(
+                page, {"version": "4.150.0"}, 3
+            )
 
-    def test_manifest_lists_only_missing_invalid_and_facts_changed(self):
-        tags = [
-            "v4.151.0-preview.1.1",
-            "v4.151.0-preview.1.2",
-            "v4.151.0-rc.1.1",
-            "v4.151.0-preview.2.1",
-        ]
-        old_items = [shipment(tag, [100 + i]) for i, tag in enumerate(tags)]
-        new_items = deepcopy(old_items)
-        new_items[2]["target_sha"] = "b" * 40
-        prose = cumulative_prose({
-            tags[0]: teaser([100]),
-            tags[1]: teaser([999]),
-            tags[2]: teaser([102]),
-        })
-        task = DATA.build_polish_task(
-            "page.md",
-            page_data(old_items),
-            page_data(new_items),
-            prose,
-        )
-        self.assertFalse(task["cumulative"])
-        self.assertEqual(
-            task["release_teasers"],
-            [
-                {"tag": tags[1], "reason": "invalid"},
-                {"tag": tags[2], "reason": "facts-changed"},
-                {"tag": tags[3], "reason": "missing"},
-            ],
-        )
+            self.assertEqual(result, str(page))
+            self.assertFalse(prose_path.exists())
+            self.assertEqual(json.loads(data_path.read_text()),
+                             {"version": "4.150.0"})
+
+    def test_unchanged_facts_keep_prose_and_do_not_queue_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "4.150.0.md"
+            data_path = DATA._data_json_path(page)
+            prose_path = DATA._prose_json_path(page)
+            data = {"version": "4.150.0"}
+            data_path.parent.mkdir(parents=True)
+            data_path.write_text(json.dumps(data, indent=2) + "\n")
+            prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
+
+            result = DATA._write_page_outputs(page, data, 3)
+
+            self.assertIsNone(result)
+            self.assertTrue(prose_path.exists())
+
+    def test_force_deletes_full_prose_and_queues_unchanged_page(self):
+        with tempfile.TemporaryDirectory() as directory:
+            page = Path(directory) / "4.150.0.md"
+            data_path = DATA._data_json_path(page)
+            prose_path = DATA._prose_json_path(page)
+            data = {"version": "4.150.0"}
+            data_path.parent.mkdir(parents=True)
+            data_path.write_text(json.dumps(data, indent=2) + "\n")
+            prose_path.write_text(json.dumps(cumulative_prose({})) + "\n")
+
+            result = DATA._write_page_outputs(page, data, 3, force=True)
+
+            self.assertEqual(result, str(page))
+            self.assertFalse(prose_path.exists())
 
     def test_cumulative_prose_only_edit_does_not_change_teaser_render(self):
         item = shipment("v4.151.0-preview.1.1", [101])
@@ -543,68 +467,27 @@ class PreservationLifecycleTests(unittest.TestCase):
             RENDER.render_release_teaser(data, after, item["tag"]),
         )
 
-    def test_polish_manifest_keeps_work_axes_separate(self):
-        path = ROOT / "output/release-notes-manifest-test.json"
-        tasks = [
-            {
-                "page": "documentation/docfx/releases/4.151.0.md",
-                "cumulative": False,
-                "release_teasers": [
-                    {
-                        "tag": "v4.151.0-preview.1.1",
-                        "reason": "missing",
-                    }
-                ],
-            }
+    def test_polish_list_contains_one_page_path_per_line(self):
+        path = ROOT / "output/release-notes-polish-list-test.txt"
+        pages = [
+            "documentation/docfx/releases/4.150.0.md",
+            "documentation/docfx/releases/4.150.1.md",
         ]
         try:
-            DATA.write_polish_list(tasks, path)
-            self.assertEqual(
-                json.loads(path.read_text()),
-                {"format": 1, "tasks": tasks},
-            )
+            DATA.write_polish_list(pages, path)
+            self.assertEqual(path.read_text().splitlines(), pages)
         finally:
             if path.exists():
                 path.unlink()
 
-    def test_empty_stable_shipment_needs_no_ai_teaser_task(self):
-        item = shipment(
-            "v4.151.0", [], channel="stable", previous="v4.151.0-rc.1.1"
-        )
-        data = page_data([item])
-        task = DATA.build_polish_task(
-            "page.md",
-            data,
-            deepcopy(data),
-            cumulative_prose({}),
-        )
-        self.assertIsNone(task)
-
-    def test_partial_preserved_file_requeues_cumulative_work(self):
-        item = shipment("v4.151.0-preview.1.1", [101])
-        data = page_data([item])
-        reviewed = teaser([101])
-        task = DATA.build_polish_task(
-            "page.md",
-            data,
-            deepcopy(data),
-            {"release_teasers": {item["tag"]: reviewed}},
-        )
-        self.assertTrue(task["cumulative"])
-        self.assertEqual(task["release_teasers"], [])
-
-    def test_force_reauthors_cumulative_only(self):
-        item = shipment("v4.151.0-preview.1.1", [101])
-        data = page_data([item])
-        task = DATA.build_polish_task(
-            "page.md",
-            data,
-            deepcopy(data),
-            cumulative_prose({item["tag"]: teaser([101])}),
-            force=True,
-        )
-        self.assertTrue(task["cumulative"])
-        self.assertEqual(task["release_teasers"], [])
+    def test_empty_polish_list_is_an_empty_file(self):
+        path = ROOT / "output/release-notes-polish-list-test.txt"
+        try:
+            DATA.write_polish_list([], path)
+            self.assertEqual(path.read_text(), "")
+        finally:
+            if path.exists():
+                path.unlink()
 
     def test_malformed_teaser_reports_validation_errors(self):
         item = shipment("v4.151.0-preview.1.1", [101])

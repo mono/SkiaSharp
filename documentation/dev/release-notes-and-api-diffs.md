@@ -404,7 +404,7 @@ live in one place:
    `versions.json`, the co-release map, and companion-file hashes. On released pages
    it folds the co-shipped HarfBuzzSharp version/API-diff link/filtered PR list into
    the page's `harfbuzz` block (§4.5). It also writes the machine-readable
-   **Polish task manifest** to `output/files-to-polish.txt` (or `--polish-list`).
+   **Files-to-polish page list** to `output/files-to-polish.txt` (or `--polish-list`).
    Each task independently identifies cumulative page work and exact shipment
    teaser work, so one never implies rewriting the other.
 3. **`release-notes-index.py`** writes the network-sourced aggregate data to
@@ -424,7 +424,7 @@ API-diff folder already exists (§5.3), and `release-notes-data.py` skips pages 
 
 **Polish.** The AI (the skill) works only from already-produced files, with **no
 network** and no permission to re-run Cake, `prepare.sh`, `release-notes-data.py`, or
-`release-notes-index.py`. For each task in `output/files-to-polish.txt`, it reads that page's
+`release-notes-index.py`. For each page in `output/files-to-polish.txt`, it reads that page's
 `_sources/<version>.data.json` plus any referenced `*.breaking.md` and
 `_sources/<version>.notes.md` companions (§4.7), updates only the requested
 parts of `_sources/<version>.prose.json` (schema:
@@ -680,7 +680,7 @@ paths and only ever clears its own:
 | `releases/<line>.md` | `release-notes-render.py` | permanent once shipped stable — never pruned; `release-notes-render.py --all` only rewrites its content (§4.2) |
 | `releases/<line>-unreleased.md` | `release-notes-render.py` | `release-notes-data.py` removes empty head deltas during generation; `release-notes-render.py --all` prunes stale live-head pages per `index.json`'s `live_unreleased` (§4.2) |
 | `releases/_sources/<stem>.data.json` | `release-notes-data.py` | with the owning SkiaSharp page (`release-notes-data.py` empty deltas, `release-notes-render.py --all` stale -unreleased) |
-| `releases/_sources/<stem>.prose.json` | **Polish AI** | with the owning SkiaSharp page; Prepare may preserve/copy existing exact-tag teaser entries while invalidating cumulative slots, but never silently drops or rewrites a reviewed historical teaser |
+| `releases/_sources/<stem>.prose.json` | **Polish AI** | with the owning SkiaSharp page; when deterministic facts change or generation is forced, Prepare removes the whole file and the AI recreates all prose, including exact-tag teasers |
 | `releases/_sources/index.json` | `release-notes-index.py` | `release-notes-index.py` (rewritten each Prepare run) |
 | `releases/_sources/co-release-map.json` (§3.6) | Cake | Cake (merged/updated each Prepare run; a full forced run recomputes the whole map) |
 | `releases/TOC.yml`, `releases/index.md` | `release-notes-render.py --all` | `release-notes-render.py --all` (regenerated from the finished SkiaSharp page set) |
@@ -1062,7 +1062,7 @@ whole-file change key (§4.6).
 | Owner | Responsibility |
 |---|---|
 | **Scripts** | Everything structural and deterministic: every filename, cumulative and exact-tag diff range, shipment fact, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, every website/GitHub heading, table, banner shape, `@handle`, ❤️, PR link, deterministic empty-delta teaser wording, `TOC.yml`, and `index.md`. `release-notes-data.py` computes facts; `release-notes-index.py` computes network index data; `release-notes-render.py` assembles Markdown and validates prose caps and exact-delta references. |
-| **AI / skill** | Only writes requested parts of `_sources/<stem>.prose.json`: cumulative website slots and missing/explicitly-stale entries in `release_teasers`. It may read (never write) the companion files named in data JSON. It never rewrites an already reviewed historical teaser unless the task manifest explicitly lists that exact tag because its shipment facts changed. |
+| **AI / skill** | Recreates the complete `_sources/<stem>.prose.json` for every page listed in `files-to-polish.txt`, including cumulative website prose and all non-empty exact shipments in `release_teasers`. It may read (never write) the companion files named in data JSON. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` for the prose contract. The renderer is the
@@ -1116,13 +1116,12 @@ principles are fixed here.
    their reviewed prose because applying today's repository-layout classifier to
    historical changes can misclassify them. Moving current classification out of
    the LLM (and into the JSON) makes product-focus reliable run-to-run.
-   For each exact published tag, Prepare reads the actual GitHub Release body and
-   copies its curated consumer-facing portion into
-   `data.json.shipments[].published_release`. This read-only grounding is not rendered
-   directly; it supplies behavior that generic
-   sync PR titles cannot express and preserves the reviewed selection without a
-   separate version-specific policy file. The prose agent may improve phrasing,
-   but uses the published release as the authoritative semantic source.
+   Exact shipment prose is regenerated from the shipment's deterministic PR delta;
+   `data.json` does not import prose from an existing GitHub Release. The prose
+   contract requires exact public type/member names and distinguishing compound
+   terms from those facts to survive summarization. A generic sync title remains
+   a generic engine-maintenance round unless another deterministic fact identifies
+   a more specific consumer-visible change.
    The renderer independently checks Skia sync-round counts against product PR
    facts and rejects internal CI, workflow, test-platform, compiler-environment,
    solution-format, and binding-generation mechanics from v4 contributor credit.
@@ -1263,8 +1262,8 @@ Always the same incremental Prepare + offline Polish sequence:
    an identical run yields an identical dict and the page is skipped. Any change to the
    PR map, diff range, preview buckets, contributor roster, supersession metadata,
    API-link facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes
-   the dict and records work in `output/files-to-polish.txt`. The manifest
-   distinguishes `cumulative` page work from `release_teasers` exact-tag work.
+   the dict and records the page in `output/files-to-polish.txt`. Every listed
+   page is re-authored completely, including all exact-tag `release_teasers`.
    Editing
    `_sources/<stem>.notes.md` or changing a `*.breaking.md` file flips the relevant
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full

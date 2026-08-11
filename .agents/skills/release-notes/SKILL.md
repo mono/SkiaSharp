@@ -26,6 +26,12 @@ plumbing, test infra), leave it out — the renderer already collapses that nois
 invisible unless it changed shipped behaviour, and for `mixed` (build config in
 `native/`, or a `docs` API-docs bump) judge from the title.
 
+Preserve distinguishing technical nouns from the source facts. Compound product
+terms are semantic, not decorative: `image filter`, `color filter`, `paint bounds`,
+`stencil buffer`, and similar phrases must not be weakened to `image`, `color`,
+`paint`, or `buffer`. Keep exact public type/member names whenever a PR title gives
+them. You may simplify surrounding prose, but not the identity of the feature.
+
 ## Running the full pipeline (prepare → write prose → render)
 
 Producing release notes is three steps. Two are scripts you run; the middle one is
@@ -38,13 +44,10 @@ prepare.sh   →   (you write prose.json per page)   →   render.sh
 
 1. **`.agents/skills/release-notes/scripts/prepare.sh`** — regenerates the API diffs
    (Cake), the per-page `_sources/<version>.data.json` facts, and `_sources/index.json`,
-   and writes a JSON task manifest to `output/files-to-polish.txt`. Each task has
-   `cumulative` and `release_teasers` axes. Prepare preserves every existing reviewed
-   exact-tag teaser; it invalidates cumulative slots only when cumulative facts changed.
-2. **You** read each task and update only the requested portions of its `prose.json`.
-   Re-author cumulative slots only when `cumulative` is true. For
-   `release_teasers`, author only the exact tags listed by the task. Every unlisted
-   teaser is immutable: do not alter, normalize, or remove it.
+   and writes changed page paths to `output/files-to-polish.txt`. When a page is
+   listed, Prepare deletes its old `prose.json`.
+2. **You** read each listed page's fresh `data.json` and recreate its complete
+   `prose.json`, including every exact shipment in `release_teasers`.
 3. **`.agents/skills/release-notes/scripts/render.sh`** — renders every page from
    `data.json` + `prose.json` and rebuilds `TOC.yml` + `index.md`. It **fails loudly** if
    any page on the list still lacks a `prose.json` (you missed one) or if prose is invalid.
@@ -78,8 +81,9 @@ tool allowlist permits `python3` for exactly this).
 
 ## How to work
 
-You are given a JSON task manifest (in CI, `output/files-to-polish.txt`). Its
-`tasks` array **may be empty** — that just means no page needs new prose this run, but you must still run
+You are given a flat page list (in CI, `output/files-to-polish.txt`; one
+repo-relative page path per line). It **may be empty** — that just means no page
+needs new prose this run, but you must still run
 the final render (`render.sh`, or `release-notes-render.py --all` in CI) to materialize the
 deterministic pages and rebuild the TOC/index; don't exit early. Every input for a
 page lives in a `_sources/` folder beside it — for a page `releases/<version>.md`
@@ -91,7 +95,7 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
 1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `shipments` (every exact published tag
-   and its exact-delta PR list plus any reviewed `published_release` teaser),
+   and its exact-delta PR list),
    `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
    and the banner/link facts.
@@ -203,7 +207,7 @@ SDK, solution-format, or workflow mechanics in the consumer-facing page.
 
 ### `release_teasers` — reviewed prose per exact shipment tag
 This map is keyed by `data.shipments[].tag`, including the leading `v` and every
-build segment. Author only keys named in the task manifest. Each entry has:
+build segment. Author every non-empty shipment listed in the page data. Each entry has:
 
 - `subtitle`: one neutral plain-language line.
 - `website_summary` (optional): required when the same tag is a `data.previews[].key`;
@@ -215,20 +219,10 @@ build segment. Author only keys named in the task manifest. Each entry has:
 
 Never mention a CVE, vulnerability, or security fix/release in teaser prose.
 
-Some shipment facts include `published_release`, extracted from the actual
-already-published GitHub Release. This is the consumer-facing source,
-not a per-version policy override and not content rendered directly from `data.json`.
-It gives the prose agent reviewed facts and curation for that exact shipment. For an already-published shipment, preserve its
-curated PR selection and factual meaning while rewriting it into the current
-schema; phrasing may improve, but do not replace specific published behavior with
-a generic PR title or add internal/test-only exact-delta work that the release
-omitted. Retain every named API, type, backend, dependency, data format, and
-failure mode from each selected published bullet; those names are reviewed facts,
-not expendable wording. For example, do not turn a published `Slug`
-deserialization crash into a generic "text data" fix. When a generic sync PR title
-lacks the behavior named by the published bullet, the published bullet supplies
-that missing fact. When
-`published_release` is absent, curate from the exact shipment's product PRs.
+Curate each teaser from that shipment's exact-delta `product` PRs and any
+consumer-facing `mixed` PRs. Do not add internal/test-only work. When a generic
+sync PR title does not identify a specific consumer-visible fix, describe it
+honestly as an upstream engine maintenance round rather than inventing details.
 Dependency updates must be neutral version updates. Do not copy the cumulative
 website `Security` section into `Dependency Updates`; independently curate only
 native dependency PRs from the exact shipment. The renderer owns Markdown

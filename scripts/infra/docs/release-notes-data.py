@@ -38,9 +38,9 @@ disk/timeout failure) as it happens (spec §2.2/§2.3). Nothing is printed to ST
 
 The machine-readable result the Polish phase consumes — the list of pages whose
 ``data.json`` changed — is ALWAYS written to a file: ``output/files-to-polish.txt``
-by default, or the path given to ``--polish-list``. It is a JSON task manifest
-which separates cumulative website prose from exact-tag teaser prose. Because the
-manifest lives in a file (not a stream), verbose progress can flow freely.
+by default, or the path given to ``--polish-list``. It contains one page path per
+line. Because the list lives in a file (not a stream), verbose progress can flow
+freely.
 
 Page model (two files per in-flight version — released + unreleased coexist)
 ---------------------------------------------------------------------------
@@ -111,7 +111,7 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
-# The Prepare phase ALWAYS writes the machine-readable Polish task manifest to a
+# The Prepare phase ALWAYS writes the machine-readable Polish page list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
 # out of the working-tree patch the Prepare job hands to the Polish agent.
 DEFAULT_POLISH_LIST = Path("output/files-to-polish.txt")
@@ -363,7 +363,7 @@ def log(*args, **kwargs):
 
     This generator is verbose: ``log()`` is the ONLY output stream (nothing goes to
     STDOUT), so a long download or a disk/timeout failure is visible in the CI job
-    log as it happens (spec §2.2). The machine-readable Polish task manifest does
+    log as it happens (spec §2.2). The machine-readable Polish page list does
     NOT ride on a stream — it is always written to a file (spec §2.3) — so callers
     never have to parse it out of progress text.
     """
@@ -371,24 +371,24 @@ def log(*args, **kwargs):
     print(*args, **kwargs)
 
 
-def write_polish_list(tasks, path=None):
+def write_polish_list(files, path=None):
     # type: (list, ...) -> None
-    """Write the machine-readable Polish task manifest.
+    """Write the machine-readable list of pages requiring full re-authoring.
 
     Always writes a file — ``output/files-to-polish.txt`` by default, or *path* if
-    given. Cumulative page prose and exact-tag teaser prose are independent task
-    axes. An omitted teaser tag is immutable: Polish must not rewrite it.
+    given. One repo-relative page path is written per line; an empty file means no
+    page facts changed.
     """
     path = Path(path) if path else DEFAULT_POLISH_LIST
     path.parent.mkdir(parents=True, exist_ok=True)
-    manifest = {"format": 1, "tasks": tasks}
-    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-    log("Wrote Polish task manifest ({} task{}) -> {}".format(
-        len(tasks), "" if len(tasks) == 1 else "s", path))
-    for task in tasks:
-        log("  {} cumulative={} teasers={}".format(
-            task["page"], task["cumulative"],
-            ", ".join(t["tag"] for t in task["release_teasers"]) or "none"))
+    path.write_text(
+        "".join("{}\n".format(file) for file in files),
+        encoding="utf-8",
+    )
+    log("Wrote files-to-polish list ({} file{}) -> {}".format(
+        len(files), "" if len(files) == 1 else "s", path))
+    for file in files:
+        log("  {}".format(file))
 
 
 def run(args, check=True):
@@ -1076,82 +1076,6 @@ def _shipment_label(parsed):
     return label
 
 
-_PUBLISHED_RELEASE_HEADINGS = {
-    "Breaking Changes",
-    "What's New",
-    "Fixes",
-    "Dependency Updates",
-}
-_RELEASE_PR_TRAILER_RE = re.compile(
-    r"\((#\d+(?:,\s*#\d+)*)\)\s*$")
-
-
-def parse_published_release_teaser(body):
-    # type: (str) -> Optional[dict]
-    """Extract the reviewed, consumer-facing portion of a GitHub Release body."""
-    curated = []
-    for line in body.replace("\r\n", "\n").splitlines():
-        if line.strip() == "---" or line.lstrip().startswith("<details"):
-            break
-        curated.append(line.rstrip())
-
-    subtitle = next((
-        line.strip()
-        for line in curated
-        if line.strip()
-        and not line.lstrip().startswith(("<!--", "📦", "## "))
-    ), None)
-    categories = []
-    current = None
-    for line in curated:
-        if line.startswith("## "):
-            heading = line[3:].strip().replace("’", "'")
-            matched = next(
-                (name for name in _PUBLISHED_RELEASE_HEADINGS if name in heading),
-                None,
-            )
-            current = {"heading": matched, "bullets": []} if matched else None
-            if current:
-                categories.append(current)
-            continue
-        if current is None or not line.startswith("- "):
-            continue
-        trailer = _RELEASE_PR_TRAILER_RE.search(line)
-        if trailer is None:
-            continue
-        numbers = [int(number) for number in re.findall(r"#(\d+)", trailer.group(1))]
-        text = re.sub(
-            r"(?:\s+by\s+@\S+)?\s+\((?:#\d+(?:,\s*)?)+\)\s*$",
-            "",
-            line[2:].strip(),
-        )
-        current["bullets"].append({"text": text, "prs": numbers})
-
-    categories = [category for category in categories if category["bullets"]]
-    if not subtitle and not categories:
-        return None
-    return {"subtitle": subtitle, "categories": categories}
-
-
-def get_published_release_teaser(tag):
-    # type: (str) -> Optional[dict]
-    """Fetch reviewed teaser facts from the exact published GitHub Release."""
-    try:
-        output = run(
-            ["gh", "api", "repos/{}/releases/tags/{}".format(REPO, tag)],
-            check=False,
-        )
-    except FileNotFoundError:
-        return None
-    try:
-        body = json.loads(output).get("body")
-    except (ValueError, AttributeError):
-        return None
-    if not isinstance(body, str):
-        return None
-    return parse_published_release_teaser(body)
-
-
 def collect_shipments(page_version, base_version):
     # type: (str, Optional[str]) -> tuple[list[dict], list[dict]]
     """Collect every exact published tag owned by one numeric page core.
@@ -1205,25 +1129,6 @@ def collect_shipments(page_version, base_version):
                 if previous_tag else None),
             "prs": numbers,
         }
-        published = None
-        if not (shipment["channel"] == "stable" and not numbers):
-            published = get_published_release_teaser(item["tag"])
-        if published:
-            outside_delta = sorted({
-                number
-                for category in published.get("categories") or []
-                for bullet in category.get("bullets") or []
-                for number in bullet.get("prs") or []
-                if number not in numbers
-            })
-            if outside_delta:
-                raise ValueError(
-                    "{} published release references PRs outside its exact delta: {}"
-                    .format(
-                        item["tag"],
-                        ", ".join("#{}".format(number)
-                                  for number in outside_delta)))
-            shipment["published_release"] = published
         shipments.append(shipment)
     return shipments, exact_prs
 
@@ -2277,121 +2182,6 @@ def validate_shipments(data):
             if duplicates else [])
 
 
-def _load_json(path):
-    # type: (Path) -> Optional[dict]
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-        return value if isinstance(value, dict) else None
-    except (ValueError, OSError):
-        return None
-
-
-def _cumulative_facts(data):
-    # type: (Optional[dict]) -> Optional[dict]
-    if data is None:
-        return None
-    result = dict(data)
-    result.pop("shipments", None)
-    return result
-
-
-def _shipment_map(data):
-    # type: (Optional[dict]) -> dict[str, dict]
-    return {
-        shipment.get("tag"): shipment
-        for shipment in (data or {}).get("shipments") or []
-        if shipment.get("tag")
-    }
-
-
-def _cumulative_prose_valid(data, prose):
-    # type: (dict, Optional[dict]) -> bool
-    """Enough validation to make a failed/partial Polish run self-healing."""
-    if not isinstance(prose, dict):
-        return False
-    if not isinstance(prose.get("theme"), str) or not prose["theme"].strip():
-        return False
-    headline = prose.get("highlights_headline")
-    if not isinstance(headline, str) or not headline.strip():
-        return False
-    if not isinstance(prose.get("breaking"), list):
-        return False
-    if not isinstance(prose.get("categories"), list):
-        return False
-    summaries = prose.get("contributor_summaries")
-    if not isinstance(summaries, dict):
-        return False
-    if any(not isinstance(summaries.get(c.get("login")), str)
-           or not summaries[c["login"]].strip()
-           for c in data.get("contributors") or []):
-        return False
-    teasers = prose.get("release_teasers")
-    teasers = teasers if isinstance(teasers, dict) else {}
-    preview_summaries = prose.get("preview_summaries")
-    preview_summaries = (
-        preview_summaries if isinstance(preview_summaries, dict) else {})
-    for preview in data.get("previews") or []:
-        key = preview.get("key")
-        website_summary = (teasers.get(key) or {}).get("website_summary")
-        if not website_summary:
-            website_summary = preview_summaries.get(key)
-        if not isinstance(website_summary, str) or not website_summary.strip():
-            return False
-    harfbuzz = data.get("harfbuzz") or {}
-    if harfbuzz_summary_required(harfbuzz):
-        summary = prose.get("harfbuzz_summary")
-        if not isinstance(summary, str) or not summary.strip():
-            return False
-    return True
-
-
-def build_polish_task(page, old_data, new_data, prose, force=False):
-    # type: (str, Optional[dict], dict, Optional[dict], bool) -> Optional[dict]
-    """Return exactly the cumulative/teaser work Polish must perform."""
-    cumulative = (
-        force
-        or
-        _cumulative_facts(old_data) != _cumulative_facts(new_data)
-        or not _cumulative_prose_valid(new_data, prose)
-    )
-    teasers = (prose or {}).get("release_teasers")
-    teasers = teasers if isinstance(teasers, dict) else {}
-    old_shipments = _shipment_map(old_data)
-    teaser_tasks = []
-    for shipment in new_data.get("shipments") or []:
-        tag = shipment["tag"]
-        if shipment_is_empty_stable(shipment):
-            continue
-        reason = None
-        if tag not in teasers:
-            reason = "missing"
-        elif old_shipments.get(tag) != shipment:
-            reason = "facts-changed"
-        elif validate_release_teaser(shipment, teasers[tag]):
-            reason = "invalid"
-        if reason:
-            teaser_tasks.append({"tag": tag, "reason": reason})
-    if not cumulative and not teaser_tasks:
-        return None
-    return {
-        "page": str(page),
-        "cumulative": cumulative,
-        "release_teasers": teaser_tasks,
-    }
-
-
-def preserve_teasers_for_cumulative_rewrite(prose_path, prose):
-    # type: (Path, Optional[dict]) -> None
-    """Invalidate cumulative slots without changing reviewed teaser semantics."""
-    teasers = (prose or {}).get("release_teasers")
-    preserved = teasers if isinstance(teasers, dict) else {}
-    prose_path.parent.mkdir(parents=True, exist_ok=True)
-    prose_path.write_text(
-        json.dumps({"release_teasers": preserved}, indent=2) + "\n",
-        encoding="utf-8",
-    )
-
-
 def _prune_page_and_sources(page_path):
     # type: (Path) -> None
     """Remove a page and the generated inputs it owns in ``_sources/``.
@@ -2617,14 +2407,14 @@ def _canonical_branches_by_version(all_branches):
 
 def _write_page(branch, all_branches, verbose=False, force=False,
                 min_core=None, max_core=None):
-    # type: (str, list[str], bool, bool, Optional[str]) -> Optional[dict]
-    """Generate one release page's data and return its Polish task, if any.
+    # type: (str, list[str], bool, bool, Optional[str], Optional[str]) -> Optional[str]
+    """Generate one release page's data and return its page path, if changed.
 
     Resolves the diff range, status and supersession links, then writes the page's
     ``_sources/<stem>.data.json`` facts unless the committed data.json already
     encodes an identical dict (idempotent — data.json is the change key, §4.6). It
     NEVER writes the ``.md`` (release-notes-render.py does). Returns the page path (added to
-    the Polish task manifest), or None when no AI prose work remains, the page was
+    the files-to-polish list), or None when no AI prose work remains, the page was
     pruned (empty unreleased delta), or the diff range could not be determined.
 
     ``min_core``/``max_core`` (inclusive ``(maj, min, patch, sub)`` tuples from
@@ -2803,27 +2593,26 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # generator NEVER writes the .md — release-notes-render.py produces it from
     # data.json + prose.json during Polish.
     data = build_data_json(prs, metadata)
+    return _write_page_outputs(output_path, data, len(prs), force)
+
+
+def _write_page_outputs(output_path, data, pr_count, force=False):
+    # type: (Path, dict, int, bool) -> Optional[str]
+    """Persist changed facts and invalidate all prose for one page."""
     data_path = _data_json_path(output_path)
-    old_data = _load_json(data_path)
-    prose_path = _prose_json_path(output_path)
-    old_prose = _load_json(prose_path)
     changed = not _data_json_unchanged(data_path, data)
-    task = build_polish_task(
-        str(output_path), old_data, data, old_prose, force=force)
     if not force and not changed:
         log("  Skipping {} (unchanged)".format(output_path))
-        return task
+        return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
-    log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    if task and task["cumulative"]:
-        preserve_teasers_for_cumulative_rewrite(prose_path, old_prose)
-        log("  Invalidated cumulative prose in {} (preserved {} teaser{})".format(
-            prose_path,
-            len((old_prose or {}).get("release_teasers") or {}),
-            "" if len((old_prose or {}).get("release_teasers") or {}) == 1 else "s"))
-    return task
+    log("  Wrote {} ({} PRs)".format(data_path, pr_count))
+    prose_path = _prose_json_path(output_path)
+    if prose_path.exists():
+        prose_path.unlink()
+        log("  Discarded {} (forcing full re-author)".format(prose_path))
+    return str(output_path)
 
 
 # ── Main ─────────────────────────────────────────────────────────────
@@ -2881,7 +2670,7 @@ def cmd_generate(force=False, polish_list_path=None,
 
     branches_to_process = ["main"] + servicing_branches + canonical_branches
 
-    polish_tasks = []
+    polish_files = []
     skipped_count = 0
     processed_count = 0
 
@@ -2891,10 +2680,10 @@ def cmd_generate(force=False, polish_list_path=None,
             continue
 
         log("\n--- Processing: {} ---".format(branch))
-        task = _write_page(branch, all_branches, force=force,
+        page = _write_page(branch, all_branches, force=force,
                            min_core=min_core, max_core=max_core)
-        if task:
-            polish_tasks.append(task)
+        if page:
+            polish_files.append(page)
             processed_count += 1
         else:
             skipped_count += 1
@@ -2912,7 +2701,7 @@ def cmd_generate(force=False, polish_list_path=None,
     log("")
     log("Processed: {}, Skipped/unchanged: {}".format(
         processed_count, skipped_count))
-    write_polish_list(polish_tasks, polish_list_path)
+    write_polish_list(polish_files, polish_list_path)
 
 
 def main():
@@ -2938,8 +2727,8 @@ def main():
              "re-render the whole back-catalogue after a format or skill change)")
     parser.add_argument(
         "--polish-list", metavar="FILE", default=None,
-        help="Write the JSON Polish task manifest to FILE. Defaults to "
-             "output/files-to-polish.txt.")
+        help="Write the page paths requiring full prose regeneration to FILE. "
+             "Defaults to output/files-to-polish.txt.")
     parser.add_argument(
         "--min-version", metavar="CORE", default=None,
         help="Lower bound (inclusive), e.g. '3.116.0'. Versions below it are left "

@@ -12,7 +12,7 @@
 #   1. API diffs        (Cake docs-api-diff)  — the committed releases/<line>/ trees
 #                                                + the co-release map sidecar.
 #   2. Page facts        (release-notes-data.py)   — _sources/<version>.data.json + the
-#                                                Polish task manifest.
+#                                                Files-to-polish page list.
 #   3. Index data        (release-notes-index.py)  — _sources/index.json (Chrome schedule
 #                                                + live-head set) for the offline render.
 #
@@ -26,7 +26,7 @@
 #   --max-version Y      Upper bound (inclusive); set equal to --min-version for a
 #                        single version.
 #
-# After this finishes, the AI performs only the cumulative/exact-tag work named in
+# After this finishes, the AI fully rewrites each page named in
 # output/files-to-polish.txt, then render.sh builds the Markdown. See SKILL.md.
 #
 # Requires: dotnet (Cake), python3, git history, and gh (PR authors). Any missing
@@ -83,5 +83,5 @@ python3 "$BUILD_DATA_PY" "${py_args[@]:+${py_args[@]}}" --polish-list output/fil
 echo "==> Prepare [3/3]: index data (release-notes-index.py) — verbose"
 python3 "$BUILD_INDEX_PY"
 
-echo "==> Prepare complete. Polish task manifest:"
+echo "==> Prepare complete. Files to polish:"
 cat output/files-to-polish.txt || true
