@@ -17,7 +17,7 @@ FROM mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-net10.0-android-
 SHELL ["/bin/bash", "-euo", "pipefail", "-c"]
 
 # Install the .NET SDK (needed for Cake build scripts).
-ARG DOTNET_SDK_VERSION=10.0.108
+ARG DOTNET_SDK_VERSION=10.0.302
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
