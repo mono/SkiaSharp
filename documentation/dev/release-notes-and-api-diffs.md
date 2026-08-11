@@ -469,6 +469,16 @@ daily run is undesirable (e.g. right after tagging). (Walking a `release/*` ref 
 *git source* for content, not an emission trigger; emission is governed solely by
 §1.4.)
 
+Manual dispatch also has a guarded pre-merge validation mode. Production dispatches
+are constrained to source/base `main` and head `bot/release-notes`. Validation mode
+requires an open PR targeting `main`, verifies that `source_branch` and
+`output_base_branch` both equal that PR's head branch, and permits only a new
+`bot/release-notes-test-pr-<PR>[-run-N]` output branch. The output branch must not
+already exist. This keeps the generated PR based on the feature branch whose
+workflow code ran, while the safe-output allowlists limit its patch to the generated
+`documentation/docfx/releases/**` tree. It cannot reset an existing automation
+branch or route arbitrary feature content into `main`.
+
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
 (`prepare.sh` — Cake, `release-notes-data.py`, then `release-notes-index.py`, §2.2) runs in its
 **own dedicated job** (`prepare`), separate from the agent job. It uses an

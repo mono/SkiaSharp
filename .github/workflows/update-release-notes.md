@@ -43,6 +43,26 @@ on:
         required: false
         default: "main"
         type: string
+      validation_mode:
+        description: "Pre-merge test mode. Requires validation_pr, source/base set to that open PR's head branch, and a unique bot/release-notes-test-pr-* output branch."
+        required: false
+        default: false
+        type: boolean
+      validation_pr:
+        description: "Open PR number whose head branch is being tested. Required only when validation_mode=true."
+        required: false
+        default: ""
+        type: string
+      output_base_branch:
+        description: "Generated PR base. Production requires main; validation requires the validated source branch."
+        required: false
+        default: "main"
+        type: string
+      output_branch:
+        description: "Generated PR head. Production requires bot/release-notes; validation requires a unique bot/release-notes-test-pr-<PR>[-run-N] branch."
+        required: false
+        default: "bot/release-notes"
+        type: string
       min_version:
         description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate a range, or set both equal to regenerate a single version."
         required: false
@@ -60,7 +80,7 @@ on:
         type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes
+  group: update-release-notes-${{ inputs.output_branch || 'bot/release-notes' }}
   cancel-in-progress: true
 # The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
 # in its own `prepare` job (below), so the agent's own budget is modest.
@@ -106,6 +126,65 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
+      - name: Validate output routing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATION_MODE: ${{ inputs.validation_mode || false }}
+          VALIDATION_PR: ${{ inputs.validation_pr }}
+          SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
+          OUTPUT_BASE_BRANCH: ${{ inputs.output_base_branch || 'main' }}
+          OUTPUT_BRANCH: ${{ inputs.output_branch || 'bot/release-notes' }}
+        run: |
+          set -euo pipefail
+          fail() {
+            echo "::error::$*"
+            exit 1
+          }
+          for ref in "$SOURCE_BRANCH" "$OUTPUT_BASE_BRANCH" "$OUTPUT_BRANCH"; do
+            git check-ref-format --branch "$ref" >/dev/null 2>&1 ||
+              fail "Invalid branch name: $ref"
+          done
+
+          if [ "$VALIDATION_MODE" = "true" ]; then
+            [[ "$VALIDATION_PR" =~ ^[1-9][0-9]*$ ]] ||
+              fail "validation_pr must be a positive PR number"
+            [ "$SOURCE_BRANCH" = "$OUTPUT_BASE_BRANCH" ] ||
+              fail "Validation source_branch and output_base_branch must match"
+            [ "$SOURCE_BRANCH" != "main" ] ||
+              fail "Validation mode cannot target main"
+            [[ "$OUTPUT_BRANCH" =~ ^bot/release-notes-test-pr-${VALIDATION_PR}(-run-[1-9][0-9]*)?$ ]] ||
+              fail "Validation output_branch must be bot/release-notes-test-pr-${VALIDATION_PR} or a numbered -run-N variant"
+
+            pr_route="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${VALIDATION_PR}" \
+              --jq '[.state, .head.ref, .base.ref] | @tsv')" ||
+              fail "Unable to read validation PR #${VALIDATION_PR}"
+            IFS=$'\t' read -r pr_state pr_head pr_base <<< "$pr_route"
+            [ "$pr_state" = "open" ] ||
+              fail "Validation PR #${VALIDATION_PR} is not open"
+            [ "$pr_head" = "$SOURCE_BRANCH" ] ||
+              fail "source_branch does not match validation PR #${VALIDATION_PR} head"
+            [ "$pr_base" = "main" ] ||
+              fail "Validation PR #${VALIDATION_PR} must target main"
+
+            if git ls-remote --exit-code --heads origin \
+              "refs/heads/$OUTPUT_BRANCH" >/dev/null 2>&1; then
+              fail "Validation output branch already exists; choose a unique -run-N branch"
+            fi
+          else
+            [ "$SOURCE_BRANCH" = "main" ] ||
+              fail "Production source_branch must be main"
+            [ "$OUTPUT_BASE_BRANCH" = "main" ] ||
+              fail "Production output_base_branch must be main"
+            [ "$OUTPUT_BRANCH" = "bot/release-notes" ] ||
+              fail "Production output_branch must be bot/release-notes"
+            [ -z "$VALIDATION_PR" ] ||
+              fail "validation_pr is only valid in validation mode"
+          fi
+
+          echo "Validated release-notes routing:"
+          echo "  source=$SOURCE_BRANCH"
+          echo "  base=$OUTPUT_BASE_BRANCH"
+          echo "  head=$OUTPUT_BRANCH"
       - name: Free up disk space
         run: |
           set -euo pipefail
@@ -251,7 +330,9 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [area/Docs, partner/agentic-workflows]
     draft: false
-    allowed-base-branches: [main]
+    allowed-base-branches: ["${{ inputs.output_base_branch || 'main' }}"]
+    allowed-branches: [bot/release-notes, "bot/release-notes-test-pr-*"]
+    allowed-files: ["documentation/docfx/releases/**"]
     preserve-branch-name: true
     recreate-ref: true
 ---
@@ -298,6 +379,11 @@ so you only ever write prose.
 
 This run's **CI-specific deltas** on top of the skill:
 
+0. Obey the validated output routing exactly:
+   - Output PR base: `${{ inputs.output_base_branch || 'main' }}`
+   - Output PR head: `${{ inputs.output_branch || 'bot/release-notes' }}`
+   These values were checked before Prepare, including open-PR ownership and
+   uniqueness in validation mode. Do not substitute another branch.
 1. Read `output/files-to-polish.txt` as JSON. Its `tasks` array names each page and
    separates `cumulative` page work from exact-tag `release_teasers` work. For every
    task:
@@ -330,14 +416,17 @@ diffing months of history (2000+ files, exceeding the PR file cap and failing th
 run). So once every page renders cleanly you **must** commit everything yourself,
 then create the PR:
 
-1. `git checkout -b bot/release-notes` — create the PR branch from the current HEAD.
+1. `git checkout -b "${{ inputs.output_branch || 'bot/release-notes' }}"` — create
+   the validated PR branch from the current HEAD.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
    **and** the regenerated `TOC.yml` + `index.md`.
 3. `git commit -m "docs: regenerate API diffs and release notes"`.
-4. Call the `create_pull_request` safe-output. It opens one PR targeting `main` from
-   the `bot/release-notes` branch.
+4. Call the `create_pull_request` safe-output with
+   `base: "${{ inputs.output_base_branch || 'main' }}"` and
+   `branch: "${{ inputs.output_branch || 'bot/release-notes' }}"`. It opens one PR
+   using only the validated route.
 
 
 Commit **once**, at the very end, after every edit is done — not incrementally.

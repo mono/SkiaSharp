@@ -148,6 +148,13 @@ VERSIONS_JSON_PATH = Path("scripts/infra/docs/versions.json")
 PATH_TAGS_JSON_PATH = Path("scripts/infra/docs/release-notes-paths.json")
 _PATH_TAGS_CONFIG = None  # type: Optional[tuple]
 
+# Human-reviewed facts retained from published GitHub Release teasers. These are
+# narrow exceptions to free-form authoring: they make a previously reviewed
+# exact-tag selection deterministic when historical prose is first materialized.
+TEASER_REVIEWS_JSON_PATH = Path(
+    "scripts/infra/docs/release-teaser-reviews.json")
+_TEASER_REVIEWS_CONFIG = None  # type: Optional[dict]
+
 # HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
 # commits touching these — the HarfBuzzSharp binding + its native assets, the
 # native libHarfBuzzSharp build, and HarfBuzz tests — NEVER any SkiaSharp.* source
@@ -194,6 +201,62 @@ def load_versions_config(family="skiasharp"):
             entries.append(entry)
     _VERSIONS_CONFIG[family] = entries
     return entries
+
+
+def load_teaser_reviews():
+    # type: () -> dict
+    """Load and validate exact-tag reviewer guidance."""
+    global _TEASER_REVIEWS_CONFIG
+    if _TEASER_REVIEWS_CONFIG is not None:
+        return _TEASER_REVIEWS_CONFIG
+    if not TEASER_REVIEWS_JSON_PATH.exists():
+        _TEASER_REVIEWS_CONFIG = {}
+        return _TEASER_REVIEWS_CONFIG
+
+    with open(TEASER_REVIEWS_JSON_PATH, encoding="utf-8") as stream:
+        value = json.load(stream)
+    if not isinstance(value, dict):
+        raise ValueError("release-teaser-reviews.json must be an object keyed by tag")
+    allowed = {
+        "subtitle", "website_summary", "selected_prs",
+        "required_phrases", "forbidden_phrases",
+    }
+    for tag, review in value.items():
+        if not isinstance(tag, str) or not tag.startswith("v"):
+            raise ValueError("release teaser review keys must be exact v-prefixed tags")
+        if not isinstance(review, dict):
+            raise ValueError("{} review must be an object".format(tag))
+        unknown = sorted(set(review) - allowed)
+        if unknown:
+            raise ValueError("{} review has unknown fields: {}".format(
+                tag, ", ".join(unknown)))
+        if not isinstance(review.get("subtitle"), str) or not review["subtitle"].strip():
+            raise ValueError("{} review requires a subtitle".format(tag))
+        for field in ("website_summary",):
+            text = review.get(field)
+            if text is not None and (not isinstance(text, str) or not text.strip()):
+                raise ValueError("{} review {} must be non-empty text".format(
+                    tag, field))
+        selected = review.get("selected_prs")
+        if (
+            not isinstance(selected, list)
+            or any(type(number) is not int or number <= 0 for number in selected)
+            or len(selected) != len(set(selected))
+        ):
+            raise ValueError(
+                "{} review selected_prs must contain unique positive integers".format(
+                    tag))
+        for field in ("required_phrases", "forbidden_phrases"):
+            phrases = review.get(field, [])
+            if (
+                not isinstance(phrases, list)
+                or any(not isinstance(text, str) or not text.strip()
+                       for text in phrases)
+            ):
+                raise ValueError(
+                    "{} review {} must contain non-empty strings".format(tag, field))
+    _TEASER_REVIEWS_CONFIG = value
+    return value
 
 
 def _versions_config_lookup(version, family="skiasharp"):
@@ -1089,6 +1152,7 @@ def collect_shipments(page_version, base_version):
     shipments = []
     exact_prs = []
     seen_prs = set()
+    teaser_reviews = load_teaser_reviews()
     for item in selected:
         idx = parsed.index(item)
         previous_tag = parsed[idx - 1]["tag"] if idx else None
@@ -1102,7 +1166,7 @@ def collect_shipments(page_version, base_version):
             if number not in seen_prs:
                 seen_prs.add(number)
                 exact_prs.append(pr)
-        shipments.append({
+        shipment = {
             "tag": item["tag"],
             "core_version": item["core"],
             "public_version": item["tag"][1:],
@@ -1116,7 +1180,18 @@ def collect_shipments(page_version, base_version):
                     REPO, previous_tag, item["tag"])
                 if previous_tag else None),
             "prs": numbers,
-        })
+        }
+        review = teaser_reviews.get(item["tag"])
+        if review:
+            outside_delta = sorted(set(review["selected_prs"]) - set(numbers))
+            if outside_delta:
+                raise ValueError(
+                    "{} review selects PRs outside its exact delta: {}".format(
+                        item["tag"],
+                        ", ".join("#{}".format(number)
+                                  for number in outside_delta)))
+            shipment["teaser_review"] = review
+        shipments.append(shipment)
     return shipments, exact_prs
 
 
@@ -2090,6 +2165,7 @@ def validate_release_teaser(shipment, teaser):
 
     allowed_prs = set(shipment.get("prs") or [])
     strings = [subtitle, teaser.get("website_summary")]
+    referenced_prs = set()
     for category in categories:
         if not isinstance(category, dict):
             errors.append("{} teaser category entries must be objects".format(tag))
@@ -2134,6 +2210,37 @@ def validate_release_teaser(shipment, teaser):
                 errors.append(
                     "{} teaser references PRs outside its exact delta: {}".format(
                         tag, ", ".join("#{}".format(n) for n in unknown)))
+            referenced_prs.update(refs)
+    review = shipment.get("teaser_review")
+    if isinstance(review, dict):
+        if subtitle != review.get("subtitle"):
+            errors.append(
+                "{} teaser subtitle must match its reviewed release subtitle".format(
+                    tag))
+        reviewed_summary = review.get("website_summary")
+        if reviewed_summary is not None and website_summary != reviewed_summary:
+            errors.append(
+                "{} teaser website_summary must match its reviewed summary".format(
+                    tag))
+        selected_prs = set(review.get("selected_prs") or [])
+        missing = sorted(selected_prs - referenced_prs)
+        extra = sorted(referenced_prs - selected_prs)
+        if missing:
+            errors.append("{} teaser omits reviewed PRs: {}".format(
+                tag, ", ".join("#{}".format(number) for number in missing)))
+        if extra:
+            errors.append("{} teaser includes PRs excluded by review: {}".format(
+                tag, ", ".join("#{}".format(number) for number in extra)))
+        searchable = "\n".join(
+            text for text in strings if isinstance(text, str)).casefold()
+        for phrase in review.get("required_phrases") or []:
+            if phrase.casefold() not in searchable:
+                errors.append("{} teaser must mention reviewed phrase '{}'".format(
+                    tag, phrase))
+        for phrase in review.get("forbidden_phrases") or []:
+            if phrase.casefold() in searchable:
+                errors.append("{} teaser must not use misattributed phrase '{}'".format(
+                    tag, phrase))
     for text in strings:
         if isinstance(text, str) and _TEASER_SECURITY_RE.search(text):
             errors.append(

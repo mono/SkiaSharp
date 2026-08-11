@@ -124,7 +124,7 @@ class ShipmentCollectionTests(unittest.TestCase):
 
         with patch.object(DATA, "run", side_effect=fake_run), patch.object(
             DATA, "get_prs_from_diff", side_effect=fake_delta
-        ):
+        ), patch.object(DATA, "load_teaser_reviews", return_value={}):
             return DATA.collect_shipments(version, base)[0]
 
     def test_preview_rc_stable_and_multiple_builds_are_not_deduped(self):
@@ -237,6 +237,40 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         value["categories"][0]["bullets"][0]["text"] = "Fixes CVE-2026-1234"
         errors = DATA.validate_release_teaser(item, value)
         self.assertTrue(any("security/vulnerability" in e for e in errors))
+
+    def test_reviewed_teaser_selection_and_wording_are_enforced(self):
+        item = shipment("v4.151.0-preview.2.1", [101, 102, 103])
+        item["teaser_review"] = {
+            "subtitle": "Reviewed subtitle.",
+            "website_summary": "Reviewed `SKColor` summary.",
+            "selected_prs": [101, 102],
+            "required_phrases": ["SKColor"],
+            "forbidden_phrases": ["managed color conversion"],
+        }
+        value = teaser(
+            [101, 103],
+            subtitle="Unreviewed subtitle.",
+            website_summary="Managed color conversions.",
+        )
+
+        errors = DATA.validate_release_teaser(item, value)
+
+        self.assertTrue(any("subtitle must match" in error for error in errors))
+        self.assertTrue(any("website_summary must match" in error for error in errors))
+        self.assertTrue(any("omits reviewed PRs: #102" in error for error in errors))
+        self.assertTrue(any("excluded by review: #103" in error for error in errors))
+        self.assertTrue(any("must mention reviewed phrase 'SKColor'" in error
+                            for error in errors))
+        self.assertTrue(any("misattributed phrase" in error for error in errors))
+
+    def test_published_preview_one_review_excludes_valid_delta_pr_3788(self):
+        DATA._TEASER_REVIEWS_CONFIG = None
+        reviews = DATA.load_teaser_reviews()
+
+        selected = reviews["v4.151.0-preview.1.1"]["selected_prs"]
+
+        self.assertEqual(selected, [4294])
+        self.assertNotIn(3788, selected)
 
     def test_duplicate_exact_tags_are_rejected(self):
         item = shipment("v4.151.0-preview.1.1", [101])

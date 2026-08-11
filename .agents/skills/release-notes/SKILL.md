@@ -206,6 +206,19 @@ build segment. Author only keys named in the task manifest. Each entry has:
   exact `prs` delta.
 
 Never mention a CVE, vulnerability, or security fix/release in teaser prose.
+
+Some shipment facts include `teaser_review`, retained from the already-published
+GitHub Release. Treat it as a hard reviewer decision, not a suggestion:
+
+- copy `subtitle` and `website_summary` exactly when present;
+- reference every `selected_prs` entry and no other PR in that teaser;
+- cover every `required_phrases` fact naturally in the subtitle, website summary,
+  or bullets; and
+- never use a `forbidden_phrases` misattribution.
+
+The renderer validates this contract. A PR can be a valid exact-delta product
+change and still be intentionally absent from `selected_prs`; published curated
+selection wins for that historical shipment.
 Dependency updates must be neutral version updates. Do not copy the cumulative
 website `Security` section into `Dependency Updates`; independently curate only
 native dependency PRs from the exact shipment. The renderer owns Markdown

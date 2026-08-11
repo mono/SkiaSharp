@@ -467,6 +467,27 @@ class UpdateTests(unittest.TestCase):
         self.assertIn("does not exist", result.entries[0].detail)
         self.assertIn("legacy", result.entries[1].detail)
 
+    def test_unmarked_legacy_empty_stable_release_is_never_rewritten(self):
+        release_shipment = shipment("v4.150.0", channel="stable", prs=[])
+        legacy = candidate(
+            "v4.150.0",
+            release_shipment=release_shipment,
+        )
+        github = FakeGitHub({
+            legacy.tag: snapshot(
+                legacy.tag,
+                "## What's Changed\n\nExisting curated stable notes.\n",
+                release_id=150,
+            ),
+        })
+
+        result = updater.update_releases(
+            [legacy], github, renderer=fake_renderer)
+
+        self.assertEqual(github.patch_calls, [])
+        self.assertEqual(result.entries[0].status, "skipped")
+        self.assertIn("no managed markers", result.entries[0].detail)
+
     def test_idempotent_rerun_sends_no_patch(self):
         item = candidate("v4.151.0-preview.1.1")
         rendered = updater.render_managed_teaser(item, fake_renderer)
