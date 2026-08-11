@@ -64,7 +64,6 @@ stages:
               displayName: Re-organize the output folder for publishing
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
-                Copy-Item -Path '.\scripts\infra\package\SignList.xml' -Destination '.\output\nugets\'
               displayName: Prepare the nugets artifact for publishing
             - pwsh: |
                 # Create nuget_preview with only prerelease packages (for easier PR testing)
