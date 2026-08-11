@@ -6,8 +6,6 @@
 
 **SkiaSharp.Views.Blazor** brings SkiaSharp to Blazor WebAssembly with ready-to-use Razor components. Draw with the same SkiaSharp API used by native .NET applications while the package handles the browser canvas, JavaScript interop, input events, and WebAssembly native assets.
 
-[![Open the live SkiaSharp Blazor Gallery](https://raw.githubusercontent.com/mono/SkiaSharp/main/samples/Gallery/screenshots/home.png)](https://mono.github.io/SkiaSharp/gallery/)
-
 ## What you get
 
 - `SKCanvasView` for CPU-rendered, on-demand drawing to an HTML canvas.

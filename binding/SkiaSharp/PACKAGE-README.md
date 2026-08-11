@@ -6,8 +6,6 @@
 
 **SkiaSharp** is a cross-platform 2D graphics API for .NET powered by Google's [Skia](https://skia.org/) graphics engine. Draw vector graphics, render text, process images, apply shaders and filters, and produce consistent output across mobile, desktop, server, and WebAssembly applications.
 
-[![Explore the live SkiaSharp Gallery](https://raw.githubusercontent.com/mono/SkiaSharp/main/samples/Gallery/screenshots/home.png)](https://mono.github.io/SkiaSharp/gallery/)
-
 ## What you can build
 
 - **Rich 2D graphics** - paths, shapes, text, images, color spaces, shaders, filters, blend modes, and more.
