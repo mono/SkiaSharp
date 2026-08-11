@@ -423,14 +423,16 @@ then create the PR:
 1. `git checkout -b "${{ needs.prepare.outputs.output_branch }}"` — create
    the validated PR branch from the current HEAD.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
-   (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
+   (Cake API-diff tree + `_sources/*.data.json` + `_sources/*.context.md` +
+   `_sources/index.json`) **and**
    the `_sources/*.prose.json` you wrote **and** the rendered `<version>.md` pages
    **and** the regenerated `TOC.yml` + `index.md`.
 3. `git commit -m "docs: regenerate API diffs and release notes"`.
-4. Call the `create_pull_request` safe-output with
+4. Call the `create_pull_request` **MCP safe-output tool directly** with
    `base: "${{ needs.prepare.outputs.output_base_branch }}"` and
    `branch: "${{ needs.prepare.outputs.output_branch }}"`. It opens one PR
-   using only the validated route.
+   using only the validated route. Do **not** invoke `safeoutputs`, `jq`,
+   `printf`, or any shell command to construct or submit the request.
 
 
 Commit **once**, at the very end, after every edit is done — not incrementally.
