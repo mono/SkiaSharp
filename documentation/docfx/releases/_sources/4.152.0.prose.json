@@ -1,0 +1,147 @@
+{
+  "theme": "Graphite and Skia m152",
+  "highlights_headline": "SkiaSharp 4.152.0 preview 1 introduces Graphite, async pixel readback, and the Skia m152 engine.",
+  "highlights_body": "The preview also expands Vulkan integration, adds Nano Server font support, fixes native lifetime hazards, and streamlines several managed and I/O hot paths.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "Moves the bundled renderer to Chrome milestone 152 after incorporating the final upstream stability updates from the m151 line.",
+          "prs": [
+            4651,
+            4568,
+            4538,
+            4537
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU bindings added",
+          "detail": "Exposes Skia's next-generation GPU backend for Vulkan, Metal, and Dawn.",
+          "prs": [
+            3968
+          ]
+        },
+        {
+          "lead": "Async pixel readback added",
+          "detail": "SKImage and SKSurface can request pixel data asynchronously through a backend-neutral API.",
+          "prs": [
+            4545
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Native-backed pixel and region lifetimes corrected",
+          "detail": "Keeps source objects alive while iterators, subsets, and transformed pixmaps use their native memory, and releases raster buffers when image creation fails.",
+          "prs": [
+            4355,
+            4558,
+            4455
+          ]
+        },
+        {
+          "lead": "Managed and I/O hot paths streamlined",
+          "detail": "Reduces repeated reflection, buffer copying, temporary strings, and uniform-map resizing in commonly used operations.",
+          "prs": [
+            4630,
+            4550,
+            4498,
+            4512
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Vulkan integration expanded",
+          "detail": "Adds a SkiaSharp.Vulkan.Silk.NET package for applications using Silk.NET's Vulkan bindings.",
+          "prs": [
+            4527
+          ]
+        },
+        {
+          "lead": "Nano Server font support added",
+          "detail": "Uses FreeType so text rendering can discover and load fonts on Windows Nano Server.",
+          "prs": [
+            4280
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Added FreeType-based font support for Windows Nano Server",
+    "mmitche": "Release infrastructure maintenance",
+    "ramezgerges": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "harfbuzz_summary": null,
+  "release_teasers": {
+    "v4.152.0-preview.1.1": {
+      "subtitle": "Introduces the Graphite GPU backend, async pixel readback, and Skia milestone 152.",
+      "website_summary": "Preview 1 introduces Graphite, async pixel readback, Nano Server font support, and Skia milestone 152.",
+      "categories": [
+        {
+          "heading": "What's New",
+          "bullets": [
+            {
+              "text": "Added Graphite GPU backend bindings for Vulkan, Metal, and Dawn",
+              "prs": [
+                3968
+              ]
+            },
+            {
+              "text": "Added backend-neutral async pixel readback for images and surfaces",
+              "prs": [
+                4545
+              ]
+            },
+            {
+              "text": "Added a SkiaSharp.Vulkan.Silk.NET integration package",
+              "prs": [
+                4527
+              ]
+            },
+            {
+              "text": "Added FreeType-based font support for Nano Server",
+              "prs": [
+                4280
+              ]
+            },
+            {
+              "text": "Updated the Skia engine to milestone 152",
+              "prs": [
+                4651
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "Fixes",
+          "bullets": [
+            {
+              "text": "Corrected native lifetimes for region iteration and pixmap subsets, and released raster buffers after failed image creation",
+              "prs": [
+                4355,
+                4455,
+                4558
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
