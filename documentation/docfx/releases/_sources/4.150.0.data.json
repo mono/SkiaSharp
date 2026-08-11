@@ -1,8 +1,13 @@
 {
-  "format": 3,
+  "format": 5,
   "version": "4.150.0",
   "family": "skiasharp",
   "status": "stable",
+  "range": {
+    "from": "release/4.148.0",
+    "to": "release/4.150.0",
+    "base_version": "4.148.0"
+  },
   "banner": {
     "kind": "stable",
     "date": "July 7, 2026",
@@ -13,9 +18,8 @@
   "harfbuzz": {
     "version": "14.2.1",
     "api_diff_link": "harfbuzzsharp/14.2.1/index.md",
-    "prs": [
-      4143
-    ]
+    "prs": [],
+    "previous_version": "14.2.0"
   },
   "supersedes": [],
   "superseded_by": null,
@@ -44,6 +48,104 @@
         4247,
         4269
       ]
+    }
+  ],
+  "shipments": [
+    {
+      "tag": "v4.150.0-preview.1.1",
+      "core_version": "4.150.0",
+      "public_version": "4.150.0-preview.1.1",
+      "channel": "preview",
+      "label": "Preview 1 (Build 1)",
+      "previous_tag": "v4.148.0",
+      "target_sha": "4c0d2b732d68db83efe8cea0708286c317252a31",
+      "date": "2026-06-13",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.148.0...v4.150.0-preview.1.1",
+      "prs": [
+        4159,
+        4146
+      ]
+    },
+    {
+      "tag": "v4.150.0-preview.2.1",
+      "core_version": "4.150.0",
+      "public_version": "4.150.0-preview.2.1",
+      "channel": "preview",
+      "label": "Preview 2 (Build 1)",
+      "previous_tag": "v4.150.0-preview.1.1",
+      "target_sha": "5f370b811b2e2a0860ef7a59282148ce4b241ad4",
+      "date": "2026-06-24",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.1.1...v4.150.0-preview.2.1",
+      "prs": [
+        4234,
+        4231,
+        4225,
+        4224,
+        4221,
+        4220,
+        4207,
+        4218,
+        4211,
+        4215,
+        4214,
+        4204,
+        4200,
+        4195,
+        4196,
+        4197,
+        4192,
+        3919,
+        4193,
+        4184,
+        4188,
+        4186,
+        4185,
+        4179,
+        4177,
+        4174,
+        4171,
+        4143,
+        4167,
+        4154
+      ]
+    },
+    {
+      "tag": "v4.150.0-rc.1.1",
+      "core_version": "4.150.0",
+      "public_version": "4.150.0-rc.1.1",
+      "channel": "rc",
+      "label": "Release Candidate 1 (Build 1)",
+      "previous_tag": "v4.150.0-preview.2.1",
+      "target_sha": "451f8f1986c5616ce2c59192c9d6097a10c9e30b",
+      "date": "2026-06-29",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.0-preview.2.1...v4.150.0-rc.1.1",
+      "prs": [
+        4271,
+        4258,
+        4269,
+        4267,
+        4260,
+        4247,
+        4254,
+        4239,
+        4227,
+        4244,
+        4229,
+        4228,
+        4190
+      ]
+    },
+    {
+      "tag": "v4.150.0",
+      "core_version": "4.150.0",
+      "public_version": "4.150.0",
+      "channel": "stable",
+      "label": "Stable",
+      "previous_tag": "v4.150.0-rc.1.1",
+      "target_sha": "0c38de125233981b6e0ce663950fe4259269cc9c",
+      "date": "2026-07-07",
+      "changelog_url": "https://github.com/mono/SkiaSharp/compare/v4.150.0-rc.1.1...v4.150.0",
+      "prs": []
     }
   ],
   "previews": [
@@ -123,56 +225,77 @@
       "title": "Add SKPaint.GetFastBounds() for quick-reject culling",
       "author": "mattleibow",
       "community": false,
-      "tag": "product"
+      "tag": "product",
+      "commit": "e19ecc5eceefc65cfc318d51cbfe8dddb4f389a2",
+      "body": "Add SKPaint.GetFastBounds() for quick-reject culling (#4271)\n\nContext: https://github.com/mono/skia/pull/271\nSubmodule: https://github.com/mono/skia/compare/b16789ec35...280ec21ada\n\nExpose Skia's public SkPaint::computeFastBounds / canComputeFastBounds as a\nsingle Try-style method:\n\n    bool SKPaint.GetFastBounds(SKRect bounds, out SKRect fastBounds)\n\nIt returns the conservative device-space rectangle a paint can draw into for a\ngiven source rect, composing the paint's path effect, stroke inflation, mask\nfilter and image filter. Paired with the already-bound SKCanvas.QuickReject it\ncompletes the quick-reject culling pattern Skia documents in its own headers:\n\n    if (paint.GetFastBounds(path.Bounds, out var fast) && canvas.QuickReject(fast))\n        return; // skip the draw\n\nOne method instead of a Can* property plus a Compute* method:\nSkia's contract is that canComputeFastBounds() is a guard that must be checked\nbefore calling computeFastBounds() - the result is unreliable for paints whose\nimage filter or path effect cannot report bounds (the header says \"Only call\nthis if canComputeFastBounds() returned true\"). Folding that guard into the\nbool return makes the API impossible to misuse and matches the existing\nout-bool bounds family - SKPath.GetBounds, SKPath.GetTightBounds,\nSKCanvas.GetLocalClipBounds - none of which has a paired Can* property (there is\nno CanGetTightBounds). GetFastBounds returns false (and SKRect.Empty) when the\npaint cannot compute fast bounds.\n\nPublic SkPaint API, not SkMaskFilter:\nThis began as a binding of SkMaskFilter::computeFastBounds, but that method has\nbeen private since 2018 (mono/skia 80747ef591, \"move the guts of SkMaskFilter.h\ninto SkMaskFilterBase.h\") and binding it would require the internal\nSkMaskFilterBase.h. SkPaint::computeFastBounds is the public entry point, has\nstayed public for 8 years despite a \"(to be made private)\" doc note, and\ncomposes the mask-filter bounds internally, so it is a strict superset of the\nper-mask-filter method. SkImageFilter::computeFastBounds likewise stayed public,\nreinforcing SkPaint as the intended API. The skia-discuss thread EFbFlfJjNxE\n(\"How to get the path bound including border?\") also recommends computeFastBounds\nas the way to get a shape's bounds including blur/shadow.\n\n  * C API (mono/skia#271): sk_paint_compute_fast_bounds,\n    sk_paint_can_compute_fast_bounds; regenerated SkiaApi.generated.cs.\n  * Bump externals/skia b16789ec35 -> 280ec21ada to pick up the C API.\n  * Tests (SKPaintTest): blur outset 3x sigma, stroke (round join/cap) outset\n    strokeWidth/2, stroke+blur composition, fill no-op returns source, source\n    rect not mutated, returns true for simple paints, managed/native parity.\n  * Gallery sample PaintFastBoundsSample and PaintFastBoundsBenchmark\n    (quick-reject culling vs. unconditional draw).\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 271,
+        "url": "https://github.com/mono/skia/pull/271"
+      }
     },
     "4258": {
       "url": "https://github.com/mono/SkiaSharp/pull/4258",
       "title": "Harden Skia upstream-sync: conflict policy, durable gn args, standalone skill, honest run signal",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "b62adf1e0f7d458b08719aeb7a9f13a12867bd49"
     },
     "4269": {
       "url": "https://github.com/mono/SkiaSharp/pull/4269",
       "title": "Fix small-sigma raster blur regression (define SK_AVOID_SLOW_RASTER_PIPELINE_BLURS)",
       "author": "ramezgerges",
       "community": true,
-      "tag": "mixed"
+      "tag": "mixed",
+      "commit": "dbd7e186807c476c92fd92df65989f0e8d37b318",
+      "body": "Skia's SkBlurEngine refactor (~m129) routes small-sigma blurs of 8888 images\nthrough the raster-pipeline shader-based GaussianPass, which is dramatically\nslower than the old dedicated box-approximation path. Chromium mitigates this by\ndefining SK_AVOID_SLOW_RASTER_PIPELINE_BLURS (skia/config/SkUserConfig.h), which\nmakes Raster8888BlurAlgorithm skip GaussianPass and use ThreeBoxApproxPass /\nTentPass instead. SkiaSharp never defined it, so the CPU blur path is fully\nexposed to the regression.\n\nDefine SK_AVOID_SLOW_RASTER_PIPELINE_BLURS for all libSkiaSharp native builds\n(linux covers linuxnodeps; ios covers maccatalyst; plus macos, windows, android,\ntvos, wasm, and tizen's project_def.prop).\n\nMeasured on a Linux x64 source build, same-milestone A/B (stock m150 vs m150 +\ndefine): small-sigma image blur recovers ~6x (2.84 ms -> 455 us), beating the\n3.119 baseline, with no measurable change to any other benchmark. The change is\na pure compile-time define and is build-verified on Linux x64.\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>"
     },
     "4267": {
       "url": "https://github.com/mono/SkiaSharp/pull/4267",
       "title": "Group release-notes site by support status (stable/preview) + audit drift check",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "920675cff8496cc25243661c034f0e439f141482"
     },
     "4260": {
       "url": "https://github.com/mono/SkiaSharp/pull/4260",
       "title": "ci: regroup and rename GitHub Actions workflows; prune dead ones",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "467bffdf9f1446e067f6e9ae7d244767ccf21493"
     },
     "4247": {
       "url": "https://github.com/mono/SkiaSharp/pull/4247",
       "title": "perf(SKSurface): cache the Canvas wrapper across calls",
       "author": "ramezgerges",
       "community": true,
-      "tag": "product"
+      "tag": "product",
+      "commit": "0d83945c99ca50fe94c5e9de8709acbc1a9dbf1a",
+      "body": "Cache the SKSurface.Canvas wrapper across calls (#4247)\n\nSKSurface.Canvas did real work on every access: a P/Invoke\n(sk_surface_get_canvas), a locked HandleDictionary lookup (a\nReaderWriterLockSlim upgradeable-read lock), and an OwnedBy\nConcurrentDictionary registration. Draw-heavy render loops that fetch the\ncanvas once per draw call hammer that path, making the getter a measurable\nbottleneck.\n\nCache the managed SKCanvas wrapper on the surface and reuse it, re-fetching\nonly when the cached wrapper was disposed out from under us; drop the cache\nin DisposeManaged. Per-getter cost drops from ~31 ns to ~0.67 ns (a field\nread + handle check) with zero allocations, so fetching Canvas per draw now\nmatches hand-caching it.\n\nThis is safe because Skia returns a stable SkCanvas* for the surface's\nlifetime. sk_surface_get_canvas forwards to SkSurface::getCanvas(), which\ndelegates to SkSurface_Base::getCachedCanvas(); that method lazily creates\nthe canvas once and only ever assigns fCachedCanvas inside its null-guard --\nit is never reset or reassigned. The guarantee lives in the shared base, so\nit holds for all backends (raster, Ganesh, Graphite, null), and copy-on-write\nforks the device's backing store without recreating the SkCanvas, so the\npointer is unaffected.\n\nThe one wrinkle is the anti-pattern of explicitly disposing the\nsurface-owned canvas. That wrapper is created with owns:false, so disposing\nit does not call sk_canvas_destroy (the native canvas survives) and it\nderegisters itself by identity from HandleDictionary. The\ncanvas.Handle == IntPtr.Zero guard detects this and re-fetches a fresh,\nusable wrapper around the still-alive native canvas.\n\nNotes:\n  - No public API changes; adds a private field and a protected override.\n    ABI-safe.\n  - The cache field is now read/written without the HandleDictionary lock the\n    old path incidentally took. Benign under SkiaSharp's single-thread-per-\n    surface model (a concurrent race resolves to the same instance).\n\nTests: SKSurfaceTest gains CanvasReturnsSameInstanceAcrossCalls (regression\nguard) and CanvasIsRefetchedAfterExplicitCanvasDispose (covers the new\nre-fetch path). Adds SurfaceCanvasBenchmark simulating a 1,000-draw/frame\nrender loop; Program.cs switches to BenchmarkSwitcher so individual\nbenchmarks can be selected via args.\n\nCo-authored-by: Ramez Ragaa <ramezragaa@proton.me>\nCo-Authored-By: Claude Opus 4.8 (1M context) <noreply@anthropic.com>"
     },
     "4254": {
       "url": "https://github.com/mono/SkiaSharp/pull/4254",
       "title": "Add a main (tip) mode to the Skia upstream sync",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "4c371024a608d71b129dabcad556823ee38138a3",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 267,
+        "url": "https://github.com/mono/skia/pull/267"
+      }
     },
     "4239": {
       "url": "https://github.com/mono/SkiaSharp/pull/4239",
       "title": "Support release-branch targeting in Skia upstream sync (+ Opus 4.7, libc++ build fix)",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "c41b44312ce542f1accbbb8a61db9915c2c6291b"
     },
     "4227": {
       "url": "https://github.com/mono/SkiaSharp/pull/4227",
@@ -180,6 +303,13 @@
       "author": "mattleibow",
       "community": false,
       "tag": "product",
+      "commit": "1f31b7c985838d7470c9dcb42733f680662c123d",
+      "body": "Add SKColorFilter.CreateOverdraw() for overdraw visualization (#4227)\n\nContext: https://github.com/mono/SkiaSharp/issues/3941\nChanges: mono/skia#262\n\nImplements overdraw visualization support by wrapping Skia's\nSkOverdrawColorFilter, which maps overdraw counts (0\u20135+) to a\n6-color heat-map palette for rendering performance debugging.\n\n~~ Problem ~~\n\nSkiaSharp wrapped SKOverdrawCanvas (which tracks draw counts by writing\nto the alpha channel) but did not expose SkOverdrawColorFilter (which\nconverts those alpha values into visible colors). Users could generate\noverdraw data but not visualize it without dropping into native code.\n\nIssue #3941 requested the missing API to complete the overdraw debugging\nworkflow.\n\n~~ Solution ~~\n\nAdded SKColorFilter.CreateOverdraw() with the standard Span-triple pattern:\n  - CreateOverdraw(ReadOnlySpan<SKColor>) \u2014 primary overload\n  - CreateOverdraw(SKColor[]) \u2014 convenience overload\n\nInput validation ensures exactly 6 colors are provided (throws\nArgumentException otherwise, ArgumentNullException for null arrays).\n\n~~ C API ~~\n\nRequires mono/skia#262, which adds sk_colorfilter_new_overdraw() wrapping\nSkOverdrawColorFilter::MakeWithSkColors(). The C API accepts a 6-element\ncolor array and returns an sk_colorfilter_t*.\n\n~~ Gallery Sample and Tests ~~\n\nAdded OverdrawVisualizationSample showing side-by-side comparison of normal\nrendering vs overdraw visualization. The sample demonstrates the full workflow:\n  1. Create offscreen A8 surface\n  2. Wrap in SKOverdrawCanvas (writes counts to alpha)\n  3. Draw overlapping shapes\n  4. Snapshot to image\n  5. Apply CreateOverdraw filter when drawing the image\n\nTests cover creation, validation (wrong length, null), Span equivalence,\nand rendering with SKOverdrawCanvas to verify the filter correctly maps\nalpha values to colors.\n\n~~ Submodule Update ~~\n\nUpdates externals/skia to a10e10524a (dev/issue-3941-colorfilter-overdraw\nrebased on 214e2d2f38) to include the required C API. The cgmanifest.json\nis updated accordingly.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 262,
+        "url": "https://github.com/mono/skia/pull/262"
+      },
       "fixes": [
         3941
       ]
@@ -189,7 +319,8 @@
       "title": "Fix integration test harness Docker detection + command timeout, and release-testing skill filter syntax",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "6584c0b2c900f655681b0e428ae1e47f9808a06e"
     },
     "4229": {
       "url": "https://github.com/mono/SkiaSharp/pull/4229",
@@ -197,6 +328,13 @@
       "author": "mattleibow",
       "community": false,
       "tag": "product",
+      "commit": "a569d69ac52ce2423b6ec148f93ba3e4e2595ec3",
+      "body": "Add SKImageFilter.CreateCrop() (#4229)\n\nCloses: https://github.com/mono/SkiaSharp/issues/3938\nRequires: https://github.com/mono/skia/pull/261\n\nExposes SkImageFilters::Crop as SKImageFilter.CreateCrop(), the modern\nreplacement for the deprecated per-filter `cropRect` pattern. Crop restricts\nan image filter's output to a rectangle using a tile mode, and composes with\nother filters (e.g. blur then crop) instead of every filter carrying its own\ncrop argument.\n\nAdd three ABI-safe overloads (no default parameters):\n\n  * CreateCrop(SKRect)                                  - defaults to Decal\n  * CreateCrop(SKRect, SKShaderTileMode)                - null input (source)\n  * CreateCrop(SKRect, SKShaderTileMode, SKImageFilter?) - full control\n\nThe full overload calls sk_imagefilter_new_crop and uses GC.KeepAlive on the\ninput filter to keep it alive across the native call. A null input maps to\nIntPtr.Zero, which Skia interprets as the source image.\n\n  * binding/SkiaSharp/SKImageFilter.cs       - the three CreateCrop overloads\n  * binding/SkiaSharp/SkiaApi.generated.cs   - regenerated P/Invoke binding\n  * externals/skia                           - bump to pick up mono/skia#261\n\nTests in SKImageFilterTest.cs go beyond non-null checks and verify behavior:\nnull input is accepted, Crop composes with CreateBlur, Decal leaves pixels\noutside the crop transparent while Clamp produces a different (edge-extended)\nresult, and a rendering test confirms pixels inside the rect are drawn and\nthose outside are cropped away.\n\nImageFilterCropSample.cs adds an interactive gallery demo with crop bounds\nsliders, a tile-mode picker, an \"Enable Crop\" toggle, and an optional blur\ncomposition, drawing the crop rect as an overlay so the effect is visible.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 261,
+        "url": "https://github.com/mono/skia/pull/261"
+      },
       "fixes": [
         3938
       ]
@@ -207,6 +345,13 @@
       "author": "mattleibow",
       "community": false,
       "tag": "product",
+      "commit": "fdfee75ebcf3ebe9da90c5d19a1e5c3ec3230151",
+      "body": "Add SKImageFilter.CreateEmpty() (#4228)\n\nContext: https://github.com/mono/SkiaSharp/issues/3937\nChanges: depends on mono/skia#260 (sk_imagefilter_new_empty C API)\n\nSkia's SkImageFilters::Empty() produces a transparent-black image filter\nthat discards its input \u2014 useful as an explicit \"no content\" node in\nfilter-composition chains and for exercising transparent-black handling.\nIt was unreachable from managed code because neither the C shim nor the\nbinding exposed it.\n\nBind it as a static factory SKImageFilter.CreateEmpty() that calls the\nnew sk_imagefilter_new_empty() entry point, matching the existing\nCreateBlur/CreateCompose factory pattern (no default parameters, returns\na ref-counted SKImageFilter the caller owns). The submodule is bumped to\npick up the C API from mono/skia#260, and SkiaApi.generated.cs is\nregenerated rather than hand-edited.\n\nTests in SKImageFilterTest.cs cover both shape and behavior:\n\n  * CreateEmpty returns non-null and a new instance per call (not a\n    singleton \u2014 distinct handles)\n  * the filter composes as both the outer and inner node of\n    CreateCompose\n  * CreateEmptyDiscardsDrawnContent renders through a shared local\n    function so the only variable is the filter: drawing a red rect on\n    an explicit blue background yields red with no filter, and yields\n    blue with Empty() \u2014 proving the filter discards the draw to\n    transparent black. Clearing to blue keeps the assertion independent\n    of surface zero-initialization.\n\nThis direct-draw behavior matches upstream usage in\ngm/imagefiltersbase.cpp, which applies Empty() straight to draw ops, and\nthe transparent-black semantics asserted here mirror\ntests/ImageFilterTest.cpp's test_fail_affects_transparent_black.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 260,
+        "url": "https://github.com/mono/skia/pull/260"
+      },
       "fixes": [
         3937
       ]
@@ -216,98 +361,119 @@
       "title": "[skia-sync] Merge upstream chrome/m150 bug fixes",
       "author": "mattleibow",
       "community": false,
-      "tag": "product"
+      "tag": "product",
+      "commit": "3876d59bd346996a41a1763ab990af588ddf64b5",
+      "body": "[skia-sync] Update externals/skia to chrome/m150 bug-fix tip (#4190)\n\nCompanion skia PR: https://github.com/mono/skia/pull/259\nChanges: https://github.com/mono/skia/compare/a54d90950e4...f6ee107ea5a\n\nSame-milestone (m150 -> m150) sync that advances the externals/skia\nsubmodule to the latest skiasharp branch tip and updates cgmanifest.json\nto match. No SkiaSharp version bump (still 4.150.0) and no C API or binding\nchanges \u2014 regenerated bindings produced no diff, so this is a pure native\nupdate from upstream.\n\nTwo upstream chrome/m150 cherry-picks are pulled in:\n\n  * 14d05ec761 [m150] Resolved a Data Race on fStream in SkTypeface_Mac\n    Fixes a data race between SkTypeface_Mac::onOpenStream() and\n    onOpenExistingStream(), which could read/write the mutable fStream\n    member concurrently. Upstream replaces the SkOnce init guard with an\n    SkSharedMutex (exclusive on open, shared on existing-stream/clone).\n    Relevant to SkiaSharp: the macOS/CoreText port backs SKTypeface on\n    Apple platforms, where typefaces are frequently shared across threads.\n\n  * 9f330f1704 [graphite] Use stable collection for static bindings\n    Graphite/Dawn-only fix (std::vector -> SkTBlockList/TArray for stable\n    sampler-layout addresses). SkiaSharp ships Ganesh, not Graphite/Dawn,\n    so this has zero runtime impact and is included only to keep the fork\n    in lockstep with upstream m150.\n\ncgmanifest.json: commitHash -> f6ee107ea5, upstream_merge_commit -> 14d05ec761.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 259,
+        "url": "https://github.com/mono/skia/pull/259"
+      }
     },
     "4234": {
       "url": "https://github.com/mono/SkiaSharp/pull/4234",
       "title": "Update docs submodule to latest main",
       "author": "github-actions[bot]",
       "community": false,
-      "tag": "mixed"
+      "tag": "mixed",
+      "commit": "5f3d749e803d32bba5a76b81c2c3ca945202ee0d",
+      "body": "Latest: [docs] Fix broken API doc cross-references (#152)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
     },
     "4231": {
       "url": "https://github.com/mono/SkiaSharp/pull/4231",
       "title": "docs: regenerate API diffs and polish release notes",
       "author": "github-actions[bot]",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "1fdd334a186e464be295e10246fd0db99360cb3c"
     },
     "4225": {
       "url": "https://github.com/mono/SkiaSharp/pull/4225",
       "title": "docs: drop obsolete GrVkYcbcrConversionInfo page to fix xref collision",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "72e7dd6b55b2de19223f7fe8a5d72ad01839aae0"
     },
     "4224": {
       "url": "https://github.com/mono/SkiaSharp/pull/4224",
       "title": "docs: regenerate API diffs and polish release notes",
       "author": "github-actions[bot]",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "c35af51d3ff96380ba927c93cad686b97aa2ac7b"
     },
     "4221": {
       "url": "https://github.com/mono/SkiaSharp/pull/4221",
       "title": "Fix integration test harness for .NET 10",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "dbac5f76d400d96444b54e7864862a3c202bb56f"
     },
     "4220": {
       "url": "https://github.com/mono/SkiaSharp/pull/4220",
       "title": "Add mono/skia counterpart branching to release-branch skill",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "827d5ffecf81e03439fdca1695cd791dce3b7e10"
     },
     "4207": {
       "url": "https://github.com/mono/SkiaSharp/pull/4207",
       "title": "[docs] Release-notes: main-only daily workflow + GitHub Release teaser playbook",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "4872d7404c17bb8ac8f2c472641c64e441a41195"
     },
     "4218": {
       "url": "https://github.com/mono/SkiaSharp/pull/4218",
       "title": "[api-docs] Stop merge from writing unfilled remarks scaffold to XML",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "1d63e9119b61963550ac26c263df27353e6481ab"
     },
     "4211": {
       "url": "https://github.com/mono/SkiaSharp/pull/4211",
       "title": "Fix release-branch skill integration-branch model and add bump-version helper",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "d02e8c154990491b07333742ee60a5f9de490f4e"
     },
     "4215": {
       "url": "https://github.com/mono/SkiaSharp/pull/4215",
       "title": "Add VERSIONS.txt step to the native-dependency-update skill",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "ca745ff3aface37a785627c96d0809c640fc009a"
     },
     "4214": {
       "url": "https://github.com/mono/SkiaSharp/pull/4214",
       "title": "Sync VERSIONS.txt with harfbuzz 14.2.1",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "66c5858e5aa08f2f6f0fc0f1c6054782e83c0f29"
     },
     "4204": {
       "url": "https://github.com/mono/SkiaSharp/pull/4204",
       "title": "Improve api-docs skill to stop recurring documentation-writer mistakes",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "eb2f24fde4a491fbc34499dc90a566f24ca21a12"
     },
     "4200": {
       "url": "https://github.com/mono/SkiaSharp/pull/4200",
       "title": "Make doc generation reproducible and Linux-only; unify \"API diff\" terminology",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "eb251ab24c96a32418b39db3c327b836d5c268f3"
     },
     "4195": {
       "url": "https://github.com/mono/SkiaSharp/pull/4195",
@@ -315,6 +481,8 @@
       "author": "ramezgerges",
       "community": true,
       "tag": "product",
+      "commit": "f27c37ffcf9b4c51a79cec1ea4bf357d791924b4",
+      "body": "[v4] Promote remaining pre-v4 obsoletes to error and trim obsolete enums from the ref assembly (#4195)\n\nFixes: https://github.com/mono/SkiaSharp/issues/3681\nFixes: https://github.com/mono/SkiaSharp/issues/3682\n\nCompletes the v4 deprecation pass. The SKPaint text/font subset was already\npromoted to error in #3732; this finishes the remaining pre-v4 warning-only\nobsoletes now that every one of them has a stable replacement:\n\n  * GRBackendRenderTarget(int, int, int sampleCount, GRVkImageInfo) and the\n    GRMtlTextureInfo overload (iOS/macOS/tvOS) -> the ctors without sampleCount\n  * SKRunBuffer.GetGlyphSpan(), SKHorizontalRunBuffer/SKPositionedRunBuffer.\n    GetPositionSpan(), SKRotationScaleRunBuffer.GetRotationScaleSpan()/\n    SetRotationScale() -> the Glyphs / Positions properties\n  * the SKPaintHinting and SKFilterQuality enums -> SKFontHinting / SKSamplingOptions\n\nAs part of the same pass we audited the bumped Skia milestone range for APIs\ndeprecated or removed upstream (#3682) and found no SkiaSharp wrappers that\nneeded new [Obsolete] warnings for this release, so none were added.\n\n~~ Strip the now-unused enums from the reference assembly ~~\n\nWith SKPaintHinting and SKFilterQuality marked error-obsolete, every remaining\nconsumer is itself error-obsolete, so the enums no longer belong in the public\nv4 surface. They are removed from the reference assembly (gone from IntelliSense\nand uncompilable against) while staying in the implementation assembly for ABI.\n\nThe earlier approach removed the enum *types by name* via an inline Cecil\nMSBuild task. That was non-deterministic \u2014 it would silently strip any future\nnon-obsolete consumer \u2014 and it crashed Cecil on write because the upstream\nRemoveObsoleteSymbols task left orphaned get_/set_ accessor methods behind (the\nC# compiler does not copy a property's [Obsolete] onto its accessors), which\nalso kept the enums looking \"used.\" This replaces that workaround with\nMono.ApiTools.MSBuildTasks 0.6.0, whose RemoveObsoleteSymbols now also removes\nthe compiler-generated accessor methods and backing fields\n(https://github.com/mattleibow/Mono.ApiTools.MSBuildTasks/pull/24). The trim is\nnow attribute-driven: the removal closure follows from [Obsolete(error: true)]\nitself rather than a type-name match. Restore pulls 0.6.0 from the dotnet-public\nmirror; no nuget.config change ships.\n\n~~ Keep two DrawText overloads at warning ~~\n\nSKCanvas.DrawText(text, ..., SKFont, SKPaint) (the two overloads without an\nexplicit SKTextAlign) are corrected from error back to warning. They were not\nobsolete in the last shipped stable (v3.119.x) \u2014 they were marked error during\nv4 development, skipping the deprecation-warning cycle. Per the deprecate-then-\nerror policy a newly-deprecated API must first ship as a warning, so they ship\nas a warning in v4 and can be promoted to error in a later release.\n\nSKMetalView (Apple) is updated to call the GRBackendRenderTarget ctor without\nsampleCount, since the sampleCount overload is now an error.\n\nCo-authored-by: Ramez Gerges <ramezragaa@proton.me>\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
       "fixes": [
         3681,
         3682
@@ -325,28 +493,33 @@
       "title": "Make API-diff changelog generation host-independent",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "4024b68f80c3b64956e9776f46d398df4d263308"
     },
     "4197": {
       "url": "https://github.com/mono/SkiaSharp/pull/4197",
       "title": "Fix docs.cake moniker collision dropping iOS GL API docs",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "1ef1113b12833f9c08d1c1022558d7596a5d01fe"
     },
     "4192": {
       "url": "https://github.com/mono/SkiaSharp/pull/4192",
       "title": "docs: latest-only, local-only frameworks docs generator",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "51ab1c13370403740c8334b57dc66c0841576b64"
     },
     "3919": {
       "url": "https://github.com/mono/SkiaSharp/pull/3919",
       "title": "Update docs submodule to latest main",
       "author": "github-actions[bot]",
       "community": false,
-      "tag": "mixed"
+      "tag": "mixed",
+      "commit": "6aa4b5a8bf6459d6cbcf52b9069fc456934818c6",
+      "body": "Latest: Regenerate frameworks docs: latest-only monikers (#141)\n\nCo-authored-by: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>"
     },
     "4193": {
       "url": "https://github.com/mono/SkiaSharp/pull/4193",
@@ -354,6 +527,7 @@
       "author": "mattleibow",
       "community": false,
       "tag": "internal",
+      "commit": "6b8e86410131049fed82328ca0dd13c27c39e97e",
       "fixes": [
         4191
       ]
@@ -363,56 +537,65 @@
       "title": "[docs] Unify API-diff + release-notes into one agentic workflow",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "bc46b5364a0a21a3785f118b3b37ed91b8528dfe"
     },
     "4188": {
       "url": "https://github.com/mono/SkiaSharp/pull/4188",
       "title": "[security-audit] Add Chromium release heads-up to the security-audit skill",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "e8007c353fa2ef796efcc2bff71cbf56df5e3961"
     },
     "4186": {
       "url": "https://github.com/mono/SkiaSharp/pull/4186",
       "title": "Remove deprecated .NET Interactive (Polyglot Notebooks) support",
       "author": "mattleibow",
       "community": false,
-      "tag": "product"
+      "tag": "product",
+      "commit": "4fc5228543c69934239d98e8a22fa4e8fb84caa5",
+      "body": "Remove deprecated .NET Interactive (Polyglot Notebooks) support (#4186)\n\nContext: https://github.com/dotnet/interactive/issues/4163\n\n.NET Interactive and Polyglot Notebooks have been officially deprecated\nupstream, so SkiaSharp no longer needs to build, package, or ship its\nnotebook integration. This removes the SkiaSharp.DotNet.Interactive\nextension and every build/packaging/solution reference to it, so the\ndeprecated DLL stops being embedded in the SkiaSharp NuGet.\n\nRemoved:\n\n  * source/SkiaSharp.DotNet.Interactive/ \u2014 the whole project\n    (SkiaSharpKernelExtension, RasterRenderer, ColorRenderer, assembly\n    info, and csproj).\n  * interactive/ \u2014 the .dib notebook samples (README.dib, Gradients.dib).\n\nReference cleanup:\n\n  * binding/SkiaSharp/SkiaSharp.csproj \u2014 dropped the\n    _IncludeDotNetInteractivePackageFiles target that packed the\n    extension DLL into the NuGet under interactive-extensions/dotnet/.\n  * source/SkiaSharpSource.sln and the Mac/Linux/Windows .slnf filters \u2014\n    removed the project and its solution-folder entries.\n  * scripts/infra/samples/samples.cake \u2014 removed the interactive.zip\n    archive step.\n  * scripts/infra/caching/repo-deps.json \u2014 removed the interactive/**\n    exclude.\n  * documentation/dev/packages.md \u2014 removed the .NET Interactive mention\n    from the SkiaSharp package description.\n\nHistorical release notes under documentation/docfx/releases/ still\nmention .NET Interactive and are intentionally left as archival records.\n\nVerified that the three .slnf files and repo-deps.json remain valid JSON\nand that `dotnet sln source/SkiaSharpSource.sln list` parses with no\ndangling references to the removed project.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
     },
     "4185": {
       "url": "https://github.com/mono/SkiaSharp/pull/4185",
       "title": "docs: refresh Skia adoption claims with verified product list",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "74d04ba5dc5194b13d6d3f66ba722881f3b27fed"
     },
     "4179": {
       "url": "https://github.com/mono/SkiaSharp/pull/4179",
       "title": "release-notes: restore in-flight -unreleased naming + per-preview rollup (R1/R2/R3)",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "61f6d319185e7af6c98d0961e8235622f1ab5761"
     },
     "4177": {
       "url": "https://github.com/mono/SkiaSharp/pull/4177",
       "title": "[docs] Unify changelog + release-notes generation: stable rollups and local skia links",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "4b8e43f6c626c7cc990fefc3e1b51cc58a16fab5"
     },
     "4174": {
       "url": "https://github.com/mono/SkiaSharp/pull/4174",
       "title": "release-notes: fix --all timeout, migrate pages, and credit contributors correctly",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "2ccf9685c98537788920c6e3c206a6baf8e7ef4e"
     },
     "4171": {
       "url": "https://github.com/mono/SkiaSharp/pull/4171",
       "title": "Unify API changelog + release-notes versioning via shared versions.json",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "08ac410ead7c8d9ef4e434fd8278c34b2b0ca8f0"
     },
     "4143": {
       "url": "https://github.com/mono/SkiaSharp/pull/4143",
@@ -420,6 +603,7 @@
       "author": "mattleibow",
       "community": false,
       "tag": "internal",
+      "commit": "aee759e6612983ba72cc14c7dfc144ba578900ee",
       "fixes": [
         4139
       ]
@@ -429,21 +613,30 @@
       "title": "Update harfbuzz to 14.2.1",
       "author": "mattleibow",
       "community": false,
-      "tag": "product"
+      "tag": "product",
+      "commit": "791be439e96663fb2ac64d22c21b1b9681874e29",
+      "body": "Update harfbuzz to 14.2.1 (#4167)\n\nChanges: https://github.com/harfbuzz/harfbuzz/compare/14.2.0...14.2.1\nSkia PR: https://github.com/mono/skia/pull/257\n\nAdvances the externals/skia submodule to pick up harfbuzz 14.2.1 (DEPS\ncommit 56feae40, merged into skiasharp as a54d9095) and updates\ncgmanifest.json to match. This is a patch-level bump of the bundled\nHarfBuzz used by HarfBuzzSharp and SkiaSharp text shaping.\n\nNotable upstream changes relevant here:\n\n  * AAT shaping fixes (mort contextual offsets, in-place deleted-glyph\n    replacement) and Arabic PUA fallback shaping for the isolated\n    lam-alef-maksura ligature.\n  * COLR v1 fixes: .notdef without paint, consistent alpha rounding, and\n    correct root clip under the font transform.\n  * Glyph-extents fixes so the reported box always covers the glyph.\n  * Subsetting fixes (keep palt by default, raise repacker MAX_SPACES,\n    fix the post glyph-name sort comparator on macOS).\n  * Map the Hrkt script tag to the kana OpenType tag.\n\nNo source files were added or removed upstream, so no BUILD.gn changes\nwere needed. Verified with a local native build (macOS arm64) and the\nfull test suite (5703 passed, 0 failed, 13 skipped).\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 257,
+        "url": "https://github.com/mono/skia/pull/257"
+      }
     },
     "4154": {
       "url": "https://github.com/mono/SkiaSharp/pull/4154",
       "title": "Build Tizen native dependencies in a Docker container",
       "author": null,
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "e3bca18bffbc55db3655d623bb32f8935f22726f"
     },
     "4159": {
       "url": "https://github.com/mono/SkiaSharp/pull/4159",
       "title": "Add job-level status to release-status pipeline script",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "2d669caa9f7d383acae5c022e3b074300f36eef2"
     },
     "4146": {
       "url": "https://github.com/mono/SkiaSharp/pull/4146",
@@ -451,6 +644,13 @@
       "author": "mattleibow",
       "community": false,
       "tag": "product",
+      "commit": "4e08384cd2d229badb53068465b5c382a0e6c01f",
+      "body": "[skia-sync] Update Skia to milestone m150 (4.150.0) (#4146)\n\nChanges: https://github.com/mono/skia/compare/chrome/m148...chrome/m150\nCompanion: mono/skia#253 (merged into the skiasharp branch as 94451aa283)\nFixes: #4155 (Tizen PDF stopgap, tracked for restore)\n\nAdvances the bundled Skia from chrome/m148 to chrome/m150, bumping the\nSkiaSharp native/managed version to 4.150.0. Bumps the externals/skia\nsubmodule, regenerates scripts/VERSIONS.txt (skia release m150, libSkiaSharp\nmilestone/soname 150, SkiaSharp assembly/file 4.150.0.0), updates\nSKIASHARP_VERSION in azure-templates-variables.yml, and refreshes\ncgmanifest.json (chrome_milestone 150, upstream_merge_commit c92514572e,\nSkia repo ref 94451aa283) for CVE/component tracking.\n\nm150 pulled in new C++20 surface area that broke three native legs, each\nwith a distinct root cause. The fixes live in the mono/skia fork (companion\nPR #253) and a small amount of SkiaSharp pipeline config; this PR pins the\nmerged fork commit and wires the build to it.\n\n~~ Native build fixes (via fork PR #253) ~~\n\n  * Windows: m150's SkFontMgr_win_dw.cpp onMatch() now uses IDWriteFontSet4,\n    which requires the Win11 SDK (10.0.22621). The build was resolving an\n    older SDK and failing with \"use of undeclared identifier\n    'IDWriteFontSet4'\". Added a min_win_sdk_version floor in the fork's gn so\n    the MSVC toolchain selects 10.0.22621+ when present, rather than pinning\n    one exact version. Runtime-safe: the interface is acquired via\n    QueryInterface with a null-check fallback to the legacy path, and the OS\n    floor and DLL imports are unchanged (verified by CheckWindowsDependencies).\n\n  * WASM (.NET 8 / emscripten 3.1.34, libc++ 15): SkPDFTag.cpp used\n    std::views::reverse, gated behind incomplete-features and disabled in\n    libc++ 15. Rewrote the single use as a reverse-iterator loop that also\n    compiles under Tizen clang 10. The .NET 9 leg (libc++ 17) was unaffected.\n\n  * Tizen (clang 10 + gcc 9.2 libstdc++, pre-C++20): m150's PDF backend now\n    needs <compare> and ranges. Rather than disable PDF (which would regress\n    SKDocument), backported the PDF sources to C++17 so PDF stays enabled on\n    Tizen. Also fixed an optional::emplace and an SkOpts -march mismatch\n    surfaced by the older toolchain.\n\n  * D3D: fixed GrD3DBackendSurface.cpp to compile without GPU_TEST_UTILS,\n    matching the m150 base-class change (FormatData::equal is unconditional;\n    Texture/RenderTarget::equal are test-utils-gated) and the existing Vulkan\n    backend.\n\n~~ Submodule pin ~~\n\nRe-pins externals/skia to 94451aa283, the merge commit of fork PR #253 on the\nstable skiasharp branch (tree-identical to the integration tip bceb12ad2c),\nand corrects the cgmanifest Skia commit reference to match.\n\nFull CI is green: build 158235 succeeded across all native platforms\n(Windows/macOS/Linux/WASM), managed build, API diff, tests, and samples.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 253,
+        "url": "https://github.com/mono/skia/pull/253"
+      },
       "fixes": [
         4155
       ]
