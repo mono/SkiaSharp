@@ -19,6 +19,7 @@
                         <segue destination="cpuVC" kind="relationship" relationship="viewControllers" id="cpuSegue"/>
                         <segue destination="gpuGLVC" kind="relationship" relationship="viewControllers" id="gpuGLSegue"/>
                         <segue destination="gpuMetalVC" kind="relationship" relationship="viewControllers" id="gpuMetalSegue"/>
+                        <segue destination="graphiteVC" kind="relationship" relationship="viewControllers" id="graphiteSegue"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tabBarFirstResponder" sceneMemberID="firstResponder"/>
@@ -111,6 +112,57 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="gpuMetalFirstResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="800" y="400"/>
+        </scene>
+        <!--Graphite Metal-->
+        <scene sceneID="graphiteScene">
+            <objects>
+                <viewController id="graphiteVC" customClass="GraphiteViewController" sceneMemberID="viewController" storyboardIdentifier="GraphiteVC">
+                    <tabBarItem key="tabBarItem" title="Graphite Metal" id="graphiteTabItem"/>
+                    <view key="view" contentMode="scaleToFill" id="graphiteRootView">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="graphiteSkiaView" customClass="SKGraphiteMetalView">
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="  GRAPHITE / METAL  |  FPS: --  " textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="graphiteFps">
+                                <rect key="frame" x="760" y="120" width="400" height="52"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="52" id="graphiteFpsHeight"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="400" id="graphiteFpsWidth"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Menlo-Bold" family="Menlo" pointSize="22"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" red="0" green="0" blue="0" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="26"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.borderWidth">
+                                        <real key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="graphiteSafeArea"/>
+                        <constraints>
+                            <constraint firstItem="graphiteSkiaView" firstAttribute="top" secondItem="graphiteRootView" secondAttribute="top" id="graphiteTop"/>
+                            <constraint firstItem="graphiteSkiaView" firstAttribute="leading" secondItem="graphiteRootView" secondAttribute="leading" id="graphiteLeading"/>
+                            <constraint firstItem="graphiteSkiaView" firstAttribute="trailing" secondItem="graphiteRootView" secondAttribute="trailing" id="graphiteTrailing"/>
+                            <constraint firstItem="graphiteSkiaView" firstAttribute="bottom" secondItem="graphiteRootView" secondAttribute="bottom" id="graphiteBottom"/>
+                            <constraint firstItem="graphiteFps" firstAttribute="centerX" secondItem="graphiteRootView" secondAttribute="centerX" id="graphiteFpsCenter"/>
+                            <constraint firstItem="graphiteFps" firstAttribute="top" secondItem="graphiteSafeArea" secondAttribute="top" constant="24" id="graphiteFpsTop"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="graphiteSkiaView" id="graphiteOutlet"/>
+                        <outlet property="fpsLabel" destination="graphiteFps" id="graphiteFpsOutlet"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="graphiteFirstResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1600" y="400"/>
         </scene>
     </scenes>
 </document>

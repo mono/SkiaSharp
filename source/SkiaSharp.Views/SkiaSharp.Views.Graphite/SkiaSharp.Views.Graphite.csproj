@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GraphiteTargetFrameworksCurrent Condition="!$(IsLinux)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent);$(TFMCurrent)-android$(TPVAndroidCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="$(IsLinux)">$(TFMCurrent)-android$(TPVAndroidCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetTVOSSupported)">$(GraphiteTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="!$(IsLinux) and $(IsNetMacOSSupported)">$(GraphiteTargetFrameworksCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and !$(IsLinux)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMPrevious)-android$(TPVAndroidPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and $(IsLinux)">$(TFMPrevious)-android$(TPVAndroidPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and !$(IsLinux) and $(IsNetTVOSSupported)">$(GraphiteTargetFrameworksPrevious);$(TFMPrevious)-tvos$(TPVtvOSPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and !$(IsLinux) and $(IsNetMacOSSupported)">$(GraphiteTargetFrameworksPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</GraphiteTargetFrameworksPrevious>
+    <TargetFrameworks>$(GraphiteTargetFrameworksCurrent);$(GraphiteTargetFrameworksPrevious)</TargetFrameworks>
+    <PackagingGroup>SkiaSharp.Views.Graphite</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Graphite</PackageId>
+    <Title>Native SkiaSharp Graphite views for Android and Apple platforms</Title>
+    <PackageDescription>This package provides native Graphite-backed rendering views for Android, iOS, Mac Catalyst, macOS, and tvOS.</PackageDescription>
+    <PackageTags>skiasharp graphite vulkan metal views</PackageTags>
+    <RootNamespace>SkiaSharp.Views</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Graphite</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <Nullable>Enable</Nullable>
+    <AndroidGenerateResourceDesigner>false</AndroidGenerateResourceDesigner>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <Compile Include="..\SkiaSharp.Views.Shared\Extensions.cs" Link="Shared\Extensions.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Platform\**" />
+    <None Include="Platform\**" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos')) or $(TargetFramework.Contains('-macos'))">
+    <Compile Include="Platform\Shared\**\*.cs" />
+    <Compile Include="Platform\Apple\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-android'))">
+    <Compile Include="Platform\Shared\**\*.cs" />
+    <Compile Include="Platform\Android\**\*.cs" />
+  </ItemGroup>
+</Project>

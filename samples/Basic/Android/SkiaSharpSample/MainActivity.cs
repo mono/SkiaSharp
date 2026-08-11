@@ -28,6 +28,10 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 
 		var bottomNav = FindViewById<BottomNavigationView>(Resource.Id.bottom_nav);
 		bottomNav.SetOnItemSelectedListener(this);
+		var graphiteSupported = Build.VERSION.SdkInt >= BuildVersionCodes.N;
+		bottomNav.Menu.FindItem(Resource.Id.nav_graphite)
+			.SetVisible(graphiteSupported)
+			.SetEnabled(graphiteSupported);
 
 		// Apply top status bar inset to the AppBarLayout
 		var appBar = FindViewById<View>(Resource.Id.appbar);
@@ -40,6 +44,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 				SamplePage.GpuSurface => Resource.Id.nav_gpu_surface,
 				SamplePage.GpuTexture => Resource.Id.nav_gpu_texture,
 				SamplePage.Drawing => Resource.Id.nav_drawing,
+				SamplePage.Graphite when graphiteSupported => Resource.Id.nav_graphite,
 				_ => Resource.Id.nav_cpu,
 			};
 		}
@@ -60,6 +65,7 @@ public class MainActivity : AppCompatActivity, BottomNavigationView.IOnItemSelec
 			Resource.Id.nav_gpu_surface => new GpuSurfaceFragment(),
 			Resource.Id.nav_gpu_texture => new GpuTextureFragment(),
 			Resource.Id.nav_drawing => new DrawingFragment(),
+			Resource.Id.nav_graphite when Build.VERSION.SdkInt >= BuildVersionCodes.N => new GraphiteFragment(),
 			_ => new CpuFragment()
 		};
 

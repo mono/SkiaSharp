@@ -9,4 +9,5 @@ public enum SamplePage
 	GpuSurface,
 	GpuTexture,
 	Drawing,
+	Graphite,
 }

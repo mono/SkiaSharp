@@ -200,6 +200,7 @@
                         <tabViewItem label="GPU (GL)" image="display" catalog="system" id="tvi-gl"/>
                         <tabViewItem label="GPU (Metal)" image="bolt.fill" catalog="system" id="tvi-metal"/>
                         <tabViewItem label="Drawing" image="pencil.tip" catalog="system" id="tvi-draw"/>
+                        <tabViewItem label="Graphite" image="cube.fill" catalog="system" id="tvi-graphite"/>
                     </tabViewItems>
                     <tabView key="tabView" type="noTabsNoBorder" id="tv-inner">
                         <font key="font" metaFont="system"/>
@@ -210,6 +211,7 @@
                         <segue destination="vc-gl" kind="relationship" relationship="tabItems" id="seg-gl"/>
                         <segue destination="vc-metal" kind="relationship" relationship="tabItems" id="seg-metal"/>
                         <segue destination="vc-draw" kind="relationship" relationship="tabItems" id="seg-draw"/>
+                        <segue destination="vc-graphite" kind="relationship" relationship="tabItems" id="seg-graphite"/>
                     </connections>
                 </tabViewController>
                 <customObject id="fr-tvc" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
@@ -436,6 +438,42 @@
                 <customObject id="fr-draw" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1575" y="655"/>
+        </scene>
+        <!--Graphite View Controller-->
+        <scene sceneID="scene-graphite">
+            <objects>
+                <viewController id="vc-graphite" customClass="GraphiteViewController" sceneMemberID="viewController">
+                    <view key="view" wantsLayer="YES" id="v-graphite">
+                        <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="cv-graphite" customClass="SKGraphiteMetalView">
+                                <rect key="frame" x="0.0" y="0.0" width="800" height="500"/>
+                            </customView>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="fps-graphite">
+                                <rect key="frame" x="275" y="464" width="250" height="24"/>
+                                <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="  GRAPHITE / METAL  |  FPS: --  " id="fpsc-graphite">
+                                    <font key="font" metaFont="smallSystem"/>
+                                </textFieldCell>
+                            </textField>
+                        </subviews>
+                        <constraints>
+                            <constraint firstItem="cv-graphite" firstAttribute="leading" secondItem="v-graphite" secondAttribute="leading" id="c-graphite-l"/>
+                            <constraint firstItem="cv-graphite" firstAttribute="trailing" secondItem="v-graphite" secondAttribute="trailing" id="c-graphite-r"/>
+                            <constraint firstItem="cv-graphite" firstAttribute="top" secondItem="v-graphite" secondAttribute="top" id="c-graphite-t"/>
+                            <constraint firstItem="cv-graphite" firstAttribute="bottom" secondItem="v-graphite" secondAttribute="bottom" id="c-graphite-b"/>
+                            <constraint firstItem="fps-graphite" firstAttribute="centerX" secondItem="v-graphite" secondAttribute="centerX" id="c-fps-graphite-cx"/>
+                            <constraint firstItem="fps-graphite" firstAttribute="top" secondItem="v-graphite" secondAttribute="top" constant="12" id="c-fps-graphite-t"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="skiaView" destination="cv-graphite" id="out-graphite-skia"/>
+                        <outlet property="fpsLabel" destination="fps-graphite" id="out-graphite-fps"/>
+                    </connections>
+                </viewController>
+                <customObject id="fr-graphite" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1950" y="655"/>
         </scene>
     </scenes>
 </document>
