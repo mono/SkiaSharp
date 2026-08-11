@@ -11,6 +11,9 @@ param(
 
     [string] $OutputPath = '',
 
+    [ValidateSet('test', 'real')]
+    [string] $SignType = 'real',
+
     [switch] $RequireSignatures
 )
 
@@ -97,7 +100,10 @@ foreach ($original in $originalPayload) {
     }
 
     if ($assignment) {
-        if ($RequireSignatures -and -not $changed) {
+        $requiresContentChange =
+            $assignment.Category -ne 'Skip' -and
+            -not ($SignType -eq 'test' -and $assignment.Category -eq 'MacDeveloper')
+        if ($RequireSignatures -and $requiresContentChange -and -not $changed) {
             throw "Expected signed package entry '$($original.Path)' was not modified."
         }
         if ($changed) {
@@ -147,6 +153,7 @@ $result = [ordered]@{
     changedEntryCount = $changedEntries
     unchangedEntryCount = $unchangedEntries
     requiredSignatures = [bool] $RequireSignatures
+    signType = $SignType
 }
 
 if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {

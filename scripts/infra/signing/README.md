@@ -17,6 +17,8 @@ The signing job uses Arcade's supported entry points:
 - `eng/common/sdk-task.ps1 -task SigningValidation`
 
 It does not invoke SignTool directly or use Arcade's private bootstrap targets.
+MicroBuild test signing validates MacDeveloper policy without rewriting dylib
+payloads; real signing requires those dylibs to change.
 
 ## Artifact flow
 
