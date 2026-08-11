@@ -1,0 +1,126 @@
+parameters:
+  - name: buildAgentWindows
+    type: object
+
+stages:
+  - stage: api_scan
+    displayName: API Scan
+    dependsOn: package
+    jobs:
+      - job: api_scan
+        displayName: API Scan
+        timeoutInMinutes: 480
+        pool: ${{ parameters.buildAgentWindows.pool }}
+        workspace:
+          clean: all
+        variables:
+          skipNugetSecurityAnalysis: true
+        steps:
+          - checkout: self
+            submodules: false
+            fetchDepth: 1
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download NuGet packages
+            inputs:
+              buildType: current
+              artifactName: nuget
+              targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download symbol packages
+            inputs:
+              buildType: current
+              artifactName: nuget_symbols
+              targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget_symbols
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download MSVC native artifacts
+            inputs:
+              buildType: current
+              artifactName: native_msvc
+              targetPath: $(Agent.TempDirectory)\APIScan\native_msvc
+
+          - pwsh: |
+              $scanRoot = "$(Agent.TempDirectory)\APIScan"
+              $extractedPackages = Join-Path $scanRoot "nuget_symbols-extracted"
+              $surrogateSource = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
+              $surrogateFolder = Join-Path $scanRoot "surrogates"
+              $surrogateFile = Join-Path $surrogateFolder "APIScanSurrogates.xml"
+
+              ./scripts/infra/package/extract-nupkg-files.ps1 `
+                -SourcePath "$scanRoot\packages\*\*.*nupkg" `
+                -DestinationPath $extractedPackages `
+                -RemoveOriginal
+
+              New-Item -ItemType Directory -Force -Path $surrogateFolder | Out-Null
+              (Get-Content $surrogateSource -Raw).Replace("{SOFTWARE_FOLDER}", $scanRoot) |
+                Set-Content $surrogateFile
+
+              $binaries = @(Get-ChildItem $scanRoot -Recurse -File -Include *.dll, *.exe, *.winmd)
+              $symbols = @(Get-ChildItem $scanRoot -Recurse -File -Filter *.pdb)
+              if ($binaries.Count -eq 0) {
+                throw "No shipped DLL, EXE, or WINMD files were collected for API Scan."
+              }
+              if ($symbols.Count -eq 0) {
+                throw "No matching PDB files were collected for API Scan."
+              }
+
+              Write-Host "Collected $($binaries.Count) binaries and $($symbols.Count) PDB files."
+            displayName: Prepare API Scan inputs
+
+          - task: AzureCLI@2
+            displayName: Login to API Scan identity
+            inputs:
+              azureSubscription: dotnet-apiscan
+              scriptType: pscore
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                Write-Host "##vso[task.setvariable variable=ARM_CLIENT_ID;issecret=true]$env:servicePrincipalId"
+                Write-Host "##vso[task.setvariable variable=ARM_ID_TOKEN;issecret=true]$env:idToken"
+                Write-Host "##vso[task.setvariable variable=ARM_TENANT_ID;issecret=true]$env:tenantId"
+
+          - pwsh: |
+              az login `
+                --service-principal `
+                --username "$(ARM_CLIENT_ID)" `
+                --tenant "$(ARM_TENANT_ID)" `
+                --allow-no-subscriptions `
+                --federated-token "$(ARM_ID_TOKEN)"
+            displayName: Activate API Scan WIF identity
+
+          - task: APIScan@2
+            displayName: Run API Scan
+            continueOnError: true
+            inputs:
+              softwareFolder: $(Agent.TempDirectory)\APIScan
+              symbolsFolder: SRV*http://symweb;$(Agent.TempDirectory)\APIScan\nuget_symbols-extracted;$(Agent.TempDirectory)\APIScan\native_msvc
+              softwareName: SkiaSharp
+              softwareVersionNum: $(SKIASHARP_VERSION)
+              softwareBuildNum: $(Build.BuildId)
+              surrogateConfigurationFolder: $(Agent.TempDirectory)\APIScan\surrogates
+              isLargeApp: true
+              toolVersion: Latest
+              verbosityLevel: standard
+              preserveLogsFolder: true
+            env:
+              AzureServicesAuthConnectionString: RunAs=Developer;DeveloperTool=AzureCli
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          - task: PublishSecurityAnalysisLogs@3
+            displayName: Publish API Scan analysis artifacts
+            condition: succeededOrFailed()
+            inputs:
+              ArtifactName: CodeAnalysisLogs - API Scan
+              ArtifactType: Container
+              AllTools: false
+              ApiScan: true
+              ToolLogsNotFoundAction: Standard
+
+          - task: PostAnalysis@2
+            displayName: Fail on API Scan issues
+            condition: succeededOrFailed()
+            inputs:
+              GdnBreakAllTools: true
+              GdnBreakGdnToolApiScanSeverity: Warning
