@@ -54,15 +54,17 @@
     <MacDeveloperFile Include="libHarfBuzzSharp.dylib" />
     <MacDeveloperFile Include="libSkiaSharp.dylib" />
 
-    <ThirdPartyFile Include="emdawnwebgpu.port.py" />
-    <ThirdPartyFile Include="library_webgpu.js" />
-    <ThirdPartyFile Include="library_webgpu_enum_tables.js" />
-    <ThirdPartyFile Include="library_webgpu_generated_sig_info.js" />
-    <ThirdPartyFile Include="library_webgpu_generated_struct_info.js" />
-    <ThirdPartyFile Include="webgpu-externs.js" />
+    <!-- Add ThirdPartyFile items when packages intentionally carry third-party binaries that support 3PartySHA2. -->
 
-    <!-- Add ThirdPartyFile items when packages intentionally carry more third-party binaries. -->
-    <!-- Add SkippedFile items when a signable payload must retain its existing signature. -->
+    <!-- Emscripten/Dawn generated source payloads do not support 3PartySHA2 Authenticode signing. -->
+    <SkippedFile Include="emdawnwebgpu.port.py" />
+    <SkippedFile Include="library_webgpu.js" />
+    <SkippedFile Include="library_webgpu_enum_tables.js" />
+    <SkippedFile Include="library_webgpu_generated_sig_info.js" />
+    <SkippedFile Include="library_webgpu_generated_struct_info.js" />
+    <SkippedFile Include="webgpu-externs.js" />
+
+    <!-- Add SkippedFile items when another signable payload must retain its existing content. -->
 
     <FileSignInfo Include="@(FirstPartyFile)" CertificateName="Microsoft400" />
     <FileSignInfo Include="@(MacDeveloperFile)" CertificateName="MacDeveloperVNext" />
