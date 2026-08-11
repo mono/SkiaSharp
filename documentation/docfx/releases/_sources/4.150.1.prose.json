@@ -1,21 +1,53 @@
 {
-  "theme": "Upstream bug-fix servicing",
-  "highlights_headline": "SkiaSharp 4.150.1 is a servicing release with two rounds of upstream Skia m150 bug fixes.",
+  "theme": "Focused m150 engine fixes",
+  "highlights_headline": "SkiaSharp 4.150.1 delivers two upstream m150 fixes for text allocation safety and stencil render-pass bounds.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Two rounds of chrome/m150 upstream bug fixes",
-          "detail": "Two upstream bug-fix syncs from the chrome/m150 branch have been applied, pulling in stability and correctness improvements from the Skia team.",
-          "prs": [4379, 4429]
+          "lead": "Text allocation lifetime corrected",
+          "detail": "Includes the upstream SubRunAllocator use-after-free fix for safer text rendering.",
+          "prs": [
+            4379
+          ]
+        },
+        {
+          "lead": "Stencil clear bounds validated",
+          "detail": "Checks clipped render-pass bounds against the cleared stencil area to avoid incorrect stencil behavior.",
+          "prs": [
+            4429
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": "HarfBuzzSharp 14.2.1.1 ships with this release with no API changes."
+  "harfbuzz_summary": "Advances the co-shipped HarfBuzzSharp package to 14.2.1.1 with no HarfBuzz binding changes.",
+  "release_teasers": {
+    "v4.150.1": {
+      "subtitle": "Corrects text allocation lifetime and stencil render-pass bounds.",
+      "categories": [
+        {
+          "heading": "Fixes",
+          "bullets": [
+            {
+              "text": "Fixed a use-after-free in SubRunAllocator",
+              "prs": [
+                4379
+              ]
+            },
+            {
+              "text": "Validated clipped render-pass bounds against the cleared stencil area",
+              "prs": [
+                4429
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
 }
