@@ -471,13 +471,13 @@ daily run is undesirable (e.g. right after tagging). (Walking a `release/*` ref 
 
 Manual dispatch also has a guarded pre-merge validation mode. Production dispatches
 are constrained to source/base `main` and head `bot/release-notes`. Validation mode
-requires an open PR targeting `main`, verifies that `source_branch` and
-`output_base_branch` both equal that PR's head branch, and permits only a new
-`bot/release-notes-test-pr-<PR>[-run-N]` output branch. The output branch must not
-already exist. This keeps the generated PR based on the feature branch whose
-workflow code ran, while the safe-output allowlists limit its patch to the generated
-`documentation/docfx/releases/**` tree. It cannot reset an existing automation
-branch or route arbitrary feature content into `main`.
+requires an open PR targeting `main` and verifies that `source_branch` equals that
+PR's head branch. The workflow derives the output base from that validated source
+and creates a unique `bot/release-notes-test-pr-<PR>-run-<run-id>` head; callers do
+not choose either output ref. This keeps the generated PR based on the feature
+branch whose workflow code ran, while the safe-output allowlists limit its patch to
+the generated `documentation/docfx/releases/**` tree. It cannot reset an existing
+automation branch or route arbitrary feature content into `main`.
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
 (`prepare.sh` — Cake, `release-notes-data.py`, then `release-notes-index.py`, §2.2) runs in its
@@ -1112,8 +1112,16 @@ principles are fixed here.
    submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
    the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
    `product`, and inspects `mixed`; the renderer rejects any cumulative category
-   bullet that references an `internal` PR. Moving the classification out of the LLM (and into the
-   JSON) makes product-focus reliable run-to-run.
+   bullet on a v4+ page that references an `internal` PR. Earlier pages retain
+   their reviewed prose because applying today's repository-layout classifier to
+   historical changes can misclassify them. Moving current classification out of
+   the LLM (and into the JSON) makes product-focus reliable run-to-run.
+   Previously reviewed page-specific facts live in
+   `scripts/infra/docs/release-page-reviews.json` and are copied into
+   `data.json.cumulative_review`. They can require or prohibit an audited phrase,
+   exclude a PR from cumulative prose, or require exact consumer-safe contributor
+   credit. The renderer enforces these decisions, so a forced re-polish cannot
+   reintroduce a known count contradiction or internal build detail.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the

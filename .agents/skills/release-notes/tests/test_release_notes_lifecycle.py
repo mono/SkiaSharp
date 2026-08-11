@@ -154,6 +154,12 @@ class ShipmentCollectionTests(unittest.TestCase):
 
         self.assertEqual(category, "internal")
 
+        deterministic = DATA._pr_category(
+            {"binding/SkiaSharp/SkiaApi.generated.cs"},
+            "Make binding generation deterministic across platforms",
+        )
+        self.assertEqual(deterministic, "internal")
+
     def test_hotfix_preview_and_stable_use_exact_predecessors(self):
         items = self.collect("4.151.1", "4.151.0")
         self.assertEqual(
@@ -297,6 +303,63 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
 
         self.assertTrue(any("must not reference internal PRs: #101" in error
                             for error in errors))
+
+        data["version"] = "2.80.0"
+        legacy_errors = RENDER.validate(data, prose)
+        self.assertFalse(any("must not reference internal PRs: #101" in error
+                             for error in legacy_errors))
+
+    def test_page_review_enforces_count_exclusions_and_safe_credit(self):
+        item = shipment("v4.152.0-preview.1.1", [101, 102])
+        data = page_data([item])
+        data["contributors"] = [{"login": "builder", "prs": [102]}]
+        data["cumulative_review"] = {
+            "required_phrases": ["Four rounds"],
+            "forbidden_phrases": ["Three rounds"],
+            "excluded_prs": [101],
+            "contributor_summaries": {
+                "builder": "Release infrastructure maintenance",
+            },
+        }
+        prose = cumulative_prose({item["tag"]: teaser([101, 102])})
+        prose["theme"] = "Three rounds"
+        prose["categories"] = [{
+            "heading": "Engine",
+            "bullets": [{
+                "lead": "Engine updates",
+                "detail": "Upstream updates.",
+                "prs": [101],
+            }],
+        }]
+        prose["contributor_summaries"] = {
+            "builder": "MSVC environment initialization",
+        }
+
+        errors = RENDER.validate(data, prose)
+
+        self.assertTrue(any("must mention reviewed phrase 'Four rounds'" in error
+                            for error in errors))
+        self.assertTrue(any("must not use contradicted phrase 'Three rounds'"
+                            in error for error in errors))
+        self.assertTrue(any("reviewer-excluded PRs: #101" in error
+                            for error in errors))
+        self.assertTrue(any("must match reviewed text" in error
+                            for error in errors))
+
+    def test_committed_page_reviews_cover_known_regressions(self):
+        DATA._PAGE_REVIEWS_CONFIG = None
+        reviews = DATA.load_page_reviews()
+
+        self.assertEqual(reviews["4.150.2"]["required_phrases"], ["Four rounds"])
+        self.assertEqual(reviews["4.150.2"]["forbidden_phrases"], ["Three rounds"])
+        self.assertEqual(reviews["4.152.0"]["excluded_prs"], [4612])
+        self.assertIn("binding generation",
+                      reviews["4.152.0"]["forbidden_phrases"])
+        self.assertIn("MSVC", reviews["4.152.0"]["forbidden_phrases"])
+        self.assertEqual(
+            reviews["4.152.0"]["contributor_summaries"]["mmitche"],
+            "Release infrastructure maintenance",
+        )
 
     def test_published_preview_one_review_excludes_valid_delta_pr_3788(self):
         DATA._TEASER_REVIEWS_CONFIG = None

@@ -442,8 +442,32 @@ def _finish_validate(errors, data, prose):
         errors.append("these contributor summaries are blank: "
                       + ", ".join("@" + m for m in empty))
 
+    cumulative_review = data.get("cumulative_review") or {}
+    reviewed_summaries = cumulative_review.get("contributor_summaries") or {}
+    for login, expected in reviewed_summaries.items():
+        if summaries.get(login) != expected:
+            errors.append(
+                "contributor summary for @{} must match reviewed text: {}"
+                .format(login, expected))
+
     allowed = set(RELEASE_CATEGORIES)
     pr_facts = data.get("prs") or {}
+    excluded_prs = set(cumulative_review.get("excluded_prs") or [])
+    cumulative_strings = [
+        prose.get("theme"),
+        prose.get("highlights_headline"),
+        prose.get("highlights_body"),
+        prose.get("harfbuzz_summary"),
+    ]
+    referenced_prs = set()
+    for item in prose.get("breaking") or []:
+        cumulative_strings.extend((item.get("title"), item.get("body")))
+        referenced_prs.update(item.get("prs") or [])
+    # Historical v2/v3 pages were reviewed under older repository layouts, so
+    # today's path classifier can label their product work as internal. Preserve
+    # that immutable prose; enforce current classification for v4+ pages.
+    major = re.match(r"^(\d+)\.", str(data.get("version", "")))
+    enforce_internal = bool(major and int(major.group(1)) >= 4)
     if allowed:
         for cat in prose.get("categories", []):
             if cat.get("heading") not in allowed:
@@ -451,15 +475,35 @@ def _finish_validate(errors, data, prose):
                     "category heading '{}' is not one of the allowed sections: {}"
                     .format(cat.get("heading"), ", ".join(sorted(allowed))))
             for bullet in cat.get("bullets") or []:
+                cumulative_strings.extend(
+                    (bullet.get("lead"), bullet.get("detail")))
+                referenced_prs.update(bullet.get("prs") or [])
                 internal = sorted(
                     number for number in bullet.get("prs") or []
                     if (pr_facts.get(str(number)) or {}).get("tag") == "internal"
                 )
-                if internal:
+                if internal and enforce_internal:
                     errors.append(
                         "consumer-facing category bullets must not reference internal "
                         "PRs: " + ", ".join("#{}".format(number)
                                            for number in internal))
+    forbidden_refs = sorted(referenced_prs & excluded_prs)
+    if forbidden_refs:
+        errors.append(
+            "cumulative prose references reviewer-excluded PRs: "
+            + ", ".join("#{}".format(number) for number in forbidden_refs))
+    cumulative_strings.extend(summaries.values())
+    cumulative_text = "\n".join(
+        text for text in cumulative_strings if isinstance(text, str)).casefold()
+    for phrase in cumulative_review.get("required_phrases") or []:
+        if phrase.casefold() not in cumulative_text:
+            errors.append(
+                "cumulative prose must mention reviewed phrase '{}'".format(phrase))
+    for phrase in cumulative_review.get("forbidden_phrases") or []:
+        if phrase.casefold() in cumulative_text:
+            errors.append(
+                "cumulative prose must not use contradicted phrase '{}'".format(
+                    phrase))
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})

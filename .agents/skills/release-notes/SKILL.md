@@ -94,6 +94,10 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
    and its exact-delta PR list), `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
    and the banner/link facts.
+   Some released pages also carry `cumulative_review`. These are retained human
+   decisions: use every `required_phrases` fact, avoid every
+   `forbidden_phrases` claim, omit `excluded_prs` from cumulative breaking and
+   category prose, and copy any `contributor_summaries` value exactly.
 2. Read the breaking sources it points at, if present: the version's
    `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
    are your material for the `breaking` slot — the API diff gives signature

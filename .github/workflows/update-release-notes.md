@@ -44,7 +44,7 @@ on:
         default: "main"
         type: string
       validation_mode:
-        description: "Pre-merge test mode. Requires validation_pr, source/base set to that open PR's head branch, and a unique bot/release-notes-test-pr-* output branch."
+        description: "Pre-merge test mode. Requires validation_pr and source_branch set to that open PR's head. The generated PR base/head are derived automatically."
         required: false
         default: false
         type: boolean
@@ -52,16 +52,6 @@ on:
         description: "Open PR number whose head branch is being tested. Required only when validation_mode=true."
         required: false
         default: ""
-        type: string
-      output_base_branch:
-        description: "Generated PR base. Production requires main; validation requires the validated source branch."
-        required: false
-        default: "main"
-        type: string
-      output_branch:
-        description: "Generated PR head. Production requires bot/release-notes; validation requires a unique bot/release-notes-test-pr-<PR>[-run-N] branch."
-        required: false
-        default: "bot/release-notes"
         type: string
       min_version:
         description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate a range, or set both equal to regenerate a single version."
@@ -80,7 +70,7 @@ on:
         type: boolean
   skip-bots: [github-actions, copilot, dependabot]
 concurrency:
-  group: update-release-notes-${{ inputs.output_branch || 'bot/release-notes' }}
+  group: update-release-notes-${{ inputs.validation_mode && inputs.source_branch || 'main' }}
   cancel-in-progress: true
 # The agent only POLISHES prose now — the heavy, deterministic Prepare phase runs
 # in its own `prepare` job (below), so the agent's own budget is modest.
@@ -121,25 +111,33 @@ jobs:
       # true iff Prepare's patch is non-empty (something actually changed). The
       # top-level `if:` uses this to skip the agent + PR on no-op runs.
       has_changes: ${{ steps.package.outputs.has_changes }}
+      output_base_branch: ${{ steps.route.outputs.output_base_branch }}
+      output_branch: ${{ steps.route.outputs.output_branch }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
       - name: Validate output routing
+        id: route
         env:
           GH_TOKEN: ${{ github.token }}
           VALIDATION_MODE: ${{ inputs.validation_mode || false }}
           VALIDATION_PR: ${{ inputs.validation_pr }}
           SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
-          OUTPUT_BASE_BRANCH: ${{ inputs.output_base_branch || 'main' }}
-          OUTPUT_BRANCH: ${{ inputs.output_branch || 'bot/release-notes' }}
         run: |
           set -euo pipefail
           fail() {
             echo "::error::$*"
             exit 1
           }
+          if [ "$VALIDATION_MODE" = "true" ]; then
+            OUTPUT_BASE_BRANCH="$SOURCE_BRANCH"
+            OUTPUT_BRANCH="bot/release-notes-test-pr-${VALIDATION_PR}-run-${GITHUB_RUN_ID}"
+          else
+            OUTPUT_BASE_BRANCH="main"
+            OUTPUT_BRANCH="bot/release-notes"
+          fi
           for ref in "$SOURCE_BRANCH" "$OUTPUT_BASE_BRANCH" "$OUTPUT_BRANCH"; do
             git check-ref-format --branch "$ref" >/dev/null 2>&1 ||
               fail "Invalid branch name: $ref"
@@ -148,12 +146,12 @@ jobs:
           if [ "$VALIDATION_MODE" = "true" ]; then
             [[ "$VALIDATION_PR" =~ ^[1-9][0-9]*$ ]] ||
               fail "validation_pr must be a positive PR number"
-            [ "$SOURCE_BRANCH" = "$OUTPUT_BASE_BRANCH" ] ||
-              fail "Validation source_branch and output_base_branch must match"
             [ "$SOURCE_BRANCH" != "main" ] ||
               fail "Validation mode cannot target main"
-            [[ "$OUTPUT_BRANCH" =~ ^bot/release-notes-test-pr-${VALIDATION_PR}(-run-[1-9][0-9]*)?$ ]] ||
-              fail "Validation output_branch must be bot/release-notes-test-pr-${VALIDATION_PR} or a numbered -run-N variant"
+            [ "$SOURCE_BRANCH" = "$OUTPUT_BASE_BRANCH" ] ||
+              fail "Derived validation base must match source_branch"
+            [[ "$OUTPUT_BRANCH" =~ ^bot/release-notes-test-pr-${VALIDATION_PR}-run-[1-9][0-9]*$ ]] ||
+              fail "Derived validation head is invalid"
 
             pr_route="$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${VALIDATION_PR}" \
               --jq '[.state, .head.ref, .base.ref] | @tsv')" ||
@@ -168,15 +166,15 @@ jobs:
 
             if git ls-remote --exit-code --heads origin \
               "refs/heads/$OUTPUT_BRANCH" >/dev/null 2>&1; then
-              fail "Validation output branch already exists; choose a unique -run-N branch"
+              fail "Derived validation output branch already exists"
             fi
           else
             [ "$SOURCE_BRANCH" = "main" ] ||
               fail "Production source_branch must be main"
             [ "$OUTPUT_BASE_BRANCH" = "main" ] ||
-              fail "Production output_base_branch must be main"
+              fail "Derived production base must be main"
             [ "$OUTPUT_BRANCH" = "bot/release-notes" ] ||
-              fail "Production output_branch must be bot/release-notes"
+              fail "Derived production head must be bot/release-notes"
             [ -z "$VALIDATION_PR" ] ||
               fail "validation_pr is only valid in validation mode"
           fi
@@ -185,6 +183,8 @@ jobs:
           echo "  source=$SOURCE_BRANCH"
           echo "  base=$OUTPUT_BASE_BRANCH"
           echo "  head=$OUTPUT_BRANCH"
+          echo "output_base_branch=$OUTPUT_BASE_BRANCH" >> "$GITHUB_OUTPUT"
+          echo "output_branch=$OUTPUT_BRANCH" >> "$GITHUB_OUTPUT"
       - name: Free up disk space
         run: |
           set -euo pipefail
@@ -330,8 +330,8 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [area/Docs, partner/agentic-workflows]
     draft: false
-    base-branch: "${{ inputs.output_base_branch || 'main' }}"
-    allowed-base-branches: ["${{ inputs.output_base_branch || 'main' }}"]
+    base-branch: "${{ needs.prepare.outputs.output_base_branch }}"
+    allowed-base-branches: ["${{ needs.prepare.outputs.output_base_branch }}"]
     allowed-branches: [bot/release-notes, "bot/release-notes-test-pr-*"]
     allowed-files: ["documentation/docfx/releases/**"]
     preserve-branch-name: true
@@ -381,8 +381,8 @@ so you only ever write prose.
 This run's **CI-specific deltas** on top of the skill:
 
 0. Obey the validated output routing exactly:
-   - Output PR base: `${{ inputs.output_base_branch || 'main' }}`
-   - Output PR head: `${{ inputs.output_branch || 'bot/release-notes' }}`
+   - Output PR base: `${{ needs.prepare.outputs.output_base_branch }}`
+   - Output PR head: `${{ needs.prepare.outputs.output_branch }}`
    These values were checked before Prepare, including open-PR ownership and
    uniqueness in validation mode. Do not substitute another branch.
 1. Read `output/files-to-polish.txt` as JSON. Its `tasks` array names each page and
@@ -417,7 +417,7 @@ diffing months of history (2000+ files, exceeding the PR file cap and failing th
 run). So once every page renders cleanly you **must** commit everything yourself,
 then create the PR:
 
-1. `git checkout -b "${{ inputs.output_branch || 'bot/release-notes' }}"` — create
+1. `git checkout -b "${{ needs.prepare.outputs.output_branch }}"` — create
    the validated PR branch from the current HEAD.
 2. `git add -A` — stage **all** working-tree changes: the restored Prepare output
    (Cake API-diff tree + the `_sources/*.data.json` + `_sources/index.json`) **and**
@@ -425,8 +425,8 @@ then create the PR:
    **and** the regenerated `TOC.yml` + `index.md`.
 3. `git commit -m "docs: regenerate API diffs and release notes"`.
 4. Call the `create_pull_request` safe-output with
-   `base: "${{ inputs.output_base_branch || 'main' }}"` and
-   `branch: "${{ inputs.output_branch || 'bot/release-notes' }}"`. It opens one PR
+   `base: "${{ needs.prepare.outputs.output_base_branch }}"` and
+   `branch: "${{ needs.prepare.outputs.output_branch }}"`. It opens one PR
    using only the validated route.
 
 

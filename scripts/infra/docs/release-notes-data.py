@@ -154,6 +154,9 @@ _PATH_TAGS_CONFIG = None  # type: Optional[tuple]
 TEASER_REVIEWS_JSON_PATH = Path(
     "scripts/infra/docs/release-teaser-reviews.json")
 _TEASER_REVIEWS_CONFIG = None  # type: Optional[dict]
+PAGE_REVIEWS_JSON_PATH = Path(
+    "scripts/infra/docs/release-page-reviews.json")
+_PAGE_REVIEWS_CONFIG = None  # type: Optional[dict]
 
 # HarfBuzz-owned paths (spec §1.5/§4.5). A HarfBuzz family page lists ONLY the
 # commits touching these — the HarfBuzzSharp binding + its native assets, the
@@ -274,6 +277,71 @@ def load_teaser_reviews():
                     "{} review pr_required_phrases must map selected PR numbers "
                     "to non-empty phrase arrays".format(tag))
     _TEASER_REVIEWS_CONFIG = value
+    return value
+
+
+def load_page_reviews():
+    # type: () -> dict
+    """Load deterministic reviewer decisions for cumulative page prose."""
+    global _PAGE_REVIEWS_CONFIG
+    if _PAGE_REVIEWS_CONFIG is not None:
+        return _PAGE_REVIEWS_CONFIG
+    if not PAGE_REVIEWS_JSON_PATH.exists():
+        _PAGE_REVIEWS_CONFIG = {}
+        return _PAGE_REVIEWS_CONFIG
+
+    with open(PAGE_REVIEWS_JSON_PATH, encoding="utf-8") as stream:
+        value = json.load(stream)
+    if not isinstance(value, dict):
+        raise ValueError("release-page-reviews.json must be an object keyed by version")
+    allowed = {
+        "required_phrases", "forbidden_phrases", "excluded_prs",
+        "contributor_summaries",
+    }
+    for version, review in value.items():
+        if not isinstance(version, str) or not re.match(r"^\d+\.\d+\.\d+$", version):
+            raise ValueError(
+                "release page review keys must be numeric stable versions")
+        if not isinstance(review, dict):
+            raise ValueError("{} page review must be an object".format(version))
+        unknown = sorted(set(review) - allowed)
+        if unknown:
+            raise ValueError("{} page review has unknown fields: {}".format(
+                version, ", ".join(unknown)))
+        for field in ("required_phrases", "forbidden_phrases"):
+            phrases = review.get(field, [])
+            if (
+                not isinstance(phrases, list)
+                or any(not isinstance(text, str) or not text.strip()
+                       for text in phrases)
+            ):
+                raise ValueError(
+                    "{} page review {} must contain non-empty strings".format(
+                        version, field))
+        excluded = review.get("excluded_prs", [])
+        if (
+            not isinstance(excluded, list)
+            or any(type(number) is not int or number <= 0 for number in excluded)
+            or len(excluded) != len(set(excluded))
+        ):
+            raise ValueError(
+                "{} page review excluded_prs must contain unique positive integers"
+                .format(version))
+        summaries = review.get("contributor_summaries", {})
+        if (
+            not isinstance(summaries, dict)
+            or any(
+                not isinstance(login, str)
+                or not login
+                or not isinstance(text, str)
+                or not text.strip()
+                for login, text in summaries.items()
+            )
+        ):
+            raise ValueError(
+                "{} page review contributor_summaries must map logins to text"
+                .format(version))
+    _PAGE_REVIEWS_CONFIG = value
     return value
 
 
@@ -2088,7 +2156,7 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
-    return {
+    result = {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
         "family": family,
@@ -2105,6 +2173,9 @@ def build_data_json(prs, metadata):
         "previews": previews,
         "prs": pr_map,
     }
+    if metadata.get("cumulative_review"):
+        result["cumulative_review"] = metadata["cumulative_review"]
+    return result
 
 
 def _sources_dir(page_path):
@@ -2787,6 +2858,9 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         "to": to_display,
         "shipments": shipments,
     }
+    page_review = load_page_reviews().get(version)
+    if page_review:
+        metadata["cumulative_review"] = page_review
     if superseded_by:
         metadata["superseded_by"] = superseded_by
     if supersedes:
