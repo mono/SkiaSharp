@@ -12,6 +12,8 @@ parameters:
     type: object
   - name: buildAgentAndroidTests
     type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -475,6 +477,7 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux)
             buildAgent: ${{ parameters.buildAgentLinux }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             docker: scripts/infra/tests/docker/azurelinux
             target: tests-container
             additionalArgs: --nativePlatform=linux
@@ -507,6 +510,7 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Azure Linux, No Dependencies)
             buildAgent: ${{ parameters.buildAgentLinux }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             docker: scripts/infra/tests/docker/azurelinux-nodeps
             target: tests-container
             additionalArgs: --nativePlatform=linuxnodeps
@@ -539,6 +543,7 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine)
             buildAgent: ${{ parameters.buildAgentLinux }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             docker: scripts/infra/tests/docker/alpine
             target: tests-container
             additionalArgs: --nativePlatform=alpine
@@ -571,6 +576,7 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Linux (Alpine, No Dependencies)
             buildAgent: ${{ parameters.buildAgentLinux }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             docker: scripts/infra/tests/docker/alpine-nodeps
             target: tests-container
             additionalArgs: --nativePlatform=alpinenodeps
@@ -603,6 +609,7 @@ stages:
               SKIASHARP_TEST_SKIP_GPU: ganesh-gl
             displayName: Windows (Nano Server)
             buildAgent: ${{ parameters.buildAgentWindows }}
+            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
             docker: scripts/infra/tests/docker/nanoserver
             target: tests-container
             additionalArgs: --nativePlatform=nanoserver

@@ -17,8 +17,7 @@ parameters:
     default:
       pool:
         name: NetCore1ESPool-Internal
-        demands:
-          - ImageOverride -equals 1es-windows-2022
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -26,8 +25,7 @@ parameters:
     default:
       pool:
         name: NetCore1ESPool-Internal
-        demands:
-          - ImageOverride -equals 1es-windows-2022
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -43,8 +41,7 @@ parameters:
     default:
       pool:
         name: NetCore1ESPool-Internal
-        demands:
-          - ImageOverride -equals 1es-ubuntu-2204
+        image: 1es-ubuntu-2204
         os: linux
   - name: runApiScan
     displayName: 'Run API Scan'
@@ -64,16 +61,17 @@ variables:
 
 resources:
   repositories:
-    - repository: 1ESTemplates
+    - repository: 1ESPipelineTemplates
       type: git
-      name: 1ESPipelineTemplates/MicroBuildTemplate
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
   pipelines:
     - pipeline: SkiaSharp
       source: skiasharp-native
       trigger: true
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESTemplates
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
