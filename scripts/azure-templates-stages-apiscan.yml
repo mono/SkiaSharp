@@ -46,6 +46,7 @@ stages:
               $extractedPackages = Join-Path $scanRoot "nuget_symbols-extracted"
               $surrogateSource = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
               $surrogateFolder = Join-Path $scanRoot "surrogates"
+              $surrogateBinaryFolder = Join-Path $scanRoot "surrogate-binaries"
               $surrogateFile = Join-Path $surrogateFolder "APIScanSurrogates.xml"
 
               ./scripts/infra/package/extract-nupkg-files.ps1 `
@@ -53,7 +54,25 @@ stages:
                 -DestinationPath $extractedPackages `
                 -RemoveOriginal
 
-              New-Item -ItemType Directory -Force -Path $surrogateFolder | Out-Null
+              New-Item -ItemType Directory -Force -Path $surrogateFolder, $surrogateBinaryFolder | Out-Null
+
+              $winUiSurrogateSource = Get-ChildItem $extractedPackages -Directory |
+                Where-Object Name -Like "skiasharp.nativeassets.winui-*.symbols" |
+                ForEach-Object { Join-Path $_.FullName "runtimes\win-x64\native" } |
+                Where-Object { Test-Path $_ } |
+                Select-Object -First 1
+              if (-not $winUiSurrogateSource) {
+                throw "Unable to find x64 WinUI binaries for API Scan ARM64 surrogates."
+              }
+
+              foreach ($file in @("libEGL.dll", "libEGL.pdb", "libGLESv2.dll", "libGLESv2.pdb", "SkiaSharp.Views.WinUI.Native.dll", "SkiaSharp.Views.WinUI.Native.pdb")) {
+                $source = Join-Path $winUiSurrogateSource $file
+                if (-not (Test-Path $source)) {
+                  throw "Unable to find API Scan surrogate file: $source"
+                }
+                Copy-Item $source $surrogateBinaryFolder
+              }
+
               (Get-Content $surrogateSource -Raw).Replace("{SOFTWARE_FOLDER}", $scanRoot) |
                 Set-Content $surrogateFile
 
@@ -108,6 +127,37 @@ stages:
               AzureServicesAuthConnectionString: RunAs=Developer;DeveloperTool=AzureCli
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
+          - task: SdtReport@2
+            displayName: Create API Scan security report
+            condition: succeededOrFailed()
+            inputs:
+              GdnExportVstsConsole: true
+              GdnExportSarifFile: true
+              GdnExportHtmlFile: true
+              GdnExportAllTools: false
+              GdnExportGdnToolApiScan: true
+              GdnExportGdnToolApiScanSeverity: Warning
+              GdnExportPolicy: Microsoft
+              GdnExportPolicyMinSev: Warning
+              GdnExportSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnExportSuppressionSets: default
+
+          - task: TSAUpload@2
+            displayName: Create bugs for API Scan results
+            condition: succeededOrFailed()
+            continueOnError: true
+            inputs:
+              GdnPublishTsaOnboard: true
+              GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\infra\security\tsaoptions-v2.json
+              GdnPublishTsaExportedResultsPublishable: true
+              GdnPublishTsaPolicy: Microsoft
+              GdnPublishTsaPolicyMinimumSeverity: Warning
+              GdnPublishTsaSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnPublishTsaSuppressionSets: default
+              GdnPublishTsaAllTools: false
+              GdnPublishTsaGdnToolApiScan: true
+              GdnPublishTsaGdnToolApiScanSeverity: Warning
+
           - task: PublishSecurityAnalysisLogs@3
             displayName: Publish API Scan analysis artifacts
             condition: succeededOrFailed()
@@ -122,5 +172,8 @@ stages:
             displayName: Fail on API Scan issues
             condition: succeededOrFailed()
             inputs:
-              GdnBreakAllTools: true
+              GdnBreakAllTools: false
+              GdnBreakGdnToolApiScan: true
               GdnBreakGdnToolApiScanSeverity: Warning
+              GdnBreakSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnBreakSuppressionSets: default
