@@ -41,6 +41,11 @@ The existing unsigned artifacts remain available to the test pipeline.
 `nuget_symbols` and the internal `nuget_special` convenience packages are not
 release signing inputs.
 
+For a signing-only retry, queue the package pipeline with
+`signingSourceBuildId` set to a successful build ID from that same definition.
+The job verifies the build definition, repository, result, and trusted branch
+requirements before downloading its `nuget` artifact.
+
 ## Policy
 
 `eng/Signing.props` is the only signing-policy source of truth. It removes
