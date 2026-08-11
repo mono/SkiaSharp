@@ -109,6 +109,10 @@ extends:
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+        - template: /scripts/azure-templates-stages-apiscan.yml@self
+          parameters:
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
       - stage: trigger_tests
         displayName: Trigger Tests
         dependsOn: package
