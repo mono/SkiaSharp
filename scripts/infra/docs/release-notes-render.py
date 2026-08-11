@@ -443,12 +443,23 @@ def _finish_validate(errors, data, prose):
                       + ", ".join("@" + m for m in empty))
 
     allowed = set(RELEASE_CATEGORIES)
+    pr_facts = data.get("prs") or {}
     if allowed:
         for cat in prose.get("categories", []):
             if cat.get("heading") not in allowed:
                 errors.append(
                     "category heading '{}' is not one of the allowed sections: {}"
                     .format(cat.get("heading"), ", ".join(sorted(allowed))))
+            for bullet in cat.get("bullets") or []:
+                internal = sorted(
+                    number for number in bullet.get("prs") or []
+                    if (pr_facts.get(str(number)) or {}).get("tag") == "internal"
+                )
+                if internal:
+                    errors.append(
+                        "consumer-facing category bullets must not reference internal "
+                        "PRs: " + ", ".join("#{}".format(number)
+                                           for number in internal))
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})

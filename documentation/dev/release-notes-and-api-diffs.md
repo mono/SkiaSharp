@@ -1086,8 +1086,12 @@ principles are fixed here.
    mapping is **not** hardcoded in the script — it lives in
    [`scripts/infra/docs/release-notes-paths.json`](../../scripts/infra/docs/release-notes-paths.json),
    the single deterministic place to edit it. It is a short list of ordered tiers (each a
-   `tag` + `patterns`) plus a `default`; the first tier with a matching file wins. A pattern
-   matches by prefix (`str.startswith`), or as a glob if it contains `* ? [`.
+   `tag` + `patterns`), an `internal_title_patterns` denylist, and a `default`. A
+   case-insensitive title-pattern match wins first; otherwise the first tier with a
+   matching file wins. A path pattern matches by prefix (`str.startswith`), or as a
+   glob if it contains `* ? [`. This keeps `[infra]`, workflow, test-leg, solution,
+   SDK, and native-build mechanics internal even when they also touch a shipped
+   project file.
    - **`product`** — touches shipped code with a real API / behaviour / native change:
      `binding/` + `source/` (managed API & Views) and `externals/skia` (the native Skia
      submodule, with its vendored HarfBuzz). Written up.
@@ -1107,7 +1111,8 @@ principles are fixed here.
    `externals/`, which would sweep in the sibling `externals/depot_tools` build-toolchain
    submodule (internal) and `externals/.gitignore`; the `docs` prefix is slash-less so it hits
    the gitlink without colliding with `documentation/`. Polish drops `internal`, writes up
-   `product`, and inspects `mixed`; moving the classification out of the LLM (and into the
+   `product`, and inspects `mixed`; the renderer rejects any cumulative category
+   bullet that references an `internal` PR. Moving the classification out of the LLM (and into the
    JSON) makes product-focus reliable run-to-run.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped

@@ -144,6 +144,16 @@ class ShipmentCollectionTests(unittest.TestCase):
         self.assertEqual(items[2]["channel"], "rc")
         self.assertEqual(items[3]["channel"], "stable")
 
+    def test_internal_title_pattern_overrides_product_path(self):
+        DATA._PATH_TAGS_CONFIG = None
+
+        category = DATA._pr_category(
+            {"binding/SkiaSharp/SkiaSharp.csproj"},
+            "[infra] Add containerized test legs",
+        )
+
+        self.assertEqual(category, "internal")
+
     def test_hotfix_preview_and_stable_use_exact_predecessors(self):
         items = self.collect("4.151.1", "4.151.0")
         self.assertEqual(
@@ -246,6 +256,9 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
             "selected_prs": [101, 102],
             "required_phrases": ["SKColor"],
             "forbidden_phrases": ["managed color conversion"],
+            "pr_required_phrases": {
+                "101": ["specific behavior"],
+            },
         }
         value = teaser(
             [101, 103],
@@ -262,6 +275,28 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         self.assertTrue(any("must mention reviewed phrase 'SKColor'" in error
                             for error in errors))
         self.assertTrue(any("misattributed phrase" in error for error in errors))
+        self.assertTrue(any("PR #101 must mention" in error for error in errors))
+
+    def test_internal_prs_are_rejected_from_cumulative_categories(self):
+        item = shipment("v4.151.0-preview.1.1", [101])
+        data = page_data([item])
+        data["prs"]["101"]["tag"] = "internal"
+        prose = cumulative_prose({item["tag"]: teaser([101])})
+        prose["theme"] = "Consumer release"
+        prose["highlights_headline"] = "Consumer improvements ship."
+        prose["categories"] = [{
+            "heading": "Highlights",
+            "bullets": [{
+                "lead": "CI mechanics",
+                "detail": "Adds a containerized test leg.",
+                "prs": [101],
+            }],
+        }]
+
+        errors = RENDER.validate(data, prose)
+
+        self.assertTrue(any("must not reference internal PRs: #101" in error
+                            for error in errors))
 
     def test_published_preview_one_review_excludes_valid_delta_pr_3788(self):
         DATA._TEASER_REVIEWS_CONFIG = None

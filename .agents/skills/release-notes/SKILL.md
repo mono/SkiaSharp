@@ -189,7 +189,9 @@ additions or removals.
 renderer fails otherwise) and no one else gets one. Summarise that person's work
 in prose; the renderer adds their `@handle` and PR links. This is the one place
 `internal` work is worth naming — a contributor's sample or CI work still deserves
-credit even though it never became a category bullet.
+credit even though it never became a category bullet. Keep that credit broad
+(`"Release infrastructure maintenance"`); never repeat CI, test-leg, compiler,
+SDK, solution-format, or workflow mechanics in the consumer-facing page.
 - Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
 - Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
 

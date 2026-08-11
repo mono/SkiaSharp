@@ -219,7 +219,7 @@ def load_teaser_reviews():
         raise ValueError("release-teaser-reviews.json must be an object keyed by tag")
     allowed = {
         "subtitle", "website_summary", "selected_prs",
-        "required_phrases", "forbidden_phrases",
+        "required_phrases", "forbidden_phrases", "pr_required_phrases",
     }
     for tag, review in value.items():
         if not isinstance(tag, str) or not tag.startswith("v"):
@@ -255,6 +255,24 @@ def load_teaser_reviews():
             ):
                 raise ValueError(
                     "{} review {} must contain non-empty strings".format(tag, field))
+        pr_requirements = review.get("pr_required_phrases", {})
+        if not isinstance(pr_requirements, dict):
+            raise ValueError(
+                "{} review pr_required_phrases must be an object".format(tag))
+        selected_set = set(selected)
+        for number, phrases in pr_requirements.items():
+            if (
+                not isinstance(number, str)
+                or not number.isdigit()
+                or int(number) not in selected_set
+                or not isinstance(phrases, list)
+                or not phrases
+                or any(not isinstance(text, str) or not text.strip()
+                       for text in phrases)
+            ):
+                raise ValueError(
+                    "{} review pr_required_phrases must map selected PR numbers "
+                    "to non-empty phrase arrays".format(tag))
     _TEASER_REVIEWS_CONFIG = value
     return value
 
@@ -1629,7 +1647,13 @@ def _load_path_tags():
             cfg = json.load(f)
         tiers = [(t["tag"], tuple(t.get("patterns", [])))
                  for t in cfg.get("tiers", [])]
-        _PATH_TAGS_CONFIG = (tiers, cfg.get("default", "internal"))
+        title_patterns = tuple(
+            pattern.casefold()
+            for pattern in cfg.get("internal_title_patterns", [])
+            if isinstance(pattern, str) and pattern
+        )
+        _PATH_TAGS_CONFIG = (
+            tiers, cfg.get("default", "internal"), title_patterns)
     return _PATH_TAGS_CONFIG
 
 
@@ -1647,14 +1671,17 @@ def _path_matches(path, pattern):
     return path.startswith(pattern)
 
 
-def _pr_category(files):
-    # type: (set) -> str
+def _pr_category(files, title=""):
+    # type: (set, str) -> str
     """Classify a PR ``product`` / ``mixed`` / ``internal`` by touched files (§4.4).
 
     Tiers from release-notes-paths.json are tried in order; the first tier with any
     matching file wins, else the configured default.
     """
-    tiers, default = _load_path_tags()
+    tiers, default, internal_title_patterns = _load_path_tags()
+    normalized_title = title.casefold()
+    if any(pattern in normalized_title for pattern in internal_title_patterns):
+        return "internal"
     for tag, patterns in tiers:
         if any(_path_matches(f, p) for f in files for p in patterns):
             return tag
@@ -1818,7 +1845,7 @@ def get_prs_from_diff(from_ref, to_ref, paths=None):
             "body": body,
             "commit": commit_hash,
             "skiaPr": skia_pr,
-            "category": _pr_category(files_by.get(commit_hash, set())),
+            "category": _pr_category(files_by.get(commit_hash, set()), title),
         })
 
     return prs
@@ -2166,6 +2193,7 @@ def validate_release_teaser(shipment, teaser):
     allowed_prs = set(shipment.get("prs") or [])
     strings = [subtitle, teaser.get("website_summary")]
     referenced_prs = set()
+    text_by_pr = {}
     for category in categories:
         if not isinstance(category, dict):
             errors.append("{} teaser category entries must be objects".format(tag))
@@ -2211,6 +2239,9 @@ def validate_release_teaser(shipment, teaser):
                     "{} teaser references PRs outside its exact delta: {}".format(
                         tag, ", ".join("#{}".format(n) for n in unknown)))
             referenced_prs.update(refs)
+            if isinstance(text, str):
+                for number in refs:
+                    text_by_pr.setdefault(number, []).append(text)
     review = shipment.get("teaser_review")
     if isinstance(review, dict):
         if subtitle != review.get("subtitle"):
@@ -2241,6 +2272,13 @@ def validate_release_teaser(shipment, teaser):
             if phrase.casefold() in searchable:
                 errors.append("{} teaser must not use misattributed phrase '{}'".format(
                     tag, phrase))
+        for number, phrases in (review.get("pr_required_phrases") or {}).items():
+            pr_text = "\n".join(text_by_pr.get(int(number), [])).casefold()
+            for phrase in phrases:
+                if phrase.casefold() not in pr_text:
+                    errors.append(
+                        "{} teaser PR #{} must mention reviewed phrase '{}'".format(
+                            tag, number, phrase))
     for text in strings:
         if isinstance(text, str) and _TEASER_SECURITY_RE.search(text):
             errors.append(
