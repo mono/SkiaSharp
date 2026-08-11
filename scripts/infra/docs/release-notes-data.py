@@ -1165,7 +1165,7 @@ def _parse_tag(tag):
         num = int(nums[0]) if nums else 0
         label_numbers = tuple(int(n) for n in nums)
     branch_key = release_branch_sort_key("release/" + name)
-    return {
+    result = {
         "tag": tag,
         "core": core,
         "core_tuple": _core_tuple(core),
@@ -1179,6 +1179,7 @@ def _parse_tag(tag):
         # every label number and the tag as a deterministic tiebreaker.
         "shipment_key": (branch_key, label_numbers, tag),
     }
+    return result
 
 
 def _tag_date(tag):
@@ -2156,13 +2157,21 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
+    harfbuzz = metadata.get("harfbuzz")
+    if harfbuzz:
+        harfbuzz = dict(harfbuzz)
+        harfbuzz["prs"] = [
+            number for number in harfbuzz.get("prs") or []
+            if (pr_map.get(str(number)) or {}).get("tag") != "internal"
+        ]
+
     result = {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
         "family": family,
         "status": status,
         "banner": banner,
-        "harfbuzz": metadata.get("harfbuzz"),
+        "harfbuzz": harfbuzz,
         "supersedes": supersedes,
         "superseded_by": superseded_by,
         "api_links": api_links,

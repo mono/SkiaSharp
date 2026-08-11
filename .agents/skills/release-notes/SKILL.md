@@ -239,9 +239,9 @@ other page's reviewed teaser merely to provide the rollup summary.
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
 `## HarfBuzzSharp X.Y.Z` section on this page, not a separate page. `data.harfbuzz`
-gives the version and `prs` — the PRs in this release that touched the HarfBuzz
-binding (a subset of the page's PRs, so you have already written about most of them
-above). Summarise the HarfBuzz-facing story in 1-2 sentences; the renderer adds the
+gives the version and `prs` — the product-facing PRs in this release that touched
+the HarfBuzz binding (internal build/test changes are filtered out). Summarise the
+HarfBuzz-facing story in 1-2 sentences; the renderer adds the
 heading, the ❤️ credit and the PR links.
 - Required only when `data.harfbuzz.prs` is non-empty. When it is empty the renderer
   writes "No HarfBuzzSharp binding changes shipped…" itself — set `harfbuzz_summary`

@@ -1122,6 +1122,9 @@ principles are fixed here.
    exclude a PR from cumulative prose, or require exact consumer-safe contributor
    credit. The renderer enforces these decisions, so a forced re-polish cannot
    reintroduce a known count contradiction or internal build detail.
+   HarfBuzz rollup facts similarly filter `internal` PRs before deciding whether
+   the page needs a HarfBuzz prose summary; a rebuild, solution conversion, or
+   test-platform change cannot manufacture a consumer-facing binding paragraph.
 2. **Highlights are a hook, not a summary.** The `## Highlights` section always exists
    and is assembled by `release-notes-render.py`. The prose targets ~80 words and is hard-capped
    at 100 words total across `highlights_headline` + `highlights_body`, naming only the

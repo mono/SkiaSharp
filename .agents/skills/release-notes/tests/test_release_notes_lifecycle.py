@@ -36,7 +36,7 @@ def pr(number, author="contributor", community=True):
         "number": number,
         "url": f"https://github.com/mono/SkiaSharp/pull/{number}",
         "title": f"Change {number}",
-        "author": {"login": author},
+        "author": author,
         "community": community,
         "category": "product",
     }
@@ -159,6 +159,36 @@ class ShipmentCollectionTests(unittest.TestCase):
             "Make binding generation deterministic across platforms",
         )
         self.assertEqual(deterministic, "internal")
+
+    def test_harfbuzz_summary_facts_exclude_internal_only_work(self):
+        prs = [
+            {
+                "number": 101,
+                "title": "Add HarfBuzz API",
+                "url": "https://github.com/mono/SkiaSharp/pull/101",
+                "author": {"login": "contributor"},
+                "category": "product",
+                "files": ["binding/HarfBuzzSharp/Foo.cs"],
+            },
+            {
+                "number": 102,
+                "title": "Convert all .sln solutions to .slnx format",
+                "url": "https://github.com/mono/SkiaSharp/pull/102",
+                "author": {"login": "maintainer"},
+                "category": "internal",
+                "files": ["binding/HarfBuzzSharp/HarfBuzzSharp.slnx"],
+            },
+        ]
+        metadata = {
+            "version": "4.152.0",
+            "status": "preview",
+            "shipments": [],
+            "harfbuzz": {"version": "14.2.1", "prs": [101, 102]},
+        }
+
+        data = DATA.build_data_json(prs, metadata)
+
+        self.assertEqual(data["harfbuzz"]["prs"], [101])
 
     def test_hotfix_preview_and_stable_use_exact_predecessors(self):
         items = self.collect("4.151.1", "4.151.0")
