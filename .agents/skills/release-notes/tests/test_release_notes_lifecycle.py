@@ -370,6 +370,22 @@ class TeaserValidationAndRenderingTests(unittest.TestCase):
         self.assertEqual(selected, [4294])
         self.assertNotIn(3788, selected)
 
+    def test_published_rc_review_excludes_test_and_generic_sync_work(self):
+        DATA._TEASER_REVIEWS_CONFIG = None
+        review = DATA.load_teaser_reviews()["v4.151.0-rc.1.1"]
+
+        self.assertEqual(
+            review["selected_prs"],
+            [3997, 4370, 4385, 4428, 4459, 4487],
+        )
+        self.assertNotIn(4488, review["selected_prs"])
+        self.assertNotIn(4443, review["selected_prs"])
+        self.assertNotIn(4489, review["selected_prs"])
+        self.assertEqual(
+            review["pr_required_phrases"]["4487"],
+            ["exception-handling mismatch"],
+        )
+
     def test_duplicate_exact_tags_are_rejected(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         errors = DATA.validate_shipments(page_data([item, deepcopy(item)]))
