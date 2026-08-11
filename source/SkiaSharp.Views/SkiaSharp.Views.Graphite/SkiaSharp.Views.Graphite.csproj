@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <GraphiteTargetFrameworksCurrent Condition="$(IsMacOS)">$(TFMCurrent)-ios$(TPViOSCurrent);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="!$(IsMacOS)">$(TFMCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="$(IsMacOS) and $(IsNetTVOSSupported)">$(GraphiteTargetFrameworksCurrent);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksCurrent Condition="$(IsMacOS) and $(IsNetMacOSSupported)">$(GraphiteTargetFrameworksCurrent);$(TFMCurrent)-macos$(TPVmacOSCurrent)</GraphiteTargetFrameworksCurrent>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and $(IsMacOS)">$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and $(IsMacOS) and $(IsNetTVOSSupported)">$(GraphiteTargetFrameworksPrevious);$(TFMPrevious)-tvos$(TPVtvOSPrevious)</GraphiteTargetFrameworksPrevious>
+    <GraphiteTargetFrameworksPrevious Condition="'$(TFMPrevious)' != '' and $(IsMacOS) and $(IsNetMacOSSupported)">$(GraphiteTargetFrameworksPrevious);$(TFMPrevious)-macos$(TPVmacOSPrevious)</GraphiteTargetFrameworksPrevious>
+    <TargetFrameworks>$(GraphiteTargetFrameworksCurrent);$(GraphiteTargetFrameworksPrevious)</TargetFrameworks>
+    <IsPackable Condition="!$(IsMacOS)">false</IsPackable>
+    <PackagingGroup>SkiaSharp.Views.Graphite</PackagingGroup>
+    <PackageId>SkiaSharp.Views.Graphite</PackageId>
+    <Title>Native SkiaSharp Graphite views for Apple platforms</Title>
+    <PackageDescription>This package provides native Graphite-backed Metal rendering views for iOS, Mac Catalyst, macOS, and tvOS.</PackageDescription>
+    <PackageTags>skiasharp graphite metal views</PackageTags>
+    <RootNamespace>SkiaSharp.Views</RootNamespace>
+    <AssemblyName>SkiaSharp.Views.Graphite</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <Nullable>Enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup Condition="$(IsMacOS)">
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+    <Compile Include="..\SkiaSharp.Views.Shared\Extensions.cs" Link="Shared\Extensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="Platform\**" />
+    <None Include="Platform\**" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-tvos')) or $(TargetFramework.Contains('-macos'))">
+    <Compile Include="Platform\Shared\**\*.cs" />
+    <Compile Include="Platform\Apple\**\*.cs" />
+  </ItemGroup>
+</Project>

@@ -21,6 +21,7 @@
                         <segue destination="ggl-vc-001" kind="relationship" relationship="viewControllers" id="seg-tab-ggl"/>
                         <segue destination="gmt-vc-001" kind="relationship" relationship="viewControllers" id="seg-tab-gmt"/>
                         <segue destination="drw-vc-001" kind="relationship" relationship="viewControllers" id="seg-tab-drw"/>
+                        <segue destination="grf-vc-001" kind="relationship" relationship="viewControllers" id="seg-tab-grf"/>
                     </connections>
                 </tabBarController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="tab-fr-001" sceneMemberID="firstResponder"/>
@@ -345,6 +346,59 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="drw-fr" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="1600" y="800"/>
+        </scene>
+        <!--Graphite-->
+        <scene sceneID="grf-sc-001">
+            <objects>
+                <viewController id="grf-vc-001" customClass="GraphiteViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="grf-vw-001">
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="grf-sk-001" customClass="SKGraphiteMetalView">
+                                <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" text="  GRAPHITE / METAL  |  FPS: --  " textAlignment="center" lineBreakMode="tailTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="grf-fps">
+                                <rect key="frame" x="75" y="130" width="243" height="32"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="32" id="grf-fh"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="240" id="grf-fw"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="Menlo-Bold" family="Menlo" pointSize="12"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" red="0" green="0" blue="0" alpha="0.5" colorSpace="custom" customColorSpace="sRGB"/>
+                                <userDefinedRuntimeAttributes>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.cornerRadius">
+                                        <integer key="value" value="16"/>
+                                    </userDefinedRuntimeAttribute>
+                                    <userDefinedRuntimeAttribute type="boolean" keyPath="layer.masksToBounds" value="YES"/>
+                                    <userDefinedRuntimeAttribute type="number" keyPath="layer.borderWidth">
+                                        <real key="value" value="1"/>
+                                    </userDefinedRuntimeAttribute>
+                                </userDefinedRuntimeAttributes>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="grf-safe"/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <constraints>
+                            <constraint firstItem="grf-sk-001" firstAttribute="top" secondItem="grf-vw-001" secondAttribute="top" id="grf-c1"/>
+                            <constraint firstItem="grf-sk-001" firstAttribute="leading" secondItem="grf-vw-001" secondAttribute="leading" id="grf-c2"/>
+                            <constraint firstItem="grf-sk-001" firstAttribute="trailing" secondItem="grf-vw-001" secondAttribute="trailing" id="grf-c3"/>
+                            <constraint firstItem="grf-sk-001" firstAttribute="bottom" secondItem="grf-vw-001" secondAttribute="bottom" id="grf-c4"/>
+                            <constraint firstItem="grf-fps" firstAttribute="centerX" secondItem="grf-vw-001" secondAttribute="centerX" id="grf-c5"/>
+                            <constraint firstItem="grf-fps" firstAttribute="top" secondItem="grf-safe" secondAttribute="top" constant="12" id="grf-c6"/>
+                        </constraints>
+                    </view>
+                    <tabBarItem key="tabBarItem" title="Graphite" image="cube.fill" catalog="system" id="grf-tab"/>
+                    <connections>
+                        <outlet property="fpsLabel" destination="grf-fps" id="grf-ol2"/>
+                        <outlet property="skiaView" destination="grf-sk-001" id="grf-ol1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="grf-fr" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2400" y="800"/>
         </scene>
     </scenes>
     <resources>

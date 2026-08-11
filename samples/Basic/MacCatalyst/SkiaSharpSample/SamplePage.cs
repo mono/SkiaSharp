@@ -8,4 +8,5 @@ public enum SamplePage
 	Cpu,
 	GpuMetal,
 	Drawing,
+	Graphite,
 }
