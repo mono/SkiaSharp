@@ -329,8 +329,10 @@ safe-outputs:
     title-prefix: "[docs] "
     labels: [area/Docs, partner/agentic-workflows]
     draft: false
-    base-branch: "${{ needs.prepare.outputs.output_base_branch }}"
-    allowed-base-branches: ["${{ needs.prepare.outputs.output_base_branch }}"]
+    # source_branch is validated before generation: production permits only main,
+    # while validation requires the open PR's non-main head.
+    base-branch: "${{ inputs.source_branch || 'main' }}"
+    allowed-base-branches: ["${{ inputs.source_branch || 'main' }}"]
     allowed-branches: [bot/release-notes, "bot/release-notes-test-pr-*"]
     allowed-files: ["documentation/docfx/releases/**"]
     preserve-branch-name: true
