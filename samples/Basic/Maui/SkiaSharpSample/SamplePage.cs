@@ -7,5 +7,6 @@ public enum SamplePage
 {
 	Cpu,
 	Gpu,
+	Graphite,
 	Drawing,
 }

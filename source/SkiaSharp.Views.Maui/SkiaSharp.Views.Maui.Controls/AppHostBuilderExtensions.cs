@@ -14,6 +14,7 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				{
 					handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
 					handlers.AddHandler<SKGLView, SKGLViewHandler>();
+					handlers.AddHandler<SKGraphiteView, SKGraphiteViewHandler>();
 				})
 				.ConfigureImageSources(sources =>
 				{

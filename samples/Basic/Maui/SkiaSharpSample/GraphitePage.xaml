@@ -1,0 +1,90 @@
+﻿<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="SkiaSharpSample.GraphitePage"
+             Title="Graphite"
+             BackgroundColor="#050814">
+
+    <Grid>
+        <skia:SKGraphiteView x:Name="graphiteView"
+                            PaintSurface="OnPaintSurface"
+                            RenderFailed="OnRenderFailed"
+                            Touch="OnTouch"
+                            EnableTouchEvents="True"
+                            HasRenderLoop="False" />
+
+        <Border HorizontalOptions="Start"
+                VerticalOptions="Start"
+                Margin="12"
+                Padding="14,10"
+                Stroke="#55AFCBFF"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 16"
+                BackgroundColor="#CC091225">
+            <VerticalStackLayout Spacing="2">
+                <Label Text="GRAPHITE / MULTI-RECORDER"
+                       TextColor="#C8DDFF"
+                       FontAttributes="Bold"
+                       FontSize="13" />
+                <Label x:Name="backendLabel"
+                       Text="Starting GPU..."
+                       TextColor="White"
+                       FontSize="12" />
+                <Label x:Name="statsLabel"
+                       Text="Recording workers: --"
+                       TextColor="#B8C7DF"
+                       FontSize="11" />
+                <Label x:Name="budgetLabel"
+                       Text="GPU budget: --"
+                       TextColor="#B8C7DF"
+                       FontSize="11" />
+            </VerticalStackLayout>
+        </Border>
+
+        <Border HorizontalOptions="Center"
+                VerticalOptions="End"
+                Margin="12,12,12,18"
+                Padding="16,12"
+                Stroke="#44FFFFFF"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 20"
+                BackgroundColor="#D90A1020">
+            <Grid RowDefinitions="Auto,Auto,Auto"
+                  ColumnDefinitions="Auto,*"
+                  ColumnSpacing="12"
+                  RowSpacing="6"
+                  MaximumWidthRequest="520">
+                <Label Text="Parallel recording"
+                       TextColor="White"
+                       VerticalOptions="Center" />
+                <Switch x:Name="parallelSwitch"
+                        Grid.Column="1"
+                        IsToggled="True"
+                        HorizontalOptions="End"
+                        Toggled="OnParallelToggled" />
+
+                <Label Grid.Row="1"
+                       Text="Particle workload"
+                       TextColor="White"
+                       VerticalOptions="Center" />
+                <Slider x:Name="particleSlider"
+                        Grid.Row="1"
+                        Grid.Column="1"
+                        Minimum="120"
+                        Maximum="900"
+                        Value="480"
+                        MinimumTrackColor="#6EA8FF"
+                        ThumbColor="#B7D3FF"
+                        ValueChanged="OnParticleCountChanged" />
+
+                <Label Grid.Row="2"
+                       Grid.ColumnSpan="2"
+                       Text="The background is snapped once and replayed. Two independent recorders build the animated layers concurrently, then one Context submits the complete frame."
+                       TextColor="#AFC0DA"
+                       FontSize="10"
+                       LineBreakMode="WordWrap" />
+            </Grid>
+        </Border>
+    </Grid>
+
+</ContentPage>
