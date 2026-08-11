@@ -48,6 +48,11 @@ For a signing-only retry, queue the package pipeline with
 The job verifies the build definition, repository, result, and trusted branch
 requirements before downloading its `nuget` artifact.
 
+To validate ESRP without retaining signed packages, also set `realSigning` and
+`signingValidationOnly` to `true`. After all signing and verification steps
+pass, the job copies evidence into the signing logs, deletes signed outputs,
+and intentionally fails so the pipeline artifact outputs cannot publish.
+
 ## Policy
 
 `eng/Signing.props` is the only signing-policy source of truth. It removes
@@ -64,9 +69,9 @@ the policy fails before signing.
 
 ## Test and real signing
 
-The pipeline currently calls the signing template with `useRealSigning: false`.
-That produces MicroBuild test signatures without referencing an ESRP service
-connection.
+The normal package pipeline calls the signing template in test mode, producing
+MicroBuild test signatures without referencing an ESRP service connection.
+Signing-only retries expose an explicit `realSigning` queue parameter.
 
 Real signing must be enabled only after ESRP onboarding and protected-branch
 checks are configured. Arcade then supplies:
@@ -76,7 +81,10 @@ checks are configured. Arcade then supplies:
 - MicroBuild install and cleanup;
 - `System.AccessToken` handling.
 
-There is no queue-time force-real parameter.
+Feature-branch real signing must also set `signingValidationOnly`; signed
+outputs are omitted, deleted on every exit path, and the job intentionally
+fails. Publish-capable real signing additionally requires main/release branch
+checks and the externally approved ESRP service connection.
 
 ## Local checks
 
