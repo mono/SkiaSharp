@@ -1,12 +1,11 @@
 ---
 description: "Regenerate website release notes AND API diffs daily (and on every main push) — new tags, releases, and release-branch commits are discovered automatically. One pipeline, one PR."
-# ENGINE — use the default Copilot model. The reworked pipeline hands the agent
-# fully-structured facts (per-page data.json + companion files) and a deterministic
-# renderer, so the Polish phase no longer needs a pinned stronger model (validated
-# by an A/B run: the default model matched — and on one behavioural breaking change
-# beat — the pinned Opus output). Recompile the .lock.yml after changing this.
+# ENGINE — release-note prose must stay faithful across large PR collections, so
+# pin the preferred high-capacity model rather than inheriting a changing default.
+# Recompile the .lock.yml after changing this.
 engine:
   id: copilot
+model: gpt-5.6-sol
 # TRIGGERS — main is the single source of truth for EVERY version/branch.
 # Deliberately NOT triggered by `release/**` pushes or `v*` tags: a push/tag event
 # runs the workflow copy that lives on THAT ref, not main's, so those triggers can
