@@ -11,6 +11,9 @@ parameters:
   - name: sourceBuildId
     type: number
     default: 0
+  - name: validationOnly
+    type: boolean
+    default: false
 
 stages:
   - stage: signing
@@ -47,18 +50,22 @@ stages:
                 name: nuget_signing_logs
           templateContext:
             outputs:
-              - output: pipelineArtifact
-                displayName: Publish signed NuGets
-                artifactName: nuget_signed
-                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-              - output: pipelineArtifact
-                displayName: Publish signed preview NuGets
-                artifactName: nuget_preview_signed
-                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
-              - output: pipelineArtifact
-                displayName: Publish signing verification
-                artifactName: nuget_signing_verification
-                targetPath: '$(Build.SourcesDirectory)\artifacts\signing-verification'
+              - ${{ if ne(parameters.validationOnly, true) }}:
+                - output: pipelineArtifact
+                  displayName: Publish signed NuGets
+                  artifactName: nuget_signed
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+                  condition: succeeded()
+                - output: pipelineArtifact
+                  displayName: Publish signed preview NuGets
+                  artifactName: nuget_preview_signed
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
+                  condition: succeeded()
+                - output: pipelineArtifact
+                  displayName: Publish signing verification
+                  artifactName: nuget_signing_verification
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\signing-verification'
+                  condition: succeeded()
           preSteps:
             - checkout: self
               clean: true
@@ -90,10 +97,21 @@ stages:
                   if ($build.result -ne 'succeeded') {
                     throw "Build ${{ parameters.sourceBuildId }} did not succeed (result: '$($build.result)')."
                   }
+                  if ('${{ parameters.validationOnly }}' -eq 'True' -and
+                      '${{ parameters.useRealSigning }}' -ne 'True') {
+                    throw 'Validation-only signing requires realSigning to be enabled.'
+                  }
                   if ('${{ parameters.useRealSigning }}' -eq 'True' -and
-                      $build.sourceBranch -ne 'refs/heads/main' -and
-                      -not $build.sourceBranch.StartsWith('refs/heads/release/')) {
-                    throw "Real signing requires a successful main or release branch build, not '$($build.sourceBranch)'."
+                      '${{ parameters.validationOnly }}' -ne 'True') {
+                    $trustedSource =
+                      $build.sourceBranch -eq 'refs/heads/main' -or
+                      $build.sourceBranch.StartsWith('refs/heads/release/')
+                    $trustedPipeline =
+                      $env:BUILD_SOURCEBRANCH -eq 'refs/heads/main' -or
+                      $env:BUILD_SOURCEBRANCH.StartsWith('refs/heads/release/')
+                    if (-not $trustedSource -or -not $trustedPipeline) {
+                      throw "Publishing real-signed artifacts requires trusted pipeline and source-build branches."
+                    }
                   }
 
                   Write-Host "Validated source build $($build.id) at $($build.sourceVersion) from $($build.sourceBranch)."
@@ -187,3 +205,30 @@ stages:
                 Get-ChildItem $source -Filter '*-*.nupkg' -File |
                   Copy-Item -Destination $destination
               displayName: Create signed preview package view
+
+            - ${{ if and(eq(parameters.validationOnly, true), eq(parameters.useRealSigning, true)) }}:
+              - pwsh: |
+                  $priorStatus = $env:AGENT_JOBSTATUS
+                  $evidence = '$(Build.SourcesDirectory)\artifacts\signing-verification'
+                  $logEvidence = '$(Build.SourcesDirectory)\artifacts\log\Release\signing-validation'
+                  try {
+                    New-Item $logEvidence -ItemType Directory -Force | Out-Null
+                    if (Test-Path $evidence) {
+                      Copy-Item "$evidence\*" $logEvidence -Recurse -Force -ErrorAction Continue
+                    }
+                  } finally {
+                    @(
+                      '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping',
+                      '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview',
+                      $evidence
+                    ) | ForEach-Object {
+                      Remove-Item $_ -Recurse -Force -ErrorAction Continue
+                    }
+                  }
+
+                  if ($priorStatus -eq 'Succeeded') {
+                    throw 'Real signing validation succeeded; signed artifact publication was intentionally blocked.'
+                  }
+                  throw "Signed outputs were removed after an earlier validation failure (Agent.JobStatus: '$priorStatus')."
+                displayName: Block validation-only signed artifact publication
+                condition: always()
