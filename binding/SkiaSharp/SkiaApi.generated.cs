@@ -40,9 +40,11 @@ using sk_font_t = System.IntPtr;
 using sk_fontmgr_t = System.IntPtr;
 using sk_fontstyle_t = System.IntPtr;
 using sk_fontstyleset_t = System.IntPtr;
+using sk_graphite_backend_semaphore_t = System.IntPtr;
 using sk_graphite_backend_texture_t = System.IntPtr;
 using sk_graphite_context_t = System.IntPtr;
 using sk_graphite_image_provider_t = System.IntPtr;
+using sk_graphite_mutable_texture_state_t = System.IntPtr;
 using sk_graphite_recorder_t = System.IntPtr;
 using sk_graphite_recording_t = System.IntPtr;
 using sk_graphite_texture_info_t = System.IntPtr;
@@ -6881,6 +6883,25 @@ namespace SkiaSharp
 			(sk_graphite_backend_is_available_delegate ??= GetSymbol<Delegates.sk_graphite_backend_is_available> ("sk_graphite_backend_is_available")).Invoke (backend);
 		#endif
 
+		// void sk_graphite_backend_semaphore_delete(sk_graphite_backend_semaphore_t* semaphore)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphite_backend_semaphore_delete (sk_graphite_backend_semaphore_t semaphore);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphite_backend_semaphore_delete (sk_graphite_backend_semaphore_t semaphore);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphite_backend_semaphore_delete (sk_graphite_backend_semaphore_t semaphore);
+		}
+		private static Delegates.sk_graphite_backend_semaphore_delete sk_graphite_backend_semaphore_delete_delegate;
+		internal static void sk_graphite_backend_semaphore_delete (sk_graphite_backend_semaphore_t semaphore) =>
+			(sk_graphite_backend_semaphore_delete_delegate ??= GetSymbol<Delegates.sk_graphite_backend_semaphore_delete> ("sk_graphite_backend_semaphore_delete")).Invoke (semaphore);
+		#endif
+
 		// void sk_graphite_backend_texture_delete(sk_graphite_backend_texture_t* tex)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -6936,6 +6957,25 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_backend_texture_get_dimensions sk_graphite_backend_texture_get_dimensions_delegate;
 		internal static void sk_graphite_backend_texture_get_dimensions (sk_graphite_backend_texture_t tex, Int32* outWidth, Int32* outHeight) =>
 			(sk_graphite_backend_texture_get_dimensions_delegate ??= GetSymbol<Delegates.sk_graphite_backend_texture_get_dimensions> ("sk_graphite_backend_texture_get_dimensions")).Invoke (tex, outWidth, outHeight);
+		#endif
+
+		// sk_graphite_texture_info_t* sk_graphite_backend_texture_get_texture_info(const sk_graphite_backend_texture_t* tex)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_texture_info_t sk_graphite_backend_texture_get_texture_info (sk_graphite_backend_texture_t tex);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_texture_info_t sk_graphite_backend_texture_get_texture_info (sk_graphite_backend_texture_t tex);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_texture_info_t sk_graphite_backend_texture_get_texture_info (sk_graphite_backend_texture_t tex);
+		}
+		private static Delegates.sk_graphite_backend_texture_get_texture_info sk_graphite_backend_texture_get_texture_info_delegate;
+		internal static sk_graphite_texture_info_t sk_graphite_backend_texture_get_texture_info (sk_graphite_backend_texture_t tex) =>
+			(sk_graphite_backend_texture_get_texture_info_delegate ??= GetSymbol<Delegates.sk_graphite_backend_texture_get_texture_info> ("sk_graphite_backend_texture_get_texture_info")).Invoke (tex);
 		#endif
 
 		// bool sk_graphite_backend_texture_is_valid(const sk_graphite_backend_texture_t* tex)
@@ -7148,6 +7188,25 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_context_insert_recording sk_graphite_context_insert_recording_delegate;
 		internal static SKGraphiteInsertStatus sk_graphite_context_insert_recording (sk_graphite_context_t context, SKGraphiteInsertRecordingInfo* info) =>
 			(sk_graphite_context_insert_recording_delegate ??= GetSymbol<Delegates.sk_graphite_context_insert_recording> ("sk_graphite_context_insert_recording")).Invoke (context, info);
+		#endif
+
+		// sk_graphite_insert_status_t sk_graphite_context_insert_recording_full(sk_graphite_context_t* context, sk_graphite_recording_t* recording, sk_surface_t* targetSurface, int32_t targetTranslationX, int32_t targetTranslationY, const sk_irect_t* targetClip, const sk_graphite_mutable_texture_state_t* targetTextureState, const void* const* waitSemaphores, int32_t waitSemaphoreCount, const void* const* signalSemaphores, int32_t signalSemaphoreCount, sk_graphite_finished_proc finishedProc, void* finishedContext)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial SKGraphiteInsertStatus sk_graphite_context_insert_recording_full (sk_graphite_context_t context, sk_graphite_recording_t recording, sk_surface_t targetSurface, Int32 targetTranslationX, Int32 targetTranslationY, SKRectI* targetClip, sk_graphite_mutable_texture_state_t targetTextureState, void** waitSemaphores, Int32 waitSemaphoreCount, void** signalSemaphores, Int32 signalSemaphoreCount, void* finishedProc, void* finishedContext);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern SKGraphiteInsertStatus sk_graphite_context_insert_recording_full (sk_graphite_context_t context, sk_graphite_recording_t recording, sk_surface_t targetSurface, Int32 targetTranslationX, Int32 targetTranslationY, SKRectI* targetClip, sk_graphite_mutable_texture_state_t targetTextureState, void** waitSemaphores, Int32 waitSemaphoreCount, void** signalSemaphores, Int32 signalSemaphoreCount, SKGraphiteFinishedProxyDelegate finishedProc, void* finishedContext);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate SKGraphiteInsertStatus sk_graphite_context_insert_recording_full (sk_graphite_context_t context, sk_graphite_recording_t recording, sk_surface_t targetSurface, Int32 targetTranslationX, Int32 targetTranslationY, SKRectI* targetClip, sk_graphite_mutable_texture_state_t targetTextureState, void** waitSemaphores, Int32 waitSemaphoreCount, void** signalSemaphores, Int32 signalSemaphoreCount, SKGraphiteFinishedProxyDelegate finishedProc, void* finishedContext);
+		}
+		private static Delegates.sk_graphite_context_insert_recording_full sk_graphite_context_insert_recording_full_delegate;
+		internal static SKGraphiteInsertStatus sk_graphite_context_insert_recording_full (sk_graphite_context_t context, sk_graphite_recording_t recording, sk_surface_t targetSurface, Int32 targetTranslationX, Int32 targetTranslationY, SKRectI* targetClip, sk_graphite_mutable_texture_state_t targetTextureState, void** waitSemaphores, Int32 waitSemaphoreCount, void** signalSemaphores, Int32 signalSemaphoreCount, SKGraphiteFinishedProxyDelegate finishedProc, void* finishedContext) =>
+			(sk_graphite_context_insert_recording_full_delegate ??= GetSymbol<Delegates.sk_graphite_context_insert_recording_full> ("sk_graphite_context_insert_recording_full")).Invoke (context, recording, targetSurface, targetTranslationX, targetTranslationY, targetClip, targetTextureState, waitSemaphores, waitSemaphoreCount, signalSemaphores, signalSemaphoreCount, finishedProc, finishedContext);
 		#endif
 
 		// bool sk_graphite_context_is_device_lost(const sk_graphite_context_t* context)
@@ -7368,6 +7427,25 @@ namespace SkiaSharp
 			(sk_graphite_image_wrap_texture_delegate ??= GetSymbol<Delegates.sk_graphite_image_wrap_texture> ("sk_graphite_image_wrap_texture")).Invoke (recorder, backendTexture, colorType, alphaType, colorSpace, releaseProc, releaseContext);
 		#endif
 
+		// void sk_graphite_mutable_texture_state_delete(sk_graphite_mutable_texture_state_t* state)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial void sk_graphite_mutable_texture_state_delete (sk_graphite_mutable_texture_state_t state);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void sk_graphite_mutable_texture_state_delete (sk_graphite_mutable_texture_state_t state);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void sk_graphite_mutable_texture_state_delete (sk_graphite_mutable_texture_state_t state);
+		}
+		private static Delegates.sk_graphite_mutable_texture_state_delete sk_graphite_mutable_texture_state_delete_delegate;
+		internal static void sk_graphite_mutable_texture_state_delete (sk_graphite_mutable_texture_state_t state) =>
+			(sk_graphite_mutable_texture_state_delete_delegate ??= GetSymbol<Delegates.sk_graphite_mutable_texture_state_delete> ("sk_graphite_mutable_texture_state_delete")).Invoke (state);
+		#endif
+
 		// sk_graphite_backend_texture_t* sk_graphite_recorder_create_backend_texture(sk_graphite_recorder_t* recorder, int32_t width, int32_t height, const sk_graphite_texture_info_t* info)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7461,6 +7539,25 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_recorder_get_max_texture_size sk_graphite_recorder_get_max_texture_size_delegate;
 		internal static Int32 sk_graphite_recorder_get_max_texture_size (sk_graphite_recorder_t recorder) =>
 			(sk_graphite_recorder_get_max_texture_size_delegate ??= GetSymbol<Delegates.sk_graphite_recorder_get_max_texture_size> ("sk_graphite_recorder_get_max_texture_size")).Invoke (recorder);
+		#endif
+
+		// sk_canvas_t* sk_graphite_recorder_make_deferred_canvas(sk_graphite_recorder_t* recorder, const sk_imageinfo_t* info, const sk_graphite_texture_info_t* textureInfo)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_canvas_t sk_graphite_recorder_make_deferred_canvas (sk_graphite_recorder_t recorder, SKImageInfoNative* info, sk_graphite_texture_info_t textureInfo);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_canvas_t sk_graphite_recorder_make_deferred_canvas (sk_graphite_recorder_t recorder, SKImageInfoNative* info, sk_graphite_texture_info_t textureInfo);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_canvas_t sk_graphite_recorder_make_deferred_canvas (sk_graphite_recorder_t recorder, SKImageInfoNative* info, sk_graphite_texture_info_t textureInfo);
+		}
+		private static Delegates.sk_graphite_recorder_make_deferred_canvas sk_graphite_recorder_make_deferred_canvas_delegate;
+		internal static sk_canvas_t sk_graphite_recorder_make_deferred_canvas (sk_graphite_recorder_t recorder, SKImageInfoNative* info, sk_graphite_texture_info_t textureInfo) =>
+			(sk_graphite_recorder_make_deferred_canvas_delegate ??= GetSymbol<Delegates.sk_graphite_recorder_make_deferred_canvas> ("sk_graphite_recorder_make_deferred_canvas")).Invoke (recorder, info, textureInfo);
 		#endif
 
 		// sk_graphite_recording_t* sk_graphite_recorder_snap(sk_graphite_recorder_t* recorder)
@@ -7747,6 +7844,25 @@ namespace SkiaSharp
 			(sk_graphite_context_make_vulkan_delegate ??= GetSymbol<Delegates.sk_graphite_context_make_vulkan> ("sk_graphite_context_make_vulkan")).Invoke (init, opts);
 		#endif
 
+		// sk_graphite_backend_semaphore_t* sk_graphite_vk_backend_semaphore_new(uint64_t vkSemaphore)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_backend_semaphore_t sk_graphite_vk_backend_semaphore_new (UInt64 vkSemaphore);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_backend_semaphore_t sk_graphite_vk_backend_semaphore_new (UInt64 vkSemaphore);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_backend_semaphore_t sk_graphite_vk_backend_semaphore_new (UInt64 vkSemaphore);
+		}
+		private static Delegates.sk_graphite_vk_backend_semaphore_new sk_graphite_vk_backend_semaphore_new_delegate;
+		internal static sk_graphite_backend_semaphore_t sk_graphite_vk_backend_semaphore_new (UInt64 vkSemaphore) =>
+			(sk_graphite_vk_backend_semaphore_new_delegate ??= GetSymbol<Delegates.sk_graphite_vk_backend_semaphore_new> ("sk_graphite_vk_backend_semaphore_new")).Invoke (vkSemaphore);
+		#endif
+
 		// sk_graphite_backend_texture_t* sk_graphite_vk_backend_texture_new(int32_t width, int32_t height, const sk_graphite_vk_texture_info_t* info, int32_t imageLayout, uint32_t queueFamilyIndex, void* vkImage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -7764,6 +7880,44 @@ namespace SkiaSharp
 		private static Delegates.sk_graphite_vk_backend_texture_new sk_graphite_vk_backend_texture_new_delegate;
 		internal static sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, void* vkImage) =>
 			(sk_graphite_vk_backend_texture_new_delegate ??= GetSymbol<Delegates.sk_graphite_vk_backend_texture_new> ("sk_graphite_vk_backend_texture_new")).Invoke (width, height, info, imageLayout, queueFamilyIndex, vkImage);
+		#endif
+
+		// sk_graphite_backend_texture_t* sk_graphite_vk_backend_texture_new_uint64(int32_t width, int32_t height, const sk_graphite_vk_texture_info_t* info, int32_t imageLayout, uint32_t queueFamilyIndex, uint64_t vkImage)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new_uint64 (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, UInt64 vkImage);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new_uint64 (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, UInt64 vkImage);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new_uint64 (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, UInt64 vkImage);
+		}
+		private static Delegates.sk_graphite_vk_backend_texture_new_uint64 sk_graphite_vk_backend_texture_new_uint64_delegate;
+		internal static sk_graphite_backend_texture_t sk_graphite_vk_backend_texture_new_uint64 (Int32 width, Int32 height, SKGraphiteVkTextureInfo* info, Int32 imageLayout, UInt32 queueFamilyIndex, UInt64 vkImage) =>
+			(sk_graphite_vk_backend_texture_new_uint64_delegate ??= GetSymbol<Delegates.sk_graphite_vk_backend_texture_new_uint64> ("sk_graphite_vk_backend_texture_new_uint64")).Invoke (width, height, info, imageLayout, queueFamilyIndex, vkImage);
+		#endif
+
+		// sk_graphite_mutable_texture_state_t* sk_graphite_vk_mutable_texture_state_new(int32_t imageLayout, uint32_t queueFamilyIndex)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (SKIA)]
+		internal static partial sk_graphite_mutable_texture_state_t sk_graphite_vk_mutable_texture_state_new (Int32 imageLayout, UInt32 queueFamilyIndex);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern sk_graphite_mutable_texture_state_t sk_graphite_vk_mutable_texture_state_new (Int32 imageLayout, UInt32 queueFamilyIndex);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate sk_graphite_mutable_texture_state_t sk_graphite_vk_mutable_texture_state_new (Int32 imageLayout, UInt32 queueFamilyIndex);
+		}
+		private static Delegates.sk_graphite_vk_mutable_texture_state_new sk_graphite_vk_mutable_texture_state_new_delegate;
+		internal static sk_graphite_mutable_texture_state_t sk_graphite_vk_mutable_texture_state_new (Int32 imageLayout, UInt32 queueFamilyIndex) =>
+			(sk_graphite_vk_mutable_texture_state_new_delegate ??= GetSymbol<Delegates.sk_graphite_vk_mutable_texture_state_new> ("sk_graphite_vk_mutable_texture_state_new")).Invoke (imageLayout, queueFamilyIndex);
 		#endif
 
 		// sk_graphite_texture_info_t* sk_graphite_vk_texture_info_new(const sk_graphite_vk_texture_info_t* info)
@@ -18760,6 +18914,10 @@ namespace SkiaSharp {
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
+	// typedef void (*)(void* finishedContext, bool success)* sk_graphite_finished_proc
+	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+	internal unsafe delegate void SKGraphiteFinishedProxyDelegate(void* finishedContext, [MarshalAs (UnmanagedType.I1)] bool success);
+
 	// typedef sk_image_t* (*)(void* userData, sk_graphite_recorder_t* recorder, const sk_image_t* image, bool mipmapped)* sk_graphite_image_provider_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_image_t SKGraphiteImageProviderProxyDelegate(void* userData, sk_graphite_recorder_t recorder, sk_image_t image, [MarshalAs (UnmanagedType.I1)] bool mipmapped);
@@ -23296,6 +23454,16 @@ internal static unsafe partial class DelegateProxies {
 	[MonoPInvokeCallback (typeof (SKGlyphPathProxyDelegate))]
 #endif
 	private static partial void SKGlyphPathProxyImplementation(sk_path_t pathOrNull,SKMatrix* matrix,void* context);
+
+	/// Proxy for sk_graphite_finished_proc native function.
+#if USE_LIBRARY_IMPORT
+	public static readonly delegate* unmanaged[Cdecl] <void*, bool, void> SKGraphiteFinishedProxy = &SKGraphiteFinishedProxyImplementation;
+	[UnmanagedCallersOnly(CallConvs = new [] {typeof(CallConvCdecl)})]
+#else
+	public static readonly SKGraphiteFinishedProxyDelegate SKGraphiteFinishedProxy = SKGraphiteFinishedProxyImplementation;
+	[MonoPInvokeCallback (typeof (SKGraphiteFinishedProxyDelegate))]
+#endif
+	private static partial void SKGraphiteFinishedProxyImplementation(void* finishedContext,[MarshalAs (UnmanagedType.I1)] bool success);
 
 	/// Proxy for sk_graphite_image_provider_proc native function.
 #if USE_LIBRARY_IMPORT

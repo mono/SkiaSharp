@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views\SkiaSharp.Views.csproj" Condition="$(TargetFramework.Contains('-'))" />
+    <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.Graphite\SkiaSharp.Views.Graphite.csproj" Condition="$(TargetFramework.Contains('-ios')) or $(TargetFramework.Contains('-maccatalyst')) or $(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\..\SkiaSharp.Views\SkiaSharp.Views.WinUI\SkiaSharp.Views.WinUI.csproj" Condition="$(TargetFramework.Contains('-windows'))" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('-'))">

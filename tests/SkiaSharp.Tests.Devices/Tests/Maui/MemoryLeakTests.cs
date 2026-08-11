@@ -44,6 +44,29 @@ public class MemoryLeakTests : SKUITests
 			return view;
 		});
 
+	[UIFact]
+	public Task SKGraphiteViewHandlerDoesNotLeak()
+	{
+		if (OperatingSystem.IsWindows())
+			Assert.Skip("Graphite presentation is not yet supported on Windows.");
+
+		return AssertHandlerDoesNotLeak(() =>
+		{
+			var view = new SKGraphiteView();
+			view.PaintSurface += (sender, e) =>
+			{
+				e.Surface.Canvas.Clear(SKColors.Red);
+			};
+			view.EnableTouchEvents = true;
+			view.Touch += (sender, e) =>
+			{
+				view.InvalidateSurface();
+			};
+			view.HasRenderLoop = true;
+			return view;
+		});
+	}
+
 	private async Task AssertHandlerDoesNotLeak(Func<View> ctor)
 	{
 		async Task<(WeakReference, WeakReference, WeakReference)> RunTest()

@@ -121,6 +121,14 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     [Fact]
     public Task SKGLView() => RunMauiTest("SKGLView", "SKPaintGLSurfaceEventArgs");
 
+    [Fact]
+    public Task SKGraphiteView()
+    {
+        if (PlatformName == "Windows")
+            Assert.Skip("Graphite presentation is not yet supported on Windows.");
+        return RunMauiTest("SKGraphiteView", "SKPaintGraphiteSurfaceEventArgs");
+    }
+
     /// <summary>
     /// Run the standard MAUI test for the specified canvas view type.
     /// </summary>

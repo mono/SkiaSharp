@@ -116,6 +116,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.NativeAssets.Win32",                  new Version (2, 80, 0) },
     { "SkiaSharp.NativeAssets.WinUI",                  new Version (2, 80, 0) },
     { "SkiaSharp.Views",                               new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Graphite",                      new Version (4, 152, 0) },
     { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
     { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
     { "SkiaSharp.Views.Gtk4",                          new Version (3, 119, 0) },
