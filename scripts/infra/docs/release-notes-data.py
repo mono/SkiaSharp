@@ -1194,7 +1194,9 @@ def collect_shipments(page_version, base_version):
                 if previous_tag else None),
             "prs": numbers,
         }
-        published = get_published_release_teaser(item["tag"])
+        published = None
+        if not (shipment["channel"] == "stable" and not numbers):
+            published = get_published_release_teaser(item["tag"])
         if published:
             outside_delta = sorted({
                 number

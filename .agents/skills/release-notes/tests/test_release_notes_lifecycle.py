@@ -164,6 +164,21 @@ class ShipmentCollectionTests(unittest.TestCase):
         item = next(shipment for shipment in items if shipment["tag"] == tag)
         self.assertEqual(item["published_release"], reviewed)
 
+    def test_empty_stable_does_not_import_cumulative_release_body(self):
+        stable = "v4.151.0"
+        cumulative = {
+            "subtitle": "Cumulative stable notes.",
+            "categories": [{
+                "heading": "What's New",
+                "bullets": [{"text": "Earlier preview work", "prs": [101]}],
+            }],
+        }
+
+        items = self.collect("4.151.0", "4.150.0", {stable: cumulative})
+
+        item = next(shipment for shipment in items if shipment["tag"] == stable)
+        self.assertNotIn("published_release", item)
+
     def test_internal_title_pattern_overrides_product_path(self):
         DATA._PATH_TAGS_CONFIG = None
 
