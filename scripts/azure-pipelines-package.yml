@@ -48,9 +48,13 @@ parameters:
     type: boolean
     default: false
   - name: enableSigning
-    displayName: 'Run the experimental repository-owned NuGet signing stage'
+    displayName: 'Run the Arcade NuGet signing stage'
     type: boolean
     default: false
+  - name: signingSourceBuildId
+    displayName: 'Sign NuGets from an existing package build ID (0 runs the normal pipeline)'
+    type: number
+    default: 0
   - name: testsPipelineId
     displayName: 'The downstream tests pipeline ID'
     type: number
@@ -110,23 +114,27 @@ extends:
         enabled: true
         configFile: $(Build.SourcesDirectory)/scripts/infra/security/tsaoptions-v2.json
     stages:
-      - template: /scripts/azure-templates-stages.yml@self
-        parameters:
-          buildPipelineType: 'package'
-          enableSigning: ${{ parameters.enableSigning }}
-          use1ESPipelineTemplates: true
-          buildAgentHost: ${{ parameters.buildAgentHost }}
-          buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentLinux: ${{ parameters.buildAgentLinux }}
-      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+      - ${{ if eq(parameters.signingSourceBuildId, 0) }}:
+        - template: /scripts/azure-templates-stages.yml@self
+          parameters:
+            buildPipelineType: 'package'
+            enableSigning: ${{ parameters.enableSigning }}
+            use1ESPipelineTemplates: true
+            buildAgentHost: ${{ parameters.buildAgentHost }}
+            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+            buildAgentMac: ${{ parameters.buildAgentMac }}
+            buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      - ${{ if and(eq(parameters.signingSourceBuildId, 0), or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))))) }}:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
       - stage: trigger_tests
         displayName: Trigger Tests
-        dependsOn: package
-        condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/dnceng-pipelines'))
+        ${{ if eq(parameters.signingSourceBuildId, 0) }}:
+          dependsOn: package
+        ${{ else }}:
+          dependsOn: []
+        condition: and(${{ eq(parameters.signingSourceBuildId, 0) }}, succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/dnceng-pipelines'))
         jobs:
           - job: trigger_tests
             displayName: Trigger Tests
@@ -171,3 +179,11 @@ extends:
                 displayName: Queue tests with current package artifacts
                 env:
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      - ${{ if ne(parameters.signingSourceBuildId, 0) }}:
+        - template: /scripts/azure-templates-stages-signing.yml@self
+          parameters:
+            buildAgent: ${{ parameters.buildAgentWindows }}
+            dependsOn: []
+            sourceBuildId: ${{ parameters.signingSourceBuildId }}
+            useRealSigning: false
