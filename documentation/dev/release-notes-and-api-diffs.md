@@ -1118,7 +1118,8 @@ principles are fixed here.
    the LLM (and into the JSON) makes product-focus reliable run-to-run.
    For each exact published tag, Prepare reads the actual GitHub Release body and
    copies its curated consumer-facing portion into
-   `data.json.shipments[].published_release`. This supplies behavior that generic
+   `data.json.shipments[].published_release`. This read-only grounding is not rendered
+   directly; it supplies behavior that generic
    sync PR titles cannot express and preserves the reviewed selection without a
    separate version-specific policy file. The prose agent may improve phrasing,
    but uses the published release as the authoritative semantic source.
@@ -1142,11 +1143,13 @@ principles are fixed here.
    `SKILL.md` (`Engine`, `API Surface`, `Bug Fixes`, `Lifecycle & Internals`,
    `Platform`, `Security`) and renders them in that order. The AI chooses which apply;
    it does not invent headings.
-5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty, the AI
+5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty or the
+   co-shipped HarfBuzz `version` differs from `previous_version`, the AI
    writes one short `harfbuzz_summary` paragraph. It does not dump every HarfBuzz PR:
    the API-diff link is in the banner, and community credit is in the page's contributor
-   table. When `data.harfbuzz.prs` is empty, the AI sets the field to `null`/omits it and
-   the renderer emits the fixed no-changes line (§4.5).
+   table. When neither the binding nor the co-shipped HarfBuzz version changed, the AI
+   sets the field to `null`/omits it and the renderer emits the deterministic
+   no-binding-changes line (§4.5).
 6. **Exact-tag teasers are neutral, curated, and immutable after review.** Each
    `release_teasers[tag]` contains a neutral subtitle, an optional
    `website_summary`, and structured bullets under the closed customer categories
@@ -1212,12 +1215,12 @@ When `data.harfbuzz.version` exists, `release-notes-render.py` emits:
 
 Then it renders exactly one paragraph:
 
-- If `data.harfbuzz.prs` is non-empty, the paragraph is the AI-authored
+- If `data.harfbuzz.prs` is non-empty or `data.harfbuzz.version` differs from
+  `data.harfbuzz.previous_version`, the paragraph is the AI-authored
   `prose.harfbuzz_summary`. The prose schema allows `harfbuzz_summary` to be a string
   or `null`, and validation requires a non-empty string only in this case.
-- If `data.harfbuzz.prs` is empty, the renderer emits the fixed line:
-  *No HarfBuzzSharp binding changes shipped in this release — it rebuilds the same
-  HarfBuzz as the previous line.*
+- Otherwise, the renderer emits the deterministic line:
+  *No HarfBuzzSharp binding changes shipped in this release.*
 
 This section is intentionally **summary-only**. It does not dump each HarfBuzz PR, does
 not duplicate the API-diff link, and does not render a separate contributor table. The
@@ -1508,8 +1511,10 @@ boolean argument); `prepare.sh` translates its shell flags to those names.
   diffs to regenerate after the diff tooling itself changes.
 - **Incremental/scoped clearing.** Any run that is not a full forced rebuild leaves
   cached lines untouched. For each line it does rebuild, it clears that line's generated
-  files immediately before copying the new diff, so stale `*.breaking.md` files cannot
-  survive while unrelated cached lines remain intact.
+  files once, immediately before the first package copies a new diff into the shared
+  line folder. Subsequent packages append their own diffs without clearing earlier
+  package output, so stale `*.breaking.md` files cannot survive while unrelated cached
+  lines remain intact.
 
 The target clears **only** generated API-diff files as defined in §3.5 — files whose
 first line starts with `# API diff:` and that are not retired `*.humanreadable.md` files.

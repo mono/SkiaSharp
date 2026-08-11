@@ -105,8 +105,7 @@ _INTERNAL_MECHANICS_RE = re.compile(
 
 # The one fixed line a "no changes" HarfBuzz page carries as its whole body.
 NO_CHANGES_BODY = (
-    "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
-    "the same HarfBuzz as the previous line.")
+    "No HarfBuzzSharp binding changes shipped in this release.")
 
 
 def page_title(data):
@@ -334,7 +333,7 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        if hb.get("prs"):
+        if _gen.harfbuzz_summary_required(hb):
             # Summary only: the API diff is in the banner and the community credit
             # is in the contributor table, so this section stays a clean narrative
             # instead of dumping every HarfBuzz-touching build PR.
@@ -578,10 +577,12 @@ def _finish_validate(errors, data, prose):
         errors.extend(_gen.validate_release_teaser(shipment, teaser))
 
     hb = data.get("harfbuzz") or {}
-    if hb.get("prs") and not (prose.get("harfbuzz_summary") or "").strip():
+    if (_gen.harfbuzz_summary_required(hb)
+            and not (prose.get("harfbuzz_summary") or "").strip()):
         errors.append(
-            "this release has HarfBuzz-specific changes, so prose.harfbuzz_summary is "
-            "required — summarise what changed in the HarfBuzzSharp binding (1-2 sentences).")
+            "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
+            "prose.harfbuzz_summary is required — summarise the consumer-facing "
+            "change (1-2 sentences).")
 
     return errors
 

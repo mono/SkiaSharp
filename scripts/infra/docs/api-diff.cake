@@ -92,6 +92,11 @@ Task ("docs-api-diff")
     // by SkiaSharp line core; value is the HarfBuzz line core shipping with it.
     var skiaHarfBuzzDeps = new Dictionary<string, string> ();
 
+    // Every tracked package in a family writes beneath the same release-line folder.
+    // A scoped rebuild must clear that shared folder once, before the first package
+    // writes it, rather than once per package (which would erase earlier diffs).
+    var clearedLineDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary
         if (id.Contains ("NativeAssets"))
@@ -240,10 +245,14 @@ Task ("docs-api-diff")
             var diffRoot = $"{baseDir}/{id}/{apiDiffVersion}";
             // Incremental runs skipped the up-front ClearOwnedApiDiffFolders, so clear
             // just THIS line's generated files before rebuilding it — a stale
-            // *.breaking.md must not survive when the line is regenerated. (A full
-            // forced rebuild already wiped everything up front, so this is a no-op
-            // there; a brand-new line has no folder yet, so guard on existence.)
-            if (!(force && !isScoped) && DirectoryExists (lineDir))
+            // *.breaking.md must not survive when the line is regenerated. Multiple
+            // packages share lineDir, so clear it only before the first package writes
+            // there; clearing for every package would leave only the final package's
+            // diff. (A full forced rebuild already wiped everything up front, and a
+            // brand-new line has no folder yet.)
+            if (!(force && !isScoped)
+                    && clearedLineDirs.Add (lineDir.FullPath)
+                    && DirectoryExists (lineDir))
                 ClearGeneratedApiDiffsIn (lineDir.FullPath);
             // Stage this package's own SkiaSharp/HarfBuzz dependencies at the versions it
             // was built against (read from its nuspec) so inherited types resolve to the

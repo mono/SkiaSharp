@@ -217,7 +217,8 @@ Never mention a CVE, vulnerability, or security fix/release in teaser prose.
 
 Some shipment facts include `published_release`, extracted from the actual
 already-published GitHub Release. This is the consumer-facing source,
-not a per-version policy override. For an already-published shipment, preserve its
+not a per-version policy override and not content rendered directly from `data.json`.
+It gives the prose agent reviewed facts and curation for that exact shipment. For an already-published shipment, preserve its
 curated PR selection and factual meaning while rewriting it into the current
 schema; phrasing may improve, but do not replace specific published behavior with
 a generic PR title or add internal/test-only exact-delta work that the release
@@ -239,16 +240,23 @@ numeric page core (and therefore is absent from this page's `shipments`), keep
 that one website-only sentence in `preview_summaries[tag]`. Never duplicate the
 other page's reviewed teaser merely to provide the rollup summary.
 
+The top-level prose fields are the stable/cumulative release notes for this file's
+version. A stable shipment with no changes after its RC therefore remains present
+in `data.shipments`, but needs no duplicate `release_teasers` entry; the stable
+release is represented by the page itself.
+
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
 `## HarfBuzzSharp X.Y.Z` section on this page, not a separate page. `data.harfbuzz`
-gives the version and `prs` — the product-facing PRs in this release that touched
-the HarfBuzz binding (internal build/test changes are filtered out). Summarise the
+gives the current version, the previous co-shipped version when known, and `prs` —
+the product-facing PRs in this release that touched the HarfBuzz binding (internal
+build/test changes are filtered out). Summarise the
 HarfBuzz-facing story in 1-2 sentences; the renderer adds the
 heading, the ❤️ credit and the PR links.
-- Required only when `data.harfbuzz.prs` is non-empty. When it is empty the renderer
-  writes "No HarfBuzzSharp binding changes shipped…" itself — set `harfbuzz_summary`
-  to `null`. When `data.harfbuzz` is absent (e.g. an unreleased head), omit it.
+- Required when `data.harfbuzz.prs` is non-empty or when `version` differs from
+  `previous_version`. When neither changed, set `harfbuzz_summary` to `null` and
+  the renderer writes the deterministic no-binding-changes sentence. When
+  `data.harfbuzz` is absent (e.g. an unreleased head), omit it.
 - Good: `"Adds variable-font shaping and an HBColor value type, and refreshes the bundled HarfBuzz to 8.3.0."`
 - Bad: re-listing every PR, or repeating the SkiaSharp highlights verbatim.
 

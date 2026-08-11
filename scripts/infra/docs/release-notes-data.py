@@ -284,6 +284,17 @@ def load_co_release_map():
     return _CO_RELEASE_MAP
 
 
+def harfbuzz_summary_required(harfbuzz):
+    # type: (Optional[dict]) -> bool
+    """Whether the prose must explain this line's HarfBuzz-facing change."""
+    if not harfbuzz:
+        return False
+    if harfbuzz.get("prs"):
+        return True
+    previous = harfbuzz.get("previous_version")
+    return bool(previous and previous != harfbuzz.get("version"))
+
+
 def _sha256_bytes(data):
     # type: (bytes) -> str
     """``sha256:<hex>`` digest of raw bytes (companion-file content key, §4.7)."""
@@ -2327,7 +2338,7 @@ def _cumulative_prose_valid(data, prose):
         if not isinstance(website_summary, str) or not website_summary.strip():
             return False
     harfbuzz = data.get("harfbuzz") or {}
-    if harfbuzz.get("prs"):
+    if harfbuzz_summary_required(harfbuzz):
         summary = prose.get("harfbuzz_summary")
         if not isinstance(summary, str) or not summary.strip():
             return False
@@ -2696,7 +2707,8 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # are the PRs in this same window that touched HarfBuzz paths (a subset of the
     # page's PRs, so their details already live in the shared PR map).
     harfbuzz = None
-    hb_line = load_co_release_map().get(version)
+    co_release_map = load_co_release_map()
+    hb_line = co_release_map.get(version)
     if not is_head and hb_line:
         hb_prs = get_prs_from_diff(from_ref, to_ref, paths=HARFBUZZ_PATHSPECS)
         harfbuzz = {
@@ -2732,6 +2744,10 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         if ce and ce.get("compare_to"):
             base_version = ce["compare_to"]
     preview_milestones = collect_preview_milestones(version, base_version)
+    if harfbuzz and base_version:
+        previous_hb_line = co_release_map.get(base_version)
+        if previous_hb_line:
+            harfbuzz["previous_version"] = previous_hb_line
 
     # Publication is exact-tag scoped even though the website page is cumulative.
     # Keep every build tag and its own predecessor/delta; never collapse re-tags.

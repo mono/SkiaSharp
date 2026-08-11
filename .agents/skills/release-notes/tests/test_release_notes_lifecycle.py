@@ -237,6 +237,42 @@ class ShipmentCollectionTests(unittest.TestCase):
 
 
 class TeaserValidationAndRenderingTests(unittest.TestCase):
+    def test_harfbuzz_version_change_requires_authored_summary(self):
+        data = page_data([])
+        data["harfbuzz"] = {
+            "version": "14.2.1",
+            "previous_version": "14.2.0",
+            "prs": [],
+        }
+        prose = cumulative_prose({})
+
+        errors = RENDER.validate(data, prose)
+        self.assertTrue(any("changes HarfBuzz" in error for error in errors))
+
+        prose["harfbuzz_summary"] = (
+            "Updates the bundled HarfBuzz from 14.2.0 to 14.2.1."
+        )
+        self.assertFalse(any(
+            "changes HarfBuzz" in error
+            for error in RENDER.validate(data, prose)
+        ))
+        self.assertIn(prose["harfbuzz_summary"], RENDER.render(data, prose))
+
+    def test_unchanged_harfbuzz_uses_narrow_deterministic_statement(self):
+        data = page_data([])
+        data["harfbuzz"] = {
+            "version": "14.2.1",
+            "previous_version": "14.2.1",
+            "prs": [],
+        }
+        prose = cumulative_prose({})
+
+        self.assertNotIn(
+            "same HarfBuzz as the previous line",
+            RENDER.render(data, prose),
+        )
+        self.assertIn(RENDER.NO_CHANGES_BODY, RENDER.render(data, prose))
+
     def test_preview_uses_exact_teaser_website_summary(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
@@ -576,6 +612,21 @@ class PreservationLifecycleTests(unittest.TestCase):
         value["categories"][0]["bullets"][0]["prs"] = [101, 101, "bad"]
         errors = DATA.validate_release_teaser(item, value)
         self.assertTrue(any("positive integers" in error for error in errors))
+
+
+class ApiDiffLifecycleTests(unittest.TestCase):
+    def test_scoped_rebuild_clears_shared_line_once(self):
+        source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
+        tracker = source.index("var clearedLineDirs = new HashSet<string>")
+        package_loop = source.index("foreach (var id in TRACKED_NUGETS.Keys)")
+        clear_guard = source.index("clearedLineDirs.Add (lineDir.FullPath)")
+        clear_call = source.index(
+            "ClearGeneratedApiDiffsIn (lineDir.FullPath)", clear_guard
+        )
+
+        self.assertLess(tracker, package_loop)
+        self.assertLess(package_loop, clear_guard)
+        self.assertLess(clear_guard, clear_call)
 
 
 if __name__ == "__main__":
