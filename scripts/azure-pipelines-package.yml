@@ -55,12 +55,8 @@ parameters:
     displayName: 'Sign NuGets from an existing package build ID (0 runs the normal pipeline)'
     type: number
     default: 0
-  - name: realSigning
-    displayName: 'Use ESRP real signing for a signing-only run'
-    type: boolean
-    default: false
-  - name: signingValidationOnly
-    displayName: 'Delete real-signed outputs and intentionally fail after validation'
+  - name: forceRealSigning
+    displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
     default: false
   - name: testsPipelineId
@@ -127,6 +123,7 @@ extends:
           parameters:
             buildPipelineType: 'package'
             enableSigning: ${{ parameters.enableSigning }}
+            forceRealSigning: ${{ parameters.forceRealSigning }}
             use1ESPipelineTemplates: true
             buildAgentHost: ${{ parameters.buildAgentHost }}
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
@@ -194,5 +191,8 @@ extends:
             buildAgent: ${{ parameters.buildAgentWindows }}
             dependsOn: []
             sourceBuildId: ${{ parameters.signingSourceBuildId }}
-            useRealSigning: ${{ parameters.realSigning }}
-            validationOnly: ${{ parameters.signingValidationOnly }}
+            forceRealSigning: ${{ parameters.forceRealSigning }}
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+              useRealSigning: true
+            ${{ else }}:
+              useRealSigning: false
