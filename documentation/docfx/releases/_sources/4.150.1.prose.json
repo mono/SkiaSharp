@@ -1,21 +1,30 @@
 {
-  "theme": "Upstream bug-fix servicing",
-  "highlights_headline": "SkiaSharp 4.150.1 is a servicing release with two rounds of upstream Skia m150 bug fixes.",
-  "highlights_body": null,
+  "theme": "Skia m150 engine fixes",
+  "highlights_headline": "SkiaSharp 4.150.1 brings two upstream correctness fixes to the m150 engine.",
+  "highlights_body": "It fixes corrupt serialized text handling and stencil-area validation for clipped render passes.",
   "breaking": [],
   "categories": [
     {
-      "heading": "Engine",
+      "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "Two rounds of chrome/m150 upstream bug fixes",
-          "detail": "Two upstream bug-fix syncs from the chrome/m150 branch have been applied, pulling in stability and correctness improvements from the Skia team.",
-          "prs": [4379, 4429]
+          "lead": "Corrupt serialized text is handled safely",
+          "detail": "Corrects destruction ordering in the GPU text allocator to prevent use-after-free and double-free behavior when a corrupt Slug buffer is rejected.",
+          "prs": [
+            4379
+          ]
+        },
+        {
+          "lead": "Clipped render-pass stencil bounds are validated",
+          "detail": "Includes the upstream m150 fix that checks clipped render-pass bounds against the cleared stencil area.",
+          "prs": [
+            4429
+          ]
         }
       ]
     }
   ],
   "contributor_summaries": {},
-  "preview_summaries": {},
-  "harfbuzz_summary": "HarfBuzzSharp 14.2.1.1 ships with this release with no API changes."
+  "release_summaries": {},
+  "harfbuzz_summary": "Ships HarfBuzzSharp 14.2.1.1 alongside the SkiaSharp 4.150.1 servicing release."
 }

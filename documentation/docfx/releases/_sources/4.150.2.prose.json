@@ -1,0 +1,32 @@
+{
+  "theme": "Ganesh correctness fixes",
+  "highlights_headline": "SkiaSharp 4.150.2 refreshes the m150 engine with Ganesh and SkSL correctness fixes.",
+  "highlights_body": "The update addresses stale GPU readbacks, failed resolve and flush handling, framebuffer cleanup, and RasterPipeline code generation.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh failure handling is more reliable",
+          "detail": "Failed flushes no longer return stale texture readbacks, and failed resolve tasks restore MSAA and mipmap dirty tracking.",
+          "prs": [
+            4517,
+            4561
+          ]
+        },
+        {
+          "lead": "GPU and shader engine fixes are included",
+          "detail": "Updates framebuffer deletion behavior for Imagination GPUs and fixes a use-after-free in SkSL RasterPipeline code generation.",
+          "prs": [
+            4561,
+            4663
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "release_summaries": {},
+  "harfbuzz_summary": "Ships HarfBuzzSharp 14.2.1.2 alongside the SkiaSharp 4.150.2 servicing release."
+}
