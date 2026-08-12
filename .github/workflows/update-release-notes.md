@@ -430,7 +430,7 @@ make no edits, run no git, and exit — no PR is created.)
 ## agent: `release-page-writer`
 ---
 description: Authors and validates one release-notes prose file from one complete context
-model: inherited
+model: gpt-5.6-sol
 ---
 You own exactly one context path supplied by the parent. Follow the repository's
 `release-notes` skill. Read that context from beginning to end, using ranges when
