@@ -1,17 +1,57 @@
 {
   "theme": "Opens the v4 line",
   "highlights_headline": "SkiaSharp 4.147.0 opens the v4 line on Skia m147 with variable fonts and animated WebP encoding.",
-  "highlights_body": "The engine jumps from milestone 132 all the way to 147, bringing variable font support end-to-end (SkiaSharp and HarfBuzzSharp), color font palettes, animated WebP encoding, and new sampling options on surface draws. Tizen picks up x64/arm64 and Linux Bionic joins the supported native asset set.",
+  "highlights_body": "It adds color font palettes, explicit sampling for surface draws, and new Linux Bionic and 64-bit Tizen assets. This preview also carries breaking engine, font, Vulkan, stream, WASM, and platform changes from the move beyond v3.",
   "breaking": [
     {
-      "title": "GrVkYcbcrConversionInfo renamed to GRVkYcbcrConversionInfo",
-      "body": "The Vulkan YCbCr conversion info struct now follows the SkiaSharp `GR` casing convention. Update any reference and rebuild \u2014 the old name and its IEquatable/Equals/== operators are gone.",
-      "prs": []
+      "title": "SKFont() now uses SKTypeface.Empty",
+      "body": "A parameterless `SKFont` no longer resolves the platform default at draw time: its typeface is empty, measurements return zero, and text is not drawn. Construct it with `new SKFont(SKTypeface.Default)` and use `font.Typeface.IsEmpty` instead of a null check.",
+      "prs": [
+        3730
+      ]
     },
     {
-      "title": "Assembly version bumped to 4.x",
-      "body": "SkiaSharp.dll now reports assembly version 4.147.0.0 (up from 3.119.0.0). Consumers with strong-name binding redirects or hard-coded version checks must be updated. Review the linked API-diff report before upgrading.",
-      "prs": []
+      "title": "SKPaint.Typeface and missing-family fallback semantics changed",
+      "body": "A new `SKPaint` now exposes `SKTypeface.Default` instead of null, and `SKTypeface.FromFamilyName` returns the default face for missing families on every platform. Remove paint typeface null checks; use `SKFontManager.Default.MatchFamily` when a missing family must return null.",
+      "prs": [
+        3730
+      ]
+    },
+    {
+      "title": "SKStream.Move(long) now validates the 32-bit native range",
+      "body": "The `long` overload is obsolete and throws `OverflowException` instead of silently truncating offsets outside the native 32-bit range. Validate the value and call `Move(int)`.",
+      "prs": [
+        3714
+      ]
+    },
+    {
+      "title": "Vulkan YCbCr conversion types and layout changed",
+      "body": "`GRVkImageInfo.YcbcrConversionInfo` now uses `GRVkYcbcrConversionInfo`; the old `GrVkYcbcrConversionInfo` loses value equality, and the native layout replaces `FormatFeatures` while adding `Components` and filter fields. Update type references, comparisons, and manual interop initialization.",
+      "prs": [
+        4001
+      ]
+    },
+    {
+      "title": "WASM native assets now require .NET 8",
+      "body": "Native assets for pre-.NET 8 Emscripten versions are removed. Blazor WASM and Uno Platform WASM projects targeting .NET 6 or .NET 7 now fail at build time; upgrade the WASM target to .NET 8 or later.",
+      "prs": [
+        4022
+      ]
+    },
+    {
+      "title": "Tizen 32-bit native assets removed",
+      "body": "The Skia m147 transition removes the EOL Tizen arm and x86 native builds. Move deployments to the new `tizen-arm64` or `tizen-x64` assets.",
+      "prs": [
+        3702,
+        3620
+      ]
+    },
+    {
+      "title": "Assembly version advanced to 4.x",
+      "body": "`SkiaSharp.dll` now reports assembly version 4.147.0.0 instead of 3.119.0.0. Update strong-name binding redirects and hard-coded version checks.",
+      "prs": [
+        3702
+      ]
     }
   ],
   "categories": [
@@ -19,8 +59,8 @@
       "heading": "Engine",
       "bullets": [
         {
-          "lead": "Skia updated to milestone m147",
-          "detail": "The bundled engine advances through m132, m133 and lands on m147, picking up every upstream fix and feature between the two lines.",
+          "lead": "Skia advances through m132, m133, and m147",
+          "detail": "The bundled engine brings the v4 line current with upstream, including CICP color-space creation for H.273 and HDR workflows.",
           "prs": [
             3560,
             3660,
@@ -29,24 +69,21 @@
         },
         {
           "lead": "Variable fonts and color font palettes",
-          "detail": "Variable font support is wired through SkiaSharp and HarfBuzzSharp, and SKFont/SKTypeface gain color font palette selection and hardened variable-font handling.",
+          "detail": "SkiaSharp and HarfBuzzSharp expose variation axes, named instances, typeface cloning, palette selection, and per-color overrides.",
           "prs": [
             3703,
             3742
           ]
         },
         {
-          "lead": "Managed default typeface resolution",
-          "detail": "Default typeface lookup moves to the managed layer, fixing #3693 and letting consumers observe/override the fallback without a native round-trip.",
+          "lead": "Bundled codec and font dependencies refreshed",
+          "detail": "The release updates libpng to 1.6.58, libexpat to 2.7.5, zlib to 1.3.2.1-motley, FreeType to 2.14.3, and libjpeg-turbo to 3.1.4.1.",
           "prs": [
-            3730
-          ]
-        },
-        {
-          "lead": "Legacy font manager entry point restored",
-          "detail": "The Skia shim regains `sk_fontmgr_legacy_create_typeface`, so downstream code depending on the legacy typeface factory works again.",
-          "prs": [
-            3744
+            3717,
+            3718,
+            3720,
+            3726,
+            4012
           ]
         }
       ]
@@ -55,29 +92,29 @@
       "heading": "API Surface",
       "bullets": [
         {
-          "lead": "SKSamplingOptions on SKSurface.Draw and SKCanvas.DrawSurface",
-          "detail": "New overloads accept SKSamplingOptions so callers can pick the mipmap and filter mode for surface-to-surface draws instead of the implicit default.",
+          "lead": "SKSamplingOptions for surface draws",
+          "detail": "`SKSurface.Draw` and `SKCanvas.DrawSurface` gain overloads that let callers choose filtering and mipmap behavior explicitly.",
           "prs": [
             3491
           ]
         },
         {
-          "lead": "SKStream.GetData() for zero-copy conversion",
-          "detail": "Turn any seekable stream into an SKData without an intermediate byte[] copy \u2014 useful when handing decoded assets to codecs and shaders.",
-          "prs": [
-            3772
-          ]
-        },
-        {
           "lead": "Animated WebP encoding",
-          "detail": "SKWebpEncoder can now emit animated WebP files from a frame sequence, closing a long-standing gap next to the existing decoder.",
+          "detail": "`SKWebpEncoder` can encode a span of pixmap-and-duration frames into an animated WebP.",
           "prs": [
             3771
           ]
         },
         {
-          "lead": "HBColor struct and missing HarfBuzz wrappers",
-          "detail": "HarfBuzzSharp gets a proper `HBColor` struct (matching `hb_color_t`) and fills in wrappers that had been missing or mis-named \u2014 a step toward full API coverage.",
+          "lead": "SKStream.GetData() fast path",
+          "detail": "Memory-backed streams can return their ref-counted `SKData` directly without copying; unsupported stream types return null.",
+          "prs": [
+            3772
+          ]
+        },
+        {
+          "lead": "New document, GPU, mask filter, and HarfBuzz APIs",
+          "detail": "Adds XPS document options, per-resource GPU flushes, shader-backed mask filters, `HBColor`, and missing HarfBuzz wrappers.",
           "prs": [
             4000,
             4001
@@ -89,15 +126,30 @@
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "SKPath finalizer crash when SKPathBuilder collected first",
-          "detail": "A GC ordering bug that could crash on finalization when an SKPathBuilder was collected before the SKPath it produced is fixed.",
+          "lead": "Variable-font spans and glyph checks corrected",
+          "detail": "Undersized variation buffers now report and copy the correct values, while `SKTypeface.ContainsGlyphs` no longer recurses until a stack overflow.",
+          "prs": [
+            3742
+          ]
+        },
+        {
+          "lead": "SKPath finalizer crash fixed",
+          "detail": "Disposal no longer flushes a builder after finalization begins, preventing a native crash when `SKPathBuilder` is collected before its `SKPath`.",
           "prs": [
             3796
           ]
         },
         {
-          "lead": "Android SKGLView blank after MAUI TabBar switch",
-          "detail": "Switching tabs in a MAUI TabBar no longer leaves SKGLView blank; the GL surface is now correctly re-attached after the view is re-added to the tree.",
+          "lead": "Default typeface startup crash fixed",
+          "detail": "Default face resolution moves to the managed font manager and falls back to `SKTypeface.Empty`, avoiding the Android API 36 null dereference.",
+          "prs": [
+            3730,
+            3744
+          ]
+        },
+        {
+          "lead": "Android SKGLView survives MAUI tab switches",
+          "detail": "A reattached `SKGLView` starts its GL thread with the current dimensions instead of remaining on a zero-sized surface.",
           "prs": [
             3076
           ]
@@ -108,63 +160,66 @@
       "heading": "Platform",
       "bullets": [
         {
-          "lead": "Tizen picks up x64 and arm64 native builds",
-          "detail": "Tizen ships alongside the existing x86/arm slices, so consumers on 64-bit Tizen devices no longer have to fall back to emulation.",
-          "prs": [
-            3620
-          ]
-        },
-        {
           "lead": "Linux Bionic native assets",
-          "detail": "Android-hosted Linux (`linux-bionic`) is a first-class native target \u2014 the runtime identifier now resolves to purpose-built binaries instead of the desktop-glibc build.",
+          "detail": "Dedicated x64 and arm64 `linux-bionic` binaries support Linux environments built on the Android NDK libc.",
           "prs": [
             3217
           ]
         },
         {
-          "lead": "Apple TFM alignment",
-          "detail": "Libraries target the versioned Apple TFMs (26.0) while sample apps use the unversioned ones, matching current .NET SDK guidance and unblocking MAUI-style consumers.",
+          "lead": "Tizen gains x64 and arm64",
+          "detail": "The package adds the official `tizen-x64` and `tizen-arm64` runtime assets.",
           "prs": [
-            3798
+            3620
           ]
         },
         {
-          "lead": "WASM drops pre-.NET 8 Emscripten builds",
-          "detail": "Native builds for pre-.NET 8 Emscripten versions are removed \u2014 .NET 8 is the floor for the SkiaSharp WASM runtime asset.",
+          "lead": "Apple target frameworks realigned",
+          "detail": "Libraries target the base 26.0 Apple workloads while apps use unversioned TFMs, avoiding an unnecessary Xcode 26.2 requirement.",
           "prs": [
-            4022
-          ]
-        }
-      ]
-    },
-    {
-      "heading": "Security",
-      "bullets": [
-        {
-          "lead": "Bundled native dependencies refreshed",
-          "detail": "libexpat 2.7.5, libpng 1.6.58, zlib 1.3.2.1-motley, freetype 2.14.3 and libjpeg-turbo 3.1.4.1 all pick up their latest upstream security and bug fixes.",
-          "prs": [
-            3717,
-            3718,
-            3720,
-            3726,
-            4012
+            3798
           ]
         }
       ]
     }
   ],
   "contributor_summaries": {
-    "ramezgerges": "The Skia m132/m147 bumps, variable font support end-to-end, the managed default-typeface fix, and the SKPath/SKPathBuilder finalizer crash fix",
-    "4Darmygeometry": "Linux Bionic native assets and PolySharp-based C# 13 support on legacy TFMs",
-    "ebariche": "Uno-side sample and integration fixes",
-    "sasakrsmanovic": "Sample and infrastructure fixes",
-    "SimonvBez": "Fixed SKGLView not rendering after MAUI TabBar tab switches on Android"
+    "4Darmygeometry": "Linux Bionic native assets and C# 13 support for legacy target frameworks",
+    "ramezgerges": "Skia milestone updates, variable fonts, managed default typefaces, and the SKPath finalizer fix",
+    "SimonvBez": "Android SKGLView rendering after MAUI TabBar switches"
   },
-  "preview_summaries": {
-    "v4.147.0-preview.1.1": "Preview 1 opened the v4 line: Skia m132 \u2192 m133 \u2192 m147, variable fonts, color font palettes, SKSamplingOptions on surface draws, the managed default-typeface fix, Tizen x64/arm64, Linux Bionic, and dependency refreshes for libpng/libexpat.",
-    "v4.147.0-preview.2.1": "Preview 2 added animated WebP encoding, zero-copy `SKStream.GetData()`, the SKPath finalizer crash fix, and the Apple TFM realignment.",
-    "v4.147.0-preview.3.1": "Preview 3 finished the API pass with HBColor and missing HarfBuzz wrappers, dropped native WASM builds for pre-.NET 8 Emscripten, and picked up freetype 2.14.3, zlib 1.3.2.1-motley and libjpeg-turbo 3.1.4.1."
+  "release_summaries": {
+    "v4.147.0-preview.1.1": {
+      "summary": "Opens the v4 line with Skia m147, variable fonts, color font palettes, explicit surface sampling, and new Linux Bionic and 64-bit Tizen assets.",
+      "prs": [
+        3702,
+        3703,
+        3742,
+        3491,
+        3217,
+        3620
+      ]
+    },
+    "v4.147.0-preview.2.1": {
+      "summary": "Adds animated WebP encoding and `SKStream.GetData()`, fixes the SKPath finalizer crash, and realigns Apple target frameworks.",
+      "prs": [
+        3771,
+        3772,
+        3796,
+        3798
+      ]
+    },
+    "v4.147.0-preview.3.1": {
+      "summary": "Adds `HBColor` and missing wrappers, raises WASM native assets to .NET 8, and refreshes bundled codec and font dependencies.",
+      "prs": [
+        4000,
+        4001,
+        4022,
+        4012,
+        3726,
+        3720
+      ]
+    }
   },
-  "harfbuzz_summary": "Adds an HBColor value type, variable-font shaping and color-palette support, and refreshes the bundled HarfBuzz to 8.3.1.6."
+  "harfbuzz_summary": "Adds variable-font shaping, color font palette APIs, and the `HBColor` value type, while extending native assets to Linux Bionic and 64-bit Tizen."
 }
