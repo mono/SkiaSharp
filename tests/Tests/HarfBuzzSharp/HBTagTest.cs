@@ -99,5 +99,68 @@ namespace HarfBuzzSharp.Tests
 		{
 			Assert.NotEqual (0xDEADBEEFu, (uint)Tag.Parse ("wght"));
 		}
+
+		// The verbatim ORIGINAL shipped ToString() body — the oracle. The optimized
+		// implementation (a stackalloc buffer instead of the char-boxing string.Concat
+		// on the general path) must agree with this exactly across every value.
+		private static string OldToString (uint value)
+		{
+			if (value == (uint)Tag.None)
+				return nameof (Tag.None);
+			if (value == (uint)Tag.Max)
+				return nameof (Tag.Max);
+			if (value == (uint)Tag.MaxSigned)
+				return nameof (Tag.MaxSigned);
+
+			return string.Concat (
+				(char)(byte)(value >> 24),
+				(char)(byte)(value >> 16),
+				(char)(byte)(value >> 8),
+				(char)(byte)value);
+		}
+
+		[Theory]
+		[InlineData (0x77676874u, "wght")]
+		[InlineData (0x77647468u, "wdth")]
+		[InlineData (0x6C696761u, "liga")]
+		[InlineData (0x6B65726Eu, "kern")]
+		[InlineData (0x47535542u, "GSUB")]
+		[InlineData (0x4F532F32u, "OS/2")]
+		[InlineData (0x61202020u, "a   ")]
+		[InlineData (0x61622020u, "ab  ")]
+		[InlineData (0x090D0A20u, "\t\r\n ")]
+		[InlineData (0xE9E9FF7Au, "\u00e9\u00e9\u00ffz")]
+		public void ToStringProducesExpectedValue (uint value, string expected)
+		{
+			var tag = (Tag)value;
+			// Optimized ToString matches the precomputed constant.
+			Assert.Equal (expected, tag.ToString ());
+			// And agrees with the original shipped algorithm (the oracle).
+			Assert.Equal (OldToString (value), tag.ToString ());
+		}
+
+		// The special-cased named values must still round-trip to their names, and the
+		// optimized general path must not accidentally swallow them.
+		[Theory]
+		[InlineData ("None")]
+		[InlineData ("Max")]
+		[InlineData ("MaxSigned")]
+		public void ToStringNamedValuesMatchOracle (string name)
+		{
+			var tag = name switch {
+				"None" => Tag.None,
+				"Max" => Tag.Max,
+				_ => Tag.MaxSigned,
+			};
+			Assert.Equal (name, tag.ToString ());
+			Assert.Equal (OldToString ((uint)tag), tag.ToString ());
+		}
+
+		// Guards the ToString oracle: a deliberately-wrong expected value must fail.
+		[Fact]
+		public void ToStringOracleCatchesWrongResult ()
+		{
+			Assert.NotEqual ("XXXX", ((Tag)0x77676874u).ToString ());
+		}
 	}
 }
