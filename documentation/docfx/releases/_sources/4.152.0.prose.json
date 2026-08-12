@@ -1,0 +1,85 @@
+{
+  "theme": "Graphite and Vulkan expansion",
+  "highlights_headline": "SkiaSharp 4.152.0 Preview 1 adds Graphite GPU backends and broadens Vulkan integration.",
+  "highlights_body": "It also introduces backend-neutral async pixel readback, updates the bundled engine to Skia m152, and adds FreeType font loading for Nano Server. Lifetime fixes protect region iterators and pixmap views, while targeted hot-path improvements reduce reflection, copying, encoding, and uniform-setup overhead.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia advances to Chrome milestone m152",
+          "detail": "Updates the bundled engine and VulkanMemoryAllocator while retaining the Vulkan allocator fallback required by SkiaSharp callers.",
+          "prs": [4651]
+        },
+        {
+          "lead": "Font rendering and Ganesh stability improve",
+          "detail": "Includes upstream m151 fixes for font rendering and stale Ganesh texture readbacks when pending render tasks fail to flush.",
+          "prs": [4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backends arrive",
+          "detail": "Adds contexts, recorders, recordings, textures, image caching, and backend integrations for Vulkan, Metal, and Dawn, including browser WebGPU.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Asynchronous pixel readback becomes backend-neutral",
+          "detail": "Adds RequestReadPixels APIs to SKImage and SKSurface, callback-scoped read results, rescaling options, and Ganesh async-work completion.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Silk.NET Vulkan integration is available",
+          "detail": "Adds the SkiaSharp.Vulkan.Silk.NET package for cross-platform Vulkan setup and makes the GRVkExtensions constructor public.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Nano Server can render explicitly loaded fonts",
+          "detail": "Uses the bundled FreeType font manager so typefaces loaded from streams, data, or files render without DirectWrite.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Native-backed views keep their sources alive",
+          "detail": "Region iterators and derived pixmaps retain the source memory they reference, preventing use-after-free failures after collection.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "Failed raster image creation releases its pixel buffer",
+          "detail": "Frees unmanaged pixel memory when SKImage.Create cannot construct the native raster image.",
+          "prs": [4455]
+        },
+        {
+          "lead": "Managed hot paths do less work",
+          "detail": "Speeds up SKData.SaveTo, native-object wrapping, null-terminated text encoding, and runtime-effect uniform setup by removing repeated copying, reflection, and resizing.",
+          "prs": [4550, 4630, 4498, 4512]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType-backed font support for Nano Server",
+    "mmitche": "Faster Windows native builds through one-time MSVC environment initialization",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {
+      "summary": "Adds Graphite GPU backends for Vulkan, Metal, and Dawn, plus backend-neutral asynchronous pixel readback for SKImage and SKSurface. Introduces the cross-platform SkiaSharp.Vulkan.Silk.NET package and enables explicitly loaded fonts on Nano Server through FreeType. Updates the bundled engine to Skia m152 with font-rendering and Ganesh stability fixes. Region iterators and derived pixmaps now retain their native data sources, failed raster image creation frees its pixel buffer, and managed hot paths reduce copying, reflection, encoding, and uniform-setup overhead.",
+      "prs": [3968, 4545, 4527, 4280, 4651, 4568, 4538, 4355, 4558, 4455, 4550, 4630, 4498, 4512]
+    }
+  },
+  "harfbuzz_summary": "Co-ships HarfBuzzSharp 14.2.1 with no HarfBuzz-facing product changes in this release."
+}
