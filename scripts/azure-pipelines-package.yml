@@ -47,10 +47,6 @@ parameters:
     displayName: 'Run API Scan'
     type: boolean
     default: false
-  - name: signingSourceBuildId
-    displayName: 'Sign NuGets from an existing package build ID (0 runs the normal pipeline)'
-    type: number
-    default: 0
   - name: forceRealSigning
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
@@ -114,27 +110,23 @@ extends:
         enabled: true
         configFile: $(Build.SourcesDirectory)/scripts/infra/security/tsaoptions-v2.json
     stages:
-      - ${{ if eq(parameters.signingSourceBuildId, 0) }}:
-        - template: /scripts/azure-templates-stages.yml@self
-          parameters:
-            buildPipelineType: 'package'
-            enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
-            forceRealSigning: ${{ parameters.forceRealSigning }}
-            buildAgentHost: ${{ parameters.buildAgentHost }}
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
-            buildAgentMac: ${{ parameters.buildAgentMac }}
-            buildAgentLinux: ${{ parameters.buildAgentLinux }}
-      - ${{ if and(eq(parameters.signingSourceBuildId, 0), or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))))) }}:
+      - template: /scripts/azure-templates-stages.yml@self
+        parameters:
+          buildPipelineType: 'package'
+          enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
+          forceRealSigning: ${{ parameters.forceRealSigning }}
+          buildAgentHost: ${{ parameters.buildAgentHost }}
+          buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentMac: ${{ parameters.buildAgentMac }}
+          buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
       - stage: trigger_tests
         displayName: Trigger Tests
-        ${{ if eq(parameters.signingSourceBuildId, 0) }}:
-          dependsOn: package
-        ${{ else }}:
-          dependsOn: []
-        condition: and(${{ eq(parameters.signingSourceBuildId, 0) }}, succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/dnceng-pipelines'))
+        dependsOn: package
+        condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/dnceng-pipelines'))
         jobs:
           - job: trigger_tests
             displayName: Trigger Tests
@@ -179,15 +171,3 @@ extends:
                 displayName: Queue tests with current package artifacts
                 env:
                   SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-      - ${{ if ne(parameters.signingSourceBuildId, 0) }}:
-        - template: /scripts/azure-templates-stages-signing.yml@self
-          parameters:
-            buildAgent: ${{ parameters.buildAgentWindows }}
-            dependsOn: []
-            sourceBuildId: ${{ parameters.signingSourceBuildId }}
-            forceRealSigning: ${{ parameters.forceRealSigning }}
-            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-              useRealSigning: true
-            ${{ else }}:
-              useRealSigning: false
