@@ -1018,9 +1018,9 @@ version and never deduplicated. Each shipment records:
 - `changelog_url`.
 - `prs` — the ordered exact delta from `previous_tag` to `tag`.
 
-The exact delta is the authority for Preview/RC summary grounding. A stable
-summary represents the complete release line and may cite important PRs from the
-page's cumulative facts, including work first published in previews and RCs.
+The exact delta is the authority for every Preview, RC, and stable summary.
+Every cited PR must belong to that shipment; a stable tag does not borrow PRs
+from previews or RCs.
 
 When a released page rolls up several prerelease tags, `release_notes/generate.py` groups the PRs
 into **per-preview buckets**: each PR is assigned by git ancestry to the **earliest
@@ -1161,10 +1161,10 @@ principles are fixed here.
    sets the field to `null`/omits it and the renderer omits an empty narrative.
 6. **Exact release summaries are evergreen and shared.** Every Preview, RC, and
    stable tag has `release_summaries[tag]`. The same fuller introduction renders
-   in the website's exact-release section and the managed GitHub Release body.
-   Prerelease PR citations are limited to the exact delta; a stable summary may
-   cite important PRs from the cumulative line. The top-level Highlights remain a
-   shorter cumulative overview of the whole line.
+   in the website's exact-release section and is available to the managed GitHub
+   Release updater. Every summary and cited PR is limited to that tag's exact
+   delta, including stable. A stable tag with no post-RC changes says so with an
+   empty PR list. Top-level Highlights remain the cumulative overview of the line.
 
 #### API-diff link rule
 

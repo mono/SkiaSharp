@@ -458,10 +458,6 @@ def _finish_validate(errors, data, prose):
     if prev_dups:
         errors.append("duplicate preview keys (data.json bug — keys must be unique "
                       "per preview): " + ", ".join(prev_dups))
-    all_page_prs = {
-        int(number)
-        for number in (data.get("prs") or {})
-    }
     scopes = {
         preview["key"]: set(preview.get("prs") or [])
         for preview in data.get("previews") or []
@@ -471,11 +467,7 @@ def _finish_validate(errors, data, prose):
         tag = shipment.get("tag")
         if not tag:
             continue
-        scopes[tag] = (
-            all_page_prs
-            if shipment.get("channel") == "stable"
-            else set(shipment.get("prs") or [])
-        )
+        scopes[tag] = set(shipment.get("prs") or [])
 
     releases = prose.get("release_summaries") or {}
     breaking_refs = {

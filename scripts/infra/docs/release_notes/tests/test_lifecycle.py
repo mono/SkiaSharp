@@ -503,16 +503,9 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
 
     def test_stable_summary_uses_exact_release_summary(self):
         item = shipment(
-            "v4.151.0", [], channel="stable", previous="v4.151.0-rc.1.1"
+            "v4.151.0", [101], channel="stable", previous="v4.151.0-rc.1.1"
         )
         data = page_data([item])
-        data["prs"]["101"] = {
-            "url": "https://github.com/mono/SkiaSharp/pull/101",
-            "title": "Release feature",
-            "author": "contributor",
-            "community": True,
-            "tag": "product",
-        }
         prose = cumulative_prose({
             item["tag"]: release_summary(
                 [101],
@@ -525,6 +518,30 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         self.assertIn("#101", text)
         self.assertIn("1 pull request · 1 consumer-facing", text)
         self.assertIn("## Stable", RENDER.render(data, prose))
+
+    def test_stable_summary_cannot_borrow_prs_from_earlier_builds(self):
+        item = shipment(
+            "v4.151.0", [], channel="stable", previous="v4.151.0-rc.1.1"
+        )
+        data = page_data([item])
+        data["prs"]["101"] = {
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "title": "Earlier RC feature",
+            "author": "contributor",
+            "community": True,
+            "tag": "product",
+        }
+        prose = cumulative_prose({
+            item["tag"]: release_summary(
+                [101],
+                summary="Finalizes the stable release.",
+            ),
+        })
+
+        self.assertTrue(any(
+            "outside its exact scope: #101" in error
+            for error in RENDER.validate(data, prose)
+        ))
 
     def test_release_summary_rejects_unsupported_data_format(self):
         item = shipment("v4.151.0", [], channel="stable")

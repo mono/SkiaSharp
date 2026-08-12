@@ -114,7 +114,7 @@
     },
     "release_summaries": {
       "type": "object",
-      "description": "Evergreen present-tense summaries keyed by every exact leading-v Preview, RC, and stable tag. Each summary is rendered on the website and used as the official GitHub Release introduction.",
+      "description": "Evergreen present-tense summaries keyed by every exact leading-v Preview, RC, and stable tag. Each describes only that tag's delta and is rendered on the website and available to the GitHub Release updater.",
       "propertyNames": {
         "pattern": "^v[0-9]+(?:\\.[0-9]+){2,3}(?:-(?:alpha|beta|preview|rc)(?:\\.[0-9]+)+)?$"
       },
@@ -130,11 +130,11 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 1000,
-            "description": "Three or four timeless present-tense sentences suitable for an official GitHub Release introduction. Aim for 80-130 words; small servicing releases may use 40-80 words. Stable summaries cover the complete stable release."
+            "description": "Three or four timeless present-tense sentences suitable for an official GitHub Release introduction. Aim for 80-130 words; small servicing or no-change releases may use 20-80 words. Describe only the exact tag delta."
           },
           "prs": {
             "type": "array",
-            "description": "The most relevant PRs grounding this summary. Prerelease numbers must belong to the exact delta; stable summaries may cite the full release line.",
+            "description": "The most relevant PRs grounding this summary. Every number must belong to the exact shipment delta.",
             "uniqueItems": true,
             "items": {
               "type": "integer"

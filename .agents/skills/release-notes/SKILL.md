@@ -255,18 +255,17 @@ numeric line and every published build. Each entry is:
 }
 ```
 
-Write three or four evergreen present-tense sentences suitable as the official
+Write three or four evergreen present-tense sentences suitable as an official
 GitHub Release introduction. Aim for 80-130 words while staying under the
-1,000-character schema cap; a small servicing release can be 40-80 words. Give
-enough context to preserve important features, fixes, migrations, and dependency
-changes without becoming a PR list.
+1,000-character schema cap; a small servicing or no-change release can be
+20-80 words. Give enough context to preserve important features, fixes,
+migrations, and dependency changes without becoming a PR list.
 
-For Preview/RC tags, describe that exact tag delta. For a stable tag, write a
-polished release introduction for the complete stable release, even when the
-stable tag has no commits after its RC. Stable `prs` may cite the important PRs
-from the whole release line; prerelease `prs` remain limited to their exact delta.
-This single summary is rendered on the website and copied to the official GitHub
-Release. Do not duplicate it in another prose field.
+Describe only that exact tag's delta for Preview, RC, and stable alike. Every
+`prs` entry must belong to that shipment. When stable has no product changes
+after its RC, say so plainly and use an empty `prs` array rather than repeating
+the full release line. This exact summary is rendered on the website and is
+available for the official GitHub Release.
 
 Breaking changes outrank ordinary fixes in an exact Preview/RC summary. When the
 tag's exact PR set contains PRs cited by the page's `breaking` entries, name those
@@ -277,9 +276,10 @@ appear in `prs` only when its change is actually described by the summary. Exclu
 source bodies that explicitly identify themselves as build-only, warning-only,
 with no API change and no behavioral change.
 
-The cumulative Highlights block and stable exact summary have different jobs:
-Highlights is the short page overview; the stable release summary is the fuller
-official release introduction.
+The cumulative Highlights block and exact-tag summaries have different jobs:
+Highlights describes the complete line; each release summary describes only what
+changed in that published build. The GitHub stable publication policy can choose
+between those sources later without losing either.
 
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
