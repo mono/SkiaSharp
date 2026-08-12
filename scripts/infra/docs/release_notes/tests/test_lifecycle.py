@@ -436,6 +436,24 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         )
         self.assertEqual(RENDER.validate(data, prose), [])
 
+    def test_harfbuzz_summary_is_rejected_without_harfbuzz_facts(self):
+        data = page_data([])
+        prose = cumulative_prose({})
+        prose["harfbuzz_summary"] = (
+            "Advances the HarfBuzzSharp package revision to 14.2.0.1."
+        )
+
+        errors = RENDER.validate(data, prose)
+
+        self.assertTrue(any(
+            "data.harfbuzz is absent" in error
+            for error in errors
+        ))
+        self.assertTrue(any(
+            "version values absent from data.harfbuzz: 14.2.0.1" in error
+            for error in errors
+        ))
+
     def test_unchanged_harfbuzz_omits_empty_narrative(self):
         data = page_data([])
         data["harfbuzz"] = {

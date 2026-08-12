@@ -563,6 +563,11 @@ def _finish_validate(errors, data, prose):
 
     hb = data.get("harfbuzz") or {}
     hb_summary = (prose.get("harfbuzz_summary") or "").strip()
+    if hb_summary and not hb:
+        errors.append(
+            "prose.harfbuzz_summary must be null or omitted when "
+            "data.harfbuzz is absent."
+        )
     if common.harfbuzz_summary_required(hb) and not hb_summary:
         errors.append(
             "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
@@ -575,7 +580,7 @@ def _finish_validate(errors, data, prose):
             if version
         }
         mentioned_versions = set(re.findall(
-            r"(?<![\w.])\d+\.\d+\.\d+(?:\.\d+)?(?![\w.])",
+            r"(?<![\w.])\d+\.\d+\.\d+(?:\.\d+)?(?!\w|\.\d)",
             hb_summary,
         ))
         unexpected_versions = sorted(mentioned_versions - allowed_versions)
