@@ -769,6 +769,21 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             source,
         )
 
+    def test_api_diff_markdown_is_normalized_before_commit(self):
+        source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
+        self.assertIn(
+            "NormalizeGeneratedMarkdown (indexPath)",
+            source,
+        )
+        self.assertIn(
+            "NormalizeGeneratedMarkdown (file)",
+            source,
+        )
+        self.assertIn(
+            "text.TrimEnd ('\\r', '\\n') + Environment.NewLine",
+            source,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

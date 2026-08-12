@@ -613,6 +613,15 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line, string release
     var text = $"{API_DIFF_MARKER} {line}{n}{n}{backLink}{body}";
     var indexPath = lineDir.CombineWithFilePath ("index.md");
     System.IO.File.WriteAllText (indexPath.FullPath, text);
+    NormalizeGeneratedMarkdown (indexPath);
+}
+
+void NormalizeGeneratedMarkdown (FilePath path)
+{
+    var text = System.IO.File.ReadAllText (path.FullPath);
+    System.IO.File.WriteAllText (
+        path.FullPath,
+        text.TrimEnd ('\r', '\n') + Environment.NewLine);
 }
 
 // Copy the generated diff markdown into a line folder: {lineDir}/{id}/{assembly}.md
@@ -639,6 +648,7 @@ void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
         ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
         ReplaceTextInFiles (mdFiles, "\r\r", "\r");
         foreach (var file in GetFiles (mdFiles)) {
+            NormalizeGeneratedMarkdown (file);
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
