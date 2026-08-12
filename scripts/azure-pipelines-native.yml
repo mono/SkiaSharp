@@ -80,16 +80,29 @@ extends:
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
+      armory:
+        break: true
       binskim:
         enabled: true
-        break: false
+        break: true
+      codeql:
+        compiled:
+          enabled: true
+        enabledOnNonDefaultBranches: true
       codeInspector:
         enabled: true
       credscan:
         enabled: true
+        break: true
+      eslint:
+        break: true
       policheck:
         enabled: true
+        break: true
         exclusionsFile: $(Build.SourcesDirectory)/scripts/infra/security/PoliCheckExclusions.xml
+      psscriptanalyzer:
+        enabled: true
+        break: true
       spotBugs:
         enabled: false
       suppression:
