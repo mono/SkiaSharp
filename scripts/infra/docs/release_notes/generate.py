@@ -262,6 +262,42 @@ def _base_version(from_ref: str, version: str) -> str | None:
     return entry.get("compare_to") if entry else None
 
 
+def _previous_co_release_version(
+    base_version: str | None,
+    supersedes: list[str],
+    co_releases: dict[str, str],
+) -> str | None:
+    candidates = [
+        candidate
+        for candidate in [base_version, *supersedes]
+        if candidate and co_releases.get(candidate)
+    ]
+    if not candidates:
+        return None
+    previous_line = max(candidates, key=common.version_key)
+    return co_releases[previous_line]
+
+
+def _harfbuzz_pr_numbers(prs: list[dict], path_prs: list[dict]) -> list[int]:
+    path_numbers = {
+        pr.get("number")
+        for pr in path_prs
+        if pr.get("number")
+    }
+    return [
+        pr["number"]
+        for pr in prs
+        if pr.get("number")
+        and (
+            pr["number"] in path_numbers
+            or common.has_harfbuzz_evidence(
+                pr.get("title") or "",
+                pr.get("body") or "",
+            )
+        )
+    ]
+
+
 def write_page(
     branch: str,
     all_branches: list[str],
@@ -327,12 +363,17 @@ def write_page(
             "api_diff_link": "harfbuzzsharp/{}/index.md".format(
                 harfbuzz_version
             ),
-            "prs": [pr["number"] for pr in hb_prs if pr.get("number")],
+            "prs": _harfbuzz_pr_numbers(prs, hb_prs),
         }
 
     base_version = _base_version(from_ref, version)
-    if harfbuzz and base_version and co_releases.get(base_version):
-        harfbuzz["previous_version"] = co_releases[base_version]
+    previous_harfbuzz = _previous_co_release_version(
+        base_version,
+        supersedes,
+        co_releases,
+    )
+    if harfbuzz and previous_harfbuzz:
+        harfbuzz["previous_version"] = previous_harfbuzz
     milestones = model.collect_preview_milestones(version, base_version)
     shipments, exact_prs = (
         model.collect_shipments(version, base_version)

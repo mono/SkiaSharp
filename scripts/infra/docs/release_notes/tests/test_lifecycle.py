@@ -13,6 +13,7 @@ if str(PACKAGE_PARENT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_PARENT))
 
 from release_notes import common as COMMON
+from release_notes import generate as GENERATE
 from release_notes import model as MODEL
 from release_notes import render as RENDER
 from release_notes import sources as SOURCES
@@ -152,6 +153,10 @@ class ShipmentCollectionTests(unittest.TestCase):
             "mixed",
         )
         self.assertEqual(SOURCES.pr_category({"VERSIONS.txt"}), "mixed")
+        self.assertEqual(
+            SOURCES.pr_category({"scripts/VERSIONS.txt"}),
+            "mixed",
+        )
         for path in (
             "cake/shared.cake",
             "design/README.md",
@@ -187,6 +192,42 @@ class ShipmentCollectionTests(unittest.TestCase):
                 "documentation/dev/building.md",
             }),
             "mixed",
+        )
+
+    def test_superseded_line_is_immediate_harfbuzz_predecessor(self):
+        co_releases = {
+            "3.119.4": "8.3.1.5",
+            "4.147.0": "8.3.1.6",
+            "4.148.0": "14.2.0",
+        }
+
+        self.assertEqual(
+            GENERATE._previous_co_release_version(
+                "3.119.4",
+                ["4.147.0"],
+                co_releases,
+            ),
+            "8.3.1.6",
+        )
+        self.assertEqual(
+            GENERATE._previous_co_release_version(
+                "3.119.4",
+                [],
+                co_releases,
+            ),
+            "8.3.1.5",
+        )
+
+    def test_harfbuzz_update_title_joins_path_scoped_prs(self):
+        prs = [
+            {"number": 101, "title": "Add shaping API", "body": ""},
+            {"number": 102, "title": "Update HarfBuzz to 14.2.0", "body": ""},
+            {"number": 103, "title": "Update Skia", "body": ""},
+        ]
+
+        self.assertEqual(
+            GENERATE._harfbuzz_pr_numbers(prs, [prs[0]]),
+            [101, 102],
         )
 
     def test_placeholder_tag_is_not_an_exact_release(self):
@@ -371,6 +412,34 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
             for error in RENDER.validate(data, prose)
         ))
         self.assertIn(prose["harfbuzz_summary"], RENDER.render(data, prose))
+
+    def test_harfbuzz_summary_renders_deterministic_pr_credit(self):
+        data = page_data([])
+        data["prs"]["101"] = {
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "title": "Update HarfBuzz",
+            "author": "contributor",
+            "community": True,
+            "tag": "product",
+        }
+        data["harfbuzz"] = {
+            "version": "14.2.0",
+            "previous_version": "8.3.1.6",
+            "prs": [101],
+        }
+        prose = cumulative_prose({})
+        prose["harfbuzz_summary"] = (
+            "Updates the bundled HarfBuzz from 8.3.1.6 to 14.2.0."
+        )
+
+        rendered = RENDER.render(data, prose)
+
+        self.assertIn(
+            "HarfBuzz from 8.3.1.6 to 14.2.0. — ❤️ "
+            "[@contributor](https://github.com/contributor) "
+            "([#101](https://github.com/mono/SkiaSharp/pull/101))",
+            rendered,
+        )
 
     def test_harfbuzz_summary_rejects_shortened_version(self):
         data = page_data([])

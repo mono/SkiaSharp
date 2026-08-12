@@ -293,7 +293,7 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        L.append(rendered_hb_summary)
+        L.append(rendered_hb_summary + credit(hb.get("prs"), data))
 
     if data.get("platform_support"):
         L.append("")

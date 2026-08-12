@@ -858,6 +858,11 @@ is the single HarfBuzzSharp line it ships.
   `SkiaSharp.HarfBuzz` package's (§5.2) `HarfBuzzSharp` dependency. An intermediate
   HarfBuzz bump within a single SkiaSharp line's previews is attributed to that line's
   final HarfBuzzSharp version; the map records no finer-grained history.
+- **`data.harfbuzz.previous_version` uses the immediate co-shipped predecessor.**
+  When a stable line rolls up a superseded preview-only line, that superseded line's
+  mapped HarfBuzzSharp version takes precedence over the older cumulative comparison
+  base. For example, 4.148.0 compares HarfBuzzSharp 14.2.0 with the 8.3.1.6 that
+  co-shipped with 4.147.0, not the 8.3.1.5 from 3.119.4.
 
 #### Data source and merge behavior
 
@@ -1169,9 +1174,10 @@ principles are fixed here.
 5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty or the
    co-shipped HarfBuzz `version` differs from `previous_version`, the AI
    writes one short `harfbuzz_summary` paragraph. It does not dump every HarfBuzz PR:
-   the API-diff link is in the banner, and community credit is in the page's contributor
-   table. When neither the binding nor the co-shipped HarfBuzz version changed, the AI
-   sets the field to `null`/omits it and the renderer omits an empty narrative.
+   the API-diff link is in the banner, and the renderer appends deterministic PR links
+   and inline community credit while the contributor table retains the full contributor
+   summary. When neither the binding nor the co-shipped HarfBuzz version changed, the
+   AI sets the field to `null`/omits it and the renderer omits an empty narrative.
 6. **Exact prerelease summaries are evergreen and shared.** Each
    `release_summaries[tag]` contains one or two present-tense sentences plus the PR
    IDs grounding its important claims. The same text renders in the website

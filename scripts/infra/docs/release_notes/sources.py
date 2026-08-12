@@ -51,7 +51,7 @@ _FIXES_RE = re.compile(
 )
 PRODUCT_PREFIXES = ("binding/", "source/")
 PRODUCT_EXACT = frozenset({"externals/skia"})
-MIXED_EXACT = frozenset({"docs", "VERSIONS.txt"})
+MIXED_EXACT = frozenset({"docs", "VERSIONS.txt", "scripts/VERSIONS.txt"})
 MIXED_PREFIXES = ("native/", "nuget/")
 MIXED_SUFFIXES = (".props", ".targets")
 INTERNAL_SUFFIXES = (".sln", ".slnf", ".slnx")

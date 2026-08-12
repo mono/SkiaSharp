@@ -28,6 +28,7 @@ SECURITY_EVIDENCE_RE = re.compile(
     r"releases?|updates?|advisor(?:y|ies)))\b",
     re.IGNORECASE,
 )
+HARFBUZZ_EVIDENCE_RE = re.compile(r"\bharfbuzz(?:sharp)?\b", re.IGNORECASE)
 MONTH_ABBR = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
@@ -45,6 +46,10 @@ def log(*args, **kwargs) -> None:
 
 def has_security_evidence(title: str, body: str) -> bool:
     return bool(SECURITY_EVIDENCE_RE.search("{}\n{}".format(title, body)))
+
+
+def has_harfbuzz_evidence(title: str, body: str) -> bool:
+    return bool(HARFBUZZ_EVIDENCE_RE.search("{}\n{}".format(title, body)))
 
 
 def run(args: list[str], check: bool = True) -> str:
