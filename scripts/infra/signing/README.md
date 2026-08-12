@@ -48,10 +48,10 @@ For a signing-only retry, queue the package pipeline with
 The job verifies the build definition, repository, result, and trusted branch
 requirements before downloading its `nuget` artifact.
 
-To validate ESRP without retaining signed packages, also set `realSigning` and
-`signingValidationOnly` to `true`. After all signing and verification steps
-pass, the job copies evidence into the signing logs, deletes signed outputs,
-and intentionally fails so the pipeline artifact outputs cannot publish.
+Signing uses real ESRP certificates on `main` and `release/*`. Other branches
+test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
+That override retains the same signed and verification artifacts as a trusted
+branch run; it does not publish them to a package feed.
 
 ## Policy
 
@@ -67,11 +67,21 @@ Arcade's broad extension defaults and lists every signable basename explicitly:
 Adding a DLL, EXE, WINMD, dylib, JavaScript, or Python payload without updating
 the policy fails before signing.
 
+`eng/SignCheckExclusionsFile.txt` mirrors the JavaScript subset of `SkippedFile`
+using package/path-scoped `DO-NOT-SIGN` entries. SignCheck fails if one of those
+files becomes signed. SignCheck does not verify Python signatures, so the
+generated Python source is controlled only by `CertificateName=None` and the
+payload fidelity verifier. That verifier requires every skipped file to remain
+byte-identical.
+
 ## Test and real signing
 
-The normal package pipeline calls the signing template in test mode, producing
-MicroBuild test signatures without referencing an ESRP service connection.
-Signing-only retries expose an explicit `realSigning` queue parameter.
+The package pipeline selects signing mode using the repository's established
+policy:
+
+- `main` and `release/*` use real signing;
+- an explicit `forceRealSigning` queue parameter uses real signing;
+- all other branches use test signing.
 
 Real signing must be enabled only after ESRP onboarding and protected-branch
 checks are configured. Arcade then supplies:
@@ -81,10 +91,9 @@ checks are configured. Arcade then supplies:
 - MicroBuild install and cleanup;
 - `System.AccessToken` handling.
 
-Feature-branch real signing must also set `signingValidationOnly`; signed
-outputs are omitted, deleted on every exit path, and the job intentionally
-fails. Publish-capable real signing additionally requires main/release branch
-checks and the externally approved ESRP service connection.
+The package pipeline has no release trigger or feed-publishing step. Real-signed
+artifacts remain internal pipeline artifacts until a separately protected
+release definition selects and publishes an exact successful signing run.
 
 ## Local checks
 

@@ -190,6 +190,49 @@ try {
         throw 'Signing policy did not reject an unclassified DLL.'
     }
 
+    $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../../..'))
+    [xml]$productionPolicy = Get-Content (Join-Path $repoRoot 'eng/Signing.props') -Raw
+    $skippedFiles = @(
+        $productionPolicy.Project.ItemGroup.SkippedFile |
+            ForEach-Object { [string]$_.Include } |
+            Sort-Object
+    )
+    $signCheckVerifiableSkippedFiles = @(
+        $skippedFiles |
+            Where-Object { [IO.Path]::GetExtension($_) -eq '.js' }
+    )
+    $expectedParent = 'SkiaSharp.NativeAssets.WebAssembly.'
+    $expectedPaths = @{
+        'library_webgpu.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu.js'
+        'library_webgpu_enum_tables.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_enum_tables.js'
+        'library_webgpu_generated_sig_info.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_sig_info.js'
+        'library_webgpu_generated_struct_info.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_struct_info.js'
+        'webgpu-externs.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/webgpu-externs.js'
+    }
+    $signCheckExclusions = @{}
+    Get-Content (Join-Path $repoRoot 'eng/SignCheckExclusionsFile.txt') |
+        Where-Object {
+            -not [string]::IsNullOrWhiteSpace($_) -and
+            -not $_.StartsWith(';;', [StringComparison]::Ordinal)
+        } |
+        ForEach-Object {
+            $parts = $_.Split(';')
+            if ($parts.Count -ne 3 -or
+                $parts[1] -ne $expectedParent -or
+                -not $parts[2].Contains('DO-NOT-SIGN')) {
+                throw "Invalid SignCheck exclusion: $_"
+            }
+            $name = $parts[0].Split('/')[-1]
+            if (-not $expectedPaths.ContainsKey($name) -or
+                $expectedPaths[$name] -cne $parts[0]) {
+                throw "SignCheck exclusion is not scoped to the expected package path: $_"
+            }
+            $signCheckExclusions.Add($name, $parts[0])
+        }
+    if (Compare-Object $signCheckVerifiableSkippedFiles @($signCheckExclusions.Keys | Sort-Object) -CaseSensitive) {
+        throw 'SignCheck-verifiable SkippedFile entries and DO-NOT-SIGN entries differ.'
+    }
+
     Write-Host 'Signing policy and payload tests passed.'
 } finally {
     if (Test-Path $testRoot) {

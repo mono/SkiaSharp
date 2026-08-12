@@ -10,6 +10,9 @@ parameters:
     type: boolean
   - name: enableSigning
     type: boolean
+  - name: forceRealSigning
+    type: boolean
+    default: false
   - name: enableCaching
     type: boolean
     default: false
@@ -150,6 +153,8 @@ stages:
     - template: /scripts/azure-templates-stages-signing.yml@self
       parameters:
         buildAgent: ${{ parameters.buildAgentWindows }}
-        # Keep the spike test-only. After ESRP onboarding, set this from a
-        # protected main/release branch policy rather than a queue parameter.
-        useRealSigning: false
+        forceRealSigning: ${{ parameters.forceRealSigning }}
+        ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+          useRealSigning: true
+        ${{ else }}:
+          useRealSigning: false
