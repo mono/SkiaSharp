@@ -1080,6 +1080,7 @@ def render_all(min_core=None, max_core=None):
     its data.json + prose.json, then builds TOC.yml + index.md from the finished page
     set. With no range, every page is rendered.
     """
+    common.require_scope_at_or_above_history_floor(min_core, max_core)
     index = load_index_json()
     _prune_stale_unreleased(
         set(index.get("live_unreleased") or []),
@@ -1102,6 +1103,8 @@ def render_all(min_core=None, max_core=None):
                 if stem.endswith("-unreleased")
                 else stem
             )
+            if common.is_below_history_floor(version):
+                continue
             core = common.core_tuple(version)
             if min_core is not None and core < min_core:
                 continue

@@ -143,6 +143,27 @@ def is_below_history_floor(
     return bool(floor and core_tuple(version) < core_tuple(floor))
 
 
+def require_scope_at_or_above_history_floor(
+    min_core: tuple | None,
+    max_core: tuple | None,
+    family: str = "skiasharp",
+) -> None:
+    floor = history_floor(family)
+    if not floor:
+        return
+    floor_core = core_tuple(floor)
+    for name, bound in (
+        ("--min-version", min_core),
+        ("--max-version", max_core),
+    ):
+        if bound is not None and bound < floor_core:
+            raise RuntimeError(
+                "{} is below the {} history floor. Lower history_floor.{} "
+                "in versions.json before regenerating historical releases."
+                .format(name, floor, family)
+            )
+
+
 def load_co_release_map() -> dict:
     global _CO_RELEASE_MAP
     if _CO_RELEASE_MAP is not None:

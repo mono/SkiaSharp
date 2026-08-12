@@ -776,6 +776,21 @@ class PreservationLifecycleTests(unittest.TestCase):
 
 
 class ScopedPruningTests(unittest.TestCase):
+    def test_explicit_scope_below_history_floor_fails(self):
+        below = COMMON.core_tuple("3.119.0")
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Lower history_floor.skiasharp",
+        ):
+            COMMON.require_scope_at_or_above_history_floor(below, None)
+
+        with self.assertRaisesRegex(
+            RuntimeError,
+            "Lower history_floor.skiasharp",
+        ):
+            COMMON.require_scope_at_or_above_history_floor(None, below)
+
     def test_scoped_render_ignores_out_of_range_cached_prose(self):
         with tempfile.TemporaryDirectory() as directory:
             releases = Path(directory)
@@ -808,6 +823,36 @@ class ScopedPruningTests(unittest.TestCase):
             self.assertEqual(result, 0)
             self.assertTrue((releases / "4.147.0.md").exists())
             self.assertFalse((releases / "1.68.2.md").exists())
+
+    def test_unscoped_render_ignores_below_floor_cache(self):
+        with tempfile.TemporaryDirectory() as directory:
+            releases = Path(directory)
+            sources = releases / "_sources"
+            sources.mkdir(parents=True)
+            (sources / "index.json").write_text("{}")
+            (sources / "3.119.0.data.json").write_text("not json")
+
+            selected = page_data([])
+            selected["version"] = "4.147.0"
+            (sources / "4.147.0.data.json").write_text(
+                json.dumps(selected)
+            )
+            (sources / "4.147.0.prose.json").write_text(
+                json.dumps(cumulative_prose({}))
+            )
+
+            with patch.object(RENDER, "RELEASES_DIR", releases), patch.object(
+                COMMON, "RELEASES_DIR", releases
+            ), patch.object(
+                RENDER, "generate_toc", return_value="toc\n"
+            ), patch.object(
+                RENDER, "generate_index", return_value="index\n"
+            ):
+                result = RENDER.render_all()
+
+            self.assertEqual(result, 0)
+            self.assertTrue((releases / "4.147.0.md").exists())
+            self.assertFalse((releases / "3.119.0.md").exists())
 
     def test_scoped_render_preserves_out_of_range_unreleased_pages(self):
         with tempfile.TemporaryDirectory() as directory:

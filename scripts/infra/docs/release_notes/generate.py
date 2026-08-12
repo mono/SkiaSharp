@@ -439,6 +439,7 @@ def generate(
     min_core: tuple | None = None,
     max_core: tuple | None = None,
 ) -> None:
+    common.require_scope_at_or_above_history_floor(min_core, max_core)
     common.log("Fetching remote branches...")
     common.run(["git", "fetch", "origin", "--unshallow", "--quiet"], check=False)
     try:

@@ -121,7 +121,7 @@ emits both SkiaSharp-versioned and HarfBuzzSharp-versioned diff folders (§3.3/�
                       "4.148.0": { "compare_to": "3.119.4" } },
   "harfbuzzsharp":  { },
   "support":        { "stable": ["4.148"], "preview": ["4.150"] },
-  "history_floor":  { "skiasharp": "3.0.0" }
+  "history_floor":  { "skiasharp": "4.0.0" }
 }
 ```
 
@@ -229,25 +229,12 @@ listed in `versions.json` and is not ahead of the latest stable produces **no**
 SkiaSharp release page. HarfBuzzSharp's additional co-release signal exists only to
 guarantee the API-diff target linked by such an emitted SkiaSharp page.
 
-**History floor (a performance skip, not a rule change).** The top-level
-`history_floor` block in `versions.json` optionally sets a per-bucket minimum line core
-(e.g. `{"skiasharp": "3.0.0"}`). A line **below** the floor is not regenerated and not
-re-emitted, so a full regeneration skips the obsolete back-catalogue (every 1.x/2.x
-line) it would otherwise rebuild from the NuGet feed on every run. It is **not** a
-deletion: pages and API-diff folders already committed below the floor are left exactly
-as they are — the Cake engine skips *clearing* them symmetrically with skipping their
-*emission*, so a floored run never wipes history, it just doesn't rebuild it. Baselines
-are unaffected: a floored line can still be downloaded as a baseline (e.g. `3.116.0`
-still diffs against `2.88.9`) — both via an explicit `compare_to` override **and** as the
-*implicit predecessor* of the lowest emitted line. That lowest line (the floor line
-itself, e.g. `3.0.0`) has no emitted predecessor — its natural baseline sits below the
-floor — so the API-diff engine resolves it from the pre-floor emittable set and downloads
-it **for comparison only** (never emitting the below-floor line's own page). Without this,
-the floor line would diff against an empty assembly (`0.0.0.0`) and re-emit its entire API
-surface as "new" on every run — a large, wrong churn. It is one already-cached package (it
-is also the next line's baseline), so the floor's performance win is preserved. Absent/empty
-block ⇒ no floor (every line is regenerated, the legacy behavior). Raise the floor as old
-lines stop needing refreshes; lower or remove it to rebuild history.
+**History floor.** `history_floor` sets the oldest line the current engines own;
+SkiaSharp uses `4.0.0`, so v1-v3 pages are historical and are not opened,
+regenerated, rendered, or cleared by unscoped runs. Below-floor packages can still
+be downloaded as comparison baselines. An explicit range below the floor fails
+instead of silently skipping; lower the configured floor deliberately before
+regenerating historical releases. With no floor, every line is owned.
 
 
 ### 1.5 HarfBuzzSharp co-ships inside SkiaSharp pages
