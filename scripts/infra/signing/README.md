@@ -36,6 +36,17 @@ case-colliding paths, unexpected payload mutations, missing expected mutations,
 and changes to intentionally skipped source files. Arcade's signature checks do
 not compare signed output against the original archive.
 
+The pipeline runs two repository-owned `.ps1` entry points:
+
+- `validate-signing-policy.ps1` performs the preflight and writes the unsigned
+  package/payload manifest;
+- `verify-signed-packages.ps1` performs the before/after fidelity comparison and
+  writes the verification result.
+
+Both scripts import `NuGetPayload.psm1`; the module is not executed directly.
+`tests/Signing.Tests.ps1` is a local regression suite and is not a pipeline
+signing step.
+
 ## Artifact flow
 
 ```text
@@ -45,9 +56,10 @@ package stage: unsigned nuget
 signing stage: stage under artifacts/packages/Release/Shipping
               |
               +-- validate eng/Signing.props against every recursive payload
-              +-- Arcade SignTool test/real signing
-              +-- Arcade recursive signature validation
+              +-- Arcade SignTool test/real signing and recursive post-sign checks
               +-- compare signed and unsigned archive structure/hashes
+              +-- real only: Arcade SigningValidation trust/validity checks
+              +-- create the signed preview-package view
               |
               +-- nuget_signed
               +-- nuget_preview_signed
@@ -57,12 +69,13 @@ signing stage: stage under artifacts/packages/Release/Shipping
 
 The existing unsigned artifacts remain available to the test pipeline.
 `nuget_symbols` and the internal `nuget_special` convenience packages are not
-release signing inputs.
+signing inputs.
 
 For a signing-only retry, queue the package pipeline with
 `signingSourceBuildId` set to a successful build ID from that same definition.
-The job verifies the build definition, repository, result, and trusted branch
-requirements before downloading its `nuget` artifact.
+The job verifies the build definition, repository, and successful result before
+downloading its `nuget` artifact. Non-forced real signing additionally requires
+both the source build and signing run to use `main` or `release/*`.
 
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches
 test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
@@ -108,9 +121,9 @@ checks are configured. Arcade then supplies:
 - MicroBuild install and cleanup;
 - `System.AccessToken` handling.
 
-The package pipeline has no release trigger or feed-publishing step. Real-signed
-artifacts remain internal pipeline artifacts until a separately protected
-release definition selects and publishes an exact successful signing run.
+The package pipeline has no release trigger or feed-publishing step. Its final
+boundary is the retained, verified internal pipeline artifacts. Any future
+release system is a separate consumer of an exact successful signing run.
 
 ## Local checks
 
