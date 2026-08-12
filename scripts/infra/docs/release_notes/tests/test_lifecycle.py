@@ -646,7 +646,7 @@ class ApiDiffLifecycleTests(unittest.TestCase):
     def test_scoped_rebuild_clears_shared_line_once(self):
         source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
         tracker = source.index("var clearedLineDirs = new HashSet<string>")
-        package_loop = source.index("foreach (var id in TRACKED_NUGETS.Keys)")
+        package_loop = source.index("foreach (var id in packageIds)")
         clear_guard = source.index("clearedLineDirs.Add (lineDir.FullPath)")
         clear_call = source.index(
             "ClearGeneratedApiDiffsIn (lineDir.FullPath)", clear_guard
@@ -655,6 +655,30 @@ class ApiDiffLifecycleTests(unittest.TestCase):
         self.assertLess(tracker, package_loop)
         self.assertLess(package_loop, clear_guard)
         self.assertLess(clear_guard, clear_call)
+
+    def test_scoped_harfbuzz_uses_co_release_versions(self):
+        source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
+        self.assertIn(
+            ".OrderBy (id => IsHarfBuzzFamily (id) ? 1 : 0)",
+            source,
+        )
+        self.assertIn("FamilyCoreInRange (", source)
+        self.assertIn(
+            "CoreInRange (kvp.Key, minVersion, maxVersion)",
+            source,
+        )
+        self.assertIn(
+            "string.Equals (kvp.Value, core",
+            source,
+        )
+        self.assertIn(
+            "feedSkiaHarfBuzzLines.Add (apiDiffVersion)",
+            source,
+        )
+        self.assertIn(
+            "!feedSkiaHarfBuzzLines.Contains (inflightSkia)",
+            source,
+        )
 
 
 if __name__ == "__main__":

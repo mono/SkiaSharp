@@ -201,6 +201,10 @@ independent product value. Placement rule of thumb: ordinary fixes go under **Bu
 Fixes** even when platform-specific; use **Platform** only for platform-support
 additions or removals.
 
+Use **Security** only when the quoted facts explicitly identify a CVE, advisory,
+vulnerability, or security release. A crash, memory-safety bug, use-after-free, or
+corrupt-input fix without that evidence remains under **Bug Fixes**.
+
 For Skia syncs, use the quoted merged-commit body to identify concrete upstream
 changes. Count distinct sync PRs when a count is useful, but prefer specific
 consumer effects over generic "maintenance rounds."

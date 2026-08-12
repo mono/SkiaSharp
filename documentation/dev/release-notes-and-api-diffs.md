@@ -1491,7 +1491,9 @@ boolean argument); `prepare.sh` translates its shell flags to those names.
   the target skips the diff work for that line. A shipped version's public API diff is
   immutable, so the committed folder is a cache. Missing folders are computed.
 - **Scoped run.** `--minVersion` / `--maxVersion` restrict which line cores are
-  rebuilt, inclusive. Out-of-range lines are skipped as outputs but remain in the full
+  rebuilt, inclusive. The arguments name SkiaSharp lines; Cake maps selected
+  SkiaSharp lines through their co-release dependencies to select the corresponding
+  HarfBuzzSharp lines (for example, 4.150.2 → 14.2.1.2). Out-of-range lines are skipped as outputs but remain in the full
   emit list for baseline resolution, so a selected line can still roll up past a
   skipped/out-of-range predecessor correctly.
 - **Forced line rebuild.** `--force` rebuilds selected lines even when their folder

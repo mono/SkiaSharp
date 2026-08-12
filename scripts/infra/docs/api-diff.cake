@@ -90,18 +90,23 @@ Task ("docs-api-diff")
     // Accumulates the SkiaSharp-line → emitted-HarfBuzz-line mapping as we discover
     // it, so we can write the co-release map sidecar (spec §3.6) at the end. Keyed
     // by SkiaSharp line core; value is the HarfBuzz line core shipping with it.
-    var skiaHarfBuzzDeps = new Dictionary<string, string> ();
+    var skiaHarfBuzzDeps = ReadCoReleaseMap ();
+    var feedSkiaHarfBuzzLines = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
     // Every tracked package in a family writes beneath the same release-line folder.
     // A scoped rebuild must clear that shared folder once, before the first package
     // writes it, rather than once per package (which would erase earlier diffs).
     var clearedLineDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
-    foreach (var id in TRACKED_NUGETS.Keys) {
-        // skip doc generation for NativeAssets as that has nothing but a native binary
-        if (id.Contains ("NativeAssets"))
-            continue;
+    // Process every SkiaSharp package (including SkiaSharp.HarfBuzz) before the
+    // HarfBuzzSharp family. Scoped HarfBuzz lines are derived from the SkiaSharp
+    // co-release dependencies, so those mappings must exist before HarfBuzz runs.
+    var packageIds = TRACKED_NUGETS.Keys
+        .Where (id => !id.Contains ("NativeAssets"))
+        .OrderBy (id => IsHarfBuzzFamily (id) ? 1 : 0)
+        .ToList ();
 
+    foreach (var id in packageIds) {
         var isHarfBuzz = IsHarfBuzzFamily (id);
         var versionsConfig = isHarfBuzz ? hbConfig : skiaConfig;
         var family = isHarfBuzz ? "harfbuzzsharp" : "skiasharp";
@@ -176,7 +181,9 @@ Task ("docs-api-diff")
             // available as a baseline for the lines that roll up past it (below).
             //   - out of [minVersion, maxVersion]  -> leave exactly as committed
             //   - folder already exists and !force -> a shipped diff never changes; reuse
-            if (isScoped && !CoreInRange (apiDiffVersion, minVersion, maxVersion)) {
+            if (isScoped && !FamilyCoreInRange (
+                    apiDiffVersion, isHarfBuzz, minVersion, maxVersion,
+                    skiaHarfBuzzDeps)) {
                 Debug ($"Skipping '{apiDiffVersion}' of '{id}' (outside --minVersion/--maxVersion).");
                 continue;
             }
@@ -271,8 +278,10 @@ Task ("docs-api-diff")
             // from the extracted package's nuspec.
             if (id == "SkiaSharp.HarfBuzz") {
                 var hbDep = ReadHarfBuzzDependencyLine (versionRoot);
-                if (!string.IsNullOrEmpty (hbDep))
+                if (!string.IsNullOrEmpty (hbDep)) {
                     skiaHarfBuzzDeps [apiDiffVersion] = hbDep;
+                    feedSkiaHarfBuzzLines.Add (apiDiffVersion);
+                }
             }
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
@@ -290,7 +299,7 @@ Task ("docs-api-diff")
     var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp")).ToNormalizedString ().Split ('-') [0];
     var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp")).ToNormalizedString ().Split ('-') [0];
     if (!string.IsNullOrEmpty (inflightSkia) && !string.IsNullOrEmpty (inflightHb)
-            && !skiaHarfBuzzDeps.ContainsKey (inflightSkia)) {
+            && !feedSkiaHarfBuzzLines.Contains (inflightSkia)) {
         Information ($"Recording in-flight co-release from working tree: SkiaSharp {inflightSkia} → HarfBuzzSharp {inflightHb}.");
         skiaHarfBuzzDeps [inflightSkia] = inflightHb;
     }
@@ -441,6 +450,24 @@ bool CoreInRange (string core, string minVersion, string maxVersion)
     return true;
 }
 
+// Scoped arguments are SkiaSharp page versions. HarfBuzzSharp has its own version
+// line, so map the selected SkiaSharp lines through the co-release dependencies
+// instead of comparing e.g. 14.2.1.2 directly with 4.150.0.
+bool FamilyCoreInRange (
+    string core,
+    bool isHarfBuzz,
+    string minVersion,
+    string maxVersion,
+    IDictionary<string, string> skiaHarfBuzzDeps)
+{
+    if (!isHarfBuzz)
+        return CoreInRange (core, minVersion, maxVersion);
+
+    return skiaHarfBuzzDeps.Any (kvp =>
+        CoreInRange (kvp.Key, minVersion, maxVersion)
+        && string.Equals (kvp.Value, core, StringComparison.OrdinalIgnoreCase));
+}
+
 // Write the co-release map sidecar (spec §3.6): a plain { "skia_line": "hb_line" } object,
 // one entry per SkiaSharp line giving the HarfBuzz line that ships with it. The api-diff
 // LINK is pure derivation (`harfbuzzsharp/<hb_line>/index.md`), so the Python engine builds
@@ -450,29 +477,37 @@ bool CoreInRange (string core, string minVersion, string maxVersion)
 // MERGE, don't overwrite: an incremental/scoped run only recomputed the lines it processed;
 // every other line's mapping is immutable (a shipped package's HarfBuzz dependency never
 // changes), so preserve the committed entries and overlay only what this run recomputed.
-void WriteCoReleaseMap (Dictionary<string, string> skiaHarfBuzzDeps)
+SortedDictionary<string, string> ReadCoReleaseMap ()
 {
-    EnsureDirectoryExists (RELEASES_PATH);
     var sourcesDir = RELEASES_PATH.Combine ("_sources");
-    EnsureDirectoryExists (sourcesDir);
     var sidecar = sourcesDir.CombineWithFilePath ("co-release-map.json");
-
-    var merged = new SortedDictionary<string, string> (StringComparer.Ordinal);
+    var result = new SortedDictionary<string, string> (StringComparer.Ordinal);
     if (FileExists (sidecar)) {
         var existing = JToken.Parse (System.IO.File.ReadAllText (sidecar.FullPath));
         if (existing is JObject obj) {
             foreach (var prop in obj.Properties ())
-                merged [prop.Name] = (string) prop.Value;
+                result [prop.Name] = (string) prop.Value;
         } else if (existing is JArray arr) {
             // Legacy array-of-objects format ({skia_line, hb_line, hb_link}); read hb_line.
             foreach (var e in arr.OfType<JObject> ()) {
                 var k = (string) e ["skia_line"];
                 var v = (string) e ["hb_line"];
                 if (!string.IsNullOrEmpty (k) && !string.IsNullOrEmpty (v))
-                    merged [k] = v;
+                    result [k] = v;
             }
         }
     }
+    return result;
+}
+
+void WriteCoReleaseMap (IDictionary<string, string> skiaHarfBuzzDeps)
+{
+    EnsureDirectoryExists (RELEASES_PATH);
+    var sourcesDir = RELEASES_PATH.Combine ("_sources");
+    EnsureDirectoryExists (sourcesDir);
+    var sidecar = sourcesDir.CombineWithFilePath ("co-release-map.json");
+
+    var merged = ReadCoReleaseMap ();
     foreach (var kvp in skiaHarfBuzzDeps)
         merged [kvp.Key] = kvp.Value;
 
