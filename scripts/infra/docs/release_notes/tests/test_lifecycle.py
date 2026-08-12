@@ -159,12 +159,41 @@ class ShipmentCollectionTests(unittest.TestCase):
             "mono.snk",
         ):
             self.assertEqual(SOURCES.pr_category({path}), "internal")
+        for path in (
+            "binding/HarfBuzzSharp/HarfBuzzSharp.slnx",
+            "source/SkiaSharpSource.slnf",
+        ):
+            self.assertEqual(SOURCES.pr_category({path}), "internal")
+        for path in (
+            "binding/IncludeNativeAssets.HarfBuzzSharp.targets",
+            "source/SkiaSharp.Build.targets",
+        ):
+            self.assertEqual(SOURCES.pr_category({path}), "mixed")
+
+        self.assertEqual(
+            SOURCES.pr_category({
+                "binding/IncludeNativeAssets.HarfBuzzSharp.targets",
+                "source/SkiaSharp.Build.targets",
+                "scripts/azure-templates-stages-test.yml",
+                "tests/Tests/BaseTest.cs",
+            }),
+            "mixed",
+        )
+        self.assertEqual(
+            SOURCES.pr_category({
+                "binding/HarfBuzzSharp/HarfBuzzSharp.slnx",
+                "native/windows/libHarfBuzzSharp/libHarfBuzzSharp.slnx",
+                "native/windows/build.cake",
+                "documentation/dev/building.md",
+            }),
+            "mixed",
+        )
 
     def test_placeholder_tag_is_not_an_exact_release(self):
         self.assertIsNone(MODEL.parse_tag("v3.0.0-preview.2.x"))
         self.assertIsNotNone(MODEL.parse_tag("v3.0.0-preview.2.1"))
 
-    def test_harfbuzz_summary_facts_exclude_internal_only_work(self):
+    def test_harfbuzz_summary_facts_include_product_work_only(self):
         prs = [
             {
                 "number": 101,
@@ -182,12 +211,20 @@ class ShipmentCollectionTests(unittest.TestCase):
                 "category": "internal",
                 "files": ["binding/HarfBuzzSharp/HarfBuzzSharp.slnx"],
             },
+            {
+                "number": 103,
+                "title": "Adjust HarfBuzz build targets",
+                "url": "https://github.com/mono/SkiaSharp/pull/103",
+                "author": {"login": "maintainer"},
+                "category": "mixed",
+                "files": ["binding/IncludeNativeAssets.HarfBuzzSharp.targets"],
+            },
         ]
         metadata = {
             "version": "4.152.0",
             "status": "preview",
             "shipments": [],
-            "harfbuzz": {"version": "14.2.1", "prs": [101, 102]},
+            "harfbuzz": {"version": "14.2.1", "prs": [101, 102, 103]},
         }
 
         data = MODEL.build_data_json(prs, metadata)

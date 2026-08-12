@@ -378,7 +378,7 @@ def build_data_json(prs: list[dict], metadata: dict) -> dict:
         harfbuzz = dict(harfbuzz)
         harfbuzz["prs"] = [
             number for number in harfbuzz.get("prs") or []
-            if (pr_map.get(str(number)) or {}).get("tag") != "internal"
+            if (pr_map.get(str(number)) or {}).get("tag") == "product"
         ]
         if harfbuzz.get("api_diff_link"):
             api_links.append({

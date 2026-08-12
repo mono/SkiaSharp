@@ -320,6 +320,12 @@ SkiaSharp lines may share one HarfBuzzSharp version; each SkiaSharp page still r
 its own co-shipped version and its own filtered PRs for that release window. The mapping
 is deterministic and script-owned — the AI never computes it.
 
+Only PRs classified as product work survive into this HarfBuzz-specific list.
+Solution files (`.sln`, `.slnf`, `.slnx`) are always internal, while MSBuild
+`.props`/`.targets` files are mixed, so repository-wide solution migrations,
+container test harnesses, and other build-only changes cannot become HarfBuzz
+consumer prose merely because they touched a HarfBuzz-owned path.
+
 ---
 
 ## 2. Skill layout & orchestration

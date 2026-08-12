@@ -53,6 +53,8 @@ PRODUCT_PREFIXES = ("binding/", "source/")
 PRODUCT_EXACT = frozenset({"externals/skia"})
 MIXED_EXACT = frozenset({"docs", "VERSIONS.txt"})
 MIXED_PREFIXES = ("native/", "nuget/")
+MIXED_SUFFIXES = (".props", ".targets")
+INTERNAL_SUFFIXES = (".sln", ".slnf", ".slnx")
 INTERNAL_PREFIXES = (
     ".agents/",
     ".claude/",
@@ -333,6 +335,10 @@ def resolve_skia_links(prs: list[dict]) -> list[dict]:
 
 
 def _path_category(path: str) -> str:
+    if path.endswith(INTERNAL_SUFFIXES):
+        return "internal"
+    if path.endswith(MIXED_SUFFIXES):
+        return "mixed"
     if path in PRODUCT_EXACT or path.startswith(PRODUCT_PREFIXES):
         return "product"
     if path in MIXED_EXACT or path.startswith(MIXED_PREFIXES):
