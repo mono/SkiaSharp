@@ -111,12 +111,11 @@ stages:
 
           - task: APIScan@2
             displayName: Run API Scan
-            continueOnError: true
             inputs:
               softwareFolder: $(Agent.TempDirectory)\APIScan
               symbolsFolder: SRV*http://symweb;$(Agent.TempDirectory)\APIScan\nuget_symbols-extracted;$(Agent.TempDirectory)\APIScan\native_msvc
               softwareName: SkiaSharp
-              softwareVersionNum: $(SKIASHARP_VERSION)
+              softwareVersionNum: 3
               softwareBuildNum: $(Build.BuildId)
               surrogateConfigurationFolder: $(Agent.TempDirectory)\APIScan\surrogates
               isLargeApp: true
