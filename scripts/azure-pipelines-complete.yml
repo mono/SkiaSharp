@@ -19,7 +19,7 @@ parameters:
     default:
       pool:
         name: NetCore-Public
-        image: build.ubuntu.2204.amd64.open
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -27,7 +27,7 @@ parameters:
     default:
       pool:
         name: NetCore-Public
-        image: windows.vs2026.amd64.open
+        demands: ImageOverride -equals windows.vs2026.amd64.open
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
@@ -35,7 +35,7 @@ parameters:
     default:
       pool:
         name: NetCore-Public
-        image: 1es-windows-2022-open
+        demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -59,7 +59,7 @@ parameters:
     default:
       pool:
         name: NetCore-Public
-        image: build.ubuntu.2204.amd64.open
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentLinuxNative
     displayName: 'The Linux build agent configuration for building the native assets:'
@@ -67,7 +67,7 @@ parameters:
     default:
       pool:
         name: NetCore-Public
-        image: build.ubuntu.2204.amd64.open
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -81,23 +81,15 @@ parameters:
 variables:
   - template: /scripts/azure-templates-variables.yml@self
 
-resources:
-  repositories:
-    - repository: 1ESPipelineTemplates
-      type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
-
 extends:
-  template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
+  template: /scripts/azure-template-public.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
-    settings:
-      networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'complete'
+          use1ESPipelineTemplates: false
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}

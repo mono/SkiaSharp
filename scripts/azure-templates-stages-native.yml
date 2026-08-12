@@ -7,6 +7,8 @@ parameters:
     type: object
   - name: buildAgentLinuxNative
     type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -26,16 +28,19 @@ stages:
   - template: /scripts/azure-templates-stages-native-linux.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       enableCaching: ${{ parameters.enableCaching }}
 
   - template: /scripts/azure-templates-stages-native-wasm.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       enableCaching: ${{ parameters.enableCaching }}
 
   - template: /scripts/azure-templates-stages-native-tizen.yml@self
     parameters:
       buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
       enableCaching: ${{ parameters.enableCaching }}
 
   - template: /scripts/azure-templates-stages-native-merge.yml@self

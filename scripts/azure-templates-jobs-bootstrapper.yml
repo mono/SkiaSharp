@@ -38,6 +38,7 @@ parameters:
   dotnetWorkloads: ''                           # override the default workloads to install (comma-separated, e.g. 'android,maui-android')
   skipInstall: false                            # whether or not to install any tools
   skipSteps: false                              # whether or not to run any steps
+  use1ESPipelineTemplates: true                 # whether the root uses 1ES Pipeline Templates
   continueOnError: false                        # whether or not to continue on error
 
 jobs:
@@ -395,15 +396,25 @@ jobs:
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         - ${{ if ne(parameters.docker, '') }}:
-          - task: 1ES.BuildContainerImage@1
-            displayName: Build the Docker image for ${{ parameters.docker }}
-            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            inputs:
-              dockerfile: ${{ parameters.docker }}/Dockerfile
-              context: ${{ parameters.docker }}
-              image: skiasharp:skiasharp
-              buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
-              enableNetwork: true
+          - ${{ if eq(parameters.use1ESPipelineTemplates, 'true') }}:
+            - task: 1ES.BuildContainerImage@1
+              displayName: Build the Docker image for ${{ parameters.docker }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                dockerfile: ${{ parameters.docker }}/Dockerfile
+                context: ${{ parameters.docker }}
+                image: skiasharp:skiasharp
+                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
+                enableNetwork: true
+          - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
+            - task: Docker@2
+              displayName: Build the Docker image for ${{ parameters.docker }}
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+              inputs:
+                command: build
+                buildContext: ${{ parameters.docker }}
+                dockerfile: ${{ parameters.docker }}/Dockerfile
+                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
           # Run the target inside the image against the mounted repo. Linux and Windows containers
           # differ in shell and mount path, so the run step is branched by agent OS.
           #
