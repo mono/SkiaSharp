@@ -24,9 +24,6 @@ parameters:
   - name: buildAgentAndroidTests
     type: object
     default: ''
-  - name: use1ESPipelineTemplates
-    type: boolean
-    default: false
   - name: enableSigning
     type: boolean
     default: false
@@ -50,7 +47,6 @@ stages:
         buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
   - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
@@ -59,10 +55,17 @@ stages:
         isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'package') }}
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-        enableSigning: ${{ parameters.enableSigning }}
-        forceRealSigning: ${{ parameters.forceRealSigning }}
         enableCaching: ${{ parameters.enableCaching }}
+
+  - ${{ if and(in(parameters.buildPipelineType, 'package', 'complete'), eq(parameters.enableSigning, 'true')) }}:
+    - template: /scripts/azure-templates-stages-signing.yml@self
+      parameters:
+        buildAgent: ${{ parameters.buildAgentWindows }}
+        forceRealSigning: ${{ parameters.forceRealSigning }}
+        ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+         useRealSigning: true
+        ${{ else }}:
+         useRealSigning: false
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
@@ -73,5 +76,4 @@ stages:
         buildAgentMac: ${{ parameters.buildAgentMac }}
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}

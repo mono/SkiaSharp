@@ -1,8 +1,6 @@
 parameters:
   - name: buildAgentLinuxNative
     type: object
-  - name: use1ESPipelineTemplates
-    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -17,7 +15,6 @@ stages:
         parameters:
           enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           emscripten:
             # .NET 8
             - 3.1.34:

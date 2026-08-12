@@ -1,8 +1,6 @@
 parameters:
   - name: buildAgentLinuxNative
     type: object
-  - name: use1ESPipelineTemplates
-    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -18,7 +16,6 @@ stages:
         parameters:
           enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
             - name: ''
               additionalArgs: --verifyIncluded=fontconfig
@@ -66,7 +63,6 @@ stages:
         parameters:
           enableCaching: ${{ parameters.enableCaching }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           builds:
             - name: ''
               additionalArgs: --verifyExcluded=fontconfig
@@ -75,4 +71,3 @@ stages:
               - arch: ${{ arch }}
                 variant: bionic
                 docker: scripts/infra/native/linux/docker/bionic
-

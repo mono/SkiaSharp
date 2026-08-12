@@ -3,6 +3,10 @@
 SkiaSharp signs already-built NuGet packages in a separate internal stage. The
 native and managed product builds remain owned by Cake.
 
+`azure-templates-stages.yml` includes package and signing as sibling stage
+templates. The package stage template does not import signing or any other
+stage.
+
 ## Supported integration
 
 The repository carries an automation-owned `eng/common` tree matched to the
