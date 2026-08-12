@@ -1,7 +1,6 @@
 parameters:
   enableCaching: false                          # whether to use build caching (opt-in)
   buildAgent: ''                                # the configuration for the build agent
-  use1ESPipelineTemplates: false                # whether or not we are building using the internal 1ES Pipeline Templates
   emscripten: [ ]
 
 jobs:
@@ -11,7 +10,6 @@ jobs:
         name: native_wasm_${{ replace(version.displayName, '.', '_') }}_linux
         displayName: WASM (${{ version.displayName }})
         buildAgent: ${{ parameters.buildAgent }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         docker: scripts/infra/native/wasm/docker
         target: externals-wasm
         cacheJob: native/wasm
