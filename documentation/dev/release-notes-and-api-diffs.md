@@ -856,12 +856,14 @@ The source of truth stays in Cake: for published lines, Cake reads the
 `HarfBuzzSharp` dependency from each emitted `SkiaSharp.HarfBuzz` package's nuspec; for
 the in-flight unpublished line, it falls back to the working tree's `scripts/VERSIONS.txt`
 values so the next page can link the HarfBuzz API-diff folder before the package is on
-the feed. Before HarfBuzz package scoping begins, Cake marks every feed-backed
-SkiaSharp line even when its API-diff folder is cached, then adds the working-tree
-fallback only when that line is absent from the feed. The complete map therefore
-exists before the first HarfBuzz package is filtered: cached published mappings
-cannot be overwritten, and a new in-flight HarfBuzz folder is emitted on the first
-scoped run rather than requiring a second pass.
+the feed. Before HarfBuzz package scoping begins, Cake reads the published
+`SkiaSharp.HarfBuzz` nuspec for every SkiaSharp line at or above the history floor,
+even when its API-diff folder is cached or outside the requested output scope, then
+adds the working-tree fallback only when that line is absent from the feed. The
+complete current-generation map therefore exists before the first HarfBuzz package
+is filtered: cached published mappings cannot be overwritten, a selected page can
+resolve an out-of-range predecessor, and a new in-flight HarfBuzz folder is emitted
+on the first scoped run rather than requiring a second pass.
 
 Cake **merges** the sidecar instead of overwriting it blindly. A scoped or incremental
 run only recomputes the lines it actually processed, so it loads the committed object,
@@ -1533,7 +1535,9 @@ boolean argument); `prepare.sh` translates its shell flags to those names.
   files once, immediately before the first package copies a new diff into the shared
   line folder. Subsequent packages append their own diffs without clearing earlier
   package output, so stale `*.breaking.md` files cannot survive while unrelated cached
-  lines remain intact.
+  lines remain intact. Per-line `index.md` landing pages are likewise emitted only for
+  selected lines or the explicit missing co-release repair; out-of-range indexes are
+  not reformatted as a side effect.
 
 The target clears **only** generated API-diff files as defined in §3.5 — files whose
 first line starts with `# API diff:` and that are not retired `*.humanreadable.md` files.

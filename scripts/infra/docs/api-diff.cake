@@ -93,6 +93,35 @@ Task ("docs-api-diff")
     // by SkiaSharp line core; value is the HarfBuzz line core shipping with it.
     var skiaHarfBuzzDeps = ReadCoReleaseMap ();
     var feedSkiaHarfBuzzLines = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+    // Co-release facts are needed even when a line's API-diff folder is cached or
+    // outside the requested output scope. Read every feed-backed v4+ binding line
+    // before HarfBuzz scoping so a selected page can resolve its immediate previous
+    // co-release without requiring that predecessor page to be regenerated first.
+    var skiaHarfBuzzFeedVersions = await NuGetVersions.GetAllAsync (
+        "SkiaSharp.HarfBuzz", filter);
+    var skiaHarfBuzzFeedLines = skiaHarfBuzzFeedVersions
+        .GroupBy (v => v.ToNormalizedString ().Split ('-') [0])
+        .Select (g => {
+            var stable = g
+                .Where (v => !v.IsPrerelease)
+                .OrderByDescending (v => v)
+                .FirstOrDefault ();
+            return (key: g.Key, rep: stable ?? g.OrderByDescending (v => v).First ());
+        })
+        .Where (line => !IsBelowHistoryFloor (line.key, "skiasharp"))
+        .OrderBy (line => line.rep)
+        .ToList ();
+    foreach (var line in skiaHarfBuzzFeedLines) {
+        var version = line.rep.ToNormalizedString ();
+        var versionRoot = await comparer.ExtractCachedPackageAsync (
+            "SkiaSharp.HarfBuzz", version);
+        var hbDep = ReadHarfBuzzDependencyLine (versionRoot);
+        if (string.IsNullOrEmpty (hbDep))
+            throw new Exception (
+                $"SkiaSharp.HarfBuzz {version} has no HarfBuzzSharp dependency.");
+        skiaHarfBuzzDeps [line.key] = hbDep;
+        feedSkiaHarfBuzzLines.Add (line.key);
+    }
 
     // Every tracked package in a family writes beneath the same release-line folder.
     // A scoped rebuild must clear that shared folder once, before the first package
@@ -145,7 +174,9 @@ Task ("docs-api-diff")
 
         Information ($"Comparing the assemblies in '{id}'...");
 
-        var allVersions = await NuGetVersions.GetAllAsync (id, filter);
+        var allVersions = id == "SkiaSharp.HarfBuzz"
+            ? skiaHarfBuzzFeedVersions
+            : await NuGetVersions.GetAllAsync (id, filter);
 
         // The newest stable release on the feed. It is the cut-off for preview
         // emission: a preview-only line is only worth an api diff while it is
@@ -207,12 +238,6 @@ Task ("docs-api-diff")
             // write it to (e.g. 4.148.0).
             var version = emit [idx].rep.ToNormalizedString ();
             var apiDiffVersion = emit [idx].key;
-
-            // Mark every published SkiaSharp.HarfBuzz line before incremental/scoped
-            // gating. Its committed co-release mapping remains authoritative even when
-            // the API-diff folder is cached and no package extraction is needed.
-            if (id == "SkiaSharp.HarfBuzz")
-                feedSkiaHarfBuzzLines.Add (apiDiffVersion);
 
             // The committed folder for this line: SkiaSharp family -> releases/<line>/<id>/…;
             // HarfBuzz family -> releases/harfbuzzsharp/<hb-line>/<id>/… (spec §3.3/§3.4).
@@ -347,7 +372,8 @@ Task ("docs-api-diff")
 
     // Write the per-line API-diff index.md landing pages (spec §3.3/§3.4) and the
     // co-release map sidecar (spec §3.6) the Python release-notes engine consumes.
-    WriteApiDiffFolderIndexes (existingApiDiffFiles);
+    WriteApiDiffFolderIndexes (
+        isScoped, minVersion, maxVersion, skiaHarfBuzzDeps);
     WriteCoReleaseMap (skiaHarfBuzzDeps);
 
     // clean up after working
@@ -575,7 +601,11 @@ void WriteCoReleaseMap (IDictionary<string, string> skiaHarfBuzzDeps)
 // flags any with a `<assembly>.breaking.md` sibling as breaking, and links back to the
 // `../<line>.md` hub. It carries the API_DIFF_MARKER like every other generated file, so
 // the §3.5 wipe regenerates it each run.
-void WriteApiDiffFolderIndexes (ISet<string> existingApiDiffFiles)
+void WriteApiDiffFolderIndexes (
+    bool isScoped,
+    string minVersion,
+    string maxVersion,
+    IDictionary<string, string> skiaHarfBuzzDeps)
 {
     if (!DirectoryExists (RELEASES_PATH))
         return;
@@ -583,9 +613,12 @@ void WriteApiDiffFolderIndexes (ISet<string> existingApiDiffFiles)
     // SkiaSharp family: line folders directly under releases/ (name starts with a digit).
     foreach (var dir in GetSubDirectories (RELEASES_PATH)) {
         var name = dir.GetDirectoryName ();
-        if (name.Length > 0 && char.IsDigit (name [0]))
-            WriteApiDiffFolderIndex (
-                dir, name, $"../{name}.md", existingApiDiffFiles);
+        if (name.Length > 0
+                && char.IsDigit (name [0])
+                && !IsBelowHistoryFloor (name, "skiasharp")
+                && (!isScoped || CoreInRange (
+                    name, minVersion, maxVersion)))
+            WriteApiDiffFolderIndex (dir, name, $"../{name}.md");
     }
 
     // HarfBuzz family: line folders one level deeper, under releases/harfbuzzsharp/.
@@ -593,9 +626,20 @@ void WriteApiDiffFolderIndexes (ISet<string> existingApiDiffFiles)
     if (DirectoryExists (hbRoot)) {
         foreach (var dir in GetSubDirectories (hbRoot)) {
             var name = dir.GetDirectoryName ();
-            if (name.Length > 0 && char.IsDigit (name [0]))
-                WriteApiDiffFolderIndex (
-                    dir, name, null, existingApiDiffFiles);
+            var indexPath = dir.CombineWithFilePath ("index.md");
+            var missingCoReleaseApiDiff = IsCoReleasedHarfBuzzLine (
+                name, skiaHarfBuzzDeps) && !FileExists (indexPath);
+            if (name.Length > 0
+                    && char.IsDigit (name [0])
+                    && !IsBelowHistoryFloor (name, "harfbuzzsharp")
+                    && (
+                        !isScoped
+                        || FamilyCoreInRange (
+                            name, true, minVersion, maxVersion,
+                            skiaHarfBuzzDeps)
+                        || missingCoReleaseApiDiff
+                    ))
+                WriteApiDiffFolderIndex (dir, name, null);
         }
     }
 }
@@ -606,8 +650,7 @@ void WriteApiDiffFolderIndexes (ISet<string> existingApiDiffFiles)
 void WriteApiDiffFolderIndex (
     DirectoryPath lineDir,
     string line,
-    string releaseNotesHref,
-    ISet<string> existingApiDiffFiles)
+    string releaseNotesHref)
 {
     var body = new System.Text.StringBuilder ();
     var hasContent = false;
@@ -642,10 +685,13 @@ void WriteApiDiffFolderIndex (
         : $"> Back to [release notes]({releaseNotesHref}).{n}{n}";
     var text = $"{API_DIFF_MARKER} {line}{n}{n}{backLink}{body}";
     var indexPath = lineDir.CombineWithFilePath ("index.md");
-    var isNewIndex = !existingApiDiffFiles.Contains (indexPath.FullPath);
-    System.IO.File.WriteAllText (indexPath.FullPath, text);
-    if (isNewIndex)
-        NormalizeGeneratedMarkdown (indexPath);
+    var normalized = text.TrimEnd ('\r', '\n') + Environment.NewLine;
+    if (
+        FileExists (indexPath)
+        && System.IO.File.ReadAllText (indexPath.FullPath) == normalized
+    )
+        return;
+    System.IO.File.WriteAllText (indexPath.FullPath, normalized);
 }
 
 void NormalizeGeneratedMarkdown (FilePath path)

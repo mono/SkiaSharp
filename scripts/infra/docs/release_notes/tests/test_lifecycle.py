@@ -1000,7 +1000,7 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             source,
         )
         self.assertIn(
-            "feedSkiaHarfBuzzLines.Add (apiDiffVersion)",
+            "feedSkiaHarfBuzzLines.Add (line.key)",
             source,
         )
         self.assertIn(
@@ -1008,7 +1008,7 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             source,
         )
         self.assertIn(
-            "dir, name, null, existingApiDiffFiles",
+            "WriteApiDiffFolderIndex (dir, name, null)",
             source,
         )
         self.assertIn(
@@ -1028,13 +1028,15 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             source,
         )
         feed_mark = source.index(
-            "feedSkiaHarfBuzzLines.Add (apiDiffVersion)"
+            "feedSkiaHarfBuzzLines.Add (line.key)"
         )
+        package_loop = source.index("foreach (var id in packageIds)")
         cache_skip = source.index("if (!force && FileExists (lineIndex))")
         inflight = source.index("if (isHarfBuzz && !inflightMappingRecorded)")
         scoped_harfbuzz = source.index(
             "if (isScoped && !FamilyCoreInRange ("
         )
+        self.assertLess(feed_mark, package_loop)
         self.assertLess(feed_mark, cache_skip)
         self.assertLess(inflight, scoped_harfbuzz)
 
@@ -1055,15 +1057,19 @@ class ApiDiffLifecycleTests(unittest.TestCase):
     def test_api_diff_markdown_is_normalized_before_commit(self):
         source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
         self.assertIn(
-            "var isNewIndex = !existingApiDiffFiles.Contains (indexPath.FullPath)",
+            "var normalized = text.TrimEnd ('\\r', '\\n') + Environment.NewLine",
             source,
         )
         self.assertIn(
-            "if (isNewIndex)",
+            "System.IO.File.ReadAllText (indexPath.FullPath) == normalized",
             source,
         )
         self.assertIn(
-            "NormalizeGeneratedMarkdown (indexPath)",
+            "!isScoped || CoreInRange",
+            source,
+        )
+        self.assertIn(
+            "|| missingCoReleaseApiDiff",
             source,
         )
         self.assertIn(
