@@ -207,16 +207,20 @@ A released SkiaSharp page may carry a folded HarfBuzzSharp section, but that sec
 does not make a second emitted release-notes line (§1.5/§4.5).
 
 For **API diffs**, the same emission rule is applied to each package-version bucket
-(`skiasharp` and `harfbuzzsharp`). The SkiaSharp API-diff folders and SkiaSharp
-release-note pages therefore stay aligned above the history floor. HarfBuzzSharp
-API-diff folders remain under `releases/harfbuzzsharp/<hb-line>/` and are linked from
-the co-shipping SkiaSharp pages; they are reference artifacts, not standalone
+(`skiasharp` and `harfbuzzsharp`), with one additional HarfBuzzSharp signal: any
+HarfBuzzSharp line named by the SkiaSharp co-release map is emitted even when its
+package remained prerelease-only and is now behind a newer stable HarfBuzzSharp
+version. The SkiaSharp API-diff folders and SkiaSharp release-note pages therefore
+stay aligned above the history floor, and every HarfBuzzSharp link from a SkiaSharp
+page has a landing page. HarfBuzzSharp API-diff folders remain under
+`releases/harfbuzzsharp/<hb-line>/`; they are reference artifacts, not standalone
 release-note hubs (§3.4/§4.5).
 
-Emission is governed solely by these three signals, never by the incidental existence
-of a `release/<ver>` branch: a stale or abandoned preview branch that is not listed in
-`versions.json` and is not ahead of the latest stable produces **no** SkiaSharp release
-page.
+SkiaSharp emission is governed solely by its three signals, never by the incidental
+existence of a `release/<ver>` branch: a stale or abandoned preview branch that is not
+listed in `versions.json` and is not ahead of the latest stable produces **no**
+SkiaSharp release page. HarfBuzzSharp's additional co-release signal exists only to
+guarantee the API-diff target linked by such an emitted SkiaSharp page.
 
 **History floor (a performance skip, not a rule change).** The top-level
 `history_floor` block in `versions.json` optionally sets a per-bucket minimum line core

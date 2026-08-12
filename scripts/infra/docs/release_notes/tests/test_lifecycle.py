@@ -289,6 +289,31 @@ class ShipmentCollectionTests(unittest.TestCase):
 
 
 class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
+    def test_api_diff_links_require_generated_landing_pages(self):
+        data = page_data([])
+        data["api_links"] = [{
+            "label": "HarfBuzzSharp API diff",
+            "href": "harfbuzzsharp/8.3.1.6/index.md",
+        }]
+        prose = cumulative_prose({})
+
+        with tempfile.TemporaryDirectory() as tmp:
+            releases = Path(tmp)
+            with patch.object(RENDER, "RELEASES_DIR", releases):
+                errors = RENDER.validate(data, prose)
+                self.assertTrue(any(
+                    "data.api_links target does not exist" in error
+                    for error in errors
+                ))
+
+                target = releases / data["api_links"][0]["href"]
+                target.parent.mkdir(parents=True)
+                target.write_text("# API diff: 8.3.1.6\n")
+                self.assertFalse(any(
+                    "data.api_links target does not exist" in error
+                    for error in RENDER.validate(data, prose)
+                ))
+
     def test_harfbuzz_version_change_requires_authored_summary(self):
         data = page_data([])
         data["harfbuzz"] = {
@@ -681,6 +706,14 @@ class ApiDiffLifecycleTests(unittest.TestCase):
         )
         self.assertIn(
             "WriteApiDiffFolderIndex (dir, name, null)",
+            source,
+        )
+        self.assertIn(
+            "IsCoReleasedHarfBuzzLine (l.key, skiaHarfBuzzDeps)",
+            source,
+        )
+        self.assertIn(
+            "skiaHarfBuzzDeps.Values.Any",
             source,
         )
 

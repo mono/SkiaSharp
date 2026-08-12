@@ -402,6 +402,15 @@ def validate(data, prose):
 
 def _finish_validate(errors, data, prose):
     errors.extend(common.validate_shipments(data))
+    for link in data.get("api_links") or []:
+        href = (link.get("href") or "").split("#", 1)[0]
+        if not href or "://" in href:
+            continue
+        if not (RELEASES_DIR / href).is_file():
+            errors.append(
+                "data.api_links target does not exist: {}. "
+                "Prepare must generate every linked API-diff landing page.".format(href))
+
     roster = {c["login"] for c in data.get("contributors", [])}
     summaries = prose.get("contributor_summaries") or {}
     missing = sorted(roster - set(summaries))

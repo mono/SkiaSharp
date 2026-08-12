@@ -147,7 +147,11 @@ Task ("docs-api-diff")
         //      superseded preview-only line like 4.147 or 3.0.0 (spec §1.4 rule 2).
         //      "superseded" only skips a line as a *baseline* (§1.3); it does NOT
         //      drop the line's own page — a shipped preview still needs its diff; or
-        //   3. it is a preview-only line ahead of the last stable (active dev line).
+        //   3. it is a preview-only line ahead of the last stable (active dev line); or
+        //   4. for HarfBuzzSharp, it is referenced by a SkiaSharp co-release. A
+        //      HarfBuzz package can remain prerelease-only even though it shipped inside
+        //      a published SkiaSharp preview line, so the co-release is the durable
+        //      signal that its API-diff folder must exist.
         // Any other preview-only line (old, never shipped, not listed) is dropped.
         // The history floor (spec §1.4) then removes any line below the configured
         // minimum — the obsolete back-catalogue whose committed folders we keep but
@@ -158,7 +162,9 @@ Task ("docs-api-diff")
             .Where (l => !l.rep.IsPrerelease
                 || IsVersionListed (versionsConfig, l.rep.ToNormalizedString ())
                 || latestStable == null
-                || l.rep.CompareTo (latestStable) > 0)
+                || l.rep.CompareTo (latestStable) > 0
+                || (isHarfBuzz
+                    && IsCoReleasedHarfBuzzLine (l.key, skiaHarfBuzzDeps)))
             .ToList ();
         var emit = emittable
             .Where (l => !IsBelowHistoryFloor (l.key, family))
@@ -466,6 +472,14 @@ bool FamilyCoreInRange (
     return skiaHarfBuzzDeps.Any (kvp =>
         CoreInRange (kvp.Key, minVersion, maxVersion)
         && string.Equals (kvp.Value, core, StringComparison.OrdinalIgnoreCase));
+}
+
+bool IsCoReleasedHarfBuzzLine (
+    string core,
+    IDictionary<string, string> skiaHarfBuzzDeps)
+{
+    return skiaHarfBuzzDeps.Values.Any (value =>
+        string.Equals (value, core, StringComparison.OrdinalIgnoreCase));
 }
 
 // Write the co-release map sidecar (spec §3.6): a plain { "skia_line": "hb_line" } object,
