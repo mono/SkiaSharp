@@ -429,6 +429,32 @@ def _finish_validate(errors, data, prose):
             errors.append(
                 "category heading '{}' is not one of the allowed sections: {}"
                 .format(cat.get("heading"), ", ".join(sorted(allowed))))
+        if (int(data.get("format") or 0) >= 5
+                and cat.get("heading") == "Security"):
+            for bullet in cat.get("bullets") or []:
+                refs = bullet.get("prs") or []
+                unsupported = []
+                for number in refs:
+                    fact = _pr(data, number) or {}
+                    if not (
+                        fact.get("security_evidence") is True
+                        or common.has_security_evidence(
+                            fact.get("title") or "",
+                            fact.get("body") or "",
+                        )
+                    ):
+                        unsupported.append(number)
+                if not refs:
+                    errors.append(
+                        "Security bullets must cite PRs with explicit CVE, advisory, "
+                        "vulnerability, security-release, or security-hardening evidence.")
+                elif unsupported:
+                    errors.append(
+                        "Security bullet references PRs without explicit security "
+                        "evidence: {}. Move ordinary dependency updates to Engine."
+                        .format(", ".join("#{}".format(number)
+                                          for number in unsupported))
+                    )
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})

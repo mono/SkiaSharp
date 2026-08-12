@@ -517,6 +517,72 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         prose["release_summaries"][item["tag"]]["prs"].append(101)
         self.assertEqual(RENDER.validate(data, prose), [])
 
+    def test_security_category_requires_explicit_security_evidence(self):
+        data = page_data([
+            shipment("v4.151.0-preview.1.1", [101, 102]),
+        ])
+        data["prs"]["101"]["body"] = (
+            "Updates libexpat with upstream security hardening."
+        )
+        data["prs"]["102"]["body"] = "Updates libpng to the latest release."
+        prose = cumulative_prose({
+            "v4.151.0-preview.1.1": release_summary([101, 102]),
+        })
+        prose["categories"] = [{
+            "heading": "Security",
+            "bullets": [{
+                "lead": "Native dependencies updated",
+                "detail": "Updates bundled parsers and codecs.",
+                "prs": [101, 102],
+            }],
+        }]
+
+        errors = RENDER.validate(data, prose)
+        self.assertTrue(any(
+            "without explicit security evidence: #102" in error
+            for error in errors
+        ))
+
+        prose["categories"][0]["bullets"][0]["prs"] = [101]
+        self.assertEqual(RENDER.validate(data, prose), [])
+
+    def test_security_evidence_accepts_standard_explicit_wording(self):
+        for text in (
+            "Addresses CVE.",
+            "Addresses CVE-2026-1234.",
+            "Publishes an advisory.",
+            "Includes upstream security fixes.",
+            "Includes security updates and advisories.",
+            "Fixes two vulnerabilities.",
+            "Applies security patches.",
+        ):
+            self.assertTrue(COMMON.has_security_evidence("", text), text)
+        self.assertFalse(COMMON.has_security_evidence(
+            "Update libpng",
+            "Updates to the latest upstream release.",
+        ))
+
+    def test_legacy_security_prose_does_not_require_new_evidence_field(self):
+        data = page_data([
+            shipment("v4.151.0-preview.1.1", [101]),
+        ])
+        data["format"] = 3
+        prose = cumulative_prose({})
+        prose["release_summaries"] = {}
+        prose["preview_summaries"] = {
+            "v4.151.0-preview.1.1": "Updates a bundled dependency.",
+        }
+        prose["categories"] = [{
+            "heading": "Security",
+            "bullets": [{
+                "lead": "Bundled dependency updated",
+                "detail": "Updates the native dependency.",
+                "prs": [101],
+            }],
+        }]
+
+        self.assertEqual(RENDER.validate(data, prose), [])
+
     def test_exact_build_scope_replaces_rollup_milestone_scope(self):
         item = shipment("v4.151.0-preview.1.2", [102])
         data = page_data([item])
