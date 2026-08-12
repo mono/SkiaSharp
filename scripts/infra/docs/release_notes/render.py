@@ -168,11 +168,7 @@ def render_github_release_summary(data, prose, tag):
         "",
         RELEASE_LINKS_MARKER,
     ]
-    exact_prs = (
-        [int(number) for number in (data.get("prs") or {})]
-        if shipment.get("channel") == "stable"
-        else shipment.get("prs") or []
-    )
+    exact_prs = shipment.get("prs") or []
     relevant = [
         number for number in exact_prs
         if _classification(_pr(data, number)) != "internal"
