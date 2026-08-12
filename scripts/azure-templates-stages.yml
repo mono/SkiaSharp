@@ -24,6 +24,9 @@ parameters:
   - name: buildAgentAndroidTests
     type: object
     default: ''
+  - name: use1ESPipelineTemplates
+    type: boolean
+    default: true
   - name: enableSigning
     type: boolean
     default: false
@@ -47,6 +50,7 @@ stages:
         buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
         buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
         buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
   - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
@@ -75,4 +79,5 @@ stages:
         buildAgentMac: ${{ parameters.buildAgentMac }}
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
+        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
