@@ -47,10 +47,6 @@ parameters:
     displayName: 'Run API Scan'
     type: boolean
     default: false
-  - name: enableSigning
-    displayName: 'Run the Arcade NuGet signing stage'
-    type: boolean
-    default: false
   - name: signingSourceBuildId
     displayName: 'Sign NuGets from an existing package build ID (0 runs the normal pipeline)'
     type: number
@@ -122,7 +118,7 @@ extends:
         - template: /scripts/azure-templates-stages.yml@self
           parameters:
             buildPipelineType: 'package'
-            enableSigning: ${{ parameters.enableSigning }}
+            enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
             forceRealSigning: ${{ parameters.forceRealSigning }}
             use1ESPipelineTemplates: true
             buildAgentHost: ${{ parameters.buildAgentHost }}

@@ -76,8 +76,9 @@ byte-identical.
 
 ## Test and real signing
 
-The package pipeline selects signing mode using the repository's established
-policy:
+Internal package and complete pipelines sign automatically for every non-PR
+run. The public pipeline never enables the signing stage. Internal signing mode
+uses the repository's established policy:
 
 - `main` and `release/*` use real signing;
 - an explicit `forceRealSigning` queue parameter uses real signing;
