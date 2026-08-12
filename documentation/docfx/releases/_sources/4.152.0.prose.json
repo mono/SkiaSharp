@@ -1,0 +1,80 @@
+{
+  "theme": "Graphite and Vulkan expansion",
+  "highlights_headline": "SkiaSharp 4.152.0 moves to Skia m152 and introduces the next-generation Graphite GPU backend.",
+  "highlights_body": "It adds Vulkan, Metal, and Dawn Graphite bindings, backend-neutral asynchronous pixel readback, and a Silk.NET Vulkan integration package. The release also strengthens native-object lifetime handling, improves several hot paths, and enables explicitly loaded fonts on Windows Nano Server.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia advances to Chrome milestone m152",
+          "detail": "Updates the bundled engine from m151 to m152, rolls VulkanMemoryAllocator to 3.4.0, and includes upstream font-rendering, Ganesh stability, and stale-texture readback fixes.",
+          "prs": [4651, 4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU bindings arrive",
+          "detail": "Adds contexts, recorders, recordings, backend textures, image caching, and Vulkan, Metal, and Dawn backend contexts for Skia's next-generation GPU architecture.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Asynchronous pixel readback becomes backend-neutral",
+          "detail": "Adds RequestReadPixels APIs to SKImage and SKSurface, callback-scoped read results, rescale controls, copy helpers, and Ganesh completion pumping.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Silk.NET Vulkan integration expands platform reach",
+          "detail": "Adds the SkiaSharp.Vulkan.Silk.NET package for cross-platform Vulkan setup, including Android, and makes the GRVkExtensions constructor public.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Nano Server can render explicitly loaded fonts",
+          "detail": "The Nano Server native asset now uses bundled FreeType so typefaces loaded from streams, data, or files render without DirectWrite.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Borrowed native data stays alive",
+          "detail": "Region iterators and derived pixmaps now retain their source owners, preventing use-after-free when those sources are collected.",
+          "prs": [4355, 4558]
+        },
+        {
+          "lead": "Failed raster image creation releases its pixel buffer",
+          "detail": "SKImage.Create now frees its unmanaged allocation when native raster creation fails instead of leaking the buffer.",
+          "prs": [4455]
+        },
+        {
+          "lead": "Managed hot paths do less work",
+          "detail": "SKData.SaveTo avoids an intermediate buffer copy on span-capable targets, while native wrapper creation, encoded-text marshalling, and runtime-effect uniform setup reduce repeated work or allocations.",
+          "prs": [4550, 4630, 4498, 4512]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType-backed font support for Windows Nano Server",
+    "mmitche": "Faster Windows native builds through one-time MSVC environment initialization",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {
+      "summary": "SkiaSharp 4.152.0 Preview 1 updates the bundled engine to Skia m152 and introduces Graphite bindings for Vulkan, Metal, and Dawn. It adds backend-neutral RequestReadPixels APIs and the SkiaSharp.Vulkan.Silk.NET package for cross-platform Vulkan integration. Region iterators and derived pixmaps now retain their native data owners, and failed SKImage raster creation releases its unmanaged pixel buffer. The release also enables explicitly loaded fonts on Windows Nano Server and improves SKData.SaveTo, native wrapper creation, encoded-text marshalling, and runtime-effect uniform setup.",
+      "prs": [4651, 3968, 4545, 4527, 4355, 4558, 4455, 4280, 4550, 4630, 4498, 4512]
+    }
+  },
+  "harfbuzz_summary": "Co-ships HarfBuzzSharp 14.2.1 with no HarfBuzz-specific product changes in this release."
+}

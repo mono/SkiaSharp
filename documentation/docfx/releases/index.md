@@ -13,18 +13,18 @@ SkiaSharp 4.x follows Chrome's release cycle. Each SkiaSharp minor version corre
 | Stable Cut | RC | Critical bug fixes only, no new features |
 | Stable Release | Stable | Ship to NuGet.org, tag and create GitHub Release |
 
-**Schedule for the two milestones currently in flight (m150 and m151), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
+**Schedule for the two milestones currently in flight (m152 and m153), from the [Chromium release schedule](https://chromiumdash.appspot.com/schedule):**
 
 | Date | Event | Package |
 |------|-------|---------|
-| Jun 3 | m150 Beta Promotion | `4.150.0-preview.1` |
-| Jun 17 | m150 Early Stable | `4.150.0-preview.2` |
-| Jun 23 | m150 Stable Cut | `4.150.0-rc.1` |
-| Jun 30 | m150 Stable Release | `4.150.0` |
-| Jul 1 | m151 Beta Promotion | `4.151.0-preview.1` |
-| Jul 15 | m151 Early Stable | `4.151.0-preview.2` |
-| Jul 21 | m151 Stable Cut | `4.151.0-rc.1` |
-| Jul 28 | m151 Stable Release | `4.151.0` |
+| Jul 29 | m152 Beta Promotion | `4.152.0-preview.1` |
+| Aug 12 | m152 Early Stable | `4.152.0-preview.2` |
+| Aug 18 | m152 Stable Cut | `4.152.0-rc.1` |
+| Aug 19 | m153 Beta Promotion | `4.153.0-preview.1` |
+| Aug 25 | m152 Stable Release | `4.152.0` |
+| Aug 26 | m153 Early Stable | `4.153.0-preview.2` |
+| Sep 1 | m153 Stable Cut | `4.153.0-rc.1` |
+| Sep 8 | m153 Stable Release | `4.153.0` |
 
 Two milestones are always in flight — as one enters its RC/stable phase, the next begins its preview phase.
 
@@ -33,11 +33,11 @@ Two milestones are always in flight — as one enters its RC/stable phase, the n
 
 ### Versioning
 
-Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.151.0` ships alongside Chrome 151's stable release.
+Packages follow the scheme `4.{chrome_milestone}.{patch}` — the middle number **is** the Chrome milestone number. For example, `4.153.0` ships alongside Chrome 153's stable release.
 
-- Preview: `4.151.0-preview.1`, `4.151.0-preview.2`
-- Release candidate: `4.151.0-rc.1`
-- Stable: `4.151.0`
+- Preview: `4.153.0-preview.1`, `4.153.0-preview.2`
+- Release candidate: `4.153.0-rc.1`
+- Stable: `4.153.0`
 
 Prerelease suffixes follow [NuGet semver conventions](https://learn.microsoft.com/nuget/concepts/package-versioning#pre-release-versions).
 
@@ -55,9 +55,13 @@ The full Chrome release calendar is published at [Chromium's release schedule](h
 | Path | Version line | Latest release |
 |------|--------------|----------------|
 | Stable | 4.150.x | [4.150.2](4.150.2.md) |
+| Preview | 4.152.x | [4.152.0](4.152.0.md) |
 
 ## Supported versions
 
+- **Version 4.152.x** — Preview
+  - [Version 4.152.0](4.152.0.md)
+  - [Version 4.152.0 (Unreleased)](4.152.0-unreleased.md)
 - **Version 4.150.x** — Stable
   - [Version 4.150.3 (Unreleased)](4.150.3-unreleased.md)
   - [Version 4.150.2](4.150.2.md)
