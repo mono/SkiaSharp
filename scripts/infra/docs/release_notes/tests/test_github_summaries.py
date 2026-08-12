@@ -344,6 +344,25 @@ class CandidateSelectionTests(unittest.TestCase):
 
         self.assertEqual([item.tag for item in selected], [new_tag])
 
+    def test_exact_request_rejects_unsupported_cached_page(self):
+        repo = FakeRepository()
+        path = prose_path("3.119.0")
+        tag = "v3.119.0-preview.1.1"
+        repo.current_paths = [path]
+        repo.current[path] = prose({
+            tag: {"summary": "Old cached preview.", "prs": [1]},
+        })
+        repo.current[data_path("3.119.0")] = {
+            "format": 4,
+            "shipments": [shipment(tag)],
+        }
+
+        with self.assertRaisesRegex(
+            updater.UpdateError,
+            "Force-regenerate this version",
+        ):
+            updater.select_current_candidates(repo, tag=tag)
+
     def test_push_migration_does_not_parse_unsupported_old_prose(self):
         repo = FakeRepository()
         path = prose_path("4.151.0")

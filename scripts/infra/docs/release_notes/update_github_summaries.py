@@ -271,6 +271,13 @@ def _is_unreleased(prose_path: str) -> bool:
     return bool(match and match.group("version").endswith("-unreleased"))
 
 
+def _prose_core(prose_path: str) -> str:
+    match = PROSE_NAME_RE.fullmatch(prose_path)
+    if not match:
+        raise UpdateError("invalid release prose path {!r}".format(prose_path))
+    return match.group("version").removesuffix("-unreleased")
+
+
 def _candidate(
     tag: str,
     prose_path: str,
@@ -398,6 +405,17 @@ def select_current_candidates(
         if prose is None or data is None:
             continue
         if not _is_supported_data(data):
+            requested_core = tag[1:].split("-", 1)[0] if tag else None
+            if requested_core == _prose_core(prose_path):
+                raise UpdateError(
+                    "{} uses unsupported release data format {}; expected {}. "
+                    "Force-regenerate this version before updating its release."
+                    .format(
+                        data_path,
+                        data.get("format"),
+                        model.DATA_FORMAT,
+                    )
+                )
             continue
         summaries = _summary_map(prose)
         shipments = _shipment_map(data, data_path)

@@ -146,6 +146,11 @@ def _classification(pr):
 
 def render_github_release_summary(data, prose, tag):
     """Render the reviewed introduction for one exact GitHub Release."""
+    if data.get("format") != model.DATA_FORMAT:
+        raise ValueError(
+            "unsupported release data format {}; only format {} is supported"
+            .format(data.get("format"), model.DATA_FORMAT)
+        )
     shipment = next(
         (s for s in data.get("shipments") or [] if s.get("tag") == tag), None)
     if not shipment:
@@ -1091,12 +1096,18 @@ def render_all(min_core=None, max_core=None):
         if not sd.is_dir():
             continue
         for dp in sorted(sd.glob("*.data.json")):
-            data = json.loads(dp.read_text())
-            core = common.core_tuple(str(data.get("version") or "0"))
+            stem = dp.name[:-len(".data.json")]
+            version = (
+                stem[:-len("-unreleased")]
+                if stem.endswith("-unreleased")
+                else stem
+            )
+            core = common.core_tuple(version)
             if min_core is not None and core < min_core:
                 continue
             if max_core is not None and core > max_core:
                 continue
+            data = json.loads(dp.read_text())
             page = _page_for_data(dp)
             for shipment in data.get("shipments") or []:
                 tag = shipment.get("tag")

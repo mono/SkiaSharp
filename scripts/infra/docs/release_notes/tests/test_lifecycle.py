@@ -519,6 +519,18 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         self.assertIn("The stable package now ships.", text)
         self.assertIn("0 pull requests · 0 consumer-facing", text)
 
+    def test_release_summary_rejects_unsupported_data_format(self):
+        item = shipment("v4.151.0", [], channel="stable")
+        data = page_data([item])
+        data["format"] = 4
+
+        with self.assertRaisesRegex(ValueError, "only format 5 is supported"):
+            RENDER.render_github_release_summary(
+                data,
+                cumulative_prose({}),
+                item["tag"],
+            )
+
     def test_release_summary_prs_must_be_subset_of_exact_scope(self):
         item = shipment("v4.151.0-preview.1.1", [101])
         data = page_data([item])
@@ -779,9 +791,7 @@ class ScopedPruningTests(unittest.TestCase):
             (sources / "4.147.0.prose.json").write_text(
                 json.dumps(cumulative_prose({}))
             )
-            (sources / "1.68.2.data.json").write_text(
-                json.dumps({"version": "1.68.2"})
-            )
+            (sources / "1.68.2.data.json").write_text("not json")
 
             with patch.object(RENDER, "RELEASES_DIR", releases), patch.object(
                 COMMON, "RELEASES_DIR", releases
