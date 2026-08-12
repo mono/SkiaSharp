@@ -679,6 +679,10 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             "!feedSkiaHarfBuzzLines.Contains (inflightSkia)",
             source,
         )
+        self.assertIn(
+            "WriteApiDiffFolderIndex (dir, name, null)",
+            source,
+        )
 
 
 if __name__ == "__main__":

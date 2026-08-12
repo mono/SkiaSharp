@@ -665,7 +665,9 @@ distinct from the `HarfBuzzSharp` package id one level down.
   the same package-namespaced, per-assembly shape as §3.3.
 - Each folder also gets a generated **`index.md`** (same package list shape as §3.3).
   This is the target of the SkiaSharp page banner's `[HarfBuzzSharp API diff]` link
-  (§4.4/§4.5).
+  (§4.4/§4.5). HarfBuzzSharp has no standalone human release page, so this API-diff
+  index has no release-notes backlink; the co-shipping SkiaSharp page owns the
+  HarfBuzz summary and the link into this index.
 - Repeated SkiaSharp releases may ship the *same* HarfBuzzSharp line. They all point to
   the same `harfbuzzsharp/<hb-line>/index.md` API-diff landing through their own
   `data.harfbuzz` blocks; no duplicate human HarfBuzz pages are created.

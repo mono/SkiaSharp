@@ -535,7 +535,7 @@ void WriteApiDiffFolderIndexes ()
     foreach (var dir in GetSubDirectories (RELEASES_PATH)) {
         var name = dir.GetDirectoryName ();
         if (name.Length > 0 && char.IsDigit (name [0]))
-            WriteApiDiffFolderIndex (dir, name);
+            WriteApiDiffFolderIndex (dir, name, $"../{name}.md");
     }
 
     // HarfBuzz family: line folders one level deeper, under releases/harfbuzzsharp/.
@@ -544,15 +544,15 @@ void WriteApiDiffFolderIndexes ()
         foreach (var dir in GetSubDirectories (hbRoot)) {
             var name = dir.GetDirectoryName ();
             if (name.Length > 0 && char.IsDigit (name [0]))
-                WriteApiDiffFolderIndex (dir, name);
+                WriteApiDiffFolderIndex (dir, name, null);
         }
     }
 }
 
-// Write one line folder's index.md. `line` is the folder name (== the §1.1 line core),
-// so the hub back-link is always `../<line>.md` for both families. Skips folders that
-// hold no per-assembly diffs (nothing to land on).
-void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
+// Write one line folder's index.md. SkiaSharp folders link to their matching
+// release page. HarfBuzzSharp has no standalone human page: its summary and API
+// diff link live on the co-shipping SkiaSharp page, so its index has no backlink.
+void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line, string releaseNotesHref)
 {
     var body = new System.Text.StringBuilder ();
     var hasContent = false;
@@ -582,7 +582,10 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line)
         return;
 
     var n = Environment.NewLine;
-    var text = $"{API_DIFF_MARKER} {line}{n}{n}> Back to [release notes](../{line}.md).{n}{n}{body}";
+    var backLink = string.IsNullOrEmpty (releaseNotesHref)
+        ? ""
+        : $"> Back to [release notes]({releaseNotesHref}).{n}{n}";
+    var text = $"{API_DIFF_MARKER} {line}{n}{n}{backLink}{body}";
     var indexPath = lineDir.CombineWithFilePath ("index.md");
     System.IO.File.WriteAllText (indexPath.FullPath, text);
 }
