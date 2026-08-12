@@ -491,15 +491,11 @@ daily run is undesirable (e.g. right after tagging). (Walking a `release/*` ref 
 
 Manual dispatch has one routing input: `source_branch`. For `main`, the workflow
 uses production routing (`main` ← `bot/release-notes`). Any other source must be an
-existing branch on the repository; the workflow targets that source branch directly
-and derives a stable automation head,
-`bot/release-notes-<sanitized-source-branch>-<source-hash>`. The readable prefix is
-sanitized and the stable hash prevents distinct source names from colliding. Callers
-never choose the output refs separately, and a non-main run cannot route its
-generated content into `main`.
-The safe-output allowlists still restrict the patch to the generated
-`documentation/docfx/releases/**` tree and to those derived automation branch
-names.
+existing repository branch and becomes the generated PR base; every run reuses the
+same `bot/release-notes` head. Global workflow concurrency serializes runs so two
+sources cannot overwrite that head simultaneously. Callers never choose output refs,
+and the safe-output allowlists restrict changes to the validated source base, the
+fixed automation head, and `documentation/docfx/releases/**`.
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
 (`prepare.sh` — Cake, `release_notes/generate.py`, then `release_notes/index.py`, §2.2) runs in its
