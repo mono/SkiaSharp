@@ -13,8 +13,6 @@ stages:
         pool: ${{ parameters.buildAgentWindows.pool }}
         workspace:
           clean: all
-        variables:
-          skipNugetSecurityAnalysis: true
         steps:
           - checkout: self
             submodules: false
@@ -134,29 +132,28 @@ stages:
               GdnExportVstsConsole: true
               GdnExportSarifFile: true
               GdnExportHtmlFile: true
-              GdnExportAllTools: false
+              GdnExportAllTools: true
               GdnExportGdnToolApiScan: true
-              GdnExportGdnToolApiScanSeverity: Warning
+              GdnExportGdnToolApiScanSeverity: Note
               GdnExportPolicy: Microsoft
-              GdnExportPolicyMinSev: Warning
+              GdnExportPolicyMinSev: Note
               GdnExportSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
               GdnExportSuppressionSets: default
 
           - task: TSAUpload@2
             displayName: Create bugs for API Scan results
             condition: succeededOrFailed()
-            continueOnError: true
             inputs:
               GdnPublishTsaOnboard: true
               GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\infra\security\tsaoptions-v2.json
               GdnPublishTsaExportedResultsPublishable: true
               GdnPublishTsaPolicy: Microsoft
-              GdnPublishTsaPolicyMinimumSeverity: Warning
+              GdnPublishTsaPolicyMinimumSeverity: Note
               GdnPublishTsaSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
               GdnPublishTsaSuppressionSets: default
-              GdnPublishTsaAllTools: false
+              GdnPublishTsaAllTools: true
               GdnPublishTsaGdnToolApiScan: true
-              GdnPublishTsaGdnToolApiScanSeverity: Warning
+              GdnPublishTsaGdnToolApiScanSeverity: Note
 
           - task: PublishSecurityAnalysisLogs@3
             displayName: Publish API Scan analysis artifacts
@@ -164,7 +161,7 @@ stages:
             inputs:
               ArtifactName: CodeAnalysisLogs - API Scan
               ArtifactType: Container
-              AllTools: false
+              AllTools: true
               ApiScan: true
               ToolLogsNotFoundAction: Standard
 
@@ -172,8 +169,9 @@ stages:
             displayName: Fail on API Scan issues
             condition: succeededOrFailed()
             inputs:
-              GdnBreakAllTools: false
+              GdnBreakAllTools: true
               GdnBreakGdnToolApiScan: true
-              GdnBreakGdnToolApiScanSeverity: Warning
+              GdnBreakGdnToolApiScanSeverity: Note
+              GdnBreakPolicyMinSev: Note
               GdnBreakSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
               GdnBreakSuppressionSets: default
