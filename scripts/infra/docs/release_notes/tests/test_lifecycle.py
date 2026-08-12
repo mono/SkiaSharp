@@ -454,6 +454,18 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
             for error in errors
         ))
 
+    def test_legacy_orphan_harfbuzz_summary_remains_compatible(self):
+        data = page_data([])
+        data["format"] = 3
+        prose = cumulative_prose({})
+        prose["release_summaries"] = {}
+        prose["preview_summaries"] = {}
+        prose["harfbuzz_summary"] = (
+            "Legacy HarfBuzzSharp package notes for 1.68.2."
+        )
+
+        self.assertEqual(RENDER.validate(data, prose), [])
+
     def test_unchanged_harfbuzz_omits_empty_narrative(self):
         data = page_data([])
         data["harfbuzz"] = {

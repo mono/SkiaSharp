@@ -563,7 +563,8 @@ def _finish_validate(errors, data, prose):
 
     hb = data.get("harfbuzz") or {}
     hb_summary = (prose.get("harfbuzz_summary") or "").strip()
-    if hb_summary and not hb:
+    current_format = int(data.get("format") or 0)
+    if current_format >= 5 and hb_summary and not hb:
         errors.append(
             "prose.harfbuzz_summary must be null or omitted when "
             "data.harfbuzz is absent."
@@ -573,7 +574,7 @@ def _finish_validate(errors, data, prose):
             "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
             "prose.harfbuzz_summary is required — summarise the consumer-facing "
             "change (1-2 sentences).")
-    if hb_summary:
+    if current_format >= 5 and hb_summary:
         allowed_versions = {
             str(version)
             for version in (hb.get("version"), hb.get("previous_version"))
