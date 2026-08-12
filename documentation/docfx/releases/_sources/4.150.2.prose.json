@@ -1,0 +1,40 @@
+{
+  "theme": "Ganesh and SkSL fixes",
+  "highlights_headline": "SkiaSharp 4.150.2 improves Ganesh failure handling and SkSL RasterPipeline code generation.",
+  "highlights_body": "This servicing release prevents stale GPU readbacks, restores resolve and mipmap state after failed work, and corrects framebuffer deletion on Imagination GPUs. It also fixes a child-effect map-pointer lifetime issue in SkSL RasterPipeline code generation.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh handles failed GPU work consistently",
+          "detail": "Readbacks propagate failed flushes, resolve and mipmap dirty tracking is restored after dropped work, internal flush results are checked, and Imagination framebuffer deletion is corrected.",
+          "prs": [
+            4517,
+            4561
+          ]
+        },
+        {
+          "lead": "SkSL RasterPipeline preserves map-pointer lifetime",
+          "detail": "Child-effect map entries are dereferenced before map growth can invalidate their pointers during code generation.",
+          "prs": [
+            4648
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "release_summaries": {
+    "v4.150.2": {
+      "summary": "Improves Ganesh behavior when GPU work fails. Readbacks no longer return stale texture data after a failed flush, resolve and mipmap dirty tracking is restored after dropped work, internal flush results are checked, and framebuffer deletion is corrected on Imagination GPUs. Also fixes a child-effect map-pointer lifetime issue in SkSL RasterPipeline code generation.",
+      "prs": [
+        4517,
+        4561,
+        4648
+      ]
+    }
+  },
+  "harfbuzz_summary": "Co-ships HarfBuzzSharp 14.2.1.2 as a package revision following 14.2.1.1."
+}
