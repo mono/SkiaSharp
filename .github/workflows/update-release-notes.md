@@ -362,6 +362,14 @@ the regenerated files (every changed `_sources/<version>.data.json` +
 do not re-run `prepare.sh`, `dotnet cake`, `release_notes/generate.py`, or `release_notes/index.py`.**
 Your job is to write the prose and render the pages (below), then commit and open the PR.
 
+The restored Prepare output is authoritative and immutable to you. The only files
+you may author by hand are the exact `_sources/<version>.prose.json` paths named by
+`output/files-to-polish.txt`; `release_notes/render.py` owns the rendered release
+pages and aggregate navigation. Never create, edit, normalize, or repair an API-diff
+file, `data.json`, `context.md`, co-release map, or index-data file yourself. If a
+deterministic artifact is missing or invalid, report it with the `missing_data`
+safe-output and stop without committing or opening a PR.
+
 > This agent job is gated on Prepare having actually changed something
 > (`prepare.outputs.has_changes`). A no-op run — where the deterministic
 > generators reproduced the existing tree byte-for-byte — is skipped *before* you
@@ -390,7 +398,9 @@ This run's **CI-specific deltas** on top of the skill:
    frontmatter names the exact page, data input, prose output, and status; its body
    contains the filtered, denormalized cumulative rollup, exact
    releases, quoted merged-commit source bodies, contributors, HarfBuzz, and
-   breaking sources. Do not dump or re-join the normalized `data.json` files.
+   breaking sources. Read every listed context from beginning to end, using ranges
+   as needed; grep is navigation, not a replacement for the quoted bodies. Do not
+   dump or re-join the normalized `data.json` files.
    Recreate each named `_sources/<version>.prose.json`. The list **may be empty**
    — that means no prose needs
    authoring, but there is
@@ -406,8 +416,10 @@ This run's **CI-specific deltas** on top of the skill:
    --max-version="${{ inputs.max_version }}"`
    to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
    committed JSON). The bounds limit stale-page pruning during a scoped validation
-   run; empty production bounds prune globally. If `--all` exits non-zero, fix the
-   reported prose and re-run.
+   run; empty production bounds prune globally. If `--all` reports a prose error in
+   one of the listed `prose.json` files, fix that prose and re-run. Any other failure
+   is a deterministic Prepare defect: do not edit its output; call `missing_data`
+   and stop.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 

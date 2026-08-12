@@ -31,6 +31,8 @@ terms are semantic, not decorative: `image filter`, `color filter`, `paint bound
 `stencil buffer`, and similar phrases must not be weakened to `image`, `color`,
 `paint`, or `buffer`. Keep exact public type/member names whenever a PR title gives
 them. You may simplify surrounding prose, but not the identity of the feature.
+Capitalization is part of a public API name: `GrVkYcbcrConversionInfo` and
+`GRVkYcbcrConversionInfo` are different names, so never normalize their casing.
 
 Do not claim output or behavior is unchanged, two implementations are equivalent,
 an optimization is allocation-free, or a change has no API/runtime impact unless
@@ -109,6 +111,9 @@ ships inside each SkiaSharp release, so it renders as a `## HarfBuzzSharp X.Y.Z`
 section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 
 1. Read the page's versioned Markdown context file.
+   Read it from beginning to end, using ranges when it is large. Searches may help
+   you navigate, but titles and grep matches are not a substitute for the quoted
+   merged-commit bodies and breaking-source content.
 2. Review **all** product and mixed changes for consumer upgrade impact. The
    embedded API breaking diff and `_sources/<version>.notes.md` sidecar are
    additional evidence, not an exhaustive list: removed packages, integrations,
@@ -171,7 +176,9 @@ that says what changed **and what to do**, and the `prs` it came from. Only writ
 what you can substantiate: a `breaking_candidate` carries a `hint` and sometimes
 `prs`, but when its companion file isn't on disk and it lists no concrete change,
 fall back to the PR titles in `prs` you can actually read — never invent a removal
-you can't point at.
+you can't point at. Do not use a milestone-bump PR as generic provenance for a
+sidecar-only breaking fact; when that fact has no PR in the supplied evidence,
+leave its `prs` array empty.
 - Good: `{"title": "SKPaint no longer exposes legacy text state", "body": "The paint text/font members obsoleted in v3 are now compile errors — move typeface and text size onto SKFont.", "prs": [4068, 4114]}`
 - Bad: `{"title": "Refactoring", "body": "Various changes."}` (no action, not consumer-facing)
 
@@ -240,6 +247,10 @@ no product-facing change. This single summary serves both the website milestone
 section and the managed GitHub Release introduction. Do not write parallel
 categories, subtitles, or duplicate website summaries.
 
+Breaking changes outrank ordinary fixes in an exact Preview/RC summary. When the
+tag's exact PR set contains PRs cited by the page's `breaking` entries, name those
+breaking changes directly and include every such PR in the summary's `prs`.
+
 Stable GitHub Releases use the cumulative top-level highlights, so do not
 duplicate stable prose in `release_summaries`. This is especially important when
 the stable tag has no changes after its RC: the cumulative page is still the full
@@ -253,6 +264,8 @@ the product-facing PRs in this release that touched the HarfBuzz binding (intern
 build/test changes are filtered out). Summarise the
 HarfBuzz-facing story in 1-2 sentences; the renderer adds the
 heading, the ❤️ credit and the PR links.
+- If you mention a current or previous HarfBuzz version, copy the complete value
+  from `data.harfbuzz` exactly. Never shorten `8.3.1.5` to `8.3.1`.
 - Write it when the context identifies a HarfBuzz version or binding change.
   Otherwise set it to `null`; the renderer omits an empty HarfBuzz narrative
   rather than inventing fixed prose. When `data.harfbuzz` is absent (e.g. an

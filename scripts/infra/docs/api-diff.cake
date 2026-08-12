@@ -181,6 +181,15 @@ Task ("docs-api-diff")
             var lineDir = isHarfBuzz
                 ? RELEASES_PATH.Combine ("harfbuzzsharp").Combine (apiDiffVersion)
                 : RELEASES_PATH.Combine (apiDiffVersion);
+            var lineIndex = lineDir.CombineWithFilePath ("index.md");
+            // A scoped run still repairs a missing HarfBuzz landing page referenced
+            // by any committed SkiaSharp page. The final renderer validates the whole
+            // release corpus so a selected page cannot be published alongside an
+            // already-broken co-release link. Existing out-of-range folders remain
+            // untouched; this exception creates only missing deterministic artifacts.
+            var missingCoReleaseApiDiff = isHarfBuzz
+                && IsCoReleasedHarfBuzzLine (apiDiffVersion, skiaHarfBuzzDeps)
+                && !FileExists (lineIndex);
 
             // Incremental + scoped gating. We only skip the DIFF WORK, never the line's
             // presence in the `emit` sequence, so a skipped/out-of-range line is still
@@ -189,11 +198,13 @@ Task ("docs-api-diff")
             //   - folder already exists and !force -> a shipped diff never changes; reuse
             if (isScoped && !FamilyCoreInRange (
                     apiDiffVersion, isHarfBuzz, minVersion, maxVersion,
-                    skiaHarfBuzzDeps)) {
+                    skiaHarfBuzzDeps) && !missingCoReleaseApiDiff) {
                 Debug ($"Skipping '{apiDiffVersion}' of '{id}' (outside --minVersion/--maxVersion).");
                 continue;
             }
-            if (!force && FileExists (lineDir.CombineWithFilePath ("index.md"))) {
+            if (missingCoReleaseApiDiff)
+                Information ($"Backfilling missing co-release API diff '{apiDiffVersion}' of '{id}'.");
+            if (!force && FileExists (lineIndex)) {
                 Information ($"Skipping '{apiDiffVersion}' of '{id}' (api-diff folder exists; --force to rebuild).");
                 continue;
             }

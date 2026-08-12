@@ -216,6 +216,13 @@ page has a landing page. HarfBuzzSharp API-diff folders remain under
 `releases/harfbuzzsharp/<hb-line>/`; they are reference artifacts, not standalone
 release-note hubs (§3.4/§4.5).
 
+A scoped API-diff run leaves existing out-of-range folders untouched, but it also
+backfills any **missing** HarfBuzzSharp folder named by the committed co-release map.
+This narrow integrity exception is required because the authoritative final render
+validates every existing release page's API-diff links, not only links in the prose
+range being refreshed. Prepare owns that repair; the Polish agent must never create
+an API-diff placeholder.
+
 SkiaSharp emission is governed solely by its three signals, never by the incidental
 existence of a `release/<ver>` branch: a stale or abandoned preview branch that is not
 listed in `versions.json` and is not ahead of the latest stable produces **no**

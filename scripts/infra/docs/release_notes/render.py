@@ -448,6 +448,12 @@ def _finish_validate(errors, data, prose):
                 scopes[tag] = set(shipment.get("prs") or [])
 
         releases = prose.get("release_summaries") or {}
+        breaking_refs = {
+            number
+            for item in prose.get("breaking") or []
+            for number in item.get("prs") or []
+            if type(number) is int
+        }
         missing = sorted(set(scopes) - set(releases))
         if missing:
             errors.append(
@@ -486,6 +492,19 @@ def _finish_validate(errors, data, prose):
                     "{} release summary references PRs outside its exact scope: {}"
                     .format(tag, ", ".join("#{}".format(number) for number in outside))
                 )
+            missing_breaking = sorted(
+                (breaking_refs & scopes.get(tag, set())) - set(refs)
+            )
+            if missing_breaking:
+                errors.append(
+                    "{} release summary must ground every exact-release breaking "
+                    "change cited by the page; missing: {}"
+                    .format(
+                        tag,
+                        ", ".join("#{}".format(number)
+                                  for number in missing_breaking),
+                    )
+                )
     else:
         missing_prev = sorted(
             key for key in prev_list
@@ -498,12 +517,29 @@ def _finish_validate(errors, data, prose):
             )
 
     hb = data.get("harfbuzz") or {}
-    if (common.harfbuzz_summary_required(hb)
-            and not (prose.get("harfbuzz_summary") or "").strip()):
+    hb_summary = (prose.get("harfbuzz_summary") or "").strip()
+    if common.harfbuzz_summary_required(hb) and not hb_summary:
         errors.append(
             "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
             "prose.harfbuzz_summary is required — summarise the consumer-facing "
             "change (1-2 sentences).")
+    if hb_summary:
+        allowed_versions = {
+            str(version)
+            for version in (hb.get("version"), hb.get("previous_version"))
+            if version
+        }
+        mentioned_versions = set(re.findall(
+            r"(?<![\w.])\d+\.\d+\.\d+(?:\.\d+)?(?![\w.])",
+            hb_summary,
+        ))
+        unexpected_versions = sorted(mentioned_versions - allowed_versions)
+        if unexpected_versions:
+            errors.append(
+                "harfbuzz_summary uses version values absent from data.harfbuzz: {}. "
+                "Copy full version strings exactly; do not shorten them."
+                .format(", ".join(unexpected_versions))
+            )
 
     return errors
 

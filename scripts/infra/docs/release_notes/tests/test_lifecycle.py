@@ -335,6 +335,29 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         ))
         self.assertIn(prose["harfbuzz_summary"], RENDER.render(data, prose))
 
+    def test_harfbuzz_summary_rejects_shortened_version(self):
+        data = page_data([])
+        data["harfbuzz"] = {
+            "version": "14.2.0",
+            "previous_version": "8.3.1.5",
+            "prs": [],
+        }
+        prose = cumulative_prose({})
+        prose["harfbuzz_summary"] = (
+            "Updates the bundled HarfBuzz from 8.3.1 to 14.2.0."
+        )
+
+        errors = RENDER.validate(data, prose)
+        self.assertTrue(any(
+            "version values absent from data.harfbuzz: 8.3.1" in error
+            for error in errors
+        ))
+
+        prose["harfbuzz_summary"] = (
+            "Updates the bundled HarfBuzz from 8.3.1.5 to 14.2.0."
+        )
+        self.assertEqual(RENDER.validate(data, prose), [])
+
     def test_unchanged_harfbuzz_omits_empty_narrative(self):
         data = page_data([])
         data["harfbuzz"] = {
@@ -435,6 +458,27 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         })
         errors = RENDER.validate(data, prose)
         self.assertTrue(any("outside its exact scope" in error for error in errors))
+
+    def test_release_summary_must_ground_exact_breaking_prs(self):
+        item = shipment("v4.151.0-rc.1.1", [101, 102], channel="rc")
+        data = page_data([item])
+        prose = cumulative_prose({
+            item["tag"]: release_summary([102]),
+        })
+        prose["breaking"] = [{
+            "title": "Breaking API",
+            "body": "Migrate to the replacement API.",
+            "prs": [101],
+        }]
+
+        errors = RENDER.validate(data, prose)
+        self.assertTrue(any(
+            "missing: #101" in error
+            for error in errors
+        ))
+
+        prose["release_summaries"][item["tag"]]["prs"].append(101)
+        self.assertEqual(RENDER.validate(data, prose), [])
 
     def test_exact_build_scope_replaces_rollup_milestone_scope(self):
         item = shipment("v4.151.0-preview.1.2", [102])
@@ -714,6 +758,14 @@ class ApiDiffLifecycleTests(unittest.TestCase):
         )
         self.assertIn(
             "skiaHarfBuzzDeps.Values.Any",
+            source,
+        )
+        self.assertIn(
+            "missingCoReleaseApiDiff",
+            source,
+        )
+        self.assertIn(
+            "&& !missingCoReleaseApiDiff",
             source,
         )
 
