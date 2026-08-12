@@ -30,6 +30,7 @@ import json
 import re
 import sys
 from collections import defaultdict
+from datetime import datetime
 from pathlib import Path
 
 PACKAGE_PARENT = Path(__file__).resolve().parent.parent
@@ -156,16 +157,9 @@ def render_github_release_summary(data, prose, tag):
     if not shipment:
         raise ValueError("unknown exact shipment tag: {}".format(tag))
 
-    if shipment.get("channel") == "stable":
-        summary = " ".join(filter(None, [
-            (prose.get("highlights_headline") or "").strip(),
-            (prose.get("highlights_body") or "").strip(),
-        ]))
-        refs = []
-    else:
-        release = (prose.get("release_summaries") or {}).get(tag) or {}
-        summary = (release.get("summary") or "").strip()
-        refs = release.get("prs") or []
+    release = (prose.get("release_summaries") or {}).get(tag) or {}
+    summary = (release.get("summary") or "").strip()
+    refs = release.get("prs") or []
     if not summary:
         raise ValueError("{} has no reviewed release summary".format(tag))
 
@@ -225,6 +219,39 @@ def banner_line(data, prose):
     if b.get("github_release_url"):
         links.append("[GitHub Release]({})".format(b["github_release_url"]))
     return "> " + " · ".join(parts + links)
+
+
+def _release_date(value):
+    if not value:
+        return None
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d")
+    except ValueError:
+        return value
+    return "{} {}, {}".format(
+        parsed.strftime("%B"),
+        parsed.day,
+        parsed.year,
+    )
+
+
+def _summary_sections(data):
+    sections = []
+    seen = set()
+    for shipment in reversed(data.get("shipments") or []):
+        if shipment.get("channel") != "stable" or not shipment.get("tag"):
+            continue
+        sections.append({
+            "key": shipment["tag"],
+            "label": shipment.get("label") or "Stable",
+            "date": _release_date(shipment.get("date")),
+            "changelog_url": shipment.get("changelog_url"),
+        })
+        seen.add(shipment["tag"])
+    for preview in data.get("previews") or []:
+        if preview.get("key") not in seen:
+            sections.append(preview)
+    return sections
 
 
 # ── page assembly (the single source of layout truth) ────────────────────────
@@ -317,7 +344,7 @@ def render(data, prose):
             L.append("- [{}]({})".format(l["label"], l["href"]))
 
     release_summaries = prose.get("release_summaries") or {}
-    for p in data.get("previews") or []:
+    for p in _summary_sections(data):
         L.append("")
         head = "## {}".format(p["label"])
         if p.get("date"):
@@ -431,6 +458,10 @@ def _finish_validate(errors, data, prose):
     if prev_dups:
         errors.append("duplicate preview keys (data.json bug — keys must be unique "
                       "per preview): " + ", ".join(prev_dups))
+    all_page_prs = {
+        int(number)
+        for number in (data.get("prs") or {})
+    }
     scopes = {
         preview["key"]: set(preview.get("prs") or [])
         for preview in data.get("previews") or []
@@ -438,8 +469,13 @@ def _finish_validate(errors, data, prose):
     }
     for shipment in data.get("shipments") or []:
         tag = shipment.get("tag")
-        if tag and shipment.get("channel") != "stable":
-            scopes[tag] = set(shipment.get("prs") or [])
+        if not tag:
+            continue
+        scopes[tag] = (
+            all_page_prs
+            if shipment.get("channel") == "stable"
+            else set(shipment.get("prs") or [])
+        )
 
     releases = prose.get("release_summaries") or {}
     breaking_refs = {
@@ -451,7 +487,7 @@ def _finish_validate(errors, data, prose):
     missing = sorted(set(scopes) - set(releases))
     if missing:
         errors.append(
-            "every Preview/RC needs release_summaries[tag]; missing: "
+            "every exact Preview/RC/stable tag needs release_summaries[tag]; missing: "
             + ", ".join(missing)
         )
     unknown = sorted(set(releases) - set(scopes))
@@ -467,8 +503,8 @@ def _finish_validate(errors, data, prose):
         summary = release.get("summary")
         if not isinstance(summary, str) or not summary.strip():
             errors.append("{} release summary text is required".format(tag))
-        elif len(summary) > 500:
-            errors.append("{} release summary exceeds 500 characters".format(tag))
+        elif len(summary) > 1000:
+            errors.append("{} release summary exceeds 1000 characters".format(tag))
         refs = release.get("prs")
         if not isinstance(refs, list):
             errors.append("{} release summary prs must be an array".format(tag))

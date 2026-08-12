@@ -135,11 +135,12 @@ def snapshot(tag, body, *, release_id=1, etag='"body-1"'):
 
 def candidate(tag, *, channel="preview", prs=None):
     release_shipment = shipment(tag, channel=channel, prs=prs)
-    summaries = (
-        {}
-        if channel == "stable"
-        else {tag: {"summary": "Updates this exact release.", "prs": [1]}}
-    )
+    summaries = {
+        tag: {
+            "summary": "Updates this exact release.",
+            "prs": [] if prs == [] else [1],
+        }
+    }
     data_value = data(release_shipment)
     if channel == "stable":
         data_value["range"] = {"base_version": "4.150.0"}
@@ -254,15 +255,19 @@ class CandidateSelectionTests(unittest.TestCase):
 
         self.assertEqual(selected, [])
 
-    def test_stable_uses_changed_cumulative_highlights(self):
+    def test_stable_uses_changed_release_summary(self):
         repo = FakeRepository()
         path = prose_path("4.151.0")
         tag = "v4.151.0"
         stable = shipment(tag, channel="stable", prs=[])
         repo.changed = [path]
         repo.historical.update({
-            (self.BEFORE, path): prose({}, highlights_headline="Old summary."),
-            (self.AFTER, path): prose({}, highlights_headline="Updates stable."),
+            (self.BEFORE, path): prose({
+                tag: {"summary": "Old stable summary.", "prs": []},
+            }),
+            (self.AFTER, path): prose({
+                tag: {"summary": "Updates the stable release.", "prs": []},
+            }),
             (self.BEFORE, data_path("4.151.0")): data(stable),
             (self.AFTER, data_path("4.151.0")): data(stable),
         })
@@ -289,6 +294,7 @@ class CandidateSelectionTests(unittest.TestCase):
         repo.current_paths = [path]
         repo.current[path] = prose({
             preview: {"summary": "Adds the preview.", "prs": [1]},
+            stable: {"summary": "Ships the stable release.", "prs": []},
         })
         repo.current[data_path("4.151.0")] = data(
             shipment(preview),
@@ -428,10 +434,10 @@ class BodyModelTests(unittest.TestCase):
         self.assertIn("packages/SkiaSharp/4.151.0-preview.1.1", rendered)
         self.assertNotIn(updater.RELEASE_LINKS_MARKER, rendered)
 
-    def test_stable_renderer_uses_cumulative_highlights(self):
+    def test_stable_renderer_uses_release_summary(self):
         item = candidate("v4.151.0", channel="stable", prs=[])
         rendered = updater.render_managed_summary(item)
-        self.assertIn("Updates the SkiaSharp release line.", rendered)
+        self.assertIn("Updates this exact release.", rendered)
         self.assertIn("0 pull requests · 0 consumer-facing", rendered)
         self.assertIn("compare/v4.150.0...v4.151.0", rendered)
 

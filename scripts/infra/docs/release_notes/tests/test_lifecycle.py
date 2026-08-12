@@ -501,23 +501,30 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         self.assertIn("[@contributor]", text)
         self.assertIn("1 pull request · 1 consumer-facing", text)
 
-    def test_stable_summary_uses_cumulative_highlights(self):
+    def test_stable_summary_uses_exact_release_summary(self):
         item = shipment(
             "v4.151.0", [], channel="stable", previous="v4.151.0-rc.1.1"
         )
         data = page_data([item])
-        prose = {
-            "theme": "Stable release",
-            "highlights_headline": "The stable package now ships.",
-            "breaking": [],
-            "categories": [],
-            "contributor_summaries": {},
-            "release_summaries": {},
+        data["prs"]["101"] = {
+            "url": "https://github.com/mono/SkiaSharp/pull/101",
+            "title": "Release feature",
+            "author": "contributor",
+            "community": True,
+            "tag": "product",
         }
+        prose = cumulative_prose({
+            item["tag"]: release_summary(
+                [101],
+                summary="Ships the complete stable release with its major feature.",
+            ),
+        })
         self.assertEqual(RENDER.validate(data, prose), [])
         text = RENDER.render_github_release_summary(data, prose, item["tag"])
-        self.assertIn("The stable package now ships.", text)
-        self.assertIn("0 pull requests · 0 consumer-facing", text)
+        self.assertIn("Ships the complete stable release", text)
+        self.assertIn("#101", text)
+        self.assertIn("1 pull request · 1 consumer-facing", text)
+        self.assertIn("## Stable", RENDER.render(data, prose))
 
     def test_release_summary_rejects_unsupported_data_format(self):
         item = shipment("v4.151.0", [], channel="stable")

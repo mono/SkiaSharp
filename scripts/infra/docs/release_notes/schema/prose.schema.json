@@ -20,7 +20,7 @@
     },
     "highlights_headline": {
       "type": "string",
-      "description": "ONE sentence, <=20 WORDS (the renderer enforces the cap in words, not characters): the single most important thing about this release. Not a list.",
+      "description": "ONE sentence, <=20 WORDS: the single most important thing about the complete release line across previews, RCs, and stable.",
       "maxLength": 160
     },
     "highlights_body": {
@@ -28,7 +28,7 @@
         "string",
         "null"
       ],
-      "description": "Optional. <=60 WORDS (renderer enforces in words). Aim for 40-60 words on feature releases and 20-40 on servicing releases. Name the important themes in prose without PR links, @handles, or a changelog dump.",
+      "description": "Optional cumulative release-line summary. <=60 WORDS. Aim for 40-60 words on feature releases and 20-40 on servicing releases, without PR links, handles, or a changelog dump.",
       "maxLength": 420
     },
     "breaking": {
@@ -114,7 +114,7 @@
     },
     "release_summaries": {
       "type": "object",
-      "description": "Evergreen present-tense summaries keyed by exact leading-v prerelease tags. These summaries serve both website milestone sections and managed GitHub Release introductions. Stable GitHub Releases use the cumulative highlights instead.",
+      "description": "Evergreen present-tense summaries keyed by every exact leading-v Preview, RC, and stable tag. Each summary is rendered on the website and used as the official GitHub Release introduction.",
       "propertyNames": {
         "pattern": "^v[0-9]+(?:\\.[0-9]+){2,3}(?:-(?:alpha|beta|preview|rc)(?:\\.[0-9]+)+)?$"
       },
@@ -129,12 +129,12 @@
           "summary": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500,
-            "description": "Two or three timeless present-tense sentences for a feature Preview/RC, aiming for 45-75 words while staying under 500 characters; servicing prereleases may be shorter. Preserve the important features, fixes, migrations, and dependency changes without listing every PR."
+            "maxLength": 1000,
+            "description": "Three or four timeless present-tense sentences suitable for an official GitHub Release introduction. Aim for 80-130 words; small servicing releases may use 40-80 words. Stable summaries cover the complete stable release."
           },
           "prs": {
             "type": "array",
-            "description": "The most relevant PRs grounding this summary. Every number must belong to this exact release or rollup milestone.",
+            "description": "The most relevant PRs grounding this summary. Prerelease numbers must belong to the exact delta; stable summaries may cite the full release line.",
             "uniqueItems": true,
             "items": {
               "type": "integer"

@@ -162,10 +162,9 @@ What *this* release is about, shown bold in the banner. No punctuation.
 - Bad: `Version 4.148.0` (that's the title, not a theme) · `Lots of fixes and new APIs` (vague)
 
 ### `highlights_headline` — one sentence, ≤20 words
-The single most important thing about the release. **Not a list.** Decide it from
-the `product`-tagged PRs, the Skia milestone bump, and whether there are breaking
-changes — the one thing a consumer would care about most, in a sentence. You are
-not summarising every PR here.
+The single most important thing about the **complete release line**, across all
+previews, RCs, and stable. **Not a list.** Decide it from the product PRs, engine
+milestone, and breaking changes — the one thing a consumer would care about most.
 - Good: `SkiaSharp 4.148.0 is the first stable v4 release, built on Skia m148.`
 - Bad: `This release adds WebP, SKStream.GetData, singleton lifecycle, pixel fixes, WinUI fixes, and more.` (enumeration)
 
@@ -174,12 +173,11 @@ Use evergreen present tense throughout release prose: `Adds`, `Fixes`, `Updates`
 future promises (`will add`). The notes should read naturally years later.
 
 ### `highlights_body` — optional, ≤60 words, or `null`
-Name the biggest themes to draw the reader in. For a feature release, aim for
-40-60 words so the Highlights block gives useful context rather than one terse
-sentence; a servicing release can stay at 20-40 words. Keep the whole block
-(headline + body) under 100 words so it remains a lead-in, not the changelog.
-No PR links or `@handles`. Use `null` only when there is genuinely no second
-consumer-facing theme.
+Summarise the complete release line at the top of the page, not one exact tag.
+For a feature release, aim for 40-60 words so the block gives useful cumulative
+context; a servicing release can stay at 20-40 words. Keep headline + body under
+100 words. No PR links or `@handles`. Use `null` only when there is genuinely no
+second consumer-facing theme.
 - Good: `It adds variable fonts and animated WebP, and reworks the singleton lifecycle. This is a breaking release — check the changes below before upgrading.`
 - Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles, and it's just PR numbers, not themes)
 
@@ -245,10 +243,10 @@ SDK, solution-format, or workflow mechanics in the consumer-facing page.
 - Good: `"ramezgerges": "Singleton lifecycle rework, the SKPath finalizer fix, and Uno sample updates"`
 - Bad: `"ramezgerges": "#4080, #4068, #3796"` (that's data, not a summary)
 
-### `release_summaries` — one evergreen summary per prerelease tag
-This map is keyed by the exact leading-`v` Preview/RC tags listed in the page's
-context, including rolled-up tags owned by a superseded numeric line and every
-exact published build. Each entry is:
+### `release_summaries` — one evergreen summary per exact release tag
+This map is keyed by every exact leading-`v` tag listed in the page's context:
+Preview, RC, **and stable**, including rolled-up tags owned by a superseded
+numeric line and every published build. Each entry is:
 
 ```json
 {
@@ -257,15 +255,18 @@ exact published build. Each entry is:
 }
 ```
 
-Write two or three evergreen present-tense sentences from that tag's exact
-changes. For a feature Preview/RC, aim for 45-75 words while staying under the
-500-character schema cap; a servicing prerelease can be shorter. Give enough
-context to preserve the important features, fixes, migrations, and dependency
-changes without becoming a PR list. The `prs` array grounds the important claims
-and may be empty when a milestone has no product-facing change. This single
-summary serves both the website milestone section and the managed GitHub Release
-introduction. Do not write parallel categories, subtitles, or duplicate website
-summaries.
+Write three or four evergreen present-tense sentences suitable as the official
+GitHub Release introduction. Aim for 80-130 words while staying under the
+1,000-character schema cap; a small servicing release can be 40-80 words. Give
+enough context to preserve important features, fixes, migrations, and dependency
+changes without becoming a PR list.
+
+For Preview/RC tags, describe that exact tag delta. For a stable tag, write a
+polished release introduction for the complete stable release, even when the
+stable tag has no commits after its RC. Stable `prs` may cite the important PRs
+from the whole release line; prerelease `prs` remain limited to their exact delta.
+This single summary is rendered on the website and copied to the official GitHub
+Release. Do not duplicate it in another prose field.
 
 Breaking changes outrank ordinary fixes in an exact Preview/RC summary. When the
 tag's exact PR set contains PRs cited by the page's `breaking` entries, name those
@@ -276,10 +277,9 @@ appear in `prs` only when its change is actually described by the summary. Exclu
 source bodies that explicitly identify themselves as build-only, warning-only,
 with no API change and no behavioral change.
 
-Stable GitHub Releases use the cumulative top-level highlights, so do not
-duplicate stable prose in `release_summaries`. This is especially important when
-the stable tag has no changes after its RC: the cumulative page is still the full
-release story.
+The cumulative Highlights block and stable exact summary have different jobs:
+Highlights is the short page overview; the stable release summary is the fuller
+official release introduction.
 
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a

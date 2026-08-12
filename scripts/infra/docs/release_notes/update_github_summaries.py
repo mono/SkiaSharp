@@ -354,15 +354,7 @@ def select_push_candidates(
         new_shipments = _shipment_map(new_data, data_path)
         old_shipments = _shipment_map(old_data, data_path)
         new_eligible = set(_summary_map(new_prose)) & set(new_shipments)
-        new_eligible.update(
-            tag for tag, shipment in new_shipments.items()
-            if shipment.get("channel") == "stable"
-        )
         old_eligible = set(_summary_map(old_prose)) & set(old_shipments)
-        old_eligible.update(
-            tag for tag, shipment in old_shipments.items()
-            if shipment.get("channel") == "stable"
-        )
 
         for tag in sorted(new_eligible):
             new_candidate = _candidate(tag, prose_path, new_prose, new_data)
@@ -422,11 +414,6 @@ def select_current_candidates(
         summary_tags.update(summaries)
         shipment_tags.update(shipments)
         eligible = set(summaries) & set(shipments)
-        eligible.update(
-            shipment_tag
-            for shipment_tag, shipment in shipments.items()
-            if shipment.get("channel") == "stable"
-        )
         if tag is not None:
             eligible.intersection_update({tag})
         for exact_tag in sorted(eligible):

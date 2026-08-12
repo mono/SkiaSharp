@@ -436,7 +436,8 @@ network** and no permission to re-run Cake, `prepare.sh`, `release_notes/generat
 `output/files-to-polish.txt` and writes the frontmatter-named
 `_sources/<version>.prose.json` (schema:
 `release_notes/schema/prose.schema.json`, including `harfbuzz_summary` when
-required and evergreen `release_summaries` keyed by exact prerelease tag), and runs
+required and evergreen `release_summaries` keyed by every exact Preview, RC, and
+stable tag), and runs
 `release_notes/render.py <data.json> <prose.json> <out.md>` to validate the prose. A render
 that prints `PROSE VALIDATION FAILED` is fixed in prose and rerun; the `.md` page is
 never hand-edited.
@@ -542,8 +543,8 @@ the work is split by artifact:
    `release_notes/schema/prose.schema.json`: `theme`, `highlights_headline`/`highlights_body`,
    `breaking`, `categories`, `contributor_summaries`, `harfbuzz_summary` when
    `data.harfbuzz.prs` is non-empty, and evergreen `release_summaries` keyed by
-   exact prerelease tag. It never writes a heading, table, banner, handle, ❤️, or
-   PR link.
+   every exact Preview, RC, and stable tag. It never writes a heading, table,
+   banner, handle, ❤️, or PR link.
 5. **`release_notes/render.py` renders Markdown** — per-page validation with
    `release_notes/render.py <data.json> <prose.json> [out.md]`, and the final
    `release_notes/render.py --all` pass that prunes stale `-unreleased` pages (per
@@ -1012,17 +1013,14 @@ version and never deduplicated. Each shipment records:
 - `tag` — the globally unique exact tag, including the leading `v`.
 - `core_version` and `public_version`.
 - `channel` and display `label`.
-- `previous_tag` — the exact predecessor for this publication delta. Preview/RC
-  generated notes use it; stable generated notes use the cumulative previous-stable
-  base so their collapsed list matches the website rollup.
+- `previous_tag` — the exact predecessor for this publication delta.
 - `target_sha` and release `date`.
 - `changelog_url`.
 - `prs` — the ordered exact delta from `previous_tag` to `tag`.
 
-The exact delta is the authority for prerelease-summary grounding. Every PR
-referenced by `prose.release_summaries[tag]` must belong to that shipment or
-rollup milestone; a summary may curate a subset but may not borrow a PR from
-another release.
+The exact delta is the authority for Preview/RC summary grounding. A stable
+summary represents the complete release line and may cite important PRs from the
+page's cumulative facts, including work first published in previews and RCs.
 
 When a released page rolls up several prerelease tags, `release_notes/generate.py` groups the PRs
 into **per-preview buckets**: each PR is assigned by git ancestry to the **earliest
@@ -1161,15 +1159,12 @@ principles are fixed here.
    the API-diff link is in the banner, and community credit is in the page's contributor
    table. When neither the binding nor the co-shipped HarfBuzz version changed, the AI
    sets the field to `null`/omits it and the renderer omits an empty narrative.
-6. **Exact prerelease summaries are evergreen and shared.** Each
-   `release_summaries[tag]` contains one or two present-tense sentences plus the PR
-   IDs grounding its important claims. The same text renders in the website
-   milestone section and the managed GitHub Release introduction. Stable GitHub
-   Releases reuse the cumulative top-level highlights, so stable prose is never
-   duplicated. Validation requires every cumulative category theme with PRs in an
-   exact Preview/RC delta to contribute at least one of those PRs to that exact
-   summary, preventing dependency, platform, lifecycle, or fix themes from silently
-   disappearing between the page and its GitHub Release teaser.
+6. **Exact release summaries are evergreen and shared.** Every Preview, RC, and
+   stable tag has `release_summaries[tag]`. The same fuller introduction renders
+   in the website's exact-release section and the managed GitHub Release body.
+   Prerelease PR citations are limited to the exact delta; a stable summary may
+   cite important PRs from the cumulative line. The top-level Highlights remain a
+   shorter cumulative overview of the whole line.
 
 #### API-diff link rule
 
@@ -1282,9 +1277,9 @@ Always the same incremental Prepare + offline Polish sequence:
 4. **Polish reads only denormalized context and renders offline.** The agent
    iterates the committed context paths in `output/files-to-polish.txt`, uses each
    file's frontmatter to
-   write the named prose JSON, and re-authors the complete cumulative and
-   prerelease-summary prose. Stable summaries come from cumulative highlights,
-   including stable tags with no changes after their RC. After the AI writes each
+   write the named prose JSON, and re-authors the complete cumulative and exact-tag
+   prose. Stable tags get their own official release summary even when they have no
+   commits after their RC. After the AI writes each
    `_sources/<stem>.prose.json` and validates the page with
    `release_notes/render.py <data.json> <prose.json> [out.md]`, it runs `render.sh`
    once to regenerate the requested range (or every page when unscoped), retire old
