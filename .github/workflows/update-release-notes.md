@@ -254,6 +254,9 @@ pre-agent-steps:
       # Match the prepare job's source so its patch applies cleanly.
       git fetch origin "$SOURCE_BRANCH" --quiet
       git checkout -B "$SOURCE_BRANCH" "origin/$SOURCE_BRANCH"
+      # Inline gh-aw sub-agents are materialized at runtime. They are execution
+      # helpers, not repository output, so keep git add -A from staging them.
+      printf '%s\n' '.github/agents/*.agent.md' >> .git/info/exclude
   - name: Download Prepare output
     uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4.1.8
     with:
