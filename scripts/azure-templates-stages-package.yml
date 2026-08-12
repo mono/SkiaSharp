@@ -6,13 +6,6 @@ parameters:
     type: object
   - name: buildAgentWindows
     type: object
-  - name: use1ESPipelineTemplates
-    type: boolean
-  - name: enableSigning
-    type: boolean
-  - name: forceRealSigning
-    type: boolean
-    default: false
   - name: enableCaching
     type: boolean
     default: false
@@ -148,13 +141,3 @@ stages:
               path: '.\output\output\'
             - name: nuget_special
               path: '.\output\nugets-special'
-
-  - ${{ if eq(parameters.enableSigning, 'true') }}:
-    - template: /scripts/azure-templates-stages-signing.yml@self
-      parameters:
-        buildAgent: ${{ parameters.buildAgentWindows }}
-        forceRealSigning: ${{ parameters.forceRealSigning }}
-        ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-          useRealSigning: true
-        ${{ else }}:
-          useRealSigning: false

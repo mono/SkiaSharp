@@ -1,8 +1,6 @@
 parameters:
   - name: buildAgentLinuxNative
     type: object
-  - name: use1ESPipelineTemplates
-    type: boolean
   - name: enableCaching
     type: boolean
     default: false
@@ -18,7 +16,6 @@ stages:
           name: native_tizen_x64_linux
           displayName: Tizen x64
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           docker: scripts/infra/native/tizen/docker
           target: externals-tizen
           cacheJob: native/tizen
@@ -29,7 +26,6 @@ stages:
           name: native_tizen_arm64_linux
           displayName: Tizen arm64
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           docker: scripts/infra/native/tizen/docker
           target: externals-tizen
           cacheJob: native/tizen
