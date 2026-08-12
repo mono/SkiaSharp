@@ -312,6 +312,11 @@ safe-outputs:
     max-patch-files: 250
     preserve-branch-name: true
     recreate-ref: true
+  threat-detection:
+    prompt: |
+      Analyze the workflow artifacts directly. Do not invoke skills, custom agents,
+      or sub-agents. Emit exactly one THREAT_DETECTION_RESULT line and no other
+      candidate verdict so the parser receives one canonical result.
 ---
 
 # Sync - Release Notes & API Diffs
