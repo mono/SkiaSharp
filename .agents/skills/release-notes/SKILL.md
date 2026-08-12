@@ -174,10 +174,12 @@ Use evergreen present tense throughout release prose: `Adds`, `Fixes`, `Updates`
 future promises (`will add`). The notes should read naturally years later.
 
 ### `highlights_body` — optional, ≤60 words, or `null`
-Name the biggest themes to draw the reader in. Prose is best, but a short feature
-list is fine for a big release — just keep the whole Highlights block (headline +
-body) under ~100 words so it stays a lead-in, not the changelog. No PR links, no
-`@handles`. If the headline already says enough, use `null`.
+Name the biggest themes to draw the reader in. For a feature release, aim for
+40-60 words so the Highlights block gives useful context rather than one terse
+sentence; a servicing release can stay at 20-40 words. Keep the whole block
+(headline + body) under 100 words so it remains a lead-in, not the changelog.
+No PR links or `@handles`. Use `null` only when there is genuinely no second
+consumer-facing theme.
 - Good: `It adds variable fonts and animated WebP, and reworks the singleton lifecycle. This is a breaking release — check the changes below before upgrading.`
 - Bad: `Includes #4125, #3771, #3772, #4080, #4068 and fixes from @ramezgerges.` (links + handles, and it's just PR numbers, not themes)
 
@@ -255,11 +257,15 @@ exact published build. Each entry is:
 }
 ```
 
-Write one or two evergreen present-tense sentences from that tag's exact changes.
-The `prs` array grounds the important claims and may be empty when a milestone has
-no product-facing change. This single summary serves both the website milestone
-section and the managed GitHub Release introduction. Do not write parallel
-categories, subtitles, or duplicate website summaries.
+Write two or three evergreen present-tense sentences from that tag's exact
+changes. For a feature Preview/RC, aim for 45-75 words while staying under the
+500-character schema cap; a servicing prerelease can be shorter. Give enough
+context to preserve the important features, fixes, migrations, and dependency
+changes without becoming a PR list. The `prs` array grounds the important claims
+and may be empty when a milestone has no product-facing change. This single
+summary serves both the website milestone section and the managed GitHub Release
+introduction. Do not write parallel categories, subtitles, or duplicate website
+summaries.
 
 Breaking changes outrank ordinary fixes in an exact Preview/RC summary. When the
 tag's exact PR set contains PRs cited by the page's `breaking` entries, name those
