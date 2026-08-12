@@ -749,7 +749,7 @@ class ApiDiffLifecycleTests(unittest.TestCase):
             source,
         )
         self.assertIn(
-            "WriteApiDiffFolderIndex (dir, name, null)",
+            "dir, name, null, existingApiDiffFiles",
             source,
         )
         self.assertIn(
@@ -772,10 +772,34 @@ class ApiDiffLifecycleTests(unittest.TestCase):
     def test_api_diff_markdown_is_normalized_before_commit(self):
         source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
         self.assertIn(
+            "var isNewIndex = !existingApiDiffFiles.Contains (indexPath.FullPath)",
+            source,
+        )
+        self.assertIn(
+            "if (isNewIndex)",
+            source,
+        )
+        self.assertIn(
             "NormalizeGeneratedMarkdown (indexPath)",
             source,
         )
         self.assertIn(
+            "NormalizeGeneratedMarkdown (apiDiffPath)",
+            source,
+        )
+        self.assertIn(
+            "var existingApiDiffFiles = DirectoryExists (RELEASES_PATH)",
+            source,
+        )
+        self.assertIn(
+            "var isNewApiDiff = !existingApiDiffFiles.Contains (apiDiffPath.FullPath)",
+            source,
+        )
+        self.assertIn(
+            "if (isNewApiDiff)",
+            source,
+        )
+        self.assertNotIn(
             "NormalizeGeneratedMarkdown (file)",
             source,
         )

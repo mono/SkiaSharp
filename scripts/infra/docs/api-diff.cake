@@ -97,6 +97,17 @@ Task ("docs-api-diff")
     // A scoped rebuild must clear that shared folder once, before the first package
     // writes it, rather than once per package (which would erase earlier diffs).
     var clearedLineDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+    // Capture committed markdown before any forced line clearing. A rebuilt path is
+    // not "new" merely because ClearGeneratedApiDiffsIn removed it earlier in this
+    // run; only paths absent at startup should receive first-write normalization.
+    var existingApiDiffFiles = DirectoryExists (RELEASES_PATH)
+        ? new HashSet<string> (
+            System.IO.Directory.EnumerateFiles (
+                RELEASES_PATH.FullPath,
+                "*.md",
+                System.IO.SearchOption.AllDirectories),
+            StringComparer.OrdinalIgnoreCase)
+        : new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
     // Process every SkiaSharp package (including SkiaSharp.HarfBuzz) before the
     // HarfBuzzSharp family. Scoped HarfBuzz lines are derived from the SkiaSharp
@@ -284,7 +295,9 @@ Task ("docs-api-diff")
             // line (spec §5.2). versionRoot is the new-side extracted package.
             var stagedSelfDeps = await StageSelfDepsFromNuspecAsync (comparer, versionRoot);
             try {
-                await RunBreakingAndFullDiff (comparer, id, previous, version, lineDir, diffRoot);
+                await RunBreakingAndFullDiff (
+                    comparer, id, previous, version, lineDir, diffRoot,
+                    existingApiDiffFiles);
             } finally {
                 UnstageSearchPaths (comparer, stagedSelfDeps);
             }
@@ -323,7 +336,7 @@ Task ("docs-api-diff")
 
     // Write the per-line API-diff index.md landing pages (spec §3.3/§3.4) and the
     // co-release map sidecar (spec §3.6) the Python release-notes engine consumes.
-    WriteApiDiffFolderIndexes ();
+    WriteApiDiffFolderIndexes (existingApiDiffFiles);
     WriteCoReleaseMap (skiaHarfBuzzDeps);
 
     // clean up after working
@@ -551,7 +564,7 @@ void WriteCoReleaseMap (IDictionary<string, string> skiaHarfBuzzDeps)
 // flags any with a `<assembly>.breaking.md` sibling as breaking, and links back to the
 // `../<line>.md` hub. It carries the API_DIFF_MARKER like every other generated file, so
 // the §3.5 wipe regenerates it each run.
-void WriteApiDiffFolderIndexes ()
+void WriteApiDiffFolderIndexes (ISet<string> existingApiDiffFiles)
 {
     if (!DirectoryExists (RELEASES_PATH))
         return;
@@ -560,7 +573,8 @@ void WriteApiDiffFolderIndexes ()
     foreach (var dir in GetSubDirectories (RELEASES_PATH)) {
         var name = dir.GetDirectoryName ();
         if (name.Length > 0 && char.IsDigit (name [0]))
-            WriteApiDiffFolderIndex (dir, name, $"../{name}.md");
+            WriteApiDiffFolderIndex (
+                dir, name, $"../{name}.md", existingApiDiffFiles);
     }
 
     // HarfBuzz family: line folders one level deeper, under releases/harfbuzzsharp/.
@@ -569,7 +583,8 @@ void WriteApiDiffFolderIndexes ()
         foreach (var dir in GetSubDirectories (hbRoot)) {
             var name = dir.GetDirectoryName ();
             if (name.Length > 0 && char.IsDigit (name [0]))
-                WriteApiDiffFolderIndex (dir, name, null);
+                WriteApiDiffFolderIndex (
+                    dir, name, null, existingApiDiffFiles);
         }
     }
 }
@@ -577,7 +592,11 @@ void WriteApiDiffFolderIndexes ()
 // Write one line folder's index.md. SkiaSharp folders link to their matching
 // release page. HarfBuzzSharp has no standalone human page: its summary and API
 // diff link live on the co-shipping SkiaSharp page, so its index has no backlink.
-void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line, string releaseNotesHref)
+void WriteApiDiffFolderIndex (
+    DirectoryPath lineDir,
+    string line,
+    string releaseNotesHref,
+    ISet<string> existingApiDiffFiles)
 {
     var body = new System.Text.StringBuilder ();
     var hasContent = false;
@@ -612,8 +631,10 @@ void WriteApiDiffFolderIndex (DirectoryPath lineDir, string line, string release
         : $"> Back to [release notes]({releaseNotesHref}).{n}{n}";
     var text = $"{API_DIFF_MARKER} {line}{n}{n}{backLink}{body}";
     var indexPath = lineDir.CombineWithFilePath ("index.md");
+    var isNewIndex = !existingApiDiffFiles.Contains (indexPath.FullPath);
     System.IO.File.WriteAllText (indexPath.FullPath, text);
-    NormalizeGeneratedMarkdown (indexPath);
+    if (isNewIndex)
+        NormalizeGeneratedMarkdown (indexPath);
 }
 
 void NormalizeGeneratedMarkdown (FilePath path)
@@ -627,7 +648,11 @@ void NormalizeGeneratedMarkdown (FilePath path)
 // Copy the generated diff markdown into a line folder: {lineDir}/{id}/{assembly}.md
 // (+ {assembly}.breaking.md), the package-namespaced per-assembly shape of spec
 // §3.3/§3.4. Also mirrors into output/logs/ for build-log inspection (transient).
-void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
+void CopyApiDiffs (
+    DirectoryPath diffRoot,
+    string id,
+    DirectoryPath lineDir,
+    ISet<string> existingApiDiffFiles)
 {
     foreach (var (path, platform) in GetPlatformDirectories (diffRoot)) {
         // first, make sure to create markdown files for unchanged assemblies
@@ -648,7 +673,6 @@ void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
         ReplaceTextInFiles (mdFiles, "</h4>", Environment.NewLine);
         ReplaceTextInFiles (mdFiles, "\r\r", "\r");
         foreach (var file in GetFiles (mdFiles)) {
-            NormalizeGeneratedMarkdown (file);
             var dllName = file.GetFilenameWithoutExtension ().GetFilenameWithoutExtension ().GetFilenameWithoutExtension ();
             if (file.GetFilenameWithoutExtension ().GetExtension () == ".breaking") {
                 // skip over breaking changes without any breaking changes
@@ -660,8 +684,14 @@ void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
                 dllName += ".breaking";
             }
             var apiDiffPath = lineDir.Combine (id).CombineWithFilePath ($"{dllName}.md");
+            var isNewApiDiff = !existingApiDiffFiles.Contains (apiDiffPath.FullPath);
             EnsureDirectoryExists (apiDiffPath.GetDirectory ());
             CopyFile (file, apiDiffPath);
+            // Preserve byte-for-byte history for existing generated diffs during a
+            // forced rebuild. Only a newly created file needs its inherited tool
+            // padding normalized before it becomes committed history.
+            if (isNewApiDiff)
+                NormalizeGeneratedMarkdown (apiDiffPath);
             var apiDiffOutputPath = (FilePath)$"{ROOT_PATH}/output/logs/api-diffs/{id}/{lineDir.GetDirectoryName ()}/{dllName}.md";
             EnsureDirectoryExists (apiDiffOutputPath.GetDirectory ());
             CopyFile (file, apiDiffOutputPath);
@@ -674,7 +704,14 @@ void CopyApiDiffs (DirectoryPath diffRoot, string id, DirectoryPath lineDir)
 // {dll}.breaking.md and {dll}.md files respectively. NEW side is a published feed
 // version. apiDiffVersion (the line folder) differs from newVersion (the actual
 // package diffed, e.g. 4.148.0-rc.1.2) whenever a line is still in preview.
-async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVersion, string newVersion, DirectoryPath lineDir, string diffRoot)
+async Task RunBreakingAndFullDiff (
+    NuGetDiff comparer,
+    string id,
+    string oldVersion,
+    string newVersion,
+    DirectoryPath lineDir,
+    string diffRoot,
+    ISet<string> existingApiDiffFiles)
 {
     comparer.MarkdownDiffFileExtension = ".breaking.md";
     comparer.IgnoreNonBreakingChanges = true;
@@ -684,7 +721,7 @@ async Task RunBreakingAndFullDiff (NuGetDiff comparer, string id, string oldVers
     comparer.IgnoreNonBreakingChanges = false;
     await comparer.SaveCompleteDiffToDirectoryAsync (id, oldVersion, newVersion, diffRoot);
 
-    CopyApiDiffs (diffRoot, id, lineDir);
+    CopyApiDiffs (diffRoot, id, lineDir, existingApiDiffFiles);
 }
 
 RunTarget(TARGET);
