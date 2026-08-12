@@ -1,6 +1,6 @@
-# API diff: 4.150.1
+# API diff: 4.150.2
 
-> Back to [release notes](../4.150.1.md).
+> Back to [release notes](../4.150.2.md).
 
 ## SkiaSharp
 
@@ -77,4 +77,3 @@
 ## SkiaSharp.Vulkan.SharpVk
 
 - [SkiaSharp.Vulkan.SharpVk](SkiaSharp.Vulkan.SharpVk/SkiaSharp.Vulkan.SharpVk.md)
-

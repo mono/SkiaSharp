@@ -1,0 +1,128 @@
+{
+  "theme": "Skia m150 and new APIs",
+  "highlights_headline": "SkiaSharp 4.150.0 updates to Skia m150 and expands image-filter, paint-bounds, and overdraw APIs.",
+  "highlights_body": "It also restores small-blur performance, speeds repeated SKSurface.Canvas access, and updates HarfBuzz shaping. This release removes the deprecated notebook integration and promotes legacy APIs to compile errors, so review the migration guidance before upgrading.",
+  "breaking": [
+    {
+      "title": "Legacy APIs now produce compile errors",
+      "body": "Pre-v4 GRBackendRenderTarget constructors with sampleCount, run-buffer span methods, SKPaintHinting, and SKFilterQuality are now error-obsolete. Use the constructors without sampleCount, the Glyphs or Positions properties, SKFontHinting, and SKSamplingOptions instead.",
+      "prs": [
+        4195
+      ]
+    },
+    {
+      "title": ".NET Interactive integration removed",
+      "body": "The SkiaSharp NuGet package no longer embeds the deprecated SkiaSharp.DotNet.Interactive extension or notebook samples. Consumers relying on that integration must remove it or move to another notebook rendering approach.",
+      "prs": [
+        4186
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia advances to milestone 150",
+          "detail": "Updates the bundled rendering engine and includes a follow-up fix for concurrent CoreText typeface stream access on Apple platforms.",
+          "prs": [
+            4146,
+            4190
+          ]
+        },
+        {
+          "lead": "HarfBuzz updates to 14.2.1",
+          "detail": "Improves AAT and Arabic shaping, COLR v1 rendering, glyph extents, subsetting, and Hrkt script mapping.",
+          "prs": [
+            4167,
+            4214
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Fast paint bounds support quick rejection",
+          "detail": "SKPaint.GetFastBounds computes conservative paint bounds while safely reporting when an image filter or path effect cannot provide them.",
+          "prs": [
+            4271
+          ]
+        },
+        {
+          "lead": "Image-filter composition gains crop and empty nodes",
+          "detail": "SKImageFilter.CreateCrop restricts filter output with selectable tile modes, while CreateEmpty provides an explicit transparent-black node.",
+          "prs": [
+            4229,
+            4228
+          ]
+        },
+        {
+          "lead": "Overdraw data becomes visible",
+          "detail": "SKColorFilter.CreateOverdraw maps SKOverdrawCanvas counts through a six-color palette for rendering diagnostics.",
+          "prs": [
+            4227
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Small raster blurs regain their faster path",
+          "detail": "Native builds avoid the slow raster-pipeline Gaussian path for small-sigma 8888 image blurs.",
+          "prs": [
+            4269
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKSurface reuses its canvas wrapper",
+          "detail": "Repeated SKSurface.Canvas access now returns a cached wrapper and recreates it if callers explicitly dispose the surface-owned canvas.",
+          "prs": [
+            4247
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "ramezgerges": "Legacy API migration, small-blur performance recovery, and faster SKSurface.Canvas access"
+  },
+  "release_summaries": {
+    "v4.150.0-preview.1.1": {
+      "summary": "Updates the bundled rendering engine to Skia milestone 150 while retaining PDF support across Tizen and WASM.",
+      "prs": [
+        4146
+      ]
+    },
+    "v4.150.0-preview.2.1": {
+      "summary": "Promotes legacy APIs to compile errors and removes the deprecated .NET Interactive integration. Updates HarfBuzz to 14.2.1 with shaping, color-font, glyph-extents, and subsetting fixes.",
+      "prs": [
+        4195,
+        4186,
+        4167,
+        4214
+      ]
+    },
+    "v4.150.0-rc.1.1": {
+      "summary": "Adds fast paint bounds, crop and empty image filters, and overdraw visualization. Restores small-blur performance, accelerates SKSurface.Canvas access, and fixes concurrent CoreText typeface stream access.",
+      "prs": [
+        4271,
+        4229,
+        4228,
+        4227,
+        4269,
+        4247,
+        4190
+      ]
+    }
+  },
+  "harfbuzz_summary": "Updates the bundled HarfBuzz from 14.2.0 to 14.2.1, improving AAT and Arabic shaping, COLR v1 rendering, glyph extents, subsetting, and Hrkt script mapping."
+}

@@ -1,0 +1,38 @@
+{
+  "theme": "GPU reliability updates",
+  "highlights_headline": "SkiaSharp 4.150.2 brings additional Skia m150 reliability fixes to GPU rendering and SkSL.",
+  "highlights_body": "The servicing update improves failed-flush and resolve handling, prevents stale GPU readbacks, corrects Imagination framebuffer cleanup, and fixes RasterPipeline code generation.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Ganesh recovers correctly from failed GPU work",
+          "detail": "Failed flushes no longer return stale readbacks, dropped resolve tasks restore dirty tracking, and Imagination GPU framebuffer deletion is corrected.",
+          "prs": [
+            4517,
+            4561
+          ]
+        },
+        {
+          "lead": "SkSL RasterPipeline code generation is safer",
+          "detail": "Updates the bundled Skia engine with an upstream fix for a use-after-free during RasterPipeline code generation.",
+          "prs": [
+            4663
+          ]
+        },
+        {
+          "lead": "Additional Skia m150 fixes are included",
+          "detail": "Refreshes the bundled release-line engine with a further upstream m150 bug-fix sync.",
+          "prs": [
+            4648
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "release_summaries": {},
+  "harfbuzz_summary": "HarfBuzzSharp advances from 14.2.1.1 to 14.2.1.2 alongside this SkiaSharp servicing release."
+}

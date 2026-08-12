@@ -1,0 +1,30 @@
+{
+  "theme": "Skia m150 reliability fixes",
+  "highlights_headline": "SkiaSharp 4.150.1 incorporates two upstream Skia m150 reliability fixes.",
+  "highlights_body": "The servicing update corrects corrupt text-buffer cleanup and validates clipped render-pass bounds against the cleared stencil area.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Corrupt Slug cleanup no longer risks invalid frees",
+          "detail": "Skia now guarantees safe destruction order when deserializing a corrupt Slug buffer.",
+          "prs": [
+            4379
+          ]
+        },
+        {
+          "lead": "Clipped render-pass stencil bounds are checked",
+          "detail": "Rendering now checks clipped render-pass bounds against the stencil area that was cleared.",
+          "prs": [
+            4429
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "release_summaries": {},
+  "harfbuzz_summary": "HarfBuzzSharp advances from 14.2.1 to 14.2.1.1 alongside this SkiaSharp servicing release."
+}
