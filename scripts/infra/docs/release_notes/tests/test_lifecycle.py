@@ -218,18 +218,6 @@ class ShipmentCollectionTests(unittest.TestCase):
             "8.3.1.5",
         )
 
-    def test_harfbuzz_update_title_joins_path_scoped_prs(self):
-        prs = [
-            {"number": 101, "title": "Add shaping API", "body": ""},
-            {"number": 102, "title": "Update HarfBuzz to 14.2.0", "body": ""},
-            {"number": 103, "title": "Update Skia", "body": ""},
-        ]
-
-        self.assertEqual(
-            GENERATE._harfbuzz_pr_numbers(prs, [prs[0]]),
-            [101, 102],
-        )
-
     def test_placeholder_tag_is_not_an_exact_release(self):
         self.assertIsNone(MODEL.parse_tag("v3.0.0-preview.2.x"))
         self.assertIsNotNone(MODEL.parse_tag("v3.0.0-preview.2.1"))
@@ -436,35 +424,15 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         )
         self.assertEqual(RENDER.validate(data, prose), [])
 
-    def test_harfbuzz_summary_is_rejected_without_harfbuzz_facts(self):
+    def test_harfbuzz_summary_requires_harfbuzz_facts(self):
         data = page_data([])
         prose = cumulative_prose({})
-        prose["harfbuzz_summary"] = (
-            "Advances the HarfBuzzSharp package revision to 14.2.0.1."
-        )
-
-        errors = RENDER.validate(data, prose)
+        prose["harfbuzz_summary"] = "Updates HarfBuzzSharp."
 
         self.assertTrue(any(
             "data.harfbuzz is absent" in error
-            for error in errors
+            for error in RENDER.validate(data, prose)
         ))
-        self.assertTrue(any(
-            "version values absent from data.harfbuzz: 14.2.0.1" in error
-            for error in errors
-        ))
-
-    def test_legacy_orphan_harfbuzz_summary_remains_compatible(self):
-        data = page_data([])
-        data["format"] = 3
-        prose = cumulative_prose({})
-        prose["release_summaries"] = {}
-        prose["preview_summaries"] = {}
-        prose["harfbuzz_summary"] = (
-            "Legacy HarfBuzzSharp package notes for 1.68.2."
-        )
-
-        self.assertEqual(RENDER.validate(data, prose), [])
 
     def test_unchanged_harfbuzz_omits_empty_narrative(self):
         data = page_data([])
@@ -477,25 +445,18 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
 
         self.assertNotIn("## HarfBuzzSharp", RENDER.render(data, prose))
 
-    def test_legacy_harfbuzz_no_change_sentence_is_preserved(self):
+    def test_unsupported_data_format_requires_regeneration(self):
         data = page_data([])
         data["format"] = 3
-        data["harfbuzz"] = {
-            "version": "14.2.1",
-            "prs": [],
-        }
         prose = cumulative_prose({})
-        prose["preview_summaries"] = {}
-        prose["harfbuzz_summary"] = (
-            "Legacy prose that the reviewed page did not render."
-        )
 
-        rendered = RENDER.render(data, prose)
-        self.assertIn(
-            RENDER.LEGACY_NO_HARFBUZZ_CHANGES,
-            rendered,
+        self.assertEqual(
+            RENDER.validate(data, prose),
+            [
+                "unsupported release data format 3; only format 5 is supported. "
+                "Force-regenerate this version before rendering."
+            ],
         )
-        self.assertNotIn(prose["harfbuzz_summary"], rendered)
 
     def test_preview_uses_release_summary(self):
         item = shipment("v4.151.0-preview.1.1", [101])
@@ -588,101 +549,18 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         prose["release_summaries"][item["tag"]]["prs"].append(101)
         self.assertEqual(RENDER.validate(data, prose), [])
 
-    def test_release_summary_must_ground_each_exact_category_theme(self):
-        item = shipment("v4.151.0-rc.1.1", [101, 102], channel="rc")
-        data = page_data([item])
-        prose = cumulative_prose({
-            item["tag"]: release_summary([101]),
-        })
-        prose["categories"] = [
-            {
-                "heading": "Engine",
-                "bullets": [{
-                    "lead": "Engine updated",
-                    "detail": "Updates the bundled engine.",
-                    "prs": [101],
-                }],
-            },
-            {
-                "heading": "Bug Fixes",
-                "bullets": [{
-                    "lead": "Pixel access fixed",
-                    "detail": "Corrects pixel access.",
-                    "prs": [102],
-                }],
-            },
-        ]
-
-        errors = RENDER.validate(data, prose)
-
-        self.assertTrue(any(
-            "category theme 'Bug Fixes / Pixel access fixed'" in error
-            and "#102" in error
-            for error in errors
-        ))
-        prose["release_summaries"][item["tag"]]["prs"].append(102)
-        self.assertEqual(RENDER.validate(data, prose), [])
-
-    def test_security_category_requires_explicit_security_evidence(self):
-        data = page_data([
-            shipment("v4.151.0-preview.1.1", [101, 102]),
-        ])
-        data["prs"]["101"]["body"] = (
-            "Updates libexpat with upstream security hardening."
-        )
-        data["prs"]["102"]["body"] = "Updates libpng to the latest release."
-        prose = cumulative_prose({
-            "v4.151.0-preview.1.1": release_summary([101, 102]),
-        })
-        prose["categories"] = [{
-            "heading": "Security",
-            "bullets": [{
-                "lead": "Native dependencies updated",
-                "detail": "Updates bundled parsers and codecs.",
-                "prs": [101, 102],
-            }],
-        }]
-
-        errors = RENDER.validate(data, prose)
-        self.assertTrue(any(
-            "without explicit security evidence: #102" in error
-            for error in errors
-        ))
-
-        prose["categories"][0]["bullets"][0]["prs"] = [101]
-        self.assertEqual(RENDER.validate(data, prose), [])
-
-    def test_security_evidence_accepts_standard_explicit_wording(self):
-        for text in (
-            "Addresses CVE.",
-            "Addresses CVE-2026-1234.",
-            "Publishes an advisory.",
-            "Includes upstream security fixes.",
-            "Includes security updates and advisories.",
-            "Fixes two vulnerabilities.",
-            "Applies security patches.",
-        ):
-            self.assertTrue(COMMON.has_security_evidence("", text), text)
-        self.assertFalse(COMMON.has_security_evidence(
-            "Update libpng",
-            "Updates to the latest upstream release.",
-        ))
-
-    def test_legacy_security_prose_does_not_require_new_evidence_field(self):
+    def test_security_category_is_an_editorial_decision(self):
         data = page_data([
             shipment("v4.151.0-preview.1.1", [101]),
         ])
-        data["format"] = 3
-        prose = cumulative_prose({})
-        prose["release_summaries"] = {}
-        prose["preview_summaries"] = {
-            "v4.151.0-preview.1.1": "Updates a bundled dependency.",
-        }
+        prose = cumulative_prose({
+            "v4.151.0-preview.1.1": release_summary([101]),
+        })
         prose["categories"] = [{
             "heading": "Security",
             "bullets": [{
-                "lead": "Bundled dependency updated",
-                "detail": "Updates the native dependency.",
+                "lead": "Maintainer-curated security fix",
+                "detail": "Summarizes trusted evidence from the notes sidecar.",
                 "prs": [101],
             }],
         }]
@@ -886,6 +764,41 @@ class PreservationLifecycleTests(unittest.TestCase):
 
 
 class ScopedPruningTests(unittest.TestCase):
+    def test_scoped_render_ignores_out_of_range_cached_prose(self):
+        with tempfile.TemporaryDirectory() as directory:
+            releases = Path(directory)
+            sources = releases / "_sources"
+            sources.mkdir(parents=True)
+            (sources / "index.json").write_text("{}")
+
+            selected = page_data([])
+            selected["version"] = "4.147.0"
+            (sources / "4.147.0.data.json").write_text(
+                json.dumps(selected)
+            )
+            (sources / "4.147.0.prose.json").write_text(
+                json.dumps(cumulative_prose({}))
+            )
+            (sources / "1.68.2.data.json").write_text(
+                json.dumps({"version": "1.68.2"})
+            )
+
+            with patch.object(RENDER, "RELEASES_DIR", releases), patch.object(
+                COMMON, "RELEASES_DIR", releases
+            ), patch.object(
+                RENDER, "generate_toc", return_value="toc\n"
+            ), patch.object(
+                RENDER, "generate_index", return_value="index\n"
+            ):
+                result = RENDER.render_all(
+                    min_core=COMMON.core_tuple("4.147.0"),
+                    max_core=COMMON.core_tuple("4.148.1"),
+                )
+
+            self.assertEqual(result, 0)
+            self.assertTrue((releases / "4.147.0.md").exists())
+            self.assertFalse((releases / "1.68.2.md").exists())
+
     def test_scoped_render_preserves_out_of_range_unreleased_pages(self):
         with tempfile.TemporaryDirectory() as directory:
             releases = Path(directory)

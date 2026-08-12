@@ -22,13 +22,6 @@ EXACT_RELEASE_TAG_RE = re.compile(
     r"^v\d+(?:\.\d+){2,3}"
     r"(?:-(?:alpha|beta|preview|rc)(?:\.\d+)+)?$"
 )
-SECURITY_EVIDENCE_RE = re.compile(
-    r"\b(?:CVE(?:-\d{4}-\d+)?|advisor(?:y|ies)|vulnerabilit(?:y|ies)|"
-    r"security\s+(?:fix(?:es)?|harden(?:ed|ing)|patch(?:es)?|"
-    r"releases?|updates?|advisor(?:y|ies)))\b",
-    re.IGNORECASE,
-)
-HARFBUZZ_EVIDENCE_RE = re.compile(r"\bharfbuzz(?:sharp)?\b", re.IGNORECASE)
 MONTH_ABBR = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
@@ -42,14 +35,6 @@ _CO_RELEASE_MAP: dict | None = None
 def log(*args, **kwargs) -> None:
     kwargs["file"] = sys.stderr
     print(*args, **kwargs)
-
-
-def has_security_evidence(title: str, body: str) -> bool:
-    return bool(SECURITY_EVIDENCE_RE.search("{}\n{}".format(title, body)))
-
-
-def has_harfbuzz_evidence(title: str, body: str) -> bool:
-    return bool(HARFBUZZ_EVIDENCE_RE.search("{}\n{}".format(title, body)))
 
 
 def run(args: list[str], check: bool = True) -> str:

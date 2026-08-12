@@ -338,9 +338,9 @@ runs, CI, and the docs Docker image share one copy). The **release-notes engine*
 its data builders, renderer and prose schema — sits **beside the API-diff engine and
 the shared Cake machinery** it runs with, rather than in the skill folder. The
 skill keeps only the thin, stable **entrypoints** (`prepare.sh`, `render.sh`) plus
-the AI's instructions (`SKILL.md`, `samples/`): the entrypoints *redirect* to the
-real engine under `scripts/infra/docs/`, so the skill stays a simple, stable
-surface while the implementation can be edited underneath it. (The committed page
+the AI's instructions (`SKILL.md`): the entrypoints *redirect* to the real engine
+under `scripts/infra/docs/`, so the skill stays a simple, stable surface while the
+implementation can be edited underneath it. (The committed page
 inputs — `_sources/*.data.json`, `*.prose.json`, `co-release-map.json`, `index.json`,
 and the `pr-authors.json` author cache — live under `releases/_sources/`.)
 
@@ -367,7 +367,8 @@ scripts/infra/docs/                (all doc engines, together)
 
 .agents/skills/release-notes/      (the skill: instructions + thin entrypoints)
   SKILL.md                     the AI's prose instructions (§4.4)
-  samples/                     worked end-to-end examples
+  templates/
+    release-notes-sidecar.md   human template for curated security/breaking facts
   scripts/
     prepare.sh                 Prepare entrypoint → docs-api-diff → release_notes/generate.py →
                                release_notes/index.py; writes the Files-to-polish list (§2.2)
@@ -461,12 +462,11 @@ runs first validate in-range pages individually before the authoritative `--all`
 That final pass prunes stale `-unreleased` pages (per the `live_unreleased`
 set `release_notes/index.py` recorded in `index.json`) only inside the requested
 range; an unscoped production run prunes globally. It retires legacy standalone
-HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates every
-SkiaSharp page from committed `_sources/*.data.json` + `_sources/*.prose.json` (with
-folded HarfBuzz sections where present), then rebuilds `TOC.yml` + `index.md` from
-the finished page set and the committed Chrome schedule in `_sources/index.json`. So
-consumers see just two phases — **Prepare** (run one script) then **Polish** (write
-prose, render) — and never juggle the individual generators by hand.
+HarfBuzzSharp hub pages under `releases/harfbuzzsharp/`, regenerates the selected
+SkiaSharp pages from committed `_sources/*.data.json` + `_sources/*.prose.json`
+(every page when unscoped), then rebuilds `TOC.yml` + `index.md` from the finished
+page set and committed Chrome schedule. So consumers see just two phases —
+**Prepare** then **Polish** — and never juggle individual generators by hand.
 
 ### 2.3 One workflow, one PR
 
@@ -561,9 +561,9 @@ the work is split by artifact:
    `release_notes/render.py <data.json> <prose.json> [out.md]`, and the final
    `release_notes/render.py --all` pass that prunes stale `-unreleased` pages (per
    `index.json`'s `live_unreleased`), retires old HarfBuzz hub pages, then rebuilds
-   every SkiaSharp page plus `TOC.yml` and `index.md` from committed JSON. It is pure
-   stdlib, dependency-free, and offline; the release-cadence timeline reads the
-   schedule from `_sources/index.json`.
+   the selected pages plus `TOC.yml` and `index.md` from committed JSON. An
+   unscoped run rebuilds every page. It is pure stdlib, dependency-free, and
+   offline; the release-cadence timeline reads `_sources/index.json`.
 
 **Why the split.** Every failure mode that recurred under the single-agent path lived
 exactly where the agent owned structure: dropped `## Breaking Changes` headings, bare
@@ -889,17 +889,16 @@ the deterministic facts `release_notes/generate.py` writes for the renderer and 
 
 ### 3.7 The manual additions sidecar (maintainer → release_notes/generate.py → Polish AI)
 
-`releases/_sources/<line>.notes.md` is an **optional, maintainer-authored** companion
-to a SkiaSharp release page. It is the one place a human injects hand-written material
-— a breaking-change call-out, a migration note, an editorial "bring this out" highlight
-— that must survive regeneration and re-polish. Editing the final `<line>.md` directly
-does not survive, because `release_notes/render.py --all` rewrites it from JSON (§4.4); the
-sidecar does, because no engine ever writes it.
+`releases/_sources/<line>.notes.md` is an **optional, maintainer-authored**
+companion for facts that generated API diffs and PR titles do not explain well.
+Security prose comes only from this file, and behavioral/binary/source breaks can
+carry explicit before/after and migration guidance. Editing the rendered page does
+not survive regeneration; the sidecar does because no engine writes it.
 
-It is **freeform Markdown, not a schema.** There is no JSON and no required structure:
-the maintainer writes natural-language notes and the Polish AI parses, understands, and
-weaves them into `prose.json` (§4.7). Not all of it is "breaking" — some is simply
-material to surface.
+It remains Markdown rather than machine-parsed schema, but maintainers should copy
+`.agents/skills/release-notes/templates/release-notes-sidecar.md`. Each entry has a
+short **Release-note blurb** for the AI plus supporting Evidence, Previous behavior,
+New behavior, Reason, Recommended action, and Affected APIs as applicable.
 
 #### Ownership & lifecycle
 
@@ -1166,7 +1165,9 @@ principles are fixed here.
 4. **Categories are closed.** `release_notes/render.py` accepts only the headings listed in
    `SKILL.md` (`Engine`, `API Surface`, `Bug Fixes`, `Lifecycle & Internals`,
    `Platform`, `Security`) and renders them in that order. The AI chooses which apply;
-   it does not invent headings.
+   it does not invent headings. Security is supplied only by maintainer-curated
+   facts under the page's `_sources/<version>.notes.md` Security heading; scripts do
+   not infer security significance from PR text or dependency names.
 5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty or the
    co-shipped HarfBuzz `version` differs from `previous_version`, the AI
    writes one short `harfbuzz_summary` paragraph. It does not dump every HarfBuzz PR:
@@ -1287,12 +1288,10 @@ Always the same incremental Prepare + offline Polish sequence:
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
    non-breaking API diff is deliberately **not** folder-hashed — its change signal is
    already carried by the PR set and the API-changes link.
-3. **The `format` field rolls out data-shape changes.** The content key detects data
-   changes but not a schema/instruction change that leaves the facts identical. The
-   `format` field is a single integer stamped into every data sidecar and compared as
-   part of the dict. Bump `_DATA_JSON_FORMAT_VERSION` in `release_notes/generate.py` whenever the
-   data JSON shape or its Polish contract changes materially; a forced run rewrites the
-   pages to the new format, then the pipeline settles back to idempotent.
+3. **The `format` field invalidates cached page facts.** Bump `DATA_FORMAT` in
+   `release_notes/model.py` when the data shape or Polish contract changes, then
+   force-regenerate the affected range. Newly generated v4 artifacts use only the
+   current format; old v4 caches are not migrated in place.
 4. **Polish reads only denormalized context and renders offline.** The agent
    iterates the committed context paths in `output/files-to-polish.txt`, uses each
    file's frontmatter to
@@ -1300,12 +1299,12 @@ Always the same incremental Prepare + offline Polish sequence:
    prerelease-summary prose. Stable summaries come from cumulative highlights,
    including stable tags with no changes after their RC. After the AI writes each
    `_sources/<stem>.prose.json` and validates the page with
-   `release_notes/render.py <data.json> <prose.json> [out.md]`, it runs `render.sh` (or the
-   equivalent `release_notes/render.py --all`) once to regenerate every SkiaSharp page, retire
-   old HarfBuzz hub pages, `TOC.yml`, and `index.md` from committed JSON. **`--all`
-   hard-fails** if any `data.json` has no matching `prose.json` — i.e. a changed/new page
-   the AI forgot to author — so a changed page can never ship with stale (or missing)
-   prose. When Prepare's patch is empty, the workflow skips Polish and opens no PR (§2.3).
+   `release_notes/render.py <data.json> <prose.json> [out.md]`, it runs `render.sh`
+   once to regenerate the requested range (or every page when unscoped), retire old
+   HarfBuzz hub pages, and rebuild `TOC.yml`/`index.md`. The authoritative pass
+   hard-fails when a selected data file has no matching prose, so changed pages
+   cannot ship stale or missing prose. An empty Prepare patch skips Polish and opens
+   no PR (§2.3).
 
 5. **Reviewed summaries converge asynchronously after merge.** Publishing never waits
    for summary prose. A separate zero-AI workflow watches merged `*.prose.json`
@@ -1384,12 +1383,12 @@ The AI reads the page's data sidecar, then **opens and reads** each companion na
 `breaking_candidates[]` and writes a **short summary**, not a dump. Four rules cover
 it:
 
-1. **Manual notes (`_sources/*.notes.md`) — merge neatly.** Read it and fold its
-   points into the prose: editorial "bring this out" notes into Highlights (kept
-   close to the maintainer's wording where it matters), behavioral and interop
-   breaks under Breaking Changes. This sidecar is the **only** channel for breaks the
-   signature diff cannot see — behavioral changes (same signature, different runtime
-   behavior) and interop / native structs.
+1. **Manual notes (`_sources/*.notes.md`) — merge neatly.** Keep each
+   **Release-note blurb** recognizable, using the supporting fields to verify and
+   clarify it. Put sidecar Security items under Security and typed behavioral,
+   source, binary, and interop changes under Breaking Changes. This sidecar is the
+   only Security source and the only channel for breaks the signature diff cannot
+   see.
 2. **Breaking diff (`.breaking.md`) — summarize as a few bullets.** Open **every**
    file the data sidecar lists (one per broken assembly) and write a handful of
    `breaking` entries naming the affected types/areas, with a small migration example

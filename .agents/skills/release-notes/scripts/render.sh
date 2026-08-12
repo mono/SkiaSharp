@@ -3,18 +3,15 @@
 # render.sh — the release-notes POLISH-FINALIZE phase (offline).
 #
 # After the AI has written _sources/<version>.prose.json for each page, this builds
-# ALL the Markdown from the committed JSON, deterministically and without a network:
-#   * every <version>.md (from its data.json + prose.json), and the deterministic
-#     no-changes pages (from data.json alone);
+# the selected Markdown from committed JSON, deterministically and without a network:
+#   * each in-range <version>.md (or every page when unscoped);
 #   * TOC.yml + index.md, rebuilt from the finished page set + the committed schedule.
-# It fails loudly (non-zero) if any committed prose.json is invalid, so a bad page can
-# never ship.
+# It fails loudly when selected prose is invalid.
 #
 # This is just release_notes/render.py --all under one banner — the single command the AI (and
 # a human) run to finalize. The three flags are accepted for a uniform interface with
-# prepare.sh; --min-version/--max-version additionally render those pages individually
-# first (targeted validation output), and --force is a no-op (the render is idempotent —
-# it always rewrites from the current JSON).
+# prepare.sh; --min-version/--max-version scope the authoritative pass, and --force
+# is a no-op because rendering is idempotent.
 #
 # Requires: python3 only (pure stdlib; reads _sources/index.json for the schedule).
 
@@ -56,8 +53,8 @@ if [ -n "$MIN" ] || [ -n "$MAX" ]; then
   done
 fi
 
-# The authoritative pass: render every page from committed JSON + rebuild TOC/index.
-echo "==> Render: full pass (every page + TOC.yml + index.md)"
+# The authoritative pass: render the scope from committed JSON + rebuild TOC/index.
+echo "==> Render: authoritative pass (selected pages + TOC.yml + index.md)"
 final_flags=(--all)
 [ -n "$MIN" ] && final_flags+=("--min-version=$MIN")
 [ -n "$MAX" ] && final_flags+=("--max-version=$MAX")

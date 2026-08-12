@@ -311,6 +311,62 @@ class CandidateSelectionTests(unittest.TestCase):
         with self.assertRaisesRegex(updater.UpdateError, "no exact shipment facts"):
             updater.select_current_candidates(repo, tag=tag)
 
+    def test_unsupported_data_format_requires_regeneration(self):
+        with self.assertRaisesRegex(
+            updater.UpdateError,
+            "unsupported release data format 4; expected 5",
+        ):
+            updater._shipment_map(
+                {"format": 4, "shipments": []},
+                data_path("4.151.0"),
+            )
+
+    def test_current_selection_skips_unsupported_cached_pages(self):
+        repo = FakeRepository()
+        old_path = prose_path("3.119.0")
+        new_path = prose_path("4.151.0")
+        old_tag = "v3.119.0-preview.1.1"
+        new_tag = "v4.151.0-preview.1.1"
+        repo.current_paths = [old_path, new_path]
+        repo.current[old_path] = prose({
+            old_tag: {"summary": "Old cached preview.", "prs": [1]},
+        })
+        repo.current[data_path("3.119.0")] = {
+            "format": 4,
+            "shipments": [shipment(old_tag)],
+        }
+        repo.current[new_path] = prose({
+            new_tag: {"summary": "Adds the current preview.", "prs": [1]},
+        })
+        repo.current[data_path("4.151.0")] = data(shipment(new_tag))
+
+        selected = updater.select_current_candidates(repo)
+
+        self.assertEqual([item.tag for item in selected], [new_tag])
+
+    def test_push_migration_does_not_parse_unsupported_old_prose(self):
+        repo = FakeRepository()
+        path = prose_path("4.151.0")
+        tag = "v4.151.0-preview.1.1"
+        repo.changed = [path]
+        repo.historical.update({
+            (self.BEFORE, path): {"release_summaries": "legacy"},
+            (self.BEFORE, data_path("4.151.0")): {
+                "format": 4,
+                "shipments": [shipment(tag)],
+            },
+            (self.AFTER, path): prose({
+                tag: {"summary": "Adds the current preview.", "prs": [1]},
+            }),
+            (self.AFTER, data_path("4.151.0")): data(shipment(tag)),
+        })
+
+        selected = updater.select_push_candidates(
+            repo, self.BEFORE, self.AFTER
+        )
+
+        self.assertEqual([item.tag for item in selected], [tag])
+
 
 class BodyModelTests(unittest.TestCase):
     def test_renderer_uses_summary_links_stats_and_contributors(self):
@@ -323,14 +379,14 @@ class BodyModelTests(unittest.TestCase):
                 "author": "contributor",
                 "community": True,
                 "title": "Add feature",
-                "classification": "product",
+                "tag": "product",
             },
             "2": {
                 "url": "https://github.com/mono/SkiaSharp/pull/2",
                 "author": "maintainer",
                 "community": False,
                 "title": "Internal change",
-                "classification": "internal",
+                "tag": "internal",
             },
         }
         prose_value = prose({

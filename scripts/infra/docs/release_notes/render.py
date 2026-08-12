@@ -2,7 +2,8 @@
 """Render a release-notes page from deterministic data + agent prose.
 
     render.py <data.json> <prose.json> [out.md]   # normal page
-    render.py --all                               # regenerate every page + TOC.yml + index.md
+    render.py --all [--min-version X --max-version Y]
+                                                  # render scope + TOC.yml + index.md
     render.py --summary TAG data.json prose.json [out.md]
 
 `data.json`  — facts emitted by generate.py (PRs, roster, banner
@@ -65,10 +66,6 @@ RELEASE_CATEGORIES = [
     "Lifecycle & Internals", "Platform", "Security",
 ]
 RELEASE_LINKS_MARKER = "<!-- RELEASE_LINKS -->"
-LEGACY_NO_HARFBUZZ_CHANGES = (
-    "No HarfBuzzSharp binding changes shipped in this release — it rebuilds "
-    "the same HarfBuzz as the previous line."
-)
 
 
 def page_title(data):
@@ -144,7 +141,7 @@ def _markdown_escape(text):
 
 
 def _classification(pr):
-    return (pr or {}).get("classification") or (pr or {}).get("tag") or "product"
+    return (pr or {}).get("tag") or "product"
 
 
 def render_github_release_summary(data, prose, tag):
@@ -276,24 +273,14 @@ def render(data, prose):
         for item in cat.get("bullets") or []:
             L.append("- **{}** — {}{}".format(item["lead"], item["detail"], credit(item.get("prs"), data)))
 
-    # HarfBuzzSharp ships inside this SkiaSharp release (spec §1.5), so its notes
-    # are a section here rather than a separate page. The version + API diff are in
-    # the banner; this section is the agent's summary of the HarfBuzz-specific
-    # changes (crediting the PRs that touched HarfBuzz), or the fixed no-changes
-    # line when the binding was only rebuilt.
+    # HarfBuzzSharp ships inside this SkiaSharp release (spec §1.5).
     hb = data.get("harfbuzz")
     hb_summary = (prose.get("harfbuzz_summary") or "").strip()
-    legacy = int(data.get("format") or 0) < 5
-    rendered_hb_summary = (
-        hb_summary
-        if not legacy or common.harfbuzz_summary_required(hb)
-        else LEGACY_NO_HARFBUZZ_CHANGES
-    )
-    if hb and hb.get("version") and rendered_hb_summary:
+    if hb and hb.get("version") and hb_summary:
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        L.append(rendered_hb_summary)
+        L.append(hb_summary)
 
     if data.get("platform_support"):
         L.append("")
@@ -325,7 +312,6 @@ def render(data, prose):
             L.append("- [{}]({})".format(l["label"], l["href"]))
 
     release_summaries = prose.get("release_summaries") or {}
-    legacy_preview_summaries = prose.get("preview_summaries") or {}
     for p in data.get("previews") or []:
         L.append("")
         head = "## {}".format(p["label"])
@@ -334,11 +320,9 @@ def render(data, prose):
         L.append(head)
         L.append("")
         release = release_summaries.get(p["key"]) or {}
-        summary = release.get("summary")
+        summary = release.get("summary") or ""
         refs = release.get("prs") or []
-        if summary is None:
-            summary = legacy_preview_summaries.get(p["key"], "")
-        L.append((summary or "") + pr_refs(refs, data))
+        L.append(summary + pr_refs(refs, data))
         if p.get("changelog_url"):
             L.append("")
             L.append("[Full changelog]({})".format(p["changelog_url"]))
@@ -371,6 +355,13 @@ HIGHLIGHTS_TOTAL_WORD_CAP = 100
 
 
 def validate(data, prose):
+    if data.get("format") != model.DATA_FORMAT:
+        return [
+            "unsupported release data format {}; only format {} is supported. "
+            "Force-regenerate this version before rendering."
+            .format(data.get("format"), model.DATA_FORMAT)
+        ]
+
     errors = []
 
     theme = (prose.get("theme") or "").strip()
@@ -429,142 +420,84 @@ def _finish_validate(errors, data, prose):
             errors.append(
                 "category heading '{}' is not one of the allowed sections: {}"
                 .format(cat.get("heading"), ", ".join(sorted(allowed))))
-        if (int(data.get("format") or 0) >= 5
-                and cat.get("heading") == "Security"):
-            for bullet in cat.get("bullets") or []:
-                refs = bullet.get("prs") or []
-                unsupported = []
-                for number in refs:
-                    fact = _pr(data, number) or {}
-                    if not (
-                        fact.get("security_evidence") is True
-                        or common.has_security_evidence(
-                            fact.get("title") or "",
-                            fact.get("body") or "",
-                        )
-                    ):
-                        unsupported.append(number)
-                if not refs:
-                    errors.append(
-                        "Security bullets must cite PRs with explicit CVE, advisory, "
-                        "vulnerability, security-release, or security-hardening evidence.")
-                elif unsupported:
-                    errors.append(
-                        "Security bullet references PRs without explicit security "
-                        "evidence: {}. Move ordinary dependency updates to Engine."
-                        .format(", ".join("#{}".format(number)
-                                          for number in unsupported))
-                    )
 
     prev_list = [p["key"] for p in data.get("previews", [])]
     prev_dups = sorted({k for k in prev_list if prev_list.count(k) > 1})
     if prev_dups:
         errors.append("duplicate preview keys (data.json bug — keys must be unique "
                       "per preview): " + ", ".join(prev_dups))
-    legacy = prose.get("preview_summaries") or {}
-    if int(data.get("format") or 0) >= 5:
-        scopes = {
-            preview["key"]: set(preview.get("prs") or [])
-            for preview in data.get("previews") or []
-            if preview.get("key")
-        }
-        for shipment in data.get("shipments") or []:
-            tag = shipment.get("tag")
-            if tag and shipment.get("channel") != "stable":
-                scopes[tag] = set(shipment.get("prs") or [])
+    scopes = {
+        preview["key"]: set(preview.get("prs") or [])
+        for preview in data.get("previews") or []
+        if preview.get("key")
+    }
+    for shipment in data.get("shipments") or []:
+        tag = shipment.get("tag")
+        if tag and shipment.get("channel") != "stable":
+            scopes[tag] = set(shipment.get("prs") or [])
 
-        releases = prose.get("release_summaries") or {}
-        breaking_refs = {
-            number
-            for item in prose.get("breaking") or []
-            for number in item.get("prs") or []
-            if type(number) is int
-        }
-        missing = sorted(set(scopes) - set(releases))
-        if missing:
-            errors.append(
-                "every Preview/RC needs release_summaries[tag]; missing: "
-                + ", ".join(missing)
-            )
-        unknown = sorted(set(releases) - set(scopes))
-        if unknown:
-            errors.append(
-                "release_summaries contains tags absent from page facts: "
-                + ", ".join(unknown)
-            )
-        for tag, release in releases.items():
-            if not isinstance(release, dict):
-                errors.append("{} release summary must be an object".format(tag))
-                continue
-            summary = release.get("summary")
-            if not isinstance(summary, str) or not summary.strip():
-                errors.append("{} release summary text is required".format(tag))
-            elif len(summary) > 500:
-                errors.append("{} release summary exceeds 500 characters".format(tag))
-            refs = release.get("prs")
-            if not isinstance(refs, list):
-                errors.append("{} release summary prs must be an array".format(tag))
-                continue
-            if any(type(number) is not int or number <= 0 for number in refs):
-                errors.append(
-                    "{} release summary prs must be positive integers".format(tag)
-                )
-                continue
-            if len(refs) != len(set(refs)):
-                errors.append("{} release summary prs must be unique".format(tag))
-            outside = sorted(set(refs) - scopes.get(tag, set()))
-            if outside:
-                errors.append(
-                    "{} release summary references PRs outside its exact scope: {}"
-                    .format(tag, ", ".join("#{}".format(number) for number in outside))
-                )
-            missing_breaking = sorted(
-                (breaking_refs & scopes.get(tag, set())) - set(refs)
-            )
-            if missing_breaking:
-                errors.append(
-                    "{} release summary must ground every exact-release breaking "
-                    "change cited by the page; missing: {}"
-                    .format(
-                        tag,
-                        ", ".join("#{}".format(number)
-                                  for number in missing_breaking),
-                    )
-                )
-            for category in prose.get("categories") or []:
-                for bullet in category.get("bullets") or []:
-                    exact_theme_refs = (
-                        set(bullet.get("prs") or []) & scopes.get(tag, set())
-                    )
-                    if exact_theme_refs and not (set(refs) & exact_theme_refs):
-                        errors.append(
-                            "{} release summary must ground the exact-release "
-                            "category theme '{} / {}'; add one of: {}"
-                            .format(
-                                tag,
-                                category.get("heading") or "(unknown category)",
-                                bullet.get("lead") or "(untitled bullet)",
-                                ", ".join(
-                                    "#{}".format(number)
-                                    for number in sorted(exact_theme_refs)
-                                ),
-                            )
-                        )
-    else:
-        missing_prev = sorted(
-            key for key in prev_list
-            if not isinstance(legacy.get(key), str) or not legacy[key].strip()
+    releases = prose.get("release_summaries") or {}
+    breaking_refs = {
+        number
+        for item in prose.get("breaking") or []
+        for number in item.get("prs") or []
+        if type(number) is int
+    }
+    missing = sorted(set(scopes) - set(releases))
+    if missing:
+        errors.append(
+            "every Preview/RC needs release_summaries[tag]; missing: "
+            + ", ".join(missing)
         )
-        if missing_prev:
+    unknown = sorted(set(releases) - set(scopes))
+    if unknown:
+        errors.append(
+            "release_summaries contains tags absent from page facts: "
+            + ", ".join(unknown)
+        )
+    for tag, release in releases.items():
+        if not isinstance(release, dict):
+            errors.append("{} release summary must be an object".format(tag))
+            continue
+        summary = release.get("summary")
+        if not isinstance(summary, str) or not summary.strip():
+            errors.append("{} release summary text is required".format(tag))
+        elif len(summary) > 500:
+            errors.append("{} release summary exceeds 500 characters".format(tag))
+        refs = release.get("prs")
+        if not isinstance(refs, list):
+            errors.append("{} release summary prs must be an array".format(tag))
+            continue
+        if any(type(number) is not int or number <= 0 for number in refs):
             errors.append(
-                "every preview/RC needs preview_summaries[tag]; missing: "
-                + ", ".join(missing_prev)
+                "{} release summary prs must be positive integers".format(tag)
+            )
+            continue
+        if len(refs) != len(set(refs)):
+            errors.append("{} release summary prs must be unique".format(tag))
+        outside = sorted(set(refs) - scopes.get(tag, set()))
+        if outside:
+            errors.append(
+                "{} release summary references PRs outside its exact scope: {}"
+                .format(tag, ", ".join("#{}".format(number) for number in outside))
+            )
+        missing_breaking = sorted(
+            (breaking_refs & scopes.get(tag, set())) - set(refs)
+        )
+        if missing_breaking:
+            errors.append(
+                "{} release summary must ground every exact-release breaking "
+                "change cited by the page; missing: {}"
+                .format(
+                    tag,
+                    ", ".join("#{}".format(number)
+                              for number in missing_breaking),
+                )
             )
 
     hb = data.get("harfbuzz") or {}
     hb_summary = (prose.get("harfbuzz_summary") or "").strip()
-    current_format = int(data.get("format") or 0)
-    if current_format >= 5 and hb_summary and not hb:
+    if hb_summary and not hb:
         errors.append(
             "prose.harfbuzz_summary must be null or omitted when "
             "data.harfbuzz is absent."
@@ -574,7 +507,7 @@ def _finish_validate(errors, data, prose):
             "this release changes HarfBuzz or the HarfBuzzSharp binding, so "
             "prose.harfbuzz_summary is required — summarise the consumer-facing "
             "change (1-2 sentences).")
-    if current_format >= 5 and hb_summary:
+    if hb_summary and hb:
         allowed_versions = {
             str(version)
             for version in (hb.get("version"), hb.get("previous_version"))
@@ -1134,14 +1067,13 @@ def _retire_harfbuzz_pages():
 
 def render_all(min_core=None, max_core=None):
     # type: () -> int
-    """Regenerate EVERY page and the TOC/index from committed JSON (offline).
+    """Regenerate selected pages and the TOC/index from committed JSON (offline).
 
     The final Polish step: after the agent has written each page's prose.json,
     one --all pass prunes any now-stale ``-unreleased`` page (per the live-head set
-    index.py recorded in index.json), re-renders every ``<version>.md`` from its
-    data.json + prose.json (and the deterministic no-changes pages from data.json
-    alone), then builds TOC.yml + index.md from the finished page set and the
-    committed Chrome schedule. Pure JSON -> Markdown, so it is fast and re-runnable.
+    index.py recorded in index.json), re-renders each in-range ``<version>.md`` from
+    its data.json + prose.json, then builds TOC.yml + index.md from the finished page
+    set. With no range, every page is rendered.
     """
     index = load_index_json()
     _prune_stale_unreleased(
@@ -1160,6 +1092,11 @@ def render_all(min_core=None, max_core=None):
             continue
         for dp in sorted(sd.glob("*.data.json")):
             data = json.loads(dp.read_text())
+            core = common.core_tuple(str(data.get("version") or "0"))
+            if min_core is not None and core < min_core:
+                continue
+            if max_core is not None and core > max_core:
+                continue
             page = _page_for_data(dp)
             for shipment in data.get("shipments") or []:
                 tag = shipment.get("tag")
@@ -1217,9 +1154,8 @@ def main(argv):
     flags = [a for a in argv[1:] if a.startswith("-")]
     args = [a for a in argv[1:] if not a.startswith("-")]
 
-    # --all: the final Polish pass. Regenerate every page + TOC/index from the
-    # committed JSON, offline. Takes no positional args. Returns non-zero if any
-    # committed prose.json failed validation (a bad page must never ship).
+    # --all: the final Polish pass. Render the requested range (or every page
+    # when unscoped) and rebuild TOC/index from committed JSON.
     if "--all" in flags:
         def scope_value(name):
             prefix = name + "="

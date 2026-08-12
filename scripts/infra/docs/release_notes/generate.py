@@ -278,26 +278,6 @@ def _previous_co_release_version(
     return co_releases[previous_line]
 
 
-def _harfbuzz_pr_numbers(prs: list[dict], path_prs: list[dict]) -> list[int]:
-    path_numbers = {
-        pr.get("number")
-        for pr in path_prs
-        if pr.get("number")
-    }
-    return [
-        pr["number"]
-        for pr in prs
-        if pr.get("number")
-        and (
-            pr["number"] in path_numbers
-            or common.has_harfbuzz_evidence(
-                pr.get("title") or "",
-                "",
-            )
-        )
-    ]
-
-
 def write_page(
     branch: str,
     all_branches: list[str],
@@ -363,7 +343,7 @@ def write_page(
             "api_diff_link": "harfbuzzsharp/{}/index.md".format(
                 harfbuzz_version
             ),
-            "prs": _harfbuzz_pr_numbers(prs, hb_prs),
+            "prs": [pr["number"] for pr in hb_prs if pr.get("number")],
         }
 
     base_version = _base_version(from_ref, version)

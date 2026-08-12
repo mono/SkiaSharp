@@ -271,12 +271,10 @@ This run's **CI-specific deltas** on top of the skill:
    `python3 scripts/infra/docs/release_notes/render.py --all \
    --min-version="${{ inputs.min_version }}" \
    --max-version="${{ inputs.max_version }}"`
-   to rebuild every page + the `TOC.yml`/`index.md` aggregates (offline, from the
-   committed JSON). The bounds limit stale-page pruning during a scoped validation
-   run; empty production bounds prune globally. If `--all` reports a prose error in
-   one of the listed `prose.json` files, fix that prose and re-run. Any other failure
-   is a deterministic Prepare defect: do not edit its output; call `missing_data`
-   and stop.
+   to rebuild the selected pages + `TOC.yml`/`index.md` (offline, from committed
+   JSON). Empty production bounds render and prune globally. If `--all` reports a
+   prose error in one of the listed files, fix it and re-run. Any other failure is a
+   deterministic Prepare defect: call `missing_data` and stop.
 4. Commit and open the PR (below). If, after `--all`, `git status` shows the working
    tree is genuinely unchanged, make no commit and exit; otherwise commit everything.
 

@@ -281,8 +281,6 @@ def build_data_json(prs: list[dict], metadata: dict) -> dict:
         body = (pr.get("body") or "").strip()
         if body and entry["tag"] != "internal":
             entry["body"] = body
-        if common.has_security_evidence(entry["title"], body):
-            entry["security_evidence"] = True
         if pr.get("skiaPr"):
             entry["companion_pr"] = {
                 "repository": "mono/skia",

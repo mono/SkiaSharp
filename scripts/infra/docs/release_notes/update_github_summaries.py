@@ -25,7 +25,7 @@ PACKAGE_PARENT = Path(__file__).resolve().parent.parent
 if str(PACKAGE_PARENT) not in sys.path:
     sys.path.insert(0, str(PACKAGE_PARENT))
 
-from release_notes import common
+from release_notes import common, model
 
 
 REPOSITORY_DEFAULT = "mono/SkiaSharp"
@@ -233,6 +233,11 @@ def _summary_map(prose: dict | None) -> dict:
 
 
 def _shipment_map(data: dict | None, source: str) -> dict[str, dict]:
+    if data is not None and data.get("format") != model.DATA_FORMAT:
+        raise UpdateError(
+            "{} uses unsupported release data format {}; expected {}"
+            .format(source, data.get("format"), model.DATA_FORMAT)
+        )
     shipments = (data or {}).get("shipments") or []
     if not isinstance(shipments, list):
         raise UpdateError("{} shipments must be an array".format(source))
@@ -251,6 +256,10 @@ def _shipment_map(data: dict | None, source: str) -> dict[str, dict]:
                 source, ", ".join(sorted(set(duplicates))))
         )
     return result
+
+
+def _is_supported_data(data: dict | None) -> bool:
+    return bool(data and data.get("format") == model.DATA_FORMAT)
 
 
 def _data_path(prose_path: str) -> str:
@@ -326,10 +335,15 @@ def select_push_candidates(
         new_data = repository.json_at(after, data_path)
         if new_data is None:
             raise UpdateError("{} is missing".format(data_path))
+        if not _is_supported_data(new_data):
+            continue
         old_data = (
             repository.json_at(before, data_path)
             if before != "0" * 40 else None
         )
+        if not _is_supported_data(old_data):
+            old_data = None
+            old_prose = None
         new_shipments = _shipment_map(new_data, data_path)
         old_shipments = _shipment_map(old_data, data_path)
         new_eligible = set(_summary_map(new_prose)) & set(new_shipments)
@@ -382,6 +396,8 @@ def select_current_candidates(
         data_path = _data_path(prose_path)
         data = repository.current_json(data_path)
         if prose is None or data is None:
+            continue
+        if not _is_supported_data(data):
             continue
         summaries = _summary_map(prose)
         shipments = _shipment_map(data, data_path)
