@@ -413,34 +413,6 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         ))
         self.assertIn(prose["harfbuzz_summary"], RENDER.render(data, prose))
 
-    def test_harfbuzz_summary_renders_deterministic_pr_credit(self):
-        data = page_data([])
-        data["prs"]["101"] = {
-            "url": "https://github.com/mono/SkiaSharp/pull/101",
-            "title": "Update HarfBuzz",
-            "author": "contributor",
-            "community": True,
-            "tag": "product",
-        }
-        data["harfbuzz"] = {
-            "version": "14.2.0",
-            "previous_version": "8.3.1.6",
-            "prs": [101],
-        }
-        prose = cumulative_prose({})
-        prose["harfbuzz_summary"] = (
-            "Updates the bundled HarfBuzz from 8.3.1.6 to 14.2.0."
-        )
-
-        rendered = RENDER.render(data, prose)
-
-        self.assertIn(
-            "HarfBuzz from 8.3.1.6 to 14.2.0. — ❤️ "
-            "[@contributor](https://github.com/contributor) "
-            "([#101](https://github.com/mono/SkiaSharp/pull/101))",
-            rendered,
-        )
-
     def test_harfbuzz_summary_rejects_shortened_version(self):
         data = page_data([])
         data["harfbuzz"] = {
@@ -584,6 +556,41 @@ class ReleaseSummaryValidationAndRenderingTests(unittest.TestCase):
         ))
 
         prose["release_summaries"][item["tag"]]["prs"].append(101)
+        self.assertEqual(RENDER.validate(data, prose), [])
+
+    def test_release_summary_must_ground_each_exact_category_theme(self):
+        item = shipment("v4.151.0-rc.1.1", [101, 102], channel="rc")
+        data = page_data([item])
+        prose = cumulative_prose({
+            item["tag"]: release_summary([101]),
+        })
+        prose["categories"] = [
+            {
+                "heading": "Engine",
+                "bullets": [{
+                    "lead": "Engine updated",
+                    "detail": "Updates the bundled engine.",
+                    "prs": [101],
+                }],
+            },
+            {
+                "heading": "Bug Fixes",
+                "bullets": [{
+                    "lead": "Pixel access fixed",
+                    "detail": "Corrects pixel access.",
+                    "prs": [102],
+                }],
+            },
+        ]
+
+        errors = RENDER.validate(data, prose)
+
+        self.assertTrue(any(
+            "category theme 'Bug Fixes / Pixel access fixed'" in error
+            and "#102" in error
+            for error in errors
+        ))
+        prose["release_summaries"][item["tag"]]["prs"].append(102)
         self.assertEqual(RENDER.validate(data, prose), [])
 
     def test_security_category_requires_explicit_security_evidence(self):

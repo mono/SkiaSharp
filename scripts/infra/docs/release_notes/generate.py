@@ -292,7 +292,7 @@ def _harfbuzz_pr_numbers(prs: list[dict], path_prs: list[dict]) -> list[int]:
             pr["number"] in path_numbers
             or common.has_harfbuzz_evidence(
                 pr.get("title") or "",
-                pr.get("body") or "",
+                "",
             )
         )
     ]

@@ -1174,16 +1174,18 @@ principles are fixed here.
 5. **HarfBuzz prose is summary-only.** When `data.harfbuzz.prs` is non-empty or the
    co-shipped HarfBuzz `version` differs from `previous_version`, the AI
    writes one short `harfbuzz_summary` paragraph. It does not dump every HarfBuzz PR:
-   the API-diff link is in the banner, and the renderer appends deterministic PR links
-   and inline community credit while the contributor table retains the full contributor
-   summary. When neither the binding nor the co-shipped HarfBuzz version changed, the
-   AI sets the field to `null`/omits it and the renderer omits an empty narrative.
+   the API-diff link is in the banner, and community credit is in the page's contributor
+   table. When neither the binding nor the co-shipped HarfBuzz version changed, the AI
+   sets the field to `null`/omits it and the renderer omits an empty narrative.
 6. **Exact prerelease summaries are evergreen and shared.** Each
    `release_summaries[tag]` contains one or two present-tense sentences plus the PR
    IDs grounding its important claims. The same text renders in the website
    milestone section and the managed GitHub Release introduction. Stable GitHub
    Releases reuse the cumulative top-level highlights, so stable prose is never
-   duplicated.
+   duplicated. Validation requires every cumulative category theme with PRs in an
+   exact Preview/RC delta to contribute at least one of those PRs to that exact
+   summary, preventing dependency, platform, lifecycle, or fix themes from silently
+   disappearing between the page and its GitHub Release teaser.
 
 #### API-diff link rule
 

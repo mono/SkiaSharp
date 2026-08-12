@@ -293,7 +293,7 @@ def render(data, prose):
         L.append("")
         L.append("## HarfBuzzSharp {}".format(hb["version"]))
         L.append("")
-        L.append(rendered_hb_summary + credit(hb.get("prs"), data))
+        L.append(rendered_hb_summary)
 
     if data.get("platform_support"):
         L.append("")
@@ -531,6 +531,25 @@ def _finish_validate(errors, data, prose):
                                   for number in missing_breaking),
                     )
                 )
+            for category in prose.get("categories") or []:
+                for bullet in category.get("bullets") or []:
+                    exact_theme_refs = (
+                        set(bullet.get("prs") or []) & scopes.get(tag, set())
+                    )
+                    if exact_theme_refs and not (set(refs) & exact_theme_refs):
+                        errors.append(
+                            "{} release summary must ground the exact-release "
+                            "category theme '{} / {}'; add one of: {}"
+                            .format(
+                                tag,
+                                category.get("heading") or "(unknown category)",
+                                bullet.get("lead") or "(untitled bullet)",
+                                ", ".join(
+                                    "#{}".format(number)
+                                    for number in sorted(exact_theme_refs)
+                                ),
+                            )
+                        )
     else:
         missing_prev = sorted(
             key for key in prev_list
