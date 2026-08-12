@@ -1,0 +1,140 @@
+{
+  "theme": "Graphite on Skia m152",
+  "highlights_headline": "SkiaSharp 4.152.0 Preview 1 introduces Graphite GPU backends on Skia m152.",
+  "highlights_body": "It also adds backend-neutral asynchronous pixel readback and a Silk.NET Vulkan helper, strengthens native-memory lifetimes, and improves several managed hot paths.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia updated to milestone m152",
+          "detail": "Moves the bundled renderer to Chrome milestone 152, rolls VulkanMemoryAllocator to 3.4.0, and preserves the Vulkan allocator fallback used by SkiaSharp callers.",
+          "prs": [
+            4651
+          ]
+        },
+        {
+          "lead": "Upstream rendering stability improved",
+          "detail": "Includes m151 font-rendering and Ganesh stability fixes, including a correction that prevents stale texture data after pending render tasks fail to flush.",
+          "prs": [
+            4568,
+            4538
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backends added",
+          "detail": "Exposes contexts, recorders, recordings, textures, and Vulkan, Metal, and Dawn backend contexts for Skia's next-generation GPU architecture, including browser WebGPU through Dawn.",
+          "prs": [
+            3968
+          ]
+        },
+        {
+          "lead": "Backend-neutral asynchronous pixel readback added",
+          "detail": "Adds RequestReadPixels to SKImage and SKSurface, callback-scoped SKImageReadPixelsResult access, rescale options, copy-out helpers, and GRContext.CheckAsyncWorkCompletion for deferred Ganesh work.",
+          "prs": [
+            4545
+          ]
+        },
+        {
+          "lead": "Silk.NET Vulkan integration added",
+          "detail": "Adds the SkiaSharp.Vulkan.Silk.NET convenience package for cross-platform Vulkan contexts and makes the parameterless GRVkExtensions constructor public.",
+          "prs": [
+            4527
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Borrowed native memory stays alive",
+          "detail": "Region iterators now retain their source SKRegion, while SKPixmap subset and With* results retain their ultimate pixel owner, preventing use-after-free failures.",
+          "prs": [
+            4355,
+            4558
+          ]
+        },
+        {
+          "lead": "Failed raster image creation no longer leaks",
+          "detail": "SKImage.Create(SKImageInfo) now frees its unmanaged pixel buffer when native raster-image creation fails.",
+          "prs": [
+            4455
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "SKData.SaveTo writes more efficiently",
+          "detail": "Span-capable targets now write the native buffer directly to the destination stream, removing the intermediate buffer copy and roughly doubling measured throughput.",
+          "prs": [
+            4550
+          ]
+        },
+        {
+          "lead": "Native wrapper creation avoids repeated reflection",
+          "detail": "Caches each wrapper type's skip-registration decision so frequently used HandleDictionary paths no longer repeat Type.IsAssignableFrom checks.",
+          "prs": [
+            4630
+          ]
+        },
+        {
+          "lead": "Managed marshalling and uniform setup allocate less",
+          "detail": "Null-terminated encoded text no longer needs an intermediate string, and SKRuntimeEffectUniforms pre-sizes its name lookup map to the known uniform count.",
+          "prs": [
+            4498,
+            4512
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Caller-supplied fonts render on Nano Server",
+          "detail": "The Nano Server native asset now uses bundled FreeType, allowing typefaces loaded through SKTypeface.FromStream, FromData, or FromFile to render without DirectWrite.",
+          "prs": [
+            4280
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType-backed rendering for caller-supplied fonts on Nano Server",
+    "mmitche": "Faster Windows native builds by initializing the MSVC environment once per architecture",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "release_summaries": {
+    "v4.152.0-preview.1.1": {
+      "summary": "Moves to Skia m152 with upstream font and Ganesh fixes; adds Graphite, asynchronous pixel readback, Silk.NET Vulkan integration, and Nano Server font support. Fixes iterator, pixmap, and raster-allocation lifetimes while improving SKData.SaveTo, wrapper creation, text marshalling, and uniform setup.",
+      "prs": [
+        4651,
+        4568,
+        4538,
+        3968,
+        4545,
+        4527,
+        4280,
+        4355,
+        4558,
+        4455,
+        4550,
+        4630,
+        4498,
+        4512
+      ]
+    }
+  },
+  "harfbuzz_summary": "This preview co-ships HarfBuzzSharp 14.2.1 rather than 14.2.1.1, with no HarfBuzz binding changes in this scope."
+}
