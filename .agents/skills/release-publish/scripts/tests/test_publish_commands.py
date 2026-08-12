@@ -484,6 +484,110 @@ class PublishCommandTests(unittest.TestCase):
         self.assertIsNone(report["executionCommand"])
         self.assertIsNotNone(report["milestonesCommand"])
 
+    def test_publish_script_skips_docs_below_history_floor(self):
+        events = []
+
+        class FakeGitHub:
+            def dispatch_docs(self, version):
+                events.append(("docs", version))
+
+            def publish_draft(self, **kwargs):
+                events.append(("publish", kwargs["tag"]))
+
+        context = SimpleNamespace(
+            root=Path.cwd(),
+            release=SimpleNamespace(
+                numeric="3.119.5",
+                title="Version 3.119.5",
+            ),
+            tag="v3.119.5",
+            github=FakeGitHub(),
+            github_release={"isDraft": True},
+        )
+        completed = (
+            context,
+            {
+                "operations": [
+                    {
+                        "id": "dispatch-release-notes",
+                        "status": "skipped",
+                        "detail": "below floor",
+                    }
+                ],
+                "nextAction": "start-release-milestones",
+                "executionCommand": None,
+                "milestonesCommand": "milestones",
+            },
+        )
+        with (
+            mock.patch.object(
+                release.github_release,
+                "docs_workflow_supports",
+                return_value=False,
+            ),
+            mock.patch.object(
+                release,
+                "audit",
+                return_value=completed,
+            ),
+        ):
+            _, report = release.execute(SimpleNamespace(), context)
+
+        self.assertEqual(events, [("publish", "v3.119.5")])
+        self.assertEqual(report["operations"][0]["status"], "skipped")
+        self.assertEqual(report["nextAction"], "start-release-milestones")
+
+    def test_published_historical_release_audit_advances_to_milestones(self):
+        context = SimpleNamespace(
+            root=Path.cwd(),
+            release=SimpleNamespace(
+                branch="release/3.119.5",
+                raw="3.119.5",
+                numeric="3.119.5",
+                release_type="stable",
+                title="Version 3.119.5",
+            ),
+            source_sha="a" * 40,
+            status={"warnings": []},
+            handoff={
+                "managed": {"runId": 10},
+                "tests": {"runId": 20},
+                "versions": {
+                    "public": {
+                        "SkiaSharp": "3.119.5",
+                        "HarfBuzzSharp": "8.3.1.7",
+                    }
+                },
+            },
+            nuget={"state": "ready"},
+            tag="v3.119.5",
+            github_release={
+                "isDraft": False,
+                "body": github.mark_generated_notes("generated notes\n"),
+                "url": "https://github.com/mono/SkiaSharp/releases/tag/v3.119.5",
+            },
+        )
+        args = SimpleNamespace(dry_run=True)
+        with (
+            mock.patch.object(
+                release.github_release,
+                "load_release",
+                return_value=context,
+            ),
+            mock.patch.object(
+                release.github_release,
+                "docs_workflow_supports",
+                return_value=False,
+            ),
+        ):
+            _, report = release.audit(args)
+
+        self.assertEqual(report["nextAction"], "start-release-milestones")
+        self.assertIsNone(report["executionCommand"])
+        self.assertIsNotNone(report["milestonesCommand"])
+        self.assertEqual(report["operations"][0]["status"], "skipped")
+        self.assertIn("history_floor.skiasharp", report["warnings"][0])
+
     def test_helpers_live_with_github_release_domain(self):
         shared = (SCRIPTS / "release_publish.py").read_text(encoding="ascii")
         github_source = (SCRIPTS / "release_github.py").read_text(

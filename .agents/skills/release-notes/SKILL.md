@@ -278,8 +278,8 @@ with no API change and no behavioral change.
 
 The cumulative Highlights block and exact-tag summaries have different jobs:
 Highlights describes the complete line; each release summary describes only what
-changed in that published build. The GitHub stable publication policy can choose
-between those sources later without losing either.
+changed in that published build. The updater currently publishes the exact-tag
+summary; cumulative Highlights remain available if that policy changes later.
 
 ### `harfbuzz_summary` — one short paragraph, or `null`
 HarfBuzzSharp ships **inside** each SkiaSharp release, so its notes are a
@@ -301,7 +301,8 @@ and contributor table.
 
 ## Why this is short
 
-There is no separate template, grouping guide, or checklist to reconcile — the
-renderer is the checklist, and this file is the only instructions. If a rule
-isn't here, it's because the renderer already guarantees it. Write the prose;
-let the script build the page.
+There is no separate prose template, grouping guide, or checklist to reconcile —
+the renderer is the checklist, and this file is the only prose instructions. The
+maintainer sidecar template supplies evidence, not prose structure. If a rule isn't
+here, it's because the renderer already guarantees it. Write the prose; let the
+script build the page.

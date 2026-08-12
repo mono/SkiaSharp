@@ -26,6 +26,10 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
     existing = context.github_release
     draft = bool(existing and existing.get("isDraft"))
     published = bool(existing and not existing.get("isDraft"))
+    docs_supported = github_release.docs_workflow_supports(
+        context.root,
+        context.release.numeric,
+    )
 
     generated_log = None
     if existing:
@@ -40,19 +44,31 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
         next_action = "create-release-draft"
     elif draft:
         next_action = "confirm-publish-release"
-    else:
+    elif docs_supported:
         next_action = "dispatch-release-notes"
+    else:
+        next_action = "start-release-milestones"
 
+    dispatch_status = (
+        "skipped"
+        if not docs_supported
+        else "pending"
+        if existing
+        else "blocked"
+    )
+    dispatch_detail = (
+        "Release is below the release-notes history floor"
+        if not docs_supported
+        else "Dispatch the targeted docs workflow idempotently"
+        if published
+        else f"Dispatch {github_release.DOCS_WORKFLOW} for "
+        f"{context.release.numeric}"
+    )
     operations = [
         publish.operation(
             "dispatch-release-notes",
-            "pending" if existing else "blocked",
-            (
-                "Dispatch the targeted docs workflow idempotently"
-                if published
-                else f"Dispatch {github_release.DOCS_WORKFLOW} for "
-                f"{context.release.numeric}"
-            ),
+            dispatch_status,
+            dispatch_detail,
         ),
         publish.operation(
             "publish-github-release",
@@ -64,7 +80,7 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
             (
                 "GitHub release is published"
                 if published
-                else                 "Publish the marked generated-notes draft"
+                else "Publish the marked generated-notes draft"
                 if draft
                 else "Create the generated-notes draft first"
             ),
@@ -94,7 +110,17 @@ def audit(args) -> tuple[github_release.ReleaseContext, dict]:
         ),
         "operations": operations,
         "nextAction": next_action,
-        "warnings": context.status.get("warnings") or [],
+        "warnings": [
+            *(context.status.get("warnings") or []),
+            *(
+                [
+                    "Release-note generation is skipped because this version "
+                    "is below history_floor.skiasharp."
+                ]
+                if not docs_supported
+                else []
+            ),
+        ],
         "executionCommand": (
             execution_command(args, context.source_sha)
             if next_action in (
@@ -126,17 +152,25 @@ def execute(
             tag=context.tag,
             title=context.release.title,
         )
-    # Dispatch is intentionally retried for an already-published release. If the
-    # first attempt failed after publication, a rerun can recover without trying
-    # to recreate or republish the release.
-    context.github.dispatch_docs(context.release.numeric)
+    docs_supported = github_release.docs_workflow_supports(
+        context.root,
+        context.release.numeric,
+    )
+    if docs_supported:
+        # Dispatch is intentionally retried for an already-published release. If
+        # the first attempt failed after publication, a rerun can recover without
+        # trying to recreate or republish the release.
+        context.github.dispatch_docs(context.release.numeric)
 
     context, report = audit(args)
-    for operation in report["operations"]:
-        if operation["id"] == "dispatch-release-notes":
-            operation["status"] = "done"
-            operation["detail"] = "Targeted docs workflow dispatched after publication"
-            break
+    if docs_supported:
+        for operation in report["operations"]:
+            if operation["id"] == "dispatch-release-notes":
+                operation["status"] = "done"
+                operation["detail"] = (
+                    "Targeted docs workflow dispatched after publication"
+                )
+                break
     report["nextAction"] = "start-release-milestones"
     report["executionCommand"] = None
     report["milestonesCommand"] = github_release.milestones_command(context.release)

@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 import sys
 import unittest
-from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parent.parent / "update_github_summaries.py"
@@ -84,16 +83,8 @@ def fake_renderer(data_value, prose_value, tag):
 
 class FakeRepository:
     def __init__(self):
-        self.changed = []
-        self.historical = {}
         self.current_paths = []
         self.current = {}
-
-    def changed_prose_paths(self, before, after):
-        return list(self.changed)
-
-    def json_at(self, ref, path):
-        return self.historical.get((ref, path))
 
     def current_prose_paths(self):
         return list(self.current_paths)
@@ -119,8 +110,17 @@ class FakeGitHub:
         self.get_counts[tag] = index + 1
         return values[min(index, len(values) - 1)]
 
-    def patch_release(self, release_id, body, *, expected_etag):
-        self.patch_calls.append((release_id, body, expected_etag))
+    def patch_release(self, release_id, body):
+        self.patch_calls.append((release_id, body))
+        for tag, values in self.snapshots.items():
+            current = values[
+                min(self.get_counts.get(tag, 1) - 1, len(values) - 1)
+            ]
+            if current.release_id == release_id:
+                values.append(
+                    replace(current, body=body, etag='"updated"')
+                )
+                return
 
 
 def snapshot(tag, body, *, release_id=1, etag='"body-1"'):
@@ -155,137 +155,6 @@ def candidate(tag, *, channel="preview", prs=None):
 
 
 class CandidateSelectionTests(unittest.TestCase):
-    BEFORE = "1" * 40
-    AFTER = "2" * 40
-
-    def test_data_only_push_maps_to_owning_prose_file(self):
-        changed = data_path("4.151.0")
-        with mock.patch.object(updater, "_run_git", return_value=changed + "\n"):
-            paths = updater.RepositoryView(REPO_ROOT).changed_prose_paths(
-                self.BEFORE, self.AFTER
-            )
-        self.assertEqual(paths, [prose_path("4.151.0")])
-
-    def test_push_selects_changed_prerelease_summaries(self):
-        repo = FakeRepository()
-        path = prose_path("4.151.0")
-        first = "v4.151.0-preview.1.1"
-        second = "v4.151.0-rc.1.1"
-        repo.changed = [path]
-        repo.historical.update({
-            (self.BEFORE, path): prose({
-                first: {"summary": "Adds the first preview.", "prs": [1]},
-            }),
-            (self.AFTER, path): prose({
-                first: {"summary": "Improves the first preview.", "prs": [1]},
-                second: {"summary": "Stabilizes the release candidate.", "prs": [1]},
-            }),
-            (self.BEFORE, data_path("4.151.0")): data(shipment(first)),
-            (self.AFTER, data_path("4.151.0")): data(
-                shipment(first), shipment(second)
-            ),
-        })
-
-        selected = updater.select_push_candidates(repo, self.BEFORE, self.AFTER)
-
-        self.assertEqual([item.tag for item in selected], [first, second])
-
-    def test_push_selects_data_only_rendered_summary_change(self):
-        repo = FakeRepository()
-        path = prose_path("4.151.0")
-        tag = "v4.151.0-preview.1.1"
-        reviewed = prose({
-            tag: {"summary": "Adds the preview feature.", "prs": [1]},
-        })
-        old_data = data(shipment(tag, prs=[1]))
-        new_data = data(shipment(tag, prs=[1, 2]))
-        old_data["prs"] = {
-            "1": {
-                "url": "https://github.com/mono/SkiaSharp/pull/1",
-                "author": "contributor",
-                "community": True,
-                "tag": "product",
-            },
-        }
-        new_data["prs"] = {
-            **old_data["prs"],
-            "2": {
-                "url": "https://github.com/mono/SkiaSharp/pull/2",
-                "author": "maintainer",
-                "community": False,
-                "tag": "product",
-            },
-        }
-        repo.changed = [path]
-        repo.historical.update({
-            (self.BEFORE, path): reviewed,
-            (self.AFTER, path): reviewed,
-            (self.BEFORE, data_path("4.151.0")): old_data,
-            (self.AFTER, data_path("4.151.0")): new_data,
-        })
-
-        selected = updater.select_push_candidates(
-            repo, self.BEFORE, self.AFTER
-        )
-
-        self.assertEqual([item.tag for item in selected], [tag])
-
-    def test_rollup_only_summary_is_not_a_github_candidate(self):
-        repo = FakeRepository()
-        path = prose_path("4.148.0")
-        rollup_tag = "v4.147.0-preview.1.1"
-        owned_tag = "v4.148.0-rc.1.2"
-        facts = data(shipment(owned_tag, channel="rc"))
-        repo.changed = [path]
-        repo.historical.update({
-            (self.BEFORE, path): prose({}),
-            (self.AFTER, path): prose({
-                rollup_tag: {
-                    "summary": "Introduces the superseded preview.",
-                    "prs": [1],
-                },
-            }),
-            (self.BEFORE, data_path("4.148.0")): facts,
-            (self.AFTER, data_path("4.148.0")): facts,
-        })
-
-        selected = updater.select_push_candidates(
-            repo, self.BEFORE, self.AFTER
-        )
-
-        self.assertEqual(selected, [])
-
-    def test_stable_uses_changed_release_summary(self):
-        repo = FakeRepository()
-        path = prose_path("4.151.0")
-        tag = "v4.151.0"
-        stable = shipment(tag, channel="stable", prs=[])
-        repo.changed = [path]
-        repo.historical.update({
-            (self.BEFORE, path): prose({
-                tag: {"summary": "Old stable summary.", "prs": []},
-            }),
-            (self.AFTER, path): prose({
-                tag: {"summary": "Updates the stable release.", "prs": []},
-            }),
-            (self.BEFORE, data_path("4.151.0")): data(stable),
-            (self.AFTER, data_path("4.151.0")): data(stable),
-        })
-
-        selected = updater.select_push_candidates(repo, self.BEFORE, self.AFTER)
-
-        self.assertEqual([item.tag for item in selected], [tag])
-
-    def test_push_skips_unreleased_source(self):
-        repo = FakeRepository()
-        path = prose_path("4.152.0-unreleased")
-        repo.changed = [path]
-        repo.historical[(self.AFTER, path)] = prose({})
-        self.assertEqual(
-            updater.select_push_candidates(repo, self.BEFORE, self.AFTER),
-            [],
-        )
-
     def test_current_selection_converges_prerelease_and_stable(self):
         repo = FakeRepository()
         path = prose_path("4.151.0")
@@ -368,30 +237,6 @@ class CandidateSelectionTests(unittest.TestCase):
             "Force-regenerate this version",
         ):
             updater.select_current_candidates(repo, tag=tag)
-
-    def test_push_migration_does_not_parse_unsupported_old_prose(self):
-        repo = FakeRepository()
-        path = prose_path("4.151.0")
-        tag = "v4.151.0-preview.1.1"
-        repo.changed = [path]
-        repo.historical.update({
-            (self.BEFORE, path): {"release_summaries": "legacy"},
-            (self.BEFORE, data_path("4.151.0")): {
-                "format": 4,
-                "shipments": [shipment(tag)],
-            },
-            (self.AFTER, path): prose({
-                tag: {"summary": "Adds the current preview.", "prs": [1]},
-            }),
-            (self.AFTER, data_path("4.151.0")): data(shipment(tag)),
-        })
-
-        selected = updater.select_push_candidates(
-            repo, self.BEFORE, self.AFTER
-        )
-
-        self.assertEqual([item.tag for item in selected], [tag])
-
 
 class BodyModelTests(unittest.TestCase):
     def test_renderer_uses_summary_links_stats_and_contributors(self):
@@ -502,8 +347,8 @@ class UpdateTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            [(call[0], call[2]) for call in github.patch_calls],
-            [(11, '"a"'), (12, '"b"')],
+            [call[0] for call in github.patch_calls],
+            [11, 12],
         )
         self.assertEqual(
             [entry.status for entry in result.entries],
@@ -561,9 +406,30 @@ class UpdateTests(unittest.TestCase):
             )
         self.assertEqual(github.patch_calls, [])
 
+    def test_post_patch_body_is_verified(self):
+        item = candidate("v4.151.0-preview.1.1")
+
+        class NonPersistingGitHub(FakeGitHub):
+            def patch_release(self, release_id, body):
+                self.patch_calls.append((release_id, body))
+
+        github = NonPersistingGitHub({
+            item.tag: snapshot(item.tag, marked_body()),
+        })
+
+        with self.assertRaisesRegex(
+            updater.UpdateError,
+            "did not match the requested managed summary",
+        ):
+            updater.update_releases(
+                [item],
+                github,
+                renderer=fake_renderer,
+            )
+
 
 class GitHubClientTests(unittest.TestCase):
-    def test_patch_sends_expected_etag(self):
+    def test_patch_sends_authenticated_body(self):
         requests = []
 
         class Response:
@@ -588,11 +454,15 @@ class GitHubClientTests(unittest.TestCase):
             api_url="https://example.invalid",
             opener=open_request,
         )
-        client.patch_release(42, "new body", expected_etag='"expected"')
+        client.patch_release(42, "new body")
 
         req, timeout = requests[0]
         self.assertEqual(req.method, "PATCH")
-        self.assertEqual(req.get_header("If-match"), '"expected"')
+        self.assertIsNone(req.get_header("If-match"))
+        self.assertEqual(
+            req.get_header("Authorization"),
+            "Bearer test-token",
+        )
         self.assertEqual(json.loads(req.data), {"body": "new body"})
         self.assertEqual(timeout, 30)
 
@@ -606,12 +476,21 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn(
             "documentation/docfx/releases/_sources/*.prose.json", workflow
         )
+        self.assertIn(
+            "scripts/infra/docs/release_notes/render.py", workflow
+        )
+        self.assertIn(
+            "scripts/infra/docs/release_notes/update_github_summaries.py",
+            workflow,
+        )
         self.assertIn("types: [published]", workflow)
         self.assertIn("contents: write", workflow)
         self.assertNotIn("pull-requests:", workflow)
         self.assertIn("cancel-in-progress: false", workflow)
         self.assertIn("persist-credentials: false", workflow)
         self.assertIn("release_notes/update_github_summaries.py", workflow)
+        self.assertNotIn("BEFORE_SHA", workflow)
+        self.assertNotIn("DISPATCH_TAG", workflow)
         self.assertNotIn("copilot", workflow.lower())
         self.assertNotIn("gh ", workflow)
 

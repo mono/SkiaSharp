@@ -15,8 +15,8 @@
 // SCOPED — like release_notes/generate.py it takes --force / --minVersion / --maxVersion:
 // by default it skips a line whose api-diff folder already exists (a shipped
 // version's diff never changes), only computing missing/forced lines in range.
-// `--force` with no scope regenerates the whole back-catalogue (e.g. after the
-// api-diff tools themselves change).
+// `--force` with no scope regenerates every line at or above its configured
+// history floor (e.g. after the api-diff tools themselves change).
 //
 // Shared machinery (the NuGet-diff comparer, layout helpers, versions.json loading)
 // lives alongside this file in scripts/infra/docs/api-diff-tools.cake and is #loaded
@@ -56,6 +56,7 @@ Task ("docs-api-diff")
     var minVersion = Argument ("minVersion", "");
     var maxVersion = Argument ("maxVersion", "");
     var isScoped = !string.IsNullOrEmpty (minVersion) || !string.IsNullOrEmpty (maxVersion);
+    RequireScopeAtOrAboveHistoryFloor (minVersion, maxVersion);
 
     var baseDir = $"{ROOT_PATH}/output/api-diffs-past";
     CleanDirectories (baseDir);
@@ -116,11 +117,31 @@ Task ("docs-api-diff")
         .Where (id => !id.Contains ("NativeAssets"))
         .OrderBy (id => IsHarfBuzzFamily (id) ? 1 : 0)
         .ToList ();
+    var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp"))
+        .ToNormalizedString ().Split ('-') [0];
+    var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp"))
+        .ToNormalizedString ().Split ('-') [0];
+    var inflightMappingRecorded = false;
 
     foreach (var id in packageIds) {
         var isHarfBuzz = IsHarfBuzzFamily (id);
         var versionsConfig = isHarfBuzz ? hbConfig : skiaConfig;
         var family = isHarfBuzz ? "harfbuzzsharp" : "skiasharp";
+
+        // Every managed SkiaSharp package has now been inspected. Add the working-tree
+        // fallback before the first HarfBuzz package is scoped so a brand-new in-flight
+        // HarfBuzz line can be generated on its first run. Published SkiaSharp.HarfBuzz
+        // lines were marked below even when their API-diff folders were cached, so the
+        // fallback cannot overwrite an immutable feed-derived mapping.
+        if (isHarfBuzz && !inflightMappingRecorded) {
+            if (!string.IsNullOrEmpty (inflightSkia)
+                    && !string.IsNullOrEmpty (inflightHb)
+                    && !feedSkiaHarfBuzzLines.Contains (inflightSkia)) {
+                Information ($"Recording in-flight co-release from working tree: SkiaSharp {inflightSkia} → HarfBuzzSharp {inflightHb}.");
+                skiaHarfBuzzDeps [inflightSkia] = inflightHb;
+            }
+            inflightMappingRecorded = true;
+        }
 
         Information ($"Comparing the assemblies in '{id}'...");
 
@@ -186,6 +207,12 @@ Task ("docs-api-diff")
             // write it to (e.g. 4.148.0).
             var version = emit [idx].rep.ToNormalizedString ();
             var apiDiffVersion = emit [idx].key;
+
+            // Mark every published SkiaSharp.HarfBuzz line before incremental/scoped
+            // gating. Its committed co-release mapping remains authoritative even when
+            // the API-diff folder is cached and no package extraction is needed.
+            if (id == "SkiaSharp.HarfBuzz")
+                feedSkiaHarfBuzzLines.Add (apiDiffVersion);
 
             // The committed folder for this line: SkiaSharp family -> releases/<line>/<id>/…;
             // HarfBuzz family -> releases/harfbuzzsharp/<hb-line>/<id>/… (spec §3.3/§3.4).
@@ -310,28 +337,12 @@ Task ("docs-api-diff")
                 var hbDep = ReadHarfBuzzDependencyLine (versionRoot);
                 if (!string.IsNullOrEmpty (hbDep)) {
                     skiaHarfBuzzDeps [apiDiffVersion] = hbDep;
-                    feedSkiaHarfBuzzLines.Add (apiDiffVersion);
                 }
             }
 
             Debug ($"Diff complete of version '{version}' of '{id}'.");
         }
         Information ($"Diff complete of '{id}'.");
-    }
-
-    // Record the in-flight SkiaSharp line's HarfBuzz co-release from the WORKING TREE
-    // (spec §3.6/§5.1): the line under active development (VERSIONS.txt) has no published
-    // package yet, so the feed loop above could not contribute it. We add it from
-    // VERSIONS.txt — SkiaSharp's line and the HarfBuzzSharp line it builds against — but
-    // ONLY when the feed did not already supply this SkiaSharp line (an on-feed line is
-    // always read from its own published package, never overridden). This is what lets an
-    // in-flight HarfBuzz line be recorded before it publishes (§4.5).
-    var inflightSkia = new NuGetVersion (GetVersion ("SkiaSharp")).ToNormalizedString ().Split ('-') [0];
-    var inflightHb = new NuGetVersion (GetVersion ("HarfBuzzSharp")).ToNormalizedString ().Split ('-') [0];
-    if (!string.IsNullOrEmpty (inflightSkia) && !string.IsNullOrEmpty (inflightHb)
-            && !feedSkiaHarfBuzzLines.Contains (inflightSkia)) {
-        Information ($"Recording in-flight co-release from working tree: SkiaSharp {inflightSkia} → HarfBuzzSharp {inflightHb}.");
-        skiaHarfBuzzDeps [inflightSkia] = inflightHb;
     }
 
     // Write the per-line API-diff index.md landing pages (spec §3.3/§3.4) and the

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import hashlib
+import json
 from pathlib import Path
 import re
 import shutil
@@ -258,22 +259,37 @@ def mark_generated_notes(generated_notes: str) -> str:
     )
 
 
-def extract_generated_notes(body: str) -> str:
-    start_token = f"{GENERATED_NOTES_START_MARKER}\n"
-    start = body.find(start_token)
-    end = body.find(GENERATED_NOTES_END_MARKER)
-    if (
-        body.count(SUMMARY_START_MARKER) != 1
-        or body.count(SUMMARY_END_MARKER) != 1
-        or body.count(GENERATED_NOTES_START_MARKER) != 1
-        or body.count(GENERATED_NOTES_END_MARKER) != 1
-        or start < 0
-        or end < start + len(start_token)
-    ):
+def _managed_marker_positions(body: str) -> tuple[int, int, int, int]:
+    markers = (
+        SUMMARY_START_MARKER,
+        SUMMARY_END_MARKER,
+        GENERATED_NOTES_START_MARKER,
+        GENERATED_NOTES_END_MARKER,
+    )
+    if [body.count(marker) for marker in markers] != [1, 1, 1, 1]:
         raise publish.PublishError(
             "GitHub release body is not a valid managed generated-notes body"
         )
-    return body[start + len(start_token) : end]
+    positions = tuple(body.index(marker) for marker in markers)
+    if not positions[0] < positions[1] < positions[2] < positions[3]:
+        raise publish.PublishError(
+            "GitHub release body has managed markers out of order"
+        )
+    return positions
+
+
+def extract_generated_notes(body: str) -> str:
+    _, _, start, end = _managed_marker_positions(body)
+    payload_start = start + len(GENERATED_NOTES_START_MARKER)
+    if body.startswith("\r\n", payload_start):
+        payload_start += 2
+    elif body.startswith("\n", payload_start):
+        payload_start += 1
+    else:
+        raise publish.PublishError(
+            "GitHub release body has no line break after the generated-notes marker"
+        )
+    return body[payload_start:end]
 
 
 def body_sha256(body: str) -> str:
@@ -389,8 +405,24 @@ def write_generated_artifacts(
 ) -> dict[str, Path]:
     paths = artifact_paths(context.root, context.tag)
     paths["directory"].mkdir(parents=True, exist_ok=True)
-    paths["generated"].write_text(generated_log, encoding="utf-8")
+    paths["generated"].write_bytes(generated_log.encode("utf-8"))
     return paths
+
+
+def docs_workflow_supports(root: Path, version: str) -> bool:
+    config_path = root / "scripts" / "infra" / "docs" / "versions.json"
+    if not config_path.exists():
+        return True
+    try:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        floor = (config.get("history_floor") or {}).get("skiasharp")
+        current = tuple(int(part) for part in version.split("."))
+        minimum = tuple(int(part) for part in floor.split(".")) if floor else None
+    except (AttributeError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise publish.PublishError(
+            f"invalid release-notes history floor in {config_path}"
+        ) from exc
+    return minimum is None or current >= minimum
 
 
 def generated_log_metadata(body: str) -> dict:

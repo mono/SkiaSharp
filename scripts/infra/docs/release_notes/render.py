@@ -9,7 +9,7 @@
 `data.json`  — facts emitted by generate.py (PRs, roster, banner
                date, links, previews). Never written by the agent.
 `prose.json` — prose the polish agent produced (theme, highlights, breaking,
-               category bullets, contributor summaries, preview summaries).
+               category bullets, contributor summaries, exact-tag summaries).
 
 Structure — headings, tables, the banner shape, @handles, ❤️, and PR links —
 lives entirely in this file, so the agent cannot drop a heading or malform a
@@ -25,6 +25,7 @@ The page structure below is the single source of truth for the layout.
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import re
@@ -1189,24 +1190,34 @@ def render_all(min_core=None, max_core=None):
 
 
 def main(argv):
+    if "--all" in argv[1:]:
+        parser = argparse.ArgumentParser(
+            description="Render all selected release-note pages."
+        )
+        parser.add_argument("--all", action="store_true", required=True)
+        parser.add_argument(
+            "--force",
+            action="store_true",
+            help="Accepted for parity with prepare.sh; rendering is idempotent.",
+        )
+        parser.add_argument("--min-version")
+        parser.add_argument("--max-version")
+        options = parser.parse_args(argv[1:])
+        return 1 if render_all(
+            min_core=(
+                common.core_tuple(options.min_version)
+                if options.min_version
+                else None
+            ),
+            max_core=(
+                common.core_tuple(options.max_version)
+                if options.max_version
+                else None
+            ),
+        ) else 0
+
     flags = [a for a in argv[1:] if a.startswith("-")]
     args = [a for a in argv[1:] if not a.startswith("-")]
-
-    # --all: the final Polish pass. Render the requested range (or every page
-    # when unscoped) and rebuild TOC/index from committed JSON.
-    if "--all" in flags:
-        def scope_value(name):
-            prefix = name + "="
-            value = next(
-                (flag[len(prefix):] for flag in flags if flag.startswith(prefix)),
-                "",
-            )
-            return common.core_tuple(value) if value else None
-
-        return 1 if render_all(
-            min_core=scope_value("--min-version"),
-            max_core=scope_value("--max-version"),
-        ) else 0
 
     if "--summary" in flags:
         if len(args) < 3:

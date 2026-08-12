@@ -259,7 +259,8 @@ flowchart TB
     ∙ Wait for protected run
     ∙ Verify both NuGet packages"] --> DRAFT_AUDIT
     DRAFT_AUDIT["Draft dry-run
-    ∙ Select immediate previous release tag
+    ∙ Select previous exact tag for prerelease
+    ∙ Select previous stable tag for stable
     ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}
     APPROVE2 -->|No| STOP
     APPROVE2 -->|Yes| DRAFT
@@ -296,6 +297,11 @@ workflow and milestone reconciliation proceeds immediately. The reviewed notes P
 later adds the exact-tag summary to the line's single prose file; after merge, a
 deterministic zero-AI workflow updates only that marked summary region while
 preserving the original generated changelog payload byte-for-byte.
+
+For a historical release below `history_floor.skiasharp`, publication deliberately
+skips the incompatible release-notes dispatch, reports that skip, and proceeds to
+milestone reconciliation. Lowering the floor is the explicit way to opt historical
+lines back into generation.
 
 The future coordinator therefore needs no Copilot token/model and no
 summary-preparation phase. Its Release phase is only tag/draft creation plus final

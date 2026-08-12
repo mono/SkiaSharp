@@ -40,6 +40,8 @@ This skill is **Step 4 of 5**:
 - Customer summary prose is owned by the later agentic release-notes PR. A
   deterministic workflow applies reviewed exact-tag summaries after merge
   without reconstructing or rewriting GitHub's generated payload.
+- Releases below `history_floor.skiasharp` remain publishable historical releases,
+  but skip the incompatible docs dispatch and proceed directly to milestones.
 
 ## Script contract
 
@@ -69,7 +71,7 @@ the pinned audit commands; every confirmation report emits its exact
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
 | Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
 | Draft | `confirm-publish-release` | Approve and publish the useful generated-notes draft. |
-| Publication | `dispatch-release-notes` | Retry the idempotent docs dispatch for an already-published release. |
+| Publication | `dispatch-release-notes` | Retry the idempotent docs dispatch for an already-published release at or above the history floor. |
 | Publication | `start-release-milestones` | Hand off the emitted milestone reconciliation command. |
 
 ## Workflow
@@ -164,6 +166,10 @@ If publication succeeds but dispatch fails, rerun the audit. An already-publishe
 release reports `dispatch-release-notes`; run its `executionCommand` without a new
 approval. The dispatch is safe to retry and successful execution advances to
 milestones without republishing or rewriting the release.
+
+For a version below `history_floor.skiasharp`, the publication report marks the
+docs operation `skipped`, includes a warning, and advances directly to
+`start-release-milestones`.
 
 Publication does not wait for summary review. Continue immediately to milestones.
 The release-notes workflow adds the exact-tag release summary to the line's single

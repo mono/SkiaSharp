@@ -6,19 +6,20 @@ on:
     paths:
       - "documentation/docfx/releases/_sources/*.prose.json"
       - "documentation/docfx/releases/_sources/*.data.json"
+      - "scripts/infra/docs/release_notes/render.py"
+      - "scripts/infra/docs/release_notes/update_github_summaries.py"
+      - ".github/workflows/update-github-release-summaries.yml"
   release:
     types: [published]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: "Optional exact tag to converge (empty updates every reviewed summary)"
-        required: false
-        type: string
 
 permissions:
   contents: write
 
 concurrency:
+  # GitHub retains at most one pending run in a concurrency group. Every run
+  # converges all reviewed summaries from current main, so a replacement run
+  # subsumes any event it displaces.
   group: update-github-release-summaries
   cancel-in-progress: false
 
@@ -42,10 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ github.token }}
           EVENT_NAME: ${{ github.event_name }}
-          BEFORE_SHA: ${{ github.event.before }}
-          AFTER_SHA: ${{ github.sha }}
           RELEASE_TAG: ${{ github.event.release.tag_name }}
-          DISPATCH_TAG: ${{ inputs.tag }}
           REPOSITORY: ${{ github.repository }}
           PYTHONDONTWRITEBYTECODE: "1"
         run: |
@@ -56,15 +54,11 @@ jobs:
           )
           case "$EVENT_NAME" in
             push)
-              args+=(--before "$BEFORE_SHA" --after "$AFTER_SHA")
               ;;
             release)
               args+=(--tag "$RELEASE_TAG")
               ;;
             workflow_dispatch)
-              if [ -n "${DISPATCH_TAG:-}" ]; then
-                args+=(--tag "$DISPATCH_TAG")
-              fi
               ;;
             *)
               echo "Unsupported event: $EVENT_NAME" >&2

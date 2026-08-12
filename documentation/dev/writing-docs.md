@@ -195,10 +195,12 @@ dotnet cake --target=docs-api-diff --nugetDiffPrerelease=true --force=true
 
 Without `--force`, `docs-api-diff` skips any line whose committed API-diff folder
 already has an `index.md`; a shipped version's public API diff is immutable, so the
-folder is a cache. `--force` with no version scope rebuilds the whole back-catalogue
-(the mode to use after changing the diff tools). `--minVersion` / `--maxVersion`
-restrict the line cores rebuilt, while out-of-range lines remain available as
-baselines for selected lines.
+folder is a cache. `--force` with no version scope rebuilds every line at or above
+the configured history floor (the mode to use after changing the diff tools).
+Historical lines below the floor remain untouched unless a maintainer deliberately
+lowers the floor first. `--minVersion` / `--maxVersion` restrict the line cores
+rebuilt, while out-of-range lines remain available as baselines for selected lines;
+an explicit bound below the floor fails instead of becoming a silent no-op.
 
 `docs-api-diff` diffs **published** NuGet.org versions: every emitted line is compared
 against its predecessor, with baselines and superseded-version skips driven by
@@ -259,4 +261,3 @@ not "fix" them into agreement:
 So a given version can show a finer-grained baseline under
 `documentation/docfx/releases/<line>/` than on its release-notes page, even
 though both agree on supersession and any explicit `compare_to` override.
-

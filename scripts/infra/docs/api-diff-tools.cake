@@ -506,6 +506,30 @@ bool IsBelowHistoryFloor (string normalizedVersion, string family = "skiasharp")
     return new NuGetVersion (normalizedVersion).CompareTo (new NuGetVersion (floor)) < 0;
 }
 
+// Explicit scopes below the floor are operator mistakes, not empty work. Fail before
+// cleanup or downloads so the Cake entrypoint matches the Python generator/renderer.
+void RequireScopeAtOrAboveHistoryFloor (
+    string minVersion,
+    string maxVersion,
+    string family = "skiasharp")
+{
+    var floor = HistoryFloor (family);
+    if (string.IsNullOrEmpty (floor))
+        return;
+
+    foreach (var bound in new [] {
+        (name: "--minVersion", value: minVersion),
+        (name: "--maxVersion", value: maxVersion),
+    }) {
+        if (!string.IsNullOrEmpty (bound.value)
+                && IsBelowHistoryFloor (bound.value, family))
+            throw new Exception (
+                $"{bound.name} is below the {floor} {family} history floor. " +
+                $"Lower history_floor.{family} in versions.json before " +
+                "regenerating historical releases.");
+    }
+}
+
 // A "superseded" version is one that was previewed but never shipped stable
 // (e.g. 4.147 was abandoned in favour of 4.148). Its ONLY effect is on baseline
 // selection: it is excluded from acting as a *baseline* for other versions, so a

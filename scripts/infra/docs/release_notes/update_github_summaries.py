@@ -16,7 +16,6 @@ import json
 import os
 from pathlib import Path, PurePosixPath
 import re
-import subprocess
 import sys
 from typing import Callable
 from urllib import error, parse, request
@@ -34,7 +33,6 @@ PROSE_NAME_RE = re.compile(
     r"^documentation/docfx/releases/_sources/"
     r"(?P<version>\d+(?:\.\d+){2,3}(?:-unreleased)?)\.prose\.json$"
 )
-SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 REPOSITORY_RE = re.compile(
     r"^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
 )
@@ -118,33 +116,11 @@ class UpdateResult:
         return "\n".join(lines) + "\n"
 
 
-def _run_git(args: list[str], *, allow_missing: bool = False) -> str | None:
-    completed = subprocess.run(
-        ["git", *args],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if completed.returncode == 0:
-        return completed.stdout
-    if allow_missing and completed.returncode == 128:
-        return None
-    raise UpdateError(
-        "git {} failed: {}".format(
-            " ".join(args), completed.stderr.strip() or completed.stdout.strip())
-    )
-
-
 class RepositoryView:
-    """Read current or historical JSON without evaluating repository content."""
+    """Read current JSON without evaluating repository content."""
 
     def __init__(self, root: Path):
         self.root = root
-
-    @staticmethod
-    def _validate_ref(ref: str) -> None:
-        if not SHA_RE.fullmatch(ref):
-            raise UpdateError("expected a full lowercase commit SHA, got {!r}".format(ref))
 
     @staticmethod
     def _validate_prose_path(path: str) -> re.Match:
@@ -152,43 +128,6 @@ class RepositoryView:
         if not match:
             raise UpdateError("unexpected release prose path: {!r}".format(path))
         return match
-
-    def changed_prose_paths(self, before: str, after: str) -> list[str]:
-        self._validate_ref(after)
-        if before == "0" * 40:
-            output = _run_git([
-                "-C", str(self.root), "ls-tree", "-r", "--name-only", after,
-                "--", str(SOURCES_DIR),
-            ]) or ""
-        else:
-            self._validate_ref(before)
-            output = _run_git([
-                "-C", str(self.root), "diff", "--name-only", "--diff-filter=AMDR",
-                before, after, "--", str(SOURCES_DIR),
-            ]) or ""
-        paths = []
-        for path in output.splitlines():
-            if path.endswith(".data.json"):
-                path = path[:-len(".data.json")] + ".prose.json"
-            elif not path.endswith(".prose.json"):
-                continue
-            self._validate_prose_path(path)
-            paths.append(path)
-        return sorted(set(paths))
-
-    def json_at(self, ref: str, path: str) -> dict | None:
-        self._validate_ref(ref)
-        self._validate_prose_path(
-            path if path.endswith(".prose.json")
-            else path.replace(".data.json", ".prose.json")
-        )
-        text = _run_git(
-            ["-C", str(self.root), "show", "{}:{}".format(ref, path)],
-            allow_missing=True,
-        )
-        if text is None:
-            return None
-        return _parse_object(text, "{} at {}".format(path, ref))
 
     def current_prose_paths(self) -> list[str]:
         directory = self.root / Path(SOURCES_DIR)
@@ -321,61 +260,6 @@ def _candidate(
         data=data,
         shipment=shipment,
     )
-
-
-def select_push_candidates(
-    repository: RepositoryView,
-    before: str,
-    after: str,
-) -> list[Candidate]:
-    """Select only semantic exact-tag changes across a possibly batched push."""
-    selected = []
-    seen_tags = set()
-    for prose_path in repository.changed_prose_paths(before, after):
-        if _is_unreleased(prose_path):
-            continue
-        old_prose = repository.json_at(before, prose_path) if before != "0" * 40 else None
-        new_prose = repository.json_at(after, prose_path)
-        if new_prose is None:
-            continue
-        data_path = _data_path(prose_path)
-        new_data = repository.json_at(after, data_path)
-        if new_data is None:
-            raise UpdateError("{} is missing".format(data_path))
-        if not _is_supported_data(new_data):
-            continue
-        old_data = (
-            repository.json_at(before, data_path)
-            if before != "0" * 40 else None
-        )
-        if not _is_supported_data(old_data):
-            old_data = None
-            old_prose = None
-        new_shipments = _shipment_map(new_data, data_path)
-        old_shipments = _shipment_map(old_data, data_path)
-        new_eligible = set(_summary_map(new_prose)) & set(new_shipments)
-        old_eligible = set(_summary_map(old_prose)) & set(old_shipments)
-
-        for tag in sorted(new_eligible):
-            new_candidate = _candidate(tag, prose_path, new_prose, new_data)
-            old_rendered = None
-            if tag in old_eligible and old_prose is not None and old_data is not None:
-                try:
-                    old_rendered = render_managed_summary(
-                        _candidate(tag, prose_path, old_prose, old_data)
-                    )
-                except UpdateError:
-                    old_rendered = None
-            new_rendered = render_managed_summary(new_candidate)
-            if old_rendered == new_rendered:
-                continue
-            if tag in seen_tags:
-                raise UpdateError(
-                    "exact release tag {} is selected by multiple prose files".format(tag)
-                )
-            seen_tags.add(tag)
-            selected.append(new_candidate)
-    return selected
 
 
 def select_current_candidates(
@@ -552,7 +436,6 @@ class GitHubClient:
         path: str,
         *,
         payload: dict | None = None,
-        etag: str | None = None,
         allow_not_found: bool = False,
     ) -> tuple[dict, str] | None:
         data = (
@@ -567,8 +450,6 @@ class GitHubClient:
         }
         if payload is not None:
             headers["Content-Type"] = "application/json"
-        if etag:
-            headers["If-Match"] = etag
         req = request.Request(
             self.api_url + path,
             data=data,
@@ -585,7 +466,7 @@ class GitHubClient:
                 return None
             if exc.code in (409, 412):
                 raise UpdateError(
-                    "GitHub rejected a stale release body (HTTP {})".format(exc.code)
+                    "GitHub rejected the release update (HTTP {})".format(exc.code)
                 ) from exc
             detail = exc.read().decode("utf-8", errors="replace")
             raise UpdateError(
@@ -630,14 +511,11 @@ class GitHubClient:
         self,
         release_id: int,
         body: str,
-        *,
-        expected_etag: str,
     ) -> None:
         self._request(
             "PATCH",
             "/repos/{}/releases/{}".format(self.repository, release_id),
             payload={"body": body},
-            etag=expected_etag,
         )
 
 
@@ -677,8 +555,9 @@ def update_releases(
         raise UpdateError(
             "preflight failed before any release update: " + "; ".join(errors))
 
-    # Refresh every body before any mutation. Body SHA catches content changes;
-    # ETag also catches representation changes. PATCH then repeats the ETag guard.
+    # Refresh every body before any mutation. The update-release endpoint does not
+    # support conditional PATCH, so this is the last preflight barrier before writes.
+    # A post-write GET below verifies every body the workflow actually stored.
     for plan in plans:
         current = github.get_release(plan.candidate.tag)
         if current is None:
@@ -710,12 +589,21 @@ def update_releases(
         github.patch_release(
             plan.snapshot.release_id,
             plan.new_body,
-            expected_etag=plan.snapshot.etag,
         )
+        stored = github.get_release(plan.candidate.tag)
+        if (
+            stored is None
+            or stored.release_id != plan.snapshot.release_id
+            or stored.body != plan.new_body
+        ):
+            raise UpdateError(
+                "{}: GitHub Release body did not match the requested managed "
+                "summary after PATCH".format(plan.candidate.tag)
+            )
         result.add(
             plan.candidate.tag,
             "updated",
-            "managed summary replaced (expected body sha256 {})".format(
+            "managed summary replaced and verified (previous body sha256 {})".format(
                 plan.snapshot.body_sha256),
         )
     return result
@@ -738,8 +626,6 @@ def create_parser() -> argparse.ArgumentParser:
         choices=("push", "release", "workflow_dispatch"),
     )
     parser.add_argument("--repository", default=REPOSITORY_DEFAULT)
-    parser.add_argument("--before")
-    parser.add_argument("--after")
     parser.add_argument("--tag")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     return parser
@@ -749,27 +635,16 @@ def main(argv: list[str] | None = None) -> int:
     args = create_parser().parse_args(argv)
     result = UpdateResult()
     try:
-        if (
-            args.event == "release"
-            and (not args.tag or not TAG_RE.fullmatch(args.tag))
-        ):
-            result.add(
-                args.tag or "(missing tag)",
-                "skipped",
-                "release tag is outside the managed SkiaSharp version format",
-            )
-            _write_summary(result)
-            return 0
         repository = RepositoryView(args.root.resolve())
-        if args.event == "push":
-            if not args.before or not args.after:
-                raise UpdateError("push mode requires --before and --after")
-            candidates = select_push_candidates(
-                repository, args.before, args.after)
-        else:
+        if args.event == "workflow_dispatch" and args.tag:
             if args.tag and not TAG_RE.fullmatch(args.tag):
                 raise UpdateError("invalid exact release tag {!r}".format(args.tag))
             candidates = select_current_candidates(repository, tag=args.tag)
+        else:
+            # Every surviving push/release run converges current main completely.
+            # This makes renderer-only changes eligible and ensures GitHub's
+            # one-pending-run concurrency behavior cannot strand an older event.
+            candidates = select_current_candidates(repository)
         github = GitHubClient(
             args.repository,
             os.environ.get("GITHUB_TOKEN", ""),

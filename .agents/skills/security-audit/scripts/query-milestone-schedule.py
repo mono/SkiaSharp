@@ -276,7 +276,8 @@ def build_support_alerts(support, chrome_ms):
         ``E`` during the promotion gap (when a preview already reaches ``S``);
         every stable entry must be ``S`` or ``E`` — nothing older or off-channel.
       * preview line must cover Chrome **Beta** ``B`` (newer, in Dev/Canary, is OK;
-        behind ``B`` warns; at/below ``S`` is not a real preview).
+        behind ``B`` warns). A preview at ``S`` is valid while Beta and Stable
+        temporarily report the same milestone during a promotion.
 
     Detection only — the fix is always a manual edit of versions.json. Returns
     ``(alerts, status)`` where status is ``ok`` | ``warn`` | ``drift`` | ``unknown``.
@@ -347,7 +348,11 @@ def build_support_alerts(support, chrome_ms):
             "(Chrome Beta is m%d)." % B)})
     else:
         ptop = max(preview_ms)
-        for m in [m for m in preview_ms if m <= S]:
+        invalid_preview = [
+            m for m in preview_ms
+            if m < S or (m == S and B > S)
+        ]
+        for m in invalid_preview:
             alerts.append({"level": "error", "message": (
                 "support.preview lists m%d, which is not newer than Chrome Stable "
                 "m%d — a preview line must be ahead of stable." % (m, S))})

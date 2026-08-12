@@ -23,7 +23,7 @@ on:
         default: "main"
         type: string
       min_version:
-        description: "Lower bound (inclusive) for generation, e.g. '3.116.0'. Empty = no lower bound. Combine with max_version to regenerate a range, or set both equal to regenerate a single version."
+        description: "Lower bound (inclusive) for generation, e.g. '4.150.0'. Empty = no lower bound. Combine with max_version to regenerate a range, or set both equal to regenerate a single version."
         required: false
         default: ""
         type: string
@@ -33,7 +33,7 @@ on:
         default: ""
         type: string
       force:
-        description: "Force a total regeneration: rebuild every api diff and page even when unchanged (passes --force through to Cake + release_notes/generate.py). Use to rebuild the whole back-catalogue after an api-diff-tool or page-format change."
+        description: "Force a total regeneration at or above the configured history floor: rebuild every selected api diff and page even when unchanged (passes --force through to Cake + release_notes/generate.py)."
         required: false
         default: false
         type: boolean
@@ -57,6 +57,7 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
+      pull-requests: read
     outputs:
       has_changes: ${{ steps.package.outputs.has_changes }}
       output_base_branch: ${{ steps.route.outputs.output_base_branch }}
@@ -68,6 +69,8 @@ jobs:
       - name: Validate output routing
         id: route
         env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
           SOURCE_BRANCH: ${{ inputs.source_branch || 'main' }}
         run: |
           set -euo pipefail
@@ -84,6 +87,20 @@ jobs:
           git ls-remote --exit-code --heads origin \
             "refs/heads/$SOURCE_BRANCH" >/dev/null 2>&1 ||
             fail "Source branch does not exist on origin: $SOURCE_BRANCH"
+
+          owner="${REPOSITORY%%/*}"
+          open_bases="$(
+            gh api --method GET "repos/$REPOSITORY/pulls" \
+              -f state=open \
+              -f "head=$owner:bot/release-notes" \
+              -f per_page=100 \
+              --jq '.[].base.ref'
+          )" || fail "Could not inspect open pull requests for bot/release-notes"
+          while IFS= read -r open_base; do
+            [ -z "$open_base" ] && continue
+            [ "$open_base" = "$SOURCE_BRANCH" ] ||
+              fail "bot/release-notes already backs an open PR targeting $open_base; merge or close that PR before generating for $SOURCE_BRANCH"
+          done <<< "$open_bases"
 
           echo "Validated release-notes routing:"
           echo "  source=$SOURCE_BRANCH"

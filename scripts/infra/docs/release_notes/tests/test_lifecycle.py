@@ -912,7 +912,65 @@ class ScopedPruningTests(unittest.TestCase):
                 self.assertTrue(pages[1].exists())
 
 
+class RenderCliTests(unittest.TestCase):
+    def test_all_accepts_space_and_equals_scope_forms(self):
+        expected_min = COMMON.core_tuple("4.150.0")
+        expected_max = COMMON.core_tuple("4.152.0")
+        forms = (
+            [
+                "render.py",
+                "--all",
+                "--min-version",
+                "4.150.0",
+                "--max-version",
+                "4.152.0",
+            ],
+            [
+                "render.py",
+                "--all",
+                "--min-version=4.150.0",
+                "--max-version=4.152.0",
+            ],
+        )
+        for argv in forms:
+            with self.subTest(argv=argv), patch.object(
+                RENDER,
+                "render_all",
+                return_value=0,
+            ) as render_all:
+                self.assertEqual(RENDER.main(argv), 0)
+                render_all.assert_called_once_with(
+                    min_core=expected_min,
+                    max_core=expected_max,
+                )
+
+    def test_all_rejects_unknown_or_missing_scope_values(self):
+        for argv in (
+            ["render.py", "--all", "--unexpected"],
+            ["render.py", "--all", "--min-version"],
+        ):
+            with self.subTest(argv=argv), patch.object(
+                RENDER,
+                "render_all",
+            ) as render_all:
+                with self.assertRaises(SystemExit):
+                    RENDER.main(argv)
+                render_all.assert_not_called()
+
+
 class ApiDiffLifecycleTests(unittest.TestCase):
+    def test_explicit_cake_scope_must_respect_history_floor(self):
+        source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
+        validation = source.index("RequireScopeAtOrAboveHistoryFloor (")
+        cleanup = source.index("CleanDirectories (baseDir)")
+        helper = (ROOT / "scripts/infra/docs/api-diff-tools.cake").read_text()
+
+        self.assertLess(validation, cleanup)
+        self.assertIn(
+            "Lower history_floor.{family} in versions.json",
+            helper,
+        )
+
     def test_scoped_rebuild_clears_shared_line_once(self):
         source = (ROOT / "scripts/infra/docs/api-diff.cake").read_text()
         tracker = source.index("var clearedLineDirs = new HashSet<string>")
@@ -968,6 +1026,30 @@ class ApiDiffLifecycleTests(unittest.TestCase):
         self.assertIn(
             "&& !missingCoReleaseApiDiff",
             source,
+        )
+        feed_mark = source.index(
+            "feedSkiaHarfBuzzLines.Add (apiDiffVersion)"
+        )
+        cache_skip = source.index("if (!force && FileExists (lineIndex))")
+        inflight = source.index("if (isHarfBuzz && !inflightMappingRecorded)")
+        scoped_harfbuzz = source.index(
+            "if (isScoped && !FamilyCoreInRange ("
+        )
+        self.assertLess(feed_mark, cache_skip)
+        self.assertLess(inflight, scoped_harfbuzz)
+
+    def test_canonical_release_notes_branch_is_cross_base_guarded(self):
+        workflow = (
+            ROOT / ".github/workflows/update-release-notes.md"
+        ).read_text()
+        prepare_start = workflow.index("jobs:\n  prepare:")
+        prepare_end = workflow.index("    outputs:", prepare_start)
+        prepare = workflow[prepare_start:prepare_end]
+        self.assertIn("pull-requests: read", prepare)
+        self.assertIn('head=$owner:bot/release-notes', workflow)
+        self.assertIn(
+            "already backs an open PR targeting",
+            workflow,
         )
 
     def test_api_diff_markdown_is_normalized_before_commit(self):

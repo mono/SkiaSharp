@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import json
 from pathlib import Path
 import sys
+import tempfile
+from types import SimpleNamespace
 import unittest
 
 
@@ -151,12 +154,66 @@ class PublishReleaseTests(unittest.TestCase):
         self.assertEqual(body.count(github.SUMMARY_START_MARKER), 1)
         self.assertEqual(body.count(github.SUMMARY_END_MARKER), 1)
 
+    def test_marked_body_accepts_crlf_and_rejects_reordered_markers(self):
+        generated = "## What's Changed\n* Fix\n"
+        body = github.mark_generated_notes(generated).replace("\n", "\r\n")
+        self.assertEqual(
+            github.extract_generated_notes(body),
+            generated.replace("\n", "\r\n"),
+        )
+
+        reordered = (
+            github.GENERATED_NOTES_START_MARKER
+            + "\ncontent\n"
+            + github.SUMMARY_START_MARKER
+            + "\n"
+            + github.SUMMARY_END_MARKER
+            + "\n"
+            + github.GENERATED_NOTES_END_MARKER
+        )
+        with self.assertRaisesRegex(
+            github.publish.PublishError,
+            "out of order",
+        ):
+            github.extract_generated_notes(reordered)
+
     def test_unmarked_generated_notes_are_rejected(self):
         with self.assertRaisesRegex(
             github.publish.PublishError,
             "not a valid managed",
         ):
             github.extract_generated_notes("## What's Changed\n")
+
+    def test_generated_artifact_preserves_exact_bytes(self):
+        generated = "line one\r\nline two\n"
+        with tempfile.TemporaryDirectory() as directory:
+            context = SimpleNamespace(
+                root=Path(directory),
+                tag="v4.152.0",
+            )
+            paths = github.write_generated_artifacts(context, generated)
+            self.assertEqual(
+                paths["generated"].read_bytes(),
+                generated.encode("utf-8"),
+            )
+
+    def test_docs_workflow_respects_history_floor(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            config = root / "scripts/infra/docs/versions.json"
+            config.parent.mkdir(parents=True)
+            config.write_text(
+                json.dumps({
+                    "history_floor": {"skiasharp": "4.0.0"},
+                }),
+                encoding="utf-8",
+            )
+            self.assertFalse(
+                github.docs_workflow_supports(root, "3.119.5")
+            )
+            self.assertTrue(
+                github.docs_workflow_supports(root, "4.0.0")
+            )
 
     def test_status_handoff_rejects_changed_run(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")

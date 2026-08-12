@@ -481,9 +481,11 @@ Manual dispatch has one routing input: `source_branch`. For `main`, the workflow
 uses production routing (`main` ← `bot/release-notes`). Any other source must be an
 existing repository branch and becomes the generated PR base; every run reuses the
 same `bot/release-notes` head. Global workflow concurrency serializes runs so two
-sources cannot overwrite that head simultaneously. Callers never choose output refs,
-and the safe-output allowlists restrict changes to the validated source base, the
-fixed automation head, and `documentation/docfx/releases/**`.
+sources cannot overwrite that head simultaneously. Before Prepare starts, routing
+also fails if that head already backs an open PR targeting another base; this
+protects the live PR after workflow concurrency has ended. Callers never choose
+output refs, and the safe-output allowlists restrict changes to the validated source
+base, the fixed automation head, and `documentation/docfx/releases/**`.
 
 **Prepare runs as a standalone job; the agent only polishes.** The **Prepare** phase
 (`prepare.sh` — Cake, `release_notes/generate.py`, then `release_notes/index.py`, §2.2) runs in its
@@ -854,14 +856,20 @@ The source of truth stays in Cake: for published lines, Cake reads the
 `HarfBuzzSharp` dependency from each emitted `SkiaSharp.HarfBuzz` package's nuspec; for
 the in-flight unpublished line, it falls back to the working tree's `scripts/VERSIONS.txt`
 values so the next page can link the HarfBuzz API-diff folder before the package is on
-the feed.
+the feed. Before HarfBuzz package scoping begins, Cake marks every feed-backed
+SkiaSharp line even when its API-diff folder is cached, then adds the working-tree
+fallback only when that line is absent from the feed. The complete map therefore
+exists before the first HarfBuzz package is filtered: cached published mappings
+cannot be overwritten, and a new in-flight HarfBuzz folder is emitted on the first
+scoped run rather than requiring a second pass.
 
 Cake **merges** the sidecar instead of overwriting it blindly. A scoped or incremental
 run only recomputes the lines it actually processed, so it loads the committed object,
 overlays the newly discovered entries, and preserves the rest. That is safe because a
 shipped `SkiaSharp.HarfBuzz` package's HarfBuzz dependency is immutable. A full forced
-run (`--force` with no version scope) processes the whole back-catalogue, so the merged
-result is effectively a full authoritative refresh.
+run (`--force` with no version scope) processes every line owned by the current engines
+at or above its configured history floor, so the merged result is authoritative for
+the owned generation range while preserving historical entries below the floor.
 
 #### How `release_notes/generate.py` consumes it
 
@@ -1081,7 +1089,7 @@ whole-file change key (§4.6).
 | Owner | Responsibility |
 |---|---|
 | **Scripts** | Everything structural and factual: every filename, cumulative and exact-tag diff range, shipment fact, released-vs-unreleased split, rollup-vs-delta, supersession banner, stale-page pruning, filtering/denormalizing agent context, every website/GitHub heading, table, banner shape, `@handle`, ❤️, PR link, `TOC.yml`, and `index.md`. Scripts validate shape and references, not editorial meaning. |
-| **AI / skill** | Recreates the complete `_sources/<stem>.prose.json` for every versioned context file, including cumulative website prose and evergreen prerelease `release_summaries`. It decides breaking impact, categories, grouping, emphasis, and wording. |
+| **AI / skill** | Recreates the complete `_sources/<stem>.prose.json` for every versioned context file, including cumulative website prose and evergreen exact-tag `release_summaries` for Preview, RC, and stable releases. It decides breaking impact, categories, grouping, emphasis, and wording. |
 
 A maintainer then fixes the *script* (and this spec), never the output. See
 `.agents/skills/release-notes/SKILL.md` for the prose contract. The renderer is the
@@ -1264,7 +1272,7 @@ Always the same incremental Prepare + offline Polish sequence:
    API-link facts, the folded HarfBuzz facts, or a companion's folded `sha256` changes
    the dict, atomically rewrites the matching committed `.context.md`, and records
    that context path in `output/files-to-polish.txt`. Every listed page is
-   re-authored completely, including all prerelease `release_summaries`.
+   re-authored completely, including all exact-tag `release_summaries`.
    Editing
    `_sources/<stem>.notes.md` or changing a `*.breaking.md` file flips the relevant
    `breaking_candidates[].sha256` and re-polishes exactly that page (§4.7). The full
@@ -1289,16 +1297,24 @@ Always the same incremental Prepare + offline Polish sequence:
    no PR (§2.3).
 
 5. **Reviewed summaries converge asynchronously after merge.** Publishing never waits
-   for summary prose. A separate zero-AI workflow watches merged `*.prose.json`
-   and `*.data.json` changes, semantically diffs old/new `release_summaries` plus
-   cumulative highlights for stable tags, and
-   updates only the changed exact tags. It also runs on `release: published` and manual dispatch to
-   close publication/merge ordering races. It resolves each tag through
-   `shipments[]`, preflights every target before any PATCH, requires the expected
-   current body hash/ETag, is idempotent, and uses non-canceling concurrency.
+   for summary prose. A separate zero-AI workflow watches merged `*.prose.json`,
+   `*.data.json`, renderer, and updater changes. Every surviving push,
+   `release: published`, or manual run converges all current format-5 summaries
+   from `main`. This current-state convergence means GitHub's one-pending-run
+   concurrency behavior cannot strand an older event.
+   Stable summaries remain exact deltas; cumulative Highlights stay on the website
+   page. The updater resolves each tag through `shipments[]`, preflights every target
+   before any PATCH, refreshes all bodies again before the first write, verifies each
+   stored body after PATCH, and is idempotent. The GitHub release endpoint has no
+   conditional-PATCH contract, so the refresh/post-write checks narrow and detect
+   races rather than claiming an atomic compare-and-swap.
    Missing releases, `*-unreleased`, unchanged entries, and unmarked legacy bodies
    are skipped. Historical migration is a reviewed PR; it never implicitly adopts
    legacy remote bodies.
+
+   Release publication also reads `history_floor.skiasharp`. A release below that
+   floor still publishes normally, but skips the incompatible docs dispatch and
+   advances to milestone reconciliation with an explicit warning.
 
 6. **The GitHub-generated payload is frozen.** New release bodies contain explicit
    managed markers around the summary region and around the original GitHub
@@ -1504,10 +1520,14 @@ boolean argument); `prepare.sh` translates its shell flags to those names.
   skipped/out-of-range predecessor correctly.
 - **Forced line rebuild.** `--force` rebuilds selected lines even when their folder
   already exists.
-- **Full forced rebuild.** `--force` with no version scope is authoritative: it clears
-  all owned generated API-diff files up front (respecting the history floor) and
-  rebuilds the whole back-catalogue. This is the only way to force old committed API
-  diffs to regenerate after the diff tooling itself changes.
+- **Full forced rebuild.** `--force` with no version scope is authoritative for the
+  current generation range: it clears all owned generated API-diff files at or above
+  each configured history floor and rebuilds those lines. Historical files below a
+  floor are deliberately neither opened nor cleared; lower the floor explicitly before
+  requesting their regeneration after a tooling change.
+- **Below-floor explicit scope.** An explicit `--minVersion` or `--maxVersion` below
+  the SkiaSharp history floor is an error before cleanup or downloads. It never
+  succeeds as an empty run.
 - **Incremental/scoped clearing.** Any run that is not a full forced rebuild leaves
   cached lines untouched. For each line it does rebuild, it clears that line's generated
   files once, immediately before the first package copies a new diff into the shared
@@ -1523,7 +1543,8 @@ files nested in old line folders are preserved.
 The co-release map uses the same incremental principle (§3.6): Cake loads the committed
 object, overlays the SkiaSharp→HarfBuzzSharp entries discovered during this run, and
 writes the merged object back. A scoped run therefore does not drop mappings for lines it
-did not process; a full forced run recomputes and overlays the whole catalogue.
+did not process; a full forced run recomputes and overlays the whole owned generation
+range.
 
 ### 5.4 How it runs
 
