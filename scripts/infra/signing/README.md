@@ -20,6 +20,22 @@ It does not invoke SignTool directly or use Arcade's private bootstrap targets.
 MicroBuild test signing validates MacDeveloper policy without rewriting dylib
 payloads; real signing requires those dylibs to change.
 
+Arcade performs the cryptographic checks:
+
+- SignTool recursively verifies mapped outputs after each signing operation;
+- real signing additionally runs `SigningValidation`, whose SignCheck NuGet
+  verifier applies NuGet integrity and signature trust/validity verification.
+
+`dotnet nuget verify --all` is not repeated because it currently performs the
+same NuGet signature verification already executed by SignCheck.
+
+The repository scripts cover different invariants. The policy preflight rejects
+stale or unmapped entries before an ESRP request. The payload verifier compares
+unsigned and signed archives to reject package-set changes, duplicate or
+case-colliding paths, unexpected payload mutations, missing expected mutations,
+and changes to intentionally skipped source files. Arcade's signature checks do
+not compare signed output against the original archive.
+
 ## Artifact flow
 
 ```text

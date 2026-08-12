@@ -189,16 +189,6 @@ stages:
                   "/p:SignCheckExclusionsFile=$(Build.SourcesDirectory)\eng\SignCheckExclusionsFile.txt"
                 displayName: Validate trusted signatures with Arcade
 
-              - pwsh: |
-                  Get-ChildItem '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' -Filter '*.nupkg' -File |
-                    ForEach-Object {
-                      & dotnet nuget verify $_.FullName --all
-                      if ($LASTEXITCODE -ne 0) {
-                        throw "NuGet signature verification failed for '$($_.Name)'."
-                      }
-                    }
-                displayName: Verify real NuGet author signatures
-
             - pwsh: |
                 $source = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
                 $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
