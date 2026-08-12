@@ -75,11 +75,9 @@ The existing unsigned artifacts remain available to the test pipeline.
 `nuget_symbols` and the internal `nuget_special` convenience packages are not
 signing inputs.
 
-For a signing-only retry, queue the package pipeline with
-`signingSourceBuildId` set to a successful build ID from that same definition.
-The job verifies the build definition, repository, and successful result before
-downloading its `nuget` artifact. Non-forced real signing additionally requires
-both the source build and signing run to use `main` or `release/*`.
+Signing consumes only the current run's `nuget` artifact after the package stage
+succeeds. Retry a signing failure within that run; starting a new pipeline run
+rebuilds the packages instead of signing artifacts from an older run.
 
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches
 test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
