@@ -1,8 +1,13 @@
 {
-  "format": 3,
+  "format": 5,
   "version": "4.148.1",
   "family": "skiasharp",
   "status": "unreleased",
+  "range": {
+    "from": "release/4.148.0",
+    "to": "release/4.148.x",
+    "base_version": "4.148.0"
+  },
   "banner": {
     "kind": "unreleased",
     "date": null,
@@ -16,11 +21,12 @@
   "api_links": [],
   "tallies": {
     "product": 1,
-    "mixed": 0,
-    "internal": 2
+    "mixed": 1,
+    "internal": 1
   },
   "breaking_candidates": [],
   "contributors": [],
+  "shipments": [],
   "previews": [],
   "prs": {
     "4262": {
@@ -28,21 +34,31 @@
       "title": "[skia-sync] Merge upstream chrome/m148 bug fixes into release/4.148.x",
       "author": "mattleibow",
       "community": false,
-      "tag": "product"
+      "tag": "product",
+      "commit": "c45ace56b5ed40432075329122ec32f59959a718",
+      "body": "[skia-sync] Merge upstream chrome/m148 bug fixes into release/4.148.x (#4262)\n\nChanges: https://github.com/mono/skia/compare/1a155bae3a...9bf10f9f96\nCompanion: https://github.com/mono/skia/pull/268\n\nAutomated release-line bug-fix sync for the m148 release branch. This is not a\nmilestone bump (current == target == 148): no version files change and the only\nedits are the externals/skia submodule pointer and the matching cgmanifest.json\nSHAs.\n\nRe-points externals/skia from 1a155bae3a to 9bf10f9f96 \u2014 the tip of mono/skia\nrelease/4.148.x after the companion skia-sync merge (mono/skia#268) landed,\nrather than the interim skia-sync branch commit. cgmanifest.json mono/skia\ncommitHash and the Skia-core upstream_merge_commit are updated to match.\n\nUpstream commits pulled in via the bump:\n\n  * 46f2e16555 [m148] Resolve a data race on fStream in SkTypeface_Mac \u2014 the\n    user-visible fix; eliminates a gTFCache/fStream race in SkTypeface_mac_ct.\n  * 3a90f6662a [graphite] Use stable collection for static bindings \u2014 benign for\n    SkiaSharp, which ships Ganesh rather than Graphite/Dawn.\n\nNo C/C++ public API, C API shim, or generated bindings changed: the binding\ngenerator re-ran with no diff, and ABI/soname stay at libSkiaSharp.so.148.0.0.\nNo managed C# or test changes were required. Linux x64 native build, full\nbinding build, and the test suite (5544 passed, 172 HW-skipped) pass; the\nremaining platforms rebuild on the release-line CI once this lands.\n\nCo-authored-by: Matthew Leibowitz <mattleibow@live.com>\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+      "companion_pr": {
+        "repository": "mono/skia",
+        "number": 268,
+        "url": "https://github.com/mono/skia/pull/268"
+      }
     },
     "4217": {
       "url": "https://github.com/mono/SkiaSharp/pull/4217",
       "title": "[docs] Remove superseded doc-automation workflows from release/4.148.x",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "internal",
+      "commit": "06ca27b1db2e864cef75efe2470b6907a5740869"
     },
     "4212": {
       "url": "https://github.com/mono/SkiaSharp/pull/4212",
       "title": "Bump to the next version (4.148.1) after release",
       "author": "mattleibow",
       "community": false,
-      "tag": "internal"
+      "tag": "mixed",
+      "commit": "c08368d9582d212ff1d972a05e4f486413f074bd",
+      "body": "Advances the release/4.148.x integration branch to 4.148.1 now that 4.148.0 has\nbeen cut, so future builds on this line don't collide with the released version.\nBumps SkiaSharp file/nuget to 4.148.1 and HarfBuzzSharp file/nuget to 14.2.0.1\n(lockstep packaging revision), and SKIASHARP_VERSION to 4.148.1. Assembly\nversions stay pinned (SkiaSharp 4.148.0.0, HarfBuzzSharp 1.0.0.0) and the\nmilestone/soname lines are unchanged.\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
     }
   }
 }
