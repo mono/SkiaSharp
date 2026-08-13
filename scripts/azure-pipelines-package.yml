@@ -51,10 +51,6 @@ parameters:
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
     default: false
-  - name: testsPipelineId
-    displayName: 'The downstream tests pipeline ID'
-    type: number
-    default: 1630
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
@@ -119,55 +115,7 @@ extends:
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
-      - stage: trigger_tests
-        displayName: Trigger Tests
-        dependsOn: package
-        condition: and(succeeded(), eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/dnceng-pipelines'))
-        jobs:
-          - job: trigger_tests
-            displayName: Trigger Tests
-            timeoutInMinutes: 10
-            pool: ${{ parameters.buildAgentHost.pool }}
-            steps:
-              - checkout: none
-              - pwsh: |
-                  if (-not $env:SYSTEM_ACCESSTOKEN) {
-                    throw "System.AccessToken is unavailable."
-                  }
-
-                  $uri = "$(System.CollectionUri)$(System.TeamProject)/_apis/pipelines/${{ parameters.testsPipelineId }}/runs?api-version=7.1"
-                  $body = @{
-                    resources = @{
-                      repositories = @{
-                        self = @{
-                          refName = "$(Build.SourceBranch)"
-                          version = "$(Build.SourceVersion)"
-                        }
-                      }
-                      pipelines = @{
-                        SkiaSharp = @{
-                          runId = [int]"$(Build.BuildId)"
-                        }
-                      }
-                    }
-                  } | ConvertTo-Json -Depth 6
-
-                  $response = Invoke-RestMethod `
-                    -Method Post `
-                    -Uri $uri `
-                    -ContentType "application/json" `
-                    -Headers @{ Authorization = "Bearer $env:SYSTEM_ACCESSTOKEN" } `
-                    -Body $body
-
-                  if (-not $response.id) {
-                    throw "The tests pipeline did not return a run ID."
-                  }
-
-                  Write-Host "Queued tests run $($response.id)."
-                displayName: Queue tests with current package artifacts
-                env:
-                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
