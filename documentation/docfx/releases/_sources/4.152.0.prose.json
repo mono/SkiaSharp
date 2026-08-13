@@ -1,0 +1,77 @@
+{
+  "theme": "Graphite GPU backend preview",
+  "highlights_headline": "SkiaSharp 4.152.0 previews Graphite GPU bindings for Vulkan, Metal, and Dawn, built on Skia m152.",
+  "highlights_body": "Adds a new async pixel-readback API, several memory-leak and performance fixes, a Vulkan/Silk.NET package, and FreeType-based font support on Nano Server.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Updated to Skia Chrome milestone m152",
+          "detail": "Bundles the Skia m152 engine, including merged chrome/m151 and m152 upstream bug fixes.",
+          "prs": [4651, 4538, 4568]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings (preview)",
+          "detail": "Adds bindings for Skia's Graphite GPU backend across Vulkan, Metal, and Dawn.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "SKImage and SKSurface gain RequestReadPixels for asynchronous, backend-neutral pixel access.",
+          "prs": [4545]
+        },
+        {
+          "lead": "New SkiaSharp.Vulkan.Silk.NET package",
+          "detail": "Adds a Silk.NET-based Vulkan interop package, with Vulkan tests now running on Android and Linux.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Native use-after-free fixes",
+          "detail": "SKRegion.SpanIterator, SKPixmap.ExtractSubset/With*, and the SKImage raster-create failure path now correctly root or free native memory instead of leaving dangling pointers.",
+          "prs": [4355, 4558, 4455]
+        },
+        {
+          "lead": "Reflection and allocation micro-fixes",
+          "detail": "Caches a skip-registration reflection check, avoids an intermediate string allocation in GetEncodedText, pre-sizes a uniform lookup map, and avoids a double buffer copy in SKData.SaveTo.",
+          "prs": [4630, 4498, 4512, 4550]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "FreeType font support on Nano Server",
+          "detail": "Nano Server now uses FreeType for font rendering, since the platform lacks the usual system font APIs.",
+          "prs": [4280]
+        },
+        {
+          "lead": "Containerized test legs added",
+          "detail": "Adds Azure Linux, Alpine/musl, and Nano Server containerized CI test legs for broader platform coverage.",
+          "prs": [4515]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "FreeType-based font support for Nano Server",
+    "mmitche": "One-time MSVC environment initialization for native builds",
+    "ramezgerges": "Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 introduces the Graphite GPU backend bindings, async pixel readback, the Vulkan/Silk.NET package, several native use-after-free and performance fixes, and updates the engine to Skia m152."
+  },
+  "harfbuzz_summary": "Converts the HarfBuzzSharp solution to .slnx and adds the new containerized test legs alongside the SkiaSharp infra changes."
+}
