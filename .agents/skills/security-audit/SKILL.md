@@ -3,8 +3,9 @@ name: security-audit
 description: >
   Audit SkiaSharp's native dependencies for security vulnerabilities and CVEs,
   including Component Governance (CG) alerts from the combined
-  skiasharp-package Azure DevOps pipeline.
-  Read-only investigation that produces a status report with recommendations.
+  skiasharp-package Azure DevOps pipeline and legacy TSA Azure Boards work items for
+  TSA-skiasharp.skiasharp_main.
+  Read-only investigation producing a status report with recommendations.
 
   Use when user asks to:
   - Audit security issues or CVEs
@@ -14,10 +15,12 @@ description: >
   - See what security work is pending
   - Check Component Governance alerts
   - Review CG alerts from the official combined Build pipeline
+  - Review TSA security/compliance work items and suppression history
 
   Triggers: "security audit", "audit CVEs", "CVE status", "what security issues are open",
   "check vulnerability status", "security overview", "what CVEs need fixing",
-  "CG alerts", "component governance", "check container CVEs".
+  "CG alerts", "component governance", "check container CVEs", "TSA work items",
+  "TSA security bugs", "compliance findings".
 
   This skill is READ-ONLY. To actually fix issues, use the `native-dependency-update` skill.
 ---
@@ -26,8 +29,8 @@ description: >
 
 Investigate the security status of SkiaSharp's native dependencies. Skia core is treated as
 the product itself (not just a dependency) and gets a deeper, commit-level resolution
-process. Third-party deps and Component Governance alerts are audited alongside it and
-combined into a single unified report.
+process. Third-party deps, Component Governance alerts, and existing legacy TSA Azure Boards
+work items are audited alongside it and combined into a single unified report.
 
 > ℹ️ This skill is **read-only**. To create PRs and fix issues, use the `native-dependency-update` skill.
 
@@ -38,6 +41,7 @@ combined into a single unified report.
 - **[references/skia-cve-resolution.md](references/skia-cve-resolution.md)** — Skia core CVE pipeline (NVD → Bug ID → Commit → Branch → Cherry-pick → Reachability). **The Skia process is fine-grained — read this before auditing Skia.**
 - **[references/third-party-deps.md](references/third-party-deps.md)** — Third-party CVE process (libpng, freetype, harfbuzz, etc.): version verification, fix-commit ancestry, known false positives
 - **[references/cg-alerts.md](references/cg-alerts.md)** — Component Governance alerts: ADO pipeline queries, Docker container CVEs, fix locations
+- **[references/tsa-work-items.md](references/tsa-work-items.md)** — Legacy TSA Azure Boards query, active/history classification, correlation, and portal links
 - **[documentation/dev/dependencies.md](../../../documentation/dev/dependencies.md)** — Dependency list, cgmanifest format, Skia-specific tracking notes
 - **[references/report-template.md](references/report-template.md)** — Markdown format guide (used by `render-security-audit-md.py`)
 - **[references/report-schema.md](references/report-schema.md)** — JSON schema for structured output
@@ -56,11 +60,12 @@ combined into a single unified report.
 5. Audit Skia core CVEs — see [Skia CVE Resolution](references/skia-cve-resolution.md)
 6. Audit third-party dependency CVEs — see [Third-Party Deps](references/third-party-deps.md)
 7. Query Component Governance alerts — see [CG Alerts](references/cg-alerts.md)
-8. Check false positives
-9. Assemble structured JSON report
-10. Validate report (`validate-security-audit.py`)
-11. Render HTML (`render-security-audit.py`)
-12. Present markdown summary to user
+8. Query and cache TSA Azure Boards work items — see [TSA Work Items](references/tsa-work-items.md)
+9. Check false positives
+10. Assemble structured JSON report and correlate TSA evidence
+11. Validate report (`validate-security-audit.py`)
+12. Render HTML and Markdown reports
+13. Present summary to user
 
 ---
 
@@ -323,7 +328,31 @@ NVD searches alone.
 
 ---
 
-### Step 8: Check False Positives
+### Step 8: Query TSA Azure Boards Work Items
+
+TSA is existing legacy infrastructure retained for now. This task does not migrate TSA to WiM.
+Every audit must query the exact TSA codebase tag so active findings and resolved suppression
+history are evaluated together.
+
+```bash
+python3 .agents/skills/security-audit/scripts/query-tsa-work-items.py \
+  --output output/ai/tsa-work-items-cache.json
+```
+
+The script uses current `az` authentication against `https://dev.azure.com/devdiv`, project
+`DevDiv`, and the narrow `[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` WIQL predicate.
+Do not query the broad SkiaSharp area; it has more than 1,000 items and times out.
+
+The cache contains every active and historical item with raw selected fields, normalized triage
+fields, tool/rule/category derivation, portal URLs, and deduplication groups. A failed query writes
+`queryStatus: "error"` and exits nonzero. Never fabricate an empty success.
+
+See **[references/tsa-work-items.md](references/tsa-work-items.md)** for the evidence model,
+correlation command, and portal links.
+
+---
+
+### Step 9: Check False Positives
 
 Before flagging anything, verify the CVE actually affects SkiaSharp.
 
@@ -342,7 +371,7 @@ Before flagging anything, verify the CVE actually affects SkiaSharp.
 
 ---
 
-### Step 9: Assemble Structured JSON Report
+### Step 10: Assemble Structured JSON Report
 
 > 🛑 **MANDATORY:** The audit MUST produce a JSON file conforming to
 > [references/report-schema.md](references/report-schema.md). This is the machine-readable
@@ -355,8 +384,9 @@ Build the JSON object with these top-level keys:
 3. **`versionVerification`** — One entry per dependency with DEPS commit, verified version, cgmanifest version, match boolean
 4. **`findings`** — Array of finding objects sorted by priority then severity. **ONE object per dependency** (e.g., one "skia" finding containing ALL Skia CVEs regardless of status). Each has `dependency`, `status`, `cves[]`, `nonChromeCves[]`, `action`, `notes`. The `status` reflects the WORST-case status among the CVEs.
 5. **`cgAlerts`** — The complete raw JSON from `query-cg-alerts.py` (full `alerts` array, do not summarize)
-6. **`chromeReleases`** — Chrome Releases blog data. Transform the script's snake_case output (`cve_id`→`cveId`, `bug_id`→`bugId`, `blog_post_url`→`blogPostUrl`) into `structuredCves[]`. Also copy `blogPostUrl` onto matching CVEs in `findings[].cves[]`. See [report-schema.md](references/report-schema.md#chromereleases--chrome-releases-blog-data-optional) for the full field mapping.
-7. **`nextSteps`** — Prioritized action items with severity, command, and reason
+6. **`tsaWorkItems`** — Added by `correlate-tsa-work-items.py`; complete active + historical TSA evidence with explicit matched/unmatched correlations
+7. **`chromeReleases`** — Chrome Releases blog data. Transform the script's snake_case output (`cve_id`→`cveId`, `bug_id`→`bugId`, `blog_post_url`→`blogPostUrl`) into `structuredCves[]`. Also copy `blogPostUrl` onto matching CVEs in `findings[].cves[]`. See [report-schema.md](references/report-schema.md#chromereleases--chrome-releases-blog-data-optional) for the full field mapping.
+8. **`nextSteps`** — Prioritized action items with severity, command, and reason
 
 > 🛑 **COMPLETENESS REQUIREMENT:** The `findings` array MUST include **every CVE returned
 > by the NVD query** (Step 1 of skia-cve-resolution.md). CVEs that are verified as already
@@ -373,9 +403,21 @@ Build the JSON object with these top-level keys:
 
 Save as `output/ai/security-audit-{date}.json`.
 
+Then load and correlate the cached TSA records:
+
+```bash
+python3 .agents/skills/security-audit/scripts/correlate-tsa-work-items.py \
+  --report output/ai/security-audit-{date}.json \
+  --tsa-cache output/ai/tsa-work-items-cache.json
+```
+
+The correlator keeps unmatched items and labels them explicitly. Review active unmatched items as
+potential standalone security/compliance actions, and use resolved groups as deduplication and
+suppression history.
+
 ---
 
-### Step 10: Validate Report
+### Step 11: Validate Report
 
 > 🛑 **MANDATORY:** Always validate before rendering. Fix any errors reported.
 
@@ -389,7 +431,7 @@ Warnings are informational — errors must be fixed before proceeding.
 
 ---
 
-### Step 11: Render HTML + Markdown Reports
+### Step 12: Render HTML + Markdown Reports
 
 > 🛑 **MANDATORY:** Always generate both reports.
 
@@ -410,6 +452,8 @@ The HTML renders:
 - Summary cards with status counts
 - Collapsible findings with CVE tables, severity badges, NVD links
 - Chrome Releases blog section with above-milestone CVEs by component
+- TSA section with query status, active/actionable and historical records, tool/rule/category,
+  DevDiv links, and correlation status
 - Version verification table with match/mismatch indicators
 - Skia upstream verification details with commit links
 - Prioritized next steps with severity-coded borders
@@ -424,9 +468,9 @@ Present the output path to the user:
 
 ---
 
-### Step 12: Present Summary to User
+### Step 13: Present Summary to User
 
-The Markdown report was already generated in Step 11. Present a brief summary in the
+The Markdown report was already generated in Step 12. Present a brief summary in the
 conversation pointing to the generated files:
 
 ```
@@ -438,6 +482,7 @@ conversation pointing to the generated files:
    m147 • 2026-05-29 • 102 CVEs • Highest: CRITICAL
    🔴 0 attention · 🆕 0 undiscovered · ⚪ 1 FP · ✅ 6 clean
    📰 Chrome Releases: 146 Skia-relevant CVEs (16 above current milestone)
+   🧭 TSA: N active · M historical
 ```
 
 Then highlight the **top actionable items** from the report:
@@ -446,10 +491,11 @@ Then highlight the **top actionable items** from the report:
 - 🔴/🟠 release heads-up (Step 3) — `main` behind the Beta milestone, or a milestone branching/going stable soon
 - 🔴 support-tier drift (Step 3) — `versions.json` `support` block out of date with the live Chrome channels
 - Critical/High CG alerts
+- Active TSA items, especially unmatched items or active groups with resolved history
 
 #### Report quality rules
 
-These rules apply to the JSON assembly (Step 9) and are enforced by the renderers:
+These rules apply to the JSON assembly (Step 10) and are enforced by the renderers:
 
 1. **Skia bump recommendations must target the highest-severity CVE**, not the lowest. If
    there are HIGH CVEs at m146 and a MEDIUM at m133, recommend m146 as the target.

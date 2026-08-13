@@ -67,6 +67,7 @@ def render_md(data):
     next_steps = data.get("nextSteps", [])
     ver = data.get("versionVerification", [])
     cg = data.get("cgAlerts", {})
+    tsa = data.get("tsaWorkItems", {})
     cr = data.get("chromeReleases", {})
 
     lines = []
@@ -217,6 +218,81 @@ def render_md(data):
             lines.append("")
 
         lines.append("---")
+        lines.append("")
+
+    # TSA Azure Boards work items
+    lines.append("## TSA Azure Boards Work Items")
+    lines.append("")
+    query_status = tsa.get("queryStatus", "unknown")
+    tsa_summary = tsa.get("summary", {})
+    lines.append(
+        f"**Query:** {query_status} | "
+        f"**Active:** {tsa_summary.get('active', 0)} | "
+        f"**Historical:** {tsa_summary.get('historical', 0)}"
+    )
+    lines.append(f"**Codebase:** `{tsa.get('codebaseTag', 'TSA-skiasharp.skiasharp_main')}`")
+    if tsa.get("portalSearchUrl"):
+        lines.append(f"**Portal:** [Search TSA work items]({tsa['portalSearchUrl']})")
+    if tsa.get("error"):
+        lines.append(f"**Query error:** {sanitize_cell(tsa['error'])}")
+    lines.append("")
+    lines.append(
+        "> TSA is existing legacy infrastructure retained for now. "
+        "This audit does not migrate TSA to WiM."
+    )
+    lines.append("")
+
+    for activity, heading in (("active", "Active / Actionable"), ("historical", "Historical / Resolved")):
+        items = [item for item in tsa.get("items", []) if item.get("activity") == activity]
+        lines.append(f"### {heading} ({len(items)})")
+        lines.append("")
+        if not items:
+            lines.append("_None._")
+            lines.append("")
+            continue
+        lines.append("| ID | State | Type | Severity / Priority | Category | Tool / Rule | Title | Owner | Changed | Correlation |")
+        lines.append("|----|-------|------|---------------------|----------|-------------|-------|-------|---------|-------------|")
+        for item in items:
+            item_id = item.get("id", "?")
+            item_url = item.get("url", "")
+            item_link = f"[{item_id}]({item_url})" if item_url else str(item_id)
+            severity = item.get("severity") or (
+                f"Priority {item['priority']}" if item.get("priority") is not None else ""
+            )
+            tool_rule = item.get("tool", "Unknown")
+            if item.get("ruleIds"):
+                tool_rule += " / " + ", ".join(item["ruleIds"])
+            correlation = item.get("correlation", {})
+            correlation_text = correlation.get("status", "unmatched")
+            matches = correlation.get("findingDependencies", []) + correlation.get("cgAlertIds", [])
+            if matches:
+                correlation_text += ": " + ", ".join(matches)
+            lines.append(
+                f"| {item_link} | {sanitize_cell(item.get('state', ''))} | "
+                f"{sanitize_cell(item.get('workItemType', ''))} | {sanitize_cell(severity)} | "
+                f"{sanitize_cell(item.get('tsaCategory', ''))} | {sanitize_cell(tool_rule)} | "
+                f"{sanitize_cell(item.get('title', ''))} | "
+                f"{sanitize_cell(item.get('assignedTo') or 'Unassigned')} | "
+                f"{sanitize_cell(item.get('changedDate') or '')} | "
+                f"{sanitize_cell(correlation_text)} |"
+            )
+        lines.append("")
+
+    groups_with_history = [
+        group for group in tsa.get("groups", [])
+        if group.get("activeIds") and group.get("historicalIds")
+    ]
+    if groups_with_history:
+        lines.append("### Active Rules with Historical TSA Records")
+        lines.append("")
+        lines.append("| Deduplication Key | Active IDs | Historical IDs |")
+        lines.append("|-------------------|------------|----------------|")
+        for group in groups_with_history:
+            lines.append(
+                f"| `{sanitize_cell(group.get('key', ''))}` | "
+                f"{', '.join(map(str, group.get('activeIds', [])))} | "
+                f"{', '.join(map(str, group.get('historicalIds', [])))} |"
+            )
         lines.append("")
 
     # CG Alerts

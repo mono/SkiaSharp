@@ -8,7 +8,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
 {
   "meta": {
     "date": "2026-04-10",
-    "schemaVersion": "1.0",
+    "schemaVersion": "1.1",
     "skiaSubmoduleCommit": "8c99e432ff06e61c42cf99aa8f2cbe248d301b9a",
     "skiaUpstreamCommit": "9ab7c2064b2b1ab22f856a7f0a8c3b3ae4cb89c7",
     "skiaMilestone": 132,
@@ -25,6 +25,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
   "versionVerification": [ ... ],
   "findings": [ ... ],
   "cgAlerts": { ... },
+  "tsaWorkItems": { ... },
   "chromeReleases": { ... },
   "nextSteps": [ ... ]
 }
@@ -35,7 +36,7 @@ JSON schema for the security audit report. The AI generates this JSON as structu
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `date` | string | Yes | ISO date of the audit |
-| `schemaVersion` | string | Yes | Always `"1.0"` |
+| `schemaVersion` | string | Yes | Always `"1.1"` |
 | `skiaSubmoduleCommit` | string | Yes | mono/skia fork commit from `git submodule status` |
 | `skiaUpstreamCommit` | string | Yes | google/skia chrome/mNNN branch tip (independently verified) |
 | `skiaMilestone` | integer | Yes | Verified from SkMilestone.h |
@@ -182,6 +183,81 @@ When `assessment == "affected"`, the resolution fields (`cherryPicksCleanly`, `r
 ### CVE `source` Values
 
 Examples: `"NVD (Chrome CPE)"`, `"NVD web search"`, `"Android Security Bulletin"`, `"Huawei HarmonyOS Bulletin"`, `"Chromium severity rating (CVSS pending)"`
+
+## `tsaWorkItems` — Legacy TSA Azure Boards Evidence
+
+Required on every audit. TSA is existing legacy infrastructure retained for now; this workflow
+does not migrate it to WiM. Query only the exact
+`[System.Tags] CONTAINS 'TSA-skiasharp.skiasharp_main'` codebase tag.
+
+```json
+{
+  "queryStatus": "success",
+  "queriedAt": "2026-08-13T05:31:22.410622+00:00",
+  "organization": "https://dev.azure.com/devdiv",
+  "project": "DevDiv",
+  "codebaseTag": "TSA-skiasharp.skiasharp_main",
+  "portalSearchUrl": "https://almsearch.dev.azure.com/devdiv/DevDiv/_search?type=workitem&text=TSA-skiasharp.skiasharp_main",
+  "cacheFile": "output/ai/tsa-work-items-cache.json",
+  "summary": {
+    "total": 12,
+    "active": 2,
+    "historical": 10,
+    "byState": {"Active": 2, "Resolved": 10},
+    "byCategory": {"Compliance": 2, "Security": 10},
+    "byTool": {"BinSkim": 10, "Roslyn": 2},
+    "correlated": 0,
+    "unmatched": 12
+  },
+  "groups": [
+    {
+      "key": "Roslyn:CA2265",
+      "tool": "Roslyn",
+      "ruleIds": ["CA2265"],
+      "activeIds": [1234567],
+      "historicalIds": [],
+      "hasActiveHistory": false
+    }
+  ],
+  "items": [
+    {
+      "id": 1234567,
+      "title": "[roslynanalyzers:Warning]: CA2265 (...)",
+      "state": "Active",
+      "activity": "active",
+      "workItemType": "Bug",
+      "severity": "2 - High",
+      "priority": null,
+      "tags": ["TSA", "TSA-Compliance", "TSA-Roslyn-CA2265", "TSA-skiasharp.skiasharp_main"],
+      "areaPath": "DevDiv\\.NET MAUI\\SkiaSharp",
+      "iterationPath": "DevDiv",
+      "assignedTo": null,
+      "createdDate": "2026-04-28T06:45:56.813Z",
+      "changedDate": "2026-04-28T06:45:56.813Z",
+      "url": "https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1234567",
+      "tool": "Roslyn",
+      "ruleIds": ["CA2265"],
+      "tsaCategory": "Compliance",
+      "dedupKey": "Roslyn:CA2265",
+      "rawFields": {"System.Id": 1234567},
+      "correlation": {
+        "status": "unmatched",
+        "findingDependencies": [],
+        "cgAlertIds": [],
+        "methods": []
+      }
+    }
+  ]
+}
+```
+
+`queryStatus` may be `success`, `error`, or `unknown`, but semantic validation rejects anything
+other than `success`. A failed query must remain visibly failed; never turn it into an empty
+successful result.
+
+`activity` separates actionable work from historical suppression/deduplication evidence. Preserve
+all records and all raw selected fields. Every item requires a `correlation` object. If it cannot
+be matched to `findings` or `cgAlerts`, retain it with `status: "unmatched"`.
 
 ## `nextSteps` — Prioritized Actions
 

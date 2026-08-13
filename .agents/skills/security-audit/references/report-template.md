@@ -21,6 +21,23 @@ Templates for formatting security audit findings. All dependencies — including
 | ⚪ False positive | N |
 ```
 
+Include TSA status immediately after the security summary:
+
+```markdown
+## TSA Azure Boards Work Items
+
+**Query:** success · **Active:** N · **Historical:** N
+**Codebase:** `TSA-skiasharp.skiasharp_main`
+
+| Activity | ID | State | Category | Tool / Rule | Title | Correlation |
+|----------|----|-------|----------|-------------|-------|-------------|
+| Active | [1234567](https://dev.azure.com/devdiv/DevDiv/_workitems/edit/1234567) | Active | Compliance | Roslyn / CA2265 | ... | Unmatched |
+```
+
+Render active/actionable items first and historical records in a separate table. Do not omit
+resolved records: they are evidence for deduplication and suppression history. Include the
+codebase-tag search link and individual DevDiv work-item links.
+
 ## Detailed Findings
 
 Use **separate tables per item** to avoid terminal wrapping issues.

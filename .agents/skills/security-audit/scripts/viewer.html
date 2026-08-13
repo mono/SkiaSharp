@@ -84,6 +84,28 @@
   <h5 class="mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Findings</h5>
   <div id="findings-container"></div>
 
+  <!-- TSA Azure Boards Work Items -->
+  <div class="card mb-4" id="tsa-section">
+    <div class="card-header bg-white d-flex align-items-center">
+      <i class="bi bi-kanban me-2"></i><strong>TSA Azure Boards Work Items</strong>
+      <a id="tsa-search-link" href="#" target="_blank" class="ms-2 small">Search in DevDiv</a>
+      <span class="ms-auto" id="tsa-badge"></span>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-secondary py-2 small">
+        TSA is existing legacy infrastructure retained for now. This audit does not migrate TSA to WiM.
+      </div>
+      <div id="tsa-error"></div>
+      <div class="row g-3 mb-3" id="tsa-summary-cards"></div>
+      <div id="tsa-active-items"></div>
+      <details class="mt-3">
+        <summary class="fw-semibold">Historical / resolved TSA records (<span id="tsa-historical-count">0</span>)</summary>
+        <div class="mt-2" id="tsa-historical-items"></div>
+      </details>
+      <div class="text-muted small mt-3" id="tsa-meta"></div>
+    </div>
+  </div>
+
   <!-- Component Governance Alerts -->
   <div class="card mb-4" id="cg-section" style="display:none;">
     <div class="card-header bg-white d-flex align-items-center">
@@ -155,12 +177,14 @@ function assessmentBadge(val) {
   return esc(val);
 }
 
-function renderSummary(s, cgAlerts) {
+function renderSummary(s, cgAlerts, tsaWorkItems) {
   const cgCount = cgAlerts ? (cgAlerts.totalAlerts || 0) : 0;
   const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
+  const tsaActive = tsaWorkItems ? ((tsaWorkItems.summary || {}).active || 0) : 0;
   const cards = [
     ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle', 'CVEs requiring action or patches'],
     ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation', 'Build pipeline container vulnerabilities'],
+    ['TSA Active', tsaActive, tsaActive > 0 ? 'danger' : 'success', 'kanban', 'Active security and compliance work items'],
     ['Undiscovered', s.undiscovered, 'primary', 'search', 'Proactively found, no issue filed yet'],
     ['False Positive', s.falsePositive, 'secondary', 'x-circle', 'Not applicable to SkiaSharp'],
     ['Clean', s.clean, 'success', 'check-circle', 'Dependencies with no open CVEs'],
@@ -539,6 +563,74 @@ function renderChromeReleases(cr, milestone) {
   meta.textContent = `Queried ${cr.monthsQueried} months (${cr.postsReviewed} posts) • ${cr.totalCvesExtracted} total CVEs extracted • ${cr.skiaRelevantCves} Skia-relevant`;
 }
 
+function renderTsaTable(items) {
+  if (!items.length) return '<p class="text-muted small mb-0">None.</p>';
+  const rows = items.map(item => {
+    const rules = (item.ruleIds || []).join(', ');
+    const toolRule = rules ? `${item.tool || 'Unknown'} / ${rules}` : (item.tool || 'Unknown');
+    const severity = item.severity || (item.priority != null ? `Priority ${item.priority}` : '');
+    const correlation = item.correlation || {status: 'unmatched'};
+    const matches = [...(correlation.findingDependencies || []), ...(correlation.cgAlertIds || [])];
+    const correlationLabel = `${correlation.status || 'unmatched'}${matches.length ? ': ' + matches.join(', ') : ''}`;
+    const corrBadge = correlation.status === 'matched' ? 'bg-success' : 'bg-secondary';
+    return `<tr>
+      <td><a href="${esc(item.url)}" target="_blank">${esc(item.id)}</a></td>
+      <td>${esc(item.state)}</td>
+      <td>${esc(item.workItemType)}</td>
+      <td>${esc(severity)}</td>
+      <td>${esc(item.tsaCategory)}</td>
+      <td>${esc(toolRule)}</td>
+      <td>${esc(item.title)}</td>
+      <td>${esc(item.assignedTo || 'Unassigned')}</td>
+      <td>${esc(item.changedDate || '')}</td>
+      <td><span class="badge ${corrBadge}">${esc(correlationLabel)}</span></td>
+    </tr>`;
+  }).join('');
+  return `<div class="table-responsive"><table class="table table-sm cve-table">
+    <thead><tr><th>ID</th><th>State</th><th>Type</th><th>Severity / Priority</th><th>Category</th><th>Tool / Rule</th><th>Title</th><th>Owner</th><th>Changed</th><th>Correlation</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function renderTsaWorkItems(tsa) {
+  const status = tsa ? (tsa.queryStatus || 'unknown') : 'unknown';
+  const summary = (tsa && tsa.summary) || {};
+  const items = (tsa && tsa.items) || [];
+  const active = items.filter(item => item.activity === 'active');
+  const historical = items.filter(item => item.activity === 'historical');
+  const badgeColor = status !== 'success' ? 'danger' : active.length ? 'danger' : 'success';
+  document.getElementById('tsa-badge').innerHTML =
+    `<span class="badge bg-${badgeColor}">${esc(status)} · ${active.length} active</span>`;
+  if (tsa && tsa.portalSearchUrl) {
+    document.getElementById('tsa-search-link').href = tsa.portalSearchUrl;
+  }
+  if (!tsa || status !== 'success') {
+    document.getElementById('tsa-error').innerHTML =
+      `<div class="alert alert-danger">TSA query ${esc(status)}: ${esc((tsa && tsa.error) || 'No successful query evidence was loaded.')}</div>`;
+  }
+
+  const cards = [
+    ['Active', summary.active || 0, 'danger'],
+    ['Historical', summary.historical || 0, 'secondary'],
+    ['Correlated', summary.correlated || 0, 'success'],
+    ['Unmatched', summary.unmatched || 0, 'warning'],
+  ];
+  document.getElementById('tsa-summary-cards').innerHTML = cards.map(([label, count, color]) => `
+    <div class="col-6 col-md-3">
+      <div class="card text-center p-2">
+        <div class="fs-4 fw-bold text-${color}">${count}</div>
+        <div class="text-muted small">${label}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('tsa-active-items').innerHTML =
+    `<h6>Active / Actionable (${active.length})</h6>${renderTsaTable(active)}`;
+  document.getElementById('tsa-historical-count').textContent = historical.length;
+  document.getElementById('tsa-historical-items').innerHTML = renderTsaTable(historical);
+  document.getElementById('tsa-meta').textContent =
+    `${tsa ? tsa.codebaseTag : 'TSA-skiasharp.skiasharp_main'} · queried ${tsa ? tsa.queriedAt : 'unknown'} · ${summary.activeGroupsWithHistory || 0} active rule groups have historical records`;
+}
+
 function renderCgAlerts(cg) {
   if (!cg || !cg.totalAlerts) return;
   const section = document.getElementById('cg-section');
@@ -638,17 +730,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const d = DATA;
   const cgTotal = d.cgAlerts ? (d.cgAlerts.totalAlerts || 0) : 0;
   const crTotal = d.chromeReleases ? (d.chromeReleases.skiaRelevantCves || 0) : 0;
+  const tsaActive = d.tsaWorkItems ? ((d.tsaWorkItems.summary || {}).active || 0) : 0;
   const subtitleParts = [`${d.meta.date}`, `Skia m${d.meta.skiaMilestone}`, `${d.summary.totalCves} CVEs`];
   if (cgTotal > 0) subtitleParts.push(`${cgTotal} CG alerts`);
+  subtitleParts.push(`${tsaActive} active TSA items`);
   if (crTotal > 0) subtitleParts.push(`${crTotal} Chrome blog CVEs`);
   document.getElementById('header-subtitle').textContent = subtitleParts.join(' · ');
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
-  renderSummary(d.summary, d.cgAlerts);
+  renderSummary(d.summary, d.cgAlerts, d.tsaWorkItems);
   renderOverview(d.versionVerification, d.findings, d.cgAlerts);
   const container = document.getElementById('findings-container');
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);
+  renderTsaWorkItems(d.tsaWorkItems);
   if (d.cgAlerts) renderCgAlerts(d.cgAlerts);
   if (d.chromeReleases) renderChromeReleases(d.chromeReleases, d.meta.skiaMilestone);
   renderUpstream(d.meta);

@@ -2,13 +2,14 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/mono/SkiaSharp/security-audit-schema.json",
   "title": "SkiaSharp Security Audit Report",
-  "description": "Structured security audit output covering native dependencies, Skia upstream verification, and Component Governance alerts from build pipelines.",
+  "description": "Structured security audit output covering native dependencies, Skia upstream verification, Component Governance alerts, and legacy TSA Azure Boards work items.",
   "type": "object",
   "required": [
     "meta",
     "summary",
     "versionVerification",
     "findings",
+    "tsaWorkItems",
     "nextSteps"
   ],
   "additionalProperties": false,
@@ -26,7 +27,7 @@
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
         },
         "schemaVersion": {
-          "type": "string"
+          "const": "1.1"
         },
         "skiaSubmoduleCommit": {
           "type": "string"
@@ -456,6 +457,281 @@
               }
             },
             "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "tsaWorkItems": {
+      "type": "object",
+      "description": "Complete legacy TSA work-item evidence for TSA-skiasharp.skiasharp_main. Historical items are retained for deduplication and suppression context.",
+      "required": [
+        "queryStatus",
+        "queriedAt",
+        "organization",
+        "project",
+        "codebaseTag",
+        "portalSearchUrl",
+        "cacheFile",
+        "summary",
+        "groups",
+        "items"
+      ],
+      "properties": {
+        "queryStatus": {
+          "type": "string",
+          "enum": ["success", "error", "unknown"]
+        },
+        "queriedAt": {
+          "type": "string"
+        },
+        "organization": {
+          "const": "https://dev.azure.com/devdiv"
+        },
+        "project": {
+          "const": "DevDiv"
+        },
+        "codebaseTag": {
+          "const": "TSA-skiasharp.skiasharp_main"
+        },
+        "wiql": {
+          "type": ["string", "null"]
+        },
+        "portalSearchUrl": {
+          "type": "string"
+        },
+        "cacheFile": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "object",
+          "required": [
+            "total",
+            "active",
+            "historical",
+            "byState",
+            "byCategory",
+            "byTool",
+            "correlated",
+            "unmatched"
+          ],
+          "properties": {
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "active": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "historical": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "byState": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "byCategory": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "byTool": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "correlated": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "unmatched": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "withFindingMatches": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "withCgMatches": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "activeGroupsWithHistory": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "historicalOnlyGroups": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "groups": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["key", "tool", "ruleIds", "activeIds", "historicalIds"],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "ruleIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "activeIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "historicalIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "hasActiveHistory": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "state",
+              "activity",
+              "workItemType",
+              "tags",
+              "url",
+              "tool",
+              "ruleIds",
+              "tsaCategory",
+              "dedupKey",
+              "rawFields",
+              "correlation"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string"
+              },
+              "activity": {
+                "type": "string",
+                "enum": ["active", "historical"]
+              },
+              "workItemType": {
+                "type": "string"
+              },
+              "severity": {
+                "type": ["string", "null"]
+              },
+              "priority": {
+                "type": ["integer", "null"]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "areaPath": {
+                "type": ["string", "null"]
+              },
+              "iterationPath": {
+                "type": ["string", "null"]
+              },
+              "assignedTo": {
+                "type": ["string", "null"]
+              },
+              "createdDate": {
+                "type": ["string", "null"]
+              },
+              "changedDate": {
+                "type": ["string", "null"]
+              },
+              "url": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              },
+              "ruleIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "tsaCategory": {
+                "type": "string",
+                "enum": ["Security", "Compliance", "Tooling"]
+              },
+              "dedupKey": {
+                "type": "string"
+              },
+              "rawFields": {
+                "type": "object"
+              },
+              "correlation": {
+                "type": "object",
+                "required": ["status", "findingDependencies", "cgAlertIds", "methods"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["matched", "unmatched"]
+                  },
+                  "findingDependencies": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "cgAlertIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "methods": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
           }
         }
       },

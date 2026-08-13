@@ -35,6 +35,13 @@
         "The chromeReleases.structuredCves array contains CVE objects with cveId, severity, component, bugId, and milestone fields",
         "The chromeReleases.skiaRelevantCves count is greater than 0 (Skia-relevant CVEs were found)",
         "The audit cross-references Chrome Releases CVEs with NVD results, using the source field ('chrome_releases', 'nvd', or 'both') on CVE objects in findings"
+        ,"The audit runs query-tsa-work-items.py against DevDiv using the narrow TSA-skiasharp.skiasharp_main tag and caches the complete result"
+        ,"The JSON report contains a required tsaWorkItems section with query status, timestamp, active/historical counts, groups, and complete item records"
+        ,"The audit retains resolved TSA work items as historical evidence for deduplication and suppression rather than reporting only active items"
+        ,"Every TSA item includes raw fields, a DevDiv work-item URL, tool/rule/category derivation, and an explicit matched or unmatched correlation"
+        ,"The audit uses correlate-tsa-work-items.py to correlate TSA items with findings and CG alerts where possible without discarding unmatched items"
+        ,"The HTML and Markdown reports render TSA query status, active/actionable items, historical items, and a TSA-skiasharp.skiasharp_main search link"
+        ,"A TSA query error remains queryStatus error/unknown and causes report validation to fail rather than fabricating an empty success"
       ]
     },
     {
@@ -51,6 +58,7 @@
         "The response includes CVSS severity scores for identified CVEs",
         "The response identifies the minimum upstream Skia milestone needed to fix the most critical CVE",
         "The response verifies at least one third-party dependency version from actual DEPS/header data rather than only trusting cgmanifest.json"
+        ,"The response includes active and historical TSA-skiasharp.skiasharp_main Azure Boards evidence and identifies unmatched active TSA actions"
       ]
     },
     {
@@ -69,6 +77,7 @@
         "The report includes the actual mono/skia fork commit AND the upstream google/skia commit (not just one of them)",
         "The report uses the verified milestone (not cgmanifest.json) when classifying which Skia CVEs are potentially affected vs already fixed",
         "The report ends with prioritized, actionable next steps"
+        ,"The report loads and correlates the complete TSA-skiasharp.skiasharp_main cache, including resolved history"
       ]
     },
     {
