@@ -250,6 +250,8 @@ string ReduceArch(string arch)
             return "arm64";
         case "riscv64":
             return "riscv64";
+        case "ppc64le":
+            return "ppc64le";
         case "loong64":
         case "loongarch64":
             return "loongarch64";

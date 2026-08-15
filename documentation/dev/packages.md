@@ -83,7 +83,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 |---------|-------------|
 | **SkiaSharp.NativeAssets.Win32**<br/>**HarfBuzzSharp.NativeAssets.Win32** | Windows (x64, x86, arm64). Auto-included. |
 | **SkiaSharp.NativeAssets.macOS**<br/>**HarfBuzzSharp.NativeAssets.macOS** | macOS universal binary (Intel + Apple Silicon). Auto-included. |
-| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux (x64, x86, arm, arm64, riscv64, loongarch64). Both glibc and musl (Alpine) variants. **Must add manually.** Requires fontconfig (`libfontconfig.so.1`) for system font enumeration. |
+| **SkiaSharp.NativeAssets.Linux**<br/>**HarfBuzzSharp.NativeAssets.Linux** | Linux (x64, x86, arm, arm64, riscv64, loongarch64, ppc64le). Both glibc and musl (Alpine) variants. **Must add manually.** Requires fontconfig (`libfontconfig.so.1`) for system font enumeration. |
 | **SkiaSharp.NativeAssets.Linux.NoDependencies** | Linux (same architectures as above, glibc + musl). **SkiaSharp only. Must add manually.** No fontconfig, no third-party deps — only requires libc/libm/libpthread/libdl. **Designed for minimal containers.** Fonts must be loaded explicitly. |
 | **SkiaSharp.NativeAssets.NanoServer** | Windows Nano Server containers (x64 only). **SkiaSharp only. Must add manually.** |
 | **SkiaSharp.NativeAssets.WinUI** | ANGLE rendering surface for WinUI 3 apps (x64, x86, arm64). **SkiaSharp only.** Contains `SkiaSharp.Views.WinUI.Native.dll`, `libEGL.dll`, and `libGLESv2.dll` for hardware-accelerated OpenGL ES — this is **not** a Skia binary. Auto-included by SkiaSharp.Views.WinUI. |
