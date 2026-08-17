@@ -206,7 +206,7 @@ Install the matching Darc CLI with `eng/common/darc-init.ps1` or
 ```bash
 export SKIASHARP_AZDO_PAT='...' # Build Read + Packaging Read for dnceng/internal
 python3 scripts/infra/darc/download-darc-packages.py \
-  --channel 'SkiaSharp Internal Testing' \
+  --channel 'General Testing Internal' \
   --expected-commit '{full-40-character-sha}' \
   --expected-branch 'refs/heads/release/{version}' \
   --expected-package 'SkiaSharp={exact-version}' \
@@ -229,6 +229,11 @@ from an internal Azure DevOps feed additionally requires an Azure DevOps token,
 passed by environment-variable name so it is not persisted in evidence.
 Like Darc itself, the token is passed to the Darc child process as an argument;
 run this only on a trusted single-tenant machine or build agent.
+
+`General Testing Internal` is the existing non-production Maestro channel for
+this workflow. Its NuGet assets are stored in the private
+`general-testing-internal` Azure DevOps feed; SkiaSharp does not need a
+repository-specific feed for release testing.
 
 Adding a default-channel mapping or running `darc add-build-to-channel` is a
 producer/promotion operation. `get-latest-build`, `get-build`, and
