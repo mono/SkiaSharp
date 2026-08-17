@@ -36,6 +36,9 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
+  - name: enablePublishing
+    type: boolean
+    default: false
 
 stages:
 
@@ -65,6 +68,7 @@ stages:
     - template: /scripts/azure-templates-stages-signing.yml@self
       parameters:
         buildAgent: ${{ parameters.buildAgentWindows }}
+        enablePublishing: ${{ parameters.enablePublishing }}
         ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
          useRealSigning: true
         ${{ else }}:

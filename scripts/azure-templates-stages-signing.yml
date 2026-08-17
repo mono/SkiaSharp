@@ -4,6 +4,9 @@ parameters:
   - name: useRealSigning
     type: boolean
     default: false
+  - name: enablePublishing
+    type: boolean
+    default: false
 
 stages:
   - stage: signing
@@ -134,3 +137,15 @@ stages:
                 Get-ChildItem $source -Filter '*-*.nupkg' -File |
                   Copy-Item -Destination $destination
               displayName: Create signed preview package view
+
+            - ${{ if eq(parameters.enablePublishing, true) }}:
+              - powershell: >
+                  eng\common\build.ps1
+                  -configuration Release
+                  -publish
+                  -ci
+                  /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                  /p:DotNetPublishUsingPipelines=true
+                displayName: Generate Arcade V3 asset manifest
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
