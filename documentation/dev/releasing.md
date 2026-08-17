@@ -191,9 +191,9 @@ release-testing unless the user explicitly overrides the test wait.
 The internal package pipeline generates an Arcade V3 asset manifest from the
 signed NuGets, registers that manifest in the Build Asset Registry (BAR), and
 then calls `darc add-build-to-channel --default-channels`. The branch must have
-an enabled internal default-channel mapping in the `maestro-configuration`
-repository. The pipeline deliberately requires that mapping; it does not fall
-back to a public channel or an ad-hoc feed.
+an enabled default-channel mapping in the `maestro-configuration` repository.
+The pipeline deliberately requires that mapping; it does not fall back to an
+ad-hoc feed or a different channel.
 
 A channel is BAR metadata, not package storage. Channel promotion publishes the
 manifest's NuGet assets to the Azure DevOps feeds configured for that channel
@@ -204,14 +204,12 @@ Install the matching Darc CLI with `eng/common/darc-init.ps1` or
 `eng/common/darc-init.sh`, then resolve and download a pinned build:
 
 ```bash
-export SKIASHARP_AZDO_PAT='...' # Build Read + Packaging Read for dnceng/internal
 python3 scripts/infra/darc/download-darc-packages.py \
-  --channel 'General Testing Internal' \
+  --channel '{configured-channel}' \
   --expected-commit '{full-40-character-sha}' \
   --expected-branch 'refs/heads/release/{version}' \
   --expected-package 'SkiaSharp={exact-version}' \
   --expected-package 'HarfBuzzSharp={exact-version}' \
-  --azdev-pat-env SKIASHARP_AZDO_PAT \
   --output-dir output/darc/{bar-build}
 ```
 
@@ -224,64 +222,28 @@ identities, verifies every NuGet signature, and writes
 `download.packageSource` as the local NuGet source.
 
 BAR access uses the caller's Azure CLI or interactive Maestro login by default;
-CI should use the `Darc: Maestro Production` service connection. Downloading
-from an internal Azure DevOps feed additionally requires an Azure DevOps token,
-passed by environment-variable name so it is not persisted in evidence.
-Like Darc itself, the token is passed to the Darc child process as an argument;
-run this only on a trusted single-tenant machine or build agent.
+CI should use the `Darc: Maestro Production` service connection. Public Azure
+Artifacts feeds are anonymously readable. If a private channel is used,
+downloading additionally requires an Azure DevOps token supplied through
+`--azdev-pat-env`; the environment-variable name, rather than the token, is
+persisted in evidence.
 
-`General Testing Internal` is the existing non-production Maestro channel for
-this workflow. Its NuGet assets are stored in the private
-`general-testing-internal` Azure DevOps feed; SkiaSharp does not need a
-repository-specific feed for release testing.
+The initial publishing validation uses the existing public `General Testing`
+channel. Its NuGet assets are stored in the anonymously readable
+`general-testing` feed:
 
-The required cross-repository configuration is a separate
-`maestro-configuration` pull request against its `production` branch. Create
+```text
+https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json
+```
+
+Create a temporary cross-repository pull request against the `production`
+branch of `maestro-configuration`. Add
 `configuration/default-channels/mono-skiasharp.yml` with:
 
 ```yaml
 - Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: main
-  Channel: General Testing Internal
-  Enabled: true
-
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: release/3.119.x
-  Channel: General Testing Internal
-  Enabled: true
-
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: release/4.148.x
-  Channel: General Testing Internal
-  Enabled: true
-
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: release/4.150.x
-  Channel: General Testing Internal
-  Enabled: true
-
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: release/4.151.x
-  Channel: General Testing Internal
-  Enabled: true
-
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: release/4.152.0-preview.1
-  Channel: General Testing Internal
-  Enabled: true
-```
-
-Maestro default-channel mappings are exact; do not use a wildcard for release
-branches. Remove obsolete release entries as maintenance lines close, and add
-the next exact release branch when it is created.
-
-Before merging that configuration, the SkiaSharp publishing branch can be
-validated by temporarily adding this entry to the same file:
-
-```yaml
-- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
-  Branch: mattleibow-darc-release-packages
-  Channel: General Testing Internal
+  Branch: dev/dnceng-pipelines
+  Channel: General Testing
   Enabled: true
 ```
 
@@ -289,11 +251,20 @@ Queue package pipeline 1642 for that branch with both `forceRealSigning=true`
 and `runApiScan=true`. Remove the temporary entry after confirming the BAR build,
 channel assignment, feed location, and downloaded-package evidence.
 
+The permanent design is one public Maestro channel named `SkiaSharp`, backed by
+one public Azure Artifacts feed named `skiasharp` for all package versions and
+release lines. Creating that channel and its Arcade target configuration is a
+separate dnceng-owned infrastructure change. After it exists, add exact
+default-channel mappings for `main` and each maintained release branch to the
+`SkiaSharp` channel. Maestro mappings do not support release-branch wildcards;
+remove obsolete entries as maintenance lines close and add each new release
+branch when it is created. Do not retain `General Testing` as a production
+default channel.
+
 Pipeline 1642 must be authorized to use the `Darc: Maestro Production` service
 connection and the `Publish-Build-Assets` and
-`AzureDevOps-Artifact-Feeds-Pats` variable groups. A local or downstream
-consumer needs Build Read and Packaging Read access to `dnceng/internal`;
-credentials must not be committed to either repository.
+`AzureDevOps-Artifact-Feeds-Pats` variable groups. Credentials must not be
+committed to either repository.
 
 Adding a default-channel mapping or running `darc add-build-to-channel` is a
 producer/promotion operation. `get-latest-build`, `get-build`, and
