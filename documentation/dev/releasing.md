@@ -235,6 +235,66 @@ this workflow. Its NuGet assets are stored in the private
 `general-testing-internal` Azure DevOps feed; SkiaSharp does not need a
 repository-specific feed for release testing.
 
+The required cross-repository configuration is a separate
+`maestro-configuration` pull request against its `production` branch. Create
+`configuration/default-channels/mono-skiasharp.yml` with:
+
+```yaml
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: main
+  Channel: General Testing Internal
+  Enabled: true
+
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: release/3.119.x
+  Channel: General Testing Internal
+  Enabled: true
+
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: release/4.148.x
+  Channel: General Testing Internal
+  Enabled: true
+
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: release/4.150.x
+  Channel: General Testing Internal
+  Enabled: true
+
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: release/4.151.x
+  Channel: General Testing Internal
+  Enabled: true
+
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: release/4.152.0-preview.1
+  Channel: General Testing Internal
+  Enabled: true
+```
+
+Maestro default-channel mappings are exact; do not use a wildcard for release
+branches. Remove obsolete release entries as maintenance lines close, and add
+the next exact release branch when it is created.
+
+Before merging that configuration, the SkiaSharp publishing branch can be
+validated by temporarily adding this entry to the same file:
+
+```yaml
+- Repository: https://dev.azure.com/dnceng/internal/_git/dotnet-SkiaSharp
+  Branch: mattleibow-darc-release-packages
+  Channel: General Testing Internal
+  Enabled: true
+```
+
+Queue package pipeline 1642 for that branch with both `forceRealSigning=true`
+and `runApiScan=true`. Remove the temporary entry after confirming the BAR build,
+channel assignment, feed location, and downloaded-package evidence.
+
+Pipeline 1642 must be authorized to use the `Darc: Maestro Production` service
+connection and the `Publish-Build-Assets` and
+`AzureDevOps-Artifact-Feeds-Pats` variable groups. A local or downstream
+consumer needs Build Read and Packaging Read access to `dnceng/internal`;
+credentials must not be committed to either repository.
+
 Adding a default-channel mapping or running `darc add-build-to-channel` is a
 producer/promotion operation. `get-latest-build`, `get-build`, and
 `gather-drop` are consumer operations; they never promote a build.
