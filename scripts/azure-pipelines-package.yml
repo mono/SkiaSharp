@@ -107,7 +107,7 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
-      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual'), startsWith(variables['Build.SourceBranch'], 'refs/heads/'), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
         networkIsolationMode: Audit
       ${{ else }}:
         networkIsolationMode: Enforce
