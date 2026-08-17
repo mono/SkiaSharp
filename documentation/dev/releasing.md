@@ -181,10 +181,58 @@ python3 .agents/skills/release-status/scripts/pipeline-status.py release/{versio
 
 The JSON report links downstream runs through `triggerInfo.pipelineId`, provides
 immutable source/run metadata, and derives exact test/public package versions.
-Packages appear on the internal feed after the selected `SkiaSharp` (ID 10789)
-run completes. Wait for the selected `SkiaSharp-Tests` run and both exact
-packages before beginning release-testing unless the user explicitly overrides
-the test wait.
+The internal package pipeline (ID 1642) produces the signed packages and BAR
+manifest; the connected test pipeline is ID 1630. Wait for the selected tests
+run and retrieve both exact packages with the BAR flow below before beginning
+release-testing unless the user explicitly overrides the test wait.
+
+#### BAR channels and signed-package retrieval
+
+The internal package pipeline generates an Arcade V3 asset manifest from the
+signed NuGets, registers that manifest in the Build Asset Registry (BAR), and
+then calls `darc add-build-to-channel --default-channels`. The branch must have
+an enabled internal default-channel mapping in the `maestro-configuration`
+repository. The pipeline deliberately requires that mapping; it does not fall
+back to a public channel or an ad-hoc feed.
+
+A channel is BAR metadata, not package storage. Channel promotion publishes the
+manifest's NuGet assets to the Azure DevOps feeds configured for that channel
+and records those feed URLs as BAR asset locations. `darc gather-drop` reads the
+BAR metadata and downloads each package from a registered location.
+
+Install the matching Darc CLI with `eng/common/darc-init.ps1` or
+`eng/common/darc-init.sh`, then resolve and download a pinned build:
+
+```bash
+export SKIASHARP_AZDO_PAT='...' # Build Read + Packaging Read for dnceng/internal
+python3 scripts/infra/darc/download-darc-packages.py \
+  --channel 'SkiaSharp Internal Testing' \
+  --expected-commit '{full-40-character-sha}' \
+  --expected-branch 'refs/heads/release/{version}' \
+  --expected-package 'SkiaSharp={exact-version}' \
+  --expected-package 'HarfBuzzSharp={exact-version}' \
+  --azdev-pat-env SKIASHARP_AZDO_PAT \
+  --output-dir output/darc/{bar-build}
+```
+
+For a known BAR build, replace `--channel` with `--build-id {id}` and add
+`--expected-channel '{channel}'`. The script resolves exactly one build, checks
+the repository, full commit, branch, and channel, invokes `darc gather-drop`
+with registered locations only, rejects missing or duplicate package
+identities, verifies every NuGet signature, and writes
+`darc-provenance.json` with SHA-512 hashes. Use the reported
+`download.packageSource` as the local NuGet source.
+
+BAR access uses the caller's Azure CLI or interactive Maestro login by default;
+CI should use the `Darc: Maestro Production` service connection. Downloading
+from an internal Azure DevOps feed additionally requires an Azure DevOps token,
+passed by environment-variable name so it is not persisted in evidence.
+Like Darc itself, the token is passed to the Darc child process as an argument;
+run this only on a trusted single-tenant machine or build agent.
+
+Adding a default-channel mapping or running `darc add-build-to-channel` is a
+producer/promotion operation. `get-latest-build`, `get-build`, and
+`gather-drop` are consumer operations; they never promote a build.
 
 ### Stage 3: Testing (release-testing skill)
 

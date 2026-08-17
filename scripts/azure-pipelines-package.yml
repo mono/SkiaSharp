@@ -111,6 +111,7 @@ extends:
           buildPipelineType: 'package'
           enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
           forceRealSigning: ${{ parameters.forceRealSigning }}
+          enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
@@ -119,3 +120,22 @@ extends:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
+      - ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+        - stage: publish_build_assets
+          displayName: Register signed packages in BAR
+          dependsOn:
+            - signing
+            - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+              - api_scan
+          jobs:
+            - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+              parameters:
+                is1ESPipeline: true
+                publishingVersion: 3
+        - template: /eng/common/templates-official/post-build/post-build.yml@self
+          parameters:
+            publishingInfraVersion: 3
+            is1ESPipeline: true
+            requireDefaultChannels: true
+            validateDependsOn:
+              - publish_build_assets
