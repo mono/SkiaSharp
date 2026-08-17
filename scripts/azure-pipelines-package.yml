@@ -130,12 +130,10 @@ extends:
           jobs:
             - template: /eng/common/templates-official/job/publish-build-assets.yml@self
               parameters:
-                is1ESPipeline: true
                 publishingVersion: 3
         - template: /eng/common/templates-official/post-build/post-build.yml@self
           parameters:
             publishingInfraVersion: 3
-            is1ESPipeline: true
             requireDefaultChannels: true
             validateDependsOn:
               - publish_build_assets

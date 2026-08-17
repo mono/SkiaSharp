@@ -188,6 +188,7 @@ class DownloadDarcPackagesTests(unittest.TestCase):
         self.assertIn("enablePublishing: ${{ or(", package_pipeline)
         self.assertIn("publish_build_assets", package_pipeline)
         self.assertIn("requireDefaultChannels: true", package_pipeline)
+        self.assertNotIn("is1ESPipeline: true", package_pipeline)
         self.assertIn("-publish", signing)
         self.assertIn("<PublishingVersion>3</PublishingVersion>", publishing)
         self.assertIn(
