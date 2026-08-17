@@ -70,7 +70,10 @@ Array of objects, one per dependency:
 
 ## `findings` — Individual Dependency Findings
 
-Array of finding objects, sorted by priority then severity.
+Array of finding objects, sorted by priority then severity. Every finding must correspond to an
+audited product dependency named in `versionVerification`. Component Governance alerts, TSA work
+items, and release-schedule actions are represented by their dedicated top-level sections and
+`nextSteps`; do not duplicate them as synthetic dependency findings.
 
 > 🛑 **ONE finding per dependency.** Every dependency (e.g., "skia", "libpng", "freetype")
 > must appear as exactly ONE object in this array. All CVEs for that dependency — regardless

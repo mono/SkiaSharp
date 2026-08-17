@@ -182,7 +182,7 @@ function renderSummary(s, cgAlerts, tsaWorkItems) {
   const cgHigh = cgAlerts ? ((cgAlerts.bySeverity || {}).High || 0) + ((cgAlerts.bySeverity || {}).Critical || 0) : 0;
   const tsaActive = tsaWorkItems ? ((tsaWorkItems.summary || {}).active || 0) : 0;
   const cards = [
-    ['Needs Attention', s.needsAttention + cgHigh, 'danger', 'exclamation-triangle', 'CVEs requiring action or patches'],
+    ['Needs Attention', s.needsAttention, 'danger', 'exclamation-triangle', 'Dependency findings requiring action'],
     ['CG Alerts', cgCount, cgHigh > 0 ? 'danger' : 'warning', 'shield-exclamation', 'Build pipeline container vulnerabilities'],
     ['TSA Active', tsaActive, tsaActive > 0 ? 'danger' : 'success', 'kanban', 'Active security and compliance work items'],
     ['Undiscovered', s.undiscovered, 'primary', 'search', 'Proactively found, no issue filed yet'],
@@ -201,7 +201,7 @@ function renderSummary(s, cgAlerts, tsaWorkItems) {
     </div>`).join('');
 }
 
-function renderOverview(vers, findings, cgAlerts) {
+function renderOverview(vers, findings) {
   const tbody = document.querySelector('#overview-table tbody');
   const findingMap = {};
   (findings || []).forEach((f, i) => { findingMap[f.dependency] = { ...f, idx: i }; });
@@ -220,42 +220,8 @@ function renderOverview(vers, findings, cgAlerts) {
         if (!maxSev || (sevOrd[norm] ?? 9) < (sevOrd[maxSev] ?? 9)) maxSev = norm;
       });
     }
-    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, isCg: false, cgSeverity: maxSev };
+    return { ...v, f, cveTotal, findingIdx: f ? f.idx : -1, cgSeverity: maxSev };
   });
-
-  // Add CG components as rows (grouped by component)
-  if (cgAlerts && cgAlerts.alerts) {
-    const byComp = {};
-    cgAlerts.alerts.forEach(a => {
-      if (!byComp[a.component]) byComp[a.component] = { alerts: [], severity: 'Low' };
-      byComp[a.component].alerts.push(a);
-      const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-      if ((sevOrder[a.severity] || 9) < (sevOrder[byComp[a.component].severity] || 9)) {
-        byComp[a.component].severity = a.severity;
-      }
-    });
-    Object.entries(byComp).forEach(([comp, data]) => {
-      // Split "minimatch 3.1.2" or "Debian:12:binutils 2.39-r2" into name + version
-      const verMatch = comp.match(/^(.+?)\s+([\d][\w.\-+:~]*)$/);
-      const compName = verMatch ? verMatch[1] : comp;
-      const compVersion = verMatch ? verMatch[2] : '';
-      // Map CG severity to finding status — all CVEs need attention, severity determines urgency
-      const statusMap = { Critical: 'needs_attention', High: 'needs_attention', Medium: 'cg_tracked', Low: 'cg_tracked' };
-      enriched.push({
-        name: compName,
-        source: 'CG (Build Pipeline)',
-        verifiedVersion: compVersion,
-        cgmanifestVersion: '',
-        latestVersion: '',
-        match: true,
-        f: { status: statusMap[data.severity] || 'undiscovered' },
-        cveTotal: data.alerts.length,
-        findingIdx: -1,
-        isCg: true,
-        cgSeverity: data.severity
-      });
-    });
-  }
 
   // Split into groups: has CVEs vs no CVEs, sorted by severity then name
   const sevOrder = { Critical: 0, High: 1, Medium: 2, Low: 3 };
@@ -272,9 +238,7 @@ function renderOverview(vers, findings, cgAlerts) {
     if (!v.match) mismatches++;
     const rowCls = v.match ? 'overview-row' : 'overview-row overview-mismatch';
     let onclick = '';
-    if (v.isCg) {
-      onclick = `onclick="document.getElementById('cg-section').scrollIntoView({behavior:'smooth',block:'start'})"`;
-    } else if (v.findingIdx >= 0) {
+    if (v.findingIdx >= 0) {
       onclick = `onclick="document.getElementById('finding-${v.findingIdx}').scrollIntoView({behavior:'smooth',block:'start'}); var col=document.getElementById('finding-${v.findingIdx}'); if(!col.classList.contains('show')){col.previousElementSibling.click();}"`;
     }
 
@@ -319,16 +283,13 @@ function renderOverview(vers, findings, cgAlerts) {
   html += noCves.map(buildRow).join('');
 
   tbody.innerHTML = html;
-  const nonCgEntries = enriched.filter(v => !v.isCg);
-  const total = nonCgEntries.length;
-  const cgMissing = nonCgEntries.filter(v => !v.cgmanifestVersion).length;
-  const cgTotal = enriched.filter(v => v.isCg).length;
+  const total = enriched.length;
+  const cgMissing = enriched.filter(v => !v.cgmanifestVersion).length;
   let statusText = mismatches === 0 && cgMissing === 0
     ? `✅ All ${total} dependencies verified`
     : `${total} deps`;
   if (mismatches > 0) statusText += ` · ❌ ${mismatches} version mismatch${mismatches > 1 ? 'es' : ''}`;
   if (cgMissing > 0) statusText += ` · ⚠️ ${cgMissing} missing from cgmanifest`;
-  if (cgTotal > 0) statusText += ` · 🛡️ ${cgTotal} CG components`;
   document.getElementById('overview-status').textContent = statusText;
 }
 
@@ -739,7 +700,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('header-badges').innerHTML =
     `<span class="badge bg-${d.summary.highestSeverity === 'CRITICAL' ? 'danger' : d.summary.highestSeverity === 'HIGH' ? 'warning' : 'info'}">${d.summary.highestSeverity}</span>`;
   renderSummary(d.summary, d.cgAlerts, d.tsaWorkItems);
-  renderOverview(d.versionVerification, d.findings, d.cgAlerts);
+  renderOverview(d.versionVerification, d.findings);
   const container = document.getElementById('findings-container');
   container.innerHTML = d.findings.map((f, i) => renderFinding(f, i)).join('');
   renderNextSteps(d.nextSteps);

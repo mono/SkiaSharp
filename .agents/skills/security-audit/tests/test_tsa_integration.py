@@ -138,6 +138,30 @@ class TsaIntegrationTests(unittest.TestCase):
             self.assertNotIn("</ScRiPt><script>alert(1)</script>", content)
             self.assertIn("\\u003c/ScRiPt\\u003e", content)
 
+    def test_operational_sources_cannot_be_duplicated_as_findings(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            report = json.loads(
+                (FIXTURES / "security-audit-report.json").read_text(encoding="utf-8")
+            )
+            report["findings"].append({
+                "dependency": "tsa-compliance",
+                "status": "needs_attention",
+                "cves": [],
+                "action": "Resolve active TSA work items.",
+            })
+            report["summary"]["needsAttention"] = 1
+            path = Path(temp_dir) / "duplicate-report.json"
+            path.write_text(json.dumps(report), encoding="utf-8")
+
+            result = self.run_script("validate-security-audit.py", path, expected=1)
+            self.assertIn("not present in versionVerification", result.stdout)
+            self.assertIn("dedicated sections and nextSteps", result.stdout)
+
+    def test_viewer_keeps_cg_out_of_dependency_overview(self):
+        viewer = (SCRIPTS / "viewer.html").read_text(encoding="utf-8")
+        self.assertNotIn("source: 'CG (Build Pipeline)'", viewer)
+        self.assertIn('id="cg-section"', viewer)
+
 
 if __name__ == "__main__":
     unittest.main()

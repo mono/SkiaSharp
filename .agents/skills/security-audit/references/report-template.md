@@ -40,6 +40,10 @@ codebase-tag search link and individual DevDiv work-item links.
 
 ## Detailed Findings
 
+Only include audited product dependencies from `findings`. Component Governance and TSA are
+rendered once in their dedicated sections; their actions may also appear in `nextSteps`, but must
+not be repeated as synthetic dependency findings.
+
 Use **separate tables per item** to avoid terminal wrapping issues.
 All dependencies — Skia core and third-party — are listed together, sorted by priority:
 

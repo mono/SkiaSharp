@@ -233,6 +233,21 @@ if dupes:
         "finding's cves[] array. Use each CVE's 'assessment' field to distinguish status."
     )
 
+# Findings are for audited product dependencies only. CG and TSA have complete dedicated
+# sections; operational actions belong in nextSteps rather than duplicate finding cards.
+verified_dependencies = {v.get("name") for v in versions if v.get("name")}
+non_dependency_findings = sorted(
+    dependency for dependency in set(deps)
+    if dependency and dependency not in verified_dependencies
+)
+if non_dependency_findings:
+    errors.append(
+        "Findings not present in versionVerification: "
+        f"{non_dependency_findings}. findings[] is only for audited product dependencies; "
+        "put Component Governance, TSA, and release-schedule actions in their dedicated "
+        "sections and nextSteps instead of duplicating them as findings."
+    )
+
 # 6. Every finding with status != clean/false_positive should have CVEs or action
 for f in findings:
     if f.get("status") in ("needs_attention", "undiscovered", "in_progress"):
