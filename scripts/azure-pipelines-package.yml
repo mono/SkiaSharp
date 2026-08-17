@@ -83,6 +83,10 @@ parameters:
     displayName: 'Run API Scan'
     type: boolean
     default: false
+  - name: auditNetworkIsolation
+    displayName: 'Audit network isolation for a manual feature-branch diagnostic run'
+    type: boolean
+    default: false
   - name: forceRealSigning
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
@@ -103,6 +107,10 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
+      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+        networkIsolationMode: Audit
+      ${{ else }}:
+        networkIsolationMode: Enforce
       networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     customBuildTags:
       - ES365AIMigrationTooling
