@@ -43,7 +43,7 @@ stages:
     parameters:
       buildAgentHost: ${{ parameters.buildAgentHost }}
 
-  - ${{ if in(parameters.buildPipelineType, 'native', 'complete') }}:
+  - ${{ if in(parameters.buildPipelineType, 'native', 'native-package', 'complete') }}:
     - template: /scripts/azure-templates-stages-native.yml@self
       parameters:
         buildAgentHost: ${{ parameters.buildAgentHost }}
@@ -53,7 +53,7 @@ stages:
         use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - ${{ if in(parameters.buildPipelineType, 'package', 'complete') }}:
+  - ${{ if in(parameters.buildPipelineType, 'package', 'native-package', 'complete') }}:
     - template: /scripts/azure-templates-stages-package.yml@self
       parameters:
         isSplitPipeline: ${{ eq(parameters.buildPipelineType, 'package') }}
@@ -61,7 +61,7 @@ stages:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - ${{ if and(in(parameters.buildPipelineType, 'package', 'complete'), eq(parameters.enableSigning, 'true')) }}:
+  - ${{ if and(in(parameters.buildPipelineType, 'package', 'native-package', 'complete'), eq(parameters.enableSigning, 'true')) }}:
     - template: /scripts/azure-templates-stages-signing.yml@self
       parameters:
         buildAgent: ${{ parameters.buildAgentWindows }}

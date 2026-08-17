@@ -1,26 +1,8 @@
-trigger:
-  branches:
-    include:
-      - main
-      - develop
-      - release/*
-  paths:
-    exclude:
-      - .devcontainer/**
-      - .github/**
-      - .vscode/**
-      - documentation/docfx/releases/**
-      - README.md
+# Definition 1641 is retained for manual native diagnostics. Definition 1642
+# owns the automatic Native + Package build and downstream Tests trigger.
+trigger: none
 
 pr: none
-
-schedules:
-  - cron: "0 0 * * *"
-    displayName: Daily midnight build for main
-    branches:
-      include:
-        - main
-    always: true
 
 parameters:
   - name: buildAgentHost
