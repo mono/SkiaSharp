@@ -315,10 +315,17 @@ foreach ($dockerfile in $nativeDockerfiles) {
     $contents = Get-Content (Join-Path $repoRoot $dockerfile) -Raw
     $dockerSdk = [regex]::Match(
         $contents,
-        '(?m)^ARG DOTNET_SDK_VERSION=(?<version>\S+)$').Groups['version'].Value
+        '(?m)^ARG DOTNET_SDK_VERSION=(?<version>[^\r\n]+)\r?$').Groups['version'].Value.Trim()
     if ($dockerSdk -cne $globalJson.sdk.version) {
         throw "$dockerfile must use the repository .NET SDK version."
     }
+}
+
+$crlfDockerSdk = [regex]::Match(
+    "FROM test`r`nARG DOTNET_SDK_VERSION=$($globalJson.sdk.version)`r`n",
+    '(?m)^ARG DOTNET_SDK_VERSION=(?<version>[^\r\n]+)\r?$').Groups['version'].Value.Trim()
+if ($crlfDockerSdk -cne $globalJson.sdk.version) {
+    throw 'Native Docker SDK validation must support Windows CRLF checkouts.'
 }
 
 $nativeWindowsStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-native-windows.yml') -Raw
