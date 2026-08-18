@@ -101,7 +101,6 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 | Feed | URL | Purpose |
 |------|-----|---------|
 | Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
-| General Testing | `https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json` | Temporary onboarding target for manually promoted BARs |
 | CI helpers | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Public build helper packages (`_*` prefixed packages) used by local and CI builds; outside Arcade publishing |
 | Stable | NuGet.org | Public releases |
 
@@ -116,15 +115,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 |----------|---------|
 | [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, signs, and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
 | [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
-| Future NuGet.org Publish | Planned protected entry point that gathers one exact BAR build and publishes it after human approval. |
-
-> **Migration status:** The combined Build, signing, API Scan, BAR registration,
-> validation, and downstream Tests flow is implemented. The existing
-> `release-status`, `release-testing`, and `release-publish` automation still
-> expects the legacy three-run chain and `-stable.{build}` test packages. It must
-> be migrated to the combined Build + Tests topology and exact `X.Y.Z` BAR
-> packages before it is used for an exact stable release. The protected
-> NuGet.org publisher shown below is the target design, not a deployed pipeline.
+| NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
 
 ---
 
@@ -188,8 +179,8 @@ flowchart TB
 
 ### Stage 2: Status Tracking (release-status skill)
 
-After the release automation migration described above, query the connected
-Build + Tests chain for the exact release commit:
+After the branch is pushed, query the connected Build + Tests chain for the
+exact release commit:
 
 ```bash
 python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
@@ -207,9 +198,8 @@ The Build pipeline generates an Arcade V3 asset manifest from the signed
 NuGets, registers that manifest in the Build Asset Registry (BAR), and validates
 its packages and signatures. It does not promote a channel automatically.
 After the connected Tests run succeeds, the release manager selects one exact
-BAR and promotes it manually to `SkiaSharp` (or `General Testing` while
-onboarding). The channel publishes the package bytes to its configured Azure
-Artifacts feed and records those locations in BAR.
+BAR and promotes it to `SkiaSharp`. The channel publishes the package bytes to
+the public `skiasharp` Azure Artifacts feed and records those locations in BAR.
 
 A channel is BAR metadata, not package storage. Channel promotion publishes the
 manifest's NuGet assets to the Azure DevOps feeds configured for that channel
@@ -241,13 +231,12 @@ Select and record one exact BAR build ID, confirm the expected package versions
 in the gathered manifest, and use
 `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
 
-The permanent configuration maps supported integration and release branches to
-the public `SkiaSharp` channel. Package versions distinguish release lines; the
-channel and feed do not. Before those mappings exist, promote the tested BAR
-explicitly with:
+All supported integration and release branches map to the public `SkiaSharp`
+channel. Package versions distinguish release lines; the channel and feed do
+not. Promote the tested BAR explicitly with:
 
 ```bash
-darc add-build-to-channel --id {bar-build} --channel "General Testing"
+darc add-build-to-channel --id {bar-build} --channel "SkiaSharp"
 ```
 
 ### Stage 3: Testing (release-testing skill)
