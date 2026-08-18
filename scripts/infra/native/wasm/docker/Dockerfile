@@ -15,7 +15,7 @@ RUN apt-get update \
 ARG DOTNET_SDK_VERSION=10.0.108
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -L -o dotnet-install.sh \
-    && bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
+    && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
     && ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \
     && rm dotnet-install.sh \
     && dotnet help \
