@@ -62,11 +62,9 @@ stages:
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
               displayName: Prepare the nugets artifact for publishing
             - pwsh: |
-                # Create nuget_preview with only prerelease packages (for easier PR testing)
-                New-Item -Path '.\output\nugets-preview\' -ItemType Directory -Force | Out-Null
-                Get-ChildItem -Path '.\output\nugets\' -Filter '*-*.nupkg' | Copy-Item -Destination '.\output\nugets-preview\'
-                $count = (Get-ChildItem -Path '.\output\nugets-preview\' -Filter '*.nupkg').Count
-                Write-Host "Created nuget_preview artifact with $count prerelease packages"
+                .\scripts\infra\package\stage-prerelease-packages.ps1 `
+                  -SourceDirectory '.\output\nugets\' `
+                  -DestinationDirectory '.\output\nugets-preview\'
               displayName: Prepare the nugets-preview artifact for publishing
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'

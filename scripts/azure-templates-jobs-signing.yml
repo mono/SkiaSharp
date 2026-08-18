@@ -4,12 +4,11 @@ parameters:
   - name: useRealSigning
     type: boolean
     default: false
+  - name: enablePublishing
+    type: boolean
+    default: false
 
-stages:
-  - stage: signing
-    displayName: Sign NuGets
-    dependsOn: package
-    jobs:
+jobs:
       - template: /eng/common/templates-official/job/job.yml@self
         parameters:
           name: sign_nugets
@@ -83,13 +82,6 @@ stages:
                 Write-Host "Staged $($packages.Count) NuGet package(s) for signing."
               displayName: Stage packages in Arcade layout
 
-            - pwsh: |
-                ./scripts/infra/signing/validate-signing-policy.ps1 `
-                  -PackageDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
-                  -SigningPropsPath '$(Build.SourcesDirectory)\eng\Signing.props' `
-                  -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\unsigned-manifest.json'
-              displayName: Validate signing policy
-
             - powershell: >
                 eng\common\build.ps1
                 -configuration Release
@@ -126,11 +118,20 @@ stages:
                 displayName: Validate trusted signatures with Arcade
 
             - pwsh: |
-                $source = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
-                Remove-Item $destination -Recurse -Force -ErrorAction Ignore
-                New-Item $destination -ItemType Directory -Force | Out-Null
-
-                Get-ChildItem $source -Filter '*-*.nupkg' -File |
-                  Copy-Item -Destination $destination
+                ./scripts/infra/package/stage-prerelease-packages.ps1 `
+                  -SourceDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
+                  -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
               displayName: Create signed preview package view
+
+            - ${{ if eq(parameters.enablePublishing, true) }}:
+              - powershell: >
+                  eng\common\build.ps1
+                  -configuration Release
+                  -restore
+                  -publish
+                  -ci
+                  /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                  /p:DotNetPublishUsingPipelines=true
+                displayName: Generate Arcade V3 asset manifest
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)

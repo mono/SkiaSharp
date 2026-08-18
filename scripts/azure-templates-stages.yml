@@ -26,12 +26,6 @@ parameters:
     default: ''
   - name: use1ESPipelineTemplates
     type: boolean
-    default: true
-  - name: enableSigning
-    type: boolean
-    default: false
-  - name: forceRealSigning
-    type: boolean
     default: false
   - name: enableCaching
     type: boolean
@@ -61,15 +55,6 @@ stages:
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         enableCaching: ${{ parameters.enableCaching }}
 
-  - ${{ if and(in(parameters.buildPipelineType, 'package', 'native-package', 'complete'), eq(parameters.enableSigning, 'true')) }}:
-    - template: /scripts/azure-templates-stages-signing.yml@self
-      parameters:
-        buildAgent: ${{ parameters.buildAgentWindows }}
-        ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-         useRealSigning: true
-        ${{ else }}:
-         useRealSigning: false
-
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
       parameters:
@@ -79,5 +64,4 @@ stages:
         buildAgentMac: ${{ parameters.buildAgentMac }}
         buildAgentLinux: ${{ parameters.buildAgentLinux }}
         buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}
-        use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
         enableCaching: ${{ parameters.enableCaching }}

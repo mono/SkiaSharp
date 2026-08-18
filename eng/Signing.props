@@ -2,6 +2,7 @@
   <PropertyGroup>
     <EnableDefaultArtifacts>false</EnableDefaultArtifacts>
     <UseDotNetCertificate>false</UseDotNetCertificate>
+    <NoSignJS>true</NoSignJS>
     <DoStrongNameCheck>false</DoStrongNameCheck>
   </PropertyGroup>
 
@@ -18,7 +19,6 @@
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
 
     <FirstPartyFile Include="HarfBuzzSharp.dll" />
-    <FirstPartyFile Include="DpiWatcher.js" />
     <FirstPartyFile Include="libEGL.dll" />
     <FirstPartyFile Include="libGLESv2.dll" />
     <FirstPartyFile Include="libHarfBuzzSharp.dll" />
@@ -47,16 +47,19 @@
     <FirstPartyFile Include="SkiaSharp.Views.WinUI.Native.winmd" />
     <FirstPartyFile Include="SkiaSharp.Views.WPF.dll" />
     <FirstPartyFile Include="SkiaSharp.Vulkan.SharpVk.dll" />
-    <FirstPartyFile Include="SizeWatcher.js" />
-    <FirstPartyFile Include="SKHtmlCanvas.js" />
-    <FirstPartyFile Include="SkiaSharpInterop.js" />
 
     <MacDeveloperFile Include="libHarfBuzzSharp.dylib" />
     <MacDeveloperFile Include="libSkiaSharp.dylib" />
 
     <!-- Add ThirdPartyFile items when packages intentionally carry third-party binaries that support 3PartySHA2. -->
 
-    <!-- Emscripten/Dawn generated source payloads do not support 3PartySHA2 Authenticode signing. -->
+    <!-- JavaScript ships as source and is supported only through its author-signed NuGet container. -->
+    <SkippedFile Include="DpiWatcher.js" />
+    <SkippedFile Include="SizeWatcher.js" />
+    <SkippedFile Include="SKHtmlCanvas.js" />
+    <SkippedFile Include="SkiaSharpInterop.js" />
+
+    <!-- Emscripten/Dawn source payloads must retain their verified upstream content. -->
     <SkippedFile Include="emdawnwebgpu.port.py" />
     <SkippedFile Include="library_webgpu.js" />
     <SkippedFile Include="library_webgpu_enum_tables.js" />

@@ -3,9 +3,9 @@
 SkiaSharp signs already-built NuGet packages in a separate internal stage. The
 native and managed product builds remain owned by Cake.
 
-`azure-templates-stages.yml` includes package and signing as sibling stage
-templates. The package stage template does not import signing or any other
-stage.
+`azure-pipelines-package.yml` defines package and signing as sibling stages. The
+signing stage imports `azure-templates-jobs-signing.yml`; the shared stage
+aggregator and package-stage template do not own signing.
 
 ## Supported integration
 
@@ -33,21 +33,15 @@ Arcade performs the cryptographic checks:
 `dotnet nuget verify --all` is not repeated because it currently performs the
 same NuGet signature verification already executed by SignCheck.
 
-The repository scripts cover different invariants. The policy preflight rejects
-stale or unmapped entries before an ESRP request. The payload verifier compares
-unsigned and signed archives to reject package-set changes, duplicate or
-case-colliding paths, unexpected payload mutations, missing expected mutations,
-and changes to intentionally skipped source files. Arcade's signature checks do
-not compare signed output against the original archive.
+The repository payload verifier compares unsigned and signed archives to reject
+package-set changes, duplicate or case-colliding paths, stale or unmapped
+policy entries, unexpected payload mutations, missing expected mutations, and
+changes to intentionally skipped source files. Arcade's signature checks do not
+compare signed output against the original archive.
 
-The pipeline runs two repository-owned `.ps1` entry points:
-
-- `validate-signing-policy.ps1` performs the preflight and writes the unsigned
-  package/payload manifest;
-- `verify-signed-packages.ps1` performs the before/after fidelity comparison and
-  writes the verification result.
-
-Both scripts import `NuGetPayload.psm1`; the module is not executed directly.
+`verify-signed-packages.ps1` performs that before/after fidelity comparison and
+writes the verification result. It imports `NuGetPayload.psm1`; the module is
+not executed directly.
 `tests/Signing.Tests.ps1` is a local regression suite and is not a pipeline
 signing step.
 
@@ -59,9 +53,8 @@ package stage: unsigned nuget
               v
 signing stage: stage under artifacts/packages/Release/Shipping
               |
-              +-- validate eng/Signing.props against every recursive payload
               +-- Arcade SignTool test/real signing and recursive post-sign checks
-              +-- compare signed and unsigned archive structure/hashes
+              +-- validate eng/Signing.props and compare unsigned/signed payloads
               +-- real only: Arcade SigningValidation trust/validity checks
               +-- create the signed preview-package view
               |
@@ -78,6 +71,13 @@ signing inputs.
 Signing consumes only the current run's `nuget` artifact after the package stage
 succeeds. Retry a signing failure within that run; starting a new pipeline run
 rebuilds the packages instead of signing artifacts from an older run.
+
+SkiaSharp builds with stable SDK `10.0.108`. Arcade uses stable SDK `10.0.301`
+only as its tool CLI because generated Arcade bootstrap calls
+`dotnet package download`, which is available in .NET 10.0.2xx and later. The
+Arcade SDK itself still runs on .NET 10. CI isolates that tool CLI under
+`$(Agent.TempDirectory)` so an agent-wide 10.0.108 installation cannot be
+selected accidentally.
 
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches
 test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
@@ -96,20 +96,26 @@ Arcade's broad extension defaults and lists every signable basename explicitly:
 - outer `.nupkg` containers use `NuGet`.
 
 Adding a DLL, EXE, WINMD, dylib, JavaScript, or Python payload without updating
-the policy fails before signing.
+the policy fails the payload-verification step.
+
+Browser and Emscripten JavaScript ships as source and is not Authenticode-signed.
+It is supported only when consumed from the author-signed NuGet package; the
+pipeline does not authenticate loose copies. `NoSignJS` opts into Arcade's
+current JavaScript policy, while every known basename remains explicitly listed
+as `SkippedFile`.
 
 `eng/SignCheckExclusionsFile.txt` mirrors the JavaScript subset of `SkippedFile`
 using package/path-scoped `DO-NOT-SIGN` entries. SignCheck fails if one of those
 files becomes signed. SignCheck does not verify Python signatures, so the
 generated Python source is controlled only by `CertificateName=None` and the
 payload fidelity verifier. That verifier requires every skipped file to remain
-byte-identical.
+byte-identical. No detached catalog is generated or shipped.
 
 ## Test and real signing
 
-Internal package and complete pipelines sign automatically for every non-PR
-run. The public pipeline never enables the signing stage. Internal signing mode
-uses the repository's established policy:
+The internal package pipeline signs automatically for every non-PR run. The
+public pipeline never enables the signing stage. Internal signing mode uses the
+repository's established policy:
 
 - `main` and `release/*` use real signing;
 - an explicit `forceRealSigning` queue parameter uses real signing;
@@ -123,20 +129,16 @@ checks are configured. Arcade then supplies:
 - MicroBuild install and cleanup;
 - `System.AccessToken` handling.
 
-The package pipeline has no release trigger or feed-publishing step. Its final
-boundary is the retained, verified internal pipeline artifacts. Any future
-release system is a separate consumer of an exact successful signing run.
+The package pipeline registers real-signed packages in BAR. Maestro channel
+promotion and final NuGet.org publication remain separate operations. BAR
+registration is deliberately limited to the signed `Preview` package view;
+each CI package job produces one uniquely versioned prerelease family rather
+than both preview and exact stable variants. The staging step reads each
+package's nuspec and rejects exact stable or unknown prerelease versions before
+manifest generation. Exact stable package generation remains deferred to a
+future protected release pipeline.
 
 ## Local checks
-
-Validate the versioned policy against an unsigned package directory:
-
-```powershell
-pwsh -NoLogo -NoProfile -File scripts/infra/signing/validate-signing-policy.ps1 `
-  -PackageDirectory path/to/nugets `
-  -SigningPropsPath eng/Signing.props `
-  -OutputPath artifacts/signing-policy.json
-```
 
 Run archive-integrity tests:
 

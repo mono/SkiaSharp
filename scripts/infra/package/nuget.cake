@@ -16,14 +16,15 @@ Task ("nuget-normal")
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
+        { "VersionSuffix", PREVIEW_NUGET_SUFFIX },
     };
 
-    // pack stable
+    // Preview BAR builds produce one coherent, uniquely-versioned package family.
+    // Exact release package selection is intentionally deferred.
+    EnsureDirectoryExists (OUTPUT_NUGETS_PATH);
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");
     RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-
-    // pack preview
-    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
 
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");

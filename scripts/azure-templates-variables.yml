@@ -1,8 +1,6 @@
 variables:
-  # NOTE: Update this value when bumping the SkiaSharp version.
-  # It must match the SkiaSharp nuget version in scripts/VERSIONS.txt.
-  # SKIASHARP_VERSION is used in the BUILD_NUMBER counter expression below,
-  # which requires a compile-time constant (cannot be derived dynamically).
+  # NOTE: Update this value when bumping the SkiaSharp version. It must match
+  # the SkiaSharp NuGet version in scripts/VERSIONS.txt.
   SKIASHARP_VERSION: 4.152.0
   FEATURE_NAME_PREFIX: 'feature/'
   VERBOSITY: normal
@@ -11,9 +9,11 @@ variables:
   GIT_URL: $(Build.Repository.Uri)
   FEATURE_NAME: ''
   PREVIEW_LABEL: 'preview.0'
-  BUILD_NUMBER: $[counter(format('_{0}_{1}_{2}_', variables['SKIASHARP_VERSION'], variables['Build.SourceBranch'], variables['PREVIEW_LABEL']), 1)]
-  BUILD_COUNTER: $[counter('global_counter', 1)]
+  # Arcade OfficialBuildId uses yyyyMMdd.revision. The product/package build
+  # number is derived from this as short-date.revision by set-build-variables.ps1.
   ARCADE_OFFICIAL_BUILD_ID: $[format('{0}.{1}', format('{0:yyyyMMdd}', pipeline.startTime), counter(format('arcade_{0}', format('{0:yyyyMMdd}', pipeline.startTime)), 1))]
+  BUILD_NUMBER: ''
+  BUILD_COUNTER: $[counter('global_counter', 1)]
   MANAGED_LINUX_PACKAGES: ttf-ancient-fonts ninja-build libgtk-4-1
   XCODE_VERSION: '26.3'
   XCODE_VERSION_NATIVE: '16.2'
@@ -23,6 +23,10 @@ variables:
   # runtime. Bump both to the next preview .NET as it moves forward.
   DOTNET_VERSION_PREVIEW: '11.0.100-preview.6.26359.118'
   DOTNET_WORKLOAD_VERSION_PREVIEW: '11.0.100-preview.6.26364.2'
+  # Keep Arcade's tool CLI isolated from agent-wide SDK installations so
+  # generated bootstrap consistently selects the 10.0.2xx+ package command.
+  DOTNET_INSTALL_DIR: $(Agent.TempDirectory)/arcade-dotnet-probe
+  DOTNET_GLOBAL_INSTALL_DIR: $(Agent.TempDirectory)/arcade-dotnet
   DOTNET_WORKLOAD_TIZEN: '10.0.100/10.0.123'
   DOTNET_WORKLOAD_VERSION: '10.0.108'
   CONFIGURATION: 'Release'

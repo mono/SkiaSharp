@@ -23,23 +23,36 @@ The version number for SkiaSharp is as follows: `major.skia.minor.patch`
 
 ## Preview Labels
 
-With regards to the pre-release versioning, it follows the typical pattern. However, there is one type that is a bit different.
+With regards to the pre-release versioning, it follows the typical pattern.
 
-> Although several preview versions are found on [nuget.org](https://nuget.org), many more are also periodically released to the preview feed:  
-> https://aka.ms/skiasharp-eap/index.json
+Official CI uses Arcade's `OfficialBuildId` identity
+`yyyyMMdd.revision`. Package versions use Arcade's derived short date and
+revision, for example `4.152.0-preview.0.26418.3` for official build
+`20260818.3`.
+GitHub and Azure Repos builds normalize their provider-specific PR, branch, and
+commit variables before constructing this version, and downstream pipelines
+inherit the upstream identity.
 
 > **Note:** There are two Azure DevOps feeds:
-> - **Preview feed** (`SkiaSharp`): Contains regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing
-> - **CI feed** (`SkiaSharp-CI`): Contains internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline
+> - **Signed builds** (`skiasharp`): regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro for public testing
+> - **CI helpers** (`skiasharp-ci`): internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.)
 
 Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested
  - `-preview` is mostly good and works, but a few more things need to be done (bugs, features, discussions)
  - `-rc` is almost ready to go out, but is waiting on third party feedback (not too common)
+ - `-stable` is an exact-version candidate that remains uniquely versioned until a future protected release operation
+
+Each package build emits exactly one uniquely versioned prerelease family; it
+does not co-produce an exact stable `X.Y.Z`. Moving the remaining version policy
+into Arcade's `eng/Versions.props` model and selecting exact versions from a
+future protected release pipeline are intentionally deferred.
 
 ### PR Packages
 
-PR builds (`-pr.xxxx.yy` versions) are **not** published to any NuGet feed. These builds are unsigned and only available as pipeline artifacts from the public Azure DevOps CI.
+PR builds (`-pr.<number>.<short-date>.<revision>` versions) are **not**
+published to any NuGet feed. These builds are unsigned and only available as
+pipeline artifacts from the public Azure DevOps CI.
 
 **Download with a single command (no repo clone needed):**
 

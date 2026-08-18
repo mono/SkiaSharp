@@ -149,8 +149,7 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'native-package'
-          enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}
-          forceRealSigning: ${{ parameters.forceRealSigning }}
+          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
@@ -158,7 +157,42 @@ extends:
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
+        - stage: signing
+          displayName: Sign NuGets
+          dependsOn: package
+          jobs:
+            - template: /scripts/azure-templates-jobs-signing.yml@self
+              parameters:
+                buildAgent: ${{ parameters.buildAgentWindows }}
+                enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
+                ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+                  useRealSigning: true
+                ${{ else }}:
+                  useRealSigning: false
       - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-        - template: /scripts/azure-templates-stages-apiscan.yml@self
+        - stage: api_scan
+          displayName: API Scan
+          dependsOn: package
+          jobs:
+            - template: /scripts/azure-templates-jobs-apiscan.yml@self
+              parameters:
+                buildAgentWindows: ${{ parameters.buildAgentWindows }}
+      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+        - stage: publish_build_assets
+          displayName: Register signed packages in BAR
+          dependsOn:
+            - signing
+            - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+              - api_scan
+          jobs:
+            - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+              parameters:
+                publishingVersion: 3
+                officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
+        - template: /eng/common/templates-official/post-build/post-build.yml@self
           parameters:
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+            publishingInfraVersion: 3
+            requireDefaultChannels: true
+            validateDependsOn:
+              - publish_build_assets

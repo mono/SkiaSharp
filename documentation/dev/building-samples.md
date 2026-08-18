@@ -45,8 +45,8 @@ After downloading, the extracted nupkgs in `output/nugets/` have real version nu
 ```powershell
 # Detect from downloaded packages
 ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
-# → SkiaSharp.3.119.4-preview.0.76.nupkg
-# So: --previewLabel=preview.0 --buildNumber=76
+# → SkiaSharp.4.152.0-preview.0.26418.3.nupkg
+# So: --previewLabel=preview.0 --buildNumber=26418.3
 ```
 
 ## NuGet Package Version Construction
@@ -71,9 +71,9 @@ The final NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`:
 
 - **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
 - **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
-- **BUILD_NUMBER**: The CI build counter
+- **BUILD_NUMBER**: Arcade's package build identity (`short-date.revision`)
 
-**Example:** `3.119.4-preview.0.76` → `previewLabel=preview.0`, `buildNumber=76`
+**Example:** `4.152.0-preview.0.26418.3` → `previewLabel=preview.0`, `buildNumber=26418.3`
 
 ## Cake Arguments
 
