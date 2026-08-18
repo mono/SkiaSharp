@@ -8,16 +8,16 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
-        image: 1es-windows-2022
-        os: windows
+        name: Azure Pipelines
+        vmImage: ubuntu-22.04
+        os: linux
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
-        image: 1es-windows-2022
+        name: Azure Pipelines
+        vmImage: windows-2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -32,8 +32,8 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
-        image: 1es-ubuntu-2204
+        name: Azure Pipelines
+        vmImage: ubuntu-22.04
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -68,6 +68,7 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'test'
+          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
