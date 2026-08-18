@@ -2,11 +2,7 @@ parameters:
   - name: buildAgentWindows
     type: object
 
-stages:
-  - stage: api_scan
-    displayName: API Scan
-    dependsOn: package
-    jobs:
+jobs:
       - job: api_scan
         displayName: API Scan
         timeoutInMinutes: 480

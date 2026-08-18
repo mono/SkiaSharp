@@ -109,6 +109,7 @@ extends:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'package'
+          use1ESPipelineTemplates: true
           enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
           forceRealSigning: ${{ parameters.forceRealSigning }}
           enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
@@ -117,9 +118,13 @@ extends:
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
       - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-        - template: /scripts/azure-templates-stages-apiscan.yml@self
-          parameters:
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+        - stage: api_scan
+          displayName: API Scan
+          dependsOn: package
+          jobs:
+            - template: /scripts/azure-templates-jobs-apiscan.yml@self
+              parameters:
+                buildAgentWindows: ${{ parameters.buildAgentWindows }}
       - ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
         - stage: publish_build_assets
           displayName: Register signed packages in BAR
