@@ -292,6 +292,31 @@ if ($pipelineSdk -cne $globalJson.sdk.version -or
     throw 'SkiaSharp, workloads, and Arcade must use the same stable .NET 10.0.4xx SDK.'
 }
 
+$winuiGlobalJson = Get-Content (Join-Path $repoRoot 'native/winui/global.json') -Raw | ConvertFrom-Json
+if ($winuiGlobalJson.sdk.version -cne $globalJson.sdk.version -or
+    $winuiGlobalJson.sdk.allowPrerelease -ne $false -or
+    $winuiGlobalJson.sdk.rollForward -cne 'latestPatch') {
+    throw 'The WinUI native build must use the repository .NET SDK feature band.'
+}
+
+$nativeDockerfiles = @(
+    'scripts/infra/native/linux/docker/alpine/Dockerfile'
+    'scripts/infra/native/linux/docker/bionic/Dockerfile'
+    'scripts/infra/native/linux/docker/glibc/Dockerfile'
+    'scripts/infra/native/linux/docker/glibc-x86/Dockerfile'
+    'scripts/infra/native/tizen/docker/Dockerfile'
+    'scripts/infra/native/wasm/docker/Dockerfile'
+)
+foreach ($dockerfile in $nativeDockerfiles) {
+    $contents = Get-Content (Join-Path $repoRoot $dockerfile) -Raw
+    $dockerSdk = [regex]::Match(
+        $contents,
+        '(?m)^ARG DOTNET_SDK_VERSION=(?<version>\S+)$').Groups['version'].Value
+    if ($dockerSdk -cne $globalJson.sdk.version) {
+        throw "$dockerfile must use the repository .NET SDK version."
+    }
+}
+
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'
@@ -313,6 +338,16 @@ if ($packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRe
     $packagePipeline -match '- name:\s*previewLabel' -or
     $packagePipeline -match '(?m)^\s*-\s+stage:') {
     throw 'The Package root must delegate all stages and policy parameters to the shared composer.'
+}
+if ($packagePipeline -match 'networkIsolationPolicy' -or
+    $packagePipeline -notmatch 'networkIsolationMode:\s*Enforce') {
+    throw 'Network isolation must enforce the default 1ES policy without a permissive custom policy.'
+}
+
+$apiScanStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-apiscan.yml') -Raw
+if ($apiScanStages -match 'SRV\*http://symweb' -or
+    $apiScanStages -notmatch 'SRV\*https://symweb') {
+    throw 'API Scan and its surrogate configuration must use the HTTPS symbol endpoint.'
 }
 
 $testsPipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-tests.yml') -Raw
