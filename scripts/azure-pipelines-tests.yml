@@ -48,27 +48,19 @@ variables:
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
-  repositories:
-    - repository: 1ESPipelineTemplates
-      type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
   pipelines:
     - pipeline: SkiaSharp
       source: skiasharp-package
       trigger: true
 
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  template: /scripts/azure-template-fake-1es.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
-    settings:
-      networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'test'
-          use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
