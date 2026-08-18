@@ -62,7 +62,9 @@ function New-TestPackage {
 
         [switch] $KeepMacUnsigned,
 
-        [switch] $Tampered
+        [switch] $Tampered,
+
+        [switch] $TamperSkippedJs
     )
 
     $suffix = if ($Signed) { '-signed' } else { '' }
@@ -85,6 +87,7 @@ function New-TestPackage {
         'runtimes/osx/native/libSkiaSharp.dylib' = "mac-skia$macSuffix"
         'runtimes/osx/native/libHarfBuzzSharp.dylib' = "mac-harfbuzz$macSuffix"
         'tools/payload.nupkg' = $nested
+        'content/site.js' = if ($TamperSkippedJs) { 'tampered-js' } else { 'source-js' }
         'content/keep.txt' = if ($Tampered) { 'tampered' } else { 'keep' }
     }
 
@@ -120,6 +123,7 @@ try {
     <FirstPartyFile Include="zlib1.dll" />
     <MacDeveloperFile Include="libHarfBuzzSharp.dylib" />
     <MacDeveloperFile Include="libSkiaSharp.dylib" />
+    <SkippedFile Include="site.js" />
   </ItemGroup>
 </Project>
 '@ | Set-Content $signingProps -Encoding utf8NoBOM
@@ -170,6 +174,21 @@ try {
         throw 'Payload verification did not detect a modified unsigned entry.'
     }
 
+    New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed -TamperSkippedJs
+    $skippedJsTamperDetected = $false
+    try {
+        & $verifier `
+            -OriginalDirectory $unsigned `
+            -SignedDirectory $signed `
+            -SigningPropsPath $signingProps `
+            -RequireSignatures
+    } catch {
+        $skippedJsTamperDetected = $true
+    }
+    if (-not $skippedJsTamperDetected) {
+        throw 'Payload verification did not detect a modified skipped JavaScript entry.'
+    }
+
     $unknownInventory = @($inventory) + [pscustomobject]@{
         RootPackage = 'SkiaSharp.Test.1.0.0.nupkg'
         Path = 'SkiaSharp.Test.1.0.0.nupkg!/lib/Unknown.dll'
@@ -201,13 +220,43 @@ try {
         $skippedFiles |
             Where-Object { [IO.Path]::GetExtension($_) -eq '.js' }
     )
-    $expectedParent = 'SkiaSharp.NativeAssets.WebAssembly.'
-    $expectedPaths = @{
-        'library_webgpu.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu.js'
-        'library_webgpu_enum_tables.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_enum_tables.js'
-        'library_webgpu_generated_sig_info.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_sig_info.js'
-        'library_webgpu_generated_struct_info.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_struct_info.js'
-        'webgpu-externs.js' = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/webgpu-externs.js'
+    $expectedExclusions = @{
+        'DpiWatcher.js' = @{
+            Path = 'staticwebassets/DpiWatcher.js'
+            Parent = 'SkiaSharp.Views.Blazor.'
+        }
+        'SKHtmlCanvas.js' = @{
+            Path = 'staticwebassets/SKHtmlCanvas.js'
+            Parent = 'SkiaSharp.Views.Blazor.'
+        }
+        'SizeWatcher.js' = @{
+            Path = 'staticwebassets/SizeWatcher.js'
+            Parent = 'SkiaSharp.Views.Blazor.'
+        }
+        'SkiaSharpInterop.js' = @{
+            Path = 'build/SkiaSharpInterop.js'
+            Parent = 'SkiaSharp.Views.Blazor.'
+        }
+        'library_webgpu.js' = @{
+            Path = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu.js'
+            Parent = 'SkiaSharp.NativeAssets.WebAssembly.'
+        }
+        'library_webgpu_enum_tables.js' = @{
+            Path = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_enum_tables.js'
+            Parent = 'SkiaSharp.NativeAssets.WebAssembly.'
+        }
+        'library_webgpu_generated_sig_info.js' = @{
+            Path = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_sig_info.js'
+            Parent = 'SkiaSharp.NativeAssets.WebAssembly.'
+        }
+        'library_webgpu_generated_struct_info.js' = @{
+            Path = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/library_webgpu_generated_struct_info.js'
+            Parent = 'SkiaSharp.NativeAssets.WebAssembly.'
+        }
+        'webgpu-externs.js' = @{
+            Path = 'buildTransitive/netstandard1.0/emdawnwebgpu_pkg/webgpu/src/webgpu-externs.js'
+            Parent = 'SkiaSharp.NativeAssets.WebAssembly.'
+        }
     }
     $signCheckExclusions = @{}
     Get-Content (Join-Path $repoRoot 'eng/SignCheckExclusionsFile.txt') |
@@ -218,19 +267,24 @@ try {
         ForEach-Object {
             $parts = $_.Split(';')
             if ($parts.Count -ne 3 -or
-                $parts[1] -ne $expectedParent -or
                 -not $parts[2].Contains('DO-NOT-SIGN')) {
                 throw "Invalid SignCheck exclusion: $_"
             }
             $name = $parts[0].Split('/')[-1]
-            if (-not $expectedPaths.ContainsKey($name) -or
-                $expectedPaths[$name] -cne $parts[0]) {
+            $expected = $expectedExclusions[$name]
+            if (-not $expected -or
+                $expected.Path -cne $parts[0] -or
+                $expected.Parent -cne $parts[1]) {
                 throw "SignCheck exclusion is not scoped to the expected package path: $_"
             }
-            $signCheckExclusions.Add($name, $parts[0])
+            $signCheckExclusions.Add($name, $_)
         }
     if (Compare-Object $signCheckVerifiableSkippedFiles @($signCheckExclusions.Keys | Sort-Object) -CaseSensitive) {
         throw 'SignCheck-verifiable SkippedFile entries and DO-NOT-SIGN entries differ.'
+    }
+    $noSignJs = @($productionPolicy.Project.PropertyGroup.NoSignJS)
+    if ($noSignJs.Count -ne 1 -or [string]$noSignJs[0] -cne 'true') {
+        throw 'Signing.props must explicitly enable the Arcade NoSignJS policy.'
     }
 
     Write-Host 'Signing policy and payload tests passed.'

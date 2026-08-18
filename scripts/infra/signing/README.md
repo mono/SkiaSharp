@@ -91,12 +91,18 @@ Arcade's broad extension defaults and lists every signable basename explicitly:
 Adding a DLL, EXE, WINMD, dylib, JavaScript, or Python payload without updating
 the policy fails the payload-verification step.
 
+Browser and Emscripten JavaScript ships as source and is not Authenticode-signed.
+It is supported only when consumed from the author-signed NuGet package; the
+pipeline does not authenticate loose copies. `NoSignJS` opts into Arcade's
+current JavaScript policy, while every known basename remains explicitly listed
+as `SkippedFile`.
+
 `eng/SignCheckExclusionsFile.txt` mirrors the JavaScript subset of `SkippedFile`
 using package/path-scoped `DO-NOT-SIGN` entries. SignCheck fails if one of those
 files becomes signed. SignCheck does not verify Python signatures, so the
 generated Python source is controlled only by `CertificateName=None` and the
 payload fidelity verifier. That verifier requires every skipped file to remain
-byte-identical.
+byte-identical. No detached catalog is generated or shipped.
 
 ## Test and real signing
 
