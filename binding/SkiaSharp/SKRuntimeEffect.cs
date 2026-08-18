@@ -308,12 +308,8 @@ namespace SkiaSharp
 
 		public void Add (string name, SKRuntimeEffectUniform value)
 		{
-			var index = Array.IndexOf (names, name);
-
-			if (index == -1)
+			if (!uniforms.TryGetValue (name, out var uniform))
 				throw new ArgumentOutOfRangeException (name, $"Variable was not found for name: '{name}'.");
-
-			var uniform = uniforms[name];
 
 			// validate the types first
 			if (!ValidateTypes (value.Type, uniform.Type, uniform.Flags.HasFlag (SKRuntimeEffectUniformFlagsNative.Array), uniform.Count))

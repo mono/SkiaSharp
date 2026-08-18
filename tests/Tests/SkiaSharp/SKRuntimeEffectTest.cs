@@ -384,6 +384,45 @@ namespace SkiaSharp.Tests
 					Assert.Equal(i + 0.5f, floats[i]);
 			}
 
+			// Equivalence guard for the SKRuntimeEffectUniforms.Add lookup optimization: Add now
+			// resolves the uniform with a single Dictionary.TryGetValue instead of Array.IndexOf plus
+			// a redundant indexer lookup. This asserts the observable behaviour is byte-identical for
+			// valid names (correct offset written) and that unknown names still throw the exact same
+			// ArgumentOutOfRangeException (same param name and message) as before.
+			[Fact]
+			public void AddResolvesUniformsIdenticallyAndRejectsUnknownNames()
+			{
+				const int count = 8;
+
+				var declarations = new System.Text.StringBuilder();
+				for (var i = 0; i < count; i++)
+					declarations.AppendLine($"uniform float uniform_{i};");
+
+				var src = $"""
+					{declarations}
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				// Every declared name is settable and lands at the correct offset.
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+				for (var i = 0; i < count; i++)
+					uniforms[$"uniform_{i}"] = i + 0.5f;
+
+				var floats = System.Runtime.InteropServices.MemoryMarshal.Cast<byte, float>(uniforms.ToData().ToArray());
+				Assert.Equal(count, floats.Length);
+				for (var i = 0; i < count; i++)
+					Assert.Equal(i + 0.5f, floats[i]);
+
+				// An unknown name throws ArgumentOutOfRangeException with the name as the parameter.
+				var fresh = new SKRuntimeEffectUniforms(effect);
+				var ex = Assert.Throws<ArgumentOutOfRangeException>(() => fresh["not_a_uniform"] = 1.0f);
+				Assert.Equal("not_a_uniform", ex.ParamName);
+				Assert.Contains("Variable was not found for name: 'not_a_uniform'.", ex.Message);
+			}
+
 			[Fact]
 			public void ChildrenWorksCorrectly()
 			{
