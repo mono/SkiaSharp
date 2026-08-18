@@ -91,6 +91,10 @@ parameters:
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
     default: false
+  - name: registerInBar
+    displayName: 'Register a forced real-sign build in BAR'
+    type: boolean
+    default: false
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
@@ -158,4 +162,5 @@ extends:
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
           forceRealSigning: ${{ parameters.forceRealSigning }}
+          registerInBar: ${{ parameters.registerInBar }}
           runApiScan: ${{ parameters.runApiScan }}

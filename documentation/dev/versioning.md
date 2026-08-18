@@ -46,7 +46,7 @@ Typically, the pre-release labels are:
 Each package build emits exactly one version family. Any normal label produces
 a uniquely versioned prerelease. `PREVIEW_LABEL=stable` derives
 `DotNetFinalVersionKind=release` and emits exact stable packages. Exact releases
-are restricted to internal manual runs with real signing and API Scan.
+are restricted to internal `release/*` branches, which use real signing.
 Package labels are normalized to lowercase before version construction.
 
 Arcade V3 marks exact release builds as stable and publishes them to dynamically

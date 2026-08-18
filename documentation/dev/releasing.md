@@ -44,10 +44,11 @@ The `{build}` number is Arcade's package build identity
 `short-date.revision`, derived from the CI `OfficialBuildId`
 `yyyyMMdd.revision`. Release testing uses the exact test packages produced
 by the selected CI build. `PREVIEW_LABEL=stable` produces the exact public
-version in a manual, real-signed, API-scanned build. Arcade stages that stable
-BAR in an isolated feed; NuGet.org publication remains a separate protected
-operation. Package CI does not promote channels automatically: Tests validate
-the registered BAR first, then the chosen BAR is promoted manually.
+version from an internal `release/*` branch, which uses real signing. Arcade
+stages that stable BAR in an isolated feed; NuGet.org publication remains a
+separate protected operation. Package CI does not promote channels
+automatically: Tests validate the registered BAR first, then the chosen BAR is
+promoted manually.
 
 ### Release Type → Base Branch
 

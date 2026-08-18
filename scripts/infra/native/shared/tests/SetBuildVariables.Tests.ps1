@@ -284,12 +284,12 @@ $toolSdk = [Version]$globalJson.tools.dotnet
 if ($pipelineSdk -cne $globalJson.sdk.version -or
     $globalJson.sdk.allowPrerelease -ne $false -or
     $globalJson.sdk.rollForward -cne 'latestFeature' -or
-    $toolSdk.Major -ne $buildSdk.Major -or
-    $toolSdk.Minor -ne $buildSdk.Minor -or
-    $toolSdk.Build -lt 200 -or
-    $variablesYaml -notmatch 'DOTNET_INSTALL_DIR:\s*\$\(Agent\.TempDirectory\)/arcade-dotnet-probe' -or
-    $variablesYaml -notmatch 'DOTNET_GLOBAL_INSTALL_DIR:\s*\$\(Agent\.TempDirectory\)/arcade-dotnet') {
-    throw 'SkiaSharp must build with the stable pipeline SDK while Arcade uses a stable .NET 10.0.2xx-or-later tool CLI.'
+    $toolSdk -ne $buildSdk -or
+    $buildSdk.Major -ne 10 -or
+    $buildSdk.Build -lt 400 -or
+    $variablesYaml -notmatch "DOTNET_WORKLOAD_VERSION:\s*'$([regex]::Escape($globalJson.sdk.version))'" -or
+    $variablesYaml -match 'DOTNET_(GLOBAL_)?INSTALL_DIR') {
+    throw 'SkiaSharp, workloads, and Arcade must use the same stable .NET 10.0.4xx SDK.'
 }
 
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
@@ -308,6 +308,7 @@ if ($packagePipeline -notmatch "buildPipelineType:\s*'build'") {
     throw "The internal Package pipeline must use the 'build' role."
 }
 if ($packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRealSigning\s*\}\}' -or
+    $packagePipeline -notmatch 'registerInBar:\s*\$\{\{\s*parameters\.registerInBar\s*\}\}' -or
     $packagePipeline -notmatch 'runApiScan:\s*\$\{\{\s*parameters\.runApiScan\s*\}\}' -or
     $packagePipeline -match '- name:\s*previewLabel' -or
     $packagePipeline -match '(?m)^\s*-\s+stage:') {
@@ -355,15 +356,19 @@ if ($variablesYaml -notmatch "PREVIEW_LABEL:\s*'preview\.0'" -or
     $packagePipeline -match '- name:\s*previewLabel') {
     throw 'PREVIEW_LABEL must remain source-controlled in the shared variables template.'
 }
-$stableExpression = "eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable')"
-if (($stagesComposer.Split($stableExpression).Count - 1) -lt 3) {
-    throw 'Stable builds must automatically real-sign, API Scan, and register in BAR.'
+if ($stagesComposer -match 'PREVIEW_LABEL') {
+    throw 'Signing, API Scan, and BAR eligibility must not depend on the package version label.'
 }
-if (-not $stagesComposer.Contains("eq(variables['Build.Reason'], 'Schedule')")) {
-    throw 'API Scan must run automatically on scheduled nightlies.'
+if (-not $stagesComposer.Contains("and(eq(parameters.forceRealSigning, 'true'), eq(parameters.registerInBar, 'true'))")) {
+    throw 'Forced real signing must require a separate opt-in before BAR registration.'
 }
-if ($stagesComposer.Contains("and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main')")) {
-    throw 'API Scan must not block every main or release branch build.'
+if (-not $stagesComposer.Contains("eq(parameters.runApiScan, 'true')") -or
+    -not $stagesComposer.Contains("eq(variables['Build.SourceBranch'], 'refs/heads/main')") -or
+    -not $stagesComposer.Contains("eq(variables['Build.Reason'], 'Schedule')")) {
+    throw 'API Scan must run only when requested or on scheduled main builds.'
+}
+if ($publishStages -match 'includeApiScan|api_scan') {
+    throw 'API Scan must remain independent from BAR registration and validation.'
 }
 
 $packageScript = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget.cake') -Raw

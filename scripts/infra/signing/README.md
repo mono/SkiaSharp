@@ -72,12 +72,9 @@ Signing consumes only the current run's `nuget` artifact after the package stage
 succeeds. Retry a signing failure within that run; starting a new pipeline run
 rebuilds the packages instead of signing artifacts from an older run.
 
-SkiaSharp builds with stable SDK `10.0.108`. Arcade uses stable SDK `10.0.301`
-only as its tool CLI because generated Arcade bootstrap calls
-`dotnet package download`, which is available in .NET 10.0.2xx and later. The
-Arcade SDK itself still runs on .NET 10. CI isolates that tool CLI under
-`$(Agent.TempDirectory)` so an agent-wide 10.0.108 installation cannot be
-selected accidentally.
+SkiaSharp and Arcade use the same stable .NET SDK from `global.json`. The
+10.0.4xx feature band includes the `dotnet package download` command required by
+generated Arcade bootstrap.
 
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches
 test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
@@ -118,13 +115,15 @@ public pipeline never enables the signing stage. Internal signing mode uses the
 repository's established policy:
 
 - `main` and `release/*` use real signing;
-- `PREVIEW_LABEL=stable` uses real signing and API Scan;
 - an explicit `forceRealSigning` queue parameter uses real signing;
 - all other branches use test signing.
 
+`forceRealSigning` does not register a BAR by itself. A non-main/release branch
+must also set `registerInBar` to opt into BAR registration and validation.
+
 API Scan runs on scheduled main builds as the asynchronous compliance check,
-when explicitly requested with `runApiScan`, and for every exact stable build.
-It does not gate each ordinary main or release branch build.
+or when explicitly requested with `runApiScan`. It does not gate each ordinary
+main or release branch build.
 
 Real signing must be enabled only after ESRP onboarding and protected-branch
 checks are configured. Arcade then supplies:
@@ -144,8 +143,9 @@ produces one package family:
 - `PREVIEW_LABEL=stable` registers exact signed `Shipping` packages and sets
   `DotNetFinalVersionKind=release`.
 
-Exact release mode is accepted only for an internal manual run with real signing
-and API Scan enabled. Arcade V3 marks the BAR stable and publishes packages to a
+Exact release mode is accepted only for an internal `release/*` branch, which
+uses real signing. API Scan remains an independent scheduled-main or ad hoc
+compliance stage. Arcade V3 marks the BAR stable and publishes packages to a
 dynamically created isolated feed, not directly to NuGet.org or a permanent
 shared feed.
 

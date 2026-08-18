@@ -1,15 +1,8 @@
-parameters:
-  - name: includeApiScan
-    type: boolean
-    default: false
-
 stages:
   - stage: publish_build_assets
     displayName: Register signed packages in BAR
     dependsOn:
       - signing
-      - ${{ if eq(parameters.includeApiScan, true) }}:
-        - api_scan
     jobs:
       - template: /eng/common/templates-official/job/publish-build-assets.yml@self
         parameters:
