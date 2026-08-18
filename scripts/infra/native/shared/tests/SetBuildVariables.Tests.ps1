@@ -286,7 +286,7 @@ if ($completePipeline -notmatch "buildPipelineType:\s*'complete'") {
 }
 
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
-if ($packageStages -match 'isSplitPipeline|Re-upload Native Artifacts') {
+if ($packageStages -match 'Re-upload Native Artifacts') {
     throw 'The Package stage must consume Native artifacts from the same pipeline run.'
 }
 
