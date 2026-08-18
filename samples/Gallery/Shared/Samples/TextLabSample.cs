@@ -179,11 +179,11 @@ public class TextLabSample : CanvasSampleBase
 				IsAntialias = true,
 			};
 			labelPaint.Color = SKColors.Blue;
-			canvas.DrawText("baseline", 4, y - 4, labelFont, labelPaint);
+			canvas.DrawText("baseline", 4, y - 4, SKTextAlign.Left, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Green;
-			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, labelFont, labelPaint);
+			canvas.DrawText("ascent", 4, y + metrics.Ascent - 4, SKTextAlign.Left, labelFont, labelPaint);
 			labelPaint.Color = SKColors.Orange;
-			canvas.DrawText("descent", 4, y + metrics.Descent - 4, labelFont, labelPaint);
+			canvas.DrawText("descent", 4, y + metrics.Descent - 4, SKTextAlign.Left, labelFont, labelPaint);
 		}
 	}
 

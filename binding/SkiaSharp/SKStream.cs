@@ -14,7 +14,9 @@ namespace SkiaSharp
 		
 		public bool IsAtEnd {
 			get {
-				return SkiaApi.sk_stream_is_at_end (Handle);
+				var result = SkiaApi.sk_stream_is_at_end (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -70,42 +72,54 @@ namespace SkiaSharp
 		public bool ReadSByte (out SByte buffer)
 		{
 			fixed (SByte* b = &buffer) {
-				return SkiaApi.sk_stream_read_s8 (Handle, b);
+				var result = SkiaApi.sk_stream_read_s8 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool ReadInt16 (out Int16 buffer)
 		{
 			fixed (Int16* b = &buffer) {
-				return SkiaApi.sk_stream_read_s16 (Handle, b);
+				var result = SkiaApi.sk_stream_read_s16 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool ReadInt32 (out Int32 buffer)
 		{
 			fixed (Int32* b = &buffer) {
-				return SkiaApi.sk_stream_read_s32 (Handle, b);
+				var result = SkiaApi.sk_stream_read_s32 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool ReadByte (out Byte buffer)
 		{
 			fixed (Byte* b = &buffer) {
-				return SkiaApi.sk_stream_read_u8 (Handle, b);
+				var result = SkiaApi.sk_stream_read_u8 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool ReadUInt16 (out UInt16 buffer)
 		{
 			fixed (UInt16* b = &buffer) {
-				return SkiaApi.sk_stream_read_u16 (Handle, b);
+				var result = SkiaApi.sk_stream_read_u16 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool ReadUInt32 (out UInt32 buffer)
 		{
 			fixed (UInt32* b = &buffer) {
-				return SkiaApi.sk_stream_read_u32 (Handle, b);
+				var result = SkiaApi.sk_stream_read_u32 (Handle, b);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -113,6 +127,7 @@ namespace SkiaSharp
 		{
 			byte b;
 			var result = SkiaApi.sk_stream_read_bool (Handle, &b);
+			GC.KeepAlive (this);
 			buffer = b > 0;
 			return result;
 		}
@@ -126,27 +141,37 @@ namespace SkiaSharp
 
 		public int Read (IntPtr buffer, int size)
 		{
-			return (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
+			var result = (int)SkiaApi.sk_stream_read (Handle, (void*)buffer, (IntPtr)size);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public int Peek (IntPtr buffer, int size)
 		{
-			return (int)SkiaApi.sk_stream_peek (Handle, (void*)buffer, (IntPtr)size);
+			var result = (int)SkiaApi.sk_stream_peek (Handle, (void*)buffer, (IntPtr)size);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public int Skip (int size)
 		{
-			return (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
+			var result = (int)SkiaApi.sk_stream_skip (Handle, (IntPtr)size);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool Rewind ()
 		{
-			return SkiaApi.sk_stream_rewind (Handle);
+			var result = SkiaApi.sk_stream_rewind (Handle);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool Seek (int position)
 		{
-			return SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
+			var result = SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		[Obsolete ("The native stream move offset is capped at a 32-bit int. Use Move(int) instead.")]
@@ -154,47 +179,71 @@ namespace SkiaSharp
 
 		public bool Move (int offset)
 		{
-			return SkiaApi.sk_stream_move (Handle, offset);
+			var result = SkiaApi.sk_stream_move (Handle, offset);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public IntPtr GetMemoryBase ()
 		{
-			return (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
+			var result = (IntPtr)SkiaApi.sk_stream_get_memory_base (Handle);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public SKData GetData ()
 		{
-			return SKData.GetObject (SkiaApi.sk_stream_get_data (Handle));
+			var result = SKData.GetObject (SkiaApi.sk_stream_get_data (Handle));
+			GC.KeepAlive (this);
+			return result;
 		}
 
-		internal SKStream Fork () => GetObject (SkiaApi.sk_stream_fork (Handle));
+		internal SKStream Fork ()
+		{
+			var result = GetObject (SkiaApi.sk_stream_fork (Handle));
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		internal SKStream Duplicate () => GetObject (SkiaApi.sk_stream_duplicate (Handle));
+		internal SKStream Duplicate ()
+		{
+			var result = GetObject (SkiaApi.sk_stream_duplicate (Handle));
+			GC.KeepAlive (this);
+			return result;
+		}
 
 		public bool HasPosition {
 			get {
-				return SkiaApi.sk_stream_has_position (Handle);
+				var result = SkiaApi.sk_stream_has_position (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public int Position {
 			get {
-				return (int)SkiaApi.sk_stream_get_position (Handle);
+				var result = (int)SkiaApi.sk_stream_get_position (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
-			set { 
+			set {
 				Seek (value);
 			}
 		}
 
 		public bool HasLength {
 			get {
-				return SkiaApi.sk_stream_has_length (Handle);
+				var result = SkiaApi.sk_stream_has_length (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public int Length {
 			get {
-				return (int)SkiaApi.sk_stream_get_length (Handle);
+				var result = (int)SkiaApi.sk_stream_get_length (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
@@ -294,7 +343,13 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filestream_destroy (Handle);
 
-		public bool IsValid => SkiaApi.sk_filestream_is_valid (Handle);
+		public bool IsValid {
+			get {
+				var result = SkiaApi.sk_filestream_is_valid (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public static bool IsPathSupported (string path) => true;
 
@@ -363,12 +418,14 @@ namespace SkiaSharp
 		internal void SetMemory (IntPtr data, IntPtr length, bool copyData = false)
 		{
 			SkiaApi.sk_memorystream_set_memory (Handle, (void*)data, length, copyData);
+			GC.KeepAlive (this);
 		}
 
 		internal void SetMemory (byte[] data, IntPtr length, bool copyData = false)
 		{
 			fixed (byte* d = data) {
 				SkiaApi.sk_memorystream_set_memory (Handle, d, length, copyData);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -387,80 +444,109 @@ namespace SkiaSharp
 		
 		public virtual int BytesWritten {
 			get {
-				return (int)SkiaApi.sk_wstream_bytes_written (Handle);
+				var result = (int)SkiaApi.sk_wstream_bytes_written (Handle);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public virtual bool Write (byte[] buffer, int size)
 		{
 			fixed (byte* b = buffer) {
-				return SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
+				var result = SkiaApi.sk_wstream_write (Handle, (void*)b, (IntPtr)size);
+				GC.KeepAlive (this);
+				return result;
 			}
 		}
 
 		public bool NewLine ()
 		{
-			return SkiaApi.sk_wstream_newline (Handle);
+			var result = SkiaApi.sk_wstream_newline (Handle);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public virtual void Flush ()
 		{
 			SkiaApi.sk_wstream_flush (Handle);
+			GC.KeepAlive (this);
 		}
 
 		public bool Write8 (Byte value)
 		{
-			return SkiaApi.sk_wstream_write_8 (Handle, value);
+			var result = SkiaApi.sk_wstream_write_8 (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool Write16 (UInt16 value)
 		{
-			return SkiaApi.sk_wstream_write_16 (Handle, value);
+			var result = SkiaApi.sk_wstream_write_16 (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool Write32 (UInt32 value)
 		{
-			return SkiaApi.sk_wstream_write_32 (Handle, value);
+			var result = SkiaApi.sk_wstream_write_32 (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteText (string value)
 		{
-			return SkiaApi.sk_wstream_write_text (Handle, value);
+			var result = SkiaApi.sk_wstream_write_text (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteDecimalAsTest (Int32 value)
 		{
-			return SkiaApi.sk_wstream_write_dec_as_text (Handle, value);
+			var result = SkiaApi.sk_wstream_write_dec_as_text (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteBigDecimalAsText (Int64 value, int digits)
 		{
-			return SkiaApi.sk_wstream_write_bigdec_as_text (Handle, value, digits);
+			var result = SkiaApi.sk_wstream_write_bigdec_as_text (Handle, value, digits);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteHexAsText (UInt32 value, int digits)
 		{
-			return SkiaApi.sk_wstream_write_hex_as_text (Handle, value, digits);
+			var result = SkiaApi.sk_wstream_write_hex_as_text (Handle, value, digits);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteScalarAsText (float value)
 		{
-			return SkiaApi.sk_wstream_write_scalar_as_text (Handle, value);
+			var result = SkiaApi.sk_wstream_write_scalar_as_text (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteBool (bool value)
 		{
-			return SkiaApi.sk_wstream_write_bool (Handle, value);
+			var result = SkiaApi.sk_wstream_write_bool (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteScalar (float value)
 		{
-			return SkiaApi.sk_wstream_write_scalar (Handle, value);
+			var result = SkiaApi.sk_wstream_write_scalar (Handle, value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WritePackedUInt32 (UInt32 value)
 		{
-			return SkiaApi.sk_wstream_write_packed_uint (Handle, (IntPtr)value);
+			var result = SkiaApi.sk_wstream_write_packed_uint (Handle, (IntPtr)value);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool WriteStream (SKStream input, int length)
@@ -469,7 +555,10 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof(input));
 			}
 
-			return SkiaApi.sk_wstream_write_stream (Handle, input.Handle, (IntPtr)length);
+			var result = SkiaApi.sk_wstream_write_stream (Handle, input.Handle, (IntPtr)length);
+			GC.KeepAlive (input);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public static int GetSizeOfPackedUInt32 (UInt32 value)
@@ -507,7 +596,13 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.sk_filewstream_destroy (Handle);
 
-		public bool IsValid => SkiaApi.sk_filewstream_is_valid (Handle);
+		public bool IsValid {
+			get {
+				var result = SkiaApi.sk_filewstream_is_valid (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public static bool IsPathSupported (string path) => true;
 
@@ -546,17 +641,22 @@ namespace SkiaSharp
 
 		public SKStreamAsset DetachAsStream ()
 		{
-			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			var result = SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public SKData DetachAsData ()
 		{
-			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+			var result = SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public void CopyTo (IntPtr data)
 		{
 			SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, (void*)data);
+			GC.KeepAlive (this);
 		}
 
 		public void CopyTo (Span<byte> data)
@@ -567,6 +667,7 @@ namespace SkiaSharp
 
 			fixed (void* d = data) {
 				SkiaApi.sk_dynamicmemorywstream_copy_to (Handle, d);
+				GC.KeepAlive (this);
 			}
 		}
 
@@ -574,7 +675,10 @@ namespace SkiaSharp
 		{
 			if (dst == null)
 				throw new ArgumentNullException (nameof (dst));
-			return SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
+			var result = SkiaApi.sk_dynamicmemorywstream_write_to_stream (Handle, dst.Handle);
+			GC.KeepAlive (dst);
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		public bool CopyTo (Stream dst)

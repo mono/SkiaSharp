@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using SkiaSharp;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 
@@ -10,6 +9,36 @@ namespace SkiaSharp.Tests.Integration;
 /// </summary>
 public abstract class PlatformTestBase : IDisposable
 {
+    /// <summary>
+    /// Base target framework the generated temp projects build against. Passed to
+    /// <c>dotnet new … -f</c> so the template-generated TFMs stay pinned to a known band even
+    /// when a newer SDK (e.g. a net11.0 preview) is installed on the machine. Platform-suffixed
+    /// MAUI TFMs (e.g. net10.0-android) derive from this.
+    /// <para>
+    /// Defaults to <c>net10.0</c>. Override to exercise a different band, e.g. to smoke-test the
+    /// packages on a .NET 11 preview:
+    /// <c>dotnet test -p:BaseFramework=net11.0 -p:SdkVersion=11.0.100-preview.x -p:SdkAllowPrerelease=true</c>.
+    /// (See <see cref="SdkVersion"/> / <see cref="SdkAllowPrerelease"/> for the matching SDK pin.)
+    /// </para>
+    /// </summary>
+    protected static readonly string BaseFramework =
+        AppContext.GetData("BaseFramework") as string is { Length: > 0 } bf ? bf : "net10.0";
+
+    /// <summary>
+    /// SDK version the generated temp projects resolve to (written into their <c>global.json</c>).
+    /// Defaults to the .NET 10 band; override with <c>-p:SdkVersion=</c> when targeting a newer
+    /// <see cref="BaseFramework"/>.
+    /// </summary>
+    protected static readonly string SdkVersion =
+        AppContext.GetData("SdkVersion") as string is { Length: > 0 } sv ? sv : "10.0.100";
+
+    /// <summary>
+    /// Whether the generated temp projects may resolve a prerelease SDK. Defaults to <c>false</c>;
+    /// set <c>-p:SdkAllowPrerelease=true</c> when <see cref="SdkVersion"/> is a preview.
+    /// </summary>
+    protected static readonly bool SdkAllowPrerelease =
+        string.Equals(AppContext.GetData("SdkAllowPrerelease") as string, "true", StringComparison.OrdinalIgnoreCase);
+
     protected readonly ITestOutputHelper Output;
     protected readonly string TestDir;
     protected readonly string SkiaVersion;
@@ -46,12 +75,18 @@ public abstract class PlatformTestBase : IDisposable
             </configuration>
             """);
         
-        // Write global.json to allow latest SDK (prevents inheriting repo's .NET 8 restriction)
-        File.WriteAllText(Path.Combine(TestDir, "global.json"), """
+        // Write global.json to pin the temp projects to a known SDK band. The MAUI/console/Blazor
+        // temp projects are generated outside the repo (in TempPath), so without this they would
+        // resolve to the highest installed SDK — including .NET 11 previews — which makes
+        // `dotnet new` emit net11.0-* TFMs that don't match the frameworks the harness builds
+        // (causing NETSDK1005 "doesn't have a target for net10.0-*"). Defaults to the .NET 10 band;
+        // pass -p:SdkVersion / -p:SdkAllowPrerelease (alongside -p:BaseFramework) to target a newer band.
+        File.WriteAllText(Path.Combine(TestDir, "global.json"), $$"""
             {
               "sdk": {
-                "version": "8.0.0",
-                "rollForward": "latestMajor"
+                "version": "{{SdkVersion}}",
+                "rollForward": "latestFeature",
+                "allowPrerelease": {{(SdkAllowPrerelease ? "true" : "false")}}
               }
             }
             """);
@@ -203,14 +238,19 @@ public abstract class PlatformTestBase : IDisposable
         
         using var process = Process.Start(psi)!;
         
-        var output = await process.StandardOutput.ReadToEndAsync();
-        var error = await process.StandardError.ReadToEndAsync();
+        // Start draining both pipes immediately so neither can fill and deadlock,
+        // then enforce the timeout via WaitForExit while the reads are in flight.
+        var outputTask = process.StandardOutput.ReadToEndAsync();
+        var errorTask = process.StandardError.ReadToEndAsync();
         
         if (!process.WaitForExit(timeoutSeconds * 1000))
         {
-            process.Kill();
+            try { process.Kill(true); } catch { }
             throw new TimeoutException($"Command timed out after {timeoutSeconds}s");
         }
+        
+        var output = await outputTask;
+        var error = await errorTask;
         
         Output.WriteLine($"Process exited with code {process.ExitCode}");
 

@@ -27,7 +27,7 @@ These contain the managed C# assemblies. The `SkiaSharp` and `HarfBuzzSharp` cor
 
 | Package | Description |
 |---------|-------------|
-| **SkiaSharp** | Cross-platform 2D graphics API. Managed C# bindings to Google's Skia library. Core types: `SKCanvas`, `SKPaint`, `SKBitmap`, `SKImage`, `SKPath`, `SKSurface`. Includes .NET Interactive support (embedded DLL for Polyglot Notebooks). |
+| **SkiaSharp** | Cross-platform 2D graphics API. Managed C# bindings to Google's Skia library. Core types: `SKCanvas`, `SKPaint`, `SKBitmap`, `SKImage`, `SKPath`, `SKSurface`. |
 | **HarfBuzzSharp** | Managed C# bindings to the HarfBuzz text shaping engine. Provides `Buffer`, `Font`, `Face` for complex text layout. |
 | **SkiaSharp.HarfBuzz** | Integration bridge — adds HarfBuzz text shaping to SkiaSharp via `SKShaper`. Depends on both SkiaSharp and HarfBuzzSharp. |
 | **SkiaSharp.Skottie** | Lottie/Bodymovin animation playback. Renders After Effects animations. Depends on SkiaSharp, SkiaSharp.SceneGraph, and SkiaSharp.Resources. |
@@ -92,7 +92,7 @@ Both follow the same platform matrix and architectures. HarfBuzzSharp does **not
 | **SkiaSharp.NativeAssets.MacCatalyst**<br/>**HarfBuzzSharp.NativeAssets.MacCatalyst** | Mac Catalyst universal framework bundle. Auto-included. |
 | **SkiaSharp.NativeAssets.tvOS**<br/>**HarfBuzzSharp.NativeAssets.tvOS** | Apple tvOS framework bundle (arm64, device only). Auto-included. |
 | **SkiaSharp.NativeAssets.Tizen**<br/>**HarfBuzzSharp.NativeAssets.Tizen** | Samsung Tizen (armel, x86). Auto-included. |
-| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0) and 3.1.56 (net9.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
+| **SkiaSharp.NativeAssets.WebAssembly**<br/>**HarfBuzzSharp.NativeAssets.WebAssembly** | Emscripten static library (`.a`). **Static linking, not P/Invoke** — linked into `dotnet.wasm` at build time via MSBuild `NativeFileReference`. Includes Emscripten 3.1.34 (net8.0), 3.1.56 (net9.0/net10.0), and 5.0.6 (net11.0+) with threading (st/mt) and SIMD variants. **Requires net8.0+.** Must add manually (or use SkiaSharp.Views.Blazor / SkiaSharp.Views.Uno.WinUI). |
 
 > **⚠️ WASM is NOT dynamic loading.** Unlike all other platforms, WebAssembly uses static linking at compile time. The `.a` files are passed to the Emscripten linker which embeds them into the final `dotnet.wasm` binary. `DllImport("libSkiaSharp")` still works — the .NET WASM runtime resolves it to statically linked symbols.
 

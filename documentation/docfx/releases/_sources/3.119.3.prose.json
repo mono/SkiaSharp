@@ -1,0 +1,56 @@
+{
+  "theme": "Security and dependency updates",
+  "highlights_headline": "SkiaSharp 3.119.3 is a preview focused on native security mitigations and dependency refreshes.",
+  "highlights_body": "Spectre mitigations are added for Linux, native dependencies including libwebp and brotli are updated, and an AoT crash with IlcDisableReflection is fixed.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "AoT crash with IlcDisableReflection fixed",
+          "detail": "Applications using Native AoT with IlcDisableReflection=true were crashing; the reflection-dependent code path has been removed.",
+          "prs": [
+            3485
+          ]
+        },
+        {
+          "lead": "Linux ARM64 fontconfig runtime dependency added",
+          "detail": "A missing fontconfig runtime library has been added to the Linux ARM64 cross-compile sysroot, fixing crashes on ARM64 Linux.",
+          "prs": [
+            3494
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Security",
+      "bullets": [
+        {
+          "lead": "Spectre mitigations enabled for Linux native binaries",
+          "detail": "Spectre v1 mitigation flags are now applied to libSkiaSharp.so on Linux, complementing the Windows mitigations from 3.119.2.",
+          "prs": [
+            3502,
+            3496
+          ]
+        },
+        {
+          "lead": "Native dependencies updated",
+          "detail": "libpng updated to 1.6.54, libwebp to 1.6.0, brotli to 1.2.0, and unused dependencies have been removed.",
+          "prs": [
+            3452,
+            3478,
+            3469,
+            3463
+          ]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "sshumakov": "Enabled Spectre mitigation flags for Windows and Linux native binaries"
+  },
+  "preview_summaries": {
+    "v3.119.3-preview.1.1": "Preview 1 delivered Spectre mitigations for Linux, AoT reflection fix, Linux ARM64 crash fix, and updates for libpng, libwebp, and brotli."
+  }
+}

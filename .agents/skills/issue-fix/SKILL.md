@@ -282,10 +282,10 @@ When a bug affects one platform but not another, **build both platforms locally*
 
 ```bash
 # Build x64 native (in Docker)
-bash ./scripts/infra/native/linux/docker/debian/11/build-local.sh
+bash ./scripts/infra/native/linux/docker/glibc/build-local.sh x64
 
 # Build ARM64 cross-compile (in Docker)
-bash ./scripts/infra/native/linux/docker/debian/11/build-local.sh arm64 10
+bash ./scripts/infra/native/linux/docker/glibc/build-local.sh arm64
 
 # Compare DT_NEEDED entries (the linked libraries)
 docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
@@ -379,10 +379,16 @@ Name: `Issue_NNNN_BriefDescription()`
 ### Run Tests
 
 ```bash
-dotnet test tests/SkiaSharp.Tests.Console.sln
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
 
-Tests MUST pass. Verify fix on original platform.
+Run the solution unfiltered first. If it identifies a failure, use the owning core,
+singleton, Vulkan, or Direct3D project for filtered diagnostic iterations; do not filter
+the `.slnx` because projects with zero matches fail under Microsoft.Testing.Platform.
+After the focused test passes, rerun the unfiltered solution.
+
+Tests MUST pass. Only the final unfiltered solution run satisfies the gate. Verify the fix
+on the original platform.
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Built successfully

@@ -11,7 +11,7 @@ namespace SkiaSharp.Direct3D.Tests;
 public class GRContextTest : Direct3DTest
 {
 	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-	[SkippableFact]
+	[Fact]
 	public void GRContextIsNullWhenNoDirect3DContext()
 	{
 		var grBackendContext = new GRD3DBackendContext();
@@ -30,7 +30,7 @@ public abstract class GRContextTest<TContext> : Direct3DTest<TContext>
 	where TContext : Direct3DContext, new()
 {
 	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-	[SkippableFact]
+	[Fact]
 	public void CreateDirect3DContextIsValid()
 	{
 		using var ctx = CreateDirect3DContext();
@@ -45,7 +45,7 @@ public abstract class GRContextTest<TContext> : Direct3DTest<TContext>
 	}
 
 	[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-	[SkippableFact]
+	[Fact]
 	public void CreateDirect3DContextWithOptionsIsValid()
 	{
 		using var ctx = CreateDirect3DContext();

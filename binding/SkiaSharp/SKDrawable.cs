@@ -54,23 +54,37 @@ namespace SkiaSharp
 				SkiaApi.sk_drawable_unref (Handle);
 		}
 
-		public uint GenerationId => SkiaApi.sk_drawable_get_generation_id (Handle);
+		public uint GenerationId {
+			get {
+				var result = SkiaApi.sk_drawable_get_generation_id (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public SKRect Bounds {
 			get {
 				SKRect bounds;
 				SkiaApi.sk_drawable_get_bounds (Handle, &bounds);
+				GC.KeepAlive (this);
 				return bounds;
 			}
 		}
 
-		public int ApproximateBytesUsed =>
-			(int)SkiaApi.sk_drawable_approximate_bytes_used (Handle);
+		public int ApproximateBytesUsed {
+			get {
+				var result = (int)SkiaApi.sk_drawable_approximate_bytes_used (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public void Draw (SKCanvas canvas, in SKMatrix matrix)
 		{
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_drawable_draw (Handle, canvas.Handle, m);
+			GC.KeepAlive (canvas);
+			GC.KeepAlive (this);
 		}
 
 		public void Draw (SKCanvas canvas, float x, float y)
@@ -80,11 +94,18 @@ namespace SkiaSharp
 		}
 
 		// do not unref as this is a plain pointer return, not a reference counted pointer
-		public SKPicture Snapshot () =>
-			SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+		public SKPicture Snapshot ()
+		{
+			var result = SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
+			GC.KeepAlive (this);
+			return result;
+		}
 
-		public void NotifyDrawingChanged () =>
+		public void NotifyDrawingChanged ()
+		{
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
+			GC.KeepAlive (this);
+		}
 
 		protected internal virtual void OnDraw (SKCanvas canvas)
 		{

@@ -1,231 +1,134 @@
+# Manage NuGet Feed — mirrors packages from a source Azure DevOps Artifacts feed
+# to a destination feed, driven by scripts/infra/package/manage-nuget-feed.ps1.
+#
+# Rather than deleting junk in place from a live feed, we mirror ONLY the
+# packages/versions that pass the rules into a clean destination. Currently
+# configured for the xamarin -> dnceng migration, and keeps the destination
+# feeds clean via per-feed rules (the public 'skiasharp' feed excludes the
+# internal '_'-prefixed CI wrapper packages; the internal 'skiasharp-ci' keeps
+# them).
+#
+#   * Manual dispatch (push unchecked)      -> DRY RUN only
+#     (inventory + diff + plan, read anonymously, no writes, NO secret in scope).
+#   * Manual dispatch with `push: true`     -> real mirror
+#     (requires the AZURE_DEVOPS_PAT secret with packaging read/write on dnceng).
+#
+# This workflow never runs automatically — there is no PR/push trigger.
+#
+# Secret handling: the PAT is injected into the job ONLY for an opted-in push, so
+# dry-run logs never contain it (not even masked). For the push, auth goes through
+# the Azure Artifacts Credential Provider (VSS_NUGET_EXTERNAL_FEED_ENDPOINTS) — the
+# token is never written to a nuget.config or passed on any command line.
+#
+# The script is idempotent and timeout-safe, so a real mirror can be re-run as
+# many times as needed; each run only transfers what is still missing.
+
 name: Manage NuGet Feed
 
+# Manual only — this workflow is never triggered automatically. Run it from the
+# Actions tab (or `gh workflow run`) with the feed + push inputs below.
 on:
-  pull_request:
-    paths:
-      - 'scripts/infra/package/manage-nuget-feed.ps1'
-      - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Run mode'
-        required: true
-        default: 'parallel-underscore'
+      feed:
+        description: 'Which feed to mirror'
         type: choice
-        options:
-          - parallel-underscore    # Run all _* packages in parallel
-          - parallel-all           # Run all packages (underscore + regular) in parallel
-          - single                 # Run single filter (use package_filter)
-      package_filter:
-        description: 'Regex filter (only for "single" mode, e.g., "^SkiaSharp$")'
-        required: false
-        default: ''
-      move_phase:
-        description: 'Move phase for underscore packages'
         required: true
-        default: 'CopyOnly'
-        type: choice
+        default: both
         options:
-          - CopyOnly
-          - DeleteOnly
-          - All
-      skip_move_operations:
-        description: 'Skip move operations (only delete bad versions)'
-        required: false
+          - both
+          - skiasharp
+          - skiasharp-ci
+      push:
+        description: 'Actually push packages (opt in). Unchecked = dry run.'
         type: boolean
+        required: true
         default: false
-      skip_delete_operations:
-        description: 'Skip delete operations (only move packages)'
-        required: false
-        type: boolean
-        default: false
-      verify_before_delete:
-        description: 'Verify package exists in destination before deleting from source'
-        required: false
-        type: boolean
-        default: true
+
+# Least privilege. This workflow never needs to write to the GitHub repo.
+permissions:
+  contents: read
 
 jobs:
-  # Parallel jobs for underscore packages (move to archive feed)
-  manage-underscore-packages:
-    if: inputs.mode == 'parallel-underscore' || inputs.mode == 'parallel-all' || github.event_name == 'pull_request'
+  mirror:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    # A little under the 360-min hard cap; the script's own budget stops earlier.
+    timeout-minutes: 350
     strategy:
       fail-fast: false
       matrix:
-        package:
-          - name: _NativeAssets
-            filter: "^_NativeAssets$"
-          - name: _NativeAssets.alpine
-            filter: "^_NativeAssets\\.alpine$"
-          - name: _NativeAssets.alpinenodeps
-            filter: "^_NativeAssets\\.alpinenodeps$"
-          - name: _NativeAssets.android
-            filter: "^_NativeAssets\\.android$"
-          - name: _NativeAssets.ios
-            filter: "^_NativeAssets\\.ios$"
-          - name: _NativeAssets.iossimulator
-            filter: "^_NativeAssets\\.iossimulator$"
-          - name: _NativeAssets.linux
-            filter: "^_NativeAssets\\.linux$"
-          - name: _NativeAssets.linuxnodeps
-            filter: "^_NativeAssets\\.linuxnodeps$"
-          - name: _NativeAssets.maccatalyst
-            filter: "^_NativeAssets\\.maccatalyst$"
-          - name: _NativeAssets.nanoserver
-            filter: "^_NativeAssets\\.nanoserver$"
-          - name: _NativeAssets.osx
-            filter: "^_NativeAssets\\.osx$"
-          - name: _NativeAssets.tizen
-            filter: "^_NativeAssets\\.tizen$"
-          - name: _NativeAssets.tvos
-            filter: "^_NativeAssets\\.tvos$"
-          - name: _NativeAssets.uwp
-            filter: "^_NativeAssets\\.uwp$"
-          - name: _NativeAssets.wasm
-            filter: "^_NativeAssets\\.wasm$"
-          - name: _NativeAssets.watchos
-            filter: "^_NativeAssets\\.watchos$"
-          - name: _NativeAssets.windows
-            filter: "^_NativeAssets\\.windows$"
-          - name: _NativeAssets.winui
-            filter: "^_NativeAssets\\.winui$"
-          - name: _NuGets
-            filter: "^_NuGets$"
-          - name: _NuGetsPreview
-            filter: "^_NuGetsPreview$"
-          - name: _Symbols
-            filter: "^_Symbols$"
-          - name: _SymbolsPreview
-            filter: "^_SymbolsPreview$"
+        # Both feeds run in parallel. All per-feed behaviour (source, destination,
+        # and rules like excluding the internal '_' packages) lives in the script.
+        feed: [skiasharp, skiasharp-ci]
 
-    name: "${{ matrix.package.name }}"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+    # Serialize real mirrors of the same feed across runs.
+    concurrency:
+      group: manage-nuget-feed-${{ matrix.feed }}
+      cancel-in-progress: false
 
-      - name: Run feed management
-        shell: pwsh
-        env:
-          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
-        run: |
-          $params = @{
-            Organization = "xamarin"
-            Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
-            PackageFilter = "${{ matrix.package.filter }}"
-          }
-
-          $movePhase = "${{ inputs.move_phase }}"
-          $params.MovePhase = if ($movePhase) { $movePhase } else { "CopyOnly" }
-          $params.Execute = $true  # Always execute in CI
-
-          if ("${{ inputs.skip_move_operations }}" -eq "true") { $params.SkipMoveOperations = $true }
-          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
-          if ("${{ inputs.verify_before_delete }}" -eq "true") { $params.VerifyBeforeDelete = $true }
-
-          Write-Host "Running ${{ matrix.package.name }} with parameters:"
-          $params | Format-Table -AutoSize
-          ./scripts/infra/package/manage-nuget-feed.ps1 @params
-
-  # Parallel jobs for regular packages (delete bad versions only, no move)
-  manage-regular-packages:
-    if: inputs.mode == 'parallel-all'
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
-    strategy:
-      fail-fast: false
-      matrix:
-        package:
-          - name: SkiaSharp
-            filter: "^SkiaSharp$"
-          - name: SkiaSharp-NativeAssets
-            filter: "^SkiaSharp\\.NativeAssets\\."
-          - name: SkiaSharp-Views
-            filter: "^SkiaSharp\\.Views\\."
-          - name: SkiaSharp-Other
-            filter: "^SkiaSharp\\.(?!NativeAssets|Views)"
-          - name: HarfBuzzSharp
-            filter: "^HarfBuzzSharp"
-
-    name: "${{ matrix.package.name }}"
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run feed management
-        shell: pwsh
-        env:
-          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
-        run: |
-          $params = @{
-            Organization = "xamarin"
-            Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
-            PackageFilter = "${{ matrix.package.filter }}"
-            SkipMoveOperations = $true  # Regular packages don't move
-          }
-
-          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
-          $params.Execute = $true  # Always execute in CI
-
-          Write-Host "Running ${{ matrix.package.name }} with parameters:"
-          $params | Format-Table -AutoSize
-          ./scripts/infra/package/manage-nuget-feed.ps1 @params
-
-  # Single package mode (manual filter)
-  manage-single:
-    if: inputs.mode == 'single' && inputs.package_filter != ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 360
+    name: "${{ matrix.feed }}"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
-      - name: Run feed management script
+      - name: Gate — should this feed run, and is this an opted-in real copy?
+        id: gate
+        shell: bash
+        # Inputs are passed via env (never interpolated into the script body) and
+        # strictly validated, so a dispatch input can never inject shell commands.
+        env:
+          FEED_INPUT: ${{ github.event.inputs.feed }}
+          PUSH_INPUT: ${{ github.event.inputs.push }}
+          MATRIX_FEED: ${{ matrix.feed }}
+        run: |
+          set -euo pipefail
+          case "$FEED_INPUT" in both|skiasharp|skiasharp-ci|"") ;; *) echo "Invalid feed input"; exit 2 ;; esac
+          case "$PUSH_INPUT" in true|false|"") ;; *) echo "Invalid push input"; exit 2 ;; esac
+
+          if [ -z "$FEED_INPUT" ] || [ "$FEED_INPUT" = "both" ] || [ "$FEED_INPUT" = "$MATRIX_FEED" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping $MATRIX_FEED (feed input = $FEED_INPUT)"
+          fi
+          # A real copy (write) happens only on a manual dispatch that explicitly
+          # opts in via push=true. The workflow is manual-only and dispatch is
+          # restricted to users with write access, so it may be run from any
+          # branch (e.g. to populate the feeds before this migration merges).
+          # A dry run never opts in and never needs the secret.
+          if [ "$PUSH_INPUT" = "true" ]; then
+            echo "push=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "push=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The credential provider + PAT are only set up for a real, opted-in push.
+      # Dry runs never install it and never receive the secret.
+      - name: Install Azure Artifacts Credential Provider
+        if: steps.gate.outputs.run == 'true' && steps.gate.outputs.push == 'true'
+        shell: bash
+        run: sh -c "$(curl -fsSL https://aka.ms/install-artifacts-credprovider.sh)"
+
+      - name: Mirror ${{ matrix.feed }}
+        if: steps.gate.outputs.run == 'true'
         shell: pwsh
         env:
-          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+          # The secret is injected ONLY for an opted-in push. On every other run
+          # this evaluates to an empty string, so the token is never present in
+          # the job environment (and therefore cannot appear in logs, even masked).
+          AZURE_DEVOPS_PAT: ${{ steps.gate.outputs.push == 'true' && secrets.AZURE_DEVOPS_PAT || '' }}
+          # matrix.feed is a fixed, workflow-controlled value (skiasharp | skiasharp-ci)
+          # and gate.outputs.push is a validated 'true'/'false' — passed via env and
+          # never interpolated into the script body.
+          MIRROR_FEED: ${{ matrix.feed }}
+          MIRROR_PUSH: ${{ steps.gate.outputs.push }}
         run: |
           $params = @{
-            Organization = "xamarin"
-            Project = "public"
-            SourceFeed = "SkiaSharp"
-            DestinationFeed = "SkiaSharp-CI"
+            Feed        = $env:MIRROR_FEED
+            SummaryFile = $env:GITHUB_STEP_SUMMARY
           }
-
-          # Add optional parameters (with defaults for PR triggers where inputs are empty)
-          $packageFilter = "${{ inputs.package_filter }}"
-          if ($packageFilter) {
-            $params.PackageFilter = $packageFilter
-          }
-
-          $movePhase = "${{ inputs.move_phase }}"
-          if ($movePhase) {
-            $params.MovePhase = $movePhase
-          } else {
-            $params.MovePhase = "CopyOnly"  # Default for PR triggers
-          }
-
-          if ("${{ inputs.skip_move_operations }}" -eq "true") {
-            $params.SkipMoveOperations = $true
-          }
-
-          if ("${{ inputs.skip_delete_operations }}" -eq "true") {
-            $params.SkipDeleteOperations = $true
-          }
-
-          if ("${{ inputs.verify_before_delete }}" -eq "true") {
-            $params.VerifyBeforeDelete = $true
-          }
-
-          $params.Execute = $true
-
-          Write-Host "Running with parameters:"
-          $params | Format-Table -AutoSize
-
+          if ($env:MIRROR_PUSH -eq "true") { $params.Push = $true }
           ./scripts/infra/package/manage-nuget-feed.ps1 @params

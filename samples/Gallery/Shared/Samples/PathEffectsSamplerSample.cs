@@ -95,7 +95,7 @@ public class PathEffectsSamplerSample : CanvasSampleBase
 			using (var labelPaint = new SKPaint { Color = new SKColor(0xFF555555), IsAntialias = true })
 			{
 				var labelW = labelFont.MeasureText(effects[i].Name);
-				canvas.DrawText(effects[i].Name, cx - labelW / 2f, row * cellH + 22, labelFont, labelPaint);
+				canvas.DrawText(effects[i].Name, cx - labelW / 2f, row * cellH + 22, SKTextAlign.Left, labelFont, labelPaint);
 			}
 
 			// Create the base path

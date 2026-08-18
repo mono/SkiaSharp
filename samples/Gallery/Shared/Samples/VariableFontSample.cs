@@ -84,7 +84,7 @@ public class VariableFontSample : CanvasSampleBase
 
 		// Draw the sample text centered
 		font.MeasureText(text, out var bounds, paint);
-		canvas.DrawText(text, x - bounds.MidX, y, font, paint);
+		canvas.DrawText(text, x - bounds.MidX, y, SKTextAlign.Left, font, paint);
 
 		// Draw axis info below
 		using var infoFont = new SKFont(typeface, Math.Max(14, textSize * 0.35f));
@@ -92,7 +92,7 @@ public class VariableFontSample : CanvasSampleBase
 
 		var info = $"wght: {weight:F0}   opsz: {opticalSize:F0}";
 		infoFont.MeasureText(info, out var infoBounds, infoPaint);
-		canvas.DrawText(info, x - infoBounds.MidX, y + bounds.Height + 40, infoFont, infoPaint);
+		canvas.DrawText(info, x - infoBounds.MidX, y + bounds.Height + 40, SKTextAlign.Left, infoFont, infoPaint);
 
 		// Draw weight spectrum at the bottom
 		DrawWeightSpectrum(canvas, width, height, typeface);
@@ -133,12 +133,12 @@ public class VariableFontSample : CanvasSampleBase
 			};
 
 			f.MeasureText(spectrumText, out var b, p);
-			canvas.DrawText(spectrumText, cx - b.MidX, spectrumY, f, p);
+			canvas.DrawText(spectrumText, cx - b.MidX, spectrumY, SKTextAlign.Left, f, p);
 
 			// Weight label
 			var label = $"{w:F0}";
 			labelFont.MeasureText(label, out var lb, labelPaint);
-			canvas.DrawText(label, cx - lb.MidX, spectrumY + b.Height + 16, labelFont, labelPaint);
+			canvas.DrawText(label, cx - lb.MidX, spectrumY + b.Height + 16, SKTextAlign.Left, labelFont, labelPaint);
 		}
 	}
 

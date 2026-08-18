@@ -21,9 +21,19 @@ namespace HarfBuzzSharp
 
 		public static FontFunctions Empty => emptyFontFunctions.Value;
 
-		public bool IsImmutable => HarfBuzzApi.hb_font_funcs_is_immutable (Handle);
+		public bool IsImmutable {
+			get {
+				var r = HarfBuzzApi.hb_font_funcs_is_immutable (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
-		public void MakeImmutable () => HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
+		public void MakeImmutable ()
+		{
+			HarfBuzzApi.hb_font_funcs_make_immutable (Handle);
+			GC.KeepAlive (this);
+		}
 
 		public void SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null)
 		{
@@ -33,6 +43,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_font_h_extents_func (
 				Handle, DelegateProxies.FontGetFontExtentsProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetVerticalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null)
@@ -43,6 +54,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_font_v_extents_func (
 				Handle, DelegateProxies.FontGetFontExtentsProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetNominalGlyphDelegate (NominalGlyphDelegate del, ReleaseDelegate destroy = null)
@@ -53,6 +65,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_nominal_glyph_func (
 				Handle, DelegateProxies.FontGetNominalGlyphProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetNominalGlyphsDelegate (NominalGlyphsDelegate del, ReleaseDelegate destroy = null)
@@ -63,6 +76,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_nominal_glyphs_func (
 				Handle, DelegateProxies.FontGetNominalGlyphsProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetVariationGlyphDelegate (VariationGlyphDelegate del, ReleaseDelegate destroy = null)
@@ -73,6 +87,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_variation_glyph_func (
 				Handle, DelegateProxies.FontGetVariationGlyphProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetHorizontalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy = null)
@@ -83,6 +98,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_advance_func (
 				Handle, DelegateProxies.FontGetGlyphAdvanceProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetVerticalGlyphAdvanceDelegate (GlyphAdvanceDelegate del, ReleaseDelegate destroy = null)
@@ -93,6 +109,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_advance_func (
 				Handle, DelegateProxies.FontGetGlyphAdvanceProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetHorizontalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy = null)
@@ -103,6 +120,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_advances_func (
 				Handle, DelegateProxies.FontGetGlyphAdvancesProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetVerticalGlyphAdvancesDelegate (GlyphAdvancesDelegate del, ReleaseDelegate destroy = null)
@@ -113,6 +131,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_advances_func (
 				Handle, DelegateProxies.FontGetGlyphAdvancesProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetHorizontalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy = null)
@@ -123,6 +142,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_origin_func (
 				Handle, DelegateProxies.FontGetGlyphOriginProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetVerticalGlyphOriginDelegate (GlyphOriginDelegate del, ReleaseDelegate destroy = null)
@@ -133,6 +153,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_v_origin_func (
 				Handle, DelegateProxies.FontGetGlyphOriginProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetHorizontalGlyphKerningDelegate (GlyphKerningDelegate del, ReleaseDelegate destroy = null)
@@ -143,6 +164,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_h_kerning_func (
 				Handle, DelegateProxies.FontGetGlyphKerningProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetGlyphExtentsDelegate (GlyphExtentsDelegate del, ReleaseDelegate destroy = null)
@@ -153,6 +175,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_extents_func (
 				Handle, DelegateProxies.FontGetGlyphExtentsProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 		public void SetGlyphContourPointDelegate (GlyphContourPointDelegate del, ReleaseDelegate destroy = null)
 		{
@@ -162,6 +185,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_contour_point_func (
 				Handle, DelegateProxies.FontGetGlyphContourPointProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetGlyphNameDelegate (GlyphNameDelegate del, ReleaseDelegate destroy = null)
@@ -172,6 +196,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_name_func (
 				Handle, DelegateProxies.FontGetGlyphNameProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		public void SetGlyphFromNameDelegate (GlyphFromNameDelegate del, ReleaseDelegate destroy = null)
@@ -182,6 +207,7 @@ namespace HarfBuzzSharp
 
 			HarfBuzzApi.hb_font_funcs_set_glyph_from_name_func (
 				Handle, DelegateProxies.FontGetGlyphFromNameProxy, (void*)ctx, DelegateProxies.DestroyProxyForMulti);
+			GC.KeepAlive (this);
 		}
 
 		protected override void Dispose (bool disposing) =>

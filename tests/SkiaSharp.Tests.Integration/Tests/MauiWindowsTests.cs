@@ -1,6 +1,6 @@
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Windows;
-using Xunit.Abstractions;
+using Xunit;
 
 namespace SkiaSharp.Tests.Integration;
 

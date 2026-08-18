@@ -6,7 +6,7 @@ namespace HarfBuzzSharp.Tests
 	{
 		// Construction
 
-		[SkippableFact]
+		[Fact]
 		public void ConstructorFromComponentsRoundtrips ()
 		{
 			var color = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -17,7 +17,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ((byte)0xFF, color.Alpha);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ConstructorFromRawValuePreservesLayout ()
 		{
 			// hb_color_t layout: 0xBBGGRRAA
@@ -30,7 +30,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0xCCBBAA_FFu, color.Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ComponentConstructorProducesCorrectRawValue ()
 		{
 			var color = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -41,7 +41,7 @@ namespace HarfBuzzSharp.Tests
 
 		// Well-known colors
 
-		[SkippableFact]
+		[Fact]
 		public void OpaqueBlack ()
 		{
 			var color = new HBColor (0, 0, 0, 255);
@@ -53,7 +53,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0x000000_FFu, color.Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OpaqueWhite ()
 		{
 			var color = new HBColor (255, 255, 255, 255);
@@ -65,7 +65,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0xFFFFFF_FFu, color.Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TransparentBlack ()
 		{
 			var color = new HBColor (0, 0, 0, 0);
@@ -77,7 +77,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (0x00000000u, color.Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PureRedIsDistinctFromPureBlue ()
 		{
 			var red = new HBColor (255, 0, 0, 255);
@@ -92,7 +92,7 @@ namespace HarfBuzzSharp.Tests
 
 		// Operators
 
-		[SkippableFact]
+		[Fact]
 		public void ImplicitConversionToUint ()
 		{
 			var color = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -101,7 +101,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (color.Value, value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ExplicitConversionFromUint ()
 		{
 			uint raw = 0xCCBBAA_FFu;
@@ -115,7 +115,7 @@ namespace HarfBuzzSharp.Tests
 
 		// Equality
 
-		[SkippableFact]
+		[Fact]
 		public void EqualColorsAreEqual ()
 		{
 			var a = new HBColor (10, 20, 30, 40);
@@ -128,7 +128,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal (a.GetHashCode (), b.GetHashCode ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DifferentColorsAreNotEqual ()
 		{
 			var a = new HBColor (10, 20, 30, 40);
@@ -139,7 +139,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.False (a.Equals (b));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void NotEqualToNull ()
 		{
 			var color = new HBColor (1, 2, 3, 4);
@@ -149,7 +149,7 @@ namespace HarfBuzzSharp.Tests
 
 		// ToString
 
-		[SkippableFact]
+		[Fact]
 		public void ToStringFormatsAsARGBHex ()
 		{
 			var color = new HBColor (0xAA, 0xBB, 0xCC, 0xFF);
@@ -157,7 +157,7 @@ namespace HarfBuzzSharp.Tests
 			Assert.Equal ("#FFAABBCC", color.ToString ());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ToStringPadsWithZeros ()
 		{
 			var color = new HBColor (0, 0, 0, 0);

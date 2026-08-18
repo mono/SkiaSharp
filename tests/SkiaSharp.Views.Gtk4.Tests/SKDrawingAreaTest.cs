@@ -9,18 +9,29 @@ namespace SkiaSharp.Views.Gtk4.Tests
 	{
 		private static void InitGtk()
 		{
+			// gtk_init()/gtk_init_check() call native exit() when no display can be opened, which
+			// cannot be caught as a managed exception and aborts the whole test host. Skip up-front on
+			// headless environments (no X11/Wayland display) before touching any GTK display API.
+			var hasDisplay =
+				!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DISPLAY")) ||
+				!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"));
+			if (!hasDisplay)
+				Assert.Skip("GTK cannot be initialized: no display available");
+
 			try
 			{
 				global::Gtk.Module.Initialize();
-				global::Gtk.Functions.Init();
+
+				if (!global::Gtk.Functions.InitCheck())
+					Assert.Skip("GTK cannot be initialized: no display available");
 			}
 			catch (Exception ex)
 			{
-				throw new SkipException($"GTK cannot be initialized: {ex.Message}");
+				Assert.Skip($"GTK cannot be initialized: {ex.Message}");
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateDrawingArea()
 		{
 			InitGtk();
@@ -29,7 +40,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.NotNull(area);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InitialCanvasSizeIsEmpty()
 		{
 			InitGtk();
@@ -38,7 +49,7 @@ namespace SkiaSharp.Views.Gtk4.Tests
 			Assert.Equal(SKSize.Empty, area.CanvasSize);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PaintSurfaceEventCanBeSubscribed()
 		{
 			InitGtk();

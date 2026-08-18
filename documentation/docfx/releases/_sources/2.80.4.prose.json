@@ -1,0 +1,38 @@
+{
+  "theme": "Servicing fixes",
+  "highlights_headline": "SkiaSharp 2.80.4 is a servicing release: IsAntialias controls edging, failed surface allocations return empty, and ANGLE ships zlib1.dll.",
+  "highlights_body": null,
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "IsAntialias controls edging",
+          "detail": "Setting IsAntialias on a paint now also updates the edging mode, matching the pre-refactor behaviour that consumers relied on.",
+          "prs": [1802]
+        },
+        {
+          "lead": "Failed surface allocations return empty",
+          "detail": "SKSurface.Create now returns an empty surface when the underlying allocation fails, instead of propagating a crash.",
+          "prs": [1784]
+        },
+        {
+          "lead": "ANGLE ships zlib1.dll",
+          "detail": "The ANGLE native package now includes the additional zlib1.dll output that ANGLE requires at runtime.",
+          "prs": [1807]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "richirisu": "Made SKSurface.Create return an empty surface when the allocation fails instead of crashing"
+  },
+  "preview_summaries": {
+    "v2.80.4-preview.9": "Preview 9 finalised the servicing bits ahead of stable.",
+    "v2.80.4-preview.6": "Preview 6 added the ANGLE zlib1.dll output.",
+    "v2.80.4-preview.5": "Preview 5 fixed IsAntialias so it also controls edging.",
+    "v2.80.4-preview.2": "Preview 2 added the empty-surface fallback for failed allocations."
+  },
+  "harfbuzz_summary": null
+}

@@ -106,6 +106,19 @@ ANGLE has its own submodules that must also be tracked:
 
 Check that all of these are in `cgmanifest.json`. If missing, flag as a coverage gap.
 
+### ANGLE in Chrome Releases Blog
+
+ANGLE CVEs also appear in the Chrome Releases blog with the component name "ANGLE" (e.g.,
+"Use after free in ANGLE"). The `query-chrome-releases.py` script captures these alongside
+Skia CVEs.
+
+When cross-referencing, ANGLE CVEs from Chrome Releases provide:
+- The exact Chrome milestone where the fix shipped
+- The bug ID for commit resolution
+- Severity rating before NVD publishes CVSS
+
+This supplements the NVD + web search approach for ANGLE vulnerabilities.
+
 ## Reporting Third-Party Dep Findings
 
 For each third-party CVE, include:

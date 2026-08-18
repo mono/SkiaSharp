@@ -46,6 +46,6 @@ public class BuiltinFiddleCompiler : IFiddleCompiler
         using var font = new SKFont(SKTypeface.Default, 28) { Embolden = true };
         const string text = "Hello SkiaFiddle";
         var w = font.MeasureText(text);
-        canvas.DrawText(text, cx - w / 2, cy - r - 24, font, paint);
+        canvas.DrawText(text, cx - w / 2, cy - r - 24, SKTextAlign.Left, font, paint);
     }
 }

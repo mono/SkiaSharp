@@ -1,0 +1,57 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    The Vulkan tests as a LIBRARY, for the single-process MAUI device host
+    (SkiaSharp.Tests.Devices). The Console desktop hosts run the same VulkanTests
+    source via the standalone SkiaSharp.Vulkan.Tests.Console exe; the device host
+    cannot spawn a second process, so it references this library and registers it in
+    MauiProgram's test-assembly list instead.
+
+    Two deliberate properties:
+      * NOT strong-named (SignAssembly=false). Silk.NET.Vulkan and SharpVk are
+        unsigned; a strong-named assembly could not reference them (and on net48 the
+        CLR would refuse to load them). This library, being unsigned, can, while
+        still referencing the signed SkiaSharp.Tests harness (unsigned -> signed is
+        allowed).
+      * Targets only the device platforms whose native libSkiaSharp is built with
+        Vulkan AND whose linker can resolve the Vulkan P/Invokes: android and
+        windows. It is deliberately NOT built for ios/maccatalyst/tizen, where the
+        AOT/native linker has no libvulkan to bind the vk* symbols against (that is
+        exactly what broke when the Vulkan deps leaked into the shared test library).
+  -->
+
+  <PropertyGroup>
+    <TargetFrameworks>$(TFMCurrent)-android</TargetFrameworks>
+    <TargetFrameworks Condition="$(IsWindows)">$(TargetFrameworks);$(TFMCurrent)-windows$(TPVWindowsCurrent)</TargetFrameworks>
+    <RootNamespace>SkiaSharp.Vulkan.Tests</RootNamespace>
+    <AssemblyName>SkiaSharp.Vulkan.Tests</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+    <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+    <IsTestProject>false</IsTestProject>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-android'))">21.0</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion Condition="$(TargetFramework.Contains('-windows'))">10.0.17763.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
+    <PackageReference Include="SharpVk" Version="0.4.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.SharpVk\SkiaSharp.Vulkan.SharpVk.csproj" />
+    <ProjectReference Include="..\..\source\SkiaSharp.Vulkan\SkiaSharp.Vulkan.Silk.NET\SkiaSharp.Vulkan.Silk.NET.csproj" />
+    <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\VulkanTests\**\*.cs" Link="%(RecursiveDir)%(FileName)%(Extension)" />
+  </ItemGroup>
+
+</Project>

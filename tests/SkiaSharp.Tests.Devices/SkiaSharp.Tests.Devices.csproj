@@ -12,6 +12,7 @@
     <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
+    <GenerateTestingPlatformEntryPoint>false</GenerateTestingPlatformEntryPoint>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -30,15 +31,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.skippablefact" Version="1.4.13" />
-    <PackageReference Include="Validation" Version="2.4.22" />
-    <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.6" />
-    <PackageReference Include="DeviceRunners.VisualRunners.Xunit" Version="0.1.0-preview.6" />
-    <PackageReference Include="DeviceRunners.XHarness.Maui" Version="0.1.0-preview.6" />
-    <PackageReference Include="DeviceRunners.XHarness.Xunit" Version="0.1.0-preview.6" />
-    <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.6" />
-    <PackageReference Include="DeviceRunners.UITesting.Xunit" Version="0.1.0-preview.6" />
+    <PackageReference Include="xunit.v3.extensibility.core" Version="3.2.2" />
+    <PackageReference Include="xunit.v3.assert" Version="3.2.2" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Maui" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.VisualRunners.Xunit3" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.UITesting.Maui" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.UITesting.Xunit3" Version="0.1.0-preview.12" />
+    <PackageReference Include="DeviceRunners.Testing.Targets" Version="0.1.0-preview.12" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
     <PackageReference Include="Microsoft.Maui.Core" Version="$(MauiVersion)" />
@@ -56,6 +55,14 @@
     <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Core\SkiaSharp.Views.Maui.Core.csproj" />
     <ProjectReference Include="..\..\source\SkiaSharp.Views.Maui\SkiaSharp.Views.Maui.Controls\SkiaSharp.Views.Maui.Controls.csproj" />
     <ProjectReference Include="..\SkiaSharp.Tests\SkiaSharp.Tests.csproj" />
+  </ItemGroup>
+
+  <!-- Vulkan tests: only the device platforms whose native library is built with Vulkan and whose
+       linker can resolve the Vulkan P/Invokes (android, windows). The library is unsigned so it can
+       reference the unsigned Silk.NET/SharpVk packages; MauiProgram registers its assembly so the
+       renderer catalog and the test runner both discover it. -->
+  <ItemGroup Condition="$(TargetFramework.Contains('-android')) or $(TargetFramework.Contains('-windows'))">
+    <ProjectReference Include="..\SkiaSharp.Vulkan.Tests\SkiaSharp.Vulkan.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup>

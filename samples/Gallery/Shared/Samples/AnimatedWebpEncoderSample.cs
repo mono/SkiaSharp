@@ -209,10 +209,10 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 				IsAntialias = true,
 				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6),
 			};
-			canvas.DrawText(ch, x, y, font, glowPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, glowPaint);
 
 			// letter
-			canvas.DrawText(ch, x, y, font, textPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, textPaint);
 			x += charW;
 		}
 	}
@@ -306,7 +306,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			(width - dw) / 2f, (height - dh) / 2f,
 			(width + dw) / 2f, (height + dh) / 2f);
 
-		canvas.DrawBitmap(_currentBitmap, destRect);
+		canvas.DrawBitmap(_currentBitmap, destRect, SKSamplingOptions.Default);
 
 		// info bar
 		using var infoPaint = new SKPaint { Color = new SKColor(200, 200, 200), IsAntialias = true };

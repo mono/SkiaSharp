@@ -7,14 +7,14 @@ using System.Threading;
 
 /*
  * This is a fix for issue #1383.
- * 
+ *
  *    https://github.com/mono/SkiaSharp/issues/1383
- * 
- * On Windows, .NET locks are alertable when using the STA threading model and can 
- * cause the Windows message loop to be dispatched (typically on WM_PAINT messages). 
- * This can lead to re-entrancy and a deadlock on the HandleDictionary lock. 
- * 
- * This fix replaces the ReaderWriteLockSlim instance on Windows with a native Win32 
+ *
+ * On Windows, .NET locks are alertable when using the STA threading model and can
+ * cause the Windows message loop to be dispatched (typically on WM_PAINT messages).
+ * This can lead to re-entrancy and a deadlock on the HandleDictionary lock.
+ *
+ * This fix replaces the ReaderWriteLockSlim instance on Windows with a native Win32
  * CRITICAL_SECTION.
  */
 
@@ -89,7 +89,7 @@ namespace SkiaSharp.Internals
 			public void EnterUpgradeableReadLock () => _lock.EnterUpgradeableReadLock ();
 			public void ExitUpgradeableReadLock () => _lock.ExitUpgradeableReadLock ();
 
-			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim ();
+			ReaderWriterLockSlim _lock = new ReaderWriterLockSlim (LockRecursionPolicy.NoRecursion);
 		}
 
 #if !(__IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__)

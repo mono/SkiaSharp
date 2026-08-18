@@ -18,6 +18,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (canvas));
 
 			Handle = SkiaApi.sk_overdraw_canvas_new (canvas.Handle);
+			GC.KeepAlive (canvas);
 		}
 	}
 }

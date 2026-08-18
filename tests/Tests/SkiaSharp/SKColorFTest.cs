@@ -9,7 +9,7 @@ namespace SkiaSharp.Tests
 	{
 		private const int Precision = 2;
 
-		[SkippableFact]
+		[Fact]
 		public void MakeSureColorsAreNotBroken()
 		{
 			var color = new SKColorF(0.4f, 0, 0, 0.6f);
@@ -21,7 +21,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((SKColor)color, paint.Color);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MakeSureColorsWithColorSpacesWork()
 		{
 			var color = new SKColorF(0.3f, 0, 0, 0.6f);
@@ -32,7 +32,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(color, paint.ColorF);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColorWithComponent()
 		{
 			var color = new SKColorF();
@@ -81,7 +81,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKColor(), new SKColorF() };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetBasicColorFToColorConversionData))]
 		public void BasicColorFToColorConversion(SKColor color, SKColorF colorf)
 		{
@@ -90,7 +90,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(color, fromF);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetBasicColorFToColorConversionData))]
 		public void BasicColorToColorFConversion(SKColor color, SKColorF colorf)
 		{
@@ -111,7 +111,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKColorF(0.0f, 0.0f, 0.5f), new SKOtherColor(240f, 100.0f, 025.0f) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetColorRgbToHslData))]
 		public void ColorRgbToHsl(SKColorF rgb, SKOtherColor other)
 		{
@@ -122,7 +122,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)other.Item3, (double)l, Precision);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetColorRgbToHslData))]
 		public void ColorHsltoRgb(SKColorF rgb, SKOtherColor other)
 		{
@@ -146,7 +146,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKColorF(0.0f, 0.0f, 0.5f), new SKOtherColor(240f, 100.0f, 050.0f) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetColorRgbToHsvData))]
 		public void ColorRgbToHsv(SKColorF rgb, SKOtherColor other)
 		{
@@ -157,7 +157,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)other.Item3, (double)v, Precision);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetColorRgbToHsvData))]
 		public void ColorHsvtoRgb(SKColorF rgb, SKOtherColor other)
 		{
@@ -194,7 +194,7 @@ namespace SkiaSharp.Tests
 			yield return new object[] { new SKColorF(1.5f, 1.5f, 1.5f, 1.5f), new SKColorF(1, 1, 1, 1) };
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[MemberData(nameof(GetClampData))]
 		public void Clamp(SKColorF before, SKColorF after)
 		{

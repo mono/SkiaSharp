@@ -41,17 +41,10 @@ The process of triage is mostly a quick read and apply some labels. There is an 
 
 
 > [!NOTE]
-> We are in the process of testing out an AI agent to help with triage, labeling and scoring. 
-
-#### Labels
-
-There is a workflow that is not actually applying labels yet as we experiment, but can be used to see what labels the AI thinks we need: https://github.com/mono/SkiaSharp/actions/workflows/label-with-ai.yml
-
-#### Scoring
-
-There is also another AI workflow to try and calculate an "engagement score" based on comments, reactions and general interactions. This workflow is running now: https://github.com/mono/SkiaSharp/actions/workflows/engagement-scores.yml 
-
-The project it writes to is still being evaluated to make sure our weights are good/useful: https://github.com/orgs/mono/projects/1/views/14
+> An AI agent now assists with triage. The **Sync - Issue Triage** workflow
+> (source: `.github/workflows/auto-triage.md`) classifies new issues, applies
+> labels, and updates the backlog project board. It runs daily and on issue
+> events: https://github.com/mono/SkiaSharp/actions/workflows/auto-triage.lock.yml
 
 
 ### PR Reviews
@@ -98,7 +91,7 @@ Updating native Skia is usually manageable, though it can become tricky when the
 
 ### General Update Steps
 
-1. Review the upstream changelog for breaking changes.
+1. Review the upstream api diff for breaking changes.
 2. Merge the target Skia version into a new branch from our current version.
 3. Resolve any merge conflicts and get it compiling.
 4. Identify and adapt to any changed or removed features.
@@ -122,7 +115,7 @@ Once native Skia is updated, updating SkiaSharp is typically more straightforwar
 1. Finish updating native Skia.
 2. Update or rewrite .NET methods to match the new native APIs.
 3. Add tests for everything.
-4. Add more tests based on things in the changelog or new features.
+4. Add more tests based on things in the api diff or new features.
 
 We’re selective about which new native APIs to expose right away. Google iterates quickly, and early-stage APIs may be short-lived or evolve significantly. Lagging slightly behind can actually help — by the time we adopt a new feature, it’s often more stable.
 

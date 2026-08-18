@@ -180,7 +180,7 @@ public class CanvasTransformsSample : CanvasSampleBase
 		using var font = new SKFont(SKTypeface.Default, 14);
 		using var headerFont = new SKFont(SKTypeface.Default, 13);
 
-		canvas.DrawText("Transform Matrix:", 10, 22, headerFont, textPaint);
+		canvas.DrawText("Transform Matrix:", 10, 22, SKTextAlign.Left, headerFont, textPaint);
 
 		var vals = new[]
 		{
@@ -194,7 +194,7 @@ public class CanvasTransformsSample : CanvasSampleBase
 		for (var row = 0; row < 3; row++)
 		{
 			var line = $"│ {vals[row * 3],8:F2}  {vals[row * 3 + 1],8:F2}  {vals[row * 3 + 2],8:F2} │";
-			canvas.DrawText(line, 12, startY + row * lineH, font, textPaint);
+			canvas.DrawText(line, 12, startY + row * lineH, SKTextAlign.Left, font, textPaint);
 		}
 	}
 }

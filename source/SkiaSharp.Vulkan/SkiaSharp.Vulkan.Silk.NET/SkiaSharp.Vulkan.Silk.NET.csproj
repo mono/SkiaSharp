@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>$(BasicTargetFrameworks)</TargetFrameworks>
+    <RootNamespace>SkiaSharp</RootNamespace>
+    <AssemblyName>SkiaSharp.Vulkan.Silk.NET</AssemblyName>
+    <SignAssembly>false</SignAssembly>
+    <PackagingGroup>SkiaSharp.Vulkan.Silk.NET</PackagingGroup>
+    <Title>SkiaSharp Vulkan support using Silk.NET</Title>
+    <PackageDescription>This package adds Vulkan support to SkiaSharp via Silk.NET.</PackageDescription>
+    <PackageTags>vulkan</PackageTags>
+    <!-- Silk.NET pulls transitive System.Text.Json/etc. that no longer advertise net6.0 support;
+         only silences the "doesn't support net6.0" TFM-support notices, not compiler warnings. -->
+    <SuppressTfmSupportBuildWarnings>true</SuppressTfmSupportBuildWarnings>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Silk.NET.Vulkan" Version="2.23.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\binding\SkiaSharp\SkiaSharp.csproj" />
+  </ItemGroup>
+</Project>

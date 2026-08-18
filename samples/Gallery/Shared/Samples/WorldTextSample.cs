@@ -110,7 +110,7 @@ public class WorldTextSample : CanvasSampleBase
 			var y = 60f;
 
 			// Title
-			canvas.DrawText($"Script: {scriptName}", x, y, labelFont, labelPaint);
+			canvas.DrawText($"Script: {scriptName}", x, y, SKTextAlign.Left, labelFont, labelPaint);
 			y += 50;
 
 			if (!useEmbedded)
@@ -118,17 +118,17 @@ public class WorldTextSample : CanvasSampleBase
 				// Platform note for scripts that need system fonts
 				using var warnFont = new SKFont(GetEmbeddedTypeface(), 13);
 				using var warnPaint = new SKPaint { IsAntialias = true, Color = new SKColor(180, 100, 0) };
-				canvas.DrawText("⚠ Requires system fonts — may not render on all platforms (e.g. WASM).", x, y, warnFont, warnPaint);
+				canvas.DrawText("⚠ Requires system fonts — may not render on all platforms (e.g. WASM).", x, y, SKTextAlign.Left, warnFont, warnPaint);
 				y += 25;
 			}
 
 			if (ShowComparison[scriptIndex])
 			{
 				// Shaped text (primary)
-				canvas.DrawText("▸ Shaped (HarfBuzz):", x, y, labelFont, labelPaint);
+				canvas.DrawText("▸ Shaped (HarfBuzz):", x, y, SKTextAlign.Left, labelFont, labelPaint);
 				y += textSize + 10;
 				using var shaper = new SKShaper(typeface);
-				canvas.DrawShapedText(shaper, text, x, y, font, textPaint);
+				canvas.DrawShapedText(shaper, text, x, y, SKTextAlign.Left, font, textPaint);
 				y += textSize + 20;
 
 				// Divider
@@ -138,30 +138,30 @@ public class WorldTextSample : CanvasSampleBase
 
 				// Unshaped text (secondary)
 				using var dimPaint = new SKPaint { IsAntialias = true, Color = new SKColor(0, 0, 0, 128) };
-				canvas.DrawText("▸ Unshaped (no shaping):", x, y, labelFont, labelPaint);
+				canvas.DrawText("▸ Unshaped (no shaping):", x, y, SKTextAlign.Left, labelFont, labelPaint);
 				y += textSize + 10;
-				canvas.DrawText(text, x, y, font, dimPaint);
+				canvas.DrawText(text, x, y, SKTextAlign.Left, font, dimPaint);
 				y += textSize + 20;
 
 				// Note
 				using var noteFont = new SKFont(GetEmbeddedTypeface(), 13);
 				using var notePaint = new SKPaint { IsAntialias = true, Color = new SKColor(120, 120, 120) };
-				canvas.DrawText("Note: Shaping fixes ligatures and bidirectional text layout.", x, y, noteFont, notePaint);
+				canvas.DrawText("Note: Shaping fixes ligatures and bidirectional text layout.", x, y, SKTextAlign.Left, noteFont, notePaint);
 			}
 			else
 			{
 				// Just show shaped version for scripts where difference is invisible
-				canvas.DrawText("▸ Shaped text:", x, y, labelFont, labelPaint);
+				canvas.DrawText("▸ Shaped text:", x, y, SKTextAlign.Left, labelFont, labelPaint);
 				y += textSize + 10;
 				using var shaper = new SKShaper(typeface);
-				canvas.DrawShapedText(shaper, text, x, y, font, textPaint);
+				canvas.DrawShapedText(shaper, text, x, y, SKTextAlign.Left, font, textPaint);
 				y += textSize + 30;
 
 				using var noteFont = new SKFont(GetEmbeddedTypeface(), 13);
 				using var notePaint = new SKPaint { IsAntialias = true, Color = new SKColor(120, 120, 120) };
-				canvas.DrawText($"Shaping for {scriptName} text produces identical output to unshaped.", x, y, noteFont, notePaint);
+				canvas.DrawText($"Shaping for {scriptName} text produces identical output to unshaped.", x, y, SKTextAlign.Left, noteFont, notePaint);
 				y += 20;
-				canvas.DrawText("Select Arabic or Hebrew to see a visible difference.", x, y, noteFont, notePaint);
+				canvas.DrawText("Select Arabic or Hebrew to see a visible difference.", x, y, SKTextAlign.Left, noteFont, notePaint);
 			}
 		}
 		finally

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using Xunit;
 
@@ -22,13 +22,13 @@ namespace SkiaSharp.Tests
 			0x02, 0x00, 0x24, 0x00, 0x44,
 		};
 
-		[SkippableFact]
+		[Fact]
 		public void NullWithMissingFile()
 		{
 			Assert.Null(SKTypeface.FromFile(Path.Combine(PathToFonts, "font that doesn't exist.ttf")));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void TestFamilyName()
 		{
@@ -38,7 +38,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestIsNotFixedPitch()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf")))
@@ -47,7 +47,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestIsFixedPitch()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "CourierNew.ttf")))
@@ -56,7 +56,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestPostScriptName()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "CourierNew.ttf")))
@@ -65,7 +65,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadNonASCIIFile()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "上田雅美.ttf")))
@@ -92,7 +92,7 @@ namespace SkiaSharp.Tests
 				(UInt32)(v[3]) << 00;
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestGetTableTags()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "SpiderSymbol.ttf")))
@@ -108,7 +108,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -127,7 +127,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ExceptionInInvalidGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -136,7 +136,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TestTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "ReallyBigA.ttf")))
@@ -154,7 +154,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void InvalidTryGetTableData()
 		{
 			using (var typeface = SKTypeface.FromFile(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -165,7 +165,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadData()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
@@ -176,7 +176,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanReadNonSeekableStream()
 		{
 			using (var stream = File.OpenRead(Path.Combine(PathToFonts, "Distortable.ttf")))
@@ -187,7 +187,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDisposeDefault()
 		{
 			// get the fist
@@ -205,7 +205,8 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(typeface);
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public unsafe void UnicharCountReturnsCorrectCount()
 		{
 			var text = new uint[] { 79 };
@@ -222,7 +223,8 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
 			const string text = "Hello World!";
@@ -234,9 +236,12 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
+		[Fact]
+		[Obsolete ("Tests obsolete SKTypeface.CountGlyphs/GetGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
+			SkipWhenNoSystemFontManager();
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
@@ -251,9 +256,11 @@ namespace SkiaSharp.Tests
 			Assert.DoesNotContain((ushort)0, glyphs);
 		}
 
-		[SkippableFact]
+		[Fact]
+		[Obsolete ("Tests obsolete SKTypeface.ContainsGlyphs — see SKFontTest for non-obsolete equivalents")]
 		public void ContainsGlyphsWithByteSpanDoesNotStackOverflow ()
 		{
+			SkipWhenNoDefaultFont();
 			using var typeface = SKTypeface.Default;
 			var text = System.Text.Encoding.UTF8.GetBytes ("Hello");
 			ReadOnlySpan<byte> span = text;
@@ -264,7 +271,7 @@ namespace SkiaSharp.Tests
 			Assert.True (result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ReleaseDataWasInvokedOnlyAfterTheTypefaceWasFinished()
 		{
 			SkipOnPlatform(IsMac, "macOS does not release the data when the typeface is disposed");
@@ -289,7 +296,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeDisposedButIsNotActually()
 		{
 			var path = Path.Combine(PathToFonts, "Distortable.ttf");
@@ -314,7 +321,7 @@ namespace SkiaSharp.Tests
 			Assert.False(SKObject.GetInstance<SKMemoryStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void InvalidStreamIsDisposedImmediately()
 		{
 			var stream = CreateTestSKStream();
@@ -327,11 +334,15 @@ namespace SkiaSharp.Tests
 			Assert.Null(SKTypeface.FromStream(stream));
 
 			Assert.False(stream.OwnsHandle);
-			Assert.True(stream.IgnorePublicDispose);
+			// Failed FromStream runs RevokeOwnership(null) -> DisposeInternal(): the wrapper is genuinely
+			// disposed (and deregistered, asserted below), NOT dispose-protected. (ff18b0f's blanket
+			// IsDisposed->IgnorePublicDispose rename was correct for the success/reparent path but wrong
+			// for this failure path, where there is no new owner to protect the wrapper for.)
+			Assert.True(stream.IsDisposed);
 			Assert.False(SKObject.GetInstance<SKStream>(handle, out _));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamIsAccessibleFromNativeType()
 		{
 			var font = CreateFont();
@@ -359,7 +370,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void StreamIsAccessibleFromNativeType()
 		{
 			SkipOnMono();
@@ -392,7 +403,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ManagedStreamIsCollectedWhenTypefaceIsDisposed()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
@@ -404,11 +415,14 @@ namespace SkiaSharp.Tests
 
 			typeface.Dispose();
 
-			Assert.False(SKObject.GetInstance<SKManagedStream>(handle, out _));
+			// Address-reuse safe: under xUnit's parallel collections a parallel test can
+			// reallocate a fresh wrapper at this freed native pointer, so asserting the
+			// address is simply absent is racy. Assert by reference identity instead.
+			SKHandleDictionaryTestHelpers.AssertDeregistered<SKManagedStream>(handle, stream);
 			Assert.Throws<ObjectDisposedException>(() => dotnet.Position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void ManagedStreamIsCollectedWhenCollected()
 		{
 			var bytes = File.ReadAllBytes(Path.Combine(PathToFonts, "Distortable.ttf"));
@@ -429,7 +443,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void StreamLosesOwnershipAndCanBeGarbageCollected()
 		{
 			SkipOnMono();
@@ -470,7 +484,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromFileReturnsDifferentObject()
 		{
 			var path = Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf");
@@ -481,7 +495,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromStreamReturnsDifferentObject()
 		{
 			using var stream1 = File.OpenRead(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
@@ -493,7 +507,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromDataReturnsDifferentObject()
 		{
 			using var data = SKData.Create(Path.Combine(PathToFonts, "Roboto2-Regular_NoEmbed.ttf"));
@@ -504,7 +518,7 @@ namespace SkiaSharp.Tests
 			Assert.NotSame(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromFamilyReturnsSameObject()
 		{
 			var tf1 = SKTypeface.FromFamilyName(DefaultFontFamily);
@@ -513,7 +527,7 @@ namespace SkiaSharp.Tests
 			Assert.Same(tf1, tf2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FontStyleIsNotTheSame()
 		{
 			var tf = SKTypeface.FromFamilyName(DefaultFontFamily);
@@ -525,7 +539,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(fs1.Handle, fs2.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void FromFamilyDisposeDoesNotDispose()
 		{
 			var tf1 = SKTypeface.FromFamilyName(DefaultFontFamily);
@@ -539,10 +553,11 @@ namespace SkiaSharp.Tests
 			Assert.False(tf1.IsDisposed);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void GCStillCollectsTypeface()
 		{
 			SkipOnNonWindows("Test uses Windows-specific font path");
+			SkipWhenNoSystemFontManager("Test resolves the 'Times New Roman' system font");
 
 			var handle = DoWork();
 
@@ -578,27 +593,29 @@ namespace SkiaSharp.Tests
 
 		// Empty / IsEmpty
 
-		[SkippableFact]
+		[Fact]
 		public void DefaultHasValidNativeHandle()
 		{
 			Assert.NotEqual(IntPtr.Zero, SKTypeface.Default.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DefaultFamilyNameIsNotNullOrEmpty()
 		{
+			SkipWhenNoDefaultFont();
 			Assert.NotNull(SKTypeface.Default.FamilyName);
 			Assert.NotEmpty(SKTypeface.Default.FamilyName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DefaultIsNotEmpty()
 		{
+			SkipWhenNoDefaultFont();
 			Assert.False(SKTypeface.Default.IsEmpty);
 			Assert.True(SKTypeface.Default.GlyphCount > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultHasValidHandle()
 		{
 			using var tf = SKTypeface.CreateDefault();
@@ -606,28 +623,28 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(IntPtr.Zero, tf.Handle);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CreateDefaultAndDefaultSameFamily()
 		{
 			using var created = SKTypeface.CreateDefault();
 			Assert.Equal(SKTypeface.Default.FamilyName, created.FamilyName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyTypefaceIsEmpty()
 		{
 			Assert.True(SKTypeface.Empty.IsEmpty);
 			Assert.Equal(0, SKTypeface.Empty.GlyphCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void EmptyTypefaceHasEmptyFamilyName()
 		{
 			Assert.NotNull(SKTypeface.Empty.FamilyName);
 			Assert.Empty(SKTypeface.Empty.FamilyName);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanDisposeEmpty()
 		{
 			SKTypeface.Empty.Dispose();
@@ -637,35 +654,35 @@ namespace SkiaSharp.Tests
 
 		// FromFamilyName behavioral changes
 
-		[SkippableFact]
+		[Fact]
 		public void FromFamilyNameNonExistentReturnsNonNull()
 		{
 			var tf = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
 			Assert.NotNull(tf);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromFamilyNameNullReturnsNonNull()
 		{
 			var tf = SKTypeface.FromFamilyName(null);
 			Assert.NotNull(tf);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromFamilyNameEmptyStringReturnsNonNull()
 		{
 			var tf = SKTypeface.FromFamilyName("");
 			Assert.NotNull(tf);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromFamilyNameNonExistentReturnsFallback()
 		{
 			var tf = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
 			Assert.NotNull(tf);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromFamilyNameNonExistentConsistentWithMatchFamily()
 		{
 			var fromFamily = SKTypeface.FromFamilyName("NonExistentFontFamilyXYZ12345");
@@ -682,7 +699,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FromFileNullThrows()
 		{
 			Assert.Throws<ArgumentNullException>(() => SKTypeface.FromFile(null));
@@ -690,7 +707,7 @@ namespace SkiaSharp.Tests
 
 		// ZeroGlyphs font
 
-		[SkippableFact]
+		[Fact]
 		public void ZeroGlyphFontIsEmpty()
 		{
 			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
@@ -701,7 +718,7 @@ namespace SkiaSharp.Tests
 			Assert.True(tf.IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ZeroGlyphFontHasFamilyName()
 		{
 			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));
@@ -713,7 +730,7 @@ namespace SkiaSharp.Tests
 
 		// Variable font tests
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetVariationDesignParameters ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -728,7 +745,7 @@ namespace SkiaSharp.Tests
 			Assert.True (axis.Default <= axis.Max);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void VariationDesignParametersEmptyForStaticFont ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -738,7 +755,7 @@ namespace SkiaSharp.Tests
 			Assert.Empty (axes);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanGetVariationDesignPosition ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -748,7 +765,7 @@ namespace SkiaSharp.Tests
 			Assert.NotEmpty (position);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanClone ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -770,7 +787,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (axes[0].Max, clonedPosition[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneOnStaticFontReturnsTypeface ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -785,7 +802,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (cloned);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignParametersMatchesProperty ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -806,7 +823,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignPositionMatchesProperty ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -825,7 +842,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignParametersWithUndersizedBuffer ()
 		{
 			// InterVariable has multiple axes (wght, opsz) — tests undersized buffer behavior
@@ -854,7 +871,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (bufExact[0].Min, buf1[0].Min);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignPositionWithUndersizedBuffer ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "InterVariable.ttf"));
@@ -882,7 +899,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (bufExact[0].Value, buf1[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanVariationDesignParametersEmptyForStaticFont ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -893,7 +910,7 @@ namespace SkiaSharp.Tests
 			Assert.True (written <= 0, $"Static font should return 0 or -1, got {written}");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanVariationDesignPositionEmptyForStaticFont ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "content-font.ttf"));
@@ -904,7 +921,7 @@ namespace SkiaSharp.Tests
 			Assert.True (written <= 0, $"Static font should return 0 or -1, got {written}");
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignParametersWithOversizedBuffer ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -918,7 +935,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (total, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SpanGetVariationDesignPositionWithOversizedBuffer ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -932,7 +949,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (total, written);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithReadOnlySpan ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -953,7 +970,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (axes[0].Min, clonedPosition[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithPaletteOverride ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
@@ -969,7 +986,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (cloned);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithDifferentPaletteIndex ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
@@ -981,7 +998,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (clone1);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithNegativePaletteIndexThrows ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "test_glyphs-COLRv1.ttf"));
@@ -992,7 +1009,7 @@ namespace SkiaSharp.Tests
 
 // Exact axis value tests — verify interop produces correct values
 
-		[SkippableFact]
+		[Fact]
 		public void DistortableFontHasExactAxisValues ()
 		{
 			// Distortable.ttf has 1 axis: wght min=0.5 default=1.0 max=2.0
@@ -1011,7 +1028,7 @@ namespace SkiaSharp.Tests
 			Assert.False (axis.IsHidden);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void DistortableFontDefaultPositionMatchesAxis ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1023,7 +1040,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (1.0f, position[0].Value); // default value
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ClonePreservesExactDesignPosition ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1042,7 +1059,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (0.5f, clonedPos[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void VariationDesignParameterCountMatchesArray ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1052,7 +1069,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (typeface.VariationDesignParameterCount, typeface.VariationDesignParameters.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void VariationDesignPositionCountMatchesArray ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1064,7 +1081,7 @@ namespace SkiaSharp.Tests
 
 		// Interop safety tests — verify struct layout through native round-trip
 
-		[SkippableFact]
+		[Fact]
 		public void VariationAxisStructLayoutMatchesNative ()
 		{
 			// Verify that SKFontVariationAxis fields are in the correct order
@@ -1087,7 +1104,7 @@ namespace SkiaSharp.Tests
 
 		// SKFontArguments tests
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithFontArguments ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1105,7 +1122,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (0.5f, pos[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithFontArgumentsDefaultIsNoOp ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1116,7 +1133,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull (cloned);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithFontArgumentsCollectionIndex ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));
@@ -1135,7 +1152,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal (2.0f, pos[0].Value);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CloneWithFontArgumentsStackalloc ()
 		{
 			using var typeface = SKTypeface.FromFile (Path.Combine (PathToFonts, "Distortable.ttf"));

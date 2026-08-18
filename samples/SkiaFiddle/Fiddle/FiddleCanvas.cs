@@ -74,6 +74,9 @@ public class FiddleCanvas : SKCanvasElement
         else if (_drawDelegate is not null) StartAnimation();
     }
 
+    /// <summary>Forces a single repaint — used when the selected asset changes while paused.</summary>
+    public void RequestRedraw() => Invalidate();
+
     private void OnFrameTick(object? sender, object e) => Invalidate();
 
     protected override void RenderOverride(SKCanvas canvas, Size area)
@@ -142,7 +145,7 @@ public class FiddleCanvas : SKCanvasElement
         var textWidth = font.MeasureText(msg);
         var x = (width - textWidth) / 2;
         var y = (height - (metrics.Ascent + metrics.Descent)) / 2;
-        canvas.DrawText(msg, x, y, font, textPaint);
+        canvas.DrawText(msg, x, y, SKTextAlign.Left, font, textPaint);
     }
 
     private void DrawError(SKCanvas canvas, int width, int height)
@@ -152,7 +155,7 @@ public class FiddleCanvas : SKCanvasElement
 
         using var titleFont = new SKFont(SKTypeface.Default, 18) { Embolden = true };
         using var titlePaint = new SKPaint { Color = new SKColor(0xFF, 0x6B, 0x6B), IsAntialias = true };
-        canvas.DrawText("Error", 24, 40, titleFont, titlePaint);
+        canvas.DrawText("Error", 24, 40, SKTextAlign.Left, titleFont, titlePaint);
 
         using var msgFont = new SKFont(SKTypeface.Default, 13);
         using var msgPaint = new SKPaint { Color = new SKColor(0xFF, 0xC8, 0xC8), IsAntialias = true };
@@ -169,7 +172,7 @@ public class FiddleCanvas : SKCanvasElement
     {
         if (font.MeasureText(text) <= maxWidth)
         {
-            canvas.DrawText(text, x, y, font, paint);
+            canvas.DrawText(text, x, y, SKTextAlign.Left, font, paint);
             return;
         }
 
@@ -180,7 +183,7 @@ public class FiddleCanvas : SKCanvasElement
             var trial = line.Length == 0 ? word : line + " " + word;
             if (font.MeasureText(trial) > maxWidth && line.Length > 0)
             {
-                canvas.DrawText(line, x, y, font, paint);
+                canvas.DrawText(line, x, y, SKTextAlign.Left, font, paint);
                 y += 22;
                 line = word;
             }
@@ -190,6 +193,6 @@ public class FiddleCanvas : SKCanvasElement
             }
         }
         if (line.Length > 0)
-            canvas.DrawText(line, x, y, font, paint);
+            canvas.DrawText(line, x, y, SKTextAlign.Left, font, paint);
     }
 }
