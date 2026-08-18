@@ -159,18 +159,8 @@ Set-BuildVariable PREVIEW_LABEL $previewLabel
 
 Write-Host "`n# Checking for secondary build information"
 $resourceRunName = "$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
-$inheritPipelineIdentity = [string]::Equals(
-    "$env:INHERIT_PIPELINE_IDENTITY",
-    'true',
-    [StringComparison]::OrdinalIgnoreCase)
-if ($inheritPipelineIdentity) {
-    if ($env:BUILD_REASON -ne 'ResourceTrigger' -and $env:BUILD_REASON -ne 'Manual') {
-        throw "Pipeline identity inheritance is not supported for build reason '$env:BUILD_REASON'."
-    }
-    if ([string]::IsNullOrWhiteSpace($resourceRunName)) {
-        throw 'Pipeline identity inheritance requires RESOURCES_PIPELINE_SKIASHARP_RUNNAME.'
-    }
-
+if (($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual') -and
+    -not [string]::IsNullOrWhiteSpace($resourceRunName)) {
     Write-Host "Working with $resourceRunName"
     $runNameWithoutMetadata = $resourceRunName.Split('+')[0]
     $versionPrefix = [regex]::Escape("$env:SKIASHARP_VERSION-")
@@ -189,7 +179,7 @@ if ($inheritPipelineIdentity) {
     Set-BuildVariable BUILD_NUMBER $buildNumber
     Set-BuildVariable BUILD_COUNTER $buildNumber
 } else {
-    Write-Host "Using this pipeline's Arcade build identity."
+    Write-Host "No upstream build identity to inherit."
 }
 
 if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {
@@ -201,7 +191,7 @@ Write-Host "Special-package counter: $env:BUILD_COUNTER"
 
 Write-Host "`n# Setting build label"
 if ($UpdateBuildNumber) {
-    if ($inheritPipelineIdentity) {
+    if (-not [string]::IsNullOrWhiteSpace($resourceRunName)) {
         $label = $resourceRunName
     } else {
         $branchMetadata = if ($isPullRequest) { '' } else { "+$env:BUILD_SOURCEBRANCHNAME" }

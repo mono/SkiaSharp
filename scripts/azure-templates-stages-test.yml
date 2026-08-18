@@ -1,5 +1,5 @@
 parameters:
-  - name: isSplitPipeline
+  - name: isSeparatePipeline
     type: boolean
     default: false
   - name: buildAgentHost
@@ -20,7 +20,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.isSeparatePipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -79,7 +79,7 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.isSeparatePipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -658,7 +658,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.isSeparatePipeline, 'true') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package

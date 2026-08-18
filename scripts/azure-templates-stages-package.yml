@@ -1,9 +1,4 @@
 parameters:
-  - name: isSplitPipeline
-    type: boolean
-    default: false
-  - name: buildAgentHost
-    type: object
   - name: buildAgentWindows
     type: object
   - name: enableCaching
@@ -11,26 +6,6 @@ parameters:
     default: false
 
 stages:
-
-  - ${{ if eq(parameters.isSplitPipeline, 'true') }}:
-    - stage: native
-      displayName: Native
-      dependsOn: prepare
-      jobs:
-        - template: /scripts/azure-templates-jobs-merger.yml@self
-          parameters:
-            name: native
-            displayName: Re-upload Native Artifacts
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native
-        - template: /scripts/azure-templates-jobs-merger.yml@self
-          parameters:
-            name: native_msvc
-            displayName: Re-upload Native MSVC Artifacts
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_msvc
 
   - stage: package
     displayName: Package NuGets

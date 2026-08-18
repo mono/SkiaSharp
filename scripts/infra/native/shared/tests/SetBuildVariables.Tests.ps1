@@ -21,7 +21,6 @@ $identityVariables = @(
     'GIT_BRANCH_NAME',
     'GIT_SHA',
     'GIT_URL',
-    'INHERIT_PIPELINE_IDENTITY',
     'PREVIEW_LABEL',
     'PR_NUMBER',
     'RESOURCES_PIPELINE_SKIASHARP_RUNNAME',
@@ -70,7 +69,6 @@ function Invoke-BuildIdentityCase {
         BUILD_SOURCEVERSION = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
         BUILD_SOURCEVERSIONMESSAGE = ''
         FEATURE_NAME_PREFIX = 'feature/'
-        INHERIT_PIPELINE_IDENTITY = 'false'
         PREVIEW_LABEL = 'preview.0'
         SKIASHARP_VERSION = '4.152.0'
     }
@@ -198,7 +196,6 @@ $resourcePr = Invoke-BuildIdentityCase 'PR resource trigger' @{
     BUILD_SOURCEBRANCHNAME = 'merge'
     BUILD_SOURCEVERSION = 'ffffffffffffffffffffffffffffffffffffffff'
     BUILD_SOURCEVERSIONMESSAGE = 'Merge 1111111111111111111111111111111111111111 into 2222222222222222222222222222222222222222'
-    INHERIT_PIPELINE_IDENTITY = 'true'
     RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-pr.63954.26418.3'
 }
 Assert-Equal (Get-LastVariableValue $resourcePr.Output 'PREVIEW_LABEL') 'pr.63954' 'Resource PR label'
@@ -223,25 +220,15 @@ Assert-Equal (Get-LastVariableValue $feature.Output 'FEATURE_NAME') 'foo-bar' 'F
 
 $resourceMain = Invoke-BuildIdentityCase 'Main resource trigger' @{
     BUILD_REASON = 'ResourceTrigger'
-    INHERIT_PIPELINE_IDENTITY = 'true'
     RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.26418.3+main'
 }
 Assert-Equal (Get-LastVariableValue $resourceMain.Output 'PREVIEW_LABEL') 'preview.0' 'Resource main label'
 Assert-Equal (Get-LastVariableValue $resourceMain.Output 'BUILD_NUMBER') '26418.3' 'Resource main build number'
 Assert-BuildLabel $resourceMain.Output '4.152.0-preview.0.26418.3+main'
 
-$packageResource = Invoke-BuildIdentityCase 'Package ignores Native resource identity' @{
-    BUILD_REASON = 'ResourceTrigger'
-    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.26399.77+main'
-}
-Assert-Equal (Get-LastVariableValue $packageResource.Output 'PREVIEW_LABEL') 'preview.0' 'Package preview label'
-Assert-Equal (Get-LastVariableValue $packageResource.Output 'BUILD_NUMBER') '26418.3' 'Package Arcade build number'
-Assert-BuildLabel $packageResource.Output '4.152.0-preview.0.26418.3+main'
-
 $malformed = Invoke-BuildIdentityCase 'Malformed resource identity' @{
     BUILD_REASON = 'ResourceTrigger'
     BUILD_SOURCEBRANCH = 'refs/pull/63954/merge'
-    INHERIT_PIPELINE_IDENTITY = 'true'
     RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-pr..8'
 } -ExpectFailure
 if ($malformed.Output -notmatch 'Unable to parse upstream build identity') {
@@ -283,11 +270,24 @@ if ($packagePipeline -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(
 if ($packagePipeline -match 'source:\s*skiasharp-native') {
     throw 'The combined Package pipeline must not inherit identity from a Native pipeline resource.'
 }
+if ($packagePipeline -notmatch "buildPipelineType:\s*'build'") {
+    throw "The internal Package pipeline must use the 'build' role."
+}
 
 $testsPipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-tests.yml') -Raw
 if ($testsPipeline -notmatch 'source:\s*skiasharp-package' -or
-    $testsPipeline -notmatch 'INHERIT_PIPELINE_IDENTITY\s+value:\s*true') {
+    $testsPipeline -notmatch "buildPipelineType:\s*'test'") {
     throw 'The separate Tests pipeline must inherit the final Package identity.'
+}
+
+$completePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-complete.yml') -Raw
+if ($completePipeline -notmatch "buildPipelineType:\s*'complete'") {
+    throw "The public pipeline must use the 'complete' role."
+}
+
+$packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
+if ($packageStages -match 'isSplitPipeline|Re-upload Native Artifacts') {
+    throw 'The Package stage must consume Native artifacts from the same pipeline run.'
 }
 
 $packageScript = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget.cake') -Raw
