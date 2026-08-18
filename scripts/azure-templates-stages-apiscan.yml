@@ -39,51 +39,10 @@ stages:
               artifactName: native_msvc
               targetPath: $(Agent.TempDirectory)\APIScan\native_msvc
 
-          - pwsh: |
-              $scanRoot = "$(Agent.TempDirectory)\APIScan"
-              $extractedPackages = Join-Path $scanRoot "nuget_symbols-extracted"
-              $surrogateSource = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
-              $surrogateFolder = Join-Path $scanRoot "surrogates"
-              $surrogateBinaryFolder = Join-Path $scanRoot "surrogate-binaries"
-              $surrogateFile = Join-Path $surrogateFolder "APIScanSurrogates.xml"
-
-              ./scripts/infra/package/extract-nupkg-files.ps1 `
-                -SourcePath "$scanRoot\packages\*\*.*nupkg" `
-                -DestinationPath $extractedPackages `
-                -RemoveOriginal
-
-              New-Item -ItemType Directory -Force -Path $surrogateFolder, $surrogateBinaryFolder | Out-Null
-
-              $winUiSurrogateSource = Get-ChildItem $extractedPackages -Directory |
-                Where-Object Name -Like "skiasharp.nativeassets.winui-*.symbols" |
-                ForEach-Object { Join-Path $_.FullName "runtimes\win-x64\native" } |
-                Where-Object { Test-Path $_ } |
-                Select-Object -First 1
-              if (-not $winUiSurrogateSource) {
-                throw "Unable to find x64 WinUI binaries for API Scan ARM64 surrogates."
-              }
-
-              foreach ($file in @("libEGL.dll", "libEGL.pdb", "libGLESv2.dll", "libGLESv2.pdb", "SkiaSharp.Views.WinUI.Native.dll", "SkiaSharp.Views.WinUI.Native.pdb")) {
-                $source = Join-Path $winUiSurrogateSource $file
-                if (-not (Test-Path $source)) {
-                  throw "Unable to find API Scan surrogate file: $source"
-                }
-                Copy-Item $source $surrogateBinaryFolder
-              }
-
-              (Get-Content $surrogateSource -Raw).Replace("{SOFTWARE_FOLDER}", $scanRoot) |
-                Set-Content $surrogateFile
-
-              $binaries = @(Get-ChildItem $scanRoot -Recurse -File -Include *.dll, *.exe, *.winmd)
-              $symbols = @(Get-ChildItem $scanRoot -Recurse -File -Filter *.pdb)
-              if ($binaries.Count -eq 0) {
-                throw "No shipped DLL, EXE, or WINMD files were collected for API Scan."
-              }
-              if ($symbols.Count -eq 0) {
-                throw "No matching PDB files were collected for API Scan."
-              }
-
-              Write-Host "Collected $($binaries.Count) binaries and $($symbols.Count) PDB files."
+          - pwsh: >
+              ./scripts/infra/security/prepare-apiscan-inputs.ps1
+              -ScanRoot "$(Agent.TempDirectory)\APIScan"
+              -SurrogateSource "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
             displayName: Prepare API Scan inputs
 
           - task: AzureCLI@2

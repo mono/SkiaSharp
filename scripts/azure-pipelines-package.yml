@@ -111,8 +111,13 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
-      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual'), startsWith(variables['Build.SourceBranch'], 'refs/heads/'), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
-        networkIsolationMode: Audit
+      # Audit is a temporary diagnostic escape hatch for manually queued
+      # feature branches. Protected branches and every automatic run enforce.
+      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual')) }}:
+        ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/'), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+          networkIsolationMode: Audit
+        ${{ else }}:
+          networkIsolationMode: Enforce
       ${{ else }}:
         networkIsolationMode: Enforce
     customBuildTags:
