@@ -126,24 +126,8 @@ Write-Host "Source branch: $sourceBranch"
 Write-Host "Source commit: $sourceCommit"
 Write-Host "Source repository: $sourceRepository"
 
-Write-Host "`n# Determining feature name"
-$featurePrefix = "refs/heads/$env:FEATURE_NAME_PREFIX"
-if (-not $isPullRequest -and
-    $sourceBranch.StartsWith($featurePrefix, [StringComparison]::OrdinalIgnoreCase)) {
-    $feature = $sourceBranch.Substring($featurePrefix.Length) -replace '[^0-9A-Za-z-]+', '-'
-    $feature = $feature.Trim('-')
-    if ([string]::IsNullOrWhiteSpace($feature)) {
-        throw "Feature branch '$sourceBranch' does not contain a valid package label."
-    }
-    Write-Host "Feature name: $feature"
-    Set-BuildVariable FEATURE_NAME $feature
-} else {
-    Write-Host "No feature name."
-    Set-BuildVariable FEATURE_NAME ''
-}
-
 Write-Host "`n# Setting preview label"
-$previewLabel = "$env:PREVIEW_LABEL"
+$previewLabel = "$env:PREVIEW_LABEL".Trim().ToLowerInvariant()
 if ($isPullRequest) {
     $previewLabel = "pr.$prNumber"
 } elseif ($env:BUILD_REASON -eq 'Schedule') {
@@ -162,24 +146,44 @@ $resourceRunName = "$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
 if (($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual') -and
     -not [string]::IsNullOrWhiteSpace($resourceRunName)) {
     Write-Host "Working with $resourceRunName"
-    $runNameWithoutMetadata = $resourceRunName.Split('+')[0]
     $versionPrefix = [regex]::Escape("$env:SKIASHARP_VERSION-")
-    $match = [regex]::Match(
+    $releasePrefix = [regex]::Escape("$env:SKIASHARP_VERSION+")
+    $releaseMatch = [regex]::Match(
+        $resourceRunName,
+        "^$releasePrefix(?<official>\d{8}\.\d+)$")
+    $runNameWithoutMetadata = $resourceRunName.Split('+')[0]
+    $previewMatch = [regex]::Match(
         $runNameWithoutMetadata,
         "^$versionPrefix(?<label>.+?)\.(?<build>(?:(?:\d{5}|\d{8})\.)?\d+)$")
-    if (-not $match.Success -or $match.Groups['label'].Value.EndsWith('.')) {
+    if ($releaseMatch.Success) {
+        $previewLabel = 'stable'
+        $buildNumber = ConvertTo-ArcadeBuildNumber $releaseMatch.Groups['official'].Value
+    } elseif ($previewMatch.Success -and -not $previewMatch.Groups['label'].Value.EndsWith('.')) {
+        $previewLabel = $previewMatch.Groups['label'].Value.ToLowerInvariant()
+        $buildNumber = $previewMatch.Groups['build'].Value
+    } else {
         throw "Unable to parse upstream build identity '$resourceRunName'."
     }
 
-    $previewLabel = $match.Groups['label'].Value
-    $buildNumber = $match.Groups['build'].Value
     Write-Host "Inherited preview label: $previewLabel"
     Write-Host "Inherited build number: $buildNumber"
     Set-BuildVariable PREVIEW_LABEL $previewLabel
     Set-BuildVariable BUILD_NUMBER $buildNumber
     Set-BuildVariable BUILD_COUNTER $buildNumber
 } else {
-    Write-Host "No upstream build identity to inherit."
+    Write-Host "Using this pipeline's Arcade build identity."
+}
+
+$isReleaseBuild = $previewLabel -ceq 'stable'
+$finalVersionKind = if ($isReleaseBuild) { 'release' } else { '' }
+Set-BuildVariable DOTNET_FINAL_VERSION_KIND $finalVersionKind
+
+if ($isReleaseBuild -and "$env:PACKAGE_PIPELINE" -eq 'true' -and
+    ($env:SYSTEM_TEAMPROJECT -ne 'internal' -or
+     $env:BUILD_REASON -ne 'Manual' -or
+     "$env:PACKAGE_FORCE_REAL_SIGNING" -ne 'true' -or
+     "$env:PACKAGE_RUN_API_SCAN" -ne 'true')) {
+    throw 'Exact release packages require an internal manual Package run with real signing and API Scan enabled.'
 }
 
 if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {
@@ -193,6 +197,8 @@ Write-Host "`n# Setting build label"
 if ($UpdateBuildNumber) {
     if (-not [string]::IsNullOrWhiteSpace($resourceRunName)) {
         $label = $resourceRunName
+    } elseif ($isReleaseBuild) {
+        $label = "$env:SKIASHARP_VERSION+$officialBuildId"
     } else {
         $branchMetadata = if ($isPullRequest) { '' } else { "+$env:BUILD_SOURCEBRANCHNAME" }
         $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$branchMetadata"

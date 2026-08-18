@@ -16,15 +16,18 @@ $identityVariables = @(
     'BUILD_SOURCEBRANCHNAME',
     'BUILD_SOURCEVERSION',
     'BUILD_SOURCEVERSIONMESSAGE',
-    'FEATURE_NAME',
-    'FEATURE_NAME_PREFIX',
+    'DOTNET_FINAL_VERSION_KIND',
     'GIT_BRANCH_NAME',
     'GIT_SHA',
     'GIT_URL',
+    'PACKAGE_FORCE_REAL_SIGNING',
+    'PACKAGE_PIPELINE',
+    'PACKAGE_RUN_API_SCAN',
     'PREVIEW_LABEL',
     'PR_NUMBER',
     'RESOURCES_PIPELINE_SKIASHARP_RUNNAME',
     'SKIASHARP_VERSION',
+    'SYSTEM_TEAMPROJECT',
     'SYSTEM_PULLREQUEST_PULLREQUESTID',
     'SYSTEM_PULLREQUEST_PULLREQUESTNUMBER',
     'SYSTEM_PULLREQUEST_SOURCEBRANCH',
@@ -68,9 +71,12 @@ function Invoke-BuildIdentityCase {
         BUILD_SOURCEBRANCHNAME = 'main'
         BUILD_SOURCEVERSION = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
         BUILD_SOURCEVERSIONMESSAGE = ''
-        FEATURE_NAME_PREFIX = 'feature/'
+        PACKAGE_FORCE_REAL_SIGNING = 'false'
+        PACKAGE_PIPELINE = 'false'
+        PACKAGE_RUN_API_SCAN = 'false'
         PREVIEW_LABEL = 'preview.0'
         SKIASHARP_VERSION = '4.152.0'
+        SYSTEM_TEAMPROJECT = 'internal'
     }
     foreach ($pair in $defaults.GetEnumerator()) {
         $startInfo.Environment[$pair.Key] = $pair.Value
@@ -168,8 +174,8 @@ $githubPr = Invoke-BuildIdentityCase 'GitHub PR' @{
 Assert-Equal (Get-LastVariableValue $githubPr.Output 'PREVIEW_LABEL') 'pr.4803' 'GitHub PR label'
 Assert-Equal (Get-LastVariableValue $githubPr.Output 'GIT_SHA') 'cccccccccccccccccccccccccccccccccccccccc' 'GitHub PR commit'
 Assert-Equal (Get-LastVariableValue $githubPr.Output 'GIT_BRANCH_NAME') 'refs/heads/feature/foo_bar' 'GitHub PR branch'
-Assert-Equal (Get-LastVariableValue $githubPr.Output 'FEATURE_NAME') '' 'GitHub PR feature name'
 Assert-Equal (Get-LastVariableValue $githubPr.Output 'BUILD_NUMBER') '26418.3' 'GitHub PR build number'
+Assert-Equal (Get-LastVariableValue $githubPr.Output 'DOTNET_FINAL_VERSION_KIND') '' 'GitHub PR final version kind'
 Assert-BuildLabel $githubPr.Output '4.152.0-pr.4803.26418.3'
 
 $azurePr = Invoke-BuildIdentityCase 'Azure Repos PR' @{
@@ -204,19 +210,19 @@ Assert-Equal (Get-LastVariableValue $resourcePr.Output 'BUILD_COUNTER') '26418.3
 Assert-Equal (Get-LastVariableValue $resourcePr.Output 'GIT_SHA') '1111111111111111111111111111111111111111' 'Resource source commit'
 Assert-BuildLabel $resourcePr.Output '4.152.0-pr.63954.26418.3'
 
+$testResource = Invoke-BuildIdentityCase 'Tests inherit Package identity' @{
+    BUILD_REASON = 'Manual'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0-preview.0.22+main'
+}
+Assert-Equal (Get-LastVariableValue $testResource.Output 'BUILD_NUMBER') '22' 'Tests build number'
+Assert-BuildLabel $testResource.Output '4.152.0-preview.0.22+main'
+
 $main = Invoke-BuildIdentityCase 'GitHub main' @{
     BUILD_REASON = 'IndividualCI'
 }
 Assert-Equal (Get-LastVariableValue $main.Output 'PREVIEW_LABEL') 'preview.0' 'Main preview label'
 Assert-Equal (Get-LastVariableValue $main.Output 'BUILD_NUMBER') '26418.3' 'Main build number'
 Assert-BuildLabel $main.Output '4.152.0-preview.0.26418.3+main'
-
-$feature = Invoke-BuildIdentityCase 'Feature branch' @{
-    BUILD_REASON = 'Manual'
-    BUILD_SOURCEBRANCH = 'refs/heads/feature/foo_bar'
-    BUILD_SOURCEBRANCHNAME = 'foo_bar'
-}
-Assert-Equal (Get-LastVariableValue $feature.Output 'FEATURE_NAME') 'foo-bar' 'Feature package label'
 
 $resourceMain = Invoke-BuildIdentityCase 'Main resource trigger' @{
     BUILD_REASON = 'ResourceTrigger'
@@ -225,6 +231,64 @@ $resourceMain = Invoke-BuildIdentityCase 'Main resource trigger' @{
 Assert-Equal (Get-LastVariableValue $resourceMain.Output 'PREVIEW_LABEL') 'preview.0' 'Resource main label'
 Assert-Equal (Get-LastVariableValue $resourceMain.Output 'BUILD_NUMBER') '26418.3' 'Resource main build number'
 Assert-BuildLabel $resourceMain.Output '4.152.0-preview.0.26418.3+main'
+
+$release = Invoke-BuildIdentityCase 'Exact release' @{
+    BUILD_REASON = 'Manual'
+    PACKAGE_FORCE_REAL_SIGNING = 'true'
+    PACKAGE_PIPELINE = 'true'
+    PACKAGE_RUN_API_SCAN = 'true'
+    PREVIEW_LABEL = 'Stable'
+}
+Assert-Equal (Get-LastVariableValue $release.Output 'PREVIEW_LABEL') 'stable' 'Release normalized label'
+Assert-Equal (Get-LastVariableValue $release.Output 'DOTNET_FINAL_VERSION_KIND') 'release' 'Release final version kind'
+Assert-BuildLabel $release.Output '4.152.0+20260818.3'
+
+$mixedCasePreview = Invoke-BuildIdentityCase 'Mixed-case preview label' @{
+    BUILD_REASON = 'Manual'
+    PACKAGE_PIPELINE = 'true'
+    PREVIEW_LABEL = 'Preview.7'
+}
+Assert-Equal (Get-LastVariableValue $mixedCasePreview.Output 'PREVIEW_LABEL') 'preview.7' 'Normalized preview label'
+Assert-BuildLabel $mixedCasePreview.Output '4.152.0-preview.7.26418.3+main'
+
+$releaseWithoutApiScan = Invoke-BuildIdentityCase 'Exact release without API Scan' @{
+    BUILD_REASON = 'Manual'
+    PACKAGE_FORCE_REAL_SIGNING = 'true'
+    PACKAGE_PIPELINE = 'true'
+    PREVIEW_LABEL = 'stable'
+} -ExpectFailure
+if ($releaseWithoutApiScan.Output -notmatch 'Exact release packages require') {
+    throw "Release without API Scan failed for the wrong reason.`n$($releaseWithoutApiScan.Output)"
+}
+
+$automaticRelease = Invoke-BuildIdentityCase 'Automatic exact release' @{
+    BUILD_REASON = 'IndividualCI'
+    PACKAGE_FORCE_REAL_SIGNING = 'true'
+    PACKAGE_PIPELINE = 'true'
+    PACKAGE_RUN_API_SCAN = 'true'
+    PREVIEW_LABEL = 'stable'
+} -ExpectFailure
+if ($automaticRelease.Output -notmatch 'Exact release packages require') {
+    throw "Automatic release failed for the wrong reason.`n$($automaticRelease.Output)"
+}
+
+$releaseResource = Invoke-BuildIdentityCase 'Release resource trigger' @{
+    BUILD_REASON = 'ResourceTrigger'
+    RESOURCES_PIPELINE_SKIASHARP_RUNNAME = '4.152.0+20260818.3'
+}
+Assert-Equal (Get-LastVariableValue $releaseResource.Output 'PREVIEW_LABEL') 'stable' 'Release resource label'
+Assert-Equal (Get-LastVariableValue $releaseResource.Output 'DOTNET_FINAL_VERSION_KIND') 'release' 'Release resource final version kind'
+Assert-Equal (Get-LastVariableValue $releaseResource.Output 'BUILD_NUMBER') '26418.3' 'Release resource build number'
+Assert-BuildLabel $releaseResource.Output '4.152.0+20260818.3'
+
+$unsafeRelease = Invoke-BuildIdentityCase 'Unsafe exact release' @{
+    BUILD_REASON = 'Manual'
+    PACKAGE_PIPELINE = 'true'
+    PREVIEW_LABEL = 'stable'
+} -ExpectFailure
+if ($unsafeRelease.Output -notmatch 'Exact release packages require') {
+    throw "Unsafe release failed for the wrong reason.`n$($unsafeRelease.Output)"
+}
 
 $malformed = Invoke-BuildIdentityCase 'Malformed resource identity' @{
     BUILD_REASON = 'ResourceTrigger'
@@ -262,6 +326,9 @@ $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stage
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'
 }
+if ($packageStages -notmatch '--dotNetFinalVersionKind=\"\$\(DOTNET_FINAL_VERSION_KIND\)\"') {
+    throw 'The Package stage must forward the derived Arcade final version kind.'
+}
 
 $packagePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-package.yml') -Raw
 if ($packagePipeline -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
@@ -289,6 +356,20 @@ $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stage
 if ($packageStages -match 'Re-upload Native Artifacts') {
     throw 'The Package stage must consume Native artifacts from the same pipeline run.'
 }
+if ($packagePipeline -notmatch 'publishAssetsImmediately:\s*true' -or
+    $packagePipeline -match 'requireDefaultChannels:\s*true') {
+    throw 'Package CI must validate BAR assets without automatic channel promotion.'
+}
+if ($packagePipeline -notmatch 'PACKAGE_FORCE_REAL_SIGNING(?s:.*?)parameters\.forceRealSigning' -or
+    $packagePipeline -notmatch 'PACKAGE_RUN_API_SCAN(?s:.*?)parameters\.runApiScan') {
+    throw 'The Package pipeline must expose signing and API Scan choices to release validation.'
+}
+if ($packagePipeline -notmatch 'previewLabel(?s:.*?)PREVIEW_LABEL(?s:.*?)parameters\.previewLabel') {
+    throw 'The combined Package pipeline must own the label inherited by Tests.'
+}
+if ([regex]::Matches($packagePipeline, '- name: previewLabel').Count -ne 1) {
+    throw 'The combined Package pipeline must expose exactly one previewLabel parameter.'
+}
 
 $packageScript = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget.cake') -Raw
 $normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
@@ -296,6 +377,13 @@ if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
     throw 'nuget-normal must pack exactly one version family selected by VersionSuffix.'
+}
+
+$publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
+if (-not $publishingProps.Contains('$(ArtifactsPackagesDir)Preview\*.nupkg') -or
+    -not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') -or
+    ([regex]::Matches($publishingProps, 'DotNetFinalVersionKind').Count -lt 2)) {
+    throw 'Arcade publishing must separate preview and exact release package views.'
 }
 
 Write-Host 'Build identity tests passed.'

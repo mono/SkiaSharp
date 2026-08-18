@@ -15,12 +15,10 @@ Add-Type -AssemblyName System.IO.Compression
 $allowedLabels = @(
     'alpha',
     'beta',
-    'featurepreview',
     'nightly',
     'pr',
     'preview',
-    'rc',
-    'stable'
+    'rc'
 )
 
 function Get-PackageIdentity {
@@ -82,9 +80,6 @@ foreach ($identity in $identities) {
 
     $prerelease = $versionWithoutMetadata.Substring($separator + 1)
     $label = $prerelease.Split('.')[0].ToLowerInvariant()
-    if ($label.StartsWith('featurepreview-', [StringComparison]::Ordinal)) {
-        $label = 'featurepreview'
-    }
     if ($label -notin $allowedLabels) {
         throw "Package '$($identity.Id) $($identity.Version)' has unsupported prerelease label '$label'."
     }

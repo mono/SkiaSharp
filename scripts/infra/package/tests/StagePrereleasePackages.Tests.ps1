@@ -42,15 +42,25 @@ try {
     New-Item $source -ItemType Directory -Force | Out-Null
     New-TestPackage 'Package-With-Hyphen' '1.0.0-preview.1.26418.3'
     New-TestPackage 'Package.Rc' '1.0.0-rc.1.26418.3'
-    New-TestPackage 'Package.StableCandidate' '1.0.0-stable.26418.3'
-    New-TestPackage 'Package.Feature' '1.0.0-featurepreview-graphite.26418.3'
 
     & $scriptPath -SourceDirectory $source -DestinationDirectory $destination
     $copied = @(Get-ChildItem $destination -Filter '*.nupkg' -File)
-    if ($copied.Count -ne 4) {
-        throw "Expected four prerelease packages, found $($copied.Count)."
+    if ($copied.Count -ne 2) {
+        throw "Expected two prerelease packages, found $($copied.Count)."
     }
 
+    New-TestPackage 'Package.LegacyStable' '1.0.0-stable.26418.3'
+    $legacyStableRejected = $false
+    try {
+        & $scriptPath -SourceDirectory $source -DestinationDirectory $destination
+    } catch {
+        $legacyStableRejected = $_.Exception.Message -like "*unsupported prerelease label 'stable'*"
+    }
+    if (-not $legacyStableRejected) {
+        throw 'Legacy -stable prerelease package was not rejected.'
+    }
+
+    Remove-Item (Join-Path $source 'Package.LegacyStable.1.0.0-stable.26418.3.nupkg') -Force
     New-TestPackage 'Package.ExactStable' '1.0.0'
     $stableRejected = $false
     try {

@@ -19,7 +19,7 @@ stages:
           target: nuget-normal
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --skipExternals="all"
+          additionalArgs: --skipExternals="all" --dotNetFinalVersionKind="$(DOTNET_FINAL_VERSION_KIND)"
           checkoutSubmodules: false
           shouldPublish: false
           requiredArtifacts:
@@ -37,9 +37,15 @@ stages:
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
               displayName: Prepare the nugets artifact for publishing
             - pwsh: |
-                .\scripts\infra\package\stage-prerelease-packages.ps1 `
-                  -SourceDirectory '.\output\nugets\' `
-                  -DestinationDirectory '.\output\nugets-preview\'
+                $destination = '.\output\nugets-preview\'
+                if ('$(DOTNET_FINAL_VERSION_KIND)' -eq 'release') {
+                  New-Item $destination -ItemType Directory -Force | Out-Null
+                  Write-Host 'Exact release packages are not copied into the preview artifact.'
+                } else {
+                  .\scripts\infra\package\stage-prerelease-packages.ps1 `
+                    -SourceDirectory '.\output\nugets\' `
+                    -DestinationDirectory $destination
+                }
               displayName: Prepare the nugets-preview artifact for publishing
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'

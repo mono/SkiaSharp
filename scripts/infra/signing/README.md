@@ -130,13 +130,19 @@ checks are configured. Arcade then supplies:
 - `System.AccessToken` handling.
 
 The package pipeline registers real-signed packages in BAR. Maestro channel
-promotion and final NuGet.org publication remain separate operations. BAR
-registration is deliberately limited to the signed `Preview` package view;
-each CI package job produces one uniquely versioned prerelease family rather
-than both preview and exact stable variants. The staging step reads each
-package's nuspec and rejects exact stable or unknown prerelease versions before
-manifest generation. Exact stable package generation remains deferred to a
-future protected release pipeline.
+promotion and final NuGet.org publication remain separate operations. CI stops
+after BAR registration and Arcade validation; a selected BAR is promoted
+manually only after the downstream Tests pipeline succeeds. Each run
+produces one package family:
+
+- normal labels register the signed `Preview` view;
+- `PREVIEW_LABEL=stable` registers exact signed `Shipping` packages and sets
+  `DotNetFinalVersionKind=release`.
+
+Exact release mode is accepted only for an internal manual run with real signing
+and API Scan enabled. Arcade V3 marks the BAR stable and publishes packages to a
+dynamically created isolated feed, not directly to NuGet.org or a permanent
+shared feed.
 
 ## Local checks
 
