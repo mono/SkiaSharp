@@ -457,7 +457,24 @@ function InitializeToolset {
     ExitWithExitCode 2
   fi
 
-  local download_args=("package" "download" "Microsoft.DotNet.Arcade.Sdk@$toolset_version" "--verbosity" "minimal" "--prerelease" "--output" "$_InitializeNuGetPackageCachePath")
+  local restore_project_dir="$temp_dir/arcade-sdk-restore"
+  local restore_project="$restore_project_dir/arcade-sdk-restore.proj"
+  ReadGlobalVersion "dotnet"
+  local toolset_dotnet_version=$_ReadGlobalVersion
+  local target_framework="net${toolset_dotnet_version%.*}"
+  mkdir -p "$restore_project_dir"
+  cat > "$restore_project" <<EOF
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$target_framework</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageDownload Include="Microsoft.DotNet.Arcade.Sdk" Version="[$toolset_version]" />
+  </ItemGroup>
+</Project>
+EOF
+
+  local restore_args=("restore" "$restore_project" "--verbosity" "minimal" "--packages" "$_InitializeNuGetPackageCachePath" "--force")
   local nuget_config="${NUGET_CONFIG:-}"
   if [[ -z "$nuget_config" ]]; then
     # Search for any variation of nuget.config in the RepoRoot
@@ -470,17 +487,15 @@ function InitializeToolset {
   fi
 
   if [[ -n "$nuget_config" ]]; then
-    download_args+=("--configfile" "$nuget_config")
+    restore_args+=("--configfile" "$nuget_config")
   fi
 
-  # 'dotnet package download' fails outright if any source in the repo's NuGet.config is
-  # unavailable (for example a transport feed that was decommissioned after a release). The
-  # Arcade SDK is always published to the public dotnet-eng feed, so if the config-driven
-  # download fails, retry once against that feed directly (which ignores the other sources)
-  # before giving up, so a single dead source doesn't block the build.
-  if ! DotNet true "${download_args[@]}"; then
+  # PackageDownload through restore works on supported SDKs that predate
+  # 'dotnet package download'. Retry against dotnet-eng alone if a configured
+  # source is unavailable.
+  if ! DotNet true "${restore_args[@]}"; then
     echo "Restoring the Arcade SDK from the configured sources failed; retrying from the public dotnet-eng feed."
-    DotNet "${download_args[@]}" --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+    DotNet restore "$restore_project" --verbosity minimal --packages "$_InitializeNuGetPackageCachePath" --force --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
   fi
 
   local package_dir="$_InitializeNuGetPackageCachePath/microsoft.dotnet.arcade.sdk/$toolset_version"
