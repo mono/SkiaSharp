@@ -293,10 +293,14 @@ if ($pipelineSdk -cne $globalJson.sdk.version -or
 }
 
 $winuiGlobalJson = Get-Content (Join-Path $repoRoot 'native/winui/global.json') -Raw | ConvertFrom-Json
-if ($winuiGlobalJson.sdk.version -cne $globalJson.sdk.version -or
+$winuiSdk = [regex]::Match(
+    $variablesYaml,
+    "DOTNET_VERSION_WINUI:\s*'(?<version>[^']+)'").Groups['version'].Value
+if ($winuiGlobalJson.sdk.version -cne $winuiSdk -or
     $winuiGlobalJson.sdk.allowPrerelease -ne $false -or
-    $winuiGlobalJson.sdk.rollForward -cne 'latestPatch') {
-    throw 'The WinUI native build must use the repository .NET SDK feature band.'
+    $winuiGlobalJson.sdk.rollForward -cne 'latestPatch' -or
+    ([Version]$winuiSdk).Build -ge 200) {
+    throw 'The WinUI native build must stay on its VS MSBuild 17-compatible .NET 10.0.1xx feature band.'
 }
 
 $nativeDockerfiles = @(
@@ -315,6 +319,14 @@ foreach ($dockerfile in $nativeDockerfiles) {
     if ($dockerSdk -cne $globalJson.sdk.version) {
         throw "$dockerfile must use the repository .NET SDK version."
     }
+}
+
+$nativeWindowsStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-native-windows.yml') -Raw
+$winuiSdkInstalls = [regex]::Matches(
+    $nativeWindowsStages,
+    'version:\s*\$\(DOTNET_VERSION_WINUI\)').Count
+if ($winuiSdkInstalls -ne 3) {
+    throw 'Every WinUI native job must install the VS MSBuild-compatible SDK side-by-side.'
 }
 
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
