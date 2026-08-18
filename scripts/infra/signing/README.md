@@ -123,7 +123,9 @@ checks are configured. Arcade then supplies:
 - `System.AccessToken` handling.
 
 The package pipeline registers real-signed packages in BAR. Maestro channel
-promotion and final NuGet.org publication remain separate operations.
+promotion and final NuGet.org publication remain separate operations. BAR
+registration is deliberately limited to the signed `Preview` package view;
+stable-looking variants produced by the build remain internal artifacts.
 
 ## Local checks
 

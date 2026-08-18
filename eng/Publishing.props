@@ -4,6 +4,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg" Kind="Package" />
+    <!-- Stable-looking package variants remain internal build artifacts. Only the
+         prerelease view is registered in BAR and eligible for channel promotion. -->
+    <Artifact Include="$(ArtifactsPackagesDir)Preview\*.nupkg" Kind="Package" />
   </ItemGroup>
 </Project>

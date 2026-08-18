@@ -287,6 +287,21 @@ try {
         throw 'Signing.props must explicitly enable the Arcade NoSignJS policy.'
     }
 
+    [xml]$publishingPolicy = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
+    $publishedArtifacts = @(
+        $publishingPolicy.Project.ItemGroup.Artifact |
+            ForEach-Object { [string]$_.Include }
+    )
+    if ($publishedArtifacts.Count -ne 1 -or
+        $publishedArtifacts[0] -cne '$(ArtifactsPackagesDir)Preview\*.nupkg') {
+        throw 'Publishing.props must register only the signed prerelease package view in BAR.'
+    }
+
+    $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-jobs-signing.yml') -Raw
+    if ($signingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
+        throw 'Arcade V3 manifest generation must restore its Publish.proj task dependencies.'
+    }
+
     Write-Host 'Signing policy and payload tests passed.'
 } finally {
     if (Test-Path $testRoot) {
