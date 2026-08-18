@@ -84,7 +84,7 @@ parameters:
     type: string
     default: 'preview.0'
   - name: runApiScan
-    displayName: 'Run API Scan'
+    displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
   - name: auditNetworkIsolation
@@ -100,12 +100,6 @@ variables:
   - template: /scripts/azure-templates-variables.yml@self
   - name: PREVIEW_LABEL
     value: ${{ parameters.previewLabel }}
-  - name: PACKAGE_PIPELINE
-    value: true
-  - name: PACKAGE_FORCE_REAL_SIGNING
-    value: ${{ parameters.forceRealSigning }}
-  - name: PACKAGE_RUN_API_SCAN
-    value: ${{ parameters.runApiScan }}
 
 resources:
   repositories:
@@ -169,44 +163,6 @@ extends:
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
-        - stage: signing
-          displayName: Sign NuGets
-          dependsOn: package
-          jobs:
-            - template: /scripts/azure-templates-jobs-signing.yml@self
-              parameters:
-                buildAgent: ${{ parameters.buildAgentWindows }}
-                enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
-                ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-                  useRealSigning: true
-                ${{ else }}:
-                  useRealSigning: false
-      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-        - stage: api_scan
-          displayName: API Scan
-          dependsOn: package
-          jobs:
-            - template: /scripts/azure-templates-jobs-apiscan.yml@self
-              parameters:
-                buildAgentWindows: ${{ parameters.buildAgentWindows }}
-      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
-        - stage: publish_build_assets
-          displayName: Register signed packages in BAR
-          dependsOn:
-            - signing
-            - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-              - api_scan
-          jobs:
-            - template: /eng/common/templates-official/job/publish-build-assets.yml@self
-              parameters:
-                publishingVersion: 3
-                officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
-        - template: /eng/common/templates-official/post-build/post-build.yml@self
-          parameters:
-            publishingInfraVersion: 3
-            # Register and validate the BAR in CI. Promotion is intentionally
-            # manual and occurs only after the downstream Tests pipeline passes.
-            publishAssetsImmediately: true
-            validateDependsOn:
-              - publish_build_assets
+          previewLabel: ${{ parameters.previewLabel }}
+          forceRealSigning: ${{ parameters.forceRealSigning }}
+          runApiScan: ${{ parameters.runApiScan }}

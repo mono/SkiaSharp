@@ -1,0 +1,26 @@
+parameters:
+  - name: includeApiScan
+    type: boolean
+    default: false
+
+stages:
+  - stage: publish_build_assets
+    displayName: Register signed packages in BAR
+    dependsOn:
+      - signing
+      - ${{ if eq(parameters.includeApiScan, true) }}:
+        - api_scan
+    jobs:
+      - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+        parameters:
+          publishingVersion: 3
+          officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
+
+  - template: /eng/common/templates-official/post-build/post-build.yml@self
+    parameters:
+      publishingInfraVersion: 3
+      # Register and validate the BAR in CI. Promotion is intentionally manual
+      # and occurs only after the downstream Tests pipeline passes.
+      publishAssetsImmediately: true
+      validateDependsOn:
+        - publish_build_assets

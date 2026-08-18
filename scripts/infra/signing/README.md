@@ -118,8 +118,13 @@ public pipeline never enables the signing stage. Internal signing mode uses the
 repository's established policy:
 
 - `main` and `release/*` use real signing;
+- `PREVIEW_LABEL=stable` uses real signing and API Scan;
 - an explicit `forceRealSigning` queue parameter uses real signing;
 - all other branches use test signing.
+
+API Scan runs on scheduled main builds as the asynchronous compliance check,
+when explicitly requested with `runApiScan`, and for every exact stable build.
+It does not gate each ordinary main or release branch build.
 
 Real signing must be enabled only after ESRP onboarding and protected-branch
 checks are configured. Arcade then supplies:

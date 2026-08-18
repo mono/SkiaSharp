@@ -178,12 +178,10 @@ $isReleaseBuild = $previewLabel -ceq 'stable'
 $finalVersionKind = if ($isReleaseBuild) { 'release' } else { '' }
 Set-BuildVariable DOTNET_FINAL_VERSION_KIND $finalVersionKind
 
-if ($isReleaseBuild -and "$env:PACKAGE_PIPELINE" -eq 'true' -and
-    ($env:SYSTEM_TEAMPROJECT -ne 'internal' -or
-     $env:BUILD_REASON -ne 'Manual' -or
-     "$env:PACKAGE_FORCE_REAL_SIGNING" -ne 'true' -or
-     "$env:PACKAGE_RUN_API_SCAN" -ne 'true')) {
-    throw 'Exact release packages require an internal manual Package run with real signing and API Scan enabled.'
+if ($isReleaseBuild -and
+    [string]::IsNullOrWhiteSpace($resourceRunName) -and
+    ($env:SYSTEM_TEAMPROJECT -ne 'internal' -or $env:BUILD_REASON -ne 'Manual')) {
+    throw 'Exact release packages require an internal manual build.'
 }
 
 if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {

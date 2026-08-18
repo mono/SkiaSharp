@@ -22,7 +22,6 @@ parameters:
   verbosity: $(VERBOSITY)                       # the level of verbosity to use when building
   docker: ''                                    # the Docker image to build and use
   dockerArgs: ''                                # any additional arguments to pass to docker build
-  checkoutSubmodules: recursive                 # whether to initialize submodules during checkout
   installAndroidNdk: true                       # whether or not to install the Android NDK
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
@@ -126,7 +125,7 @@ jobs:
 
       - ${{ else }}:
         - checkout: self
-          submodules: ${{ parameters.checkoutSubmodules }}
+          submodules: recursive
 
       - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
         displayName: Configure build variables
@@ -134,7 +133,6 @@ jobs:
       - pwsh: .\scripts\infra\native\shared\get-free-space.ps1
         displayName: Get the volume information after the checkout
         condition: always()
-        retryCountOnTaskFailure: 3
 
       # free disk space on hosted agents - skip on cache hit (not building)
       - ${{ if eq(parameters.buildAgent.pool.name, 'Azure Pipelines') }}:

@@ -20,9 +20,6 @@ $identityVariables = @(
     'GIT_BRANCH_NAME',
     'GIT_SHA',
     'GIT_URL',
-    'PACKAGE_FORCE_REAL_SIGNING',
-    'PACKAGE_PIPELINE',
-    'PACKAGE_RUN_API_SCAN',
     'PREVIEW_LABEL',
     'PR_NUMBER',
     'RESOURCES_PIPELINE_SKIASHARP_RUNNAME',
@@ -71,9 +68,6 @@ function Invoke-BuildIdentityCase {
         BUILD_SOURCEBRANCHNAME = 'main'
         BUILD_SOURCEVERSION = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'
         BUILD_SOURCEVERSIONMESSAGE = ''
-        PACKAGE_FORCE_REAL_SIGNING = 'false'
-        PACKAGE_PIPELINE = 'false'
-        PACKAGE_RUN_API_SCAN = 'false'
         PREVIEW_LABEL = 'preview.0'
         SKIASHARP_VERSION = '4.152.0'
         SYSTEM_TEAMPROJECT = 'internal'
@@ -234,9 +228,6 @@ Assert-BuildLabel $resourceMain.Output '4.152.0-preview.0.26418.3+main'
 
 $release = Invoke-BuildIdentityCase 'Exact release' @{
     BUILD_REASON = 'Manual'
-    PACKAGE_FORCE_REAL_SIGNING = 'true'
-    PACKAGE_PIPELINE = 'true'
-    PACKAGE_RUN_API_SCAN = 'true'
     PREVIEW_LABEL = 'Stable'
 }
 Assert-Equal (Get-LastVariableValue $release.Output 'PREVIEW_LABEL') 'stable' 'Release normalized label'
@@ -245,27 +236,13 @@ Assert-BuildLabel $release.Output '4.152.0+20260818.3'
 
 $mixedCasePreview = Invoke-BuildIdentityCase 'Mixed-case preview label' @{
     BUILD_REASON = 'Manual'
-    PACKAGE_PIPELINE = 'true'
     PREVIEW_LABEL = 'Preview.7'
 }
 Assert-Equal (Get-LastVariableValue $mixedCasePreview.Output 'PREVIEW_LABEL') 'preview.7' 'Normalized preview label'
 Assert-BuildLabel $mixedCasePreview.Output '4.152.0-preview.7.26418.3+main'
 
-$releaseWithoutApiScan = Invoke-BuildIdentityCase 'Exact release without API Scan' @{
-    BUILD_REASON = 'Manual'
-    PACKAGE_FORCE_REAL_SIGNING = 'true'
-    PACKAGE_PIPELINE = 'true'
-    PREVIEW_LABEL = 'stable'
-} -ExpectFailure
-if ($releaseWithoutApiScan.Output -notmatch 'Exact release packages require') {
-    throw "Release without API Scan failed for the wrong reason.`n$($releaseWithoutApiScan.Output)"
-}
-
 $automaticRelease = Invoke-BuildIdentityCase 'Automatic exact release' @{
     BUILD_REASON = 'IndividualCI'
-    PACKAGE_FORCE_REAL_SIGNING = 'true'
-    PACKAGE_PIPELINE = 'true'
-    PACKAGE_RUN_API_SCAN = 'true'
     PREVIEW_LABEL = 'stable'
 } -ExpectFailure
 if ($automaticRelease.Output -notmatch 'Exact release packages require') {
@@ -280,15 +257,6 @@ Assert-Equal (Get-LastVariableValue $releaseResource.Output 'PREVIEW_LABEL') 'st
 Assert-Equal (Get-LastVariableValue $releaseResource.Output 'DOTNET_FINAL_VERSION_KIND') 'release' 'Release resource final version kind'
 Assert-Equal (Get-LastVariableValue $releaseResource.Output 'BUILD_NUMBER') '26418.3' 'Release resource build number'
 Assert-BuildLabel $releaseResource.Output '4.152.0+20260818.3'
-
-$unsafeRelease = Invoke-BuildIdentityCase 'Unsafe exact release' @{
-    BUILD_REASON = 'Manual'
-    PACKAGE_PIPELINE = 'true'
-    PREVIEW_LABEL = 'stable'
-} -ExpectFailure
-if ($unsafeRelease.Output -notmatch 'Exact release packages require') {
-    throw "Unsafe release failed for the wrong reason.`n$($unsafeRelease.Output)"
-}
 
 $malformed = Invoke-BuildIdentityCase 'Malformed resource identity' @{
     BUILD_REASON = 'ResourceTrigger'
@@ -331,14 +299,17 @@ if ($packageStages -notmatch '--dotNetFinalVersionKind=\"\$\(DOTNET_FINAL_VERSIO
 }
 
 $packagePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-package.yml') -Raw
-if ($packagePipeline -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
-    throw 'BAR registration must use the same Arcade OfficialBuildId as manifest generation.'
-}
 if ($packagePipeline -match 'source:\s*skiasharp-native') {
     throw 'The combined Package pipeline must not inherit identity from a Native pipeline resource.'
 }
 if ($packagePipeline -notmatch "buildPipelineType:\s*'build'") {
     throw "The internal Package pipeline must use the 'build' role."
+}
+if ($packagePipeline -notmatch 'previewLabel:\s*\$\{\{\s*parameters\.previewLabel\s*\}\}' -or
+    $packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRealSigning\s*\}\}' -or
+    $packagePipeline -notmatch 'runApiScan:\s*\$\{\{\s*parameters\.runApiScan\s*\}\}' -or
+    $packagePipeline -match '(?m)^\s*-\s+stage:') {
+    throw 'The Package root must delegate all stages and policy parameters to the shared composer.'
 }
 
 $testsPipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-tests.yml') -Raw
@@ -356,19 +327,38 @@ $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stage
 if ($packageStages -match 'Re-upload Native Artifacts') {
     throw 'The Package stage must consume Native artifacts from the same pipeline run.'
 }
-if ($packagePipeline -notmatch 'publishAssetsImmediately:\s*true' -or
-    $packagePipeline -match 'requireDefaultChannels:\s*true') {
+$stagesComposer = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages.yml') -Raw
+$publishStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-publish.yml') -Raw
+if ($stagesComposer -notmatch '/scripts/azure-templates-stages-publish\.yml@self') {
+    throw 'The shared stage composer must delegate BAR registration and validation to the publish stage template.'
+}
+if ($publishStages -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
+    throw 'BAR registration must use the same Arcade OfficialBuildId as manifest generation.'
+}
+if ($publishStages -notmatch 'publishAssetsImmediately:\s*true' -or
+    $publishStages -match 'requireDefaultChannels:\s*true') {
     throw 'Package CI must validate BAR assets without automatic channel promotion.'
 }
-if ($packagePipeline -notmatch 'PACKAGE_FORCE_REAL_SIGNING(?s:.*?)parameters\.forceRealSigning' -or
-    $packagePipeline -notmatch 'PACKAGE_RUN_API_SCAN(?s:.*?)parameters\.runApiScan') {
-    throw 'The Package pipeline must expose signing and API Scan choices to release validation.'
+if ($packagePipeline -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or
+    $stagesComposer -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or
+    $publishStages -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN') {
+    throw 'The combined Package pipeline must use its parameters directly instead of mirrored variables.'
 }
 if ($packagePipeline -notmatch 'previewLabel(?s:.*?)PREVIEW_LABEL(?s:.*?)parameters\.previewLabel') {
     throw 'The combined Package pipeline must own the label inherited by Tests.'
 }
 if ([regex]::Matches($packagePipeline, '- name: previewLabel').Count -ne 1) {
     throw 'The combined Package pipeline must expose exactly one previewLabel parameter.'
+}
+$stableExpression = "eq(lower(trim(parameters.previewLabel)), 'stable')"
+if (($stagesComposer.Split($stableExpression).Count - 1) -lt 3) {
+    throw 'Stable builds must automatically real-sign, API Scan, and register in BAR.'
+}
+if (-not $stagesComposer.Contains("eq(variables['Build.Reason'], 'Schedule')")) {
+    throw 'API Scan must run automatically on scheduled nightlies.'
+}
+if ($stagesComposer.Contains("and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main')")) {
+    throw 'API Scan must not block every main or release branch build.'
 }
 
 $packageScript = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget.cake') -Raw

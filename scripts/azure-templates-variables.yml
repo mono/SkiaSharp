@@ -8,9 +8,6 @@ variables:
   GIT_URL: $(Build.Repository.Uri)
   PREVIEW_LABEL: 'preview.0'
   DOTNET_FINAL_VERSION_KIND: ''
-  PACKAGE_PIPELINE: false
-  PACKAGE_FORCE_REAL_SIGNING: false
-  PACKAGE_RUN_API_SCAN: false
   # Arcade OfficialBuildId uses yyyyMMdd.revision. The product/package build
   # number is derived from this as short-date.revision by set-build-variables.ps1.
   ARCADE_OFFICIAL_BUILD_ID: $[format('{0}.{1}', format('{0:yyyyMMdd}', pipeline.startTime), counter(format('arcade_{0}', format('{0:yyyyMMdd}', pipeline.startTime)), 1))]
