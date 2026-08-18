@@ -1,0 +1,150 @@
+parameters:
+  - name: buildAgent
+    type: object
+  - name: useRealSigning
+    type: boolean
+    default: false
+
+stages:
+  - stage: signing
+    displayName: Sign NuGets
+    dependsOn: package
+    jobs:
+      - template: /eng/common/templates-official/job/job.yml@self
+        parameters:
+          name: sign_nugets
+          displayName: Sign already-built NuGets
+          pool: ${{ parameters.buildAgent.pool }}
+          timeoutInMinutes: 180
+          workspace:
+            clean: all
+          runAsPublic: false
+          enableMicrobuild: true
+          enableMicrobuildForMacAndLinux: false
+          microbuildUseESRP: ${{ parameters.useRealSigning }}
+          variables:
+            - name: _TeamName
+              value: '.NET MAUI'
+            - name: TeamName
+              value: '.NET MAUI'
+            - name: _BuildConfig
+              value: Release
+            - name: _SignType
+              ${{ if eq(parameters.useRealSigning, true) }}:
+                value: real
+              ${{ else }}:
+                value: test
+          artifacts:
+            publish:
+              logs:
+                name: nuget_signing_logs
+          templateContext:
+            outputs:
+              - output: pipelineArtifact
+                displayName: Publish signed NuGets
+                artifactName: nuget_signed
+                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+                condition: succeeded()
+              - output: pipelineArtifact
+                displayName: Publish signed preview NuGets
+                artifactName: nuget_preview_signed
+                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
+                condition: succeeded()
+              - output: pipelineArtifact
+                displayName: Publish signing verification
+                artifactName: nuget_signing_verification
+                targetPath: '$(Build.SourcesDirectory)\artifacts\signing-verification'
+                condition: succeeded()
+          preSteps:
+            - checkout: self
+              clean: true
+              fetchDepth: 1
+              fetchTags: false
+              submodules: false
+          steps:
+            - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+              displayName: Configure package version identity
+
+            - task: DownloadPipelineArtifact@2
+              displayName: Download unsigned NuGets
+              inputs:
+                artifactName: nuget
+                targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
+
+            - pwsh: |
+                $source = '$(Agent.TempDirectory)\unsigned-nugets'
+                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+                Remove-Item $destination -Recurse -Force -ErrorAction Ignore
+                New-Item $destination -ItemType Directory -Force | Out-Null
+
+                $packages = @(Get-ChildItem $source -Filter '*.nupkg' -File -Recurse)
+                if ($packages.Count -eq 0) {
+                  throw "No unsigned NuGet packages were downloaded from artifact 'nuget'."
+                }
+
+                Copy-Item $packages.FullName $destination
+                Write-Host "Staged $($packages.Count) NuGet package(s) for signing."
+              displayName: Stage packages in Arcade layout
+
+            - powershell: >
+                eng\common\build.ps1
+                -configuration Release
+                -restore
+                -prepareMachine
+                -sign
+                -ci
+                /p:DotNetSignType=$(_SignType)
+                "/p:TeamName=$(_TeamName)"
+                /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
+                /p:PostBuildSign=false
+              displayName: Sign staged NuGets with Arcade
+              env:
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+            - pwsh: |
+                ./scripts/infra/signing/verify-signed-packages.ps1 `
+                  -OriginalDirectory '$(Agent.TempDirectory)\unsigned-nugets' `
+                  -SignedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
+                  -SigningPropsPath '$(Build.SourcesDirectory)\eng\Signing.props' `
+                  -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\payload-verification.json' `
+                  -SignType '$(_SignType)' `
+                  -RequireSignatures
+              displayName: Verify signed NuGet payload fidelity
+
+            - ${{ if eq(parameters.useRealSigning, true) }}:
+              - powershell: >
+                  eng\common\sdk-task.ps1
+                  -task SigningValidation
+                  -restore
+                  -msbuildEngine dotnet
+                  "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping"
+                  "/p:SignCheckExclusionsFile=$(Build.SourcesDirectory)\eng\SignCheckExclusionsFile.txt"
+                displayName: Validate trusted signatures with Arcade
+
+            - pwsh: |
+                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
+                if ('$(DOTNET_FINAL_VERSION_KIND)' -eq 'release') {
+                  Remove-Item $destination -Recurse -Force -ErrorAction Ignore
+                  New-Item $destination -ItemType Directory -Force | Out-Null
+                  Write-Host 'Exact release packages remain in the signed Shipping view.'
+                } else {
+                  ./scripts/infra/package/stage-prerelease-packages.ps1 `
+                    -SourceDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
+                    -DestinationDirectory $destination
+                }
+              displayName: Create signed preview package view
+
+            - ${{ if eq(parameters.useRealSigning, true) }}:
+              - powershell: >
+                  eng\common\build.ps1
+                  -configuration Release
+                  -restore
+                  -publish
+                  -ci
+                  /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                  /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
+                  /p:DotNetPublishUsingPipelines=true
+                displayName: Generate Arcade V3 asset manifest
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)

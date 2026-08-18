@@ -227,7 +227,9 @@ Assert-Equal (Get-LastVariableValue $resourceMain.Output 'BUILD_NUMBER') '26418.
 Assert-BuildLabel $resourceMain.Output '4.152.0-preview.0.26418.3+main'
 
 $release = Invoke-BuildIdentityCase 'Exact release' @{
-    BUILD_REASON = 'Manual'
+    BUILD_REASON = 'IndividualCI'
+    BUILD_SOURCEBRANCH = 'refs/heads/release/4.152.0'
+    BUILD_SOURCEBRANCHNAME = '4.152.0'
     PREVIEW_LABEL = 'Stable'
 }
 Assert-Equal (Get-LastVariableValue $release.Output 'PREVIEW_LABEL') 'stable' 'Release normalized label'
@@ -305,9 +307,9 @@ if ($packagePipeline -match 'source:\s*skiasharp-native') {
 if ($packagePipeline -notmatch "buildPipelineType:\s*'build'") {
     throw "The internal Package pipeline must use the 'build' role."
 }
-if ($packagePipeline -notmatch 'previewLabel:\s*\$\{\{\s*parameters\.previewLabel\s*\}\}' -or
-    $packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRealSigning\s*\}\}' -or
+if ($packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRealSigning\s*\}\}' -or
     $packagePipeline -notmatch 'runApiScan:\s*\$\{\{\s*parameters\.runApiScan\s*\}\}' -or
+    $packagePipeline -match '- name:\s*previewLabel' -or
     $packagePipeline -match '(?m)^\s*-\s+stage:') {
     throw 'The Package root must delegate all stages and policy parameters to the shared composer.'
 }
@@ -329,6 +331,11 @@ if ($packageStages -match 'Re-upload Native Artifacts') {
 }
 $stagesComposer = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages.yml') -Raw
 $publishStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-publish.yml') -Raw
+if ($stagesComposer -notmatch '/scripts/azure-templates-stages-signing\.yml@self' -or
+    $stagesComposer -notmatch '/scripts/azure-templates-stages-apiscan\.yml@self' -or
+    $stagesComposer -match '/scripts/azure-templates-jobs-(signing|apiscan)\.yml@self') {
+    throw 'The shared composer must consume signing and API Scan as stage templates.'
+}
 if ($stagesComposer -notmatch '/scripts/azure-templates-stages-publish\.yml@self') {
     throw 'The shared stage composer must delegate BAR registration and validation to the publish stage template.'
 }
@@ -344,13 +351,11 @@ if ($packagePipeline -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE
     $publishStages -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN') {
     throw 'The combined Package pipeline must use its parameters directly instead of mirrored variables.'
 }
-if ($packagePipeline -notmatch 'previewLabel(?s:.*?)PREVIEW_LABEL(?s:.*?)parameters\.previewLabel') {
-    throw 'The combined Package pipeline must own the label inherited by Tests.'
+if ($variablesYaml -notmatch "PREVIEW_LABEL:\s*'preview\.0'" -or
+    $packagePipeline -match '- name:\s*previewLabel') {
+    throw 'PREVIEW_LABEL must remain source-controlled in the shared variables template.'
 }
-if ([regex]::Matches($packagePipeline, '- name: previewLabel').Count -ne 1) {
-    throw 'The combined Package pipeline must expose exactly one previewLabel parameter.'
-}
-$stableExpression = "eq(lower(trim(parameters.previewLabel)), 'stable')"
+$stableExpression = "eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable')"
 if (($stagesComposer.Split($stableExpression).Count - 1) -lt 3) {
     throw 'Stable builds must automatically real-sign, API Scan, and register in BAR.'
 }

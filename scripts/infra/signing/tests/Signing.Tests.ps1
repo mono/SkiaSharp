@@ -303,7 +303,7 @@ try {
         throw 'Publishing.props must separate preview and exact release package views.'
     }
 
-    $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-jobs-signing.yml') -Raw
+    $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
     if ($signingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
         throw 'Arcade V3 manifest generation must restore its Publish.proj task dependencies.'
     }

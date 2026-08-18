@@ -180,8 +180,9 @@ Set-BuildVariable DOTNET_FINAL_VERSION_KIND $finalVersionKind
 
 if ($isReleaseBuild -and
     [string]::IsNullOrWhiteSpace($resourceRunName) -and
-    ($env:SYSTEM_TEAMPROJECT -ne 'internal' -or $env:BUILD_REASON -ne 'Manual')) {
-    throw 'Exact release packages require an internal manual build.'
+    ($env:SYSTEM_TEAMPROJECT -ne 'internal' -or
+     -not "$env:BUILD_SOURCEBRANCH".StartsWith('refs/heads/release/', [StringComparison]::OrdinalIgnoreCase))) {
+    throw 'Exact release packages require an internal release/* branch.'
 }
 
 if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {

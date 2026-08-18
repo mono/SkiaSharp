@@ -1,0 +1,177 @@
+parameters:
+  - name: buildAgentWindows
+    type: object
+
+stages:
+  - stage: api_scan
+    displayName: API Scan
+    dependsOn: package
+    jobs:
+      - job: api_scan
+        displayName: API Scan
+        timeoutInMinutes: 480
+        pool: ${{ parameters.buildAgentWindows.pool }}
+        workspace:
+          clean: all
+        steps:
+          - checkout: self
+            submodules: false
+            fetchDepth: 1
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download NuGet packages
+            inputs:
+              buildType: current
+              artifactName: nuget
+              targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download symbol packages
+            inputs:
+              buildType: current
+              artifactName: nuget_symbols
+              targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget_symbols
+
+          - task: DownloadPipelineArtifact@2
+            displayName: Download MSVC native artifacts
+            inputs:
+              buildType: current
+              artifactName: native_msvc
+              targetPath: $(Agent.TempDirectory)\APIScan\native_msvc
+
+          - pwsh: |
+              $scanRoot = "$(Agent.TempDirectory)\APIScan"
+              $extractedPackages = Join-Path $scanRoot "nuget_symbols-extracted"
+              $surrogateSource = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
+              $surrogateFolder = Join-Path $scanRoot "surrogates"
+              $surrogateBinaryFolder = Join-Path $scanRoot "surrogate-binaries"
+              $surrogateFile = Join-Path $surrogateFolder "APIScanSurrogates.xml"
+
+              ./scripts/infra/package/extract-nupkg-files.ps1 `
+                -SourcePath "$scanRoot\packages\*\*.*nupkg" `
+                -DestinationPath $extractedPackages `
+                -RemoveOriginal
+
+              New-Item -ItemType Directory -Force -Path $surrogateFolder, $surrogateBinaryFolder | Out-Null
+
+              $winUiSurrogateSource = Get-ChildItem $extractedPackages -Directory |
+                Where-Object Name -Like "skiasharp.nativeassets.winui-*.symbols" |
+                ForEach-Object { Join-Path $_.FullName "runtimes\win-x64\native" } |
+                Where-Object { Test-Path $_ } |
+                Select-Object -First 1
+              if (-not $winUiSurrogateSource) {
+                throw "Unable to find x64 WinUI binaries for API Scan ARM64 surrogates."
+              }
+
+              foreach ($file in @("libEGL.dll", "libEGL.pdb", "libGLESv2.dll", "libGLESv2.pdb", "SkiaSharp.Views.WinUI.Native.dll", "SkiaSharp.Views.WinUI.Native.pdb")) {
+                $source = Join-Path $winUiSurrogateSource $file
+                if (-not (Test-Path $source)) {
+                  throw "Unable to find API Scan surrogate file: $source"
+                }
+                Copy-Item $source $surrogateBinaryFolder
+              }
+
+              (Get-Content $surrogateSource -Raw).Replace("{SOFTWARE_FOLDER}", $scanRoot) |
+                Set-Content $surrogateFile
+
+              $binaries = @(Get-ChildItem $scanRoot -Recurse -File -Include *.dll, *.exe, *.winmd)
+              $symbols = @(Get-ChildItem $scanRoot -Recurse -File -Filter *.pdb)
+              if ($binaries.Count -eq 0) {
+                throw "No shipped DLL, EXE, or WINMD files were collected for API Scan."
+              }
+              if ($symbols.Count -eq 0) {
+                throw "No matching PDB files were collected for API Scan."
+              }
+
+              Write-Host "Collected $($binaries.Count) binaries and $($symbols.Count) PDB files."
+            displayName: Prepare API Scan inputs
+
+          - task: AzureCLI@2
+            displayName: Login to API Scan identity
+            inputs:
+              azureSubscription: dotnet-apiscan
+              scriptType: pscore
+              scriptLocation: inlineScript
+              addSpnToEnvironment: true
+              inlineScript: |
+                Write-Host "##vso[task.setvariable variable=ARM_CLIENT_ID;issecret=true]$env:servicePrincipalId"
+                Write-Host "##vso[task.setvariable variable=ARM_ID_TOKEN;issecret=true]$env:idToken"
+                Write-Host "##vso[task.setvariable variable=ARM_TENANT_ID;issecret=true]$env:tenantId"
+
+          - pwsh: |
+              az login `
+                --service-principal `
+                --username "$(ARM_CLIENT_ID)" `
+                --tenant "$(ARM_TENANT_ID)" `
+                --allow-no-subscriptions `
+                --federated-token "$(ARM_ID_TOKEN)"
+            displayName: Activate API Scan WIF identity
+
+          - task: APIScan@2
+            displayName: Run API Scan
+            inputs:
+              softwareFolder: $(Agent.TempDirectory)\APIScan
+              symbolsFolder: SRV*http://symweb;$(Agent.TempDirectory)\APIScan\nuget_symbols-extracted;$(Agent.TempDirectory)\APIScan\native_msvc
+              softwareName: SkiaSharp
+              softwareVersionNum: 3
+              softwareBuildNum: $(Build.BuildId)
+              surrogateConfigurationFolder: $(Agent.TempDirectory)\APIScan\surrogates
+              isLargeApp: true
+              modeType: release
+              toolVersion: Latest
+              verbosityLevel: standard
+              preserveLogsFolder: true
+            env:
+              AzureServicesAuthConnectionString: RunAs=Developer;DeveloperTool=AzureCli
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+          - task: SdtReport@2
+            displayName: Create API Scan security report
+            condition: succeededOrFailed()
+            inputs:
+              GdnExportVstsConsole: true
+              GdnExportSarifFile: true
+              GdnExportHtmlFile: true
+              GdnExportAllTools: true
+              GdnExportGdnToolApiScan: true
+              GdnExportGdnToolApiScanSeverity: Note
+              GdnExportPolicy: Microsoft
+              GdnExportPolicyMinSev: Note
+              GdnExportSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnExportSuppressionSets: default
+
+          - task: TSAUpload@2
+            displayName: Create bugs for API Scan results
+            condition: succeededOrFailed()
+            inputs:
+              GdnPublishTsaOnboard: true
+              GdnPublishTsaConfigFile: $(Build.SourcesDirectory)\scripts\infra\security\tsaoptions-v2.json
+              GdnPublishTsaExportedResultsPublishable: true
+              GdnPublishTsaPolicy: Microsoft
+              GdnPublishTsaPolicyMinimumSeverity: Note
+              GdnPublishTsaSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnPublishTsaSuppressionSets: default
+              GdnPublishTsaAllTools: true
+              GdnPublishTsaGdnToolApiScan: true
+              GdnPublishTsaGdnToolApiScanSeverity: Note
+
+          - task: PublishSecurityAnalysisLogs@3
+            displayName: Publish API Scan analysis artifacts
+            condition: succeededOrFailed()
+            inputs:
+              ArtifactName: CodeAnalysisLogs - API Scan
+              ArtifactType: Container
+              AllTools: true
+              ApiScan: true
+              ToolLogsNotFoundAction: Standard
+
+          - task: PostAnalysis@2
+            displayName: Fail on API Scan issues
+            condition: succeededOrFailed()
+            inputs:
+              GdnBreakAllTools: true
+              GdnBreakGdnToolApiScan: true
+              GdnBreakGdnToolApiScanSeverity: Note
+              GdnBreakPolicyMinSev: Note
+              GdnBreakSuppressionFiles: $(Build.SourcesDirectory)\scripts\infra\security\source.gdnsuppress
+              GdnBreakSuppressionSets: default

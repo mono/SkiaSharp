@@ -79,10 +79,6 @@ parameters:
         name: NetCore1ESPool-Internal
         image: 1es-ubuntu-2204
         os: linux
-  - name: previewLabel
-    displayName: 'Package label (use stable for an exact release)'
-    type: string
-    default: 'preview.0'
   - name: runApiScan
     displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
     type: boolean
@@ -98,8 +94,6 @@ parameters:
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
-  - name: PREVIEW_LABEL
-    value: ${{ parameters.previewLabel }}
 
 resources:
   repositories:
@@ -163,6 +157,5 @@ extends:
           buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
           buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
-          previewLabel: ${{ parameters.previewLabel }}
           forceRealSigning: ${{ parameters.forceRealSigning }}
           runApiScan: ${{ parameters.runApiScan }}

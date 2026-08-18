@@ -30,9 +30,6 @@ parameters:
   - name: enableCaching
     type: boolean
     default: false
-  - name: previewLabel
-    type: string
-    default: 'preview.0'
   - name: forceRealSigning
     type: boolean
     default: false
@@ -65,32 +62,23 @@ stages:
   # Build.Reason covers policy-triggered PRs; refs/pull covers manually queued
   # or resource-triggered PR merge refs.
   - ${{ if and(eq(parameters.buildPipelineType, 'build'), eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
-    - stage: signing
-      displayName: Sign NuGets
-      dependsOn: package
-      jobs:
-        - template: /scripts/azure-templates-jobs-signing.yml@self
-          parameters:
-            buildAgent: ${{ parameters.buildAgentWindows }}
-            enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(lower(trim(parameters.previewLabel)), 'stable'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
-            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(lower(trim(parameters.previewLabel)), 'stable'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-              useRealSigning: true
-            ${{ else }}:
-              useRealSigning: false
+    - template: /scripts/azure-templates-stages-signing.yml@self
+      parameters:
+        buildAgent: ${{ parameters.buildAgentWindows }}
+        ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+          useRealSigning: true
+        ${{ else }}:
+          useRealSigning: false
 
-  - ${{ if and(eq(parameters.buildPipelineType, 'build'), or(eq(parameters.runApiScan, 'true'), eq(lower(trim(parameters.previewLabel)), 'stable'), and(eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.Reason'], 'Schedule')))) }}:
-    - stage: api_scan
-      displayName: API Scan
-      dependsOn: package
-      jobs:
-        - template: /scripts/azure-templates-jobs-apiscan.yml@self
-          parameters:
-            buildAgentWindows: ${{ parameters.buildAgentWindows }}
+  - ${{ if and(eq(parameters.buildPipelineType, 'build'), or(eq(parameters.runApiScan, 'true'), eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable'), and(eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.Reason'], 'Schedule')))) }}:
+    - template: /scripts/azure-templates-stages-apiscan.yml@self
+      parameters:
+        buildAgentWindows: ${{ parameters.buildAgentWindows }}
 
-  - ${{ if and(eq(parameters.buildPipelineType, 'build'), eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), or(eq(parameters.forceRealSigning, 'true'), eq(lower(trim(parameters.previewLabel)), 'stable'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
+  - ${{ if and(eq(parameters.buildPipelineType, 'build'), eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), or(eq(parameters.forceRealSigning, 'true'), eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
     - template: /scripts/azure-templates-stages-publish.yml@self
       parameters:
-        includeApiScan: ${{ or(eq(parameters.runApiScan, 'true'), eq(lower(trim(parameters.previewLabel)), 'stable'), and(eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.Reason'], 'Schedule'))) }}
+        includeApiScan: ${{ or(eq(parameters.runApiScan, 'true'), eq(lower(trim(variables['PREVIEW_LABEL'])), 'stable'), and(eq(variables['System.TeamProject'], 'internal'), eq(variables['Build.Reason'], 'Schedule'))) }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
