@@ -19,8 +19,8 @@ Task ("nuget-normal")
         { "VersionSuffix", PREVIEW_NUGET_SUFFIX },
     };
 
-    // Preview BAR builds produce one coherent, uniquely-versioned package family.
-    // Exact release package selection is intentionally deferred.
+    // Each build produces one coherent package family. Preview labels use a
+    // unique suffix; PREVIEW_LABEL=stable clears the suffix for an exact release.
     EnsureDirectoryExists (OUTPUT_NUGETS_PATH);
     DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
     DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");

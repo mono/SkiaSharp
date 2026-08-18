@@ -288,18 +288,27 @@ try {
     }
 
     [xml]$publishingPolicy = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
-    $publishedArtifacts = @(
-        $publishingPolicy.Project.ItemGroup.Artifact |
-            ForEach-Object { [string]$_.Include }
-    )
-    if ($publishedArtifacts.Count -ne 1 -or
-        $publishedArtifacts[0] -cne '$(ArtifactsPackagesDir)Preview\*.nupkg') {
-        throw 'Publishing.props must register only the signed prerelease package view in BAR.'
+    $publishedArtifacts = @($publishingPolicy.Project.ItemGroup.Artifact)
+    $previewArtifact = @(
+        $publishedArtifacts |
+            Where-Object { [string]$_.Include -ceq '$(ArtifactsPackagesDir)Preview\*.nupkg' })
+    $releaseArtifact = @(
+        $publishedArtifacts |
+            Where-Object { [string]$_.Include -ceq '$(ArtifactsShippingPackagesDir)**\*.nupkg' })
+    if ($publishedArtifacts.Count -ne 2 -or
+        $previewArtifact.Count -ne 1 -or
+        $releaseArtifact.Count -ne 1 -or
+        [string]$previewArtifact[0].Condition -notmatch "!= 'release'" -or
+        [string]$releaseArtifact[0].Condition -notmatch "== 'release'") {
+        throw 'Publishing.props must separate preview and exact release package views.'
     }
 
     $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-jobs-signing.yml') -Raw
     if ($signingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
         throw 'Arcade V3 manifest generation must restore its Publish.proj task dependencies.'
+    }
+    if ([regex]::Matches($signingTemplate, 'DotNetFinalVersionKind=\$\(DOTNET_FINAL_VERSION_KIND\)').Count -lt 2) {
+        throw 'Arcade signing and manifest generation must share the derived final version kind.'
     }
 
     Write-Host 'Signing policy and payload tests passed.'

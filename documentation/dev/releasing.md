@@ -36,17 +36,18 @@ skill-specific and documented by the script that emits them.
 |--------------|----------------|--------|--------------|----------------|-----|
 | Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
 | RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
-| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `X.Y.Z` | `vX.Y.Z` |
+| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z` | `X.Y.Z` | `vX.Y.Z` |
 | Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
-| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `X.Y.Z.F` | `vX.Y.Z.F` |
+| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
 The `{build}` number is Arcade's package build identity
 `short-date.revision`, derived from the CI `OfficialBuildId`
 `yyyyMMdd.revision`. Release testing uses the exact test packages produced
-by the selected CI build. Normal CI emits the uniquely versioned
-`-stable.{build}` candidate only. Exact public-version selection belongs to the
-future protected release pipeline and is not part of the current preview BAR
-build.
+by the selected CI build. `PREVIEW_LABEL=stable` produces the exact public
+version in a manual, real-signed, API-scanned build. Arcade stages that stable
+BAR in an isolated feed; NuGet.org publication remains a separate protected
+operation. Package CI does not promote channels automatically: Tests validate
+the registered BAR first, then the chosen BAR is promoted manually.
 
 ### Release Type → Base Branch
 

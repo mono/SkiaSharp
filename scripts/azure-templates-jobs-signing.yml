@@ -61,6 +61,9 @@ jobs:
               fetchTags: false
               submodules: false
           steps:
+            - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+              displayName: Configure package version identity
+
             - task: DownloadPipelineArtifact@2
               displayName: Download unsigned NuGets
               inputs:
@@ -92,6 +95,7 @@ jobs:
                 /p:DotNetSignType=$(_SignType)
                 "/p:TeamName=$(_TeamName)"
                 /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
                 /p:PostBuildSign=false
               displayName: Sign staged NuGets with Arcade
               env:
@@ -118,9 +122,16 @@ jobs:
                 displayName: Validate trusted signatures with Arcade
 
             - pwsh: |
-                ./scripts/infra/package/stage-prerelease-packages.ps1 `
-                  -SourceDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
-                  -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
+                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
+                if ('$(DOTNET_FINAL_VERSION_KIND)' -eq 'release') {
+                  Remove-Item $destination -Recurse -Force -ErrorAction Ignore
+                  New-Item $destination -ItemType Directory -Force | Out-Null
+                  Write-Host 'Exact release packages remain in the signed Shipping view.'
+                } else {
+                  ./scripts/infra/package/stage-prerelease-packages.ps1 `
+                    -SourceDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
+                    -DestinationDirectory $destination
+                }
               displayName: Create signed preview package view
 
             - ${{ if eq(parameters.enablePublishing, true) }}:
@@ -131,6 +142,7 @@ jobs:
                   -publish
                   -ci
                   /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                  /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
                   /p:DotNetPublishUsingPipelines=true
                 displayName: Generate Arcade V3 asset manifest
                 env:

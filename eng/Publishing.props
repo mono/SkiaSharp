@@ -4,8 +4,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Only the signed prerelease view is registered in BAR and eligible for
-         channel promotion. -->
-    <Artifact Include="$(ArtifactsPackagesDir)Preview\*.nupkg" Kind="Package" />
+    <!-- Preview builds register only their signed prerelease view. Exact release
+         builds register signed Shipping packages and are isolated by Arcade V3. -->
+    <Artifact Include="$(ArtifactsPackagesDir)Preview\*.nupkg"
+              Kind="Package"
+              Condition="'$(DotNetFinalVersionKind)' != 'release'" />
+    <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg"
+              Kind="Package"
+              Condition="'$(DotNetFinalVersionKind)' == 'release'" />
   </ItemGroup>
 </Project>

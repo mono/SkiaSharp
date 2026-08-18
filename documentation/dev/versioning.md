@@ -41,12 +41,17 @@ Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested
  - `-preview` is mostly good and works, but a few more things need to be done (bugs, features, discussions)
  - `-rc` is almost ready to go out, but is waiting on third party feedback (not too common)
- - `-stable` is an exact-version candidate that remains uniquely versioned until a future protected release operation
+ - `stable` is the pipeline sentinel for an exact `X.Y.Z` package; it is not included in the package version
 
-Each package build emits exactly one uniquely versioned prerelease family; it
-does not co-produce an exact stable `X.Y.Z`. Moving the remaining version policy
-into Arcade's `eng/Versions.props` model and selecting exact versions from a
-future protected release pipeline are intentionally deferred.
+Each package build emits exactly one version family. Any normal label produces
+a uniquely versioned prerelease. `PREVIEW_LABEL=stable` derives
+`DotNetFinalVersionKind=release` and emits exact stable packages. Exact releases
+are restricted to internal manual runs with real signing and API Scan.
+Package labels are normalized to lowercase before version construction.
+
+Arcade V3 marks exact release builds as stable and publishes them to dynamically
+created isolated feeds. Channel assignment does not publish stable packages to
+NuGet.org; a selected, tested BAR is released separately.
 
 ### PR Packages
 

@@ -55,9 +55,17 @@ parameters:
         name: NetCore1ESPool-Internal
         image: 1es-ubuntu-2204
         os: linux
+  - name: previewLabel
+    displayName: 'Package label inherited by Package and Tests'
+    type: string
+    default: 'preview.0'
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
+  - name: NATIVE_PIPELINE
+    value: true
+  - name: PREVIEW_LABEL
+    value: ${{ parameters.previewLabel }}
 
 resources:
   repositories:
