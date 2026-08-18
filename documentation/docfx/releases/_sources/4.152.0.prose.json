@@ -1,0 +1,87 @@
+{
+  "theme": "Skia m152 preview",
+  "highlights_headline": "SkiaSharp 4.152.0 previews the m152 renderer and early Graphite-era API work for the next release line.",
+  "highlights_body": "This preview blends the Skia m152 engine update with new Graphite GPU bindings, async pixel-read APIs, Vulkan packaging work, and a cluster of leak and performance fixes in core managed paths.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "The preview line moved to Skia milestone m152",
+          "detail": "SkiaSharp 4.152.0 brings in the Chrome m152 engine update while also carrying forward the final m151 bug-fix syncs that landed immediately before the branch advanced.",
+          "prs": [4538, 4568, 4651]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU bindings arrived for the next generation backend",
+          "detail": "The preview adds managed bindings for Graphite on Vulkan, Metal and Dawn, giving early adopters access to Skia's newer GPU architecture alongside the existing Ganesh surface.",
+          "prs": [3968]
+        },
+        {
+          "lead": "Async pixel reads became backend-neutral",
+          "detail": "SKImage and SKSurface gain RequestReadPixels APIs that let callers request asynchronous readback without committing to a specific GPU backend implementation.",
+          "prs": [4545]
+        },
+        {
+          "lead": "Vulkan packaging expanded beyond the core binding",
+          "detail": "A SkiaSharp.Vulkan.Silk.NET package now ships alongside the validation work that runs Vulkan tests on Android and Linux, making the Vulkan integration story easier to consume across ecosystems.",
+          "prs": [4527]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Several native lifetime bugs were eliminated",
+          "detail": "The preview fixes use-after-free issues in SKRegion.SpanIterator and SKPixmap subset helpers, and also closes a CoTaskMem leak in the raster-failure path for SKImage.Create.",
+          "prs": [4355, 4455, 4558]
+        },
+        {
+          "lead": "Windows native builds became more reliable",
+          "detail": "Native Windows builds now initialize the MSVC environment once per build, and the release line stops pinning a specific Windows SDK version by default.",
+          "prs": [4570, 4588]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Several managed hot paths now do less work per call",
+          "detail": "SKData.SaveTo avoids an extra buffer copy, HandleDictionary caches its reflection-based registration check, encoded-text parsing skips an intermediate string, and runtime-effect uniforms start with a right-sized lookup table.",
+          "prs": [4498, 4512, 4550, 4630]
+        },
+        {
+          "lead": "Binding and solution generation became more deterministic",
+          "detail": "The preview tightens up generated bindings across platforms and standardizes solution files on .slnx, helping keep generated output stable across environments.",
+          "prs": [4528, 4612]
+        }
+      ]
+    },
+    {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Container and server-oriented environments received more first-class coverage",
+          "detail": "The line adds containerized validation legs for Azure Linux, Alpine and Nano Server, and uses FreeType to improve font availability on Nano Server deployments.",
+          "prs": [4280, 4515]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Enabled FreeType-based font support for Nano Server environments",
+    "mmitche": "Improved Windows native build reliability by initializing the MSVC environment once per build",
+    "ramezgerges": "Added the new Graphite GPU backend bindings and related preview-line validation work"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 opened the 4.152 line with the Skia m152 update, the new Graphite bindings, backend-neutral async pixel reads, Vulkan packaging additions, and a wide pass of leak, performance and build-determinism fixes."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships inside this preview line unchanged at the API level, while the shared release train keeps the surrounding text and build infrastructure ready for the next stable release."
+}
