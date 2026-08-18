@@ -110,13 +110,23 @@ extends:
         parameters:
           buildPipelineType: 'package'
           use1ESPipelineTemplates: true
-          enableSigning: ${{ and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest')) }}
-          forceRealSigning: ${{ parameters.forceRealSigning }}
-          enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/'))) }}:
+        - stage: signing
+          displayName: Sign NuGets
+          dependsOn: package
+          jobs:
+            - template: /scripts/azure-templates-jobs-signing.yml@self
+              parameters:
+                buildAgent: ${{ parameters.buildAgentWindows }}
+                enablePublishing: ${{ or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}
+                ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+                  useRealSigning: true
+                ${{ else }}:
+                  useRealSigning: false
       - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['System.TeamProject'], 'internal'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
         - stage: api_scan
           displayName: API Scan
@@ -125,7 +135,7 @@ extends:
             - template: /scripts/azure-templates-jobs-apiscan.yml@self
               parameters:
                 buildAgentWindows: ${{ parameters.buildAgentWindows }}
-      - ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+      - ${{ if and(eq(variables['System.TeamProject'], 'internal'), ne(variables['Build.Reason'], 'PullRequest'), not(startsWith(variables['Build.SourceBranch'], 'refs/pull/')), or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
         - stage: publish_build_assets
           displayName: Register signed packages in BAR
           dependsOn:

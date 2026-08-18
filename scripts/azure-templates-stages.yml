@@ -27,16 +27,7 @@ parameters:
   - name: use1ESPipelineTemplates
     type: boolean
     default: false
-  - name: enableSigning
-    type: boolean
-    default: false
-  - name: forceRealSigning
-    type: boolean
-    default: false
   - name: enableCaching
-    type: boolean
-    default: false
-  - name: enablePublishing
     type: boolean
     default: false
 
@@ -63,20 +54,6 @@ stages:
         buildAgentHost: ${{ parameters.buildAgentHost }}
         buildAgentWindows: ${{ parameters.buildAgentWindows }}
         enableCaching: ${{ parameters.enableCaching }}
-
-  - ${{ if and(in(parameters.buildPipelineType, 'package', 'complete'), eq(parameters.enableSigning, 'true')) }}:
-    - stage: signing
-      displayName: Sign NuGets
-      dependsOn: package
-      jobs:
-        - template: /scripts/azure-templates-jobs-signing.yml@self
-          parameters:
-            buildAgent: ${{ parameters.buildAgentWindows }}
-            enablePublishing: ${{ parameters.enablePublishing }}
-            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-              useRealSigning: true
-            ${{ else }}:
-              useRealSigning: false
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
