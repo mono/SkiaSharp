@@ -1,0 +1,67 @@
+{
+  "theme": "Graphite GPU backend preview",
+  "highlights_headline": "SkiaSharp 4.152.0 previews the new Graphite GPU backend for Vulkan, Metal, and Dawn on Skia m152.",
+  "highlights_body": "This preview also fixes several native use-after-free and memory-leak bugs, and adds backend-neutral async pixel readback.",
+  "breaking": [],
+  "categories": [
+    {
+      "heading": "Engine",
+      "bullets": [
+        {
+          "lead": "Skia bumped to Chrome milestone 152",
+          "detail": "SkiaSharp now tracks Skia m152, with upstream m151 stability fixes merged along the way.",
+          "prs": [4651, 4568, 4538]
+        }
+      ]
+    },
+    {
+      "heading": "API Surface",
+      "bullets": [
+        {
+          "lead": "Graphite GPU backend bindings",
+          "detail": "Adds Graphite bindings for Vulkan, Metal, and Dawn, alongside a new SkiaSharp.Vulkan.Silk.NET package with Vulkan tests running on Android and Linux.",
+          "prs": [3968, 4527]
+        },
+        {
+          "lead": "Backend-neutral async pixel readback",
+          "detail": "SKImage and SKSurface gain an async RequestReadPixels API that works consistently across GPU backends.",
+          "prs": [4545]
+        }
+      ]
+    },
+    {
+      "heading": "Bug Fixes",
+      "bullets": [
+        {
+          "lead": "Fixed native use-after-free and memory-leak bugs",
+          "detail": "SKRegion.SpanIterator, SKPixmap.ExtractSubset/With*, and SKImage.Create's raster failure path no longer leave dangling native memory or leak a CoTaskMem pixel buffer.",
+          "prs": [4355, 4558, 4455]
+        },
+        {
+          "lead": "Nano Server font support restored",
+          "detail": "Nano Server now uses FreeType for font support.",
+          "prs": [4280]
+        }
+      ]
+    },
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Reduced allocations in hot paths",
+          "detail": "Caches the HandleDictionary skip-registration reflection check, avoids the double buffer copy in SKData.SaveTo, avoids an intermediate string allocation in GetEncodedText, and pre-sizes the SKRuntimeEffectUniforms lookup map.",
+          "prs": [4630, 4550, 4498, 4512]
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {
+    "jeffska": "Restored Nano Server font support by switching to FreeType",
+    "mmitche": "Updated the m151 release line with upstream stability fixes",
+    "ramezgerges": "Added the Graphite GPU backend bindings for Vulkan, Metal, and Dawn"
+  },
+  "preview_summaries": {
+    "v4.152.0-preview.1.1": "Preview 1 opened the 4.152.0 line with the Graphite GPU backend bindings, the Skia m152 bump, and several native memory-safety fixes."
+  },
+  "harfbuzz_summary": "HarfBuzzSharp 14.2.1 ships with this release with no API changes."
+}
