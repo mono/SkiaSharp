@@ -72,6 +72,13 @@ Signing consumes only the current run's `nuget` artifact after the package stage
 succeeds. Retry a signing failure within that run; starting a new pipeline run
 rebuilds the packages instead of signing artifacts from an older run.
 
+SkiaSharp builds with stable SDK `10.0.108`. Arcade uses stable SDK `10.0.301`
+only as its tool CLI because generated Arcade bootstrap calls
+`dotnet package download`, which is available in .NET 10.0.2xx and later. The
+Arcade SDK itself still runs on .NET 10. CI isolates that tool CLI under
+`$(Agent.TempDirectory)` so an agent-wide 10.0.108 installation cannot be
+selected accidentally.
+
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches
 test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
 That override retains the same signed and verification artifacts as a trusted
@@ -125,7 +132,11 @@ checks are configured. Arcade then supplies:
 The package pipeline registers real-signed packages in BAR. Maestro channel
 promotion and final NuGet.org publication remain separate operations. BAR
 registration is deliberately limited to the signed `Preview` package view;
-stable-looking variants produced by the build remain internal artifacts.
+each CI package job produces one uniquely versioned prerelease family rather
+than both preview and exact stable variants. The staging step reads each
+package's nuspec and rejects exact stable or unknown prerelease versions before
+manifest generation. Exact stable package generation remains deferred to a
+future protected release pipeline.
 
 ## Local checks
 

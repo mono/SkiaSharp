@@ -3,98 +3,205 @@ Param(
 )
 
 $ErrorActionPreference = 'Stop'
+Set-StrictMode -Version Latest
 
-# Determine the feature name, if any
-Write-Host "# Determining feature name..."
+function Get-FirstNonEmpty {
+    param([string[]] $Values)
+
+    foreach ($value in $Values) {
+        if (-not [string]::IsNullOrWhiteSpace($value)) {
+            return $value
+        }
+    }
+
+    return ''
+}
+
+function Set-BuildVariable {
+    param(
+        [Parameter(Mandatory)]
+        [string] $Name,
+
+        [AllowEmptyString()]
+        [string] $Value
+    )
+
+    Set-Item -Path "Env:$Name" -Value $Value
+    Write-Host "##vso[task.setvariable variable=$Name]$Value"
+}
+
+function ConvertTo-ArcadeBuildNumber {
+    param([Parameter(Mandatory)][string] $OfficialBuildId)
+
+    $match = [regex]::Match(
+        $OfficialBuildId,
+        '^(?<date>\d{8})\.(?<revision>\d+)$')
+    if (-not $match.Success) {
+        throw "ARCADE_OFFICIAL_BUILD_ID '$OfficialBuildId' must use yyyyMMdd.revision."
+    }
+
+    $date = [DateTime]::ParseExact(
+        $match.Groups['date'].Value,
+        'yyyyMMdd',
+        [Globalization.CultureInfo]::InvariantCulture)
+    $shortDate = (($date.Year % 100) * 1000) + (50 * $date.Month) + $date.Day
+    return "$shortDate.$($match.Groups['revision'].Value)"
+}
+
+$officialBuildId = "$env:ARCADE_OFFICIAL_BUILD_ID"
+if ([string]::IsNullOrWhiteSpace($officialBuildId)) {
+    throw 'ARCADE_OFFICIAL_BUILD_ID is empty.'
+}
+
+$productBuildNumber = ConvertTo-ArcadeBuildNumber $officialBuildId
+Write-Host '# Arcade build identity'
+Write-Host "Official build ID: $officialBuildId"
+Write-Host "Product build number: $productBuildNumber"
+Set-BuildVariable BUILD_NUMBER $productBuildNumber
+
+$rawBranch = "$env:BUILD_SOURCEBRANCH"
+$pullRequestRef = [regex]::Match($rawBranch, '^refs/pull/(\d+)/merge$')
+$isPullRequest = $env:BUILD_REASON -eq 'PullRequest' -or $pullRequestRef.Success
+$prNumber = Get-FirstNonEmpty @(
+    "$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER",
+    "$env:SYSTEM_PULLREQUEST_PULLREQUESTID",
+    $(if ($pullRequestRef.Success) { $pullRequestRef.Groups[1].Value } else { '' })
+)
+
+if ($isPullRequest -and [string]::IsNullOrWhiteSpace($prNumber)) {
+    throw "Unable to determine the pull request number for '$rawBranch' from provider '$env:BUILD_REPOSITORY_PROVIDER'."
+}
+
+if ($isPullRequest) {
+    Write-Host "# Pull request identity"
+    Write-Host "PR number: $prNumber"
+    Set-BuildVariable PR_NUMBER $prNumber
+    if ([string]::IsNullOrWhiteSpace($env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)) {
+        Set-BuildVariable SYSTEM_PULLREQUEST_PULLREQUESTNUMBER $prNumber
+    }
+}
+
+$sourceCommit = if ($isPullRequest) {
+    Get-FirstNonEmpty @("$env:SYSTEM_PULLREQUEST_SOURCECOMMITID")
+} else {
+    ''
+}
+if ([string]::IsNullOrWhiteSpace($sourceCommit) -and $isPullRequest) {
+    $mergeMessage = [regex]::Match(
+        "$env:BUILD_SOURCEVERSIONMESSAGE",
+        '^Merge\s+([0-9a-fA-F]{7,40})\s+into\s+')
+    if ($mergeMessage.Success) {
+        $sourceCommit = $mergeMessage.Groups[1].Value
+    }
+}
+if ([string]::IsNullOrWhiteSpace($sourceCommit)) {
+    $sourceCommit = "$env:BUILD_SOURCEVERSION"
+}
+
+$sourceBranch = if ($isPullRequest) {
+    Get-FirstNonEmpty @("$env:SYSTEM_PULLREQUEST_SOURCEBRANCH", $rawBranch)
+} else {
+    $rawBranch
+}
+$sourceRepository = Get-FirstNonEmpty @(
+    "$env:SYSTEM_PULLREQUEST_SOURCEREPOSITORYURI",
+    "$env:BUILD_REPOSITORY_URI"
+)
+
+if ([string]::IsNullOrWhiteSpace($sourceCommit) -or
+    [string]::IsNullOrWhiteSpace($sourceBranch) -or
+    [string]::IsNullOrWhiteSpace($sourceRepository)) {
+    throw "Incomplete source identity: commit='$sourceCommit', branch='$sourceBranch', repository='$sourceRepository'."
+}
+
+Set-BuildVariable GIT_SHA $sourceCommit
+Set-BuildVariable GIT_BRANCH_NAME $sourceBranch
+Set-BuildVariable GIT_URL $sourceRepository
+
+Write-Host "`n# Normalized source identity"
+Write-Host "Provider: $env:BUILD_REPOSITORY_PROVIDER"
+Write-Host "Reason: $env:BUILD_REASON"
+Write-Host "Raw branch: $rawBranch"
+Write-Host "Source branch: $sourceBranch"
+Write-Host "Source commit: $sourceCommit"
+Write-Host "Source repository: $sourceRepository"
+
+Write-Host "`n# Determining feature name"
 $featurePrefix = "refs/heads/$env:FEATURE_NAME_PREFIX"
-if ("$env:BUILD_SOURCEBRANCH".StartsWith($featurePrefix)) {
-    $feature = $env:BUILD_SOURCEBRANCH.Substring($featurePrefix.Length)
+if (-not $isPullRequest -and
+    $sourceBranch.StartsWith($featurePrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    $feature = $sourceBranch.Substring($featurePrefix.Length) -replace '[^0-9A-Za-z-]+', '-'
+    $feature = $feature.Trim('-')
+    if ([string]::IsNullOrWhiteSpace($feature)) {
+        throw "Feature branch '$sourceBranch' does not contain a valid package label."
+    }
     Write-Host "Feature name: $feature"
-    $env:FEATURE_NAME = $feature
-    Write-Host "##vso[task.setvariable variable=FEATURE_NAME]$feature"
+    Set-BuildVariable FEATURE_NAME $feature
 } else {
     Write-Host "No feature name."
+    Set-BuildVariable FEATURE_NAME ''
 }
 
-# Update the PR variables for downstream builds
-Write-Host "`n# Checking PR variables for downstream builds..."
-if ($env:BUILD_REASON -eq "ResourceTrigger" -or $env:BUILD_REASON -eq "Manual") {
-    $isPR = [regex]::Match("$env:BUILD_SOURCEBRANCH", 'refs\/pull\/(\d+)\/merge')
-    if ($isPR) {
-        if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
-            $pr = $isPR.Groups[1].Value
-            Write-Host "PR number: $pr"
-            $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER = $pr
-            Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_PULLREQUESTNUMBER]$pr"
-        }
-        if (-not $env:SYSTEM_PULLREQUEST_SOURCECOMMITID) {
-            $sha = [regex]::Match("$env:BUILD_SOURCEVERSIONMESSAGE", 'Merge (.+) into (.+)').Groups[1].Value
-            Write-Host "PR SHA: $sha"
-            $env:SYSTEM_PULLREQUEST_SOURCECOMMITID = $sha
-            Write-Host "##vso[task.setvariable variable=SYSTEM_PULLREQUEST_SOURCECOMMITID]$sha"
-        }
-    } else {
-        Write-Host "Not a PR build."
+Write-Host "`n# Setting preview label"
+$previewLabel = "$env:PREVIEW_LABEL"
+if ($isPullRequest) {
+    $previewLabel = "pr.$prNumber"
+} elseif ($env:BUILD_REASON -eq 'Schedule') {
+    $previewLabel = 'nightly'
+}
+
+if ([string]::IsNullOrWhiteSpace($previewLabel)) {
+    throw "Preview label is empty for build reason '$env:BUILD_REASON'."
+}
+
+Write-Host "Preview label: $previewLabel"
+Set-BuildVariable PREVIEW_LABEL $previewLabel
+
+Write-Host "`n# Checking for secondary build information"
+$resourceRunName = "$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
+if (($env:BUILD_REASON -eq 'ResourceTrigger' -or $env:BUILD_REASON -eq 'Manual') -and
+    -not [string]::IsNullOrWhiteSpace($resourceRunName)) {
+    Write-Host "Working with $resourceRunName"
+    $runNameWithoutMetadata = $resourceRunName.Split('+')[0]
+    $versionPrefix = [regex]::Escape("$env:SKIASHARP_VERSION-")
+    $match = [regex]::Match(
+        $runNameWithoutMetadata,
+        "^$versionPrefix(?<label>.+?)\.(?<build>(?:(?:\d{5}|\d{8})\.)?\d+)$")
+    if (-not $match.Success -or $match.Groups['label'].Value.EndsWith('.')) {
+        throw "Unable to parse upstream build identity '$resourceRunName'."
     }
+
+    $previewLabel = $match.Groups['label'].Value
+    $buildNumber = $match.Groups['build'].Value
+    Write-Host "Inherited preview label: $previewLabel"
+    Write-Host "Inherited build number: $buildNumber"
+    Set-BuildVariable PREVIEW_LABEL $previewLabel
+    Set-BuildVariable BUILD_NUMBER $buildNumber
+    Set-BuildVariable BUILD_COUNTER $buildNumber
 } else {
-    Write-Host "Not a downstream build."
+    Write-Host "No upstream build identity to inherit."
 }
 
-# Handle preview labels based on build reason
-Write-Host "`n# Setting preview label..."
-if ($env:BUILD_REASON -eq "PullRequest") {
-    # Use a special preview label for PRs
-    $pr = "pr." + $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
-    Write-Host "Preview label: $pr"
-    $env:PREVIEW_LABEL = $pr
-    Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$pr"
-} elseif ($env:BUILD_REASON -eq "Schedule") {
-    # Use a special preview label for scheduled builds
-    $nightly = "nightly"
-    Write-Host "Preview label: $nightly"
-    $env:PREVIEW_LABEL = $nightly
-    Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$nightly"
-} else {
-    Write-Host "No special preview label for this build reason: $env:BUILD_REASON."
+if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {
+    throw 'BUILD_NUMBER is empty.'
 }
 
-# Override the preview label and build number if this is a secondary build
-Write-Host "`n# Checking for secondary build information..."
-if ($env:BUILD_REASON -eq "ResourceTrigger" -or $env:BUILD_REASON -eq "Manual") {
-    Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
-    if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
-        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '^[^+]*-([^+]+)\.(\d+)(?:\+|$)')
-        $label = $match.Groups[1].Value
-        Write-Host "Preview label: $label"
-        $env:PREVIEW_LABEL = $label
-        Write-Host "##vso[task.setvariable variable=PREVIEW_LABEL]$label"
-        $buildnumber = $match.Groups[2].Value
-        Write-Host "Build number: $buildnumber"
-        $env:BUILD_NUMBER = $buildnumber
-        Write-Host "##vso[task.setvariable variable=BUILD_NUMBER]$buildnumber"
-    } else {
-        Write-Host "Not a secondary build."
-    }
-} else {
-    Write-Host "Not a secondary build for this build reason: $env:BUILD_REASON."
-}
+Write-Host "Product build number: $env:BUILD_NUMBER"
+Write-Host "Special-package counter: $env:BUILD_COUNTER"
 
-# Update the build number with a more readable one
-Write-Host "`n# Setting build label..."
+Write-Host "`n# Setting build label"
 if ($UpdateBuildNumber) {
-    $label = ""
-    if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
-        $label = $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME
+    if (-not [string]::IsNullOrWhiteSpace($resourceRunName)) {
+        $label = $resourceRunName
     } else {
-        if ($env:BUILD_REASON -ne "PullRequest") {
-            $label = "+" + $env:BUILD_SOURCEBRANCHNAME
-        }
-        $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$label"
+        $branchMetadata = if ($isPullRequest) { '' } else { "+$env:BUILD_SOURCEBRANCHNAME" }
+        $label = "$env:SKIASHARP_VERSION-$env:PREVIEW_LABEL.$env:BUILD_NUMBER$branchMetadata"
     }
+
     Write-Host "Build label: $label"
     Write-Host "##vso[build.updatebuildnumber]$label"
 } else {
-    Write-Host "Skipping build number update."
+    Write-Host 'Skipping build number update.'
 }
 
-exit $LASTEXITCODE
+exit 0

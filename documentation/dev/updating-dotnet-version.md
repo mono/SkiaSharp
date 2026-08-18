@@ -19,6 +19,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
 ### 1. SDK & Workloads
 
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
+- [ ] **`global.json` `tools.dotnet`** — Keep this compatible with generated Arcade bootstrap. Arcade 11 requires a .NET 10.0.2xx-or-later CLI for `dotnet package download`; it may intentionally differ from the SkiaSharp build SDK.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` and `DOTNET_WORKLOAD_VERSION` to match the new SDK version
 - [ ] **`scripts/install-dotnet-workloads.ps1`** — Review Tizen script URL (Samsung repo may update)
 

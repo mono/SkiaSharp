@@ -40,9 +40,13 @@ skill-specific and documented by the script that emits them.
 | Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
 | Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
-The `{build}` number is auto-assigned by CI. Release testing uses the exact test packages produced
-by the selected CI build. Stable public versions drop the `-stable.{build}` suffix only when they
-are published to NuGet.org.
+The `{build}` number is Arcade's package build identity
+`short-date.revision`, derived from the CI `OfficialBuildId`
+`yyyyMMdd.revision`. Release testing uses the exact test packages produced
+by the selected CI build. Normal CI emits the uniquely versioned
+`-stable.{build}` candidate only. Exact public-version selection belongs to the
+future protected release pipeline and is not part of the current preview BAR
+build.
 
 ### Release Type → Base Branch
 

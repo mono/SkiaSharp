@@ -711,25 +711,7 @@ function InitializeToolset() {
     ExitWithExitCode 1
   }
 
-  $restoreProjectDir = Join-Path $TempDir 'arcade-sdk-restore'
-  $restoreProject = Join-Path $restoreProjectDir 'arcade-sdk-restore.proj'
-  $dotnetVersionParts = $GlobalJson.tools.dotnet.Split('.')
-  $targetFramework = "net$($dotnetVersionParts[0]).$($dotnetVersionParts[1])"
-  Create-Directory $restoreProjectDir
-  [IO.File]::WriteAllText(
-    $restoreProject,
-    @"
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>$targetFramework</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageDownload Include="Microsoft.DotNet.Arcade.Sdk" Version="[$toolsetVersion]" />
-  </ItemGroup>
-</Project>
-"@)
-
-  $restoreArgs = @("restore", $restoreProject, "--verbosity", "minimal", "--packages", "$nugetPackageCachePath", "--force")
+  $downloadArgs = @("package", "download", "Microsoft.DotNet.Arcade.Sdk@$toolsetVersion", "--verbosity", "minimal", "--prerelease", "--output", "$nugetPackageCachePath")
   $nugetConfig = $env:NUGET_CONFIG
   if (-not $nugetConfig) {
     # Search for any variation of nuget.config in the RepoRoot
@@ -741,17 +723,19 @@ function InitializeToolset() {
   }
 
   if ($nugetConfig) {
-    $restoreArgs += "--configfile"
-    $restoreArgs += $nugetConfig
+    $downloadArgs += "--configfile"
+    $downloadArgs += $nugetConfig
   }
 
-  # PackageDownload through restore works on supported SDKs that predate
-  # 'dotnet package download'. Retry against dotnet-eng alone if a configured
-  # source is unavailable.
-  $restoreExitCode = DotNet -ignoreFailure @restoreArgs
-  if ($restoreExitCode) {
+  # 'dotnet package download' fails outright if any source in the repo's NuGet.config is
+  # unavailable (for example a transport feed that was decommissioned after a release). The
+  # Arcade SDK is always published to the public dotnet-eng feed, so if the config-driven
+  # download fails, retry once against that feed directly (which ignores the other sources)
+  # before giving up, so a single dead source doesn't block the build.
+  $downloadExitCode = DotNet -ignoreFailure @downloadArgs
+  if ($downloadExitCode) {
     Write-Host "Restoring the Arcade SDK from the configured sources failed; retrying from the public dotnet-eng feed."
-    DotNet restore $restoreProject --verbosity minimal --packages "$nugetPackageCachePath" --force --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
+    DotNet @downloadArgs --source "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
   }
 
   $packageDir = Join-Path $nugetPackageCachePath (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
