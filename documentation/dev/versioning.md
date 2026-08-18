@@ -34,7 +34,7 @@ commit variables before constructing this version, and downstream pipelines
 inherit the upstream identity.
 
 > **Note:** There are two Azure DevOps feeds:
-> - **Signed builds** (`skiasharp`): regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro for public testing
+> - **Signed builds** (`skiasharp`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
 > - **CI helpers** (`skiasharp-ci`): internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.)
 
 Typically, the pre-release labels are:

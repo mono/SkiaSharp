@@ -100,7 +100,8 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Signed packages promoted through the Maestro `SkiaSharp` channel |
+| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
+| General Testing | `https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json` | Temporary onboarding target for manually promoted BARs |
 | CI helpers | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Public build helper packages (`_*` prefixed packages) used by local and CI builds; outside Arcade publishing |
 | Stable | NuGet.org | Public releases |
 
@@ -113,9 +114,17 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Pipeline | Purpose |
 |----------|---------|
-| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, runs API Scan, signs, and registers assets in BAR. |
+| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, signs, and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
 | [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
-| NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
+| Future NuGet.org Publish | Planned protected entry point that gathers one exact BAR build and publishes it after human approval. |
+
+> **Migration status:** The combined Build, signing, API Scan, BAR registration,
+> validation, and downstream Tests flow is implemented. The existing
+> `release-status`, `release-testing`, and `release-publish` automation still
+> expects the legacy three-run chain and `-stable.{build}` test packages. It must
+> be migrated to the combined Build + Tests topology and exact `X.Y.Z` BAR
+> packages before it is used for an exact stable release. The protected
+> NuGet.org publisher shown below is the target design, not a deployed pipeline.
 
 ---
 
@@ -179,26 +188,28 @@ flowchart TB
 
 ### Stage 2: Status Tracking (release-status skill)
 
-After the branch is pushed, query one connected pipeline chain for the exact
-release commit:
+After the release automation migration described above, query the connected
+Build + Tests chain for the exact release commit:
 
 ```bash
 python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-The JSON report links downstream runs through `triggerInfo.pipelineId`, provides
-immutable source/run metadata, and carries the exact Native, Package, Tests, and
-BAR build IDs together with the signed package versions. Release testing starts
-only after the connected Tests run succeeds unless the release manager records
-an explicit override.
+The JSON report links the combined Build run to its downstream Tests run,
+provides immutable source/run metadata, and carries the exact Build, Tests, and
+BAR IDs together with the signed package versions. Release testing starts only
+after the connected Tests run succeeds unless the release manager records an
+explicit override.
 
 #### BAR channels and signed-package retrieval
 
-The Package pipeline generates an Arcade V3 asset manifest from the signed
-NuGets, registers that manifest in the Build Asset Registry (BAR), and promotes
-the build through its branch's default `SkiaSharp` channel. The channel publishes
-the package bytes to the public `skiasharp` Azure Artifacts feed and records
-those locations in BAR.
+The Build pipeline generates an Arcade V3 asset manifest from the signed
+NuGets, registers that manifest in the Build Asset Registry (BAR), and validates
+its packages and signatures. It does not promote a channel automatically.
+After the connected Tests run succeeds, the release manager selects one exact
+BAR and promotes it manually to `SkiaSharp` (or `General Testing` while
+onboarding). The channel publishes the package bytes to its configured Azure
+Artifacts feed and records those locations in BAR.
 
 A channel is BAR metadata, not package storage. Channel promotion publishes the
 manifest's NuGet assets to the Azure DevOps feeds configured for that channel
@@ -206,7 +217,7 @@ and records those feed URLs as BAR asset locations. `darc gather-drop` reads the
 BAR metadata and downloads each package from a registered location.
 
 Use the BAR build ID emitted by release status, inspect its repository, commit,
-branch, and `SkiaSharp` channel, then gather it by immutable ID:
+branch, versions, and asset locations, then gather it by immutable ID:
 
 ```bash
 darc get-build \
@@ -230,9 +241,14 @@ Select and record one exact BAR build ID, confirm the expected package versions
 in the gathered manifest, and use
 `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
 
-All supported integration and release branches map to the same public
-`SkiaSharp` channel. Package versions distinguish release lines; the channel
-and feed do not.
+The permanent configuration maps supported integration and release branches to
+the public `SkiaSharp` channel. Package versions distinguish release lines; the
+channel and feed do not. Before those mappings exist, promote the tested BAR
+explicitly with:
+
+```bash
+darc add-build-to-channel --id {bar-build} --channel "General Testing"
+```
 
 ### Stage 3: Testing (release-testing skill)
 
@@ -289,7 +305,7 @@ flowchart TB
     START([Testing gate satisfied]) --> DETECT
     DETECT["Read-only detector
     ∙ Pin source SHA
-    ∙ Pin Native/Package/Tests runs
+    ∙ Pin combined Build + Tests runs
     ∙ Pin BAR build ID + package versions"] --> GATHER
     GATHER["Gather exact BAR build
     ∙ Verify repository/branch/commit/channel

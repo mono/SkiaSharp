@@ -283,7 +283,7 @@ $buildSdk = [Version]$globalJson.sdk.version
 $toolSdk = [Version]$globalJson.tools.dotnet
 if ($pipelineSdk -cne $globalJson.sdk.version -or
     $globalJson.sdk.allowPrerelease -ne $false -or
-    $globalJson.sdk.rollForward -cne 'latestFeature' -or
+    $globalJson.sdk.rollForward -cne 'latestPatch' -or
     $toolSdk -ne $buildSdk -or
     $buildSdk.Major -ne 10 -or
     $buildSdk.Build -lt 400 -or

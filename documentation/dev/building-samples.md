@@ -15,8 +15,8 @@ These wrapper packages bundle the real NuGet packages inside their `tools/` dire
 | Wrapper package | Contains |
 |-----------------|----------|
 | `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | Stable NuGet packages (e.g. `SkiaSharp.3.119.4.nupkg`) |
-| `_nugetspreview` | Preview NuGet packages (e.g. `SkiaSharp.3.119.4-preview.0.76.nupkg`) |
+| `_nugets` | Exact stable NuGet packages (e.g. `SkiaSharp.4.152.0.nupkg`) |
+| `_nugetspreview` | Prerelease NuGet packages (e.g. `SkiaSharp.4.152.0-preview.0.26418.3.nupkg`) |
 
 The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
 
@@ -51,20 +51,24 @@ ls output/nugets/SkiaSharp.[0-9]*-*.nupkg
 
 ## NuGet Package Version Construction
 
-The cake build constructs the NuGet preview suffix in `build.cake` (lines 56-72):
+The Cake build constructs the NuGet suffix in `scripts/infra/shared/shared.cake`:
 
 ```csharp
-var PREVIEW_LABEL = Argument("previewLabel", EnvironmentVariable("PREVIEW_LABEL") ?? "preview");
-var BUILD_NUMBER = Argument("buildNumber", EnvironmentVariable("BUILD_NUMBER") ?? "0");
-var FINAL_VERSION_KIND = EnvironmentVariable("DOTNET_FINAL_VERSION_KIND") ?? "";
+var PREVIEW_LABEL = Argument ("previewLabel", EnvironmentVariable ("PREVIEW_LABEL") ?? "preview").ToLowerInvariant ();
+var BUILD_NUMBER = Argument ("buildNumber", EnvironmentVariable ("BUILD_NUMBER") ?? "0");
+var DOTNET_FINAL_VERSION_KIND = Argument (
+    "dotNetFinalVersionKind",
+    EnvironmentVariable ("DOTNET_FINAL_VERSION_KIND") ?? "").ToLowerInvariant ();
 
-var PREVIEW_NUGET_SUFFIX = FINAL_VERSION_KIND == "release" ? "" : PREVIEW_LABEL;
-if (FINAL_VERSION_KIND != "release" && !string.IsNullOrEmpty(BUILD_NUMBER))
+var PREVIEW_NUGET_SUFFIX = DOTNET_FINAL_VERSION_KIND == "release" ? "" : PREVIEW_LABEL;
+if (DOTNET_FINAL_VERSION_KIND != "release" && !string.IsNullOrEmpty (BUILD_NUMBER))
     PREVIEW_NUGET_SUFFIX += $".{BUILD_NUMBER}";
 ```
 
-The normal NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`.
-`PREVIEW_LABEL=stable` selects the exact `{base_version}` instead.
+The normal NuGet version is `{base_version}-{PREVIEW_NUGET_SUFFIX}`. In CI,
+source-controlled `PREVIEW_LABEL=stable` derives
+`DOTNET_FINAL_VERSION_KIND=release`; direct Cake invocations select the same
+exact `{base_version}` with `--dotNetFinalVersionKind=release`.
 
 - **base_version**: From `scripts/VERSIONS.txt` (e.g. `3.119.4`)
 - **PREVIEW_LABEL**: The preview label (e.g. `preview.0` — first preview, `preview.1` — second, etc.)
@@ -93,6 +97,7 @@ These arguments control the **NuGet version suffix** used when rewriting package
 |----------|---------------------|---------|---------|
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | Preview suffix label |
 | `--buildNumber` | `BUILD_NUMBER` | `0` | Build number for suffix |
+| `--dotNetFinalVersionKind` | `DOTNET_FINAL_VERSION_KIND` | `""` | Set to `release` for an exact stable version |
 | `--sample` | — | `""` | Filter to build a specific sample |
 
 > **Note:** `--previewLabel` serves double duty: it selects the CI artifact during download AND forms the NuGet suffix during sample generation. For nightly builds from main, you typically run download with default args, then set `--previewLabel` and `--buildNumber` to match the extracted packages.
