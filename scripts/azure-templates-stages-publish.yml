@@ -12,43 +12,9 @@ stages:
   - template: /eng/common/templates-official/post-build/post-build.yml@self
     parameters:
       publishingInfraVersion: 3
-      # Suppress Arcade's default-channel stage until the permanent SkiaSharp
-      # channel mapping exists. The explicit testing promotion below replaces it.
-      publishAssetsImmediately: true
+      # Use Arcade's standard promotion stage and fail closed if Maestro has no
+      # default channel mapping for this repository and branch.
+      publishAssetsImmediately: false
+      requireDefaultChannels: true
       validateDependsOn:
         - publish_build_assets
-
-  - stage: promote_build
-    displayName: Promote BAR to General Testing
-    dependsOn:
-      - Validate
-    jobs:
-      - job: promote_build
-        displayName: Promote BAR to General Testing
-        timeoutInMinutes: 120
-        pool:
-          name: NetCore1ESPool-Publishing-Internal
-          image: windows.vs2026.amd64
-          os: windows
-        steps:
-          - checkout: self
-            fetchDepth: 1
-
-          - template: /eng/common/templates-official/post-build/setup-maestro-vars.yml@self
-
-          - task: UseDotNet@2
-            displayName: Install .NET 8 for Darc
-            inputs:
-              version: 8.0.x
-
-          - task: AzureCLI@2
-            displayName: Publish assets to General Testing
-            inputs:
-              azureSubscription: "Darc: Maestro Production"
-              scriptType: pscore
-              scriptLocation: scriptPath
-              scriptPath: $(System.DefaultWorkingDirectory)/scripts/infra/publishing/promote-build.ps1
-              arguments: >
-                -BuildId $(BARBuildId)
-                -Channel 'General Testing'
-                -AzdoToken '$(System.AccessToken)'
