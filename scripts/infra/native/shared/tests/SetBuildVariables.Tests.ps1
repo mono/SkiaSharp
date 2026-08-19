@@ -401,6 +401,7 @@ if ($packageStages -match 'Re-upload Native Artifacts') {
 }
 $stagesComposer = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages.yml') -Raw
 $publishStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-publish.yml') -Raw
+$prepareStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-prepare.yml') -Raw
 if ($stagesComposer -notmatch '/scripts/azure-templates-stages-signing\.yml@self' -or
     $stagesComposer -notmatch '/scripts/azure-templates-stages-apiscan\.yml@self' -or
     $stagesComposer -match '/scripts/azure-templates-jobs-(signing|apiscan)\.yml@self') {
@@ -413,8 +414,15 @@ if ($publishStages -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(AR
     throw 'BAR registration must use the same Arcade OfficialBuildId as manifest generation.'
 }
 if ($publishStages -notmatch 'publishAssetsImmediately:\s*true' -or
-    $publishStages -match 'requireDefaultChannels:\s*true') {
-    throw 'Package CI must validate BAR assets without automatic channel promotion.'
+    $publishStages -match 'requireDefaultChannels:\s*true' -or
+    $publishStages -notmatch 'stage:\s*promote_build' -or
+    $publishStages -notmatch 'dependsOn:\s+- Validate' -or
+    $publishStages -notmatch "scriptPath:\s*\$\(System\.DefaultWorkingDirectory\)/scripts/infra/publishing/promote-build\.ps1" -or
+    $publishStages -notmatch "-Channel\s+'General Testing'") {
+    throw 'Package CI must explicitly promote validated BAR assets to General Testing without requiring default channel mappings.'
+}
+if ($prepareStages -notmatch 'scripts/infra/publishing/tests/PromoteBuild\.Tests\.ps1') {
+    throw 'The Prepare stage must validate the BAR promotion command before running the build.'
 }
 if ($packagePipeline -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or
     $stagesComposer -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or

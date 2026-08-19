@@ -21,6 +21,8 @@ stages:
             displayName: Validate prerelease package selection
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
+          - pwsh: ./scripts/infra/publishing/tests/PromoteBuild.Tests.ps1
+            displayName: Validate BAR promotion
           - bash: python3 scripts/infra/caching/repo-deps.py validate
             displayName: Validate cache config coverage
           - bash: |
