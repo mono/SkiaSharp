@@ -366,8 +366,9 @@ if ($packagePipeline -notmatch 'forceRealSigning:\s*\$\{\{\s*parameters\.forceRe
     throw 'The Package root must delegate all stages and policy parameters to the shared composer.'
 }
 if ($packagePipeline -match 'networkIsolationPolicy' -or
-    $packagePipeline -notmatch 'networkIsolationMode:\s*Enforce') {
-    throw 'Network isolation must enforce the default 1ES policy without a permissive custom policy.'
+    $packagePipeline -notmatch 'networkIsolationMode:\s*Audit' -or
+    $packagePipeline -match 'auditNetworkIsolation') {
+    throw 'Network isolation must temporarily audit the default 1ES policy without a queue-time bypass or custom policy.'
 }
 
 $apiScanStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-apiscan.yml') -Raw

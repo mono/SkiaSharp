@@ -83,10 +83,6 @@ parameters:
     displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
-  - name: auditNetworkIsolation
-    displayName: 'Audit network isolation for a manual feature-branch diagnostic run'
-    type: boolean
-    default: false
   - name: forceRealSigning
     displayName: 'Ignore branch selection and force ESRP real signing'
     type: boolean
@@ -111,15 +107,9 @@ extends:
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     settings:
-      # Audit is a temporary diagnostic escape hatch for manually queued
-      # feature branches. Protected branches and every automatic run enforce.
-      ${{ if and(eq(parameters.auditNetworkIsolation, true), eq(variables['Build.Reason'], 'Manual')) }}:
-        ${{ if and(startsWith(variables['Build.SourceBranch'], 'refs/heads/'), ne(variables['Build.SourceBranch'], 'refs/heads/main'), not(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'))) }}:
-          networkIsolationMode: Audit
-        ${{ else }}:
-          networkIsolationMode: Enforce
-      ${{ else }}:
-        networkIsolationMode: Enforce
+      # Temporary during migration: collect required egress without blocking
+      # official builds. Switch to Enforce after mirrors/allowlisting are ready.
+      networkIsolationMode: Audit
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
