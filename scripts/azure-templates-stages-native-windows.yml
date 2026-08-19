@@ -10,18 +10,6 @@ stages:
     displayName: Native Windows
     dependsOn: prepare
     jobs:
-      - ${{ each arch in split('x86,x64,arm,arm64', ',') }}:
-        - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android (Windows nightly)
-          parameters:
-            name: native_android_${{ arch }}_windows
-            displayName: Android ${{ arch }}
-            buildAgent: ${{ parameters.buildAgentWindowsNative }}
-            target: externals-android
-            cacheJob: native/android
-            enableCaching: false
-            additionalArgs: --buildarch=${{ arch }}
-            condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
-
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x86 (Win)
         parameters:
           name: native_win32_x86_windows
