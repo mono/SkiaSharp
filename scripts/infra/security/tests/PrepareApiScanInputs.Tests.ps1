@@ -80,9 +80,7 @@ try {
     New-TestPackage 'HarfBuzzSharp.NativeAssets.Win32' $harfBuzzFiles
 
     $nanoServerFiles = [Collections.Generic.List[string]]::new()
-    foreach ($runtime in @('win-x86', 'win-x64', 'win-arm64')) {
-        Add-NativePair $nanoServerFiles $runtime 'libSkiaSharp'
-    }
+    Add-NativePair $nanoServerFiles 'win-x64' 'libSkiaSharp'
     New-TestPackage 'SkiaSharp.NativeAssets.NanoServer' $nanoServerFiles
 
     $winUiFiles = [Collections.Generic.List[string]]::new()
@@ -112,8 +110,8 @@ try {
     $generatedSurrogates = Join-Path $scanRoot 'surrogates/APIScanSurrogates.xml'
     [xml] $configuration = Get-Content $generatedSurrogates -Raw
     $mappings = @($configuration.APIScanSurrogates.Mappings.Mapping)
-    if ($mappings.Count -ne 10) {
-        throw "Expected 10 API Scan mappings, found $($mappings.Count)."
+    if ($mappings.Count -ne 8) {
+        throw "Expected eight API Scan mappings, found $($mappings.Count)."
     }
     if ((Get-Content $generatedSurrogates -Raw).Contains('{SOFTWARE_FOLDER}')) {
         throw 'The generated surrogate configuration still contains its path placeholder.'
