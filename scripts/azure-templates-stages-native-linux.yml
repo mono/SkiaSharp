@@ -20,9 +20,6 @@ stages:
             name: native_android_${{ arch }}_linux
             displayName: Android ${{ arch }}
             buildAgent: ${{ parameters.buildAgentLinuxNative }}
-            use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
-            docker: scripts/infra/native/android/docker
-            skipInstall: true
             target: externals-android
             cacheJob: native/android
             enableCaching: ${{ parameters.enableCaching }}
