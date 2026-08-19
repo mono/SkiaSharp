@@ -113,6 +113,18 @@ try {
     if ($mappings.Count -ne 8) {
         throw "Expected eight API Scan mappings, found $($mappings.Count)."
     }
+    foreach ($mapping in @($configuration.SelectNodes('/APIScanSurrogates/Mappings/Mapping'))) {
+        $previous = $mapping.PreviousSibling
+        while ($previous -and
+            $previous.NodeType -eq [Xml.XmlNodeType]::Whitespace) {
+            $previous = $previous.PreviousSibling
+        }
+        if (-not $previous -or
+            $previous.NodeType -ne [Xml.XmlNodeType]::Comment -or
+            [string]::IsNullOrWhiteSpace($previous.Value)) {
+            throw 'Every API Scan surrogate mapping must have an immediately preceding explanatory comment.'
+        }
+    }
     if ((Get-Content $generatedSurrogates -Raw).Contains('{SOFTWARE_FOLDER}')) {
         throw 'The generated surrogate configuration still contains its path placeholder.'
     }
