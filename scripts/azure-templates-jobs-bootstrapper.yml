@@ -26,9 +26,11 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
+  installDotNetWorkloads: true                  # whether or not to install the .NET workloads
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
+  installNode: true                             # whether or not to install Node.js
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
   previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
@@ -204,7 +206,7 @@ jobs:
 
       # install extra bits for the managed builds
       - ${{ if and(not(startsWith(parameters.name, 'native_')), ne(parameters.skipInstall, 'true')) }}:
-        - ${{ if eq(parameters.buildAgent.pool.os, 'windows') }}:
+        - ${{ if and(eq(parameters.installNode, 'true'), eq(parameters.buildAgent.pool.os, 'windows')) }}:
           - task: UseNode@1
             displayName: Install Node.js
             retryCountOnTaskFailure: 3
@@ -247,7 +249,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install workloads
-        - ${{ if eq(parameters.installDotNet, 'true') }}:
+        - ${{ if and(eq(parameters.installDotNet, 'true'), eq(parameters.installDotNetWorkloads, 'true')) }}:
           - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3

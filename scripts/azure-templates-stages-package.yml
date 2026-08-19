@@ -116,6 +116,9 @@ stages:
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          installAndroidSdk: false
+          installDotNetWorkloads: false
+          installNode: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
