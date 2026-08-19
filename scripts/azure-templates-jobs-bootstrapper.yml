@@ -31,6 +31,7 @@ parameters:
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
   installNode: true                             # whether or not to install Node.js
+  checkoutSubmodules: true                      # whether or not to recursively initialize all submodules
   installPreviewSdk: false                      # whether to install the preview .NET SDK ($(DOTNET_VERSION_PREVIEW)) and pin global.json to it
   previewWorkloads: ''                           # workloads to install under the preview .NET SDK (comma-separated, e.g. 'wasm-tools,android')
   installXcode: true                            # whether or not to install Xcode
@@ -121,13 +122,17 @@ jobs:
                 Write-Host "##[section]Cache MISS - full build required"
             }
           displayName: Evaluate cache decision
-        - pwsh: git submodule update --init --recursive
-          displayName: Full checkout (submodules)
-          condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+        - ${{ if eq(parameters.checkoutSubmodules, 'true') }}:
+          - pwsh: git submodule update --init --recursive
+            displayName: Full checkout (submodules)
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
 
       - ${{ else }}:
         - checkout: self
-          submodules: recursive
+          ${{ if eq(parameters.checkoutSubmodules, 'true') }}:
+            submodules: recursive
+          ${{ else }}:
+            submodules: false
 
       - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
         displayName: Configure build variables

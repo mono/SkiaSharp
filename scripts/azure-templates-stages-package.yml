@@ -47,23 +47,30 @@ stages:
           name: package_normal_windows
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
-          target: nuget-normal
+          target: nuget
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          checkoutSubmodules: false
+          installNode: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
+          preBuildSteps:
+            - pwsh: git submodule update --init --recursive docs
+              displayName: Checkout API documentation
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           postBuildSteps:
             - pwsh: |
-                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 New-Item '.\output\' -Type Directory -Force | Out-Null
               displayName: Re-organize the output folder for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
                 Copy-Item -Path '.\scripts\infra\package\SignList.xml' -Destination '.\output\nugets\'
               displayName: Prepare the nugets artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 # Create nuget_preview with only prerelease packages (for easier PR testing)
                 New-Item -Path '.\output\nugets-preview\' -ItemType Directory -Force | Out-Null
@@ -71,21 +78,45 @@ stages:
                 $count = (Get-ChildItem -Path '.\output\nugets-preview\' -Filter '*.nupkg').Count
                 Write-Host "Created nuget_preview artifact with $count prerelease packages"
               displayName: Prepare the nugets-preview artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
               displayName: Prepare the nugets-symbols artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
-              displayName: Prepare the build artifact for publishing
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
+              displayName: Prepare the nugets-special artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                New-Item -Path '.\output\package-special\' -ItemType Directory -Force | Out-Null
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\native\' -Destination '.\output\package-special\'
+                $specialLogs = '$(Build.ArtifactStagingDirectory)\output\logs\binlogs\scripts\infra\package\nuget\'
+                if (Test-Path $specialLogs) {
+                  $specialLogsDestination = '.\output\package-special\logs\binlogs\scripts\infra\package\'
+                  New-Item -Path $specialLogsDestination -ItemType Directory -Force | Out-Null
+                  Move-Item -Path $specialLogs -Destination $specialLogsDestination
+                }
+              displayName: Prepare the special build artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
+                New-Item -Path '.\output\package-normal\' -ItemType Directory -Force | Out-Null
+                Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)\output\' |
+                  Move-Item -Destination '.\output\package-normal\'
+              displayName: Prepare the normal build artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
             - name: package_normal_windows
-              path: '.\output\output\'
+              path: '.\output\package-normal\'
             - name: nuget
               path: '.\output\nugets'
             - name: nuget_preview
               path: '.\output\nugets-preview'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
+            - name: package_special_windows
+              path: '.\output\package-special\'
+            - name: nuget_special
+              path: '.\output\nugets-special'
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
         parameters:
           name: scan_normal_windows
@@ -106,47 +137,6 @@ stages:
                   -SourcePath ".\output\nugets*\*.*nupkg" `
                   -DestinationPath ".\output\extracted_nugets"
               displayName: Extract all the .nupkg files for scanning
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
-        parameters:
-          name: package_special_windows
-          displayName: Package Special NuGets
-          buildAgent: ${{ parameters.buildAgentWindows}}
-          dependsOn: package_normal_windows
-          target: nuget-special
-          cacheJob: managed/package
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --skipExternals="all"
-          installAndroidSdk: false
-          installDotNetWorkloads: false
-          installNode: false
-          shouldPublish: false
-          requiredArtifacts:
-            - name: native
-            - name: nuget
-              dir: nugets
-              currentRun: true
-            - name: nuget_symbols
-              dir: nugets-symbols
-              currentRun: true
-          postBuildSteps:
-            - pwsh: |
-                Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
-                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
-                New-Item '.\output\' -Type Directory -Force | Out-Null
-              displayName: Re-organize the output folder for publishing
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
-              displayName: Prepare the nugets-special artifact for publishing
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
-              displayName: Prepare the build artifact for publishing
-          publishArtifacts:
-            - name: package_special_windows
-              path: '.\output\output\'
-            - name: nuget_special
-              path: '.\output\nugets-special'
-
   - ${{ if eq(parameters.enableSigning, 'true') }}:
     - stage: signing
       displayName: Sign NuGets
