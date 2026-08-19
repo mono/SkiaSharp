@@ -20,7 +20,7 @@ stages:
             cacheJob: native/android
             enableCaching: false
             additionalArgs: --buildarch=${{ arch }}
-            condition: eq(variables['Build.Reason'], 'Schedule')
+            condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
 
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native Win32|x86 (Win)
         parameters:

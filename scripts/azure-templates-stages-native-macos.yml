@@ -20,7 +20,7 @@ stages:
           cacheJob: native/android
           enableCaching: false
           additionalArgs: --buildarch=x86
-          condition: eq(variables['Build.Reason'], 'Schedule')
+          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x64 (macOS)
         parameters:
           name: native_android_x64_macos
@@ -30,7 +30,7 @@ stages:
           cacheJob: native/android
           enableCaching: false
           additionalArgs: --buildarch=x64
-          condition: eq(variables['Build.Reason'], 'Schedule')
+          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm (macOS)
         parameters:
           name: native_android_arm_macos
@@ -40,7 +40,7 @@ stages:
           cacheJob: native/android
           enableCaching: false
           additionalArgs: --buildarch=arm
-          condition: eq(variables['Build.Reason'], 'Schedule')
+          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
         parameters:
           name: native_android_arm64_macos
@@ -50,7 +50,7 @@ stages:
           cacheJob: native/android
           enableCaching: false
           additionalArgs: --buildarch=arm64
-          condition: eq(variables['Build.Reason'], 'Schedule')
+          condition: and(succeeded(), eq(variables['Build.Reason'], 'Schedule'))
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS (macOS)
         parameters:
           name: native_ios_macos
