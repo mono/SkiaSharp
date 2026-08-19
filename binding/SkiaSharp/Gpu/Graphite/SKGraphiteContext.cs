@@ -242,6 +242,111 @@ namespace SkiaSharp
 		public SKGraphiteInsertStatus InsertRecording (SKGraphiteInsertRecordingInfo info) =>
 			SkiaApi.sk_graphite_context_insert_recording (Handle, &info);
 
+		public SKGraphiteInsertStatus InsertRecording (
+			SKGraphiteRecording recording,
+			SKGraphiteInsertRecordingOptions options)
+		{
+			if (recording is null)
+				throw new ArgumentNullException (nameof (recording));
+			if (options.TargetTextureState is not null &&
+				options.TargetSurface is null) {
+				throw new ArgumentException (
+					"A target surface is required when a target texture state is supplied.",
+					nameof (options));
+			}
+			for (var i = 0; i < options.WaitSemaphores.Length; i++) {
+				if (options.WaitSemaphores[i] is null)
+					throw new ArgumentException (
+						"Wait semaphores cannot contain null values.",
+						nameof (options));
+			}
+			for (var i = 0; i < options.SignalSemaphores.Length; i++) {
+				if (options.SignalSemaphores[i] is null)
+					throw new ArgumentException (
+						"Signal semaphores cannot contain null values.",
+						nameof (options));
+			}
+
+			const int MaxStackSemaphoreCount = 16;
+			IntPtr waitMemory = IntPtr.Zero;
+			IntPtr signalMemory = IntPtr.Zero;
+			IntPtr* waitStack = stackalloc IntPtr[MaxStackSemaphoreCount];
+			IntPtr* signalStack = stackalloc IntPtr[MaxStackSemaphoreCount];
+
+			void** waitSemaphores = null;
+			IntPtr* waitHandles = null;
+			if (!options.WaitSemaphores.IsEmpty) {
+				if (options.WaitSemaphores.Length <= MaxStackSemaphoreCount) {
+					waitHandles = waitStack;
+				} else {
+					waitMemory = Marshal.AllocHGlobal (
+						checked (options.WaitSemaphores.Length * IntPtr.Size));
+					waitHandles = (IntPtr*)waitMemory;
+				}
+				waitSemaphores = (void**)waitHandles;
+				for (var i = 0; i < options.WaitSemaphores.Length; i++) {
+					var semaphore = options.WaitSemaphores[i];
+					waitHandles[i] = semaphore.Handle;
+				}
+			}
+
+			void** signalSemaphores = null;
+			IntPtr* signalHandles = null;
+			if (!options.SignalSemaphores.IsEmpty) {
+				if (options.SignalSemaphores.Length <= MaxStackSemaphoreCount) {
+					signalHandles = signalStack;
+				} else {
+					signalMemory = Marshal.AllocHGlobal (
+						checked (options.SignalSemaphores.Length * IntPtr.Size));
+					signalHandles = (IntPtr*)signalMemory;
+				}
+				signalSemaphores = (void**)signalHandles;
+				for (var i = 0; i < options.SignalSemaphores.Length; i++) {
+					var semaphore = options.SignalSemaphores[i];
+					signalHandles[i] = semaphore.Handle;
+				}
+			}
+
+			var targetClip = options.TargetClip;
+			DelegateProxies.Create (options.Finished, out _, out var finishedContext);
+			var finishedProxy = options.Finished is not null
+				? DelegateProxies.SKGraphiteFinishedProxy
+				: null;
+
+			SKGraphiteInsertStatus status;
+			try {
+				status = SkiaApi.sk_graphite_context_insert_recording_full (
+					Handle,
+					recording.Handle,
+					options.TargetSurface?.Handle ?? IntPtr.Zero,
+					options.TargetTranslation.X,
+					options.TargetTranslation.Y,
+					&targetClip,
+					options.TargetTextureState?.Handle ?? IntPtr.Zero,
+					waitSemaphores,
+					options.WaitSemaphores.Length,
+					signalSemaphores,
+					options.SignalSemaphores.Length,
+					finishedProxy,
+					(void*)finishedContext);
+			} finally {
+				if (waitMemory != IntPtr.Zero)
+					Marshal.FreeHGlobal (waitMemory);
+				if (signalMemory != IntPtr.Zero)
+					Marshal.FreeHGlobal (signalMemory);
+			}
+
+			GC.KeepAlive (recording);
+			GC.KeepAlive (options.TargetSurface);
+			GC.KeepAlive (options.TargetTextureState);
+			for (var i = 0; i < options.WaitSemaphores.Length; i++)
+				GC.KeepAlive (options.WaitSemaphores[i]);
+			for (var i = 0; i < options.SignalSemaphores.Length; i++)
+				GC.KeepAlive (options.SignalSemaphores[i]);
+
+			return status;
+		}
+
 		public bool Submit () =>
 			SkiaApi.sk_graphite_context_submit (Handle, null);
 
