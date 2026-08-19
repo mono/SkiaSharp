@@ -134,7 +134,7 @@ Task ("tests-wasm")
 Task ("nuget")
     .Description ("Pack all NuGets.")
     .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -143,7 +143,6 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
-    .IsDependentOn ("libs")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
