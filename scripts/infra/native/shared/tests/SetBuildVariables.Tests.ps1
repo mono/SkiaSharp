@@ -340,8 +340,12 @@ $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stage
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'
 }
-if ($packageStages -notmatch '--dotNetFinalVersionKind=\"\$\(DOTNET_FINAL_VERSION_KIND\)\"') {
-    throw 'The Package stage must forward the derived Arcade final version kind.'
+if ($packageStages -match '--dotNetFinalVersionKind') {
+    throw 'The Package stage must not pass an empty final version kind to Cake.'
+}
+$sharedCake = Get-Content (Join-Path $repoRoot 'scripts/infra/shared/shared.cake') -Raw
+if ($sharedCake -notmatch 'EnvironmentVariable\s*\(\s*"DOTNET_FINAL_VERSION_KIND"\s*\)') {
+    throw 'Cake must read the derived Arcade final version kind from the environment.'
 }
 
 $packagePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-package.yml') -Raw
