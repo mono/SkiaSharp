@@ -8,7 +8,7 @@ Information("Android NDK Path: {0}", ANDROID_NDK_HOME);
 
 Task("libSkiaSharp")
     .IsDependentOn("git-sync-deps")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86", "x86");
@@ -48,7 +48,7 @@ Task("libSkiaSharp")
 });
 
 Task("libHarfBuzzSharp")
-    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows())
+    .WithCriteria(IsRunningOnMacOs() || IsRunningOnWindows() || IsRunningOnLinux())
     .Does(() =>
 {
     Build("x86");
