@@ -291,6 +291,9 @@ if ($pipelineSdk -cne $globalJson.sdk.version -or
     $variablesYaml -match 'DOTNET_(GLOBAL_)?INSTALL_DIR') {
     throw 'SkiaSharp, workloads, and Arcade must use the same stable .NET 10.0.4xx SDK.'
 }
+if ($variablesYaml -notmatch "XCODE_VERSION:\s*'26\.6'") {
+    throw 'Managed Apple builds must use Xcode 26.6 for the .NET 10.0.400 workload set.'
+}
 
 $winuiGlobalJson = Get-Content (Join-Path $repoRoot 'native/winui/global.json') -Raw | ConvertFrom-Json
 $winuiSdk = [regex]::Match(
@@ -382,6 +385,13 @@ if ($testsPipeline -notmatch 'source:\s*skiasharp-package' -or
 $completePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-complete.yml') -Raw
 if ($completePipeline -notmatch "buildPipelineType:\s*'complete'") {
     throw "The public pipeline must use the 'complete' role."
+}
+
+foreach ($pipelineContents in @($completePipeline, $packagePipeline, $testsPipeline)) {
+    if ($pipelineContents -notmatch 'name:\s*GitHub-hosted Agents' -or
+        $pipelineContents -notmatch 'vmImage:\s*macos-26-arm64') {
+        throw 'Managed Apple builds must use the macOS 26 GitHub-hosted agent image.'
+    }
 }
 
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw

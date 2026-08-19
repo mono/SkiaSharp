@@ -22,6 +22,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version`; Arcade 11 requires a .NET 10.0.2xx-or-later CLI for `dotnet package download`.
 - [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. VS MSBuild 17.x requires .NET 10.0.1xx; SDK 10.0.2xx+ requires MSBuild 18. Install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` and `DOTNET_WORKLOAD_VERSION` to match the new SDK version
+- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the Xcode/Apple SDK required by the workload set. Xcode 26.6 and iOS/MacCatalyst 26.5 require the PAYG `GitHub-hosted Agents` pool with `macos-26-arm64`; keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/install-dotnet-workloads.ps1`** — Review Tizen script URL (Samsung repo may update)
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
