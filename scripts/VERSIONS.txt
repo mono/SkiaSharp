@@ -80,9 +80,10 @@ SkiaSharp               assembly    4.151.0.0
 SkiaSharp               file        4.151.3.0
 
 # HarfBuzzSharp.dll
-# Revision buckets: M150 uses 0-99, M151 uses 100-199, and M152 uses 200-299.
-# Base = (Skia milestone - 150) * 100; releases increment within the bucket.
-# A native HarfBuzz upgrade resets to the current milestone's bucket base.
+# Revision buckets are relative to the milestone that first adopts native HarfBuzz X.Y.Z.
+# Example: 14.2.1 starts at M150 (0-99), so M151 uses 100-199 and M152 uses 200-299.
+# Releases increment within the bucket. A native upgrade on main resets N to 0 and
+# makes that milestone the new base; older release lines remain on their prior X.Y.*.
 HarfBuzzSharp           assembly    1.0.0.0
 HarfBuzzSharp           file        14.2.1.103
 

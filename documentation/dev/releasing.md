@@ -78,18 +78,24 @@ HarfBuzzSharp package and file versions use four parts: `X.Y.Z.N`.
 | Digits | Meaning |
 |--------|---------|
 | X.Y.Z | Native HarfBuzz version (e.g., `8.3.1`) |
-| N | Revision within the current Skia milestone's 100-revision bucket |
+| N | Revision within a 100-revision bucket relative to the milestone that first adopted `X.Y.Z` |
 
-Each milestone reserves 100 revisions: M150 uses `0-99`, M151 uses `100-199`,
-and M152 uses `200-299`. The bucket base is:
+For each native HarfBuzz `X.Y.Z`, the Skia milestone that first adopts it is the
+base milestone and uses revisions `0-99`. Each later milestone that stays on the
+same `X.Y.Z` adds 100 to the bucket base:
 
 ```text
-(Skia milestone - 150) * 100
+(current Skia milestone - adopting Skia milestone) * 100
 ```
 
-HarfBuzzSharp releases increment `N` within that bucket, including releases
-where the native HarfBuzz version is unchanged. When native HarfBuzz is
-upgraded, change `X.Y.Z` and reset `N` to the current milestone's bucket base.
+For example, HarfBuzz `14.2.1` was first adopted by M150, so M150 uses `0-99`,
+M151 uses `100-199`, and M152 uses `200-299`. HarfBuzzSharp releases increment
+`N` within the current bucket.
+
+When `main` upgrades native HarfBuzz, change `X.Y.Z`, reset `N` to `0`, and use
+that milestone as the new base. Native HarfBuzz upgrades are not backported to
+older release lines; those lines remain on their older `X.Y.*` versions and
+continue using the corresponding milestone-relative buckets.
 
 ### Feeds
 
