@@ -171,16 +171,29 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 
 #### VERSIONS.txt updates (harfbuzz)
 
-When bumping **harfbuzz** to `{major}.{minor}.{micro}`, update ALL of these lines in `scripts/VERSIONS.txt` (they otherwise drift out of sync with the binary — the soname/file lines drive the actual native `.so` soname and DLL `FileVersion`):
+When bumping **harfbuzz** to `{major}.{minor}.{micro}`, update ALL of these
+lines in `scripts/VERSIONS.txt` (they otherwise drift out of sync with the
+binary — the soname/file lines drive the actual native `.so` soname and DLL
+`FileVersion`):
 
 | Entry | Line format | Value for `X.Y.Z` |
 |-------|-------------|-------------------|
 | `harfbuzz` | `release` | `X.Y.Z` |
 | `HarfBuzz` | `soname` | `0.<60000 + X*100 + Y*10 + Z>.0` (e.g. 14.2.1 → `0.61421.0`) |
-| `HarfBuzzSharp` | `file` | `X.Y.Z` |
-| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z` (≈10 lines) |
+| `HarfBuzzSharp` | `file` | `X.Y.Z.N` |
+| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z.N` (≈10 lines) |
 
-The soname formula is documented in a comment directly above the `HarfBuzz soname` line. Verify your result with `grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt` — no stale version should remain.
+`N` reserves 100 revisions per Skia milestone. Its bucket base is
+`(Skia milestone - 150) * 100`: M150 uses 0–99, M151 uses 100–199, M152 uses
+200–299, and so on. A native HarfBuzz update resets `N` to the current
+milestone's bucket base, not to zero. M150's zero bucket may use the normalized
+3-part form `X.Y.Z`.
+
+The soname formula and package bucket formula are documented in comments next
+to their lines. Verify the result with
+`grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt`: the native release and
+soname must match `X.Y.Z`, while every HarfBuzzSharp file/NuGet entry must use
+the same bucketed package version.
 
 ### Phase 4: Build & Test
 
