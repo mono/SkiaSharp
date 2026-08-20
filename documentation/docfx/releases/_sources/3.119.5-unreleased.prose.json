@@ -1,20 +1,33 @@
 {
-  "theme": "Servicing line head",
-  "highlights_headline": "Head of the 3.119.x servicing line — one WinUI DLL-resolution fix has landed so far.",
+  "theme": "Apple TFM and WinUI fixes",
+  "highlights_headline": "This in-progress 3.119.5 servicing release backports Apple 26.0 support and fixes a WinUI projection DLL issue.",
   "highlights_body": null,
   "breaking": [],
   "categories": [
     {
+      "heading": "Platform",
+      "bullets": [
+        {
+          "lead": "Apple 26.0 library backported",
+          "detail": "Unversioned app TFMs now work against the Apple 26.0 native library.",
+          "prs": [4579]
+        }
+      ]
+    },
+    {
       "heading": "Bug Fixes",
       "bullets": [
         {
-          "lead": "WinUI projection now resolves on .NET 9",
-          "detail": "SkiaSharp.Views.WinUI no longer fails with a DLL-not-found error for consumers targeting .NET 9.",
+          "lead": "WinUI projection DLL restored",
+          "detail": "Fixed the WinUI Projection DLL not being found for .NET 9 consumers.",
           "prs": [4086]
         }
       ]
     }
   ],
-  "contributor_summaries": {},
-  "preview_summaries": {}
+  "contributor_summaries": {
+    "drasticactions": "Backported Apple 26.0 library support and unversioned app TFMs."
+  },
+  "preview_summaries": {},
+  "harfbuzz_summary": null
 }
