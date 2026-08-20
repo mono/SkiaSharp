@@ -21,20 +21,29 @@ This skill is **Step 4 of 5**:
 ## Contract
 
 - Start from a passing release-testing handoff unless the user explicitly
-  overrides that gate. Preserve the exact branch, source SHA, managed run ID,
-  tests run ID, and paired package versions.
+  overrides that gate. Preserve the exact branch, source SHA, Build run ID,
+  tests run ID, BAR build ID, and paired package versions.
 - Use scripts for detection, Azure publication, NuGet verification, draft
   creation, and final publication.
 - Package publication, tag push, and GitHub Release publication are
   irreversible. Present the corresponding dry-run and obtain approval first.
-- Preserve the detector's source SHA and run IDs; never select newer packages or
-  pipeline runs.
+- Preserve the detector's source SHA and run IDs; never select newer packages,
+  pipeline runs, or prior publisher runs. If more than one prior publisher run
+  matches the exact pinned BAR build, treat that as ambiguous and require the
+  user to pass `--publish-run` explicitly; never guess or pick the latest one.
 - Keep the checkout unchanged. Draft creation pushes a lightweight tag directly
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
-- Approval of the queue command authorizes only queueing pipeline 25298. Its
-  protected push stage then waits for a human to review the exact versions and
-  destination. The agent never approves that downstream gate.
+- The BAR build's Maestro channel promotion (`darc add-build-to-channel`) is a
+  distinct, already-completed step performed upstream of this skill. It is not
+  the same thing as NuGet.org publication, which this skill queues and a human
+  must separately approve.
+- Approval of the queue command authorizes only queueing the protected NuGet.org
+  publisher pipeline (its dnceng/internal definition ID is supplied via
+  `SKIASHARP_NUGET_PUBLISH_PIPELINE_ID`; there is no publicly known definition
+  ID to hardcode). Its protected push stage then waits for a human to review
+  the exact versions and destination. The agent never approves that downstream
+  gate.
 - The agent owns customer-teaser classification between draft creation and
   publication; scripts assemble and validate the final release body.
 
@@ -42,12 +51,18 @@ This skill is **Step 4 of 5**:
 
 | Script | Responsibility |
 |--------|----------------|
-| `scripts/detect-release-publish.py` | Read-only exact release/testing/package handoff. |
-| `scripts/push-release-packages.py` | Audit, queue/recover one exact pipeline 25298 run, and optionally wait through NuGet verification. |
+| `scripts/detect-release-publish.py` | Read-only exact release/Build/tests/BAR/package handoff. |
+| `scripts/push-release-packages.py` | Audit, queue/recover one exact protected publisher run pinned to the BAR build, and optionally wait through NuGet verification. |
 | `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
 | `scripts/publish-release.py` | Validate the teaser and publish the draft. |
 | `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
 | `scripts/release_publish.py` | Shared clients and validation; not a user command. |
+
+`scripts/push-release-packages.py` requires the `SKIASHARP_NUGET_PUBLISH_PIPELINE_ID`
+environment variable to be set to the protected publisher's dnceng/internal
+pipeline definition ID. It fails closed with an actionable error if the
+variable is unset or not an integer; do not work around this by hardcoding a
+value.
 
 Write scripts audit with `--dry-run` and execute without it. The detector emits
 the pinned audit commands; every confirmation report emits its exact
@@ -92,7 +107,9 @@ Run `pushAuditCommand`. Render:
 
 **Release:** `{release.version}` ({release.type})
 **Commit:** `{release.sourceSha}`
-**Managed/tests runs:** `{release.managedRunId}` / `{release.testsRunId}`
+**Build/tests runs:** `{release.buildRunId}` / `{release.testsRunId}`
+**BAR build:** `{release.barBuildId}`
+**BAR asset locations:** `{release.barAssets}`
 **Public packages:** SkiaSharp `{release.publicPackages.SkiaSharp}`,
 HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 
@@ -106,10 +123,12 @@ must be read or recovered without queueing anything; it detects an exact
 queued/running/succeeded publication and returns its URL/resume command.
 
 For `confirm-publish-packages`, obtain approval and run `executionCommand`.
-Verify that Azure selected the exact managed resource/run and the Stable or
-Preview destination. The queue command returns immediately: show
-`publishRun.runId` and `publishRun.url`, then stop so a human can review the
-versions/destination and approve the protected stage.
+Verify that Azure selected the exact folder-qualified Build pipeline resource
+(`\dotnet\skiasharp\skiasharp-package`), the pinned Build run, the exact build
+number, the pinned BAR build ID, and the Stable or Preview destination. The
+queue command returns immediately: show `publishRun.runId` and
+`publishRun.url`, then stop so a human can review the versions/destination and
+approve the protected stage.
 
 After the user confirms that decision, run the emitted `resumeCommand`. It is
 the same script with `--wait --publish-run {id}`, waits for completion, and
@@ -118,6 +137,10 @@ verifies both exact public packages on NuGet.org.
 If Azure succeeds but indexing exceeds the wait window, treat the returned
 `wait-for-nuget` report as resumable status, not a publication failure. Show
 `wait.missingPackages` and reuse `resumeCommand`.
+
+If more than one prior publisher run matches the exact pinned BAR build, the
+script fails as ambiguous rather than picking a "latest" run; rerun the audit
+with an explicit `--publish-run {id}` to pick the exact one the human intends.
 
 For unattended automation, invoke the approved execution command with `--wait`.
 It queues or recovers the exact run, prints its URL immediately, then waits

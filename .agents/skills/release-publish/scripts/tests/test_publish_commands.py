@@ -31,10 +31,12 @@ COMMON = [
     "release/4.152.0",
     "--expect-source-sha",
     "a" * 40,
-    "--expect-managed-run",
+    "--expect-build-run",
     "10",
     "--expect-tests-run",
     "20",
+    "--expect-bar-build",
+    "30",
 ]
 
 
@@ -56,16 +58,16 @@ class PublishCommandTests(unittest.TestCase):
         push_args = push.create_parser().parse_args(
             [*COMMON, "--dry-run"]
         )
-        self.assertNotIn(
-            "--dry-run",
-            push.execution_command(push_args, "a" * 40),
-        )
+        push_command = push.execution_command(push_args, "a" * 40)
+        self.assertNotIn("--dry-run", push_command)
+        self.assertIn("--expect-bar-build 30", push_command)
 
         draft_args = draft.create_parser().parse_args(
             [*COMMON, "--dry-run"]
         )
         draft_command = draft.execution_command(draft_args, "a" * 40)
         self.assertNotIn("--dry-run", draft_command)
+        self.assertIn("--expect-bar-build 30", draft_command)
 
         release_args = release.create_parser().parse_args(
             [
@@ -81,6 +83,7 @@ class PublishCommandTests(unittest.TestCase):
         )
         self.assertNotIn("--dry-run", release_command)
         self.assertIn("--teaser-file teaser.md", release_command)
+        self.assertIn("--expect-bar-build 30", release_command)
 
     def test_package_statuses_match_external_state(self):
         self.assertEqual(
@@ -106,46 +109,161 @@ class PublishCommandTests(unittest.TestCase):
             "confirm-publish-packages",
         )
 
-    def test_wait_validates_exact_managed_resource(self):
-        report = {
-            "release": {
-                "buildNumber": "4.152.0-preview.1.1+4.152.0-preview.1",
-                "type": "preview",
-            }
-        }
+    def test_run_url_targets_dnceng_internal(self):
+        self.assertEqual(
+            push.run_url(14911788),
+            "https://dev.azure.com/dnceng/internal/_build/results"
+            "?buildId=14911788&view=results",
+        )
+
+    def test_publish_pipeline_id_fails_closed_when_unset(self):
+        with mock.patch.dict(push.os.environ, {}, clear=True):
+            with self.assertRaisesRegex(
+                push.publish.PublishError,
+                push.PUBLISH_PIPELINE_ID_ENV,
+            ):
+                push.publish_pipeline_id()
+
+    def test_publish_pipeline_id_fails_closed_when_not_integer(self):
+        with mock.patch.dict(
+            push.os.environ,
+            {push.PUBLISH_PIPELINE_ID_ENV: "not-an-integer"},
+            clear=True,
+        ):
+            with self.assertRaisesRegex(
+                push.publish.PublishError,
+                "integer",
+            ):
+                push.publish_pipeline_id()
+
+    def test_publish_pipeline_id_reads_configured_env_var(self):
+        with mock.patch.dict(
+            push.os.environ,
+            {push.PUBLISH_PIPELINE_ID_ENV: "4242"},
+            clear=True,
+        ):
+            self.assertEqual(push.publish_pipeline_id(), 4242)
+
+    def test_wait_validates_exact_build_resource(self):
+        build_number = "4.152.0-preview.1.1+4.152.0-preview.1"
         detail = {
             "resources": {
                 "pipelines": {
-                    "SkiaSharp": {
-                        "pipeline": {"id": 10},
-                        "version": (
-                            "4.152.0-preview.1.1+4.152.0-preview.1"
-                        ),
+                    push.RESOURCE_ALIAS: {
+                        "pipeline": {
+                            "id": 10,
+                            "name": push.RESOURCE_NAME,
+                            "folder": push.RESOURCE_FOLDER,
+                        },
+                        "version": build_number,
                     }
                 }
             },
             "templateParameters": {
-                "selectedResource": "SkiaSharp",
+                "selectedResource": push.RESOURCE_ALIAS,
+                "buildRunId": 10,
+                "barBuildId": 30,
                 "pushPackages": "true",
                 "pushStable": "false",
             },
         }
-        args = SimpleNamespace(expect_managed_run=10)
         push.validate_run_detail(
             detail,
-            managed_run_id=args.expect_managed_run,
-            managed_build_number=report["release"]["buildNumber"],
+            bar_build_id=30,
+            build_run_id=10,
+            build_number=build_number,
             stable=False,
         )
-        detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]["id"] = 11
+
         with self.assertRaisesRegex(
             push.publish.PublishError,
-            "different managed run",
+            "has not resolved",
         ):
             push.validate_run_detail(
-                detail,
-                managed_run_id=args.expect_managed_run,
-                managed_build_number=report["release"]["buildNumber"],
+                {"state": "completed"},
+                bar_build_id=30,
+                build_run_id=10,
+                build_number=build_number,
+                stable=False,
+            )
+
+        # A different Build run must be rejected.
+        mismatched = {
+            **detail,
+            "resources": {
+                "pipelines": {
+                    push.RESOURCE_ALIAS: {
+                        "pipeline": {
+                            "id": 11,
+                            "name": push.RESOURCE_NAME,
+                            "folder": push.RESOURCE_FOLDER,
+                        },
+                        "version": build_number,
+                    }
+                }
+            },
+        }
+        with self.assertRaisesRegex(
+            push.publish.PublishError,
+            "different Build run",
+        ):
+            push.validate_run_detail(
+                mismatched,
+                bar_build_id=30,
+                build_run_id=10,
+                build_number=build_number,
+                stable=False,
+            )
+
+        # A resource that is not the folder-qualified skiasharp-package
+        # pipeline path must be rejected.
+        wrong_path = {
+            **detail,
+            "resources": {
+                "pipelines": {
+                    push.RESOURCE_ALIAS: {
+                        "pipeline": {
+                            "id": 10,
+                            "name": "SkiaSharp",
+                            "folder": push.RESOURCE_FOLDER,
+                        },
+                        "version": build_number,
+                    }
+                }
+            },
+        }
+        with self.assertRaisesRegex(
+            push.publish.PublishError,
+            r"expected.*skiasharp-package",
+        ):
+            push.validate_run_detail(
+                wrong_path,
+                bar_build_id=30,
+                build_run_id=10,
+                build_number=build_number,
+                stable=False,
+            )
+
+        # A different BAR build must be rejected.
+        wrong_bar = {
+            **detail,
+            "templateParameters": {
+                "selectedResource": push.RESOURCE_ALIAS,
+                "buildRunId": 10,
+                "barBuildId": 99,
+                "pushPackages": "true",
+                "pushStable": "false",
+            },
+        }
+        with self.assertRaisesRegex(
+            push.publish.PublishError,
+            "different BAR build",
+        ):
+            push.validate_run_detail(
+                wrong_bar,
+                bar_build_id=30,
+                build_run_id=10,
+                build_number=build_number,
                 stable=False,
             )
 
@@ -153,8 +271,9 @@ class PublishCommandTests(unittest.TestCase):
         args = SimpleNamespace(
             release_branch="release/4.152.0-preview.1",
             expect_source_sha="a" * 40,
-            expect_managed_run=10,
+            expect_build_run=10,
             expect_tests_run=20,
+            expect_bar_build=30,
             publish_run=None,
             wait_minutes=60,
         )
@@ -162,6 +281,8 @@ class PublishCommandTests(unittest.TestCase):
             "dryRun": False,
             "release": {
                 "sourceSha": "a" * 40,
+                "buildRunId": 10,
+                "barBuildId": 30,
                 "buildNumber": (
                     "4.152.0-preview.1.1+4.152.0-preview.1"
                 ),
@@ -172,7 +293,9 @@ class PublishCommandTests(unittest.TestCase):
         }
 
         class FakeAzure:
-            def queue(self, build_number, *, stable):
+            def queue(self, bar_build_id, build_run_id, build_number, *, stable):
+                self.bar_build_id = bar_build_id
+                self.build_run_id = build_run_id
                 self.build_number = build_number
                 self.stable = stable
                 return {
@@ -191,7 +314,7 @@ class PublishCommandTests(unittest.TestCase):
         self.assertEqual(result["publishRun"]["runId"], 14911788)
         self.assertEqual(
             result["publishRun"]["url"],
-            "https://dev.azure.com/devdiv/DevDiv/_build/results"
+            "https://dev.azure.com/dnceng/internal/_build/results"
             "?buildId=14911788&view=results",
         )
         self.assertIn(
@@ -203,8 +326,9 @@ class PublishCommandTests(unittest.TestCase):
         args = SimpleNamespace(
             release_branch="release/4.152.0-preview.1",
             expect_source_sha="a" * 40,
-            expect_managed_run=10,
+            expect_build_run=10,
             expect_tests_run=20,
+            expect_bar_build=30,
             dry_run=True,
             publish_run=None,
             wait_minutes=60,
@@ -213,11 +337,23 @@ class PublishCommandTests(unittest.TestCase):
             args.release_branch
         )
         handoff = {
-            "managed": {
+            "build": {
                 "runId": 10,
                 "buildNumber": (
                     "4.152.0-preview.1.1+4.152.0-preview.1"
                 ),
+            },
+            "bar": {
+                "assets": {
+                    "SkiaSharp": {
+                        "version": "4.152.0-preview.1.1",
+                        "locations": ["source"],
+                    },
+                    "HarfBuzzSharp": {
+                        "version": "14.2.1-preview.1.1",
+                        "locations": ["source"],
+                    },
+                },
             },
             "versions": {
                 "test": {
@@ -270,6 +406,83 @@ class PublishCommandTests(unittest.TestCase):
         self.assertEqual(result["nextAction"], "approve-publish-run")
         self.assertIsNone(result["executionCommand"])
         self.assertIn("--publish-run 14911788", result["resumeCommand"])
+
+    def test_ambiguous_matches_require_explicit_publish_run(self):
+        args = SimpleNamespace(
+            release_branch="release/4.152.0-preview.1",
+            expect_source_sha="a" * 40,
+            expect_build_run=10,
+            expect_tests_run=20,
+            expect_bar_build=30,
+            dry_run=True,
+            publish_run=None,
+            wait_minutes=60,
+        )
+        release_version = push.publish.ReleaseVersion.parse(
+            args.release_branch
+        )
+        handoff = {
+            "build": {
+                "runId": 10,
+                "buildNumber": (
+                    "4.152.0-preview.1.1+4.152.0-preview.1"
+                ),
+            },
+            "versions": {
+                "test": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "14.2.1-preview.1.1",
+                },
+                "public": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "14.2.1-preview.1.1",
+                },
+            },
+        }
+
+        class FakeNuGet:
+            def check(self, versions):
+                return {"state": "missing", "packages": {}}
+
+        class FakeAzure:
+            def matching_runs(self, *unused, **kwargs):
+                return [
+                    {
+                        "runId": 2,
+                        "name": "SkiaSharp preview",
+                        "status": "completed",
+                        "result": "succeeded",
+                        "url": push.run_url(2),
+                    },
+                    {
+                        "runId": 1,
+                        "name": "SkiaSharp preview",
+                        "status": "completed",
+                        "result": "succeeded",
+                        "url": push.run_url(1),
+                    },
+                ]
+
+        with (
+            mock.patch.object(
+                push,
+                "load_release",
+                return_value=(
+                    object(),
+                    release_version,
+                    {"warnings": []},
+                    handoff,
+                    "a" * 40,
+                ),
+            ),
+            mock.patch.object(push.publish, "NuGet", FakeNuGet),
+            mock.patch.object(push, "AzurePublish", FakeAzure),
+        ):
+            with self.assertRaisesRegex(
+                push.publish.PublishError,
+                r"multiple publication runs.*--publish-run",
+            ):
+                push.current_state(args)
 
     def test_successful_run_nuget_timeout_is_resumable(self):
         args = SimpleNamespace(
@@ -446,6 +659,13 @@ class PublishCommandTests(unittest.TestCase):
         self.assertNotIn("class TagVersion", shared)
         self.assertIn("class GitHub", github_source)
         self.assertIn("class TagVersion", github_source)
+
+    def test_no_legacy_devdiv_or_managed_references_remain(self):
+        for path in SCRIPTS.glob("*.py"):
+            source = path.read_text(encoding="ascii").lower()
+            self.assertNotIn("devdiv", source, path)
+            self.assertNotIn("25298", source, path)
+            self.assertNotIn("managed", source, path)
 
     def test_scripts_are_ascii_only(self):
         for path in SCRIPTS.glob("*.py"):

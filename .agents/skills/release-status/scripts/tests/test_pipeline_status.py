@@ -19,7 +19,10 @@ SPEC.loader.exec_module(status)
 
 COMMIT = "a" * 40
 BRANCH = "release/4.152.0-preview.1"
-BUILD = "4.152.0-preview.1.2+4.152.0-preview.1"
+BUILD_NUMBER = "4.152.0-preview.1.26421.1"
+BUILD_RUN_ID = 202
+TESTS_RUN_ID = 302
+BAR_BUILD_ID = 400
 
 
 def make_run(
@@ -27,34 +30,103 @@ def make_run(
     *,
     status_value="completed",
     result="succeeded",
-    upstream=None,
 ):
     return {
         "id": run_id,
         "status": status_value,
         "result": result,
-        "buildNumber": BUILD,
+        "buildNumber": BUILD_NUMBER,
         "sourceBranch": f"refs/heads/{BRANCH}",
         "sourceVersion": COMMIT,
         "queueTime": f"2026-08-06T00:00:{run_id % 60:02d}Z",
-        "triggerInfo": (
-            {"pipelineId": str(upstream)}
-            if upstream is not None
-            else {}
-        ),
+    }
+
+
+def test_detail(build_run_id=BUILD_RUN_ID, build_number=BUILD_NUMBER):
+    return {
+        "resources": {
+            "pipelines": {
+                "SkiaSharp": {
+                    "pipeline": {
+                        "folder": r"\dotnet\skiasharp",
+                        "id": build_run_id,
+                        "name": "skiasharp-package",
+                    },
+                    "version": build_number,
+                }
+            }
+        }
+    }
+
+
+def bar_record(
+    *,
+    stable=False,
+    channels=None,
+    locations=None,
+    skia_version="4.152.0-preview.1.26421.1",
+    harfbuzz_version="14.2.1-preview.1.26421.1",
+):
+    if channels is None:
+        channels = [{"name": "SkiaSharp"}]
+    if locations is None:
+        locations = ["https://example.test/skiasharp"]
+    return {
+        "id": BAR_BUILD_ID,
+        "commit": COMMIT,
+        "azureDevOpsAccount": "dnceng",
+        "azureDevOpsProject": "internal",
+        "azureDevOpsBuildDefinitionId": 1642,
+        "azureDevOpsBuildId": BUILD_RUN_ID,
+        "azureDevOpsBuildNumber": BUILD_NUMBER,
+        "azureDevOpsBranch": f"refs/heads/{BRANCH}",
+        "stable": stable,
+        "channels": channels,
+        "assets": [
+            {
+                "name": "SkiaSharp",
+                "version": skia_version,
+                "nonShipping": False,
+                "locations": locations,
+            },
+            {
+                "name": "HarfBuzzSharp",
+                "version": harfbuzz_version,
+                "nonShipping": False,
+                "locations": locations,
+            },
+        ],
     }
 
 
 class FakeAdo:
-    def __init__(self, runs, timelines=None):
+    def __init__(self, runs, details=None):
         self.runs = runs
-        self.timelines = timelines or {}
+        self.details = details or {}
 
     def list_runs(self, pipeline_id, branch):
         return self.runs.get(pipeline_id, [])
 
+    def run_detail(self, pipeline_id, run_id):
+        return self.details.get(run_id, {})
+
     def timeline(self, build_id):
-        return self.timelines.get(build_id, [])
+        return []
+
+    def release_config(self, build_id):
+        return {
+            "barBuildId": BAR_BUILD_ID,
+            "defaultChannels": "[529]",
+            "stable": False,
+        }
+
+
+class FakeDarc:
+    def __init__(self, record=None):
+        self.record = record or bar_record()
+
+    def get_build(self, bar_build_id):
+        return self.record
 
 
 class FakeRepo:
@@ -69,20 +141,18 @@ class FakeRepo:
         }
 
 
-class FakeFeed:
-    def __init__(self, available=True):
-        self.available = available
-
-    def contains(self, package_id, version):
-        return self.available
-
-
 def complete_chain():
     return {
-        26493: [make_run(102)],
-        10789: [make_run(202, upstream=102)],
-        15756: [make_run(302, upstream=202)],
+        1642: [make_run(BUILD_RUN_ID)],
+        1630: [make_run(TESTS_RUN_ID)],
     }
+
+
+def complete_ado():
+    return FakeAdo(
+        complete_chain(),
+        details={TESTS_RUN_ID: test_detail()},
+    )
 
 
 def git(cwd, *args):
@@ -96,6 +166,18 @@ def git(cwd, *args):
 
 
 class PipelineStatusTests(unittest.TestCase):
+    def test_pipeline_contract_uses_dnceng_topology(self):
+        self.assertEqual(status.ORG, "https://dev.azure.com/dnceng")
+        self.assertEqual(status.PROJECT, "internal")
+        self.assertEqual(
+            [(item["name"], item["id"]) for item in status.PIPELINES],
+            [("skiasharp-package", 1642), ("skiasharp-tests", 1630)],
+        )
+        self.assertEqual(
+            status.BUILD_PIPELINE_SOURCE,
+            r"\dotnet\skiasharp\skiasharp-package",
+        )
+
     def test_azure_cli_uses_resolved_cmd_launcher(self):
         az_path = r"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.CMD"
         with mock.patch.object(
@@ -168,127 +250,133 @@ class PipelineStatusTests(unittest.TestCase):
                 },
             )
 
-    def test_complete_chain_is_ready(self):
+    def test_complete_chain_is_ready_with_exact_bar_assets(self):
         report = status.build_report(
             BRANCH,
-            ado=FakeAdo(complete_chain()),
+            ado=complete_ado(),
             repo=FakeRepo(),
-            feed=FakeFeed(),
+            darc=FakeDarc(),
         )
         self.assertEqual(report["state"], "ready")
         self.assertEqual(report["nextAction"], "start-release-testing")
+        self.assertEqual(report["buildRun"]["runId"], BUILD_RUN_ID)
+        self.assertEqual(report["testsRun"]["runId"], TESTS_RUN_ID)
+        self.assertEqual(report["barBuild"]["id"], BAR_BUILD_ID)
+        self.assertEqual(report["barBuild"]["state"], "ready")
         self.assertEqual(
-            [
-                report["nativeRun"]["runId"],
-                report["managedRun"]["runId"],
-                report["testsRun"]["runId"],
-            ],
-            [102, 202, 302],
+            report["packageVersions"]["test"]["SkiaSharp"],
+            "4.152.0-preview.1.26421.1",
         )
-        self.assertEqual(report["packageFeed"]["state"], "ready")
 
-    def test_latest_native_failure_requires_retry(self):
+    def test_newest_exact_build_failure_requires_retry(self):
         runs = complete_chain()
-        runs[26493].append(make_run(103, result="failed"))
+        runs[1642].append(make_run(203, result="failed"))
         report = status.build_report(
             COMMIT,
             ado=FakeAdo(runs),
             repo=FakeRepo(),
-            feed=FakeFeed(),
+            darc=FakeDarc(),
         )
         self.assertEqual(report["state"], "blocked")
-        self.assertEqual(report["nextAction"], "retry-native")
-        self.assertEqual(report["nativeRun"]["runId"], 103)
-        self.assertIsNone(report["managedRun"]["runId"])
+        self.assertEqual(report["nextAction"], "retry-build")
+        self.assertEqual(report["buildRun"]["runId"], 203)
+        self.assertIsNone(report["testsRun"]["runId"])
 
-    def test_waits_for_managed(self):
+    def test_waits_for_connected_tests(self):
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo({26493: [make_run(102)], 10789: [], 15756: []}),
+            ado=FakeAdo(complete_chain(), details={TESTS_RUN_ID: test_detail(999)}),
             repo=FakeRepo(),
-            feed=FakeFeed(),
+            darc=FakeDarc(),
         )
-        self.assertEqual(report["nextAction"], "wait-for-managed-trigger")
+        self.assertEqual(report["nextAction"], "wait-for-tests-trigger")
+        self.assertIsNone(report["testsRun"]["runId"])
 
-    def test_waits_for_tests_even_when_packages_exist(self):
+    def test_failed_connected_tests_require_retry(self):
         runs = complete_chain()
-        runs[15756][0]["status"] = "inProgress"
-        runs[15756][0]["result"] = None
+        runs[1630][0]["result"] = "failed"
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo(runs),
+            ado=FakeAdo(runs, details={TESTS_RUN_ID: test_detail()}),
             repo=FakeRepo(),
-            feed=FakeFeed(),
-        )
-        self.assertEqual(report["state"], "running")
-        self.assertEqual(report["nextAction"], "wait-for-tests")
-        self.assertEqual(report["packageFeed"]["state"], "ready")
-
-    def test_waits_for_newer_managed_child(self):
-        runs = complete_chain()
-        runs[10789].append(
-            make_run(
-                203,
-                status_value="inProgress",
-                result=None,
-                upstream=102,
-            )
-        )
-        report = status.build_report(
-            COMMIT,
-            ado=FakeAdo(runs),
-            repo=FakeRepo(),
-            feed=FakeFeed(),
-        )
-        self.assertEqual(report["state"], "running")
-        self.assertEqual(report["nextAction"], "wait-for-managed")
-
-    def test_failed_tests_require_retry(self):
-        runs = complete_chain()
-        runs[15756][0]["result"] = "failed"
-        report = status.build_report(
-            COMMIT,
-            ado=FakeAdo(runs),
-            repo=FakeRepo(),
-            feed=FakeFeed(),
+            darc=FakeDarc(),
         )
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(report["nextAction"], "retry-tests")
 
-    def test_missing_packages_waits(self):
+    def test_registered_bar_requires_explicit_channel_promotion(self):
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo(complete_chain()),
+            ado=complete_ado(),
             repo=FakeRepo(),
-            feed=FakeFeed(available=False),
+            darc=FakeDarc(bar_record(channels=[], locations=[])),
         )
         self.assertEqual(report["state"], "waiting")
-        self.assertEqual(report["nextAction"], "wait-for-packages")
+        self.assertEqual(report["nextAction"], "promote-bar")
+        self.assertEqual(
+            report["barBuild"]["promotionCommand"],
+            "darc add-build-to-channel --id 400 --channel SkiaSharp",
+        )
 
-    def test_stable_versions_have_internal_and_public_forms(self):
-        runs = complete_chain()
-        for values in runs.values():
-            values[0]["buildNumber"] = "4.152.0-stable.3+4.152.0"
+    def test_channel_without_locations_waits_for_bar_assets(self):
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(bar_record(locations=[])),
+        )
+        self.assertEqual(report["nextAction"], "wait-for-bar-assets")
+
+    def test_stable_bar_uses_exact_package_versions(self):
         repo = FakeRepo()
         repo.release_inputs = lambda commit: {
             "skiaSharp": "4.152.0",
             "harfBuzzSharp": "14.2.1",
             "previewLabel": "stable",
         }
+        ado = complete_ado()
+        ado.release_config = lambda build_id: {
+            "barBuildId": BAR_BUILD_ID,
+            "defaultChannels": "[529]",
+            "stable": True,
+        }
+        record = bar_record(
+            stable=True,
+            skia_version="4.152.0",
+            harfbuzz_version="14.2.1",
+        )
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo(runs),
+            ado=ado,
             repo=repo,
-            feed=FakeFeed(),
+            darc=FakeDarc(record),
         )
         self.assertEqual(
-            report["packageVersions"]["test"]["SkiaSharp"],
-            "4.152.0-stable.3",
+            report["packageVersions"],
+            {
+                "test": {
+                    "SkiaSharp": "4.152.0",
+                    "HarfBuzzSharp": "14.2.1",
+                },
+                "public": {
+                    "SkiaSharp": "4.152.0",
+                    "HarfBuzzSharp": "14.2.1",
+                },
+            },
         )
-        self.assertEqual(
-            report["packageVersions"]["public"]["SkiaSharp"],
-            "4.152.0",
+
+    def test_bar_build_must_match_exact_azure_build(self):
+        record = bar_record()
+        record["azureDevOpsBuildId"] = 999
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
         )
+        self.assertEqual(report["state"], "blocked")
+        self.assertEqual(report["nextAction"], "retry-bar-check")
+        self.assertIn("azureDevOpsBuildId=999", report["warnings"][0])
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

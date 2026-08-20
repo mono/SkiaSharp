@@ -100,21 +100,25 @@ class PublishReleaseTests(unittest.TestCase):
             "v4.152.0",
         )
 
-    def test_azure_request_uses_managed_build_number_as_resource_version(self):
+    def test_azure_request_uses_build_number_as_resource_version(self):
         request = push.AzurePublish.request_body(
+            30,
+            10,
             "4.152.0-preview.1.1+4.152.0-preview.1",
             stable=True,
             preview=True,
         )
         self.assertTrue(request["previewRun"])
         self.assertEqual(
-            request["resources"]["pipelines"]["SkiaSharp"]["version"],
+            request["resources"]["pipelines"][push.RESOURCE_ALIAS]["version"],
             "4.152.0-preview.1.1+4.152.0-preview.1",
         )
         self.assertEqual(
             request["templateParameters"],
             {
-                "selectedResource": "SkiaSharp",
+                "selectedResource": push.RESOURCE_ALIAS,
+                "buildRunId": 10,
+                "barBuildId": 30,
                 "pushPackages": True,
                 "pushStable": True,
             },
@@ -199,19 +203,193 @@ class PublishReleaseTests(unittest.TestCase):
 
     def test_status_handoff_rejects_changed_run(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
-        status = {
+        status = self._stable_status(release)
+        status["buildRun"]["runId"] = 10
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "Build run changed",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=11,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_changed_bar_build(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "BAR build changed",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=31,
+            )
+
+    def test_status_handoff_rejects_bar_commit_mismatch(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["commit"] = "b" * 40
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "does not match the tested source commit",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_bar_off_channel(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["channels"] = ["General Testing"]
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "SkiaSharp.*channel",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_missing_bar_asset_locations(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["assets"]["HarfBuzzSharp"]["locations"] = []
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "no recorded package locations",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_requires_exact_stable_versions(self):
+        # Stable BAR package versions must be exact X.Y.Z, never a
+        # X.Y.Z-stable.{build} pre-release suffix.
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["assets"]["SkiaSharp"]["version"] = (
+            "4.152.0-stable.1"
+        )
+        status["packageVersions"]["test"]["SkiaSharp"] = "4.152.0-stable.1"
+        status["packageVersions"]["public"]["SkiaSharp"] = "4.152.0-stable.1"
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "stable public version",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_distinct_test_package_family(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["packageVersions"]["test"]["SkiaSharp"] = (
+            "4.152.0-preview.99"
+        )
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "same BAR assets",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_accepts_exact_stable_versions(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        handoff = publish.validate_status_handoff(
+            status,
+            release,
+            expected_sha="a" * 40,
+            expected_build_run=10,
+            expected_tests_run=20,
+            expected_bar_build=30,
+        )
+        self.assertEqual(handoff["bar"]["assets"]["SkiaSharp"]["version"], "4.152.0")
+        self.assertEqual(handoff["build"]["runId"], 10)
+        self.assertEqual(handoff["bar"]["id"], 30)
+
+    @staticmethod
+    def _stable_status(release: "publish.ReleaseVersion") -> dict:
+        return {
             "branch": release.branch,
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "managedRun": {
+            "buildRun": {
                 "runId": 10,
+                "pipelineId": publish.BUILD_DEFINITION_ID,
+                "sourceVersion": "a" * 40,
+                "sourceBranch": "refs/heads/release/4.152.0",
+                "buildNumber": "4.152.0+4.152.0",
+            },
+            "testsRun": {
+                "runId": 20,
+                "pipelineId": publish.TESTS_DEFINITION_ID,
                 "sourceVersion": "a" * 40,
             },
-            "testsRun": {"runId": 20},
+            "barBuild": {
+                "id": 30,
+                "state": "ready",
+                "commit": "a" * 40,
+                "buildRunId": 10,
+                "buildDefinitionId": publish.BUILD_DEFINITION_ID,
+                "branch": "refs/heads/release/4.152.0",
+                "buildNumber": "4.152.0+4.152.0",
+                "channels": [publish.BAR_CHANNEL],
+                "assets": {
+                    "SkiaSharp": {
+                        "version": "4.152.0",
+                        "locations": [
+                            "https://pkgs.dev.azure.com/dnceng/"
+                            "_packaging/skiasharp"
+                        ],
+                    },
+                    "HarfBuzzSharp": {
+                        "version": "1.0.0",
+                        "locations": [
+                            "https://pkgs.dev.azure.com/dnceng/"
+                            "_packaging/skiasharp"
+                        ],
+                    },
+                },
+            },
             "packageVersions": {
                 "test": {
-                    "SkiaSharp": "4.152.0-stable.1",
-                    "HarfBuzzSharp": "1.0.0-stable.1",
+                    "SkiaSharp": "4.152.0",
+                    "HarfBuzzSharp": "1.0.0",
                 },
                 "public": {
                     "SkiaSharp": "4.152.0",
@@ -219,17 +397,6 @@ class PublishReleaseTests(unittest.TestCase):
                 },
             },
         }
-        with self.assertRaisesRegex(
-            publish.PublishError,
-            "managed run changed",
-        ):
-            publish.validate_status_handoff(
-                status,
-                release,
-                expected_sha="a" * 40,
-                expected_managed_run=11,
-                expected_tests_run=20,
-            )
 
     def test_scripts_are_ascii_only(self):
         for path in SCRIPTS.glob("*.py"):

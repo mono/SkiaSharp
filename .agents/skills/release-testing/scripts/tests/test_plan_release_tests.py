@@ -153,8 +153,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
 
     def test_status_override_is_limited_to_tests_wait(self):
         base = {
-            "managedRun": {"state": "succeeded"},
-            "packageFeed": {"state": "ready"},
+            "buildRun": {"state": "succeeded"},
+            "barBuild": {"state": "ready"},
         }
         self.assertEqual(
             planner.plan_eligibility(
@@ -168,7 +168,19 @@ class ReleaseTestPlanTests(unittest.TestCase):
             "only the tests wait",
         ):
             planner.plan_eligibility(
-                {**base, "nextAction": "wait-for-managed"},
+                {**base, "nextAction": "retry-build"},
+                allow_incomplete_ci=True,
+            )
+        with self.assertRaisesRegex(
+            planner.PlanError,
+            "BAR assets",
+        ):
+            planner.plan_eligibility(
+                {
+                    "buildRun": {"state": "succeeded"},
+                    "barBuild": {"state": "registered"},
+                    "nextAction": "wait-for-tests",
+                },
                 allow_incomplete_ci=True,
             )
         with self.assertRaisesRegex(
@@ -187,15 +199,29 @@ class ReleaseTestPlanTests(unittest.TestCase):
             "state": "ready",
             "nextAction": "start-release-testing",
             "warnings": ["example"],
-            "managedRun": {
+            "buildRun": {
                 "state": "succeeded",
                 "runId": 20,
                 "buildNumber": "build",
                 "sourceBranch": "refs/heads/release/x",
                 "sourceVersion": "a" * 40,
-                "url": "managed",
+                "url": "build",
             },
             "testsRun": {"runId": 30, "url": "tests"},
+            "barBuild": {
+                "id": 40,
+                "state": "ready",
+                "assets": {
+                    "SkiaSharp": {
+                        "version": "s",
+                        "locations": ["source"],
+                    },
+                    "HarfBuzzSharp": {
+                        "version": "h",
+                        "locations": ["source"],
+                    },
+                },
+            },
             "packageVersions": {
                 "test": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
                 "public": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
@@ -205,10 +231,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
             status,
             status_override=False,
         )
-        self.assertEqual(summary["managedRunId"], 20)
+        self.assertEqual(summary["buildRunId"], 20)
         self.assertEqual(summary["testsRunId"], 30)
+        self.assertEqual(summary["barBuildId"], 40)
         self.assertEqual(summary["warnings"], ["example"])
-        self.assertNotIn("managedRun", summary)
+        self.assertNotIn("buildRun", summary)
         self.assertNotIn("testsRun", summary)
 
     def test_windows_command_quotes_powershell_metacharacters(self):

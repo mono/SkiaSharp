@@ -1,12 +1,13 @@
 # Component Governance (CG) Alerts
 
-CG scans Docker container images and build-time dependencies used by the SkiaSharp-Native
-and SkiaSharp Azure DevOps pipelines. It flags CVEs in OS packages, npm dependencies, Rust
-crates, and NuGet packages used during the build.
+CG scans Docker container images and build-time dependencies used by the
+combined `skiasharp-package` Azure DevOps pipeline. It flags CVEs in OS
+packages, npm dependencies, Rust crates, and NuGet packages used during the
+build.
 
-> ⚠️ **MANDATORY:** The audit MUST include CG alerts from BOTH the **SkiaSharp-Native**
-> (pipeline 26493) and **SkiaSharp** (pipeline 10789) pipelines — together they make up the
-> shipped build.
+> ⚠️ **MANDATORY:** The audit MUST include CG alerts from
+> **skiasharp-package** (pipeline 1642). It builds native and managed assets,
+> performs real signing, and registers the shipped packages in BAR.
 
 ## Why This Matters
 
@@ -70,13 +71,9 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
   --branch main --output output/ai/cg-alerts-cache.json
 
-# Query only the native pipeline
+# Query the combined Build pipeline
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
-  --pipeline native --output output/ai/cg-alerts-cache.json
-
-# Query only the managed pipeline
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
-  --pipeline managed --output output/ai/cg-alerts-cache.json
+  --pipeline build --output output/ai/cg-alerts-cache.json
 
 # Query a specific build
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
@@ -85,7 +82,7 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
 
 ### What the Script Does
 
-1. Discovers the latest completed build from `main` AND all active `release/*` branches for BOTH pipelines.
+1. Discovers the latest completed Build from `main` and every active `release/*` branch.
 2. Identifies ALL CG logs in each build (every job, no sampling — this is security).
 3. Parses and deduplicates all CVEs across builds, pipelines, and jobs.
 4. Sorts by severity and reports which branches and pipelines are affected.
@@ -99,22 +96,20 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
 ## Manual Approach (for Debugging)
 
 ```bash
-# 1. Get latest build ID (native pipeline)
-BUILD_ID=$(az pipelines runs list --pipeline-id 26493 \
-  --org https://devdiv.visualstudio.com --project DevDiv \
+# 1. Get latest combined Build ID
+BUILD_ID=$(az pipelines runs list --pipeline-id 1642 \
+  --org https://dev.azure.com/dnceng --project internal \
   --top 1 --query "[0].id" -o tsv)
-
-# For managed pipeline, use --pipeline-id 10789 instead
 
 # 2. Get timeline to find CG log IDs
 az devops invoke --area build --resource timeline \
-  --route-parameters project=DevDiv buildId=$BUILD_ID \
-  --org https://devdiv.visualstudio.com -o json
+  --route-parameters project=internal buildId=$BUILD_ID \
+  --org https://dev.azure.com/dnceng -o json
 
 # 3. Parse CVEs from a specific CG log
 az devops invoke --area build --resource logs \
-  --route-parameters project=DevDiv buildId=$BUILD_ID logId={LOG_ID} \
-  --org https://devdiv.visualstudio.com -o json
+  --route-parameters project=internal buildId=$BUILD_ID logId={LOG_ID} \
+  --org https://dev.azure.com/dnceng -o json
 ```
 
 ## CG Alert Categories
@@ -172,7 +167,7 @@ The script output has this structure (include ALL fields as-is):
         "severity": "Medium",
         "sources": ["Alpine 3.17"],
         "branches": ["main"],
-        "pipelines": ["SkiaSharp-Native"],
+        "pipelines": ["skiasharp-package"],
         "paths": ["/some/path/to/manifest"]
       }
     ]
@@ -187,9 +182,9 @@ The script output has this structure (include ALL fields as-is):
 - Replace `alerts` with `uniqueCVEs` or `categories`
 - Write `totalAlerts: N` without including the actual N alerts
 
-## CG Portal Links
+## CG Build Link
 
-- **Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
-- **Native pipeline:** https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493
-- **Managed pipeline:** https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789
-- **Alert type filter:** Append `?_a=alerts&typeId={typeId}&alerts-view-option=active` to the registration URL
+- **Combined Build pipeline:** https://dev.azure.com/dnceng/internal/_build?definitionId=1642
+
+Use the exact Build run URL emitted by the script for audit evidence. Do not
+substitute a latest branch build after collection.

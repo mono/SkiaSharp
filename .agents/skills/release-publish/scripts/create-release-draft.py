@@ -33,10 +33,12 @@ def publication_audit_command(
         context.release.branch,
         "--expect-source-sha",
         context.source_sha,
-        "--expect-managed-run",
-        str(context.handoff["managed"]["runId"]),
+        "--expect-build-run",
+        str(context.handoff["build"]["runId"]),
         "--expect-tests-run",
         str(context.handoff["tests"]["runId"]),
+        "--expect-bar-build",
+        str(context.handoff["bar"]["id"]),
     ]
     if teaser_file:
         command.extend(["--teaser-file", str(teaser_file)])

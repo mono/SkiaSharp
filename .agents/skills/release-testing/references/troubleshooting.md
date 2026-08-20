@@ -26,17 +26,15 @@ package version, or skip policy.
 
 **Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
-matching feed package instead of the exact package from the selected CI build. The feed contains
-multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
-return the wrong one.
+**Cause:** Choosing a feed version or mutable build selector instead of the exact
+asset version and location recorded on the selected BAR build.
 
-**Fix:** Rerun `release-status`. It verifies both exact package versions against
-the preview feed and reports `wait-for-packages` until both are indexed. Do not
-select a replacement version from the feed.
+**Fix:** Rerun `release-status`. It verifies the Build/Tests/BAR identity and
+reports `wait-for-bar-assets` until both exact assets have recorded locations.
+Do not select a replacement version from a feed.
 
-**`ERROR: Could not resolve build metadata for run ...`** — confirm the selected `SkiaSharp`
-pipeline run ID and Azure CLI authentication.
+**`ERROR: Could not resolve build metadata for run ...`** — confirm the selected
+`skiasharp-package` run ID and Azure CLI authentication.
 
 **`ERROR: Selected run came from ...`** — the selected run is not from the requested release
 branch. Return to release-status and select the correct run.
@@ -56,9 +54,9 @@ by release-status and its `sourceVersion`.
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
-| `.latestVersion` | `.version` |
-| Newest matching build | Exact selected CI build |
-| Prefix filtering to select a version | Exact version match |
+| Latest feed version | Exact BAR asset version |
+| Latest branch build | Exact selected Build run and BAR ID |
+| Prefix filtering to select a version | Exact BAR asset match |
 
 ---
 
@@ -71,7 +69,7 @@ by release-status and its `sourceVersion`.
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
 | `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
 | `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
-| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
+| Stable `X.Y.Z` package cannot be restored | The selected BAR has not finished channel publication or its location was replaced manually | Return to release-status and use the exact BAR-recorded asset locations; never invent `X.Y.Z-stable.{build}` |
 
 ## Appium Errors
 

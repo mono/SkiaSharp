@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import shutil
 import sys
@@ -14,10 +15,39 @@ import time
 import release_publish as publish
 
 
-AZURE_ORG = "https://devdiv.visualstudio.com"
-AZURE_PROJECT = "DevDiv"
-PUBLISH_PIPELINE_ID = 25298
-AZURE_WEB_ORG = "devdiv"
+# dnceng/internal is the immutable pipeline home for the Build pipeline that
+# registers each BAR build (skiasharp-package, definition 1642). There is
+# currently no protected NuGet.org publisher pipeline definition, so its ID
+# must be supplied explicitly via SKIASHARP_NUGET_PUBLISH_PIPELINE_ID.
+AZURE_ORG = "https://dev.azure.com/dnceng"
+AZURE_PROJECT = "internal"
+AZURE_WEB_ORG = "dnceng"
+PUBLISH_PIPELINE_ID_ENV = "SKIASHARP_NUGET_PUBLISH_PIPELINE_ID"
+
+# The folder-qualified Build pipeline resource that the protected publisher
+# must be pinned to. This is the only pipeline that produces BAR builds for
+# SkiaSharp, so every publication request must reference it exactly.
+RESOURCE_ALIAS = "SkiaSharp"
+RESOURCE_NAME = "skiasharp-package"
+RESOURCE_FOLDER = r"\dotnet\skiasharp"
+RESOURCE_PATH = r"\dotnet\skiasharp\skiasharp-package"
+
+
+def publish_pipeline_id() -> int:
+    raw = os.environ.get(PUBLISH_PIPELINE_ID_ENV)
+    if not raw or not raw.strip():
+        raise publish.PublishError(
+            "the protected NuGet.org publisher pipeline is not configured: "
+            f"set {PUBLISH_PIPELINE_ID_ENV} to its dnceng/internal pipeline "
+            "definition ID before running push-release-packages.py"
+        )
+    try:
+        return int(raw.strip())
+    except ValueError as error:
+        raise publish.PublishError(
+            f"{PUBLISH_PIPELINE_ID_ENV} must be an integer pipeline "
+            f"definition ID, got {raw!r}"
+        ) from error
 
 
 class AzurePublish:
@@ -25,6 +55,7 @@ class AzurePublish:
         self.az_path = shutil.which("az")
         if not self.az_path:
             raise publish.PublishError("Azure CLI 'az' was not found on PATH")
+        self.pipeline_id = publish_pipeline_id()
 
     def json(self, args: list[str], *, timeout: int = 120):
         return publish.run_json(
@@ -34,7 +65,9 @@ class AzurePublish:
 
     @staticmethod
     def request_body(
-        managed_build_number: str,
+        bar_build_id: int,
+        build_run_id: int,
+        build_number: str,
         *,
         stable: bool,
         preview: bool,
@@ -43,13 +76,15 @@ class AzurePublish:
             "previewRun": preview,
             "resources": {
                 "pipelines": {
-                    "SkiaSharp": {
-                        "version": managed_build_number,
+                    RESOURCE_ALIAS: {
+                        "version": build_number,
                     }
                 }
             },
             "templateParameters": {
-                "selectedResource": "SkiaSharp",
+                "selectedResource": RESOURCE_ALIAS,
+                "buildRunId": build_run_id,
+                "barBuildId": bar_build_id,
                 "pushPackages": True,
                 "pushStable": stable,
             },
@@ -78,7 +113,7 @@ class AzurePublish:
                     "runs",
                     "--route-parameters",
                     f"project={AZURE_PROJECT}",
-                    f"pipelineId={PUBLISH_PIPELINE_ID}",
+                    f"pipelineId={self.pipeline_id}",
                     "--http-method",
                     "POST",
                     "--in-file",
@@ -96,13 +131,17 @@ class AzurePublish:
 
     def preview(
         self,
-        managed_build_number: str,
+        bar_build_id: int,
+        build_run_id: int,
+        build_number: str,
         *,
         stable: bool,
     ) -> bool:
         response = self.invoke_run(
             self.request_body(
-                managed_build_number,
+                bar_build_id,
+                build_run_id,
+                build_number,
                 stable=stable,
                 preview=True,
             )
@@ -111,13 +150,17 @@ class AzurePublish:
 
     def queue(
         self,
-        managed_build_number: str,
+        bar_build_id: int,
+        build_run_id: int,
+        build_number: str,
         *,
         stable: bool,
     ) -> dict:
         return self.invoke_run(
             self.request_body(
-                managed_build_number,
+                bar_build_id,
+                build_run_id,
+                build_number,
                 stable=stable,
                 preview=False,
             )
@@ -136,7 +179,7 @@ class AzurePublish:
                 "runs",
                 "--route-parameters",
                 f"project={AZURE_PROJECT}",
-                f"pipelineId={PUBLISH_PIPELINE_ID}",
+                f"pipelineId={self.pipeline_id}",
                 f"runId={run_id}",
                 "--api-version",
                 "7.1",
@@ -147,19 +190,19 @@ class AzurePublish:
 
     def matching_runs(
         self,
-        managed_run_id: int,
+        bar_build_id: int,
+        build_run_id: int,
         build_number: str,
         *,
         stable: bool,
     ) -> list[dict]:
-        expected_name = f"SkiaSharp {build_number}"
         builds = self.json(
             [
                 "pipelines",
                 "runs",
                 "list",
                 "--pipeline-ids",
-                str(PUBLISH_PIPELINE_ID),
+                str(self.pipeline_id),
                 "--org",
                 AZURE_ORG,
                 "--project",
@@ -170,34 +213,18 @@ class AzurePublish:
                 "json",
             ]
         )
-        candidates = [
-            build
-            for build in builds
-            if build.get("buildNumber") == expected_name
-            or build.get("status") != "completed"
-        ]
         matched = []
-        for build in candidates:
+        for build in builds:
             detail = self.run_detail(int(build["id"]))
-            resource = (
-                (detail.get("resources") or {})
-                .get("pipelines", {})
-                .get("SkiaSharp", {})
-            )
-            pipeline = resource.get("pipeline") or {}
-            parameters = detail.get("templateParameters") or {}
-            if int(pipeline.get("id") or 0) != managed_run_id:
-                continue
-            if resource.get("version") != build_number:
-                continue
-            if parameters.get("selectedResource") != "SkiaSharp":
-                continue
-            if str(parameters.get("pushPackages")).lower() != "true":
-                continue
-            if (
-                str(parameters.get("pushStable")).lower()
-                != str(stable).lower()
-            ):
+            try:
+                validate_run_detail(
+                    detail,
+                    bar_build_id=bar_build_id,
+                    build_run_id=build_run_id,
+                    build_number=build_number,
+                    stable=stable,
+                )
+            except publish.PublishError:
                 continue
             matched.append(
                 {
@@ -223,6 +250,66 @@ def run_url(run_id: int) -> str:
     )
 
 
+def validate_run_detail(
+    detail: dict,
+    *,
+    bar_build_id: int,
+    build_run_id: int,
+    build_number: str,
+    stable: bool,
+) -> None:
+    resource = (
+        (detail.get("resources") or {})
+        .get("pipelines", {})
+        .get(RESOURCE_ALIAS, {})
+    )
+    if not resource:
+        raise publish.PublishError(
+            "publication run has not resolved its skiasharp-package resource"
+        )
+    pipeline = resource.get("pipeline") or {}
+    parameters = detail.get("templateParameters") or {}
+    if (
+        pipeline.get("name") != RESOURCE_NAME
+        or pipeline.get("folder") != RESOURCE_FOLDER
+    ):
+        raise publish.PublishError(
+            "publication run resource is "
+            f"{pipeline.get('folder')!r}\\{pipeline.get('name')!r}, "
+            f"expected {RESOURCE_PATH!r}"
+        )
+    if int(pipeline.get("id") or 0) != build_run_id:
+        raise publish.PublishError(
+            "publication run uses a different Build run"
+        )
+    if resource.get("version") != build_number:
+        raise publish.PublishError(
+            f"publication run uses {resource.get('version')}, "
+            f"expected {build_number}"
+        )
+    if parameters.get("selectedResource") != RESOURCE_ALIAS:
+        raise publish.PublishError(
+            "publication run selected a different pipeline resource"
+        )
+    if int(parameters.get("buildRunId") or 0) != build_run_id:
+        raise publish.PublishError(
+            "publication run template parameters use a different Build run"
+        )
+    if int(parameters.get("barBuildId") or 0) != bar_build_id:
+        raise publish.PublishError(
+            "publication run uses a different BAR build"
+        )
+    if str(parameters.get("pushPackages")).lower() != "true":
+        raise publish.PublishError("publication run does not push packages")
+    if (
+        str(parameters.get("pushStable")).lower()
+        != str(stable).lower()
+    ):
+        raise publish.PublishError(
+            "publication run has the wrong Stable/Preview destination"
+        )
+
+
 def load_release(args):
     repo = publish.GitRepository.discover()
     release = publish.ReleaseVersion.parse(args.release_branch)
@@ -231,8 +318,9 @@ def load_release(args):
         status,
         release,
         expected_sha=args.expect_source_sha,
-        expected_managed_run=args.expect_managed_run,
+        expected_build_run=args.expect_build_run,
         expected_tests_run=args.expect_tests_run,
+        expected_bar_build=args.expect_bar_build,
     )
     source_sha = repo.resolve_release_sha(
         release.branch,
@@ -248,10 +336,12 @@ def execution_command(args, source_sha: str) -> str:
         args.release_branch,
         "--expect-source-sha",
         source_sha,
-        "--expect-managed-run",
-        str(args.expect_managed_run),
+        "--expect-build-run",
+        str(args.expect_build_run),
         "--expect-tests-run",
         str(args.expect_tests_run),
+        "--expect-bar-build",
+        str(args.expect_bar_build),
     ]
     return publish.shell_command(command)
 
@@ -264,10 +354,12 @@ def resume_command(args, source_sha: str, publish_run_id: int) -> str:
             args.release_branch,
             "--expect-source-sha",
             source_sha,
-            "--expect-managed-run",
-            str(args.expect_managed_run),
+            "--expect-build-run",
+            str(args.expect_build_run),
             "--expect-tests-run",
             str(args.expect_tests_run),
+            "--expect-bar-build",
+            str(args.expect_bar_build),
             "--publish-run",
             str(publish_run_id),
             "--wait",
@@ -317,12 +409,16 @@ def current_state(args, *, validate_request: bool = True) -> dict:
     repo, release, status, handoff, source_sha = load_release(args)
     nuget = publish.NuGet().check(handoff["versions"])
     azure = AzurePublish()
+    bar_build_id = args.expect_bar_build
+    build_run_id = args.expect_build_run
+    build_number = handoff["build"]["buildNumber"]
     if args.publish_run:
         detail = azure.run_detail(args.publish_run)
         validate_run_detail(
             detail,
-            managed_run_id=args.expect_managed_run,
-            managed_build_number=handoff["managed"]["buildNumber"],
+            bar_build_id=bar_build_id,
+            build_run_id=build_run_id,
+            build_number=build_number,
             stable=release.stable,
         )
         latest = {
@@ -334,10 +430,18 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         }
     else:
         runs = azure.matching_runs(
-            args.expect_managed_run,
-            handoff["managed"]["buildNumber"],
+            bar_build_id,
+            build_run_id,
+            build_number,
             stable=release.stable,
         )
+        if len(runs) > 1:
+            run_ids = ", ".join(str(run["runId"]) for run in runs)
+            raise publish.PublishError(
+                "multiple publication runs match this exact BAR build "
+                f"{bar_build_id} ({run_ids}); rerun with --publish-run to "
+                "pick the exact run"
+            )
         latest = runs[0] if runs else None
     needs_queue = (
         args.publish_run is None
@@ -352,7 +456,9 @@ def current_state(args, *, validate_request: bool = True) -> dict:
         None
         if not needs_queue
         else azure.preview(
-            handoff["managed"]["buildNumber"],
+            bar_build_id,
+            build_run_id,
+            build_number,
             stable=release.stable,
         )
         if validate_request
@@ -380,9 +486,11 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             "version": release.raw,
             "type": release.release_type,
             "sourceSha": source_sha,
-            "managedRunId": args.expect_managed_run,
+            "buildRunId": build_run_id,
             "testsRunId": args.expect_tests_run,
-            "buildNumber": handoff["managed"]["buildNumber"],
+            "barBuildId": bar_build_id,
+            "buildNumber": build_number,
+            "barAssets": handoff["bar"]["assets"],
             "testPackages": handoff["versions"]["test"],
             "publicPackages": handoff["versions"]["public"],
         },
@@ -441,6 +549,8 @@ def execute(args) -> dict:
     azure = AzurePublish()
     if should_queue:
         queued = azure.queue(
+            state["release"]["barBuildId"],
+            state["release"]["buildRunId"],
             state["release"]["buildNumber"],
             stable=publish.ReleaseVersion.parse(
                 args.release_branch
@@ -480,50 +590,6 @@ def execute(args) -> dict:
         state["dryRun"] = False
         return state
     raise publish.PublishError("failed to queue the Azure publication run")
-
-
-def validate_run_detail(
-    detail: dict,
-    *,
-    managed_run_id: int,
-    managed_build_number: str,
-    stable: bool,
-) -> None:
-    resource = (
-        (detail.get("resources") or {})
-        .get("pipelines", {})
-        .get("SkiaSharp", {})
-    )
-    if not resource:
-        if detail.get("state") == "completed":
-            return
-        raise publish.PublishError(
-            "publication run has not resolved its SkiaSharp resource"
-        )
-    pipeline = resource.get("pipeline") or {}
-    parameters = detail.get("templateParameters") or {}
-    if int(pipeline.get("id") or 0) != managed_run_id:
-        raise publish.PublishError(
-            "publication run uses a different managed run"
-        )
-    if resource.get("version") != managed_build_number:
-        raise publish.PublishError(
-            f"publication run uses {resource.get('version')}, "
-            f"expected {managed_build_number}"
-        )
-    if parameters.get("selectedResource") != "SkiaSharp":
-        raise publish.PublishError(
-            "publication run selected a different pipeline resource"
-        )
-    if str(parameters.get("pushPackages")).lower() != "true":
-        raise publish.PublishError("publication run does not push packages")
-    if (
-        str(parameters.get("pushStable")).lower()
-        != str(stable).lower()
-    ):
-        raise publish.PublishError(
-            "publication run has the wrong Stable/Preview destination"
-        )
 
 
 def execute_and_wait(args) -> dict:
@@ -594,8 +660,9 @@ def create_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("release_branch")
     parser.add_argument("--expect-source-sha", required=True)
-    parser.add_argument("--expect-managed-run", required=True, type=int)
+    parser.add_argument("--expect-build-run", required=True, type=int)
     parser.add_argument("--expect-tests-run", required=True, type=int)
+    parser.add_argument("--expect-bar-build", required=True, type=int)
     parser.add_argument("--publish-run", type=int)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--wait", action="store_true")

@@ -26,6 +26,24 @@ RELEASE_BRANCH_RE = re.compile(
     r"^release/(?P<numeric>\d+\.\d+\.\d+(?:\.\d+)?)"
     r"(?:-(?P<channel>preview|rc)\.(?P<iteration>\d+))?$"
 )
+
+# The two dnceng/internal pipeline definitions that form the immutable chain
+# a BAR build must have originated from. There is currently no protected
+# NuGet.org publisher pipeline definition; its ID is supplied at runtime
+# through an environment variable (see push-release-packages.py).
+BUILD_DEFINITION_ID = 1642
+TESTS_DEFINITION_ID = 1630
+
+# The core packages every BAR build must register exact versions and
+# non-empty asset locations for before publication can proceed.
+BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
+
+# BAR must have promoted the tested build to this Maestro channel. Channel
+# promotion is a distinct, already-completed step performed by release
+# status/testing; release-publish only validates that it happened.
+BAR_CHANNEL = "SkiaSharp"
+
+
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
 
@@ -271,8 +289,9 @@ def validate_status_handoff(
     release: ReleaseVersion,
     *,
     expected_sha: str,
-    expected_managed_run: int,
+    expected_build_run: int,
     expected_tests_run: int,
+    expected_bar_build: int,
 ) -> dict:
     if status.get("branch") != release.branch:
         raise PublishError(
@@ -288,30 +307,106 @@ def validate_status_handoff(
         raise PublishError(
             f"release-status is not ready: {status.get('nextAction')}"
         )
-    managed = status.get("managedRun") or {}
+    build = status.get("buildRun") or {}
     tests = status.get("testsRun") or {}
-    if managed.get("runId") != expected_managed_run:
+    bar = status.get("barBuild") or {}
+    if build.get("runId") != expected_build_run:
         raise PublishError(
-            f"managed run changed: expected {expected_managed_run}, "
-            f"found {managed.get('runId')}"
+            f"Build run changed: expected {expected_build_run}, "
+            f"found {build.get('runId')}"
+        )
+    if build.get("pipelineId") != BUILD_DEFINITION_ID:
+        raise PublishError(
+            f"Build run did not originate from pipeline {BUILD_DEFINITION_ID}"
         )
     if tests.get("runId") != expected_tests_run:
         raise PublishError(
             f"tests run changed: expected {expected_tests_run}, "
             f"found {tests.get('runId')}"
         )
-    if managed.get("sourceVersion") != expected_sha:
+    if tests.get("pipelineId") != TESTS_DEFINITION_ID:
         raise PublishError(
-            "selected managed run does not use the tested source commit"
+            f"tests run did not originate from pipeline {TESTS_DEFINITION_ID}"
+        )
+    if build.get("sourceVersion") != expected_sha:
+        raise PublishError(
+            "selected Build run does not use the tested source commit"
+        )
+    if tests.get("sourceVersion") != expected_sha:
+        raise PublishError(
+            "selected Tests run does not use the tested source commit"
+        )
+    expected_branch = f"refs/heads/{release.branch}"
+    if build.get("sourceBranch") != expected_branch:
+        raise PublishError(
+            "selected Build run does not use the release branch"
+        )
+    if bar.get("id") != expected_bar_build:
+        raise PublishError(
+            f"BAR build changed: expected {expected_bar_build}, "
+            f"found {bar.get('id')}"
+        )
+    if bar.get("commit") != expected_sha:
+        raise PublishError(
+            "BAR build does not match the tested source commit"
+        )
+    if bar.get("buildRunId") != expected_build_run:
+        raise PublishError(
+            "BAR build is not linked to the pinned Build run"
+        )
+    if bar.get("buildDefinitionId") != BUILD_DEFINITION_ID:
+        raise PublishError(
+            "BAR build did not originate from the "
+            f"skiasharp-package pipeline ({BUILD_DEFINITION_ID})"
+        )
+    if bar.get("state") != "ready":
+        raise PublishError(
+            f"BAR build {bar.get('id')} is not ready: {bar.get('state')}"
+        )
+    if bar.get("branch") != expected_branch:
+        raise PublishError("BAR build does not use the release branch")
+    if bar.get("buildNumber") != build.get("buildNumber"):
+        raise PublishError(
+            "BAR build number does not match the pinned Build run"
+        )
+    channels = bar.get("channels") or []
+    if BAR_CHANNEL not in channels:
+        raise PublishError(
+            f"BAR build {bar.get('id')} has not been promoted to the "
+            f"{BAR_CHANNEL} channel"
         )
     versions = status.get("packageVersions")
     if not versions or not versions.get("test") or not versions.get("public"):
         raise PublishError("release-status returned no package versions")
+    if versions["test"] != versions["public"]:
+        raise PublishError(
+            "test and public package versions must be the same BAR assets"
+        )
+    assets = bar.get("assets") or {}
+    for package_id in BAR_ASSET_PACKAGES:
+        asset = assets.get(package_id) or {}
+        expected_version = versions["public"].get(package_id)
+        if not asset or not asset.get("version"):
+            raise PublishError(
+                f"BAR build {bar.get('id')} is missing the {package_id} "
+                "asset"
+            )
+        if asset.get("version") != expected_version:
+            raise PublishError(
+                f"BAR asset version for {package_id} is "
+                f"{asset.get('version')}, expected {expected_version}"
+            )
+        if not asset.get("locations"):
+            raise PublishError(
+                f"BAR build {bar.get('id')} has no recorded package "
+                f"locations for {package_id}"
+            )
     public_skia = versions["public"].get("SkiaSharp") or ""
     release.validate_public_version(public_skia)
     return {
-        "managed": managed,
+        "build": build,
         "tests": tests,
+        "bar": bar,
         "versions": versions,
     }
 

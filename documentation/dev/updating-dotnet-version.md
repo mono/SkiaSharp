@@ -134,7 +134,9 @@ Keep each distro/OS suffix unchanged when updating either kind of image. For exa
 Before merging a .NET upgrade PR, verify these items:
 
 - [ ] **`nuget.config`** — Must NOT contain `nuget.org` source (disallowed in CI)
-- [ ] **`scripts/azure-pipelines-complete.yml`** — `buildExternals` parameter must be reset to `'latest'` (not a specific build ID)
+- [ ] **Connected Tests pipeline** — Must consume the exact
+      `\dotnet\skiasharp\skiasharp-package` pipeline resource run; never replace
+      it with a `latestFromBranch` selector
 - [ ] **All CI stages pass** — Tests, samples, API diff, and package stages must be green
 - [ ] **Documentation updated** — `documentation/dev/updating-dotnet-version.md` reflects any new learnings
 

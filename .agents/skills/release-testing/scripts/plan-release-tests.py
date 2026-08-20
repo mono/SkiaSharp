@@ -240,8 +240,9 @@ def build_matrix(
 
 
 def release_summary(status: dict, *, status_override: bool) -> dict:
-    managed = status.get("managedRun") or {}
+    build = status.get("buildRun") or {}
     tests = status.get("testsRun") or {}
+    bar = status.get("barBuild") or {}
     versions = status.get("packageVersions") or {}
     return {
         "branch": status.get("branch"),
@@ -250,13 +251,15 @@ def release_summary(status: dict, *, status_override: bool) -> dict:
         "nextAction": status.get("nextAction"),
         "statusOverride": status_override,
         "warnings": status.get("warnings") or [],
-        "managedRunId": managed.get("runId"),
+        "buildRunId": build.get("runId"),
         "testsRunId": tests.get("runId"),
-        "buildNumber": managed.get("buildNumber"),
-        "sourceBranch": managed.get("sourceBranch"),
-        "sourceVersion": managed.get("sourceVersion"),
-        "managedRunUrl": managed.get("url"),
+        "barBuildId": bar.get("id"),
+        "buildNumber": build.get("buildNumber"),
+        "sourceBranch": build.get("sourceBranch"),
+        "sourceVersion": build.get("sourceVersion"),
+        "buildRunUrl": build.get("url"),
         "testsRunUrl": tests.get("url"),
+        "barAssets": bar.get("assets"),
         "testPackages": versions.get("test"),
         "publicPackages": versions.get("public"),
     }
@@ -278,14 +281,16 @@ def plan_eligibility(
         raise PlanError(
             "--allow-incomplete-ci may override only the tests wait"
         )
-    managed_state = (status.get("managedRun") or {}).get("state")
-    feed_state = (status.get("packageFeed") or {}).get("state")
-    if managed_state not in ("succeeded", "warning"):
+    build_state = (status.get("buildRun") or {}).get("state")
+    bar_state = (status.get("barBuild") or {}).get("state")
+    if build_state not in ("succeeded", "warning"):
         raise PlanError(
-            "Cannot override an incomplete/failed managed package build"
+            "Cannot override an incomplete/failed combined Build"
         )
-    if feed_state != "ready":
-        raise PlanError("Cannot plan tests until both packages are available")
+    if bar_state != "ready":
+        raise PlanError(
+            "Cannot plan tests until the exact BAR assets have locations"
+        )
     return True, not ready
 
 

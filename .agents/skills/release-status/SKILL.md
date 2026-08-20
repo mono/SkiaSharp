@@ -4,8 +4,8 @@ description: >
   Check the current SkiaSharp release pipeline status. Use when the user asks
   how a release build is progressing, whether packages are ready, which build
   will be released, or what to do next. This is the second release step: resolve
-  one exact commit, follow its connected native/managed/tests chain, verify both
-  exact packages, and report the next action.
+  one exact commit, follow its connected Build and Tests runs, verify the BAR
+  build and signed assets, and report the next action.
 ---
 
 # Release Status
@@ -19,45 +19,49 @@ This skill is **Step 2 of 5**:
 
 ## Contract
 
-- Use `pipeline-status.py` for all Git, Azure DevOps, and package-feed queries.
-- This skill is read-only: it may fetch refs but never checks out a branch or
-  queues, cancels, or retries a build.
+- Use `pipeline-status.py` for all Git, Azure DevOps, Darc, and BAR queries.
+- `pipeline-status.py` is read-only: it may fetch refs but never checks out a
+  branch or queues, cancels, retries, or promotes anything.
+- The skill may execute only the script-emitted BAR promotion command, and only
+  after explicit approval. It never approves NuGet.org publication.
 - Resolve a branch to its current remote tip; preserve a supplied commit exactly.
-- Select one connected chain for that commit. The newest native run is
-  authoritative; managed and tests must descend from it.
-- Never combine downstream runs from different native attempts.
-- Native, managed, tests, and both exact preview-feed packages must be ready
-  before the default testing handoff.
+- Select the newest combined Build attempt for that exact commit, then accept
+  only a Tests run whose runtime pipeline resource points to that exact Build
+  run, build number, and folder-qualified source.
+- Resolve the Build run's `ReleaseConfigs` artifact to one exact BAR build ID.
+  Verify BAR repository metadata, commit, branch, Build run/definition, stable
+  flag, package versions, channel, and asset locations.
+- Never combine runs, BAR metadata, or assets from different Build attempts.
+- Build, connected Tests, and both exact BAR-recorded package assets must be
+  ready before the default testing handoff.
 - The user may explicitly override only the wait for incomplete CI tests.
-  Preserve all selected run/package metadata and report the override.
+  Preserve all selected Build/Tests/BAR/package metadata and report the override.
 
 ## Pipeline chain
 
 | Pipeline | ID | Role |
 |----------|----|------|
-| `SkiaSharp-Native` | 26493 | Native binaries |
-| `SkiaSharp` | 10789 | Managed build/sign/internal packages |
-| `SkiaSharp-Tests` | 15756 | Connected tests |
+| `skiasharp-package` | 1642 | Combined native/managed build, signing, BAR registration/validation |
+| `skiasharp-tests` | 1630 | Connected tests consuming `\dotnet\skiasharp\skiasharp-package` |
 
-The script links downstream runs through Azure trigger metadata and derives
-SkiaSharp/HarfBuzzSharp test and eventual public versions from the exact source
-commit.
+The script links Tests through its runtime pipeline resource, reads the BAR ID
+from the exact Build run's `ReleaseConfigs` artifact, and gets signed package
+versions and locations from that immutable BAR record. Stable assets are exact
+`X.Y.Z`; no `-stable.{build}` version is synthesized.
 
 ## Actions
 
 | `nextAction` | Response |
 |--------------|----------|
-| `wait-for-native` | Report that native has not started or is running. |
-| `retry-native` | Show the authoritative failed/canceled native run. |
-| `wait-for-managed-trigger` | Native passed; managed has not started. |
-| `wait-for-managed` | Report managed progress. |
-| `retry-managed` | Show managed failure/missing successful child. |
-| `wait-for-tests-trigger` | Managed passed; tests have not started. |
+| `wait-for-build` | Report that the exact combined Build has not started or is running. |
+| `retry-build` | Show the authoritative failed/canceled Build run. |
+| `retry-bar-check` | Report the exact BAR registration or identity failure. |
+| `wait-for-tests-trigger` | Build passed; connected Tests have not started. |
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
-| `retry-package-check` | Report package-feed query failure. |
-| `wait-for-packages` | Report which exact package is not indexed. |
-| `start-release-testing` | Hand the immutable chain and packages to release-testing. |
+| `promote-bar` | Present `barBuild.promotionCommand`; after explicit approval promote this BAR to `SkiaSharp`, then rerun status. This is Maestro/BAR promotion, not NuGet.org publication. |
+| `wait-for-bar-assets` | The exact BAR is on `SkiaSharp`; wait for both asset locations to be recorded. |
+| `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 
 Only `start-release-testing` is ready by default.
 
@@ -81,10 +85,11 @@ Render:
 
 | Pipeline | Status | Run | Build |
 |----------|--------|-----|-------|
-| Native | `{nativeRun.state}` | [run `{nativeRun.runId}`]({nativeRun.url}) | `{nativeRun.buildNumber}` |
-| Managed | `{managedRun.state}` | [run `{managedRun.runId}`]({managedRun.url}) | `{managedRun.buildNumber}` |
+| Build | `{buildRun.state}` | [run `{buildRun.runId}`]({buildRun.url}) | `{buildRun.buildNumber}` |
 | Tests | `{testsRun.state}` | [run `{testsRun.runId}`]({testsRun.url}) | `{testsRun.buildNumber}` |
 
+**BAR build:** `{barBuild.id}` (`{barBuild.state}`)
+**BAR channels:** `{barBuild.channels}`
 **Test packages:** SkiaSharp `{packageVersions.test.SkiaSharp}`,
 HarfBuzzSharp `{packageVersions.test.HarfBuzzSharp}`
 **Public versions:** SkiaSharp `{packageVersions.public.SkiaSharp}`,
@@ -92,13 +97,15 @@ HarfBuzzSharp `{packageVersions.public.HarfBuzzSharp}`
 **Next:** translate `{nextAction}`
 ```
 
-Include package availability, active/failed jobs, and every warning. Omit missing
-run rows/links. Do not independently query or replace the script-selected chain.
+Include both core assets' BAR-recorded locations, active/failed jobs, and every
+warning. Omit missing run rows/links. Do not independently query or replace the
+script-selected identity.
 
 For `start-release-testing`, invoke
-[release-testing](../release-testing/SKILL.md) with the complete `managedRun`,
-`testsRun`, and exact test/public package pairs. For wait/retry actions, report
-the relevant run URL and stop.
+[release-testing](../release-testing/SKILL.md) with the complete `buildRun`,
+`testsRun`, `barBuild`, and exact package pairs. For `promote-bar`, obtain
+explicit approval before executing the emitted command; rerun status afterward.
+For wait/retry actions, report the relevant run URL and stop.
 
 See [releasing.md](../../../documentation/dev/releasing.md) for the complete
 release process.

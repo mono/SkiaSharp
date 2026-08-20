@@ -42,9 +42,9 @@ This skill is **Step 1 of 5**:
 | `X.Y.Z.F` | Latest matching hotfix preview/RC branch |
 
 Preview/RC iterations begin at 1. Every SkiaSharp release branch has an
-identically named mono/skia branch at the exact pinned gitlink. Stable public
-versions are bare `X.Y.Z`; CI test packages remain `X.Y.Z-stable.{build}` until
-publication.
+identically named mono/skia branch at the exact pinned gitlink. Stable Build and
+BAR package versions are exact `X.Y.Z`; `stable` is only the pipeline sentinel
+that selects release versioning and is never emitted as a package suffix.
 
 ## Script contract
 

@@ -323,8 +323,9 @@ def load_release(args) -> ReleaseContext:
         status,
         release,
         expected_sha=args.expect_source_sha,
-        expected_managed_run=args.expect_managed_run,
+        expected_build_run=args.expect_build_run,
         expected_tests_run=args.expect_tests_run,
+        expected_bar_build=args.expect_bar_build,
     )
     source_sha = repo.resolve_release_sha(
         release.branch,
@@ -381,18 +382,21 @@ def pinned_arguments(args, source_sha: str | None = None) -> list[str]:
         args.release_branch,
         "--expect-source-sha",
         source_sha or args.expect_source_sha,
-        "--expect-managed-run",
-        str(args.expect_managed_run),
+        "--expect-build-run",
+        str(args.expect_build_run),
         "--expect-tests-run",
         str(args.expect_tests_run),
+        "--expect-bar-build",
+        str(args.expect_bar_build),
     ]
 
 
 def add_release_arguments(parser) -> None:
     parser.add_argument("release_branch")
     parser.add_argument("--expect-source-sha", required=True)
-    parser.add_argument("--expect-managed-run", required=True, type=int)
+    parser.add_argument("--expect-build-run", required=True, type=int)
     parser.add_argument("--expect-tests-run", required=True, type=int)
+    parser.add_argument("--expect-bar-build", required=True, type=int)
 
 
 def artifact_paths(root: Path, tag: str) -> dict[str, Path]:
@@ -448,8 +452,9 @@ def release_details(context: ReleaseContext) -> dict:
         "version": context.release.raw,
         "type": context.release.release_type,
         "sourceSha": context.source_sha,
-        "managedRunId": context.handoff["managed"]["runId"],
+        "buildRunId": context.handoff["build"]["runId"],
         "testsRunId": context.handoff["tests"]["runId"],
+        "barBuildId": context.handoff["bar"]["id"],
         "publicPackages": context.handoff["versions"]["public"],
         "tag": context.tag,
         "title": context.release.title,

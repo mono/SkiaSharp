@@ -218,7 +218,8 @@ explicit override.
 
 The Build pipeline puts signed product packages, unsigned transport packages,
 and symbol blobs in one BAR, validates it, then invokes standard Darc promotion.
-The configured Maestro channel routes each asset class to its destination.
+The configured Maestro default channels route each asset class to its
+destination. Darc promotion is not NuGet.org publication.
 
 Use the BAR ID emitted by release status and gather that immutable build:
 
@@ -241,6 +242,11 @@ dotnet nuget verify --all \
 
 Do not select release inputs by channel or latest location. Record the exact BAR
 ID and use `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
+
+Release status waits until the exact BAR records the expected package locations.
+Default-channel promotion authorizes publication only to the channel-configured
+Azure Artifacts and symbol destinations; it does not authorize NuGet.org
+publication.
 
 ### Stage 3: Testing (release-testing skill)
 

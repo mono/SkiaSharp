@@ -163,12 +163,12 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-Generated applications use:
+Generated applications use the signed `skiasharp` source:
 
-- SkiaSharp preview feed:
-  `https://aka.ms/skiasharp-eap/index.json`
-- NuGet.org:
-  `https://api.nuget.org/v3/index.json`
+- `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json`
+- `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
 
-Always use exact test versions from release-status. Stable prepublication tests
-use `*-stable.{build}`, not bare public versions.
+Release-status discovers versions and locations from one exact BAR build after
+its assets are promoted through Maestro. Always use those exact versions.
+Stable prepublication tests use exact `X.Y.Z` assets; `-stable.{build}` is not a
+valid package family.

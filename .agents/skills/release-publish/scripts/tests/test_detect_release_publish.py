@@ -20,17 +20,57 @@ sys.modules[SPEC.name] = detector
 SPEC.loader.exec_module(detector)
 
 
+def bar_build(
+    *,
+    bar_id=30,
+    commit="a" * 40,
+    build_run_id=10,
+    skia_version="4.152.0-preview.1.1",
+    harfbuzz_version="1.0.0-preview.1.1",
+    branch="release/4.152.0-preview.1",
+    build_number="4.152.0-preview.1.1+branch",
+):
+    return {
+        "id": bar_id,
+        "state": "ready",
+        "commit": commit,
+        "buildRunId": build_run_id,
+        "buildDefinitionId": detector.publish.BUILD_DEFINITION_ID,
+        "branch": f"refs/heads/{branch}",
+        "buildNumber": build_number,
+        "channels": [detector.publish.BAR_CHANNEL],
+        "assets": {
+            "SkiaSharp": {
+                "version": skia_version,
+                "locations": ["https://pkgs.dev.azure.com/dnceng/_packaging/skiasharp"],
+            },
+            "HarfBuzzSharp": {
+                "version": harfbuzz_version,
+                "locations": ["https://pkgs.dev.azure.com/dnceng/_packaging/skiasharp"],
+            },
+        },
+    }
+
+
 class DetectReleasePublishTests(unittest.TestCase):
     def test_detector_emits_pinned_audit_command(self):
         status = {
             "branch": "release/4.152.0-preview.1",
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "managedRun": {
+            "buildRun": {
                 "runId": 10,
+                "pipelineId": detector.publish.BUILD_DEFINITION_ID,
                 "buildNumber": "4.152.0-preview.1.1+branch",
+                "sourceBranch": "refs/heads/release/4.152.0-preview.1",
+                "sourceVersion": "a" * 40,
             },
-            "testsRun": {"runId": 20},
+            "testsRun": {
+                "runId": 20,
+                "pipelineId": detector.publish.TESTS_DEFINITION_ID,
+                "sourceVersion": "a" * 40,
+            },
+            "barBuild": bar_build(),
             "packageVersions": {
                 "test": {
                     "SkiaSharp": "4.152.0-preview.1.1",
@@ -53,15 +93,22 @@ class DetectReleasePublishTests(unittest.TestCase):
                 "release/4.152.0-preview.1",
             )
         self.assertEqual(result["sourceSha"], "a" * 40)
-        self.assertEqual(result["managedRunId"], 10)
+        self.assertEqual(result["buildRunId"], 10)
         self.assertEqual(result["testsRunId"], 20)
-        self.assertIn("--expect-managed-run 10", result["pushAuditCommand"])
+        self.assertEqual(result["barBuildId"], 30)
+        self.assertEqual(
+            result["barAssets"]["SkiaSharp"]["locations"],
+            ["https://pkgs.dev.azure.com/dnceng/_packaging/skiasharp"],
+        )
+        self.assertIn("--expect-build-run 10", result["pushAuditCommand"])
         self.assertIn("--expect-tests-run 20", result["pushAuditCommand"])
+        self.assertIn("--expect-bar-build 30", result["pushAuditCommand"])
         self.assertTrue(result["pushAuditCommand"].endswith("--dry-run"))
         self.assertIn(
             "create-release-draft.py",
             result["draftAuditCommand"],
         )
+        self.assertIn("--expect-bar-build 30", result["draftAuditCommand"])
 
     def test_detector_requires_ready_status(self):
         status = {
@@ -87,15 +134,29 @@ class DetectReleasePublishTests(unittest.TestCase):
             "branch": "release/4.152.0",
             "commit": source_sha,
             "nextAction": "start-release-testing",
-            "managedRun": {
+            "buildRun": {
                 "runId": 10,
-                "buildNumber": "4.152.0-stable.1+4.152.0",
+                "pipelineId": detector.publish.BUILD_DEFINITION_ID,
+                "buildNumber": "4.152.0+4.152.0",
+                "sourceBranch": "refs/heads/release/4.152.0",
+                "sourceVersion": source_sha,
             },
-            "testsRun": {"runId": 20},
+            "testsRun": {
+                "runId": 20,
+                "pipelineId": detector.publish.TESTS_DEFINITION_ID,
+                "sourceVersion": source_sha,
+            },
+            "barBuild": bar_build(
+                commit=source_sha,
+                skia_version="4.152.0",
+                harfbuzz_version="1.0.0",
+                branch="release/4.152.0",
+                build_number="4.152.0+4.152.0",
+            ),
             "packageVersions": {
                 "test": {
-                    "SkiaSharp": "4.152.0-stable.1",
-                    "HarfBuzzSharp": "1.0.0-stable.1",
+                    "SkiaSharp": "4.152.0",
+                    "HarfBuzzSharp": "1.0.0",
                 },
                 "public": {
                     "SkiaSharp": "4.152.0",
@@ -111,6 +172,92 @@ class DetectReleasePublishTests(unittest.TestCase):
             result = detector.detect(Path.cwd(), source_sha)
         self.assertEqual(result["input"], source_sha)
         self.assertEqual(result["releaseBranch"], "release/4.152.0")
+
+    def test_detector_rejects_bar_build_off_channel(self):
+        status = {
+            "branch": "release/4.152.0-preview.1",
+            "commit": "a" * 40,
+            "nextAction": "start-release-testing",
+            "buildRun": {
+                "runId": 10,
+                "pipelineId": detector.publish.BUILD_DEFINITION_ID,
+                "buildNumber": "4.152.0-preview.1.1+branch",
+                "sourceBranch": "refs/heads/release/4.152.0-preview.1",
+                "sourceVersion": "a" * 40,
+            },
+            "testsRun": {
+                "runId": 20,
+                "pipelineId": detector.publish.TESTS_DEFINITION_ID,
+                "sourceVersion": "a" * 40,
+            },
+            "barBuild": bar_build(),
+            "packageVersions": {
+                "test": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "1.0.0-preview.1.1",
+                },
+                "public": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "1.0.0-preview.1.1",
+                },
+            },
+        }
+        status["barBuild"]["channels"] = ["General Testing"]
+        with (
+            mock.patch.object(
+                detector.publish,
+                "status_report",
+                return_value=status,
+            ),
+            self.assertRaisesRegex(
+                detector.DetectionError,
+                "SkiaSharp.*channel",
+            ),
+        ):
+            detector.detect(Path.cwd(), "release/4.152.0-preview.1")
+
+    def test_detector_rejects_missing_bar_asset_locations(self):
+        status = {
+            "branch": "release/4.152.0-preview.1",
+            "commit": "a" * 40,
+            "nextAction": "start-release-testing",
+            "buildRun": {
+                "runId": 10,
+                "pipelineId": detector.publish.BUILD_DEFINITION_ID,
+                "buildNumber": "4.152.0-preview.1.1+branch",
+                "sourceBranch": "refs/heads/release/4.152.0-preview.1",
+                "sourceVersion": "a" * 40,
+            },
+            "testsRun": {
+                "runId": 20,
+                "pipelineId": detector.publish.TESTS_DEFINITION_ID,
+                "sourceVersion": "a" * 40,
+            },
+            "barBuild": bar_build(),
+            "packageVersions": {
+                "test": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "1.0.0-preview.1.1",
+                },
+                "public": {
+                    "SkiaSharp": "4.152.0-preview.1.1",
+                    "HarfBuzzSharp": "1.0.0-preview.1.1",
+                },
+            },
+        }
+        status["barBuild"]["assets"]["SkiaSharp"]["locations"] = []
+        with (
+            mock.patch.object(
+                detector.publish,
+                "status_report",
+                return_value=status,
+            ),
+            self.assertRaisesRegex(
+                detector.DetectionError,
+                "no recorded package locations",
+            ),
+        ):
+            detector.detect(Path.cwd(), "release/4.152.0-preview.1")
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")
