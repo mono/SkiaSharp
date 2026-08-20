@@ -79,7 +79,8 @@ the release so it stays auditable, reproducible, and safe from garbage collectio
 
 ### HarfBuzzSharp Versioning
 
-HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`.
+HarfBuzzSharp versions are modeled as `X.Y.Z.N`. Revision zero is written in
+the normalized 3-part form `X.Y.Z`.
 
 | Digits | Meaning |
 |--------|---------|
@@ -105,10 +106,10 @@ ordered and prevents them from publishing the same package version.
 
 **When native HarfBuzz upgrades:** Reset `N` to zero and make the adopting
 milestone the new base. For example, an M152 upgrade from `14.2.1.203` to
-HarfBuzz 14.3.1 becomes `14.3.1` (the normalized form of `14.3.1.0`), and
-M153 would start at `14.3.1.100`. HarfBuzz upgrades are made on `main` and are
-not backported; older release lines remain on their existing native HarfBuzz
-version and revision buckets.
+HarfBuzz 14.3.1 becomes `14.3.1` (`N = 0`), and M153 would start at
+`14.3.1.100`. HarfBuzz upgrades are made on `main` and are not backported;
+older release lines remain on their existing native HarfBuzz version and
+revision buckets.
 
 ### Feeds
 
