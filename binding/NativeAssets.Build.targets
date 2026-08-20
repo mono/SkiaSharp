@@ -10,6 +10,16 @@
     <DebugSymbols>false</DebugSymbols>
     <!-- Don't generate docs -->
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+
+    <!-- NuGet README -->
+    <PackageReadmePrimaryPackage>$(PackagingGroup)</PackageReadmePrimaryPackage>
+    <PackageDescription>$(MSBuildProjectName) provides native runtime assets for $(PackageReadmePrimaryPackage).</PackageDescription>
+    <PackageReadmeSummary>**$(MSBuildProjectName)** provides the native runtime assets used by [**$(PackageReadmePrimaryPackage)**](https://www.nuget.org/packages/$(PackageReadmePrimaryPackage)) for this deployment target.</PackageReadmeSummary>
+    <PackageReadmeNotice>&gt; This is a runtime assets package. Most developers should start with `$(PackageReadmePrimaryPackage)` and add this package directly to the **application project** only when the deployment target requires it.</PackageReadmeNotice>
+    <PackageReadmeIncludesPackageNotes>true</PackageReadmeIncludesPackageNotes>
+    <PackageReadmeAdditionalDetails Condition="'$(PackageNotes)' != ''">## Package details
+
+$(PackageNotes)</PackageReadmeAdditionalDetails>
   </PropertyGroup>
 
   <ItemGroup>
