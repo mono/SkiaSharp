@@ -139,6 +139,10 @@ The `CreateSamplesDirectory()` function in `scripts/infra/samples/samples.cake`:
 3. For SkiaSharp/HarfBuzzSharp packages, the preview suffix is appended
 4. Two output trees: `output/samples/` (stable) and `output/samples-preview/` (preview)
 
+`samples-run` selects the stable tree only for an exact release identity. Any
+non-empty `PREVIEW_NUGET_SUFFIX` selects the preview tree so its references
+match the single package family emitted by that build.
+
 ## Troubleshooting
 
 ### Stale cached packages

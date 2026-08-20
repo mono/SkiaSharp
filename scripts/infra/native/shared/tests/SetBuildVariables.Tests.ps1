@@ -470,6 +470,16 @@ if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     throw 'nuget-normal must pack exactly one version family selected by VersionSuffix.'
 }
 
+$samplesScript = Get-Content (Join-Path $repoRoot 'scripts/infra/samples/samples.cake') -Raw
+$docsScript = Get-Content (Join-Path $repoRoot 'scripts/infra/docs/docs.cake') -Raw
+if ($samplesScript -notmatch 'actualSamples\s*=\s*string\.IsNullOrEmpty\s*\(PREVIEW_NUGET_SUFFIX\)' -or
+    $docsScript -notmatch 'localNugetVersion\s*=\s*string\.IsNullOrEmpty\s*\(PREVIEW_NUGET_SUFFIX\)' -or
+    $samplesScript -match 'PREVIEW_ONLY_NUGETS' -or
+    $docsScript -match 'PREVIEW_ONLY_NUGETS' -or
+    $sharedCake -match 'PREVIEW_ONLY_NUGETS') {
+    throw 'Samples and docs must consume the single package family selected by PREVIEW_NUGET_SUFFIX.'
+}
+
 $publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
 if (-not $publishingProps.Contains('$(ArtifactsPackagesDir)Preview\*.nupkg') -or
     -not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') -or

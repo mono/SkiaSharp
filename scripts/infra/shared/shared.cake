@@ -102,8 +102,6 @@ var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBD
 
 var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json");
 
-var PREVIEW_ONLY_NUGETS = new List<string> {};
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET PACKAGES
 ////////////////////////////////////////////////////////////////////////////////////////////////////
