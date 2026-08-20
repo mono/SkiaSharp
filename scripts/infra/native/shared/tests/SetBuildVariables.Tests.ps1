@@ -395,9 +395,9 @@ if ($apiScanStages -match 'SRV\*http://symweb' -or
 }
 
 $testsPipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-tests.yml') -Raw
-if ($testsPipeline -notmatch 'source:\s*skiasharp-package' -or
+if ($testsPipeline -notmatch "source:\s*'\\dotnet\\skiasharp\\skiasharp-package'" -or
     $testsPipeline -notmatch "buildPipelineType:\s*'test'") {
-    throw 'The separate Tests pipeline must inherit the final Package identity.'
+    throw 'The separate Tests pipeline must inherit the final Package identity using its folder-qualified Azure pipeline name.'
 }
 
 $completePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-complete.yml') -Raw

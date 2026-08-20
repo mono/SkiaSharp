@@ -50,7 +50,8 @@ variables:
 resources:
   pipelines:
     - pipeline: SkiaSharp
-      source: skiasharp-package
+      # Azure DevOps requires the full path for pipelines stored in folders.
+      source: '\dotnet\skiasharp\skiasharp-package'
       trigger: true
 
 extends:
