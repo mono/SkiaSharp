@@ -73,29 +73,16 @@ the release so it stays auditable, reproducible, and safe from garbage collectio
 
 ### HarfBuzzSharp Versioning
 
-HarfBuzzSharp package and file versions use four parts: `X.Y.Z.N`.
+HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Digits | Meaning |
 |--------|---------|
 | X.Y.Z | Native HarfBuzz version (e.g., `8.3.1`) |
-| N | Revision within a 100-revision bucket relative to the milestone that first adopted `X.Y.Z` |
+| N | Incremented with each SkiaSharp release |
 
-For each native HarfBuzz `X.Y.Z`, the Skia milestone that first adopts it is the
-base milestone and uses revisions `0-99`. Each later milestone that stays on the
-same `X.Y.Z` adds 100 to the bucket base:
+**Why 4 digits?** HarfBuzzSharp packages are released with SkiaSharp even when there are no HarfBuzz changes. The 4th digit keeps them in sync.
 
-```text
-(current Skia milestone - adopting Skia milestone) * 100
-```
-
-For example, HarfBuzz `14.2.1` was first adopted by M150, so M150 uses `0-99`,
-M151 uses `100-199`, and M152 uses `200-299`. HarfBuzzSharp releases increment
-`N` within the current bucket.
-
-When `main` upgrades native HarfBuzz, change `X.Y.Z`, reset `N` to `0`, and use
-that milestone as the new base. Native HarfBuzz upgrades are not backported to
-older release lines; those lines remain on their older `X.Y.*` versions and
-continue using the corresponding milestone-relative buckets.
+**When native HarfBuzz upgrades:** Reset to 3-digit version (e.g., `8.3.1.4` → `8.4.0`).
 
 ### Feeds
 
