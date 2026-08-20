@@ -288,10 +288,10 @@ if ($pipelineSdk -cne $globalJson.sdk.version -or
     $globalJson.sdk.allowPrerelease -ne $false -or
     $globalJson.sdk.rollForward -cne 'latestPatch' -or
     $toolSdk -ne $buildSdk -or
-    $buildSdk -ne [Version]'10.0.204' -or
+    $buildSdk -ne [Version]'10.0.203' -or
     $workloadSet -cne '10.0.202' -or
     $variablesYaml -match 'DOTNET_(GLOBAL_)?INSTALL_DIR') {
-    throw 'SkiaSharp and Arcade must use SDK 10.0.204 while workloads stay on the Xcode 26.3-compatible 10.0.202 set.'
+    throw 'SkiaSharp and Arcade must use SDK 10.0.203 while workloads stay on the Xcode 26.3-compatible 10.0.202 set.'
 }
 if ($variablesYaml -notmatch "XCODE_VERSION:\s*'26\.3'") {
     throw 'Managed Apple builds must use Xcode 26.3 for the .NET 10.0.202 workload set.'
@@ -323,6 +323,21 @@ foreach ($dockerfile in $nativeDockerfiles) {
         '(?m)^ARG DOTNET_SDK_VERSION=(?<version>[^\r\n]+)\r?$').Groups['version'].Value.Trim()
     if ($dockerSdk -cne $globalJson.sdk.version) {
         throw "$dockerfile must use the repository .NET SDK version."
+    }
+
+    $sdkContainerImages = @{
+        'scripts/infra/docs/docker/Dockerfile' = '10.0.203'
+        'scripts/infra/tests/docker/alpine/Dockerfile' = '10.0.203-alpine3.23'
+        'scripts/infra/tests/docker/alpine-nodeps/Dockerfile' = '10.0.203-alpine3.23'
+        'scripts/infra/tests/docker/azurelinux/Dockerfile' = '10.0.203-azurelinux3.0'
+        'scripts/infra/tests/docker/azurelinux-nodeps/Dockerfile' = '10.0.203-azurelinux3.0'
+        'scripts/infra/tests/docker/nanoserver/Dockerfile' = '10.0.203-nanoserver-ltsc2022'
+    }
+    foreach ($container in $sdkContainerImages.GetEnumerator()) {
+        $contents = Get-Content (Join-Path $repoRoot $container.Key) -Raw
+        if ($contents -notmatch "FROM\s+mcr\.microsoft\.com/dotnet/sdk:$([regex]::Escape($container.Value))(\s|$)") {
+            throw "$($container.Key) must pin the expected repository-compatible SDK image."
+        }
     }
 }
 
