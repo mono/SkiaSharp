@@ -21,8 +21,8 @@ This checklist documents every file that needs updating when bumping the .NET SD
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
 - [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version`; Arcade 11 requires a .NET 10.0.2xx-or-later CLI for `dotnet package download`.
 - [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. VS MSBuild 17.x requires .NET 10.0.1xx; SDK 10.0.2xx+ requires MSBuild 18. Install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
-- [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` and `DOTNET_WORKLOAD_VERSION` to match the new SDK version
-- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the Xcode/Apple SDK required by the workload set. Xcode 26.6 and iOS/MacCatalyst 26.5 require the PAYG `GitHub-hosted Agents` pool with `macos-26-arm64`; keep native Apple builds on their separately pinned Xcode.
+- [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set from the same feature band. The workload set may intentionally lag the SDK patch when a newer set requires an unavailable Apple toolchain.
+- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode required by the workload set. The current `10.0.202` workload set requires Xcode 26.3 and works on `Azure Pipelines` `macos-15`; keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/install-dotnet-workloads.ps1`** — Review Tizen script URL (Samsung repo may update)
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.

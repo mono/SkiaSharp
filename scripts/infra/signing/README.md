@@ -73,7 +73,7 @@ succeeds. Retry a signing failure within that run; starting a new pipeline run
 rebuilds the packages instead of signing artifacts from an older run.
 
 SkiaSharp and Arcade use the same stable .NET SDK from `global.json`. The
-10.0.4xx feature band includes the `dotnet package download` command required by
+10.0.2xx feature band includes the `dotnet package download` command required by
 generated Arcade bootstrap.
 
 Signing uses real ESRP certificates on `main` and `release/*`. Other branches

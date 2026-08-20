@@ -279,20 +279,22 @@ $globalJson = Get-Content (Join-Path $repoRoot 'global.json') -Raw | ConvertFrom
 $pipelineSdk = [regex]::Match(
     $variablesYaml,
     "DOTNET_VERSION:\s*'(?<version>[^']+)'").Groups['version'].Value
+$workloadSet = [regex]::Match(
+    $variablesYaml,
+    "DOTNET_WORKLOAD_VERSION:\s*'(?<version>[^']+)'").Groups['version'].Value
 $buildSdk = [Version]$globalJson.sdk.version
 $toolSdk = [Version]$globalJson.tools.dotnet
 if ($pipelineSdk -cne $globalJson.sdk.version -or
     $globalJson.sdk.allowPrerelease -ne $false -or
     $globalJson.sdk.rollForward -cne 'latestPatch' -or
     $toolSdk -ne $buildSdk -or
-    $buildSdk.Major -ne 10 -or
-    $buildSdk.Build -lt 400 -or
-    $variablesYaml -notmatch "DOTNET_WORKLOAD_VERSION:\s*'$([regex]::Escape($globalJson.sdk.version))'" -or
+    $buildSdk -ne [Version]'10.0.204' -or
+    $workloadSet -cne '10.0.202' -or
     $variablesYaml -match 'DOTNET_(GLOBAL_)?INSTALL_DIR') {
-    throw 'SkiaSharp, workloads, and Arcade must use the same stable .NET 10.0.4xx SDK.'
+    throw 'SkiaSharp and Arcade must use SDK 10.0.204 while workloads stay on the Xcode 26.3-compatible 10.0.202 set.'
 }
-if ($variablesYaml -notmatch "XCODE_VERSION:\s*'26\.6'") {
-    throw 'Managed Apple builds must use Xcode 26.6 for the .NET 10.0.400 workload set.'
+if ($variablesYaml -notmatch "XCODE_VERSION:\s*'26\.3'") {
+    throw 'Managed Apple builds must use Xcode 26.3 for the .NET 10.0.202 workload set.'
 }
 
 $winuiGlobalJson = Get-Content (Join-Path $repoRoot 'native/winui/global.json') -Raw | ConvertFrom-Json
@@ -389,9 +391,13 @@ if ($completePipeline -notmatch "buildPipelineType:\s*'complete'") {
 }
 
 foreach ($pipelineContents in @($completePipeline, $packagePipeline, $testsPipeline)) {
-    if ($pipelineContents -notmatch 'name:\s*GitHub-hosted Agents' -or
-        $pipelineContents -notmatch 'vmImage:\s*macos-26-arm64') {
-        throw 'Managed Apple builds must use the macOS 26 GitHub-hosted agent image.'
+    $managedMacBlock = [regex]::Match(
+        $pipelineContents,
+        '(?ms)^\s*- name:\s*buildAgentMac\s*$.*?(?=^\s*- name:)').Value
+    if ($managedMacBlock -notmatch 'name:\s*Azure Pipelines' -or
+        $managedMacBlock -notmatch 'vmImage:\s*macos-15' -or
+        $managedMacBlock -match 'GitHub-hosted Agents|macos-26') {
+        throw 'Managed Apple builds must use the Azure Pipelines macos-15 image.'
     }
 }
 
