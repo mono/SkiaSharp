@@ -180,20 +180,23 @@ binary — the soname/file lines drive the actual native `.so` soname and DLL
 |-------|-------------|-------------------|
 | `harfbuzz` | `release` | `X.Y.Z` |
 | `HarfBuzz` | `soname` | `0.<60000 + X*100 + Y*10 + Z>.0` (e.g. 14.2.1 → `0.61421.0`) |
-| `HarfBuzzSharp` | `file` | `X.Y.Z.N` |
-| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z.N` (≈10 lines) |
+| `HarfBuzzSharp` | `file` | `X.Y.Z` (`N = 0`) |
+| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z` (`N = 0`, ≈10 lines) |
 
-`N` reserves 100 revisions per Skia milestone. Its bucket base is
-`(Skia milestone - 150) * 100`: M150 uses 0–99, M151 uses 100–199, M152 uses
-200–299, and so on. A native HarfBuzz update resets `N` to the current
-milestone's bucket base, not to zero. M150's zero bucket may use the normalized
-3-part form `X.Y.Z`.
+HarfBuzz upgrades are made on `main` and are not backported to older release
+lines. The upgrade resets package revision `N` to zero and makes the current
+Skia milestone the base for `X.Y.Z`; the normalized 3-part form represents
+`X.Y.Z.0`.
+
+If later Skia milestones continue using the same native HarfBuzz version, each
+milestone adds 100 to the bucket base. For example, if M152 adopts 14.3.1,
+M152 uses revisions 0–99, M153 uses 100–199, and M154 uses 200–299.
 
 The soname formula and package bucket formula are documented in comments next
 to their lines. Verify the result with
 `grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt`: the native release and
-soname must match `X.Y.Z`, while every HarfBuzzSharp file/NuGet entry must use
-the same bucketed package version.
+soname must match `X.Y.Z`, while every HarfBuzzSharp file/NuGet entry must
+reset to the same `X.Y.Z` package version.
 
 ### Phase 4: Build & Test
 

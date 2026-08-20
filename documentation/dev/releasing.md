@@ -86,24 +86,29 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`.
 | X.Y.Z | Native HarfBuzz version (e.g., `8.3.1`) |
 | N | Skia milestone bucket plus the release revision within that milestone |
 
-Each Skia milestone reserves 100 revision values:
+For each native HarfBuzz `X.Y.Z`, the Skia milestone that first adopts it is
+the base milestone. It reserves 100 revision values, and each later milestone
+that continues using the same native version advances to the next bucket:
 
-| Skia milestone | HarfBuzzSharp revisions |
-|----------------|----------------------------|
-| M150 | 0–99 |
-| M151 | 100–199 |
-| M152 | 200–299 |
+| Milestone relative to the base | HarfBuzzSharp revisions |
+|--------------------------------|----------------------------|
+| Base milestone | 0–99 |
+| Base + 1 | 100–199 |
+| Base + 2 | 200–299 |
 
-The bucket base is `(Skia milestone - 150) * 100`. Releases increment within
-their milestone's bucket, so M151 might use `14.2.1.100`, `14.2.1.101`, and
-`14.2.1.102` while M152 starts at `14.2.1.200`. This keeps parallel Skia
-release lines ordered and prevents them from publishing the same package
-version.
+The bucket base is
+`(current Skia milestone - HarfBuzz adoption milestone) * 100`. For example,
+HarfBuzz 14.2.1 was adopted by M150, so M150 uses `14.2.1` through
+`14.2.1.99`, M151 uses `14.2.1.100` through `14.2.1.199`, and M152 uses
+`14.2.1.200` through `14.2.1.299`. This keeps parallel Skia release lines
+ordered and prevents them from publishing the same package version.
 
-**When native HarfBuzz upgrades:** Keep the current Skia milestone bucket and
-reset its release revision. For example, an M152 upgrade from `14.2.1.203` to
-HarfBuzz 14.3.1 becomes `14.3.1.200`. M150's zero bucket may be written as the
-3-digit version (for example, `14.3.1` instead of `14.3.1.0`).
+**When native HarfBuzz upgrades:** Reset `N` to zero and make the adopting
+milestone the new base. For example, an M152 upgrade from `14.2.1.203` to
+HarfBuzz 14.3.1 becomes `14.3.1` (the normalized form of `14.3.1.0`), and
+M153 would start at `14.3.1.100`. HarfBuzz upgrades are made on `main` and are
+not backported; older release lines remain on their existing native HarfBuzz
+version and revision buckets.
 
 ### Feeds
 
