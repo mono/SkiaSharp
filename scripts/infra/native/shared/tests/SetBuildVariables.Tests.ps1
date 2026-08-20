@@ -309,6 +309,7 @@ if ($winuiGlobalJson.sdk.version -cne $winuiSdk -or
 }
 
 $nativeDockerfiles = @(
+    'scripts/infra/native/android/docker/Dockerfile'
     'scripts/infra/native/linux/docker/alpine/Dockerfile'
     'scripts/infra/native/linux/docker/bionic/Dockerfile'
     'scripts/infra/native/linux/docker/glibc/Dockerfile'
