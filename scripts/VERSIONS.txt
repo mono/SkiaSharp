@@ -79,9 +79,10 @@ HarfBuzz                soname      0.61421.0
 SkiaSharp               assembly    4.150.0.0
 SkiaSharp               file        4.150.4.0
 
-# HarfBuzzSharp revisions use 100-number Skia milestone buckets:
-# M150 = 0-99, M151 = 100-199, M152 = 200-299; base = (Skia milestone - 150) * 100.
-# Releases increment within the bucket; a native HarfBuzz upgrade resets to the current bucket base.
+# HarfBuzzSharp uses 100-number Skia milestone buckets for each native X.Y.Z:
+# the milestone first adopting X.Y.Z uses 0-99; each later milestone on that X.Y.Z adds 100.
+# Releases increment within the bucket; a native upgrade on main resets to 0.
+# Older release lines keep their existing native X.Y.* and assigned milestone bucket.
 # HarfBuzzSharp.dll
 HarfBuzzSharp           assembly    1.0.0.0
 HarfBuzzSharp           file        14.2.1.4
