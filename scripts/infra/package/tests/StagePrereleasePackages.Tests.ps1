@@ -15,10 +15,13 @@ function New-TestPackage {
         [string] $Id,
 
         [Parameter(Mandatory)]
-        [string] $Version
+        [string] $Version,
+
+        [switch] $Symbols
     )
 
-    $path = Join-Path $source "$Id.$Version.nupkg"
+    $suffix = if ($Symbols) { '.symbols' } else { '' }
+    $path = Join-Path $source "$Id.$Version$suffix.nupkg"
     $stream = [IO.File]::Create($path)
     $archive = [IO.Compression.ZipArchive]::new(
         $stream,
@@ -42,11 +45,13 @@ try {
     New-Item $source -ItemType Directory -Force | Out-Null
     New-TestPackage 'Package-With-Hyphen' '1.0.0-preview.1.26418.3'
     New-TestPackage 'Package.Rc' '1.0.0-rc.1.26418.3'
+    New-TestPackage 'Package.Symbols' '1.0.0-preview.1.26418.3' -Symbols
 
     & $scriptPath -SourceDirectory $source -DestinationDirectory $destination
     $copied = @(Get-ChildItem $destination -Filter '*.nupkg' -File)
-    if ($copied.Count -ne 2) {
-        throw "Expected two prerelease packages, found $($copied.Count)."
+    if ($copied.Count -ne 3 -or
+        -not ($copied.Name -contains 'Package.Symbols.1.0.0-preview.1.26418.3.symbols.nupkg')) {
+        throw "Expected normal and symbol prerelease packages, found $($copied.Count)."
     }
 
     New-TestPackage 'Package.LegacyStable' '1.0.0-stable.26418.3'

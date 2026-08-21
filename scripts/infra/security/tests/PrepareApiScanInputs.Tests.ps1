@@ -19,7 +19,7 @@ function New-TestPackage {
     )
 
     $version = '1.0.0-preview.1'
-    $packageFolder = Join-Path $scanRoot 'packages/nuget_symbols'
+    $packageFolder = Join-Path $scanRoot 'packages/nuget'
     New-Item $packageFolder -ItemType Directory -Force | Out-Null
     $path = Join-Path $packageFolder "$Id.$version.symbols.nupkg"
     $stream = [IO.File]::Create($path)
@@ -135,7 +135,7 @@ try {
     }
 
     $emptyScanRoot = Join-Path $testRoot 'empty'
-    New-Item (Join-Path $emptyScanRoot 'packages/nuget_symbols') -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $emptyScanRoot 'packages/nuget') -ItemType Directory -Force | Out-Null
     $missingInputsRejected = $false
     try {
         & $scriptPath -ScanRoot $emptyScanRoot -SurrogateSource $surrogateSource

@@ -317,7 +317,10 @@ function Extract-Packages {
 
             # Find and copy matching packages
             $packages = Get-ChildItem -Path $tempExtract -Filter "*.nupkg" -Recurse | 
-                        Where-Object { $_.Name -like $Filter }
+                        Where-Object {
+                            $_.Name -like $Filter -and
+                            -not $_.Name.EndsWith('.symbols.nupkg', [StringComparison]::OrdinalIgnoreCase)
+                        }
 
             if ($packages.Count -eq 0) {
                 Write-Message "  No packages found matching filter '$Filter'" -Level Warning

@@ -74,22 +74,19 @@ Arcade also emits three standard publishing artifacts that must be preserved:
 - `AssetManifests` describes the registered package and blob inventory consumed
   by the BAR publishing job.
 
-Arcade auto-generates each `*.symbols.nupkg` in `BlobArtifacts` by copying the
-corresponding signed shipping package. Those copies contain the portable and
-native PDBs embedded in the shipping packages, but they do not contain Android
-`*.so.dbg` sidecars.
+The repository publishes one `nuget` pipeline artifact containing both normal
+and `*.symbols.nupkg` packages. The complete set is signed and staged in the
+active Arcade shipping or preview view.
 
-The repository-owned `nuget_symbols` artifact is different. It contains the six
-symbol packages emitted by native-assets projects: SkiaSharp Android, Win32,
-WinUI, and NanoServer, plus HarfBuzzSharp Android and Win32. The Android symbol
-packages carry four `*.so.dbg` files each that are absent from `BlobArtifacts`.
-API Scan also consumes `nuget_symbols` directly. Keep this artifact until those
-Android sidecars are registered as standard Arcade blob assets and API Scan has
-been migrated to the replacement.
+Arcade classifies every existing `*.symbols.nupkg` as a symbol blob and indexes
+its supported payload files in the target symbol servers. For a normal package
+without a matching symbol package, Arcade generates one by copying the signed
+normal package; this covers packages that embed portable or native PDBs. Android
+native-assets projects provide real symbol packages because their large
+`*.so.dbg` sidecars do not belong in customer shipping packages.
 
-The existing unsigned artifacts remain available to the test pipeline.
-`nuget_symbols` and the internal `nuget_special` convenience packages are not
-signing inputs.
+The existing unsigned artifact remains available to the test pipeline. The
+internal `nuget_special` convenience packages are not signing inputs.
 
 Signing consumes only the current run's `nuget` artifact after the package stage
 succeeds. Retry a signing failure within that run; starting a new pipeline run

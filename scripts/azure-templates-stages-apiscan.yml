@@ -26,13 +26,6 @@ stages:
               targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget
 
           - task: DownloadPipelineArtifact@2
-            displayName: Download symbol packages
-            inputs:
-              buildType: current
-              artifactName: nuget_symbols
-              targetPath: $(Agent.TempDirectory)\APIScan\packages\nuget_symbols
-
-          - task: DownloadPipelineArtifact@2
             displayName: Download MSVC native artifacts
             inputs:
               buildType: current
@@ -70,7 +63,7 @@ stages:
             displayName: Run API Scan
             inputs:
               softwareFolder: $(Agent.TempDirectory)\APIScan
-              symbolsFolder: SRV*https://symweb;$(Agent.TempDirectory)\APIScan\nuget_symbols-extracted;$(Agent.TempDirectory)\APIScan\native_msvc
+              symbolsFolder: SRV*https://symweb;$(Agent.TempDirectory)\APIScan\symbols-extracted;$(Agent.TempDirectory)\APIScan\native_msvc
               softwareName: SkiaSharp
               softwareVersionNum: 3
               softwareBuildNum: $(Build.BuildId)

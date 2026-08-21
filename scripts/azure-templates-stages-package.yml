@@ -40,10 +40,6 @@ stages:
               displayName: Prepare the nugets artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
-              displayName: Prepare the nugets-symbols artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -52,8 +48,6 @@ stages:
               path: '.\output\output\'
             - name: nuget
               path: '.\output\nugets'
-            - name: nuget_symbols
-              path: '.\output\nugets-symbols'
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
         parameters:
           name: scan_normal_windows
@@ -64,9 +58,6 @@ stages:
           requiredArtifacts:
             - name: nuget
               dir: nugets
-              currentRun: true
-            - name: nuget_symbols
-              dir: nugets-symbols
               currentRun: true
           postBuildSteps:
             - pwsh: |
@@ -94,14 +85,10 @@ stages:
             - name: nuget
               dir: nugets
               currentRun: true
-            - name: nuget_symbols
-              dir: nugets-symbols
-              currentRun: true
           postBuildSteps:
             - pwsh: |
                 Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 New-Item '.\output\' -Type Directory -Force | Out-Null
               displayName: Re-organize the output folder for publishing

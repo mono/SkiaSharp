@@ -357,6 +357,13 @@ if ($winuiSdkInstalls -ne 3) {
     throw 'Every WinUI native job must install the VS MSBuild-compatible SDK side-by-side.'
 }
 
+$androidBuild = Get-Content (Join-Path $repoRoot 'native/android/build.cake') -Raw
+$harfBuzzAndroidBuild = Get-Content (Join-Path $repoRoot 'native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk') -Raw
+if ($androidBuild -notmatch '-Wl,--build-id=sha1' -or
+    $harfBuzzAndroidBuild -notmatch '-Wl,--build-id=sha1') {
+    throw 'Android native libraries must use deterministic GNU build IDs for dotnet-symbol.'
+}
+
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'
@@ -366,6 +373,9 @@ if ($packageStages -match '--dotNetFinalVersionKind') {
 }
 if ($packageStages -match 'nuget_preview|nugets-preview') {
     throw 'The Package stage must publish only the single-family nuget artifact.'
+}
+if ($packageStages -match 'nuget_symbols|nugets-symbols') {
+    throw 'Normal and symbol packages must share the single nuget pipeline artifact.'
 }
 if ($packageStages -notmatch 'Remove-Item ./output/native/') {
     throw 'The special-package job must discard raw native inputs after packaging them.'
@@ -481,6 +491,10 @@ if ($packageScript -match '_NuGetsPreview|_SymbolsPreview|IsPreview' -or
     $packageScript -notmatch 'Id = "_Symbols"') {
     throw 'Special package transfer must use only _NuGets and _Symbols for the single package family.'
 }
+if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
+    $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {
+    throw 'NuGet symbol packages must remain beside normal packages in the unified artifact.'
+}
 
 $samplesScript = Get-Content (Join-Path $repoRoot 'scripts/infra/samples/samples.cake') -Raw
 $docsScript = Get-Content (Join-Path $repoRoot 'scripts/infra/docs/docs.cake') -Raw
@@ -496,11 +510,22 @@ if ($docsScript -match '_nugetspreview' -or
     throw 'Docs must download the single-family _NuGets transfer package.'
 }
 
+$prDownloadBash = Get-Content (Join-Path $repoRoot 'scripts/get-skiasharp-pr.sh') -Raw
+$prDownloadPowerShell = Get-Content (Join-Path $repoRoot 'scripts/get-skiasharp-pr.ps1') -Raw
+if (-not $prDownloadBash.Contains('! -name "*.symbols.nupkg"') -or
+    -not $prDownloadPowerShell.Contains("EndsWith('.symbols.nupkg'")) {
+    throw 'PR package downloaders must exclude symbol packages from the local NuGet source.'
+}
+
 $signingStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
 if ($signingStages -match 'nuget_preview_signed' -or
     $signingStages -notmatch 'artifacts\\packages\\Release\\Preview' -or
     $signingStages -notmatch 'stage-prerelease-packages\.ps1') {
     throw 'Signing must retain the Arcade preview layout without publishing a duplicate preview artifact.'
+}
+if ($signingStages -match 'artifactName:\s*nuget_symbols' -or
+    $signingStages -match 'stage-android-symbol-packages\.ps1') {
+    throw 'Signing must consume normal and symbol packages from the unified nuget artifact.'
 }
 
 $publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw

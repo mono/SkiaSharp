@@ -106,7 +106,9 @@ try {
     New-Item $unsigned -ItemType Directory -Force | Out-Null
     New-Item $signed -ItemType Directory -Force | Out-Null
     New-TestPackage (Join-Path $unsigned 'SkiaSharp.Test.1.0.0.nupkg')
+    New-TestPackage (Join-Path $unsigned 'SkiaSharp.Test.1.0.0.symbols.nupkg')
     New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.nupkg') -Signed
+    New-TestPackage (Join-Path $signed 'SkiaSharp.Test.1.0.0.symbols.nupkg') -Signed
 
     @'
 <Project>
@@ -309,6 +311,10 @@ try {
     }
     if ([regex]::Matches($signingTemplate, 'DotNetFinalVersionKind=\$\(DOTNET_FINAL_VERSION_KIND\)').Count -lt 2) {
         throw 'Arcade signing and manifest generation must share the derived final version kind.'
+    }
+    if ($signingTemplate -match 'artifactName:\s*nuget_symbols' -or
+        $signingTemplate -match 'stage-android-symbol-packages\.ps1') {
+        throw 'Arcade publishing must consume normal and symbol packages from the unified nuget artifact.'
     }
 
     Write-Host 'Signing policy and payload tests passed.'

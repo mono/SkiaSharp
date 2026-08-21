@@ -380,7 +380,7 @@ extract_packages() {
             say_verbose "Extracted: ${filename}"
             ((count++))
         fi
-    done < <(find "$temp_dir" -name "$filter" -print0 2>/dev/null)
+    done < <(find "$temp_dir" -name "$filter" ! -name "*.symbols.nupkg" -print0 2>/dev/null)
     
     # Cleanup
     rm -rf "$temp_dir"
