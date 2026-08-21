@@ -59,10 +59,33 @@ signing stage: stage under artifacts/packages/Release/Shipping
               +-- create the signed preview-package view
               |
               +-- nuget_signed
-              +-- nuget_preview_signed
               +-- nuget_signing_verification
               `-- nuget_signing_logs
 ```
+
+The `artifacts/packages/Release/Preview` directory is still required for Arcade
+to select preview packages when it generates the V3 manifest. It is an internal
+layout, not a separately published pipeline artifact.
+
+Arcade also emits three standard publishing artifacts that must be preserved:
+
+- `PackageArtifacts` contains package bytes staged for BAR-backed feed publishing.
+- `BlobArtifacts` contains blob assets such as Arcade-generated symbol packages.
+- `AssetManifests` describes the registered package and blob inventory consumed
+  by the BAR publishing job.
+
+Arcade auto-generates each `*.symbols.nupkg` in `BlobArtifacts` by copying the
+corresponding signed shipping package. Those copies contain the portable and
+native PDBs embedded in the shipping packages, but they do not contain Android
+`*.so.dbg` sidecars.
+
+The repository-owned `nuget_symbols` artifact is different. It contains the six
+symbol packages emitted by native-assets projects: SkiaSharp Android, Win32,
+WinUI, and NanoServer, plus HarfBuzzSharp Android and Win32. The Android symbol
+packages carry four `*.so.dbg` files each that are absent from `BlobArtifacts`.
+API Scan also consumes `nuget_symbols` directly. Keep this artifact until those
+Android sidecars are registered as standard Arcade blob assets and API Scan has
+been migrated to the replacement.
 
 The existing unsigned artifacts remain available to the test pipeline.
 `nuget_symbols` and the internal `nuget_special` convenience packages are not

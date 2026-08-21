@@ -90,7 +90,7 @@ Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
 
 1. Go to: https://dev.azure.com/dnceng-public/public/_build?definitionId=345&_a=summary
 2. Find the build for your PR
-3. Click "Artifacts" → download the `nuget_preview` (or `nuget`) artifact
+3. Click "Artifacts" → download the `nuget` artifact
 4. Extract and use as a local NuGet source
 
 ## Native API Versions

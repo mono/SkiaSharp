@@ -364,6 +364,12 @@ if ($packageStages -match 'packStableNuGets') {
 if ($packageStages -match '--dotNetFinalVersionKind') {
     throw 'The Package stage must not pass an empty final version kind to Cake.'
 }
+if ($packageStages -match 'nuget_preview|nugets-preview') {
+    throw 'The Package stage must publish only the single-family nuget artifact.'
+}
+if ($packageStages -notmatch 'Remove-Item ./output/native/') {
+    throw 'The special-package job must discard raw native inputs after packaging them.'
+}
 $sharedCake = Get-Content (Join-Path $repoRoot 'scripts/infra/shared/shared.cake') -Raw
 if ($sharedCake -notmatch 'EnvironmentVariable\s*\(\s*"DOTNET_FINAL_VERSION_KIND"\s*\)') {
     throw 'Cake must read the derived Arcade final version kind from the environment.'
@@ -470,6 +476,11 @@ if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
     throw 'nuget-normal must pack exactly one version family selected by VersionSuffix.'
 }
+if ($packageScript -match '_NuGetsPreview|_SymbolsPreview|IsPreview' -or
+    $packageScript -notmatch 'Id = "_NuGets"' -or
+    $packageScript -notmatch 'Id = "_Symbols"') {
+    throw 'Special package transfer must use only _NuGets and _Symbols for the single package family.'
+}
 
 $samplesScript = Get-Content (Join-Path $repoRoot 'scripts/infra/samples/samples.cake') -Raw
 $docsScript = Get-Content (Join-Path $repoRoot 'scripts/infra/docs/docs.cake') -Raw
@@ -479,6 +490,17 @@ if ($samplesScript -notmatch 'actualSamples\s*=\s*string\.IsNullOrEmpty\s*\(PREV
     $docsScript -match 'PREVIEW_ONLY_NUGETS' -or
     $sharedCake -match 'PREVIEW_ONLY_NUGETS') {
     throw 'Samples and docs must consume the single package family selected by PREVIEW_NUGET_SUFFIX.'
+}
+if ($docsScript -match '_nugetspreview' -or
+    $docsScript -notmatch 'DownloadPackageAsync\s*\(\s*"_nugets"') {
+    throw 'Docs must download the single-family _NuGets transfer package.'
+}
+
+$signingStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
+if ($signingStages -match 'nuget_preview_signed' -or
+    $signingStages -notmatch 'artifacts\\packages\\Release\\Preview' -or
+    $signingStages -notmatch 'stage-prerelease-packages\.ps1') {
+    throw 'Signing must retain the Arcade preview layout without publishing a duplicate preview artifact.'
 }
 
 $publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw

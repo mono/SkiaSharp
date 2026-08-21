@@ -40,18 +40,6 @@ stages:
               displayName: Prepare the nugets artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
-                $destination = '.\output\nugets-preview\'
-                if ('$(DOTNET_FINAL_VERSION_KIND)' -eq 'release') {
-                  New-Item $destination -ItemType Directory -Force | Out-Null
-                  Write-Host 'Exact release packages are not copied into the preview artifact.'
-                } else {
-                  .\scripts\infra\package\stage-prerelease-packages.ps1 `
-                    -SourceDirectory '.\output\nugets\' `
-                    -DestinationDirectory $destination
-                }
-              displayName: Prepare the nugets-preview artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
               displayName: Prepare the nugets-symbols artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
@@ -64,8 +52,6 @@ stages:
               path: '.\output\output\'
             - name: nuget
               path: '.\output\nugets'
-            - name: nuget_preview
-              path: '.\output\nugets-preview'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
@@ -113,6 +99,7 @@ stages:
               currentRun: true
           postBuildSteps:
             - pwsh: |
+                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
                 Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'

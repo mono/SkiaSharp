@@ -46,11 +46,6 @@ stages:
                 targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
                 condition: succeeded()
               - output: pipelineArtifact
-                displayName: Publish signed preview NuGets
-                artifactName: nuget_preview_signed
-                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
-                condition: succeeded()
-              - output: pipelineArtifact
                 displayName: Publish signing verification
                 artifactName: nuget_signing_verification
                 targetPath: '$(Build.SourcesDirectory)\artifacts\signing-verification'

@@ -15,8 +15,7 @@ These wrapper packages bundle the real NuGet packages inside their `tools/` dire
 | Wrapper package | Contains |
 |-----------------|----------|
 | `_nativeassets` | Native binaries (per-platform frameworks/dylibs) |
-| `_nugets` | Exact stable NuGet packages (e.g. `SkiaSharp.4.152.0.nupkg`) |
-| `_nugetspreview` | Prerelease NuGet packages (e.g. `SkiaSharp.4.152.0-preview.0.26418.3.nupkg`) |
+| `_nugets` | The build's single NuGet package family: exact stable or prerelease |
 
 The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their CI source. The actual NuGet packages inside have their real, user-facing version numbers.
 
@@ -106,7 +105,7 @@ These arguments control the **NuGet version suffix** used when rewriting package
 
 | Target | What it does | Output directory |
 |--------|-------------|-----------------|
-| `docs-download-output` | Downloads stable + preview NuGet packages from CI feed | `output/nugets/` |
+| `docs-download-output` | Downloads the build's NuGet package family from the CI feed | `output/nugets/` |
 | `samples-generate` | Copies samples to `output/`, converts ProjectRef → PackageRef | `output/samples/`, `output/samples-preview/` |
 | `samples-prepare` | Clears cached SkiaSharp/HarfBuzz packages, copies nupkgs for Docker | — |
 | `samples-run` | Builds all generated samples from `output/` | — |

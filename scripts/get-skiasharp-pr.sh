@@ -9,8 +9,7 @@ set -euo pipefail
 readonly ORGANIZATION="dnceng-public"
 readonly PROJECT="public"
 readonly PIPELINE_ID=345
-readonly PREFERRED_ARTIFACT="nuget_preview"
-readonly FALLBACK_ARTIFACT="nuget"
+readonly NUGET_ARTIFACT="nuget"
 readonly BASE_URL="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_apis"
 
 # Colors
@@ -444,20 +443,10 @@ main() {
         exit 0
     fi
     
-    # Find nuget artifact (prefer nuget_preview)
-    local artifact_name download_url using_preview
-    
-    download_url=$(echo "$artifacts" | jq -r --arg name "$PREFERRED_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
-    
-    if [[ -n "$download_url" ]]; then
-        artifact_name="$PREFERRED_ARTIFACT"
-        using_preview=true
-    else
-        say_verbose "nuget_preview artifact not found, trying full nuget artifact..."
-        download_url=$(echo "$artifacts" | jq -r --arg name "$FALLBACK_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
-        artifact_name="$FALLBACK_ARTIFACT"
-        using_preview=false
-    fi
+    # Every build emits one package family in the canonical nuget artifact.
+    local artifact_name="$NUGET_ARTIFACT"
+    local download_url
+    download_url=$(echo "$artifacts" | jq -r --arg name "$NUGET_ARTIFACT" '.value[] | select(.name == $name) | .resource.downloadUrl // empty')
     
     if [[ -z "$download_url" ]]; then
         say_warn "Available artifacts:"
@@ -465,10 +454,10 @@ main() {
             say_info "  - ${name}"
         done
         if [[ "$SUCCESSFUL_ONLY" != true ]]; then
-            say_error "Neither '${PREFERRED_ARTIFACT}' nor '${FALLBACK_ARTIFACT}' artifact found."
+            say_error "Artifact '${NUGET_ARTIFACT}' was not found."
             say_info "The build may still be in progress. Try --successful-only to get the last successful build."
         else
-            say_error "Neither '${PREFERRED_ARTIFACT}' nor '${FALLBACK_ARTIFACT}' artifact found."
+            say_error "Artifact '${NUGET_ARTIFACT}' was not found."
         fi
         exit 1
     fi
@@ -491,15 +480,7 @@ main() {
         exit 1
     fi
     
-    # Extract (nuget_preview already has only prerelease; for full nuget, filter to prerelease)
-    local filter
-    if [[ "$using_preview" == true ]]; then
-        filter="*.nupkg"
-    else
-        filter="*-*.nupkg"
-    fi
-    
-    if ! extract_packages "$zip_path" "$packages_path" "$filter" "$FORCE"; then
+    if ! extract_packages "$zip_path" "$packages_path" "*.nupkg" "$FORCE"; then
         rm -rf "$temp_dir"
         exit 1
     fi

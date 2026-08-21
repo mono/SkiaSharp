@@ -143,15 +143,13 @@ Task ("nuget-special")
         }
     }
 
-    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
+    // NuGets and Symbols: bin-pack the build's single package family into ~200 MB chunks
     if (GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
         const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
 
         var metaPackages = new[] {
-            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
-            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
-            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
-            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
+            new { Id = "_NuGets",  SourceDir = "nugets",         IncludeSnupkg = false },
+            new { Id = "_Symbols", SourceDir = "nugets-symbols", IncludeSnupkg = true },
         };
 
         foreach (var meta in metaPackages) {
@@ -161,11 +159,7 @@ Task ("nuget-special")
                 allFiles.AddRange (GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.snupkg"));
 
             var matchingFiles = allFiles
-                .Where (f => {
-                    var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_")) return false;
-                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
-                })
+                .Where (f => !f.GetFilename ().ToString ().StartsWith ("_"))
                 .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
                 .OrderByDescending (f => f.Size)
                 .ToList ();
