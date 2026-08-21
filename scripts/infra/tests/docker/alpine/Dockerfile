@@ -12,7 +12,7 @@
 # There is intentionally no COPY here. The build context is this directory, not the repo. The
 # tests-container cake target selects the musl build via --nativePlatform=alpine.
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine
+FROM mcr.microsoft.com/dotnet/sdk:10.0.203-alpine3.23
 
 # Fonts for Skia's fontconfig-backed default font manager (the base .NET SDK image already provides
 # the C++/ICU runtime the native library links against, so only fonts are added):
