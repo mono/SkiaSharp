@@ -377,12 +377,36 @@ if ($packageStages -match 'nuget_preview|nugets-preview') {
 if ($packageStages -match 'nuget_symbols|nugets-symbols') {
     throw 'Normal and symbol packages must share the single nuget pipeline artifact.'
 }
+if ($packageStages -match 'package_special_windows|target:\s*nuget-special' -or
+    $packageStages -notmatch 'name:\s*package_windows' -or
+    $packageStages -notmatch 'target:\s*nuget(\s|$)' -or
+    $packageStages -notmatch 'name:\s*nuget_special') {
+    throw 'Product and transport NuGets must be produced by one aggregate package job.'
+}
 if ($packageStages -notmatch 'Remove-Item ./output/native/') {
     throw 'The special-package job must discard raw native inputs after packaging them.'
 }
 $sharedCake = Get-Content (Join-Path $repoRoot 'scripts/infra/shared/shared.cake') -Raw
 if ($sharedCake -notmatch 'EnvironmentVariable\s*\(\s*"DOTNET_FINAL_VERSION_KIND"\s*\)') {
     throw 'Cake must read the derived Arcade final version kind from the environment.'
+}
+if ($sharedCake -notmatch '"SkiaSharp\.Vulkan\.Silk\.NET"') {
+    throw 'The supported NuGet inventory must include SkiaSharp.Vulkan.Silk.NET.'
+}
+if ($sharedCake -notmatch '_packaging/skiasharp-transport/nuget/v3/index\.json' -or
+    $sharedCake -match '_packaging/skiasharp-ci/') {
+    throw 'Build-transfer packages must resolve from the future SkiaSharp transport feed.'
+}
+$silkNetProject = 'SkiaSharp.Vulkan\\SkiaSharp.Vulkan.Silk.NET\\SkiaSharp.Vulkan.Silk.NET.csproj'
+foreach ($solutionFilter in @(
+    'source/SkiaSharpSource.Windows.slnf'
+    'source/SkiaSharpSource.Mac.slnf'
+    'source/SkiaSharpSource.Linux.slnf'
+)) {
+    $filter = Get-Content (Join-Path $repoRoot $solutionFilter) -Raw
+    if (-not $filter.Contains($silkNetProject)) {
+        throw "$solutionFilter must pack SkiaSharp.Vulkan.Silk.NET."
+    }
 }
 
 $packagePipeline = Get-Content (Join-Path $repoRoot 'scripts/azure-pipelines-package.yml') -Raw
@@ -480,6 +504,10 @@ if ($publishStages -match 'includeApiScan|api_scan') {
 }
 
 $packageScript = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget.cake') -Raw
+$transportProject = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuget/NuGet.csproj') -Raw
+if ($transportProject -notmatch '<IsShippingPackage>false</IsShippingPackage>') {
+    throw 'The special-package project must declare its NuGets as non-shipping.'
+}
 $normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
 if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
@@ -530,8 +558,11 @@ if ($signingStages -match 'artifactName:\s*nuget_symbols' -or
 $publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
 if (-not $publishingProps.Contains('$(ArtifactsPackagesDir)Preview\*.nupkg') -or
     -not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') -or
+    -not $publishingProps.Contains('$(ArtifactsNonShippingPackagesDir)**\*.nupkg') -or
+    $publishingProps -notmatch 'IsShipping="false"' -or
+    $publishingProps -notmatch '<AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>' -or
     ([regex]::Matches($publishingProps, 'DotNetFinalVersionKind').Count -lt 2)) {
-    throw 'Arcade publishing must separate preview and exact release package views.'
+    throw 'Arcade publishing must separate preview/release shipping packages from transport packages.'
 }
 
 Write-Host 'Build identity tests passed.'

@@ -122,12 +122,12 @@ revision buckets.
 | Feed | URL | Purpose |
 |------|-----|---------|
 | Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
-| CI helpers | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Public build helper packages (`_*` prefixed packages) used by local and CI builds; outside Arcade publishing |
+| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json` | Signed non-shipping `_NuGets`, `_NativeAssets*`, and dependency chunks used by local and CI builds |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** Regular signed packages are registered in BAR and promoted by
-> Maestro. The `skiasharp-ci` helper feed is not a Maestro channel and retains
-> `_NuGets`, `_NativeAssets`, and similar build-transfer packages.
+> **Note:** One BAR records both product and transport packages. Maestro routes
+> `IsShipping=true` packages to `skiasharp`, `IsShipping=false` packages to
+> `skiasharp-transport`, and symbol blobs to the configured symbol targets.
 > NuGet.org publication remains a separate protected operation.
 
 ### Pipelines
@@ -215,12 +215,12 @@ explicit override.
 
 #### BAR channels and signed-package retrieval
 
-The Build pipeline generates an Arcade V3 asset manifest from the signed
-NuGets, registers that manifest in the Build Asset Registry (BAR), and validates
-its packages and signatures. It does not promote a channel automatically.
-After the connected Tests run succeeds, the release manager selects one exact
-BAR and promotes it to `SkiaSharp`. The channel publishes the package bytes to
-the public `skiasharp` Azure Artifacts feed and records those locations in BAR.
+The Build pipeline generates one Arcade V3 asset manifest from signed product
+and transport NuGets, registers it in the Build Asset Registry (BAR), validates
+its packages and signatures, and promotes it through the configured default
+Maestro channel. The channel routes shipping packages to `skiasharp`,
+non-shipping packages to `skiasharp-transport`, and symbol blobs to the
+configured symbol targets.
 
 A channel is BAR metadata, not package storage. Channel promotion publishes the
 manifest's NuGet assets to the Azure DevOps feeds configured for that channel

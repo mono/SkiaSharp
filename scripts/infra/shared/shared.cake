@@ -99,7 +99,7 @@ var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json");
+var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json");
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET PACKAGES
@@ -148,6 +148,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.SceneGraph",                          new Version (2, 88, 0) },
     { "SkiaSharp.Resources",                           new Version (2, 88, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (2, 80, 0) },
+    { "SkiaSharp.Vulkan.Silk.NET",                     new Version (4, 152, 0) },
     { "SkiaSharp.Direct3D.Vortice",                    new Version (2, 88, 0) },
 };
 

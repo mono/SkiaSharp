@@ -13,10 +13,10 @@ stages:
     jobs:
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
         parameters:
-          name: package_normal_windows
+          name: package_windows
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
-          target: nuget-normal
+          target: nuget
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
@@ -40,20 +40,26 @@ stages:
               displayName: Prepare the nugets artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
+              displayName: Prepare the transport nugets artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
-            - name: package_normal_windows
+            - name: package_windows
               path: '.\output\output\'
             - name: nuget
               path: '.\output\nugets'
+            - name: nuget_special
+              path: '.\output\nugets-special'
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
         parameters:
           name: scan_normal_windows
           displayName: Scan NuGet Artifacts
           buildAgent: ${{ parameters.buildAgentWindows}}
-          dependsOn: package_normal_windows
+          dependsOn: package_windows
           shouldPublish: false
           requiredArtifacts:
             - name: nuget
@@ -65,44 +71,3 @@ stages:
                   -SourcePath ".\output\nugets*\*.*nupkg" `
                   -DestinationPath ".\output\extracted_nugets"
               displayName: Extract all the .nupkg files for scanning
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
-        parameters:
-          name: package_special_windows
-          displayName: Package Special NuGets
-          buildAgent: ${{ parameters.buildAgentWindows}}
-          dependsOn: package_normal_windows
-          target: nuget-special
-          cacheJob: managed/package
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --skipExternals="all"
-          checkoutSubmodules: false
-          installAndroidSdk: false
-          installDotNetWorkloads: false
-          installNode: false
-          shouldPublish: false
-          requiredArtifacts:
-            - name: native
-            - name: nuget
-              dir: nugets
-              currentRun: true
-          postBuildSteps:
-            - pwsh: |
-                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-                Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
-                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
-                New-Item '.\output\' -Type Directory -Force | Out-Null
-              displayName: Re-organize the output folder for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
-              displayName: Prepare the nugets-special artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
-              displayName: Prepare the build artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-          publishArtifacts:
-            - name: package_special_windows
-              path: '.\output\output\'
-            - name: nuget_special
-              path: '.\output\nugets-special'

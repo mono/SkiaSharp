@@ -85,12 +85,16 @@ normal package; this covers packages that embed portable or native PDBs. Android
 native-assets projects provide real symbol packages because their large
 `*.so.dbg` sidecars do not belong in customer shipping packages.
 
-The existing unsigned artifact remains available to the test pipeline. The
-internal `nuget_special` convenience packages are not signing inputs.
+The existing unsigned artifacts remain available to pipeline consumers.
+`nuget_special` contains transport wrappers (`_NuGets`, `_NativeAssets*`, and
+dependency chunks). Official builds stage these under Arcade's `NonShipping`
+package directory, sign and validate them with the product packages, and record
+them in the same BAR with `NonShipping=true`.
 
-Signing consumes only the current run's `nuget` artifact after the package stage
-succeeds. Retry a signing failure within that run; starting a new pipeline run
-rebuilds the packages instead of signing artifacts from an older run.
+Arcade's global fallback symbol generation is disabled. SkiaSharp preserves
+genuine `*.symbols.nupkg` files and creates explicit byte-identical fallback
+copies only for shipping packages that embed their PDBs. Transport wrappers do
+not receive symbol blobs.
 
 SkiaSharp and Arcade use the same stable .NET SDK from `global.json`. The
 10.0.2xx feature band includes the `dotnet package download` command required by

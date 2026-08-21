@@ -2,12 +2,14 @@
 
 This guide explains how to build SkiaSharp samples using CI-produced NuGet packages. The samples use **package references** (not project references) when built through the `samples` cake target, so they need downloadable NuGet packages to compile.
 
-## CI Artifacts Feed
+## Transport Feed
 
-All CI builds publish wrapper packages to the **SkiaSharp-CI** Azure DevOps feed:
+Official builds register wrapper packages as non-shipping assets in the same BAR
+as the product packages. The Maestro `SkiaSharp` channel routes them to the
+separate **SkiaSharp Transport** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:
@@ -86,7 +88,7 @@ These arguments control **which CI build** to fetch from the feed:
 | `--previewLabel` | `PREVIEW_LABEL` | `preview` | When starts with `pr.`, fetches PR build |
 | `--gitSha` | `GIT_SHA` | `""` | Fetch by commit SHA |
 | `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
-| `--previewFeed` | — | SkiaSharp-CI URL | Override the NuGet feed |
+| `--previewFeed` | — | SkiaSharp Transport URL | Override the NuGet feed |
 
 ### For building samples (`samples`)
 
@@ -163,4 +165,4 @@ Some platforms are disabled by default:
 May need a newer `Microsoft.WindowsAppSDK` version.
 
 ### NuGet feed authentication
-The SkiaSharp-CI feed is public — no authentication required.
+The SkiaSharp Transport feed is public — no authentication required.

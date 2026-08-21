@@ -297,14 +297,22 @@ try {
     $releaseArtifact = @(
         $publishedArtifacts |
             Where-Object { [string]$_.Include -ceq '$(ArtifactsShippingPackagesDir)**\*.nupkg' })
-    if ($publishedArtifacts.Count -ne 2 -or
+    $transportArtifact = @(
+        $publishedArtifacts |
+            Where-Object { [string]$_.Include -ceq '$(ArtifactsNonShippingPackagesDir)**\*.nupkg' })
+    if ($publishedArtifacts.Count -ne 3 -or
         $previewArtifact.Count -ne 1 -or
         $releaseArtifact.Count -ne 1 -or
+        $transportArtifact.Count -ne 1 -or
         [string]$previewArtifact[0].Condition -notmatch "!= 'release'" -or
-        [string]$releaseArtifact[0].Condition -notmatch "== 'release'") {
-        throw 'Publishing.props must separate preview and exact release package views.'
+        [string]$releaseArtifact[0].Condition -notmatch "== 'release'" -or
+        [string]$transportArtifact[0].Kind -cne 'Package' -or
+        [string]$transportArtifact[0].IsShipping -cne 'false') {
+        throw 'Publishing.props must separate shipping package views from non-shipping transport packages.'
     }
-
+    if ([string]$publishingPolicy.Project.PropertyGroup.AutoGenerateSymbolPackages -cne 'false') {
+        throw 'Arcade fallback symbol generation must be disabled in favor of the explicit shipping symbol inventory.'
+    }
     $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
     if ($signingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
         throw 'Arcade V3 manifest generation must restore its Publish.proj task dependencies.'
@@ -315,6 +323,21 @@ try {
     if ($signingTemplate -match 'artifactName:\s*nuget_symbols' -or
         $signingTemplate -match 'stage-android-symbol-packages\.ps1') {
         throw 'Arcade publishing must consume normal and symbol packages from the unified nuget artifact.'
+    }
+    if ($signingTemplate -notmatch 'artifactName:\s*nuget_special' -or
+        $signingTemplate -notmatch 'stage-transport-packages\.ps1' -or
+        $signingTemplate -notmatch 'stage-shipping-symbol-packages\.ps1' -or
+        $signingTemplate -notmatch 'artifacts\\packages\\Release\\NonShipping' -or
+        $signingTemplate -notmatch 'transport-payload-verification\.json' -or
+        $signingTemplate -notmatch 'PackageBasePath=\$\(Build\.SourcesDirectory\)\\artifacts\\packages\\Release"') {
+        throw 'Real-sign builds must sign and validate special packages in the Arcade non-shipping package view.'
+    }
+    $itemsToSign = @(
+        $productionPolicy.SelectNodes('//ItemsToSign') |
+            ForEach-Object { $_.GetAttribute('Include') })
+    if (-not ($itemsToSign -contains '$(ArtifactsShippingPackagesDir)**\*.nupkg') -or
+        -not ($itemsToSign -contains '$(ArtifactsNonShippingPackagesDir)**\*.nupkg')) {
+        throw 'Arcade signing must include both shipping and non-shipping NuGet packages.'
     }
 
     Write-Host 'Signing policy and payload tests passed.'

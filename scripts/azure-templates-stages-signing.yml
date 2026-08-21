@@ -66,6 +66,13 @@ stages:
                 artifactName: nuget
                 targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
 
+            - ${{ if eq(parameters.useRealSigning, true) }}:
+              - task: DownloadPipelineArtifact@2
+                displayName: Download transport NuGets
+                inputs:
+                  artifactName: nuget_special
+                  targetPath: '$(Agent.TempDirectory)\transport-nugets'
+
             - pwsh: |
                 $source = '$(Agent.TempDirectory)\unsigned-nugets'
                 $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
@@ -80,6 +87,13 @@ stages:
                 Copy-Item $packages.FullName $destination
                 Write-Host "Staged $($packages.Count) NuGet package(s) for signing."
               displayName: Stage packages in Arcade layout
+
+            - ${{ if eq(parameters.useRealSigning, true) }}:
+              - pwsh: |
+                  ./scripts/infra/package/stage-transport-packages.ps1 `
+                    -SourceDirectory '$(Agent.TempDirectory)\transport-nugets' `
+                    -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping'
+                displayName: Stage transport packages for signing
 
             - powershell: >
                 eng\common\build.ps1
@@ -107,13 +121,28 @@ stages:
                   -RequireSignatures
               displayName: Verify signed NuGet payload fidelity
 
+            - pwsh: |
+                ./scripts/infra/package/stage-shipping-symbol-packages.ps1 `
+                  -PackageDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+              displayName: Stage explicit shipping symbol packages
+
             - ${{ if eq(parameters.useRealSigning, true) }}:
+              - pwsh: |
+                  ./scripts/infra/signing/verify-signed-packages.ps1 `
+                    -OriginalDirectory '$(Agent.TempDirectory)\transport-nugets' `
+                    -SignedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping' `
+                    -SigningPropsPath '$(Build.SourcesDirectory)\eng\Signing.props' `
+                    -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\transport-payload-verification.json' `
+                    -SignType '$(_SignType)' `
+                    -RequireSignatures
+                displayName: Verify signed transport NuGet payload fidelity
+
               - powershell: >
                   eng\common\sdk-task.ps1
                   -task SigningValidation
                   -restore
                   -msbuildEngine dotnet
-                  "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping"
+                  "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release"
                   "/p:SignCheckExclusionsFile=$(Build.SourcesDirectory)\eng\SignCheckExclusionsFile.txt"
                 displayName: Validate trusted signatures with Arcade
 
