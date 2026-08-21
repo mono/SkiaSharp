@@ -143,6 +143,7 @@ var SUPPORTED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.SceneGraph",                          new Version (2, 88, 0) },
     { "SkiaSharp.Resources",                           new Version (2, 88, 0) },
     { "SkiaSharp.Vulkan.SharpVk",                      new Version (2, 80, 0) },
+    { "SkiaSharp.Vulkan.Silk.NET",                     new Version (4, 152, 0) },
     { "SkiaSharp.Direct3D.Vortice",                    new Version (2, 88, 0) },
 };
 
