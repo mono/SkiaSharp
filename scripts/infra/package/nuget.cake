@@ -138,27 +138,22 @@ Task ("nuget-special")
         }
     }
 
-    // NuGets and Symbols: bin-pack the build's single package family into ~200 MB chunks
+    // Bin-pack the build's normal NuGets into ~200 MB chunks
     if (GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
         const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
 
         var metaPackages = new[] {
-            new { Id = "_NuGets",  IsSymbols = false },
-            new { Id = "_Symbols", IsSymbols = true },
+            new { Id = "_NuGets" },
         };
 
         foreach (var meta in metaPackages) {
             // enumerate matching files
             var allFiles = GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").ToList ();
-            allFiles.AddRange (GetFiles ($"{ROOT_PATH}/output/nugets/*.snupkg"));
 
             var matchingFiles = allFiles
                 .Where (f => {
                     var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_"))
-                        return false;
-                    var isSymbols = name.EndsWith (".symbols.nupkg") || name.EndsWith (".snupkg");
-                    return isSymbols == meta.IsSymbols;
+                    return !name.StartsWith ("_") && !name.EndsWith (".symbols.nupkg");
                 })
                 .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
                 .OrderByDescending (f => f.Size)

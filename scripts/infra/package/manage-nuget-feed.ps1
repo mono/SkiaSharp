@@ -37,7 +37,7 @@
       skiasharp     PUBLIC release feed.
                     xamarin/public/SkiaSharp  ->  dnceng/public/skiasharp
                     Excludes the internal underscore-prefixed CI wrapper packages
-                    (_NativeAssets, _NuGets, _Symbols, ...) so the public feed only
+                    (_NativeAssets, _NuGets, ...) so the public feed only
                     ever contains real, user-facing packages.
 
       skiasharp-ci  INTERNAL CI artifact feed.

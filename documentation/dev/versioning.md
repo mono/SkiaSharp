@@ -35,7 +35,7 @@ inherit the upstream identity.
 
 > **Note:** There are two Azure DevOps feeds:
 > - **Signed builds** (`skiasharp`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
-> - **CI helpers** (`skiasharp-ci`): internal build artifacts (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.)
+> - **CI helpers** (`skiasharp-ci`): internal build artifacts (`_NuGets`, `_NativeAssets`, etc.)
 
 Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested

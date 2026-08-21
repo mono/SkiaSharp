@@ -486,10 +486,9 @@ if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
     throw 'nuget-normal must pack exactly one version family selected by VersionSuffix.'
 }
-if ($packageScript -match '_NuGetsPreview|_SymbolsPreview|IsPreview' -or
-    $packageScript -notmatch 'Id = "_NuGets"' -or
-    $packageScript -notmatch 'Id = "_Symbols"') {
-    throw 'Special package transfer must use only _NuGets and _Symbols for the single package family.'
+if ($packageScript -match '_NuGetsPreview|_Symbols|IsPreview' -or
+    $packageScript -notmatch 'Id = "_NuGets"') {
+    throw 'Special package transfer must use only _NuGets for the single package family.'
 }
 if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
     $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {

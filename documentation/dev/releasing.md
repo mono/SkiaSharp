@@ -106,7 +106,7 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 > **Note:** Regular signed packages are registered in BAR and promoted by
 > Maestro. The `skiasharp-ci` helper feed is not a Maestro channel and retains
-> `_NuGets`, `_Symbols`, `_NativeAssets`, and similar build-transfer packages.
+> `_NuGets`, `_NativeAssets`, and similar build-transfer packages.
 > NuGet.org publication remains a separate protected operation.
 
 ### Pipelines
