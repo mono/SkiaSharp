@@ -82,12 +82,12 @@ Building for different Linux distributions is easier with Docker. The repository
 
 ```bash
 # Build the Docker image
-cd scripts/infra/native/linux/docker/alpine/amd64
-docker build --tag skiasharp-alpine .
+cd scripts/infra/native/linux/docker/alpine
+docker build --tag skiasharp-alpine --build-arg BUILD_ARCH=x64 .
 
 # Run the build
 docker run --rm --name skiasharp-alpine --volume $(pwd):/work skiasharp-alpine \
-    /bin/bash ./bootstrapper.sh -t externals-linux --variant=alpine --buildarch=x64
+    /bin/bash -c "dotnet tool restore && dotnet cake --target=externals-linux-clang-cross --buildarch=x64 --variant=alpine"
 
 # Fix file ownership if needed
 chown -R $(id -u):$(id -g) .

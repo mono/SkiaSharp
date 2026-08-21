@@ -22,7 +22,7 @@ namespace SkiaSharp
 
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) => glyphs.CopyTo (Glyphs);
 
-		[Obsolete ("Use Glyphs instead.")]
+		[Obsolete ("Use Glyphs instead.", error: true)]
 		public Span<ushort> GetGlyphSpan () => Glyphs;
 	}
 
@@ -37,7 +37,7 @@ namespace SkiaSharp
 
 		public void SetPositions (ReadOnlySpan<float> positions) => positions.CopyTo (Positions);
 
-		[Obsolete ("Use Positions instead.")]
+		[Obsolete ("Use Positions instead.", error: true)]
 		public Span<float> GetPositionSpan () => Positions;
 	}
 
@@ -52,7 +52,7 @@ namespace SkiaSharp
 
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) => positions.CopyTo (Positions);
 
-		[Obsolete ("Use Positions instead.")]
+		[Obsolete ("Use Positions instead.", error: true)]
 		public Span<SKPoint> GetPositionSpan () => Positions;
 	}
 
@@ -67,10 +67,10 @@ namespace SkiaSharp
 
 		public void SetPositions (ReadOnlySpan<SKRotationScaleMatrix> positions) => positions.CopyTo (Positions);
 
-		[Obsolete ("Use Positions instead.")]
+		[Obsolete ("Use Positions instead.", error: true)]
 		public Span<SKRotationScaleMatrix> GetRotationScaleSpan () => Positions;
 
-		[Obsolete ("Use SetPositions instead.")]
+		[Obsolete ("Use SetPositions instead.", error: true)]
 		public void SetRotationScale (ReadOnlySpan<SKRotationScaleMatrix> positions) => SetPositions (positions);
 	}
 

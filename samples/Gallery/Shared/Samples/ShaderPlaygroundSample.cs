@@ -133,6 +133,14 @@ half4 main(float2 fragCoord) {
 
 	public override string Description => "Write and visualize animated SkSL runtime effect shaders with adjustable parameters.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKRuntimeEffect", "SKRuntimeEffectUniforms",
+		"SKRuntimeEffect.CreateShader", "SKRuntimeEffect.ToShader",
+		"SKCanvas.DrawRect", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>

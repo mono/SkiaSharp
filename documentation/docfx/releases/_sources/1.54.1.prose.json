@@ -1,0 +1,31 @@
+{
+  "theme": "Servicing release",
+  "highlights_headline": "SkiaSharp 1.54.1 is a servicing release that tightens SKMatrix and the disposable object hierarchy.",
+  "highlights_body": null,
+  "breaking": [
+    {
+      "title": "SKMatrix fields removed",
+      "body": "SKMatrix no longer exposes its ScaleX/ScaleY, SkewX/SkewY, TransX/TransY and Persp0/Persp1/Persp2 fields directly \u2014 use the matrix constructors and helper APIs instead.",
+      "prs": []
+    },
+    {
+      "title": "Dispose overrides removed on SKObject and path iterators",
+      "body": "The explicit Dispose() overrides and finalizers on SKObject, SKPath.Iterator and SKPath.RawIterator were removed. Disposal now flows through the standard IDisposable pattern inherited from the base type.",
+      "prs": []
+    }
+  ],
+  "categories": [
+    {
+      "heading": "Lifecycle & Internals",
+      "bullets": [
+        {
+          "lead": "Cleaned up SKObject disposal",
+          "detail": "Removes duplicate Dispose overrides and finalizers on SKObject and the SKPath iterators so lifecycle flows through a single base implementation.",
+          "prs": []
+        }
+      ]
+    }
+  ],
+  "contributor_summaries": {},
+  "preview_summaries": {}
+}

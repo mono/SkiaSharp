@@ -413,20 +413,20 @@ def cmd_validate(config, args):
         print(f"{job_path:<30} {count:>4} files{sub_str}")
 
     if overlaps:
-        print(f"\nℹ️  {len(overlaps)} files match both include and exclude (include wins):")
+        print(f"\n[info] {len(overlaps)} files match both include and exclude (include wins):")
         for f in overlaps[:10]:
             print(f"  {f}")
         if len(overlaps) > 10:
             print(f"  ... +{len(overlaps) - 10} more")
 
     if uncovered:
-        print(f"\n❌ UNCOVERED FILES:")
+        print(f"\n[FAIL] UNCOVERED FILES:")
         for f in uncovered:
             print(f"{f}")
         print(f"\nAdd to a job or exclude list in repo-deps.json")
         return 1
 
-    print("\n✅ All files covered!")
+    print("\n[PASS] All files covered!")
     return 0
 
 # ---------------------------------------------------------------------------

@@ -3,24 +3,37 @@
   "Version": 1,
   "registrations": [
     {
-      "comment": "Security-relevant dependencies - using 'other' type with canonical names for CVE matching",
+      "comment": "Security-relevant dependencies - using 'other' type with canonical upstream names for CVE matching. Actual code comes from Chromium forks (see DEPS) but CVEs are filed against the upstream projects.",
       "component": {
         "type": "other",
         "other": {
           "name": "libpng",
           "version": "1.6.58",
-          "downloadUrl": "https://github.com/glennrp/libpng"
+          "downloadUrl": "https://github.com/pnggroup/libpng"
         }
+      },
+      "skia_dependency": {
+        "name": "libpng",
+        "revision": "3061454d980de7d53608f594194cfac722721d2a",
+        "version_reviewed_identity": "https://skia.googlesource.com/third_party/libpng.git@3061454d980de7d53608f594194cfac722721d2a",
+        "version_source": "png.h: PNG_LIBPNG_VER_STRING \"1.6.58\""
       }
     },
     {
+      "comment": "Used by both Skia (via DEPS -> chromium fork) and ANGLE (via submodule -> same chromium fork). CVEs are filed against upstream madler/zlib. The fork header reports 1.3.2.1-motley; the component version remains canonical upstream 1.3.2 for CVE matching.",
       "component": {
         "type": "other",
         "other": {
           "name": "zlib",
-          "version": "1.3.0.1",
+          "version": "1.3.2",
           "downloadUrl": "https://github.com/madler/zlib"
         }
+      },
+      "skia_dependency": {
+        "name": "zlib",
+        "revision": "89921383f1f51331f48a2dc843403779770ea3a9",
+        "version_reviewed_identity": "https://chromium.googlesource.com/chromium/src/third_party/zlib@89921383f1f51331f48a2dc843403779770ea3a9",
+        "version_source": "zlib.h: ZLIB_VERSION \"1.3.2.1-motley\" (Chromium fork of canonical upstream 1.3.2)"
       }
     },
     {
@@ -28,9 +41,15 @@
         "type": "other",
         "other": {
           "name": "libjpeg-turbo",
-          "version": "2.1.5.1",
+          "version": "3.1.4.1",
           "downloadUrl": "https://github.com/libjpeg-turbo/libjpeg-turbo"
         }
+      },
+      "skia_dependency": {
+        "name": "libjpeg-turbo",
+        "revision": "9217719d3a58633923b096af4c1d50d304768a64",
+        "version_reviewed_identity": "https://github.com/libjpeg-turbo/libjpeg-turbo.git@9217719d3a58633923b096af4c1d50d304768a64",
+        "version_source": "CMakeLists.txt: set(VERSION 3.1.4.1)"
       }
     },
     {
@@ -41,6 +60,12 @@
           "version": "1.6.0",
           "downloadUrl": "https://github.com/webmproject/libwebp"
         }
+      },
+      "skia_dependency": {
+        "name": "libwebp",
+        "revision": "4fa21912338357f89e4fd51cf2368325b59e9bd9",
+        "version_reviewed_identity": "https://chromium.googlesource.com/webm/libwebp.git@4fa21912338357f89e4fd51cf2368325b59e9bd9",
+        "version_source": "configure.ac: AC_INIT([libwebp], [1.6.0])"
       }
     },
     {
@@ -48,9 +73,15 @@
         "type": "other",
         "other": {
           "name": "freetype",
-          "version": "2.13.3",
+          "version": "2.14.3",
           "downloadUrl": "https://gitlab.freedesktop.org/freetype/freetype"
         }
+      },
+      "skia_dependency": {
+        "name": "freetype",
+        "revision": "0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+        "version_reviewed_identity": "https://chromium.googlesource.com/chromium/src/third_party/freetype2.git@0a0221a1347e2f1e07c395263540026e9a0aa7c7",
+        "version_source": "include/freetype/freetype.h: FREETYPE_MAJOR/MINOR/PATCH = 2/14/3"
       }
     },
     {
@@ -58,9 +89,15 @@
         "type": "other",
         "other": {
           "name": "harfbuzz",
-          "version": "8.3.1",
+          "version": "14.2.1",
           "downloadUrl": "https://github.com/harfbuzz/harfbuzz"
         }
+      },
+      "skia_dependency": {
+        "name": "harfbuzz",
+        "revision": "56feae4035bdd48f62ba2b8d8c16232d4d89b3a4",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/harfbuzz/harfbuzz.git@56feae4035bdd48f62ba2b8d8c16232d4d89b3a4",
+        "version_source": "src/hb-version.h: HB_VERSION_STRING \"14.2.1\""
       }
     },
     {
@@ -68,9 +105,15 @@
         "type": "other",
         "other": {
           "name": "libexpat",
-          "version": "2.7.5",
+          "version": "2.8.1",
           "downloadUrl": "https://github.com/libexpat/libexpat"
         }
+      },
+      "skia_dependency": {
+        "name": "expat",
+        "revision": "c7ffbf3879f6aef7a7b020ef84ddb4ee00222b19",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/libexpat/libexpat.git@c7ffbf3879f6aef7a7b020ef84ddb4ee00222b19",
+        "version_source": "expat/lib/expat.h: XML_MAJOR/MINOR/MICRO_VERSION = 2/8/1"
       }
     },
     {
@@ -81,6 +124,12 @@
           "version": "1.2.0",
           "downloadUrl": "https://github.com/google/brotli"
         }
+      },
+      "skia_dependency": {
+        "name": "brotli",
+        "revision": "028fb5a23661f123017c060daa546b55cf4bde29",
+        "version_reviewed_identity": "https://skia.googlesource.com/external/github.com/google/brotli.git@028fb5a23661f123017c060daa546b55cf4bde29",
+        "version_source": "c/common/version.h: BROTLI_VERSION_MAJOR/MINOR/PATCH = 1/2/0"
       }
     },
     {
@@ -91,6 +140,12 @@
           "version": "0.3.3",
           "downloadUrl": "https://github.com/google/wuffs-mirror-release-c"
         }
+      },
+      "skia_dependency": {
+        "name": "wuffs",
+        "revision": "e3f919ccfe3ef542cfc983a82146070258fb57f8",
+        "version_reviewed_identity": "https://skia.googlesource.com/external/github.com/google/wuffs-mirror-release-c.git@e3f919ccfe3ef542cfc983a82146070258fb57f8",
+        "version_source": "release/c/wuffs-v0.3.c: WUFFS_VERSION_STRING \"0.3.3+3399.20230408\""
       }
     },
     {
@@ -98,9 +153,16 @@
         "type": "other",
         "other": {
           "name": "dng_sdk",
-          "version": "1.6.0",
+          "version": "1.4.0",
           "downloadUrl": "https://android.googlesource.com/platform/external/dng_sdk"
         }
+      },
+      "comment": "Version tracks the DNG specification implemented by this SDK because the source has no separate SDK release version.",
+      "skia_dependency": {
+        "name": "dng_sdk",
+        "revision": "dbe0a676450d9b8c71bf00688bb306409b779e90",
+        "version_reviewed_identity": "https://android.googlesource.com/platform/external/dng_sdk.git@dbe0a676450d9b8c71bf00688bb306409b779e90",
+        "version_source": "README.version: Version 1.4.0 (DNG specification version implemented by the SDK)"
       }
     },
     {
@@ -109,9 +171,15 @@
         "type": "other",
         "other": {
           "name": "VulkanMemoryAllocator",
-          "version": "3.0.1",
+          "version": "3.4.0",
           "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator"
         }
+      },
+      "skia_dependency": {
+        "name": "vulkanmemoryallocator",
+        "revision": "eb744ea7a2b17040121b4bbb4d6f9e8a77e3cae7",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator@eb744ea7a2b17040121b4bbb4d6f9e8a77e3cae7",
+        "version_source": "include/vk_mem_alloc.h: Version 3.4.0 (VMA_VERSION VK_MAKE_VERSION(3, 4, 0)); upstream chrome/m152 DEPS roll"
       }
     },
     {
@@ -119,19 +187,33 @@
         "type": "other",
         "other": {
           "name": "SPIRV-Cross",
-          "version": "vulkan-sdk-1.3.268.0",
+          "version": "vulkan-sdk-1.3.275.0",
           "downloadUrl": "https://github.com/KhronosGroup/SPIRV-Cross"
         }
+      },
+      "comment": "SPIRV-Cross has no in-source semantic version; version is the upstream Vulkan SDK tag at the pinned commit.",
+      "skia_dependency": {
+        "name": "spirv-cross",
+        "revision": "b8fcf307f1f347089e3c46eb4451d27f32ebc8d3",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/KhronosGroup/SPIRV-Cross@b8fcf307f1f347089e3c46eb4451d27f32ebc8d3",
+        "version_source": "upstream git tag vulkan-sdk-1.3.275.0 at b8fcf307f1f347089e3c46eb4451d27f32ebc8d3 (no in-source version)"
       }
     },
     {
+      "comment": "Pinned to commit 169895d (2020-08-18), header declares version 2.0.0-development",
       "component": {
         "type": "other",
         "other": {
           "name": "D3D12MemoryAllocator",
-          "version": "2.0.1",
+          "version": "2.0.0-development",
           "downloadUrl": "https://github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator"
         }
+      },
+      "skia_dependency": {
+        "name": "d3d12allocator",
+        "revision": "169895d529dfce00390a20e69c2f516066fe7a3b",
+        "version_reviewed_identity": "https://skia.googlesource.com/external/github.com/GPUOpen-LibrariesAndSDKs/D3D12MemoryAllocator.git@169895d529dfce00390a20e69c2f516066fe7a3b",
+        "version_source": "src/D3D12MemAlloc.h: Version 2.0.0-development"
       }
     },
     {
@@ -139,13 +221,19 @@
         "type": "other",
         "other": {
           "name": "vulkan-headers",
-          "version": "1.3.301",
+          "version": "1.4.345",
           "downloadUrl": "https://github.com/KhronosGroup/Vulkan-Headers"
         }
+      },
+      "skia_dependency": {
+        "name": "vulkan-headers",
+        "revision": "74d8a6cb930c68ef617b202c3ff3c59d919e086b",
+        "version_reviewed_identity": "https://chromium.googlesource.com/external/github.com/KhronosGroup/Vulkan-Headers@74d8a6cb930c68ef617b202c3ff3c59d919e086b",
+        "version_source": "include/vulkan/vulkan_core.h: VK_HEADER_VERSION_COMPLETE = 1.4.345"
       }
     },
     {
-      "comment": "Supporting dependencies",
+      "comment": "Supporting dependency with no semantic upstream releases; 0.0.0 is an explicit placeholder and revision is the authoritative version.",
       "component": {
         "type": "other",
         "other": {
@@ -153,6 +241,12 @@
           "version": "0.0.0",
           "downloadUrl": "https://android.googlesource.com/platform/external/piex"
         }
+      },
+      "skia_dependency": {
+        "name": "piex",
+        "revision": "bb217acdca1cc0c16b704669dd6f91a1b509c406",
+        "version_reviewed_identity": "https://android.googlesource.com/platform/external/piex.git@bb217acdca1cc0c16b704669dd6f91a1b509c406",
+        "version_source": "commit bb217acdca1c (2018-03-09); upstream has no semantic releases, so 0.0.0 is a placeholder"
       }
     },
     {
@@ -161,7 +255,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/google/angle.git",
-          "commitHash": "chromium/6275"
+          "commitHash": "ea1cea778c4a2312ef1b963b29a62fe595dd4df8"
         }
       }
     },
@@ -171,32 +265,23 @@
         "other": {
           "name": "angle",
           "version": "chromium/6275",
-          "downloadUrl": "https://github.com/ArtifexSoftware/angle"
+          "downloadUrl": "https://github.com/google/angle"
         }
       }
     },
     {
-      "comment": "ANGLE submodule dependencies — versions from ANGLE DEPS at chromium/6275",
-      "component": {
-        "type": "other",
-        "other": {
-          "name": "angle-zlib",
-          "version": "1.3.0.1",
-          "downloadUrl": "https://chromium.googlesource.com/chromium/src/third_party/zlib"
-        }
-      }
-    },
-    {
+      "comment": "ANGLE-only: JSON parser used by ANGLE's build system (not used by Skia)",
       "component": {
         "type": "other",
         "other": {
           "name": "jsoncpp",
           "version": "1.9.4",
-          "downloadUrl": "https://github.com/nicknaso/jsoncpp"
+          "downloadUrl": "https://github.com/open-source-parsers/jsoncpp"
         }
       }
     },
     {
+      "comment": "ANGLE-only: ASTC texture compression (not used by Skia)",
       "component": {
         "type": "other",
         "other": {
@@ -207,7 +292,7 @@
       }
     },
     {
-      "comment": "ANGLE vulkan-deps is a meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc.",
+      "comment": "ANGLE-only: meta-repo pinning vulkan-headers, spirv-tools, spirv-cross, etc. (Skia pulls these individually via DEPS)",
       "component": {
         "type": "other",
         "other": {
@@ -223,7 +308,7 @@
         "type": "git",
         "git": {
           "repositoryUrl": "https://github.com/mono/skia.git",
-          "commitHash": "e09e6c1349c2e1bab47ed32675d03be951250f8e"
+          "commitHash": "9f0d864fd60e9907a8bf5ec84a71d603e6c8db5f"
         }
       }
     },
@@ -233,12 +318,13 @@
         "type": "other",
         "other": {
           "name": "skia",
-          "version": "chrome/m147",
+          "version": "chrome/m152",
           "downloadUrl": "https://github.com/google/skia"
         }
       },
-      "chrome_milestone": 147,
-      "upstream_merge_commit": "f8cd2da0256752afb0059bf17e4bf2bec422967e"
+      "chrome_milestone": 152,
+      "upstream_merge_commit": "b6d106297ff9ef2ff8094033695d045e87775581",
+      "upstream_ref": "chrome/m152"
     }
   ]
 }

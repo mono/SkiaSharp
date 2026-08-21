@@ -3,13 +3,14 @@ using SkiaSharp.Tests;
 
 namespace SkiaSharp.Vulkan.Tests
 {
+	[Collection(VulkanGpuRenderingCollection.Name)]
 	public class SharpVkBackendContextTest : VKTest
 	{
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void VkGpuSurfaceIsCreatedSharpVkTypes()
 		{
-			using var ctx = CreateVkContext();
+			using var ctx = CreateSharpVkContext();
 			using var grVkBackendContext = new GRSharpVkBackendContext
 			{
 				VkInstance = ctx.Instance,
@@ -33,7 +34,7 @@ namespace SkiaSharp.Vulkan.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
-		[SkippableFact]
+		[Fact]
 		public void PropertyIsSetAndUnset()
 		{
 			using var grVkBackendContext = new GRSharpVkBackendContext();

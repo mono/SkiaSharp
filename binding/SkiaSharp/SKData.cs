@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using SkiaSharp.Internals;
 
 namespace SkiaSharp
@@ -15,23 +16,9 @@ namespace SkiaSharp
 		// improvement in Copy performance.
 		internal const int CopyBufferSize = 81920;
 
-		private static readonly SKData empty;
-
-		static SKData ()
-		{
-			// TODO: This is not the best way to do this as it will create a lot of objects that
-			//       might not be needed, but it is the only way to ensure that the static
-			//       instances are created before any access is made to them.
-			//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
-
-			empty = new SKDataStatic (SkiaApi.sk_data_new_empty ());
-		}
-
-		internal static void EnsureStaticInstanceAreInitialized ()
-		{
-			// IMPORTANT: do not remove to ensure that the static instances
-			//            are initialized before any access is made to them
-		}
+		private static SKData empty;
+		private static bool emptyInitialized;
+		private static object emptyLock = new object ();
 
 		internal SKData (IntPtr x, bool owns)
 			: base (x, owns)
@@ -41,11 +28,24 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		void ISKNonVirtualReferenceCounted.ReferenceNative () => SkiaApi.sk_data_ref (Handle);
+		void ISKNonVirtualReferenceCounted.ReferenceNative ()
+		{
+			SkiaApi.sk_data_ref (Handle);
+			GC.KeepAlive (this);
+		}
 
-		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_data_unref (Handle);
+		void ISKNonVirtualReferenceCounted.UnreferenceNative ()
+		{
+			SkiaApi.sk_data_unref (Handle);
+			GC.KeepAlive (this);
+		}
 
-		public static SKData Empty => empty;
+		public static SKData Empty =>
+			LazyInitializer.EnsureInitialized (
+				ref empty, ref emptyInitialized, ref emptyLock,
+				// Immortal Skia singleton (SkData::MakeEmpty's function-local static) — never unref it.
+				// See SKColorFilter.GetDisposeProtectedObject for the full teardown-crash rationale.
+				() => GetDisposeProtectedObject (SkiaApi.sk_data_new_empty (), owns: false, unrefExisting: false));
 
 		// CreateCopy
 
@@ -228,7 +228,9 @@ namespace SkiaSharp
 				if (offset > UInt32.MaxValue)
 					throw new ArgumentOutOfRangeException (nameof (offset), "The offset exceeds the size of pointers.");
 			}
-			return GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+			var result = GetObject (SkiaApi.sk_data_new_subset (Handle, (IntPtr)offset, (IntPtr)length));
+			GC.KeepAlive (this);
+			return result;
 		}
 
 		// ToArray
@@ -244,9 +246,21 @@ namespace SkiaSharp
 
 		public bool IsEmpty => Size == 0;
 
-		public long Size => (long)SkiaApi.sk_data_get_size (Handle);
+		public long Size {
+			get {
+				var result = (long)SkiaApi.sk_data_get_size (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
-		public IntPtr Data => (IntPtr)SkiaApi.sk_data_get_data (Handle);
+		public IntPtr Data {
+			get {
+				var result = (IntPtr)SkiaApi.sk_data_get_data (Handle);
+				GC.KeepAlive (this);
+				return result;
+			}
+		}
 
 		public Span<byte> Span => new Span<byte> ((void*)Data, (int)Size);
 
@@ -274,6 +288,19 @@ namespace SkiaSharp
 
 			var ptr = Data;
 			var total = Size;
+#if NETSTANDARD2_1_OR_GREATER || NET6_0_OR_GREATER
+			// Write native memory straight to the stream: no intermediate managed buffer and no
+			// Marshal.Copy, so the pixel/encoded bytes are copied once instead of twice.
+			var src = (byte*)ptr;
+			for (var left = total; left > 0;) {
+				var copyCount = (int)Math.Min (CopyBufferSize, left);
+				target.Write (new ReadOnlySpan<byte> (src, copyCount));
+				left -= copyCount;
+				src += copyCount;
+			}
+#else
+			// Stream.Write(ReadOnlySpan<byte>) is unavailable on netstandard2.0 / .NET Framework, so
+			// fall back to copying through a pooled buffer.
 			using var buffer = Utils.RentArray<byte> (CopyBufferSize);
 			for (var left = total; left > 0;) {
 				var copyCount = (int)Math.Min (CopyBufferSize, left);
@@ -282,11 +309,15 @@ namespace SkiaSharp
 				ptr += copyCount;
 				target.Write ((byte[])buffer, 0, copyCount);
 			}
+#endif
 			GC.KeepAlive (this);
 		}
 
 		internal static SKData GetObject (IntPtr handle) =>
 			GetOrAddObject (handle, (h, o) => new SKData (h, o));
+
+		internal static SKData GetDisposeProtectedObject (IntPtr handle, bool owns = true, bool unrefExisting = true) =>
+			GetOrAddDisposeProtectedObject (handle, owns, unrefExisting, (h, o) => new SKData (h, o));
 
 		//
 
@@ -313,16 +344,5 @@ namespace SkiaSharp
 			}
 		}
 
-		//
-
-		private sealed class SKDataStatic : SKData
-		{
-			internal SKDataStatic (IntPtr x)
-				: base (x, false)
-			{
-			}
-
-			protected override void Dispose (bool disposing) { }
-		}
 	}
 }

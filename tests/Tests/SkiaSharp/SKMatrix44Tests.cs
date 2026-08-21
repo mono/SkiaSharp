@@ -6,7 +6,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKMatrix44Test : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void Matrix44CreatesIdentity()
 		{
 			var matrix = SKMatrix44.CreateIdentity();
@@ -22,7 +22,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedRowMajor, rowMajor);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RowMajorColumnMajorTransposes()
 		{
 			var rowMajor = new float[] {
@@ -44,7 +44,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(colMajor, colMajorMatrix);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MatrixGoesFullCircle()
 		{
 			var rowMajor = new float[] {
@@ -60,7 +60,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rowMajor, result);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TranslationFieldsAreCorrectForMatrix()
 		{
 			var skm44 = SKMatrix44.CreateTranslation(10, 20, 30);
@@ -71,7 +71,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(20, matrix.TransY);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ScaleFieldsAreCorrectForMatrix()
 		{
 			var skm44 = SKMatrix44.CreateScale(10, 20, 30);
@@ -82,7 +82,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(20, matrix.ScaleY);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TranslateConvertsToMatrix()
 		{
 			var matrix44 = SKMatrix44.CreateTranslation(10, 20, 30);
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ScaleConvertsToMatrix()
 		{
 			var matrix44 = SKMatrix44.CreateScale(10, 20, 30);
@@ -100,7 +100,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RotationConvertsToMatrix()
 		{
 			var matrix44 = SKMatrix44.CreateRotationDegrees(0, 0, 1, 45);
@@ -109,7 +109,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(matrix.Values, matrix44.Matrix.Values, 6);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImplicitFromMatrix()
 		{
 			var matrix = SKMatrix.CreateRotationDegrees(45);
@@ -118,7 +118,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ImplicitFromRotationScale()
 		{
 			var rs = SKRotationScaleMatrix.CreateRotationDegrees(45, 0, 0);
@@ -128,7 +128,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(matrix.Values, matrix44.Matrix.Values);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TransposeWorks()
 		{
 			var rowMajor = new float[] {
@@ -151,7 +151,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(colMajor, colMajorMatrix);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ColumnMajorToRowMajorTransposes()
 		{
 			var rowMajor = new float[] {
@@ -173,7 +173,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(rowMajor, rowMajorMatrix);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void Matrix44Inverts()
 		{
 			var rowMajor = new float[] {
@@ -203,7 +203,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedRowMajor, actualRowMajor);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnIdentityUsingFields()
 		{
 			var skm = SKMatrix44.CreateIdentity();
@@ -212,7 +212,7 @@ namespace SkiaSharp.Tests
 			AssertEqualFields(skm, m4x4);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnTranslateUsingFields()
 		{
 			var skm = SKMatrix44.CreateTranslation(10, 20, 30);
@@ -221,7 +221,7 @@ namespace SkiaSharp.Tests
 			AssertEqualFields(skm, m4x4);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnScaleUsingFields()
 		{
 			var skm = SKMatrix44.CreateScale(10, 20, 30);
@@ -230,7 +230,7 @@ namespace SkiaSharp.Tests
 			AssertEqualFields(skm, m4x4);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TranslationMapsScalars()
 		{
 			var matrixTranslate = SKMatrix44.CreateTranslation(10, 20, 0);
@@ -242,7 +242,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new[] { 15f, 45f, 0f, 1f }, resultTranslateValue);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RotationMapsScalars()
 		{
 			var matrixRotate = SKMatrix44.CreateRotationDegrees(0, 1, 0, 90);
@@ -254,7 +254,7 @@ namespace SkiaSharp.Tests
 			AssertSimilar(new[] { 0f, 25f, -5f, 1f }, resultRotateValue, PRECISION);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void TranslationMapsPoints()
 		{
 			var matrixTranslate = SKMatrix44.CreateTranslation(10, 20, 0);
@@ -266,7 +266,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new SKPoint(15f, 45f), resultTranslateValue);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RotationMapsPoints()
 		{
 			var matrixRotate = SKMatrix44.CreateRotationDegrees(0, 1, 0, 90);
@@ -279,7 +279,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)25, (double)resultRotateValue.Y, PRECISION);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IdentityIsCorrectLayout()
 		{
 			var matrix = SKMatrix44.Identity;
@@ -290,7 +290,7 @@ namespace SkiaSharp.Tests
 			AssertMatrixBitmap(bmp, rect);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(0, 0, 0)]
 		[InlineData(10, 0, 0)]
 		[InlineData(-10, 0, 0)]
@@ -309,7 +309,7 @@ namespace SkiaSharp.Tests
 			AssertMatrixBitmap(bmp, SKRectI.Create(25 + x, 25 + y, 50, 50));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1, 1, 1)]
 		[InlineData(2, 1, 1)]
 		[InlineData(1, 2, 1)]
@@ -327,7 +327,7 @@ namespace SkiaSharp.Tests
 			AssertMatrixBitmap(bmp, SKRectI.Create(o - ((s * x) - s) / 2, o - ((s * y) - s) / 2, s * x, s * y));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1, 1, 1)]
 		[InlineData(2, 1, 1)]
 		[InlineData(1, 2, 1)]
@@ -342,7 +342,7 @@ namespace SkiaSharp.Tests
 			AssertMatrixBitmap(bmp, SKRectI.Create(30 * x, 30 * y, 10 * x, 10 * y));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(1, 0, 0, 30)]
 		[InlineData(0, 1, 0, 30)]
 		[InlineData(0, 0, 1, 30)]
@@ -358,7 +358,7 @@ namespace SkiaSharp.Tests
 
 #if NET5_0_OR_GREATER
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnIdentity()
 		{
 			var skm = SKMatrix44.CreateIdentity();
@@ -367,7 +367,7 @@ namespace SkiaSharp.Tests
 			AssertEqualIndices(skm, m4x4);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnTranslate()
 		{
 			var skm = SKMatrix44.CreateTranslation(10, 20, 30);
@@ -376,7 +376,7 @@ namespace SkiaSharp.Tests
 			AssertEqualIndices(skm, m4x4);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void IndicesAreCorrectOnScale()
 		{
 			var skm = SKMatrix44.CreateScale(10, 20, 30);

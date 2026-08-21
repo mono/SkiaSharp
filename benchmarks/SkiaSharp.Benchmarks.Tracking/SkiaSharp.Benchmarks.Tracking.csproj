@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    CI writes version.props (via scripts/infra/perf/benchmarks/write_version_props.py) to
+    pin ONE resolved nightly across all matrix legs, so the cross-OS comparison is
+    valid and BenchmarkDotNet's rebuild uses the same version. Absent locally, where
+    the SkiaSharpTrackingVersion default below (`*-*`) floats to the newest nightly.
+  -->
+  <Import Project="$(MSBuildThisFileDirectory)version.props" Condition="Exists('$(MSBuildThisFileDirectory)version.props')" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>SkiaSharp.Benchmarks.Tracking</RootNamespace>
+    <AssemblyName>SkiaSharp.Benchmarks.Tracking</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- The classic SKPath API is [Obsolete] in 4.x but is the only path API common
+         to every benchmarked version (3.119 .. 4.x nightly), so suppress CS0618. -->
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <!--
+      The SkiaSharp/HarfBuzzSharp version to benchmark. Defaults to the newest
+      prerelease on the EAP feed (the daily -nightly.* build). CI pins the exact
+      resolved version via -p:SkiaSharpTrackingVersion=... so the data point can
+      be stamped with what actually ran.
+    -->
+    <SkiaSharpTrackingVersion Condition="'$(SkiaSharpTrackingVersion)' == ''">*-*</SkiaSharpTrackingVersion>
+    <!-- Concrete core version (MAJOR.MINOR.PATCH) used ONLY to select the API-level
+         #if defines below. version.props (CI) sets it to the exact resolved version;
+         locally it defaults high so the newest APIs are used (matching floating *-*). -->
+    <SkiaSharpResolvedVersion Condition="'$(SkiaSharpResolvedVersion)' == ''">999.999</SkiaSharpResolvedVersion>
+  </PropertyGroup>
+
+  <!-- API-availability defines, driven by the resolved SkiaSharp version. Add a line
+       when a benchmark needs to branch on an API introduced in a specific version, e.g.
+       SKIASHARP_4_150_OR_GREATER for '4.150'. Major defines are enough for most cases
+       (large API changes bump the major). -->
+  <PropertyGroup>
+    <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(SkiaSharpResolvedVersion)', '3.0'))">$(DefineConstants);SKIASHARP_3_OR_GREATER</DefineConstants>
+    <DefineConstants Condition="$([MSBuild]::VersionGreaterThanOrEquals('$(SkiaSharpResolvedVersion)', '4.0'))">$(DefineConstants);SKIASHARP_4_OR_GREATER</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpTrackingVersion)" />
+    <!-- Linux native assets ship in a separate package (SkiaSharp bundles win/mac). -->
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux" Version="$(SkiaSharpTrackingVersion)" />
+  </ItemGroup>
+
+</Project>

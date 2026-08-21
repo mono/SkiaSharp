@@ -74,7 +74,7 @@
         "cs": "GRVkImageInfo"
       },
       "gr_vk_ycbcrconversioninfo_t": {
-        "cs": "GrVkYcbcrConversionInfo"
+        "cs": "GRVkYcbcrConversionInfo"
       },
       "gr_pixelconfig_t": {
         "cs": "GRPixelConfigNative",
@@ -105,6 +105,10 @@
       },
       "gr_vk_backendcontext_t": {
         "cs": "GRVkBackendContextNative",
+        "internal": true
+      },
+      "sk_graphite_vk_backend_context_init_t": {
+        "cs": "SKGraphiteVkBackendContextNative",
         "internal": true
       },
       "gr_mtl_textureinfo_t": {
@@ -226,7 +230,6 @@
       "sk_codec_frameinfo_t": {
         "cs": "SKCodecFrameInfo",
         "members": {
-          // TODO: spelling error
           "fFullyReceived": "FullyRecieved"
         }
       },
@@ -410,6 +413,11 @@
         "cs": "SKCodecOptionsInternal",
         "internal": true
       },
+      "sk_document_xps_options_t": {
+        "members": {
+          "fDPI": "Dpi"
+        }
+      },
       "sk_document_pdf_metadata_t": {
         "cs": "SKDocumentPdfMetadataInternal",
         "internal": true
@@ -457,6 +465,16 @@
       },
       "gr_vk_get_proc": {
         "cs": "GRVkGetProcProxyDelegate",
+        "parameters": {
+          "-1": "IntPtr"
+        }
+      },
+      "sk_graphite_vk_func_ptr": {
+        "convention": "stdcall",
+        "generateProxy": false
+      },
+      "sk_graphite_vk_get_proc": {
+        "cs": "SKGraphiteVkGetProxyDelegate",
         "parameters": {
           "-1": "IntPtr"
         }

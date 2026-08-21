@@ -20,6 +20,14 @@ public class PerlinNoiseTexturesSample : CanvasSampleBase
 	public override string Description =>
 		"Procedural textures using Perlin noise — fractal vs turbulence side by side, with color presets for marble, wood, cloud, and fire effects.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKShader", "SKShader.CreatePerlinNoiseFractalNoise", "SKShader.CreatePerlinNoiseTurbulence",
+		"SKColorFilter", "SKColorFilter.CreateColorMatrix",
+		"SKCanvas.DrawPaint", "SKCanvas.DrawRect", "SKCanvas.DrawRoundRect", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.Shaders;
 
 	public override IReadOnlyList<SampleControl> Controls =>
@@ -104,8 +112,8 @@ public class PerlinNoiseTexturesSample : CanvasSampleBase
 		var turbLabel = "Turbulence";
 		var flw = labelFont.MeasureText(fractalLabel);
 		var tlw = labelFont.MeasureText(turbLabel);
-		canvas.DrawText(fractalLabel, halfW / 2f - flw / 2f, 21, labelFont, labelPaint);
-		canvas.DrawText(turbLabel, halfW + halfW / 2f - tlw / 2f, 21, labelFont, labelPaint);
+		canvas.DrawText(fractalLabel, halfW / 2f - flw / 2f, 21, SKTextAlign.Left, labelFont, labelPaint);
+		canvas.DrawText(turbLabel, halfW + halfW / 2f - tlw / 2f, 21, SKTextAlign.Left, labelFont, labelPaint);
 	}
 
 	private void DrawTexturePreset(SKCanvas canvas, int width, int height, int numOctaves)
@@ -130,7 +138,7 @@ public class PerlinNoiseTexturesSample : CanvasSampleBase
 
 		using var labelFont = new SKFont { Size = 14 };
 		using var labelPaint = new SKPaint { Color = SKColors.White, IsAntialias = true };
-		canvas.DrawText(Presets[presetIndex], 16, 28, labelFont, labelPaint);
+		canvas.DrawText(Presets[presetIndex], 16, 28, SKTextAlign.Left, labelFont, labelPaint);
 	}
 
 	private SKColorFilter? CreatePresetColorFilter()

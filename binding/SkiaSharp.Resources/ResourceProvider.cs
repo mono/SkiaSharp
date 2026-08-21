@@ -12,8 +12,12 @@ namespace SkiaSharp.Resources
 		public SKData? Load (string resourceName) =>
 			Load ("", resourceName);
 
-		public SKData? Load (string resourcePath, string resourceName) =>
-			SKData.GetObject (ResourcesApi.skresources_resource_provider_load (Handle, resourcePath, resourceName));
+		public SKData? Load (string resourcePath, string resourceName)
+		{
+			var r = SKData.GetObject (ResourcesApi.skresources_resource_provider_load (Handle, resourcePath, resourceName));
+			GC.KeepAlive (this);
+			return r;
+		}
 	}
 
 	public sealed class CachingResourceProvider : ResourceProvider

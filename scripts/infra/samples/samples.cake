@@ -17,9 +17,6 @@ Task ("samples-generate")
 {
     EnsureDirectoryExists ($"{ROOT_PATH}/output/");
 
-    // create the interactive archive
-    Zip ($"{ROOT_PATH}/interactive", $"{ROOT_PATH}/output/interactive.zip");
-
     // create the samples archive
     CreateSamplesDirectory ($"{ROOT_PATH}/samples/", $"{ROOT_PATH}/output/samples/");
     Zip ($"{ROOT_PATH}/output/samples/", $"{ROOT_PATH}/output/samples.zip");

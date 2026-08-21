@@ -1,116 +1,121 @@
 ---
 name: release-branch
 description: >
-  Create a release branch for SkiaSharp.
-  Use when user says "release X", "start release X", "create release branch for X",
-  "I want to release", or "release now".
-  This is the FIRST step of releasing - creates branch and pushes to trigger CI.
-  Can auto-detect next preview version from main branch.
+  Create SkiaSharp release branches and start release CI. Use when the user says
+  "release X", "start release X", "create release branch for X", "release now",
+  or asks for the next preview on main or a maintenance line. This is the first
+  release step: resolve an exact version, audit immutable branch inputs, obtain
+  approval, and reconcile both SkiaSharp and mono/skia release branches.
 ---
 
-# Release Branch Skill
+# Release Branch
 
-Create release branches for SkiaSharp versions.
+This skill is **Step 1 of 5**:
 
-⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/dev/releasing.md) for full workflow.
+**release-branch** → [release-status](../release-status/SKILL.md) →
+[release-testing](../release-testing/SKILL.md) →
+[release-publish](../release-publish/SKILL.md) →
+[release-milestones](../release-milestones/SKILL.md)
 
-## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+## Contract
 
-> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
+- Use scripts for detection, validation, reconciliation, and writes.
+- Treat remote release refs and the CI run triggered by the SkiaSharp push as
+  irreversible. Never force-update or move an existing ref.
+- Keep the current checkout unchanged and never commit directly to protected
+  `main`/`skiasharp` branches.
+- Audit the exact version first; execute only after the user approves every
+  pending operation.
+- Preserve the audited base SHA and Skia gitlink SHA during execution.
+- The script may create matching `release/{version}` refs in both repositories.
+- A regular stable release may create a protected-branch bump PR. Automation
+  opens it; a maintainer reviews and merges it.
+- This skill never merges PRs or publishes packages/releases.
 
-| Repository | Protected Branches | Required Action |
-|------------|-------------------|-----------------|
-| SkiaSharp (parent) | `main` | Create `release/X.Y.Z` branch, never commit to main |
-| externals/skia (submodule) | `main`, `skiasharp` | Must use feature branch if submodule changes needed |
+## Release model
 
-**Release branches are created FROM main, but never modify main directly.**
+| Exact version | Base |
+|---------------|------|
+| `X.Y.Z-preview.N` / `-rc.N` | `main` before line creation, otherwise `release/X.Y.x` |
+| `X.Y.Z` | `release/X.Y.x` |
+| `X.Y.Z.F-preview.N` / `-rc.N` | Tag `vX.Y.Z` |
+| `X.Y.Z.F` | Latest matching hotfix preview/RC branch |
 
----
+Preview/RC iterations begin at 1. Every SkiaSharp release branch has an
+identically named mono/skia branch at the exact pinned gitlink. Stable public
+versions are bare `X.Y.Z`; CI test packages remain `X.Y.Z-stable.{build}` until
+publication.
 
-## Step 1: Determine Version
+## Script contract
 
-### Auto-detect (user says "release now")
+| Script | Responsibility |
+|--------|----------------|
+| `scripts/detect-release-version.py` | Read-only next-preview calculation from `main` or `release/X.Y.x`. |
+| `scripts/create-release-branches.py` | Exact-version dry-run, validation, reconciliation, push, and stable bump PR. |
 
-1. Fetch main and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
-2. List existing branches: `git branch -r | grep "release/{version}-preview"`
-3. Next preview = highest + 1 (or 1 if none)
-4. **⚠️ Semver check:** Also verify no bare `release/{version}` branch exists — if it does, the stable release is already cut and you should NOT create another preview. Ask the user to confirm.
-5. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
+Operation statuses:
 
-### User provides version
+| Status | Response |
+|--------|----------|
+| `done` | Validated; no write needed. |
+| `pending` | Include in approval and execution. |
+| `awaiting-user` | Automation is complete; report the maintainer action. |
 
-Use the provided version directly.
+## Workflow
 
----
+### 1. Resolve the exact version
 
-## Step 2: Determine Release Type
-
-⚠️ **Semver ordering:** A bare version `X.Y.Z` is ALWAYS newer than `X.Y.Z-preview.N`. When listing
-branches to find the latest, remember that `release/3.119.2` > `release/3.119.2-preview.3`.
-Do NOT use alphabetical sorting — it gives wrong results for semver.
-
-| Version Format | Type | Base | PREVIEW_LABEL |
-|----------------|------|------|---------------|
-| `X.Y.Z-preview.N` | Preview | `main` | `preview.N` |
-| `X.Y.Z` | Stable | `release/X.Y.Z-preview.{latest}` | `stable` |
-| `X.Y.Z.F-preview.N` | Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
-| `X.Y.Z.F` | Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
-
-For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
-
-**NuGet version format by release type:**
-- **Preview:** `{base}-{PREVIEW_LABEL}.{build}` (e.g., `3.119.2-preview.2.3`) — build number is part of the prerelease tag
-- **Stable:** `{base}` only (e.g., `3.119.2`) — the build number is NEVER appended to stable versions. On the internal feed, stable builds appear as `{base}-stable.{build}` but the published version is just `{base}`.
-
----
-
-## Step 3: Create Branch and Update PREVIEW_LABEL
-
-1. Checkout the base (main, preview branch, or tag)
-2. Create branch `release/{version}`
-3. Edit `scripts/azure-templates-variables.yml`: set `PREVIEW_LABEL`
-4. Commit: `git commit -m "Bump the version to {version}"`
-5. Show diff summary to user and **confirm with `ask_user`** before pushing
-
----
-
-## Step 4: Push Branch
+Use a supplied exact version directly. When the user requests the next release,
+choose `main` or an exact `release/X.Y.x` integration branch, asking only when
+that line is ambiguous:
 
 ```bash
-git push -u origin release/{version}
+python3 .agents/skills/release-branch/scripts/detect-release-version.py \
+  {integration-branch}
 ```
 
-This triggers CI build (2-4 hours).
+Pin the returned `releaseVersion`.
 
----
+### 2. Audit
 
-## Step 5: Bump Version on Main (Preview from main only)
+```bash
+python3 .agents/skills/release-branch/scripts/create-release-branches.py \
+  {exact-version} \
+  --dry-run
+```
 
-**Skip for stable and hotfix releases.**
+Render:
 
-1. Create branch `bump-version-{next}` from main
+```markdown
+## Release branch audit
 
-2. Edit `scripts/azure-templates-variables.yml`:
-   - Update `SKIASHARP_VERSION` to next version
-   - Reset `PREVIEW_LABEL` to `preview.0`
+**Release:** `{version}` ({type})
+**Base:** `{baseRef}` at `{baseSha}`
+**Skia:** `{skiaSha}`
+**Branches:** `mono/SkiaSharp:{releaseBranch}`,
+`mono/skia:{releaseBranch}`
 
-3. Edit `scripts/VERSIONS.txt`:
-   - `SkiaSharp file` → `{next}.0`
-   - All `SkiaSharp ... nuget` lines → `{next}`
-   - `HarfBuzzSharp file` → increment 4th digit (e.g., `8.3.1.4` → `8.3.1.5`)
-   - All `HarfBuzzSharp ... nuget` lines → same as file version
+| Operation | Status | Detail |
+|-----------|--------|--------|
+| `{operations[].id}` | `{operations[].status}` | `{operations[].detail}` |
+```
 
-4. Commit: `git commit -m "Bump to the next version ({next}) after release"`
+Include every warning and call out that a pending SkiaSharp push starts CI.
 
-5. Show diff to user, then:
-   ```bash
-   git push -u origin bump-version-{next}
-   gh pr create --title "Bump to the next version ({next}) after release" --body ""
-   gh pr merge --merge --delete-branch
-   ```
+### 3. Approve and execute
 
----
+If no operation is pending, report any maintainer action and continue to the
+handoff. Otherwise obtain approval and run the emitted `executionCommand`, which
+pins `baseSha` and `skiaSha`.
 
-## Resources
+If execution fails, rerun the dry-run to reconcile partial state before retrying
+the emitted command.
 
-- [releasing.md](../../../documentation/dev/releasing.md) — Version patterns, HarfBuzz versioning, workflow diagrams
+### 4. Hand off
+
+Run the returned `statusCommand` with
+[release-status](../release-status/SKILL.md). For stable releases, also report
+the bump PR URL and its maintainer-owned merge state.
+
+See [releasing.md](../../../documentation/dev/releasing.md) for the complete
+release process.

@@ -1,57 +1,151 @@
 ﻿@page "/"
-@implements IDisposable
 @using SkiaSharpSample.Services
 @inject SampleService SampleService
-@inject IJSRuntime JS
 
 <PageTitle>SkiaSharp Gallery</PageTitle>
 
-<div class="gallery-shell">
-    <div class="filter-area">
-        <FilterPalette AllCategories="allCategories" SelectedCategories="selectedCategories"
-                       SearchText="@searchText" AllSamples="allSamples"
-                       OnSearchChanged="HandleSearchChanged" OnCategoriesChanged="HandleCategoriesChanged" />
+<div class="gallery-page">
+    @* Info strip *@
+    <div class="info-strip">
+        <p class="info-subtitle">Explore samples by API type, rendering technique, or concept.</p>
+        <div class="info-stats">
+            <span class="stat">@filteredSamples.Length<small> / @allSamples.Length samples</small></span>
+            <span class="stat-sep">·</span>
+            <span class="stat">@uniqueApiCount<small> APIs covered</small></span>
+        </div>
     </div>
 
-    @* Skeleton — same CSS column layout as the real grid *@
-    <div class="skeleton-grid" id="skeleton">
-        @for (var s = 0; s < 12; s++)
-        {
-            <div class="skeleton-card" style="animation-delay: @(s * 80)ms;">
-                <div class="skeleton-accent"></div>
-                <div class="skeleton-line wide"></div>
-                <div class="skeleton-line medium"></div>
-                <div class="skeleton-line short"></div>
+    @* Active filter bar *@
+    <div class="filter-bar-area">
+        <ActiveFilterBar SearchText="@searchText"
+                         SelectedCategory="@selectedCategory"
+                         SelectedTags="@selectedTags"
+                         OnClearSearch="ClearSearch"
+                         OnClearCategory="ClearCategory"
+                         OnRemoveTag="RemoveTag"
+                         OnResetAll="ResetAll" />
+    </div>
+
+    @* Main layout: sidebar + grid *@
+    <div class="gallery-main">
+        @* Desktop sidebar — hidden on mobile *@
+        <div class="sidebar-desktop">
+            <FilterRail AllCategories="allCategories"
+                        AllSamples="allSamples"
+                        SearchText="@searchText"
+                        SelectedCategory="@selectedCategory"
+                        SelectedTags="@selectedTags"
+                        LiveTagCounts="@liveTagCounts"
+                        OnSearchChanged="HandleSearchChanged"
+                        OnCategoryChanged="HandleCategoryChanged"
+                        OnTagToggled="HandleTagToggled" />
+        </div>
+
+        <div class="results-column">
+            @* Results header *@
+            <div class="results-header">
+                <div class="results-info">
+                    @if (HasActiveFilters)
+                    {
+                        <span class="results-count">@filteredSamples.Length samples</span>
+                    }
+                    else
+                    {
+                        <span class="results-count">All @allSamples.Length samples</span>
+                    }
+                </div>
+                <div class="results-sort">
+                    Sort:
+                    <select @bind="sortOrder" @bind:after="RefreshGrid">
+                        <option value="@SampleSortOrder.NewestFirst">Featured</option>
+                        <option value="@SampleSortOrder.Alphabetical">A → Z</option>
+                        <option value="@SampleSortOrder.OldestFirst">Oldest</option>
+                        <option value="@SampleSortOrder.Category">Category</option>
+                    </select>
+                </div>
             </div>
-        }
-    </div>
 
-    @* Card grid — CSS columns handle layout, JS only reorders for NEW distribution *@
-    <div class="masonry-grid" id="masonry-container">
-        @{ var index = 0; }
-        @foreach (var sample in GetFilteredSamples())
-        {
-            var i = index++;
-            var cat = SampleManager.GetCategoryFor(sample.Category);
-            var icon = SampleManager.GetCssIcon(sample.Title);
-            var isNew = SampleManager.IsNew(sample, allSamples);
-
-            <div class="grid-item" data-is-new="@(isNew ? "true" : "false")">
-                @if (sample.IsSupported)
+            @* Scrollable card area *@
+            <div class="results-scroll">
+                @if (filteredSamples.Length == 0)
                 {
-                    <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link">
-                        <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
-                                    Index="i" Supported="true" IsNew="isNew" />
-                    </a>
+                    <div class="empty-state">
+                        <i class="bi bi-search" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <h3>No samples match</h3>
+                        <p>Try removing a filter or switching tag mode to <strong>ANY</strong>.</p>
+                        <button class="empty-reset" @onclick="ResetAll">Reset all filters</button>
+                    </div>
                 }
                 else
                 {
-                    <SampleCard Sample="sample" CategoryColor="@cat.Color" Icon="@icon"
-                                Index="i" Supported="false" IsNew="isNew" />
+                    <div class="sample-grid">
+                        @{ var index = 0; }
+                        @foreach (var sample in filteredSamples)
+                        {
+                            var i = index++;
+                            var icon = SampleManager.GetCssIcon(sample.Title);
+                            var isNew = SampleManager.IsNew(sample, allSamples);
+
+                            @if (sample.IsSupported)
+                            {
+                                <a href="sample/@Uri.EscapeDataString(sample.Title)" class="grid-link" @key="sample.Title">
+                                    <SampleCard Sample="sample" Icon="@icon"
+                                                Index="i" Supported="true" IsNew="isNew"
+                                                ActiveTags="@selectedTags"
+                                                CorpusCounts="@corpusTagCounts"
+                                                OnTagClicked="HandleTagToggled" />
+                                </a>
+                            }
+                            else
+                            {
+                                <div @key="sample.Title" title="This sample is not supported on this platform">
+                                    <SampleCard Sample="sample" Icon="@icon"
+                                                Index="i" Supported="false" IsNew="isNew"
+                                                ActiveTags="@selectedTags"
+                                                CorpusCounts="@corpusTagCounts"
+                                                OnTagClicked="HandleTagToggled" />
+                                </div>
+                            }
+                        }
+                    </div>
                 }
             </div>
-        }
+        </div>
     </div>
+
+    @* Mobile filter drawer *@
+    <button type="button" class="mobile-filter-fab @(HasActiveFilters ? "has-filters" : "")" @onclick="() => mobileDrawerOpen = true">
+        <i class="bi bi-funnel"></i>
+        Filters
+        @if (activeFilterCount > 0)
+        {
+            <span class="fab-badge">@activeFilterCount</span>
+        }
+    </button>
+
+    @if (mobileDrawerOpen)
+    {
+        <div class="drawer-backdrop" @onclick="() => mobileDrawerOpen = false"></div>
+        <div class="drawer-panel">
+            <div class="drawer-header">
+                <span class="drawer-title">Filters · @filteredSamples.Length results</span>
+                <button class="drawer-close" @onclick="() => mobileDrawerOpen = false" aria-label="Close filters">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <FilterRail AllCategories="allCategories"
+                            AllSamples="allSamples"
+                            SearchText="@searchText"
+                            SelectedCategory="@selectedCategory"
+                            SelectedTags="@selectedTags"
+                            LiveTagCounts="@liveTagCounts"
+                            OnSearchChanged="HandleSearchChanged"
+                            OnCategoryChanged="HandleCategoryChanged"
+                            OnTagToggled="HandleTagToggled" />
+            </div>
+        </div>
+    }
 
     <footer class="gallery-footer">
         SkiaSharp <strong>@SampleService.SkiaSharpVersion</strong> ·
@@ -65,10 +159,18 @@
 
 @code {
     private string searchText = string.Empty;
-    private HashSet<string> selectedCategories = new();
+    private string? selectedCategory;
+    private HashSet<string> selectedTags = new();
+    private bool tagModeAll = true;
+    private SampleSortOrder sortOrder = SampleSortOrder.NewestFirst;
+    private bool mobileDrawerOpen;
+
     private string[] allCategories = Array.Empty<string>();
     private SampleBase[] allSamples = Array.Empty<SampleBase>();
-    private IJSObjectReference? jsModule;
+    private SampleBase[] filteredSamples = Array.Empty<SampleBase>();
+    private Dictionary<string, int> corpusTagCounts = new();
+    private Dictionary<string, int> liveTagCounts = new();
+    private int uniqueApiCount;
 
     protected override void OnInitialized()
     {
@@ -78,40 +180,84 @@
             .Where(name => allSamples.Any(s => s.Category == name))
             .OrderBy(c => c)
             .ToArray();
-        selectedCategories = new HashSet<string>(allCategories);
+
+        corpusTagCounts = SampleManager.GetTagCounts(allSamples);
+        uniqueApiCount = corpusTagCounts.Count;
+        RefreshGrid();
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    private bool HasActiveFilters =>
+        !string.IsNullOrWhiteSpace(searchText) ||
+        selectedCategory is not null ||
+        selectedTags.Count > 0;
+
+    private int activeFilterCount =>
+        (string.IsNullOrWhiteSpace(searchText) ? 0 : 1) +
+        (selectedCategory is not null ? 1 : 0) +
+        selectedTags.Count;
+
+    private void RefreshGrid()
     {
-        jsModule ??= await JS.InvokeAsync<IJSObjectReference>("import", "./Pages/Home.razor.js");
+        ISet<string>? catSet = selectedCategory is not null
+            ? new HashSet<string> { selectedCategory }
+            : null;
 
-        if (firstRender)
-        {
-            await Task.Delay(600); // let skeleton shimmer be visible
-            await jsModule.InvokeVoidAsync("reveal", "#masonry-container", "#skeleton");
-        }
-        else
-        {
-            await jsModule.InvokeVoidAsync("reorder", "#masonry-container");
-        }
+        filteredSamples = SampleManager.SearchSamples(
+            allSamples, searchText, catSet, selectedTags,
+            tagModeAll, sortOrder).ToArray();
+
+        liveTagCounts = SampleManager.GetLiveTagCounts(filteredSamples);
+        StateHasChanged();
     }
-
-    private IEnumerable<SampleBase> GetFilteredSamples() =>
-        SampleManager.SearchSamples(allSamples, searchText, selectedCategories, SampleSortOrder.NewestFirst);
 
     private void HandleSearchChanged(string text)
     {
         searchText = text;
-        StateHasChanged();
+        RefreshGrid();
     }
 
-    private void HandleCategoriesChanged(HashSet<string> cats)
+    private void HandleCategoryChanged(string? cat)
     {
-        if (cats.Count == 0)
-            cats = new HashSet<string>(allCategories);
-        selectedCategories = cats;
-        StateHasChanged();
+        selectedCategory = cat;
+        RefreshGrid();
     }
 
-    public void Dispose() { }
+    private void HandleTagToggled(string tag)
+    {
+        var copy = new HashSet<string>(selectedTags);
+        if (!copy.Remove(tag))
+            copy.Add(tag);
+        selectedTags = copy;
+        RefreshGrid();
+    }
+
+    private void ClearSearch()
+    {
+        searchText = string.Empty;
+        RefreshGrid();
+    }
+
+    private void ClearCategory()
+    {
+        selectedCategory = null;
+        RefreshGrid();
+    }
+
+    private void RemoveTag(string tag)
+    {
+        var copy = new HashSet<string>(selectedTags);
+        copy.Remove(tag);
+        selectedTags = copy;
+        RefreshGrid();
+    }
+
+    private void ResetAll()
+    {
+        searchText = string.Empty;
+        selectedCategory = null;
+        selectedTags = new HashSet<string>();
+        tagModeAll = true;
+        sortOrder = SampleSortOrder.NewestFirst;
+        RefreshGrid();
+    }
 }

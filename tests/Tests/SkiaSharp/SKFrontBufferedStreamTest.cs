@@ -15,7 +15,7 @@ namespace SkiaSharp.Tests
 
 		private readonly byte[] TwentyBytes = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20 };
 
-		[SkippableFact]
+		[Fact]
 		public void ImageCanBeDecoded()
 		{
 			var path = Path.Combine(PathToImages, "color-wheel.png");
@@ -27,7 +27,7 @@ namespace SkiaSharp.Tests
 			Assert.NotNull(bitmap.PeekPixels());
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void OnlyReadWorks()
 		{
 			var ms = new MemoryStream(TwentyBytes);
@@ -46,7 +46,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new byte[] { 15, 16, 17, 18, 19, 20, 0 }, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RewindInBufferWorks()
 		{
 			var ms = new MemoryStream(TwentyBytes);
@@ -71,7 +71,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new byte[] { 8, 9, 10, 11, 12, 13, 14 }, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void SeekInBufferWorks()
 		{
 			var ms = new MemoryStream(TwentyBytes);
@@ -91,7 +91,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new byte[] { 3, 4, 5, 6, 7, 8, 9 }, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ReadPastBufferAfterSeekInBufferWorks()
 		{
 			var ms = new MemoryStream(TwentyBytes);
@@ -111,7 +111,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(new byte[] { 6, 7, 8, 9, 10, 11, 12 }, buffer);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void RewindOutsideBufferThrows()
 		{
 			var ms = new MemoryStream(TwentyBytes);

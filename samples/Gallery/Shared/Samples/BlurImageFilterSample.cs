@@ -19,6 +19,13 @@ public class BlurImageFilterSample : CanvasSampleBase
 	public override string Description =>
 		"Apply Gaussian blur with independent horizontal and vertical sigma controls.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKImageFilter", "SKImageFilter.CreateBlur",
+		"SKManagedStream", "SKBitmap",
+		"SKCanvas.DrawBitmap", "SKCanvas", "SKPaint",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new SliderControl("sigmaX", "Sigma X", 0, 50, sigmaX, 0.5f),
@@ -62,6 +69,6 @@ public class BlurImageFilterSample : CanvasSampleBase
 		using var paint = new SKPaint();
 		paint.ImageFilter = filter;
 
-		canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), paint);
+		canvas.DrawBitmap(cachedBitmap, SKRect.Create(width, height), SKSamplingOptions.Default, paint);
 	}
 }

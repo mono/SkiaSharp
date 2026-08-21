@@ -35,6 +35,18 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 
 	public override string Description => "Encode an animated WebP with letter-by-letter reveal, blink, and fade-out, then play it back.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKPixmap", "SKWebpEncoder", "SKWebpEncoder.EncodeAnimated",
+		"SKWebpEncoderFrame", "SKWebpEncoderOptions",
+		"SKCodecOptions", "SKCodec", "SKData",
+		"SKMaskFilter", "SKMaskFilter.CreateBlur",
+		"SKShader", "SKShader.CreateLinearGradient",
+		"SKBitmap", "SKTypeface", "SKTypeface.FromStream",
+		"SKCanvas.DrawBitmap", "SKCanvas.DrawText", "SKCanvas.DrawCircle", "SKCanvas.DrawRect",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.BitmapDecoding;
 
 	public override DateOnly? DateAdded => new DateOnly(2026, 5, 5);
@@ -197,10 +209,10 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 				IsAntialias = true,
 				MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 6),
 			};
-			canvas.DrawText(ch, x, y, font, glowPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, glowPaint);
 
 			// letter
-			canvas.DrawText(ch, x, y, font, textPaint);
+			canvas.DrawText(ch, x, y, SKTextAlign.Left, font, textPaint);
 			x += charW;
 		}
 	}
@@ -294,7 +306,7 @@ public class AnimatedWebpEncoderSample : CanvasSampleBase
 			(width - dw) / 2f, (height - dh) / 2f,
 			(width + dw) / 2f, (height + dh) / 2f);
 
-		canvas.DrawBitmap(_currentBitmap, destRect);
+		canvas.DrawBitmap(_currentBitmap, destRect, SKSamplingOptions.Default);
 
 		// info bar
 		using var infoPaint = new SKPaint { Color = new SKColor(200, 200, 200), IsAntialias = true };

@@ -24,6 +24,19 @@ public class HeroImageSample : CanvasSampleBase
 	public override string Description =>
 		"Generate a stylized SkiaSharp banner with flowing Bézier curves, gradient text, and a frosted glass logo card.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKSvg", "SKImage", "SKFontVariationPositionCoordinate",
+		"SKMaskFilter", "SKMaskFilter.CreateBlur",
+		"SKImageFilter", "SKImageFilter.CreateBlur",
+		"SKShader", "SKShader.CreateRadialGradient", "SKShader.CreateLinearGradient",
+		"SKPathBuilder", "SKPath", "SKRoundRect",
+		"SKCanvas.DrawPicture", "SKCanvas.ClipRoundRect",
+		"SKCanvas.DrawPath", "SKCanvas.DrawCircle", "SKCanvas.DrawRect",
+		"SKCanvas.DrawRoundRect", "SKCanvas.DrawText", "SKCanvas.DrawImage",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override string Category => SampleManager.General;
 
 	public override IReadOnlyList<SampleControl> Controls =>
@@ -261,7 +274,7 @@ public class HeroImageSample : CanvasSampleBase
 			Shader = titleShader,
 			IsAntialias = true,
 		};
-		canvas.DrawText(titleText, titleX, titleY, titleFont, titlePaint);
+		canvas.DrawText(titleText, titleX, titleY, SKTextAlign.Left, titleFont, titlePaint);
 	}
 
 	private static void DrawFrostedCard(SKCanvas canvas, SKImage bgSnapshot, SKRect cardRect)
@@ -277,7 +290,7 @@ public class HeroImageSample : CanvasSampleBase
 			ImageFilter = SKImageFilter.CreateBlur(20, 20),
 			IsAntialias = true,
 		};
-		canvas.DrawImage(bgSnapshot, 0, 0, blurPaint);
+		canvas.DrawImage(bgSnapshot, 0, 0, SKSamplingOptions.Default, blurPaint);
 
 		using var glassPaint = new SKPaint
 		{

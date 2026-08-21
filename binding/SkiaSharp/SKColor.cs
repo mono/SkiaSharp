@@ -1,7 +1,7 @@
 ﻿#nullable disable
 
 using System;
-using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
@@ -120,125 +120,113 @@ namespace SkiaSharp
 		public static explicit operator uint (SKColor color) =>
 			color.color;
 
-		public static SKColor Parse (string hexString)
+		public static SKColor Parse (string hexString) =>
+			Parse (hexString.AsSpan ());
+
+		public static SKColor Parse (ReadOnlySpan<char> hexString)
 		{
 			if (!TryParse (hexString, out var color))
 				throw new ArgumentException ("Invalid hexadecimal color string.", nameof (hexString));
 			return color;
 		}
 
-		public static bool TryParse (string hexString, out SKColor color)
+		public static bool TryParse (string hexString, out SKColor color) =>
+			TryParse (hexString.AsSpan (), out color);
+
+		public static bool TryParse (ReadOnlySpan<char> hexString, out SKColor color)
 		{
-			if (string.IsNullOrWhiteSpace (hexString)) {
-				// error
-				color = SKColor.Empty;
-				return false;
-			}
-
-#if NETCOREAPP3_1_OR_GREATER || NETSTANDARD2_1_OR_GREATER
-			// clean up string
-			var hexSpan = hexString.AsSpan ().Trim ().TrimStart ('#');
-
-			var len = hexSpan.Length;
-			if (len == 3 || len == 4) {
-				byte a;
-				// parse [A]
-				if (len == 4) {
-					if (!byte.TryParse (hexSpan.Slice (0, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
-						// error
-						color = SKColor.Empty;
-						return false;
-					}
-					a = (byte)(a << 4 | a);
-				} else {
-					a = 255;
-				}
-
-				// parse RGB
-				if (!byte.TryParse (hexSpan.Slice (len - 3, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
-					!byte.TryParse (hexSpan.Slice (len - 2, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
-					!byte.TryParse (hexSpan.Slice (len - 1, 1), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
-					// error
-					color = SKColor.Empty;
-					return false;
-				}
-
-				// success
-				color = new SKColor ((byte)(r << 4 | r), (byte)(g << 4 | g), (byte)(b << 4 | b), a);
-				return true;
-			}
-
-			if (len == 6 || len == 8) {
-				// parse [AA]RRGGBB
-				if (!uint.TryParse (hexSpan, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
-					// error
-					color = SKColor.Empty;
-					return false;
-				}
-
-				// success
-				color = (SKColor)number;
-
-				// alpha was not provided, so use 255
-				if (len == 6) {
-					color = color.WithAlpha (255);
-				}
-				return true;
-			}
-#else
-			// clean up string
-			hexString = hexString.Trim ();
-			var startIndex = hexString[0] == '#' ? 1 : 0;
-
-			var len = hexString.Length - startIndex;
-			if (len == 3 || len == 4) {
-				byte a;
-				// parse [A]
-				if (len == 4) {
-					if (!byte.TryParse (string.Concat (new string (hexString[len - 4 + startIndex], 2)), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a)) {
-						// error
-						color = SKColor.Empty;
-						return false;
-					}
-				} else {
-					a = 255;
-				}
-
-				// parse RGB
-				if (!byte.TryParse (new string (hexString[len - 3 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var r) ||
-					!byte.TryParse (new string (hexString[len - 2 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var g) ||
-					!byte.TryParse (new string (hexString[len - 1 + startIndex], 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b)) {
-					// error
-					color = SKColor.Empty;
-					return false;
-				}
-
-				// success
-				color = new SKColor (r, g, b, a);
-				return true;
-			}
-
-			if (len == 6 || len == 8) {
-				// parse [AA]RRGGBB
-				if (!uint.TryParse (hexString.Substring (startIndex), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var number)) {
-					// error
-					color = SKColor.Empty;
-					return false;
-				}
-
-				// success
-				color = (SKColor)number;
-
-				// alpha was not provided, so use 255
-				if (len == 6) {
-					color = color.WithAlpha (255);
-				}
-				return true;
-			}
-#endif
-
-			// error
 			color = SKColor.Empty;
+
+			// Trim surrounding whitespace and any leading '#'. Re-basing the span to index 0 also lets
+			// the JIT prove the fixed-length indexes below are in range and drop the bounds checks.
+			hexString = hexString.Trim ().TrimStart ('#');
+
+			switch (hexString.Length) {
+				case 3: {
+					// #RGB -> each nibble is duplicated (e.g. "F" -> 0xFF)
+					if (!TryParseNibble (hexString[0], out var r) ||
+						!TryParseNibble (hexString[1], out var g) ||
+						!TryParseNibble (hexString[2], out var b))
+						return false;
+
+					color = new SKColor (
+						(byte)(r << 4 | r),
+						(byte)(g << 4 | g),
+						(byte)(b << 4 | b));
+					return true;
+				}
+				case 4: {
+					// #ARGB -> each nibble is duplicated (e.g. "F" -> 0xFF)
+					if (!TryParseNibble (hexString[0], out var a) ||
+						!TryParseNibble (hexString[1], out var r) ||
+						!TryParseNibble (hexString[2], out var g) ||
+						!TryParseNibble (hexString[3], out var b))
+						return false;
+
+					color = new SKColor (
+						(byte)(r << 4 | r),
+						(byte)(g << 4 | g),
+						(byte)(b << 4 | b),
+						(byte)(a << 4 | a));
+					return true;
+				}
+				case 6: {
+					// #RRGGBB
+					if (!TryParseByte (hexString[0], hexString[1], out var r) ||
+						!TryParseByte (hexString[2], hexString[3], out var g) ||
+						!TryParseByte (hexString[4], hexString[5], out var b))
+						return false;
+
+					color = new SKColor (r, g, b);
+					return true;
+				}
+				case 8: {
+					// #AARRGGBB
+					if (!TryParseByte (hexString[0], hexString[1], out var a) ||
+						!TryParseByte (hexString[2], hexString[3], out var r) ||
+						!TryParseByte (hexString[4], hexString[5], out var g) ||
+						!TryParseByte (hexString[6], hexString[7], out var b))
+						return false;
+
+					color = new SKColor (r, g, b, a);
+					return true;
+				}
+				default:
+					return false;
+			}
+		}
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		private static bool TryParseNibble (char c, out byte value)
+		{
+			// Convert a single ASCII hex digit to its 0-15 value, case-insensitively
+			// ('a'-'f' and 'A'-'F' both map to 10-15).
+			if (c >= '0' && c <= '9') {
+				value = (byte)(c - '0');
+				return true;
+			}
+			if (c >= 'a' && c <= 'f') {
+				value = (byte)(c - 'a' + 10);
+				return true;
+			}
+			if (c >= 'A' && c <= 'F') {
+				value = (byte)(c - 'A' + 10);
+				return true;
+			}
+
+			value = 0;
+			return false;
+		}
+
+		[MethodImpl (MethodImplOptions.AggressiveInlining)]
+		private static bool TryParseByte (char hi, char lo, out byte value)
+		{
+			if (TryParseNibble (hi, out var h) && TryParseNibble (lo, out var l)) {
+				value = (byte)(h << 4 | l);
+				return true;
+			}
+
+			value = 0;
 			return false;
 		}
 	}

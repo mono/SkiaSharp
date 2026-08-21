@@ -24,6 +24,14 @@ public class TextOnPathSample : CanvasSampleBase
 	public override string Description =>
 		"Draw text along circle, wave, and heart-shaped paths with adjustable offset and size.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKPathMeasure", "SKCanvas.DrawTextOnPath",
+		"SKPathBuilder", "SKPath",
+		"SKCanvas.DrawPath", "SKCanvas.DrawText",
+		"SKCanvas", "SKPaint", "SKFont", "SKTypeface",
+	];
+
 	public override IReadOnlyList<SampleControl> Controls =>
 	[
 		new PickerControl("text", "Text", TextOptions, textIndex),
@@ -99,7 +107,7 @@ public class TextOnPathSample : CanvasSampleBase
 		// Draw labels
 		using var labelPaint = new SKPaint { IsAntialias = true, Color = SKColors.White };
 		using var labelFont = new SKFont(SKTypeface.Default, 14);
-		canvas.DrawText($"Shape: {PathShapes[pathShapeIndex]}  Warp: {(warpGlyphs ? "on" : "off")}  Offset: {textOffset:F2}", 10, 20, labelFont, labelPaint);
+		canvas.DrawText($"Shape: {PathShapes[pathShapeIndex]}  Warp: {(warpGlyphs ? "on" : "off")}  Offset: {textOffset:F2}", 10, 20, SKTextAlign.Left, labelFont, labelPaint);
 	}
 
 	private static SKPath CreateCirclePath(float cx, float cy, float radius)

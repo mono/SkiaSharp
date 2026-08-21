@@ -1,96 +1,58 @@
 ---
 description: "Daily upstream Skia milestone sync - merges new commits, resolves conflicts, builds, tests, and creates PRs."
 
+# -- Engine ------------------------------------------------------------
+# Use Claude Opus for the primary update work. A controlled Sonnet 5 evaluation
+# was cheaper when successful, but did not achieve the required reliability.
+engine:
+  id: copilot
+model: claude-opus-4.8
+
 # -- Triggers ----------------------------------------------------------
-# Three daily crons: current (7 AM), next (12 PM), latest (5 PM UTC).
-# Manual dispatch with mode selector.
+# One fuzzy schedule every 6h. Scheduled runs pass no target, so the detector ROTATES:
+# it picks ONE supported line from versions.json per run, round-robin
+# (see .github/scripts/skia-sync-detect.sh / rotate_select). Manual dispatch may pin a
+# specific `target` (a milestone number, or `main` for the upstream tip).
 on:
-  schedule:
-    - cron: "0 7 * * *"
-    - cron: "0 12 * * *"
-    - cron: "0 17 * * *"
+  schedule: every 6h
   workflow_dispatch:
     inputs:
-      mode:
-        description: "Which milestone to track"
+      target:
+        description: "What to sync. Empty = rotate over the supported versions.json lines (the scheduled default). Or a milestone number (e.g. 151), or `main` for the very tip of upstream Skia (google/skia main HEAD — bleeding edge, NOT a version bump)."
         required: false
-        type: choice
-        default: next
-        options: [current, next, latest]
-      milestone:
-        description: "Exact milestone number (e.g. 148) — overrides mode if set"
+        type: string
+      base_branch:
+        description: "Optional mono/SkiaSharp base branch override for manual workflow validation. Empty uses normal main/release detection."
         required: false
         type: string
 
   # -- Pre-activation step -------------------------------------------
-  # Runs BEFORE the agent job. Detects the target milestone.
-  # Exit 1 = skip the entire workflow (upstream branch doesn't exist).
+  # Runs BEFORE the agent job. Detects the target milestone + branch line.
+  # All resolution and work-detection logic lives in the committed
+  # .github/scripts/skia-sync-detect.sh (the single source of truth,
+  # sparse-checked-out below).
+  # Exit 1 = hard failure (explicit milestone input doesn't exist / branch missing).
+  # skip=true output = nothing to sync; skip=false = verified work to do.
+  # A missing output never activates the agent.
   # Outputs are available in the prompt via ${{ needs.pre_activation.outputs.* }}.
   steps:
+    - name: Check out detection scripts
+      uses: actions/checkout@v7.0.1
+      with:
+        sparse-checkout: .github/scripts
     - name: Detect milestone
       id: detect
+      # Scheduled runs pass an empty target — the detector then ROTATES: it reads
+      # versions.json's `support` block and picks one supported line per run, round-robin
+      # by GITHUB_RUN_NUMBER (stable across jobs, so this gate and the agent-job prepare step
+      # resolve the SAME target). Manual dispatch passes a milestone number or `main`.
+      # Staged into an env var rather than interpolated into `run:`, so the free-form input
+      # can't inject shell — the script consumes it as a real --target arg.
       env:
-        INPUT_MODE: ${{ github.event.inputs.mode }}
-        INPUT_MILESTONE: ${{ github.event.inputs.milestone }}
-        SCHEDULE: ${{ github.event.schedule }}
+        SYNC_TARGET: ${{ github.event.inputs.target }}
+        SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
         GH_TOKEN: ${{ github.token }}
-      run: |
-        if [ -n "$INPUT_MODE" ]; then
-          MODE="$INPUT_MODE"
-        elif [ "$SCHEDULE" = "0 7 * * *" ]; then
-          MODE=current
-        elif [ "$SCHEDULE" = "0 17 * * *" ]; then
-          MODE=latest
-        else
-          MODE=next
-        fi
-        echo "mode=$MODE" >> "$GITHUB_OUTPUT"
-
-        CURRENT=$(gh api "repos/$GITHUB_REPOSITORY/contents/scripts/VERSIONS.txt?ref=$GITHUB_REF" \
-          --jq '.content' | base64 -d | grep '^libSkiaSharp.*milestone' | awk '{print $NF}')
-        echo "current=$CURRENT" >> "$GITHUB_OUTPUT"
-
-        NEXT=$((CURRENT + 1))
-        echo "next=$NEXT" >> "$GITHUB_OUTPUT"
-
-        LATEST=$(git ls-remote --heads https://github.com/google/skia.git 'refs/heads/chrome/m*' \
-          | sed -n 's|.*refs/heads/chrome/m\([0-9]*\)$|\1|p' \
-          | sort -n | tail -1)
-        echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
-
-        # Explicit milestone input overrides mode
-        if [ -n "$INPUT_MILESTONE" ]; then
-          TARGET="$INPUT_MILESTONE"
-          MODE="explicit"
-        elif [ "$MODE" = "latest" ]; then
-          TARGET="$LATEST"
-        elif [ "$MODE" = "current" ]; then
-          TARGET="$CURRENT"
-        else
-          TARGET="$NEXT"
-        fi
-        echo "target=$TARGET" >> "$GITHUB_OUTPUT"
-
-        UPSTREAM_SHA=$(git ls-remote https://github.com/google/skia.git "refs/heads/chrome/m${TARGET}" | awk '{print $1}')
-        if [ -z "$UPSTREAM_SHA" ]; then
-          echo "::notice::upstream/chrome/m${TARGET} does not exist yet"
-          exit 1
-        fi
-
-        # Check if the sync branch already contains all upstream commits.
-        # This avoids spinning up the expensive agent job when there's nothing new.
-        SYNC_SHA=$(git ls-remote https://github.com/mono/skia.git "refs/heads/skia-sync/m${TARGET}" | awk '{print $1}')
-        if [ -n "$SYNC_SHA" ]; then
-          BEHIND=$(gh api "repos/mono/skia/compare/${UPSTREAM_SHA}...skia-sync/m${TARGET}" \
-            --jq '.behind_by' 2>/dev/null || echo "unknown")
-          if [ "$BEHIND" = "0" ]; then
-            echo "::notice::chrome/m${TARGET} already fully merged into skia-sync/m${TARGET} (upstream HEAD: ${UPSTREAM_SHA:0:12}) — skipping"
-            exit 1
-          fi
-          echo "Sync branch exists but is ${BEHIND} commits behind upstream"
-        fi
-
-        echo "Will process: m${TARGET} (mode=${MODE}, current=m${CURRENT}, latest=m${LATEST})"
+      run: bash .github/scripts/skia-sync-detect.sh --output "$GITHUB_OUTPUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
 
 # -- Pre-activation outputs ------------------------------------------
 # Expose detect step outputs for use in the prompt and other jobs.
@@ -99,22 +61,27 @@ jobs:
   pre-activation:
     outputs:
       current: ${{ steps.detect.outputs.current }}
-      next: ${{ steps.detect.outputs.next }}
-      latest: ${{ steps.detect.outputs.latest }}
       target: ${{ steps.detect.outputs.target }}
+      upstream_ref: ${{ steps.detect.outputs.upstream_ref }}
       mode: ${{ steps.detect.outputs.mode }}
+      skip: ${{ steps.detect.outputs.skip }}
+      is_release: ${{ steps.detect.outputs.is_release }}
+      base_branch: ${{ steps.detect.outputs.base_branch }}
+      skia_base_branch: ${{ steps.detect.outputs.skia_base_branch }}
+      head_branch: ${{ steps.detect.outputs.head_branch }}
 
 # -- Agent job gate --------------------------------------------------
-# Only run the agent if pre-activation succeeded (milestone detected).
-if: needs.pre_activation.outputs.detect_result == 'success'
+# Only run the agent if pre-activation succeeded and explicitly found work to do.
+if: needs.pre_activation.outputs.detect_result == 'success' && needs.pre_activation.outputs.skip == 'false'
 
 # -- Checkout --------------------------------------------------------
 checkout:
   - fetch-depth: 0
     submodules: recursive
 timeout-minutes: 120
+max-ai-credits: 2000
 concurrency:
-  group: skia-upstream-sync-${{ github.event.inputs.mode || github.event.schedule || 'manual' }}
+  group: skia-upstream-sync-${{ github.event.inputs.base_branch || 'auto' }}-${{ github.event.inputs.target || github.event.schedule || 'manual' }}
   cancel-in-progress: true
 
 # -- Agent tools -----------------------------------------------------
@@ -140,31 +107,48 @@ network:
     - "swiftshader.googlesource.com"
     - "chrome-infra-packages.appspot.com"
     - "gn.googlesource.com"
-    - "storage.googleapis.com"
+    - dart
 
 # -- Environment -----------------------------------------------------
 # Clang is required for the Linux native build (retpoline flag).
 env:
   CC: clang
   CXX: clang++
+  SKIA_SYNC_ARTIFACT_DIR: /tmp/gh-aw/agent
 permissions:
   contents: read
   pull-requests: read
 
 # -- Safe outputs ------------------------------------------------------
-# All GitHub writes (push, PR) are done in post-steps via bash.
-# Stage all safe outputs so the agent can't create issues/PRs directly.
+# All real GitHub writes (push, both PRs) are done in the post-step via bash with
+# SKIASHARP_AUTOBUMP_TOKEN — gh-aw can't create the mono/skia PR (the submodule's merge
+# commits live in a nested repo gh-aw sees only as a gitlink) and `staged: true` keeps the
+# agent from creating anything directly.
+#
+# `create-pull-request` is declared ONLY as an honest completion signal: it is kept STAGED
+# (preview-only — NO real PR is created), so a successful sync registers as a pull-request
+# output instead of being mislabeled a "no-op". The agent calls it when work was done and
+# `noop` only when there genuinely was none.
 safe-outputs:
   staged: true
+  create-pull-request:
+    staged: true
+    if-no-changes: ignore
+  # report-as-issue defaults to true, but this workflow has no `issues: write` and a real sync
+  # is NOT a no-op — disable the no-op→issue posting so genuine no-work runs don't try (and fail)
+  # to file a "no-op runs" issue.
+  noop:
+    report-as-issue: false
 
 # -- Sandbox -----------------------------------------------------------
-# Mount host /etc/fonts into the AWF chroot so Skia's fontconfig can find fonts.
-# Without this, /etc/fonts/fonts.conf doesn't exist in the chroot and
-# SKTypeface.Default is empty (46 test failures).
+# Mount host fontconfig config AND font files into the AWF chroot.
+# /etc/fonts provides fonts.conf; /usr/share/fonts provides the actual .ttf files.
+# Without BOTH, fontconfig resolves 0 fonts and SKTypeface tests fail (61 failures).
 sandbox:
   agent:
     mounts:
       - "/etc/fonts:/etc/fonts:ro"
+      - "/usr/share/fonts:/usr/share/fonts:ro"
 
 # -- Pre-agent steps (host) ------------------------------------------
 # Both steps: and pre-agent-steps: run on the HOST, not inside the AWF container.
@@ -173,23 +157,50 @@ steps:
   - name: Set up agent output directory
     run: |
       mkdir -p /tmp/gh-aw/agent
-  - name: Align submodule to origin/main
+  - name: Prepare Skia checkout
+    # Same target resolution as the pre_activation detect step (see there). The agent job
+    # can't read pre_activation's outputs (it only `needs:` activation), so re-run the
+    # same committed detector to recover base_branch / skia_base_branch, then prepare the
+    # submodule and exact upstream analysis range. For rotation runs (empty target), the
+    # detector picks the SAME line as pre_activation because the round-robin index is
+    # GITHUB_RUN_NUMBER (identical across jobs) and main's config is read at the immutable
+    # $GITHUB_SHA. skia-sync-detect.sh is the single source of truth.
+    env:
+      SYNC_TARGET: ${{ github.event.inputs.target }}
+      SYNC_BASE_BRANCH: ${{ github.event.inputs.base_branch }}
+      GH_TOKEN: ${{ github.token }}
     run: |
-      # The checkout uses the workflow branch, so the submodule may be at a
-      # different SHA than what origin/main expects. Fix it before the agent runs.
-      # Note: the submodule tracks the `skiasharp` branch in mono/skia, so this
-      # SHA should be a commit on origin/skiasharp.
-      MAIN_SUB_SHA=$(git ls-tree origin/main -- externals/skia | awk '{print $3}')
-      echo "origin/main submodule SHA: $MAIN_SUB_SHA"
-      git -C externals/skia fetch origin skiasharp 2>&1
-      git -C externals/skia checkout "$MAIN_SUB_SHA" 2>&1
-      echo "Verifying SHA is on skiasharp branch:"
-      git -C externals/skia branch -r --contains "$MAIN_SUB_SHA" | grep -q 'origin/skiasharp' \
-        && echo "  ✅ SHA is on origin/skiasharp" \
-        || echo "  ⚠️ SHA is NOT on origin/skiasharp — submodule pointer may be stale"
-  - name: Copy push script for post-step
+      OUT=$(mktemp)
+      bash .github/scripts/skia-sync-detect.sh --resolve-only --output "$OUT" --target "$SYNC_TARGET" --base-branch "$SYNC_BASE_BRANCH"
+      set -a
+      # shellcheck disable=SC1090
+      . "$OUT"
+      set +a
+      bash .github/scripts/skia-sync-prepare-skia.sh
+      {
+        printf 'SKIA_SYNC_AUTOMATION=1\n'
+        printf 'SKIA_SYNC_CURRENT=%s\n' "$current"
+        printf 'SKIA_SYNC_TARGET=%s\n' "$target"
+        printf 'SKIA_SYNC_UPSTREAM_REF=%s\n' "$upstream_ref"
+        printf 'SKIA_SYNC_IS_RELEASE=%s\n' "$is_release"
+        printf 'SKIA_SYNC_BASE_BRANCH=%s\n' "$base_branch"
+        printf 'SKIA_SYNC_SKIA_BASE_BRANCH=%s\n' "$skia_base_branch"
+        printf 'SKIA_SYNC_HEAD_BRANCH=%s\n' "$head_branch"
+        printf 'SKIA_SYNC_PLATFORM=linux\n'
+        printf 'SKIA_SYNC_ARCH=x64\n'
+        printf 'SKIA_SYNC_SKIA_BASE_SHA=%s\n' "$(git -C externals/skia rev-parse HEAD)"
+      } >> "$GITHUB_ENV"
+  - name: Stage immutable workflow assets
     run: |
-      cp .github/scripts/skia-sync-push-prs.sh /tmp/gh-aw/skia-sync-push-prs.sh
+      RUNTIME_DIR="$RUNNER_TEMP/gh-aw/skia-sync-runtime"
+      mkdir -p "$RUNTIME_DIR"
+      cp -a .agents/skills/update-skia "$RUNTIME_DIR/update-skia"
+      cp -a .github/scripts/skia-sync-push-prs.sh "$RUNTIME_DIR/skia-sync-push-prs.sh"
+      {
+        printf 'SKIA_SYNC_RUNTIME_DIR=%s\n' "$RUNTIME_DIR"
+        printf 'SKIA_SYNC_SKILL_DIR=%s\n' "$RUNTIME_DIR/update-skia"
+      } >> "$GITHUB_ENV"
+      chmod -R a-w "$RUNTIME_DIR"
 
 # -- Pre-agent steps ---------------------------------------------------
 # Run on the host before the agent starts. Packages installed here are visible
@@ -197,69 +208,173 @@ steps:
 # carry into the chroot — the agent must run it itself.
 pre-agent-steps:
   - name: Install native build dependencies
+    # These run on the HOST and are visible to the agent's AWF chroot via the shared
+    # filesystem. The agent itself CANNOT apt-install anything (no apt inside the chroot,
+    # and the firewall blocks the Ubuntu archives), so every native build dependency must
+    # be installed here.
+    #
+    # libc++: native/linux/build.cake builds libSkiaSharp/libHarfBuzzSharp with
+    # `-stdlib=libc++` (clang's LLVM C++ runtime). On the real CI this comes from the
+    # .NET cross-compilation image; for this host build we must install libc++-dev +
+    # libc++abi-dev or the compile fails with "cannot find <libc++ headers>". Keep this in
+    # sync with native/linux/build.cake's extra_cflags/extra_ldflags.
     run: |
       sudo apt-get update -qq
-      sudo apt-get install -y clang fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts
+      sudo apt-get install -y clang libc++-dev libc++abi-dev fontconfig libfontconfig1-dev ninja-build fonts-dejavu-core ttf-ancient-fonts xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 mesa-vulkan-drivers vulkan-tools
+      LAVAPIPE_ICD=$(dpkg -L mesa-vulkan-drivers | grep -E '/lvp_icd(\.x86_64)?\.json$' | head -n 1)
+      if [ -z "$LAVAPIPE_ICD" ]; then
+        echo "::error::mesa-vulkan-drivers did not install a lavapipe ICD manifest."
+        exit 1
+      fi
+      export VK_ICD_FILENAMES="$LAVAPIPE_ICD"
+      export VK_DRIVER_FILES="$LAVAPIPE_ICD"
+      {
+        echo "VK_ICD_FILENAMES=$LAVAPIPE_ICD"
+        echo "VK_DRIVER_FILES=$LAVAPIPE_ICD"
+      } >> "$GITHUB_ENV"
       fc-cache -f
       dotnet workload install android --skip-sign-check
     env:
       DEBIAN_FRONTEND: noninteractive
+  - name: Verify Mesa lavapipe
+    run: |
+      set -euo pipefail
+      if [ ! -r "$VK_DRIVER_FILES" ]; then
+        echo "::error::Mesa lavapipe ICD manifest is missing or unreadable: $VK_DRIVER_FILES"
+        exit 1
+      fi
 
+      VULKANINFO_OUTPUT=$(mktemp)
+      if ! vulkaninfo --summary >"$VULKANINFO_OUTPUT" 2>&1; then
+        cat "$VULKANINFO_OUTPUT"
+        echo "::error::vulkaninfo could not initialize the pinned Mesa lavapipe ICD."
+        exit 1
+      fi
+      cat "$VULKANINFO_OUTPUT"
+
+      if ! grep -Eiq '(deviceName|driverName).*(llvmpipe|lavapipe)' "$VULKANINFO_OUTPUT"; then
+        echo "::error::The pinned Vulkan ICD did not expose Mesa lavapipe/llvmpipe."
+        exit 1
+      fi
+      echo "Verified deterministic software Vulkan through $VK_DRIVER_FILES"
+  - name: Verify Mesa software OpenGL
+    run: |
+      set -euo pipefail
+      nohup Xvfb :99 -screen 0 1280x1024x24 > /tmp/xvfb.log 2>&1 &
+      sleep 3
+      {
+        echo "DISPLAY=:99"
+        echo "LIBGL_ALWAYS_SOFTWARE=1"
+        echo "GALLIUM_DRIVER=softpipe"
+      } >> "$GITHUB_ENV"
+
+      DISPLAY=:99 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=softpipe \
+        glxinfo -B | tee /tmp/glxinfo.txt
+      if ! grep -Eiq 'renderer string:.*softpipe' /tmp/glxinfo.txt; then
+        cat /tmp/xvfb.log
+        echo "::error::Mesa software OpenGL did not initialize with softpipe."
+        exit 1
+      fi
+      echo "Verified deterministic software OpenGL through Mesa softpipe on Xvfb."
 # -- Post-agent steps -----------------------------------------------
-# Run AFTER the AI finishes. Pushes branches and creates/updates PRs
-# using the SKIASHARP_AUTOBUMP_TOKEN (has write access to mono/skia).
+# Run AFTER the AI finishes. Finalize mechanical metadata without credentials,
+# then push branches and create/update PRs with the write credential.
 post-steps:
+  - name: Finalize sync metadata
+    env:
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
+    run: |
+      set -euo pipefail
+      test "$(git branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+      test "$(git -C externals/skia branch --show-current)" = "$SKIA_SYNC_HEAD_BRANCH"
+
+      UNEXPECTED_CHANGES=$(
+        {
+          git diff --name-only
+          git diff --cached --name-only
+        } | sort -u | grep -Ev '^(cgmanifest\.json|scripts/VERSIONS\.txt|scripts/azure-templates-variables\.yml|externals/skia|externals/depot_tools)$' || true
+      )
+      if [ -n "$UNEXPECTED_CHANGES" ]; then
+        echo "::error::The agent left uncommitted semantic changes:"
+        echo "$UNEXPECTED_CHANGES"
+        exit 1
+      fi
+
+      python3 "$SKIA_SYNC_SKILL_DIR/scripts/update_versions.py" --repo-root "$GITHUB_WORKSPACE"
+
+      if ! git -C externals/skia diff --quiet || ! git -C externals/skia diff --cached --quiet; then
+        echo "::error::The finalizer changed mono/skia; the agent did not commit its native work."
+        exit 1
+      fi
+
+      git add cgmanifest.json scripts/VERSIONS.txt scripts/azure-templates-variables.yml externals/skia
+      if ! git diff --cached --quiet; then
+        git config user.name "SkiaSharp Sync"
+        git config user.email "devnull@localhost"
+        git commit -m "[skia-sync] Finalize deterministic metadata"
+      fi
+      git diff --quiet -- . ':(exclude)externals/depot_tools'
+      git diff --cached --quiet
   - name: Push branches and create PRs
     env:
       GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
-    run: bash /tmp/gh-aw/skia-sync-push-prs.sh
+      SKIA_SYNC_RUNTIME_DIR: ${{ runner.temp }}/gh-aw/skia-sync-runtime
+    run: bash "$SKIA_SYNC_RUNTIME_DIR/skia-sync-push-prs.sh"
 ---
 
-# Skia Upstream Sync
+# Sync - Skia Upstream
 
-Current: `m${{ needs.pre_activation.outputs.current }}`.  
-Target: `m${{ needs.pre_activation.outputs.target }}`.  
-Branch: `skia-sync/m${{ needs.pre_activation.outputs.target }}`.  
+Read `$SKIA_SYNC_SKILL_DIR/SKILL.md` and use that immutable staged copy as the complete
+engineering process. Load one numbered phase reference at a time from the same directory.
 
-**Read `.agents/skills/update-skia/SKILL.md` and follow Phases 2-10.** Notes specific to this automated workflow:
+## 1. Resolved runtime state
 
-- **Phase 1 is pre-computed** (above). Skip it — but you still need to add the `upstream` remote
-  and fetch `chrome/m${{ needs.pre_activation.outputs.target }}` (Phase 1 step 4) since Phase 5 depends on it.
-- **First thing**: run `dotnet tool restore` (pre-agent-steps can't do this for the chroot).
-- **Phase 4**: Before creating a fresh branch, check if `origin/skia-sync/m${{ needs.pre_activation.outputs.target }}` already exists.
-  If so, check it out — the pre-activation step already verified new upstream commits exist.
-  Even when current == target, there may be new upstream bug-fix commits — a matching milestone does NOT mean no work.
-  **Skip Phase 4 step 5** (submodule SHA alignment) — the pre-agent step already aligned it.
-  Branch from the current HEAD when creating the submodule feature branch in step 6.
-- **Build platform**: use Linux x64 (`dotnet cake --target=externals-linux --arch=x64`). Clang is pre-configured via env vars.
-  This also applies to Phase 10 if a native rebuild is needed.
-- **NEVER run `externals-download`** in this workflow — not even for debugging or baseline comparison. Build from source only.
-- **Phase 9 reminder**: a green C# build is NOT sufficient - run the new-function diff check from Phase 9 step 1.
-- **Phase 11 — do NOT execute it.** Replace it entirely with the file writes below.
-  Do NOT push branches, create PRs, or create issues — all GitHub artifacts are handled by the post-step.
-  Just commit locally. Do NOT call `create_issue` or `create_pull_request`.
-- **"No work" signal**: the pre-activation step skips the workflow when there are no new upstream commits,
-  so this should not happen. If somehow it does, do NOT write `skia-sync-env.sh` and stop.
+| Value | Resolved setting |
+|---|---|
+| Current milestone | `${{ needs.pre_activation.outputs.current }}` |
+| Target milestone | `${{ needs.pre_activation.outputs.target }}` |
+| Upstream ref | `${{ needs.pre_activation.outputs.upstream_ref }}` |
+| Parent base | `${{ needs.pre_activation.outputs.base_branch }}` |
+| mono/skia base | `${{ needs.pre_activation.outputs.skia_base_branch }}` |
+| Shared head branch | `${{ needs.pre_activation.outputs.head_branch }}` |
+| Release-line mode | `${{ needs.pre_activation.outputs.is_release }}` |
+| Build target | `linux / x64` |
 
-After Phase 10, write these files:
+These values are exported as `SKIA_SYNC_*`. Phase 01 target resolution and no-work detection are
+already complete; verify the supplied refs and begin its research work. Do not re-derive or replace
+the supplied values.
 
-1. `/tmp/gh-aw/agent/skia-sync-env.sh` — **required** for the post-step to know what to push:
-   ```bash
-   mkdir -p /tmp/gh-aw/agent
-   cat > /tmp/gh-aw/agent/skia-sync-env.sh << EOF
-   TARGET=${{ needs.pre_activation.outputs.target }}
-   CURRENT=${{ needs.pre_activation.outputs.current }}
-   EOF
-   ```
+## 2. Provisioned environment
 
-2. `/tmp/gh-aw/agent/skia-sync-skia-summary.md` - for the mono/skia PR:
-   - Upstream merge details, conflicts resolved, C API fixes, items needing human attention
+- The selected parent base is fetched, the submodule is aligned to that base's exact recorded
+  pointer, and the target upstream ref and recorded base-upstream SHA are fetched.
+- The exact update-skia skill from the triggering workflow revision is staged read-only at
+  `$SKIA_SYNC_SKILL_DIR`. It remains authoritative after the product checkout switches branches.
+- No native tree is prebuilt. The first mandatory merged-target source build starts cold and normally
+  takes 10–20 minutes. Wait for it to finish; do not treat the expected quiet compile period as a hang,
+  cancel it, or restart it solely because of its duration.
+- Clang, libc++, fontconfig/fonts, Ninja, Android workload, Xvfb, and Mesa software GL/Vulkan are
+  installed. Mesa softpipe and the lavapipe ICD are pinned so every Linux backend required by
+  `GpuPolicy` executes deterministically.
+- The sandbox cannot install host packages. Diagnose update failures in source, dependencies, or
+  durable repository configuration; do not alter flags to mask a missing prerequisite.
 
-3. `/tmp/gh-aw/agent/skia-sync-skiasharp-summary.md` - for the mono/SkiaSharp PR:
-   - Breaking change analysis, version/binding updates, C# changes, build/test results, items needing human attention
+## 3. Execution contract
 
-All files written to `/tmp/gh-aw/agent/` are automatically uploaded as workflow artifacts.
-Write test output there too (`/tmp/gh-aw/agent/test-output.txt`) so failures can be inspected after the run.
+- Complete Phases 02–10 in order. Phase 03 must finish before either feature branch is created.
+- The agent job starts only after upstream work is detected. It must complete or fail; never return
+  `noop` or human-review output for an unresolved build/test failure.
+- Build and test failures are work to diagnose and fix. The final gate is the unfiltered solution
+  with every maintained host and every `GpuPolicy`-required backend executing successfully, exactly
+  as defined by the skill.
+- For a deterministic failure, trace the failing call through its direct implementation and
+  preconditions before widening the search. Expand to surrounding logs or broader history only when
+  evidence rules out that path.
+- Commit only to `${{ needs.pre_activation.outputs.head_branch }}` in both local repositories.
 
-Commit submodule changes inside `externals/skia` on `skia-sync/m${{ needs.pre_activation.outputs.target }}`.
-Commit parent repo changes on `skia-sync/m${{ needs.pre_activation.outputs.target }}` in the parent.
+## 4. Automated delivery
+
+After every gate passes, follow Phase 11's **Automated delivery** contract. Do not push branches or
+create real PRs/issues from the agent. Write the required artifacts under
+`/tmp/gh-aw/agent`, then invoke staged `create_pull_request` once as the completion signal.
+The deterministic post-step performs guarded pushes and creates the two cross-linked draft PRs.

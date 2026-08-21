@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKFontTest : SKTest
 	{
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextEncoding.Utf8)]
 		[InlineData(SKTextEncoding.Utf16)]
 		[InlineData(SKTextEncoding.Utf32)]
@@ -20,7 +20,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, count);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextEncoding.Utf8)]
 		[InlineData(SKTextEncoding.Utf16)]
 		[InlineData(SKTextEncoding.Utf32)]
@@ -33,7 +33,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, count);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void UnicharCountReturnsCorrectCount()
 		{
 			var text = new uint[] { 79 };
@@ -50,7 +50,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CountGlyphsReturnsTheCorrectNumberOfGlyphsForEmtptyString()
 		{
 			using var font = new SKFont();
@@ -58,7 +58,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.CountGlyphs(""));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CountGlyphsSucceedsForNullPointerZeroLength()
 		{
 			using var font = new SKFont();
@@ -66,7 +66,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.CountGlyphs(IntPtr.Zero, 0, SKTextEncoding.Utf16));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CountGlyphsThrowsForNullPointer()
 		{
 			using var font = new SKFont();
@@ -74,7 +74,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => font.CountGlyphs(IntPtr.Zero, 123, SKTextEncoding.Utf16));
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void PlainGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
@@ -87,9 +87,11 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
+		[Fact]
 		public void UnicodeGlyphsReturnsTheCorrectNumberOfCharacters()
 		{
+			SkipWhenNoSystemFontManager();
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
@@ -104,9 +106,10 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(0, font.GetGlyphs(text)[0]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ContainsTextIsCorrect()
 		{
+			SkipWhenNoDefaultFont();
 			const string text = "A";
 
 			using var font = new SKFont();
@@ -116,9 +119,11 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
-		[SkippableFact]
+		[Fact]
 		public void ContainsUnicodeTextIsCorrect()
 		{
+			SkipWhenNoSystemFontManager();
+
 			const string text = "🚀";
 			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
 
@@ -137,7 +142,7 @@ namespace SkiaSharp.Tests
 			Assert.True(font.ContainsGlyphs(text));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanMeasureBadUnicodeText()
 		{
 			using var font = new SKFont();
@@ -148,9 +153,10 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKRect.Empty, rect);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextMeasuresTheText()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!");
@@ -158,9 +164,10 @@ namespace SkiaSharp.Tests
 			Assert.True(width > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextMeasuresTheTextForBytes()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
@@ -177,9 +184,10 @@ namespace SkiaSharp.Tests
 			Assert.Equal(width8, width32);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextReturnsTheBounds()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			var width = font.MeasureText("Hello World!", out var bounds);
@@ -188,9 +196,10 @@ namespace SkiaSharp.Tests
 			Assert.NotEqual(SKRect.Empty, bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextReturnsTheBoundsForBytes()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			var text8 = StringUtilities.GetEncodedText("Hello World!", SKTextEncoding.Utf8);
@@ -211,7 +220,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(bounds8, bounds32);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextMeasuresTheTextForGlyphs()
 		{
 			using var font = new SKFont();
@@ -223,7 +232,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedWidth, width);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextReturnsTheBoundsForGlyphs()
 		{
 			using var font = new SKFont();
@@ -236,7 +245,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(expectedBounds, bounds);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextSucceedsForEmptyString()
 		{
 			using var font = new SKFont();
@@ -244,7 +253,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.MeasureText(""));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextSucceedsForNullPointerZeroLength()
 		{
 			using var font = new SKFont();
@@ -252,7 +261,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.MeasureText(IntPtr.Zero, 0, SKTextEncoding.Utf16));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void MeasureTextThrowsForNullPointer()
 		{
 			using var font = new SKFont();
@@ -260,7 +269,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => font.MeasureText(IntPtr.Zero, 123, SKTextEncoding.Utf16));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetGlyphWidthsReturnsTheCorrectAmount()
 		{
 			using var font = new SKFont();
@@ -270,9 +279,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(widths.Length, bounds.Length);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetGlyphWidthsAreCorrect()
 		{
+			SkipWhenNoDefaultFont();
+			SkipOnPlatform(IsBrowser, "WASM has no system fonts for glyph width measurement");
+
 			using var font = new SKFont(SKTypeface.Default);
 
 			var widths = font.GetGlyphWidths("Hello World!", out var bounds);
@@ -294,9 +306,10 @@ namespace SkiaSharp.Tests
 			Assert.True(bounds[2] != bounds[6]);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public unsafe void TextInterceptsAreFoundCorrectly()
 		{
+			SkipWhenNoDefaultFont();
 			var text = "|";
 
 			using var font = new SKFont(SKTypeface.Default);
@@ -315,7 +328,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal((double)pathWidth, (double)diff, 2);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetTextPathSucceedsForEmptyString()
 		{
 			using var font = new SKFont();
@@ -326,9 +339,10 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, path.PointCount);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetTextPathWithPositionsProducesNonEmptyPath()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont();
 			var text = "AV";
 			var glyphCount = font.CountGlyphs(text);
@@ -345,9 +359,10 @@ namespace SkiaSharp.Tests
 			Assert.False(path.Bounds.IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void GetTextPathWithPositionsMatchesExpectedBounds()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont();
 			var text = "A";
 
@@ -367,7 +382,7 @@ namespace SkiaSharp.Tests
 			Assert.True(posPath.Bounds.Left > originPath.Bounds.Left + 50);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
 		[InlineData(SKTextEncoding.Utf8, "a", 1)]
 		[InlineData(SKTextEncoding.Utf16, "ä", 2)]
@@ -378,6 +393,7 @@ namespace SkiaSharp.Tests
 		[InlineData(SKTextEncoding.GlyphId, "a", 2)]
 		public void BreakTextReturnsTheCorrectNumberOfBytes(SKTextEncoding encoding, string text, int expectedRead)
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			// get bytes
@@ -398,7 +414,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BreakTextSucceedsForEmptyString()
 		{
 			using var font = new SKFont();
@@ -406,7 +422,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.BreakText("", 50.0f));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BreakTextSucceedsForNullPointerZeroLength()
 		{
 			using var font = new SKFont();
@@ -414,7 +430,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, font.BreakText(IntPtr.Zero, 0, SKTextEncoding.Utf8, 50.0f));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BreakTextThrowsForNullPointer()
 		{
 			using var font = new SKFont();
@@ -422,7 +438,7 @@ namespace SkiaSharp.Tests
 			Assert.Throws<ArgumentNullException>(() => font.BreakText(IntPtr.Zero, 123, SKTextEncoding.Utf8, 50.0f));
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void BreakTextReturnsTheCorrectNumberOfCharacters()
 		{
 			using var font = new SKFont();
@@ -431,11 +447,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(1, font.BreakText("ä", 50.0f));
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1)]
 		[InlineData(1 << 17)]
 		public void BreakTextWidthIsEqualToMeasureTextWidth(int textSize)
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
@@ -454,11 +471,12 @@ namespace SkiaSharp.Tests
 			Assert.Equal(width, mm);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1)]
 		[InlineData(1 << 17)]
 		public void BreakTextHandlesLongText(int textSize)
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 
 			if (textSize >= 0)
@@ -474,7 +492,7 @@ namespace SkiaSharp.Tests
 			Assert.Equal(width, mm);
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData(-1)]
 		[InlineData(0)]
 		[InlineData(1 << 17)]
@@ -517,7 +535,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableTheory]
+		[Theory]
 		[InlineData("CourierNew.ttf")]
 		[InlineData("Distortable.ttf")]
 		[InlineData("Funkster.ttf")]
@@ -553,16 +571,17 @@ namespace SkiaSharp.Tests
 		// is wrapped in the managed binding to use SKTypeface.Default so
 		// the parameterless ctor stays useful for text measurement.
 
-		[SkippableFact]
+		[Fact]
 		public void DefaultFontTypefaceIsDefault()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont();
 			Assert.NotNull(font.Typeface);
 			Assert.False(font.Typeface.IsEmpty);
 			Assert.Same(SKTypeface.Default, font.Typeface);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FontWithNullTypefaceIsEmpty()
 		{
 			using var font = new SKFont(null);
@@ -570,7 +589,7 @@ namespace SkiaSharp.Tests
 			Assert.True(font.Typeface.IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FontTypefaceSetNullReturnsEmpty()
 		{
 			using var font = new SKFont(SKTypeface.Default);
@@ -579,7 +598,7 @@ namespace SkiaSharp.Tests
 			Assert.True(font.Typeface.IsEmpty);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FontTypefaceSetNullDoesNotCrashOnMeasure()
 		{
 			using var font = new SKFont(SKTypeface.Default);
@@ -589,15 +608,16 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, width);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void FontWithDefaultCanMeasure()
 		{
+			SkipWhenNoDefaultFont();
 			using var font = new SKFont(SKTypeface.Default);
 			var width = font.MeasureText("Hello World!");
 			Assert.True(width > 0);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ZeroGlyphFontMeasuresZero()
 		{
 			using var tf = SKTypeface.FromFile(Path.Combine(PathToFonts, "ZeroGlyphs.ttf"));

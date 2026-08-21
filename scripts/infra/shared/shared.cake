@@ -60,6 +60,11 @@ var MSBUILD_VERSION_PROPERTIES = new Dictionary<string, string> {
     { "PREVIEW_LABEL", PREVIEW_LABEL },
 };
 
+var ANDROID_SDK_ROOT = EnvironmentVariable("ANDROID_SDK_ROOT");
+if (!string.IsNullOrEmpty(ANDROID_SDK_ROOT)) {
+    MSBUILD_VERSION_PROPERTIES["AndroidSdkDirectory"] = ANDROID_SDK_ROOT;
+}
+
 var DATE_TIME_NOW = DateTime.Now;
 var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_HHmmss");
 
@@ -87,7 +92,7 @@ var NUGET_DIFF_PRERELEASE = Argument ("nugetDiffPrerelease", false);
 var COVERAGE = Argument ("coverage", false);
 var CHROMEWEBDRIVER = Argument ("chromedriver", EnvironmentVariable ("CHROMEWEBDRIVER"));
 
-var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json");
+var CI_ARTIFACTS_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json");
 
 var PREVIEW_ONLY_NUGETS = new List<string> {};
 
@@ -300,5 +305,9 @@ void TakeSnapshot(DirectoryPath output, string name)
     var fname = $"screenshot-{DateTime.Now:yyyyMMdd_hhmmss}-{name}.jpg";
     var dest = output.CombineWithFilePath(fname);
 
-    RunProcess("screencapture", dest.FullPath);
+    try {
+        RunProcess("screencapture", dest.FullPath);
+    } catch (Exception ex) {
+        Warning("Failed to take screenshot: {0}", ex.Message);
+    }
 }

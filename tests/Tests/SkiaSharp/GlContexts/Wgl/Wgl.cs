@@ -98,20 +98,26 @@ namespace SkiaSharp.Tests
 			var windowRect = new RECT { left = 0, right = 8, top = 0, bottom = 8 };
 			User32.AdjustWindowRectEx(ref windowRect, WindowStyles.WS_SYSMENU, false, User32.WS_EX_CLIENTEDGE);
 
-			// create the dummy window
-			var dummyWND = User32.CreateWindowEx(
-				User32.WS_EX_CLIENTEDGE,
-				"DummyClass",
-				"DummyWindow",
-				WindowStyles.WS_CLIPSIBLINGS | WindowStyles.WS_CLIPCHILDREN | WindowStyles.WS_SYSMENU,
-				0, 0,
-				windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-				IntPtr.Zero, IntPtr.Zero, Kernel32.CurrentModuleHandle, IntPtr.Zero);
-			if (dummyWND == IntPtr.Zero)
+			IntPtr CreateDummyWindow()
 			{
-				User32.UnregisterClass("DummyClass", Kernel32.CurrentModuleHandle);
-				throw new Exception("Could not create dummy window.");
+				var wnd = User32.CreateWindowEx(
+					User32.WS_EX_CLIENTEDGE,
+					"DummyClass",
+					"DummyWindow",
+					WindowStyles.WS_CLIPSIBLINGS | WindowStyles.WS_CLIPCHILDREN | WindowStyles.WS_SYSMENU,
+					0, 0,
+					windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+					IntPtr.Zero, IntPtr.Zero, Kernel32.CurrentModuleHandle, IntPtr.Zero);
+				if (wnd == IntPtr.Zero)
+				{
+					User32.UnregisterClass("DummyClass", Kernel32.CurrentModuleHandle);
+					throw new Exception("Could not create dummy window.");
+				}
+				return wnd;
 			}
+
+			// create the dummy window
+			var dummyWND = CreateDummyWindow();
 
 			// get the dummy DC
 			var dummyDC = User32.GetDC(dummyWND);
@@ -131,6 +137,40 @@ namespace SkiaSharp.Tests
 
 			// get the dummy GL context
 			var dummyGLRC = Wgl.wglCreateContext(dummyDC);
+			if (dummyGLRC == IntPtr.Zero)
+			{
+				// Windows has two entry points for the same job — gdi32's
+				// ChoosePixelFormat/SetPixelFormat and opengl32's wgl* equivalents —
+				// and which one works depends on who ends up owning the DC's format
+				// state. That is consistent per driver, not intermittent:
+				//
+				//   * a real hardware ICD is set up through GDI, and refuses a
+				//     context when the format was set the other way;
+				//   * Mesa is the reverse. gdi32's ChoosePixelFormat reports Mesa's
+				//     formats and SetPixelFormat returns true, but Mesa's own
+				//     per-HDC state is never created, so wglCreateContext fails with
+				//     ERROR_INVALID_PIXEL_FORMAT (2000). Mesa's wglSetPixelFormat is
+				//     what creates that state; it calls GDI's afterwards itself.
+				//
+				// Hardware is the common case, so GDI goes first and this runs only
+				// when it actually failed — which on a headless CI agent, where Mesa
+				// is the only OpenGL there is, is every time.
+				//
+				// A pixel format can be set only once per DC, and CS_OWNDC means
+				// re-getting the DC returns the same one, so the second attempt
+				// needs a whole new window. The first is destroyed before it is
+				// replaced — there is never more than one alive.
+				User32.ReleaseDC(dummyWND, dummyDC);
+				User32.DestroyWindow(dummyWND);
+
+				dummyWND = CreateDummyWindow();
+				dummyDC = User32.GetDC(dummyWND);
+
+				dummyFormat = Wgl.wglChoosePixelFormat(dummyDC, ref dummyPFD);
+				Wgl.wglSetPixelFormat(dummyDC, dummyFormat, ref dummyPFD);
+
+				dummyGLRC = Wgl.wglCreateContext(dummyDC);
+			}
 			if (dummyGLRC == IntPtr.Zero)
 			{
 				throw new Exception("Could not create dummy GL context.");
@@ -202,6 +242,14 @@ namespace SkiaSharp.Tests
 
 		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetCurrentDC();
+
+		// opengl32's own pixel-format entry points, which reach an ICD that GDI's
+		// SetPixelFormat does not — see the fallback in the static constructor.
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern int wglChoosePixelFormat(IntPtr hDC, ref PIXELFORMATDESCRIPTOR pfd);
+
+		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
+		public static extern bool wglSetPixelFormat(IntPtr hDC, int format, ref PIXELFORMATDESCRIPTOR pfd);
 
 		[DllImport(opengl32, CallingConvention = CallingConvention.Winapi)]
 		public static extern IntPtr wglGetCurrentContext();

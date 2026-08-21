@@ -21,7 +21,13 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
-		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
+		public int Count {
+			get {
+				var r = SkiaApi.sk_fontstyleset_get_count (Handle);
+				GC.KeepAlive (this);
+				return r;
+			}
+		}
 
 		public SKFontStyle this[int index] => GetStyle (index);
 
@@ -38,8 +44,7 @@ namespace SkiaSharp
 			if (index < 0 || index >= Count)
 				throw new ArgumentOutOfRangeException ($"Index was out of range. Must be non-negative and less than the size of the set.", nameof (index));
 
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
-			tf?.PreventPublicDisposal ();
+			var tf = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontstyleset_create_typeface (Handle, index));
 			GC.KeepAlive (this);
 			return tf;
 		}
@@ -49,8 +54,8 @@ namespace SkiaSharp
 			if (style == null)
 				throw new ArgumentNullException (nameof (style));
 
-			var tf = SKTypeface.GetObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
-			tf?.PreventPublicDisposal ();
+			var tf = SKTypeface.GetDisposeProtectedObject (SkiaApi.sk_fontstyleset_match_style (Handle, style.Handle));
+			GC.KeepAlive (style);
 			GC.KeepAlive (this);
 			return tf;
 		}
@@ -71,6 +76,7 @@ namespace SkiaSharp
 		{
 			var fontStyle = new SKFontStyle ();
 			SkiaApi.sk_fontstyleset_get_style (Handle, index, fontStyle.Handle, IntPtr.Zero);
+			GC.KeepAlive (this);
 			return fontStyle;
 		}
 

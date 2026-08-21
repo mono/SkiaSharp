@@ -1,5 +1,4 @@
 using Xunit;
-using Xunit.Abstractions;
 
 namespace SkiaSharp.Tests.Integration;
 
@@ -20,7 +19,16 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
                 UseShellExecute = false
             };
             using var process = System.Diagnostics.Process.Start(psi)!;
-            process.WaitForExit(10000);
+            // Drain both pipes concurrently so a large `docker info` payload can't
+            // fill the OS buffer and deadlock the child against WaitForExit.
+            var stdout = process.StandardOutput.ReadToEndAsync();
+            var stderr = process.StandardError.ReadToEndAsync();
+            if (!process.WaitForExit(10000))
+            {
+                try { process.Kill(true); } catch { }
+                return false;
+            }
+            System.Threading.Tasks.Task.WaitAll(stdout, stderr);
             return process.ExitCode == 0;
         }
         catch
@@ -29,10 +37,10 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         }
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task SkiaSharpRunsOnLinux()
     {
-        Skip.IfNot(IsDockerAvailable(), "Docker is not available");
+        Assert.SkipUnless(IsDockerAvailable(), "Docker is not available");
 
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in Linux Docker container");
 
@@ -62,10 +70,10 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         await VerifyScreenshot(actualImage, "linux-console-skiasharp");
     }
 
-    [SkippableFact]
+    [Fact]
     public async Task HarfBuzzSharpRunsOnLinux()
     {
-        Skip.IfNot(IsDockerAvailable(), "Docker is not available");
+        Assert.SkipUnless(IsDockerAvailable(), "Docker is not available");
 
         Output.WriteLine($"Testing HarfBuzzSharp {HarfBuzzVersion} in Linux Docker container");
 
@@ -148,7 +156,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
         // Build and run in Docker using dotnet publish (resolves RID-specific native assets)
         var dockerfile = Path.Combine(projectDir, "Dockerfile");
         File.WriteAllText(dockerfile, $"""
-            FROM mcr.microsoft.com/dotnet/sdk:8.0
+            FROM mcr.microsoft.com/dotnet/sdk:10.0
             WORKDIR /src
             COPY {projectName}.csproj nuget.config ./
             RUN dotnet restore

@@ -7,7 +7,7 @@ namespace SkiaSharp.Tests
 {
 	public class SKDocumentTest : SKTest
 	{
-		[SkippableFact]
+		[Fact]
 		public void PdfFileIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".pdf");
@@ -24,7 +24,7 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void PdfFileWithNonASCIIPathIsClosed()
 		{
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + "上田雅美.pdf");
@@ -41,28 +41,27 @@ namespace SkiaSharp.Tests
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void XpsFileIsClosed()
 		{
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
+
 			var path = Path.Combine(PathToImages, Guid.NewGuid().ToString("D") + ".xps");
 
 			using (new SKAutoCoInitialize())
 			using (var doc = SKDocument.CreateXps(path))
 			{
-				if (IsWindows)
-				{
-					Assert.NotNull(doc);
-					Assert.NotNull(doc.BeginPage(100, 100));
+				Assert.NotNull(doc);
+				Assert.NotNull(doc.BeginPage(100, 100));
 
-					doc.EndPage();
-					doc.Close();
-				}
+				doc.EndPage();
+				doc.Close();
 			}
 
 			File.Delete(path);
 		}
 
-		[SkippableFact]
+		[Fact]
 		[Trait(Traits.Category.Key, Traits.Category.Values.Smoke)]
 		public void CanCreatePdf()
 		{
@@ -82,7 +81,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreatePdfWithMetadata()
 		{
 			var metadata = SKDocumentPdfMetadata.Default;
@@ -111,7 +110,7 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void ManagedStreamDisposeOrder()
 		{
 			using (var stream = new MemoryStream())
@@ -131,45 +130,74 @@ namespace SkiaSharp.Tests
 			}
 		}
 
-		[SkippableFact]
+		[Fact]
 		public void CanCreateXps()
 		{
-			// XPS is only supported on Windows
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
 
 			using (var stream = new MemoryStream())
 			{
 				using (new SKAutoCoInitialize())
 				using (var doc = SKDocument.CreateXps(stream))
 				{
-					if (IsWindows)
-					{
-						Assert.NotNull(doc);
-						Assert.NotNull(doc.BeginPage(100, 100));
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
 
-						doc.EndPage();
-						doc.Close();
-					}
-					else
-					{
-						Assert.Null(doc);
-					}
+					doc.EndPage();
+					doc.Close();
 				}
 
-				if (IsWindows)
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+			}
+		}
+
+		[Fact]
+		public void CanCreateXpsWithOptions()
+		{
+			Assert.SkipWhen(!SupportsXps, "XPS is only supported on desktop/server Windows");
+
+			var options = new SKDocumentXpsOptions { Dpi = 150, AllowNoPngs = true };
+
+			using (var stream = new MemoryStream())
+			{
+				using (new SKAutoCoInitialize())
+				using (var doc = SKDocument.CreateXps(stream, options))
 				{
-					Assert.True(stream.Length > 0);
-					Assert.True(stream.Position > 0);
+					Assert.NotNull(doc);
+					Assert.NotNull(doc.BeginPage(100, 100));
+
+					doc.EndPage();
+					doc.Close();
 				}
-				else
+
+				Assert.True(stream.Length > 0);
+				Assert.True(stream.Position > 0);
+			}
+		}
+
+		[Fact]
+		public void CreateXpsReturnsNullWhereUnsupported()
+		{
+			Assert.SkipWhen(SupportsXps, "XPS is supported on this platform");
+
+			var options = new SKDocumentXpsOptions { Dpi = 150, AllowNoPngs = true };
+
+			using (var stream = new MemoryStream())
+			{
+				using (new SKAutoCoInitialize())
 				{
-					Assert.True(stream.Length == 0);
-					Assert.True(stream.Position == 0);
+					Assert.Null(SKDocument.CreateXps(stream));
+					Assert.Null(SKDocument.CreateXps(stream, options));
 				}
+
+				Assert.True(stream.Length == 0);
+				Assert.True(stream.Position == 0);
 			}
 		}
 
 
-		[SkippableFact]
+		[Fact]
 		public void StreamIsNotCollectedPrematurely()
 		{
 			DoWork(out var handle);

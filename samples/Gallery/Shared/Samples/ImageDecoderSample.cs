@@ -19,6 +19,14 @@ public class ImageDecoderSample : CanvasSampleBase
 
 	public override string Description => "Decode images in various formats (PNG, WebP, DNG) with metadata inspection and subset decoding.";
 
+	public override IReadOnlyList<string> ApiTags =>
+	[
+		"SKColorSpace", "SKColorSpaceXyz", "SKColorSpaceTransferFn",
+		"SKBitmap", "SKBitmap.Decode", "SKCodec", "SKImageInfo", "SKData", "SKRoundRect",
+		"SKCanvas.DrawBitmap", "SKCanvas.DrawText", "SKCanvas.DrawRect",
+		"SKCanvas", "SKPaint", "SKFont",
+	];
+
 	public override string Category => SampleManager.BitmapDecoding;
 
 	public override IReadOnlyList<SampleControl> Controls =>
@@ -117,7 +125,7 @@ public class ImageDecoderSample : CanvasSampleBase
 			// Draw checkered background for transparency
 			DrawCheckerboard(canvas, destRect);
 
-			canvas.DrawBitmap(bitmap, destRect);
+			canvas.DrawBitmap(bitmap, destRect, SKSamplingOptions.Default);
 
 			if (_showInfo)
 				DrawMetadata(canvas, width, height, codec, info);
@@ -205,7 +213,7 @@ public class ImageDecoderSample : CanvasSampleBase
 		var y = boxTop + padding + fontSize;
 		foreach (var line in lines)
 		{
-			canvas.DrawText(line, boxLeft + padding, y, font, textPaint);
+			canvas.DrawText(line, boxLeft + padding, y, SKTextAlign.Left, font, textPaint);
 			y += lineHeight;
 		}
 	}

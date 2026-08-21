@@ -11,42 +11,6 @@ stages:
     displayName: Native macOS
     dependsOn: prepare
     jobs:
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x86 (macOS)
-        parameters:
-          name: native_android_x86_macos
-          displayName: Android x86
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-android
-          cacheJob: native/android
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x86
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|x64 (macOS)
-        parameters:
-          name: native_android_x64_macos
-          displayName: Android x64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-android
-          cacheJob: native/android
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm (macOS)
-        parameters:
-          name: native_android_arm_macos
-          displayName: Android arm
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-android
-          cacheJob: native/android
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Android|arm64 (macOS)
-        parameters:
-          name: native_android_arm64_macos
-          displayName: Android arm64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-android
-          cacheJob: native/android
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native iOS (macOS)
         parameters:
           name: native_ios_macos
@@ -79,21 +43,3 @@ stages:
           target: externals-tvos
           cacheJob: native/tvos
           enableCaching: ${{ parameters.enableCaching }}
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|x64 (macOS)
-        parameters:
-          name: native_tizen_x64_macos
-          displayName: Tizen x64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=x64
-      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Build Native Tizen|arm64 (macOS)
-        parameters:
-          name: native_tizen_arm64_macos
-          displayName: Tizen arm64
-          buildAgent: ${{ parameters.buildAgentMacNative }}
-          target: externals-tizen
-          cacheJob: native/tizen
-          enableCaching: ${{ parameters.enableCaching }}
-          additionalArgs: --buildarch=arm64
