@@ -106,19 +106,22 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
 - [ ] Pin every `mcr.microsoft.com/dotnet/sdk` build image to the exact repository SDK patch while preserving its distro/OS suffix:
   - `scripts/infra/docs/docker/Dockerfile`
   - `scripts/infra/tests/docker/{alpine,alpine-nodeps,azurelinux,azurelinux-nodeps,nanoserver}/Dockerfile`
-  - `samples/Basic/DockerConsole/{linux,windows}.Dockerfile`
-  - `samples/Basic/DockerWebApi/{linux,windows}.Dockerfile`
   - `tests/Dockerfile.linux`
-  - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
 - [ ] Update every native `DOTNET_SDK_VERSION` argument to the exact repository SDK patch:
   - `scripts/infra/native/android/docker/Dockerfile`
   - `scripts/infra/native/linux/docker/{alpine,bionic,glibc,glibc-x86}/Dockerfile`
   - `scripts/infra/native/tizen/docker/Dockerfile`
   - `scripts/infra/native/wasm/docker/Dockerfile`
 - [ ] In the WASM Dockerfile, use `dotnet-install.sh --version ${DOTNET_SDK_VERSION}`. Do not use `--channel` with an exact SDK version.
+- [ ] Keep isolated consumer/sample contexts on the floating .NET major tag so they exercise the latest servicing release:
+  - `samples/Basic/DockerConsole/{linux,windows}.Dockerfile`
+  - `samples/Basic/DockerWebApi/{linux,windows}.Dockerfile`
+  - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
 - [ ] Verify every complete MCR tag exists with `docker manifest inspect mcr.microsoft.com/dotnet/sdk:<tag>`. Verify SDKs installed by `dotnet-install.sh` have published artifacts for every host architecture used by the image.
 
-Keep the distro/OS suffix exact rather than replacing it with a floating alias. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
+Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating `10.0` SDK tags intentionally validate the current .NET 10 servicing release.
+
+Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 
 ### 11. NuGet & Feeds
 
