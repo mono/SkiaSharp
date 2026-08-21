@@ -31,7 +31,7 @@ PROJECT_DEVDIV = "DevDiv"
 ORG_DNCENG_PUBLIC = "https://dev.azure.com/dnceng-public"
 PROJECT_DNCENG_PUBLIC = "public"
 
-# Public CI pipeline — runs on every push/PR to main, develop, release/*
+# Public CI pipeline — runs on every push/PR to main and release/*
 # Lives in the dnceng-public/public org
 PUBLIC_PIPELINES = [
     {"name": "mono-SkiaSharp", "id": 345, "org": ORG_DNCENG_PUBLIC, "project": PROJECT_DNCENG_PUBLIC},
