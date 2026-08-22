@@ -76,6 +76,8 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|x64 (Win)
         parameters:
@@ -85,6 +87,8 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native WinUI|arm64 (Win)
         parameters:
@@ -94,6 +98,8 @@ stages:
           target: externals-winui
           cacheJob: native/winui
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x86 (Win)
         parameters:
@@ -103,6 +109,8 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=x86
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|x64 (Win)
         parameters:
@@ -112,6 +120,8 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=x64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native ANGLE WinUI|arm64 (Win)
         parameters:
@@ -121,6 +131,8 @@ stages:
           target: externals-winui-angle
           cacheJob: native/winui_angle
           enableCaching: ${{ parameters.enableCaching }}
+          additionalDotNetSdks:
+            - $(DOTNET_VERSION_WINUI)
           additionalArgs: --buildarch=arm64
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self   # Build Native NanoServer|x64 (Win)
         parameters:
