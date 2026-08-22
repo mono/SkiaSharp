@@ -3,10 +3,25 @@
     <TargetFrameworks>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMCurrent)-ios$(TPViOSCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for iOS</Title>
+    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\ios\libSkiaSharp.framework\**" PackagePath="runtimes\ios\native\libSkiaSharp.framework" />
-    <PackageFile Include="..\..\output\native\iossimulator\libSkiaSharp.framework\**" PackagePath="runtimes\iossimulator\native\libSkiaSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)ios\libSkiaSharp.framework\**" PackagePath="runtimes\ios\native\libSkiaSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp.framework\**" PackagePath="runtimes\iossimulator\native\libSkiaSharp.framework" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libSkiaSharp.framework\libSkiaSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp.framework\libSkiaSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)ios\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="ios" Architecture="arm64" SymbolPackagePath="runtimes\ios\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)ios\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="ios" Architecture="x86_64" SymbolPackagePath="runtimes\ios\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="iossimulator" Architecture="arm64" SymbolPackagePath="runtimes\iossimulator\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)iossimulator\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="iossimulator" Architecture="x86_64" SymbolPackagePath="runtimes\iossimulator\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

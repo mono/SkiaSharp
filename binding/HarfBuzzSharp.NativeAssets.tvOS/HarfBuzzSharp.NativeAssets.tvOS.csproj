@@ -3,10 +3,25 @@
     <TargetFrameworks>$(TFMPrevious)-tvos$(TPVtvOSPrevious);$(TFMCurrent)-tvos$(TPVtvOSCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for tvOS</Title>
+    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\tvos\libHarfBuzzSharp.framework\**" PackagePath="runtimes\tvos\native\libHarfBuzzSharp.framework" />
-    <PackageFile Include="..\..\output\native\tvossimulator\libHarfBuzzSharp.framework\**" PackagePath="runtimes\tvossimulator\native\libHarfBuzzSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp.framework\**" PackagePath="runtimes\tvos\native\libHarfBuzzSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp.framework\**" PackagePath="runtimes\tvossimulator\native\libHarfBuzzSharp.framework" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp.framework\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp.framework\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="tvos" Architecture="arm64" SymbolPackagePath="runtimes\tvos\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)tvos\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="tvos" Architecture="x86_64" SymbolPackagePath="runtimes\tvos\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="tvossimulator" Architecture="arm64" SymbolPackagePath="runtimes\tvossimulator\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)tvossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="tvossimulator" Architecture="x86_64" SymbolPackagePath="runtimes\tvossimulator\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

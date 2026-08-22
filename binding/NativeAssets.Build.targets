@@ -20,6 +20,10 @@
     <PackageReadmeAdditionalDetails Condition="'$(PackageNotes)' != ''">## Package details
 
 $(PackageNotes)</PackageReadmeAdditionalDetails>
+
+    <NativeOutputPath Condition="'$(NativeOutputPath)' == ''">$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..', 'output', 'native'))</NativeOutputPath>
+    <BuildAppleSymbols Condition="'$(BuildAppleSymbols)' == ''">true</BuildAppleSymbols>
+    <RequireAppleSymbols Condition="'$(RequireAppleSymbols)' == '' and $(IsWindows)">true</RequireAppleSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -61,6 +65,46 @@ $(PackageNotes)</PackageReadmeAdditionalDetails>
       <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />
       <_TargetPathsToSymbols Include="@(_CompletedNativeAssetPackageFile)" Condition="'%(Extension)' == '.pdb' or '%(Extension)' == '.dbg'" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_IncludeNativeSymbolPackageContent"
+          BeforeTargets="_GetPackageFiles"
+          Condition="'$(PackNativeSymbols)' == 'true' and '$(HasNativeSymbolPackage)' == 'true'">
+    <ItemGroup>
+      <None Include="@(NativeSymbolPackageFile)"
+            Pack="true"
+            PackagePath="%(NativeSymbolPackageFile.SymbolPackagePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PackNativeSymbolPackage"
+          AfterTargets="Pack"
+          Condition="'$(BuildAppleSymbols)' == 'true' and '$(HasNativeSymbolPackage)' == 'true' and '$(PackNativeSymbols)' != 'true'">
+    <PropertyGroup>
+      <_NativeSymbolPackageIntermediatePath>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'native-symbol-package'))</_NativeSymbolPackageIntermediatePath>
+      <_NativeSymbolPackageSource>$(_NativeSymbolPackageIntermediatePath)$(PackageId).$(PackageVersion).nupkg</_NativeSymbolPackageSource>
+      <_NativeSymbolPackageDestination>$([MSBuild]::NormalizeDirectory('$(PackageOutputPath)'))$(PackageId).$(PackageVersion).symbols.nupkg</_NativeSymbolPackageDestination>
+    </PropertyGroup>
+    <ItemGroup>
+      <_MissingNativeSymbolRequiredFile Include="@(NativeSymbolRequiredFile)" Condition="!Exists('%(Identity)')" />
+    </ItemGroup>
+    <Delete Files="$(_NativeSymbolPackageDestination)" Condition="Exists('$(_NativeSymbolPackageDestination)')" />
+    <Error Condition="'$(RequireAppleSymbols)' == 'true' and '@(_MissingNativeSymbolRequiredFile)' != ''"
+           Text="The Apple symbol package for $(PackageId) is missing required inputs: @(_MissingNativeSymbolRequiredFile, ', ')" />
+    <Message Condition="'$(RequireAppleSymbols)' != 'true' and '@(_MissingNativeSymbolRequiredFile)' != ''"
+             Importance="high"
+             Text="Skipping the Apple symbol package for $(PackageId) because these inputs were not produced: @(_MissingNativeSymbolRequiredFile, ', ')" />
+
+    <RemoveDir Directories="$(_NativeSymbolPackageIntermediatePath)" Condition="'@(_MissingNativeSymbolRequiredFile)' == ''" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Pack"
+             BuildInParallel="false"
+             Condition="'@(_MissingNativeSymbolRequiredFile)' == ''"
+             Properties="PackNativeSymbols=true;BuildAppleSymbols=false;RequireAppleSymbols=false;NoBuild=true;BuildProjectReferences=false;PackageOutputPath=$(_NativeSymbolPackageIntermediatePath)" />
+    <Move SourceFiles="$(_NativeSymbolPackageSource)"
+          DestinationFiles="$(_NativeSymbolPackageDestination)"
+          Condition="'@(_MissingNativeSymbolRequiredFile)' == ''" />
+    <RemoveDir Directories="$(_NativeSymbolPackageIntermediatePath)" Condition="'@(_MissingNativeSymbolRequiredFile)' == ''" />
   </Target>
 
 </Project>

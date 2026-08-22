@@ -146,7 +146,8 @@ try {
 
             $runtimeIdentifier = $modulePath.Split('/')[1]
             $packagedDwarfs = @(
-                Get-ChildItem (Join-Path $extractDirectory "runtimes/$runtimeIdentifier/native/symbols") -Filter '*.dwarf' -File -Recurse
+                Get-ChildItem (Join-Path $extractDirectory "runtimes/$runtimeIdentifier/native/symbols") -File -Recurse |
+                    Where-Object FullName -Match '\.dSYM[/\\]Contents[/\\]Resources[/\\]DWARF[/\\][^/\\]+$'
             )
             if ($packagedDwarfs.Count -eq 0) {
                 throw "$($package.Id) has no packaged DWARFs for '$runtimeIdentifier'."

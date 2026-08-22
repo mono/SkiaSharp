@@ -3,10 +3,25 @@
     <TargetFrameworks>$(TFMPrevious)-ios$(TPViOSPrevious);$(TFMCurrent)-ios$(TPViOSCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for iOS</Title>
+    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\ios\libHarfBuzzSharp.framework\**" PackagePath="runtimes\ios\native\libHarfBuzzSharp.framework" />
-    <PackageFile Include="..\..\output\native\iossimulator\libHarfBuzzSharp.framework\**" PackagePath="runtimes\iossimulator\native\libHarfBuzzSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp.framework\**" PackagePath="runtimes\ios\native\libHarfBuzzSharp.framework" />
+    <PackageFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp.framework\**" PackagePath="runtimes\iossimulator\native\libHarfBuzzSharp.framework" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp.framework\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp.framework\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Info.plist" />
+    <NativeSymbolRequiredFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="ios" Architecture="arm64" SymbolPackagePath="runtimes\ios\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)ios\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="ios" Architecture="x86_64" SymbolPackagePath="runtimes\ios\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="iossimulator" Architecture="arm64" SymbolPackagePath="runtimes\iossimulator\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolPackageFile Include="$(NativeOutputPath)iossimulator\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**\*" RuntimeIdentifier="iossimulator" Architecture="x86_64" SymbolPackagePath="runtimes\iossimulator\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>
