@@ -4,6 +4,15 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 #load "../shared/shared.cake"
 #load "../shared/msbuild.cake"
+#load "apple-symbols.cake"
+
+var APPLE_SYMBOLS_PACKAGE_PATH = MakeAbsolute(Directory(
+    Argument("appleSymbolsPackagePath", OUTPUT_NUGETS_PATH.FullPath)));
+var APPLE_SYMBOLS_NATIVE_PATH = MakeAbsolute(Directory(
+    Argument("appleSymbolsNativePath", ROOT_PATH.Combine("output/native").FullPath)));
+var APPLE_SYMBOLS_OUTPUT_PATH = MakeAbsolute(Directory(
+    Argument("appleSymbolsOutputPath", OUTPUT_SYMBOLS_NUGETS_PATH.FullPath)));
+var REQUIRE_APPLE_SYMBOLS = Argument("requireAppleSymbols", IsRunningOnWindows());
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET — pack NuGet packages
@@ -30,6 +39,36 @@ Task ("nuget-normal")
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
+
+    CreateAppleSymbolPackages(
+        APPLE_SYMBOLS_PACKAGE_PATH,
+        APPLE_SYMBOLS_NATIVE_PATH,
+        APPLE_SYMBOLS_OUTPUT_PATH,
+        REQUIRE_APPLE_SYMBOLS);
+});
+
+Task ("nuget-apple-symbols")
+    .Description ("Pack Apple native runtime and DWARF symbol packages.")
+    .Does (() =>
+{
+    CreateAppleSymbolPackages(
+        APPLE_SYMBOLS_PACKAGE_PATH,
+        APPLE_SYMBOLS_NATIVE_PATH,
+        APPLE_SYMBOLS_OUTPUT_PATH,
+        REQUIRE_APPLE_SYMBOLS);
+});
+
+Task ("tests-apple-symbols")
+    .Description ("Run Apple symbol package regression tests.")
+    .Does (() =>
+{
+    RunProcess("pwsh", new ProcessSettings {
+        Arguments = new ProcessArgumentBuilder()
+            .Append("-NoLogo")
+            .Append("-NoProfile")
+            .Append("-File")
+            .AppendQuoted($"{ROOT_PATH}/scripts/infra/package/tests/apple-symbols.tests.ps1"),
+    });
 });
 
 Task ("nuget-special")
