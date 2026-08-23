@@ -256,6 +256,28 @@ try {
                 throw "$packageId customer package contains dSYM files."
             }
 
+            $expectedNormalRuntimeEntries = switch ($platform) {
+                'iOS' {
+                    @(
+                        "runtimes/ios/native/$library.framework/Info.plist"
+                        "runtimes/ios/native/$library.framework/$library"
+                        "runtimes/iossimulator/native/$library.framework/Info.plist"
+                        "runtimes/iossimulator/native/$library.framework/$library"
+                    )
+                }
+                'MacCatalyst' {
+                    @("runtimes/maccatalyst/native/$library.framework.zip")
+                }
+                default {
+                    @()
+                }
+            }
+            foreach ($expectedEntry in $expectedNormalRuntimeEntries) {
+                if (-not $normalEntries.ContainsKey($expectedEntry)) {
+                    throw "$packageId customer package is missing expected runtime entry '$expectedEntry'."
+                }
+            }
+
             if ($platform -eq 'MacCatalyst') {
                 $runtimePath = "runtimes/maccatalyst/native/$library.framework/Versions/A/$library"
                 if (-not $symbolEntries.ContainsKey($runtimePath)) {
@@ -293,8 +315,16 @@ try {
     $missingRuntimeRoot = Join-Path $testRoot 'missing-runtime'
     $missingRuntime = New-Fixture $missingRuntimeRoot
     Remove-Item (Join-Path $missingRuntime 'ios/libSkiaSharp.framework/libSkiaSharp')
-    if ((Invoke-Pack (Get-Project 'SkiaSharp' 'iOS') $missingRuntime (Join-Path $missingRuntimeRoot 'packages') $true $true) -eq 0) {
+    $missingRuntimePackages = Join-Path $missingRuntimeRoot 'packages'
+    [IO.Directory]::CreateDirectory($missingRuntimePackages) | Out-Null
+    [IO.File]::WriteAllText(
+        (Join-Path $missingRuntimePackages "SkiaSharp.NativeAssets.iOS.$($products[0].Version)-symboltest.symbols.nupkg"),
+        'stale')
+    if ((Invoke-Pack (Get-Project 'SkiaSharp' 'iOS') $missingRuntime $missingRuntimePackages $true $true) -eq 0) {
         throw 'A full package build with a missing runtime unexpectedly succeeded.'
+    }
+    if (@(Get-ChildItem $missingRuntimePackages -Filter '*.nupkg').Count -ne 0) {
+        throw 'A failed full package build left a normal or stale symbol package behind.'
     }
 
     $missingPlistRoot = Join-Path $testRoot 'missing-plist'
