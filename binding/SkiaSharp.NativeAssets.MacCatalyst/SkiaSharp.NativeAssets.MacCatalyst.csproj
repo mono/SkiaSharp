@@ -9,13 +9,9 @@
     <PackageFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp*.framework.zip" PackagePath="runtimes\maccatalyst\native\%(Filename)%(Extension)" />
     <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp.framework.zip" />
     <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Info.plist" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\Contents\Resources\DWARF\libSkiaSharp" />
     <NativeSymbolPackageFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp" RuntimeIdentifier="maccatalyst" Architecture="universal" SymbolPackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" />
-    <NativeSymbolPackageFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="maccatalyst" Architecture="arm64" SymbolPackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
-    <NativeSymbolPackageFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**\*" RuntimeIdentifier="maccatalyst" Architecture="x86_64" SymbolPackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" SymbolPackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" SymbolPackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

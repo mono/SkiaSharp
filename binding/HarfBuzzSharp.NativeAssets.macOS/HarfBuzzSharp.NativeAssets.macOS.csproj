@@ -9,12 +9,8 @@
   <ItemGroup>
     <PackageFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp*" PackagePath="runtimes\osx\native\%(Filename)%(Extension)" />
     <NativeSymbolRequiredFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp.dylib" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\Contents\Info.plist" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp.dylib" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\Contents\Info.plist" />
-    <NativeSymbolRequiredFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\Contents\Resources\DWARF\libHarfBuzzSharp.dylib" />
-    <NativeSymbolPackageFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**\*" RuntimeIdentifier="osx" Architecture="arm64" SymbolPackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
-    <NativeSymbolPackageFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM\**\*" RuntimeIdentifier="osx" Architecture="x86_64" SymbolPackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
+    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" SymbolPackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
+    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" SymbolPackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">

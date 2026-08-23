@@ -71,9 +71,15 @@ $(PackageNotes)</PackageReadmeAdditionalDetails>
           BeforeTargets="_GetPackageFiles"
           Condition="'$(PackNativeSymbols)' == 'true' and '$(HasNativeSymbolPackage)' == 'true'">
     <ItemGroup>
+      <_NativeSymbolBundleFile Include="%(NativeSymbolBundle.Identity)\**\*">
+        <SymbolPackagePath>%(NativeSymbolBundle.SymbolPackagePath)</SymbolPackagePath>
+      </_NativeSymbolBundleFile>
       <None Include="@(NativeSymbolPackageFile)"
             Pack="true"
             PackagePath="%(NativeSymbolPackageFile.SymbolPackagePath)" />
+      <None Include="@(_NativeSymbolBundleFile)"
+            Pack="true"
+            PackagePath="%(_NativeSymbolBundleFile.SymbolPackagePath)" />
     </ItemGroup>
   </Target>
 
@@ -86,7 +92,10 @@ $(PackageNotes)</PackageReadmeAdditionalDetails>
       <_NativeSymbolPackageDestination>$([MSBuild]::NormalizeDirectory('$(PackageOutputPath)'))$(PackageId).$(PackageVersion).symbols.nupkg</_NativeSymbolPackageDestination>
     </PropertyGroup>
     <ItemGroup>
-      <_MissingNativeSymbolRequiredFile Include="@(NativeSymbolRequiredFile)" Condition="!Exists('%(Identity)')" />
+      <_NativeSymbolRequiredFile Include="@(NativeSymbolRequiredFile)" />
+      <_NativeSymbolRequiredFile Include="%(NativeSymbolBundle.Identity)\Contents\Info.plist" />
+      <_NativeSymbolRequiredFile Include="%(NativeSymbolBundle.Identity)\Contents\Resources\DWARF\%(NativeSymbolBundle.DwarfName)" />
+      <_MissingNativeSymbolRequiredFile Include="@(_NativeSymbolRequiredFile)" Condition="!Exists('%(Identity)')" />
     </ItemGroup>
     <Delete Files="$(_NativeSymbolPackageDestination)" Condition="Exists('$(_NativeSymbolPackageDestination)')" />
     <Error Condition="'$(RequireAppleSymbols)' == 'true' and '@(_MissingNativeSymbolRequiredFile)' != ''"
