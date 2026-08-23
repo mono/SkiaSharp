@@ -79,7 +79,7 @@ RUN echo "export TOOLCHAIN_ARCH=powerpc64le-linux-gnu" > /etc/skia-env \
        fi
  
 # Install .NET SDK
-ARG DOTNET_SDK_VERSION=10.0.108
+ARG DOTNET_SDK_VERSION=10.0.203
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \
