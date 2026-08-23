@@ -3,13 +3,12 @@
     <TargetFrameworks>$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
-    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
-    <NativeRuntimeFile Include="$(NativeOutputPath)maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp" PackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" PackageScope="Symbols" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
+    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
+    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp" PackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" PackageScope="Symbols" />
+    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

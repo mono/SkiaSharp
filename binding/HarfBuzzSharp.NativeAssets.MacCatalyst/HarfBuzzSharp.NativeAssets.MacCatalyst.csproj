@@ -3,13 +3,12 @@
     <TargetFrameworks>$(TFMPrevious)-maccatalyst$(TPVMacCatalystPrevious);$(TFMCurrent)-maccatalyst$(TPVMacCatalystCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
-    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="$(NativeOutputPath)maccatalyst\libHarfBuzzSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
-    <NativeRuntimeFile Include="$(NativeOutputPath)maccatalyst\libHarfBuzzSharp.framework\Versions\A\libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\libHarfBuzzSharp.framework\Versions\A" PackageScope="Symbols" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)maccatalyst\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
+    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework\Versions\A\libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\libHarfBuzzSharp.framework\Versions\A" PackageScope="Symbols" />
+    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

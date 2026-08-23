@@ -4,12 +4,11 @@
     <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>SkiaSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
-    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="$(NativeOutputPath)osx\libSkiaSharp.dylib" PackagePath="runtimes\osx\native" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM" DwarfName="libSkiaSharp.dylib" PackagePath="runtimes\osx\native\symbols\arm64\libSkiaSharp.dylib.dSYM" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM" DwarfName="libSkiaSharp.dylib" PackagePath="runtimes\osx\native\symbols\x86_64\libSkiaSharp.dylib.dSYM" />
+    <NativeRuntimeFile Include="..\..\output\native\osx\libSkiaSharp.dylib" PackagePath="runtimes\osx\native" />
+    <NativeSymbolBundle Include="..\..\output\native\osx\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM" DwarfName="libSkiaSharp.dylib" PackagePath="runtimes\osx\native\symbols\arm64\libSkiaSharp.dylib.dSYM" />
+    <NativeSymbolBundle Include="..\..\output\native\osx\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.dylib.dSYM" DwarfName="libSkiaSharp.dylib" PackagePath="runtimes\osx\native\symbols\x86_64\libSkiaSharp.dylib.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">

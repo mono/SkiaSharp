@@ -21,7 +21,6 @@ Task ("nuget-normal")
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
-        { "BuildAppleSymbols", "true" },
     };
 
     // pack stable
@@ -29,7 +28,6 @@ Task ("nuget-normal")
 
     // pack preview
     props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    props ["BuildAppleSymbols"] = "false";
     RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
 
     // move symbols to a special location to avoid signing

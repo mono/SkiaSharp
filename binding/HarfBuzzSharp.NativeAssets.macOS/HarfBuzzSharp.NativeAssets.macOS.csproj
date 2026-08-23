@@ -4,12 +4,11 @@
     <TargetFrameworks Condition="!$(IsLinux)">$(TargetFrameworks);$(TFMPrevious)-macos$(TPVmacOSPrevious);$(TFMCurrent)-macos$(TPVmacOSCurrent)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for macOS</Title>
-    <HasNativeSymbolPackage>true</HasNativeSymbolPackage>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="$(NativeOutputPath)osx\libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
-    <NativeSymbolBundle Include="$(NativeOutputPath)osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
+    <NativeRuntimeFile Include="..\..\output\native\osx\libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native" />
+    <NativeSymbolBundle Include="..\..\output\native\osx\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native\symbols\arm64\libHarfBuzzSharp.dylib.dSYM" />
+    <NativeSymbolBundle Include="..\..\output\native\osx\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.dylib.dSYM" DwarfName="libHarfBuzzSharp.dylib" PackagePath="runtimes\osx\native\symbols\x86_64\libHarfBuzzSharp.dylib.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.Contains('-macos'))">
