@@ -232,13 +232,15 @@ find_build_for_pr() {
     local successful_only="$2"
     
     local source_branch="refs/pull/${pr_number}/merge"
+    local encoded_branch
+    encoded_branch=$(printf '%s' "$source_branch" | jq -sRr @uri)
     
     if [[ "$successful_only" == true ]]; then
         say_info "Finding latest successful build for PR #${pr_number}..."
-        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&\$top=20"
+        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&branchName=${encoded_branch}&queryOrder=queueTimeDescending&statusFilter=completed&resultFilter=succeeded&\$top=1"
     else
         say_info "Finding latest build for PR #${pr_number}..."
-        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&\$top=50"
+        local endpoint="build/builds?api-version=7.1&definitions=${PIPELINE_ID}&reasonFilter=pullRequest&branchName=${encoded_branch}&queryOrder=queueTimeDescending&\$top=1"
     fi
     
     local response
@@ -246,15 +248,8 @@ find_build_for_pr() {
         return 1
     fi
     
-    # Filter to builds for this specific PR and get the latest
     local build
-    build=$(echo "$response" | jq -r --arg branch "$source_branch" '
-        .value 
-        | map(select(.sourceBranch == $branch)) 
-        | sort_by(.queueTime) 
-        | reverse 
-        | .[0] // empty
-    ')
+    build=$(echo "$response" | jq -r '.value[0] // empty')
     
     if [[ -z "$build" || "$build" == "null" ]]; then
         if [[ "$successful_only" == true ]]; then
@@ -374,13 +369,13 @@ extract_packages() {
         
         if [[ -f "$dest_file" && "$force" != true ]]; then
             say_verbose "Skipping (exists): ${filename}"
-            ((skipped++))
+            ((++skipped))
         else
             cp "$nupkg" "$dest_file"
             say_verbose "Extracted: ${filename}"
-            ((count++))
+            ((++count))
         fi
-    done < <(find "$temp_dir" -name "$filter" ! -name "*.symbols.nupkg" -print0 2>/dev/null)
+    done < <(find "$temp_dir" -name "$filter" ! -iname "*.symbols.nupkg" -print0 2>/dev/null)
     
     # Cleanup
     rm -rf "$temp_dir"

@@ -146,16 +146,16 @@ function Find-BuildForPR {
     )
 
     $sourceBranch = "refs/pull/$PRNumber/merge"
+    $encodedBranch = [Uri]::EscapeDataString($sourceBranch)
 
     if ($SuccessfulOnly) {
         Write-Message "Finding latest successful build for PR #$PRNumber..." -Level Info
         
-        $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&`$top=20"
+        $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&branchName=$encodedBranch&queryOrder=queueTimeDescending&statusFilter=completed&resultFilter=succeeded&`$top=1"
         $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
-        $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
-        if ($prBuilds -and $prBuilds.Count -gt 0) {
-            $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+        if ($builds.value) {
+            $latestBuild = $builds.value[0]
             Write-Message "Found successful build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Success
             Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
             Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
@@ -168,17 +168,14 @@ function Find-BuildForPR {
     # Default: find latest build regardless of status
     Write-Message "Finding latest build for PR #$PRNumber..." -Level Info
 
-    # Query all builds (completed + in-progress) and pick the latest
-    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&`$top=50"
+    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&branchName=$encodedBranch&queryOrder=queueTimeDescending&`$top=1"
     $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
-    $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
-    if (-not $prBuilds -or $prBuilds.Count -eq 0) {
+    if (-not $builds.value) {
         throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/dnceng-public/public/_build?definitionId=$($Script:PipelineId)"
     }
 
-    # Sort by queueTime to get truly latest (handles in-progress builds that have no finishTime)
-    $latestBuild = $prBuilds | Sort-Object -Property queueTime -Descending | Select-Object -First 1
+    $latestBuild = $builds.value[0]
     
     $status = $latestBuild.status
     $result = $latestBuild.result
@@ -414,7 +411,7 @@ try {
     # Setup paths
     $hivePath = Join-Path $InstallPath "hives" "pr-$PRNumber"
     $packagesPath = Join-Path $hivePath "packages"
-    $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-download"
+    $tempPath = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-download-$([Guid]::NewGuid().ToString('N'))"
 
     Write-Host ""
     Write-Message "Installing to: $packagesPath" -Level Info
