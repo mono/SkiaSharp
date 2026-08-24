@@ -13,6 +13,7 @@ Reference for all NuGet packages produced by SkiaSharp — purpose, contents, an
   - [Platform Packages](#platform-packages) — Per-platform package details
   - [Auto-Included NativeAssets](#auto-included-nativeassets) — What's pulled in automatically by TFM
   - [Linux Package Selection Guide](#linux-package-selection-guide) — Which Linux package to use
+- [Build and Publishing](#build-and-publishing) — Signing, transport, symbols, and Arcade
 - [Deployment & Containers](#deployment--containers) — Container and publishing guidance
   - [Container Deployment](#container-deployment) — Which Linux package to use in containers
   - [Publishing Modes](#publishing-modes) — Framework-dependent, self-contained, single-file
@@ -129,6 +130,30 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 | Alpine Docker containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Includes `linux-musl-*` variants, no deps |
 | Minimal/distroless containers | `SkiaSharp.NativeAssets.Linux.NoDependencies` | Zero third-party deps |
 | App needs system font enumeration | `SkiaSharp.NativeAssets.Linux` | Fontconfig required for `SKFontManager` system fonts |
+
+---
+
+## Build and Publishing
+
+Cake produces two pipeline artifacts:
+
+- `nuget` — product packages and explicit `.symbols.nupkg` packages;
+- `nuget_special` — unsigned `_NuGets` and `_NativeAssets*` transport packages.
+
+The internal pipeline signs `nuget`, then assembles signed packages under
+Arcade `Shipping` and transport packages under `NonShipping`. Arcade generates
+the V3 manifest, registers one BAR, validates it, and invokes Darc promotion.
+
+`eng/Signing.props` defines product signing. Normal and explicit symbol packages
+are signed together; dSYM DWARF files are not signing targets. Missing symbol
+packages are filled by byte-identical copies of already-signed packages.
+
+`eng/Publishing.props` publishes Shipping packages, NonShipping transport, and
+symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
+`DO-NOT-SIGN, DO-NOT-UNPACK`.
+
+See [Releasing](releasing.md) for release branches, BAR selection, testing, and
+NuGet.org publication.
 
 ---
 
