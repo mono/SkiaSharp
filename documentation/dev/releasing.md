@@ -36,13 +36,19 @@ skill-specific and documented by the script that emits them.
 |--------------|----------------|--------|--------------|----------------|-----|
 | Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
 | RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
-| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `X.Y.Z` | `vX.Y.Z` |
+| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z` | `X.Y.Z` | `vX.Y.Z` |
 | Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
-| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `X.Y.Z.F` | `vX.Y.Z.F` |
+| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
-The `{build}` number is auto-assigned by CI. Release testing uses the exact test packages produced
-by the selected CI build. Stable public versions drop the `-stable.{build}` suffix only when they
-are published to NuGet.org.
+The `{build}` number is Arcade's package build identity
+`short-date.revision`, derived from the CI `OfficialBuildId`
+`yyyyMMdd.revision`. Release testing uses the exact test packages produced
+by the selected CI build. `PREVIEW_LABEL=stable` produces the exact public
+version from an internal `release/*` branch, which uses real signing. Arcade
+stages that stable BAR in an isolated feed; NuGet.org publication remains a
+separate protected operation. Package CI does not promote channels
+automatically: Tests validate the registered BAR first, then the chosen BAR is
+promoted manually.
 
 ### Release Type → Base Branch
 
@@ -115,21 +121,22 @@ revision buckets.
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing (regular packages) |
-| CI | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-ci/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
+| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
+| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json` | Unsigned non-shipping `_NuGets`, `_NativeAssets*`, and dependency chunks used by local and CI builds |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for testing, including exact `*-stable.{build}` packages before stable publication.
-> The CI feed contains internal build artifacts prefixed with `_` (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline and is not intended for public consumption.
+> **Note:** One BAR records both product and transport packages. Maestro routes
+> `IsShipping=true` packages to `skiasharp`, `IsShipping=false` packages to
+> `skiasharp-transport`, and symbol blobs to the configured symbol targets.
+> NuGet.org publication remains a separate protected operation.
 
 ### Pipelines
 
 | Pipeline | Purpose |
 |----------|---------|
-| [SkiaSharp-Native](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=26493) | Builds native binaries. |
-| [SkiaSharp](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=10789) | Builds/signs managed packages and publishes the preview feed. |
-| [SkiaSharp-Tests](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15756) | Runs the connected CI test suite. |
-| [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org after protected human approval. |
+| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, signs, and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
+| [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
+| NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
 
 ---
 
@@ -193,19 +200,65 @@ flowchart TB
 
 ### Stage 2: Status Tracking (release-status skill)
 
-After the branch is pushed, query one connected pipeline chain for the exact
-release commit:
+After the branch is pushed, query the connected Build + Tests chain for the
+exact release commit:
 
 ```bash
 python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
 ```
 
-The JSON report links downstream runs through `triggerInfo.pipelineId`, provides
-immutable source/run metadata, and derives exact test/public package versions.
-Packages appear on the internal feed after the selected `SkiaSharp` (ID 10789)
-run completes. Wait for the selected `SkiaSharp-Tests` run and both exact
-packages before beginning release-testing unless the user explicitly overrides
-the test wait.
+The JSON report links the combined Build run to its downstream Tests run,
+provides immutable source/run metadata, and carries the exact Build, Tests, and
+BAR IDs together with the signed package versions. Release testing starts only
+after the connected Tests run succeeds unless the release manager records an
+explicit override.
+
+#### BAR channels and signed-package retrieval
+
+The Build pipeline generates one Arcade V3 asset manifest from signed product
+NuGets and unsigned non-shipping transport NuGets, registers it in the Build
+Asset Registry (BAR), validates product signatures and transport identity, and
+promotes it through the configured default Maestro channel. The channel routes shipping packages to `skiasharp`,
+non-shipping packages to `skiasharp-transport`, and symbol blobs to the
+configured symbol targets.
+
+A channel is BAR metadata, not package storage. Channel promotion publishes the
+manifest's NuGet assets to the Azure DevOps feeds configured for that channel
+and records those feed URLs as BAR asset locations. `darc gather-drop` reads the
+BAR metadata and downloads each package from a registered location.
+
+Use the BAR build ID emitted by release status, inspect its repository, commit,
+branch, versions, and asset locations, then gather it by immutable ID:
+
+```bash
+darc get-build \
+  --id {bar-build} \
+  --extended \
+  --output-format json
+
+darc gather-drop \
+  --id {bar-build} \
+  --output-dir output/darc/{bar-build} \
+  --asset-filter '^(SkiaSharp|HarfBuzzSharp)(\..*)?$' \
+  --no-workarounds \
+  --include-released
+
+dotnet nuget verify --all \
+  output/darc/{bar-build}/shipping/packages/*.nupkg
+```
+
+Do not use `gather-drop --channel` or `--latest-location` for release testing.
+Select and record one exact BAR build ID, confirm the expected package versions
+in the gathered manifest, and use
+`output/darc/{bar-build}/shipping/packages` as the local NuGet source.
+
+All supported integration and release branches map to the public `SkiaSharp`
+channel. Package versions distinguish release lines; the channel and feed do
+not. Promote the tested BAR explicitly with:
+
+```bash
+darc add-build-to-channel --id {bar-build} --channel "SkiaSharp"
+```
 
 ### Stage 3: Testing (release-testing skill)
 
@@ -262,23 +315,25 @@ flowchart TB
     START([Testing gate satisfied]) --> DETECT
     DETECT["Read-only detector
     ∙ Pin source SHA
-    ∙ Pin managed/tests runs
-    ∙ Pin test/public versions"] --> PUSH_AUDIT
-    PUSH_AUDIT["Package-push dry-run
-    ∙ Preview exact Azure request
-    ∙ Reconcile publish run
-    ∙ Check exact NuGet versions"] --> APPROVE1{Queue publish pipeline?}
+    ∙ Pin combined Build + Tests runs
+    ∙ Pin BAR build ID + package versions"] --> GATHER
+    GATHER["Gather exact BAR build
+    ∙ Verify repository/branch/commit/channel
+    ∙ Verify package versions + signatures"] --> PUSH_AUDIT
+    PUSH_AUDIT["NuGet.org dry run
+    ∙ Preview exact BAR ID + versions
+    ∙ Confirm packages are absent"] --> APPROVE1{Queue protected publisher?}
     APPROVE1 -->|No| STOP([Stop])
     APPROVE1 -->|Yes| PUSH
-    PUSH["Queue package script
-    ∙ Queue exact managed resource
+    PUSH["Queue NuGet.org publisher
+    ∙ Pass immutable BAR build ID
     ∙ Return run ID + approval URL"] --> AZURE_APPROVAL{Human approves versions/destination?}
     AZURE_APPROVAL -->|No| STOP
     AZURE_APPROVAL -->|Yes| WAIT
-    WAIT["Same script with --wait
-    ∙ Pin exact publication run
-    ∙ Wait for protected run
-    ∙ Verify both NuGet packages"] --> DRAFT_AUDIT
+    WAIT["Protected publisher
+    ∙ Gather + verify exact BAR build
+    ∙ Push NuGet.org packages
+    ∙ Verify indexed versions"] --> DRAFT_AUDIT
     DRAFT_AUDIT["Draft dry-run
     ∙ Select immediate previous release tag
     ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}
@@ -307,12 +362,10 @@ flowchart TB
     class START,HANDOFF endpoint
 ```
 
-`detect-release-publish.py release/{version}` is also the recovery entry point:
-it reconstructs all immutable pins and audit commands. The package publication
-dry-run detects an exact existing Azure run without queueing. Execution returns
-its approval URL immediately; run the emitted pinned resume command after human
-approval, or add `--wait` to the approved execution command in unattended
-automation. Successful Azure completion with delayed NuGet indexing remains a
+The release-publish detector is also the recovery entry point: it reconstructs
+the immutable source, pipeline, BAR, package, and test pins. The protected
+publisher accepts the BAR build ID rather than a mutable branch or latest-build
+selector. Successful publication with delayed NuGet indexing remains a
 resumable `wait-for-nuget` state.
 
 ### Stage 5: Release Milestones (release-milestones skill)

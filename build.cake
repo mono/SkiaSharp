@@ -143,6 +143,7 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
+    .IsDependentOn ("nuget-normal")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

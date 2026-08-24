@@ -85,8 +85,7 @@ param(
 $Script:Organization = "dnceng-public"
 $Script:Project = "public"
 $Script:PipelineId = 345  # mono-SkiaSharp pipeline (dnceng-public/public)
-$Script:PreferredArtifact = "nuget_preview"  # Smaller artifact with only prerelease packages
-$Script:FallbackArtifact = "nuget"           # Full artifact (for older builds without nuget_preview)
+$Script:NuGetArtifact = "nuget"
 $Script:BaseUrl = "https://dev.azure.com/$($Script:Organization)/$($Script:Project)/_apis"
 
 # Determine install path
@@ -318,7 +317,10 @@ function Extract-Packages {
 
             # Find and copy matching packages
             $packages = Get-ChildItem -Path $tempExtract -Filter "*.nupkg" -Recurse | 
-                        Where-Object { $_.Name -like $Filter }
+                        Where-Object {
+                            $_.Name -like $Filter -and
+                            -not $_.Name.EndsWith('.symbols.nupkg', [StringComparison]::OrdinalIgnoreCase)
+                        }
 
             if ($packages.Count -eq 0) {
                 Write-Message "  No packages found matching filter '$Filter'" -Level Warning
@@ -392,15 +394,8 @@ try {
         return
     }
 
-    # Find the nuget artifact - prefer nuget_preview (smaller), fallback to nuget
-    $nugetArtifact = $artifacts | Where-Object { $_.name -eq $Script:PreferredArtifact }
-    $usingPreview = $true
-    
-    if (-not $nugetArtifact) {
-        Write-Message "nuget_preview artifact not found, trying full nuget artifact..." -Level Verbose
-        $nugetArtifact = $artifacts | Where-Object { $_.name -eq $Script:FallbackArtifact }
-        $usingPreview = $false
-    }
+    # Every build emits one package family in the canonical nuget artifact.
+    $nugetArtifact = $artifacts | Where-Object { $_.name -eq $Script:NuGetArtifact }
     
     if (-not $nugetArtifact) {
         Write-Message "Available artifacts:" -Level Warning
@@ -408,9 +403,9 @@ try {
             Write-Message "  - $($artifact.name)" -Level Info
         }
         if (-not $SuccessfulOnly) {
-            throw "Neither '$($Script:PreferredArtifact)' nor '$($Script:FallbackArtifact)' artifact found. The build may still be in progress. Try -SuccessfulOnly to get the last successful build."
+            throw "Artifact '$($Script:NuGetArtifact)' was not found. The build may still be in progress. Try -SuccessfulOnly to get the last successful build."
         }
-        throw "Neither '$($Script:PreferredArtifact)' nor '$($Script:FallbackArtifact)' artifact found."
+        throw "Artifact '$($Script:NuGetArtifact)' was not found."
     }
 
     $artifactName = $nugetArtifact.name
@@ -429,9 +424,7 @@ try {
     $zipPath = Download-Artifact -Artifact $nugetArtifact -DownloadPath $tempPath
 
     if ($zipPath) {
-        # Extract packages - nuget_preview already contains only prerelease; for full nuget, filter to prerelease only
-        $effectiveFilter = if ($usingPreview) { "*.nupkg" } else { "*-*.nupkg" }
-        $extractedPackages = Extract-Packages -ZipPath $zipPath -DestinationPath $packagesPath -Filter $effectiveFilter -Force:$Force
+        $extractedPackages = Extract-Packages -ZipPath $zipPath -DestinationPath $packagesPath -Filter "*.nupkg" -Force:$Force
 
         # Cleanup zip
         if (Test-Path $zipPath) {

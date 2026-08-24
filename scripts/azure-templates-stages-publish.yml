@@ -1,0 +1,20 @@
+stages:
+  - stage: publish_build_assets
+    displayName: Register signed packages in BAR
+    dependsOn:
+      - signing
+    jobs:
+      - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+        parameters:
+          publishingVersion: 3
+          officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
+
+  - template: /eng/common/templates-official/post-build/post-build.yml@self
+    parameters:
+      publishingInfraVersion: 3
+      # Use Arcade's standard promotion stage and fail closed if Maestro has no
+      # default channel mapping for this repository and branch.
+      publishAssetsImmediately: false
+      requireDefaultChannels: true
+      validateDependsOn:
+        - publish_build_assets

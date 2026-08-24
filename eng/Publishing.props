@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <PublishingVersion>3</PublishingVersion>
+    <!-- Shipping symbol packages are staged explicitly so transport packages
+         never receive Arcade's byte-for-byte fallback symbol copy. -->
+    <AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Preview builds register only their signed prerelease view. Exact release
+         builds register signed Shipping packages and are isolated by Arcade V3. -->
+    <Artifact Include="$(ArtifactsPackagesDir)Preview\*.nupkg"
+              Kind="Package"
+              Condition="'$(DotNetFinalVersionKind)' != 'release'" />
+    <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg"
+              Kind="Package"
+              Condition="'$(DotNetFinalVersionKind)' == 'release'" />
+    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**\*.nupkg"
+              Kind="Package"
+              IsShipping="false" />
+  </ItemGroup>
+</Project>
