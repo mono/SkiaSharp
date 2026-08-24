@@ -19,6 +19,9 @@ foreach (var cake in GetFiles("native/*/build.cake"))
         .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
+    if (native == "macos")
+        task.IsDependentOn("tests-apple-symbols");
+
     externalsTask.IsDependentOn(task);
 }
 
@@ -126,6 +129,10 @@ Task ("tests-wasm")
     .Description ("Run WASM tests.")
     .IsDependentOn ("externals-wasm")
     .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
+
+Task ("tests-apple-symbols")
+    .Description ("Run Apple native symbol UUID regression tests.")
+    .Does (() => RunCake ("./scripts/infra/native/apple/xcode-symbols.tests.cake", "Default"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - pack NuGet packages (isolated via RunCake)
