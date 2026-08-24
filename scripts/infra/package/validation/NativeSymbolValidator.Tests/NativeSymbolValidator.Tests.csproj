@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <RollForward>LatestMajor</RollForward>
+    <AssemblyName>NativeSymbolValidator.Tests</AssemblyName>
+    <RootNamespace>SkiaSharp.PackageValidation.Tests</RootNamespace>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="3.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\NativeSymbolValidator\NativeSymbolValidator.csproj" />
+  </ItemGroup>
+
+  <!--
+    The symbol store assemblies are referenced directly rather than relied upon flowing through the
+    project reference, so the test host always has the exact same implementation the validator uses.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="2.0.0-preview.1.24303.4" GeneratePathProperty="true" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.SymbolStore">
+      <HintPath>$(PkgMicrosoft_SymbolUploader_Build_Task)/build/netcoreapp3.1/Microsoft.SymbolStore.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.FileFormats">
+      <HintPath>$(PkgMicrosoft_SymbolUploader_Build_Task)/build/netcoreapp3.1/Microsoft.FileFormats.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

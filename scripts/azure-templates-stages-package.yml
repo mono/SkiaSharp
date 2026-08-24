@@ -96,12 +96,21 @@ stages:
               path: '.\output\nugets-preview'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
-      - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Scan NuGet Artifacts
         parameters:
           name: scan_normal_windows
           displayName: Scan NuGet Artifacts
           buildAgent: ${{ parameters.buildAgentWindows}}
           dependsOn: package_normal_windows
+          # Validates the packed artifacts, including the Apple dSYM and Android .so.dbg symbol
+          # packages. Deliberately not cached: a cached job skips its steps, and validation that
+          # can be skipped is not validation.
+          target: nuget-validate
+          additionalArgs: --skipExternals="all" --requireAll=true
+          checkoutSubmodules: false
+          installAndroidSdk: false
+          installDotNetWorkloads: false
+          installNode: false
           shouldPublish: false
           requiredArtifacts:
             - name: nuget

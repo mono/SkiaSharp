@@ -141,7 +141,8 @@ Task ("tests-apple-symbols")
 Task ("nuget")
     .Description ("Pack all NuGets.")
     .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
+    .IsDependentOn ("nuget-special")
+    .IsDependentOn ("nuget-validate");
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -151,6 +152,10 @@ Task ("nuget-normal")
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
+
+Task ("nuget-validate")
+    .Description ("Validate the packed NuGets, including the native symbol packages.")
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-validate"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation

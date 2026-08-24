@@ -8,6 +8,11 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 
 var REQUIRE_NATIVE_SYMBOLS = Argument("requireNativeSymbols", false);
 
+// CI packs the complete matrix, so a package that is expected but missing is a failure there. A
+// local pack is frequently partial, so the strict check is opt-out via --requireAll=false.
+var VALIDATE_REQUIRE_ALL = Argument ("requireAll", true);
+var VALIDATE_RUN_TESTS = Argument ("validatorTests", true);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,6 +158,52 @@ bool IsMachO(ZipArchiveEntry entry)
             (magic[0] == 0xfe && magic[1] == 0xed && magic[2] == 0xfa && magic[3] == 0xcf);
     }
 }
+
+Task ("nuget-validate")
+    .Description ("Validate the packed NuGets, including the native symbol packages.")
+    .Does (() =>
+{
+    var validationRoot = ROOT_PATH.Combine ("scripts/infra/package/validation");
+    var validator = validationRoot.CombineWithFilePath ("NativeSymbolValidator/NativeSymbolValidator.csproj");
+    var validatorTests = validationRoot.CombineWithFilePath ("NativeSymbolValidator.Tests/NativeSymbolValidator.Tests.csproj");
+
+    // The validator's own regression suite runs first: if its logic has regressed then it cannot be
+    // trusted to sign off on the packages, and a green validation would be meaningless.
+    if (VALIDATE_RUN_TESTS) {
+        DotNetTest (MakeAbsolute (validatorTests).FullPath, new DotNetTestSettings {
+            Configuration = CONFIGURATION,
+            Verbosity = DotNetVerbosity.Minimal,
+        });
+    }
+
+    var args = new ProcessArgumentBuilder ()
+        .Append ("--packages")
+        .AppendQuoted (OUTPUT_NUGETS_PATH.FullPath)
+        .Append ("--symbol-packages")
+        .AppendQuoted (OUTPUT_SYMBOLS_NUGETS_PATH.FullPath)
+        .Append ("--versions-file")
+        .AppendQuoted (MakeAbsolute (ROOT_PATH.CombineWithFilePath ("scripts/VERSIONS.txt")).FullPath);
+
+    if (!string.IsNullOrEmpty (PREVIEW_NUGET_SUFFIX)) {
+        args.Append ("--preview-suffix");
+        args.AppendQuoted (PREVIEW_NUGET_SUFFIX);
+    }
+
+    // CI packs the entire matrix, so a missing package there is a failure. Local runs often pack
+    // only a subset, so the strict check is opt-out rather than assumed.
+    if (VALIDATE_REQUIRE_ALL)
+        args.Append ("--require-all");
+
+    if (VERBOSITY >= Verbosity.Verbose)
+        args.Append ("--verbose");
+
+    // DotNetRun throws on a non-zero exit code, so validation failures fail the build. Verbosity is
+    // deliberately not set: Cake appends it after the `--` separator, where it becomes an argument
+    // to the validator rather than to `dotnet run`.
+    DotNetRun (MakeAbsolute (validator).FullPath, args, new DotNetRunSettings {
+        Configuration = CONFIGURATION,
+    });
+});
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
