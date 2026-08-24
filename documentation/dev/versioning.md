@@ -25,13 +25,9 @@ The version number for SkiaSharp is as follows: `major.skia.minor.patch`
 
 With regards to the pre-release versioning, it follows the typical pattern.
 
-Official CI uses Arcade's `OfficialBuildId` identity
-`yyyyMMdd.revision`. Package versions use Arcade's derived short date and
-revision, for example `4.152.0-preview.0.26418.3` for official build
-`20260818.3`.
-GitHub and Azure Repos builds normalize their provider-specific PR, branch, and
-commit variables before constructing this version, and downstream pipelines
-inherit the upstream identity.
+Official CI derives package build suffixes from Arcade's
+`OfficialBuildId` (`yyyyMMdd.revision`), for example
+`4.152.0-preview.0.26418.3` from build `20260818.3`.
 
 > **Note:** There are two Azure DevOps feeds:
 > - **Signed builds** (`skiasharp`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
@@ -43,15 +39,9 @@ Typically, the pre-release labels are:
  - `-rc` is almost ready to go out, but is waiting on third party feedback (not too common)
  - `stable` is the pipeline sentinel for an exact `X.Y.Z` package; it is not included in the package version
 
-Each package build emits exactly one version family. Any normal label produces
-a uniquely versioned prerelease. `PREVIEW_LABEL=stable` derives
-`DotNetFinalVersionKind=release` and emits exact stable packages. Exact releases
-are restricted to internal `release/*` branches, which use real signing.
-Package labels are normalized to lowercase before version construction.
-
-Arcade V3 marks exact release builds as stable and publishes them to dynamically
-created isolated feeds. Channel assignment does not publish stable packages to
-NuGet.org; a selected, tested BAR is released separately.
+Each build emits one package family. Normal labels produce prerelease packages;
+`PREVIEW_LABEL=stable` produces exact packages from a real-signed internal
+`release/*` branch. Arcade promotion and NuGet.org publication remain separate.
 
 ### PR Packages
 

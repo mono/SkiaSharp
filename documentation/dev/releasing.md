@@ -40,15 +40,10 @@ skill-specific and documented by the script that emits them.
 | Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
 | Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F` | `X.Y.Z.F` | `vX.Y.Z.F` |
 
-The `{build}` number is Arcade's package build identity
-`short-date.revision`, derived from the CI `OfficialBuildId`
-`yyyyMMdd.revision`. Release testing uses the exact test packages produced
-by the selected CI build. `PREVIEW_LABEL=stable` produces the exact public
-version from an internal `release/*` branch, which uses real signing. Arcade
-stages that stable BAR in an isolated feed; NuGet.org publication remains a
-separate protected operation. Package CI does not promote channels
-automatically: Tests validate the registered BAR first, then the chosen BAR is
-promoted manually.
+`{build}` is Arcade's `short-date.revision` identity. `PREVIEW_LABEL=stable`
+produces the exact public version from a real-signed `release/*` build. Arcade
+registers, validates, and promotes the BAR through its configured default
+channel; NuGet.org publication remains a separate protected operation.
 
 ### Release Type → Base Branch
 
@@ -215,20 +210,11 @@ explicit override.
 
 #### BAR channels and signed-package retrieval
 
-The Build pipeline generates one Arcade V3 asset manifest from signed product
-NuGets and unsigned non-shipping transport NuGets, registers it in the Build
-Asset Registry (BAR), validates product signatures and transport identity, and
-promotes it through the configured default Maestro channel. The channel routes shipping packages to `skiasharp`,
-non-shipping packages to `skiasharp-transport`, and symbol blobs to the
-configured symbol targets.
+The Build pipeline puts signed product packages, unsigned transport packages,
+and symbol blobs in one BAR, validates it, then invokes standard Darc promotion.
+The configured Maestro channel routes each asset class to its destination.
 
-A channel is BAR metadata, not package storage. Channel promotion publishes the
-manifest's NuGet assets to the Azure DevOps feeds configured for that channel
-and records those feed URLs as BAR asset locations. `darc gather-drop` reads the
-BAR metadata and downloads each package from a registered location.
-
-Use the BAR build ID emitted by release status, inspect its repository, commit,
-branch, versions, and asset locations, then gather it by immutable ID:
+Use the BAR ID emitted by release status and gather that immutable build:
 
 ```bash
 darc get-build \
@@ -247,18 +233,8 @@ dotnet nuget verify --all \
   output/darc/{bar-build}/shipping/packages/*.nupkg
 ```
 
-Do not use `gather-drop --channel` or `--latest-location` for release testing.
-Select and record one exact BAR build ID, confirm the expected package versions
-in the gathered manifest, and use
-`output/darc/{bar-build}/shipping/packages` as the local NuGet source.
-
-All supported integration and release branches map to the public `SkiaSharp`
-channel. Package versions distinguish release lines; the channel and feed do
-not. Promote the tested BAR explicitly with:
-
-```bash
-darc add-build-to-channel --id {bar-build} --channel "SkiaSharp"
-```
+Do not select release inputs by channel or latest location. Record the exact BAR
+ID and use `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
 
 ### Stage 3: Testing (release-testing skill)
 

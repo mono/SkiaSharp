@@ -1,205 +1,81 @@
-# Arcade NuGet signing
+# Arcade package signing and publishing
 
-SkiaSharp signs already-built NuGet packages in a separate internal stage. The
-native and managed product builds remain owned by Cake.
+SkiaSharp builds packages with Cake, then uses Arcade for signing, BAR
+registration, validation, and Darc promotion.
 
-`azure-pipelines-package.yml` composes separate package, signing, and publishing
-stages. `azure-templates-stages-signing.yml` owns signing only.
-`azure-templates-stages-publish.yml` assembles the final Arcade package views,
-generates the manifest, registers the BAR, and invokes standard Arcade validation
-and Darc promotion.
-
-## Supported integration
-
-The repository carries an automation-owned `eng/common` tree matched to the
-`Microsoft.DotNet.Arcade.Sdk` version in `global.json` and
-`eng/Version.Details.xml`. Do not edit `eng/common` directly or update the SDK
-without syncing that tree through Darc dependency flow.
-
-The signing job uses Arcade's supported entry points:
-
-- `/eng/common/templates-official/job/job.yml`
-- `eng/common/build.ps1 -restore -sign`
-
-It does not invoke SignTool directly or use Arcade's private bootstrap targets.
-MicroBuild test signing validates MacDeveloper policy without rewriting dylib
-payloads; real signing requires those dylibs to change.
-
-Arcade performs the cryptographic checks:
-
-- SignTool recursively verifies mapped outputs after each signing operation.
-- Standard Arcade post-build validation applies NuGet integrity and signature
-  trust/validity verification to the final BAR package inventory.
-
-`dotnet nuget verify --all` is not repeated because it currently performs the
-same NuGet signature verification already executed by SignCheck.
-
-The repository payload verifier compares unsigned and signed archives to reject
-package-set changes, duplicate or case-colliding paths, stale or unmapped
-policy entries, unexpected payload mutations, missing expected mutations, and
-changes to intentionally skipped source files. Arcade's signature checks do not
-compare signed output against the original archive.
-
-`verify-signed-packages.ps1` performs that before/after fidelity comparison and
-writes the verification result. It imports `NuGetPayload.psm1`; the module is
-not executed directly.
-Contents under `.dSYM` bundles are inventoried and must remain byte-identical,
-but are not signing targets because they contain debug-symbol payloads rather
-than runtime binaries.
-Apple native-assets packages receive explicit `.symbols.nupkg` companions. They
-contain the normal package payload plus flattened per-architecture DWARF Mach-O
-files from the build's dSYM bundles. Mac Catalyst symbol packages also include
-the unpacked framework binary because the customer package carries that binary
-inside a framework ZIP. Arcade recursively indexes these files by Mach-O UUID.
-`tests/Signing.Tests.ps1` is a local regression suite and is not a pipeline
-signing step.
-
-## Artifact flow
+## Pipeline flow
 
 ```text
-package stage: unsigned nuget
-              |
-              v
-signing stage: stage under artifacts/packages/Release/Shipping
-              |
-              +-- Arcade SignTool test/real signing and recursive post-sign checks
-              +-- validate eng/Signing.props and compare unsigned/signed payloads
-              |
-              +-- nuget_signed
-              +-- nuget_signing_verification
-              `-- nuget_signing_logs
-              |
-              v
-publish assembly: download nuget_signed + unsigned nuget_special
-              |
-              +-- complete shipping symbol package inventory
-              +-- stage signed Shipping and unsigned NonShipping packages
-              `-- generate Arcade V3 PackageArtifacts/BlobArtifacts/AssetManifests
+Package
+  nuget         normal + explicit .symbols.nupkg packages
+  nuget_special unsigned _NuGets / _NativeAssets transport packages
+      |
+      v
+Sign NuGets
+  download nuget
+  sign and verify package payloads
+  publish nuget_signed
+      |
+      v
+Assemble Arcade assets
+  download nuget_signed + nuget_special
+  stage signed packages in Shipping
+  stage unsigned transport in NonShipping
+  add byte-identical fallback .symbols.nupkg copies when needed
+  generate PackageArtifacts, BlobArtifacts, and AssetManifests
+      |
+      v
+Register BAR -> Arcade validation -> Darc promotion
 ```
 
-Arcade also emits three standard publishing artifacts that must be preserved:
+The publish assembly stage runs only when BAR registration is enabled. Transport
+packages never enter the signing stage.
 
-- `PackageArtifacts` contains package bytes staged for BAR-backed feed publishing.
-- `BlobArtifacts` contains blob assets such as Arcade-generated symbol packages.
-- `AssetManifests` describes the registered package and blob inventory consumed
-  by the BAR publishing job.
+## Signing policy
 
-The repository publishes one `nuget` pipeline artifact containing both normal
-and `*.symbols.nupkg` packages. The complete set is signed and staged in Arcade's
-Shipping view. Prerelease versus exact release identity comes from package
-versions, not a second directory.
+`eng/Signing.props` is the source of truth:
 
-Arcade classifies every existing `*.symbols.nupkg` as a symbol blob and indexes
-its supported payload files in the target symbol servers. For a normal package
-without a matching symbol package, Arcade generates one by copying the signed
-normal package; this covers packages that embed portable or native PDBs. Android
-native-assets projects provide real symbol packages because their large
-`*.so.dbg` sidecars do not belong in customer shipping packages.
+- shipping `.nupkg` files use the NuGet certificate;
+- first-party binaries use `Microsoft400`;
+- Apple runtime dylibs use `MacDeveloperVNext`;
+- source payloads listed as `SkippedFile` remain unchanged.
 
-The existing unsigned artifacts remain available to pipeline consumers.
-`nuget_special` contains transport wrappers (`_NuGets`, `_NativeAssets*`, and
-dependency chunks). Official builds stage these under Arcade's `NonShipping`
-package directory without passing them through signing, and record them in the
-same BAR with `NonShipping=true`. Package-scoped
-`DO-NOT-SIGN`/`DO-NOT-UNPACK` entries in `eng/SignCheckExclusionsFile.txt`
-require unsigned transport containers without recursively re-validating their
-build-input payloads.
+Normal and explicit symbol packages share the `nuget` artifact and are signed
+together. dSYM DWARF payloads are inventoried but not signing targets. Fallback
+symbol packages copy an already-signed package.
 
-Arcade's global fallback symbol generation is disabled. SkiaSharp preserves
-genuine `*.symbols.nupkg` files and creates explicit byte-identical fallback
-copies only for shipping packages that embed their PDBs. Transport wrappers do
-not receive symbol blobs.
+`verify-signed-packages.ps1` compares unsigned and signed archives so only
+policy-approved payloads may change.
 
-SkiaSharp and Arcade use the same stable .NET SDK from `global.json`. The
-10.0.2xx feature band includes the `dotnet package download` command required by
-generated Arcade bootstrap.
+## Publishing policy
 
-Signing uses real ESRP certificates on `main` and `release/*`. Other branches
-test-sign unless an authorized manual run explicitly sets `forceRealSigning`.
-That override retains the same signed and verification artifacts as a trusted
-branch run; it does not publish them to a package feed.
+`eng/Publishing.props` publishes:
 
-## Policy
+- signed product and symbol packages from `Shipping`;
+- unsigned transport packages from `NonShipping`.
 
-`eng/Signing.props` is the only signing-policy source of truth. It removes
-Arcade's broad extension defaults and lists every signable basename explicitly:
+Arcade records both in one BAR. Maestro routes shipping packages, non-shipping
+transport, and symbol blobs to their configured destinations.
 
-- `FirstPartyFile` uses `Microsoft400`;
-- `MacDeveloperFile` uses `MacDeveloperVNext`;
-- `ThirdPartyFile` uses `3PartySHA2`;
-- `SkippedFile` uses `None`;
-- outer `.nupkg` containers use `NuGet`.
+`eng/SignCheckExclusionsFile.txt` marks transport packages
+`DO-NOT-SIGN, DO-NOT-UNPACK`, preventing signatures and recursive checks of raw
+build inputs.
 
-Adding a DLL, EXE, WINMD, dylib, JavaScript, or Python payload without updating
-the policy fails the payload-verification step.
+Each run produces one package family. `PREVIEW_LABEL=stable` creates exact
+release versions; other labels create prerelease versions in the same Shipping
+view.
 
-Browser and Emscripten JavaScript ships as source and is not Authenticode-signed.
-It is supported only when consumed from the author-signed NuGet package; the
-pipeline does not authenticate loose copies. `NoSignJS` opts into Arcade's
-current JavaScript policy, while every known basename remains explicitly listed
-as `SkippedFile`.
+## Signing modes
 
-`eng/SignCheckExclusionsFile.txt` mirrors the JavaScript subset of `SkippedFile`
-using package/path-scoped `DO-NOT-SIGN` entries. SignCheck fails if one of those
-files becomes signed. SignCheck does not verify Python signatures, so the
-generated Python source is controlled only by `CertificateName=None` and the
-payload fidelity verifier. That verifier requires every skipped file to remain
-byte-identical. No detached catalog is generated or shipped.
+- `main` and `release/*`: real signing and BAR publishing.
+- Other internal branches: test signing.
+- `forceRealSigning=true`: real signing.
+- A feature branch also needs `registerInBar=true` to assemble and publish a BAR.
 
-## Test and real signing
+Public PR builds do not run the signing or publishing stages.
 
-The internal package pipeline signs automatically for every non-PR run. The
-public pipeline never enables the signing stage. Internal signing mode uses the
-repository's established policy:
-
-- `main` and `release/*` use real signing;
-- an explicit `forceRealSigning` queue parameter uses real signing;
-- all other branches use test signing.
-
-`forceRealSigning` does not register a BAR by itself. A non-main/release branch
-must also set `registerInBar` to opt into BAR registration and validation.
-
-API Scan runs on scheduled main builds as the asynchronous compliance check,
-or when explicitly requested with `runApiScan`. It does not gate each ordinary
-main or release branch build.
-
-Real signing must be enabled only after ESRP onboarding and protected-branch
-checks are configured. Arcade then supplies:
-
-- `MicroBuild Signing Task (DevDiv)`;
-- the dnceng Windows PME endpoint;
-- MicroBuild install and cleanup;
-- `System.AccessToken` handling.
-
-The package pipeline registers real-signed packages in BAR. Maestro channel
-promotion and final NuGet.org publication remain separate operations. CI stops
-after BAR registration and Arcade validation; a selected BAR is promoted
-manually only after the downstream Tests pipeline succeeds. Each run
-produces one package family in the signed Shipping view.
-`PREVIEW_LABEL=stable` produces exact packages and sets
-`DotNetFinalVersionKind=release`; other labels produce uniquely versioned
-prerelease packages in the same view.
-
-Exact release mode is accepted only for an internal `release/*` branch, which
-uses real signing. API Scan remains an independent scheduled-main or ad hoc
-compliance stage. Arcade V3 marks the BAR stable and publishes packages to a
-dynamically created isolated feed, not directly to NuGet.org or a permanent
-shared feed.
-
-## Local checks
-
-Run archive-integrity tests:
+## Local check
 
 ```powershell
 pwsh -NoLogo -NoProfile -File scripts/infra/signing/tests/Signing.Tests.ps1
-```
-
-Run an offline Arcade signing dry run by staging packages under
-`artifacts/packages/Release/Shipping` and omitting `OfficialBuildId`:
-
-```powershell
-eng/common/build.ps1 -configuration Release -restore -sign -ci `
-  /p:DotNetSignType=test `
-  /p:TeamName=".NET MAUI" `
-  /p:PostBuildSign=false
 ```
