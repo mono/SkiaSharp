@@ -544,10 +544,8 @@ if (-not $prDownloadBash.Contains('! -name "*.symbols.nupkg"') -or
 }
 
 $signingStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
-if ($signingStages -match 'nuget_preview_signed' -or
-    $signingStages -notmatch 'artifacts\\packages\\Release\\Preview' -or
-    $signingStages -notmatch 'stage-prerelease-packages\.ps1') {
-    throw 'Signing must retain the Arcade preview layout without publishing a duplicate preview artifact.'
+if ($signingStages -match 'nuget_preview_signed|nuget_special|transport-nugets|NonShipping|stage-shipping-symbol-packages|-publish') {
+    throw 'Signing must only sign and verify the unified product and symbol package artifact.'
 }
 if ($signingStages -match 'artifactName:\s*nuget_symbols' -or
     $signingStages -match 'stage-android-symbol-packages\.ps1') {
@@ -555,13 +553,20 @@ if ($signingStages -match 'artifactName:\s*nuget_symbols' -or
 }
 
 $publishingProps = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
-if (-not $publishingProps.Contains('$(ArtifactsPackagesDir)Preview\*.nupkg') -or
-    -not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') -or
+if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') -or
     -not $publishingProps.Contains('$(ArtifactsNonShippingPackagesDir)**\*.nupkg') -or
+    $publishingProps -match 'Preview|DotNetFinalVersionKind' -or
     $publishingProps -notmatch 'IsShipping="false"' -or
-    $publishingProps -notmatch '<AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>' -or
-    ([regex]::Matches($publishingProps, 'DotNetFinalVersionKind').Count -lt 2)) {
-    throw 'Arcade publishing must separate preview/release shipping packages from transport packages.'
+    $publishingProps -notmatch '<AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>') {
+    throw 'Arcade publishing must use one shipping view and one non-shipping transport view.'
+}
+if ($publishStages -notmatch 'stage:\s*assemble_publish_assets' -or
+    $publishStages -notmatch 'artifactName:\s*nuget_signed' -or
+    $publishStages -notmatch 'artifactName:\s*nuget_special' -or
+    $publishStages -notmatch 'stage-shipping-symbol-packages\.ps1' -or
+    $publishStages -notmatch 'stage-transport-packages\.ps1' -or
+    $publishStages -notmatch 'dependsOn:\s+- assemble_publish_assets') {
+    throw 'Publishing must assemble signed shipping packages and unsigned transport before BAR registration.'
 }
 
 Write-Host 'Build identity tests passed.'

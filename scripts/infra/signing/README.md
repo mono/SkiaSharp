@@ -3,9 +3,11 @@
 SkiaSharp signs already-built NuGet packages in a separate internal stage. The
 native and managed product builds remain owned by Cake.
 
-`azure-pipelines-package.yml` defines package and signing as sibling stages. The
-signing stage is defined in `azure-templates-stages-signing.yml`; the shared stage
-aggregator and package-stage template do not own signing.
+`azure-pipelines-package.yml` composes separate package, signing, and publishing
+stages. `azure-templates-stages-signing.yml` owns signing only.
+`azure-templates-stages-publish.yml` assembles the final Arcade package views,
+generates the manifest, registers the BAR, and invokes standard Arcade validation
+and Darc promotion.
 
 ## Supported integration
 
@@ -18,7 +20,6 @@ The signing job uses Arcade's supported entry points:
 
 - `/eng/common/templates-official/job/job.yml`
 - `eng/common/build.ps1 -restore -sign`
-- `eng/common/sdk-task.ps1 -task SigningValidation`
 
 It does not invoke SignTool directly or use Arcade's private bootstrap targets.
 MicroBuild test signing validates MacDeveloper policy without rewriting dylib
@@ -26,9 +27,9 @@ payloads; real signing requires those dylibs to change.
 
 Arcade performs the cryptographic checks:
 
-- SignTool recursively verifies mapped outputs after each signing operation;
-- real signing additionally runs `SigningValidation`, whose SignCheck NuGet
-  verifier applies NuGet integrity and signature trust/validity verification.
+- SignTool recursively verifies mapped outputs after each signing operation.
+- Standard Arcade post-build validation applies NuGet integrity and signature
+  trust/validity verification to the final BAR package inventory.
 
 `dotnet nuget verify --all` is not repeated because it currently performs the
 same NuGet signature verification already executed by SignCheck.
@@ -63,17 +64,19 @@ signing stage: stage under artifacts/packages/Release/Shipping
               |
               +-- Arcade SignTool test/real signing and recursive post-sign checks
               +-- validate eng/Signing.props and compare unsigned/signed payloads
-              +-- real only: Arcade SigningValidation trust/validity checks
-              +-- create the signed preview-package view
               |
               +-- nuget_signed
               +-- nuget_signing_verification
               `-- nuget_signing_logs
+              |
+              v
+publish assembly: download nuget_signed + unsigned nuget_special
+              |
+              +-- complete shipping symbol package inventory
+              +-- stage signed Shipping and unsigned NonShipping packages
+              +-- verify transport packages remain byte-identical and unsigned
+              `-- generate Arcade V3 PackageArtifacts/BlobArtifacts/AssetManifests
 ```
-
-The `artifacts/packages/Release/Preview` directory is still required for Arcade
-to select preview packages when it generates the V3 manifest. It is an internal
-layout, not a separately published pipeline artifact.
 
 Arcade also emits three standard publishing artifacts that must be preserved:
 
@@ -83,8 +86,9 @@ Arcade also emits three standard publishing artifacts that must be preserved:
   by the BAR publishing job.
 
 The repository publishes one `nuget` pipeline artifact containing both normal
-and `*.symbols.nupkg` packages. The complete set is signed and staged in the
-active Arcade shipping or preview view.
+and `*.symbols.nupkg` packages. The complete set is signed and staged in Arcade's
+Shipping view. Prerelease versus exact release identity comes from package
+versions, not a second directory.
 
 Arcade classifies every existing `*.symbols.nupkg` as a symbol blob and indexes
 its supported payload files in the target symbol servers. For a normal package
@@ -172,11 +176,10 @@ The package pipeline registers real-signed packages in BAR. Maestro channel
 promotion and final NuGet.org publication remain separate operations. CI stops
 after BAR registration and Arcade validation; a selected BAR is promoted
 manually only after the downstream Tests pipeline succeeds. Each run
-produces one package family:
-
-- normal labels register the signed `Preview` view;
-- `PREVIEW_LABEL=stable` registers exact signed `Shipping` packages and sets
-  `DotNetFinalVersionKind=release`.
+produces one package family in the signed Shipping view.
+`PREVIEW_LABEL=stable` produces exact packages and sets
+`DotNetFinalVersionKind=release`; other labels produce uniquely versioned
+prerelease packages in the same view.
 
 Exact release mode is accepted only for an internal `release/*` branch, which
 uses real signing. API Scan remains an independent scheduled-main or ad hoc

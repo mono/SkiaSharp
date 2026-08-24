@@ -66,13 +66,6 @@ stages:
                 artifactName: nuget
                 targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
 
-            - ${{ if eq(parameters.useRealSigning, true) }}:
-              - task: DownloadPipelineArtifact@2
-                displayName: Download transport NuGets
-                inputs:
-                  artifactName: nuget_special
-                  targetPath: '$(Agent.TempDirectory)\transport-nugets'
-
             - pwsh: |
                 $source = '$(Agent.TempDirectory)\unsigned-nugets'
                 $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
@@ -86,14 +79,7 @@ stages:
 
                 Copy-Item $packages.FullName $destination
                 Write-Host "Staged $($packages.Count) NuGet package(s) for signing."
-              displayName: Stage packages in Arcade layout
-
-            - ${{ if eq(parameters.useRealSigning, true) }}:
-              - pwsh: |
-                  ./scripts/infra/package/stage-transport-packages.ps1 `
-                    -SourceDirectory '$(Agent.TempDirectory)\transport-nugets' `
-                    -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping'
-                displayName: Stage unsigned transport packages for publishing
+              displayName: Stage packages for signing
 
             - powershell: >
                 eng\common\build.ps1
@@ -120,52 +106,3 @@ stages:
                   -SignType '$(_SignType)' `
                   -RequireSignatures
               displayName: Verify signed NuGet payload fidelity
-
-            - pwsh: |
-                ./scripts/infra/package/stage-shipping-symbol-packages.ps1 `
-                  -PackageDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-              displayName: Stage explicit shipping symbol packages
-
-            - ${{ if eq(parameters.useRealSigning, true) }}:
-              - pwsh: |
-                  ./scripts/infra/signing/verify-unsigned-transport-packages.ps1 `
-                    -OriginalDirectory '$(Agent.TempDirectory)\transport-nugets' `
-                    -StagedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping' `
-                    -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\transport-payload-verification.json'
-                displayName: Verify unsigned transport NuGet identity
-
-              - powershell: >
-                  eng\common\sdk-task.ps1
-                  -task SigningValidation
-                  -restore
-                  -msbuildEngine dotnet
-                  "/p:PackageBasePath=$(Build.SourcesDirectory)\artifacts\packages\Release"
-                  "/p:SignCheckExclusionsFile=$(Build.SourcesDirectory)\eng\SignCheckExclusionsFile.txt"
-                displayName: Validate trusted signatures with Arcade
-
-            - pwsh: |
-                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Preview'
-                if ('$(DOTNET_FINAL_VERSION_KIND)' -eq 'release') {
-                  Remove-Item $destination -Recurse -Force -ErrorAction Ignore
-                  New-Item $destination -ItemType Directory -Force | Out-Null
-                  Write-Host 'Exact release packages remain in the signed Shipping view.'
-                } else {
-                  ./scripts/infra/package/stage-prerelease-packages.ps1 `
-                    -SourceDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
-                    -DestinationDirectory $destination
-                }
-              displayName: Create signed preview package view
-
-            - ${{ if eq(parameters.useRealSigning, true) }}:
-              - powershell: >
-                  eng\common\build.ps1
-                  -configuration Release
-                  -restore
-                  -publish
-                  -ci
-                  /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
-                  /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
-                  /p:DotNetPublishUsingPipelines=true
-                displayName: Generate Arcade V3 asset manifest
-                env:
-                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)

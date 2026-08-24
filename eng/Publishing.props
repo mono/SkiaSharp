@@ -7,14 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Preview builds register only their signed prerelease view. Exact release
-         builds register signed Shipping packages and are isolated by Arcade V3. -->
-    <Artifact Include="$(ArtifactsPackagesDir)Preview\*.nupkg"
-              Kind="Package"
-              Condition="'$(DotNetFinalVersionKind)' != 'release'" />
     <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg"
-              Kind="Package"
-              Condition="'$(DotNetFinalVersionKind)' == 'release'" />
+              Kind="Package" />
     <Artifact Include="$(ArtifactsNonShippingPackagesDir)**\*.nupkg"
               Kind="Package"
               IsShipping="false" />

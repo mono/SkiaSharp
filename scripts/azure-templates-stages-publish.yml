@@ -1,8 +1,105 @@
+parameters:
+  - name: buildAgent
+    type: object
+
 stages:
+  - stage: assemble_publish_assets
+    displayName: Assemble Arcade assets
+    dependsOn:
+      - signing
+    jobs:
+      - template: /eng/common/templates-official/job/job.yml@self
+        parameters:
+          name: assemble_arcade_assets
+          displayName: Assemble signed and transport assets
+          pool: ${{ parameters.buildAgent.pool }}
+          timeoutInMinutes: 180
+          workspace:
+            clean: all
+          runAsPublic: false
+          artifacts:
+            publish:
+              logs:
+                name: arcade_asset_logs
+          templateContext:
+            outputs:
+              - output: pipelineArtifact
+                displayName: Publish Arcade asset verification
+                artifactName: arcade_asset_verification
+                targetPath: '$(Build.SourcesDirectory)\artifacts\publishing-verification'
+                condition: succeeded()
+          preSteps:
+            - checkout: self
+              clean: true
+              fetchDepth: 1
+              fetchTags: false
+              submodules: false
+          steps:
+            - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+              displayName: Configure package version identity
+
+            - task: DownloadPipelineArtifact@2
+              displayName: Download signed NuGets
+              inputs:
+                artifactName: nuget_signed
+                targetPath: '$(Agent.TempDirectory)\signed-nugets'
+
+            - task: DownloadPipelineArtifact@2
+              displayName: Download transport NuGets
+              inputs:
+                artifactName: nuget_special
+                targetPath: '$(Agent.TempDirectory)\transport-nugets'
+
+            - pwsh: |
+                $source = '$(Agent.TempDirectory)\signed-nugets'
+                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+                Remove-Item '$(Build.SourcesDirectory)\artifacts\packages\Release' -Recurse -Force -ErrorAction Ignore
+                New-Item $destination -ItemType Directory -Force | Out-Null
+
+                $packages = @(Get-ChildItem $source -Filter '*.nupkg' -File -Recurse)
+                if ($packages.Count -eq 0) {
+                  throw "No signed NuGet packages were downloaded from artifact 'nuget_signed'."
+                }
+
+                Copy-Item $packages.FullName $destination
+                Write-Host "Staged $($packages.Count) signed NuGet package(s) for Arcade publishing."
+              displayName: Stage signed shipping packages
+
+            - pwsh: |
+                ./scripts/infra/package/stage-shipping-symbol-packages.ps1 `
+                  -PackageDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
+              displayName: Complete shipping symbol package inventory
+
+            - pwsh: |
+                ./scripts/infra/package/stage-transport-packages.ps1 `
+                  -SourceDirectory '$(Agent.TempDirectory)\transport-nugets' `
+                  -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping'
+              displayName: Stage unsigned transport packages
+
+            - pwsh: |
+                ./scripts/infra/signing/verify-unsigned-transport-packages.ps1 `
+                  -OriginalDirectory '$(Agent.TempDirectory)\transport-nugets' `
+                  -StagedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping' `
+                  -OutputPath '$(Build.SourcesDirectory)\artifacts\publishing-verification\transport-payload-verification.json'
+              displayName: Verify unsigned transport NuGet identity
+
+            - powershell: >
+                eng\common\build.ps1
+                -configuration Release
+                -restore
+                -publish
+                -ci
+                /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
+                /p:DotNetPublishUsingPipelines=true
+              displayName: Generate Arcade V3 asset manifest
+              env:
+                SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
   - stage: publish_build_assets
     displayName: Register signed packages in BAR
     dependsOn:
-      - signing
+      - assemble_publish_assets
     jobs:
       - template: /eng/common/templates-official/job/publish-build-assets.yml@self
         parameters:

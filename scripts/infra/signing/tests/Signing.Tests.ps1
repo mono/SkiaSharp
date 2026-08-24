@@ -334,47 +334,47 @@ try {
 
     [xml]$publishingPolicy = Get-Content (Join-Path $repoRoot 'eng/Publishing.props') -Raw
     $publishedArtifacts = @($publishingPolicy.Project.ItemGroup.Artifact)
-    $previewArtifact = @(
-        $publishedArtifacts |
-            Where-Object { [string]$_.Include -ceq '$(ArtifactsPackagesDir)Preview\*.nupkg' })
-    $releaseArtifact = @(
+    $shippingArtifact = @(
         $publishedArtifacts |
             Where-Object { [string]$_.Include -ceq '$(ArtifactsShippingPackagesDir)**\*.nupkg' })
     $transportArtifact = @(
         $publishedArtifacts |
             Where-Object { [string]$_.Include -ceq '$(ArtifactsNonShippingPackagesDir)**\*.nupkg' })
-    if ($publishedArtifacts.Count -ne 3 -or
-        $previewArtifact.Count -ne 1 -or
-        $releaseArtifact.Count -ne 1 -or
+    if ($publishedArtifacts.Count -ne 2 -or
+        $shippingArtifact.Count -ne 1 -or
         $transportArtifact.Count -ne 1 -or
-        [string]$previewArtifact[0].Condition -notmatch "!= 'release'" -or
-        [string]$releaseArtifact[0].Condition -notmatch "== 'release'" -or
+        -not [string]::IsNullOrEmpty($shippingArtifact[0].GetAttribute('Condition')) -or
         [string]$transportArtifact[0].Kind -cne 'Package' -or
         [string]$transportArtifact[0].IsShipping -cne 'false') {
-        throw 'Publishing.props must separate shipping package views from non-shipping transport packages.'
+        throw 'Publishing.props must publish one shipping view and one non-shipping transport view.'
     }
     if ([string]$publishingPolicy.Project.PropertyGroup.AutoGenerateSymbolPackages -cne 'false') {
         throw 'Arcade fallback symbol generation must be disabled in favor of the explicit shipping symbol inventory.'
     }
     $signingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
-    if ($signingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
+    $publishingTemplate = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-publish.yml') -Raw
+    if ($publishingTemplate -notmatch '(?s)eng\\common\\build\.ps1\s+-configuration Release\s+-restore\s+-publish\s+-ci') {
         throw 'Arcade V3 manifest generation must restore its Publish.proj task dependencies.'
     }
-    if ([regex]::Matches($signingTemplate, 'DotNetFinalVersionKind=\$\(DOTNET_FINAL_VERSION_KIND\)').Count -lt 2) {
+    if ($signingTemplate -notmatch 'DotNetFinalVersionKind=\$\(DOTNET_FINAL_VERSION_KIND\)' -or
+        $publishingTemplate -notmatch 'DotNetFinalVersionKind=\$\(DOTNET_FINAL_VERSION_KIND\)') {
         throw 'Arcade signing and manifest generation must share the derived final version kind.'
     }
     if ($signingTemplate -match 'artifactName:\s*nuget_symbols' -or
         $signingTemplate -match 'stage-android-symbol-packages\.ps1') {
         throw 'Arcade publishing must consume normal and symbol packages from the unified nuget artifact.'
     }
-    if ($signingTemplate -notmatch 'artifactName:\s*nuget_special' -or
-        $signingTemplate -notmatch 'stage-transport-packages\.ps1' -or
-        $signingTemplate -notmatch 'verify-unsigned-transport-packages\.ps1' -or
-        $signingTemplate -notmatch 'stage-shipping-symbol-packages\.ps1' -or
-        $signingTemplate -notmatch 'artifacts\\packages\\Release\\NonShipping' -or
-        $signingTemplate -notmatch 'transport-payload-verification\.json' -or
-        $signingTemplate -notmatch 'PackageBasePath=\$\(Build\.SourcesDirectory\)\\artifacts\\packages\\Release"') {
-        throw 'Real-sign builds must preserve unsigned transport packages in the Arcade non-shipping package view.'
+    if ($signingTemplate -match 'nuget_special|transport-nugets|NonShipping|stage-shipping-symbol-packages|-publish') {
+        throw 'The signing stage must not assemble transport or publishing assets.'
+    }
+    if ($publishingTemplate -notmatch 'artifactName:\s*nuget_signed' -or
+        $publishingTemplate -notmatch 'artifactName:\s*nuget_special' -or
+        $publishingTemplate -notmatch 'stage-transport-packages\.ps1' -or
+        $publishingTemplate -notmatch 'verify-unsigned-transport-packages\.ps1' -or
+        $publishingTemplate -notmatch 'stage-shipping-symbol-packages\.ps1' -or
+        $publishingTemplate -notmatch 'artifacts\\packages\\Release\\NonShipping' -or
+        $publishingTemplate -notmatch 'transport-payload-verification\.json') {
+        throw 'Arcade asset assembly must combine signed packages with unsigned transport packages.'
     }
     $itemsToSign = @(
         $productionPolicy.SelectNodes('//ItemsToSign') |
