@@ -251,22 +251,19 @@ class PublishReleaseTests(unittest.TestCase):
                 expected_bar_build=30,
             )
 
-    def test_status_handoff_rejects_bar_off_channel(self):
+    def test_status_handoff_does_not_require_named_channel(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
         status = self._stable_status(release)
-        status["barBuild"]["channels"] = ["General Testing"]
-        with self.assertRaisesRegex(
-            publish.PublishError,
-            "SkiaSharp.*channel",
-        ):
-            publish.validate_status_handoff(
-                status,
-                release,
-                expected_sha="a" * 40,
-                expected_build_run=10,
-                expected_tests_run=20,
-                expected_bar_build=30,
-            )
+        status["barBuild"]["channels"] = []
+        handoff = publish.validate_status_handoff(
+            status,
+            release,
+            expected_sha="a" * 40,
+            expected_build_run=10,
+            expected_tests_run=20,
+            expected_bar_build=30,
+        )
+        self.assertEqual(handoff["bar"]["id"], 30)
 
     def test_status_handoff_rejects_missing_bar_asset_locations(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
@@ -368,7 +365,7 @@ class PublishReleaseTests(unittest.TestCase):
                 "buildDefinitionId": publish.BUILD_DEFINITION_ID,
                 "branch": "refs/heads/release/4.152.0",
                 "buildNumber": "4.152.0+4.152.0",
-                "channels": [publish.BAR_CHANNEL],
+                "channels": ["General Testing"],
                 "assets": {
                     "SkiaSharp": {
                         "version": "4.152.0",

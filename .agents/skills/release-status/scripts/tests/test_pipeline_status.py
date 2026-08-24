@@ -304,7 +304,7 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(report["nextAction"], "retry-tests")
 
-    def test_registered_bar_requires_explicit_channel_promotion(self):
+    def test_bar_waits_for_default_channel_asset_locations(self):
         report = status.build_report(
             COMMIT,
             ado=complete_ado(),
@@ -312,20 +312,21 @@ class PipelineStatusTests(unittest.TestCase):
             darc=FakeDarc(bar_record(channels=[], locations=[])),
         )
         self.assertEqual(report["state"], "waiting")
-        self.assertEqual(report["nextAction"], "promote-bar")
-        self.assertEqual(
-            report["barBuild"]["promotionCommand"],
-            "darc add-build-to-channel --id 400 --channel SkiaSharp",
-        )
+        self.assertEqual(report["nextAction"], "wait-for-bar-assets")
+        self.assertEqual(report["barBuild"]["channels"], [])
 
-    def test_channel_without_locations_waits_for_bar_assets(self):
+    def test_channel_names_do_not_select_release_assets(self):
         report = status.build_report(
             COMMIT,
             ado=complete_ado(),
             repo=FakeRepo(),
-            darc=FakeDarc(bar_record(locations=[])),
+            darc=FakeDarc(
+                bar_record(
+                    channels=[{"name": "General Testing"}],
+                )
+            ),
         )
-        self.assertEqual(report["nextAction"], "wait-for-bar-assets")
+        self.assertEqual(report["nextAction"], "start-release-testing")
 
     def test_stable_bar_uses_exact_package_versions(self):
         repo = FakeRepo()

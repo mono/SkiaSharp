@@ -34,10 +34,10 @@ This skill is **Step 4 of 5**:
 - Keep the checkout unchanged. Draft creation pushes a lightweight tag directly
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
-- The BAR build's Maestro channel promotion (`darc add-build-to-channel`) is a
-  distinct, already-completed step performed upstream of this skill. It is not
-  the same thing as NuGet.org publication, which this skill queues and a human
-  must separately approve.
+- The Build pipeline's standard Darc default-channel promotion is upstream of
+  this skill. Validate the exact BAR-recorded locations; never select or promote
+  a release by mutable channel name. Darc promotion is not NuGet.org
+  publication, which this skill queues and a human must separately approve.
 - Approval of the queue command authorizes only queueing the protected NuGet.org
   publisher pipeline (its dnceng/internal definition ID is supplied via
   `SKIASHARP_NUGET_PUBLISH_PIPELINE_ID`; there is no publicly known definition

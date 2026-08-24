@@ -19,7 +19,6 @@ BUILD_URL = (
     "https://dev.azure.com/dnceng/internal/_build/results?buildId={build_id}"
 )
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
-BAR_CHANNEL = "SkiaSharp"
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
 
 PIPELINES = (
@@ -602,15 +601,8 @@ def bar_output(
             if channel.get("name")
         }
     )
-    has_channel = BAR_CHANNEL in channels
     has_locations = all(asset["locations"] for asset in assets.values())
-    state = (
-        "ready"
-        if has_channel and has_locations
-        else "publishing"
-        if has_channel
-        else "registered"
-    )
+    state = "ready" if has_locations else "awaiting-locations"
     return (
         {
             "id": config["barBuildId"],
@@ -625,14 +617,6 @@ def bar_output(
             "stable": bool(record.get("stable")),
             "channels": channels,
             "assets": assets,
-            "promotionCommand": (
-                None
-                if has_channel
-                else (
-                    f"darc add-build-to-channel --id "
-                    f"{config['barBuildId']} --channel {BAR_CHANNEL}"
-                )
-            ),
         },
         versions,
     )
@@ -696,9 +680,7 @@ def build_report(
         state, next_action = "running", "wait-for-tests"
     elif tests_state in ("failed", "canceled", "unknown"):
         state, next_action = "blocked", "retry-tests"
-    elif bar["state"] == "registered":
-        state, next_action = "waiting", "promote-bar"
-    elif bar["state"] == "publishing":
+    elif bar["state"] != "ready":
         state, next_action = "waiting", "wait-for-bar-assets"
     else:
         state, next_action = "ready", "start-release-testing"

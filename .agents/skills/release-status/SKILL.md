@@ -20,17 +20,15 @@ This skill is **Step 2 of 5**:
 ## Contract
 
 - Use `pipeline-status.py` for all Git, Azure DevOps, Darc, and BAR queries.
-- `pipeline-status.py` is read-only: it may fetch refs but never checks out a
-  branch or queues, cancels, retries, or promotes anything.
-- The skill may execute only the script-emitted BAR promotion command, and only
-  after explicit approval. It never approves NuGet.org publication.
+- This skill is read-only: it may fetch refs but never checks out a branch or
+  queues, cancels, retries, promotes, or publishes anything.
 - Resolve a branch to its current remote tip; preserve a supplied commit exactly.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
 - Resolve the Build run's `ReleaseConfigs` artifact to one exact BAR build ID.
   Verify BAR repository metadata, commit, branch, Build run/definition, stable
-  flag, package versions, channel, and asset locations.
+  flag, package versions, observed channels, and exact asset locations.
 - Never combine runs, BAR metadata, or assets from different Build attempts.
 - Build, connected Tests, and both exact BAR-recorded package assets must be
   ready before the default testing handoff.
@@ -59,8 +57,7 @@ versions and locations from that immutable BAR record. Stable assets are exact
 | `wait-for-tests-trigger` | Build passed; connected Tests have not started. |
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
-| `promote-bar` | Present `barBuild.promotionCommand`; after explicit approval promote this BAR to `SkiaSharp`, then rerun status. This is Maestro/BAR promotion, not NuGet.org publication. |
-| `wait-for-bar-assets` | The exact BAR is on `SkiaSharp`; wait for both asset locations to be recorded. |
+| `wait-for-bar-assets` | Standard Darc default-channel promotion has not yet recorded both exact asset locations. |
 | `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 
 Only `start-release-testing` is ready by default.
@@ -103,9 +100,8 @@ script-selected identity.
 
 For `start-release-testing`, invoke
 [release-testing](../release-testing/SKILL.md) with the complete `buildRun`,
-`testsRun`, `barBuild`, and exact package pairs. For `promote-bar`, obtain
-explicit approval before executing the emitted command; rerun status afterward.
-For wait/retry actions, report the relevant run URL and stop.
+`testsRun`, `barBuild`, and exact package pairs. For wait/retry actions, report
+the relevant run URL and stop. Never select or promote a BAR by channel name.
 
 See [releasing.md](../../../documentation/dev/releasing.md) for the complete
 release process.

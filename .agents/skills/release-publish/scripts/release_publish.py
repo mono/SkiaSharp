@@ -38,12 +38,6 @@ TESTS_DEFINITION_ID = 1630
 # non-empty asset locations for before publication can proceed.
 BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
 
-# BAR must have promoted the tested build to this Maestro channel. Channel
-# promotion is a distinct, already-completed step performed by release
-# status/testing; release-publish only validates that it happened.
-BAR_CHANNEL = "SkiaSharp"
-
-
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
 
@@ -368,12 +362,6 @@ def validate_status_handoff(
     if bar.get("buildNumber") != build.get("buildNumber"):
         raise PublishError(
             "BAR build number does not match the pinned Build run"
-        )
-    channels = bar.get("channels") or []
-    if BAR_CHANNEL not in channels:
-        raise PublishError(
-            f"BAR build {bar.get('id')} has not been promoted to the "
-            f"{BAR_CHANNEL} channel"
         )
     versions = status.get("packageVersions")
     if not versions or not versions.get("test") or not versions.get("public"):

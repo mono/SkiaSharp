@@ -38,7 +38,7 @@ def bar_build(
         "buildDefinitionId": detector.publish.BUILD_DEFINITION_ID,
         "branch": f"refs/heads/{branch}",
         "buildNumber": build_number,
-        "channels": [detector.publish.BAR_CHANNEL],
+        "channels": ["General Testing"],
         "assets": {
             "SkiaSharp": {
                 "version": skia_version,
@@ -173,7 +173,7 @@ class DetectReleasePublishTests(unittest.TestCase):
         self.assertEqual(result["input"], source_sha)
         self.assertEqual(result["releaseBranch"], "release/4.152.0")
 
-    def test_detector_rejects_bar_build_off_channel(self):
+    def test_detector_does_not_select_release_by_channel_name(self):
         status = {
             "branch": "release/4.152.0-preview.1",
             "commit": "a" * 40,
@@ -202,19 +202,17 @@ class DetectReleasePublishTests(unittest.TestCase):
                 },
             },
         }
-        status["barBuild"]["channels"] = ["General Testing"]
-        with (
-            mock.patch.object(
-                detector.publish,
-                "status_report",
-                return_value=status,
-            ),
-            self.assertRaisesRegex(
-                detector.DetectionError,
-                "SkiaSharp.*channel",
-            ),
+        status["barBuild"]["channels"] = []
+        with mock.patch.object(
+            detector.publish,
+            "status_report",
+            return_value=status,
         ):
-            detector.detect(Path.cwd(), "release/4.152.0-preview.1")
+            result = detector.detect(
+                Path.cwd(),
+                "release/4.152.0-preview.1",
+            )
+        self.assertEqual(result["barBuildId"], 30)
 
     def test_detector_rejects_missing_bar_asset_locations(self):
         status = {

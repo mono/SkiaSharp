@@ -306,7 +306,7 @@ flowchart TB
     ∙ Pin combined Build + Tests runs
     ∙ Pin BAR build ID + package versions"] --> GATHER
     GATHER["Gather exact BAR build
-    ∙ Verify repository/branch/commit/channel
+    ∙ Verify repository/branch/commit and recorded locations
     ∙ Verify package versions + signatures"] --> PUSH_AUDIT
     PUSH_AUDIT["NuGet.org dry run
     ∙ Preview exact BAR ID + versions
