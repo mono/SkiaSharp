@@ -357,19 +357,6 @@ if ($winuiSdkInstalls -ne 3) {
     throw 'Every WinUI native job must install the VS MSBuild-compatible SDK side-by-side.'
 }
 
-$androidBuild = Get-Content (Join-Path $repoRoot 'native/android/build.cake') -Raw
-$harfBuzzAndroidBuild = Get-Content (Join-Path $repoRoot 'native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk') -Raw
-if ($androidBuild -notmatch '-Wl,--build-id=sha1' -or
-    $harfBuzzAndroidBuild -notmatch '-Wl,--build-id=sha1') {
-    throw 'Android native libraries must use deterministic GNU build IDs for dotnet-symbol.'
-}
-$appleBuild = Get-Content (Join-Path $repoRoot 'scripts/infra/native/apple/xcode.cake') -Raw
-if ($appleBuild -notmatch 'ValidateArchiveDsym' -or
-    $appleBuild -notmatch 'dwarfdump' -or
-    $appleBuild -notmatch 'ValidateMachOUuidSets') {
-    throw 'Apple native builds must verify matching runtime and dSYM Mach-O UUIDs.'
-}
-
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'

@@ -50,10 +50,6 @@ contain the normal package payload plus flattened per-architecture DWARF Mach-O
 files from the build's dSYM bundles. Mac Catalyst symbol packages also include
 the unpacked framework binary because the customer package carries that binary
 inside a framework ZIP. Arcade recursively indexes these files by Mach-O UUID.
-After promotion, run `verify-published-apple-symbols.ps1` on the signed Apple
-packages with the pinned `dotnet-symbol` tool. It queries both MSDL and SymWeb,
-requires module and DWARF retrieval, and compares every downloaded DWARF UUID
-against the shipped fat Mach-O binary.
 `tests/Signing.Tests.ps1` is a local regression suite and is not a pipeline
 signing step.
 

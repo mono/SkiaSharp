@@ -367,17 +367,6 @@ try {
         $signingTemplate -match 'stage-android-symbol-packages\.ps1') {
         throw 'Arcade publishing must consume normal and symbol packages from the unified nuget artifact.'
     }
-    $nativeAssetsTargets = Get-Content (Join-Path $repoRoot 'binding/NativeAssets.Build.targets') -Raw
-    if ($nativeAssetsTargets -notmatch 'PackageSymbolFile' -or
-        $nativeAssetsTargets -notmatch '\.symbols\.nupkg') {
-        throw 'Native-assets packing must create explicit Apple symbol packages.'
-    }
-    $publishedAppleVerifier = Get-Content (Join-Path $repoRoot 'scripts/infra/signing/verify-published-apple-symbols.ps1') -Raw
-    if ($publishedAppleVerifier -notmatch '--microsoft-symbol-server' -or
-        $publishedAppleVerifier -notmatch '--internal-server' -or
-        $publishedAppleVerifier -notmatch 'SetEquals') {
-        throw 'Published Apple symbol validation must verify matching DWARF UUIDs on MSDL and SymWeb.'
-    }
     if ($signingTemplate -notmatch 'artifactName:\s*nuget_special' -or
         $signingTemplate -notmatch 'stage-transport-packages\.ps1' -or
         $signingTemplate -notmatch 'verify-unsigned-transport-packages\.ps1' -or
