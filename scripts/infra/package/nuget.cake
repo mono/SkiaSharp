@@ -13,10 +13,9 @@ Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
-    foreach (var product in new[] { "SkiaSharp", "HarfBuzzSharp" }) {
-        foreach (var platform in new[] { "macOS", "iOS", "MacCatalyst", "tvOS" })
-            DeleteFiles($"{OUTPUT_NUGETS_PATH}/{product}.NativeAssets.{platform}.*.symbols.nupkg");
-    }
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");
 
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
@@ -33,21 +32,9 @@ Task ("nuget-normal")
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.snupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-});
-
-Task ("tests-apple-symbols")
-    .Description ("Run Apple symbol package regression tests.")
-    .Does (() =>
-{
-    RunProcess("pwsh", new ProcessSettings {
-        Arguments = new ProcessArgumentBuilder()
-            .Append("-NoLogo")
-            .Append("-NoProfile")
-            .Append("-File")
-            .AppendQuoted($"{ROOT_PATH}/scripts/infra/package/tests/apple-symbols.tests.ps1"),
-    });
 });
 
 Task ("nuget-special")

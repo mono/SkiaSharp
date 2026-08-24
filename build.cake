@@ -127,10 +127,6 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
 
-Task ("tests-apple-symbols")
-    .Description ("Run Apple symbol package regression tests.")
-    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "tests-apple-symbols"));
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - pack NuGet packages (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////

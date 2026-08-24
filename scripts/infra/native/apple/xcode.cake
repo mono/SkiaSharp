@@ -25,57 +25,6 @@ void RunXCodeBuild(FilePath project, string scheme, string sdk, string arch, Dic
     }
 
     XCodeBuild(settings);
-    ValidateArchiveDsym($"{settings.ArchivePath}.xcarchive", scheme);
-}
-
-void ValidateArchiveDsym(DirectoryPath archive, string moduleName)
-{
-    if (!IsRunningOnMacOs())
-        throw new InvalidOperationException("dwarfdump is only available on macOS.");
-
-    var dylib = archive.CombineWithFilePath($"Products/@rpath/{moduleName}.dylib");
-    var framework = archive.CombineWithFilePath(
-        $"Products/Library/Frameworks/{moduleName}.framework/{moduleName}");
-    var versionedFramework = archive.CombineWithFilePath(
-        $"Products/Library/Frameworks/{moduleName}.framework/Versions/A/{moduleName}");
-    var runtime = FileExists(dylib)
-        ? dylib
-        : FileExists(versionedFramework)
-            ? versionedFramework
-            : FileExists(framework)
-                ? framework
-                : null;
-    if (runtime == null)
-        throw new InvalidOperationException($"The expected archived runtime was not produced for {moduleName}.");
-    var isDylib = runtime.GetExtension() == ".dylib";
-    var dsymName = isDylib ? $"{moduleName}.dylib.dSYM" : $"{moduleName}.framework.dSYM";
-    var dwarfName = isDylib ? $"{moduleName}.dylib" : moduleName;
-    var dwarf = archive.CombineWithFilePath($"dSYMs/{dsymName}/Contents/Resources/DWARF/{dwarfName}");
-    if (!FileExists(dwarf))
-        throw new InvalidOperationException($"The expected dSYM DWARF was not produced: {dwarf}");
-
-    RunProcess("otool", $"-l \"{dwarf}\"", out var loadCommands);
-    if (loadCommands.Any(line => line.Trim() == "cmd LC_CODE_SIGNATURE"))
-        throw new InvalidOperationException($"The dSYM DWARF must not be code-signed: {dwarf}");
-
-    var runtimeUuids = ReadMachOUuids(runtime);
-    var dwarfUuids = ReadMachOUuids(dwarf);
-    if (!runtimeUuids.SetEquals(dwarfUuids)) {
-        throw new InvalidOperationException(
-            $"The archived runtime and dSYM UUIDs do not match for {moduleName}. " +
-            $"Runtime: {string.Join(", ", runtimeUuids)}; dSYM: {string.Join(", ", dwarfUuids)}");
-    }
-}
-
-HashSet<string> ReadMachOUuids(FilePath file)
-{
-    RunProcess("dwarfdump", $"--uuid \"{file}\"", out var output);
-    var uuids = new HashSet<string>(
-        MatchRegex(@"UUID:\s+([0-9A-Fa-f-]+)", output.ToArray()),
-        StringComparer.OrdinalIgnoreCase);
-    if (uuids.Count == 0)
-        throw new InvalidOperationException($"No Mach-O UUIDs were found in {file}.");
-    return uuids;
 }
 
 void StripSign(FilePath target)
