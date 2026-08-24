@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <RollForward>LatestMajor</RollForward>
+    <AssemblyName>NativeSymbolValidator</AssemblyName>
+    <RootNamespace>SkiaSharp.PackageValidation</RootNamespace>
+    <SkipGenerateAssemblyVersionInfo>true</SkipGenerateAssemblyVersionInfo>
+    <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+  </PropertyGroup>
+
+  <!--
+    Microsoft.SymbolStore and Microsoft.FileFormats are not published as standalone packages on the
+    feeds this repository is allowed to use. They are, however, shipped inside the Arcade symbol
+    uploader task package that is already available on dotnet-eng. Referencing the assemblies from
+    that pinned package means the validator indexes symbols using the exact same implementation
+    Arcade uses when it publishes them, without adding a new feed or an unpinned download.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="2.0.0-preview.1.24303.4" GeneratePathProperty="true" ExcludeAssets="all" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.SymbolStore">
+      <HintPath>$(PkgMicrosoft_SymbolUploader_Build_Task)/build/netcoreapp3.1/Microsoft.SymbolStore.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="Microsoft.FileFormats">
+      <HintPath>$(PkgMicrosoft_SymbolUploader_Build_Task)/build/netcoreapp3.1/Microsoft.FileFormats.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>
