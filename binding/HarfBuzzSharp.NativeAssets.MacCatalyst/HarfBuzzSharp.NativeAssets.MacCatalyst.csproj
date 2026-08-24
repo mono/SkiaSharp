@@ -5,10 +5,10 @@
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
-    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework\Versions\A\libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\libHarfBuzzSharp.framework\Versions\A" PackageScope="Symbols" />
-    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
-    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM" DwarfName="libHarfBuzzSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
+    <PackageFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp*.framework.zip" PackagePath="runtimes\maccatalyst\native\%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp.framework\Versions\A\libHarfBuzzSharp*" PackagePath="runtimes\maccatalyst\native\libHarfBuzzSharp.framework\Versions\A" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\arm64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libHarfBuzzSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libHarfBuzzSharp\x86_64.xcarchive\dSYMs\libHarfBuzzSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libHarfBuzzSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

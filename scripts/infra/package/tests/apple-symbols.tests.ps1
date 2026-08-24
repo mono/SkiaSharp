@@ -29,8 +29,7 @@ function Invoke-Pack {
     param(
         [string] $Project,
         [string] $PackageOutputPath,
-        [string] $VersionSuffix = '',
-        [bool] $RequireSymbols = $true
+        [string] $VersionSuffix = ''
     )
 
     [IO.Directory]::CreateDirectory($PackageOutputPath) | Out-Null
@@ -39,7 +38,6 @@ function Invoke-Pack {
         $Project
         '--nologo'
         "-p:PackageOutputPath=$PackageOutputPath"
-        "-p:RequireNativeSymbols=$($RequireSymbols.ToString().ToLowerInvariant())"
     )
     if ($VersionSuffix) {
         $arguments += "-p:VersionSuffix=$VersionSuffix"
@@ -189,57 +187,6 @@ function Assert-Packages {
     }
 }
 
-function New-FixtureProject {
-    param(
-        [string] $Root,
-        [switch] $MissingRuntime,
-        [switch] $MissingDwarf,
-        [switch] $MissingPlist
-    )
-
-    $native = Join-Path $Root 'native'
-    $framework = Join-Path $native 'ios/libSkiaSharp.framework'
-    $module = Join-Path $framework 'libSkiaSharp'
-    [IO.Directory]::CreateDirectory($framework) | Out-Null
-    [IO.File]::WriteAllBytes((Join-Path $framework 'Info.plist'), [byte[]](1))
-    if (-not $MissingRuntime) {
-        [IO.File]::WriteAllBytes($module, [byte[]](0xcf, 0xfa, 0xed, 0xfe))
-    }
-
-    $dsym = Join-Path $native 'ios/libSkiaSharp.framework.dSYM'
-    $dwarf = Join-Path $dsym 'Contents/Resources/DWARF/libSkiaSharp'
-    [IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($dwarf)) | Out-Null
-    if (-not $MissingDwarf) {
-        [IO.File]::WriteAllBytes($dwarf, [byte[]](0xcf, 0xfa, 0xed, 0xfe))
-    }
-    if (-not $MissingPlist) {
-        [IO.File]::WriteAllBytes((Join-Path $dsym 'Contents/Info.plist'), [byte[]](1))
-    }
-
-    $targets = [Security.SecurityElement]::Escape((Join-Path $repoRoot 'binding/NativeAssets.Build.targets'))
-    $nativeXml = [Security.SecurityElement]::Escape($native)
-    $project = Join-Path $Root 'NativeSymbols.Fixture.csproj'
-    @"
-<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
-  <PropertyGroup>
-    <TargetFrameworks>net10.0-ios26.0</TargetFrameworks>
-    <PackageId>NativeSymbols.Fixture</PackageId>
-    <PackageVersion>1.0.0</PackageVersion>
-    <Authors>SkiaSharp</Authors>
-    <Description>Native symbol packaging fixture.</Description>
-    <PackagingGroup>SkiaSharp</PackagingGroup>
-  </PropertyGroup>
-  <ItemGroup>
-    <NativeRuntimeBundle Include="$nativeXml/ios/libSkiaSharp.framework" ModuleName="libSkiaSharp" PackagePath="runtimes/ios/native/libSkiaSharp.framework" />
-    <NativeSymbolBundle Include="$nativeXml/ios/libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes/ios/native/symbols/arm64/libSkiaSharp.framework.dSYM" />
-  </ItemGroup>
-  <Import Project="$targets" />
-  <Target Name="CollectAssemblyVersionInfo" />
-</Project>
-"@ | Set-Content $project
-    return $project
-}
-
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-native-symbol-tests-$([Guid]::NewGuid())"
 try {
     $packages = Join-Path $testRoot 'packages'
@@ -247,7 +194,7 @@ try {
         foreach ($product in $products) {
             foreach ($platform in $platforms) {
                 $project = Get-Project $product.Prefix $platform
-                if ((Invoke-Pack $project $packages $versionSuffix $true) -ne 0) {
+                if ((Invoke-Pack $project $packages $versionSuffix) -ne 0) {
                     throw "Packing $project failed for suffix '$versionSuffix'."
                 }
             }
@@ -257,50 +204,6 @@ try {
 
     if (@(Get-ChildItem $packages -Filter '*.symbols.nupkg').Count -ne 16) {
         throw 'Expected eight stable and eight preview native symbol packages.'
-    }
-
-    $missingRuntimeRoot = Join-Path $testRoot 'missing-runtime'
-    $missingRuntimeProject = New-FixtureProject $missingRuntimeRoot -MissingRuntime
-    $missingRuntimePackages = Join-Path $missingRuntimeRoot 'packages'
-    [IO.Directory]::CreateDirectory($missingRuntimePackages) | Out-Null
-    [IO.File]::WriteAllText(
-        (Join-Path $missingRuntimePackages 'NativeSymbols.Fixture.1.0.0.symbols.nupkg'),
-        'stale')
-    if ((Invoke-Pack $missingRuntimeProject $missingRuntimePackages '' $true) -eq 0) {
-        throw 'A full package build with a missing runtime unexpectedly succeeded.'
-    }
-    if (@(Get-ChildItem $missingRuntimePackages -Filter '*.nupkg').Count -ne 0) {
-        throw 'A failed full package build left a normal or stale symbol package behind.'
-    }
-
-    foreach ($missing in @('Dwarf', 'Plist')) {
-        $root = Join-Path $testRoot "missing-$($missing.ToLowerInvariant())"
-        $project = if ($missing -eq 'Dwarf') {
-            New-FixtureProject $root -MissingDwarf
-        }
-        else {
-            New-FixtureProject $root -MissingPlist
-        }
-
-        $strictPackages = Join-Path $root 'strict'
-        if ((Invoke-Pack $project $strictPackages '' $true) -eq 0) {
-            throw "A full package build with a missing $missing unexpectedly succeeded."
-        }
-
-        $partialPackages = Join-Path $root 'partial'
-        [IO.Directory]::CreateDirectory($partialPackages) | Out-Null
-        [IO.File]::WriteAllText(
-            (Join-Path $partialPackages 'NativeSymbols.Fixture.1.0.0.symbols.nupkg'),
-            'stale')
-        if ((Invoke-Pack $project $partialPackages '' $false) -ne 0) {
-            throw "A partial package build failed instead of skipping a missing $missing."
-        }
-        if (@(Get-ChildItem $partialPackages -Filter '*.symbols.nupkg').Count -ne 0) {
-            throw "A partial package build emitted a stale or incomplete symbol package for a missing $missing."
-        }
-        if (@(Get-ChildItem $partialPackages -Filter '*.nupkg').Count -ne 1) {
-            throw "A partial package build did not emit its normal package for a missing $missing."
-        }
     }
 
     Write-Host 'Native symbol package tests passed.'

@@ -5,10 +5,10 @@
     <Title>$(PackagingGroup) - Native Assets for Mac Catalyst</Title>
   </PropertyGroup>
   <ItemGroup>
-    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework.zip" PackagePath="runtimes\maccatalyst\native" />
-    <NativeRuntimeFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp" PackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" PackageScope="Symbols" />
-    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
-    <NativeSymbolBundle Include="..\..\output\native\maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM" DwarfName="libSkiaSharp" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
+    <PackageFile Include="..\..\output\native\maccatalyst\libSkiaSharp*.framework.zip" PackagePath="runtimes\maccatalyst\native\%(Filename)%(Extension)" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp.framework\Versions\A\libSkiaSharp*" PackagePath="runtimes\maccatalyst\native\libSkiaSharp.framework\Versions\A" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp\arm64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\arm64\libSkiaSharp.framework.dSYM" />
+    <PackageSymbolFile Include="..\..\output\native\maccatalyst\libSkiaSharp\x86_64.xcarchive\dSYMs\libSkiaSharp.framework.dSYM\**" PackagePath="runtimes\maccatalyst\native\symbols\x86_64\libSkiaSharp.framework.dSYM" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>
