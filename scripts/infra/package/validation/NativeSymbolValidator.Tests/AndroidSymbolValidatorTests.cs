@@ -100,6 +100,23 @@ public class AndroidSymbolValidatorTests
 	}
 
 	[Fact]
+	public void TruncatedLibraryWithValidMagicFailsInsteadOfCrashing ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AndroidFixture ("HarfBuzzSharp");
+		var rid = PackageMatrix.AndroidRuntimeIdentifiers[1];
+
+		// Valid ELF magic, but the program headers point past the end of the file: the reader must
+		// report this rather than throw out of the validator.
+		var truncated = BinaryFixtures.Elf (fixture.BuildId (rid))[..48];
+
+		fixture.Normal.Add (fixture.Spec.GetStrippedLibraryPath (rid), truncated);
+		fixture.Symbols.Add (fixture.Spec.GetStrippedLibraryPath (rid), truncated);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("not a readable ELF image", StringComparison.Ordinal));
+	}
+
+	[Fact]
 	public void LibraryWithoutAGnuBuildIdFails ()
 	{
 		using var workspace = new TestWorkspace ();

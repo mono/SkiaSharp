@@ -33,8 +33,11 @@ public sealed class AppleFixture
 
 			if (spec.Kind == ApplePayloadKind.CatalystFramework) {
 				var zip = spec.GetFrameworkZipPath (rid)!;
-				Normal.Add (zip, "framework-zip-payload");
-				Symbols.Add (zip, "framework-zip-payload");
+				var payload = BinaryFixtures.Zip (
+					($"{spec.NativeLibrary}.framework/Versions/A/{spec.NativeLibrary}", module),
+					($"{spec.NativeLibrary}.framework/Versions/A/Resources/Info.plist", BinaryFixtures.InfoPlist (spec.NativeLibrary)));
+				Normal.Add (zip, payload);
+				Symbols.Add (zip, payload);
 			} else {
 				Normal.Add (spec.GetModulePathInNormalPackage (rid)!, module);
 			}

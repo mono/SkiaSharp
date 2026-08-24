@@ -188,4 +188,22 @@ public static class BinaryFixtures
 			  </dict>
 			</plist>
 			""");
+
+	/// <summary>
+	/// Produces a real zip archive, so tests can exercise the MacCatalyst framework.zip that is the
+	/// only Mach-O a Catalyst customer ever consumes.
+	/// </summary>
+	public static byte[] Zip (params (string Entry, byte[] Content)[] entries)
+	{
+		using var buffer = new MemoryStream ();
+
+		using (var archive = new System.IO.Compression.ZipArchive (buffer, System.IO.Compression.ZipArchiveMode.Create, leaveOpen: true)) {
+			foreach (var (entry, content) in entries) {
+				using var stream = archive.CreateEntry (entry).Open ();
+				stream.Write (content);
+			}
+		}
+
+		return buffer.ToArray ();
+	}
 }

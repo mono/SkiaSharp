@@ -74,6 +74,54 @@ public class ValidatorTests
 	}
 
 	[Fact]
+	public void UnknownSymbolPackageIsDetectedEvenWhenAShorterProductIdSharesItsPrefix ()
+	{
+		using var workspace = new TestWorkspace ();
+		new PackageBuilder ("SkiaSharp.NativeAssets.Fictional", "3.999.0")
+			.Add ("runtimes/fictional/native/libSkiaSharp.so", BinaryFixtures.Elf (BinaryFixtures.NewBuildId ()))
+			.Save (workspace.SymbolPackages, "SkiaSharp.NativeAssets.Fictional.3.999.0.symbols.nupkg");
+
+		// scripts/VERSIONS.txt lists the bare 'SkiaSharp' product before every 'SkiaSharp.NativeAssets.*'
+		// entry, so resolving the owning package by matching the file name against version keys picks
+		// 'SkiaSharp' and the guard never fires. The identity must come from the nuspec instead.
+		var versionsFile = workspace.WriteVersionsFile (
+			new (string Id, string Version)[] { ("SkiaSharp", "3.999.0"), ("HarfBuzzSharp", "3.999.0") }
+				.Concat (PackageMatrix.AllPackageIds.Select (id => (Id: id, Version: "3.999.0")))
+				.Append ((Id: "SkiaSharp.NativeAssets.Fictional", Version: "3.999.0"))
+				.ToArray ());
+
+		var result = new Validator (
+			new ValidatorOptions {
+				PackagesDirectory = workspace.Packages,
+				SymbolPackagesDirectory = workspace.SymbolPackages,
+				VersionsFile = versionsFile,
+				RequireAll = false,
+			},
+			TextWriter.Null).Run ();
+
+		Assert.Contains (result.Errors, e =>
+			e.Contains ("SkiaSharp.NativeAssets.Fictional", StringComparison.Ordinal) &&
+			e.Contains ("extend PackageMatrix", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void WindowsNativeAssetsSymbolPackagesAreNotReportedAsUnknown ()
+	{
+		using var workspace = new TestWorkspace ();
+
+		// These ship Windows PDBs from the same IncludeSymbols switch and are deliberately outside the
+		// matrix, so they must not be mistaken for a packaging regression.
+		foreach (var packageId in PackageMatrix.UnvalidatedNativeAssetsPackageIds)
+			new PackageBuilder (packageId, "3.999.0")
+				.Add ("runtimes/win-x64/native/libSkiaSharp.dll", "windows payload")
+				.Save (workspace.SymbolPackages, $"{packageId}.3.999.0.symbols.nupkg");
+
+		var result = Run (workspace, requireAll: false);
+
+		Assert.Empty (result.Errors);
+	}
+
+	[Fact]
 	public void MissingVersionForAnExpectedPackageThrows ()
 	{
 		using var workspace = new TestWorkspace ();

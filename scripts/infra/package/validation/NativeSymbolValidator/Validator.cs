@@ -79,8 +79,13 @@ public sealed class Validator
 
 				log.Info ($"validating {packageId} {version} ({channel})");
 
-				using var normal = NuGetPackage.Open (normalPath);
-				using var symbols = NuGetPackage.Open (symbolsPath);
+				using var normal = TryOpen (normalPath, log);
+				if (normal is null)
+					continue;
+
+				using var symbols = TryOpen (symbolsPath, log);
+				if (symbols is null)
+					continue;
 
 				SymbolPackagePairValidator.Validate (normal, symbols, log);
 
@@ -95,7 +100,7 @@ public sealed class Validator
 				validated++;
 			}
 
-			ValidateNoUnexpectedSymbolPackages (versions, log);
+			ValidateNoUnexpectedSymbolPackages (log);
 		} finally {
 			TryDelete (workspace);
 		}
@@ -120,7 +125,13 @@ public sealed class Validator
 	/// A symbol package for a native assets project that the matrix does not know about means a new
 	/// package started producing symbols without validation being extended to cover it.
 	/// </summary>
-	private void ValidateNoUnexpectedSymbolPackages (IReadOnlyDictionary<string, string> versions, ValidationLog log)
+	/// <remarks>
+	/// The package id is read from the nuspec rather than inferred from the file name. Inferring it
+	/// by longest/first matching prefix is unreliable because <c>VERSIONS.txt</c> also lists the
+	/// bare product ids (<c>SkiaSharp</c>, <c>HarfBuzzSharp</c>), which are prefixes of every native
+	/// assets id and would shadow them.
+	/// </remarks>
+	private void ValidateNoUnexpectedSymbolPackages (ValidationLog log)
 	{
 		if (!Directory.Exists (options.SymbolPackagesDirectory))
 			return;
@@ -129,11 +140,31 @@ public sealed class Validator
 
 		foreach (var file in Directory.EnumerateFiles (options.SymbolPackagesDirectory, "*.symbols.nupkg")) {
 			var name = Path.GetFileName (file);
-			var packageId = versions.Keys.FirstOrDefault (id =>
-				name.StartsWith (id + ".", StringComparison.OrdinalIgnoreCase) && !known.Contains (id));
 
-			if (packageId is not null && packageId.Contains (".NativeAssets.", StringComparison.OrdinalIgnoreCase))
-				log.Error ($"'{name}' is a native assets symbol package that this validator does not know how to validate; extend PackageMatrix.");
+			using var package = TryOpen (file, log);
+			if (package is null)
+				continue;
+
+			var packageId = package.Id;
+
+			if (!packageId.Contains (".NativeAssets.", StringComparison.OrdinalIgnoreCase))
+				continue;
+			if (known.Contains (packageId))
+				continue;
+			if (PackageMatrix.UnvalidatedNativeAssetsPackageIds.Contains (packageId))
+				continue;
+
+			log.Error ($"'{name}' is a native assets symbol package ('{packageId}') that this validator does not know how to validate; extend PackageMatrix.AppleSpecs/AndroidSpecs, or add it to PackageMatrix.UnvalidatedNativeAssetsPackageIds if it is deliberately out of scope.");
+		}
+	}
+
+	private static NuGetPackage? TryOpen (string path, ValidationLog log)
+	{
+		try {
+			return NuGetPackage.Open (path);
+		} catch (InvalidDataException ex) {
+			log.Error ($"'{Path.GetFileName (path)}' could not be read as a NuGet package: {ex.Message}");
+			return null;
 		}
 	}
 

@@ -110,6 +110,21 @@ public static class PackageMatrix
 	public static IEnumerable<string> AllPackageIds =>
 		AppleSpecs.Select (s => s.PackageId).Concat (AndroidSpecs.Select (s => s.PackageId));
 
+	/// <summary>
+	/// Native assets packages that produce a symbol package this validator deliberately does not
+	/// cover. These ship Windows PDBs, which Arcade indexes through a different key generator and
+	/// which carry none of the dSYM/<c>.so.dbg</c> structure asserted here. Listing them explicitly
+	/// keeps <see cref="Validator.ValidateNoUnexpectedSymbolPackages"/> able to fail on a genuinely
+	/// new native symbol package instead of having to ignore every id it does not recognise.
+	/// </summary>
+	public static readonly IReadOnlySet<string> UnvalidatedNativeAssetsPackageIds =
+		new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+			"SkiaSharp.NativeAssets.Win32",
+			"SkiaSharp.NativeAssets.WinUI",
+			"SkiaSharp.NativeAssets.NanoServer",
+			"HarfBuzzSharp.NativeAssets.Win32",
+		};
+
 	private static ApplePackageSpec[] BuildAppleSpecs ()
 	{
 		var platforms = new (string Platform, string[] Rids, ApplePayloadKind Kind)[] {

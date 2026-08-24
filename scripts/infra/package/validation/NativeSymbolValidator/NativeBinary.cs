@@ -8,7 +8,7 @@ namespace SkiaSharp.PackageValidation;
 
 public sealed record MachOSlice (string Architecture, uint CpuType, uint CpuSubType, string Uuid, string FileType);
 
-public sealed record MachOImage (bool IsFat, IReadOnlyList<MachOSlice> Slices)
+public sealed record MachOImage (bool IsFat, IReadOnlyList<MachOSlice> Slices, IReadOnlyList<string> UnreadableArchitectures)
 {
 	public IReadOnlyList<string> Architectures =>
 		Slices.Select (s => s.Architecture).ToArray ();
@@ -44,6 +44,23 @@ public static class NativeBinary
 	};
 
 	/// <summary>
+	/// Malformed-image failures. Microsoft.FileFormats raises <see cref="BadInputFormatException"/>
+	/// and <see cref="InvalidVirtualAddressException"/> for most corruption, but it also treats
+	/// <see cref="OverflowException"/> as an expected outcome internally (ELFFile catches it in its
+	/// own BuildID, Sections and Notes accessors), and a truncated image can surface as an
+	/// out-of-range read. A validator that crashes on the very inputs it exists to reject is worse
+	/// than useless, so all of these are turned into "unreadable", which the callers report as a
+	/// validation error.
+	/// </summary>
+	private static bool IsMalformedImage (Exception exception) =>
+		exception is InvalidVirtualAddressException
+			or BadInputFormatException
+			or OverflowException
+			or ArgumentOutOfRangeException
+			or IndexOutOfRangeException
+			or EndOfStreamException;
+
+	/// <summary>
 	/// Reads a thin or fat Mach-O image, returning one slice per architecture. Returns
 	/// <see langword="null"/> when the file is not a Mach-O image at all.
 	/// </summary>
@@ -56,18 +73,21 @@ public static class NativeBinary
 			var fat = new MachOFatFile (addressSpace);
 			if (fat.IsValid ()) {
 				var slices = new List<MachOSlice> ();
+				var unreadable = new List<string> ();
 				var arches = fat.Arches;
 				var files = fat.ArchSpecificFiles;
 				for (var i = 0; i < arches.Length && i < files.Length; i++) {
 					var slice = TryDescribe (files[i], arches[i].CpuType, arches[i].CpuSubType);
 					if (slice is not null)
 						slices.Add (slice);
+					else
+						unreadable.Add (DescribeArchitecture (arches[i].CpuType));
 				}
-				return slices.Count == 0 ? null : new MachOImage (true, slices);
+				return slices.Count == 0 && unreadable.Count == 0
+					? null
+					: new MachOImage (true, slices, unreadable);
 			}
-		} catch (InvalidVirtualAddressException) {
-			// Not a fat image; fall through and try a thin image.
-		} catch (BadInputFormatException) {
+		} catch (Exception ex) when (IsMalformedImage (ex)) {
 			// Not a fat image; fall through and try a thin image.
 		}
 
@@ -76,10 +96,10 @@ public static class NativeBinary
 			if (!thin.IsValid ())
 				return null;
 			var slice = TryDescribe (thin, thin.Header.CpuType, thin.Header.CpuSubType);
-			return slice is null ? null : new MachOImage (false, new[] { slice });
-		} catch (InvalidVirtualAddressException) {
-			return null;
-		} catch (BadInputFormatException) {
+			return slice is null
+				? null
+				: new MachOImage (false, new[] { slice }, Array.Empty<string> ());
+		} catch (Exception ex) when (IsMalformedImage (ex)) {
 			return null;
 		}
 	}
@@ -98,9 +118,7 @@ public static class NativeBinary
 				return null;
 			var buildId = elf.BuildID;
 			return buildId is null || buildId.Length == 0 ? null : Convert.ToHexString (buildId).ToLowerInvariant ();
-		} catch (InvalidVirtualAddressException) {
-			return null;
-		} catch (BadInputFormatException) {
+		} catch (Exception ex) when (IsMalformedImage (ex)) {
 			return null;
 		}
 	}
@@ -119,13 +137,20 @@ public static class NativeBinary
 	/// </summary>
 	public static IReadOnlyList<string> GetSymbolStoreKeys (string filePath, string fileName, KeyTypeFlags flags)
 	{
-		using var stream = File.OpenRead (filePath);
-		var generator = new FileKeyGenerator (NullTracer.Instance, new SymbolStoreFile (stream, fileName));
-		if (!generator.IsValid ())
-			return Array.Empty<string> ();
+		try {
+			using var stream = File.OpenRead (filePath);
+			var generator = new FileKeyGenerator (NullTracer.Instance, new SymbolStoreFile (stream, fileName));
+			if (!generator.IsValid ())
+				return Array.Empty<string> ();
 
-		stream.Position = 0;
-		return generator.GetKeys (flags).Select (k => k.Index).ToArray ();
+			stream.Position = 0;
+			// GetKeys is lazy, so any parse failure surfaces here rather than above.
+			return generator.GetKeys (flags).Select (k => k.Index).ToArray ();
+		} catch (Exception ex) when (IsMalformedImage (ex)) {
+			// No keys is itself a validation failure at every call site, so a file that passes the
+			// magic check but cannot be keyed is reported rather than crashing the run.
+			return Array.Empty<string> ();
+		}
 	}
 
 	public static IReadOnlyList<string> GetIdentityKeys (string filePath, string fileName) =>
@@ -139,19 +164,25 @@ public static class NativeBinary
 
 	private static MachOSlice? TryDescribe (MachOFile file, uint cpuType, uint cpuSubType)
 	{
-		if (!file.IsValid ())
-			return null;
+		try {
+			if (!file.IsValid ())
+				return null;
 
-		var uuid = file.Uuid;
-		if (uuid is null || uuid.Length == 0)
-			return null;
+			var uuid = file.Uuid;
+			if (uuid is null || uuid.Length == 0)
+				return null;
 
-		return new MachOSlice (
-			DescribeArchitecture (cpuType),
-			cpuType,
-			cpuSubType,
-			Convert.ToHexString (uuid).ToLowerInvariant (),
-			file.Header.FileType.ToString ());
+			return new MachOSlice (
+				DescribeArchitecture (cpuType),
+				cpuType,
+				cpuSubType,
+				Convert.ToHexString (uuid).ToLowerInvariant (),
+				file.Header.FileType.ToString ());
+		} catch (Exception ex) when (IsMalformedImage (ex)) {
+			// One damaged slice must not abort the whole fat image; the caller records it as
+			// unreadable so the failure is reported against the right architecture.
+			return null;
+		}
 	}
 
 	private sealed class NullTracer : ITracer

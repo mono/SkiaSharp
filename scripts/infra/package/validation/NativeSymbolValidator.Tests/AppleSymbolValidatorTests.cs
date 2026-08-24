@@ -141,6 +141,107 @@ public class AppleSymbolValidatorTests
 	}
 
 	[Fact]
+	public void CatalystFrameworkZipCarryingADifferentBinaryFails ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("SkiaSharp", "MacCatalyst"));
+		var rid = fixture.FirstRid;
+		var spec = fixture.Spec;
+
+		// The zip is the only Mach-O a Catalyst customer consumes, so a stale one silently ships a
+		// binary that no dSYM in the symbol package can resolve.
+		var stale = BinaryFixtures.Zip ((
+			$"{spec.NativeLibrary}.framework/Versions/A/{spec.NativeLibrary}",
+			BinaryFixtures.FatMachO (
+				(BinaryFixtures.CpuTypeArm64, BinaryFixtures.MachO (BinaryFixtures.CpuTypeArm64, BinaryFixtures.NewUuid ())),
+				(BinaryFixtures.CpuTypeX86_64, BinaryFixtures.MachO (BinaryFixtures.CpuTypeX86_64, BinaryFixtures.NewUuid ())))));
+
+		fixture.Normal.Add (spec.GetFrameworkZipPath (rid)!, stale);
+		fixture.Symbols.Add (spec.GetFrameworkZipPath (rid)!, stale);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("would not resolve against these symbols", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void CatalystFrameworkZipMissingTheBinaryFails ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("HarfBuzzSharp", "MacCatalyst"));
+		var rid = fixture.FirstRid;
+		var empty = BinaryFixtures.Zip (("readme.txt", "no binary here"u8.ToArray ()));
+
+		fixture.Normal.Add (fixture.Spec.GetFrameworkZipPath (rid)!, empty);
+		fixture.Symbols.Add (fixture.Spec.GetFrameworkZipPath (rid)!, empty);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("does not contain 'Versions/A/", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void CatalystFrameworkZipThatIsNotAZipFails ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("SkiaSharp", "MacCatalyst"));
+		var rid = fixture.FirstRid;
+
+		fixture.Normal.Add (fixture.Spec.GetFrameworkZipPath (rid)!, "definitely not a zip archive");
+		fixture.Symbols.Add (fixture.Spec.GetFrameworkZipPath (rid)!, "definitely not a zip archive");
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("is not a readable zip archive", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void TruncatedModuleWithValidMagicFailsInsteadOfCrashing ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("SkiaSharp", "macOS"));
+		var rid = fixture.FirstRid;
+
+		// Valid magic and a plausible load-command count, but the commands run past the end of the
+		// file: the reader must report this rather than throw out of the validator.
+		var truncated = BinaryFixtures.MachO (BinaryFixtures.CpuTypeArm64, BinaryFixtures.NewUuid ())[..40];
+
+		fixture.Normal.Add (fixture.Spec.GetModulePathInNormalPackage (rid)!, truncated);
+		fixture.Symbols.Add (fixture.Spec.GetModulePathInSymbolPackage (rid), truncated);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("not a readable Mach-O image", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void TruncatedDwarfPayloadWithValidMagicFailsInsteadOfCrashing ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("HarfBuzzSharp", "iOS"));
+		var rid = fixture.FirstRid;
+		var root = fixture.Spec.GetDsymRoot (rid, "arm64");
+
+		var truncated = BinaryFixtures
+			.MachO (BinaryFixtures.CpuTypeArm64, fixture.Uuid (rid, "arm64"), BinaryFixtures.MachOFileTypeDsym, totalSize: 4096)[..40];
+
+		fixture.Symbols.Add ($"{root}/Contents/Resources/DWARF/{fixture.Spec.DwarfFileName}", truncated);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("not a readable Mach-O image", StringComparison.Ordinal));
+	}
+
+	[Fact]
+	public void ModuleWithAnUnreadableFatSliceFails ()
+	{
+		using var workspace = new TestWorkspace ();
+		var fixture = new AppleFixture (AppleFixture.SpecFor ("SkiaSharp", "tvOS"));
+		var rid = fixture.FirstRid;
+
+		// A slice that cannot be parsed must never be dropped silently: the module would then report
+		// exactly the architectures the dSYMs cover and reconcile against a truncated set.
+		var damaged = BinaryFixtures.FatMachO (
+			(BinaryFixtures.CpuTypeArm64, BinaryFixtures.MachO (BinaryFixtures.CpuTypeArm64, fixture.Uuid (rid, "arm64"))),
+			(BinaryFixtures.CpuTypeX86_64, BinaryFixtures.MachO (BinaryFixtures.CpuTypeX86_64, fixture.Uuid (rid, "x86_64"))[..40]));
+
+		fixture.Normal.Add (fixture.Spec.GetModulePathInNormalPackage (rid)!, damaged);
+		fixture.Symbols.Add (fixture.Spec.GetModulePathInSymbolPackage (rid), damaged);
+
+		Assert.Contains (fixture.Validate (workspace), e => e.Contains ("unreadable", StringComparison.Ordinal));
+	}
+
+	[Fact]
 	public void CorruptModuleFails ()
 	{
 		using var workspace = new TestWorkspace ();

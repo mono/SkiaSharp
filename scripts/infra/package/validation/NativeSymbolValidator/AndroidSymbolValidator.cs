@@ -36,8 +36,8 @@ public sealed class AndroidSymbolValidator
 		if (!log.Check (symbols.Contains (libraryPath), $"symbol package is missing the native library '{libraryPath}'."))
 			return;
 
-		var libraryFile = normal.ExtractTo (libraryPath, workspace);
-		var libraryBuildId = NativeBinary.TryReadElfBuildId (libraryFile);
+		using var libraryFile = normal.ExtractScoped (libraryPath, workspace);
+		var libraryBuildId = NativeBinary.TryReadElfBuildId (libraryFile.Path);
 
 		if (!log.Check (libraryBuildId is not null, $"'{libraryPath}' is not a readable ELF image with a GNU build ID."))
 			return;
@@ -49,8 +49,8 @@ public sealed class AndroidSymbolValidator
 		if (!log.Check (debugPath is not null, $"symbol package is missing '{spec.DebugFileName}' for '{rid}'."))
 			return;
 
-		var debugFile = symbols.ExtractTo (debugPath!, workspace);
-		var debugBuildId = NativeBinary.TryReadElfBuildId (debugFile);
+		using var debugFile = symbols.ExtractScoped (debugPath!, workspace);
+		var debugBuildId = NativeBinary.TryReadElfBuildId (debugFile.Path);
 
 		if (!log.Check (debugBuildId is not null, $"'{debugPath}' is not a readable ELF image with a GNU build ID."))
 			return;
@@ -67,7 +67,7 @@ public sealed class AndroidSymbolValidator
 			strippedLength < debugLength,
 			$"'{libraryPath}' ({strippedLength} bytes) is not smaller than '{debugPath}' ({debugLength} bytes), so it does not look stripped.");
 
-		ValidateKeys (libraryPath, libraryFile, debugPath!, debugFile, libraryBuildId!, log);
+		ValidateKeys (libraryPath, libraryFile.Path, debugPath!, debugFile.Path, libraryBuildId!, log);
 	}
 
 	private static string? FindDebugFile (NuGetPackage symbols, AndroidPackageSpec spec, string rid) =>

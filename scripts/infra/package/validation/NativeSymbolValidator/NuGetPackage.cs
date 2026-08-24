@@ -66,8 +66,18 @@ public sealed class NuGetPackage : IDisposable
 
 	public IReadOnlyList<string> Entries { get; }
 
-	public static NuGetPackage Open (string path) =>
-		new (path, ZipFile.OpenRead (path));
+	public static NuGetPackage Open (string path)
+	{
+		var archive = ZipFile.OpenRead (path);
+		try {
+			return new NuGetPackage (path, archive);
+		} catch {
+			// The constructor rejects malformed packages. Without this the archive - and the
+			// underlying file handle - would stay open, locking the .nupkg for later signing steps.
+			archive.Dispose ();
+			throw;
+		}
+	}
 
 	public static string Normalize (string entry) =>
 		entry.Replace ('\\', '/').TrimStart ('/');
@@ -119,6 +129,35 @@ public sealed class NuGetPackage : IDisposable
 	}
 
 	/// <summary>
+	/// Extracts an entry and deletes it again when the scope ends. The full matrix stages well over
+	/// a hundred payloads, and SkiaSharp's DWARF files run to hundreds of megabytes each, so holding
+	/// every one of them until the end of the run risks exhausting the agent's disk.
+	/// </summary>
+	public ExtractedFile ExtractScoped (string entry, string destinationDirectory) =>
+		new (ExtractTo (entry, destinationDirectory));
+
+	/// <summary>
+	/// Extracts a nested archive entry (a <c>framework.zip</c>) and returns the temporary path of
+	/// the first inner entry matching <paramref name="innerEntrySuffix"/>, or <see langword="null"/>
+	/// when the archive carries no such entry.
+	/// </summary>
+	public static ExtractedFile? ExtractFromNestedArchive (string archiveFile, string innerEntrySuffix, string destinationDirectory)
+	{
+		using var archive = ZipFile.OpenRead (archiveFile);
+
+		var suffix = Normalize (innerEntrySuffix);
+		var match = archive.Entries.FirstOrDefault (e =>
+			Normalize (e.FullName).EndsWith (suffix, StringComparison.OrdinalIgnoreCase));
+		if (match is null)
+			return null;
+
+		Directory.CreateDirectory (destinationDirectory);
+		var destination = Path.Combine (destinationDirectory, Guid.NewGuid ().ToString ("n"));
+		match.ExtractToFile (destination, overwrite: true);
+		return new ExtractedFile (destination);
+	}
+
+	/// <summary>
 	/// Compares entry contents without materializing either side in memory.
 	/// </summary>
 	public bool ContentEquals (string entry, NuGetPackage other, string otherEntry)
@@ -161,4 +200,27 @@ public sealed class NuGetPackage : IDisposable
 	}
 
 	public void Dispose () => archive.Dispose ();
+}
+
+/// <summary>
+/// A staged copy of a package entry that is removed as soon as the checks needing it are done.
+/// </summary>
+public sealed class ExtractedFile : IDisposable
+{
+	public ExtractedFile (string path) => Path = path;
+
+	public string Path { get; }
+
+	public void Dispose ()
+	{
+		try {
+			if (File.Exists (Path))
+				File.Delete (Path);
+		} catch (IOException) {
+			// A leftover temp file is not worth failing validation over; the run-scoped workspace
+			// directory is deleted as a whole at the end regardless.
+		} catch (UnauthorizedAccessException) {
+			// As above.
+		}
+	}
 }

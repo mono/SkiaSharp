@@ -49,10 +49,12 @@ public sealed class AppleSymbolValidator
 
 	private void ValidateRuntimeIdentifier (ApplePackageSpec spec, string rid, NuGetPackage normal, NuGetPackage symbols, ValidationLog log)
 	{
+		string? frameworkZip = null;
+
 		if (spec.Kind == ApplePayloadKind.CatalystFramework) {
-			var zip = spec.GetFrameworkZipPath (rid)!;
-			log.Check (normal.Contains (zip), $"package is missing '{zip}'.");
-			log.Check (symbols.Contains (zip), $"symbol package is missing '{zip}'.");
+			frameworkZip = spec.GetFrameworkZipPath (rid)!;
+			log.Check (normal.Contains (frameworkZip), $"package is missing '{frameworkZip}'.");
+			log.Check (symbols.Contains (frameworkZip), $"symbol package is missing '{frameworkZip}'.");
 		} else {
 			var normalModule = spec.GetModulePathInNormalPackage (rid)!;
 			log.Check (normal.Contains (normalModule), $"package is missing the native module '{normalModule}'.");
@@ -62,34 +64,45 @@ public sealed class AppleSymbolValidator
 		if (!log.Check (symbols.Contains (modulePath), $"symbol package is missing the native module '{modulePath}'."))
 			return;
 
-		var moduleFile = symbols.ExtractTo (modulePath, workspace);
+		using var moduleFile = symbols.ExtractScoped (modulePath, workspace);
 		var moduleName = Path.GetFileName (modulePath);
 
-		var module = NativeBinary.TryReadMachO (moduleFile);
+		var module = NativeBinary.TryReadMachO (moduleFile.Path);
 		if (!log.Check (module is not null, $"'{modulePath}' is not a readable Mach-O image."))
 			return;
 
+		// A slice that fails to parse would otherwise silently vanish from the architecture and
+		// UUID sets, turning a damaged image into a misleading "missing architecture" report - or,
+		// if the same slice is damaged on both sides, into a pass.
+		if (!log.Check (
+			module!.UnreadableArchitectures.Count == 0,
+			$"'{modulePath}' has {module.UnreadableArchitectures.Count} unreadable slice(s) ({string.Join (", ", module.UnreadableArchitectures)}); the image is damaged."))
+			return;
+
 		var missingArches = PackageMatrix.AppleArchitectures
-			.Where (a => module!.GetUuid (a) is null)
+			.Where (a => module.GetUuid (a) is null)
 			.ToArray ();
 		log.Check (
 			missingArches.Length == 0,
-			$"'{modulePath}' is missing expected architecture(s) {string.Join (", ", missingArches)}; it has {string.Join (", ", module!.Architectures)}.");
+			$"'{modulePath}' is missing expected architecture(s) {string.Join (", ", missingArches)}; it has {string.Join (", ", module.Architectures)}.");
 
-		ValidateModuleKeys (modulePath, moduleFile, moduleName, module!, log);
+		ValidateModuleKeys (modulePath, moduleFile.Path, moduleName, module, log);
+
+		if (frameworkZip is not null && normal.Contains (frameworkZip))
+			ValidateCatalystFrameworkZip (spec, frameworkZip, normal, module, log);
 
 		var dsymUuids = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (var architecture in PackageMatrix.AppleArchitectures) {
 			using var _ = log.BeginScope (architecture);
-			var uuid = ValidateDsym (spec, rid, architecture, symbols, module!, log);
+			var uuid = ValidateDsym (spec, rid, architecture, symbols, module, log);
 			if (uuid is not null)
 				dsymUuids.Add (uuid);
 		}
 
 		// Every slice the customer can load must be resolvable from the symbol package, and the
 		// symbol package must not carry dSYMs for slices that are not shipped.
-		var moduleUuids = module!.Uuids;
+		var moduleUuids = module.Uuids;
 		var unmatchedRuntime = moduleUuids.Except (dsymUuids, StringComparer.OrdinalIgnoreCase).ToArray ();
 		var unmatchedDsym = dsymUuids.Except (moduleUuids, StringComparer.OrdinalIgnoreCase).ToArray ();
 
@@ -99,6 +112,43 @@ public sealed class AppleSymbolValidator
 		log.Check (
 			unmatchedDsym.Length == 0,
 			$"dSYM UUID(s) {string.Join (", ", unmatchedDsym)} do not correspond to any runtime slice.");
+	}
+
+	/// <summary>
+	/// Catalyst customers only ever receive <c>framework.zip</c>; the unpacked module that every
+	/// other Catalyst check above is anchored to exists solely in the symbol package. Without this,
+	/// a stale or mismatched binary inside the zip would pass the entire matrix while shipping
+	/// symbols that resolve nothing.
+	/// </summary>
+	private void ValidateCatalystFrameworkZip (ApplePackageSpec spec, string frameworkZip, NuGetPackage normal, MachOImage module, ValidationLog log)
+	{
+		using var archiveFile = normal.ExtractScoped (frameworkZip, workspace);
+
+		ExtractedFile? shipped;
+		try {
+			shipped = NuGetPackage.ExtractFromNestedArchive (archiveFile.Path, $"Versions/A/{spec.NativeLibrary}", workspace);
+		} catch (InvalidDataException ex) {
+			log.Error ($"'{frameworkZip}' is not a readable zip archive: {ex.Message}");
+			return;
+		}
+
+		using (shipped) {
+			if (!log.Check (shipped is not null, $"'{frameworkZip}' does not contain 'Versions/A/{spec.NativeLibrary}'."))
+				return;
+
+			var shippedImage = NativeBinary.TryReadMachO (shipped!.Path);
+			if (!log.Check (shippedImage is not null, $"'Versions/A/{spec.NativeLibrary}' inside '{frameworkZip}' is not a readable Mach-O image."))
+				return;
+
+			if (!log.Check (
+				shippedImage!.UnreadableArchitectures.Count == 0,
+				$"'Versions/A/{spec.NativeLibrary}' inside '{frameworkZip}' has unreadable slice(s) ({string.Join (", ", shippedImage.UnreadableArchitectures)}); the image is damaged."))
+				return;
+
+			log.Check (
+				shippedImage.Uuids.SetEquals (module.Uuids),
+				$"the binary inside '{frameworkZip}' has UUID(s) {SymbolPackagePairValidator.Describe (shippedImage.Uuids.ToArray ())} but the unpacked module in the symbol package has {SymbolPackagePairValidator.Describe (module.Uuids.ToArray ())}; the shipped Catalyst binary would not resolve against these symbols.");
+		}
 	}
 
 	private string? ValidateDsym (ApplePackageSpec spec, string rid, string architecture, NuGetPackage symbols, MachOImage module, ValidationLog log)
@@ -122,12 +172,20 @@ public sealed class AppleSymbolValidator
 			return null;
 		}
 
-		var dwarfFile = symbols.ExtractTo (dwarfPath, workspace);
-		var dsym = NativeBinary.TryReadMachO (dwarfFile);
+		using var dwarfFile = symbols.ExtractScoped (dwarfPath, workspace);
+		var dsym = NativeBinary.TryReadMachO (dwarfFile.Path);
 		if (!log.Check (dsym is not null, $"'{dwarfPath}' is not a readable Mach-O image."))
 			return null;
 
-		var slice = dsym!.Slices[0];
+		if (!log.Check (
+			dsym!.UnreadableArchitectures.Count == 0,
+			$"'{dwarfPath}' has {dsym.UnreadableArchitectures.Count} unreadable slice(s) ({string.Join (", ", dsym.UnreadableArchitectures)}); the DWARF payload is damaged."))
+			return null;
+
+		if (!log.Check (dsym.Slices.Count > 0, $"'{dwarfPath}' contains no readable architecture."))
+			return null;
+
+		var slice = dsym.Slices[0];
 
 		log.Check (
 			dsym.Slices.Count == 1,
@@ -148,7 +206,7 @@ public sealed class AppleSymbolValidator
 				$"dSYM UUID '{slice.Uuid}' does not match the runtime '{architecture}' slice UUID '{expectedUuid}'.");
 		}
 
-		ValidateDsymKeys (dwarfPath, dwarfFile, spec.DwarfFileName, slice.Uuid, log);
+		ValidateDsymKeys (dwarfPath, dwarfFile.Path, spec.DwarfFileName, slice.Uuid, log);
 
 		return slice.Uuid;
 	}

@@ -1,33 +1,57 @@
 using SkiaSharp.PackageValidation;
 
-var options = ParseArguments (args);
-if (options is null)
-	return 2;
-
-Console.WriteLine ("Validating native symbol packages...");
-Console.WriteLine ($"  packages:        {options.PackagesDirectory}");
-Console.WriteLine ($"  symbol packages: {options.SymbolPackagesDirectory}");
-Console.WriteLine ($"  versions:        {options.VersionsFile}");
-Console.WriteLine ($"  preview suffix:  {(string.IsNullOrEmpty (options.PreviewSuffix) ? "<none>" : options.PreviewSuffix)}");
-Console.WriteLine ($"  require all:     {options.RequireAll}");
-Console.WriteLine ();
-
-var result = new Validator (options, Console.Out).Run ();
-
-Console.WriteLine ();
-Console.WriteLine ($"Validated {result.Validated} package pair(s), skipped {result.Skipped}, {result.Warnings.Count} warning(s), {result.Errors.Count} error(s).");
-
-if (result.Succeeded) {
-	Console.WriteLine ("Native symbol package validation succeeded.");
-	return 0;
+try {
+	return Run (args);
+} catch (Exception ex) {
+	// A crash reads as an infrastructure fault and gets retried; a reported failure does not. Surface
+	// the message as a validation failure so the CI log is diagnosable without a stack trace.
+	Console.Error.WriteLine ();
+	Console.Error.WriteLine ("Native symbol package validation FAILED:");
+	Console.Error.WriteLine ($"  - {ex.Message}");
+	return 1;
 }
 
-Console.Error.WriteLine ();
-Console.Error.WriteLine ("Native symbol package validation FAILED:");
-foreach (var error in result.Errors)
-	Console.Error.WriteLine ($"  - {error}");
+static int Run (string[] args)
+{
+	ValidatorOptions? options;
+	try {
+		options = ParseArguments (args);
+	} catch (Exception ex) when (ex is ArgumentException or FormatException) {
+		// A flag with no value, or a non-boolean value for a switch.
+		Console.Error.WriteLine (ex.Message);
+		Console.Error.WriteLine ();
+		WriteUsage ();
+		return 2;
+	}
 
-return 1;
+	if (options is null)
+		return 2;
+
+	Console.WriteLine ("Validating native symbol packages...");
+	Console.WriteLine ($"  packages:        {options.PackagesDirectory}");
+	Console.WriteLine ($"  symbol packages: {options.SymbolPackagesDirectory}");
+	Console.WriteLine ($"  versions:        {options.VersionsFile}");
+	Console.WriteLine ($"  preview suffix:  {(string.IsNullOrEmpty (options.PreviewSuffix) ? "<none>" : options.PreviewSuffix)}");
+	Console.WriteLine ($"  require all:     {options.RequireAll}");
+	Console.WriteLine ();
+
+	var result = new Validator (options, Console.Out).Run ();
+
+	Console.WriteLine ();
+	Console.WriteLine ($"Validated {result.Validated} package pair(s), skipped {result.Skipped}, {result.Warnings.Count} warning(s), {result.Errors.Count} error(s).");
+
+	if (result.Succeeded) {
+		Console.WriteLine ("Native symbol package validation succeeded.");
+		return 0;
+	}
+
+	Console.Error.WriteLine ();
+	Console.Error.WriteLine ("Native symbol package validation FAILED:");
+	foreach (var error in result.Errors)
+		Console.Error.WriteLine ($"  - {error}");
+
+	return 1;
+}
 
 static ValidatorOptions? ParseArguments (string[] args)
 {
