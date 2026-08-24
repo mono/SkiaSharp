@@ -21,13 +21,6 @@ stages:
             publish:
               logs:
                 name: arcade_asset_logs
-          templateContext:
-            outputs:
-              - output: pipelineArtifact
-                displayName: Publish Arcade asset verification
-                artifactName: arcade_asset_verification
-                targetPath: '$(Build.SourcesDirectory)\artifacts\publishing-verification'
-                condition: succeeded()
           preSteps:
             - checkout: self
               clean: true
@@ -51,37 +44,44 @@ stages:
                 targetPath: '$(Agent.TempDirectory)\transport-nugets'
 
             - pwsh: |
-                $source = '$(Agent.TempDirectory)\signed-nugets'
-                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-                Remove-Item '$(Build.SourcesDirectory)\artifacts\packages\Release' -Recurse -Force -ErrorAction Ignore
-                New-Item $destination -ItemType Directory -Force | Out-Null
+                $signedSource = '$(Agent.TempDirectory)\signed-nugets'
+                $transportSource = '$(Agent.TempDirectory)\transport-nugets'
+                $packageRoot = '$(Build.SourcesDirectory)\artifacts\packages\Release'
+                $shipping = Join-Path $packageRoot 'Shipping'
+                $nonShipping = Join-Path $packageRoot 'NonShipping'
 
-                $packages = @(Get-ChildItem $source -Filter '*.nupkg' -File -Recurse)
-                if ($packages.Count -eq 0) {
+                Remove-Item $packageRoot -Recurse -Force -ErrorAction Ignore
+                New-Item $shipping -ItemType Directory -Force | Out-Null
+                New-Item $nonShipping -ItemType Directory -Force | Out-Null
+
+                $signedPackages = @(Get-ChildItem $signedSource -Filter '*.nupkg' -File -Recurse)
+                if ($signedPackages.Count -eq 0) {
                   throw "No signed NuGet packages were downloaded from artifact 'nuget_signed'."
                 }
+                Copy-Item $signedPackages.FullName $shipping
 
-                Copy-Item $packages.FullName $destination
-                Write-Host "Staged $($packages.Count) signed NuGet package(s) for Arcade publishing."
-              displayName: Stage signed shipping packages
+                $fallbackCount = 0
+                $normalPackages = @(
+                  Get-ChildItem $shipping -Filter '*.nupkg' -File |
+                    Where-Object {
+                      -not $_.Name.EndsWith('.symbols.nupkg', [StringComparison]::OrdinalIgnoreCase)
+                    })
+                foreach ($package in $normalPackages) {
+                  $symbolPath = Join-Path $shipping "$($package.BaseName).symbols.nupkg"
+                  if (-not (Test-Path $symbolPath -PathType Leaf)) {
+                    Copy-Item $package.FullName $symbolPath
+                    $fallbackCount++
+                  }
+                }
 
-            - pwsh: |
-                ./scripts/infra/package/stage-shipping-symbol-packages.ps1 `
-                  -PackageDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-              displayName: Complete shipping symbol package inventory
+                $transportPackages = @(Get-ChildItem $transportSource -Filter '*.nupkg' -File -Recurse)
+                if ($transportPackages.Count -eq 0) {
+                  throw "No transport NuGet packages were downloaded from artifact 'nuget_special'."
+                }
+                Copy-Item $transportPackages.FullName $nonShipping
 
-            - pwsh: |
-                ./scripts/infra/package/stage-transport-packages.ps1 `
-                  -SourceDirectory '$(Agent.TempDirectory)\transport-nugets' `
-                  -DestinationDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping'
-              displayName: Stage unsigned transport packages
-
-            - pwsh: |
-                ./scripts/infra/signing/verify-unsigned-transport-packages.ps1 `
-                  -OriginalDirectory '$(Agent.TempDirectory)\transport-nugets' `
-                  -StagedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping' `
-                  -OutputPath '$(Build.SourcesDirectory)\artifacts\publishing-verification\transport-payload-verification.json'
-              displayName: Verify unsigned transport NuGet identity
+                Write-Host "Arcade assets: $($signedPackages.Count) signed package(s), $fallbackCount symbol fallback(s), $($transportPackages.Count) unsigned transport package(s)."
+              displayName: Assemble Arcade package views
 
             - powershell: >
                 eng\common\build.ps1

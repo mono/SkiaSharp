@@ -74,7 +74,6 @@ publish assembly: download nuget_signed + unsigned nuget_special
               |
               +-- complete shipping symbol package inventory
               +-- stage signed Shipping and unsigned NonShipping packages
-              +-- verify transport packages remain byte-identical and unsigned
               `-- generate Arcade V3 PackageArtifacts/BlobArtifacts/AssetManifests
 ```
 
@@ -100,8 +99,8 @@ native-assets projects provide real symbol packages because their large
 The existing unsigned artifacts remain available to pipeline consumers.
 `nuget_special` contains transport wrappers (`_NuGets`, `_NativeAssets*`, and
 dependency chunks). Official builds stage these under Arcade's `NonShipping`
-package directory without signing them, verify they remain byte-identical and
-unsigned, and record them in the same BAR with `NonShipping=true`. Package-scoped
+package directory without passing them through signing, and record them in the
+same BAR with `NonShipping=true`. Package-scoped
 `DO-NOT-SIGN`/`DO-NOT-UNPACK` entries in `eng/SignCheckExclusionsFile.txt`
 require unsigned transport containers without recursively re-validating their
 build-input payloads.

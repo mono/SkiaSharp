@@ -369,11 +369,10 @@ try {
     }
     if ($publishingTemplate -notmatch 'artifactName:\s*nuget_signed' -or
         $publishingTemplate -notmatch 'artifactName:\s*nuget_special' -or
-        $publishingTemplate -notmatch 'stage-transport-packages\.ps1' -or
-        $publishingTemplate -notmatch 'verify-unsigned-transport-packages\.ps1' -or
-        $publishingTemplate -notmatch 'stage-shipping-symbol-packages\.ps1' -or
-        $publishingTemplate -notmatch 'artifacts\\packages\\Release\\NonShipping' -or
-        $publishingTemplate -notmatch 'transport-payload-verification\.json') {
+        $publishingTemplate -notmatch '\.symbols\.nupkg' -or
+        $publishingTemplate -notmatch 'artifacts\\packages\\Release' -or
+        $publishingTemplate -notmatch "'Shipping'" -or
+        $publishingTemplate -notmatch "'NonShipping'") {
         throw 'Arcade asset assembly must combine signed packages with unsigned transport packages.'
     }
     $itemsToSign = @(

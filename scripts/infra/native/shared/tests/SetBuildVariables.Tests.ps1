@@ -563,8 +563,10 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
 if ($publishStages -notmatch 'stage:\s*assemble_publish_assets' -or
     $publishStages -notmatch 'artifactName:\s*nuget_signed' -or
     $publishStages -notmatch 'artifactName:\s*nuget_special' -or
-    $publishStages -notmatch 'stage-shipping-symbol-packages\.ps1' -or
-    $publishStages -notmatch 'stage-transport-packages\.ps1' -or
+    $publishStages -notmatch '\.symbols\.nupkg' -or
+    $publishStages -notmatch 'artifacts\\packages\\Release' -or
+    $publishStages -notmatch "'Shipping'" -or
+    $publishStages -notmatch "'NonShipping'" -or
     $publishStages -notmatch 'dependsOn:\s+- assemble_publish_assets') {
     throw 'Publishing must assemble signed shipping packages and unsigned transport before BAR registration.'
 }
