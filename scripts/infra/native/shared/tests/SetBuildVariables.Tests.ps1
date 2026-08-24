@@ -460,26 +460,26 @@ if ($packageStages -match 'Re-upload Native Artifacts') {
     throw 'The Package stage must consume Native artifacts from the same pipeline run.'
 }
 $stagesComposer = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages.yml') -Raw
-$publishStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-publish.yml') -Raw
+$signingStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
 if ($stagesComposer -notmatch '/scripts/azure-templates-stages-signing\.yml@self' -or
     $stagesComposer -notmatch '/scripts/azure-templates-stages-apiscan\.yml@self' -or
     $stagesComposer -match '/scripts/azure-templates-jobs-(signing|apiscan)\.yml@self') {
     throw 'The shared composer must consume signing and API Scan as stage templates.'
 }
-if ($stagesComposer -notmatch '/scripts/azure-templates-stages-publish\.yml@self') {
-    throw 'The shared stage composer must delegate BAR registration and validation to the publish stage template.'
+if ($stagesComposer -match '/scripts/azure-templates-stages-publish\.yml@self') {
+    throw 'Signing, Arcade asset assembly, and BAR registration must share one stage template.'
 }
-if ($publishStages -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
+if ($signingStages -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
     throw 'BAR registration must use the same Arcade OfficialBuildId as manifest generation.'
 }
-if ($publishStages -notmatch 'publishAssetsImmediately:\s*false' -or
-    $publishStages -notmatch 'requireDefaultChannels:\s*true' -or
-    $publishStages -match 'General Testing|promote-build\.ps1|stage:\s*promote_build') {
+if ($signingStages -notmatch 'publishAssetsImmediately:\s*false' -or
+    $signingStages -notmatch 'requireDefaultChannels:\s*true' -or
+    $signingStages -match 'General Testing|promote-build\.ps1|stage:\s*promote_build') {
     throw 'Package CI must use Arcade default-channel promotion and fail closed when no mapping exists.'
 }
 if ($packagePipeline -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or
     $stagesComposer -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN' -or
-    $publishStages -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN') {
+    $signingStages -match 'PACKAGE_PIPELINE|PACKAGE_FORCE_REAL_SIGNING|PACKAGE_RUN_API_SCAN') {
     throw 'The combined Package pipeline must use its parameters directly instead of mirrored variables.'
 }
 if ($variablesYaml -notmatch "PREVIEW_LABEL:\s*'preview\.0'" -or
@@ -497,7 +497,7 @@ if (-not $stagesComposer.Contains("eq(parameters.runApiScan, 'true')") -or
     -not $stagesComposer.Contains("eq(variables['Build.Reason'], 'Schedule')")) {
     throw 'API Scan must run only when requested or on scheduled main builds.'
 }
-if ($publishStages -match 'includeApiScan|api_scan') {
+if ($signingStages -match 'includeApiScan|api_scan') {
     throw 'API Scan must remain independent from BAR registration and validation.'
 }
 
@@ -538,17 +538,22 @@ if ($docsScript -match '_nugetspreview' -or
 
 $prDownloadBash = Get-Content (Join-Path $repoRoot 'scripts/get-skiasharp-pr.sh') -Raw
 $prDownloadPowerShell = Get-Content (Join-Path $repoRoot 'scripts/get-skiasharp-pr.ps1') -Raw
-if (-not $prDownloadBash.Contains('! -name "*.symbols.nupkg"') -or
+if (-not ($prDownloadBash.Contains('! -name "*.symbols.nupkg"') -or
+          $prDownloadBash.Contains('! -iname "*.symbols.nupkg"')) -or
     -not $prDownloadPowerShell.Contains("EndsWith('.symbols.nupkg'")) {
     throw 'PR package downloaders must exclude symbol packages from the local NuGet source.'
 }
 
-$signingStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-signing.yml') -Raw
-if ($signingStages -match 'nuget_preview_signed|nuget_special|transport-nugets|NonShipping|stage-shipping-symbol-packages|-publish') {
+$publishMarker = $signingStages.IndexOf('- ${{ if eq(parameters.publishAssets, true) }}:')
+if ($publishMarker -lt 0) {
+    throw 'Signing must conditionally compile Arcade assembly and BAR registration jobs.'
+}
+$signOnly = $signingStages.Substring(0, $publishMarker)
+if ($signOnly -match 'nuget_preview_signed|nuget_special|transport-nugets|NonShipping|\.symbols\.nupkg|-publish') {
     throw 'Signing must only sign and verify the unified product and symbol package artifact.'
 }
-if ($signingStages -match 'artifactName:\s*nuget_symbols' -or
-    $signingStages -match 'stage-android-symbol-packages\.ps1') {
+if ($signOnly -match 'artifactName:\s*nuget_symbols' -or
+    $signOnly -match 'stage-android-symbol-packages\.ps1') {
     throw 'Signing must consume normal and symbol packages from the unified nuget artifact.'
 }
 
@@ -560,15 +565,17 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
     $publishingProps -notmatch '<AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>') {
     throw 'Arcade publishing must use one shipping view and one non-shipping transport view.'
 }
-if ($publishStages -notmatch 'stage:\s*assemble_publish_assets' -or
-    $publishStages -notmatch 'artifactName:\s*nuget_signed' -or
-    $publishStages -notmatch 'artifactName:\s*nuget_special' -or
-    $publishStages -notmatch '\.symbols\.nupkg' -or
-    $publishStages -notmatch 'artifacts\\packages\\Release' -or
-    $publishStages -notmatch "'Shipping'" -or
-    $publishStages -notmatch "'NonShipping'" -or
-    $publishStages -notmatch 'dependsOn:\s+- assemble_publish_assets') {
-    throw 'Publishing must assemble signed shipping packages and unsigned transport before BAR registration.'
+if ($signingStages -notmatch 'name:\s*assemble_arcade_assets' -or
+    $signingStages -notmatch 'dependsOn:\s*sign_nugets' -or
+    $signingStages -notmatch 'artifactName:\s*nuget_signed' -or
+    $signingStages -notmatch 'artifactName:\s*nuget_special' -or
+    $signingStages -notmatch '\.symbols\.nupkg' -or
+    $signingStages -notmatch 'artifacts\\packages\\Release' -or
+    $signingStages -notmatch "'Shipping'" -or
+    $signingStages -notmatch "'NonShipping'" -or
+    $signingStages -notmatch 'dependsOn:\s*assemble_arcade_assets' -or
+    $signingStages -notmatch 'validateDependsOn:\s+- signing') {
+    throw 'One stage must order signing, Arcade assembly, and BAR registration before standard validation.'
 }
 
 Write-Host 'Build identity tests passed.'

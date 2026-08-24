@@ -4,6 +4,9 @@ parameters:
   - name: useRealSigning
     type: boolean
     default: false
+  - name: publishAssets
+    type: boolean
+    default: false
 
 stages:
   - stage: signing
@@ -91,3 +94,108 @@ stages:
               displayName: Sign staged NuGets with Arcade
               env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+      - ${{ if eq(parameters.publishAssets, true) }}:
+        - template: /eng/common/templates-official/job/job.yml@self
+          parameters:
+            name: assemble_arcade_assets
+            displayName: Assemble signed and transport assets
+            dependsOn: sign_nugets
+            pool: ${{ parameters.buildAgent.pool }}
+            timeoutInMinutes: 180
+            workspace:
+              clean: all
+            runAsPublic: false
+            artifacts:
+              publish:
+                logs:
+                  name: arcade_asset_logs
+            preSteps:
+              - checkout: self
+                clean: true
+                fetchDepth: 1
+                fetchTags: false
+                submodules: false
+            steps:
+              - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1
+                displayName: Configure package version identity
+
+              - task: DownloadPipelineArtifact@2
+                displayName: Download signed NuGets
+                inputs:
+                  artifactName: nuget_signed
+                  targetPath: '$(Agent.TempDirectory)\signed-nugets'
+
+              - task: DownloadPipelineArtifact@2
+                displayName: Download transport NuGets
+                inputs:
+                  artifactName: nuget_special
+                  targetPath: '$(Agent.TempDirectory)\transport-nugets'
+
+              - pwsh: |
+                  $signedSource = '$(Agent.TempDirectory)\signed-nugets'
+                  $transportSource = '$(Agent.TempDirectory)\transport-nugets'
+                  $packageRoot = '$(Build.SourcesDirectory)\artifacts\packages\Release'
+                  $shipping = Join-Path $packageRoot 'Shipping'
+                  $nonShipping = Join-Path $packageRoot 'NonShipping'
+
+                  Remove-Item $packageRoot -Recurse -Force -ErrorAction Ignore
+                  New-Item $shipping -ItemType Directory -Force | Out-Null
+                  New-Item $nonShipping -ItemType Directory -Force | Out-Null
+
+                  $signedPackages = @(Get-ChildItem $signedSource -Filter '*.nupkg' -File -Recurse)
+                  if ($signedPackages.Count -eq 0) {
+                    throw "No signed NuGet packages were downloaded from artifact 'nuget_signed'."
+                  }
+                  Copy-Item $signedPackages.FullName $shipping
+
+                  $fallbackCount = 0
+                  $normalPackages = @(
+                    Get-ChildItem $shipping -Filter '*.nupkg' -File |
+                      Where-Object {
+                        -not $_.Name.EndsWith('.symbols.nupkg', [StringComparison]::OrdinalIgnoreCase)
+                      })
+                  foreach ($package in $normalPackages) {
+                    $symbolPath = Join-Path $shipping "$($package.BaseName).symbols.nupkg"
+                    if (-not (Test-Path $symbolPath -PathType Leaf)) {
+                      Copy-Item $package.FullName $symbolPath
+                      $fallbackCount++
+                    }
+                  }
+
+                  $transportPackages = @(Get-ChildItem $transportSource -Filter '*.nupkg' -File -Recurse)
+                  if ($transportPackages.Count -eq 0) {
+                    throw "No transport NuGet packages were downloaded from artifact 'nuget_special'."
+                  }
+                  Copy-Item $transportPackages.FullName $nonShipping
+
+                  Write-Host "Arcade assets: $($signedPackages.Count) signed package(s), $fallbackCount symbol fallback(s), $($transportPackages.Count) unsigned transport package(s)."
+                displayName: Assemble Arcade package views
+
+              - powershell: >
+                  eng\common\build.ps1
+                  -configuration Release
+                  -restore
+                  -publish
+                  -ci
+                  /p:OfficialBuildId=$(ARCADE_OFFICIAL_BUILD_ID)
+                  /p:DotNetFinalVersionKind=$(DOTNET_FINAL_VERSION_KIND)
+                  /p:DotNetPublishUsingPipelines=true
+                displayName: Generate Arcade V3 asset manifest
+                env:
+                  SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+
+        - template: /eng/common/templates-official/job/publish-build-assets.yml@self
+          parameters:
+            dependsOn: assemble_arcade_assets
+            publishingVersion: 3
+            officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
+
+  - ${{ if eq(parameters.publishAssets, true) }}:
+    - template: /eng/common/templates-official/post-build/post-build.yml@self
+      parameters:
+        publishingInfraVersion: 3
+        publishAssetsImmediately: false
+        requireDefaultChannels: true
+        validateDependsOn:
+          - signing

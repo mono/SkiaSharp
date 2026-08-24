@@ -73,16 +73,15 @@ stages:
             useRealSigning: true
           ${{ else }}:
             useRealSigning: false
+          ${{ if or(and(eq(parameters.forceRealSigning, 'true'), eq(parameters.registerInBar, 'true')), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+            publishAssets: true
+          ${{ else }}:
+            publishAssets: false
 
       - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'Schedule'))) }}:
         - template: /scripts/azure-templates-stages-apiscan.yml@self
           parameters:
             buildAgentWindows: ${{ parameters.buildAgentWindows }}
-
-      - ${{ if or(and(eq(parameters.forceRealSigning, 'true'), eq(parameters.registerInBar, 'true')), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
-        - template: /scripts/azure-templates-stages-publish.yml@self
-          parameters:
-            buildAgent: ${{ parameters.buildAgentWindows }}
 
   - ${{ if in(parameters.buildPipelineType, 'test', 'complete') }}:
     - template: /scripts/azure-templates-stages-test.yml@self
