@@ -45,11 +45,6 @@ stages:
                 artifactName: nuget_signed
                 targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
                 condition: succeeded()
-              - output: pipelineArtifact
-                displayName: Publish signing verification
-                artifactName: nuget_signing_verification
-                targetPath: '$(Build.SourcesDirectory)\artifacts\signing-verification'
-                condition: succeeded()
           preSteps:
             - checkout: self
               clean: true
@@ -96,13 +91,3 @@ stages:
               displayName: Sign staged NuGets with Arcade
               env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-
-            - pwsh: |
-                ./scripts/infra/signing/verify-signed-packages.ps1 `
-                  -OriginalDirectory '$(Agent.TempDirectory)\unsigned-nugets' `
-                  -SignedDirectory '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping' `
-                  -SigningPropsPath '$(Build.SourcesDirectory)\eng\Signing.props' `
-                  -OutputPath '$(Build.SourcesDirectory)\artifacts\signing-verification\payload-verification.json' `
-                  -SignType '$(_SignType)' `
-                  -RequireSignatures
-              displayName: Verify signed NuGet payload fidelity

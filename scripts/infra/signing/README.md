@@ -44,8 +44,8 @@ Normal and explicit symbol packages share the `nuget` artifact and are signed
 together. dSYM DWARF payloads are inventoried but not signing targets. Fallback
 symbol packages copy an already-signed package.
 
-`verify-signed-packages.ps1` compares unsigned and signed archives so only
-policy-approved payloads may change.
+Arcade SignTool verifies the signed outputs. Standard post-build NuGet and
+SigningValidation jobs validate the final BAR inventory.
 
 ## Publishing policy
 
@@ -73,9 +73,3 @@ view.
 - A feature branch also needs `registerInBar=true` to assemble and publish a BAR.
 
 Public PR builds do not run the signing or publishing stages.
-
-## Local check
-
-```powershell
-pwsh -NoLogo -NoProfile -File scripts/infra/signing/tests/Signing.Tests.ps1
-```
