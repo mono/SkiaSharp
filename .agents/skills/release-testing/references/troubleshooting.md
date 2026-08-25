@@ -30,8 +30,9 @@ package version, or skip policy.
 asset version and location recorded on the selected BAR build.
 
 **Fix:** Rerun `release-status`. It verifies the Build/Tests/BAR identity and
-reports `wait-for-bar-assets` until both exact assets have recorded locations.
-Do not select a replacement version from a feed.
+reports `configure-default-channels` or `configure-feed-routing` when the exact
+BAR cannot prove both signed package locations. Do not select a replacement
+version from a feed.
 
 **`ERROR: Could not resolve build metadata for run ...`** — confirm the selected
 `skiasharp-package` run ID and Azure CLI authentication.

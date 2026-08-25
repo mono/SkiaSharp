@@ -19,7 +19,64 @@ BUILD_URL = (
     "https://dev.azure.com/dnceng/internal/_build/results?buildId={build_id}"
 )
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
+SIGNED_FEED_MARKER = "/_packaging/skiasharp/"
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
+EXACT_RELEASE_BRANCH_RE = re.compile(
+    r"^release/\d+\.\d+\.\d+(?:\.\d+)?"
+    r"(?:-(?:preview|rc)\.[1-9]\d*)?$"
+)
+MAINTENANCE_BRANCH_RE = re.compile(r"^release/\d+\.\d+\.x$")
+
+MIGRATION_REQUIREMENTS = (
+    {
+        "id": "combined-build",
+        "path": "scripts/azure-pipelines-package.yml",
+        "pattern": r"buildPipelineType:\s*['\"]?build['\"]?",
+        "detail": (
+            "backport the combined dnceng Build role used by pipeline 1642"
+        ),
+    },
+    {
+        "id": "connected-tests",
+        "path": "scripts/azure-pipelines-tests.yml",
+        "pattern": (
+            r"source:\s*['\"]?"
+            r"\\dotnet\\skiasharp\\skiasharp-package['\"]?"
+        ),
+        "detail": (
+            "backport the folder-qualified Build resource consumed by "
+            "Tests pipeline 1630"
+        ),
+    },
+    {
+        "id": "exact-release-versioning",
+        "path": "scripts/infra/native/shared/set-build-variables.ps1",
+        "pattern": (
+            r"Set-BuildVariable\s+DOTNET_FINAL_VERSION_KIND\s+"
+            r"\$finalVersionKind"
+        ),
+        "detail": (
+            "backport exact stable version selection for internal release/* "
+            "builds"
+        ),
+    },
+    *(
+        {
+            "id": f"{package}-transport-metadata",
+            "path": f"scripts/infra/package/nuget/_{package}.nuspec",
+            "pattern": (
+                r"<copyright>.+?</copyright>.*"
+                r"<license\s+type=\"expression\">MIT</license>.*"
+                r"<projectUrl>.+?</projectUrl>"
+            ),
+            "detail": (
+                f"backport Microsoft package metadata required by Arcade "
+                f"NuGet validation for _{package}"
+            ),
+        }
+        for package in ("NativeAssets", "NuGets", "Dependencies")
+    ),
+)
 
 PIPELINES = (
     {
@@ -39,6 +96,31 @@ PIPELINES = (
 
 class StatusError(RuntimeError):
     """Release status could not be determined safely."""
+
+
+def normalize_release_branch(value: str) -> str:
+    branch = value
+    for prefix in ("refs/remotes/origin/", "refs/heads/", "origin/"):
+        if branch.startswith(prefix):
+            branch = branch[len(prefix):]
+            break
+    if MAINTENANCE_BRANCH_RE.fullmatch(branch):
+        raise StatusError(
+            f"{branch} is an integration/maintenance branch; use "
+            "release-branch to cut an exact release/X.Y.Z[-preview.N|-rc.N] "
+            "branch before running release-status"
+        )
+    if not EXACT_RELEASE_BRANCH_RE.fullmatch(branch):
+        raise StatusError(
+            "release status requires an exact "
+            "release/X.Y.Z[-preview.N|-rc.N] or "
+            "release/X.Y.Z.F[-preview.N|-rc.N] branch, or a commit SHA"
+        )
+    return branch
+
+
+def parse_default_channel_ids(value: str) -> list[int]:
+    return [int(item) for item in re.findall(r"\d+", value)]
 
 
 def run(
@@ -202,7 +284,7 @@ class AzureDevOps:
             )
         return {
             "barBuildId": int(lines[0].strip()),
-            "defaultChannels": lines[1].strip(),
+            "defaultChannelIds": parse_default_channel_ids(lines[1]),
             "stable": lines[2].strip().lower() == "true",
         }
 
@@ -291,15 +373,7 @@ class GitRepository:
                 )
             return selected[0], commit
 
-        branch = value
-        for prefix in ("refs/remotes/origin/", "refs/heads/", "origin/"):
-            if branch.startswith(prefix):
-                branch = branch[len(prefix):]
-                break
-        if not re.fullmatch(r"release/\S+", branch):
-            raise StatusError(
-                "release status requires release/{version} or a commit SHA"
-            )
+        branch = normalize_release_branch(value)
         ref = f"refs/remotes/origin/{branch}"
         exists = run(
             ["git", "show-ref", "--verify", "--quiet", ref],
@@ -312,6 +386,40 @@ class GitRepository:
             "rev-parse",
             f"{ref}^{{commit}}",
         ).stdout.strip()
+
+    def release_prerequisites(self, commit: str) -> dict:
+        cache: dict[str, str | None] = {}
+        missing = []
+        for requirement in MIGRATION_REQUIREMENTS:
+            path = requirement["path"]
+            if path not in cache:
+                result = run(
+                    ["git", "show", f"{commit}:{path}"],
+                    cwd=self.root,
+                    check=False,
+                )
+                cache[path] = (
+                    result.stdout
+                    if result.returncode == 0
+                    else None
+                )
+            content = cache[path]
+            if content is None or not re.search(
+                requirement["pattern"],
+                content,
+                re.MULTILINE | re.DOTALL,
+            ):
+                missing.append(
+                    {
+                        "id": requirement["id"],
+                        "path": path,
+                        "detail": requirement["detail"],
+                    }
+                )
+        return {
+            "state": "ready" if not missing else "missing",
+            "missing": missing,
+        }
 
     def release_inputs(self, commit: str) -> dict:
         versions = self.git(
@@ -601,8 +709,20 @@ def bar_output(
             if channel.get("name")
         }
     )
-    has_locations = all(asset["locations"] for asset in assets.values())
-    state = "ready" if has_locations else "awaiting-locations"
+    default_channel_ids = config.get("defaultChannelIds") or []
+    routed_assets = {
+        package_id: any(
+            SIGNED_FEED_MARKER in str(location).lower()
+            for location in asset["locations"]
+        )
+        for package_id, asset in assets.items()
+    }
+    if not default_channel_ids:
+        state = "missing-default-channels"
+    elif not all(routed_assets.values()):
+        state = "missing-feed-routing"
+    else:
+        state = "ready"
     return (
         {
             "id": config["barBuildId"],
@@ -616,7 +736,9 @@ def bar_output(
             "branch": record.get("azureDevOpsBranch"),
             "stable": bool(record.get("stable")),
             "channels": channels,
+            "defaultChannelIds": default_channel_ids,
             "assets": assets,
+            "routedAssets": routed_assets,
         },
         versions,
     )
@@ -631,6 +753,36 @@ def build_report(
 ) -> dict:
     branch, commit = repo.resolve_target(target)
     warnings: list[str] = []
+    migration = repo.release_prerequisites(commit)
+    if migration["state"] != "ready":
+        warnings.append(
+            "The target commit does not contain the minimum Arcade release "
+            "backport required for Build 1642 -> Tests 1630 -> BAR"
+        )
+        return {
+            "schemaVersion": 5,
+            "input": target,
+            "branch": branch,
+            "commit": commit,
+            "state": "blocked",
+            "nextAction": "backport-arcade-release",
+            "migration": migration,
+            "buildRun": run_output(
+                ado,
+                PIPELINES[0],
+                None,
+                warnings,
+            ),
+            "testsRun": run_output(
+                ado,
+                PIPELINES[1],
+                None,
+                warnings,
+            ),
+            "barBuild": None,
+            "packageVersions": None,
+            "warnings": warnings,
+        }
     build_runs = [
         item
         for item in ado.list_runs(PIPELINES[0]["id"], branch)
@@ -672,6 +824,16 @@ def build_report(
         state, next_action = "running", "wait-for-build"
     elif build_state in ("failed", "canceled", "unknown"):
         state, next_action = "blocked", "retry-build"
+        try:
+            failed_config = ado.release_config(int(build_run["id"]))
+            if not failed_config.get("defaultChannelIds"):
+                next_action = "configure-default-channels"
+                warnings.append(
+                    "The failed Build registered a BAR but resolved no "
+                    "default channels for this release branch"
+                )
+        except StatusError:
+            pass
     elif bar_error:
         state, next_action = "blocked", "retry-bar-check"
     elif tests_run is None:
@@ -680,8 +842,10 @@ def build_report(
         state, next_action = "running", "wait-for-tests"
     elif tests_state in ("failed", "canceled", "unknown"):
         state, next_action = "blocked", "retry-tests"
-    elif bar["state"] != "ready":
-        state, next_action = "waiting", "wait-for-bar-assets"
+    elif bar["state"] == "missing-default-channels":
+        state, next_action = "blocked", "configure-default-channels"
+    elif bar["state"] == "missing-feed-routing":
+        state, next_action = "blocked", "configure-feed-routing"
     else:
         state, next_action = "ready", "start-release-testing"
 
@@ -691,12 +855,13 @@ def build_report(
         warnings.append("The connected skiasharp-tests run partially succeeded")
 
     return {
-        "schemaVersion": 4,
+        "schemaVersion": 5,
         "input": target,
         "branch": branch,
         "commit": commit,
         "state": state,
         "nextAction": next_action,
+        "migration": migration,
         "buildRun": run_output(
             ado,
             PIPELINES[0],

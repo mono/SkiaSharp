@@ -70,7 +70,10 @@ def bar_record(
     if channels is None:
         channels = [{"name": "SkiaSharp"}]
     if locations is None:
-        locations = ["https://example.test/skiasharp"]
+        locations = [
+            "https://pkgs.dev.azure.com/dnceng/public/"
+            "_packaging/skiasharp/nuget/v3/index.json"
+        ]
     return {
         "id": BAR_BUILD_ID,
         "commit": COMMIT,
@@ -116,7 +119,7 @@ class FakeAdo:
     def release_config(self, build_id):
         return {
             "barBuildId": BAR_BUILD_ID,
-            "defaultChannels": "[529]",
+            "defaultChannelIds": [529],
             "stable": False,
         }
 
@@ -139,6 +142,9 @@ class FakeRepo:
             "harfBuzzSharp": "14.2.1",
             "previewLabel": "preview.1",
         }
+
+    def release_prerequisites(self, commit):
+        return {"state": "ready", "missing": []}
 
 
 def complete_chain():
@@ -177,6 +183,34 @@ class PipelineStatusTests(unittest.TestCase):
             status.BUILD_PIPELINE_SOURCE,
             r"\dotnet\skiasharp\skiasharp-package",
         )
+
+    def test_release_config_default_channels_are_explicit_ids(self):
+        self.assertEqual(
+            status.parse_default_channel_ids("[529][612]"),
+            [529, 612],
+        )
+        self.assertEqual(status.parse_default_channel_ids("[]"), [])
+
+    def test_historical_branch_forms_have_explicit_release_roles(self):
+        for branch in (
+            "release/4.150.4",
+            "release/4.151.3",
+            "release/4.152.0-rc.1",
+            "release/4.150.4-preview.1",
+            "release/4.151.3.1",
+        ):
+            with self.subTest(branch=branch):
+                self.assertEqual(
+                    status.normalize_release_branch(branch),
+                    branch,
+                )
+        for branch in ("release/4.150.x", "release/4.151.x"):
+            with self.subTest(branch=branch):
+                with self.assertRaisesRegex(
+                    status.StatusError,
+                    "integration/maintenance branch",
+                ):
+                    status.normalize_release_branch(branch)
 
     def test_azure_cli_uses_resolved_cmd_launcher(self):
         az_path = r"C:\Program Files\Microsoft SDKs\Azure\CLI2\wbin\az.CMD"
@@ -227,6 +261,34 @@ class PipelineStatusTests(unittest.TestCase):
                 "variables:\n  PREVIEW_LABEL: 'preview.1'\n",
                 encoding="ascii",
             )
+            (scripts / "azure-pipelines-package.yml").write_text(
+                "buildPipelineType: 'build'\n",
+                encoding="ascii",
+            )
+            (scripts / "azure-pipelines-tests.yml").write_text(
+                r"source: '\dotnet\skiasharp\skiasharp-package'"
+                "\n",
+                encoding="ascii",
+            )
+            shared = scripts / "infra" / "native" / "shared"
+            shared.mkdir(parents=True)
+            (shared / "set-build-variables.ps1").write_text(
+                "Set-BuildVariable DOTNET_FINAL_VERSION_KIND "
+                "$finalVersionKind\n",
+                encoding="ascii",
+            )
+            nuget = scripts / "infra" / "package" / "nuget"
+            nuget.mkdir(parents=True)
+            metadata = (
+                "<copyright>Microsoft Corporation</copyright>"
+                '<license type="expression">MIT</license>'
+                "<projectUrl>https://example.test</projectUrl>\n"
+            )
+            for package in ("NativeAssets", "NuGets", "Dependencies"):
+                (nuget / f"_{package}.nuspec").write_text(
+                    metadata,
+                    encoding="ascii",
+                )
             git(seed, "add", "scripts")
             git(seed, "commit", "-m", "Release")
             git(seed, "branch", BRANCH)
@@ -248,6 +310,10 @@ class PipelineStatusTests(unittest.TestCase):
                     "harfBuzzSharp": "14.2.1",
                     "previewLabel": "preview.1",
                 },
+            )
+            self.assertEqual(
+                repo.release_prerequisites(sha),
+                {"state": "ready", "missing": []},
             )
 
     def test_complete_chain_is_ready_with_exact_bar_assets(self):
@@ -282,6 +348,26 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["buildRun"]["runId"], 203)
         self.assertIsNone(report["testsRun"]["runId"])
 
+    def test_failed_build_without_mapping_is_actionable(self):
+        runs = complete_chain()
+        runs[1642][0]["result"] = "failed"
+        ado = FakeAdo(runs)
+        ado.release_config = lambda build_id: {
+            "barBuildId": BAR_BUILD_ID,
+            "defaultChannelIds": [],
+            "stable": False,
+        }
+        report = status.build_report(
+            COMMIT,
+            ado=ado,
+            repo=FakeRepo(),
+            darc=FakeDarc(),
+        )
+        self.assertEqual(
+            report["nextAction"],
+            "configure-default-channels",
+        )
+
     def test_waits_for_connected_tests(self):
         report = status.build_report(
             COMMIT,
@@ -305,14 +391,23 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["nextAction"], "retry-tests")
 
     def test_bar_waits_for_default_channel_asset_locations(self):
+        ado = complete_ado()
+        ado.release_config = lambda build_id: {
+            "barBuildId": BAR_BUILD_ID,
+            "defaultChannelIds": [],
+            "stable": False,
+        }
         report = status.build_report(
             COMMIT,
-            ado=complete_ado(),
+            ado=ado,
             repo=FakeRepo(),
             darc=FakeDarc(bar_record(channels=[], locations=[])),
         )
-        self.assertEqual(report["state"], "waiting")
-        self.assertEqual(report["nextAction"], "wait-for-bar-assets")
+        self.assertEqual(report["state"], "blocked")
+        self.assertEqual(
+            report["nextAction"],
+            "configure-default-channels",
+        )
         self.assertEqual(report["barBuild"]["channels"], [])
 
     def test_channel_names_do_not_select_release_assets(self):
@@ -328,6 +423,27 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(report["nextAction"], "start-release-testing")
 
+    def test_wrong_or_missing_signed_feed_route_is_blocked(self):
+        for locations in (
+            [],
+            [
+                "https://pkgs.dev.azure.com/dnceng/public/"
+                "_packaging/skiasharp-transport/nuget/v3/index.json"
+            ],
+        ):
+            with self.subTest(locations=locations):
+                report = status.build_report(
+                    COMMIT,
+                    ado=complete_ado(),
+                    repo=FakeRepo(),
+                    darc=FakeDarc(bar_record(locations=locations)),
+                )
+                self.assertEqual(report["state"], "blocked")
+                self.assertEqual(
+                    report["nextAction"],
+                    "configure-feed-routing",
+                )
+
     def test_stable_bar_uses_exact_package_versions(self):
         repo = FakeRepo()
         repo.release_inputs = lambda commit: {
@@ -338,7 +454,7 @@ class PipelineStatusTests(unittest.TestCase):
         ado = complete_ado()
         ado.release_config = lambda build_id: {
             "barBuildId": BAR_BUILD_ID,
-            "defaultChannels": "[529]",
+            "defaultChannelIds": [529],
             "stable": True,
         }
         record = bar_record(
@@ -366,6 +482,46 @@ class PipelineStatusTests(unittest.TestCase):
             },
         )
 
+    def test_historical_stable_and_rc_package_families(self):
+        cases = (
+            (
+                {"skiaSharp": "4.150.4", "harfBuzzSharp": "14.2.1.4",
+                 "previewLabel": "stable"},
+                "4.150.4",
+                "14.2.1.4",
+            ),
+            (
+                {"skiaSharp": "4.151.3", "harfBuzzSharp": "14.2.1.103",
+                 "previewLabel": "stable"},
+                "4.151.3",
+                "14.2.1.103",
+            ),
+            (
+                {"skiaSharp": "4.152.0", "harfBuzzSharp": "14.2.1.200",
+                 "previewLabel": "rc.1"},
+                "4.152.0-rc.1.26425.1",
+                "14.2.1.200-rc.1.26425.1",
+            ),
+        )
+        for inputs, skia_version, harfbuzz_version in cases:
+            with self.subTest(inputs=inputs):
+                record = bar_record(
+                    stable=inputs["previewLabel"] == "stable",
+                    skia_version=skia_version,
+                    harfbuzz_version=harfbuzz_version,
+                )
+                versions, _ = status.package_versions_from_bar(
+                    record,
+                    inputs,
+                )
+                self.assertEqual(
+                    versions["test"],
+                    {
+                        "SkiaSharp": skia_version,
+                        "HarfBuzzSharp": harfbuzz_version,
+                    },
+                )
+
     def test_bar_build_must_match_exact_azure_build(self):
         record = bar_record()
         record["azureDevOpsBuildId"] = 999
@@ -378,6 +534,34 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(report["nextAction"], "retry-bar-check")
         self.assertIn("azureDevOpsBuildId=999", report["warnings"][0])
+
+    def test_missing_historical_migration_surface_fails_closed(self):
+        repo = FakeRepo()
+        repo.release_prerequisites = lambda commit: {
+            "state": "missing",
+            "missing": [
+                {
+                    "id": "combined-build",
+                    "path": "scripts/azure-pipelines-package.yml",
+                    "detail": "backport combined Build",
+                }
+            ],
+        }
+        report = status.build_report(
+            COMMIT,
+            ado=FakeAdo({}),
+            repo=repo,
+            darc=FakeDarc(),
+        )
+        self.assertEqual(report["state"], "blocked")
+        self.assertEqual(
+            report["nextAction"],
+            "backport-arcade-release",
+        )
+        self.assertEqual(
+            report["migration"]["missing"][0]["id"],
+            "combined-build",
+        )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

@@ -79,6 +79,8 @@ def detect(root: Path, target: str) -> dict:
         "buildRunId": build_id,
         "testsRunId": tests_id,
         "barBuildId": bar_id,
+        "migration": status.get("migration"),
+        "defaultChannelIds": bar.get("defaultChannelIds"),
         "barAssets": bar.get("assets"),
         "buildNumber": build.get("buildNumber"),
         "testPackages": versions["test"],

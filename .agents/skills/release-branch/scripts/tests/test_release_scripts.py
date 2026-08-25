@@ -169,6 +169,50 @@ class ReleaseScriptTests(unittest.TestCase):
             "4.152.0-preview.2",
         )
 
+    def test_historical_maintenance_and_rc_branch_relationships(self):
+        for branch in ("release/4.150.x", "release/4.151.x"):
+            with self.subTest(branch=branch):
+                self.assertEqual(
+                    detector.normalize_integration_branch(branch),
+                    branch,
+                )
+
+        class RefRepo:
+            def __init__(self, refs):
+                self.refs = set(refs)
+
+            def ref_exists(self, ref):
+                return ref in self.refs
+
+        cases = (
+            (
+                "4.150.4",
+                {"refs/remotes/origin/release/4.150.x"},
+                "refs/remotes/origin/release/4.150.x",
+            ),
+            (
+                "4.151.3",
+                {"refs/remotes/origin/release/4.151.x"},
+                "refs/remotes/origin/release/4.151.x",
+            ),
+            (
+                "4.152.0-rc.1",
+                {"refs/remotes/origin/main"},
+                "refs/remotes/origin/main",
+            ),
+        )
+        for version, refs, expected in cases:
+            with self.subTest(version=version):
+                parsed = release.parse_release_version(version)
+                self.assertEqual(
+                    release.select_base_ref(
+                        RefRepo(refs),
+                        parsed,
+                        [],
+                    ),
+                    expected,
+                )
+
     def test_next_preview_refuses_stable(self):
         with self.assertRaisesRegex(detector.DetectionError, "stable branch"):
             detector.calculate_next_preview(

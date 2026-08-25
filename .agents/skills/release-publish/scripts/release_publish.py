@@ -37,6 +37,7 @@ TESTS_DEFINITION_ID = 1630
 # The core packages every BAR build must register exact versions and
 # non-empty asset locations for before publication can proceed.
 BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
+SIGNED_FEED_MARKER = "/_packaging/skiasharp/"
 
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
@@ -196,10 +197,11 @@ class ReleaseVersion:
                 )
             return
         match = re.fullmatch(
-            rf"{re.escape(self.raw)}\.(\d+)",
+            rf"{re.escape(self.raw)}\."
+            rf"(?:(?:\d{{5}}|\d{{8}})\.)?\d+",
             version,
         )
-        if not match or int(match.group(1)) == 0:
+        if not match or version.endswith(".0"):
             raise PublishError(
                 f"public version {version} does not match {self.raw}.BUILD"
             )
@@ -301,6 +303,12 @@ def validate_status_handoff(
         raise PublishError(
             f"release-status is not ready: {status.get('nextAction')}"
         )
+    migration = status.get("migration") or {}
+    if migration.get("state") != "ready":
+        raise PublishError(
+            "release-status did not verify the target branch's Arcade release "
+            "migration surface"
+        )
     build = status.get("buildRun") or {}
     tests = status.get("testsRun") or {}
     bar = status.get("barBuild") or {}
@@ -357,6 +365,10 @@ def validate_status_handoff(
         raise PublishError(
             f"BAR build {bar.get('id')} is not ready: {bar.get('state')}"
         )
+    if not bar.get("defaultChannelIds"):
+        raise PublishError(
+            f"BAR build {bar.get('id')} has no default-channel mapping"
+        )
     if bar.get("branch") != expected_branch:
         raise PublishError("BAR build does not use the release branch")
     if bar.get("buildNumber") != build.get("buildNumber"):
@@ -388,6 +400,14 @@ def validate_status_handoff(
             raise PublishError(
                 f"BAR build {bar.get('id')} has no recorded package "
                 f"locations for {package_id}"
+            )
+        if not any(
+            SIGNED_FEED_MARKER in str(location).lower()
+            for location in asset["locations"]
+        ):
+            raise PublishError(
+                f"BAR build {bar.get('id')} has no signed skiasharp feed "
+                f"location for {package_id}"
             )
     public_skia = versions["public"].get("SkiaSharp") or ""
     release.validate_public_version(public_skia)

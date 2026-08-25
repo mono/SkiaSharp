@@ -489,6 +489,10 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             "buildRunId": build_run_id,
             "testsRunId": args.expect_tests_run,
             "barBuildId": bar_build_id,
+            "migration": status.get("migration"),
+            "defaultChannelIds": handoff["bar"].get(
+                "defaultChannelIds"
+            ),
             "buildNumber": build_number,
             "barAssets": handoff["bar"]["assets"],
             "testPackages": handoff["versions"]["test"],

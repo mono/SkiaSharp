@@ -199,6 +199,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             "state": "ready",
             "nextAction": "start-release-testing",
             "warnings": ["example"],
+            "migration": {"state": "ready", "missing": []},
             "buildRun": {
                 "state": "succeeded",
                 "runId": 20,
@@ -211,6 +212,7 @@ class ReleaseTestPlanTests(unittest.TestCase):
             "barBuild": {
                 "id": 40,
                 "state": "ready",
+                "defaultChannelIds": [529],
                 "assets": {
                     "SkiaSharp": {
                         "version": "s",
@@ -234,6 +236,8 @@ class ReleaseTestPlanTests(unittest.TestCase):
         self.assertEqual(summary["buildRunId"], 20)
         self.assertEqual(summary["testsRunId"], 30)
         self.assertEqual(summary["barBuildId"], 40)
+        self.assertEqual(summary["defaultChannelIds"], [529])
+        self.assertEqual(summary["migration"]["state"], "ready")
         self.assertEqual(summary["warnings"], ["example"])
         self.assertNotIn("buildRun", summary)
         self.assertNotIn("testsRun", summary)

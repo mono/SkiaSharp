@@ -23,6 +23,9 @@ This skill is **Step 3 of 5**:
 - Run the read-only planner first and preserve its exact source commit, combined
   Build run, connected Tests run, BAR build ID, BAR asset locations, and paired
   package versions throughout testing.
+- Historical releases use the same matrix from their exact BAR product
+  packages. Do not require Apple symbol production or any other main-only
+  artifact unless the selected historical BAR explicitly records it as required.
 - Obtain user approval for the matrix before preparation or execution.
 - Test stable releases with the exact `X.Y.Z` assets recorded by BAR. Never
   synthesize a `-stable.{build}` version or select a newer feed package.

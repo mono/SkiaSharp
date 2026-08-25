@@ -34,6 +34,11 @@ class PublishReleaseTests(unittest.TestCase):
         self.assertEqual(preview.title, "Version 4.152.0 (Preview 2)")
         preview.validate_public_version("4.152.0-preview.2.3")
 
+        rc = publish.ReleaseVersion.parse("release/4.152.0-rc.1")
+        self.assertEqual(rc.release_type, "rc")
+        self.assertEqual(rc.title, "Version 4.152.0 (RC 1)")
+        rc.validate_public_version("4.152.0-rc.1.26425.1")
+
         stable = publish.ReleaseVersion.parse("release/4.152.0")
         self.assertEqual(stable.release_type, "stable")
         self.assertEqual(stable.title, "Version 4.152.0")
@@ -282,6 +287,63 @@ class PublishReleaseTests(unittest.TestCase):
                 expected_bar_build=30,
             )
 
+    def test_status_handoff_rejects_missing_default_channel_mapping(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["defaultChannelIds"] = []
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "no default-channel mapping",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_transport_only_route(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["assets"]["SkiaSharp"]["locations"] = [
+            "https://pkgs.dev.azure.com/dnceng/public/"
+            "_packaging/skiasharp-transport/nuget/v3/index.json"
+        ]
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "no signed skiasharp feed location",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_unverified_migration_surface(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["migration"] = {
+            "state": "missing",
+            "missing": [{"id": "combined-build"}],
+        }
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "migration surface",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
     def test_status_handoff_requires_exact_stable_versions(self):
         # Stable BAR package versions must be exact X.Y.Z, never a
         # X.Y.Z-stable.{build} pre-release suffix.
@@ -345,6 +407,7 @@ class PublishReleaseTests(unittest.TestCase):
             "branch": release.branch,
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
+            "migration": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": publish.BUILD_DEFINITION_ID,
@@ -365,20 +428,21 @@ class PublishReleaseTests(unittest.TestCase):
                 "buildDefinitionId": publish.BUILD_DEFINITION_ID,
                 "branch": "refs/heads/release/4.152.0",
                 "buildNumber": "4.152.0+4.152.0",
+                "defaultChannelIds": [529],
                 "channels": ["General Testing"],
                 "assets": {
                     "SkiaSharp": {
                         "version": "4.152.0",
                         "locations": [
-                            "https://pkgs.dev.azure.com/dnceng/"
-                            "_packaging/skiasharp"
+                            "https://pkgs.dev.azure.com/dnceng/public/"
+                            "_packaging/skiasharp/nuget/v3/index.json"
                         ],
                     },
                     "HarfBuzzSharp": {
                         "version": "1.0.0",
                         "locations": [
-                            "https://pkgs.dev.azure.com/dnceng/"
-                            "_packaging/skiasharp"
+                            "https://pkgs.dev.azure.com/dnceng/public/"
+                            "_packaging/skiasharp/nuget/v3/index.json"
                         ],
                     },
                 },

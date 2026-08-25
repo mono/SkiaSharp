@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 
+import importlib.util
 import json
 from pathlib import Path
+import sys
 import unittest
 
 
 ROOT = Path(__file__).resolve().parents[5]
+SCRIPT_PATH = Path(__file__).resolve().parent.parent / "pipeline-status.py"
+SPEC = importlib.util.spec_from_file_location(
+    "pipeline_status_contracts",
+    SCRIPT_PATH,
+)
+status = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = status
+SPEC.loader.exec_module(status)
 
 
 class RepositoryPipelineContractTests(unittest.TestCase):
@@ -43,6 +53,10 @@ class RepositoryPipelineContractTests(unittest.TestCase):
             data["areaPath"],
             r"internal\Dotnet-Core-Engineering",
         )
+
+    def test_current_tree_satisfies_minimum_release_backport(self):
+        report = status.GitRepository(ROOT).release_prerequisites("HEAD")
+        self.assertEqual(report, {"state": "ready", "missing": []})
 
 
 if __name__ == "__main__":

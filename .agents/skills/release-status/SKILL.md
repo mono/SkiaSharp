@@ -22,7 +22,14 @@ This skill is **Step 2 of 5**:
 - Use `pipeline-status.py` for all Git, Azure DevOps, Darc, and BAR queries.
 - This skill is read-only: it may fetch refs but never checks out a branch or
   queues, cancels, retries, promotes, or publishes anything.
-- Resolve a branch to its current remote tip; preserve a supplied commit exactly.
+- Resolve an exact release branch to its current remote tip; preserve a supplied
+  commit exactly. `release/X.Y.x` is an integration branch: return to
+  release-branch and cut an exact release branch before status tracking.
+- Verify the target commit contains the minimum behavioral Arcade backport:
+  combined Build role, folder-qualified Tests resource, and exact internal
+  release versioning, plus metadata required to validate the historical
+  transport package templates. Do not require Apple symbols or another
+  main-only feature; BAR runtime evidence proves signing and asset routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
@@ -51,13 +58,15 @@ versions and locations from that immutable BAR record. Stable assets are exact
 
 | `nextAction` | Response |
 |--------------|----------|
+| `backport-arcade-release` | Show every `migration.missing[]` prerequisite and stop before querying/selecting builds. |
 | `wait-for-build` | Report that the exact combined Build has not started or is running. |
 | `retry-build` | Show the authoritative failed/canceled Build run. |
 | `retry-bar-check` | Report the exact BAR registration or identity failure. |
 | `wait-for-tests-trigger` | Build passed; connected Tests have not started. |
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
-| `wait-for-bar-assets` | Standard Darc default-channel promotion has not yet recorded both exact asset locations. |
+| `configure-default-channels` | The exact Build has no default-channel mapping; configure the target release branch before retrying. |
+| `configure-feed-routing` | The BAR does not record both core packages on the signed `skiasharp` feed; configure routing before retrying. |
 | `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 
 Only `start-release-testing` is ready by default.
@@ -87,6 +96,7 @@ Render:
 
 **BAR build:** `{barBuild.id}` (`{barBuild.state}`)
 **BAR channels:** `{barBuild.channels}`
+**Default channel IDs:** `{barBuild.defaultChannelIds}`
 **Test packages:** SkiaSharp `{packageVersions.test.SkiaSharp}`,
 HarfBuzzSharp `{packageVersions.test.HarfBuzzSharp}`
 **Public versions:** SkiaSharp `{packageVersions.public.SkiaSharp}`,
@@ -97,6 +107,11 @@ HarfBuzzSharp `{packageVersions.public.HarfBuzzSharp}`
 Include both core assets' BAR-recorded locations, active/failed jobs, and every
 warning. Omit missing run rows/links. Do not independently query or replace the
 script-selected identity.
+
+Historical maintenance lines such as `release/4.150.x` and `release/4.151.x`
+remain Step 1 inputs. Their exact children (for example `release/4.150.4` and
+`release/4.151.3`) and exact prereleases such as `release/4.152.0-rc.1` become
+status inputs only after the minimum Arcade backport is present.
 
 For `start-release-testing`, invoke
 [release-testing](../release-testing/SKILL.md) with the complete `buildRun`,

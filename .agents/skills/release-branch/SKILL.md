@@ -46,6 +46,12 @@ identically named mono/skia branch at the exact pinned gitlink. Stable Build and
 BAR package versions are exact `X.Y.Z`; `stable` is only the pipeline sentinel
 that selects release versioning and is never emitted as a package suffix.
 
+Historical lines use the same relationship: `release/4.150.x` and
+`release/4.151.x` are integration/maintenance inputs that produce exact child
+branches such as `release/4.150.4` and `release/4.151.3`. An existing exact
+branch such as `release/4.152.0-rc.1` is not an integration branch and proceeds
+to release-status after its minimal Arcade release backport lands.
+
 ## Script contract
 
 | Script | Responsibility |
