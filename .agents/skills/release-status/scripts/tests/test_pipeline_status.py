@@ -249,14 +249,15 @@ class PipelineStatusTests(unittest.TestCase):
             if item["id"] == "real-pdb-artifacts"
         )
         contract = (
-            "if (Test-Path $symbolPath) { continue }\n"
-            "$packagePdbRoot = Join-Path $pdbArtifacts "
-            "$package.BaseName\n"
-            "if ($entryPath.StartsWith('ref/')) { continue }\n"
-            "$targetPath = Join-Path $packagePdbRoot $relativePath\n"
-            "throw 'PDB package path escapes its extraction root'\n"
-            "if ($pdbCount -eq 0) { Set-Content "
-            "(Join-Path $pdbArtifacts '.empty') '' }\n"
+            'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
+            "{ continue; }\n"
+            "var packagePdbRoot = Path.Combine "
+            "(pdbArtifactsDirectory.FullPath, packageBaseName);\n"
+            'if (entryPath.StartsWith ("ref/")) { continue; }\n'
+            "var targetPath = Path.Combine (packagePdbRoot, relativePath);\n"
+            'throw new Exception ("PDB package path escapes");\n'
+            "if (pdbCount == 0) "
+            'pdbArtifactsDirectory.CombineWithFilePath (".empty");\n'
         )
         self.assertTrue(
             status.migration_requirement_satisfied(
@@ -267,9 +268,49 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertFalse(
             status.migration_requirement_satisfied(
                 contract.replace(
-                    "if ($entryPath.StartsWith('ref/')) { continue }\n",
+                    'if (entryPath.StartsWith ("ref/")) { continue; }\n',
                     "",
                 ),
+                requirement,
+            )
+        )
+
+    def test_public_artifact_contract_rejects_cache(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "public-arcade-artifacts"
+        )
+        contract = (
+            "target: nuget\nname: nuget\nname: nuget_special\n"
+            "name: arcade_shipping\nname: arcade_nonshipping\n"
+            "name: PdbArtifacts\nisProduction: false\n"
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                contract,
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                contract + "enableCaching: true\n",
+                requirement,
+            )
+        )
+
+    def test_powershell_asset_assembler_must_be_absent(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "no-powershell-asset-assembler"
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(None, requirement)
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                "production helper",
                 requirement,
             )
         )
@@ -364,17 +405,45 @@ class PipelineStatusTests(unittest.TestCase):
             )
             package = scripts / "infra" / "package"
             package.mkdir(parents=True)
-            (package / "assemble-arcade-assets.ps1").write_text(
-                "$_.Name.Contains('.0.0.0-branch.')\n"
-                "Copy-Item $transportPackages.FullName $nonShipping\n"
-                "if (Test-Path $symbolPath) { continue }\n"
-                "$packagePdbRoot = Join-Path $pdbArtifacts "
-                "$package.BaseName\n"
-                "if ($entryPath.StartsWith('ref/')) { continue }\n"
-                "$targetPath = Join-Path $packagePdbRoot $relativePath\n"
-                "throw 'PDB package path escapes its extraction root'\n"
-                "if ($pdbCount -eq 0) { Set-Content "
-                "(Join-Path $pdbArtifacts '.empty') '' }\n",
+            (package / "nuget.cake").write_text(
+                "void PrepareArcadeAssets (\n"
+                'var transportMarker = $".0.0.0-{transportVersionKind}.";\n'
+                "CopyFileToDirectory (package, nonShipping);\n"
+                'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
+                "{ continue; }\n"
+                "var packagePdbRoot = Path.Combine "
+                "(pdbArtifactsDirectory.FullPath, packageBaseName);\n"
+                'if (entryPath.StartsWith ("ref/")) { continue; }\n'
+                "var targetPath = Path.Combine (packagePdbRoot, relativePath);\n"
+                'throw new Exception ("PDB package path escapes");\n'
+                "if (pdbCount == 0) "
+                'pdbArtifactsDirectory.CombineWithFilePath (".empty");\n',
+                encoding="ascii",
+            )
+            (seed / "build.cake").write_text(
+                'Task ("nuget").IsDependentOn ("assemble-arcade-assets");\n'
+                'Task ("assemble-arcade-assets");\n',
+                encoding="ascii",
+            )
+            (scripts / "azure-templates-stages-package.yml").write_text(
+                "target: nuget\n"
+                "name: nuget\n"
+                "name: nuget_special\n"
+                "name: arcade_shipping\n"
+                "name: arcade_nonshipping\n"
+                "name: PdbArtifacts\n"
+                "isProduction: false\n",
+                encoding="ascii",
+            )
+            (scripts / "azure-templates-stages-signing.yml").write_text(
+                "artifactName: arcade_shipping_signed\n"
+                "artifactName: arcade_shipping\n"
+                "stage: publish_assets\n"
+                "artifactName: arcade_shipping_signed\n"
+                "artifactName: arcade_nonshipping\n"
+                "dependsOn: generate_arcade_manifest\n"
+                "validateDependsOn:\n"
+                "  - publish_assets\n",
                 encoding="ascii",
             )
             infra_shared = scripts / "infra" / "shared"
@@ -405,7 +474,7 @@ class PipelineStatusTests(unittest.TestCase):
                     metadata,
                     encoding="ascii",
                 )
-            git(seed, "add", "scripts")
+            git(seed, "add", "scripts", "build.cake")
             git(seed, "commit", "-m", "Release")
             git(seed, "branch", BRANCH)
             git(seed, "remote", "add", "origin", str(remote))

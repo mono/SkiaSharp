@@ -75,35 +75,103 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
-        "id": "unique-transport-bar-assets",
-        "path": "scripts/infra/package/assemble-arcade-assets.ps1",
+        "id": "cake-arcade-assets",
+        "path": "scripts/infra/package/nuget.cake",
         "pattern": (
-            r"\.Name\.Contains\("
-            r"['\"]\.0\.0\.0-branch\.['\"].*"
-            r"Copy-Item\s+\$transportPackages\.FullName\s+\$nonShipping"
+            r"void\s+PrepareArcadeAssets\s*\(.*"
+            r"transportMarker\s*=\s*\$['\"]\.0\.0\.0-"
+            r"\{transportVersionKind\}\..*"
+            r"CopyFileToDirectory\s*\(\s*package,\s*nonShipping\s*\)"
         ),
         "detail": (
-            "backport the tested Arcade asset assembler with branch-only "
-            "NonShipping transport staging so BAR registers one version per "
-            "transport package ID"
+            "backport Cake Arcade asset assembly with one selected transport "
+            "version kind staged into NonShipping"
         ),
     },
     {
         "id": "real-pdb-artifacts",
-        "path": "scripts/infra/package/assemble-arcade-assets.ps1",
+        "path": "scripts/infra/package/nuget.cake",
         "pattern": (
-            r"Test-Path\s+\$symbolPath.*continue.*"
-            r"Join-Path\s+\$pdbArtifacts\s+\$package\.BaseName.*"
-            r"StartsWith\(['\"]ref/['\"].*"
-            r"Join-Path\s+\$packagePdbRoot\s+\$relativePath.*"
+            r"productNames\.Contains\s*\(.*\.symbols\.nupkg.*continue.*"
+            r"Path\.Combine\s*\(\s*pdbArtifactsDirectory\.FullPath,\s*"
+            r"packageBaseName\s*\).*"
+            r"entryPath\.StartsWith\s*\(\s*['\"]ref/['\"].*"
+            r"Path\.Combine\s*\(\s*packagePdbRoot,\s*relativePath\s*\).*"
             r"PDB package path escapes.*"
-            r"if\s*\(\$pdbCount\s+-eq\s+0\).*"
-            r"Set-Content.*['\"]\.empty['\"]"
+            r"if\s*\(\s*pdbCount\s*==\s*0\s*\).*"
+            r"pdbArtifactsDirectory\.CombineWithFilePath\s*\(\s*"
+            r"['\"]\.empty['\"]"
         ),
         "detail": (
-            "backport real loose PdbArtifacts assembly: preserve explicit "
+            "backport Cake loose PdbArtifacts assembly: preserve explicit "
             "symbol ownership, retain package/TFM/RID paths, exclude ref/**, "
             "guard traversal, and emit .empty only when no PDB exists"
+        ),
+    },
+    {
+        "id": "top-level-arcade-assembly",
+        "path": "build.cake",
+        "pattern": (
+            r"(?=.*Task\s*\(\s*['\"]assemble-arcade-assets['\"]\s*\))"
+            r"(?=.*Task\s*\(\s*['\"]nuget['\"]\s*\).*"
+            r"IsDependentOn\s*\(\s*['\"]assemble-arcade-assets['\"]\s*\))"
+        ),
+        "detail": (
+            "backport the top-level nuget dependency on Cake "
+            "assemble-arcade-assets"
+        ),
+    },
+    {
+        "id": "public-arcade-artifacts",
+        "path": "scripts/azure-templates-stages-package.yml",
+        "pattern": (
+            r"target:\s*nuget(?:\s|$).*"
+            r"name:\s*nuget(?:\s|$).*"
+            r"name:\s*nuget_special.*"
+            r"name:\s*arcade_shipping.*"
+            r"name:\s*arcade_nonshipping.*"
+            r"name:\s*PdbArtifacts.*"
+            r"isProduction:\s*false"
+        ),
+        "forbiddenPattern": (
+            r"package_special_windows|target:\s*nuget-special|"
+            r"cacheJob:|enableCaching|Build\.ArtifactStagingDirectory|"
+            r"Re-organize package artifacts"
+        ),
+        "detail": (
+            "backport one uncached aggregate public Package job that emits "
+            "nuget, nuget_special, arcade_shipping, arcade_nonshipping, and "
+            "non-production PdbArtifacts directly from Cake outputs"
+        ),
+    },
+    {
+        "id": "internal-arcade-publishing",
+        "path": "scripts/azure-templates-stages-signing.yml",
+        "pattern": (
+            r"artifactName:\s*arcade_shipping_signed.*"
+            r"artifactName:\s*arcade_shipping(?:\s|$).*"
+            r"stage:\s*publish_assets.*"
+            r"artifactName:\s*arcade_shipping_signed.*"
+            r"artifactName:\s*arcade_nonshipping.*"
+            r"dependsOn:\s*generate_arcade_manifest.*"
+            r"validateDependsOn:\s*-\s*publish_assets"
+        ),
+        "forbiddenPattern": (
+            r"artifactName:\s*(?:nuget_special|PdbArtifacts)|"
+            r"assemble-arcade-assets\.ps1"
+        ),
+        "detail": (
+            "backport signed-only arcade_shipping_signed plus separate "
+            "publish_assets/BAR registration using arcade_nonshipping"
+        ),
+    },
+    {
+        "id": "no-powershell-asset-assembler",
+        "path": "scripts/infra/package/assemble-arcade-assets.ps1",
+        "absent": True,
+        "detail": (
+            "remove the production PowerShell asset assembler after moving "
+            "the graph into Cake"
         ),
     },
     {
@@ -185,6 +253,8 @@ def migration_requirement_satisfied(
     content: str | None,
     requirement: dict,
 ) -> bool:
+    if requirement.get("absent", False):
+        return content is None
     if content is None or not re.search(
         requirement["pattern"],
         content,

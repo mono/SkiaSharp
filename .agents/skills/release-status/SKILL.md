@@ -27,15 +27,20 @@ This skill is **Step 2 of 5**:
   release-branch and cut an exact release branch before status tracking.
 - Verify the target commit contains the minimum behavioral Arcade backport:
   combined Build role, folder-qualified Tests resource, fail-closed exact
-  artifact selection, exact internal release versioning, plus metadata required
-  to validate the historical transport package templates and branch-only
-  transport staging so BAR contains one version per NonShipping package ID. The
-  same assembler must preserve explicit symbol ownership and produce real loose
-  PDBs with package/TFM/RID paths, excluding `ref/**`, guarding traversal, and
-  emitting `.empty` only when no PDB exists. Do not require Apple symbols or
-  another main-only feature. Historical package downloads must prefer the
-  branch transport identity before the commit alias; BAR runtime evidence then
-  proves signing and asset routing.
+  artifact selection, exact internal release versioning, and transport metadata.
+  The top-level `nuget` Cake graph must depend on `assemble-arcade-assets`; its
+  uncached aggregate Package emits public `nuget`, `nuget_special`,
+  `arcade_shipping`, `arcade_nonshipping`, and non-production `PdbArtifacts`
+  directly from Cake outputs. Internal signing transforms only
+  `arcade_shipping` into `arcade_shipping_signed`; separate `publish_assets`
+  combines signed Shipping with `arcade_nonshipping` for BAR. The Cake
+  assembler preserves explicit symbol ownership and loose PDB
+  package/TFM/RID paths, excludes `ref/**`, guards traversal, emits `.empty`
+  only when no PDB exists, and stages one NonShipping transport version per ID.
+  The production PowerShell assembler and split/cached legacy Package behavior
+  must be absent. Do not require Apple symbols or another main-only feature.
+  Historical downloads prefer branch transport before commit aliases; BAR
+  runtime evidence then proves signing and routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.

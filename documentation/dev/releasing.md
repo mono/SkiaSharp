@@ -270,8 +270,12 @@ proof. The canonical `nuget` artifact owns product and explicit symbol packages;
 aliases, while only branch aliases enter BAR. `PdbArtifacts` contains loose
 implementation/runtime PDBs extracted from signed packages that have no
 explicit symbol package, preserving package/version/TFM/RID paths and excluding
-`ref/**`; `.empty` is valid only when no eligible PDB exists. Release readiness
-still requires exact successful internal Build, connected Tests, BAR,
+`ref/**`; `.empty` is valid only when no eligible PDB exists. These public
+outputs come from one uncached aggregate Cake Package as `arcade_shipping`,
+`arcade_nonshipping`, and `PdbArtifacts`. Internal signing consumes only
+`arcade_shipping` and emits `arcade_shipping_signed`; a separate
+`publish_assets` stage combines it with `arcade_nonshipping` for BAR. Release
+readiness still requires exact successful internal Build, connected Tests, BAR,
 default-channel, signed-feed, and protected publisher evidence.
 
 ### Stage 3: Testing (release-testing skill)
