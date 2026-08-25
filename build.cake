@@ -19,6 +19,9 @@ foreach (var cake in GetFiles("native/*/build.cake"))
         .WithCriteria(!SKIP_BUILD)
         .Does(() => RunCake(localCake, "Default"));
 
+    if (native == "macos")
+        task.IsDependentOn("tests-apple-symbols");
+
     externalsTask.IsDependentOn(task);
 }
 
@@ -127,6 +130,10 @@ Task ("tests-wasm")
     .IsDependentOn ("externals-wasm")
     .Does (() => RunCake ("./scripts/infra/tests/tests-wasm.cake", "Default"));
 
+Task ("tests-apple-symbols")
+    .Description ("Run Apple native symbol UUID regression tests.")
+    .Does (() => RunCake ("./scripts/infra/native/apple/xcode-symbols.tests.cake", "Default"));
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET - pack NuGet packages (isolated via RunCake)
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +141,8 @@ Task ("tests-wasm")
 Task ("nuget")
     .Description ("Pack all NuGets.")
     .IsDependentOn ("nuget-normal")
-    .IsDependentOn ("nuget-special");
+    .IsDependentOn ("nuget-special")
+    .IsDependentOn ("nuget-validate");
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -144,6 +152,10 @@ Task ("nuget-normal")
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
+
+Task ("nuget-validate")
+    .Description ("Validate the packed NuGets, including the native symbol packages.")
+    .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-validate"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // DOCS - creating the xml, markdown and other documentation
