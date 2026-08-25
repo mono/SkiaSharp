@@ -18,6 +18,7 @@ namespace SkiaSharp
 				if (ownedObjects == null) {
 					lock (locker) {
 						ownedObjects ??= new ConcurrentDictionary<IntPtr, SKObject> (
+						    // perf-tuned small defaults; grows as needed
 							concurrencyLevel: 1, capacity: 4);
 					}
 				}
@@ -30,6 +31,7 @@ namespace SkiaSharp
 				if (keepAliveObjects == null) {
 					lock (locker) {
 						keepAliveObjects ??= new ConcurrentDictionary<IntPtr, SKObject> (
+						    // perf-tuned small defaults; grows as needed
 							concurrencyLevel: 1, capacity: 4);
 					}
 				}
