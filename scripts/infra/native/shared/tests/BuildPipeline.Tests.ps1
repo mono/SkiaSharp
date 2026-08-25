@@ -358,6 +358,17 @@ if ($winuiSdkInstalls -ne 3) {
     throw 'Every WinUI native job must install the VS MSBuild-compatible SDK side-by-side.'
 }
 
+$prepareStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-prepare.yml') -Raw
+$prepareDotNet = $prepareStages.IndexOf('task: UseDotNet@2')
+$prepareToolRestore = $prepareStages.IndexOf('pwsh: dotnet tool restore')
+$prepareAssetTests = $prepareStages.IndexOf('AssembleArcadeAssets.Tests.ps1')
+if ($prepareDotNet -lt 0 -or
+    $prepareToolRestore -le $prepareDotNet -or
+    $prepareAssetTests -le $prepareToolRestore -or
+    $prepareStages -notmatch 'version:\s*\$\(DOTNET_VERSION\)') {
+    throw 'Prepare must install the repository SDK before restoring Cake and running asset tests.'
+}
+
 $packageStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-package.yml') -Raw
 if ($packageStages -match 'packStableNuGets') {
     throw 'The Package stage must not select a second stable package variant.'
