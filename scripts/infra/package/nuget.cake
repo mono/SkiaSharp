@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Xml.Linq;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
@@ -9,10 +10,35 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+FilePath[] GetNuGetPackages (DirectoryPath directory, string description)
+{
+    if (!DirectoryExists (directory))
+        throw new Exception ($"The {description} NuGet directory does not exist: '{directory}'.");
+
+    var packages = GetFiles ($"{directory}/**/*.nupkg").ToArray ();
+    if (packages.Length == 0)
+        throw new Exception ($"No {description} NuGet packages were found in '{directory}'.");
+
+    var duplicates = packages
+        .GroupBy (package => package.GetFilename ().ToString (), StringComparer.OrdinalIgnoreCase)
+        .Where (group => group.Count () > 1)
+        .Select (group => group.Key)
+        .ToArray ();
+    if (duplicates.Length != 0)
+        throw new Exception (
+            $"{description} NuGet packages contain duplicate names: {string.Join (", ", duplicates)}");
+
+    return packages;
+}
+
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");
+
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
@@ -261,6 +287,105 @@ Task ("nuget-special")
             }
         }
     }
+});
+
+Task ("nuget-assemble-arcade-assets")
+    .Description ("Prepare Arcade package views and loose PDB artifacts.")
+    .Does (() =>
+{
+    var transportVersionKind = PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
+
+    var productPackages = GetNuGetPackages (OUTPUT_NUGETS_PATH, "product");
+    var allTransportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
+    var transportMarker = $".0.0.0-{transportVersionKind}.";
+    var transportPackages = allTransportPackages
+        .Where (package => package.GetFilename ().ToString ()
+            .Contains (transportMarker, StringComparison.OrdinalIgnoreCase))
+        .ToArray ();
+    if (transportPackages.Length == 0)
+        throw new Exception (
+            $"No {transportVersionKind}-versioned transport NuGet packages were found.");
+
+    var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("Shipping");
+    var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("NonShipping");
+    CleanDir (OUTPUT_ARCADE_ASSETS_PATH);
+    CleanDir (OUTPUT_PDB_ARTIFACTS_PATH);
+    EnsureDirectoryExists (shipping);
+    EnsureDirectoryExists (nonShipping);
+
+    foreach (var package in productPackages)
+        CopyFileToDirectory (package, shipping);
+    foreach (var package in transportPackages)
+        CopyFileToDirectory (package, nonShipping);
+
+    var productNames = new HashSet<string> (
+        productPackages.Select (package => package.GetFilename ().ToString ()),
+        StringComparer.OrdinalIgnoreCase);
+    var explicitSymbolCount = 0;
+    var pdbCount = 0;
+
+    foreach (var package in productPackages.Where (package =>
+        !package.GetFilename ().ToString ()
+            .EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase))) {
+        var packageBaseName = package.GetFilenameWithoutExtension ().ToString ();
+        if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) {
+            explicitSymbolCount++;
+            continue;
+        }
+
+        var packagePdbRoot = MakeAbsolute (OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));
+        var archive = ZipFile.OpenRead (package.FullPath);
+        try {
+            foreach (var entry in archive.Entries) {
+                var entryPath = entry.FullName.Replace ('\\', '/');
+                if (!entry.Name.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase) ||
+                    entryPath.StartsWith ("ref/", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                var targetPath = MakeAbsolute (packagePdbRoot
+                    .CombineWithFilePath (entryPath)
+                    .Collapse ());
+                var relativeTargetPath = packagePdbRoot.GetRelativePath (targetPath);
+                if (relativeTargetPath.Segments.Any (segment => segment == "..")) {
+                    throw new Exception (
+                        $"PDB package path escapes its extraction root: {entry.FullName}");
+                }
+
+                EnsureDirectoryExists (targetPath.GetDirectory ());
+                var sourceStream = entry.Open ();
+                var targetStream = Context.FileSystem.GetFile (targetPath).Open (
+                    System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write,
+                    System.IO.FileShare.None);
+                try {
+                    sourceStream.CopyTo (targetStream);
+                } finally {
+                    targetStream.Dispose ();
+                    sourceStream.Dispose ();
+                }
+                pdbCount++;
+            }
+        } finally {
+            archive.Dispose ();
+        }
+    }
+
+    if (pdbCount == 0) {
+        var emptyStream = Context.FileSystem
+            .GetFile (OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty"))
+            .Open (System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None);
+        emptyStream.Dispose ();
+    }
+
+    Information (
+        "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
+        "{2} loose PDB(s), {3} {4} transport package(s).",
+        productPackages.Length,
+        explicitSymbolCount,
+        pdbCount,
+        transportPackages.Length,
+        transportVersionKind);
 });
 
 RunTarget(TARGET);

@@ -16,7 +16,16 @@ stages:
           - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
           - pwsh: ./scripts/infra/native/shared/tests/SetBuildVariables.Tests.ps1
-            displayName: Validate build identity rules
+            displayName: Validate build pipeline contracts
+          - task: UseDotNet@2
+            displayName: Install .NET $(DOTNET_VERSION) for Cake validation
+            retryCountOnTaskFailure: 3
+            inputs:
+              packageType: sdk
+              version: $(DOTNET_VERSION)
+          - pwsh: dotnet tool restore
+            displayName: Restore .NET tools for Cake validation
+            retryCountOnTaskFailure: 3
           - pwsh: ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
             displayName: Validate Arcade asset assembly
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
