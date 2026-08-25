@@ -76,15 +76,16 @@ MIGRATION_REQUIREMENTS = (
     },
     {
         "id": "unique-transport-bar-assets",
-        "path": "scripts/azure-templates-stages-signing.yml",
+        "path": "scripts/infra/package/assemble-arcade-assets.ps1",
         "pattern": (
             r"\.Name\.Contains\("
             r"['\"]\.0\.0\.0-branch\.['\"].*"
             r"Copy-Item\s+\$transportPackages\.FullName\s+\$nonShipping"
         ),
         "detail": (
-            "backport branch-only NonShipping transport staging so BAR "
-            "registers one version per transport package ID"
+            "backport the tested Arcade asset assembler with branch-only "
+            "NonShipping transport staging so BAR registers one version per "
+            "transport package ID"
         ),
     },
     {

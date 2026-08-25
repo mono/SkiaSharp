@@ -330,7 +330,9 @@ class PipelineStatusTests(unittest.TestCase):
                 "supported\n",
                 encoding="ascii",
             )
-            (scripts / "azure-templates-stages-signing.yml").write_text(
+            package = scripts / "infra" / "package"
+            package.mkdir(parents=True)
+            (package / "assemble-arcade-assets.ps1").write_text(
                 "$_.Name.Contains('.0.0.0-branch.')\n"
                 "Copy-Item $transportPackages.FullName $nonShipping\n",
                 encoding="ascii",
@@ -351,8 +353,8 @@ class PipelineStatusTests(unittest.TestCase):
                 "$finalVersionKind\n",
                 encoding="ascii",
             )
-            nuget = scripts / "infra" / "package" / "nuget"
-            nuget.mkdir(parents=True)
+            nuget = package / "nuget"
+            nuget.mkdir()
             metadata = (
                 "<copyright>Microsoft Corporation</copyright>"
                 '<license type="expression">MIT</license>'

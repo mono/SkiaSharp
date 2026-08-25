@@ -29,8 +29,8 @@ This skill is **Step 2 of 5**:
   combined Build role, folder-qualified Tests resource, fail-closed exact
   artifact selection, exact internal release versioning, plus metadata required
   to validate the historical transport package templates and branch-only
-  transport staging so BAR contains one version per NonShipping package ID. Do
-  not require Apple symbols or another main-only feature. Historical package
+  transport staging so BAR contains one version per NonShipping package ID.
+  Do not require Apple symbols or another main-only feature. Historical package
   downloads must prefer the branch transport identity before the commit alias;
   BAR runtime evidence then proves signing and asset routing.
 - Select the newest combined Build attempt for that exact commit, then accept
