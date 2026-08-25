@@ -101,11 +101,7 @@ try {
 
     foreach ($name in @(
         '_NuGets.0.0.0-branch.main.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg'
-        '_NuGets.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.0.0.0-pr.4863.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-pr.4863.1.nupkg')) {
+        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg')) {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
@@ -139,12 +135,17 @@ try {
 
     $nonShipping = @(Get-ChildItem (Join-Path $packages 'NonShipping') -Filter '*.nupkg' -File)
     if ($nonShipping.Count -ne 2 -or
-        @($nonShipping | Where-Object Name -like '*-commit.*').Count -ne 0) {
+        @($nonShipping | Where-Object Name -notlike '*-branch.*').Count -ne 0) {
         throw 'Only the branch-versioned transport family may enter NonShipping.'
     }
 
     Copy-Item $product (Join-Path $prOutput 'nugets') -Recurse
-    Copy-Item $transport (Join-Path $prOutput 'nugets-special') -Recurse
+    $prTransport = New-Item (Join-Path $prOutput 'nugets-special') -ItemType Directory -Force
+    foreach ($name in @(
+        '_NuGets.0.0.0-pr.4863.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-pr.4863.1.nupkg')) {
+        New-Package (Join-Path $prTransport $name) @{ 'README.md' = $name }
+    }
     Invoke-Assembly -OutputDirectory $prOutput -PreviewLabel 'pr.4863'
 
     $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)

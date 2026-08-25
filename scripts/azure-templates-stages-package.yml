@@ -18,6 +18,9 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - name: native
+          postBuildSteps:
+            - pwsh: ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
+              displayName: Validate Arcade asset assembly
           publishArtifacts:
             - name: nuget
               path: '.\output\nugets'

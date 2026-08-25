@@ -11,8 +11,6 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
         version += PREVIEW_LABEL.ToLower();
     else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
         version += "branch." + GIT_BRANCH_NAME.Replace("/", ".").ToLower();
-    else if (!string.IsNullOrEmpty(GIT_SHA))
-        version += "commit." + GIT_SHA.ToLower();
     else
         version += "branch.main";
     version += ".*";
