@@ -113,7 +113,7 @@ stages:
             templateContext:
               outputs:
                 - output: pipelineArtifact
-                  displayName: Publish empty loose PDB artifact
+                  displayName: Publish loose PDB artifacts
                   artifactName: PdbArtifacts
                   targetPath: '$(Build.SourcesDirectory)\artifacts\pdbs'
                   isProduction: false
@@ -140,50 +140,11 @@ stages:
                   targetPath: '$(Agent.TempDirectory)\transport-nugets'
 
               - pwsh: |
-                  $signedSource = '$(Agent.TempDirectory)\signed-nugets'
-                  $transportSource = '$(Agent.TempDirectory)\transport-nugets'
-                  $packageRoot = '$(Build.SourcesDirectory)\artifacts\packages\Release'
-                  $shipping = Join-Path $packageRoot 'Shipping'
-                  $nonShipping = Join-Path $packageRoot 'NonShipping'
-                  $pdbArtifacts = '$(Build.SourcesDirectory)\artifacts\pdbs'
-
-                  Remove-Item $packageRoot -Recurse -Force -ErrorAction Ignore
-                  New-Item $shipping -ItemType Directory -Force | Out-Null
-                  New-Item $nonShipping -ItemType Directory -Force | Out-Null
-                  New-Item $pdbArtifacts -ItemType Directory -Force | Out-Null
-                  Set-Content (Join-Path $pdbArtifacts '.empty') ''
-
-                  $signedPackages = @(Get-ChildItem $signedSource -Filter '*.nupkg' -File -Recurse)
-                  if ($signedPackages.Count -eq 0) {
-                    throw "No signed NuGet packages were downloaded from artifact 'nuget_signed'."
-                  }
-                  Copy-Item $signedPackages.FullName $shipping
-
-                  $fallbackCount = 0
-                  $normalPackages = @(
-                    Get-ChildItem $shipping -Filter '*.nupkg' -File |
-                      Where-Object {
-                        -not $_.Name.EndsWith('.symbols.nupkg', [StringComparison]::OrdinalIgnoreCase)
-                      })
-                  foreach ($package in $normalPackages) {
-                    $symbolPath = Join-Path $shipping "$($package.BaseName).symbols.nupkg"
-                    if (-not (Test-Path $symbolPath -PathType Leaf)) {
-                      Copy-Item $package.FullName $symbolPath
-                      $fallbackCount++
-                    }
-                  }
-
-                  $transportPackages = @(
-                    Get-ChildItem $transportSource -Filter '*.nupkg' -File -Recurse |
-                      Where-Object {
-                        $_.Name.Contains('.0.0.0-branch.', [StringComparison]::OrdinalIgnoreCase)
-                      })
-                  if ($transportPackages.Count -eq 0) {
-                    throw "No branch-versioned transport NuGet packages were downloaded from artifact 'nuget_special'."
-                  }
-                  Copy-Item $transportPackages.FullName $nonShipping
-
-                  Write-Host "Arcade assets: $($signedPackages.Count) signed package(s), $fallbackCount symbol fallback(s), $($transportPackages.Count) unsigned transport package(s)."
+                  ./scripts/infra/package/assemble-arcade-assets.ps1 `
+                    -SignedPackageDirectory '$(Agent.TempDirectory)\signed-nugets' `
+                    -TransportPackageDirectory '$(Agent.TempDirectory)\transport-nugets' `
+                    -PackageRoot '$(Build.SourcesDirectory)\artifacts\packages\Release' `
+                    -PdbArtifactsDirectory '$(Build.SourcesDirectory)\artifacts\pdbs'
                 displayName: Assemble Arcade package views
 
               - powershell: >
