@@ -25,19 +25,24 @@ The wrapper packages use `0.0.0-{source}.{build}` versioning to identify their C
 
 Building samples requires two separate sets of arguments because the CI feed version and the NuGet package version are different things:
 
-### Step 1: Download — select which CI build to fetch
+### Step 1: Download packages
 
-The `docs-download-output` target resolves the CI wrapper package version using these args (checked in priority order):
+Promoted branch builds are available from the transport feed:
 
 | Argument | Resolves to | Use case |
 |----------|------------|----------|
-| `--previewLabel=pr.3553` | `0.0.0-pr.3553.*` | PR build |
-| `--gitSha=abc123` | `0.0.0-commit.abc123.*` | Specific commit |
 | `--gitBranch=release/3.119.4` | `0.0.0-branch.release.3.119.4.*` | Release branch |
 | `--gitBranch=main` | `0.0.0-branch.main.*` | Main branch (nightly) |
 | *(no args)* | `0.0.0-branch.main.*` | Default: latest from main |
 
 The `.*` wildcard selects the **latest** matching build from the feed.
+
+PR builds are not published to that feed. Use `scripts/get-skiasharp-pr.ps1`
+or `.sh`, then copy packages from
+`~/.skiasharp/hives/pr-{number}/packages/` to `output/nugets/`.
+
+For another exact public build, download its canonical `nuget` pipeline artifact
+and extract non-symbol packages to `output/nugets/`.
 
 ### Step 2: Build samples — use the real NuGet version
 
@@ -85,8 +90,6 @@ These arguments control **which CI build** to fetch from the feed:
 
 | Argument | Environment variable | Default | Purpose |
 |----------|---------------------|---------|---------|
-| `--previewLabel` | `PREVIEW_LABEL` | `preview` | When starts with `pr.`, fetches PR build |
-| `--gitSha` | `GIT_SHA` | `""` | Fetch by commit SHA |
 | `--gitBranch` | `GIT_BRANCH_NAME` | `""` | Fetch by branch name |
 | `--previewFeed` | — | SkiaSharp Transport URL | Override the NuGet feed |
 

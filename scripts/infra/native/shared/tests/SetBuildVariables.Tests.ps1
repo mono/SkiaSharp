@@ -570,6 +570,7 @@ if ($signingStages -notmatch 'name:\s*assemble_arcade_assets' -or
     $signingStages -notmatch 'artifactName:\s*nuget_signed' -or
     $signingStages -notmatch 'artifactName:\s*nuget_special' -or
     $signingStages -notmatch '\.symbols\.nupkg' -or
+    $signingStages -notmatch '\.0\.0\.0-branch\.' -or
     $signingStages -notmatch 'artifacts\\packages\\Release' -or
     $signingStages -notmatch "'Shipping'" -or
     $signingStages -notmatch "'NonShipping'" -or

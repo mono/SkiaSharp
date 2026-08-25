@@ -163,9 +163,13 @@ stages:
                     }
                   }
 
-                  $transportPackages = @(Get-ChildItem $transportSource -Filter '*.nupkg' -File -Recurse)
+                  $transportPackages = @(
+                    Get-ChildItem $transportSource -Filter '*.nupkg' -File -Recurse |
+                      Where-Object {
+                        $_.Name.Contains('.0.0.0-branch.', [StringComparison]::OrdinalIgnoreCase)
+                      })
                   if ($transportPackages.Count -eq 0) {
-                    throw "No transport NuGet packages were downloaded from artifact 'nuget_special'."
+                    throw "No branch-versioned transport NuGet packages were downloaded from artifact 'nuget_special'."
                   }
                   Copy-Item $transportPackages.FullName $nonShipping
 

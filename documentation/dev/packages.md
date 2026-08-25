@@ -152,6 +152,9 @@ packages are filled by byte-identical copies of already-signed packages.
 symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
 `DO-NOT-SIGN, DO-NOT-UNPACK`.
 
+Official BARs publish one branch-versioned transport package per ID. Commit
+aliases remain available in the `nuget_special` pipeline artifact.
+
 See [Releasing](releasing.md) for release branches, BAR selection, testing, and
 NuGet.org publication.
 
