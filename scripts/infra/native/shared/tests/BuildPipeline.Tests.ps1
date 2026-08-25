@@ -551,7 +551,10 @@ if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
 if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageScript -notmatch 'ZipFile\.OpenRead' -or
     $packageScript -notmatch 'transportVersionKind' -or
-    $packageScript -notmatch 'entryPath\.StartsWith\s*\(\s*"ref/"') {
+    $packageScript -notmatch 'entryPath\.StartsWith\s*\(\s*"ref/"' -or
+    $packageScript -notmatch 'CombineWithFilePath' -or
+    $packageScript -notmatch 'GetRelativePath' -or
+    $packageScript -match 'System\.IO\.Path') {
     throw 'The NuGet Cake graph must prepare Arcade package views and loose PDB artifacts.'
 }
 $rootCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw

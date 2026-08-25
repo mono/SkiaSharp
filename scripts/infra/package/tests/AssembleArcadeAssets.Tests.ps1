@@ -46,6 +46,8 @@ $emptyOutput = Join-Path $root 'empty'
 $emptyProduct = Join-Path $emptyOutput 'nugets'
 $emptyPackages = Join-Path $emptyOutput 'arcade-assets'
 $emptyPdbs = Join-Path $emptyOutput 'pdbs'
+$escapingOutput = Join-Path $root 'escaping'
+$escapingProduct = Join-Path $escapingOutput 'nugets'
 $cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
 
 function Invoke-Assembly {
@@ -53,7 +55,9 @@ function Invoke-Assembly {
         [Parameter(Mandatory)]
         [string] $OutputDirectory,
 
-        [string] $PreviewLabel = 'preview.0'
+        [string] $PreviewLabel = 'preview.0',
+
+        [switch] $ExpectFailure
     )
 
     & dotnet cake $cake `
@@ -61,7 +65,11 @@ function Invoke-Assembly {
         "--outputPath=$OutputDirectory" `
         "--previewLabel=$PreviewLabel" `
         --verbosity=quiet
-    if ($LASTEXITCODE -ne 0) {
+    if ($ExpectFailure) {
+        if ($LASTEXITCODE -eq 0) {
+            throw 'Cake asset assembly unexpectedly accepted an escaping PDB path.'
+        }
+    } elseif ($LASTEXITCODE -ne 0) {
         throw "Cake asset assembly failed with exit code $LASTEXITCODE."
     }
 }
@@ -71,6 +79,8 @@ try {
     New-Item $transport -ItemType Directory -Force | Out-Null
     New-Item $emptyProduct -ItemType Directory -Force | Out-Null
     New-Item (Join-Path $emptyOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $escapingProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $escapingOutput 'nugets-special') -ItemType Directory -Force | Out-Null
 
     New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
@@ -151,6 +161,15 @@ try {
     $emptyPdbFiles = @(Get-ChildItem $emptyPdbs -File -Recurse -Force)
     if ($emptyPdbFiles.Count -ne 1 -or $emptyPdbFiles[0].Name -ne '.empty') {
         throw 'PdbArtifacts must contain only .empty when no eligible PDB exists.'
+    }
+
+    New-Package (Join-Path $escapingProduct 'Escaping.1.0.0.nupkg') @{
+        '../escape.pdb' = 'escape'
+    }
+    Copy-Item (Join-Path $transport '*') (Join-Path $escapingOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $escapingOutput -ExpectFailure
+    if (Test-Path (Join-Path $escapingOutput 'pdbs/escape.pdb')) {
+        throw 'An escaping PDB path wrote outside its package extraction root.'
     }
 
     Write-Host 'Arcade asset assembly tests passed.'
