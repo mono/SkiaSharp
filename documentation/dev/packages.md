@@ -145,7 +145,8 @@ publishes:
 It also publishes the deterministic release inputs created by Cake:
 
 - `arcade_shipping` — product and explicit symbol packages ready for signing;
-- `arcade_nonshipping` — the selected unsigned transport family ready for BAR;
+- `arcade_nonshipping` — the run's single unsigned transport family: PR-versioned
+  for PR artifact validation or branch-versioned for official BAR registration;
 - `PdbArtifacts` — loose implementation/runtime PDBs for product packages that
   do not have an explicit symbol package. This is marked `isProduction: false`
   for 1ES artifact metadata; it does not change Arcade shipping classification.
