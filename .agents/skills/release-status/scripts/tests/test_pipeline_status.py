@@ -215,7 +215,7 @@ class PipelineStatusTests(unittest.TestCase):
             )
         )
 
-    def test_package_output_root_accepts_source_or_historical_spelling(self):
+    def test_package_output_root_requires_canonical_spelling(self):
         requirement = next(
             item
             for item in status.MIGRATION_REQUIREMENTS
@@ -237,25 +237,18 @@ class PipelineStatusTests(unittest.TestCase):
 
         self.assertTrue(
             status.migration_requirement_satisfied(
-                contract("OUTPUT_PATH"),
+                contract("ROOT_OUTPUT_PATH"),
                 requirement,
             )
         )
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                contract("PACKAGE_OUTPUT_PATH"),
-                requirement,
-            )
-        )
-        self.assertFalse(
-            status.migration_requirement_satisfied(
-                contract("PACKAGE_OUTPUT_PATH").replace(
-                    "OUTPUT_PDB_ARTIFACTS_PATH = PACKAGE_OUTPUT_PATH",
-                    "OUTPUT_PDB_ARTIFACTS_PATH = OUTPUT_PATH",
-                ),
-                requirement,
-            )
-        )
+        for legacy in ("OUTPUT_PATH", "PACKAGE_OUTPUT_PATH"):
+            with self.subTest(legacy=legacy):
+                self.assertFalse(
+                    status.migration_requirement_satisfied(
+                        contract(legacy),
+                        requirement,
+                    )
+                )
 
     def test_transport_download_has_no_commit_fallback(self):
         requirement = next(
@@ -559,16 +552,16 @@ class PipelineStatusTests(unittest.TestCase):
             )
             infra_shared = scripts / "infra" / "shared"
             (infra_shared / "shared.cake").write_text(
-                'DirectoryPath OUTPUT_PATH = MakeAbsolute(Directory('
+                'DirectoryPath ROOT_OUTPUT_PATH = MakeAbsolute(Directory('
                 'Argument("outputPath", "output")));\n'
                 'DirectoryPath OUTPUT_NUGETS_PATH = '
-                'OUTPUT_PATH.Combine("nugets");\n'
+                'ROOT_OUTPUT_PATH.Combine("nugets");\n'
                 'DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = '
-                'OUTPUT_PATH.Combine("nugets-special");\n'
+                'ROOT_OUTPUT_PATH.Combine("nugets-special");\n'
                 'DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = '
-                'OUTPUT_PATH.Combine("arcade-assets");\n'
+                'ROOT_OUTPUT_PATH.Combine("arcade-assets");\n'
                 'DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = '
-                'OUTPUT_PATH.Combine("pdbs");\n',
+                'ROOT_OUTPUT_PATH.Combine("pdbs");\n',
                 encoding="ascii",
             )
             nuget = package / "nuget"

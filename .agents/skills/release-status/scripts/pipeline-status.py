@@ -78,8 +78,7 @@ MIGRATION_REQUIREMENTS = (
         "id": "package-output-root",
         "path": "scripts/infra/shared/shared.cake",
         "pattern": (
-            r"DirectoryPath\s+(?P<packageRoot>"
-            r"OUTPUT_PATH|PACKAGE_OUTPUT_PATH)\s*=\s*"
+            r"DirectoryPath\s+(?P<packageRoot>ROOT_OUTPUT_PATH)\s*=\s*"
             r"MakeAbsolute\s*\(\s*Directory\s*\(\s*"
             r"Argument\s*\(\s*['\"]outputPath['\"].*"
             r"OUTPUT_NUGETS_PATH\s*=\s*(?P=packageRoot)\.Combine\s*\("
@@ -92,10 +91,9 @@ MIGRATION_REQUIREMENTS = (
             r"\s*\(\s*['\"]pdbs['\"]"
         ),
         "detail": (
-            "backport one consistent package output root: OUTPUT_PATH on "
-            "source/main or PACKAGE_OUTPUT_PATH on historical lines with "
-            "native Cake globals; preserve --outputPath and all derived "
-            "package directories"
+            "backport canonical ROOT_OUTPUT_PATH to avoid native Cake global "
+            "collisions while preserving --outputPath and all derived package "
+            "directories"
         ),
     },
     {
