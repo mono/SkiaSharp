@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Xml.Linq;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
@@ -8,6 +9,27 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+FilePath[] GetNuGetPackages (DirectoryPath directory, string description)
+{
+    if (!DirectoryExists (directory))
+        throw new Exception ($"The {description} NuGet directory does not exist: '{directory}'.");
+
+    var packages = GetFiles ($"{directory}/**/*.nupkg").ToArray ();
+    if (packages.Length == 0)
+        throw new Exception ($"No {description} NuGet packages were found in '{directory}'.");
+
+    var duplicates = packages
+        .GroupBy (package => package.GetFilename ().ToString (), StringComparer.OrdinalIgnoreCase)
+        .Where (group => group.Count () > 1)
+        .Select (group => group.Key)
+        .ToArray ();
+    if (duplicates.Length != 0)
+        throw new Exception (
+            $"{description} NuGet packages contain duplicate names: {string.Join (", ", duplicates)}");
+
+    return packages;
+}
 
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
@@ -265,6 +287,111 @@ Task ("nuget-special")
             }
         }
     }
+});
+
+Task ("nuget-assemble-arcade-assets")
+    .Description ("Prepare Arcade package views and loose PDB artifacts.")
+    .Does (() =>
+{
+    var productPackageDirectory = MakeAbsolute (Directory (Argument ("productPackageDirectory", OUTPUT_NUGETS_PATH.FullPath)));
+    var transportPackageDirectory = MakeAbsolute (Directory (Argument ("transportPackageDirectory", OUTPUT_SPECIAL_NUGETS_PATH.FullPath)));
+    var packageRoot = MakeAbsolute (Directory (Argument ("packageRoot", OUTPUT_ARCADE_ASSETS_PATH.FullPath)));
+    var pdbArtifactsDirectory = MakeAbsolute (Directory (Argument ("pdbArtifactsDirectory", OUTPUT_PDB_ARTIFACTS_PATH.FullPath)));
+    var defaultTransportVersionKind = PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
+    var transportVersionKind = Argument ("transportVersionKind", defaultTransportVersionKind).ToLowerInvariant ();
+
+    if (transportVersionKind != "branch" && transportVersionKind != "pr")
+        throw new Exception (
+            $"Unsupported transport version kind '{transportVersionKind}'. Expected 'branch' or 'pr'.");
+
+    var productPackages = GetNuGetPackages (productPackageDirectory, "product");
+    var allTransportPackages = GetNuGetPackages (transportPackageDirectory, "transport");
+    var transportMarker = $".0.0.0-{transportVersionKind}.";
+    var transportPackages = allTransportPackages
+        .Where (package => package.GetFilename ().ToString ()
+            .Contains (transportMarker, StringComparison.OrdinalIgnoreCase))
+        .ToArray ();
+    if (transportPackages.Length == 0)
+        throw new Exception (
+            $"No {transportVersionKind}-versioned transport NuGet packages were found.");
+
+    var shipping = packageRoot.Combine ("Shipping");
+    var nonShipping = packageRoot.Combine ("NonShipping");
+    CleanDir (packageRoot);
+    CleanDir (pdbArtifactsDirectory);
+    EnsureDirectoryExists (shipping);
+    EnsureDirectoryExists (nonShipping);
+
+    foreach (var package in productPackages)
+        CopyFileToDirectory (package, shipping);
+    foreach (var package in transportPackages)
+        CopyFileToDirectory (package, nonShipping);
+
+    var productNames = new HashSet<string> (
+        productPackages.Select (package => package.GetFilename ().ToString ()),
+        StringComparer.OrdinalIgnoreCase);
+    var explicitSymbolCount = 0;
+    var pdbCount = 0;
+
+    foreach (var package in productPackages.Where (package =>
+        !package.GetFilename ().ToString ()
+            .EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase))) {
+        var packageBaseName = package.GetFilenameWithoutExtension ().ToString ();
+        if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) {
+            explicitSymbolCount++;
+            continue;
+        }
+
+        var packagePdbRoot = System.IO.Path.GetFullPath (
+            System.IO.Path.Combine (pdbArtifactsDirectory.FullPath, packageBaseName));
+        var archive = ZipFile.OpenRead (package.FullPath);
+        try {
+            foreach (var entry in archive.Entries) {
+                var entryPath = entry.FullName.Replace ('\\', '/');
+                if (!entry.Name.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase) ||
+                    entryPath.StartsWith ("ref/", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                var relativePath = entryPath.Replace ('/', System.IO.Path.DirectorySeparatorChar);
+                var targetPath = System.IO.Path.GetFullPath (
+                    System.IO.Path.Combine (packagePdbRoot, relativePath));
+                if (!targetPath.StartsWith (
+                    packagePdbRoot + System.IO.Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase)) {
+                    throw new Exception (
+                        $"PDB package path escapes its extraction root: {entry.FullName}");
+                }
+
+                System.IO.Directory.CreateDirectory (System.IO.Path.GetDirectoryName (targetPath));
+                var sourceStream = entry.Open ();
+                var targetStream = System.IO.File.Create (targetPath);
+                try {
+                    sourceStream.CopyTo (targetStream);
+                } finally {
+                    targetStream.Dispose ();
+                    sourceStream.Dispose ();
+                }
+                pdbCount++;
+            }
+        } finally {
+            archive.Dispose ();
+        }
+    }
+
+    if (pdbCount == 0)
+        System.IO.File.WriteAllText (
+            pdbArtifactsDirectory.CombineWithFilePath (".empty").FullPath,
+            "");
+
+    Information (
+        "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
+        "{2} loose PDB(s), {3} {4} transport package(s).",
+        productPackages.Length,
+        explicitSymbolCount,
+        pdbCount,
+        transportPackages.Length,
+        transportVersionKind);
 });
 
 RunTarget(TARGET);

@@ -84,6 +84,8 @@ FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.c
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
 DirectoryPath OUTPUT_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets"));
 DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/nugets-special"));
+DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/arcade-assets"));
+DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = MakeAbsolute(ROOT_PATH.Combine("output/pdbs"));
 DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
 DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
