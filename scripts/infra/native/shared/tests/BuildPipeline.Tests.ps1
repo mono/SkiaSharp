@@ -533,16 +533,15 @@ if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
     $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {
     throw 'NuGet symbol packages must remain beside normal packages in the unified artifact.'
 }
-if ($packageScript -notmatch 'Task\s*\(\s*"assemble-arcade-assets"\s*\)' -or
-    $packageScript -notmatch 'PrepareArcadeAssets' -or
+if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageScript -notmatch 'ZipFile\.OpenRead' -or
     $packageScript -notmatch 'transportVersionKind' -or
     $packageScript -notmatch 'entryPath\.StartsWith\s*\(\s*"ref/"') {
     throw 'The NuGet Cake graph must prepare Arcade package views and loose PDB artifacts.'
 }
 $rootCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw
-if ($rootCake -notmatch 'Task\s*\(\s*"assemble-arcade-assets"\s*\)' -or
-    $rootCake -notmatch '(?s)Task\s*\(\s*"nuget"\s*\).*?IsDependentOn\s*\(\s*"assemble-arcade-assets"\s*\)') {
+if ($rootCake -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
+    $rootCake -notmatch '(?s)Task\s*\(\s*"nuget"\s*\).*?IsDependentOn\s*\(\s*"nuget-assemble-arcade-assets"\s*\)') {
     throw 'The top-level nuget target must include Arcade asset assembly.'
 }
 if (Test-Path (Join-Path $repoRoot 'scripts/infra/package/assemble-arcade-assets.ps1')) {

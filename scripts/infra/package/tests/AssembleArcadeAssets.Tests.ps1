@@ -63,7 +63,7 @@ function Invoke-Assembly {
     )
 
     & dotnet cake $cake `
-        --target=assemble-arcade-assets `
+        --target=nuget-assemble-arcade-assets `
         "--productPackageDirectory=$ProductPackageDirectory" `
         "--transportPackageDirectory=$TransportPackageDirectory" `
         "--packageRoot=$PackageRoot" `
