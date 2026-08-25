@@ -30,8 +30,9 @@ This skill is **Step 2 of 5**:
   artifact selection, exact internal release versioning, plus metadata required
   to validate the historical transport package templates and branch-only
   transport staging so BAR contains one version per NonShipping package ID. Do
-  not require Apple symbols or another main-only feature; BAR runtime evidence
-  proves signing and asset routing.
+  not require Apple symbols or another main-only feature. Historical package
+  downloads must prefer the branch transport identity before the commit alias;
+  BAR runtime evidence then proves signing and asset routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.

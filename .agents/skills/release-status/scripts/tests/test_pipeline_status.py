@@ -215,6 +215,33 @@ class PipelineStatusTests(unittest.TestCase):
             )
         )
 
+    def test_transport_download_requires_branch_before_commit(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "branch-first-transport-download"
+        )
+        branch_first = (
+            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
+            "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
+        )
+        commit_first = (
+            "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
+            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                branch_first,
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                commit_first,
+                requirement,
+            )
+        )
+
     def test_historical_branch_forms_have_explicit_release_roles(self):
         for branch in (
             "release/4.150.3",
@@ -306,6 +333,15 @@ class PipelineStatusTests(unittest.TestCase):
             (scripts / "azure-templates-stages-signing.yml").write_text(
                 "$_.Name.Contains('.0.0.0-branch.')\n"
                 "Copy-Item $transportPackages.FullName $nonShipping\n",
+                encoding="ascii",
+            )
+            infra_shared = scripts / "infra" / "shared"
+            infra_shared.mkdir(parents=True)
+            (infra_shared / "download.cake").write_text(
+                "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
+                "    version += \"branch.\";\n"
+                "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
+                "    version += \"commit.\";\n",
                 encoding="ascii",
             )
             shared = scripts / "infra" / "native" / "shared"

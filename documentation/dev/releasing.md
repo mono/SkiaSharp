@@ -260,8 +260,9 @@ release-tooling prerequisites.
 
 Historical BARs must also contain only one branch-versioned NonShipping
 transport asset per package ID. Commit aliases may remain in the pipeline
-artifact, but release status rejects a BAR that exposes both branch and commit
-versions for the same transport ID.
+artifact, but package downloads prefer the branch identity and release status
+rejects a BAR that exposes both branch and commit versions for the same
+transport ID.
 
 ### Stage 3: Testing (release-testing skill)
 

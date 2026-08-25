@@ -87,6 +87,18 @@ MIGRATION_REQUIREMENTS = (
             "registers one version per transport package ID"
         ),
     },
+    {
+        "id": "branch-first-transport-download",
+        "path": "scripts/infra/shared/download.cake",
+        "pattern": (
+            r"else if \(!string\.IsNullOrEmpty\(GIT_BRANCH_NAME\)\).*"
+            r"else if \(!string\.IsNullOrEmpty\(GIT_SHA\)\)"
+        ),
+        "detail": (
+            "backport branch-before-commit transport package lookup so "
+            "release builds consume the identity promoted to BAR"
+        ),
+    },
     *(
         {
             "id": f"{package}-transport-metadata",
