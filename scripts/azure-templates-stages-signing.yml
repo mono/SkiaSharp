@@ -110,6 +110,13 @@ stages:
               publish:
                 logs:
                   name: arcade_asset_logs
+            templateContext:
+              outputs:
+                - output: pipelineArtifact
+                  displayName: Publish empty loose PDB artifact
+                  artifactName: PdbArtifacts
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\pdbs'
+                  isProduction: false
             preSteps:
               - checkout: self
                 clean: true
@@ -138,10 +145,13 @@ stages:
                   $packageRoot = '$(Build.SourcesDirectory)\artifacts\packages\Release'
                   $shipping = Join-Path $packageRoot 'Shipping'
                   $nonShipping = Join-Path $packageRoot 'NonShipping'
+                  $pdbArtifacts = '$(Build.SourcesDirectory)\artifacts\pdbs'
 
                   Remove-Item $packageRoot -Recurse -Force -ErrorAction Ignore
                   New-Item $shipping -ItemType Directory -Force | Out-Null
                   New-Item $nonShipping -ItemType Directory -Force | Out-Null
+                  New-Item $pdbArtifacts -ItemType Directory -Force | Out-Null
+                  Set-Content (Join-Path $pdbArtifacts '.empty') ''
 
                   $signedPackages = @(Get-ChildItem $signedSource -Filter '*.nupkg' -File -Recurse)
                   if ($signedPackages.Count -eq 0) {

@@ -569,6 +569,7 @@ if ($signingStages -notmatch 'name:\s*assemble_arcade_assets' -or
     $signingStages -notmatch 'dependsOn:\s*sign_nugets' -or
     $signingStages -notmatch 'artifactName:\s*nuget_signed' -or
     $signingStages -notmatch 'artifactName:\s*nuget_special' -or
+    $signingStages -notmatch 'artifactName:\s*PdbArtifacts' -or
     $signingStages -notmatch '\.symbols\.nupkg' -or
     $signingStages -notmatch '\.0\.0\.0-branch\.' -or
     $signingStages -notmatch 'artifacts\\packages\\Release' -or
