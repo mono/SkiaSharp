@@ -191,6 +191,28 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(status.parse_default_channel_ids("[]"), [])
 
+    def test_exact_artifact_selector_rejects_mutable_assignment(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "exact-artifact-selection"
+        )
+        marker = (
+            "Mutable latestFromBranch artifact selection is not supported"
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                marker,
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                marker + "\n$versionType = 'latestFromBranch'\n",
+                requirement,
+            )
+        )
+
     def test_historical_branch_forms_have_explicit_release_roles(self):
         for branch in (
             "release/4.150.4",
@@ -268,6 +290,13 @@ class PipelineStatusTests(unittest.TestCase):
             (scripts / "azure-pipelines-tests.yml").write_text(
                 r"source: '\dotnet\skiasharp\skiasharp-package'"
                 "\n",
+                encoding="ascii",
+            )
+            (
+                scripts / "azure-templates-steps-download-artifacts.yml"
+            ).write_text(
+                "Mutable latestFromBranch artifact selection is not "
+                "supported\n",
                 encoding="ascii",
             )
             shared = scripts / "infra" / "native" / "shared"

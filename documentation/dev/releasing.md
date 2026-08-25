@@ -251,10 +251,11 @@ publication.
 Historical maintenance lines (`release/X.Y.x`) remain release-branch inputs.
 After an exact child or prerelease branch is cut, release status first verifies
 that commit has the minimal combined Build, connected Tests, and exact-version
-Arcade backport. It then fails closed until that branch has default-channel
-mapping and signed `skiasharp` feed routing. Main-only production features such
-as Apple symbol generation are not release-tooling prerequisites for a
-historical branch.
+Arcade backport, including rejection of mutable `latestFromBranch` artifact
+selection. It then fails closed until that branch has default-channel mapping
+and signed `skiasharp` feed routing. Main-only production features such as Apple
+symbol generation are not release-tooling prerequisites for a historical
+branch.
 
 ### Stage 3: Testing (release-testing skill)
 

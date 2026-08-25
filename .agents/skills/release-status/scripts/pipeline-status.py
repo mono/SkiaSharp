@@ -49,6 +49,20 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
+        "id": "exact-artifact-selection",
+        "path": "scripts/azure-templates-steps-download-artifacts.yml",
+        "pattern": (
+            r"Mutable latestFromBranch artifact selection is not supported"
+        ),
+        "forbiddenPattern": (
+            r"\$versionType\s*=\s*['\"]latestFromBranch['\"]"
+        ),
+        "detail": (
+            "backport the fail-closed exact Build artifact selector and "
+            "remove mutable latestFromBranch assignment"
+        ),
+    },
+    {
         "id": "exact-release-versioning",
         "path": "scripts/infra/native/shared/set-build-variables.ps1",
         "pattern": (
@@ -121,6 +135,24 @@ def normalize_release_branch(value: str) -> str:
 
 def parse_default_channel_ids(value: str) -> list[int]:
     return [int(item) for item in re.findall(r"\d+", value)]
+
+
+def migration_requirement_satisfied(
+    content: str | None,
+    requirement: dict,
+) -> bool:
+    if content is None or not re.search(
+        requirement["pattern"],
+        content,
+        re.MULTILINE | re.DOTALL,
+    ):
+        return False
+    forbidden = requirement.get("forbiddenPattern")
+    return forbidden is None or re.search(
+        forbidden,
+        content,
+        re.MULTILINE | re.DOTALL,
+    ) is None
 
 
 def run(
@@ -404,10 +436,9 @@ class GitRepository:
                     else None
                 )
             content = cache[path]
-            if content is None or not re.search(
-                requirement["pattern"],
+            if not migration_requirement_satisfied(
                 content,
-                re.MULTILINE | re.DOTALL,
+                requirement,
             ):
                 missing.append(
                     {

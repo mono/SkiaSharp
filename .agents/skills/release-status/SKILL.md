@@ -26,10 +26,11 @@ This skill is **Step 2 of 5**:
   commit exactly. `release/X.Y.x` is an integration branch: return to
   release-branch and cut an exact release branch before status tracking.
 - Verify the target commit contains the minimum behavioral Arcade backport:
-  combined Build role, folder-qualified Tests resource, and exact internal
-  release versioning, plus metadata required to validate the historical
-  transport package templates. Do not require Apple symbols or another
-  main-only feature; BAR runtime evidence proves signing and asset routing.
+  combined Build role, folder-qualified Tests resource, fail-closed exact
+  artifact selection, exact internal release versioning, plus metadata required
+  to validate the historical transport package templates. Do not require Apple
+  symbols or another main-only feature; BAR runtime evidence proves signing and
+  asset routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
