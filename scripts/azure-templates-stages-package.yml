@@ -29,9 +29,11 @@ stages:
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 New-Item '.\output\' -Type Directory -Force | Out-Null
               displayName: Re-organize the output folder for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
               displayName: Prepare the nugets artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
               displayName: Prepare the transport nugets artifact for publishing
@@ -39,6 +41,7 @@ stages:
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
             - name: package_windows
               path: '.\output\output\'
