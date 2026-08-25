@@ -25,6 +25,8 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
+  additionalDotNetSdks: []                      # additional SDKs to install side-by-side
+  installDotNetWorkloads: true                  # whether or not to install the .NET workloads
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
@@ -191,6 +193,14 @@ jobs:
             version: $(DOTNET_VERSION)
           retryCountOnTaskFailure: 3
           displayName: Install .NET $(DOTNET_VERSION)
+        - ${{ each sdkVersion in parameters.additionalDotNetSdks }}:
+          - task: UseDotNet@2
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              packageType: 'sdk'
+              version: ${{ sdkVersion }}
+            retryCountOnTaskFailure: 3
+            displayName: Install additional .NET ${{ sdkVersion }}
         - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
           - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Fix the Microsoft.WinFX.* file
@@ -226,7 +236,7 @@ jobs:
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install workloads
-        - ${{ if eq(parameters.installDotNet, 'true') }}:
+        - ${{ if and(eq(parameters.installDotNet, 'true'), eq(parameters.installDotNetWorkloads, 'true')) }}:
           - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
