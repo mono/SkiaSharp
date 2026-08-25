@@ -9,10 +9,10 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
     var version = "0.0.0-";
     if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr."))
         version += PREVIEW_LABEL.ToLower();
-    else if (!string.IsNullOrEmpty(GIT_SHA))
-        version += "commit." + GIT_SHA.ToLower();
     else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))
         version += "branch." + GIT_BRANCH_NAME.Replace("/", ".").ToLower();
+    else if (!string.IsNullOrEmpty(GIT_SHA))
+        version += "commit." + GIT_SHA.ToLower();
     else
         version += "branch.main";
     version += ".*";

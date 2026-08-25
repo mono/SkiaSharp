@@ -25,6 +25,7 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
+  additionalDotNetSdks: []                      # additional SDKs to install side-by-side
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
@@ -193,6 +194,14 @@ jobs:
             version: $(DOTNET_VERSION)
           retryCountOnTaskFailure: 3
           displayName: Install .NET $(DOTNET_VERSION)
+        - ${{ each sdkVersion in parameters.additionalDotNetSdks }}:
+          - task: UseDotNet@2
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              packageType: 'sdk'
+              version: ${{ sdkVersion }}
+            retryCountOnTaskFailure: 3
+            displayName: Install additional .NET ${{ sdkVersion }}
         - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
           - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Fix the Microsoft.WinFX.* file

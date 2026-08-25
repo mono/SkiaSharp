@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <PublishingVersion>3</PublishingVersion>
+    <!-- Shipping symbol packages are staged explicitly so transport packages
+         never receive Arcade's byte-for-byte fallback symbol copy. -->
+    <AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Artifact Include="$(ArtifactsShippingPackagesDir)**\*.nupkg"
+              Kind="Package" />
+    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**\*.nupkg"
+              Kind="Package"
+              IsShipping="false" />
+  </ItemGroup>
+</Project>

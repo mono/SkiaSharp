@@ -1,7 +1,6 @@
 parameters:
-  - name: isSplitPipeline
-    type: boolean
-    default: false
+  - name: buildPipelineType
+    type: string
   - name: buildAgentHost
     type: object
   - name: buildAgentWindows
@@ -20,7 +19,7 @@ stages:
 
     - stage: managed
       displayName: Build Managed
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -79,7 +78,7 @@ stages:
 
     - stage: tests
       displayName: Tests
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: native
@@ -407,7 +406,7 @@ stages:
 
     - stage: samples
       displayName: Samples
-      ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+      ${{ if eq(parameters.buildPipelineType, 'test') }}:
         dependsOn: prepare
       ${{ else }}:
         dependsOn: package

@@ -16,20 +16,12 @@ Task ("nuget-normal")
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
+        { "VersionSuffix", PREVIEW_NUGET_SUFFIX },
     };
 
-    // pack stable
+    // Each build produces one coherent package family. Preview labels use a
+    // unique suffix; PREVIEW_LABEL=stable clears the suffix for an exact release.
     RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-
-    // pack preview
-    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
-
-    // move symbols to a special location to avoid signing
-    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 });
 
 Task ("nuget-special")
@@ -142,28 +134,22 @@ Task ("nuget-special")
         }
     }
 
-    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
+    // Bin-pack the build's normal NuGets into ~200 MB chunks
     if (GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
         const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
 
         var metaPackages = new[] {
-            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
-            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
-            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
-            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
+            new { Id = "_NuGets" },
         };
 
         foreach (var meta in metaPackages) {
             // enumerate matching files
-            var allFiles = GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nupkg").ToList ();
-            if (meta.IncludeSnupkg)
-                allFiles.AddRange (GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.snupkg"));
+            var allFiles = GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").ToList ();
 
             var matchingFiles = allFiles
                 .Where (f => {
                     var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_")) return false;
-                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
+                    return !name.StartsWith ("_") && !name.EndsWith (".symbols.nupkg");
                 })
                 .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
                 .OrderByDescending (f => f.Size)
@@ -204,9 +190,9 @@ Task ("nuget-special")
                 // pack each chunk as a numbered dependency
                 for (int i = 0; i < chunks.Count; i++) {
                     var chunkId = $"{meta.Id}.Dependencies.{i + 1}";
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{chunkId}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{chunkId}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
 
                     var xdoc = XDocument.Load ($"{ROOT_PATH}/scripts/infra/package/nuget/_Dependencies.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
@@ -240,9 +226,9 @@ Task ("nuget-special")
 
                 // pack the parent meta-package with dependencies on all chunks
                 {
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{meta.Id}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{meta.Id}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
 
                     var xdoc = XDocument.Load (ROOT_PATH + $"/scripts/infra/package/nuget/{meta.Id}.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
@@ -271,7 +257,7 @@ Task ("nuget-special")
                         });
                 }
 
-                DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
             }
         }
     }
