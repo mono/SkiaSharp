@@ -145,8 +145,9 @@ Arcade `Shipping` and transport packages under `NonShipping`. Arcade generates
 the V3 manifest, registers one BAR, validates it, and invokes Darc promotion.
 
 `eng/Signing.props` defines product signing. Normal and explicit symbol packages
-are signed together; dSYM DWARF files are not signing targets. Missing symbol
-packages are filled by byte-identical copies of already-signed packages.
+are signed together; dSYM DWARF files are not signing targets. For packages
+without explicit symbols, PDBs are extracted from the signed package into
+Arcade's standard `PdbArtifacts`.
 
 `eng/Publishing.props` publishes Shipping packages, NonShipping transport, and
 symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
