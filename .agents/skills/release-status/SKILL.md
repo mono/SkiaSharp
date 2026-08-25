@@ -28,8 +28,10 @@ This skill is **Step 2 of 5**:
 - Verify the target commit contains the minimum behavioral Arcade backport:
   combined Build role, folder-qualified Tests resource, fail-closed exact
   artifact selection, exact internal release versioning, and transport metadata.
-  The top-level `nuget` Cake graph must depend on `assemble-arcade-assets`; its
-  uncached aggregate Package emits public `nuget`, `nuget_special`,
+  Prepare must install the repository SDK before restoring tools and running
+  asset validation. The top-level `nuget` Cake graph must depend on
+  `nuget-assemble-arcade-assets`; its uncached aggregate Package emits public
+  `nuget`, `nuget_special`,
   `arcade_shipping`, `arcade_nonshipping`, and non-production `PdbArtifacts`
   directly from Cake outputs. Internal signing transforms only
   `arcade_shipping` into `arcade_shipping_signed`; separate `publish_assets`

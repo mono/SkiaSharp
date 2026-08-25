@@ -406,7 +406,7 @@ class PipelineStatusTests(unittest.TestCase):
             package = scripts / "infra" / "package"
             package.mkdir(parents=True)
             (package / "nuget.cake").write_text(
-                "void PrepareArcadeAssets (\n"
+                'Task ("nuget-assemble-arcade-assets")\n'
                 'var transportMarker = $".0.0.0-{transportVersionKind}.";\n'
                 "CopyFileToDirectory (package, nonShipping);\n"
                 'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
@@ -421,8 +421,16 @@ class PipelineStatusTests(unittest.TestCase):
                 encoding="ascii",
             )
             (seed / "build.cake").write_text(
-                'Task ("nuget").IsDependentOn ("assemble-arcade-assets");\n'
-                'Task ("assemble-arcade-assets");\n',
+                'Task ("nuget").IsDependentOn '
+                '("nuget-assemble-arcade-assets");\n'
+                'Task ("nuget-assemble-arcade-assets");\n',
+                encoding="ascii",
+            )
+            (scripts / "azure-templates-stages-prepare.yml").write_text(
+                "task: UseDotNet@2\n"
+                "version: $(DOTNET_VERSION)\n"
+                "pwsh: dotnet tool restore\n"
+                "AssembleArcadeAssets.Tests.ps1\n",
                 encoding="ascii",
             )
             (scripts / "azure-templates-stages-package.yml").write_text(

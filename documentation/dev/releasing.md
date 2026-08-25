@@ -278,6 +278,11 @@ outputs come from one uncached aggregate Cake Package as `arcade_shipping`,
 readiness still requires exact successful internal Build, connected Tests, BAR,
 default-channel, signed-feed, and protected publisher evidence.
 
+Prepare installs the repository SDK before restoring Cake tools and validating
+this contract. The top-level `nuget` target depends on
+`nuget-assemble-arcade-assets`; package outputs are build-context dependent and
+must not come from source-only aggregate Package caching.
+
 ### Stage 3: Testing (release-testing skill)
 
 ```mermaid

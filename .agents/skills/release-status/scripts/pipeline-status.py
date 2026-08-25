@@ -78,7 +78,7 @@ MIGRATION_REQUIREMENTS = (
         "id": "cake-arcade-assets",
         "path": "scripts/infra/package/nuget.cake",
         "pattern": (
-            r"void\s+PrepareArcadeAssets\s*\(.*"
+            r"Task\s*\(\s*['\"]nuget-assemble-arcade-assets['\"]\s*\).*"
             r"transportMarker\s*=\s*\$['\"]\.0\.0\.0-"
             r"\{transportVersionKind\}\..*"
             r"CopyFileToDirectory\s*\(\s*package,\s*nonShipping\s*\)"
@@ -112,13 +112,27 @@ MIGRATION_REQUIREMENTS = (
         "id": "top-level-arcade-assembly",
         "path": "build.cake",
         "pattern": (
-            r"(?=.*Task\s*\(\s*['\"]assemble-arcade-assets['\"]\s*\))"
+            r"(?=.*Task\s*\(\s*['\"]nuget-assemble-arcade-assets['\"]\s*\))"
             r"(?=.*Task\s*\(\s*['\"]nuget['\"]\s*\).*"
-            r"IsDependentOn\s*\(\s*['\"]assemble-arcade-assets['\"]\s*\))"
+            r"IsDependentOn\s*\(\s*['\"]nuget-assemble-arcade-assets['\"]\s*\))"
         ),
         "detail": (
             "backport the top-level nuget dependency on Cake "
-            "assemble-arcade-assets"
+            "nuget-assemble-arcade-assets"
+        ),
+    },
+    {
+        "id": "prepare-cake-sdk",
+        "path": "scripts/azure-templates-stages-prepare.yml",
+        "pattern": (
+            r"task:\s*UseDotNet@2.*"
+            r"version:\s*\$\(DOTNET_VERSION\).*"
+            r"pwsh:\s*dotnet tool restore.*"
+            r"AssembleArcadeAssets\.Tests\.ps1"
+        ),
+        "detail": (
+            "backport Prepare SDK installation before tool restore and Cake "
+            "asset validation"
         ),
     },
     {
