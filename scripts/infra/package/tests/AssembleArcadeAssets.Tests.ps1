@@ -69,6 +69,7 @@ function Invoke-Assembly {
         if ($LASTEXITCODE -eq 0) {
             throw 'Cake asset assembly unexpectedly accepted an escaping PDB path.'
         }
+        $global:LASTEXITCODE = 0
     } elseif ($LASTEXITCODE -ne 0) {
         throw "Cake asset assembly failed with exit code $LASTEXITCODE."
     }
