@@ -1,9 +1,6 @@
 parameters:
   - name: buildAgentWindows
     type: object
-  - name: enableCaching
-    type: boolean
-    default: false
 
 stages:
 
@@ -17,8 +14,6 @@ stages:
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget
-          cacheJob: managed/package
-          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
           checkoutSubmodules: false
           shouldPublish: false

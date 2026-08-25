@@ -377,6 +377,10 @@ if ($packageStages -match 'package_special_windows|target:\s*nuget-special' -or
     $packageStages -notmatch 'name:\s*nuget_special') {
     throw 'Product and transport NuGets must be produced by one aggregate package job.'
 }
+if ($packageStages -match 'cacheJob:\s*managed/package' -or
+    $packageStages -match 'enableCaching') {
+    throw 'Build-identity-dependent package outputs must never use source-only caching.'
+}
 if ($packageStages -match 'Build\.ArtifactStagingDirectory|Re-organize package artifacts' -or
     $packageStages -match "path:\s*'\\.\\output\\output") {
     throw 'Cake outputs must publish directly without Azure-specific reorganization.'
