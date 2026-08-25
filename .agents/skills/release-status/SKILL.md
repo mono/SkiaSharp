@@ -28,8 +28,9 @@ This skill is **Step 2 of 5**:
 - Verify the target commit contains the minimum behavioral Arcade backport:
   combined Build role, folder-qualified Tests resource, fail-closed exact
   artifact selection, exact internal release versioning, and transport metadata.
-  Prepare must install the repository SDK before restoring tools and running
-  asset validation. The top-level `nuget` Cake graph must depend on
+  Prepare must remain tool-free and run only focused build-variable, API Scan,
+  and cache validation; Cake behavior validation runs as a Package post-build
+  step. The top-level `nuget` Cake graph must depend on
   `nuget-assemble-arcade-assets`; its uncached aggregate Package emits public
   `nuget`, `nuget_special`,
   `arcade_shipping`, `arcade_nonshipping`, and non-production `PdbArtifacts`
@@ -42,10 +43,12 @@ This skill is **Step 2 of 5**:
   entry in its contract test, clears global `LASTEXITCODE` after the expected
   rejection, emits `.empty` only when no PDB exists, and stages one NonShipping
   transport version per ID.
-  The production PowerShell assembler and split/cached legacy Package behavior
-  must be absent. Do not require Apple symbols or another main-only feature.
-  Historical downloads prefer branch transport before commit aliases; BAR
-  runtime evidence then proves signing and routing.
+  The production PowerShell assembler, split/cached legacy Package behavior,
+  YAML string-linter, commit wrapper generation, anonymous commit fallback, and
+  transport-family filtering must be absent. Each build emits exactly one
+  transport family: PR for PR builds, branch otherwise. Do not require Apple
+  symbols or another main-only feature; BAR runtime evidence proves signing and
+  routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
@@ -54,8 +57,8 @@ This skill is **Step 2 of 5**:
   flag, package versions, observed channels, and exact asset locations.
 - Never combine runs, BAR metadata, or assets from different Build attempts.
 - Reject BARs with duplicate NonShipping transport package IDs (for example,
-  branch and commit aliases for `_NuGets`); only the branch identity belongs in
-  BAR, while commit aliases may remain pipeline artifacts.
+  multiple `_NuGets` identities); only the build's single PR-or-branch transport
+  family belongs in BAR.
 - Build, connected Tests, and both exact BAR-recorded package assets must be
   ready before the default testing handoff.
 - The user may explicitly override only the wait for incomplete CI tests.

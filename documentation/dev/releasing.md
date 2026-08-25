@@ -259,15 +259,14 @@ production features such as Apple symbol generation are not historical
 release-tooling prerequisites.
 
 Historical BARs must also contain only one branch-versioned NonShipping
-transport asset per package ID. Commit aliases may remain in the pipeline
-artifact, but package downloads prefer the branch identity and release status
-rejects a BAR that exposes both branch and commit versions for the same
-transport ID.
+transport asset per package ID (or one PR-versioned family for PR validation).
+Commit wrappers and anonymous commit fallback are not produced; release status
+rejects duplicate transport IDs.
 
 Public CI validates package and pipeline artifact shape before internal release
 proof. The canonical `nuget` artifact owns product and explicit symbol packages;
-`nuget_special` retains unsigned branch and pipeline-only commit transport
-aliases, while only branch aliases enter BAR. `PdbArtifacts` contains loose
+`nuget_special` contains exactly one unsigned PR-or-branch transport family.
+`PdbArtifacts` contains loose
 implementation/runtime PDBs extracted from signed packages that have no
 explicit symbol package, preserving package/version/TFM/RID paths and excluding
 `ref/**`. Cake-native collapsed paths plus relative containment reject escaping
@@ -281,8 +280,9 @@ public outputs come from one uncached aggregate Cake Package as `arcade_shipping
 readiness still requires exact successful internal Build, connected Tests, BAR,
 default-channel, signed-feed, and protected publisher evidence.
 
-Prepare installs the repository SDK before restoring Cake tools and validating
-this contract. The top-level `nuget` target depends on
+Prepare stays tool-free with focused build-variable, API Scan, and cache checks.
+The Package post-build step runs the Cake behavior test before publishing
+artifacts. The top-level `nuget` target depends on
 `nuget-assemble-arcade-assets`; package outputs are build-context dependent and
 must not come from source-only aggregate Package caching.
 

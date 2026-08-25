@@ -215,29 +215,55 @@ class PipelineStatusTests(unittest.TestCase):
             )
         )
 
-    def test_transport_download_requires_branch_before_commit(self):
+    def test_transport_download_has_no_commit_fallback(self):
         requirement = next(
             item
             for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "branch-first-transport-download"
+            if item["id"] == "transport-download-family"
         )
-        branch_first = (
+        pr_or_branch = (
+            'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
+            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
+            "else version += \"branch.main\";\n"
+        )
+        commit_fallback = (
             "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
             "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
-        )
-        commit_first = (
-            "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
-            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
         )
         self.assertTrue(
             status.migration_requirement_satisfied(
-                branch_first,
+                pr_or_branch,
                 requirement,
             )
         )
         self.assertFalse(
             status.migration_requirement_satisfied(
-                commit_first,
+                pr_or_branch + commit_fallback,
+                requirement,
+            )
+        )
+
+    def test_transport_pack_emits_exactly_one_family(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "single-transport-family"
+        )
+        contract = (
+            'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
+            'versions.Add ("pr", version);\n'
+            "else\n"
+            'versions.Add ("branch", version);\n'
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                contract,
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                contract + 'versions.Add ("commit", version);\n',
                 requirement,
             )
         )
@@ -406,8 +432,14 @@ class PipelineStatusTests(unittest.TestCase):
             package = scripts / "infra" / "package"
             package.mkdir(parents=True)
             (package / "nuget.cake").write_text(
+                'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
+                'versions.Add ("pr", version);\n'
+                "else\n"
+                'versions.Add ("branch", version);\n'
                 'Task ("nuget-assemble-arcade-assets")\n'
-                'var transportMarker = $".0.0.0-{transportVersionKind}.";\n'
+                "var transportPackages = GetNuGetPackages "
+                "(OUTPUT_SPECIAL_NUGETS_PATH, \"transport\");\n"
+                "foreach (var package in transportPackages)\n"
                 "CopyFileToDirectory (package, nonShipping);\n"
                 'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
                 "{ continue; }\n"
@@ -439,14 +471,16 @@ class PipelineStatusTests(unittest.TestCase):
                 encoding="ascii",
             )
             (scripts / "azure-templates-stages-prepare.yml").write_text(
-                "task: UseDotNet@2\n"
-                "version: $(DOTNET_VERSION)\n"
-                "pwsh: dotnet tool restore\n"
-                "AssembleArcadeAssets.Tests.ps1\n",
+                "SetBuildVariables.Tests.ps1\n"
+                "PrepareApiScanInputs.Tests.ps1\n"
+                "repo-deps.py validate\n",
                 encoding="ascii",
             )
             (scripts / "azure-templates-stages-package.yml").write_text(
                 "target: nuget\n"
+                "postBuildSteps:\n"
+                "  - pwsh: AssembleArcadeAssets.Tests.ps1\n"
+                "publishArtifacts:\n"
                 "name: nuget\n"
                 "name: nuget_special\n"
                 "name: arcade_shipping\n"
@@ -469,10 +503,9 @@ class PipelineStatusTests(unittest.TestCase):
             infra_shared = scripts / "infra" / "shared"
             infra_shared.mkdir(parents=True)
             (infra_shared / "download.cake").write_text(
+                'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
                 "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
-                "    version += \"branch.\";\n"
-                "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
-                "    version += \"commit.\";\n",
+                "else version += \"branch.main\";\n",
                 encoding="ascii",
             )
             shared = scripts / "infra" / "native" / "shared"

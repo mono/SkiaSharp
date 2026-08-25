@@ -79,13 +79,36 @@ MIGRATION_REQUIREMENTS = (
         "path": "scripts/infra/package/nuget.cake",
         "pattern": (
             r"Task\s*\(\s*['\"]nuget-assemble-arcade-assets['\"]\s*\).*"
-            r"transportMarker\s*=\s*\$['\"]\.0\.0\.0-"
-            r"\{transportVersionKind\}\..*"
+            r"transportPackages\s*=\s*GetNuGetPackages\s*\(\s*"
+            r"OUTPUT_SPECIAL_NUGETS_PATH.*"
+            r"foreach\s*\(\s*var package in transportPackages\s*\).*"
             r"CopyFileToDirectory\s*\(\s*package,\s*nonShipping\s*\)"
         ),
+        "forbiddenPattern": (
+            r"transportMarker|transportVersionKind|0\.0\.0-commit|"
+            r"versions\.Add\s*\(\s*['\"]commit['\"]"
+        ),
         "detail": (
-            "backport Cake Arcade asset assembly with one selected transport "
-            "version kind staged into NonShipping"
+            "backport Cake Arcade assembly that stages the single prepared "
+            "PR-or-branch transport family without commit fallback/filtering"
+        ),
+    },
+    {
+        "id": "single-transport-family",
+        "path": "scripts/infra/package/nuget.cake",
+        "pattern": (
+            r"if\s*\(.*PREVIEW_LABEL.*StartsWith\s*\(\s*['\"]pr\..*"
+            r"versions\.Add\s*\(\s*['\"]pr['\"].*"
+            r"else.*"
+            r"versions\.Add\s*\(\s*['\"]branch['\"]"
+        ),
+        "forbiddenPattern": (
+            r"versions\.Add\s*\(\s*['\"]commit['\"]|"
+            r"0\.0\.0-commit|GIT_SHA"
+        ),
+        "detail": (
+            "backport exactly one transport wrapper family: PR for PR builds, "
+            "branch otherwise, with no commit alias generation"
         ),
     },
     {
@@ -149,17 +172,33 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
-        "id": "prepare-cake-sdk",
+        "id": "prepare-tool-free",
         "path": "scripts/azure-templates-stages-prepare.yml",
         "pattern": (
-            r"task:\s*UseDotNet@2.*"
-            r"version:\s*\$\(DOTNET_VERSION\).*"
-            r"pwsh:\s*dotnet tool restore.*"
-            r"AssembleArcadeAssets\.Tests\.ps1"
+            r"SetBuildVariables\.Tests\.ps1.*"
+            r"PrepareApiScanInputs\.Tests\.ps1.*"
+            r"repo-deps\.py\s+validate"
+        ),
+        "forbiddenPattern": (
+            r"UseDotNet@2|dotnet tool restore|"
+            r"AssembleArcadeAssets\.Tests\.ps1|BuildPipeline\.Tests\.ps1"
         ),
         "detail": (
-            "backport Prepare SDK installation before tool restore and Cake "
-            "asset validation"
+            "backport tool-free Prepare with focused build-variable/API/cache "
+            "validation and no YAML string-linter or Cake tool restore"
+        ),
+    },
+    {
+        "id": "package-cake-behavior-test",
+        "path": "scripts/azure-templates-stages-package.yml",
+        "pattern": (
+            r"postBuildSteps:.*"
+            r"AssembleArcadeAssets\.Tests\.ps1.*"
+            r"publishArtifacts:"
+        ),
+        "detail": (
+            "backport Package post-build Cake behavior validation before "
+            "publishing public artifact views"
         ),
     },
     {
@@ -216,15 +255,17 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
-        "id": "branch-first-transport-download",
+        "id": "transport-download-family",
         "path": "scripts/infra/shared/download.cake",
         "pattern": (
+            r"PREVIEW_LABEL\.StartsWith\s*\(\s*['\"]pr\..*"
             r"else if \(!string\.IsNullOrEmpty\(GIT_BRANCH_NAME\)\).*"
-            r"else if \(!string\.IsNullOrEmpty\(GIT_SHA\)\)"
+            r"else.*branch\.main"
         ),
+        "forbiddenPattern": r"GIT_SHA|0\.0\.0-commit|commit\.",
         "detail": (
-            "backport branch-before-commit transport package lookup so "
-            "release builds consume the identity promoted to BAR"
+            "backport PR-or-branch-only transport lookup with no commit alias "
+            "or fallback"
         ),
     },
     *(
