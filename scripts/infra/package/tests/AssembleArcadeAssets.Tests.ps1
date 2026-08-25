@@ -38,6 +38,9 @@ $signed = Join-Path $root 'signed'
 $transport = Join-Path $root 'transport'
 $packages = Join-Path $root 'packages'
 $pdbs = Join-Path $root 'pdbs'
+$prTransport = Join-Path $root 'pr-transport'
+$prPackages = Join-Path $root 'pr-packages'
+$prPdbs = Join-Path $root 'pr-pdbs'
 $script = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../assemble-arcade-assets.ps1'))
 
 try {
@@ -62,9 +65,7 @@ try {
 
     foreach ($name in @(
         '_NuGets.0.0.0-branch.main.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg'
-        '_NuGets.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg')) {
+        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg')) {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
@@ -99,8 +100,27 @@ try {
 
     $nonShipping = @(Get-ChildItem (Join-Path $packages 'NonShipping') -Filter '*.nupkg' -File)
     if ($nonShipping.Count -ne 2 -or
-        @($nonShipping | Where-Object Name -like '*-commit.*').Count -ne 0) {
+        @($nonShipping | Where-Object Name -notlike '*-branch.*').Count -ne 0) {
         throw 'Only the branch-versioned transport family may enter NonShipping.'
+    }
+
+    New-Item $prTransport -ItemType Directory -Force | Out-Null
+    foreach ($name in @(
+        '_NuGets.0.0.0-pr.4865.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-pr.4865.1.nupkg')) {
+        New-Package (Join-Path $prTransport $name) @{ 'README.md' = $name }
+    }
+
+    & $script `
+        -SignedPackageDirectory $signed `
+        -TransportPackageDirectory $prTransport `
+        -PackageRoot $prPackages `
+        -PdbArtifactsDirectory $prPdbs
+
+    $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
+    if ($prNonShipping.Count -ne 2 -or
+        @($prNonShipping | Where-Object Name -notlike '*-pr.*').Count -ne 0) {
+        throw 'Only the PR-versioned transport family may enter PR NonShipping.'
     }
 
     Write-Host 'Arcade asset assembly tests passed.'

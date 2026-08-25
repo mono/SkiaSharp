@@ -46,15 +46,7 @@ function Get-Packages {
 }
 
 $signedPackages = @(Get-Packages $SignedPackageDirectory 'signed')
-$allTransportPackages = @(Get-Packages $TransportPackageDirectory 'transport')
-$transportPackages = @(
-    $allTransportPackages |
-        Where-Object {
-            $_.Name.Contains('.0.0.0-branch.', [StringComparison]::OrdinalIgnoreCase)
-        })
-if ($transportPackages.Count -eq 0) {
-    throw "No branch-versioned transport NuGet packages were found."
-}
+$transportPackages = @(Get-Packages $TransportPackageDirectory 'transport')
 
 $packageRoot = [IO.Path]::GetFullPath($PackageRoot)
 $shipping = Join-Path $packageRoot 'Shipping'

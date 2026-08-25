@@ -39,18 +39,13 @@ Task ("nuget-special")
             v += $".{BUILD_COUNTER}";
         versions.Add ("pr", v);
     } else {
-        if (!string.IsNullOrEmpty (GIT_SHA)) {
-            var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("commit", v);
-        }
-        if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
-            var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("branch", v);
-        }
+        var branchName = string.IsNullOrEmpty (GIT_BRANCH_NAME)
+            ? "main"
+            : GIT_BRANCH_NAME.Replace ("/", ".");
+        var v = $"0.0.0-branch.{branchName}";
+        if (!string.IsNullOrEmpty (BUILD_COUNTER))
+            v += $".{BUILD_COUNTER}";
+        versions.Add ("branch", v);
     }
     Information ("Detected {0} special versions to process:", versions.Count);
     var max = 0;
