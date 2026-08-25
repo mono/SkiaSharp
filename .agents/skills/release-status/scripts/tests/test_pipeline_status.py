@@ -428,6 +428,7 @@ class PipelineStatusTests(unittest.TestCase):
             (tests / "AssembleArcadeAssets.Tests.ps1").write_text(
                 "'../escape.pdb'\n"
                 "Invoke-Assembly -ExpectFailure\n"
+                "$global:LASTEXITCODE = 0\n"
                 "throw 'An escaping PDB path wrote outside'\n",
                 encoding="ascii",
             )

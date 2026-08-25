@@ -39,8 +39,9 @@ This skill is **Step 2 of 5**:
   assembler preserves explicit symbol ownership and loose PDB
   package/TFM/RID paths, excludes `ref/**`, uses Cake-native collapsed paths and
   relative containment instead of `System.IO.Path`, rejects an escaping archive
-  entry in its contract test, emits `.empty` only when no PDB exists, and stages
-  one NonShipping transport version per ID.
+  entry in its contract test, clears global `LASTEXITCODE` after the expected
+  rejection, emits `.empty` only when no PDB exists, and stages one NonShipping
+  transport version per ID.
   The production PowerShell assembler and split/cached legacy Package behavior
   must be absent. Do not require Apple symbols or another main-only feature.
   Historical downloads prefer branch transport before commit aliases; BAR

@@ -127,6 +127,15 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
+        "id": "expected-failure-exit-reset",
+        "path": "scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1",
+        "pattern": r"\$global:LASTEXITCODE\s*=\s*0",
+        "detail": (
+            "backport reset of global LASTEXITCODE after the verified "
+            "expected traversal rejection so public validation exits cleanly"
+        ),
+    },
+    {
         "id": "top-level-arcade-assembly",
         "path": "build.cake",
         "pattern": (

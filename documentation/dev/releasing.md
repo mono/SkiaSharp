@@ -272,7 +272,9 @@ implementation/runtime PDBs extracted from signed packages that have no
 explicit symbol package, preserving package/version/TFM/RID paths and excluding
 `ref/**`. Cake-native collapsed paths plus relative containment reject escaping
 archive entries without `System.IO.Path`; `.empty` is valid only when no
-eligible PDB exists. These public outputs come from one uncached aggregate Cake Package as `arcade_shipping`,
+eligible PDB exists. The expected-failure test clears global `LASTEXITCODE`
+after confirming rejection so public validation exits successfully. These
+public outputs come from one uncached aggregate Cake Package as `arcade_shipping`,
 `arcade_nonshipping`, and `PdbArtifacts`. Internal signing consumes only
 `arcade_shipping` and emits `arcade_shipping_signed`; a separate
 `publish_assets` stage combines it with `arcade_nonshipping` for BAR. Release
