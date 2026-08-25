@@ -147,19 +147,24 @@ It also publishes the deterministic release inputs created by Cake:
 - `arcade_shipping` — product and explicit symbol packages ready for signing;
 - `arcade_nonshipping` — the selected unsigned transport family ready for BAR;
 - `PdbArtifacts` — loose implementation/runtime PDBs for product packages that
-  do not have an explicit symbol package.
+  do not have an explicit symbol package. This is marked `isProduction: false`
+  for 1ES artifact metadata; it does not change Arcade shipping classification.
 
-Public PR validation selects PR-versioned transport packages for structural
-validation. Official branch builds select exactly one branch-versioned package
-per transport ID; commit aliases remain only in `nuget_special`.
+Each build creates one transport family. Public PR validation creates
+PR-versioned packages for structural validation; all other builds create one
+branch-versioned package per transport ID. The same family appears in
+`nuget_special` and `arcade_nonshipping`, so BAR never receives duplicate IDs.
 
+Public CI ends after deterministic build, package, test, and artifact validation.
 The internal signing stage downloads only `arcade_shipping`, signs it, and
 republishes it as `arcade_shipping_signed`; transport packages never enter the
 signing job. A separate authenticated stage combines the signed Shipping and
 already-prepared NonShipping views by artifact download, generates the Arcade
-V3 manifest, registers one BAR, validates it, and invokes Darc promotion. This
-keeps package layout, transport filtering, and PDB extraction public while
-internal jobs perform only signing and publishing.
+V3 manifest, and registers one BAR. Standard downstream Arcade stages validate
+the BAR and invoke Darc default-channel promotion. API Scan is an independent
+internal stage. This keeps package layout, transport filtering, PDB extraction,
+and artifact inspection public while internal jobs perform only operations that
+require protected identities or services.
 
 `eng/Signing.props` defines product signing. Normal and explicit symbol packages
 are signed together; dSYM DWARF files are not signing targets. PDBs are extracted

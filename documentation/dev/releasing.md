@@ -129,9 +129,15 @@ revision buckets.
 
 | Pipeline | Purpose |
 |----------|---------|
-| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, prepares public Arcade package/PDB artifacts, then internally signs and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
+| [mono-SkiaSharp](https://dev.azure.com/dnceng-public/public/_build?definitionId=345) | Public PR and branch validation. Builds native/managed outputs and publishes raw NuGets, prepared Shipping/NonShipping artifacts, and loose PDBs for direct inspection. |
+| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Repeats the deterministic build/package work, then adds protected API Scan, real signing, BAR registration, standard validation, and Darc promotion. |
 | [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
 | NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
+
+`main` and `release/*` select real signing and BAR registration automatically.
+When validating another branch manually, explicitly set `forceRealSigning`,
+`registerInBar`, and `runApiScan` to `true`; a safe-default run is not release
+evidence.
 
 ---
 
