@@ -4,6 +4,8 @@ DirectoryPath OUTPUT_PATH = MakeAbsolute(ROOT_PATH.Combine("output/native"));
 var llvmHomeArg = Argument("llvm", EnvironmentVariable("LLVM_HOME") ?? "C:/Program Files/LLVM");
 DirectoryPath LLVM_HOME = string.IsNullOrEmpty(llvmHomeArg) || llvmHomeArg.ToLower() == "msvc" ? "" : llvmHomeArg;
 string VC_TOOLSET_VERSION = Argument("vcToolsetVersion", "14.2");
+// empty lets gn detect an installed SDK
+string WINDOWS_SDK_VERSION = Argument("windowsSdkVersion", "");
 
 // GPU features can be disabled for NanoServer builds
 string SUPPORT_VULKAN_VAR = Argument ("supportVulkan", EnvironmentVariable ("SUPPORT_VULKAN") ?? "true");
@@ -44,10 +46,13 @@ Task("libSkiaSharp")
 
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
         var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
+        var win_sdk_version = string.IsNullOrEmpty(WINDOWS_SDK_VERSION) ? "" : $"win_sdk_version='{WINDOWS_SDK_VERSION}' ";
+        var vcVarsArchitecture = skiaArch == "x64" ? "amd64" : $"amd64_{skiaArch}";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
         var spectreLibPath = GetSpectreLibPath(arch);
+        var nativeOutDir = $"{VARIANT}/{arch}";
 
-        GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
+        GenerateGnBuild(nativeOutDir,
             $"target_os='win'" +
             $"target_cpu='{skiaArch}' " +
             $"skia_enable_fontmgr_win_gdi=false " +
@@ -68,11 +73,21 @@ Task("libSkiaSharp")
             $"skia_use_freetype={USE_FREETYPE} ".ToLower () +
             $"skia_enable_fontmgr_custom_empty={USE_FREETYPE} ".ToLower () +
             $"skia_enable_fontmgr_win={USE_FONTMGR_WIN} ".ToLower () +
+            $"skia_enable_graphite=true " +
             clang +
             win_vcvars_version +
+            win_sdk_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DSK_AVOID_SLOW_RASTER_PIPELINE_BLURS', '-DSK_ENABLE_LEGACY_SHADERCONTEXT', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}', '/DELAYLOAD:d3d12.dll', '/DELAYLOAD:dxgi.dll', '/DELAYLOAD:D3DCOMPILER_47.dll', '/DEFAULTLIB:delayimp' ] " +
             ADDITIONAL_GN_ARGS);
+
+        RunNinjaWithVcVars(
+            SKIA_PATH,
+            $"out/{nativeOutDir}",
+            "SkiaSharp",
+            vcVarsArchitecture,
+            WINDOWS_SDK_VERSION,
+            VC_TOOLSET_VERSION);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);
@@ -94,7 +109,7 @@ Task("libHarfBuzzSharp")
     {
         if (Skip(arch)) return;
 
-        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.sln", platformTarget: arch);
+        RunMSBuild("libHarfBuzzSharp/libHarfBuzzSharp.slnx", platformTarget: arch);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
         EnsureDirectoryExists(outDir);

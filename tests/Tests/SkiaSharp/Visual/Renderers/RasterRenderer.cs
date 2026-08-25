@@ -13,11 +13,7 @@ namespace SkiaSharp.Tests.Visual
 	/// </summary>
 	public sealed class RasterRenderer : IRenderer
 	{
-		public string Name => "raster";
-
-		public bool IsAvailable => true;
-
-		public string UnavailableReason => null;
+		public string Name => GpuBackends.Raster;
 
 		public Task<byte[]> RenderAsync(ISkiaScene scene, SKImageInfo info, CancellationToken cancellationToken)
 		{

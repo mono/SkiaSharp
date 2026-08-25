@@ -12,7 +12,7 @@ Options:
     --no-issues     Skip fetching errors/warnings (faster)
 
 Queries Azure DevOps for:
-  Public CI:  SkiaSharp (Public) — xamarin/public, def 4
+  Public CI:  mono-SkiaSharp — dnceng-public/public, def 345
   Internal:   SkiaSharp-Native (26493) → SkiaSharp (10789) → SkiaSharp-Tests (15756)
 """
 
@@ -28,13 +28,13 @@ from collections import defaultdict
 ORG_DEVDIV = "https://devdiv.visualstudio.com"
 PROJECT_DEVDIV = "DevDiv"
 
-ORG_XAMARIN = "https://dev.azure.com/xamarin"
-PROJECT_XAMARIN = "public"
+ORG_DNCENG_PUBLIC = "https://dev.azure.com/dnceng-public"
+PROJECT_DNCENG_PUBLIC = "public"
 
-# Public CI pipeline — runs on every push/PR to main, develop, release/*
-# Lives in the xamarin/public org
+# Public CI pipeline — runs on every push/PR to main and release/*
+# Lives in the dnceng-public/public org
 PUBLIC_PIPELINES = [
-    {"name": "SkiaSharp (Public)", "id": 4, "org": ORG_XAMARIN, "project": PROJECT_XAMARIN},
+    {"name": "mono-SkiaSharp", "id": 345, "org": ORG_DNCENG_PUBLIC, "project": PROJECT_DNCENG_PUBLIC},
 ]
 
 # Internal release pipeline chain — runs on release/* branches
@@ -71,6 +71,7 @@ GITHUB_WORKFLOWS = [
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup.yml", "name": "Pages - PR Staging - Cleanup", "scope": "global", "trigger": "event"},
     {"repo": "mono/SkiaSharp", "workflow": "build-site-cleanup-stale.yml", "name": "Pages - PR Staging - Sweep Stale", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-docs-submodule-sync.yml", "name": "Sync - Docs Submodule", "scope": "global", "trigger": "schedule"},
+    {"repo": "mono/SkiaSharp", "workflow": "auto-skia-submodule-sync.yml", "name": "Sync - Skia Submodule", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-skia-sync.lock.yml", "name": "Sync - Skia Upstream", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "nightly-fix-finder.lock.yml", "name": "Nightly Fix Finder", "scope": "global", "trigger": "schedule"},
     {"repo": "mono/SkiaSharp", "workflow": "auto-triage.lock.yml", "name": "Sync - Issue Triage", "scope": "global", "trigger": "schedule"},

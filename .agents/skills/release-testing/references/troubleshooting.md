@@ -2,28 +2,63 @@
 
 Quick reference for common errors and fixes.
 
+## Collection and repair workflow
+
+Do not investigate one failure so deeply that the rest of the approved matrix
+never runs. During the collection pass, capture diagnostics, allow runner
+cleanup, and continue. After all initial attempts:
+
+1. Group failures as environment/prerequisite, transient infrastructure, or
+   product/test failures.
+2. Repair shared environment causes first.
+3. Retry only items affected by a concrete repair.
+4. Preserve both the initial failure and retry outcome in the final report.
+
+Starting or restarting an already-installed service and restoring pinned local
+tools are safe repairs. Ask before installing/upgrading software, changing
+system permissions, or modifying user-owned devices. A product assertion or
+rendering mismatch is not repairable by changing the test, expected image,
+package version, or skip policy.
+
 ## Package Resolution Errors
 
 ### Packages appear missing but CI succeeded
 
 **Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
+**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
+matching feed package instead of the exact package from the selected CI build. The feed contains
+multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
+return the wrong one.
 
-**Fix:** Use `.version` and filter by base version + label from the release branch:
+**Fix:** Rerun `release-status`. It verifies both exact package versions against
+the preview feed and reports `wait-for-packages` until both are indexed. Do not
+select a replacement version from the feed.
 
-```bash
-dotnet package search SkiaSharp \
-  --source "https://aka.ms/skiasharp-eap/index.json" \
-  --exact-match --prerelease --format json \
-  | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
-  | grep "^3.119.2-preview.3\."
-```
+**`ERROR: Could not resolve build metadata for run ...`** — confirm the selected `SkiaSharp`
+pipeline run ID and Azure CLI authentication.
+
+**`ERROR: Selected run came from ...`** — the selected run is not from the requested release
+branch. Return to release-status and select the correct run.
+
+**`ERROR: Selected source commit ... is not available locally`** — fetch the named release branch
+again. Do not checkout the branch; the remote-tracking fetch should make the commit available.
+
+**`ERROR: Selected source commit ... does not belong to ...`** — the run and release branch do not
+match. Re-check the selected run rather than reading version files from the branch's current tip.
+
+**`ERROR: Could not read release versions from ...`** — confirm the selected source commit contains
+both version files. Keep `HEAD` unchanged and inspect them with `git show {source-sha}:{path}`.
+
+**`ERROR: Selected buildNumber ... does not match ...`** — the selected run is not from that
+release branch, or its source commit contains different version values. Re-check the run selected
+by release-status and its `sourceVersion`.
 
 | ❌ Wrong | ✅ Correct |
 |----------|-----------|
 | `.latestVersion` | `.version` |
-| No filtering | Filter by `{base}-{label}.*` |
+| Newest matching build | Exact selected CI build |
+| Prefix filtering to select a version | Exact version match |
 
 ---
 
@@ -31,16 +66,22 @@ dotnet package search SkiaSharp \
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `MAUI workload is required` | Missing workload | `dotnet workload install maui` |
-| `wasm-tools workload is required` | Missing workload | `dotnet workload install wasm-tools` |
-| `SkiaSharpVersion must be specified` | Missing version param | Add `-p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N` |
+| Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `python3 .agents/skills/release-testing/scripts/prepare-test-run.py`; it performs `dotnet tool restore` |
+| `the maui workload is not installed` | Missing workload | Record affected MAUI items, continue unrelated coverage, then ask whether to install `maui` or explicitly amend the matrix |
+| `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
+| `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
+| `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
+| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
 
 ## Appium Errors
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Cannot start process 'appium'` | Appium not installed | `npm install -g appium` |
-| `Mac2 driver requires Carthage` | Carthage missing | `brew install carthage` |
+| `Appium is not installed or is not on PATH` | Appium is absent or npm global binaries are unavailable | Record affected MAUI items, continue unrelated coverage, then ask whether to install/configure Appium before retrying |
+| `the Appium ... driver is not installed` | Required platform driver is absent | Record affected items, continue unrelated coverage, then ask whether to install that driver before retrying |
+| `Appium ... is required; found ...` | Server or driver differs from the pinned release-test version | Record affected items, continue unrelated coverage, then ask whether to switch versions before retrying |
+| Doctor reports `ANDROID_HOME` / `JAVA_HOME` missing | Pinned path discovery failed | Run `dotnet tool run android -- sdk find` and `jdk find` to diagnose the selected installations |
+| Driver doctor fails after path resolution | Required platform environment is incomplete | Fix every remaining required doctor finding; optional recording/streaming tools are not needed |
 | `Connection refused` | Port conflict | Appium auto-starts on 4723; check for conflicts |
 | `Session creation timeout` | First run building WDA | Wait - WebDriverAgent builds on first iOS/Mac run |
 | `Invalid bundle identifier` | Wrong bundleId | Tests extract from csproj automatically |
@@ -49,9 +90,12 @@ dotnet package search SkiaSharp \
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `No Android devices found` | No emulator running | Start emulator first |
-| `Simulator not found` | Wrong device name | Check `xcrun simctl list devices available` |
-| `iOS version not available` | Missing runtime | Install via Xcode → Platforms |
+| `Android ... is not installed` | No installed image matches the exact version and host architecture | Record that item, continue, then inspect `dotnet tool run android -- sdk list --installed --format json` and ask whether to install it or explicitly amend the matrix |
+| `Android SDK package ... is not installed` | Emulator or platform tools are absent | Record affected Android items, continue, then ask whether to install the missing package |
+| `hvf is not enabled` / `mprotect failed: Permission denied` | Android emulator installation/acceleration is unhealthy despite host support | Check `emulator -accel-check`, reinstall/update the Android emulator package through `dotnet android`, then retry |
+| Multiple Android emulators are running | Automatic target selection is ambiguous | Rerun with `--device-id <serial>` |
+| `iOS ... is not installed` | The exact runtime has no available installed simulator | Record that item, continue, then ask whether to install it or explicitly amend the matrix |
+| Temporary simulator creation fails | No compatible iPhone type is available for the exact runtime | Inspect `dotnet apple simulator list --runtime "iOS {version}"`; install a compatible device profile or explicitly choose one with `--device` |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
 
 ## Android Crash Diagnostics
@@ -59,11 +103,7 @@ dotnet package search SkiaSharp \
 ### Getting Crash Details
 
 ```bash
-# Check if app crashed
-adb logcat -d | grep -E "(Force removing|app died)" | tail -5
-
-# Get stack trace
-adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
+dotnet tool run android -- device logcat
 ```
 
 ### Common Crash Causes
@@ -75,22 +115,23 @@ adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
 | `FATAL EXCEPTION` | Unhandled exception | **Bug - investigate** |
 | `Native crash` | Native library issue | **Bug - investigate** |
 
-### Old Android (API 21-23) Crashes
+### Minimum Android (API 26) Crashes
 
-Old Android may crash due to:
+The minimum Android target may crash due to:
 - Missing APIs that MAUI expects
 - Different permission behavior
 - Slower startup causing timeouts
 
-If crash only on old Android: get full stack trace, check if known MAUI/SkiaSharp issue.
+If a crash occurs only on API 26, get the full stack trace and investigate it as
+a compatibility regression.
 
 ## iOS Diagnostics
 
 ### Simulator Logs
 
 ```bash
-xcrun simctl list devices booted  # get UDID
-xcrun simctl spawn <UDID> log stream --predicate 'process == "YourApp"'
+dotnet tool run apple -- simulator list --booted --format json
+dotnet tool run apple -- simulator logs <udid>
 ```
 
 Or use Console.app → select simulator device.
@@ -99,7 +140,7 @@ Or use Console.app → select simulator device.
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| Simulator won't boot | Corrupt state | `xcrun simctl erase <UDID>` |
+| Simulator won't boot | Runtime/device creation problem | The runner deletes its temporary simulator; inspect Xcode/CoreSimulator logs before retrying |
 | App won't install | Code signing | Check Appium logs |
 | Black screen | App crashed | Check simulator logs |
 
@@ -125,10 +166,10 @@ Or use Console.app → select simulator device.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `Docker is not available` | Docker not installed/running | Install Docker Desktop, start it |
+| `Docker is not available` | Docker not installed/running | Record the Linux item failure and continue; in the repair pass start/restart an existing Docker Desktop, or ask before installation |
 | `undefined symbol: uuid_generate_random` | Using `NativeAssets.Linux` instead of `NoDependencies` | Use `SkiaSharp.NativeAssets.Linux.NoDependencies` |
 | `Fontconfig error: Cannot load default config file` | No fontconfig in container | Expected with `NoDependencies` — not an error |
-| `Cannot connect to the Docker daemon` | Docker Desktop not running | Start Docker Desktop |
+| `Cannot connect to the Docker daemon` | Docker Desktop crashed or is not running | Continue unrelated items; restart Docker Desktop in the repair pass and retry only `linux` |
 | Docker image build slow | No layer cache | Normal on first run (~90s), cached after |
 
 ## Platform-Specific Notes
@@ -148,24 +189,39 @@ Scale factor calculated automatically from screenshot size vs window size:
 
 Mac Catalyst uses hardcoded 2x scale factor. Screenshot is full monitor size, element coordinates are app-relative.
 
+**No Allow UI Automation prompt / WDA app missing:**
+
+Xcode 27 rejects Mac2's current WebDriverAgentMac deployment target before
+XCTest can request authenticated Automation Mode. The host runner works around
+this by selecting the newest installed Xcode 26.x process-locally. Confirm its
+output contains `Using Xcode 26... for Mac2`.
+
+If no Xcode 26.x is installed, the runner uses the default Xcode and prints that
+fallback explicitly. Track removal of this workaround in
+[appium/appium-mac2-driver#410](https://github.com/appium/appium-mac2-driver/issues/410).
+
 **"Timed out while enabling automation mode" error:**
 
-This is a macOS accessibility permissions issue. The WebDriverAgentMac process needs accessibility permissions to automate apps.
+After WDA builds, XCTest may require the normal interactive **Allow UI
+Automation** authorization. Keep authentication enabled and run from the
+logged-in Aqua session.
 
 **Fixes to try (in order):**
-1. Reset accessibility permissions: `tccutil reset Accessibility`
-2. System Settings → Privacy & Security → Accessibility → Add Terminal.app (or your IDE)
-3. Restart Terminal/IDE after granting permissions
-4. If still failing, try running test in isolation (not after other tests)
+1. Approve the interactive authorization dialog.
+2. Confirm `launchctl managername` reports `Aqua`.
+3. Grant Xcode Helper and the launching Terminal/IDE Accessibility access.
+4. Restart the Terminal/IDE and rerun the item in isolation.
 
-The test includes retry logic (3 attempts) with recovery actions that reset TCC and kill stale processes. If it still fails after retries, it's likely a deeper macOS configuration issue.
+Do not run `enable-automationmode-without-authentication` for interactive release
+tests. Recovery kills only stale WebDriverAgentRunner processes and does not
+reset TCC.
 
 ## Retry Logic
 
 Tests include automatic retry for transient failures:
 - **Android**: 3 retries, 10s delay, recovery includes dialog dismissal
 - **iOS**: 3 retries, 10s delay
-- **Mac Catalyst**: 3 retries, 30s delay, recovery includes TCC reset and process cleanup
+- **Mac Catalyst**: 3 retries, 30s delay, recovery kills stale WDA test processes
 - **Blazor**: 3 retries for server startup
 
 Retryable errors include:

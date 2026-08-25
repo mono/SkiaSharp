@@ -103,6 +103,10 @@ Task ("tests-netcore")
     .IsDependentOn ("externals")
     .Does (() => RunCake ("./scripts/infra/tests/tests-netcore.cake", "Default"));
 
+Task ("tests-container")
+    .Description ("Run the console test suite against prebuilt natives (used by the containerized test legs).")
+    .Does (() => RunCake ("./scripts/infra/tests/tests-container.cake", "Default"));
+
 Task ("tests-android")
     .Description ("Run all Android tests.")
     .IsDependentOn ("externals")
@@ -139,7 +143,6 @@ Task ("nuget-normal")
 
 Task ("nuget-special")
     .Description ("Pack all special NuGets.")
-    .IsDependentOn ("libs")
     .Does (() => RunCake ("./scripts/infra/package/nuget.cake", "nuget-special"));
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

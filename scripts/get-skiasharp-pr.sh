@@ -6,9 +6,9 @@
 set -euo pipefail
 
 # Constants
-readonly ORGANIZATION="xamarin"
+readonly ORGANIZATION="dnceng-public"
 readonly PROJECT="public"
-readonly PIPELINE_ID=4
+readonly PIPELINE_ID=345
 readonly PREFERRED_ARTIFACT="nuget_preview"
 readonly FALLBACK_ARTIFACT="nuget"
 readonly BASE_URL="https://dev.azure.com/${ORGANIZATION}/${PROJECT}/_apis"
@@ -260,10 +260,10 @@ find_build_for_pr() {
     if [[ -z "$build" || "$build" == "null" ]]; then
         if [[ "$successful_only" == true ]]; then
             say_error "No successful builds found for PR #${pr_number}"
-            say_info "Check: https://dev.azure.com/xamarin/public/_build?definitionId=${PIPELINE_ID}"
+            say_info "Check: https://dev.azure.com/dnceng-public/public/_build?definitionId=${PIPELINE_ID}"
         else
             say_error "No builds found for PR #${pr_number}"
-            say_info "Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=${PIPELINE_ID}"
+            say_info "Check if the PR exists at: https://dev.azure.com/dnceng-public/public/_build?definitionId=${PIPELINE_ID}"
         fi
         return 1
     fi

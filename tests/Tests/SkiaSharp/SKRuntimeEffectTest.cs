@@ -384,6 +384,47 @@ namespace SkiaSharp.Tests
 					Assert.Equal(i + 0.5f, floats[i]);
 			}
 
+			// SKRuntimeEffectUniforms.Reset() replaces its internal owned SKData buffer with a
+			// freshly-allocated one. The previous SKData is native ref-counted and owned by the
+			// uniforms object, so it must be disposed when it is replaced — otherwise every Reset()
+			// leaks a native SkData allocation that only the finalizer can reclaim. This asserts the
+			// old buffer's wrapper is deregistered from the handle dictionary (i.e. disposed)
+			// immediately after Reset(), without waiting for a GC.
+			[Fact]
+			public void ResetDisposesPreviousUniformBuffer()
+			{
+				SkipOnMono();
+
+				var src = $"""
+					uniform float uniform_float;
+					{EmptyMain}
+					""";
+
+				using var effect = SKRuntimeEffect.CreateShader(src, out var errorText);
+				Assert.Null(errorText);
+
+				var uniforms = new SKRuntimeEffectUniforms(effect);
+
+				var dataField = typeof(SKRuntimeEffectUniforms).GetField(
+					"data",
+					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+				Assert.NotNull(dataField);
+
+				var oldData = (SKData)dataField.GetValue(uniforms);
+				var oldHandle = oldData.Handle;
+				Assert.NotEqual(IntPtr.Zero, oldHandle);
+
+				// the wrapper is currently registered against its handle
+				Assert.True(SKObject.GetInstance<SKData>(oldHandle, out _));
+
+				uniforms.Reset();
+
+				// after Reset(), the previous buffer must have been disposed and deregistered
+				Assert.False(SKObject.GetInstance<SKData>(oldHandle, out _));
+
+				uniforms.Dispose();
+			}
+
 			[Fact]
 			public void ChildrenWorksCorrectly()
 			{
@@ -1079,6 +1120,7 @@ namespace SkiaSharp.Tests
 		}
 
 		[Trait(Traits.Category.Key, Traits.Category.Values.Gpu)]
+		[Collection(Visual.GpuRenderingCollection.Name)]
 		public unsafe class Gpu : TestEffectTests, IDisposable
 		{
 			GlContext glContext;

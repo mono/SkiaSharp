@@ -171,16 +171,32 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 
 #### VERSIONS.txt updates (harfbuzz)
 
-When bumping **harfbuzz** to `{major}.{minor}.{micro}`, update ALL of these lines in `scripts/VERSIONS.txt` (they otherwise drift out of sync with the binary — the soname/file lines drive the actual native `.so` soname and DLL `FileVersion`):
+When bumping **harfbuzz** to `{major}.{minor}.{micro}`, update ALL of these
+lines in `scripts/VERSIONS.txt` (they otherwise drift out of sync with the
+binary — the soname/file lines drive the actual native `.so` soname and DLL
+`FileVersion`):
 
 | Entry | Line format | Value for `X.Y.Z` |
 |-------|-------------|-------------------|
 | `harfbuzz` | `release` | `X.Y.Z` |
 | `HarfBuzz` | `soname` | `0.<60000 + X*100 + Y*10 + Z>.0` (e.g. 14.2.1 → `0.61421.0`) |
-| `HarfBuzzSharp` | `file` | `X.Y.Z` |
-| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z` (≈10 lines) |
+| `HarfBuzzSharp` | `file` | `X.Y.Z` (`N = 0`) |
+| `HarfBuzzSharp` + all `HarfBuzzSharp.NativeAssets.*` | `nuget` | `X.Y.Z` (`N = 0`, ≈10 lines) |
 
-The soname formula is documented in a comment directly above the `HarfBuzz soname` line. Verify your result with `grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt` — no stale version should remain.
+HarfBuzz upgrades are made on `main` and are not backported to older release
+lines. The upgrade resets package revision `N` to zero and makes the current
+Skia milestone the base for `X.Y.Z`; the normalized 3-part form represents
+`X.Y.Z.0`.
+
+If later Skia milestones continue using the same native HarfBuzz version, each
+milestone adds 100 to the bucket base. For example, if M152 adopts 14.3.1,
+M152 uses revisions 0–99, M153 uses 100–199, and M154 uses 200–299.
+
+The soname formula and package bucket formula are documented in comments next
+to their lines. Verify the result with
+`grep -E "harfbuzz|HarfBuzz" scripts/VERSIONS.txt`: the native release and
+soname must match `X.Y.Z`, while every HarfBuzzSharp file/NuGet entry must
+reset to the same `X.Y.Z` package version.
 
 ### Phase 4: Build & Test
 
@@ -191,9 +207,15 @@ See [documentation/dev/building.md](../../../documentation/dev/building.md#build
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
 
-# Run all tests (core + Vulkan + Direct3D — backends self-skip if unavailable)
-dotnet test tests/SkiaSharp.Tests.Console.sln
+# Run all tests (core + Vulkan + Direct3D). GPU backends are required per
+# GpuPolicy — a backend that cannot come up fails.
+dotnet test tests/SkiaSharp.Tests.Console.slnx
 ```
+
+Use the unfiltered solution for initial and final validation. If it identifies a failure,
+use the owning core, singleton, Vulkan, or Direct3D test project for filtered diagnostic
+iterations; filtering the `.slnx` fails the other projects with zero matches. Rerun the
+unfiltered solution after the focused test passes.
 
 ### Build Retry Strategy
 

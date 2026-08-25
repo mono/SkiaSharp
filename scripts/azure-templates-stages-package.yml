@@ -51,19 +51,26 @@ stages:
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          checkoutSubmodules: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
+          preBuildSteps:
+            - pwsh: git submodule update --init --recursive docs
+              displayName: Checkout API documentation
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           postBuildSteps:
             - pwsh: |
                 Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 New-Item '.\output\' -Type Directory -Force | Out-Null
               displayName: Re-organize the output folder for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
                 Copy-Item -Path '.\scripts\infra\package\SignList.xml' -Destination '.\output\nugets\'
               displayName: Prepare the nugets artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 # Create nuget_preview with only prerelease packages (for easier PR testing)
                 New-Item -Path '.\output\nugets-preview\' -ItemType Directory -Force | Out-Null
@@ -71,12 +78,15 @@ stages:
                 $count = (Get-ChildItem -Path '.\output\nugets-preview\' -Filter '*.nupkg').Count
                 Write-Host "Created nuget_preview artifact with $count prerelease packages"
               displayName: Prepare the nugets-preview artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
               displayName: Prepare the nugets-symbols artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
             - name: package_normal_windows
               path: '.\output\output\'
@@ -116,6 +126,10 @@ stages:
           cacheJob: managed/package
           enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
+          checkoutSubmodules: false
+          installAndroidSdk: false
+          installDotNetWorkloads: false
+          installNode: false
           shouldPublish: false
           requiredArtifacts:
             - name: native
@@ -132,18 +146,20 @@ stages:
                 Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
                 New-Item '.\output\' -Type Directory -Force | Out-Null
               displayName: Re-organize the output folder for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
               displayName: Prepare the nugets-special artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
+              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
             - name: package_special_windows
               path: '.\output\output\'
             - name: nuget_special
               path: '.\output\nugets-special'
-
   - ${{ if eq(parameters.enableSigning, 'true') }}:
     - stage: signing
       displayName: Sign NuGets

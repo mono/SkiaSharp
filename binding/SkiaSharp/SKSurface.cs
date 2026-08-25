@@ -252,6 +252,57 @@ namespace SkiaSharp
 			return surface;
 		}
 
+		// Graphite-backed render target
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info) =>
+			Create (recorder, info, mipmapped: false, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped) =>
+			Create (recorder, info, mipmapped, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, SKSurfaceProperties props) =>
+			Create (recorder, info, mipmapped: false, props);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKImageInfo info, bool mipmapped, SKSurfaceProperties props)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			return GetObject (SkiaApi.sk_graphite_surface_make_render_target (recorder.Handle, &cinfo, mipmapped, props?.Handle ?? IntPtr.Zero));
+		}
+
+		// Graphite-backed surface wrapping a caller-allocated GPU texture
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType) =>
+			Create (recorder, backendTexture, colorType, colorSpace: null, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props) =>
+			Create (recorder, backendTexture, colorType, colorSpace, props, releaseProc: null);
+
+		public static SKSurface Create (SKGraphiteRecorder recorder, SKGraphiteBackendTexture backendTexture, SKColorType colorType, SKColorSpace colorSpace, SKSurfaceProperties props, SKGraphiteReleaseDelegate releaseProc)
+		{
+			if (recorder == null)
+				throw new ArgumentNullException (nameof (recorder));
+			if (backendTexture == null)
+				throw new ArgumentNullException (nameof (backendTexture));
+
+			DelegateProxies.Create (releaseProc, out _, out var ctx);
+			var proxy = releaseProc != null ? DelegateProxies.SKGraphiteReleaseProxy : null;
+
+			return GetObject (SkiaApi.sk_graphite_surface_wrap_backend_texture (
+				recorder.Handle,
+				backendTexture.Handle,
+				colorType.ToNative (),
+				colorSpace?.Handle ?? IntPtr.Zero,
+				props?.Handle ?? IntPtr.Zero,
+				proxy,
+				(void*)ctx));
+		}
+
 #if __MACOS__ || __IOS__ || __TVOS__
 
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
@@ -404,6 +455,29 @@ namespace SkiaSharp
 			var result = SkiaApi.sk_surface_read_pixels (Handle, &cinfo, (void*)dstPixels, (IntPtr)dstRowBytes, srcX, srcY);
 			GC.KeepAlive (this);
 			return result;
+		}
+
+		// RequestReadPixels
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, Action<SKImageReadPixelsResult> callback) =>
+			RequestReadPixels (info, srcRect, SKImageRescaleGamma.Src, SKImageRescaleMode.Nearest, callback);
+
+		public void RequestReadPixels (SKImageInfo info, SKRectI srcRect, SKImageRescaleGamma rescaleGamma, SKImageRescaleMode rescaleMode, Action<SKImageReadPixelsResult> callback)
+		{
+			if (callback == null)
+				throw new ArgumentNullException (nameof (callback));
+
+			Action<IntPtr> handler = raw => {
+				using var result = raw == IntPtr.Zero ? null : new SKImageReadPixelsResult (raw, info);
+				callback (result);
+				// Keep this surface alive until the (possibly deferred) callback fires.
+				GC.KeepAlive (this);
+			};
+			DelegateProxies.Create (handler, out _, out var ctx);
+
+			var cinfo = SKImageInfoNative.FromManaged (ref info);
+			SkiaApi.sk_surface_async_rescale_and_read_pixels (Handle, &cinfo, &srcRect, rescaleGamma, rescaleMode, DelegateProxies.SKImageAsyncReadPixelsProxy, (void*)ctx);
+			GC.KeepAlive (this);
 		}
 
 		public void Flush () => Flush (true);
