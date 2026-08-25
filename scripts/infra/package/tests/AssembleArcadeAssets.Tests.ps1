@@ -34,17 +34,53 @@ function New-Package {
 }
 
 $root = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-arcade-assets-$([Guid]::NewGuid().ToString('N'))"
-$signed = Join-Path $root 'signed'
+$product = Join-Path $root 'product'
 $transport = Join-Path $root 'transport'
 $packages = Join-Path $root 'packages'
 $pdbs = Join-Path $root 'pdbs'
-$script = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../assemble-arcade-assets.ps1'))
+$prPackages = Join-Path $root 'pr-packages'
+$prPdbs = Join-Path $root 'pr-pdbs'
+$emptyProduct = Join-Path $root 'empty-product'
+$emptyPackages = Join-Path $root 'empty-packages'
+$emptyPdbs = Join-Path $root 'empty-pdbs'
+$cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
+
+function Invoke-Assembly {
+    param(
+        [Parameter(Mandatory)]
+        [string] $ProductPackageDirectory,
+
+        [Parameter(Mandatory)]
+        [string] $TransportPackageDirectory,
+
+        [Parameter(Mandatory)]
+        [string] $PackageRoot,
+
+        [Parameter(Mandatory)]
+        [string] $PdbArtifactsDirectory,
+
+        [string] $TransportVersionKind = 'branch'
+    )
+
+    & dotnet cake $cake `
+        --target=assemble-arcade-assets `
+        "--productPackageDirectory=$ProductPackageDirectory" `
+        "--transportPackageDirectory=$TransportPackageDirectory" `
+        "--packageRoot=$PackageRoot" `
+        "--pdbArtifactsDirectory=$PdbArtifactsDirectory" `
+        "--transportVersionKind=$TransportVersionKind" `
+        --verbosity=quiet
+    if ($LASTEXITCODE -ne 0) {
+        throw "Cake asset assembly failed with exit code $LASTEXITCODE."
+    }
+}
 
 try {
-    New-Item $signed -ItemType Directory -Force | Out-Null
+    New-Item $product -ItemType Directory -Force | Out-Null
     New-Item $transport -ItemType Directory -Force | Out-Null
+    New-Item $emptyProduct -ItemType Directory -Force | Out-Null
 
-    New-Package (Join-Path $signed 'Foo.1.0.0.nupkg') @{
+    New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
         'lib/net8.0/Foo.pdb' = 'pdb8'
         'lib/net9.0/Foo.dll' = 'dll9'
@@ -52,11 +88,11 @@ try {
         'ref/net8.0/Foo.pdb' = 'reference'
         'runtimes/win-x64/native/Foo.pdb' = 'native'
     }
-    New-Package (Join-Path $signed 'Bar.1.0.0.nupkg') @{
+    New-Package (Join-Path $product 'Bar.1.0.0.nupkg') @{
         'lib/net8.0/Bar.dll' = 'dll'
         'lib/net8.0/Bar.pdb' = 'normal-pdb'
     }
-    New-Package (Join-Path $signed 'Bar.1.0.0.symbols.nupkg') @{
+    New-Package (Join-Path $product 'Bar.1.0.0.symbols.nupkg') @{
         'lib/net8.0/Bar.pdb' = 'explicit-pdb'
     }
 
@@ -64,12 +100,14 @@ try {
         '_NuGets.0.0.0-branch.main.1.nupkg'
         '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg'
         '_NuGets.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg')) {
+        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg'
+        '_NuGets.0.0.0-pr.4863.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-pr.4863.1.nupkg')) {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
-    & $script `
-        -SignedPackageDirectory $signed `
+    Invoke-Assembly `
+        -ProductPackageDirectory $product `
         -TransportPackageDirectory $transport `
         -PackageRoot $packages `
         -PdbArtifactsDirectory $pdbs
@@ -96,11 +134,41 @@ try {
     if (-not (Test-Path (Join-Path $packages 'Shipping/Bar.1.0.0.symbols.nupkg'))) {
         throw 'Explicit symbol packages must remain in Shipping.'
     }
+    if (-not (Test-Path (Join-Path $packages 'Shipping/Foo.1.0.0.nupkg'))) {
+        throw 'Product packages must remain in Shipping.'
+    }
 
     $nonShipping = @(Get-ChildItem (Join-Path $packages 'NonShipping') -Filter '*.nupkg' -File)
     if ($nonShipping.Count -ne 2 -or
         @($nonShipping | Where-Object Name -like '*-commit.*').Count -ne 0) {
         throw 'Only the branch-versioned transport family may enter NonShipping.'
+    }
+
+    Invoke-Assembly `
+        -ProductPackageDirectory $product `
+        -TransportPackageDirectory $transport `
+        -PackageRoot $prPackages `
+        -PdbArtifactsDirectory $prPdbs `
+        -TransportVersionKind pr
+
+    $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
+    if ($prNonShipping.Count -ne 2 -or
+        @($prNonShipping | Where-Object Name -notlike '*-pr.*').Count -ne 0) {
+        throw 'Public PR validation must stage only the PR-versioned transport family.'
+    }
+
+    New-Package (Join-Path $emptyProduct 'Empty.1.0.0.nupkg') @{
+        'lib/net8.0/Empty.dll' = 'dll'
+    }
+    Invoke-Assembly `
+        -ProductPackageDirectory $emptyProduct `
+        -TransportPackageDirectory $transport `
+        -PackageRoot $emptyPackages `
+        -PdbArtifactsDirectory $emptyPdbs
+
+    $emptyPdbFiles = @(Get-ChildItem $emptyPdbs -File -Recurse -Force)
+    if ($emptyPdbFiles.Count -ne 1 -or $emptyPdbFiles[0].Name -ne '.empty') {
+        throw 'PdbArtifacts must contain only .empty when no eligible PDB exists.'
     }
 
     Write-Host 'Arcade asset assembly tests passed.'

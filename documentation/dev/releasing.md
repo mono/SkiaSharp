@@ -129,7 +129,7 @@ revision buckets.
 
 | Pipeline | Purpose |
 |----------|---------|
-| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, signs, and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
+| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Builds native binaries and managed packages, prepares public Arcade package/PDB artifacts, then internally signs and registers/validates assets in BAR. API Scan runs on scheduled main builds or when explicitly requested. |
 | [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
 | NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
 

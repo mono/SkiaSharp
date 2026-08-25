@@ -135,26 +135,41 @@ The core `SkiaSharp` and `HarfBuzzSharp` packages automatically include NativeAs
 
 ## Build and Publishing
 
-Cake produces two pipeline artifacts:
+`dotnet cake --target=nuget` produces the raw package directories and the
+prepared Arcade release views in one dependency graph. The Package stage
+publishes:
 
 - `nuget` — product packages and explicit `.symbols.nupkg` packages;
 - `nuget_special` — unsigned `_NuGets` and `_NativeAssets*` transport packages.
 
-The internal pipeline signs `nuget`, then assembles signed packages under
-Arcade `Shipping` and transport packages under `NonShipping`. Arcade generates
-the V3 manifest, registers one BAR, validates it, and invokes Darc promotion.
+It also publishes the deterministic release inputs created by Cake:
+
+- `arcade_shipping` — product and explicit symbol packages ready for signing;
+- `arcade_nonshipping` — the selected unsigned transport family ready for BAR;
+- `PdbArtifacts` — loose implementation/runtime PDBs for product packages that
+  do not have an explicit symbol package.
+
+Public PR validation selects PR-versioned transport packages for structural
+validation. Official branch builds select exactly one branch-versioned package
+per transport ID; commit aliases remain only in `nuget_special`.
+
+The internal signing stage downloads only `arcade_shipping`, signs it, and
+republishes it as `arcade_shipping_signed`; transport packages never enter the
+signing job. A separate authenticated stage combines the signed Shipping and
+already-prepared NonShipping views by artifact download, generates the Arcade
+V3 manifest, registers one BAR, validates it, and invokes Darc promotion. This
+keeps package layout, transport filtering, and PDB extraction public while
+internal jobs perform only signing and publishing.
 
 `eng/Signing.props` defines product signing. Normal and explicit symbol packages
-are signed together; dSYM DWARF files are not signing targets. For packages
-without explicit symbols, PDBs are extracted from the signed package into
-Arcade's standard `PdbArtifacts`.
+are signed together; dSYM DWARF files are not signing targets. PDBs are extracted
+before signing because package signing does not alter their contents.
 
 `eng/Publishing.props` publishes Shipping packages, NonShipping transport, and
 symbol blobs. `eng/SignCheckExclusionsFile.txt` marks transport packages
 `DO-NOT-SIGN, DO-NOT-UNPACK`.
 
-Official BARs publish one branch-versioned transport package per ID. Commit
-aliases remain available in the `nuget_special` pipeline artifact.
+Official BARs publish one branch-versioned transport package per ID.
 
 See [Releasing](releasing.md) for release branches, BAR selection, testing, and
 NuGet.org publication.
