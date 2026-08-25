@@ -23,6 +23,9 @@ stages:
             - pwsh: git submodule update --init --recursive docs
               displayName: Checkout API documentation
               condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          postBuildSteps:
+            - pwsh: ./scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1
+              displayName: Validate Arcade asset assembly
           publishArtifacts:
             - name: nuget
               path: '.\output\nugets'
