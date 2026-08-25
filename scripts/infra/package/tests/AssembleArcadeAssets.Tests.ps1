@@ -34,43 +34,42 @@ function New-Package {
 }
 
 $root = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-arcade-assets-$([Guid]::NewGuid().ToString('N'))"
-$product = Join-Path $root 'product'
-$transport = Join-Path $root 'transport'
-$packages = Join-Path $root 'packages'
-$pdbs = Join-Path $root 'pdbs'
-$prPackages = Join-Path $root 'pr-packages'
-$prPdbs = Join-Path $root 'pr-pdbs'
-$emptyProduct = Join-Path $root 'empty-product'
-$emptyPackages = Join-Path $root 'empty-packages'
-$emptyPdbs = Join-Path $root 'empty-pdbs'
+$branchOutput = Join-Path $root 'branch'
+$product = Join-Path $branchOutput 'nugets'
+$transport = Join-Path $branchOutput 'nugets-special'
+$packages = Join-Path $branchOutput 'arcade-assets'
+$pdbs = Join-Path $branchOutput 'pdbs'
+$prOutput = Join-Path $root 'pr'
+$prPackages = Join-Path $prOutput 'arcade-assets'
+$prPdbs = Join-Path $prOutput 'pdbs'
+$emptyOutput = Join-Path $root 'empty'
+$emptyProduct = Join-Path $emptyOutput 'nugets'
+$emptyPackages = Join-Path $emptyOutput 'arcade-assets'
+$emptyPdbs = Join-Path $emptyOutput 'pdbs'
+$escapingOutput = Join-Path $root 'escaping'
+$escapingProduct = Join-Path $escapingOutput 'nugets'
 $cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
 
 function Invoke-Assembly {
     param(
         [Parameter(Mandatory)]
-        [string] $ProductPackageDirectory,
+        [string] $OutputDirectory,
 
-        [Parameter(Mandatory)]
-        [string] $TransportPackageDirectory,
+        [string] $PreviewLabel = 'preview.0',
 
-        [Parameter(Mandatory)]
-        [string] $PackageRoot,
-
-        [Parameter(Mandatory)]
-        [string] $PdbArtifactsDirectory,
-
-        [string] $TransportVersionKind = 'branch'
+        [switch] $ExpectFailure
     )
 
     & dotnet cake $cake `
         --target=nuget-assemble-arcade-assets `
-        "--productPackageDirectory=$ProductPackageDirectory" `
-        "--transportPackageDirectory=$TransportPackageDirectory" `
-        "--packageRoot=$PackageRoot" `
-        "--pdbArtifactsDirectory=$PdbArtifactsDirectory" `
-        "--transportVersionKind=$TransportVersionKind" `
+        "--outputPath=$OutputDirectory" `
+        "--previewLabel=$PreviewLabel" `
         --verbosity=quiet
-    if ($LASTEXITCODE -ne 0) {
+    if ($ExpectFailure) {
+        if ($LASTEXITCODE -eq 0) {
+            throw 'Cake asset assembly unexpectedly accepted an escaping PDB path.'
+        }
+    } elseif ($LASTEXITCODE -ne 0) {
         throw "Cake asset assembly failed with exit code $LASTEXITCODE."
     }
 }
@@ -79,6 +78,9 @@ try {
     New-Item $product -ItemType Directory -Force | Out-Null
     New-Item $transport -ItemType Directory -Force | Out-Null
     New-Item $emptyProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $emptyOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $escapingProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $escapingOutput 'nugets-special') -ItemType Directory -Force | Out-Null
 
     New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
@@ -106,11 +108,7 @@ try {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
-    Invoke-Assembly `
-        -ProductPackageDirectory $product `
-        -TransportPackageDirectory $transport `
-        -PackageRoot $packages `
-        -PdbArtifactsDirectory $pdbs
+    Invoke-Assembly -OutputDirectory $branchOutput
 
     $expectedPdbs = @(
         'Foo.1.0.0/lib/net8.0/Foo.pdb'
@@ -144,12 +142,9 @@ try {
         throw 'Only the branch-versioned transport family may enter NonShipping.'
     }
 
-    Invoke-Assembly `
-        -ProductPackageDirectory $product `
-        -TransportPackageDirectory $transport `
-        -PackageRoot $prPackages `
-        -PdbArtifactsDirectory $prPdbs `
-        -TransportVersionKind pr
+    Copy-Item $product (Join-Path $prOutput 'nugets') -Recurse
+    Copy-Item $transport (Join-Path $prOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $prOutput -PreviewLabel 'pr.4863'
 
     $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
     if ($prNonShipping.Count -ne 2 -or
@@ -160,15 +155,21 @@ try {
     New-Package (Join-Path $emptyProduct 'Empty.1.0.0.nupkg') @{
         'lib/net8.0/Empty.dll' = 'dll'
     }
-    Invoke-Assembly `
-        -ProductPackageDirectory $emptyProduct `
-        -TransportPackageDirectory $transport `
-        -PackageRoot $emptyPackages `
-        -PdbArtifactsDirectory $emptyPdbs
+    Copy-Item (Join-Path $transport '*') (Join-Path $emptyOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $emptyOutput
 
     $emptyPdbFiles = @(Get-ChildItem $emptyPdbs -File -Recurse -Force)
     if ($emptyPdbFiles.Count -ne 1 -or $emptyPdbFiles[0].Name -ne '.empty') {
         throw 'PdbArtifacts must contain only .empty when no eligible PDB exists.'
+    }
+
+    New-Package (Join-Path $escapingProduct 'Escaping.1.0.0.nupkg') @{
+        '../escape.pdb' = 'escape'
+    }
+    Copy-Item (Join-Path $transport '*') (Join-Path $escapingOutput 'nugets-special') -Recurse
+    Invoke-Assembly -OutputDirectory $escapingOutput -ExpectFailure
+    if (Test-Path (Join-Path $escapingOutput 'pdbs/escape.pdb')) {
+        throw 'An escaping PDB path wrote outside its package extraction root.'
     }
 
     Write-Host 'Arcade asset assembly tests passed.'

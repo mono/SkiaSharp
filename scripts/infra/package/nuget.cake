@@ -293,19 +293,10 @@ Task ("nuget-assemble-arcade-assets")
     .Description ("Prepare Arcade package views and loose PDB artifacts.")
     .Does (() =>
 {
-    var productPackageDirectory = MakeAbsolute (Directory (Argument ("productPackageDirectory", OUTPUT_NUGETS_PATH.FullPath)));
-    var transportPackageDirectory = MakeAbsolute (Directory (Argument ("transportPackageDirectory", OUTPUT_SPECIAL_NUGETS_PATH.FullPath)));
-    var packageRoot = MakeAbsolute (Directory (Argument ("packageRoot", OUTPUT_ARCADE_ASSETS_PATH.FullPath)));
-    var pdbArtifactsDirectory = MakeAbsolute (Directory (Argument ("pdbArtifactsDirectory", OUTPUT_PDB_ARTIFACTS_PATH.FullPath)));
-    var defaultTransportVersionKind = PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
-    var transportVersionKind = Argument ("transportVersionKind", defaultTransportVersionKind).ToLowerInvariant ();
+    var transportVersionKind = PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
 
-    if (transportVersionKind != "branch" && transportVersionKind != "pr")
-        throw new Exception (
-            $"Unsupported transport version kind '{transportVersionKind}'. Expected 'branch' or 'pr'.");
-
-    var productPackages = GetNuGetPackages (productPackageDirectory, "product");
-    var allTransportPackages = GetNuGetPackages (transportPackageDirectory, "transport");
+    var productPackages = GetNuGetPackages (OUTPUT_NUGETS_PATH, "product");
+    var allTransportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
     var transportMarker = $".0.0.0-{transportVersionKind}.";
     var transportPackages = allTransportPackages
         .Where (package => package.GetFilename ().ToString ()
@@ -315,10 +306,10 @@ Task ("nuget-assemble-arcade-assets")
         throw new Exception (
             $"No {transportVersionKind}-versioned transport NuGet packages were found.");
 
-    var shipping = packageRoot.Combine ("Shipping");
-    var nonShipping = packageRoot.Combine ("NonShipping");
-    CleanDir (packageRoot);
-    CleanDir (pdbArtifactsDirectory);
+    var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("Shipping");
+    var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("NonShipping");
+    CleanDir (OUTPUT_ARCADE_ASSETS_PATH);
+    CleanDir (OUTPUT_PDB_ARTIFACTS_PATH);
     EnsureDirectoryExists (shipping);
     EnsureDirectoryExists (nonShipping);
 
@@ -330,20 +321,20 @@ Task ("nuget-assemble-arcade-assets")
     var productNames = new HashSet<string> (
         productPackages.Select (package => package.GetFilename ().ToString ()),
         StringComparer.OrdinalIgnoreCase);
+    var normalPackages = productPackages
+        .Where (package => !package.GetFilename ().ToString ().EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+        .ToArray ();
     var explicitSymbolCount = 0;
     var pdbCount = 0;
 
-    foreach (var package in productPackages.Where (package =>
-        !package.GetFilename ().ToString ()
-            .EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase))) {
+    foreach (var package in normalPackages) {
         var packageBaseName = package.GetFilenameWithoutExtension ().ToString ();
         if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) {
             explicitSymbolCount++;
             continue;
         }
 
-        var packagePdbRoot = System.IO.Path.GetFullPath (
-            System.IO.Path.Combine (pdbArtifactsDirectory.FullPath, packageBaseName));
+        var packagePdbRoot = MakeAbsolute (OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));
         var archive = ZipFile.OpenRead (package.FullPath);
         try {
             foreach (var entry in archive.Entries) {
@@ -353,19 +344,20 @@ Task ("nuget-assemble-arcade-assets")
                     continue;
                 }
 
-                var relativePath = entryPath.Replace ('/', System.IO.Path.DirectorySeparatorChar);
-                var targetPath = System.IO.Path.GetFullPath (
-                    System.IO.Path.Combine (packagePdbRoot, relativePath));
-                if (!targetPath.StartsWith (
-                    packagePdbRoot + System.IO.Path.DirectorySeparatorChar,
-                    StringComparison.OrdinalIgnoreCase)) {
-                    throw new Exception (
-                        $"PDB package path escapes its extraction root: {entry.FullName}");
+                var targetPath = MakeAbsolute (packagePdbRoot
+                    .CombineWithFilePath (entryPath)
+                    .Collapse ());
+                var relativeTargetPath = packagePdbRoot.GetRelativePath (targetPath);
+                if (relativeTargetPath.Segments.Any (segment => segment == "..")) {
+                    throw new Exception ($"PDB package path escapes its extraction root: {entry.FullName}");
                 }
 
-                System.IO.Directory.CreateDirectory (System.IO.Path.GetDirectoryName (targetPath));
+                EnsureDirectoryExists (targetPath.GetDirectory ());
                 var sourceStream = entry.Open ();
-                var targetStream = System.IO.File.Create (targetPath);
+                var targetStream = Context.FileSystem.GetFile (targetPath).Open (
+                    System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write,
+                    System.IO.FileShare.None);
                 try {
                     sourceStream.CopyTo (targetStream);
                 } finally {
@@ -379,10 +371,12 @@ Task ("nuget-assemble-arcade-assets")
         }
     }
 
-    if (pdbCount == 0)
-        System.IO.File.WriteAllText (
-            pdbArtifactsDirectory.CombineWithFilePath (".empty").FullPath,
-            "");
+    if (pdbCount == 0) {
+        var emptyStream = Context.FileSystem
+            .GetFile (OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty"))
+            .Open (System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None);
+        emptyStream.Dispose ();
+    }
 
     Information (
         "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +

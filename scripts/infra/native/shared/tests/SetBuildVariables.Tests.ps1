@@ -528,7 +528,11 @@ $transportProject = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuge
 if ($transportProject -notmatch '<IsShippingPackage>false</IsShippingPackage>') {
     throw 'The special-package project must declare its NuGets as non-shipping.'
 }
-$normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
+$specialTaskMarker = [regex]::Match($packageScript, 'Task\s*\(\s*"nuget-special"\s*\)')
+if (-not $specialTaskMarker.Success) {
+    throw 'The NuGet Cake graph must define nuget-special.'
+}
+$normalTask = $packageScript.Substring(0, $specialTaskMarker.Index)
 if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
@@ -546,7 +550,10 @@ if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
 if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageScript -notmatch 'ZipFile\.OpenRead' -or
     $packageScript -notmatch 'transportVersionKind' -or
-    $packageScript -notmatch 'entryPath\.StartsWith\s*\(\s*"ref/"') {
+    $packageScript -notmatch 'entryPath\.StartsWith\s*\(\s*"ref/"' -or
+    $packageScript -notmatch 'CombineWithFilePath' -or
+    $packageScript -notmatch 'GetRelativePath' -or
+    $packageScript -match 'System\.IO\.Path') {
     throw 'The NuGet Cake graph must prepare Arcade package views and loose PDB artifacts.'
 }
 if ($buildCake -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
