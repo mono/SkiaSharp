@@ -529,7 +529,11 @@ $transportProject = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuge
 if ($transportProject -notmatch '<IsShippingPackage>false</IsShippingPackage>') {
     throw 'The special-package project must declare its NuGets as non-shipping.'
 }
-$normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
+$specialTaskMarker = [regex]::Match($packageScript, 'Task\s*\(\s*"nuget-special"\s*\)')
+if (-not $specialTaskMarker.Success) {
+    throw 'The NuGet Cake graph must define nuget-special.'
+}
+$normalTask = $packageScript.Substring(0, $specialTaskMarker.Index)
 if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
