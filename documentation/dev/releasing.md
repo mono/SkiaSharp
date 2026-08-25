@@ -286,6 +286,12 @@ artifacts. The top-level `nuget` target depends on
 `nuget-assemble-arcade-assets`; package outputs are build-context dependent and
 must not come from source-only aggregate Package caching.
 
+Source/main calls the shared `--outputPath` root `OUTPUT_PATH`. Historical
+lines may call it `PACKAGE_OUTPUT_PATH` to avoid native Cake global collisions;
+`OUTPUT_NUGETS_PATH`, `OUTPUT_SPECIAL_NUGETS_PATH`,
+`OUTPUT_ARCADE_ASSETS_PATH`, and `OUTPUT_PDB_ARTIFACTS_PATH` remain derived from
+that one root with unchanged directory names.
+
 ### Stage 3: Testing (release-testing skill)
 
 ```mermaid

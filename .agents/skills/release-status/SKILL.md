@@ -28,6 +28,9 @@ This skill is **Step 2 of 5**:
 - Verify the target commit contains the minimum behavioral Arcade backport:
   combined Build role, folder-qualified Tests resource, fail-closed exact
   artifact selection, exact internal release versioning, and transport metadata.
+  The package graph uses one consistent `--outputPath` root: `OUTPUT_PATH` on
+  source/main or `PACKAGE_OUTPUT_PATH` on historical lines where native Cake
+  already owns `OUTPUT_PATH`; all derived package directories keep their names.
   Prepare must remain tool-free and run only focused build-variable, API Scan,
   and cache validation; Cake behavior validation runs as a Package post-build
   step. The top-level `nuget` Cake graph must depend on

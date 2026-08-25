@@ -215,6 +215,48 @@ class PipelineStatusTests(unittest.TestCase):
             )
         )
 
+    def test_package_output_root_accepts_source_or_historical_spelling(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "package-output-root"
+        )
+
+        def contract(root):
+            return (
+                f'DirectoryPath {root} = MakeAbsolute(Directory('
+                'Argument("outputPath", "output")));\n'
+                f'DirectoryPath OUTPUT_NUGETS_PATH = {root}.Combine("nugets");\n'
+                f'DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = {root}'
+                '.Combine("nugets-special");\n'
+                f'DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = {root}'
+                '.Combine("arcade-assets");\n'
+                f'DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = {root}'
+                '.Combine("pdbs");\n'
+            )
+
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                contract("OUTPUT_PATH"),
+                requirement,
+            )
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                contract("PACKAGE_OUTPUT_PATH"),
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                contract("PACKAGE_OUTPUT_PATH").replace(
+                    "OUTPUT_PDB_ARTIFACTS_PATH = PACKAGE_OUTPUT_PATH",
+                    "OUTPUT_PDB_ARTIFACTS_PATH = OUTPUT_PATH",
+                ),
+                requirement,
+            )
+        )
+
     def test_transport_download_has_no_commit_fallback(self):
         requirement = next(
             item
@@ -513,6 +555,20 @@ class PipelineStatusTests(unittest.TestCase):
             (shared / "set-build-variables.ps1").write_text(
                 "Set-BuildVariable DOTNET_FINAL_VERSION_KIND "
                 "$finalVersionKind\n",
+                encoding="ascii",
+            )
+            infra_shared = scripts / "infra" / "shared"
+            (infra_shared / "shared.cake").write_text(
+                'DirectoryPath OUTPUT_PATH = MakeAbsolute(Directory('
+                'Argument("outputPath", "output")));\n'
+                'DirectoryPath OUTPUT_NUGETS_PATH = '
+                'OUTPUT_PATH.Combine("nugets");\n'
+                'DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = '
+                'OUTPUT_PATH.Combine("nugets-special");\n'
+                'DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = '
+                'OUTPUT_PATH.Combine("arcade-assets");\n'
+                'DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = '
+                'OUTPUT_PATH.Combine("pdbs");\n',
                 encoding="ascii",
             )
             nuget = package / "nuget"

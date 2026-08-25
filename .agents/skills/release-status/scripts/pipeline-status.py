@@ -75,6 +75,30 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
+        "id": "package-output-root",
+        "path": "scripts/infra/shared/shared.cake",
+        "pattern": (
+            r"DirectoryPath\s+(?P<packageRoot>"
+            r"OUTPUT_PATH|PACKAGE_OUTPUT_PATH)\s*=\s*"
+            r"MakeAbsolute\s*\(\s*Directory\s*\(\s*"
+            r"Argument\s*\(\s*['\"]outputPath['\"].*"
+            r"OUTPUT_NUGETS_PATH\s*=\s*(?P=packageRoot)\.Combine\s*\("
+            r"\s*['\"]nugets['\"].*"
+            r"OUTPUT_SPECIAL_NUGETS_PATH\s*=\s*(?P=packageRoot)\.Combine"
+            r"\s*\(\s*['\"]nugets-special['\"].*"
+            r"OUTPUT_ARCADE_ASSETS_PATH\s*=\s*(?P=packageRoot)\.Combine"
+            r"\s*\(\s*['\"]arcade-assets['\"].*"
+            r"OUTPUT_PDB_ARTIFACTS_PATH\s*=\s*(?P=packageRoot)\.Combine"
+            r"\s*\(\s*['\"]pdbs['\"]"
+        ),
+        "detail": (
+            "backport one consistent package output root: OUTPUT_PATH on "
+            "source/main or PACKAGE_OUTPUT_PATH on historical lines with "
+            "native Cake globals; preserve --outputPath and all derived "
+            "package directories"
+        ),
+    },
+    {
         "id": "cake-arcade-assets",
         "path": "scripts/infra/package/nuget.cake",
         "pattern": (
