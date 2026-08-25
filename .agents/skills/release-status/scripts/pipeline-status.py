@@ -93,19 +93,37 @@ MIGRATION_REQUIREMENTS = (
         "path": "scripts/infra/package/nuget.cake",
         "pattern": (
             r"productNames\.Contains\s*\(.*\.symbols\.nupkg.*continue.*"
-            r"Path\.Combine\s*\(\s*pdbArtifactsDirectory\.FullPath,\s*"
-            r"packageBaseName\s*\).*"
+            r"MakeAbsolute\s*\(\s*OUTPUT_PDB_ARTIFACTS_PATH"
+            r"\.Combine\s*\(\s*packageBaseName\s*\)\s*\).*"
             r"entryPath\.StartsWith\s*\(\s*['\"]ref/['\"].*"
-            r"Path\.Combine\s*\(\s*packagePdbRoot,\s*relativePath\s*\).*"
+            r"CombineWithFilePath\s*\(\s*entryPath\s*\).*Collapse\s*\(\s*\).*"
+            r"GetRelativePath\s*\(\s*targetPath\s*\).*"
+            r"Segments\.Any\s*\(.*['\"]\.\.['\"].*"
             r"PDB package path escapes.*"
             r"if\s*\(\s*pdbCount\s*==\s*0\s*\).*"
-            r"pdbArtifactsDirectory\.CombineWithFilePath\s*\(\s*"
+            r"OUTPUT_PDB_ARTIFACTS_PATH\.CombineWithFilePath\s*\(\s*"
             r"['\"]\.empty['\"]"
         ),
+        "forbiddenPattern": r"System\.IO\.Path",
         "detail": (
-            "backport Cake loose PdbArtifacts assembly: preserve explicit "
-            "symbol ownership, retain package/TFM/RID paths, exclude ref/**, "
-            "guard traversal, and emit .empty only when no PDB exists"
+            "backport Cake-native loose PdbArtifacts assembly: preserve "
+            "explicit symbol ownership and package/TFM/RID paths, exclude "
+            "ref/**, prove containment without System.IO.Path, and emit "
+            ".empty only when no PDB exists"
+        ),
+    },
+    {
+        "id": "pdb-escape-contract-test",
+        "path": "scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1",
+        "pattern": (
+            r"['\"]\.\./escape\.pdb['\"].*"
+            r"Invoke-Assembly.*-ExpectFailure.*"
+            r"escaping PDB path wrote outside"
+        ),
+        "detail": (
+            "backport the public artifact contract test that requires an "
+            "escaping PDB archive entry to fail without writing outside its "
+            "package root"
         ),
     },
     {

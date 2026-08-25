@@ -251,13 +251,16 @@ class PipelineStatusTests(unittest.TestCase):
         contract = (
             'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
             "{ continue; }\n"
-            "var packagePdbRoot = Path.Combine "
-            "(pdbArtifactsDirectory.FullPath, packageBaseName);\n"
+            "var packagePdbRoot = MakeAbsolute "
+            "(OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));\n"
             'if (entryPath.StartsWith ("ref/")) { continue; }\n'
-            "var targetPath = Path.Combine (packagePdbRoot, relativePath);\n"
+            "var targetPath = packagePdbRoot"
+            ".CombineWithFilePath (entryPath).Collapse ();\n"
+            "var relative = packagePdbRoot.GetRelativePath (targetPath);\n"
+            'relative.Segments.Any (segment => segment == "..");\n'
             'throw new Exception ("PDB package path escapes");\n'
             "if (pdbCount == 0) "
-            'pdbArtifactsDirectory.CombineWithFilePath (".empty");\n'
+            'OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty");\n'
         )
         self.assertTrue(
             status.migration_requirement_satisfied(
@@ -267,10 +270,7 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertFalse(
             status.migration_requirement_satisfied(
-                contract.replace(
-                    'if (entryPath.StartsWith ("ref/")) { continue; }\n',
-                    "",
-                ),
+                contract + "System.IO.Path.Combine (\"bad\");\n",
                 requirement,
             )
         )
@@ -411,13 +411,24 @@ class PipelineStatusTests(unittest.TestCase):
                 "CopyFileToDirectory (package, nonShipping);\n"
                 'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
                 "{ continue; }\n"
-                "var packagePdbRoot = Path.Combine "
-                "(pdbArtifactsDirectory.FullPath, packageBaseName);\n"
+                "var packagePdbRoot = MakeAbsolute "
+                "(OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));\n"
                 'if (entryPath.StartsWith ("ref/")) { continue; }\n'
-                "var targetPath = Path.Combine (packagePdbRoot, relativePath);\n"
+                "var targetPath = packagePdbRoot"
+                ".CombineWithFilePath (entryPath).Collapse ();\n"
+                "var relative = packagePdbRoot.GetRelativePath (targetPath);\n"
+                'relative.Segments.Any (segment => segment == "..");\n'
                 'throw new Exception ("PDB package path escapes");\n'
                 "if (pdbCount == 0) "
-                'pdbArtifactsDirectory.CombineWithFilePath (".empty");\n',
+                'OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty");\n',
+                encoding="ascii",
+            )
+            tests = package / "tests"
+            tests.mkdir()
+            (tests / "AssembleArcadeAssets.Tests.ps1").write_text(
+                "'../escape.pdb'\n"
+                "Invoke-Assembly -ExpectFailure\n"
+                "throw 'An escaping PDB path wrote outside'\n",
                 encoding="ascii",
             )
             (seed / "build.cake").write_text(
