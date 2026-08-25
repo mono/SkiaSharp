@@ -13,6 +13,10 @@ Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");
+
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
@@ -28,6 +32,7 @@ Task ("nuget-normal")
     // move symbols to a special location to avoid signing
     EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
     DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.snupkg");
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
     MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 });
