@@ -242,6 +242,38 @@ class PipelineStatusTests(unittest.TestCase):
             )
         )
 
+    def test_real_pdb_contract_requires_all_safety_markers(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "real-pdb-artifacts"
+        )
+        contract = (
+            "if (Test-Path $symbolPath) { continue }\n"
+            "$packagePdbRoot = Join-Path $pdbArtifacts "
+            "$package.BaseName\n"
+            "if ($entryPath.StartsWith('ref/')) { continue }\n"
+            "$targetPath = Join-Path $packagePdbRoot $relativePath\n"
+            "throw 'PDB package path escapes its extraction root'\n"
+            "if ($pdbCount -eq 0) { Set-Content "
+            "(Join-Path $pdbArtifacts '.empty') '' }\n"
+        )
+        self.assertTrue(
+            status.migration_requirement_satisfied(
+                contract,
+                requirement,
+            )
+        )
+        self.assertFalse(
+            status.migration_requirement_satisfied(
+                contract.replace(
+                    "if ($entryPath.StartsWith('ref/')) { continue }\n",
+                    "",
+                ),
+                requirement,
+            )
+        )
+
     def test_historical_branch_forms_have_explicit_release_roles(self):
         for branch in (
             "release/4.150.3",
@@ -334,7 +366,15 @@ class PipelineStatusTests(unittest.TestCase):
             package.mkdir(parents=True)
             (package / "assemble-arcade-assets.ps1").write_text(
                 "$_.Name.Contains('.0.0.0-branch.')\n"
-                "Copy-Item $transportPackages.FullName $nonShipping\n",
+                "Copy-Item $transportPackages.FullName $nonShipping\n"
+                "if (Test-Path $symbolPath) { continue }\n"
+                "$packagePdbRoot = Join-Path $pdbArtifacts "
+                "$package.BaseName\n"
+                "if ($entryPath.StartsWith('ref/')) { continue }\n"
+                "$targetPath = Join-Path $packagePdbRoot $relativePath\n"
+                "throw 'PDB package path escapes its extraction root'\n"
+                "if ($pdbCount -eq 0) { Set-Content "
+                "(Join-Path $pdbArtifacts '.empty') '' }\n",
                 encoding="ascii",
             )
             infra_shared = scripts / "infra" / "shared"

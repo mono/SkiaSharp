@@ -89,6 +89,24 @@ MIGRATION_REQUIREMENTS = (
         ),
     },
     {
+        "id": "real-pdb-artifacts",
+        "path": "scripts/infra/package/assemble-arcade-assets.ps1",
+        "pattern": (
+            r"Test-Path\s+\$symbolPath.*continue.*"
+            r"Join-Path\s+\$pdbArtifacts\s+\$package\.BaseName.*"
+            r"StartsWith\(['\"]ref/['\"].*"
+            r"Join-Path\s+\$packagePdbRoot\s+\$relativePath.*"
+            r"PDB package path escapes.*"
+            r"if\s*\(\$pdbCount\s+-eq\s+0\).*"
+            r"Set-Content.*['\"]\.empty['\"]"
+        ),
+        "detail": (
+            "backport real loose PdbArtifacts assembly: preserve explicit "
+            "symbol ownership, retain package/TFM/RID paths, exclude ref/**, "
+            "guard traversal, and emit .empty only when no PDB exists"
+        ),
+    },
+    {
         "id": "branch-first-transport-download",
         "path": "scripts/infra/shared/download.cake",
         "pattern": (

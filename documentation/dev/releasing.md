@@ -264,6 +264,16 @@ artifact, but package downloads prefer the branch identity and release status
 rejects a BAR that exposes both branch and commit versions for the same
 transport ID.
 
+Public CI validates package and pipeline artifact shape before internal release
+proof. The canonical `nuget` artifact owns product and explicit symbol packages;
+`nuget_special` retains unsigned branch and pipeline-only commit transport
+aliases, while only branch aliases enter BAR. `PdbArtifacts` contains loose
+implementation/runtime PDBs extracted from signed packages that have no
+explicit symbol package, preserving package/version/TFM/RID paths and excluding
+`ref/**`; `.empty` is valid only when no eligible PDB exists. Release readiness
+still requires exact successful internal Build, connected Tests, BAR,
+default-channel, signed-feed, and protected publisher evidence.
+
 ### Stage 3: Testing (release-testing skill)
 
 ```mermaid
