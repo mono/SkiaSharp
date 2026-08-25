@@ -248,11 +248,11 @@ Default-channel promotion authorizes publication only to the channel-configured
 Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
 
-Historical exact snapshots such as `release/4.150.3`,
-`release/4.151.2`, and `release/4.152.0-rc.1` can proceed directly to release
-status after their own minimal backports. Their `.x` siblings are separate,
-advanced integration state for future cuts. Release status verifies the exact
-target commit has the combined Build, connected Tests, exact-version, and
+The historical migration targets `release/4.150.x`, `release/4.151.x`, and
+exact `release/4.152.0-rc.1`. After the `.x` backports land, release-branch cuts
+exact `release/4.150.4` and `release/4.151.3` children before
+status/testing/publish; RC1 can proceed directly. Release status verifies each
+exact target commit has the combined Build, connected Tests, exact-version, and
 fail-closed artifact-selection backport. It then blocks until that branch has
 default-channel mapping and signed `skiasharp` feed routing. Main-only
 production features such as Apple symbol generation are not historical

@@ -114,11 +114,11 @@ Include both core assets' BAR-recorded locations, active/failed jobs, and every
 warning. Omit missing run rows/links. Do not independently query or replace the
 script-selected identity.
 
-Exact untagged snapshots such as `release/4.150.3`,
-`release/4.151.2`, and `release/4.152.0-rc.1` become status inputs after the
-minimum Arcade backport is present. Their `.x` siblings have already advanced
-to future integration state; `release/4.150.x` and `release/4.151.x` remain
-Step 1 inputs for later `4.150.4` and `4.151.3` cuts.
+The historical migration targets `release/4.150.x`, `release/4.151.x`, and the
+exact `release/4.152.0-rc.1`. The `.x` lines remain Step 1 inputs: after their
+Arcade backports land, release-branch cuts exact `release/4.150.4` and
+`release/4.151.3` children for status/testing/publish. RC1 is already exact and
+can proceed directly after its own backport.
 
 For `start-release-testing`, invoke
 [release-testing](../release-testing/SKILL.md) with the complete `buildRun`,
