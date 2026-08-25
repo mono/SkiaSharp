@@ -82,11 +82,11 @@ var DATE_TIME_STR = DATE_TIME_NOW.ToString ("yyyyMMdd_HHmmss");
 
 FilePath NUGET_CONFIG_PATH = MakeAbsolute(ROOT_PATH.CombineWithFilePath("nuget.config"));
 DirectoryPath PACKAGE_CACHE_PATH = MakeAbsolute(ROOT_PATH.Combine("externals/package_cache"));
-DirectoryPath OUTPUT_PATH = MakeAbsolute(Directory(Argument("outputPath", ROOT_PATH.Combine("output").FullPath)));
-DirectoryPath OUTPUT_NUGETS_PATH = OUTPUT_PATH.Combine("nugets");
-DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = OUTPUT_PATH.Combine("nugets-special");
-DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = OUTPUT_PATH.Combine("arcade-assets");
-DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = OUTPUT_PATH.Combine("pdbs");
+DirectoryPath PACKAGE_OUTPUT_PATH = MakeAbsolute(Directory(Argument("outputPath", ROOT_PATH.Combine("output").FullPath)));
+DirectoryPath OUTPUT_NUGETS_PATH = PACKAGE_OUTPUT_PATH.Combine("nugets");
+DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = PACKAGE_OUTPUT_PATH.Combine("nugets-special");
+DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = PACKAGE_OUTPUT_PATH.Combine("arcade-assets");
+DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = PACKAGE_OUTPUT_PATH.Combine("pdbs");
 DirectoryPath DOCS_ROOT_PATH = ROOT_PATH.Combine("docs");
 DirectoryPath DOCS_PATH = DOCS_ROOT_PATH.Combine("SkiaSharpAPI");
 
