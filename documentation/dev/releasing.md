@@ -248,14 +248,20 @@ Default-channel promotion authorizes publication only to the channel-configured
 Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
 
-Historical maintenance lines (`release/X.Y.x`) remain release-branch inputs.
-After an exact child or prerelease branch is cut, release status first verifies
-that commit has the minimal combined Build, connected Tests, and exact-version
-Arcade backport, including rejection of mutable `latestFromBranch` artifact
-selection. It then fails closed until that branch has default-channel mapping
-and signed `skiasharp` feed routing. Main-only production features such as Apple
-symbol generation are not release-tooling prerequisites for a historical
-branch.
+Historical exact snapshots such as `release/4.150.3`,
+`release/4.151.2`, and `release/4.152.0-rc.1` can proceed directly to release
+status after their own minimal backports. Their `.x` siblings are separate,
+advanced integration state for future cuts. Release status verifies the exact
+target commit has the combined Build, connected Tests, exact-version, and
+fail-closed artifact-selection backport. It then blocks until that branch has
+default-channel mapping and signed `skiasharp` feed routing. Main-only
+production features such as Apple symbol generation are not historical
+release-tooling prerequisites.
+
+Historical BARs must also contain only one branch-versioned NonShipping
+transport asset per package ID. Commit aliases may remain in the pipeline
+artifact, but release status rejects a BAR that exposes both branch and commit
+versions for the same transport ID.
 
 ### Stage 3: Testing (release-testing skill)
 

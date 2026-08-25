@@ -66,6 +66,7 @@ def bar_record(
     locations=None,
     skia_version="4.152.0-preview.1.26421.1",
     harfbuzz_version="14.2.1-preview.1.26421.1",
+    extra_assets=None,
 ):
     if channels is None:
         channels = [{"name": "SkiaSharp"}]
@@ -98,6 +99,7 @@ def bar_record(
                 "nonShipping": False,
                 "locations": locations,
             },
+            *(extra_assets or []),
         ],
     }
 
@@ -215,7 +217,9 @@ class PipelineStatusTests(unittest.TestCase):
 
     def test_historical_branch_forms_have_explicit_release_roles(self):
         for branch in (
+            "release/4.150.3",
             "release/4.150.4",
+            "release/4.151.2",
             "release/4.151.3",
             "release/4.152.0-rc.1",
             "release/4.150.4-preview.1",
@@ -297,6 +301,11 @@ class PipelineStatusTests(unittest.TestCase):
             ).write_text(
                 "Mutable latestFromBranch artifact selection is not "
                 "supported\n",
+                encoding="ascii",
+            )
+            (scripts / "azure-templates-stages-signing.yml").write_text(
+                "$_.Name.Contains('.0.0.0-branch.')\n"
+                "Copy-Item $transportPackages.FullName $nonShipping\n",
                 encoding="ascii",
             )
             shared = scripts / "infra" / "native" / "shared"
@@ -514,16 +523,16 @@ class PipelineStatusTests(unittest.TestCase):
     def test_historical_stable_and_rc_package_families(self):
         cases = (
             (
-                {"skiaSharp": "4.150.4", "harfBuzzSharp": "14.2.1.4",
+                {"skiaSharp": "4.150.3", "harfBuzzSharp": "14.2.1.3",
                  "previewLabel": "stable"},
-                "4.150.4",
-                "14.2.1.4",
+                "4.150.3",
+                "14.2.1.3",
             ),
             (
-                {"skiaSharp": "4.151.3", "harfBuzzSharp": "14.2.1.103",
+                {"skiaSharp": "4.151.2", "harfBuzzSharp": "14.2.1.102",
                  "previewLabel": "stable"},
-                "4.151.3",
-                "14.2.1.103",
+                "4.151.2",
+                "14.2.1.102",
             ),
             (
                 {"skiaSharp": "4.152.0", "harfBuzzSharp": "14.2.1.200",
@@ -563,6 +572,36 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(report["nextAction"], "retry-bar-check")
         self.assertIn("azureDevOpsBuildId=999", report["warnings"][0])
+
+    def test_duplicate_nonshipping_transport_ids_are_blocked(self):
+        record = bar_record(
+            extra_assets=[
+                {
+                    "name": "_NuGets",
+                    "version": "0.0.0-branch.release-4.152.0-rc.1.1",
+                    "nonShipping": True,
+                    "locations": ["transport"],
+                },
+                {
+                    "name": "_NuGets",
+                    "version": "0.0.0-commit.abc123.1",
+                    "nonShipping": True,
+                    "locations": ["transport"],
+                },
+            ]
+        )
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
+        )
+        self.assertEqual(report["state"], "blocked")
+        self.assertEqual(report["nextAction"], "retry-bar-check")
+        self.assertIn(
+            "duplicate NonShipping transport asset IDs",
+            report["warnings"][0],
+        )
 
     def test_missing_historical_migration_surface_fails_closed(self):
         repo = FakeRepo()

@@ -82,6 +82,7 @@ def detect(root: Path, target: str) -> dict:
         "migration": status.get("migration"),
         "defaultChannelIds": bar.get("defaultChannelIds"),
         "barAssets": bar.get("assets"),
+        "nonShippingAssets": bar.get("nonShippingAssets"),
         "buildNumber": build.get("buildNumber"),
         "testPackages": versions["test"],
         "publicPackages": versions["public"],

@@ -375,6 +375,18 @@ def validate_status_handoff(
         raise PublishError(
             "BAR build number does not match the pinned Build run"
         )
+    duplicate_transport = {
+        name: versions
+        for name, versions in (
+            bar.get("nonShippingAssets") or {}
+        ).items()
+        if len(versions) > 1
+    }
+    if duplicate_transport:
+        raise PublishError(
+            "BAR build contains ambiguous duplicate NonShipping transport "
+            f"asset IDs: {duplicate_transport}"
+        )
     versions = status.get("packageVersions")
     if not versions or not versions.get("test") or not versions.get("public"):
         raise PublishError("release-status returned no package versions")

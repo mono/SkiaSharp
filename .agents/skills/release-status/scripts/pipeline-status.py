@@ -74,6 +74,19 @@ MIGRATION_REQUIREMENTS = (
             "builds"
         ),
     },
+    {
+        "id": "unique-transport-bar-assets",
+        "path": "scripts/azure-templates-stages-signing.yml",
+        "pattern": (
+            r"\.Name\.Contains\("
+            r"['\"]\.0\.0\.0-branch\.['\"].*"
+            r"Copy-Item\s+\$transportPackages\.FullName\s+\$nonShipping"
+        ),
+        "detail": (
+            "backport branch-only NonShipping transport staging so BAR "
+            "registers one version per transport package ID"
+        ),
+    },
     *(
         {
             "id": f"{package}-transport-metadata",
@@ -682,6 +695,35 @@ def package_versions_from_bar(record: dict, inputs: dict) -> tuple[dict, dict]:
     return versions, assets
 
 
+def nonshipping_asset_versions(record: dict) -> dict[str, list[str]]:
+    grouped: dict[str, list[str]] = {}
+    for asset in record.get("assets") or []:
+        if not asset.get("nonShipping", False):
+            continue
+        name = str(asset.get("name") or "")
+        version = str(asset.get("version") or "")
+        grouped.setdefault(name.casefold(), []).append(version)
+    return grouped
+
+
+def validate_unique_nonshipping_assets(record: dict) -> None:
+    grouped = nonshipping_asset_versions(record)
+    duplicates = {
+        name: versions
+        for name, versions in grouped.items()
+        if len(versions) > 1
+    }
+    if duplicates:
+        detail = "; ".join(
+            f"{name}={versions}"
+            for name, versions in sorted(duplicates.items())
+        )
+        raise StatusError(
+            "BAR contains ambiguous duplicate NonShipping transport asset "
+            f"IDs: {detail}"
+        )
+
+
 def bar_output(
     record: dict,
     config: dict,
@@ -732,6 +774,7 @@ def bar_output(
             f"Build run: {'; '.join(mismatches)}"
         )
 
+    validate_unique_nonshipping_assets(record)
     versions, assets = package_versions_from_bar(record, inputs)
     channels = sorted(
         {
@@ -770,6 +813,7 @@ def bar_output(
             "defaultChannelIds": default_channel_ids,
             "assets": assets,
             "routedAssets": routed_assets,
+            "nonShippingAssets": nonshipping_asset_versions(record),
         },
         versions,
     )

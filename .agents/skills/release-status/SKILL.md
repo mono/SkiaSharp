@@ -28,9 +28,10 @@ This skill is **Step 2 of 5**:
 - Verify the target commit contains the minimum behavioral Arcade backport:
   combined Build role, folder-qualified Tests resource, fail-closed exact
   artifact selection, exact internal release versioning, plus metadata required
-  to validate the historical transport package templates. Do not require Apple
-  symbols or another main-only feature; BAR runtime evidence proves signing and
-  asset routing.
+  to validate the historical transport package templates and branch-only
+  transport staging so BAR contains one version per NonShipping package ID. Do
+  not require Apple symbols or another main-only feature; BAR runtime evidence
+  proves signing and asset routing.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
@@ -38,6 +39,9 @@ This skill is **Step 2 of 5**:
   Verify BAR repository metadata, commit, branch, Build run/definition, stable
   flag, package versions, observed channels, and exact asset locations.
 - Never combine runs, BAR metadata, or assets from different Build attempts.
+- Reject BARs with duplicate NonShipping transport package IDs (for example,
+  branch and commit aliases for `_NuGets`); only the branch identity belongs in
+  BAR, while commit aliases may remain pipeline artifacts.
 - Build, connected Tests, and both exact BAR-recorded package assets must be
   ready before the default testing handoff.
 - The user may explicitly override only the wait for incomplete CI tests.
@@ -109,10 +113,11 @@ Include both core assets' BAR-recorded locations, active/failed jobs, and every
 warning. Omit missing run rows/links. Do not independently query or replace the
 script-selected identity.
 
-Historical maintenance lines such as `release/4.150.x` and `release/4.151.x`
-remain Step 1 inputs. Their exact children (for example `release/4.150.4` and
-`release/4.151.3`) and exact prereleases such as `release/4.152.0-rc.1` become
-status inputs only after the minimum Arcade backport is present.
+Exact untagged snapshots such as `release/4.150.3`,
+`release/4.151.2`, and `release/4.152.0-rc.1` become status inputs after the
+minimum Arcade backport is present. Their `.x` siblings have already advanced
+to future integration state; `release/4.150.x` and `release/4.151.x` remain
+Step 1 inputs for later `4.150.4` and `4.151.3` cuts.
 
 For `start-release-testing`, invoke
 [release-testing](../release-testing/SKILL.md) with the complete `buildRun`,

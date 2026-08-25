@@ -52,6 +52,11 @@ branches such as `release/4.150.4` and `release/4.151.3`. An existing exact
 branch such as `release/4.152.0-rc.1` is not an integration branch and proceeds
 to release-status after its minimal Arcade release backport lands.
 
+Do not confuse future integration state with the immediate untagged release
+snapshots: `release/4.150.3` and `release/4.151.2` are exact sibling branches,
+not ancestors of their advanced `.x` lines, and can proceed directly to
+release-status after their own backports.
+
 ## Script contract
 
 | Script | Responsibility |

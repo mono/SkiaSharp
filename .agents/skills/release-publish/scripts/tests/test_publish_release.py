@@ -344,6 +344,28 @@ class PublishReleaseTests(unittest.TestCase):
                 expected_bar_build=30,
             )
 
+    def test_status_handoff_rejects_duplicate_transport_ids(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["nonShippingAssets"] = {
+            "_nugets": [
+                "0.0.0-branch.release-4.152.0.1",
+                "0.0.0-commit.abc123.1",
+            ]
+        }
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "duplicate NonShipping transport",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
     def test_status_handoff_requires_exact_stable_versions(self):
         # Stable BAR package versions must be exact X.Y.Z, never a
         # X.Y.Z-stable.{build} pre-release suffix.

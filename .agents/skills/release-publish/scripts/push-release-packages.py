@@ -495,6 +495,9 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             ),
             "buildNumber": build_number,
             "barAssets": handoff["bar"]["assets"],
+            "nonShippingAssets": handoff["bar"].get(
+                "nonShippingAssets"
+            ),
             "testPackages": handoff["versions"]["test"],
             "publicPackages": handoff["versions"]["public"],
         },

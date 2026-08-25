@@ -262,6 +262,7 @@ def release_summary(status: dict, *, status_override: bool) -> dict:
         "buildRunUrl": build.get("url"),
         "testsRunUrl": tests.get("url"),
         "barAssets": bar.get("assets"),
+        "nonShippingAssets": bar.get("nonShippingAssets"),
         "testPackages": versions.get("test"),
         "publicPackages": versions.get("public"),
     }
