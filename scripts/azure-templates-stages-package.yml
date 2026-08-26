@@ -1,9 +1,6 @@
 parameters:
   - name: buildAgentWindows
     type: object
-  - name: enableCaching
-    type: boolean
-    default: false
 
 stages:
 
@@ -17,38 +14,23 @@ stages:
           displayName: Package NuGets
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget
-          cacheJob: managed/package
-          enableCaching: ${{ parameters.enableCaching }}
           additionalArgs: --skipExternals="all"
           shouldPublish: false
           requiredArtifacts:
             - name: native
-          postBuildSteps:
-            - pwsh: |
-                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
-                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
-                New-Item '.\output\' -Type Directory -Force | Out-Null
-              displayName: Re-organize the output folder for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
-              displayName: Prepare the nugets artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
-              displayName: Prepare the transport nugets artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-            - pwsh: |
-                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
-              displayName: Prepare the build artifact for publishing
-              condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           publishArtifacts:
-            - name: package_windows
-              path: '.\output\output\'
             - name: nuget
               path: '.\output\nugets'
             - name: nuget_special
               path: '.\output\nugets-special'
+            - name: arcade_shipping
+              path: '.\output\arcade-assets\Shipping'
+            - name: arcade_nonshipping
+              path: '.\output\arcade-assets\NonShipping'
+            - name: PdbArtifacts
+              path: '.\output\pdbs'
+              isProduction: 'false'
+
       - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
         parameters:
           name: scan_normal_windows

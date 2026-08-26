@@ -33,6 +33,47 @@ function New-Package {
     }
 }
 
+function Run-Cake {
+    param(
+        [Parameter(Mandatory)]
+        [string] $Products,
+
+        [Parameter(Mandatory)]
+        [string] $Transport,
+
+        [Parameter(Mandatory)]
+        [string] $PackageRoot,
+
+        [Parameter(Mandatory)]
+        [string] $PdbRoot,
+
+        [switch] $ExpectFailure
+    )
+
+    $cake = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../nuget.cake'))
+    $args = @(
+        'cake'
+        $cake
+        '--target=nuget-assemble-arcade-assets'
+        "--productPackageDirectory=$Products"
+        "--transportPackageDirectory=$Transport"
+        "--packageRoot=$PackageRoot"
+        "--pdbArtifactsDirectory=$PdbRoot"
+        '--verbosity=quiet'
+    )
+
+    & dotnet @args
+    $failed = $LASTEXITCODE -ne 0
+    if ($ExpectFailure) {
+        if (-not $failed) {
+            throw 'Cake unexpectedly accepted invalid Arcade assets.'
+        }
+        $global:LASTEXITCODE = 0
+    } elseif ($failed) {
+        throw "Cake failed with exit code $LASTEXITCODE."
+    }
+}
+
 $root = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-arcade-assets-$([Guid]::NewGuid().ToString('N'))"
 $signed = Join-Path $root 'signed'
 $transport = Join-Path $root 'transport'
@@ -41,7 +82,12 @@ $pdbs = Join-Path $root 'pdbs'
 $prTransport = Join-Path $root 'pr-transport'
 $prPackages = Join-Path $root 'pr-packages'
 $prPdbs = Join-Path $root 'pr-pdbs'
-$script = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../assemble-arcade-assets.ps1'))
+$emptyProducts = Join-Path $root 'empty-products'
+$emptyPackages = Join-Path $root 'empty-packages'
+$emptyPdbs = Join-Path $root 'empty-pdbs'
+$escapeProducts = Join-Path $root 'escape-products'
+$escapePackages = Join-Path $root 'escape-packages'
+$escapePdbs = Join-Path $root 'escape-pdbs'
 
 try {
     New-Item $signed -ItemType Directory -Force | Out-Null
@@ -69,11 +115,11 @@ try {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
-    & $script `
-        -SignedPackageDirectory $signed `
-        -TransportPackageDirectory $transport `
+    Run-Cake `
+        -Products $signed `
+        -Transport $transport `
         -PackageRoot $packages `
-        -PdbArtifactsDirectory $pdbs
+        -PdbRoot $pdbs
 
     $expectedPdbs = @(
         'Foo.1.0.0/lib/net8.0/Foo.pdb'
@@ -97,6 +143,10 @@ try {
     if (-not (Test-Path (Join-Path $packages 'Shipping/Bar.1.0.0.symbols.nupkg'))) {
         throw 'Explicit symbol packages must remain in Shipping.'
     }
+    if (-not (Test-Path (Join-Path $packages 'Shipping/Foo.1.0.0.nupkg')) -or
+        -not (Test-Path (Join-Path $packages 'Shipping/Bar.1.0.0.nupkg'))) {
+        throw 'All product packages must enter Shipping.'
+    }
 
     $nonShipping = @(Get-ChildItem (Join-Path $packages 'NonShipping') -Filter '*.nupkg' -File)
     if ($nonShipping.Count -ne 2 -or
@@ -111,16 +161,43 @@ try {
         New-Package (Join-Path $prTransport $name) @{ 'README.md' = $name }
     }
 
-    & $script `
-        -SignedPackageDirectory $signed `
-        -TransportPackageDirectory $prTransport `
+    Run-Cake `
+        -Products $signed `
+        -Transport $prTransport `
         -PackageRoot $prPackages `
-        -PdbArtifactsDirectory $prPdbs
+        -PdbRoot $prPdbs
 
     $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
     if ($prNonShipping.Count -ne 2 -or
         @($prNonShipping | Where-Object Name -notlike '*-pr.*').Count -ne 0) {
         throw 'Only the PR-versioned transport family may enter PR NonShipping.'
+    }
+
+    New-Item $emptyProducts -ItemType Directory -Force | Out-Null
+    New-Package (Join-Path $emptyProducts 'NoPdb.1.0.0.nupkg') @{
+        'lib/net8.0/NoPdb.dll' = 'dll'
+    }
+    Run-Cake `
+        -Products $emptyProducts `
+        -Transport $transport `
+        -PackageRoot $emptyPackages `
+        -PdbRoot $emptyPdbs
+    if (-not (Test-Path (Join-Path $emptyPdbs '.empty') -PathType Leaf)) {
+        throw 'PdbArtifacts must contain .empty when no loose PDB is eligible.'
+    }
+
+    New-Item $escapeProducts -ItemType Directory -Force | Out-Null
+    New-Package (Join-Path $escapeProducts 'Escape.1.0.0.nupkg') @{
+        '../escape.pdb' = 'escape'
+    }
+    Run-Cake `
+        -Products $escapeProducts `
+        -Transport $transport `
+        -PackageRoot $escapePackages `
+        -PdbRoot $escapePdbs `
+        -ExpectFailure
+    if (Test-Path (Join-Path $escapePdbs 'escape.pdb')) {
+        throw 'A package entry escaped the PDB extraction root.'
     }
 
     Write-Host 'Arcade asset assembly tests passed.'

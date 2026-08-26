@@ -44,8 +44,8 @@ stages:
           templateContext:
             outputs:
               - output: pipelineArtifact
-                displayName: Publish signed NuGets
-                artifactName: nuget_signed
+                displayName: Publish signed Arcade Shipping assets
+                artifactName: arcade_shipping_signed
                 targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
                 condition: succeeded()
           preSteps:
@@ -59,25 +59,10 @@ stages:
               displayName: Configure package version identity
 
             - task: DownloadPipelineArtifact@2
-              displayName: Download unsigned NuGets
+              displayName: Download prepared Arcade Shipping assets
               inputs:
-                artifactName: nuget
-                targetPath: '$(Agent.TempDirectory)\unsigned-nugets'
-
-            - pwsh: |
-                $source = '$(Agent.TempDirectory)\unsigned-nugets'
-                $destination = '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
-                Remove-Item $destination -Recurse -Force -ErrorAction Ignore
-                New-Item $destination -ItemType Directory -Force | Out-Null
-
-                $packages = @(Get-ChildItem $source -Filter '*.nupkg' -File -Recurse)
-                if ($packages.Count -eq 0) {
-                  throw "No unsigned NuGet packages were downloaded from artifact 'nuget'."
-                }
-
-                Copy-Item $packages.FullName $destination
-                Write-Host "Staged $($packages.Count) NuGet package(s) for signing."
-              displayName: Stage packages for signing
+                artifactName: arcade_shipping
+                targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
 
             - powershell: >
                 eng\common\build.ps1
@@ -95,12 +80,15 @@ stages:
               env:
                 SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
-      - ${{ if eq(parameters.publishAssets, true) }}:
+  - ${{ if eq(parameters.publishAssets, true) }}:
+    - stage: publish_assets
+      displayName: Register Arcade assets
+      dependsOn: signing
+      jobs:
         - template: /eng/common/templates-official/job/job.yml@self
           parameters:
-            name: assemble_arcade_assets
-            displayName: Assemble signed and transport assets
-            dependsOn: sign_nugets
+            name: generate_arcade_manifest
+            displayName: Generate Arcade asset manifest
             pool: ${{ parameters.buildAgent.pool }}
             timeoutInMinutes: 180
             workspace:
@@ -109,14 +97,7 @@ stages:
             artifacts:
               publish:
                 logs:
-                  name: arcade_asset_logs
-            templateContext:
-              outputs:
-                - output: pipelineArtifact
-                  displayName: Publish loose PDB artifacts
-                  artifactName: PdbArtifacts
-                  targetPath: '$(Build.SourcesDirectory)\artifacts\pdbs'
-                  isProduction: false
+                  name: arcade_publish_logs
             preSteps:
               - checkout: self
                 clean: true
@@ -128,24 +109,16 @@ stages:
                 displayName: Configure package version identity
 
               - task: DownloadPipelineArtifact@2
-                displayName: Download signed NuGets
+                displayName: Download signed Arcade Shipping assets
                 inputs:
-                  artifactName: nuget_signed
-                  targetPath: '$(Agent.TempDirectory)\signed-nugets'
+                  artifactName: arcade_shipping_signed
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\Shipping'
 
               - task: DownloadPipelineArtifact@2
-                displayName: Download transport NuGets
+                displayName: Download prepared Arcade NonShipping assets
                 inputs:
-                  artifactName: nuget_special
-                  targetPath: '$(Agent.TempDirectory)\transport-nugets'
-
-              - pwsh: |
-                  ./scripts/infra/package/assemble-arcade-assets.ps1 `
-                    -SignedPackageDirectory '$(Agent.TempDirectory)\signed-nugets' `
-                    -TransportPackageDirectory '$(Agent.TempDirectory)\transport-nugets' `
-                    -PackageRoot '$(Build.SourcesDirectory)\artifacts\packages\Release' `
-                    -PdbArtifactsDirectory '$(Build.SourcesDirectory)\artifacts\pdbs'
-                displayName: Assemble Arcade package views
+                  artifactName: arcade_nonshipping
+                  targetPath: '$(Build.SourcesDirectory)\artifacts\packages\Release\NonShipping'
 
               - powershell: >
                   eng\common\build.ps1
@@ -162,15 +135,14 @@ stages:
 
         - template: /eng/common/templates-official/job/publish-build-assets.yml@self
           parameters:
-            dependsOn: assemble_arcade_assets
+            dependsOn: generate_arcade_manifest
             publishingVersion: 3
             officialBuildId: $(ARCADE_OFFICIAL_BUILD_ID)
 
-  - ${{ if eq(parameters.publishAssets, true) }}:
     - template: /eng/common/templates-official/post-build/post-build.yml@self
       parameters:
         publishingInfraVersion: 3
         publishAssetsImmediately: false
         requireDefaultChannels: true
         validateDependsOn:
-          - signing
+          - publish_assets

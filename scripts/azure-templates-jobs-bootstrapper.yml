@@ -71,6 +71,8 @@ jobs:
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
             artifactName: ${{ additionalArtifact.name }}
             targetPath: ${{ additionalArtifact.path }}
+            ${{ if ne(additionalArtifact.isProduction, '') }}:
+              isProduction: ${{ additionalArtifact.isProduction }}
           - ${{ if eq(additionalArtifact.always, 'true') }}:
             - output: pipelineArtifact
               displayName: 'Publish the failed ${{ additionalArtifact.name }} artifacts'

@@ -365,22 +365,25 @@ if ($packageStages -match 'nuget_preview|nugets-preview') {
 if ($packageStages -match 'nuget_symbols|nugets-symbols') {
     throw 'Normal and symbol packages must share the single nuget pipeline artifact.'
 }
-if ($packageStages -match 'package_special_windows|target:\s*nuget-special' -or
-    $packageStages -notmatch 'name:\s*package_windows' -or
+if ($packageStages -match 'package_special_windows|target:\s*nuget-special|name:\s*package_windows\s+path:' -or
+    $packageStages -match 'enableCaching|cacheJob|CACHE_SKIP|Re-organize the output folder' -or
     $packageStages -notmatch 'target:\s*nuget(\s|$)' -or
-    $packageStages -notmatch 'name:\s*nuget_special') {
-    throw 'Product and transport NuGets must be produced by one aggregate package job.'
+    $packageStages -notmatch 'name:\s*nuget_special' -or
+    $packageStages -notmatch 'name:\s*arcade_shipping' -or
+    $packageStages -notmatch 'name:\s*arcade_nonshipping' -or
+    $packageStages -notmatch 'name:\s*PdbArtifacts' -or
+    $packageStages -notmatch "isProduction:\s*'false'") {
+    throw 'One uncached Package job must publish raw and prepared Arcade package artifacts.'
 }
-if ($packageStages -notmatch 'Remove-Item ./output/native/') {
-    throw 'The special-package job must discard raw native inputs after packaging them.'
-}
-$packagePostBuild = [regex]::Match(
-    $packageStages,
-    '(?ms)^\s*postBuildSteps:\s*$.*?(?=^\s*publishArtifacts:\s*$)').Value
-if ([regex]::Matches(
-        $packagePostBuild,
-        "condition:\s*and\(succeeded\(\),\s*ne\(variables\['CACHE_SKIP'\],\s*'true'\)\)").Count -ne 4) {
-    throw 'Package artifact reshaping must be skipped atomically when output is restored from cache.'
+$prepareStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-prepare.yml') -Raw
+$prepareDotNet = $prepareStages.IndexOf('task: UseDotNet@2')
+$prepareToolRestore = $prepareStages.IndexOf('pwsh: dotnet tool restore')
+$prepareAssetTests = $prepareStages.IndexOf('AssembleArcadeAssets.Tests.ps1')
+if ($prepareDotNet -lt 0 -or
+    $prepareToolRestore -le $prepareDotNet -or
+    $prepareAssetTests -le $prepareToolRestore -or
+    $prepareStages -notmatch 'version:\s*\$\(DOTNET_VERSION\)') {
+    throw 'Prepare must install the pinned SDK before restoring tools and running Cake asset tests.'
 }
 $sharedCake = Get-Content (Join-Path $repoRoot 'scripts/infra/shared/shared.cake') -Raw
 if ($sharedCake -notmatch 'EnvironmentVariable\s*\(\s*"DOTNET_FINAL_VERSION_KIND"\s*\)') {
@@ -461,7 +464,7 @@ if ($stagesComposer -notmatch '/scripts/azure-templates-stages-signing\.yml@self
     throw 'The shared composer must consume signing and API Scan as stage templates.'
 }
 if ($stagesComposer -match '/scripts/azure-templates-stages-publish\.yml@self') {
-    throw 'Signing, Arcade asset assembly, and BAR registration must share one stage template.'
+    throw 'Signing and BAR registration must remain in the shared historical-line stage template.'
 }
 if ($signingStages -notmatch 'publishingVersion:\s*3\s+officialBuildId:\s*\$\(ARCADE_OFFICIAL_BUILD_ID\)') {
     throw 'BAR registration must use the same Arcade OfficialBuildId as manifest generation.'
@@ -503,13 +506,18 @@ if ($transportProject -notmatch '<IsShippingPackage>false</IsShippingPackage>') 
 $normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
 if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
+    $normalTask -notmatch 'DeleteFiles\s*\(\s*\$"\{OUTPUT_NUGETS_PATH\}/\*\.nupkg"\s*\)' -or
     ([regex]::Matches($normalTask, 'RunDotNetPack\s*\(').Count -ne 1)) {
-    throw 'nuget-normal must pack exactly one version family selected by VersionSuffix.'
+    throw 'nuget-normal must clean and pack exactly one version family selected by VersionSuffix.'
 }
 if ($packageScript -match 'Id\s*=\s*"_(NuGetsPreview|Symbols)' -or
     $packageScript -match 'IsPreview' -or
     $packageScript -notmatch 'Id = "_NuGets"') {
     throw 'Special package transfer must use only _NuGets for the single package family.'
+}
+if ($packageScript -match 'versions\.Add\s*\(\s*"commit"' -or
+    $packageScript -match 'transportVersionKind|GIT_SHA') {
+    throw 'Production packaging must emit and assemble only the branch or PR transport family.'
 }
 if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
     $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {
@@ -526,8 +534,9 @@ if ($samplesScript -notmatch 'actualSamples\s*=\s*string\.IsNullOrEmpty\s*\(PREV
     throw 'Samples and docs must consume the single package family selected by PREVIEW_NUGET_SUFFIX.'
 }
 if ($docsScript -match '_nugetspreview' -or
-    $docsScript -notmatch 'DownloadPackageAsync\s*\(\s*"_nugets"') {
-    throw 'Docs must download the single-family _NuGets transfer package.'
+    $docsScript -notmatch 'DownloadPackageAsync\s*\(\s*"_nugets"' -or
+    $docsScript -match 'GIT_SHA') {
+    throw 'Docs must download the branch or PR single-family _NuGets transfer package.'
 }
 
 $publishMarker = $signingStages.IndexOf('- ${{ if eq(parameters.publishAssets, true) }}:')
@@ -535,11 +544,12 @@ if ($publishMarker -lt 0) {
     throw 'Signing must conditionally compile Arcade assembly and BAR registration jobs.'
 }
 $signOnly = $signingStages.Substring(0, $publishMarker)
-if ($signOnly -match 'nuget_preview_signed|nuget_special|transport-nugets|NonShipping|\.symbols\.nupkg|-publish') {
-    throw 'Signing must only sign and verify the unified product and symbol package artifact.'
+if ($signOnly -match 'nuget_signed|nuget_special|transport-nugets|NonShipping|nuget-assemble-arcade-assets|-publish' -or
+    $signOnly -notmatch 'artifactName:\s*arcade_shipping' -or
+    $signOnly -notmatch 'artifactName:\s*arcade_shipping_signed') {
+    throw 'Signing must consume and publish only the prepared Arcade Shipping artifact.'
 }
-if ($signOnly -match 'artifactName:\s*nuget_symbols' -or
-    $signOnly -match 'stage-android-symbol-packages\.ps1') {
+if ($signOnly -match 'artifactName:\s*nuget_symbols|stage-android-symbol-packages\.ps1') {
     throw 'Signing must consume normal and symbol packages from the unified nuget artifact.'
 }
 
@@ -551,16 +561,31 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
     $publishingProps -notmatch '<AutoGenerateSymbolPackages>false</AutoGenerateSymbolPackages>') {
     throw 'Arcade publishing must use one shipping view and one non-shipping transport view.'
 }
-if ($signingStages -notmatch 'name:\s*assemble_arcade_assets' -or
-    $signingStages -notmatch 'dependsOn:\s*sign_nugets' -or
-    $signingStages -notmatch 'artifactName:\s*nuget_signed' -or
-    $signingStages -notmatch 'artifactName:\s*nuget_special' -or
-    $signingStages -notmatch 'artifactName:\s*PdbArtifacts' -or
-    $signingStages -notmatch 'assemble-arcade-assets\.ps1' -or
-    $signingStages -notmatch 'artifacts\\packages\\Release' -or
-    $signingStages -notmatch 'dependsOn:\s*assemble_arcade_assets' -or
-    $signingStages -notmatch 'validateDependsOn:\s+- signing') {
-    throw 'One stage must order signing, Arcade assembly, and BAR registration before standard validation.'
+$buildCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw
+if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
+    $buildCake -notmatch '\.IsDependentOn\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
+    $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\Shipping'" -or
+    $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\NonShipping'" -or
+    $packageStages -notmatch "path:\s*'.\\output\\pdbs'" -or
+    $packageStages -notmatch "isProduction:\s*'false'") {
+    throw 'The Package graph must prepare and publish deterministic public Arcade asset views.'
+}
+$publishOnly = $signingStages.Substring($publishMarker)
+if ($publishOnly -notmatch 'stage:\s*publish_assets' -or
+    $publishOnly -notmatch 'dependsOn:\s*signing' -or
+    $publishOnly -notmatch 'artifactName:\s*arcade_shipping_signed' -or
+    $publishOnly -notmatch 'artifactName:\s*arcade_nonshipping' -or
+    $publishOnly -notmatch 'publish-build-assets\.yml@self' -or
+    $publishOnly -notmatch 'validateDependsOn:\s+- publish_assets') {
+    throw 'BAR publication must consume signed Shipping and prepared NonShipping in a separate stage.'
+}
+if ($signingStages -match 'assemble-arcade-assets\.ps1|artifactName:\s*PdbArtifacts') {
+    throw 'Authenticated signing must not reassemble assets or publish PDB artifacts.'
+}
+if ($sharedCake -notmatch 'ROOT_OUTPUT_PATH' -or
+    $sharedCake -notmatch 'OUTPUT_ARCADE_ASSETS_PATH' -or
+    $sharedCake -notmatch 'OUTPUT_PDB_ARTIFACTS_PATH') {
+    throw 'Canonical output constants must define the public Arcade asset roots.'
 }
 
-Write-Host 'Build identity tests passed.'
+Write-Host 'Build identity and pipeline contract tests passed.'
