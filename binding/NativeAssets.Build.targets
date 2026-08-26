@@ -10,6 +10,17 @@
     <DebugSymbols>false</DebugSymbols>
     <!-- Don't generate docs -->
     <SkipMDocGenerateDocs>true</SkipMDocGenerateDocs>
+
+    <!-- NuGet README -->
+    <PackageReadmePrimaryPackage>$(PackagingGroup)</PackageReadmePrimaryPackage>
+    <PackageDescription>$(MSBuildProjectName) provides native runtime assets for $(PackageReadmePrimaryPackage).</PackageDescription>
+    <PackageReadmeSummary>**$(MSBuildProjectName)** provides the native runtime assets used by [**$(PackageReadmePrimaryPackage)**](https://www.nuget.org/packages/$(PackageReadmePrimaryPackage)) for this deployment target.</PackageReadmeSummary>
+    <PackageReadmeNotice>&gt; This is a runtime assets package. Most developers should start with `$(PackageReadmePrimaryPackage)` and add this package directly to the **application project** only when the deployment target requires it.</PackageReadmeNotice>
+    <PackageReadmeIncludesPackageNotes>true</PackageReadmeIncludesPackageNotes>
+    <PackageReadmeAdditionalDetails Condition="'$(PackageNotes)' != ''">## Package details
+
+$(PackageNotes)</PackageReadmeAdditionalDetails>
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -51,6 +62,48 @@
       <_TargetPathsToSymbols Remove="@(_TargetPathsToSymbols)" />
       <_TargetPathsToSymbols Include="@(_CompletedNativeAssetPackageFile)" Condition="'%(Extension)' == '.pdb' or '%(Extension)' == '.dbg'" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_PrepareNativeSymbolPackage"
+          BeforeTargets="_GetPackageFiles"
+          DependsOnTargets="CollectAssemblyVersionInfo"
+          Condition="'@(PackageSymbolFile)' != ''">
+    <PropertyGroup>
+      <NoWarn>$(NoWarn);NU5123</NoWarn>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(PackNativeSymbols)' != 'true'">
+      <_StaleNativeSymbolPackage Include="$([MSBuild]::NormalizeDirectory('$(PackageOutputPath)'))$(PackageId).$(PackageVersion).symbols.nupkg" />
+    </ItemGroup>
+    <Delete Files="@(_StaleNativeSymbolPackage)" />
+  </Target>
+
+  <Target Name="_IncludeNativeSymbolPackageContent"
+          BeforeTargets="_GetPackageFiles"
+          Condition="'@(PackageSymbolFile)' != '' and '$(PackNativeSymbols)' == 'true'">
+    <ItemGroup>
+      <None Include="@(PackageSymbolFile)"
+            Pack="true"
+            PackagePath="%(PackageSymbolFile.PackagePath)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PackNativeSymbolPackage"
+          AfterTargets="Pack"
+          Condition="'@(PackageSymbolFile)' != '' and '$(PackNativeSymbols)' != 'true'">
+    <PropertyGroup>
+      <_NativeSymbolPackageIntermediatePath>$([MSBuild]::NormalizeDirectory('$(IntermediateOutputPath)', 'native-symbol-package'))</_NativeSymbolPackageIntermediatePath>
+      <_NativeSymbolPackageSource>$(_NativeSymbolPackageIntermediatePath)$(PackageId).$(PackageVersion).nupkg</_NativeSymbolPackageSource>
+      <_NativeSymbolPackageDestination>$([MSBuild]::NormalizeDirectory('$(PackageOutputPath)'))$(PackageId).$(PackageVersion).symbols.nupkg</_NativeSymbolPackageDestination>
+    </PropertyGroup>
+    <Delete Files="$(_NativeSymbolPackageDestination)" Condition="Exists('$(_NativeSymbolPackageDestination)')" />
+    <RemoveDir Directories="$(_NativeSymbolPackageIntermediatePath)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Pack"
+             BuildInParallel="false"
+             Properties="PackNativeSymbols=true;NoBuild=true;BuildProjectReferences=false;PackageOutputPath=$(_NativeSymbolPackageIntermediatePath)" />
+    <Move SourceFiles="$(_NativeSymbolPackageSource)"
+          DestinationFiles="$(_NativeSymbolPackageDestination)" />
+    <RemoveDir Directories="$(_NativeSymbolPackageIntermediatePath)" />
   </Target>
 
 </Project>

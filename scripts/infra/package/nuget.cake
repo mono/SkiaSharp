@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Xml.Linq;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
@@ -9,86 +10,98 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-Task ("nuget-normal")
-    .Description ("Pack all NuGets (build all required dependencies).")
-    .Does (() =>
+FilePath[] GetNuGetPackages(DirectoryPath directory, string description)
 {
-    var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
+    if (!DirectoryExists(directory))
+        throw new Exception($"The {description} NuGet directory does not exist: '{directory}'.");
+
+    var packages = GetFiles($"{directory}/**/*.nupkg").ToArray();
+    if (packages.Length == 0)
+        throw new Exception($"No {description} NuGet packages were found in '{directory}'.");
+
+    var duplicates = packages
+        .GroupBy(package => package.GetFilename().ToString(), StringComparer.OrdinalIgnoreCase)
+        .Where(group => group.Count() > 1)
+        .Select(group => group.Key)
+        .ToArray();
+    if (duplicates.Length != 0)
+        throw new Exception(
+            $"{description} NuGet packages contain duplicate names: {string.Join(", ", duplicates)}");
+
+    return packages;
+}
+
+Task("nuget-normal")
+    .Description("Pack all NuGets (build all required dependencies).")
+    .Does(() =>
+{
+    EnsureDirectoryExists($"{OUTPUT_NUGETS_PATH}");
+    DeleteFiles($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles($"{OUTPUT_NUGETS_PATH}/*.snupkg");
+
+    var props = new Dictionary<string, string>(MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
+        { "VersionSuffix", PREVIEW_NUGET_SUFFIX },
     };
 
-    // pack stable
-    RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-
-    // pack preview
-    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
-
-    // move symbols to a special location to avoid signing
-    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
+    // Each build produces one coherent package family. Preview labels use a
+    // unique suffix; PREVIEW_LABEL=stable clears the suffix for an exact release.
+    RunDotNetPack($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
 });
 
-Task ("nuget-special")
-    .Description ("Pack all special NuGets.")
-    .Does (() =>
+Task("nuget-special")
+    .Description("Pack all special NuGets.")
+    .Does(() =>
 {
-    EnsureDirectoryExists ($"{OUTPUT_SPECIAL_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
+    EnsureDirectoryExists($"{OUTPUT_SPECIAL_NUGETS_PATH}");
+    DeleteFiles($"{OUTPUT_SPECIAL_NUGETS_PATH}/*.nupkg");
 
     // get a list of all the version number variants
-    var versions = new Dictionary<string, string> ();
-    if (!string.IsNullOrEmpty (PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith ("pr.")) {
+    var versions = new Dictionary<string, string>();
+    if (!string.IsNullOrEmpty(PREVIEW_LABEL) && PREVIEW_LABEL.StartsWith("pr.")) {
         var v = $"0.0.0-{PREVIEW_LABEL}";
-        if (!string.IsNullOrEmpty (BUILD_COUNTER))
+        if (!string.IsNullOrEmpty(BUILD_COUNTER))
             v += $".{BUILD_COUNTER}";
-        versions.Add ("pr", v);
+        versions.Add("pr", v);
     } else {
-        if (!string.IsNullOrEmpty (GIT_SHA)) {
-            var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("commit", v);
-        }
-        if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
-            var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("branch", v);
-        }
+        var branchName = string.IsNullOrEmpty(GIT_BRANCH_NAME)
+            ? "main"
+            : GIT_BRANCH_NAME.Replace("/", ".");
+        var v = $"0.0.0-branch.{branchName}";
+        if (!string.IsNullOrEmpty(BUILD_COUNTER))
+            v += $".{BUILD_COUNTER}";
+        versions.Add("branch", v);
     }
-    Information ("Detected {0} special versions to process:", versions.Count);
+    Information("Detected {0} special versions to process:", versions.Count);
     var max = 0;
     foreach (var version in versions) {
         if (version.Key.Length > max)
             max = version.Key.Length + 1;
     }
     foreach (var version in versions) {
-        Information ("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
+        Information("  - {0}" + " ".PadRight(max - version.Key.Length) + "=> {1}", version.Key, version.Value);
     }
 
-    // _NativeAssets handling (per-platform raw native binaries)
-    var nativePlatforms = GetDirectories ($"{ROOT_PATH}/output/native/*")
-        .Select (d => d.GetDirectoryName ())
-        .ToArray ();
+    // _NativeAssets handling(per-platform raw native binaries)
+    var nativePlatforms = GetDirectories($"{ROOT_PATH}/output/native/*")
+        .Select(d => d.GetDirectoryName())
+        .ToArray();
     if (nativePlatforms.Length > 0) {
-        var nativeSpecials = new Dictionary<string, string> ();
+        var nativeSpecials = new Dictionary<string, string>();
         nativeSpecials["_NativeAssets"] = "native";
         foreach (var platform in nativePlatforms) {
             nativeSpecials[$"_NativeAssets.{platform}"] = $"native/{platform}";
         }
 
-        Information ("Detected {0} native asset artifacts to process:", nativeSpecials.Count);
+        Information("Detected {0} native asset artifacts to process:", nativeSpecials.Count);
         max = 0;
         foreach (var special in nativeSpecials) {
             if (special.Key.Length > max)
                 max = special.Key.Length + 1;
         }
         foreach (var special in nativeSpecials) {
-            Information ("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
+            Information("  - {0}" + " ".PadRight(max - special.Key.Length) + "=> {1}", special.Key, special.Value);
         }
 
         foreach (var pair in nativeSpecials) {
@@ -96,105 +109,99 @@ Task ("nuget-special")
             var path = pair.Value;
             var nuspec = $"{ROOT_PATH}/output/{path}/{id}.nuspec";
 
-            DeleteFiles ($"{ROOT_PATH}/output/{path}/*.nuspec");
+            DeleteFiles($"{ROOT_PATH}/output/{path}/*.nuspec");
 
             foreach (var version in versions) {
                 var packageVersion = version.Value;
 
-                var xdoc = XDocument.Load ($"{ROOT_PATH}/scripts/infra/package/nuget/_NativeAssets.nuspec");
-                var metadata = xdoc.Root.Element ("metadata");
-                metadata.Element ("version").Value = packageVersion;
-                metadata.Element ("id").Value = id;
+                var xdoc = XDocument.Load($"{ROOT_PATH}/scripts/infra/package/nuget/_NativeAssets.nuspec");
+                var metadata = xdoc.Root.Element("metadata");
+                metadata.Element("version").Value = packageVersion;
+                metadata.Element("id").Value = id;
 
                 if (id == "_NativeAssets") {
-                    var dependencies = metadata.Element ("dependencies");
+                    var dependencies = metadata.Element("dependencies");
                     foreach (var platform in nativePlatforms) {
-                        dependencies.Add (new XElement ("dependency",
-                            new XAttribute ("id", $"_NativeAssets.{platform}"),
-                            new XAttribute ("version", packageVersion)));
+                        dependencies.Add(new XElement("dependency",
+                            new XAttribute("id", $"_NativeAssets.{platform}"),
+                            new XAttribute("version", packageVersion)));
                     }
                 } else {
-                    var platform = id.Substring (id.IndexOf (".") + 1);
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", "**"),
-                        new XAttribute ("target", $"tools/{platform}")));
+                    var platform = id.Substring(id.IndexOf(".") + 1);
+                    var files = xdoc.Root.Element("files");
+                    files.Add(new XElement("file",
+                        new XAttribute("src", "**"),
+                        new XAttribute("target", $"tools/{platform}")));
                 }
                 {
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
+                    var files = xdoc.Root.Element("files");
+                    files.Add(new XElement("file",
+                        new XAttribute("src", MakeAbsolute(File($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
+                        new XAttribute("target", "README.md")));
                 }
 
-                xdoc.Save (nuspec);
-                RunDotNetPack (
+                xdoc.Save(nuspec);
+                RunDotNetPack(
                     $"{ROOT_PATH}/scripts/infra/package/nuget/NuGet.csproj",
                     OUTPUT_SPECIAL_NUGETS_PATH,
                     bl: $".{id}.{version.Key}",
                     additionalArgs: "/restore /nologo",
                     properties: new Dictionary<string, string> {
-                        { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                        { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
                     });
             }
 
-            DeleteFiles ($"{ROOT_PATH}/output/{path}/*.nuspec");
+            DeleteFiles($"{ROOT_PATH}/output/{path}/*.nuspec");
         }
     }
 
-    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
-    if (GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
+    // Bin-pack the build's normal NuGets into ~200 MB chunks
+    if (GetFiles($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
         const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
 
         var metaPackages = new[] {
-            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
-            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
-            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
-            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
+            new { Id = "_NuGets" },
         };
 
         foreach (var meta in metaPackages) {
             // enumerate matching files
-            var allFiles = GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nupkg").ToList ();
-            if (meta.IncludeSnupkg)
-                allFiles.AddRange (GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.snupkg"));
+            var allFiles = GetFiles($"{ROOT_PATH}/output/nugets/*.nupkg").ToList();
 
             var matchingFiles = allFiles
-                .Where (f => {
-                    var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_")) return false;
-                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
+                .Where(f => {
+                    var name = f.GetFilename().ToString();
+                    return !name.StartsWith("_") && !name.EndsWith(".symbols.nupkg");
                 })
-                .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
-                .OrderByDescending (f => f.Size)
-                .ToList ();
+                .Select(f => new { Path = f, Size = new FileInfo(f.FullPath).Length })
+                .OrderByDescending(f => f.Size)
+                .ToList();
 
             if (matchingFiles.Count == 0)
                 continue;
 
             // bin-pack using first-fit decreasing
-            var chunks = new List<List<FilePath>> ();
-            var chunkSizes = new List<long> ();
+            var chunks = new List<List<FilePath>>();
+            var chunkSizes = new List<long>();
 
             foreach (var file in matchingFiles) {
                 var placed = false;
                 for (int i = 0; i < chunks.Count; i++) {
                     if (chunkSizes[i] + file.Size <= MAX_CHUNK_SIZE) {
-                        chunks[i].Add (file.Path);
+                        chunks[i].Add(file.Path);
                         chunkSizes[i] += file.Size;
                         placed = true;
                         break;
                     }
                 }
                 if (!placed) {
-                    chunks.Add (new List<FilePath> { file.Path });
-                    chunkSizes.Add (file.Size);
+                    chunks.Add(new List<FilePath> { file.Path });
+                    chunkSizes.Add(file.Size);
                 }
             }
 
-            Information ("{0}: {1} files -> {2} chunk(s)", meta.Id, matchingFiles.Count, chunks.Count);
+            Information("{0}: {1} files -> {2} chunk(s)", meta.Id, matchingFiles.Count, chunks.Count);
             for (int i = 0; i < chunks.Count; i++) {
-                Information ("  Chunk {0}: {1} files, {2:F1} MB",
+                Information("  Chunk {0}: {1} files, {2:F1} MB",
                     i + 1, chunks[i].Count, chunkSizes[i] / 1024.0 / 1024.0);
             }
 
@@ -204,77 +211,164 @@ Task ("nuget-special")
                 // pack each chunk as a numbered dependency
                 for (int i = 0; i < chunks.Count; i++) {
                     var chunkId = $"{meta.Id}.Dependencies.{i + 1}";
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{chunkId}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{chunkId}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles($"{ROOT_PATH}/output/nugets/*.nuspec");
 
-                    var xdoc = XDocument.Load ($"{ROOT_PATH}/scripts/infra/package/nuget/_Dependencies.nuspec");
-                    var xmeta = xdoc.Root.Element ("metadata");
-                    xmeta.Element ("id").Value = chunkId;
-                    xmeta.Element ("version").Value = packageVersion;
-                    xmeta.Element ("title").Value = $"{meta.Id.TrimStart ('_')} (Part {i + 1})";
-                    xmeta.Element ("description").Value =
-                        $"Part {i + 1} of {chunks.Count} of the {meta.Id.TrimStart ('_')} packages.";
-                    xmeta.Element ("summary").Value = xmeta.Element ("description").Value;
+                    var xdoc = XDocument.Load($"{ROOT_PATH}/scripts/infra/package/nuget/_Dependencies.nuspec");
+                    var xmeta = xdoc.Root.Element("metadata");
+                    xmeta.Element("id").Value = chunkId;
+                    xmeta.Element("version").Value = packageVersion;
+                    xmeta.Element("title").Value = $"{meta.Id.TrimStart('_')} (Part {i + 1})";
+                    xmeta.Element("description").Value = $"Part {i + 1} of {chunks.Count} of the {meta.Id.TrimStart('_')} packages.";
+                    xmeta.Element("summary").Value = xmeta.Element("description").Value;
 
-                    var files = xdoc.Root.Element ("files");
+                    var files = xdoc.Root.Element("files");
                     foreach (var file in chunks[i]) {
-                        files.Add (new XElement ("file",
-                            new XAttribute ("src", MakeAbsolute (file).FullPath),
-                            new XAttribute ("target", "tools/")));
+                        files.Add(new XElement("file",
+                            new XAttribute("src", MakeAbsolute(file).FullPath),
+                            new XAttribute("target", "tools/")));
                     }
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
+                    files.Add(new XElement("file",
+                        new XAttribute("src", MakeAbsolute(File($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
+                        new XAttribute("target", "README.md")));
 
-                    xdoc.Save (nuspec);
-                    RunDotNetPack (
+                    xdoc.Save(nuspec);
+                    RunDotNetPack(
                         $"{ROOT_PATH}/scripts/infra/package/nuget/NuGet.csproj",
                         OUTPUT_SPECIAL_NUGETS_PATH,
                         bl: $".{chunkId}.{version.Key}",
                         additionalArgs: "/restore /nologo",
                         properties: new Dictionary<string, string> {
-                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                            { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
                         });
                 }
 
                 // pack the parent meta-package with dependencies on all chunks
                 {
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{meta.Id}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{meta.Id}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles($"{ROOT_PATH}/output/nugets/*.nuspec");
 
-                    var xdoc = XDocument.Load (ROOT_PATH + $"/scripts/infra/package/nuget/{meta.Id}.nuspec");
-                    var xmeta = xdoc.Root.Element ("metadata");
-                    xmeta.Element ("version").Value = packageVersion;
+                    var xdoc = XDocument.Load(ROOT_PATH + $"/scripts/infra/package/nuget/{meta.Id}.nuspec");
+                    var xmeta = xdoc.Root.Element("metadata");
+                    xmeta.Element("version").Value = packageVersion;
 
-                    var dependencies = xmeta.Element ("dependencies");
+                    var dependencies = xmeta.Element("dependencies");
                     for (int i = 0; i < chunks.Count; i++) {
-                        dependencies.Add (new XElement ("dependency",
-                            new XAttribute ("id", $"{meta.Id}.Dependencies.{i + 1}"),
-                            new XAttribute ("version", packageVersion)));
+                        dependencies.Add(new XElement("dependency",
+                            new XAttribute("id", $"{meta.Id}.Dependencies.{i + 1}"),
+                            new XAttribute("version", packageVersion)));
                     }
 
-                    var files = xdoc.Root.Element ("files");
-                    files.Add (new XElement ("file",
-                        new XAttribute ("src", MakeAbsolute (File ($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
-                        new XAttribute ("target", "README.md")));
+                    var files = xdoc.Root.Element("files");
+                    files.Add(new XElement("file",
+                        new XAttribute("src", MakeAbsolute(File($"{ROOT_PATH}/scripts/infra/package/nuget/README.md")).FullPath),
+                        new XAttribute("target", "README.md")));
 
-                    xdoc.Save (nuspec);
-                    RunDotNetPack (
+                    xdoc.Save(nuspec);
+                    RunDotNetPack(
                         $"{ROOT_PATH}/scripts/infra/package/nuget/NuGet.csproj",
                         OUTPUT_SPECIAL_NUGETS_PATH,
                         bl: $".{meta.Id}.{version.Key}",
                         additionalArgs: "/restore /nologo",
                         properties: new Dictionary<string, string> {
-                            { "NuspecFile", MakeAbsolute (File (nuspec)).FullPath },
+                            { "NuspecFile", MakeAbsolute(File(nuspec)).FullPath },
                         });
                 }
 
-                DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                DeleteFiles($"{ROOT_PATH}/output/nugets/*.nuspec");
             }
         }
     }
+});
+
+Task("nuget-assemble-arcade-assets")
+    .Description("Prepare Arcade package views and loose PDB artifacts.")
+    .Does(() =>
+{
+    var productPackages = GetNuGetPackages(OUTPUT_NUGETS_PATH, "product");
+    var transportPackages = GetNuGetPackages(OUTPUT_SPECIAL_NUGETS_PATH, "transport");
+
+    var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine("Shipping");
+    var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine("NonShipping");
+    CleanDir(OUTPUT_ARCADE_ASSETS_PATH);
+    CleanDir(OUTPUT_PDB_ARTIFACTS_PATH);
+    EnsureDirectoryExists(shipping);
+    EnsureDirectoryExists(nonShipping);
+
+    foreach (var package in productPackages)
+        CopyFileToDirectory(package, shipping);
+    foreach (var package in transportPackages)
+        CopyFileToDirectory(package, nonShipping);
+
+    var productNames = new HashSet<string>(
+        productPackages.Select(package => package.GetFilename().ToString()),
+        StringComparer.OrdinalIgnoreCase);
+    var normalPackages = productPackages
+        .Where(package => !package.GetFilename().ToString().EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+    var explicitSymbolCount = 0;
+    var pdbCount = 0;
+
+    foreach (var package in normalPackages) {
+        var packageBaseName = package.GetFilenameWithoutExtension().ToString();
+        if (productNames.Contains($"{packageBaseName}.symbols.nupkg")) {
+            explicitSymbolCount++;
+            continue;
+        }
+
+        var packagePdbRoot = MakeAbsolute(OUTPUT_PDB_ARTIFACTS_PATH.Combine(packageBaseName));
+        var archive = ZipFile.OpenRead(package.FullPath);
+        try {
+            foreach (var entry in archive.Entries) {
+                var entryPath = entry.FullName.Replace('\\', '/');
+                if (!entry.Name.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase) ||
+                    entryPath.StartsWith("ref/", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                var targetPath = MakeAbsolute(packagePdbRoot
+                    .CombineWithFilePath(entryPath)
+                    .Collapse());
+                var relativeTargetPath = packagePdbRoot.GetRelativePath(targetPath);
+                if (relativeTargetPath.Segments.Any(segment => segment == "..")) {
+                    throw new Exception($"PDB package path escapes its extraction root: {entry.FullName}");
+                }
+
+                EnsureDirectoryExists(targetPath.GetDirectory());
+                var sourceStream = entry.Open();
+                var targetStream = Context.FileSystem.GetFile(targetPath).Open(
+                    System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write,
+                    System.IO.FileShare.None);
+                try {
+                    sourceStream.CopyTo(targetStream);
+                } finally {
+                    targetStream.Dispose();
+                    sourceStream.Dispose();
+                }
+                pdbCount++;
+            }
+        } finally {
+            archive.Dispose();
+        }
+    }
+
+    if (pdbCount == 0) {
+        var emptyStream = Context.FileSystem
+            .GetFile(OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath(".empty"))
+            .Open(System.IO.FileMode.Create, System.IO.FileAccess.Write, System.IO.FileShare.None);
+        emptyStream.Dispose();
+    }
+
+    Information(
+        "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
+        "{2} loose PDB(s), {3} transport package(s).",
+        productPackages.Length,
+        explicitSymbolCount,
+        pdbCount,
+        transportPackages.Length);
 });
 
 RunTarget(TARGET);

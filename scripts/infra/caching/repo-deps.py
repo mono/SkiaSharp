@@ -7,7 +7,7 @@ Reads the job tree from repo-deps.json and provides two commands:
   validate    Check all tracked files are covered by a job or exclude pattern
 
 Usage:
-  python3 scripts/infra/caching/repo-deps.py cache-key --job managed/package --name package_normal_windows
+  python3 scripts/infra/caching/repo-deps.py cache-key --job managed/package --name package_windows
   python3 scripts/infra/caching/repo-deps.py cache-key --job managed/package --name test --base HEAD~1
   python3 scripts/infra/caching/repo-deps.py validate
 """
