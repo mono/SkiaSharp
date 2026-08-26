@@ -372,18 +372,13 @@ if ($packageStages -match 'package_special_windows|target:\s*nuget-special|name:
     $packageStages -notmatch 'name:\s*arcade_shipping' -or
     $packageStages -notmatch 'name:\s*arcade_nonshipping' -or
     $packageStages -notmatch 'name:\s*PdbArtifacts' -or
-    $packageStages -notmatch "isProduction:\s*'false'") {
+    $packageStages -notmatch "isProduction:\s*'false'" -or
+    $packageStages -notmatch 'postBuildSteps:(?s).*AssembleArcadeAssets\.Tests\.ps1') {
     throw 'One uncached Package job must publish raw and prepared Arcade package artifacts.'
 }
 $prepareStages = Get-Content (Join-Path $repoRoot 'scripts/azure-templates-stages-prepare.yml') -Raw
-$prepareDotNet = $prepareStages.IndexOf('task: UseDotNet@2')
-$prepareToolRestore = $prepareStages.IndexOf('pwsh: dotnet tool restore')
-$prepareAssetTests = $prepareStages.IndexOf('AssembleArcadeAssets.Tests.ps1')
-if ($prepareDotNet -lt 0 -or
-    $prepareToolRestore -le $prepareDotNet -or
-    $prepareAssetTests -le $prepareToolRestore -or
-    $prepareStages -notmatch 'version:\s*\$\(DOTNET_VERSION\)') {
-    throw 'Prepare must install the pinned SDK before restoring tools and running Cake asset tests.'
+if ($prepareStages -match 'UseDotNet@2|dotnet tool restore|AssembleArcadeAssets\.Tests\.ps1') {
+    throw 'Prepare validation must remain tool-free; Cake assembly tests run in Package.'
 }
 $sharedCake = Get-Content (Join-Path $repoRoot 'scripts/infra/shared/shared.cake') -Raw
 if ($sharedCake -notmatch 'EnvironmentVariable\s*\(\s*"DOTNET_FINAL_VERSION_KIND"\s*\)') {
