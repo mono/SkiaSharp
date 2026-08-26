@@ -5,11 +5,12 @@ This guide explains how to build SkiaSharp samples using CI-produced NuGet packa
 ## Transport Feed
 
 Official builds register wrapper packages as non-shipping assets in the same BAR
-as the product packages. The Maestro `SkiaSharp` channel routes them to the
-separate **SkiaSharp Transport** Azure DevOps feed:
+as the product packages. Maestro `.NET Libraries` routes them by asset class to
+the **dotnet-libraries-transport** Azure DevOps feed; transport is not a separate
+channel:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:

@@ -19,6 +19,52 @@ SPEC.loader.exec_module(status)
 
 
 class RepositoryPipelineContractTests(unittest.TestCase):
+    def test_repository_feed_routing_uses_dotnet_libraries(self):
+        product_paths = (
+            ".agents/skills/release-testing/references/setup.md",
+            "tests/SkiaSharp.Tests.Integration/nuget.config",
+            "benchmarks/SkiaSharp.Benchmarks.Tracking/nuget.config",
+            "scripts/infra/perf/_common.py",
+        )
+        transport_paths = (
+            "documentation/dev/building-samples.md",
+            "scripts/infra/shared/shared.cake",
+        )
+        for relative_path in product_paths:
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                comparable = source.replace('"\n    "', "")
+                self.assertIn("/_packaging/dotnet-libraries/", comparable)
+                self.assertNotIn("/_packaging/skiasharp/", source)
+                self.assertNotIn("aka.ms/skiasharp-eap", source)
+        for relative_path in transport_paths:
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertIn(
+                    "/_packaging/dotnet-libraries-transport/",
+                    source,
+                )
+                self.assertNotIn("/_packaging/skiasharp-transport/", source)
+
+        mirror = (
+            ROOT / "scripts" / "infra" / "package" / "manage-nuget-feed.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '[ValidateSet("dotnet-libraries", '
+            '"dotnet-libraries-transport")]',
+            mirror,
+        )
+        self.assertIn("DestFeed   = 'dotnet-libraries'", mirror)
+        self.assertIn("DestFeed   = 'dotnet-libraries-transport'", mirror)
+        workflow = (
+            ROOT / ".github" / "workflows" / "manage-nuget-feed.yml"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            "feed: [dotnet-libraries, dotnet-libraries-transport]",
+            workflow,
+        )
+        self.assertNotIn("skiasharp-ci", workflow.lower())
+
     def test_tests_pipeline_uses_folder_qualified_build_resource(self):
         source = (
             ROOT / "scripts" / "azure-pipelines-tests.yml"
@@ -52,6 +98,34 @@ class RepositoryPipelineContractTests(unittest.TestCase):
         self.assertEqual(
             data["areaPath"],
             r"internal\Dotnet-Core-Engineering",
+        )
+        self.assertNotIn("devdiv", json.dumps(data).lower())
+
+    def test_migration_requirement_set_cannot_silently_shrink(self):
+        self.assertEqual(
+            {requirement["id"] for requirement in status.MIGRATION_REQUIREMENTS},
+            {
+                "combined-build",
+                "connected-tests",
+                "exact-artifact-selection",
+                "exact-release-versioning",
+                "package-output-root",
+                "cake-arcade-assets",
+                "single-transport-family",
+                "real-pdb-artifacts",
+                "pdb-escape-contract-test",
+                "expected-failure-exit-reset",
+                "top-level-arcade-assembly",
+                "prepare-tool-free",
+                "package-cake-behavior-test",
+                "public-arcade-artifacts",
+                "internal-arcade-publishing",
+                "no-powershell-asset-assembler",
+                "transport-download-family",
+                "NativeAssets-transport-metadata",
+                "NuGets-transport-metadata",
+                "Dependencies-transport-metadata",
+            },
         )
 
     def test_current_tree_satisfies_minimum_release_backport(self):

@@ -147,7 +147,7 @@ public class LinuxConsoleTests(ITestOutputHelper output) : PlatformTestBase(outp
             <configuration>
               <packageSources>
                 <clear />
-                <add key="SkiaSharp Preview" value="https://aka.ms/skiasharp-eap/index.json" />
+                <add key="dotnet-libraries" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json" />
                 <add key="NuGet.org" value="https://api.nuget.org/v3/index.json" />
               </packageSources>
             </configuration>

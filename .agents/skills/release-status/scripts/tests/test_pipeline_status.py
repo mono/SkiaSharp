@@ -79,11 +79,11 @@ def bar_record(
     extra_assets=None,
 ):
     if channels is None:
-        channels = [{"name": "SkiaSharp"}]
+        channels = [{"name": ".NET Libraries"}]
     if locations is None:
         locations = [
             "https://pkgs.dev.azure.com/dnceng/public/"
-            "_packaging/skiasharp/nuget/v3/index.json"
+            "_packaging/dotnet-libraries/nuget/v3/index.json"
         ]
     return {
         "id": BAR_BUILD_ID,
@@ -131,7 +131,7 @@ class FakeAdo:
     def release_config(self, build_id):
         return {
             "barBuildId": BAR_BUILD_ID,
-            "defaultChannelIds": [529],
+            "defaultChannelIds": [1648],
             "stable": False,
         }
 
@@ -194,6 +194,11 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(
             status.BUILD_PIPELINE_SOURCE,
             r"\dotnet\skiasharp\skiasharp-package",
+        )
+        self.assertEqual(status.PRODUCT_CHANNEL_ID, 1648)
+        self.assertEqual(
+            status.PRODUCT_FEED_MARKER,
+            "/_packaging/dotnet-libraries/",
         )
 
     def test_release_config_default_channels_are_explicit_ids(self):
@@ -720,10 +725,16 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(report["barBuild"]["channels"], [])
 
-    def test_channel_names_do_not_select_release_assets(self):
+    def test_general_testing_channel_is_not_release_ready(self):
+        ado = complete_ado()
+        ado.release_config = lambda build_id: {
+            "barBuildId": BAR_BUILD_ID,
+            "defaultChannelIds": [529],
+            "stable": False,
+        }
         report = status.build_report(
             COMMIT,
-            ado=complete_ado(),
+            ado=ado,
             repo=FakeRepo(),
             darc=FakeDarc(
                 bar_record(
@@ -731,14 +742,17 @@ class PipelineStatusTests(unittest.TestCase):
                 )
             ),
         )
-        self.assertEqual(report["nextAction"], "start-release-testing")
+        self.assertEqual(
+            report["nextAction"],
+            "configure-default-channels",
+        )
 
     def test_wrong_or_missing_signed_feed_route_is_blocked(self):
         for locations in (
             [],
             [
                 "https://pkgs.dev.azure.com/dnceng/public/"
-                "_packaging/skiasharp-transport/nuget/v3/index.json"
+                "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
             ],
         ):
             with self.subTest(locations=locations):
@@ -764,7 +778,7 @@ class PipelineStatusTests(unittest.TestCase):
         ado = complete_ado()
         ado.release_config = lambda build_id: {
             "barBuildId": BAR_BUILD_ID,
-            "defaultChannelIds": [529],
+            "defaultChannelIds": [1648],
             "stable": True,
         }
         record = bar_record(

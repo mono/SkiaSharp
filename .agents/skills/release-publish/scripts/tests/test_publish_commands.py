@@ -40,6 +40,39 @@ COMMON = [
 ]
 
 
+def publisher_run_detail(
+    build_number,
+    *,
+    build_run_id=10,
+    bar_build_id=30,
+    stable=False,
+):
+    return {
+        "name": "SkiaSharp publication",
+        "state": "inProgress",
+        "result": None,
+        "resources": {
+            "pipelines": {
+                push.RESOURCE_ALIAS: {
+                    "pipeline": {
+                        "id": build_run_id,
+                        "name": push.RESOURCE_NAME,
+                        "folder": push.RESOURCE_FOLDER,
+                    },
+                    "version": build_number,
+                }
+            }
+        },
+        "templateParameters": {
+            "selectedResource": push.RESOURCE_ALIAS,
+            "buildRunId": build_run_id,
+            "barBuildId": bar_build_id,
+            "pushPackages": "true",
+            "pushStable": str(stable).lower(),
+        },
+    }
+
+
 class PublishCommandTests(unittest.TestCase):
     def test_no_flag_means_execution(self):
         self.assertFalse(push.create_parser().parse_args(COMMON).dry_run)
@@ -328,6 +361,10 @@ class PublishCommandTests(unittest.TestCase):
                     "result": None,
                 }
 
+            def run_detail(self, run_id):
+                self.run_id = run_id
+                return publisher_run_detail(self.build_number)
+
         with (
             mock.patch.object(push, "current_state", return_value=state),
             mock.patch.object(push, "AzurePublish", FakeAzure),
@@ -344,6 +381,60 @@ class PublishCommandTests(unittest.TestCase):
             "--publish-run 14911788",
             result["resumeCommand"],
         )
+        self.assertEqual(
+            result["publishRun"]["resourcePath"],
+            push.RESOURCE_PATH,
+        )
+        self.assertEqual(result["publishRun"]["buildRunId"], 10)
+        self.assertEqual(result["publishRun"]["barBuildId"], 30)
+        self.assertEqual(result["publishRun"]["destination"], "preview")
+
+    def test_queue_rejects_unresolved_resource_before_approval(self):
+        args = SimpleNamespace(
+            release_branch="release/4.152.0-preview.1",
+            expect_source_sha="a" * 40,
+            expect_build_run=10,
+            expect_tests_run=20,
+            expect_bar_build=30,
+            publish_run=None,
+            wait_minutes=60,
+        )
+        state = {
+            "dryRun": False,
+            "release": {
+                "sourceSha": "a" * 40,
+                "buildRunId": 10,
+                "barBuildId": 30,
+                "buildNumber": (
+                    "4.152.0-preview.1.1+4.152.0-preview.1"
+                ),
+            },
+            "nuget": {"state": "missing"},
+            "publishRun": None,
+            "operations": [{}, {}],
+        }
+
+        class FakeAzure:
+            def queue(self, *args, **kwargs):
+                return {"id": 14911788}
+
+            def run_detail(self, run_id):
+                return publisher_run_detail(
+                    state["release"]["buildNumber"],
+                    build_run_id=11,
+                )
+
+        with (
+            mock.patch.object(push, "current_state", return_value=state),
+            mock.patch.object(push, "AzurePublish", FakeAzure),
+        ):
+            with self.assertRaises(push.publish.PublishError) as raised:
+                push.execute(args)
+        message = str(raised.exception)
+        self.assertIn("failed post-queue validation", message)
+        self.assertIn("do not approve", message)
+        self.assertIn("14911788", message)
+        self.assertIn("different Build run", message)
 
     def test_pending_run_recovers_with_wait_only(self):
         args = SimpleNamespace(

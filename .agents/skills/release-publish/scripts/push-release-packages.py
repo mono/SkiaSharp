@@ -283,6 +283,7 @@ def validate_run_detail(
             f"{pipeline.get('folder')!r}\\{pipeline.get('name')!r}, "
             f"expected {RESOURCE_PATH!r}"
         )
+    # Resolved pipeline resources expose the source run ID in pipeline.id.
     if int(pipeline.get("id") or 0) != build_run_id:
         raise publish.PublishError(
             "publication run uses a different Build run"
@@ -313,6 +314,27 @@ def validate_run_detail(
         raise publish.PublishError(
             "publication run has the wrong Stable/Preview destination"
         )
+
+
+def run_evidence(detail: dict, run_id: int) -> dict:
+    resource = detail["resources"]["pipelines"][RESOURCE_ALIAS]
+    pipeline = resource["pipeline"]
+    parameters = detail["templateParameters"]
+    return {
+        "runId": run_id,
+        "name": detail.get("name"),
+        "status": detail.get("state"),
+        "result": detail.get("result"),
+        "url": run_url(run_id),
+        "resourcePath": pipeline_resource_path(pipeline),
+        "buildRunId": int(pipeline["id"]),
+        "buildNumber": resource["version"],
+        "barBuildId": int(parameters["barBuildId"]),
+        "destination": (
+            "stable" if str(parameters["pushStable"]).lower() == "true"
+            else "preview"
+        ),
+    }
 
 
 def load_release(args):
@@ -426,13 +448,7 @@ def current_state(args, *, validate_request: bool = True) -> dict:
             build_number=build_number,
             stable=release.stable,
         )
-        latest = {
-            "runId": args.publish_run,
-            "name": detail.get("name"),
-            "status": detail.get("state"),
-            "result": detail.get("result"),
-            "url": run_url(args.publish_run),
-        }
+        latest = run_evidence(detail, args.publish_run)
     else:
         runs = azure.matching_runs(
             bar_build_id,
@@ -560,16 +576,32 @@ def execute(args) -> dict:
     )
     azure = AzurePublish()
     if should_queue:
+        stable = publish.ReleaseVersion.parse(args.release_branch).stable
         queued = azure.queue(
             state["release"]["barBuildId"],
             state["release"]["buildRunId"],
             state["release"]["buildNumber"],
-            stable=publish.ReleaseVersion.parse(
-                args.release_branch
-            ).stable,
+            stable=stable,
         )
         queued_run_id = int(queued["id"])
-        url = run_url(queued_run_id)
+        queued_url = run_url(queued_run_id)
+        try:
+            detail = azure.run_detail(queued_run_id)
+            validate_run_detail(
+                detail,
+                bar_build_id=state["release"]["barBuildId"],
+                build_run_id=state["release"]["buildRunId"],
+                build_number=state["release"]["buildNumber"],
+                stable=stable,
+            )
+        except publish.PublishError as error:
+            raise publish.PublishError(
+                f"queued publication run {queued_run_id} failed post-queue "
+                f"validation; do not approve it and cancel the run: "
+                f"{queued_url}: {error}"
+            ) from error
+        evidence = run_evidence(detail, queued_run_id)
+        url = evidence["url"]
         print(
             f"Queued protected Azure publication run {queued_run_id}: "
             f"{url}",
@@ -577,13 +609,7 @@ def execute(args) -> dict:
             flush=True,
         )
         state["dryRun"] = False
-        state["publishRun"] = {
-            "runId": queued_run_id,
-            "name": queued.get("name"),
-            "status": queued.get("state"),
-            "result": queued.get("result"),
-            "url": url,
-        }
+        state["publishRun"] = evidence
         state["operations"][0] = publish.operation(
             "publish-packages",
             "running",

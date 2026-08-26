@@ -24,8 +24,11 @@ This skill is **Step 4 of 5**:
   overrides that gate. Preserve the exact branch, source SHA, Build run ID,
   tests run ID, BAR build ID, and paired package versions.
 - Require release-status to verify the target commit's minimum Arcade migration,
-  default-channel mapping, and signed-feed locations. This applies equally to
-  historical exact release/RC/hotfix branches; do not infer readiness from main.
+  `.NET Libraries` channel 1648 mapping, and `dotnet-libraries` product-feed
+  locations. This applies equally to historical exact release/RC/hotfix
+  branches; do not infer readiness from main. `General Testing` is not a
+  release route, and transport is asset-class routing under the product channel,
+  not a separate Maestro channel.
 - Use scripts for detection, Azure publication, NuGet verification, draft
   creation, and final publication.
 - Package publication, tag push, and GitHub Release publication are

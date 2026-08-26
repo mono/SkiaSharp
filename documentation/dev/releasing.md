@@ -116,14 +116,22 @@ revision buckets.
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
-| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json` | Unsigned non-shipping `_NuGets`, `_NativeAssets*`, and dependency chunks used by local and CI builds |
+| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json` | Shipping assets promoted through Maestro `.NET Libraries` channel 1648 |
+| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json` | NonShipping `_NuGets`, `_NativeAssets*`, and dependency chunks routed by the same `.NET Libraries` promotion |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** One BAR records both product and transport packages. Maestro routes
-> `IsShipping=true` packages to `skiasharp`, `IsShipping=false` packages to
-> `skiasharp-transport`, and symbol blobs to the configured symbol targets.
+> **Note:** One BAR records both product and transport packages. Maestro
+> `.NET Libraries` routes `IsShipping=true` packages to `dotnet-libraries`,
+> `IsShipping=false` packages to `dotnet-libraries-transport`, and symbol blobs
+> to configured symbol targets. There is no separate Transport channel.
 > NuGet.org publication remains a separate protected operation.
+
+The production Maestro configuration currently maps only the internal
+`dotnet-SkiaSharp` `dev/dnceng-pipelines` branch to `General Testing` (529).
+Before release, the configuration must map internal `main` and
+`Branch: -regex:release/.*` to `.NET Libraries` (1648), using the same branch
+regex syntax as existing production default-channel files. Keep `General
+Testing` only for intentionally non-release validation builds.
 
 ### Pipelines
 
@@ -254,7 +262,8 @@ exact `release/4.150.4` and `release/4.151.3` children before
 status/testing/publish; RC1 can proceed directly. Release status verifies each
 exact target commit has the combined Build, connected Tests, exact-version, and
 fail-closed artifact-selection backport. It then blocks until that branch has
-default-channel mapping and signed `skiasharp` feed routing. Main-only
+`.NET Libraries` channel 1648 mapping and `dotnet-libraries` product-feed
+routing. Main-only
 production features such as Apple symbol generation are not historical
 release-tooling prerequisites.
 

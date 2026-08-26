@@ -289,31 +289,33 @@ class PublishReleaseTests(unittest.TestCase):
 
     def test_status_handoff_rejects_missing_default_channel_mapping(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
-        status = self._stable_status(release)
-        status["barBuild"]["defaultChannelIds"] = []
-        with self.assertRaisesRegex(
-            publish.PublishError,
-            "no default-channel mapping",
-        ):
-            publish.validate_status_handoff(
-                status,
-                release,
-                expected_sha="a" * 40,
-                expected_build_run=10,
-                expected_tests_run=20,
-                expected_bar_build=30,
-            )
+        for channel_ids in ([], [529]):
+            with self.subTest(channel_ids=channel_ids):
+                status = self._stable_status(release)
+                status["barBuild"]["defaultChannelIds"] = channel_ids
+                with self.assertRaisesRegex(
+                    publish.PublishError,
+                    r"\.NET Libraries channel 1648",
+                ):
+                    publish.validate_status_handoff(
+                        status,
+                        release,
+                        expected_sha="a" * 40,
+                        expected_build_run=10,
+                        expected_tests_run=20,
+                        expected_bar_build=30,
+                    )
 
     def test_status_handoff_rejects_transport_only_route(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
         status = self._stable_status(release)
         status["barBuild"]["assets"]["SkiaSharp"]["locations"] = [
             "https://pkgs.dev.azure.com/dnceng/public/"
-            "_packaging/skiasharp-transport/nuget/v3/index.json"
+            "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
         ]
         with self.assertRaisesRegex(
             publish.PublishError,
-            "no signed skiasharp feed location",
+            "no dotnet-libraries feed location",
         ):
             publish.validate_status_handoff(
                 status,
@@ -450,21 +452,21 @@ class PublishReleaseTests(unittest.TestCase):
                 "buildDefinitionId": publish.BUILD_DEFINITION_ID,
                 "branch": "refs/heads/release/4.152.0",
                 "buildNumber": "4.152.0+4.152.0",
-                "defaultChannelIds": [529],
-                "channels": ["General Testing"],
+                "defaultChannelIds": [1648],
+                "channels": [".NET Libraries"],
                 "assets": {
                     "SkiaSharp": {
                         "version": "4.152.0",
                         "locations": [
                             "https://pkgs.dev.azure.com/dnceng/public/"
-                            "_packaging/skiasharp/nuget/v3/index.json"
+                            "_packaging/dotnet-libraries/nuget/v3/index.json"
                         ],
                     },
                     "HarfBuzzSharp": {
                         "version": "1.0.0",
                         "locations": [
                             "https://pkgs.dev.azure.com/dnceng/public/"
-                            "_packaging/skiasharp/nuget/v3/index.json"
+                            "_packaging/dotnet-libraries/nuget/v3/index.json"
                         ],
                     },
                 },

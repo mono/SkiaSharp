@@ -19,7 +19,8 @@ BUILD_URL = (
     "https://dev.azure.com/dnceng/internal/_build/results?buildId={build_id}"
 )
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
-SIGNED_FEED_MARKER = "/_packaging/skiasharp/"
+PRODUCT_CHANNEL_ID = 1648
+PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
 EXACT_RELEASE_BRANCH_RE = re.compile(
     r"^release/\d+\.\d+\.\d+(?:\.\d+)?"
@@ -825,6 +826,8 @@ def pipeline_resource_path(pipeline: dict) -> str:
 def is_connected_test(detail: dict, build_run: dict) -> bool:
     resource = pipeline_resource(detail)
     pipeline = resource.get("pipeline") or {}
+    # In a resolved Runs API resource, pipeline.id is the source run ID.
+    # The definition is identified independently by the folder-qualified path.
     return (
         int(pipeline.get("id") or 0) == int(build_run["id"])
         and pipeline_resource_path(pipeline) == BUILD_PIPELINE_SOURCE
@@ -998,12 +1001,12 @@ def bar_output(
     default_channel_ids = config.get("defaultChannelIds") or []
     routed_assets = {
         package_id: any(
-            SIGNED_FEED_MARKER in str(location).lower()
+            PRODUCT_FEED_MARKER in str(location).lower()
             for location in asset["locations"]
         )
         for package_id, asset in assets.items()
     }
-    if not default_channel_ids:
+    if PRODUCT_CHANNEL_ID not in default_channel_ids:
         state = "missing-default-channels"
     elif not all(routed_assets.values()):
         state = "missing-feed-routing"
@@ -1117,7 +1120,8 @@ def build_report(
                 next_action = "configure-default-channels"
                 warnings.append(
                     "The failed Build registered a BAR but resolved no "
-                    "default channels for this release branch"
+                    f".NET Libraries channel ({PRODUCT_CHANNEL_ID}) for this "
+                    "release branch"
                 )
         except StatusError:
             pass

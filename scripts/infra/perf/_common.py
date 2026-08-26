@@ -3,7 +3,7 @@
 
 Both trackers independently resolve the same version roles from the same NuGet feeds and
 both hand-rolled identical SemVer sorting + HTTP-with-retries helpers. Those live here now
-so there is one implementation: the HTTP layer, SemVer sorting, the EAP/nuget feed helpers,
+so there is one implementation: the HTTP layer, SemVer sorting, the signed-build/NuGet feed helpers,
 and role resolution (``nightly`` + ``latest`` + released baselines). Domain-specific things
 (per-package size resolution, the time/byte Markdown formatters) stay in their own scripts.
 
@@ -23,7 +23,10 @@ import urllib.request
 USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 
 # SkiaSharp package feeds.
-EAP_INDEX_URL = "https://aka.ms/skiasharp-eap/index.json"       # daily -nightly.* builds
+SIGNED_BUILDS_INDEX_URL = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries/nuget/v3/index.json"
+)
 NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"  # released stables
 
 _SEMVER_RE = re.compile(r"^(\d+)\.(\d+)\.(\d+)(?:\.(\d+))?(?:-(.+))?$")
@@ -87,7 +90,7 @@ def is_stable(version: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
-# NuGet feed access (EAP nightly feed + nuget.org)
+# NuGet feed access (signed nightly builds + nuget.org)
 # --------------------------------------------------------------------------- #
 
 def pick_resource(resources: list[dict], type_prefix: str) -> str | None:
@@ -111,12 +114,14 @@ def feed_versions(flat_base: str, package: str) -> list[str]:
         return []
 
 
-def eap_versions(package: str = "SkiaSharp") -> list[str]:
-    """All versions of ``package`` on the SkiaSharp EAP feed (hosts the -nightly.* builds)."""
-    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
+def signed_build_versions(package: str = "SkiaSharp") -> list[str]:
+    """All versions of ``package`` on the signed-build feed."""
+    resources = http_get_json(SIGNED_BUILDS_INDEX_URL).get("resources", [])
     flat = pick_resource(resources, "PackageBaseAddress/")
     if not flat:
-        raise RuntimeError("No PackageBaseAddress resource in the EAP service index")
+        raise RuntimeError(
+            "No PackageBaseAddress resource in the signed-build service index"
+        )
     return feed_versions(flat, package)
 
 
@@ -131,7 +136,7 @@ def nuget_versions(package: str = "SkiaSharp") -> list[str]:
 # Roles split into RELEASED (published to nuget.org) and UNRELEASED (never shipped):
 #   released:    latest (newest overall, may be a preview/rc) + curr-stable +
 #                prev-stable + prev-major
-#   unreleased:  nightly (EAP/CI daily build)  and  pr (a branch source build)
+#   unreleased:  nightly (signed CI daily build) and pr (a branch source build)
 # `latest` is a preview so it is less vital than the stables (which can still be patched),
 # but it is a *shipped* release we must not regress. Only `pr` is ephemeral / per-branch
 # (dropped from persisted history); `nightly` is unreleased but tracked as the CI trend.
@@ -172,7 +177,7 @@ def released_roles(versions: list[str]) -> dict[str, str]:
 
     Everything on nuget.org counts as released: ``latest`` (the newest version overall,
     which may be a preview/rc) plus the stable baselines from ``stable_roles``
-    (``curr-stable`` / ``prev-stable`` / ``prev-major``). Only ``nightly`` (EAP/CI) and the
+    (``curr-stable`` / ``prev-stable`` / ``prev-major``). Only ``nightly`` (signed CI) and the
     per-branch ``pr`` build are unreleased. Only the roles that actually exist are returned.
     """
     if not versions:
@@ -185,14 +190,14 @@ def released_roles(versions: list[str]) -> dict[str, str]:
 def resolve_roles(package: str = "SkiaSharp") -> dict[str, str]:
     """Resolve the version roles to track for ``package``.
 
-    ``nightly`` is the newest ``-nightly.*`` on the EAP/CI feed (unreleased); the released
+    ``nightly`` is the newest ``-nightly.*`` on the signed-build feed (unreleased); the released
     roles come from nuget.org via ``released_roles`` — ``latest`` (newest, incl. preview/rc)
     plus ``curr-stable`` / ``prev-stable`` / ``prev-major``. Only roles that exist are
     returned (a brand-new major may lack prev-*).
     """
-    nightly = latest_nightly(eap_versions(package))
+    nightly = latest_nightly(signed_build_versions(package))
     if not nightly:
-        raise RuntimeError("No -nightly.* versions on the EAP feed")
+        raise RuntimeError("No -nightly.* versions on the signed-build feed")
     roles = {"nightly": nightly}
     roles.update(released_roles(nuget_versions(package)))
     return roles

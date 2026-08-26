@@ -38,21 +38,21 @@ def bar_build(
         "buildDefinitionId": detector.publish.BUILD_DEFINITION_ID,
         "branch": f"refs/heads/{branch}",
         "buildNumber": build_number,
-        "defaultChannelIds": [529],
-        "channels": ["General Testing"],
+        "defaultChannelIds": [1648],
+        "channels": [".NET Libraries"],
         "assets": {
             "SkiaSharp": {
                 "version": skia_version,
                 "locations": [
                     "https://pkgs.dev.azure.com/dnceng/public/"
-                    "_packaging/skiasharp/nuget/v3/index.json"
+                    "_packaging/dotnet-libraries/nuget/v3/index.json"
                 ],
             },
             "HarfBuzzSharp": {
                 "version": harfbuzz_version,
                 "locations": [
                     "https://pkgs.dev.azure.com/dnceng/public/"
-                    "_packaging/skiasharp/nuget/v3/index.json"
+                    "_packaging/dotnet-libraries/nuget/v3/index.json"
                 ],
             },
         },
@@ -104,13 +104,13 @@ class DetectReleasePublishTests(unittest.TestCase):
         self.assertEqual(result["buildRunId"], 10)
         self.assertEqual(result["testsRunId"], 20)
         self.assertEqual(result["barBuildId"], 30)
-        self.assertEqual(result["defaultChannelIds"], [529])
+        self.assertEqual(result["defaultChannelIds"], [1648])
         self.assertEqual(result["migration"]["state"], "ready")
         self.assertEqual(
             result["barAssets"]["SkiaSharp"]["locations"],
             [
                 "https://pkgs.dev.azure.com/dnceng/public/"
-                "_packaging/skiasharp/nuget/v3/index.json"
+                "_packaging/dotnet-libraries/nuget/v3/index.json"
             ],
         )
         self.assertIn("--expect-build-run 10", result["pushAuditCommand"])

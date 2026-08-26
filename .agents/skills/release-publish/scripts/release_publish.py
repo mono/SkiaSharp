@@ -37,7 +37,8 @@ TESTS_DEFINITION_ID = 1630
 # The core packages every BAR build must register exact versions and
 # non-empty asset locations for before publication can proceed.
 BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
-SIGNED_FEED_MARKER = "/_packaging/skiasharp/"
+PRODUCT_CHANNEL_ID = 1648
+PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
 
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
@@ -365,9 +366,10 @@ def validate_status_handoff(
         raise PublishError(
             f"BAR build {bar.get('id')} is not ready: {bar.get('state')}"
         )
-    if not bar.get("defaultChannelIds"):
+    if PRODUCT_CHANNEL_ID not in (bar.get("defaultChannelIds") or []):
         raise PublishError(
-            f"BAR build {bar.get('id')} has no default-channel mapping"
+            f"BAR build {bar.get('id')} is not mapped to .NET Libraries "
+            f"channel {PRODUCT_CHANNEL_ID}"
         )
     if bar.get("branch") != expected_branch:
         raise PublishError("BAR build does not use the release branch")
@@ -414,11 +416,11 @@ def validate_status_handoff(
                 f"locations for {package_id}"
             )
         if not any(
-            SIGNED_FEED_MARKER in str(location).lower()
+            PRODUCT_FEED_MARKER in str(location).lower()
             for location in asset["locations"]
         ):
             raise PublishError(
-                f"BAR build {bar.get('id')} has no signed skiasharp feed "
+                f"BAR build {bar.get('id')} has no dotnet-libraries feed "
                 f"location for {package_id}"
             )
     public_skia = versions["public"].get("SkiaSharp") or ""

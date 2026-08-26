@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import json
 from pathlib import Path
 import sys
 import unittest
 
 
 SCRIPT_PATH = Path(__file__).resolve().parent.parent / "query-cg-alerts.py"
+ROOT = Path(__file__).resolve().parents[5]
 SPEC = importlib.util.spec_from_file_location("query_cg_alerts", SCRIPT_PATH)
 query = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = query
@@ -36,6 +38,18 @@ class ComponentGovernancePipelineTests(unittest.TestCase):
             viewer,
         )
         self.assertNotIn("devdiv", viewer.lower())
+
+    def test_tsa_upload_routes_to_dnceng_internal(self):
+        path = ROOT / "scripts" / "infra" / "security" / "tsaoptions-v2.json"
+        source = path.read_text(encoding="utf-8")
+        data = json.loads(source)
+        self.assertEqual(data["instanceUrl"], "https://dev.azure.com/dnceng/")
+        self.assertEqual(data["projectName"], "internal")
+        self.assertEqual(
+            data["areaPath"],
+            r"internal\Dotnet-Core-Engineering",
+        )
+        self.assertNotIn("devdiv", source.lower())
 
 if __name__ == "__main__":
     unittest.main()
