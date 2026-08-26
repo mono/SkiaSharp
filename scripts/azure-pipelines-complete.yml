@@ -19,15 +19,15 @@ parameters:
     default:
       pool:
         name: $(DncEngPublicBuildPool)
-        vmImage: ubuntu-22.04
-        os: windows
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
+        os: linux
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
         name: $(DncEngPublicBuildPool)
-        vmImage: windows-2022
+        demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentWindowsNative
     displayName: 'The Windows build agent configuration for building the native assets:'
@@ -35,7 +35,7 @@ parameters:
     default:
       pool:
         name: $(DncEngPublicBuildPool)
-        vmImage: windows-2022
+        demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -59,7 +59,7 @@ parameters:
     default:
       pool:
         name: $(DncEngPublicBuildPool)
-        vmImage: ubuntu-22.04
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentLinuxNative
     displayName: 'The Linux build agent configuration for building the native assets:'
@@ -67,7 +67,7 @@ parameters:
     default:
       pool:
         name: $(DncEngPublicBuildPool)
-        vmImage: ubuntu-22.04
+        demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
