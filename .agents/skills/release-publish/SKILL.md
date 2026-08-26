@@ -24,8 +24,8 @@ This skill is **Step 4 of 5**:
   overrides that gate. Preserve the exact branch, source SHA, Build run ID,
   tests run ID, BAR build ID, and paired package versions.
 - Require release-status to verify the target commit's minimum Arcade migration,
-  `.NET Libraries` channel 1648 mapping, and `dotnet-libraries` product-feed
-  locations. This applies equally to historical exact release/RC/hotfix
+  `.NET Libraries` channel 1648 mapping, and exact approved-feed routing. This
+  applies equally to historical exact release/RC/hotfix
   branches; do not infer readiness from main. `General Testing` is not a
   release route, and transport is asset-class routing under the product channel,
   not a separate Maestro channel.
@@ -41,8 +41,9 @@ This skill is **Step 4 of 5**:
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
 - The Build pipeline's standard Darc default-channel promotion is upstream of
-  this skill. Validate the exact BAR-recorded locations; never select or promote
-  a release by mutable channel name. Darc promotion is not NuGet.org
+  this skill. Use BAR locations when present, otherwise verify the BAR's exact
+  versions on the approved feeds; never select or promote a release by mutable
+  channel name. Darc promotion is not NuGet.org
   publication, which this skill queues and a human must separately approve.
 - Approval of the queue command authorizes only queueing the protected NuGet.org
   publisher pipeline (its dnceng/internal definition ID is supplied via

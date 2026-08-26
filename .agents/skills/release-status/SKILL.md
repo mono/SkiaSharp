@@ -58,12 +58,12 @@ This skill is **Step 2 of 5**:
   run, build number, and folder-qualified source.
 - Resolve the Build run's `ReleaseConfigs` artifact to one exact BAR build ID.
   Verify BAR repository metadata, commit, branch, Build run/definition, stable
-  flag, package versions, observed channels, and exact asset locations.
+  flag, package versions, observed channels, and routing evidence.
 - Never combine runs, BAR metadata, or assets from different Build attempts.
 - Reject BARs with duplicate NonShipping transport package IDs (for example,
   multiple `_NuGets` identities); only the build's single PR-or-branch transport
   family belongs in BAR.
-- Build, connected Tests, and both exact BAR-recorded package assets must be
+- Build, connected Tests, and exact BAR package assets must be
   ready before the default testing handoff.
 - The user may explicitly override only the wait for incomplete CI tests.
   Preserve all selected Build/Tests/BAR/package metadata and report the override.
@@ -77,7 +77,9 @@ This skill is **Step 2 of 5**:
 
 The script links Tests through its runtime pipeline resource, reads the BAR ID
 from the exact Build run's `ReleaseConfigs` artifact, and gets signed package
-versions and locations from that immutable BAR record. Stable assets are exact
+versions from that immutable BAR record. Prefer BAR locations when present;
+otherwise verify those exact versions directly on the approved product and
+transport feeds. Stable assets are exact
 `X.Y.Z`; no `-stable.{build}` version is synthesized.
 
 ## Actions
@@ -130,7 +132,7 @@ HarfBuzzSharp `{packageVersions.public.HarfBuzzSharp}`
 **Next:** translate `{nextAction}`
 ```
 
-Include both core assets' BAR-recorded locations, active/failed jobs, and every
+Include both core assets' routing evidence, active/failed jobs, and every
 warning. Omit missing run rows/links. Do not independently query or replace the
 script-selected identity.
 

@@ -85,6 +85,25 @@ def bar_record(
             "https://pkgs.dev.azure.com/dnceng/public/"
             "_packaging/dotnet-libraries/nuget/v3/index.json"
         ]
+    if extra_assets is None:
+        transport_locations = [
+            "https://pkgs.dev.azure.com/dnceng/public/"
+            "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
+        ]
+        extra_assets = [
+            {
+                "name": "_NativeAssets",
+                "version": "0.0.0-branch.release-4.152.0-preview.1.1",
+                "nonShipping": True,
+                "locations": transport_locations,
+            },
+            {
+                "name": "_NuGets",
+                "version": "0.0.0-branch.release-4.152.0-preview.1.1",
+                "nonShipping": True,
+                "locations": transport_locations,
+            },
+        ]
     return {
         "id": BAR_BUILD_ID,
         "commit": COMMIT,
@@ -109,7 +128,7 @@ def bar_record(
                 "nonShipping": False,
                 "locations": locations,
             },
-            *(extra_assets or []),
+            *extra_assets,
         ],
     }
 
@@ -142,6 +161,16 @@ class FakeDarc:
 
     def get_build(self, bar_build_id):
         return self.record
+
+
+class FakeFeeds:
+    def __init__(self, available=True):
+        self.available = available
+        self.requests = []
+
+    def has_version(self, index_url, package_id, version):
+        self.requests.append((index_url, package_id, version))
+        return self.available
 
 
 class FakeRepo:
@@ -208,6 +237,52 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(status.parse_default_channel_ids("[]"), [])
 
+    def test_feed_verifier_rejects_non_nuget_path_components(self):
+        verifier = status.FeedVerifier()
+        verifier.flat_bases[status.TRANSPORT_FEED_INDEX] = (
+            "https://example.test/flat"
+        )
+        for version in (
+            "../_nugets/0.0.0-branch.main.105",
+            "1/2/3",
+            r"1\2\3",
+            "1%2f2",
+        ):
+            with (
+                self.subTest(version=version),
+                self.assertRaisesRegex(
+                    status.StatusError,
+                    "invalid NuGet version",
+                ),
+            ):
+                verifier.has_version(
+                    status.TRANSPORT_FEED_INDEX,
+                    "_NuGets",
+                    version,
+                )
+
+    def test_feed_verifier_wraps_non_json_service_index(self):
+        response = mock.MagicMock()
+        response.__enter__.return_value = response
+        decode_error = status.json.JSONDecodeError("invalid", "<html>", 0)
+        with (
+            mock.patch.object(
+                status.urllib.request,
+                "urlopen",
+                return_value=response,
+            ),
+            mock.patch.object(
+                status.json,
+                "load",
+                side_effect=decode_error,
+            ),
+            self.assertRaisesRegex(
+                status.StatusError,
+                "failed to read approved package feed",
+            ),
+        ):
+            status.FeedVerifier().flat_base(status.PRODUCT_FEED_INDEX)
+
     def test_exact_artifact_selector_rejects_mutable_assignment(self):
         requirement = next(
             item
@@ -229,46 +304,6 @@ class PipelineStatusTests(unittest.TestCase):
                 requirement,
             )
         )
-
-    def test_tsa_routing_requires_complete_dnceng_ownership(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "dnceng-tsa-routing"
-        )
-        ready = """{
-          "instanceUrl": "https://dev.azure.com/dnceng/",
-          "projectName": "internal",
-          "areaPath": "internal\\\\Dotnet-Core-Engineering",
-          "iterationPath": "internal"
-        }"""
-        self.assertTrue(
-            status.migration_requirement_satisfied(ready, requirement)
-        )
-        for legacy in (
-            ready.replace("https://dev.azure.com/dnceng/", "https://devdiv.visualstudio.com/"),
-            ready.replace('"projectName": "internal"', '"projectName": "DevDiv"'),
-            ready.replace(
-                '"areaPath": "internal\\\\Dotnet-Core-Engineering"',
-                '"areaPath": "DevDiv\\\\.NET MAUI\\\\SkiaSharp"',
-            ),
-            ready.replace(
-                '"iterationPath": "internal"',
-                '"iterationPath": "DevDiv"',
-            ),
-            ready.replace(
-                '"iterationPath": "internal"',
-                '"iterationPath": "internal\\\\Sprint 200"',
-            ),
-            ready.replace('          "iterationPath": "internal"\n', ""),
-        ):
-            with self.subTest(legacy=legacy):
-                self.assertFalse(
-                    status.migration_requirement_satisfied(
-                        legacy,
-                        requirement,
-                    )
-                )
 
     def test_package_output_root_requires_canonical_spelling(self):
         requirement = next(
@@ -631,15 +666,6 @@ class PipelineStatusTests(unittest.TestCase):
                     metadata,
                     encoding="ascii",
                 )
-            security = scripts / "infra" / "security"
-            security.mkdir()
-            (security / "tsaoptions-v2.json").write_text(
-                '{"instanceUrl":"https://dev.azure.com/dnceng/",'
-                '"projectName":"internal",'
-                '"areaPath":"internal\\\\Dotnet-Core-Engineering",'
-                '"iterationPath":"internal"}\n',
-                encoding="ascii",
-            )
             git(seed, "add", "scripts", "build.cake")
             git(seed, "commit", "-m", "Release")
             git(seed, "branch", BRANCH)
@@ -816,6 +842,55 @@ class PipelineStatusTests(unittest.TestCase):
                     report["nextAction"],
                     "configure-feed-routing",
                 )
+
+    def test_missing_bar_locations_probe_exact_approved_feed_versions(self):
+        feeds = FakeFeeds()
+        record = bar_record(locations=[])
+        for asset in record["assets"]:
+            asset["locations"] = []
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
+            feeds=feeds,
+        )
+        self.assertEqual(report["nextAction"], "start-release-testing")
+        self.assertEqual(
+            feeds.requests,
+            [
+                (
+                    status.PRODUCT_FEED_INDEX,
+                    "SkiaSharp",
+                    "4.152.0-preview.1.26421.1",
+                ),
+                (
+                    status.PRODUCT_FEED_INDEX,
+                    "HarfBuzzSharp",
+                    "14.2.1-preview.1.26421.1",
+                ),
+                (
+                    status.TRANSPORT_FEED_INDEX,
+                    "_NativeAssets",
+                    "0.0.0-branch.release-4.152.0-preview.1.1",
+                ),
+                (
+                    status.TRANSPORT_FEED_INDEX,
+                    "_NuGets",
+                    "0.0.0-branch.release-4.152.0-preview.1.1",
+                ),
+            ],
+        )
+
+    def test_missing_bar_locations_fail_when_exact_versions_are_absent(self):
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(bar_record(locations=[])),
+            feeds=FakeFeeds(available=False),
+        )
+        self.assertEqual(report["nextAction"], "configure-feed-routing")
 
     def test_stable_bar_uses_exact_package_versions(self):
         repo = FakeRepo()

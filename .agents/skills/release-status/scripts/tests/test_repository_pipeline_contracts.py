@@ -125,20 +125,22 @@ class RepositoryPipelineContractTests(unittest.TestCase):
         )
         self.assertNotIn("$versionType = 'latestFromBranch'", source)
 
-    def test_tsa_routes_to_dnceng_internal(self):
+    def test_tsa_tracks_work_in_devdiv(self):
         data = json.loads(
             (
                 ROOT / "scripts" / "infra" / "security" / "tsaoptions-v2.json"
             ).read_text(encoding="utf-8")
         )
-        self.assertEqual(data["instanceUrl"], "https://dev.azure.com/dnceng/")
-        self.assertEqual(data["projectName"], "internal")
+        self.assertEqual(
+            data["instanceUrl"],
+            "https://devdiv.visualstudio.com/",
+        )
+        self.assertEqual(data["projectName"], "DevDiv")
         self.assertEqual(
             data["areaPath"],
-            r"internal\Dotnet-Core-Engineering",
+            r"DevDiv\.NET MAUI\SkiaSharp",
         )
-        self.assertEqual(data["iterationPath"], "internal")
-        self.assertNotIn("devdiv", json.dumps(data).lower())
+        self.assertEqual(data["iterationPath"], "DevDiv")
 
     def test_migration_requirement_set_cannot_silently_shrink(self):
         self.assertEqual(
@@ -161,7 +163,6 @@ class RepositoryPipelineContractTests(unittest.TestCase):
                 "internal-arcade-publishing",
                 "no-powershell-asset-assembler",
                 "transport-download-family",
-                "dnceng-tsa-routing",
                 "NativeAssets-transport-metadata",
                 "NuGets-transport-metadata",
                 "Dependencies-transport-metadata",

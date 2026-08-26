@@ -270,23 +270,6 @@ class PublishReleaseTests(unittest.TestCase):
         )
         self.assertEqual(handoff["bar"]["id"], 30)
 
-    def test_status_handoff_rejects_missing_bar_asset_locations(self):
-        release = publish.ReleaseVersion.parse("release/4.152.0")
-        status = self._stable_status(release)
-        status["barBuild"]["assets"]["HarfBuzzSharp"]["locations"] = []
-        with self.assertRaisesRegex(
-            publish.PublishError,
-            "no recorded package locations",
-        ):
-            publish.validate_status_handoff(
-                status,
-                release,
-                expected_sha="a" * 40,
-                expected_build_run=10,
-                expected_tests_run=20,
-                expected_bar_build=30,
-            )
-
     def test_status_handoff_rejects_missing_default_channel_mapping(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
         for channel_ids in ([], [529]):
@@ -454,6 +437,14 @@ class PublishReleaseTests(unittest.TestCase):
                 "buildNumber": "4.152.0+4.152.0",
                 "defaultChannelIds": [1648],
                 "channels": [".NET Libraries"],
+                "routedAssets": {
+                    "SkiaSharp": True,
+                    "HarfBuzzSharp": True,
+                },
+                "routedTransportAssets": {
+                    "_NativeAssets": True,
+                    "_NuGets": True,
+                },
                 "assets": {
                     "SkiaSharp": {
                         "version": "4.152.0",
@@ -470,6 +461,24 @@ class PublishReleaseTests(unittest.TestCase):
                         ],
                     },
                 },
+                "transportAssets": {
+                    "_NativeAssets": {
+                        "version": "0.0.0-branch.release-4.152.0.1",
+                        "locations": [
+                            "https://pkgs.dev.azure.com/dnceng/public/"
+                            "_packaging/dotnet-libraries-transport/"
+                            "nuget/v3/index.json"
+                        ],
+                    },
+                    "_NuGets": {
+                        "version": "0.0.0-branch.release-4.152.0.1",
+                        "locations": [
+                            "https://pkgs.dev.azure.com/dnceng/public/"
+                            "_packaging/dotnet-libraries-transport/"
+                            "nuget/v3/index.json"
+                        ],
+                    },
+                },
             },
             "packageVersions": {
                 "test": {
@@ -482,6 +491,60 @@ class PublishReleaseTests(unittest.TestCase):
                 },
             },
         }
+
+    def test_status_handoff_accepts_exact_feed_proof_without_bar_locations(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        for asset in status["barBuild"]["assets"].values():
+            asset["locations"] = []
+        for asset in status["barBuild"]["transportAssets"].values():
+            asset["locations"] = []
+        handoff = publish.validate_status_handoff(
+            status,
+            release,
+            expected_sha="a" * 40,
+            expected_build_run=10,
+            expected_tests_run=20,
+            expected_bar_build=30,
+        )
+        self.assertEqual(handoff["bar"]["state"], "ready")
+
+    def test_status_handoff_rejects_missing_location_and_feed_proof(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["assets"]["SkiaSharp"]["locations"] = []
+        status["barBuild"]["routedAssets"]["SkiaSharp"] = False
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "no BAR location or exact dotnet-libraries package proof",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
+
+    def test_status_handoff_rejects_missing_transport_feed_proof(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        status["barBuild"]["transportAssets"]["_NuGets"]["locations"] = []
+        status["barBuild"]["routedTransportAssets"]["_NuGets"] = False
+        with self.assertRaisesRegex(
+            publish.PublishError,
+            "no BAR location or exact dotnet-libraries-transport "
+            "package proof",
+        ):
+            publish.validate_status_handoff(
+                status,
+                release,
+                expected_sha="a" * 40,
+                expected_build_run=10,
+                expected_tests_run=20,
+                expected_bar_build=30,
+            )
 
     def test_scripts_are_ascii_only(self):
         for path in SCRIPTS.glob("*.py"):

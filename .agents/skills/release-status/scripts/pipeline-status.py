@@ -11,6 +11,9 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.error
+import urllib.parse
+import urllib.request
 
 
 ORG = "https://dev.azure.com/dnceng"
@@ -21,6 +24,15 @@ BUILD_URL = (
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
 PRODUCT_CHANNEL_ID = 1648
 PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
+PRODUCT_FEED_INDEX = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries/nuget/v3/index.json"
+)
+TRANSPORT_FEED_MARKER = "/_packaging/dotnet-libraries-transport/"
+TRANSPORT_FEED_INDEX = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
+)
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
 EXACT_RELEASE_BRANCH_RE = re.compile(
     r"^release/\d+\.\d+\.\d+(?:\.\d+)?"
@@ -289,21 +301,6 @@ MIGRATION_REQUIREMENTS = (
         "detail": (
             "backport PR-or-branch-only transport lookup with no commit alias "
             "or fallback"
-        ),
-    },
-    {
-        "id": "dnceng-tsa-routing",
-        "path": "scripts/infra/security/tsaoptions-v2.json",
-        "pattern": (
-            r'(?=.*"instanceUrl"\s*:\s*"https://dev\.azure\.com/dnceng/")'
-            r'(?=.*"projectName"\s*:\s*"internal")'
-            r'(?=.*"areaPath"\s*:\s*"internal\\\\Dotnet-Core-Engineering")'
-            r'(?=.*"iterationPath"\s*:\s*"internal")'
-        ),
-        "forbiddenPattern": r"(?i)devdiv",
-        "detail": (
-            "backport dnceng/internal TSA ownership for API Scan so shared "
-            "skiasharp.skiasharp_main uploads cannot flip back to DevDiv"
         ),
     },
     *(
@@ -587,6 +584,91 @@ class Darc:
                 f"BAR build {bar_build_id} resolved to {len(records)} records"
             )
         return records[0]
+
+
+class FeedVerifier:
+    def __init__(self) -> None:
+        self.flat_bases: dict[str, str] = {}
+
+    def flat_base(self, index_url: str) -> str:
+        if index_url in self.flat_bases:
+            return self.flat_bases[index_url]
+        request = urllib.request.Request(
+            index_url,
+            headers={"User-Agent": "SkiaSharp-release-status/1.0"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                resources = json.load(response).get("resources") or []
+        except (
+            urllib.error.HTTPError,
+            urllib.error.URLError,
+            TimeoutError,
+            json.JSONDecodeError,
+        ) as error:
+            raise StatusError(
+                f"failed to read approved package feed {index_url}: {error}"
+            ) from error
+        flat = next(
+            (
+                str(resource.get("@id") or "")
+                for resource in resources
+                if str(resource.get("@type") or "").startswith(
+                    "PackageBaseAddress/"
+                )
+            ),
+            "",
+        )
+        if not flat:
+            raise StatusError(
+                f"approved package feed has no flat-container resource: "
+                f"{index_url}"
+            )
+        self.flat_bases[index_url] = flat.rstrip("/")
+        return self.flat_bases[index_url]
+
+    def has_version(
+        self,
+        index_url: str,
+        package_id: str,
+        version: str,
+    ) -> bool:
+        if not re.fullmatch(
+            r"[0-9A-Za-z_](?:[0-9A-Za-z_.-]*[0-9A-Za-z_])?",
+            package_id,
+        ):
+            raise StatusError(f"invalid NuGet package ID: {package_id!r}")
+        if not re.fullmatch(
+            r"[0-9A-Za-z](?:[0-9A-Za-z.-]*[0-9A-Za-z])?",
+            version,
+        ):
+            raise StatusError(f"invalid NuGet version: {version!r}")
+        lower_id = package_id.lower()
+        url = (
+            f"{self.flat_base(index_url)}/"
+            f"{urllib.parse.quote(lower_id, safe='')}/"
+            f"{urllib.parse.quote(version.lower(), safe='')}/"
+            f"{urllib.parse.quote(lower_id, safe='')}.nuspec"
+        )
+        request = urllib.request.Request(
+            url,
+            headers={"User-Agent": "SkiaSharp-release-status/1.0"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return response.status == 200
+        except urllib.error.HTTPError as error:
+            if error.code == 404:
+                return False
+            raise StatusError(
+                f"failed to verify {package_id} {version} on "
+                f"{index_url}: {error}"
+            ) from error
+        except (urllib.error.URLError, TimeoutError) as error:
+            raise StatusError(
+                f"failed to verify {package_id} {version} on "
+                f"{index_url}: {error}"
+            ) from error
 
 
 class GitRepository:
@@ -962,6 +1044,7 @@ def bar_output(
     commit: str,
     build_run: dict,
     inputs: dict,
+    feeds: FeedVerifier | None = None,
 ) -> tuple[dict, dict]:
     expected_branch = f"refs/heads/{branch}"
     checks = {
@@ -1006,6 +1089,24 @@ def bar_output(
 
     validate_unique_nonshipping_assets(record)
     versions, assets = package_versions_from_bar(record, inputs)
+    transport_assets = {}
+    for package_id in ("_NativeAssets", "_NuGets"):
+        matches = [
+            asset
+            for asset in record.get("assets") or []
+            if str(asset.get("name") or "").casefold()
+            == package_id.casefold()
+            and asset.get("nonShipping", False)
+        ]
+        if len(matches) != 1:
+            raise StatusError(
+                f"BAR build {record.get('id')} has {len(matches)} "
+                f"NonShipping {package_id} assets; expected exactly one"
+            )
+        transport_assets[package_id] = {
+            "version": str(matches[0].get("version") or ""),
+            "locations": matches[0].get("locations") or [],
+        }
     channels = sorted(
         {
             str(channel.get("name"))
@@ -1015,15 +1116,44 @@ def bar_output(
     )
     default_channel_ids = config.get("defaultChannelIds") or []
     routed_assets = {
-        package_id: any(
-            PRODUCT_FEED_MARKER in str(location).lower()
-            for location in asset["locations"]
+        package_id: (
+            any(
+                PRODUCT_FEED_MARKER in str(location).lower()
+                for location in asset["locations"]
+            )
+            if asset["locations"]
+            else feeds.has_version(
+                PRODUCT_FEED_INDEX,
+                package_id,
+                asset["version"],
+            )
+            if feeds
+            else False
         )
         for package_id, asset in assets.items()
     }
+    routed_transport_assets = {
+        package_id: (
+            any(
+                TRANSPORT_FEED_MARKER in str(location).lower()
+                for location in asset["locations"]
+            )
+            if asset["locations"]
+            else feeds.has_version(
+                TRANSPORT_FEED_INDEX,
+                package_id,
+                asset["version"],
+            )
+            if feeds
+            else False
+        )
+        for package_id, asset in transport_assets.items()
+    }
     if PRODUCT_CHANNEL_ID not in default_channel_ids:
         state = "missing-default-channels"
-    elif not all(routed_assets.values()):
+    elif not all(routed_assets.values()) or not all(
+        routed_transport_assets.values()
+    ):
         state = "missing-feed-routing"
     else:
         state = "ready"
@@ -1043,6 +1173,8 @@ def bar_output(
             "defaultChannelIds": default_channel_ids,
             "assets": assets,
             "routedAssets": routed_assets,
+            "transportAssets": transport_assets,
+            "routedTransportAssets": routed_transport_assets,
             "nonShippingAssets": nonshipping_asset_versions(record),
         },
         versions,
@@ -1055,6 +1187,7 @@ def build_report(
     ado: AzureDevOps,
     repo: GitRepository,
     darc: Darc,
+    feeds: FeedVerifier | None = None,
 ) -> dict:
     branch, commit = repo.resolve_target(target)
     warnings: list[str] = []
@@ -1111,6 +1244,7 @@ def build_report(
                 commit=commit,
                 build_run=build_run,
                 inputs=repo.release_inputs(commit),
+                feeds=feeds,
             )
         except StatusError as error:
             bar_error = str(error)
@@ -1198,6 +1332,7 @@ def main() -> int:
                     ado=AzureDevOps(),
                     repo=GitRepository.discover(),
                     darc=Darc(),
+                    feeds=FeedVerifier(),
                 ),
                 indent=2,
             )

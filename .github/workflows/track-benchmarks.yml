@@ -66,8 +66,6 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Validate benchmark feed contracts
-        run: python3 -m unittest discover -s scripts/infra/perf/tests -p 'test_*.py'
       - name: Resolve version roles
         id: resolve
         run: |

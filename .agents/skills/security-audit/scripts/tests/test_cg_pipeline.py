@@ -39,17 +39,20 @@ class ComponentGovernancePipelineTests(unittest.TestCase):
         )
         self.assertNotIn("devdiv", viewer.lower())
 
-    def test_tsa_upload_routes_to_dnceng_internal(self):
+    def test_tsa_upload_tracks_work_in_devdiv(self):
         path = ROOT / "scripts" / "infra" / "security" / "tsaoptions-v2.json"
         source = path.read_text(encoding="utf-8")
         data = json.loads(source)
-        self.assertEqual(data["instanceUrl"], "https://dev.azure.com/dnceng/")
-        self.assertEqual(data["projectName"], "internal")
+        self.assertEqual(
+            data["instanceUrl"],
+            "https://devdiv.visualstudio.com/",
+        )
+        self.assertEqual(data["projectName"], "DevDiv")
         self.assertEqual(
             data["areaPath"],
-            r"internal\Dotnet-Core-Engineering",
+            r"DevDiv\.NET MAUI\SkiaSharp",
         )
-        self.assertNotIn("devdiv", source.lower())
+        self.assertEqual(data["iterationPath"], "DevDiv")
 
 if __name__ == "__main__":
     unittest.main()

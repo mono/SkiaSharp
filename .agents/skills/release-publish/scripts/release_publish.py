@@ -34,11 +34,12 @@ RELEASE_BRANCH_RE = re.compile(
 BUILD_DEFINITION_ID = 1642
 TESTS_DEFINITION_ID = 1630
 
-# The core packages every BAR build must register exact versions and
-# non-empty asset locations for before publication can proceed.
+# The exact Shipping and NonShipping packages every BAR build must register.
 BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
+TRANSPORT_ASSET_PACKAGES = ("_NativeAssets", "_NuGets")
 PRODUCT_CHANNEL_ID = 1648
 PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
+TRANSPORT_FEED_MARKER = "/_packaging/dotnet-libraries-transport/"
 
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
@@ -410,18 +411,44 @@ def validate_status_handoff(
                 f"BAR asset version for {package_id} is "
                 f"{asset.get('version')}, expected {expected_version}"
             )
-        if not asset.get("locations"):
-            raise PublishError(
-                f"BAR build {bar.get('id')} has no recorded package "
-                f"locations for {package_id}"
-            )
-        if not any(
+        locations = asset.get("locations") or []
+        if locations and not any(
             PRODUCT_FEED_MARKER in str(location).lower()
-            for location in asset["locations"]
+            for location in locations
         ):
             raise PublishError(
                 f"BAR build {bar.get('id')} has no dotnet-libraries feed "
                 f"location for {package_id}"
+            )
+        if not locations and not (
+            (bar.get("routedAssets") or {}).get(package_id)
+        ):
+            raise PublishError(
+                f"BAR build {bar.get('id')} has no BAR location or exact "
+                f"dotnet-libraries package proof for {package_id}"
+            )
+    transport_assets = bar.get("transportAssets") or {}
+    routed_transport = bar.get("routedTransportAssets") or {}
+    for package_id in TRANSPORT_ASSET_PACKAGES:
+        asset = transport_assets.get(package_id) or {}
+        if not asset.get("version"):
+            raise PublishError(
+                f"BAR build {bar.get('id')} is missing the {package_id} "
+                "NonShipping asset"
+            )
+        locations = asset.get("locations") or []
+        if locations and not any(
+            TRANSPORT_FEED_MARKER in str(location).lower()
+            for location in locations
+        ):
+            raise PublishError(
+                f"BAR build {bar.get('id')} has no "
+                f"dotnet-libraries-transport location for {package_id}"
+            )
+        if not locations and not routed_transport.get(package_id):
+            raise PublishError(
+                f"BAR build {bar.get('id')} has no BAR location or exact "
+                f"dotnet-libraries-transport package proof for {package_id}"
             )
     public_skia = versions["public"].get("SkiaSharp") or ""
     release.validate_public_version(public_skia)

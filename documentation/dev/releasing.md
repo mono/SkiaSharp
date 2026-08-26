@@ -121,9 +121,11 @@ revision buckets.
 | Stable | NuGet.org | Public releases |
 
 > **Note:** One BAR records both product and transport packages. Maestro
-> Release status validates exact `dotnet-libraries` and
-> `dotnet-libraries-transport` asset locations recorded by BAR. Transport
-> remains an asset class, not a separate Maestro channel.
+> Release status uses BAR asset locations when Maestro records them. Because
+> successful BARs may leave `locations` null, it otherwise verifies the BAR's
+> exact Shipping and NonShipping versions directly on `dotnet-libraries` and
+> `dotnet-libraries-transport`. Transport remains an asset class, not a separate
+> Maestro channel.
 > NuGet.org publication remains a separate protected operation.
 
 The production Maestro configuration currently maps only the internal
@@ -258,7 +260,9 @@ dotnet nuget verify --all \
 Do not select release inputs by channel or latest location. Record the exact BAR
 ID and use `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
 
-Release status waits until the exact BAR records the expected package locations.
+Release status waits until the exact BAR assets are available on the expected
+package feeds, using recorded locations when present and exact-version probes
+otherwise.
 Default-channel promotion authorizes publication only to the channel-configured
 Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
@@ -367,7 +371,7 @@ flowchart TB
     ∙ Pin combined Build + Tests runs
     ∙ Pin BAR build ID + package versions"] --> GATHER
     GATHER["Gather exact BAR build
-    ∙ Verify repository/branch/commit and recorded locations
+    ∙ Verify repository/branch/commit and exact feed routing
     ∙ Verify package versions + signatures"] --> PUSH_AUDIT
     PUSH_AUDIT["NuGet.org dry run
     ∙ Preview exact BAR ID + versions

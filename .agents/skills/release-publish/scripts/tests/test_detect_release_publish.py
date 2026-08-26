@@ -40,6 +40,14 @@ def bar_build(
         "buildNumber": build_number,
         "defaultChannelIds": [1648],
         "channels": [".NET Libraries"],
+        "routedAssets": {
+            "SkiaSharp": True,
+            "HarfBuzzSharp": True,
+        },
+        "routedTransportAssets": {
+            "_NativeAssets": True,
+            "_NuGets": True,
+        },
         "assets": {
             "SkiaSharp": {
                 "version": skia_version,
@@ -53,6 +61,22 @@ def bar_build(
                 "locations": [
                     "https://pkgs.dev.azure.com/dnceng/public/"
                     "_packaging/dotnet-libraries/nuget/v3/index.json"
+                ],
+            },
+        },
+        "transportAssets": {
+            "_NativeAssets": {
+                "version": "0.0.0-branch.release-4.152.0-preview.1.1",
+                "locations": [
+                    "https://pkgs.dev.azure.com/dnceng/public/"
+                    "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
+                ],
+            },
+            "_NuGets": {
+                "version": "0.0.0-branch.release-4.152.0-preview.1.1",
+                "locations": [
+                    "https://pkgs.dev.azure.com/dnceng/public/"
+                    "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
                 ],
             },
         },
@@ -260,6 +284,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             },
         }
         status["barBuild"]["assets"]["SkiaSharp"]["locations"] = []
+        status["barBuild"]["routedAssets"]["SkiaSharp"] = False
         with (
             mock.patch.object(
                 detector.publish,
@@ -268,7 +293,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             ),
             self.assertRaisesRegex(
                 detector.DetectionError,
-                "no recorded package locations",
+                "no BAR location or exact dotnet-libraries package proof",
             ),
         ):
             detector.detect(Path.cwd(), "release/4.152.0-preview.1")
