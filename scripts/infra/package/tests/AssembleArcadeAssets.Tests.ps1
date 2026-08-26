@@ -105,11 +105,7 @@ try {
 
     foreach ($name in @(
         '_NuGets.0.0.0-branch.main.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg'
-        '_NuGets.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg'
-        '_NuGets.0.0.0-pr.4865.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-pr.4865.1.nupkg')) {
+        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg')) {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
@@ -149,7 +145,12 @@ try {
     }
 
     Copy-Item $product (Join-Path $prOutput 'nugets') -Recurse
-    Copy-Item $transport (Join-Path $prOutput 'nugets-special') -Recurse
+    $prTransport = New-Item (Join-Path $prOutput 'nugets-special') -ItemType Directory -Force
+    foreach ($name in @(
+        '_NuGets.0.0.0-pr.4865.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-pr.4865.1.nupkg')) {
+        New-Package (Join-Path $prTransport $name) @{ 'README.md' = $name }
+    }
     Run-Cake -OutputDirectory $prOutput -PreviewLabel 'pr.4865'
 
     $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
@@ -163,8 +164,9 @@ try {
     }
     Copy-Item (Join-Path $transport '*') (Join-Path $emptyOutput 'nugets-special') -Recurse
     Run-Cake -OutputDirectory $emptyOutput
-    if (-not (Test-Path (Join-Path $emptyPdbs '.empty') -PathType Leaf)) {
-        throw 'PdbArtifacts must contain .empty when no loose PDB is eligible.'
+    $emptyPdbFiles = @(Get-ChildItem $emptyPdbs -File -Recurse -Force)
+    if ($emptyPdbFiles.Count -ne 1 -or $emptyPdbFiles[0].Name -ne '.empty') {
+        throw 'PdbArtifacts must contain only .empty when no eligible PDB exists.'
     }
 
     New-Package (Join-Path $escapeProduct 'Escape.1.0.0.nupkg') @{

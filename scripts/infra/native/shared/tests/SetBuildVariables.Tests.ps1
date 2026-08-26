@@ -517,7 +517,7 @@ if ($packageScript -match 'Id\s*=\s*"_(NuGetsPreview|Symbols)' -or
 if ($packageScript -match 'versions\.Add\s*\(\s*"commit"' -or
     $packageScript -match 'Argument\s*\(\s*"transportVersionKind"' -or
     $packageScript -match 'Argument\s*\(\s*"(productPackageDirectory|transportPackageDirectory|packageRoot|pdbArtifactsDirectory)"') {
-    throw 'Production packaging must emit one family and derive assembly inputs from outputPath and PREVIEW_LABEL.'
+    throw 'Production packaging must emit one family and derive assembly inputs from outputPath.'
 }
 if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
     $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {
@@ -563,7 +563,6 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
 }
 $buildCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw
 if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
-    $packageScript -notmatch 'PREVIEW_LABEL\.StartsWith' -or
     $packageScript -notmatch 'CombineWithFilePath' -or
     $packageScript -notmatch 'GetRelativePath' -or
     $packageScript -match 'System\.IO\.Path' -or

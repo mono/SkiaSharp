@@ -288,19 +288,8 @@ Task ("nuget-assemble-arcade-assets")
     .Description ("Prepare Arcade package views and loose PDB artifacts.")
     .Does (() =>
 {
-    var transportVersionKind =
-        PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
-
     var productPackages = GetNuGetPackages (OUTPUT_NUGETS_PATH, "product");
-    var allTransportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
-    var transportMarker = $".0.0.0-{transportVersionKind}.";
-    var transportPackages = allTransportPackages
-        .Where (package => package.GetFilename ().ToString ()
-            .Contains (transportMarker, StringComparison.OrdinalIgnoreCase))
-        .ToArray ();
-    if (transportPackages.Length == 0)
-        throw new Exception (
-            $"No {transportVersionKind}-versioned transport NuGet packages were found.");
+    var transportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
 
     var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("Shipping");
     var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("NonShipping");
@@ -380,12 +369,11 @@ Task ("nuget-assemble-arcade-assets")
 
     Information (
         "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
-        "{2} loose PDB(s), {3} {4} transport package(s).",
+        "{2} loose PDB(s), {3} transport package(s).",
         productPackages.Length,
         explicitSymbolCount,
         pdbCount,
-        transportPackages.Length,
-        transportVersionKind);
+        transportPackages.Length);
 });
 
 RunTarget(TARGET);
