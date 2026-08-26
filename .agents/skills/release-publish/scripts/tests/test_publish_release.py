@@ -311,11 +311,11 @@ class PublishReleaseTests(unittest.TestCase):
         status = self._stable_status(release)
         status["barBuild"]["assets"]["SkiaSharp"]["locations"] = [
             "https://pkgs.dev.azure.com/dnceng/public/"
-            "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
+            "_packaging/skiasharp-transport/nuget/v3/index.json"
         ]
         with self.assertRaisesRegex(
             publish.PublishError,
-            "no dotnet-libraries feed location",
+            "no skiasharp feed location",
         ):
             publish.validate_status_handoff(
                 status,
@@ -459,14 +459,14 @@ class PublishReleaseTests(unittest.TestCase):
                         "version": "4.152.0",
                         "locations": [
                             "https://pkgs.dev.azure.com/dnceng/public/"
-                            "_packaging/dotnet-libraries/nuget/v3/index.json"
+                            "_packaging/skiasharp/nuget/v3/index.json"
                         ],
                     },
                     "HarfBuzzSharp": {
                         "version": "1.0.0",
                         "locations": [
                             "https://pkgs.dev.azure.com/dnceng/public/"
-                            "_packaging/dotnet-libraries/nuget/v3/index.json"
+                            "_packaging/skiasharp/nuget/v3/index.json"
                         ],
                     },
                 },

@@ -20,7 +20,7 @@ BUILD_URL = (
 )
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
 PRODUCT_CHANNEL_ID = 1648
-PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
+PRODUCT_FEED_MARKER = "/_packaging/skiasharp/"
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
 EXACT_RELEASE_BRANCH_RE = re.compile(
     r"^release/\d+\.\d+\.\d+(?:\.\d+)?"

@@ -92,7 +92,7 @@ versions and locations from that immutable BAR record. Stable assets are exact
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
 | `configure-default-channels` | The exact Build is not mapped to `.NET Libraries` channel 1648; configure the target release branch before retrying. `General Testing` 529 is test evidence only. |
-| `configure-feed-routing` | The BAR does not record both core packages on the `dotnet-libraries` product feed; configure asset-class routing before retrying. |
+| `configure-feed-routing` | The BAR does not record both core packages on the `skiasharp` product feed; configure exact product/transport routing before retrying. |
 | `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 
 Only `start-release-testing` is ready by default.

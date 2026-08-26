@@ -24,7 +24,7 @@ This skill is **Step 4 of 5**:
   overrides that gate. Preserve the exact branch, source SHA, Build run ID,
   tests run ID, BAR build ID, and paired package versions.
 - Require release-status to verify the target commit's minimum Arcade migration,
-  `.NET Libraries` channel 1648 mapping, and `dotnet-libraries` product-feed
+  `.NET Libraries` channel 1648 mapping, and `skiasharp` product-feed
   locations. This applies equally to historical exact release/RC/hotfix
   branches; do not infer readiness from main. `General Testing` is not a
   release route, and transport is asset-class routing under the product channel,

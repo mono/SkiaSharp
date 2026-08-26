@@ -83,7 +83,7 @@ def bar_record(
     if locations is None:
         locations = [
             "https://pkgs.dev.azure.com/dnceng/public/"
-            "_packaging/dotnet-libraries/nuget/v3/index.json"
+            "_packaging/skiasharp/nuget/v3/index.json"
         ]
     return {
         "id": BAR_BUILD_ID,
@@ -198,7 +198,7 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(status.PRODUCT_CHANNEL_ID, 1648)
         self.assertEqual(
             status.PRODUCT_FEED_MARKER,
-            "/_packaging/dotnet-libraries/",
+            "/_packaging/skiasharp/",
         )
 
     def test_release_config_default_channels_are_explicit_ids(self):
@@ -752,7 +752,7 @@ class PipelineStatusTests(unittest.TestCase):
             [],
             [
                 "https://pkgs.dev.azure.com/dnceng/public/"
-                "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
+                "_packaging/skiasharp-transport/nuget/v3/index.json"
             ],
         ):
             with self.subTest(locations=locations):

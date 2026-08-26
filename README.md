@@ -51,7 +51,7 @@ _Because there are multiple distros of Linux, and we cannot possibly support the
 Signed prerelease and nightly builds are available from the .NET Libraries feed:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json
 ```
 
 ## Building SkiaSharp

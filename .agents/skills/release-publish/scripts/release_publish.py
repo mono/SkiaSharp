@@ -38,7 +38,7 @@ TESTS_DEFINITION_ID = 1630
 # non-empty asset locations for before publication can proceed.
 BAR_ASSET_PACKAGES = ("SkiaSharp", "HarfBuzzSharp")
 PRODUCT_CHANNEL_ID = 1648
-PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
+PRODUCT_FEED_MARKER = "/_packaging/skiasharp/"
 
 class PublishError(RuntimeError):
     """The release could not be audited or advanced safely."""
@@ -420,7 +420,7 @@ def validate_status_handoff(
             for location in asset["locations"]
         ):
             raise PublishError(
-                f"BAR build {bar.get('id')} has no dotnet-libraries feed "
+                f"BAR build {bar.get('id')} has no skiasharp feed "
                 f"location for {package_id}"
             )
     public_skia = versions["public"].get("SkiaSharp") or ""

@@ -45,14 +45,14 @@ def bar_build(
                 "version": skia_version,
                 "locations": [
                     "https://pkgs.dev.azure.com/dnceng/public/"
-                    "_packaging/dotnet-libraries/nuget/v3/index.json"
+                    "_packaging/skiasharp/nuget/v3/index.json"
                 ],
             },
             "HarfBuzzSharp": {
                 "version": harfbuzz_version,
                 "locations": [
                     "https://pkgs.dev.azure.com/dnceng/public/"
-                    "_packaging/dotnet-libraries/nuget/v3/index.json"
+                    "_packaging/skiasharp/nuget/v3/index.json"
                 ],
             },
         },
@@ -110,7 +110,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             result["barAssets"]["SkiaSharp"]["locations"],
             [
                 "https://pkgs.dev.azure.com/dnceng/public/"
-                "_packaging/dotnet-libraries/nuget/v3/index.json"
+                "_packaging/skiasharp/nuget/v3/index.json"
             ],
         )
         self.assertIn("--expect-build-run 10", result["pushAuditCommand"])

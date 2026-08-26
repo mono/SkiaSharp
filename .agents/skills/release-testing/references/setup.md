@@ -163,9 +163,9 @@ browser. The test builds a real native WASM app with
 
 ## Package sources
 
-Generated applications use the signed `dotnet-libraries` source:
+Generated applications use the signed `skiasharp` source:
 
-- `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json`
+- `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json`
 - `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
 
 Release-status discovers versions and locations from one exact BAR build after

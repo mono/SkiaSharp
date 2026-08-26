@@ -167,10 +167,10 @@ internal stage. This keeps package layout, transport filtering, PDB extraction,
 and artifact inspection public while internal jobs perform only operations that
 require protected identities or services.
 
-Release BARs use Maestro `.NET Libraries` channel 1648. Shipping packages route
-to the `dotnet-libraries` feed and NonShipping transport routes to
-`dotnet-libraries-transport` by asset class under that same channel. `General
-Testing` is validation evidence only; there is no separate Transport channel.
+Release BARs use Maestro `.NET Libraries` channel 1648. Release status requires
+Shipping package locations on `skiasharp` and NonShipping transport locations on
+`skiasharp-transport`. `General Testing` is validation evidence only; transport
+is an asset class rather than a separate Maestro channel.
 
 `eng/Signing.props` defines product signing. Normal and explicit symbol packages
 are signed together; dSYM DWARF files are not signing targets. PDBs are extracted

@@ -34,33 +34,35 @@ class RepositoryPipelineContractTests(unittest.TestCase):
             with self.subTest(path=relative_path):
                 source = (ROOT / relative_path).read_text(encoding="utf-8")
                 comparable = source.replace('"\n    "', "")
-                self.assertIn("/_packaging/dotnet-libraries/", comparable)
-                self.assertNotIn("/_packaging/skiasharp/", source)
+                self.assertIn("/_packaging/skiasharp/", comparable)
+                self.assertNotIn("/_packaging/dotnet-libraries/", source)
                 self.assertNotIn("aka.ms/skiasharp-eap", source)
         for relative_path in transport_paths:
             with self.subTest(path=relative_path):
                 source = (ROOT / relative_path).read_text(encoding="utf-8")
                 self.assertIn(
+                    "/_packaging/skiasharp-transport/",
+                    source,
+                )
+                self.assertNotIn(
                     "/_packaging/dotnet-libraries-transport/",
                     source,
                 )
-                self.assertNotIn("/_packaging/skiasharp-transport/", source)
 
         mirror = (
             ROOT / "scripts" / "infra" / "package" / "manage-nuget-feed.ps1"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            '[ValidateSet("dotnet-libraries", '
-            '"dotnet-libraries-transport")]',
+            '[ValidateSet("skiasharp", "skiasharp-transport")]',
             mirror,
         )
-        self.assertIn("DestFeed   = 'dotnet-libraries'", mirror)
-        self.assertIn("DestFeed   = 'dotnet-libraries-transport'", mirror)
+        self.assertIn("DestFeed   = 'skiasharp'", mirror)
+        self.assertIn("DestFeed   = 'skiasharp-transport'", mirror)
         workflow = (
             ROOT / ".github" / "workflows" / "manage-nuget-feed.yml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "feed: [dotnet-libraries, dotnet-libraries-transport]",
+            "feed: [skiasharp, skiasharp-transport]",
             workflow,
         )
         self.assertNotIn("skiasharp-ci", workflow.lower())
@@ -127,6 +129,9 @@ class RepositoryPipelineContractTests(unittest.TestCase):
                 "Dependencies-transport-metadata",
             },
         )
+        serialized = json.dumps(status.MIGRATION_REQUIREMENTS).lower()
+        self.assertNotIn("apple-symbol", serialized)
+        self.assertNotIn("dsym", serialized)
 
     def test_current_tree_satisfies_minimum_release_backport(self):
         report = status.GitRepository(ROOT).release_prerequisites("HEAD")

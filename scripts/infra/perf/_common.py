@@ -25,7 +25,7 @@ USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 # SkiaSharp package feeds.
 SIGNED_BUILDS_INDEX_URL = (
     "https://pkgs.dev.azure.com/dnceng/public/"
-    "_packaging/dotnet-libraries/nuget/v3/index.json"
+    "_packaging/skiasharp/nuget/v3/index.json"
 )
 NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"  # released stables
 
