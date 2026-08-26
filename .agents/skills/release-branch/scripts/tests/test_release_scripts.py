@@ -281,11 +281,15 @@ class ReleaseScriptTests(unittest.TestCase):
             release.increment_harfbuzz("14.2.1.1"),
             "14.2.1.2",
         )
+        self.assertEqual(
+            release.increment_harfbuzz("14.2.1.200"),
+            "14.2.1.201",
+        )
 
     def test_next_versions(self):
         self.assertEqual(
-            release.calculate_next_versions("4.151.2", "14.2.1.2"),
-            ("4.151.3", "14.2.1.3"),
+            release.calculate_next_versions("4.151.2", "14.2.1.102"),
+            ("4.151.3", "14.2.1.103"),
         )
 
     def test_update_version_files_supports_four_part_hotfix(self):
