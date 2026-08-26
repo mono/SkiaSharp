@@ -585,7 +585,7 @@ if ($publishOnly -notmatch 'stage:\s*publish_assets' -or
 if ($signingStages -match 'assemble-arcade-assets\.ps1|artifactName:\s*PdbArtifacts') {
     throw 'Authenticated signing must not reassemble assets or publish PDB artifacts.'
 }
-if ($sharedCake -notmatch 'DirectoryPath\s+ROOT_OUTPUT_PATH\s*=.*Argument\s*\(\s*"outputPath"' -or
+if ($sharedCake -notmatch 'DirectoryPath\s+PACKAGE_OUTPUT_PATH\s*=.*Argument\s*\(\s*"outputPath"' -or
     $sharedCake -notmatch 'OUTPUT_ARCADE_ASSETS_PATH' -or
     $sharedCake -notmatch 'OUTPUT_PDB_ARTIFACTS_PATH') {
     throw 'Canonical output constants must define the public Arcade asset roots.'
