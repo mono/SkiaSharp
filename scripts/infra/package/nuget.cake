@@ -288,22 +288,24 @@ Task ("nuget-assemble-arcade-assets")
     .Description ("Prepare Arcade package views and loose PDB artifacts.")
     .Does (() =>
 {
-    var productPackageDirectory = MakeAbsolute (Directory (
-        Argument ("productPackageDirectory", OUTPUT_NUGETS_PATH.FullPath)));
-    var transportPackageDirectory = MakeAbsolute (Directory (
-        Argument ("transportPackageDirectory", OUTPUT_SPECIAL_NUGETS_PATH.FullPath)));
-    var packageRoot = MakeAbsolute (Directory (
-        Argument ("packageRoot", OUTPUT_ARCADE_ASSETS_PATH.FullPath)));
-    var pdbArtifactsDirectory = MakeAbsolute (Directory (
-        Argument ("pdbArtifactsDirectory", OUTPUT_PDB_ARTIFACTS_PATH.FullPath)));
+    var transportVersionKind =
+        PREVIEW_LABEL.StartsWith ("pr.", StringComparison.OrdinalIgnoreCase) ? "pr" : "branch";
 
-    var productPackages = GetNuGetPackages (productPackageDirectory, "product");
-    var transportPackages = GetNuGetPackages (transportPackageDirectory, "transport");
+    var productPackages = GetNuGetPackages (OUTPUT_NUGETS_PATH, "product");
+    var allTransportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
+    var transportMarker = $".0.0.0-{transportVersionKind}.";
+    var transportPackages = allTransportPackages
+        .Where (package => package.GetFilename ().ToString ()
+            .Contains (transportMarker, StringComparison.OrdinalIgnoreCase))
+        .ToArray ();
+    if (transportPackages.Length == 0)
+        throw new Exception (
+            $"No {transportVersionKind}-versioned transport NuGet packages were found.");
 
-    var shipping = packageRoot.Combine ("Shipping");
-    var nonShipping = packageRoot.Combine ("NonShipping");
-    CleanDir (packageRoot);
-    CleanDir (pdbArtifactsDirectory);
+    var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("Shipping");
+    var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("NonShipping");
+    CleanDir (OUTPUT_ARCADE_ASSETS_PATH);
+    CleanDir (OUTPUT_PDB_ARTIFACTS_PATH);
     EnsureDirectoryExists (shipping);
     EnsureDirectoryExists (nonShipping);
 
@@ -328,7 +330,7 @@ Task ("nuget-assemble-arcade-assets")
         }
 
         var packagePdbRoot = System.IO.Path.GetFullPath (
-            System.IO.Path.Combine (pdbArtifactsDirectory.FullPath, packageBaseName));
+            System.IO.Path.Combine (OUTPUT_PDB_ARTIFACTS_PATH.FullPath, packageBaseName));
         var archive = ZipFile.OpenRead (package.FullPath);
         try {
             foreach (var entry in archive.Entries) {
@@ -366,16 +368,17 @@ Task ("nuget-assemble-arcade-assets")
 
     if (pdbCount == 0)
         System.IO.File.WriteAllText (
-            pdbArtifactsDirectory.CombineWithFilePath (".empty").FullPath,
+            OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty").FullPath,
             "");
 
     Information (
         "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
-        "{2} loose PDB(s), {3} transport package(s).",
+        "{2} loose PDB(s), {3} {4} transport package(s).",
         productPackages.Length,
         explicitSymbolCount,
         pdbCount,
-        transportPackages.Length);
+        transportPackages.Length,
+        transportVersionKind);
 });
 
 RunTarget(TARGET);

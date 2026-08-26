@@ -498,7 +498,11 @@ $transportProject = Get-Content (Join-Path $repoRoot 'scripts/infra/package/nuge
 if ($transportProject -notmatch '<IsShippingPackage>false</IsShippingPackage>') {
     throw 'The special-package project must declare its NuGets as non-shipping.'
 }
-$normalTask = $packageScript.Substring(0, $packageScript.IndexOf('Task ("nuget-special")'))
+$specialTaskMarker = [regex]::Match($packageScript, 'Task\s*\(\s*"nuget-special"\s*\)')
+if (-not $specialTaskMarker.Success) {
+    throw 'The NuGet Cake graph must define nuget-special.'
+}
+$normalTask = $packageScript.Substring(0, $specialTaskMarker.Index)
 if ($normalTask -match 'PACK_STABLE_NUGETS|packStableNuGets' -or
     $normalTask -notmatch '\{\s*"VersionSuffix",\s*PREVIEW_NUGET_SUFFIX\s*\}' -or
     $normalTask -notmatch 'DeleteFiles\s*\(\s*\$"\{OUTPUT_NUGETS_PATH\}/\*\.nupkg"\s*\)' -or
@@ -511,8 +515,9 @@ if ($packageScript -match 'Id\s*=\s*"_(NuGetsPreview|Symbols)' -or
     throw 'Special package transfer must use only _NuGets for the single package family.'
 }
 if ($packageScript -match 'versions\.Add\s*\(\s*"commit"' -or
-    $packageScript -match 'transportVersionKind|GIT_SHA') {
-    throw 'Production packaging must emit and assemble only the branch or PR transport family.'
+    $packageScript -match 'Argument\s*\(\s*"transportVersionKind"' -or
+    $packageScript -match 'Argument\s*\(\s*"(productPackageDirectory|transportPackageDirectory|packageRoot|pdbArtifactsDirectory)"') {
+    throw 'Production packaging must emit one family and derive assembly inputs from outputPath and PREVIEW_LABEL.'
 }
 if ($packageScript -match 'MoveFiles\s*\(.+\\.symbols\\.nupkg' -or
     $packageScript -match 'OUTPUT_SYMBOLS_NUGETS_PATH') {
@@ -558,6 +563,7 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
 }
 $buildCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw
 if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
+    $packageScript -notmatch 'PREVIEW_LABEL\.StartsWith' -or
     $buildCake -notmatch '\.IsDependentOn\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\Shipping'" -or
     $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\NonShipping'" -or
@@ -577,7 +583,7 @@ if ($publishOnly -notmatch 'stage:\s*publish_assets' -or
 if ($signingStages -match 'assemble-arcade-assets\.ps1|artifactName:\s*PdbArtifacts') {
     throw 'Authenticated signing must not reassemble assets or publish PDB artifacts.'
 }
-if ($sharedCake -notmatch 'ROOT_OUTPUT_PATH' -or
+if ($sharedCake -notmatch 'DirectoryPath\s+OUTPUT_PATH\s*=.*Argument\s*\(\s*"outputPath"' -or
     $sharedCake -notmatch 'OUTPUT_ARCADE_ASSETS_PATH' -or
     $sharedCake -notmatch 'OUTPUT_PDB_ARTIFACTS_PATH') {
     throw 'Canonical output constants must define the public Arcade asset roots.'

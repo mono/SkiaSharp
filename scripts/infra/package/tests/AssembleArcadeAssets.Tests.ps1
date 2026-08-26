@@ -36,16 +36,9 @@ function New-Package {
 function Run-Cake {
     param(
         [Parameter(Mandatory)]
-        [string] $Products,
+        [string] $OutputDirectory,
 
-        [Parameter(Mandatory)]
-        [string] $Transport,
-
-        [Parameter(Mandatory)]
-        [string] $PackageRoot,
-
-        [Parameter(Mandatory)]
-        [string] $PdbRoot,
+        [string] $PreviewLabel = 'preview.0',
 
         [switch] $ExpectFailure
     )
@@ -55,10 +48,8 @@ function Run-Cake {
         'cake'
         $cake
         '--target=nuget-assemble-arcade-assets'
-        "--productPackageDirectory=$Products"
-        "--transportPackageDirectory=$Transport"
-        "--packageRoot=$PackageRoot"
-        "--pdbArtifactsDirectory=$PdbRoot"
+        "--outputPath=$OutputDirectory"
+        "--previewLabel=$PreviewLabel"
         '--verbosity=quiet'
     )
 
@@ -75,25 +66,28 @@ function Run-Cake {
 }
 
 $root = Join-Path ([IO.Path]::GetTempPath()) "skiasharp-arcade-assets-$([Guid]::NewGuid().ToString('N'))"
-$signed = Join-Path $root 'signed'
-$transport = Join-Path $root 'transport'
-$packages = Join-Path $root 'packages'
-$pdbs = Join-Path $root 'pdbs'
-$prTransport = Join-Path $root 'pr-transport'
-$prPackages = Join-Path $root 'pr-packages'
-$prPdbs = Join-Path $root 'pr-pdbs'
-$emptyProducts = Join-Path $root 'empty-products'
-$emptyPackages = Join-Path $root 'empty-packages'
-$emptyPdbs = Join-Path $root 'empty-pdbs'
-$escapeProducts = Join-Path $root 'escape-products'
-$escapePackages = Join-Path $root 'escape-packages'
-$escapePdbs = Join-Path $root 'escape-pdbs'
+$branchOutput = Join-Path $root 'branch'
+$product = Join-Path $branchOutput 'nugets'
+$transport = Join-Path $branchOutput 'nugets-special'
+$packages = Join-Path $branchOutput 'arcade-assets'
+$pdbs = Join-Path $branchOutput 'pdbs'
+$prOutput = Join-Path $root 'pr'
+$prPackages = Join-Path $prOutput 'arcade-assets'
+$emptyOutput = Join-Path $root 'empty'
+$emptyProduct = Join-Path $emptyOutput 'nugets'
+$emptyPdbs = Join-Path $emptyOutput 'pdbs'
+$escapeOutput = Join-Path $root 'escape'
+$escapeProduct = Join-Path $escapeOutput 'nugets'
 
 try {
-    New-Item $signed -ItemType Directory -Force | Out-Null
+    New-Item $product -ItemType Directory -Force | Out-Null
     New-Item $transport -ItemType Directory -Force | Out-Null
+    New-Item $emptyProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $emptyOutput 'nugets-special') -ItemType Directory -Force | Out-Null
+    New-Item $escapeProduct -ItemType Directory -Force | Out-Null
+    New-Item (Join-Path $escapeOutput 'nugets-special') -ItemType Directory -Force | Out-Null
 
-    New-Package (Join-Path $signed 'Foo.1.0.0.nupkg') @{
+    New-Package (Join-Path $product 'Foo.1.0.0.nupkg') @{
         'lib/net8.0/Foo.dll' = 'dll8'
         'lib/net8.0/Foo.pdb' = 'pdb8'
         'lib/net9.0/Foo.dll' = 'dll9'
@@ -101,25 +95,25 @@ try {
         'ref/net8.0/Foo.pdb' = 'reference'
         'runtimes/win-x64/native/Foo.pdb' = 'native'
     }
-    New-Package (Join-Path $signed 'Bar.1.0.0.nupkg') @{
+    New-Package (Join-Path $product 'Bar.1.0.0.nupkg') @{
         'lib/net8.0/Bar.dll' = 'dll'
         'lib/net8.0/Bar.pdb' = 'normal-pdb'
     }
-    New-Package (Join-Path $signed 'Bar.1.0.0.symbols.nupkg') @{
+    New-Package (Join-Path $product 'Bar.1.0.0.symbols.nupkg') @{
         'lib/net8.0/Bar.pdb' = 'explicit-pdb'
     }
 
     foreach ($name in @(
         '_NuGets.0.0.0-branch.main.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg')) {
+        '_NuGets.Dependencies.1.0.0.0-branch.main.1.nupkg'
+        '_NuGets.0.0.0-commit.abc.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-commit.abc.1.nupkg'
+        '_NuGets.0.0.0-pr.4865.1.nupkg'
+        '_NuGets.Dependencies.1.0.0.0-pr.4865.1.nupkg')) {
         New-Package (Join-Path $transport $name) @{ 'README.md' = $name }
     }
 
-    Run-Cake `
-        -Products $signed `
-        -Transport $transport `
-        -PackageRoot $packages `
-        -PdbRoot $pdbs
+    Run-Cake -OutputDirectory $branchOutput
 
     $expectedPdbs = @(
         'Foo.1.0.0/lib/net8.0/Foo.pdb'
@@ -154,18 +148,9 @@ try {
         throw 'Only the branch-versioned transport family may enter NonShipping.'
     }
 
-    New-Item $prTransport -ItemType Directory -Force | Out-Null
-    foreach ($name in @(
-        '_NuGets.0.0.0-pr.4865.1.nupkg'
-        '_NuGets.Dependencies.1.0.0.0-pr.4865.1.nupkg')) {
-        New-Package (Join-Path $prTransport $name) @{ 'README.md' = $name }
-    }
-
-    Run-Cake `
-        -Products $signed `
-        -Transport $prTransport `
-        -PackageRoot $prPackages `
-        -PdbRoot $prPdbs
+    Copy-Item $product (Join-Path $prOutput 'nugets') -Recurse
+    Copy-Item $transport (Join-Path $prOutput 'nugets-special') -Recurse
+    Run-Cake -OutputDirectory $prOutput -PreviewLabel 'pr.4865'
 
     $prNonShipping = @(Get-ChildItem (Join-Path $prPackages 'NonShipping') -Filter '*.nupkg' -File)
     if ($prNonShipping.Count -ne 2 -or
@@ -173,30 +158,21 @@ try {
         throw 'Only the PR-versioned transport family may enter PR NonShipping.'
     }
 
-    New-Item $emptyProducts -ItemType Directory -Force | Out-Null
-    New-Package (Join-Path $emptyProducts 'NoPdb.1.0.0.nupkg') @{
+    New-Package (Join-Path $emptyProduct 'NoPdb.1.0.0.nupkg') @{
         'lib/net8.0/NoPdb.dll' = 'dll'
     }
-    Run-Cake `
-        -Products $emptyProducts `
-        -Transport $transport `
-        -PackageRoot $emptyPackages `
-        -PdbRoot $emptyPdbs
+    Copy-Item (Join-Path $transport '*') (Join-Path $emptyOutput 'nugets-special') -Recurse
+    Run-Cake -OutputDirectory $emptyOutput
     if (-not (Test-Path (Join-Path $emptyPdbs '.empty') -PathType Leaf)) {
         throw 'PdbArtifacts must contain .empty when no loose PDB is eligible.'
     }
 
-    New-Item $escapeProducts -ItemType Directory -Force | Out-Null
-    New-Package (Join-Path $escapeProducts 'Escape.1.0.0.nupkg') @{
+    New-Package (Join-Path $escapeProduct 'Escape.1.0.0.nupkg') @{
         '../escape.pdb' = 'escape'
     }
-    Run-Cake `
-        -Products $escapeProducts `
-        -Transport $transport `
-        -PackageRoot $escapePackages `
-        -PdbRoot $escapePdbs `
-        -ExpectFailure
-    if (Test-Path (Join-Path $escapePdbs 'escape.pdb')) {
+    Copy-Item (Join-Path $transport '*') (Join-Path $escapeOutput 'nugets-special') -Recurse
+    Run-Cake -OutputDirectory $escapeOutput -ExpectFailure
+    if (Test-Path (Join-Path $escapeOutput 'pdbs/escape.pdb')) {
         throw 'A package entry escaped the PDB extraction root.'
     }
 
