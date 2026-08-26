@@ -5,18 +5,85 @@ description: "Create Graphite GPU surfaces for Vulkan, Metal, or WebGPU, submit 
 
 # Graphite GPU surfaces
 
-*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. In SkiaSharp, Graphite is currently an **offscreen** rendering path: you create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. It does not yet drive any of the [view controls](../views/index.md).
+*Graphite* is Skia's newer GPU backend, built on modern explicit graphics APIs. You create a context, record drawing into a surface, submit that recording to the GPU, and read the result back yourself. None of the SkiaSharp [view controls](../views/index.md) drive Graphite yet, so you drive it directly today — either fully offscreen, or by wrapping an onscreen render target or texture yourself, the same way you can with Ganesh.
 
-Where the older [Ganesh](../ganesh/index.md) backend issues GPU work as you draw and auto-flushes it, Graphite separates **recording** from **submission**: drawing is captured into a *recording* that you later insert into the context and submit. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and Dawn/WebGPU) and lets an application record drawing on multiple threads in parallel, then submit the results through one shared context.
+Both backends **defer** GPU work rather than executing it as you draw — neither is immediate-mode. The difference is *where* that deferred work lives. [Ganesh](../ganesh/index.md) accumulates it inside a stateful, context-centric [`GRContext`](xref:SkiaSharp.GRContext) and drains it when you call `Flush`/`Submit` (and it may flush internally on its own when it needs to). Graphite instead splits the pipeline into independent producer objects: a **recorder** records drawing and hands you a self-contained **recording**, which you later transfer to one **context** thread to be encoded and submitted. That split is deliberate — it maps cleanly onto modern explicit APIs (Vulkan, Metal, and WebGPU) and lets an application record drawing on several CPU threads in parallel, then funnel the recordings through one shared context.
 
 Graphite differs from [Ganesh](../ganesh/index.md) in two important ways:
 
-- **Drawing is recorded, not flushed.** You draw onto a surface's canvas as usual, but instead of flushing a context you *snap* a **recording** from a **recorder** and *insert* that recording into the context, then *submit* it.
+- **Drawing is recorded, then submitted separately.** You draw onto a surface's canvas as usual, but instead of flushing a context you *snap* a **recording** from a **recorder** and *insert* that recording into the context, then *submit* it.
 - **Reading pixels back is asynchronous.** Graphite surfaces do not support the synchronous `SKSurface.ReadPixels` you use with raster and Ganesh surfaces. You request a readback and drive it to completion. This is the single most important thing to get right — see [Reading pixels back](#reading-pixels-back).
 
 Graphite supports three backends: **Vulkan**, **Metal**, and **Dawn** (WebGPU).
 
-**Threading model:** A single `SKGraphiteRecorder` and the surfaces created from it belong to one thread; don't use them concurrently. To record in parallel, give each thread its own recorder, then feed the recordings to one shared `SKGraphiteContext`. Serialize context-level calls such as `InsertRecording` and `Submit`.
+**Threading model:** `SKGraphiteRecorder` and `SKGraphiteContext` are single-owner objects — never call into one from two threads at once — but they are *not* permanently pinned to the thread that created them. Separate recorders may run concurrently on different CPU workers, provided each recorder (and the surfaces made from it) is touched by one worker at a time and handed off with proper synchronization. Every `SKGraphiteContext` operation — `InsertRecording`, `Submit`, `CheckAsyncWorkCompletion` — must be serialized onto one designated context/submission thread.
+
+## What parallel recording actually means
+
+Graphite's split between recording and submission is what makes it worth the extra plumbing — but it is easy to misread. The parallelism is on the **CPU**: many threads can build recordings at once. Submission stays **serial**: one context encodes those recordings, in order, into one command buffer and hands them to **one** backend queue. That is not a bottleneck that makes Graphite pointless — encoding is cheap CPU work, and the GPU itself is where the massive parallelism happens.
+
+```mermaid
+flowchart TB
+  subgraph CPU["Parallel CPU recording — many worker threads"]
+    direction LR
+    drawA["Draw calls (root A)"] --> recA["SKGraphiteRecorder A"] --> snapA["Snap()"] --> rgA["Recording A<br/>(logical tasks + resource refs + callbacks)"]
+    drawB["Draw calls (root B)"] --> recB["SKGraphiteRecorder B"] --> snapB["Snap()"] --> rgB["Recording B<br/>(logical tasks + resource refs + callbacks)"]
+  end
+  subgraph CTX["Serialized Context calls / command encoding — one context thread"]
+    direction TB
+    insert["InsertRecording A, then B<br/>encode tasks into the one current native command buffer"] --> submit["Submit()"]
+  end
+  subgraph QUEUE["One ordered backend queue — ordered submissions"]
+    queue["MTLCommandQueue / VkQueue / WGPUQueue"]
+  end
+  subgraph GPU["Massively parallel GPU execution — hardware/driver decides overlap"]
+    cp["Command processor"] --> lanes["Thousands of shader lanes"]
+    cp --> raster["Raster units"]
+    cp --> samplers["Texture samplers"]
+  end
+  rgA --> insert
+  rgB --> insert
+  submit --> queue --> cp
+```
+
+Read the zones from top to bottom:
+
+- **Parallel CPU recording.** Each worker owns a recorder, issues draw calls, and calls `Snap()` to get an immutable recording. Recorders never touch each other, so this scales across cores.
+- **Serialized Context calls / command encoding.** `InsertRecording` walks each recording's tasks and encodes them into the context's single current native command buffer; `Submit` closes and submits it. These calls run one at a time on the context thread. No GPU work has executed yet.
+- **Ordered submissions.** The command buffer goes to one backend queue (`MTLCommandQueue`, `VkQueue`, or `WGPUQueue`). Submissions execute in the order you made them.
+- **Massively parallel GPU execution.** The GPU's command processor feeds thousands of shader lanes, raster units, and samplers. *This* is where a single draw is parallelized across pixels and vertices.
+
+Two things people get wrong: **one queue is not one GPU thread** — a single queue already drives the whole GPU's parallel hardware — and **using several recorders does not create several GPU queues** or guarantee that their work overlaps on the GPU. Recorders buy you parallel *recording*; the driver and hardware decide any parallel *execution*.
+
+### Cross-frame pipelining
+
+Because `Submit` is asynchronous and returns without waiting for the GPU, the CPU does not sit idle while a frame renders. While the GPU executes frame N, your workers can already be recording frame N+1:
+
+```mermaid
+flowchart LR
+  recN["CPU records frame N"] --> subN["Submit N — async, returns immediately"]
+  subN --> gpuN["GPU executes frame N"]
+  subN --> recN1["CPU records frame N+1 — overlaps GPU work on N"]
+  recN1 --> subN1["Submit N+1"]
+```
+
+Keep the ordered-draw caveat in mind: this overlaps *CPU recording of the next frame* with *GPU execution of the current one*. It does not reorder or parallelize the ordered draws within a frame — the hardware and driver decide whatever internal overlap is safe.
+
+### A compositor-style example
+
+A UI framework's compositor is the classic fit for parallel recording. (This describes a *pattern* you could build; the stock SkiaSharp view controls and stock Uno controls do **not** render through Graphite today.)
+
+1. **Invalidation identifies independent dirty raster roots** — self-contained subtrees such as scrolling tiles, separate windows, popups, a chart, or a heavy custom control that changed this frame.
+2. **Worker threads record roots in parallel** — one recorder per worker turns each dirty root into a recording, while unchanged roots keep their cached GPU content.
+3. **The context thread inserts recordings in dependency order** — parents after the children they composite, back-to-front where blending requires it — then submits once.
+4. **The compositor assembles and presents** — it combines the freshly recorded roots with the cached ones and presents the frame.
+
+This pays off only when the roots are genuinely independent and each is substantial. Watch for:
+
+- **Partitioning overhead** — splitting the scene, allocating recorders, and synchronizing handoff all cost CPU; too fine a split loses more than it gains.
+- **Dependencies** — a root that reads another's output cannot be recorded in isolation; encode order still has to respect it.
+- **Shared caches** — text/glyph atlases and image caches are shared state; coordinate access rather than racing on them.
+- **Tiny jobs** — recording a trivial root on its own worker is usually slower than just recording it inline.
 
 ## Backend platform support
 
@@ -83,22 +150,23 @@ context.Submit(new SKGraphiteSubmitInfo { Sync = true });
 A few things to note:
 
 - `CreateRecorder` returns an `SKGraphiteRecorder`. A recorder is a reusable unit of work capture; you create the surface from it, not from the context directly. If you draw raster (CPU-backed) `SKImage`s, create the recorder with an image provider instead — see [Drawing CPU images](#drawing-cpu-images-the-image-provider).
-- `Snap` produces an `SKGraphiteRecording` — an immutable list of GPU commands. Snapping resets the recorder so it can record the next frame. It can return **`null`** if the recording could not be built, for example if the driver could not compile a pipeline for something you drew; see [Pipeline compilation](#pipeline-compilation).
-- `InsertRecording` returns an [`SKGraphiteInsertStatus`](#status-and-enums) that production code can inspect when it needs to recover from submission problems.
-- `Submit(new SKGraphiteSubmitInfo { Sync = true })` flushes the work to the GPU and, with `Sync = true`, waits for it to finish. It returns `false` if submission failed.
+- `Snap` produces an `SKGraphiteRecording` — an immutable package of prepared Graphite *tasks*, the resource references they need, and completion callbacks. It is **not** a native command buffer: no Metal, Vulkan, or WebGPU commands have been encoded yet, and no GPU work has run. Snapping resets the recorder so it can record the next frame. It can return **`null`** if the recording could not be built, for example if the driver could not compile a pipeline for something you drew; see [Pipeline compilation](#pipeline-compilation).
+- `InsertRecording` walks the recording's tasks and encodes them into the context's current native command buffer, on the context thread. This is CPU work — it still does not execute anything on the GPU. It returns an [`SKGraphiteInsertStatus`](#status-and-enums) that production code can inspect when it needs to recover from submission problems.
+- `Submit(new SKGraphiteSubmitInfo { Sync = true })` sends that command buffer to the backend queue — this is where the GPU actually starts working — and, with `Sync = true`, waits for it to finish. It returns `false` if submission failed.
 
 ## Reading pixels back
 
 > [!IMPORTANT]
 > Graphite surfaces do **not** support the synchronous [`SKSurface.ReadPixels`](xref:SkiaSharp.SKSurface.ReadPixels*) used with [raster](../raster/index.md) and [Ganesh](../ganesh/index.md) surfaces — it returns `false`. To get pixels off a Graphite surface you must use the **asynchronous** readback path. This is the number-one thing to get right when porting existing code.
 
-Call `RequestReadPixels` with the surface, the destination `SKImageInfo`, the source rectangle, and a callback. Then drive the request to completion by submitting and repeatedly calling `CheckAsyncWorkCompletion` until the callback fires. This bounded helper is for native hosts, where synchronous submission is supported:
+Call `RequestReadPixels` with the surface, the destination `SKImageInfo`, the source rectangle, and a callback. Then drive the request to completion by submitting and repeatedly calling `CheckAsyncWorkCompletion` until the callback fires. This helper is for **native hosts** only — it submits with `Sync = true`, which a browser/WebGPU host cannot do because it must yield to the event loop (see [Graphite with Dawn](dawn.md)). It bounds the pump, checks the `Submit` result, and handles a failed read:
 
 ```csharp
 static byte[] ReadPixelsFromGraphite(
     SKGraphiteContext context,
     SKSurface surface,
-    SKImageInfo dstInfo)
+    SKImageInfo dstInfo,
+    int maxPumps = 10_000)
 {
     byte[] pixels = null;
     var done = false;
@@ -109,16 +177,27 @@ static byte[] ReadPixelsFromGraphite(
         new SKRectI(0, 0, dstInfo.Width, dstInfo.Height),
         result =>
         {
+            done = true;
+            // The read can fail: the result is null when Graphite could not satisfy it.
+            if (result is null)
+                return;
             // ToArray copies the plane into a tightly-packed byte[] that outlives the
             // callback, stripping any per-row transfer padding for you.
             pixels = result.ToArray();
-            done = true;
         });
 
-    // Flush the queued readback and wait, then pump until the callback runs.
-    context.Submit(new SKGraphiteSubmitInfo { Sync = true });
-    while (!done)
+    // Flush the queued readback. Submit reports failure by returning false.
+    if (!context.Submit(new SKGraphiteSubmitInfo { Sync = true }))
+        throw new InvalidOperationException("Graphite Submit failed during read-back.");
+
+    // Bounded pump so a callback that never fires can't spin forever.
+    for (var pump = 0; !done && pump < maxPumps; pump++)
         context.CheckAsyncWorkCompletion();
+
+    if (!done)
+        throw new TimeoutException("Graphite read-back did not complete within the pump budget.");
+    if (pixels is null)
+        throw new InvalidOperationException("Graphite read-back failed.");
 
     return pixels;
 }
@@ -127,7 +206,7 @@ var dstInfo = new SKImageInfo(info.Width, info.Height, SKColorType.Rgba8888, SKA
 var pixels = ReadPixelsFromGraphite(context, surface, dstInfo);
 ```
 
-The focused helper waits for the callback so the sequence is easy to see. In a production renderer, pump completion from the host's render or event loop and apply the timeout or cancellation policy appropriate for the application. Browser hosts cannot use `Sync = true`; see [Graphite with Dawn](dawn.md).
+The helper drives the callback to completion within a bounded budget so the sequence is easy to see. In a production renderer, pump completion from the host's render or event loop and apply the timeout or cancellation policy appropriate for the application. Browser hosts cannot use `Sync = true` and must never block the event loop; submit without syncing and pump `CheckAsyncWorkCompletion` from the loop instead — see [Graphite with Dawn](dawn.md).
 
 The callback receives an [`SKImageReadPixelsResult`](#status-and-enums) — the backend-neutral async-read result type shared by the [`SKImage`](xref:SkiaSharp.SKImage), [`SKSurface`](xref:SkiaSharp.SKSurface), and `SKGraphiteContext` read paths. SkiaSharp disposes it automatically when the callback returns, so copy what you need out before returning; using its accessors afterwards throws `ObjectDisposedException`. Keep the context and surface undisposed until the callback completes.
 

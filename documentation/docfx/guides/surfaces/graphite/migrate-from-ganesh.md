@@ -10,10 +10,10 @@ If you already render on the GPU with [Ganesh](../ganesh/index.md) — a [`GRCon
 1. **Reading pixels back is asynchronous.** Graphite has no synchronous `SKSurface.ReadPixels`; you use `context.RequestReadPixels(...)` and pump `CheckAsyncWorkCompletion()`.
 2. **CPU images need an image provider.** Ganesh auto-uploads a raster `SKImage` when you draw it; Graphite does not — without a provider the draw is silently dropped.
 
-There is also a **structural** shift: Ganesh records a draw stream on one `GRContext` and auto-flushes it, whereas Graphite is explicit — you record into a `Recorder`, `Snap` a `Recording`, `InsertRecording`, then `Submit`. The `Recorder` is **per-thread**, so a multi-threaded renderer gives each thread its own recorder.
+There is also a **structural** shift. Neither backend is immediate-mode — both defer GPU work — but Ganesh keeps that deferred work inside a stateful `GRContext` that you drain with `Flush`/`Submit`, whereas Graphite is explicit and producer-based: you record into a `Recorder`, `Snap` a self-contained `Recording`, `InsertRecording` (which encodes it on the context thread), then `Submit`. Recording runs on CPU worker threads and can be parallelized; `InsertRecording` and `Submit` are serialized on one context thread. See [What parallel recording actually means](index.md#what-parallel-recording-actually-means).
 
 > [!NOTE]
-> Graphite is currently an **offscreen** path in SkiaSharp. If your Ganesh code renders into a view control's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no Graphite equivalent for that view yet — the [view controls](../views/index.md) still use Ganesh. This migration applies to offscreen rendering.
+> No SkiaSharp view control drives Graphite yet. If your Ganesh code renders into a view's render target (`SKGLView`, `SKMetalView`, `SKSwapChainPanel`), there is no drop-in Graphite view — you drive Graphite yourself, either offscreen or by wrapping the target's texture. The view controls still use Ganesh.
 
 ## Concept mapping
 
@@ -98,9 +98,9 @@ The drawing calls are identical. What changes is the plumbing around them.
 
 ### 1. Replace `Flush` with snap + insert + submit
 
-Ganesh flushes the context directly. Graphite splits this into three steps: `recorder.Snap()` captures the recorded commands into an `SKGraphiteRecording`, `context.InsertRecording(recording)` hands them to the context, and `context.Submit(new SKGraphiteSubmitInfo { Sync = true })` sends them to the GPU and (with `Sync = true`) waits.
+Ganesh flushes the context directly. Graphite splits this into three steps: `recorder.Snap()` packages the pending Graphite tasks and resource references into an immutable `SKGraphiteRecording` (not a native command buffer — nothing is encoded or executed yet), `context.InsertRecording(recording)` encodes those tasks into the context's current command buffer, and `context.Submit(new SKGraphiteSubmitInfo { Sync = true })` sends that buffer to the GPU queue and (with `Sync = true`) waits.
 
-`InsertRecording` returns an `SKGraphiteInsertStatus` that production code can inspect when it needs to recover from submission problems. `Snap` **resets** the recorder for the next frame. Because the recorder is per-thread, a multi-threaded renderer creates one recorder per thread and submits their recordings to the shared context.
+`InsertRecording` returns an `SKGraphiteInsertStatus` that production code can inspect when it needs to recover from submission problems. `Snap` **resets** the recorder for the next frame. Recording is CPU-side and can run in parallel across worker threads; `InsertRecording` and `Submit` are serialized on one context thread. See [What parallel recording actually means](index.md#what-parallel-recording-actually-means).
 
 ### 2. Replace synchronous `ReadPixels` with asynchronous readback
 
@@ -127,7 +127,7 @@ Per-surface and per-image creation moves from the context to the recorder:
 - **CPU images need a provider.** A raster `SKImage` drawn without an image provider does not appear. See [Drawing CPU images](index.md#drawing-cpu-images-the-image-provider).
 - **Browser (Dawn/WebGPU) can't submit synchronously.** In a WebAssembly host, `Submit(Sync = true)` throws. Submit without syncing and pump `CheckAsyncWorkCompletion`. See [Graphite with Dawn](dawn.md#submit-from-the-browser-loop).
 - **Check backend availability.** Use `SKGraphiteContext.IsBackendAvailable` before creating a context, since not every build includes every backend.
-- **The recorder is per-thread — and that's a feature.** A single `SKGraphiteRecorder` and its surfaces are single-threaded, but unlike a single-threaded Ganesh `GRContext`, Graphite is built for parallel recording: give each rendering thread its own recorder, then submit their recordings to the shared context (serializing the `InsertRecording`/`Submit` calls). See the threading note in [Graphite GPU surfaces](index.md).
+- **Recording is parallel; submission is serial — and that's the point.** A single `SKGraphiteRecorder` and its surfaces are single-owner, but Graphite is built for parallel recording: give each worker thread its own recorder, then serialize the `InsertRecording`/`Submit` calls on one context thread. See [What parallel recording actually means](index.md#what-parallel-recording-actually-means).
 
 ## Related links
 
