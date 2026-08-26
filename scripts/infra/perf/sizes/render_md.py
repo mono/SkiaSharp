@@ -214,7 +214,7 @@ def is_native_package(history: dict, package_id: str) -> bool:
 def _legend() -> list[str]:
     return [
         "> Columns run newest → oldest (left → right): 🌙 daily nightlies from "
-        "the [skiasharp feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json), then the "
+        "the [dotnet-libraries feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json), then the "
         "released reference versions `latest → curr-stable → prev-stable → "
         "prev-major` from NuGet.org. "
         f"Each dot compares a cell to the older column on its right: "

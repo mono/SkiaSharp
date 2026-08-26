@@ -20,7 +20,7 @@ BUILD_URL = (
 )
 BUILD_PIPELINE_SOURCE = r"\dotnet\skiasharp\skiasharp-package"
 PRODUCT_CHANNEL_ID = 1648
-PRODUCT_FEED_MARKER = "/_packaging/skiasharp/"
+PRODUCT_FEED_MARKER = "/_packaging/dotnet-libraries/"
 SUCCESS_RESULTS = {"succeeded", "partiallySucceeded"}
 EXACT_RELEASE_BRANCH_RE = re.compile(
     r"^release/\d+\.\d+\.\d+(?:\.\d+)?"
@@ -289,6 +289,21 @@ MIGRATION_REQUIREMENTS = (
         "detail": (
             "backport PR-or-branch-only transport lookup with no commit alias "
             "or fallback"
+        ),
+    },
+    {
+        "id": "dnceng-tsa-routing",
+        "path": "scripts/infra/security/tsaoptions-v2.json",
+        "pattern": (
+            r'(?=.*"instanceUrl"\s*:\s*"https://dev\.azure\.com/dnceng/")'
+            r'(?=.*"projectName"\s*:\s*"internal")'
+            r'(?=.*"areaPath"\s*:\s*"internal\\\\Dotnet-Core-Engineering")'
+            r'(?=.*"iterationPath"\s*:\s*"internal")'
+        ),
+        "forbiddenPattern": r"(?i)devdiv",
+        "detail": (
+            "backport dnceng/internal TSA ownership for API Scan so shared "
+            "skiasharp.skiasharp_main uploads cannot flip back to DevDiv"
         ),
     },
     *(

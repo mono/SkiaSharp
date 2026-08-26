@@ -25,6 +25,12 @@ USER_AGENT = "skiasharp-perf-tracker/1.0 (+https://github.com/mono/SkiaSharp)"
 # SkiaSharp package feeds.
 SIGNED_BUILDS_INDEX_URL = (
     "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/dotnet-libraries/nuget/v3/index.json"
+)
+# Temporary nightly-only bridge until the first SkiaSharp BAR reaches channel
+# 1648. Release/package tooling never consults this legacy source.
+LEGACY_NIGHTLY_INDEX_URL = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
     "_packaging/skiasharp/nuget/v3/index.json"
 )
 NUGET_FLATCONTAINER = "https://api.nuget.org/v3-flatcontainer"  # released stables
@@ -49,11 +55,15 @@ def http_get(url: str, *, retries: int = 4, timeout: int = 120) -> bytes:
             req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
             with urllib.request.urlopen(req, timeout=timeout) as resp:
                 return resp.read()
+        except urllib.error.HTTPError as err:
+            if 400 <= err.code < 500 and err.code != 429:
+                raise RuntimeError(f"GET failed: {url}\n  {err}") from err
+            last = err
         except (urllib.error.URLError, TimeoutError, ConnectionError) as err:
             last = err
-            wait = min(30, 2 ** attempt)
-            log(f"  ! request failed ({err}); retry {attempt}/{retries} in {wait}s")
-            time.sleep(wait)
+        wait = min(30, 2 ** attempt)
+        log(f"  ! request failed ({last}); retry {attempt}/{retries} in {wait}s")
+        time.sleep(wait)
     raise RuntimeError(f"GET failed after {retries} attempts: {url}\n  {last}")
 
 
@@ -114,15 +124,20 @@ def feed_versions(flat_base: str, package: str) -> list[str]:
         return []
 
 
-def signed_build_versions(package: str = "SkiaSharp") -> list[str]:
-    """All versions of ``package`` on the signed-build feed."""
-    resources = http_get_json(SIGNED_BUILDS_INDEX_URL).get("resources", [])
+def versions_from_index(index_url: str, package: str) -> list[str]:
+    """All versions of ``package`` from one NuGet V3 service index."""
+    resources = http_get_json(index_url).get("resources", [])
     flat = pick_resource(resources, "PackageBaseAddress/")
     if not flat:
         raise RuntimeError(
             "No PackageBaseAddress resource in the signed-build service index"
         )
     return feed_versions(flat, package)
+
+
+def signed_build_versions(package: str = "SkiaSharp") -> list[str]:
+    """All versions of ``package`` on the primary signed-build feed."""
+    return versions_from_index(SIGNED_BUILDS_INDEX_URL, package)
 
 
 def nuget_versions(package: str = "SkiaSharp") -> list[str]:
@@ -196,6 +211,14 @@ def resolve_roles(package: str = "SkiaSharp") -> dict[str, str]:
     returned (a brand-new major may lack prev-*).
     """
     nightly = latest_nightly(signed_build_versions(package))
+    if not nightly:
+        log(
+            "  ! primary signed-build feed has no nightly; using the "
+            "temporary legacy nightly source"
+        )
+        nightly = latest_nightly(
+            versions_from_index(LEGACY_NIGHTLY_INDEX_URL, package)
+        )
     if not nightly:
         raise RuntimeError("No -nightly.* versions on the signed-build feed")
     roles = {"nightly": nightly}

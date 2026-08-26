@@ -7,7 +7,7 @@ track-benchmarks.yml:
 
     {"nightly": "...", "curr-stable": "...", "prev-stable": "...", "prev-major": "..."}
 
-* nightly     -> newest `-nightly.*` on the skiasharp signed-build feed.
+* nightly     -> newest `-nightly.*` on the dotnet-libraries signed-build feed.
 * curr/prev-* -> released stables from nuget.org's version list (read over plain HTTP;
                  the packages are restored from the build feeds, so nuget.org never
                  appears in a nuget.config).

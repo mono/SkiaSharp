@@ -23,8 +23,6 @@ class RepositoryPipelineContractTests(unittest.TestCase):
         product_paths = (
             ".agents/skills/release-testing/references/setup.md",
             "tests/SkiaSharp.Tests.Integration/nuget.config",
-            "benchmarks/SkiaSharp.Benchmarks.Tracking/nuget.config",
-            "scripts/infra/perf/_common.py",
         )
         transport_paths = (
             "documentation/dev/building-samples.md",
@@ -34,35 +32,42 @@ class RepositoryPipelineContractTests(unittest.TestCase):
             with self.subTest(path=relative_path):
                 source = (ROOT / relative_path).read_text(encoding="utf-8")
                 comparable = source.replace('"\n    "', "")
-                self.assertIn("/_packaging/skiasharp/", comparable)
-                self.assertNotIn("/_packaging/dotnet-libraries/", source)
+                self.assertIn("/_packaging/dotnet-libraries/", comparable)
+                self.assertNotIn("/_packaging/skiasharp/", source)
+                self.assertNotIn("aka.ms/skiasharp-eap", source)
+        for relative_path in (
+            "benchmarks/SkiaSharp.Benchmarks.Tracking/nuget.config",
+            "scripts/infra/perf/_common.py",
+        ):
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                comparable = source.replace('"\n    "', "")
+                self.assertIn("/_packaging/dotnet-libraries/", comparable)
                 self.assertNotIn("aka.ms/skiasharp-eap", source)
         for relative_path in transport_paths:
             with self.subTest(path=relative_path):
                 source = (ROOT / relative_path).read_text(encoding="utf-8")
                 self.assertIn(
-                    "/_packaging/skiasharp-transport/",
-                    source,
-                )
-                self.assertNotIn(
                     "/_packaging/dotnet-libraries-transport/",
                     source,
                 )
+                self.assertNotIn("/_packaging/skiasharp-transport/", source)
 
         mirror = (
             ROOT / "scripts" / "infra" / "package" / "manage-nuget-feed.ps1"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            '[ValidateSet("skiasharp", "skiasharp-transport")]',
+            '[ValidateSet("dotnet-libraries", '
+            '"dotnet-libraries-transport")]',
             mirror,
         )
-        self.assertIn("DestFeed   = 'skiasharp'", mirror)
-        self.assertIn("DestFeed   = 'skiasharp-transport'", mirror)
+        self.assertIn("DestFeed   = 'dotnet-libraries'", mirror)
+        self.assertIn("DestFeed   = 'dotnet-libraries-transport'", mirror)
         workflow = (
             ROOT / ".github" / "workflows" / "manage-nuget-feed.yml"
         ).read_text(encoding="utf-8")
         self.assertIn(
-            "feed: [skiasharp, skiasharp-transport]",
+            "feed: [dotnet-libraries, dotnet-libraries-transport]",
             workflow,
         )
         self.assertNotIn("skiasharp-ci", workflow.lower())
@@ -101,6 +106,7 @@ class RepositoryPipelineContractTests(unittest.TestCase):
             data["areaPath"],
             r"internal\Dotnet-Core-Engineering",
         )
+        self.assertEqual(data["iterationPath"], "internal")
         self.assertNotIn("devdiv", json.dumps(data).lower())
 
     def test_migration_requirement_set_cannot_silently_shrink(self):
@@ -124,6 +130,7 @@ class RepositoryPipelineContractTests(unittest.TestCase):
                 "internal-arcade-publishing",
                 "no-powershell-asset-assembler",
                 "transport-download-family",
+                "dnceng-tsa-routing",
                 "NativeAssets-transport-metadata",
                 "NuGets-transport-metadata",
                 "Dependencies-transport-metadata",

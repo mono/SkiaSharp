@@ -10,7 +10,7 @@ This script builds/updates a JSON "history" document that records:
 Two kinds of data points ("columns") are collected:
 
   * ``nightly`` -- the latest ``-nightly.*`` build from the official SkiaSharp
-    skiasharp signed-build feed. Every
+    dotnet-libraries signed-build feed. Every
     package is measured at its family's headline nightly version (SkiaSharp and
     HarfBuzzSharp version independently), keyed by the observation date. The
     newest ``--max-nightly`` days are kept.
@@ -45,6 +45,7 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
 from _common import (  # noqa: E402
+    LEGACY_NIGHTLY_INDEX_URL,
     SIGNED_BUILDS_INDEX_URL,
     NUGET_FLATCONTAINER,
     feed_versions,
@@ -176,12 +177,14 @@ def measure_nupkg(path: str) -> dict:
 # NuGet feed helpers (flat container)
 # --------------------------------------------------------------------------- #
 
-def resolve_signed_build_feed() -> dict:
+def resolve_signed_build_feed(
+    index_url: str = SIGNED_BUILDS_INDEX_URL,
+) -> dict:
     """Resolve the signed-build feed's service URLs from its v3 index.
 
     Returns ``{"flat": <PackageBaseAddress>, "search": <SearchQueryService>}``.
     """
-    resources = http_get_json(SIGNED_BUILDS_INDEX_URL).get("resources", [])
+    resources = http_get_json(index_url).get("resources", [])
     flat = pick_resource(resources, "PackageBaseAddress/")
     search = pick_resource(resources, "SearchQueryService")
     if not flat:
@@ -277,6 +280,15 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
     _log(f"  measured {len(packages)} packages "
          f"({sum(1 for p in packages.values() if p['natives'])} native)")
     return packages, headlines["skia"]
+
+
+def has_complete_nightly_families(feed: dict) -> bool:
+    """Whether both product families have a nightly on one feed."""
+    flat = feed["flat"]
+    return all(
+        latest_nightly(feed_versions(flat, package))
+        for package in ("SkiaSharp", "HarfBuzzSharp")
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -421,6 +433,12 @@ def main(argv: list[str]) -> int:
             _log("Collecting nightly from the signed-build feed...")
             today = args.date or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
             feed = resolve_signed_build_feed()
+            if not has_complete_nightly_families(feed):
+                _log(
+                    "  ! primary signed-build feed has no nightly packages; "
+                    "using the temporary legacy nightly source"
+                )
+                feed = resolve_signed_build_feed(LEGACY_NIGHTLY_INDEX_URL)
             packages, headline = collect_nightly(feed, work_dir)
             if packages:
                 # Raw snapshot (optional): full per-file breakdown, archived per day.

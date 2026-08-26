@@ -195,7 +195,7 @@ def render_header(histories, oses):
               f"> Columns run newest → oldest. When present, **⭐ this PR** (a full source "
               f"build of SkiaSharp — native + managed — from the branch) is leftmost, then "
               f"🌙 the last {DISPLAY_DAYS} nightlies from the "
-              f"[skiasharp feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json), then released baselines "
+              f"[dotnet-libraries feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json), then released baselines "
               f"(from nuget.org). Each dot compares a cell to the older column on its right: "
               f"{TREND_FASTER} faster · {TREND_SLOWER} slower; < {TREND_PCT:.0%} is noise.", ""]
     return lines

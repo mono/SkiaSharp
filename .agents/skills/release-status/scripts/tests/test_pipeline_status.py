@@ -83,7 +83,7 @@ def bar_record(
     if locations is None:
         locations = [
             "https://pkgs.dev.azure.com/dnceng/public/"
-            "_packaging/skiasharp/nuget/v3/index.json"
+            "_packaging/dotnet-libraries/nuget/v3/index.json"
         ]
     return {
         "id": BAR_BUILD_ID,
@@ -198,7 +198,7 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(status.PRODUCT_CHANNEL_ID, 1648)
         self.assertEqual(
             status.PRODUCT_FEED_MARKER,
-            "/_packaging/skiasharp/",
+            "/_packaging/dotnet-libraries/",
         )
 
     def test_release_config_default_channels_are_explicit_ids(self):
@@ -229,6 +229,46 @@ class PipelineStatusTests(unittest.TestCase):
                 requirement,
             )
         )
+
+    def test_tsa_routing_requires_complete_dnceng_ownership(self):
+        requirement = next(
+            item
+            for item in status.MIGRATION_REQUIREMENTS
+            if item["id"] == "dnceng-tsa-routing"
+        )
+        ready = """{
+          "instanceUrl": "https://dev.azure.com/dnceng/",
+          "projectName": "internal",
+          "areaPath": "internal\\\\Dotnet-Core-Engineering",
+          "iterationPath": "internal"
+        }"""
+        self.assertTrue(
+            status.migration_requirement_satisfied(ready, requirement)
+        )
+        for legacy in (
+            ready.replace("https://dev.azure.com/dnceng/", "https://devdiv.visualstudio.com/"),
+            ready.replace('"projectName": "internal"', '"projectName": "DevDiv"'),
+            ready.replace(
+                '"areaPath": "internal\\\\Dotnet-Core-Engineering"',
+                '"areaPath": "DevDiv\\\\.NET MAUI\\\\SkiaSharp"',
+            ),
+            ready.replace(
+                '"iterationPath": "internal"',
+                '"iterationPath": "DevDiv"',
+            ),
+            ready.replace(
+                '"iterationPath": "internal"',
+                '"iterationPath": "internal\\\\Sprint 200"',
+            ),
+            ready.replace('          "iterationPath": "internal"\n', ""),
+        ):
+            with self.subTest(legacy=legacy):
+                self.assertFalse(
+                    status.migration_requirement_satisfied(
+                        legacy,
+                        requirement,
+                    )
+                )
 
     def test_package_output_root_requires_canonical_spelling(self):
         requirement = next(
@@ -591,6 +631,15 @@ class PipelineStatusTests(unittest.TestCase):
                     metadata,
                     encoding="ascii",
                 )
+            security = scripts / "infra" / "security"
+            security.mkdir()
+            (security / "tsaoptions-v2.json").write_text(
+                '{"instanceUrl":"https://dev.azure.com/dnceng/",'
+                '"projectName":"internal",'
+                '"areaPath":"internal\\\\Dotnet-Core-Engineering",'
+                '"iterationPath":"internal"}\n',
+                encoding="ascii",
+            )
             git(seed, "add", "scripts", "build.cake")
             git(seed, "commit", "-m", "Release")
             git(seed, "branch", BRANCH)
@@ -752,7 +801,7 @@ class PipelineStatusTests(unittest.TestCase):
             [],
             [
                 "https://pkgs.dev.azure.com/dnceng/public/"
-                "_packaging/skiasharp-transport/nuget/v3/index.json"
+                "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
             ],
         ):
             with self.subTest(locations=locations):

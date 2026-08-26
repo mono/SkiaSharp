@@ -116,14 +116,14 @@ revision buckets.
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Shipping assets for the exact release BAR |
-| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json` | NonShipping `_NuGets`, `_NativeAssets*`, and dependency chunks |
+| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json` | Shipping assets promoted through Maestro `.NET Libraries` channel 1648 |
+| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json` | NonShipping `_NuGets`, `_NativeAssets*`, and dependency chunks routed by the same `.NET Libraries` promotion |
 | Stable | NuGet.org | Public releases |
 
 > **Note:** One BAR records both product and transport packages. Maestro
-> Release status validates exact `skiasharp` and `skiasharp-transport` asset
-> locations recorded by BAR. Transport remains an asset class, not a separate
-> Maestro channel.
+> Release status validates exact `dotnet-libraries` and
+> `dotnet-libraries-transport` asset locations recorded by BAR. Transport
+> remains an asset class, not a separate Maestro channel.
 > NuGet.org publication remains a separate protected operation.
 
 The production Maestro configuration currently maps only the internal
@@ -262,7 +262,7 @@ exact `release/4.150.4` and `release/4.151.3` children before
 status/testing/publish; RC1 can proceed directly. Release status verifies each
 exact target commit has the combined Build, connected Tests, exact-version, and
 fail-closed artifact-selection backport. It then blocks until that branch has
-`.NET Libraries` channel 1648 mapping and exact `skiasharp` product-feed
+`.NET Libraries` channel 1648 mapping and exact `dotnet-libraries` product-feed
 routing. Main-only
 production features such as Apple symbol generation are not historical
 release-tooling prerequisites.
