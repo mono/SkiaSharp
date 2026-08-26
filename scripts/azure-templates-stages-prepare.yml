@@ -17,6 +17,8 @@ stages:
             displayName: Configure build variables
           - pwsh: ./scripts/infra/native/shared/tests/SetBuildVariables.Tests.ps1
             displayName: Validate build identity rules
+          - pwsh: ./scripts/infra/pipeline/tests/PoolProviders.Tests.ps1
+            displayName: Validate branch-aware pool providers
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
           - bash: python3 scripts/infra/caching/repo-deps.py validate

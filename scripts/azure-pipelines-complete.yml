@@ -16,7 +16,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore-Public
+        name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentWindows
@@ -24,7 +24,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore-Public
+        name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals windows.vs2026.amd64.open
         os: windows
   - name: buildAgentWindowsNative
@@ -32,7 +32,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore-Public
+        name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals 1es-windows-2022-open
         os: windows
   - name: buildAgentMac
@@ -56,7 +56,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore-Public
+        name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentLinuxNative
@@ -64,7 +64,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore-Public
+        name: $(DncEngPublicBuildPool)
         demands: ImageOverride -equals build.ubuntu.2204.amd64.open
         os: linux
   - name: buildAgentAndroidTests
@@ -77,6 +77,7 @@ parameters:
         os: linux
 
 variables:
+  - template: /eng/common/templates/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 extends:
