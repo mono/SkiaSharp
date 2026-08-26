@@ -21,10 +21,10 @@ stages:
           buildAgent: ${{ parameters.buildAgentHost }}
           requiredArtifacts:
             # Android
-            - name: native_android_x86_windows
-            - name: native_android_x64_windows
-            - name: native_android_arm_windows
-            - name: native_android_arm64_windows
+            - name: native_android_x86_linux
+            - name: native_android_x64_linux
+            - name: native_android_arm_linux
+            - name: native_android_arm64_linux
             # Tizen
             - name: native_tizen_x64_linux
             - name: native_tizen_arm64_linux
@@ -140,13 +140,12 @@ stages:
             - name: native_wasm_5_0_6_SIMD_Threading_linux
             - name: native_wasm_5_0_6_Threading_linux
 
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-        - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
-          parameters:
-            name: native_msvc
-            displayName: Merge Native MSVC Artifacts
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_win32_x86_msvc_windows
-              - name: native_win32_x64_msvc_windows
-              - name: native_win32_arm64_msvc_windows
+      - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
+        parameters:
+          name: native_msvc
+          displayName: Merge Native MSVC Artifacts
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            - name: native_win32_x86_msvc_windows
+            - name: native_win32_x64_msvc_windows
+            - name: native_win32_arm64_msvc_windows

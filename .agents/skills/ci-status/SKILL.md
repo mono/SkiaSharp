@@ -42,7 +42,7 @@ The collector script requires:
 - **`gh` CLI** — authenticated with read access to `mono/SkiaSharp` and `mono/SkiaSharp-API-docs`
 - **Git remotes** — fetched recently so `git branch -r` returns up-to-date release branches
 
-### Public CI (dnceng-public/public org — triggers on push/PR to main, develop, release/*)
+### Public CI (dnceng-public/public org — triggers on push/PR to main and release/*)
 
 | Pipeline Name | Org/Project | Definition ID | URL |
 |---------------|-------------|---------------|-----|

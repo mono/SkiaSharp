@@ -15,7 +15,7 @@
   <PropertyGroup>
     <PackageTags Condition="$(PackagingGroup.StartsWith('SkiaSharp'))">graphics;cross-platform;skiasharp;skia;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
     <PackageTags Condition="$(PackagingGroup.StartsWith('HarfBuzzSharp'))">graphics;text;cross-platform;harfbuzzsharp;harfbuzz;$(PackageTags);ios;android;linux;windows;tvos;macos;tizen</PackageTags>
-    <PackageDescription Condition="'$(PackageNotes)' != ''">$(PackageDescription)
+    <PackageDescription Condition="'$(PackageNotes)' != '' and '$(PackageReadmeIncludesPackageNotes)' != 'true'">$(PackageDescription)
 
 $(PackageNotes)</PackageDescription>
   </PropertyGroup>
@@ -28,16 +28,75 @@ $(PackageNotes)</PackageDescription>
     ===================================================================================================================
     _GeneratePackageReadmeFile
 
-    Generate the package README file.
+    Generate the package README file. A project can provide a custom README by
+    placing PACKAGE-README.md beside the project file or setting PackageReadmeSource.
+
+    All other packages receive a useful generated README rather than exposing the
+    short NuGet package description as the entire document.
     ===================================================================================================================
   -->
   <Target Name="_GeneratePackageReadmeFile"
           BeforeTargets="_GetPackageFiles"
           Condition="'$(PackageDescription)' != ''">
-    <WriteLinesToFile File="$(IntermediateOutputPath)$(PackageReadmeFile)" Lines="$(PackageDescription)" Overwrite="True" />
+    <PropertyGroup>
+      <_PackageReadmeOutput>$(IntermediateOutputPath)$(PackageReadmeFile)</_PackageReadmeOutput>
+      <_PackageReadmeSource Condition="'$(PackageReadmeSource)' != ''">$(PackageReadmeSource)</_PackageReadmeSource>
+      <_PackageReadmeSource Condition="'$(_PackageReadmeSource)' == '' and Exists('$(MSBuildProjectDirectory)/PACKAGE-README.md')">$(MSBuildProjectDirectory)/PACKAGE-README.md</_PackageReadmeSource>
+
+      <_PackageReadmeApiUrl>$(PackageReadmeApiUrl)</_PackageReadmeApiUrl>
+      <_PackageReadmeApiUrl Condition="'$(_PackageReadmeApiUrl)' == ''">https://learn.microsoft.com/dotnet/api/skiasharp</_PackageReadmeApiUrl>
+      <_PackageReadmeResourceLinks>$(PackageReadmeResourceLinks)</_PackageReadmeResourceLinks>
+      <_PackageReadmeResourceLinks Condition="'$(_PackageReadmeResourceLinks)' == ''">- [SkiaSharp documentation](https://mono.github.io/SkiaSharp/docs/)
+- [API reference on Microsoft Learn]($(_PackageReadmeApiUrl))
+- [Package selection and deployment guide](https://github.com/mono/SkiaSharp/blob/main/documentation/dev/packages.md)
+- [Live SkiaSharp Gallery](https://mono.github.io/SkiaSharp/gallery/)
+- [SkiaFiddle](https://mono.github.io/SkiaSharp/fiddle/) - experiment with SkiaSharp in your browser</_PackageReadmeResourceLinks>
+
+      <_PackageReadmeSummary>$(PackageReadmeSummary)</_PackageReadmeSummary>
+      <_PackageReadmeSummary Condition="'$(_PackageReadmeSummary)' == ''">$(PackageDescription)</_PackageReadmeSummary>
+      <_PackageReadmeNotice>$(PackageReadmeNotice)</_PackageReadmeNotice>
+      <_PackageReadmeAdditionalDetails>$(PackageReadmeAdditionalDetails)</_PackageReadmeAdditionalDetails>
+      <_PackageReadmeNoticeSection Condition="'$(_PackageReadmeNotice)' != ''">$(_PackageReadmeNotice)
+
+</_PackageReadmeNoticeSection>
+      <_PackageReadmeAdditionalDetailsSection Condition="'$(_PackageReadmeAdditionalDetails)' != ''">$(_PackageReadmeAdditionalDetails)
+
+</_PackageReadmeAdditionalDetailsSection>
+
+      <_PackageReadmeContents># $(PackageId)
+
+[![NuGet](https://img.shields.io/nuget/v/$(PackageId)?style=flat-square&amp;label=NuGet)](https://www.nuget.org/packages/$(PackageId))
+[![NuGet downloads](https://img.shields.io/nuget/dt/$(PackageId)?style=flat-square&amp;label=Downloads)](https://www.nuget.org/packages/$(PackageId))
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md)
+
+$(_PackageReadmeSummary)
+
+$(_PackageReadmeNoticeSection)## Installation
+
+```bash
+dotnet add package $(PackageId)
+```
+
+$(_PackageReadmeAdditionalDetailsSection)## Documentation and resources
+
+$(_PackageReadmeResourceLinks)
+
+## Feedback and contributing
+
+SkiaSharp is an open-source project from Microsoft, released under the [MIT license](https://github.com/mono/SkiaSharp/blob/main/LICENSE.md). Use [GitHub Discussions](https://github.com/mono/SkiaSharp/discussions) for questions, file bugs and feature requests in the [issue tracker](https://github.com/mono/SkiaSharp/issues), and see the [contributing guide](https://github.com/mono/SkiaSharp/blob/main/CONTRIBUTING.md) to get involved.</_PackageReadmeContents>
+    </PropertyGroup>
+
+    <Copy SourceFiles="$(_PackageReadmeSource)"
+          DestinationFiles="$(_PackageReadmeOutput)"
+          Condition="'$(_PackageReadmeSource)' != ''" />
+    <WriteLinesToFile File="$(_PackageReadmeOutput)"
+                     Lines="$(_PackageReadmeContents)"
+                     Encoding="UTF-8"
+                     Overwrite="True"
+                     Condition="'$(_PackageReadmeSource)' == ''" />
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)$(PackageReadmeFile)" />
-      <None Include="$(IntermediateOutputPath)$(PackageReadmeFile)" PackagePath="$(PackageReadmeFile)" Pack="True" />
+      <FileWrites Include="$(_PackageReadmeOutput)" />
+      <None Include="$(_PackageReadmeOutput)" PackagePath="$(PackageReadmeFile)" Pack="True" />
     </ItemGroup>
   </Target>
 

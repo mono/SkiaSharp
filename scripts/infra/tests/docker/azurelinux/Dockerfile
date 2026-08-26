@@ -16,7 +16,7 @@
 # (DefaultFontFamily "DejaVu Sans"). It exercises a non-Ubuntu glibc distro (the desktop leg already
 # covers Ubuntu).
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0-azurelinux3.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0.203-azurelinux3.0
 
 # Fonts for Skia's fontconfig-backed default font manager:
 #   - fontconfig: font discovery used by Skia at runtime
