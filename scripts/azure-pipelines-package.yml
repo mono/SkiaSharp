@@ -27,7 +27,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
+        name: $(DncEngInternalBuildPool)
         image: 1es-windows-2022
         os: windows
   - name: buildAgentWindows
@@ -35,7 +35,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
+        name: $(DncEngInternalBuildPool)
         image: 1es-windows-2022
         os: windows
   - name: buildAgentWindowsNative
@@ -43,7 +43,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
+        name: $(DncEngInternalBuildPool)
         image: 1es-windows-2022
         os: windows
   - name: buildAgentMac
@@ -67,7 +67,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
+        name: $(DncEngInternalBuildPool)
         image: 1es-ubuntu-2204
         os: linux
   - name: buildAgentLinuxNative
@@ -75,7 +75,7 @@ parameters:
     type: object
     default:
       pool:
-        name: NetCore1ESPool-Internal
+        name: $(DncEngInternalBuildPool)
         image: 1es-ubuntu-2204
         os: linux
   - name: runApiScan
@@ -92,6 +92,7 @@ parameters:
     default: false
 
 variables:
+  - template: /eng/common/templates-official/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
