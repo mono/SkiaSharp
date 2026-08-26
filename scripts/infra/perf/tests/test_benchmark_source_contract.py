@@ -6,14 +6,18 @@ from pathlib import Path
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
-TRANSPORT_FEED = (
+PRODUCT_TRANSPORT_FEED = (
+    "https://pkgs.dev.azure.com/dnceng/public/"
+    "_packaging/skiasharp-transport/nuget/v3/index.json"
+)
+SHARED_TRANSPORT_FEED = (
     "https://pkgs.dev.azure.com/dnceng/public/"
     "_packaging/dotnet-libraries-transport/nuget/v3/index.json"
 )
 
 
 class BenchmarkSourceContractTests(unittest.TestCase):
-    def test_shared_download_uses_channel_transport_feed(self):
+    def test_shared_download_uses_product_transport_feed(self):
         shared = (REPO_ROOT / "scripts/infra/shared/shared.cake").read_text()
         match = re.search(
             r'CI_ARTIFACTS_FEED_URL\s*=\s*Argument\s*'
@@ -22,7 +26,8 @@ class BenchmarkSourceContractTests(unittest.TestCase):
         )
 
         self.assertIsNotNone(match, "The shared previewFeed default was not found.")
-        self.assertEqual(TRANSPORT_FEED, match.group(1))
+        self.assertEqual(PRODUCT_TRANSPORT_FEED, match.group(1))
+        self.assertNotEqual(SHARED_TRANSPORT_FEED, match.group(1))
 
     def test_download_query_and_extraction_share_one_feed(self):
         download = (REPO_ROOT / "scripts/infra/shared/download.cake").read_text()
