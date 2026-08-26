@@ -147,6 +147,13 @@ When validating another branch manually, explicitly set `forceRealSigning`,
 `registerInBar`, and `runApiScan` to `true`; a safe-default run is not release
 evidence.
 
+The public and internal entrypoints also import Arcade pool-provider variables.
+Their default build-agent objects use `$(DncEngPublicBuildPool)` and
+`$(DncEngInternalBuildPool)`, so `release/*` automatically runs on the
+corresponding servicing pools while `main` and other branches remain on regular
+pools. Release-branch automation must not mutate pipeline YAML or supply pool
+overrides; Azure queue-time object overrides remain available for diagnostics.
+
 ---
 
 ## Workflow Diagrams

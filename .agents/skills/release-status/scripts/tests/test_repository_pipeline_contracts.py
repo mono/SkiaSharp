@@ -19,6 +19,37 @@ SPEC.loader.exec_module(status)
 
 
 class RepositoryPipelineContractTests(unittest.TestCase):
+    def test_release_branches_use_arcade_servicing_pool_providers(self):
+        contracts = {
+            "scripts/azure-pipelines-complete.yml": (
+                "/eng/common/templates/variables/pool-providers.yml@self",
+                "$(DncEngPublicBuildPool)",
+            ),
+            "scripts/azure-pipelines-package.yml": (
+                "/eng/common/templates-official/variables/"
+                "pool-providers.yml@self",
+                "$(DncEngInternalBuildPool)",
+            ),
+        }
+        for relative_path, (provider, pool) in contracts.items():
+            with self.subTest(path=relative_path):
+                source = (ROOT / relative_path).read_text(encoding="utf-8")
+                self.assertIn(provider, source)
+                self.assertGreaterEqual(source.count(pool), 5)
+                self.assertNotIn("NetCore1ESPool-Internal", source)
+
+        release_script = (
+            ROOT
+            / ".agents"
+            / "skills"
+            / "release-branch"
+            / "scripts"
+            / "create-release-branches.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("DncEngPublicBuildPool", release_script)
+        self.assertNotIn("DncEngInternalBuildPool", release_script)
+        self.assertNotIn("NetCore-Svc-", release_script)
+
     def test_repository_feed_routing_uses_dotnet_libraries(self):
         product_paths = (
             ".agents/skills/release-testing/references/setup.md",

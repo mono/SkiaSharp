@@ -28,6 +28,9 @@ This skill is **Step 1 of 5**:
   pending operation.
 - Preserve the audited base SHA and Skia gitlink SHA during execution.
 - The script may create matching `release/{version}` refs in both repositories.
+- Release branches select Arcade servicing pools automatically through the
+  provider variables in the public/internal pipeline entrypoints. Do not edit
+  pipeline YAML or pass pool overrides when cutting a release branch.
 - A regular stable release may create a protected-branch bump PR. Automation
   opens it; a maintainer reviews and merges it.
 - This skill never merges PRs or publishes packages/releases.
