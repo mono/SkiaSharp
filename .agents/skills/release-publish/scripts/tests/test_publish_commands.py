@@ -175,6 +175,29 @@ class PublishCommandTests(unittest.TestCase):
             stable=False,
         )
 
+        full_path = {
+            **detail,
+            "resources": {
+                "pipelines": {
+                    push.RESOURCE_ALIAS: {
+                        "pipeline": {
+                            "id": 10,
+                            "name": push.RESOURCE_PATH,
+                            "folder": push.RESOURCE_FOLDER,
+                        },
+                        "version": build_number,
+                    }
+                }
+            },
+        }
+        push.validate_run_detail(
+            full_path,
+            bar_build_id=30,
+            build_run_id=10,
+            build_number=build_number,
+            stable=False,
+        )
+
         with self.assertRaisesRegex(
             push.publish.PublishError,
             "has not resolved",

@@ -814,13 +814,20 @@ def pipeline_resource(detail: dict) -> dict:
     )
 
 
+def pipeline_resource_path(pipeline: dict) -> str:
+    name = str(pipeline.get("name") or "").replace("/", "\\")
+    if name.startswith("\\"):
+        return name
+    folder = str(pipeline.get("folder") or "").replace("/", "\\").rstrip("\\")
+    return f"{folder}\\{name}" if folder else name
+
+
 def is_connected_test(detail: dict, build_run: dict) -> bool:
     resource = pipeline_resource(detail)
     pipeline = resource.get("pipeline") or {}
     return (
         int(pipeline.get("id") or 0) == int(build_run["id"])
-        and pipeline.get("name") == PIPELINES[0]["name"]
-        and pipeline.get("folder") == r"\dotnet\skiasharp"
+        and pipeline_resource_path(pipeline) == BUILD_PIPELINE_SOURCE
         and resource.get("version") == build_run.get("buildNumber")
     )
 

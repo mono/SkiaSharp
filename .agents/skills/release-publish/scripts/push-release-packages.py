@@ -33,6 +33,14 @@ RESOURCE_FOLDER = r"\dotnet\skiasharp"
 RESOURCE_PATH = r"\dotnet\skiasharp\skiasharp-package"
 
 
+def pipeline_resource_path(pipeline: dict) -> str:
+    name = str(pipeline.get("name") or "").replace("/", "\\")
+    if name.startswith("\\"):
+        return name
+    folder = str(pipeline.get("folder") or "").replace("/", "\\").rstrip("\\")
+    return f"{folder}\\{name}" if folder else name
+
+
 def publish_pipeline_id() -> int:
     raw = os.environ.get(PUBLISH_PIPELINE_ID_ENV)
     if not raw or not raw.strip():
@@ -269,10 +277,7 @@ def validate_run_detail(
         )
     pipeline = resource.get("pipeline") or {}
     parameters = detail.get("templateParameters") or {}
-    if (
-        pipeline.get("name") != RESOURCE_NAME
-        or pipeline.get("folder") != RESOURCE_FOLDER
-    ):
+    if pipeline_resource_path(pipeline) != RESOURCE_PATH:
         raise publish.PublishError(
             "publication run resource is "
             f"{pipeline.get('folder')!r}\\{pipeline.get('name')!r}, "

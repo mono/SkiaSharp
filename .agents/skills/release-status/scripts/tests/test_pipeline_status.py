@@ -59,6 +59,16 @@ def test_detail(build_run_id=BUILD_RUN_ID, build_number=BUILD_NUMBER):
     }
 
 
+def full_path_test_detail(
+    build_run_id=BUILD_RUN_ID,
+    build_number=BUILD_NUMBER,
+):
+    detail = test_detail(build_run_id, build_number)
+    pipeline = detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]
+    pipeline["name"] = r"\dotnet\skiasharp\skiasharp-package"
+    return detail
+
+
 def bar_record(
     *,
     stable=False,
@@ -664,6 +674,19 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(report["nextAction"], "wait-for-tests-trigger")
         self.assertIsNone(report["testsRun"]["runId"])
+
+    def test_connected_tests_accept_live_full_resource_name(self):
+        report = status.build_report(
+            COMMIT,
+            ado=FakeAdo(
+                complete_chain(),
+                details={TESTS_RUN_ID: full_path_test_detail()},
+            ),
+            repo=FakeRepo(),
+            darc=FakeDarc(),
+        )
+        self.assertEqual(report["testsRun"]["runId"], TESTS_RUN_ID)
+        self.assertEqual(report["nextAction"], "start-release-testing")
 
     def test_failed_connected_tests_require_retry(self):
         runs = complete_chain()
