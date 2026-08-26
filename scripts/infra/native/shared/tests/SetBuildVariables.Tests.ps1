@@ -564,6 +564,9 @@ if (-not $publishingProps.Contains('$(ArtifactsShippingPackagesDir)**\*.nupkg') 
 $buildCake = Get-Content (Join-Path $repoRoot 'build.cake') -Raw
 if ($packageScript -notmatch 'Task\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageScript -notmatch 'PREVIEW_LABEL\.StartsWith' -or
+    $packageScript -notmatch 'CombineWithFilePath' -or
+    $packageScript -notmatch 'GetRelativePath' -or
+    $packageScript -match 'System\.IO\.Path' -or
     $buildCake -notmatch '\.IsDependentOn\s*\(\s*"nuget-assemble-arcade-assets"\s*\)' -or
     $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\Shipping'" -or
     $packageStages -notmatch "path:\s*'.\\output\\arcade-assets\\NonShipping'" -or

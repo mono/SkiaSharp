@@ -329,8 +329,8 @@ Task ("nuget-assemble-arcade-assets")
             continue;
         }
 
-        var packagePdbRoot = System.IO.Path.GetFullPath (
-            System.IO.Path.Combine (OUTPUT_PDB_ARTIFACTS_PATH.FullPath, packageBaseName));
+        var packagePdbRoot = MakeAbsolute (
+            OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));
         var archive = ZipFile.OpenRead (package.FullPath);
         try {
             foreach (var entry in archive.Entries) {
@@ -340,19 +340,21 @@ Task ("nuget-assemble-arcade-assets")
                     continue;
                 }
 
-                var relativePath = entryPath.Replace ('/', System.IO.Path.DirectorySeparatorChar);
-                var targetPath = System.IO.Path.GetFullPath (
-                    System.IO.Path.Combine (packagePdbRoot, relativePath));
-                if (!targetPath.StartsWith (
-                    packagePdbRoot + System.IO.Path.DirectorySeparatorChar,
-                    StringComparison.OrdinalIgnoreCase)) {
+                var targetPath = MakeAbsolute (packagePdbRoot
+                    .CombineWithFilePath (entryPath)
+                    .Collapse ());
+                var relativeTargetPath = packagePdbRoot.GetRelativePath (targetPath);
+                if (relativeTargetPath.Segments.Any (segment => segment == "..")) {
                     throw new Exception (
                         $"PDB package path escapes its extraction root: {entry.FullName}");
                 }
 
-                System.IO.Directory.CreateDirectory (System.IO.Path.GetDirectoryName (targetPath));
+                EnsureDirectoryExists (targetPath.GetDirectory ());
                 var sourceStream = entry.Open ();
-                var targetStream = System.IO.File.Create (targetPath);
+                var targetStream = Context.FileSystem.GetFile (targetPath).Open (
+                    System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write,
+                    System.IO.FileShare.None);
                 try {
                     sourceStream.CopyTo (targetStream);
                 } finally {
@@ -366,10 +368,15 @@ Task ("nuget-assemble-arcade-assets")
         }
     }
 
-    if (pdbCount == 0)
-        System.IO.File.WriteAllText (
-            OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty").FullPath,
-            "");
+    if (pdbCount == 0) {
+        var emptyStream = Context.FileSystem
+            .GetFile (OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty"))
+            .Open (
+                System.IO.FileMode.Create,
+                System.IO.FileAccess.Write,
+                System.IO.FileShare.None);
+        emptyStream.Dispose ();
+    }
 
     Information (
         "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
