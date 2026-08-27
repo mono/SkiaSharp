@@ -339,12 +339,23 @@ class SignatureVerifier(Protocol):
 
 @dataclass
 class DotNetSignatureVerifier:
-    """Runs ``dotnet nuget verify --certificate-fingerprint ... --all``."""
+    """Runs ``<dotnet_command> nuget verify --all --certificate-fingerprint ...``.
+
+    ``dotnet_command`` defaults to a bare ``("dotnet",)`` (relying on PATH),
+    but callers running inside this repository should pass the resolved
+    Arcade wrapper instead (``eng/common/dotnet.sh``/``dotnet.cmd``), which
+    is how this was live-validated against a real published package
+    (``./eng/common/dotnet.sh nuget verify --all``), so the pinned SDK/
+    runtime is used rather than whatever ``dotnet`` happens to be on PATH.
+    """
 
     runner: object  # release_common.CommandRunner, kept loosely typed to avoid import cycle
+    dotnet_command: tuple[str, ...] = ("dotnet",)
 
     def verify(self, nupkg_path: Path, fingerprints: tuple[str, ...]) -> None:
-        args = ["dotnet", "nuget", "verify", "--all"]
+        if not fingerprints:
+            raise NuGetError("no trusted certificate fingerprints were provided")
+        args = [*self.dotnet_command, "nuget", "verify", "--all"]
         for fingerprint in fingerprints:
             args.extend(["--certificate-fingerprint", fingerprint])
         args.append(str(nupkg_path))
@@ -445,11 +456,95 @@ def load_manifest(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def load_fingerprints(path: Path) -> tuple[str, ...]:
+_CERTIFICATE_FINGERPRINT_RE = re.compile(r"^[0-9A-F]{64}$")
+_CERTIFICATE_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+KNOWN_CERTIFICATE_ROLES = ("author", "repository")
+
+
+@dataclass(frozen=True)
+class CertificateInfo:
+    """One reviewed, pinned NuGet package-signing certificate.
+
+    ``role`` distinguishes an author signature (e.g. Microsoft Corporation)
+    from a repository signature (NuGet.org): a dual-signed package needs a
+    trusted fingerprint of *each* role present, or ``dotnet nuget verify
+    --all`` fails on whichever signature has no match. ``valid_until`` is
+    purely informational/audit data -- an expired signing certificate does
+    not retroactively invalidate packages already signed with it, so
+    verification never filters by it at runtime.
+    """
+
+    fingerprint: str
+    role: str
+    subject: str
+    description: str
+    valid_from: str | None
+    valid_until: str | None
+
+
+def load_certificates(path: Path) -> tuple[CertificateInfo, ...]:
+    """Load and structurally validate the reviewed certificate list.
+
+    Designed for additive rotation: any number of certificates per role is
+    accepted (a renewal adds a new entry alongside the old one instead of
+    replacing it), so this never assumes exactly one or two entries.
+    """
+
     import json
 
     data = json.loads(path.read_text(encoding="utf-8"))
-    return tuple(cert["fingerprint"] for cert in data["certificates"])
+    entries = data.get("certificates")
+    if not isinstance(entries, list) or not entries:
+        raise NuGetError(f"{path} has no certificates")
+
+    certificates: list[CertificateInfo] = []
+    seen_fingerprints: set[str] = set()
+    for entry in entries:
+        fingerprint = entry.get("fingerprint")
+        if not isinstance(fingerprint, str) or not _CERTIFICATE_FINGERPRINT_RE.fullmatch(fingerprint):
+            raise NuGetError(f"{path} has an invalid certificate fingerprint: {fingerprint!r}")
+        if fingerprint in seen_fingerprints:
+            raise NuGetError(f"{path} has a duplicate certificate fingerprint: {fingerprint!r}")
+        seen_fingerprints.add(fingerprint)
+
+        role = entry.get("role")
+        if role not in KNOWN_CERTIFICATE_ROLES:
+            raise NuGetError(
+                f"{path} certificate {fingerprint!r} has an unknown role {role!r}; "
+                f"expected one of {KNOWN_CERTIFICATE_ROLES}"
+            )
+
+        for date_field in ("validFrom", "validUntil"):
+            value = entry.get(date_field)
+            if value is not None and not _CERTIFICATE_DATE_RE.fullmatch(value):
+                raise NuGetError(
+                    f"{path} certificate {fingerprint!r} has an invalid {date_field}: {value!r}"
+                )
+
+        certificates.append(
+            CertificateInfo(
+                fingerprint=fingerprint,
+                role=role,
+                subject=entry.get("subject") or "",
+                description=entry.get("description") or "",
+                valid_from=entry.get("validFrom"),
+                valid_until=entry.get("validUntil"),
+            )
+        )
+    return tuple(certificates)
+
+
+def load_fingerprints(path: Path) -> tuple[str, ...]:
+    """Every reviewed fingerprint, any role, in file order.
+
+    This is what gets passed to ``dotnet nuget verify --certificate-fingerprint``:
+    the command accepts multiple occurrences of the flag and treats the
+    signer as trusted if it matches *any* of them, so the full reviewed set
+    (every still-relevant role and rotation generation) is always passed
+    together rather than picking a single "current" fingerprint.
+    """
+
+    return tuple(certificate.fingerprint for certificate in load_certificates(path))
 
 
 _NUGET_SECTION_HEADER = "# nuget versions"

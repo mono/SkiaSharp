@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import release_nuget as nuget
-from release_common import ConflictError, NotReadyError
+from release_common import CommandResult, ConflictError, NotReadyError
 
 
 REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -693,13 +693,219 @@ class PublicPackagesManifestTests(unittest.TestCase):
             self.assertIn(anchor, declared)
 
 
+class FakeCommandRunnerForVerify:
+    def __init__(self, *, returncode: int = 0):
+        self.returncode = returncode
+        self.calls: list[list[str]] = []
+
+    def run(self, args, *, cwd, check=True, timeout=120, input=None):
+        self.calls.append(list(args))
+        return CommandResult(args=tuple(args), returncode=self.returncode, stdout="", stderr="")
+
+
+class DotNetSignatureVerifierTests(unittest.TestCase):
+    def test_passes_all_fingerprints_and_dotnet_command_prefix(self):
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner, dotnet_command=("/repo/eng/common/dotnet.sh",))
+        nupkg = Path("/tmp/does-not-matter/SkiaSharp.1.0.0.nupkg")
+        verifier.verify(nupkg, ("AAAA", "BBBB"))
+        self.assertEqual(len(runner.calls), 1)
+        args = runner.calls[0]
+        self.assertEqual(args[0], "/repo/eng/common/dotnet.sh")
+        self.assertIn("--all", args)
+        self.assertEqual(args.count("--certificate-fingerprint"), 2)
+        self.assertIn("AAAA", args)
+        self.assertIn("BBBB", args)
+        self.assertEqual(args[-1], str(nupkg))
+
+    def test_defaults_to_bare_dotnet(self):
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        verifier.verify(Path("/tmp/pkg.nupkg"), ("AAAA",))
+        self.assertEqual(runner.calls[0][0], "dotnet")
+
+    def test_rejects_empty_fingerprint_list(self):
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        with self.assertRaises(nuget.NuGetError):
+            verifier.verify(Path("/tmp/pkg.nupkg"), ())
+        self.assertEqual(runner.calls, [])
+
+    def test_raises_on_verification_failure(self):
+        runner = FakeCommandRunnerForVerify(returncode=1)
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        with self.assertRaises(nuget.NuGetError):
+            verifier.verify(Path("/tmp/pkg.nupkg"), ("AAAA",))
+
+
+class DotnetCommandResolutionTests(unittest.TestCase):
+    def test_prefers_arcade_wrapper_when_present(self):
+        import tempfile
+
+        import release as cli
+
+        with tempfile.TemporaryDirectory() as tmp:
+            repo_root = Path(tmp)
+            (repo_root / "eng" / "common").mkdir(parents=True)
+            wrapper_name = "dotnet.cmd" if sys.platform.startswith("win") else "dotnet.sh"
+            wrapper = repo_root / "eng" / "common" / wrapper_name
+            wrapper.write_text("#!/bin/sh\n", encoding="utf-8")
+            self.assertEqual(cli._dotnet_command(repo_root), (str(wrapper),))
+
+    def test_falls_back_to_path_dotnet_when_wrapper_missing(self):
+        import tempfile
+
+        import release as cli
+
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(cli._dotnet_command(Path(tmp)), ("dotnet",))
+
+
 class TrustedCertificatesTests(unittest.TestCase):
-    def test_fingerprints_are_valid_sha256_hex(self):
+    """Structural checks against the real, checked-in reviewed certificate
+    file. These deliberately never assert an exact fingerprint value or an
+    exact certificate count: rotation is additive (old fingerprints are
+    kept alongside new ones), so a future renewal must not need a test
+    edit here. Only load_certificates()'s own structural validation (regex
+    format, known role, dedupe, date format) is exercised precisely, using
+    synthetic fixtures below."""
+
+    def _load(self):
         certificates_path = Path(__file__).resolve().parent.parent / "trusted-signing-certificates.json"
-        fingerprints = nuget.load_fingerprints(certificates_path)
-        self.assertGreaterEqual(len(fingerprints), 1)
-        for fingerprint in fingerprints:
-            self.assertRegex(fingerprint, r"^[0-9A-F]{64}$")
+        return nuget.load_certificates(certificates_path)
+
+    def test_fingerprints_are_valid_sha256_hex(self):
+        certificates = self._load()
+        self.assertGreaterEqual(len(certificates), 1)
+        for certificate in certificates:
+            self.assertRegex(certificate.fingerprint, r"^[0-9A-F]{64}$")
+
+    def test_fingerprints_are_unique(self):
+        certificates = self._load()
+        fingerprints = [c.fingerprint for c in certificates]
+        self.assertEqual(len(fingerprints), len(set(fingerprints)))
+
+    def test_every_certificate_has_a_known_role(self):
+        for certificate in self._load():
+            self.assertIn(certificate.role, nuget.KNOWN_CERTIFICATE_ROLES)
+
+    def test_at_least_one_author_and_one_repository_certificate(self):
+        # SkiaSharp packages are dual-signed (Microsoft author signature +
+        # NuGet.org repository signature); `dotnet nuget verify --all`
+        # needs a trusted fingerprint of each role or it fails on whichever
+        # signature has no match. This is a property of the anchor
+        # packages, not a fixed count, so adding/rotating certificates of
+        # either role never breaks this test.
+        roles = {certificate.role for certificate in self._load()}
+        self.assertIn("author", roles)
+        self.assertIn("repository", roles)
+
+    def test_load_fingerprints_returns_every_certificate(self):
+        certificates = self._load()
+        fingerprints = nuget.load_fingerprints(
+            Path(__file__).resolve().parent.parent / "trusted-signing-certificates.json"
+        )
+        self.assertEqual(set(fingerprints), {c.fingerprint for c in certificates})
+
+
+class LoadCertificatesValidationTests(unittest.TestCase):
+    """Exercises load_certificates()'s structural validation against small
+    synthetic fixture files, independent of the real reviewed list, so
+    rotating real certificates never has to touch these."""
+
+    def _write(self, tmp_path: Path, certificates: list[dict]) -> Path:
+        import json
+
+        path = tmp_path / "trusted-signing-certificates.json"
+        path.write_text(json.dumps({"hashAlgorithm": "SHA256", "certificates": certificates}), encoding="utf-8")
+        return path
+
+    def test_accepts_additive_rotation_with_three_generations(self):
+        # A third, newly added fingerprint alongside two older ones for the
+        # same role must load cleanly: rotation is additive, never a swap.
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [
+                    {"fingerprint": "A" * 64, "role": "repository", "subject": "NuGet.org", "description": "gen 1", "validFrom": None, "validUntil": "2022-01-01"},
+                    {"fingerprint": "B" * 64, "role": "repository", "subject": "NuGet.org", "description": "gen 2", "validFrom": "2022-01-01", "validUntil": "2024-01-01"},
+                    {"fingerprint": "C" * 64, "role": "repository", "subject": "NuGet.org", "description": "gen 3", "validFrom": "2024-01-01", "validUntil": None},
+                ],
+            )
+            certificates = nuget.load_certificates(path)
+            self.assertEqual(len(certificates), 3)
+            self.assertEqual(
+                {c.fingerprint for c in certificates}, {"A" * 64, "B" * 64, "C" * 64}
+            )
+
+    def test_rejects_duplicate_fingerprint(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [
+                    {"fingerprint": "A" * 64, "role": "author", "subject": "x", "description": "d", "validFrom": None, "validUntil": None},
+                    {"fingerprint": "A" * 64, "role": "repository", "subject": "y", "description": "d", "validFrom": None, "validUntil": None},
+                ],
+            )
+            with self.assertRaisesRegex(nuget.NuGetError, "duplicate"):
+                nuget.load_certificates(path)
+
+    def test_rejects_unknown_role(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [{"fingerprint": "A" * 64, "role": "timestamp", "subject": "x", "description": "d", "validFrom": None, "validUntil": None}],
+            )
+            with self.assertRaisesRegex(nuget.NuGetError, "unknown role"):
+                nuget.load_certificates(path)
+
+    def test_rejects_malformed_fingerprint(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [{"fingerprint": "not-hex", "role": "author", "subject": "x", "description": "d", "validFrom": None, "validUntil": None}],
+            )
+            with self.assertRaises(nuget.NuGetError):
+                nuget.load_certificates(path)
+
+    def test_rejects_malformed_date(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [{"fingerprint": "A" * 64, "role": "author", "subject": "x", "description": "d", "validFrom": None, "validUntil": "not-a-date"}],
+            )
+            with self.assertRaises(nuget.NuGetError):
+                nuget.load_certificates(path)
+
+    def test_rejects_empty_certificate_list(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(Path(tmp), [])
+            with self.assertRaises(nuget.NuGetError):
+                nuget.load_certificates(path)
+
+    def test_accepts_missing_optional_dates(self):
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = self._write(
+                Path(tmp),
+                [{"fingerprint": "A" * 64, "role": "author", "subject": "x", "description": "d"}],
+            )
+            certificates = nuget.load_certificates(path)
+            self.assertIsNone(certificates[0].valid_from)
+            self.assertIsNone(certificates[0].valid_until)
 
 
 if __name__ == "__main__":

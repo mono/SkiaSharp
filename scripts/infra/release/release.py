@@ -110,6 +110,19 @@ def cmd_prepare_apply(args: argparse.Namespace) -> int:
     return 0
 
 
+def _dotnet_command(repo_root: Path) -> tuple[str, ...]:
+    """Prefer this repository's pinned Arcade dotnet wrapper over a bare
+    ``dotnet`` on PATH, matching how signature verification was live-
+    validated (``./eng/common/dotnet.sh nuget verify --all``). Falls back
+    to PATH only when the checkout has no ``eng/common`` wrapper script."""
+
+    script_name = "dotnet.cmd" if sys.platform.startswith("win") else "dotnet.sh"
+    script = repo_root / "eng" / "common" / script_name
+    if script.is_file():
+        return (str(script),)
+    return ("dotnet",)
+
+
 def cmd_finish_plan(args: argparse.Namespace) -> int:
     repo = _repo(args.repo)
     package_dir = Path(__file__).resolve().parent
@@ -117,7 +130,9 @@ def cmd_finish_plan(args: argparse.Namespace) -> int:
     fingerprints = nuget.load_fingerprints(package_dir / "trusted-signing-certificates.json")
     nuget_client = nuget.HttpNuGetClient()
     github = gh.GhCliGitHubClient()
-    signature_verifier = nuget.DotNetSignatureVerifier(runner=common.DEFAULT_RUNNER)
+    signature_verifier = nuget.DotNetSignatureVerifier(
+        runner=common.DEFAULT_RUNNER, dotnet_command=_dotnet_command(repo.root)
+    )
     plan = finish.build_finish_plan(
         requested_version=args.version,
         nuget_client=nuget_client,
