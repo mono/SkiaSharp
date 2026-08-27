@@ -9,16 +9,33 @@
     release.py finish publish --plan <file>
     release.py finish closeout
     release.py inspect --release-branch <release/X.Y.Z...>
+    release.py render-plan --plan <file> --output <file>
 
 Every "plan" subcommand is read-only. Every "apply"/"create-draft"/"publish"/
 "closeout" subcommand takes an already schema-validated, digest-stamped plan
 file and revalidates live state before writing; none of them interpret plan
 fields as commands.
+
+Every subcommand accepts an optional ``--output <file>`` in addition to its
+existing stdout JSON, so a thin workflow step can read an exact file instead
+of scraping stdout. ``prepare plan``/``finish plan`` always write their
+plan artifact to ``--output`` (required for later "apply"/"create-draft"/
+etc. steps to consume); for every other subcommand ``--output`` is optional
+and, when given, receives the same JSON object that is printed to stdout.
+
+``render-plan`` is the deterministic summary surface for thin workflows: it
+reads an already-validated prepare or finish plan file and projects a small,
+flat, schema-versioned set of fields a workflow can map directly to job
+outputs -- the trusted tooling SHA, the normalized release identity
+(concurrency key, never including the CI build revision), the exact release
+branch/version, and the plan's own canonical digest. See
+``schemas/plan-summary.schema.json``.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -30,12 +47,18 @@ import release_github as gh
 import release_milestones as milestones
 import release_nuget as nuget
 import release_prepare as prepare
+import release_summary as summary
 from release_git import GitRepository
 
 
 def _repo(root: Path | None) -> GitRepository:
     start = root or Path.cwd()
     return GitRepository.discover(start)
+
+
+def _output_path(args: argparse.Namespace) -> Path | None:
+    value = getattr(args, "output", None)
+    return Path(value) if value else None
 
 
 def cmd_prepare_plan(args: argparse.Namespace) -> int:
@@ -61,7 +84,7 @@ def cmd_prepare_apply(args: argparse.Namespace) -> int:
     skia_repo = GitRepository(root=(repo.root / prepare.SKIA_SUBMODULE_PATH))
     github = gh.GhCliGitHubClient()
     report = prepare.apply_prepare_plan(plan, repo=repo, skia_repo=skia_repo, github=github)
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
     return 0
 
 
@@ -94,7 +117,7 @@ def cmd_finish_create_draft(args: argparse.Namespace) -> int:
     repo = _repo(args.repo)
     github = gh.GhCliGitHubClient()
     report = finish.create_draft(plan, repo=repo, github=github)
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
     return 0
 
 
@@ -102,7 +125,7 @@ def cmd_finish_plan_publication(args: argparse.Namespace) -> int:
     plan = common.read_plan(Path(args.plan), schema_name=finish.FINISH_SCHEMA)
     github = gh.GhCliGitHubClient()
     report = finish.plan_publication(plan, github=github)
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
     return 0
 
 
@@ -111,7 +134,7 @@ def cmd_finish_publish(args: argparse.Namespace) -> int:
     github = gh.GhCliGitHubClient()
     publication = finish.plan_publication(plan, github=github)
     report = finish.publish(plan, publication, github=github)
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
     return 0
 
 
@@ -124,7 +147,7 @@ def cmd_finish_closeout(args: argparse.Namespace) -> int:
         report = finish.plan_closeout(milestone_client=client, tags=tags)
     else:
         report = finish.apply_closeout(milestone_client=client, tags=tags)
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
     return 0
 
 
@@ -152,7 +175,38 @@ def cmd_inspect(args: argparse.Namespace) -> int:
                 "url": existing.url,
             }
         )
-    common.print_json(report)
+    common.emit(report, output=_output_path(args))
+    return 0
+
+
+_SUMMARY_PLAN_SCHEMAS = {"prepare": prepare.PREPARE_SCHEMA, "finish": finish.FINISH_SCHEMA}
+
+
+def cmd_render_plan(args: argparse.Namespace) -> int:
+    """Render the deterministic, flat plan-summary surface for a plan file.
+
+    Reads and fully schema-validates and digest-verifies the plan (detecting
+    whether it is a prepare or finish plan from its own ``operation`` field)
+    before projecting any field, so a tampered plan file is rejected the
+    same way ``apply``/``create-draft``/etc. would reject it.
+    """
+
+    plan_path = Path(args.plan)
+    try:
+        peeked = json.loads(plan_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise common.ValidationError(f"could not read plan file {plan_path}: {exc}") from exc
+    operation = peeked.get("operation") if isinstance(peeked, dict) else None
+    schema_name = _SUMMARY_PLAN_SCHEMAS.get(operation)
+    if schema_name is None:
+        raise common.ValidationError(
+            f"{plan_path} has unknown or missing 'operation' {operation!r}; "
+            f"expected one of {sorted(_SUMMARY_PLAN_SCHEMAS)}"
+        )
+    plan = common.read_plan(plan_path, schema_name=schema_name)
+    rendered = summary.summarize_plan(plan)
+    common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
+    common.emit(rendered, output=_output_path(args))
     return 0
 
 
@@ -276,6 +330,7 @@ def create_parser() -> argparse.ArgumentParser:
 
     apply_parser = prepare_sub.add_parser("apply")
     apply_parser.add_argument("--plan", required=True)
+    apply_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     apply_parser.set_defaults(func=cmd_prepare_apply)
 
     finish_parser = subparsers.add_parser("finish")
@@ -290,24 +345,36 @@ def create_parser() -> argparse.ArgumentParser:
 
     create_draft_parser = finish_sub.add_parser("create-draft")
     create_draft_parser.add_argument("--plan", required=True)
+    create_draft_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     create_draft_parser.set_defaults(func=cmd_finish_create_draft)
 
     plan_publication_parser = finish_sub.add_parser("plan-publication")
     plan_publication_parser.add_argument("--plan", required=True)
+    plan_publication_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     plan_publication_parser.set_defaults(func=cmd_finish_plan_publication)
 
     publish_parser = finish_sub.add_parser("publish")
     publish_parser.add_argument("--plan", required=True)
+    publish_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     publish_parser.set_defaults(func=cmd_finish_publish)
 
     closeout_parser = finish_sub.add_parser("closeout")
     closeout_parser.add_argument("--dry-run", action="store_true")
+    closeout_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     closeout_parser.set_defaults(func=cmd_finish_closeout)
 
     inspect_parser = subparsers.add_parser("inspect")
     inspect_parser.add_argument("--release-branch", required=True)
     inspect_parser.add_argument("--version", default=None)
+    inspect_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     inspect_parser.set_defaults(func=cmd_inspect)
+
+    render_plan_parser = subparsers.add_parser(
+        "render-plan", help="render a deterministic, flat plan summary for thin workflow consumption"
+    )
+    render_plan_parser.add_argument("--plan", required=True)
+    render_plan_parser.add_argument("--output", default=None, help="also write the summary JSON to this file")
+    render_plan_parser.set_defaults(func=cmd_render_plan)
 
     return parser
 
