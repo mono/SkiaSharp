@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/scripts/infra/release/schemas/prepare-plan.schema.json",
+  "title": "Release Prepare plan",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "operation",
+    "generatedAt",
+    "toolingSha",
+    "input",
+    "release",
+    "base",
+    "maintenanceBranch",
+    "skia",
+    "skiaSharpRemoteState",
+    "versions",
+    "operations",
+    "stableBump",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "const": "prepare" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "toolingSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "input": {
+      "type": "object",
+      "required": ["integrationTarget", "requestedVersion"],
+      "properties": {
+        "integrationTarget": { "type": "string", "pattern": "^(main|release/\\d+\\.\\d+\\.x)$" },
+        "requestedVersion": { "type": ["string", "null"] }
+      }
+    },
+    "release": {
+      "type": "object",
+      "required": [
+        "version", "numeric", "label", "releaseType", "releaseBranch",
+        "integrationBranch", "isHotfix", "stable"
+      ],
+      "properties": {
+        "version": { "type": "string" },
+        "numeric": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(\\.\\d+)?$" },
+        "label": { "type": "string" },
+        "releaseType": { "type": "string" },
+        "releaseBranch": { "type": "string", "pattern": "^release/" },
+        "integrationBranch": { "type": "string", "pattern": "^release/\\d+\\.\\d+\\.x$" },
+        "isHotfix": { "type": "boolean" },
+        "stable": { "type": "boolean" }
+      }
+    },
+    "base": {
+      "type": "object",
+      "required": ["ref", "sha"],
+      "properties": {
+        "ref": { "type": "string" },
+        "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "maintenanceBranch": {
+      "type": "object",
+      "required": ["name", "exists", "action", "baseSha"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^release/\\d+\\.\\d+\\.x$" },
+        "exists": { "type": "boolean" },
+        "action": { "enum": ["none", "create"] },
+        "baseSha": { "type": ["string", "null"], "pattern": "^[0-9a-f]{40}$|^$" }
+      }
+    },
+    "skia": {
+      "type": "object",
+      "required": ["sha", "releaseBranch", "remoteState"],
+      "properties": {
+        "sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "releaseBranch": { "type": "string" },
+        "remoteState": { "enum": ["matching", "missing", "conflict"] }
+      }
+    },
+    "skiaSharpRemoteState": { "enum": ["matching", "missing"] },
+    "versions": {
+      "type": "object",
+      "required": ["skiaSharp", "requiresPackageBump"],
+      "properties": {
+        "skiaSharp": { "type": "string" },
+        "requiresPackageBump": { "type": "boolean" }
+      }
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "kind", "status"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "status": { "enum": ["done", "pending", "blocked", "skipped"] },
+          "detail": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "stableBump": {
+      "type": ["object", "null"],
+      "properties": {
+        "integrationBranch": { "type": "string" },
+        "bumpBranch": { "type": "string" },
+        "skiaSharpVersion": { "type": "string" },
+        "harfBuzzSharpVersion": { "type": "string" },
+        "status": { "enum": ["done", "pending", "awaiting-user"] },
+        "pullRequestUrl": { "type": ["string", "null"] },
+        "title": { "type": "string" }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
