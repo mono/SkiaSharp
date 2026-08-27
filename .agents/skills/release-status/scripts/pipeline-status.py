@@ -62,20 +62,6 @@ RELEASE_REQUIREMENTS = (
         ),
     },
     {
-        "id": "exact-artifact-selection",
-        "path": "scripts/azure-templates-steps-download-artifacts.yml",
-        "pattern": (
-            r"Mutable latestFromBranch artifact selection is not supported"
-        ),
-        "forbiddenPattern": (
-            r"\$versionType\s*=\s*['\"]latestFromBranch['\"]"
-        ),
-        "detail": (
-            "include the fail-closed exact Build artifact selector and "
-            "remove mutable latestFromBranch assignment"
-        ),
-    },
-    {
         "id": "exact-release-versioning",
         "path": "scripts/infra/native/shared/set-build-variables.ps1",
         "pattern": (

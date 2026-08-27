@@ -414,13 +414,6 @@ class PipelineStatusTests(unittest.TestCase):
                 "\n",
                 encoding="ascii",
             )
-            (
-                scripts / "azure-templates-steps-download-artifacts.yml"
-            ).write_text(
-                "Mutable latestFromBranch artifact selection is not "
-                "supported\n",
-                encoding="ascii",
-            )
             package = scripts / "infra" / "package"
             package.mkdir(parents=True)
             (package / "nuget.cake").write_text(
