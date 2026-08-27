@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import io
-import re
 import sys
 import unittest
 import zipfile
@@ -601,6 +600,70 @@ class VerifyPublicReceiptTests(unittest.TestCase):
                 )
 
 
+class VersionsTxtFamilyExtractionTests(unittest.TestCase):
+    """Unit tests for the authoritative parser, independent of the real
+    scripts/VERSIONS.txt so family/section-boundary edge cases are exact."""
+
+    def test_groups_packages_under_their_family_header(self):
+        text = (
+            "# native sources\n"
+            "harfbuzz                                        release     14.2.1\n"
+            "\n"
+            "# nuget versions\n"
+            "# SkiaSharp\n"
+            "SkiaSharp                                       nuget       4.152.0\n"
+            "SkiaSharp.Views                                 nuget       4.152.0\n"
+            "# HarfBuzzSharp\n"
+            "HarfBuzzSharp                                   nuget       14.2.1.200\n"
+        )
+        families = nuget.extract_versions_txt_families(text)
+        self.assertEqual(families["SkiaSharp"], ["SkiaSharp", "SkiaSharp.Views"])
+        self.assertEqual(families["HarfBuzzSharp"], ["HarfBuzzSharp"])
+
+    def test_ignores_non_nuget_lines_and_comments(self):
+        text = (
+            "# nuget versions\n"
+            "# SkiaSharp\n"
+            "# a comment about SkiaSharp\n"
+            "SkiaSharp               assembly    4.152.0.0\n"
+            "SkiaSharp                                       nuget       4.152.0\n"
+        )
+        families = nuget.extract_versions_txt_families(text)
+        self.assertEqual(families["SkiaSharp"], ["SkiaSharp"])
+
+    def test_rejects_missing_nuget_versions_section(self):
+        with self.assertRaisesRegex(nuget.NuGetError, "nuget versions"):
+            nuget.extract_versions_txt_families("# native sources\nfoo release 1\n")
+
+    def test_rejects_package_line_before_any_family_header(self):
+        text = "# nuget versions\nSkiaSharp nuget 4.152.0\n# SkiaSharp\n"
+        with self.assertRaisesRegex(nuget.NuGetError, "before any"):
+            nuget.extract_versions_txt_families(text)
+
+    def test_rejects_section_with_no_family_headers(self):
+        text = "# nuget versions\nnot a package line\n"
+        with self.assertRaises(nuget.NuGetError):
+            nuget.extract_versions_txt_families(text)
+
+    def test_matches_the_real_versions_txt_lines_92_to_133(self):
+        versions_text = (REPO_ROOT / "scripts" / "VERSIONS.txt").read_text(encoding="utf-8")
+        lines = versions_text.splitlines()
+        # The "# nuget versions" section (header on line 90, 1-based) and its
+        # "# SkiaSharp"/"# HarfBuzzSharp" sub-headers (lines 91 and 123) are
+        # what make the block on lines 92-133 parseable at all; those 42
+        # lines currently enumerate exactly 31 SkiaSharp-family and 10
+        # HarfBuzzSharp-family public NuGet IDs (41 package lines total, plus
+        # the "# HarfBuzzSharp" sub-header itself on line 123).
+        header_index = next(i for i, line in enumerate(lines) if line.strip() == "# nuget versions")
+        self.assertEqual(header_index, 89)  # line 90, 1-based
+        block = "\n".join(lines[header_index:133])
+        families = nuget.extract_versions_txt_families(block)
+        full_file_families = nuget.extract_versions_txt_families(versions_text)
+        self.assertEqual(families, full_file_families)
+        self.assertEqual(len(families["SkiaSharp"]), 31)
+        self.assertEqual(len(families["HarfBuzzSharp"]), 10)
+
+
 class PublicPackagesManifestTests(unittest.TestCase):
     def test_public_packages_manifest_matches_versions_txt(self):
         import json
@@ -608,14 +671,17 @@ class PublicPackagesManifestTests(unittest.TestCase):
         manifest_path = Path(__file__).resolve().parent.parent / "public-packages.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         versions_text = (REPO_ROOT / "scripts" / "VERSIONS.txt").read_text(encoding="utf-8")
-        found = set(
-            re.findall(r"^(SkiaSharp\S*|HarfBuzzSharp\S*)\s+nuget\s+\S+\s*$", versions_text, re.MULTILINE)
-        )
-        declared = set(manifest["families"]["SkiaSharp"]) | set(manifest["families"]["HarfBuzzSharp"])
-        self.assertEqual(
-            found, declared,
-            "public-packages.json is out of sync with the nuget lines in scripts/VERSIONS.txt",
-        )
+        # Authoritative source: the "# SkiaSharp"/"# HarfBuzzSharp" families
+        # declared in scripts/VERSIONS.txt's "# nuget versions" section, not a
+        # `<PackageId>` inference from project files.
+        expected = nuget.extract_versions_txt_families(versions_text)
+        for family in ("SkiaSharp", "HarfBuzzSharp"):
+            self.assertEqual(
+                set(manifest["families"][family]),
+                set(expected[family]),
+                f"public-packages.json[{family!r}] is out of sync with "
+                "scripts/VERSIONS.txt's '# nuget versions' section",
+            )
 
     def test_anchor_packages_are_declared_in_families(self):
         import json

@@ -1,5 +1,5 @@
 {
-  "$schemaComment": "Required public package IDs on NuGet.org, grouped by version family. Kept synchronized with the 'nuget' lines in scripts/VERSIONS.txt by tests/test_release_nuget.py::test_public_packages_manifest_matches_versions_txt so a newly introduced packable project cannot be silently omitted from the finish public-receipt gate.",
+  "$schemaComment": "Required public package IDs on NuGet.org, grouped by version family. Authoritative source: scripts/VERSIONS.txt's '# nuget versions' section, whose '# SkiaSharp'/'# HarfBuzzSharp' sub-headers (not a bare <PackageId> inference) group each package line into its family. Kept synchronized by tests/test_release_nuget.py::PublicPackagesManifestTests via release_nuget.extract_versions_txt_families() so a newly introduced packable project cannot be silently omitted from the finish public-receipt gate.",
   "anchorPackages": [
     "HarfBuzzSharp",
     "SkiaSharp",
