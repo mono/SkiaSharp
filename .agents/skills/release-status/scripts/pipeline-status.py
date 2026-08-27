@@ -40,13 +40,13 @@ EXACT_RELEASE_BRANCH_RE = re.compile(
 )
 MAINTENANCE_BRANCH_RE = re.compile(r"^release/\d+\.\d+\.x$")
 
-MIGRATION_REQUIREMENTS = (
+RELEASE_REQUIREMENTS = (
     {
         "id": "combined-build",
         "path": "scripts/azure-pipelines-package.yml",
         "pattern": r"buildPipelineType:\s*['\"]?build['\"]?",
         "detail": (
-            "backport the combined dnceng Build role used by pipeline 1642"
+            "include the combined dnceng Build role used by pipeline 1642"
         ),
     },
     {
@@ -57,7 +57,7 @@ MIGRATION_REQUIREMENTS = (
             r"\\dotnet\\skiasharp\\skiasharp-package['\"]?"
         ),
         "detail": (
-            "backport the folder-qualified Build resource consumed by "
+            "include the folder-qualified Build resource consumed by "
             "Tests pipeline 1630"
         ),
     },
@@ -71,7 +71,7 @@ MIGRATION_REQUIREMENTS = (
             r"\$versionType\s*=\s*['\"]latestFromBranch['\"]"
         ),
         "detail": (
-            "backport the fail-closed exact Build artifact selector and "
+            "include the fail-closed exact Build artifact selector and "
             "remove mutable latestFromBranch assignment"
         ),
     },
@@ -83,7 +83,7 @@ MIGRATION_REQUIREMENTS = (
             r"\$finalVersionKind"
         ),
         "detail": (
-            "backport exact stable version selection for internal release/* "
+            "include exact stable version selection for internal release/* "
             "builds"
         ),
     },
@@ -104,7 +104,7 @@ MIGRATION_REQUIREMENTS = (
             r"\s*\(\s*['\"]pdbs['\"]"
         ),
         "detail": (
-            "backport canonical ROOT_OUTPUT_PATH to avoid native Cake global "
+            "use canonical ROOT_OUTPUT_PATH to avoid native Cake global "
             "collisions while preserving --outputPath and all derived package "
             "directories"
         ),
@@ -124,7 +124,7 @@ MIGRATION_REQUIREMENTS = (
             r"versions\.Add\s*\(\s*['\"]commit['\"]"
         ),
         "detail": (
-            "backport Cake Arcade assembly that stages the single prepared "
+            "include Cake Arcade assembly that stages the single prepared "
             "PR-or-branch transport family without commit fallback/filtering"
         ),
     },
@@ -142,7 +142,7 @@ MIGRATION_REQUIREMENTS = (
             r"0\.0\.0-commit|GIT_SHA"
         ),
         "detail": (
-            "backport exactly one transport wrapper family: PR for PR builds, "
+            "emit exactly one transport wrapper family: PR for PR builds, "
             "branch otherwise, with no commit alias generation"
         ),
     },
@@ -164,7 +164,7 @@ MIGRATION_REQUIREMENTS = (
         ),
         "forbiddenPattern": r"System\.IO\.Path",
         "detail": (
-            "backport Cake-native loose PdbArtifacts assembly: preserve "
+            "include Cake-native loose PdbArtifacts assembly: preserve "
             "explicit symbol ownership and package/TFM/RID paths, exclude "
             "ref/**, prove containment without System.IO.Path, and emit "
             ".empty only when no PDB exists"
@@ -179,7 +179,7 @@ MIGRATION_REQUIREMENTS = (
             r"escaping PDB path wrote outside"
         ),
         "detail": (
-            "backport the public artifact contract test that requires an "
+            "include the public artifact contract test that requires an "
             "escaping PDB archive entry to fail without writing outside its "
             "package root"
         ),
@@ -189,7 +189,7 @@ MIGRATION_REQUIREMENTS = (
         "path": "scripts/infra/package/tests/AssembleArcadeAssets.Tests.ps1",
         "pattern": r"\$global:LASTEXITCODE\s*=\s*0",
         "detail": (
-            "backport reset of global LASTEXITCODE after the verified "
+            "reset global LASTEXITCODE after the verified "
             "expected traversal rejection so public validation exits cleanly"
         ),
     },
@@ -202,7 +202,7 @@ MIGRATION_REQUIREMENTS = (
             r"IsDependentOn\s*\(\s*['\"]nuget-assemble-arcade-assets['\"]\s*\))"
         ),
         "detail": (
-            "backport the top-level nuget dependency on Cake "
+            "include the top-level nuget dependency on Cake "
             "nuget-assemble-arcade-assets"
         ),
     },
@@ -219,7 +219,7 @@ MIGRATION_REQUIREMENTS = (
             r"AssembleArcadeAssets\.Tests\.ps1|BuildPipeline\.Tests\.ps1"
         ),
         "detail": (
-            "backport tool-free Prepare with focused build-variable/API/cache "
+            "use tool-free Prepare with focused build-variable/API/cache "
             "validation and no YAML string-linter or Cake tool restore"
         ),
     },
@@ -232,7 +232,7 @@ MIGRATION_REQUIREMENTS = (
             r"publishArtifacts:"
         ),
         "detail": (
-            "backport Package post-build Cake behavior validation before "
+            "run Package post-build Cake behavior validation before "
             "publishing public artifact views"
         ),
     },
@@ -254,7 +254,7 @@ MIGRATION_REQUIREMENTS = (
             r"Re-organize package artifacts"
         ),
         "detail": (
-            "backport one uncached aggregate public Package job that emits "
+            "use one uncached aggregate public Package job that emits "
             "nuget, nuget_special, arcade_shipping, arcade_nonshipping, and "
             "non-production PdbArtifacts directly from Cake outputs"
         ),
@@ -276,7 +276,7 @@ MIGRATION_REQUIREMENTS = (
             r"assemble-arcade-assets\.ps1"
         ),
         "detail": (
-            "backport signed-only arcade_shipping_signed plus separate "
+            "use signed-only arcade_shipping_signed plus separate "
             "publish_assets/BAR registration using arcade_nonshipping"
         ),
     },
@@ -299,7 +299,7 @@ MIGRATION_REQUIREMENTS = (
         ),
         "forbiddenPattern": r"GIT_SHA|0\.0\.0-commit|commit\.",
         "detail": (
-            "backport PR-or-branch-only transport lookup with no commit alias "
+            "use PR-or-branch-only transport lookup with no commit alias "
             "or fallback"
         ),
     },
@@ -313,7 +313,7 @@ MIGRATION_REQUIREMENTS = (
                 r"<projectUrl>.+?</projectUrl>"
             ),
             "detail": (
-                f"backport Microsoft package metadata required by Arcade "
+                f"include Microsoft package metadata required by Arcade "
                 f"NuGet validation for _{package}"
             ),
         }
@@ -366,7 +366,7 @@ def parse_default_channel_ids(value: str) -> list[int]:
     return [int(item) for item in re.findall(r"\d+", value)]
 
 
-def migration_requirement_satisfied(
+def release_requirement_satisfied(
     content: str | None,
     requirement: dict,
 ) -> bool:
@@ -742,7 +742,7 @@ class GitRepository:
     def release_prerequisites(self, commit: str) -> dict:
         cache: dict[str, str | None] = {}
         missing = []
-        for requirement in MIGRATION_REQUIREMENTS:
+        for requirement in RELEASE_REQUIREMENTS:
             path = requirement["path"]
             if path not in cache:
                 result = run(
@@ -756,7 +756,7 @@ class GitRepository:
                     else None
                 )
             content = cache[path]
-            if not migration_requirement_satisfied(
+            if not release_requirement_satisfied(
                 content,
                 requirement,
             ):
@@ -1221,11 +1221,11 @@ def build_report(
 ) -> dict:
     branch, commit = repo.resolve_target(target)
     warnings: list[str] = []
-    migration = repo.release_prerequisites(commit)
-    if migration["state"] != "ready":
+    prerequisites = repo.release_prerequisites(commit)
+    if prerequisites["state"] != "ready":
         warnings.append(
-            "The target commit does not contain the minimum Arcade release "
-            "backport required for Build 1642 -> Tests 1630 -> BAR"
+            "The target commit does not contain the release tooling required "
+            "for Build 1642 -> Tests 1630 -> BAR"
         )
         return {
             "schemaVersion": 5,
@@ -1233,8 +1233,8 @@ def build_report(
             "branch": branch,
             "commit": commit,
             "state": "blocked",
-            "nextAction": "backport-arcade-release",
-            "migration": migration,
+            "nextAction": "update-release-tooling",
+            "prerequisites": prerequisites,
             "buildRun": run_output(
                 ado,
                 PIPELINES[0],
@@ -1331,7 +1331,7 @@ def build_report(
         "commit": commit,
         "state": state,
         "nextAction": next_action,
-        "migration": migration,
+        "prerequisites": prerequisites,
         "buildRun": run_output(
             ado,
             PIPELINES[0],

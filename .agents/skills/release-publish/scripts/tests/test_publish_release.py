@@ -20,7 +20,6 @@ def load(name: str, filename: str):
 
 
 publish = load("publish_release", "release_publish.py")
-push = load("push_release_packages_test", "push-release-packages.py")
 github = load("release_github_test", "release_github.py")
 
 
@@ -103,30 +102,6 @@ class PublishReleaseTests(unittest.TestCase):
                 ],
             ),
             "v4.152.0",
-        )
-
-    def test_azure_request_uses_build_number_as_resource_version(self):
-        request = push.AzurePublish.request_body(
-            30,
-            10,
-            "4.152.0-preview.1.1+4.152.0-preview.1",
-            stable=True,
-            preview=True,
-        )
-        self.assertTrue(request["previewRun"])
-        self.assertEqual(
-            request["resources"]["pipelines"][push.RESOURCE_ALIAS]["version"],
-            "4.152.0-preview.1.1+4.152.0-preview.1",
-        )
-        self.assertEqual(
-            request["templateParameters"],
-            {
-                "selectedResource": push.RESOURCE_ALIAS,
-                "buildRunId": 10,
-                "barBuildId": 30,
-                "pushPackages": True,
-                "pushStable": True,
-            },
         )
 
     def test_generated_log_count_excludes_new_contributors(self):
@@ -272,7 +247,7 @@ class PublishReleaseTests(unittest.TestCase):
 
     def test_status_handoff_rejects_missing_default_channel_mapping(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
-        for channel_ids in ([], [529]):
+        for channel_ids in ([], [3882]):
             with self.subTest(channel_ids=channel_ids):
                 status = self._stable_status(release)
                 status["barBuild"]["defaultChannelIds"] = channel_ids
@@ -358,16 +333,16 @@ class PublishReleaseTests(unittest.TestCase):
         )
         self.assertEqual(handoff["bar"]["id"], 30)
 
-    def test_status_handoff_rejects_unverified_migration_surface(self):
+    def test_status_handoff_rejects_unverified_prerequisites(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")
         status = self._stable_status(release)
-        status["migration"] = {
+        status["prerequisites"] = {
             "state": "missing",
             "missing": [{"id": "combined-build"}],
         }
         with self.assertRaisesRegex(
             publish.PublishError,
-            "migration surface",
+            "tooling prerequisites",
         ):
             publish.validate_status_handoff(
                 status,
@@ -463,7 +438,7 @@ class PublishReleaseTests(unittest.TestCase):
             "branch": release.branch,
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "migration": {"state": "ready", "missing": []},
+            "prerequisites": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": publish.BUILD_DEFINITION_ID,

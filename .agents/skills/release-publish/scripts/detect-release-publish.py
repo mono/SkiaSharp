@@ -19,7 +19,12 @@ def repository_root() -> Path:
     return publish.GitRepository.discover().root
 
 
-def detect(root: Path, target: str) -> dict:
+def detect(
+    root: Path,
+    target: str,
+    *,
+    nuget: publish.NuGet | None = None,
+) -> dict:
     status = publish.status_report(root, target)
     release_branch = status.get("branch") or ""
     release = publish.ReleaseVersion.parse(release_branch)
@@ -59,18 +64,18 @@ def detect(root: Path, target: str) -> dict:
         "--expect-bar-build",
         str(bar_id),
     ]
-    push_command = [
-        sys.executable,
-        ".agents/skills/release-publish/scripts/push-release-packages.py",
-        *common,
-        "--dry-run",
-    ]
     draft_command = [
         sys.executable,
         ".agents/skills/release-publish/scripts/create-release-draft.py",
         *common,
         "--dry-run",
     ]
+    nuget_state = (nuget or publish.NuGet()).check(versions)
+    next_action = (
+        "start-release-draft"
+        if nuget_state["state"] == "ready"
+        else "manual-package-publication"
+    )
     return {
         "schemaVersion": 1,
         "input": target,
@@ -79,7 +84,7 @@ def detect(root: Path, target: str) -> dict:
         "buildRunId": build_id,
         "testsRunId": tests_id,
         "barBuildId": bar_id,
-        "migration": status.get("migration"),
+        "prerequisites": status.get("prerequisites"),
         "defaultChannelIds": bar.get("defaultChannelIds"),
         "barAssets": bar.get("assets"),
         "nonShippingAssets": bar.get("nonShippingAssets"),
@@ -87,9 +92,14 @@ def detect(root: Path, target: str) -> dict:
         "testPackages": versions["test"],
         "publicPackages": versions["public"],
         "warnings": status.get("warnings") or [],
-        "pushAuditCommand": publish.shell_command(push_command),
+        "manualPublication": {
+            "repositoryOwner": "mono",
+            "repositoryName": "SkiaSharp",
+            "commitSha": source_sha,
+        },
+        "nuget": nuget_state,
         "draftAuditCommand": publish.shell_command(draft_command),
-        "nextAction": "audit-package-publication",
+        "nextAction": next_action,
     }
 
 

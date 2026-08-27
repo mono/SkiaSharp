@@ -251,7 +251,7 @@ def release_summary(status: dict, *, status_override: bool) -> dict:
         "nextAction": status.get("nextAction"),
         "statusOverride": status_override,
         "warnings": status.get("warnings") or [],
-        "migration": status.get("migration"),
+        "prerequisites": status.get("prerequisites"),
         "buildRunId": build.get("runId"),
         "testsRunId": tests.get("runId"),
         "barBuildId": bar.get("id"),

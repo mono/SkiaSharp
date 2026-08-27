@@ -170,9 +170,8 @@ require protected identities or services.
 Release BARs use Maestro `.NET Libraries` channel 1648. Release status requires
 the BAR's exact Shipping versions on `dotnet-libraries` and exact NonShipping
 transport versions on `dotnet-libraries-transport`. It uses BAR locations when
-present and direct exact-version checks otherwise. `General Testing` is
-validation evidence only; transport is an asset class rather than a separate
-Maestro channel.
+present and direct exact-version checks otherwise. Transport is an asset class
+rather than a separate Maestro channel.
 
 `eng/Signing.props` defines product signing. Normal and explicit symbol packages
 are signed together; dSYM DWARF files are not signing targets. PDBs are extracted

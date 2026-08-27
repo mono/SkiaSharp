@@ -25,8 +25,8 @@ This skill is **Step 2 of 5**:
 - Resolve an exact release branch to its current remote tip; preserve a supplied
   commit exactly. `release/X.Y.x` is an integration branch: return to
   release-branch and cut an exact release branch before status tracking.
-- Verify the target commit contains the minimum behavioral Arcade backport.
-  If it does not, report every entry in `migration.missing[]` and stop.
+- Verify the target commit contains the required release tooling.
+  If it does not, report every entry in `prerequisites.missing[]` and stop.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
@@ -60,14 +60,14 @@ transport feeds. Stable assets are exact
 
 | `nextAction` | Response |
 |--------------|----------|
-| `backport-arcade-release` | Show every `migration.missing[]` prerequisite and stop before querying/selecting builds. |
+| `update-release-tooling` | Show every `prerequisites.missing[]` entry and stop before querying/selecting builds. |
 | `wait-for-build` | Report that the exact combined Build has not started or is running. |
 | `retry-build` | Show the authoritative failed/canceled Build run. |
 | `retry-bar-check` | Report the exact BAR registration or identity failure. |
 | `wait-for-tests-trigger` | Build passed; connected Tests have not started. |
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
-| `configure-default-channels` | The exact Build is not mapped to `.NET Libraries` channel 1648; configure the target release branch before retrying. `General Testing` 529 is test evidence only. |
+| `configure-default-channels` | The exact Build is not mapped to `.NET Libraries` channel 1648; configure the target release branch before retrying. |
 | `configure-feed-routing` | The BAR's exact Shipping or NonShipping assets are missing from their approved feed or present on the opposite feed. |
 | `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 

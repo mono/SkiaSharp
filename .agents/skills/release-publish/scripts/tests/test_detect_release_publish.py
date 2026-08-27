@@ -84,12 +84,23 @@ def bar_build(
 
 
 class DetectReleasePublishTests(unittest.TestCase):
+    @staticmethod
+    def nuget(state="missing"):
+        return mock.Mock(
+            check=mock.Mock(
+                return_value={
+                    "state": state,
+                    "packages": {},
+                }
+            )
+        )
+
     def test_detector_emits_pinned_audit_command(self):
         status = {
             "branch": "release/4.152.0-preview.1",
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "migration": {"state": "ready", "missing": []},
+            "prerequisites": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": detector.publish.BUILD_DEFINITION_ID,
@@ -123,13 +134,14 @@ class DetectReleasePublishTests(unittest.TestCase):
             result = detector.detect(
                 Path.cwd(),
                 "release/4.152.0-preview.1",
+                nuget=self.nuget(),
             )
         self.assertEqual(result["sourceSha"], "a" * 40)
         self.assertEqual(result["buildRunId"], 10)
         self.assertEqual(result["testsRunId"], 20)
         self.assertEqual(result["barBuildId"], 30)
         self.assertEqual(result["defaultChannelIds"], [1648])
-        self.assertEqual(result["migration"]["state"], "ready")
+        self.assertEqual(result["prerequisites"]["state"], "ready")
         self.assertEqual(
             result["barAssets"]["SkiaSharp"]["locations"],
             [
@@ -137,15 +149,27 @@ class DetectReleasePublishTests(unittest.TestCase):
                 "_packaging/dotnet-libraries/nuget/v3/index.json"
             ],
         )
-        self.assertIn("--expect-build-run 10", result["pushAuditCommand"])
-        self.assertIn("--expect-tests-run 20", result["pushAuditCommand"])
-        self.assertIn("--expect-bar-build 30", result["pushAuditCommand"])
-        self.assertTrue(result["pushAuditCommand"].endswith("--dry-run"))
+        self.assertEqual(
+            result["manualPublication"],
+            {
+                "repositoryOwner": "mono",
+                "repositoryName": "SkiaSharp",
+                "commitSha": "a" * 40,
+            },
+        )
+        self.assertEqual(result["nextAction"], "manual-package-publication")
         self.assertIn(
             "create-release-draft.py",
             result["draftAuditCommand"],
         )
+        self.assertIn(
+            "--expect-source-sha " + "a" * 40,
+            result["draftAuditCommand"],
+        )
+        self.assertIn("--expect-build-run 10", result["draftAuditCommand"])
+        self.assertIn("--expect-tests-run 20", result["draftAuditCommand"])
         self.assertIn("--expect-bar-build 30", result["draftAuditCommand"])
+        self.assertTrue(result["draftAuditCommand"].endswith("--dry-run"))
 
     def test_detector_requires_ready_status(self):
         status = {
@@ -171,7 +195,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             "branch": "release/4.152.0",
             "commit": source_sha,
             "nextAction": "start-release-testing",
-            "migration": {"state": "ready", "missing": []},
+            "prerequisites": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": detector.publish.BUILD_DEFINITION_ID,
@@ -207,16 +231,21 @@ class DetectReleasePublishTests(unittest.TestCase):
             "status_report",
             return_value=status,
         ):
-            result = detector.detect(Path.cwd(), source_sha)
+            result = detector.detect(
+                Path.cwd(),
+                source_sha,
+                nuget=self.nuget("ready"),
+            )
         self.assertEqual(result["input"], source_sha)
         self.assertEqual(result["releaseBranch"], "release/4.152.0")
+        self.assertEqual(result["nextAction"], "start-release-draft")
 
     def test_detector_does_not_select_release_by_channel_name(self):
         status = {
             "branch": "release/4.152.0-preview.1",
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "migration": {"state": "ready", "missing": []},
+            "prerequisites": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": detector.publish.BUILD_DEFINITION_ID,
@@ -250,6 +279,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             result = detector.detect(
                 Path.cwd(),
                 "release/4.152.0-preview.1",
+                nuget=self.nuget(),
             )
         self.assertEqual(result["barBuildId"], 30)
 
@@ -258,7 +288,7 @@ class DetectReleasePublishTests(unittest.TestCase):
             "branch": "release/4.152.0-preview.1",
             "commit": "a" * 40,
             "nextAction": "start-release-testing",
-            "migration": {"state": "ready", "missing": []},
+            "prerequisites": {"state": "ready", "missing": []},
             "buildRun": {
                 "runId": 10,
                 "pipelineId": detector.publish.BUILD_DEFINITION_ID,
@@ -296,7 +326,11 @@ class DetectReleasePublishTests(unittest.TestCase):
                 "no BAR location or exact dotnet-libraries package proof",
             ),
         ):
-            detector.detect(Path.cwd(), "release/4.152.0-preview.1")
+            detector.detect(
+                Path.cwd(),
+                "release/4.152.0-preview.1",
+                nuget=self.nuget(),
+            )
 
     def test_scripts_are_ascii_only(self):
         SCRIPT_PATH.read_text(encoding="ascii")

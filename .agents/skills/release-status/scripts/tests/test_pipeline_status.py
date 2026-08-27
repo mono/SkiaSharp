@@ -245,8 +245,8 @@ class PipelineStatusTests(unittest.TestCase):
 
     def test_release_config_default_channels_are_explicit_ids(self):
         self.assertEqual(
-            status.parse_default_channel_ids("[529][612]"),
-            [529, 612],
+            status.parse_default_channel_ids("[1648][3882]"),
+            [1648, 3882],
         )
         self.assertEqual(status.parse_default_channel_ids("[]"), [])
 
@@ -296,33 +296,33 @@ class PipelineStatusTests(unittest.TestCase):
         ):
             status.FeedVerifier().flat_base(status.PRODUCT_FEED_INDEX)
 
-    def test_migration_requirement_matching_semantics(self):
+    def test_release_requirement_matching_semantics(self):
         requirement = {
             "pattern": r"required",
             "forbiddenPattern": r"forbidden",
         }
         self.assertTrue(
-            status.migration_requirement_satisfied(
+            status.release_requirement_satisfied(
                 "required",
                 requirement,
             )
         )
         self.assertFalse(
-            status.migration_requirement_satisfied(
+            status.release_requirement_satisfied(
                 "required forbidden",
                 requirement,
             )
         )
         self.assertFalse(
-            status.migration_requirement_satisfied(
+            status.release_requirement_satisfied(
                 "unrelated",
                 requirement,
             )
         )
         absent = {"absent": True}
-        self.assertTrue(status.migration_requirement_satisfied(None, absent))
+        self.assertTrue(status.release_requirement_satisfied(None, absent))
         self.assertFalse(
-            status.migration_requirement_satisfied("present", absent)
+            status.release_requirement_satisfied("present", absent)
         )
 
     def test_historical_branch_forms_have_explicit_release_roles(self):
@@ -666,7 +666,7 @@ class PipelineStatusTests(unittest.TestCase):
         ado = complete_ado()
         ado.release_config = lambda build_id: {
             "barBuildId": BAR_BUILD_ID,
-            "defaultChannelIds": [529],
+            "defaultChannelIds": [3882],
             "stable": False,
         }
         report = status.build_report(
@@ -675,7 +675,7 @@ class PipelineStatusTests(unittest.TestCase):
             repo=FakeRepo(),
             darc=FakeDarc(
                 bar_record(
-                    channels=[{"name": "General Testing"}],
+                    channels=[{"name": ".NET Libraries Internal"}],
                 )
             ),
         )
@@ -962,7 +962,7 @@ class PipelineStatusTests(unittest.TestCase):
             report["warnings"][0],
         )
 
-    def test_missing_historical_migration_surface_fails_closed(self):
+    def test_missing_release_tooling_fails_closed(self):
         repo = FakeRepo()
         repo.release_prerequisites = lambda commit: {
             "state": "missing",
@@ -983,10 +983,10 @@ class PipelineStatusTests(unittest.TestCase):
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(
             report["nextAction"],
-            "backport-arcade-release",
+            "update-release-tooling",
         )
         self.assertEqual(
-            report["migration"]["missing"][0]["id"],
+            report["prerequisites"]["missing"][0]["id"],
             "combined-build",
         )
 

@@ -135,7 +135,7 @@ revision buckets.
 | [mono-SkiaSharp](https://dev.azure.com/dnceng-public/public/_build?definitionId=345) | Public PR and branch validation. Builds native/managed outputs and publishes raw NuGets, prepared Shipping/NonShipping artifacts, and loose PDBs for direct inspection. |
 | [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Repeats the deterministic build/package work, then adds protected API Scan, real signing, BAR registration, standard validation, and Darc promotion. |
 | [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
-| NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
+| NuGet.org Publish | Currently started manually with repository owner `mono`, repository name `SkiaSharp`, and the exact tested commit SHA. |
 
 `main` and `release/*` select real signing and BAR registration automatically.
 When validating another branch manually, explicitly set `forceRealSigning`,
@@ -253,11 +253,10 @@ Default-channel promotion authorizes publication only to the channel-configured
 Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
 
-Release status evaluates the selected commit's behavioral migration
-requirements before selecting any run. Report every entry in
-`migration.missing[]`; readiness still requires one exact successful Build,
+Release status evaluates the selected commit's release-tooling prerequisites
+before selecting any run. Readiness still requires one exact successful Build,
 its connected Tests run, the matching BAR, approved channel/feed routing, and
-protected publisher evidence.
+successful release testing.
 
 ### Stage 3: Testing (release-testing skill)
 
@@ -316,27 +315,19 @@ flowchart TB
     ∙ Pin source SHA
     ∙ Pin combined Build + Tests runs
     ∙ Pin BAR build ID + package versions"] --> GATHER
-    GATHER["Gather exact BAR build
+    GATHER["Verify exact BAR build
     ∙ Verify repository/branch/commit and exact feed routing
-    ∙ Verify package versions + signatures"] --> PUSH_AUDIT
-    PUSH_AUDIT["NuGet.org dry run
-    ∙ Preview exact BAR ID + versions
-    ∙ Confirm packages are absent"] --> APPROVE1{Queue protected publisher?}
-    APPROVE1 -->|No| STOP([Stop])
-    APPROVE1 -->|Yes| PUSH
-    PUSH["Queue NuGet.org publisher
-    ∙ Pass immutable BAR build ID
-    ∙ Return run ID + approval URL"] --> AZURE_APPROVAL{Human approves versions/destination?}
-    AZURE_APPROVAL -->|No| STOP
-    AZURE_APPROVAL -->|Yes| WAIT
-    WAIT["Protected publisher
-    ∙ Gather + verify exact BAR build
-    ∙ Push NuGet.org packages
-    ∙ Verify indexed versions"] --> DRAFT_AUDIT
+    ∙ Verify package versions + signatures"] --> PUBLISHED{Exact versions on NuGet.org?}
+    PUBLISHED -->|No| MANUAL
+    MANUAL["Manual publisher handoff
+    ∙ Owner: mono
+    ∙ Repository: SkiaSharp
+    ∙ Exact tested commit SHA"] --> WAIT([Wait for maintainer])
+    PUBLISHED -->|Yes| DRAFT_AUDIT
     DRAFT_AUDIT["Draft dry-run
     ∙ Select immediate previous release tag
     ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}
-    APPROVE2 -->|No| STOP
+    APPROVE2 -->|No| STOP([Stop])
     APPROVE2 -->|Yes| DRAFT
     DRAFT["Create release draft
     ∙ Push exact tag
@@ -358,14 +349,14 @@ flowchart TB
     classDef error fill:#ffebee,stroke:#c62828
     classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
     class STOP error
-    class START,HANDOFF endpoint
+    class START,HANDOFF,WAIT endpoint
 ```
 
 The release-publish detector is also the recovery entry point: it reconstructs
-the immutable source, pipeline, BAR, package, and test pins. The protected
-publisher accepts the BAR build ID rather than a mutable branch or latest-build
-selector. Successful publication with delayed NuGet indexing remains a
-resumable `wait-for-nuget` state.
+the immutable source, pipeline, BAR, package, and test pins. Until publisher
+automation exists, hand the maintainer repository owner `mono`, repository
+`SkiaSharp`, and the exact tested commit SHA. Rerun detection after publication;
+it proceeds only when both exact package versions are indexed on NuGet.org.
 
 ### Stage 5: Release Milestones (release-milestones skill)
 

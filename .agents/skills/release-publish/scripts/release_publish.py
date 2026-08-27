@@ -28,9 +28,7 @@ RELEASE_BRANCH_RE = re.compile(
 )
 
 # The two dnceng/internal pipeline definitions that form the immutable chain
-# a BAR build must have originated from. There is currently no protected
-# NuGet.org publisher pipeline definition; its ID is supplied at runtime
-# through an environment variable (see push-release-packages.py).
+# a BAR build must have originated from.
 BUILD_DEFINITION_ID = 1642
 TESTS_DEFINITION_ID = 1630
 
@@ -305,11 +303,11 @@ def validate_status_handoff(
         raise PublishError(
             f"release-status is not ready: {status.get('nextAction')}"
         )
-    migration = status.get("migration") or {}
-    if migration.get("state") != "ready":
+    prerequisites = status.get("prerequisites") or {}
+    if prerequisites.get("state") != "ready":
         raise PublishError(
-            "release-status did not verify the target branch's Arcade release "
-            "migration surface"
+            "release-status did not verify the target branch's release "
+            "tooling prerequisites"
         )
     build = status.get("buildRun") or {}
     tests = status.get("testsRun") or {}

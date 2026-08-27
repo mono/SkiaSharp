@@ -23,34 +23,24 @@ This skill is **Step 4 of 5**:
 - Start from a passing release-testing handoff unless the user explicitly
   overrides that gate. Preserve the exact branch, source SHA, Build run ID,
   tests run ID, BAR build ID, and paired package versions.
-- Require release-status to verify the target commit's minimum Arcade migration,
-  `.NET Libraries` channel 1648 mapping, and exact approved-feed routing. This
-  applies equally to historical exact release/RC/hotfix
-  branches; do not infer readiness from main. `General Testing` is not a
-  release route, and transport is asset-class routing under the product channel,
-  not a separate Maestro channel.
-- Use scripts for detection, Azure publication, NuGet verification, draft
-  creation, and final publication.
+- Require release-status to verify `.NET Libraries` channel 1648 and exact
+  approved-feed routing for the tested Build/Tests/BAR handoff.
+- Use scripts for detection, NuGet verification, draft creation, and final
+  publication.
 - Package publication, tag push, and GitHub Release publication are
   irreversible. Present the corresponding dry-run and obtain approval first.
-- Preserve the detector's source SHA and run IDs; never select newer packages,
-  pipeline runs, or prior publisher runs. If more than one prior publisher run
-  matches the exact pinned BAR build, treat that as ambiguous and require the
-  user to pass `--publish-run` explicitly; never guess or pick the latest one.
+- Preserve the detector's source SHA and run IDs; never select newer packages
+  or pipeline runs.
 - Keep the checkout unchanged. Draft creation pushes a lightweight tag directly
   to the tested SHA.
 - Never delete or move a published tag/release to recover.
 - The Build pipeline's standard Darc default-channel promotion is upstream of
   this skill. Use BAR locations when present, otherwise verify the BAR's exact
   versions on the approved feeds; never select or promote a release by mutable
-  channel name. Darc promotion is not NuGet.org
-  publication, which this skill queues and a human must separately approve.
-- Approval of the queue command authorizes only queueing the protected NuGet.org
-  publisher pipeline (its dnceng/internal definition ID is supplied via
-  `SKIASHARP_NUGET_PUBLISH_PIPELINE_ID`; there is no publicly known definition
-  ID to hardcode). Its protected push stage then waits for a human to review
-  the exact versions and destination. The agent never approves that downstream
-  gate.
+  channel name. Darc promotion is not NuGet.org publication.
+- NuGet.org publication is currently started manually. Provide the tested
+  repository owner (`mono`), repository name (`SkiaSharp`), and exact source
+  commit SHA, then stop for the maintainer.
 - The agent owns customer-teaser classification between draft creation and
   publication; scripts assemble and validate the final release body.
 
@@ -59,17 +49,10 @@ This skill is **Step 4 of 5**:
 | Script | Responsibility |
 |--------|----------------|
 | `scripts/detect-release-publish.py` | Read-only exact release/Build/tests/BAR/package handoff. |
-| `scripts/push-release-packages.py` | Audit, queue/recover one exact protected publisher run pinned to the BAR build, and optionally wait through NuGet verification. |
 | `scripts/create-release-draft.py` | Audit or create the exact tag and generated-notes GitHub draft. |
 | `scripts/publish-release.py` | Validate the teaser and publish the draft. |
 | `scripts/release_github.py` | Shared GitHub release and body helpers; not a user command. |
 | `scripts/release_publish.py` | Shared clients and validation; not a user command. |
-
-`scripts/push-release-packages.py` requires the `SKIASHARP_NUGET_PUBLISH_PIPELINE_ID`
-environment variable to be set to the protected publisher's dnceng/internal
-pipeline definition ID. It fails closed with an actionable error if the
-variable is unset or not an integer; do not work around this by hardcoding a
-value.
 
 Write scripts audit with `--dry-run` and execute without it. The detector emits
 the pinned audit commands; every confirmation report emits its exact
@@ -79,12 +62,8 @@ the pinned audit commands; every confirmation report emits its exact
 
 | Source | `nextAction` | Response |
 |--------|--------------|----------|
-| Detector | `audit-package-publication` | Run `pushAuditCommand`. |
-| Packages | `confirm-publish-packages` | Approve and run package execution. |
-| Packages | `approve-publish-run` | Show `publishRun.url` and stop for human review/approval. |
-| Packages | `wait-for-nuget` | Continue the pinned resume command until both versions index. |
-| Packages | `retry-publish-run` | Show the failed exact run and return to package audit. |
-| Packages | `start-release-draft` | Run `draftAuditCommand`. |
+| Detector | `manual-package-publication` | Show the exact owner, repository, and commit SHA for the human-run publisher; stop until publication completes. |
+| Detector | `start-release-draft` | Both exact package versions are on NuGet.org; run `draftAuditCommand`. |
 | Draft | `confirm-create-release-draft` | Approve and create the tag/draft. |
 | Draft | `write-release-teaser` | Classify `generated-log.md` and fill `teaser.md`. |
 | Draft | `audit-release-publication` | Release already exists; run `publishAuditCommand`. |
@@ -105,53 +84,31 @@ entry point after lost context: rerun it from only `release/{version}` to
 reconstruct every `--expect-*` value and pinned audit command. Never reconstruct
 those values manually.
 
-### 2. Publish packages
+### 2. Publish packages manually
 
-Run `pushAuditCommand`. Render:
+Render:
 
 ```markdown
 ## Package publication audit
 
-**Release:** `{release.version}` ({release.type})
-**Commit:** `{release.sourceSha}`
-**Build/tests runs:** `{release.buildRunId}` / `{release.testsRunId}`
-**BAR build:** `{release.barBuildId}`
-**BAR routing evidence:** `{release.barAssets}`
-**Public packages:** SkiaSharp `{release.publicPackages.SkiaSharp}`,
-HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
-
-| Operation | Status | Detail |
-|-----------|--------|--------|
-| `{operations[].id}` | `{operations[].status}` | `{operations[].detail}` |
+**Release:** `{releaseBranch}`
+**Commit:** `{sourceSha}`
+**Build/tests runs:** `{buildRunId}` / `{testsRunId}`
+**BAR build:** `{barBuildId}`
+**BAR routing evidence:** `{barAssets}`
+**Public packages:** SkiaSharp `{publicPackages.SkiaSharp}`,
+HarfBuzzSharp `{publicPackages.HarfBuzzSharp}`
+**NuGet.org state:** `{nuget.state}` / `{nuget.packages}`
+**Publisher inputs:** owner `{manualPublication.repositoryOwner}`, repository
+`{manualPublication.repositoryName}`, commit `{manualPublication.commitSha}`
 ```
 
-The emitted audit command already includes `--dry-run`. Use it whenever status
-must be read or recovered without queueing anything; it detects an exact
-queued/running/succeeded publication and returns its URL/resume command.
-
-For `confirm-publish-packages`, obtain approval and run `executionCommand`.
-Verify that Azure selected the exact folder-qualified Build pipeline resource
-(`\dotnet\skiasharp\skiasharp-package`), the pinned Build run, the exact build
-number, the pinned BAR build ID, and the Stable or Preview destination. The
-queue command returns immediately: show `publishRun.runId` and
-`publishRun.url`, then stop so a human can review the versions/destination and
-approve the protected stage.
-
-After the user confirms that decision, run the emitted `resumeCommand`. It is
-the same script with `--wait --publish-run {id}`, waits for completion, and
-verifies both exact public packages on NuGet.org.
-
-If Azure succeeds but indexing exceeds the wait window, treat the returned
-`wait-for-nuget` report as resumable status, not a publication failure. Show
-`wait.missingPackages` and reuse `resumeCommand`.
-
-If more than one prior publisher run matches the exact pinned BAR build, the
-script fails as ambiguous rather than picking a "latest" run; rerun the audit
-with an explicit `--publish-run {id}` to pick the exact one the human intends.
-
-For unattended automation, invoke the approved execution command with `--wait`.
-It queues or recovers the exact run, prints its URL immediately, then waits
-through protected approval and NuGet indexing in one process.
+For `manual-package-publication`, stop and give those three values to the
+maintainer. The current publisher is run manually and may ask for other
+interactive choices; do not infer or automate them. After the maintainer says
+publication completed, rerun detection. It verifies the exact SkiaSharp and
+HarfBuzzSharp versions on NuGet.org and returns `start-release-draft` only when
+both are indexed.
 
 ### 3. Create the generated-notes draft
 
