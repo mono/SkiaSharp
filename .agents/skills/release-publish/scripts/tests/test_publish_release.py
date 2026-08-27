@@ -298,7 +298,7 @@ class PublishReleaseTests(unittest.TestCase):
         ]
         with self.assertRaisesRegex(
             publish.PublishError,
-            "no dotnet-libraries feed location",
+            "does not route SkiaSharp exclusively to dotnet-libraries",
         ):
             publish.validate_status_handoff(
                 status,
@@ -308,6 +308,55 @@ class PublishReleaseTests(unittest.TestCase):
                 expected_tests_run=20,
                 expected_bar_build=30,
             )
+
+    def test_status_handoff_rejects_cross_feed_locations(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        cases = (
+            ("assets", "SkiaSharp", publish.TRANSPORT_FEED_MARKER),
+            (
+                "transportAssets",
+                "_NuGets",
+                publish.PRODUCT_FEED_MARKER,
+            ),
+        )
+        for group, package_id, wrong_marker in cases:
+            with self.subTest(package_id=package_id):
+                status = self._stable_status(release)
+                status["barBuild"][group][package_id]["locations"].append(
+                    f"https://example.test{wrong_marker}nuget/v3/index.json"
+                )
+                with self.assertRaisesRegex(
+                    publish.PublishError,
+                    "exclusively",
+                ):
+                    publish.validate_status_handoff(
+                        status,
+                        release,
+                        expected_sha="a" * 40,
+                        expected_build_run=10,
+                        expected_tests_run=20,
+                        expected_bar_build=30,
+                    )
+
+    def test_status_handoff_allows_neutral_source_artifact_locations(self):
+        release = publish.ReleaseVersion.parse("release/4.152.0")
+        status = self._stable_status(release)
+        neutral = (
+            "https://dev.azure.com/dnceng/internal/_apis/build/"
+            "builds/3058119/artifacts"
+        )
+        for group in ("assets", "transportAssets"):
+            for asset in status["barBuild"][group].values():
+                asset["locations"].append(neutral)
+        handoff = publish.validate_status_handoff(
+            status,
+            release,
+            expected_sha="a" * 40,
+            expected_build_run=10,
+            expected_tests_run=20,
+            expected_bar_build=30,
+        )
+        self.assertEqual(handoff["bar"]["id"], 30)
 
     def test_status_handoff_rejects_unverified_migration_surface(self):
         release = publish.ReleaseVersion.parse("release/4.152.0")

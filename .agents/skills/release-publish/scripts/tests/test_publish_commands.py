@@ -774,13 +774,6 @@ class PublishCommandTests(unittest.TestCase):
         self.assertIn("class GitHub", github_source)
         self.assertIn("class TagVersion", github_source)
 
-    def test_no_legacy_devdiv_or_managed_references_remain(self):
-        for path in SCRIPTS.glob("*.py"):
-            source = path.read_text(encoding="ascii").lower()
-            self.assertNotIn("devdiv", source, path)
-            self.assertNotIn("25298", source, path)
-            self.assertNotIn("managed", source, path)
-
     def test_scripts_are_ascii_only(self):
         for path in SCRIPTS.glob("*.py"):
             path.read_text(encoding="ascii")

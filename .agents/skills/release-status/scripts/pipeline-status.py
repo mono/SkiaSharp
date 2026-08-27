@@ -684,7 +684,11 @@ class GitRepository:
         return run(["git", *args], cwd=self.root)
 
     def resolve_target(self, value: str) -> tuple[str, str]:
-        self.git("fetch", "origin", "--prune")
+        run(
+            ["git", "fetch", "origin", "--prune"],
+            cwd=self.root,
+            timeout=120,
+        )
         if re.fullmatch(r"[0-9a-fA-F]{7,40}", value):
             commit = self.git(
                 "rev-parse",
@@ -1036,6 +1040,42 @@ def validate_unique_nonshipping_assets(record: dict) -> None:
         )
 
 
+def asset_has_exact_route(
+    asset: dict,
+    package_id: str,
+    *,
+    expected_marker: str,
+    opposite_marker: str,
+    expected_feed: str,
+    opposite_feed: str,
+    feeds: FeedVerifier | None,
+) -> bool:
+    locations = asset["locations"]
+    if locations:
+        has_expected = any(
+            expected_marker in str(location).lower()
+            for location in locations
+        )
+        has_opposite = any(
+            opposite_marker in str(location).lower()
+            for location in locations
+        )
+        return has_expected and not has_opposite
+    if not feeds:
+        return False
+    on_expected = feeds.has_version(
+        expected_feed,
+        package_id,
+        asset["version"],
+    )
+    on_opposite = feeds.has_version(
+        opposite_feed,
+        package_id,
+        asset["version"],
+    )
+    return on_expected and not on_opposite
+
+
 def bar_output(
     record: dict,
     config: dict,
@@ -1116,36 +1156,26 @@ def bar_output(
     )
     default_channel_ids = config.get("defaultChannelIds") or []
     routed_assets = {
-        package_id: (
-            any(
-                PRODUCT_FEED_MARKER in str(location).lower()
-                for location in asset["locations"]
-            )
-            if asset["locations"]
-            else feeds.has_version(
-                PRODUCT_FEED_INDEX,
-                package_id,
-                asset["version"],
-            )
-            if feeds
-            else False
+        package_id: asset_has_exact_route(
+            asset,
+            package_id,
+            expected_marker=PRODUCT_FEED_MARKER,
+            opposite_marker=TRANSPORT_FEED_MARKER,
+            expected_feed=PRODUCT_FEED_INDEX,
+            opposite_feed=TRANSPORT_FEED_INDEX,
+            feeds=feeds,
         )
         for package_id, asset in assets.items()
     }
     routed_transport_assets = {
-        package_id: (
-            any(
-                TRANSPORT_FEED_MARKER in str(location).lower()
-                for location in asset["locations"]
-            )
-            if asset["locations"]
-            else feeds.has_version(
-                TRANSPORT_FEED_INDEX,
-                package_id,
-                asset["version"],
-            )
-            if feeds
-            else False
+        package_id: asset_has_exact_route(
+            asset,
+            package_id,
+            expected_marker=TRANSPORT_FEED_MARKER,
+            opposite_marker=PRODUCT_FEED_MARKER,
+            expected_feed=TRANSPORT_FEED_INDEX,
+            opposite_feed=PRODUCT_FEED_INDEX,
+            feeds=feeds,
         )
         for package_id, asset in transport_assets.items()
     }

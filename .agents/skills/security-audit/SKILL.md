@@ -319,7 +319,7 @@ NVD searches alone.
 - Alert categories (Alpine, Debian, npm, Rust, NuGet)
 - Key Dockerfiles for fixes
 - How to embed the raw `alerts` array in the report (do NOT summarize)
-- Exact Build links
+- CG portal and exact Build links
 
 ---
 

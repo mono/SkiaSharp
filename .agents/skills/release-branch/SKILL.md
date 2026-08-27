@@ -28,9 +28,6 @@ This skill is **Step 1 of 5**:
   pending operation.
 - Preserve the audited base SHA and Skia gitlink SHA during execution.
 - The script may create matching `release/{version}` refs in both repositories.
-- Release branches select Arcade servicing pools automatically through the
-  provider variables in the public/internal pipeline entrypoints. Do not edit
-  pipeline YAML or pass pool overrides when cutting a release branch.
 - A regular stable release may create a protected-branch bump PR. Automation
   opens it; a maintainer reviews and merges it.
 - This skill never merges PRs or publishes packages/releases.
@@ -48,12 +45,6 @@ Preview/RC iterations begin at 1. Every SkiaSharp release branch has an
 identically named mono/skia branch at the exact pinned gitlink. Stable Build and
 BAR package versions are exact `X.Y.Z`; `stable` is only the pipeline sentinel
 that selects release versioning and is never emitted as a package suffix.
-
-Historical lines use the same relationship: migrate `release/4.150.x` and
-`release/4.151.x` as integration/maintenance inputs, then cut exact
-`release/4.150.4` and `release/4.151.3` children. The existing
-`release/4.152.0-rc.1` branch is already exact and proceeds to release-status
-after its own minimal Arcade backport lands.
 
 ## Script contract
 

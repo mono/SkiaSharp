@@ -25,34 +25,8 @@ This skill is **Step 2 of 5**:
 - Resolve an exact release branch to its current remote tip; preserve a supplied
   commit exactly. `release/X.Y.x` is an integration branch: return to
   release-branch and cut an exact release branch before status tracking.
-- Verify the target commit contains the minimum behavioral Arcade backport:
-  combined Build role, folder-qualified Tests resource, fail-closed exact
-  artifact selection, exact internal release versioning, and transport metadata.
-  The package graph uses canonical `ROOT_OUTPUT_PATH` for `--outputPath` on
-  every line, avoiding native Cake's separate `OUTPUT_PATH`; legacy
-  `OUTPUT_PATH`/`PACKAGE_OUTPUT_PATH` spellings are migration-required. All
-  derived package directories keep their names.
-  Prepare must remain tool-free and run only focused build-variable, API Scan,
-  and cache validation; Cake behavior validation runs as a Package post-build
-  step. The top-level `nuget` Cake graph must depend on
-  `nuget-assemble-arcade-assets`; its uncached aggregate Package emits public
-  `nuget`, `nuget_special`,
-  `arcade_shipping`, `arcade_nonshipping`, and non-production `PdbArtifacts`
-  directly from Cake outputs. Internal signing transforms only
-  `arcade_shipping` into `arcade_shipping_signed`; separate `publish_assets`
-  combines signed Shipping with `arcade_nonshipping` for BAR. The Cake
-  assembler preserves explicit symbol ownership and loose PDB
-  package/TFM/RID paths, excludes `ref/**`, uses Cake-native collapsed paths and
-  relative containment instead of `System.IO.Path`, rejects an escaping archive
-  entry in its contract test, clears global `LASTEXITCODE` after the expected
-  rejection, emits `.empty` only when no PDB exists, and stages one NonShipping
-  transport version per ID.
-  The production PowerShell assembler, split/cached legacy Package behavior,
-  YAML string-linter, commit wrapper generation, anonymous commit fallback, and
-  transport-family filtering must be absent. Each build emits exactly one
-  transport family: PR for PR builds, branch otherwise. Do not require Apple
-  symbols or another main-only feature; BAR runtime evidence proves signing and
-  routing.
+- Verify the target commit contains the minimum behavioral Arcade backport.
+  If it does not, report every entry in `migration.missing[]` and stop.
 - Select the newest combined Build attempt for that exact commit, then accept
   only a Tests run whose runtime pipeline resource points to that exact Build
   run, build number, and folder-qualified source.
@@ -94,7 +68,7 @@ transport feeds. Stable assets are exact
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
 | `configure-default-channels` | The exact Build is not mapped to `.NET Libraries` channel 1648; configure the target release branch before retrying. `General Testing` 529 is test evidence only. |
-| `configure-feed-routing` | The BAR does not record both core packages on the `dotnet-libraries` product feed; configure asset-class routing before retrying. |
+| `configure-feed-routing` | The BAR's exact Shipping or NonShipping assets are missing from their approved feed or present on the opposite feed. |
 | `start-release-testing` | Hand the immutable Build/Tests/BAR/package identity to release-testing. |
 
 Only `start-release-testing` is ready by default.
@@ -135,12 +109,6 @@ HarfBuzzSharp `{packageVersions.public.HarfBuzzSharp}`
 Include both core assets' routing evidence, active/failed jobs, and every
 warning. Omit missing run rows/links. Do not independently query or replace the
 script-selected identity.
-
-The historical migration targets `release/4.150.x`, `release/4.151.x`, and the
-exact `release/4.152.0-rc.1`. The `.x` lines remain Step 1 inputs: after their
-Arcade backports land, release-branch cuts exact `release/4.150.4` and
-`release/4.151.3` children for status/testing/publish. RC1 is already exact and
-can proceed directly after its own backport.
 
 For `start-release-testing`, invoke
 [release-testing](../release-testing/SKILL.md) with the complete `buildRun`,

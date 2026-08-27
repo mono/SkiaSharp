@@ -71,14 +71,19 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
   --branch main --output output/ai/cg-alerts-cache.json
 
-# Query the combined Build pipeline
-python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
-  --pipeline build --output output/ai/cg-alerts-cache.json
-
 # Query a specific build
 python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
   --build-id 14176611 --output output/ai/cg-alerts-cache.json
 ```
+
+## CG Portal Links
+
+**Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
+
+**Active alerts:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321?_a=alerts&typeId=29227950&alerts-view-option=active
+
+The registration and alerts remain in the DevDiv Component Governance portal.
+The dnceng Build pipeline is the scan source, not the alert portal.
 
 ### What the Script Does
 

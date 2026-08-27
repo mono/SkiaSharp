@@ -120,20 +120,13 @@ revision buckets.
 | Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json` | NonShipping `_NuGets`, `_NativeAssets*`, and dependency chunks routed by the same `.NET Libraries` promotion |
 | Stable | NuGet.org | Public releases |
 
-> **Note:** One BAR records both product and transport packages. Maestro
-> Release status uses BAR asset locations when Maestro records them. Because
+> **Note:** One BAR records both product and transport packages. Release status
+> uses BAR asset locations when Maestro records them. Because
 > successful BARs may leave `locations` null, it otherwise verifies the BAR's
 > exact Shipping and NonShipping versions directly on `dotnet-libraries` and
 > `dotnet-libraries-transport`. Transport remains an asset class, not a separate
 > Maestro channel.
 > NuGet.org publication remains a separate protected operation.
-
-The production Maestro configuration currently maps only the internal
-`dotnet-SkiaSharp` `dev/dnceng-pipelines` branch to `General Testing` (529).
-Before release, the configuration must map internal `main` and
-`Branch: -regex:release/.*` to `.NET Libraries` (1648), using the same branch
-regex syntax as existing production default-channel files. Keep `General
-Testing` only for intentionally non-release validation builds.
 
 ### Pipelines
 
@@ -148,13 +141,6 @@ Testing` only for intentionally non-release validation builds.
 When validating another branch manually, explicitly set `forceRealSigning`,
 `registerInBar`, and `runApiScan` to `true`; a safe-default run is not release
 evidence.
-
-The public and internal entrypoints also import Arcade pool-provider variables.
-Their default build-agent objects use `$(DncEngPublicBuildPool)` and
-`$(DncEngInternalBuildPool)`, so `release/*` automatically runs on the
-corresponding servicing pools while `main` and other branches remain on regular
-pools. Release-branch automation must not mutate pipeline YAML or supply pool
-overrides; Azure queue-time object overrides remain available for diagnostics.
 
 ---
 
@@ -267,51 +253,11 @@ Default-channel promotion authorizes publication only to the channel-configured
 Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
 
-The historical migration targets `release/4.150.x`, `release/4.151.x`, and
-exact `release/4.152.0-rc.1`. After the `.x` backports land, release-branch cuts
-exact `release/4.150.4` and `release/4.151.3` children before
-status/testing/publish; RC1 can proceed directly. Release status verifies each
-exact target commit has the combined Build, connected Tests, exact-version, and
-fail-closed artifact-selection backport. It then blocks until that branch has
-`.NET Libraries` channel 1648 mapping and exact `dotnet-libraries` product-feed
-routing. Main-only
-production features such as Apple symbol generation are not historical
-release-tooling prerequisites.
-
-Historical BARs must also contain only one branch-versioned NonShipping
-transport asset per package ID (or one PR-versioned family for PR validation).
-Commit wrappers and anonymous commit fallback are not produced; release status
-rejects duplicate transport IDs.
-
-Public CI validates package and pipeline artifact shape before internal release
-proof. The canonical `nuget` artifact owns product and explicit symbol packages;
-`nuget_special` contains exactly one unsigned PR-or-branch transport family.
-`PdbArtifacts` contains loose
-implementation/runtime PDBs extracted from signed packages that have no
-explicit symbol package, preserving package/version/TFM/RID paths and excluding
-`ref/**`. Cake-native collapsed paths plus relative containment reject escaping
-archive entries without `System.IO.Path`; `.empty` is valid only when no
-eligible PDB exists. The expected-failure test clears global `LASTEXITCODE`
-after confirming rejection so public validation exits successfully. These
-public outputs come from one uncached aggregate Cake Package as `arcade_shipping`,
-`arcade_nonshipping`, and `PdbArtifacts`. Internal signing consumes only
-`arcade_shipping` and emits `arcade_shipping_signed`; a separate
-`publish_assets` stage combines it with `arcade_nonshipping` for BAR. Release
-readiness still requires exact successful internal Build, connected Tests, BAR,
-default-channel, signed-feed, and protected publisher evidence.
-
-Prepare stays tool-free with focused build-variable, API Scan, and cache checks.
-The Package post-build step runs the Cake behavior test before publishing
-artifacts. The top-level `nuget` target depends on
-`nuget-assemble-arcade-assets`; package outputs are build-context dependent and
-must not come from source-only aggregate Package caching.
-
-Every line calls the shared `--outputPath` root `ROOT_OUTPUT_PATH`, avoiding the
-separate native Cake `OUTPUT_PATH` global. Older `OUTPUT_PATH` or
-`PACKAGE_OUTPUT_PATH` package-root spellings require migration;
-`OUTPUT_NUGETS_PATH`, `OUTPUT_SPECIAL_NUGETS_PATH`,
-`OUTPUT_ARCADE_ASSETS_PATH`, and `OUTPUT_PDB_ARTIFACTS_PATH` remain derived from
-that one root with unchanged directory names.
+Release status evaluates the selected commit's behavioral migration
+requirements before selecting any run. Report every entry in
+`migration.missing[]`; readiness still requires one exact successful Build,
+its connected Tests run, the matching BAR, approved channel/feed routing, and
+protected publisher evidence.
 
 ### Stage 3: Testing (release-testing skill)
 

@@ -48,7 +48,7 @@ nuget install SkiaSharp
 
 _Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
 
-Signed prerelease and nightly builds are available from the .NET Libraries feed:
+Signed prerelease builds are available from the .NET Libraries feed:
 
 ```
 https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json

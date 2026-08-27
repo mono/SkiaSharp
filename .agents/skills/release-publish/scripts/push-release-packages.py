@@ -204,6 +204,7 @@ class AzurePublish:
         *,
         stable: bool,
     ) -> list[dict]:
+        expected_name = f"SkiaSharp {build_number}"
         builds = self.json(
             [
                 "pipelines",
@@ -221,8 +222,14 @@ class AzurePublish:
                 "json",
             ]
         )
+        candidates = [
+            build
+            for build in builds
+            if build.get("buildNumber") == expected_name
+            or build.get("status") != "completed"
+        ]
         matched = []
-        for build in builds:
+        for build in candidates:
             detail = self.run_detail(int(build["id"]))
             try:
                 validate_run_detail(

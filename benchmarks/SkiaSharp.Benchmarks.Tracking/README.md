@@ -44,7 +44,7 @@ CI workflow (`.github/workflows/track-benchmarks.yml`) parses via
 `track-benchmarks.yml` runs daily (and on every PR/push) on Linux, Windows and macOS.
 For each OS it benchmarks several **version roles**:
 
-- `nightly` — the newest `-nightly.*` build from the [dotnet-libraries feed](https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json) (the daily trend). Until its first SkiaSharp promotion, the resolver uses the legacy product feed only for this nightly role;
+- `nightly` — the newest `-nightly.*` build from the [EAP feed](https://aka.ms/skiasharp-eap/index.json) (the daily trend);
 - `curr-stable` / `prev-stable` / `prev-major` — released baselines (same roles as the artifact-size tracker);
 - `pr` — a **full source build** (native + managed) of the checkout, so native/C-API
   changes show up in the ⭐ "this PR" column. See the sibling

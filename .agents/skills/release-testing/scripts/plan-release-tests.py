@@ -292,7 +292,8 @@ def plan_eligibility(
         )
     if bar_state != "ready":
         raise PlanError(
-            "Cannot plan tests until the exact BAR assets have locations"
+            "Cannot plan tests until the exact BAR assets are proven on the "
+            "approved feeds"
         )
     return True, not ready
 

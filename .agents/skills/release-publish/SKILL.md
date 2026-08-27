@@ -116,7 +116,7 @@ Run `pushAuditCommand`. Render:
 **Commit:** `{release.sourceSha}`
 **Build/tests runs:** `{release.buildRunId}` / `{release.testsRunId}`
 **BAR build:** `{release.barBuildId}`
-**BAR asset locations:** `{release.barAssets}`
+**BAR routing evidence:** `{release.barAssets}`
 **Public packages:** SkiaSharp `{release.publicPackages.SkiaSharp}`,
 HarfBuzzSharp `{release.publicPackages.HarfBuzzSharp}`
 

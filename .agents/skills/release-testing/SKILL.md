@@ -21,11 +21,10 @@ This skill is **Step 3 of 5**:
 ## Contract
 
 - Run the read-only planner first and preserve its exact source commit, combined
-  Build run, connected Tests run, BAR build ID, BAR asset locations, and paired
+  Build run, connected Tests run, BAR build ID, BAR routing evidence, and paired
   package versions throughout testing.
 - Historical releases use the same matrix from their exact BAR product
-  packages. Do not require Apple symbol production or any other main-only
-  artifact unless the selected historical BAR explicitly records it as required.
+  packages.
 - Obtain user approval for the matrix before preparation or execution.
 - Test stable releases with the exact `X.Y.Z` assets recorded by BAR. Never
   synthesize a `-stable.{build}` version or select a newer feed package.
@@ -152,8 +151,8 @@ expectations, skips, or package pins to make them pass.
 Review expected screenshots under `output/logs/testlogs/integration/`. The final
 report must include:
 
-- Immutable release/Build/Tests/BAR/package identity, including the BAR-recorded
-  asset locations used for restore.
+- Immutable release/Build/Tests/BAR/package identity, including the exact
+  approved-feed routing used for restore.
 - Every approved ID with initial, repair, retry, and final result.
 - Missing or intentionally omitted coverage.
 - Screenshot paths and review status.

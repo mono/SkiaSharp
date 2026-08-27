@@ -166,7 +166,7 @@ browser. The test builds a real native WASM app with
 Generated applications use the signed `dotnet-libraries` source:
 
 - `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json`
-- `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json`
+- `https://api.nuget.org/v3/index.json`
 
 Release-status discovers versions from one exact BAR build after its assets are
 promoted through Maestro. It uses BAR locations when available, otherwise it

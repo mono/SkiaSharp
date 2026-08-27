@@ -10,7 +10,7 @@ This script builds/updates a JSON "history" document that records:
 Two kinds of data points ("columns") are collected:
 
   * ``nightly`` -- the latest ``-nightly.*`` build from the official SkiaSharp
-    dotnet-libraries signed-build feed. Every
+    Early Access Preview feed (https://aka.ms/skiasharp-eap/index.json). Every
     package is measured at its family's headline nightly version (SkiaSharp and
     HarfBuzzSharp version independently), keyed by the observation date. The
     newest ``--max-nightly`` days are kept.
@@ -45,8 +45,7 @@ import zipfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # perf/
 from _common import (  # noqa: E402
-    LEGACY_NIGHTLY_INDEX_URL,
-    SIGNED_BUILDS_INDEX_URL,
+    EAP_INDEX_URL,
     NUGET_FLATCONTAINER,
     feed_versions,
     http_get_json,
@@ -177,20 +176,16 @@ def measure_nupkg(path: str) -> dict:
 # NuGet feed helpers (flat container)
 # --------------------------------------------------------------------------- #
 
-def resolve_signed_build_feed(
-    index_url: str = SIGNED_BUILDS_INDEX_URL,
-) -> dict:
-    """Resolve the signed-build feed's service URLs from its v3 index.
+def resolve_eap_feed() -> dict:
+    """Resolve the EAP feed's service URLs from its v3 index.
 
     Returns ``{"flat": <PackageBaseAddress>, "search": <SearchQueryService>}``.
     """
-    resources = http_get_json(index_url).get("resources", [])
+    resources = http_get_json(EAP_INDEX_URL).get("resources", [])
     flat = pick_resource(resources, "PackageBaseAddress/")
     search = pick_resource(resources, "SearchQueryService")
     if not flat:
-        raise RuntimeError(
-            "Signed-build feed index has no PackageBaseAddress resource."
-        )
+        raise RuntimeError("EAP feed index has no PackageBaseAddress resource.")
     return {"flat": flat, "search": search}
 
 
@@ -230,7 +225,7 @@ def enumerate_feed_packages(search_base: str) -> list[str]:
 
 
 # --------------------------------------------------------------------------- #
-# Nightly collection (signed-build feed)
+# Nightly collection (EAP feed)
 # --------------------------------------------------------------------------- #
 
 def _nightly_family(package_id: str) -> str:
@@ -249,9 +244,7 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
     flat = feed["flat"]
     package_ids = enumerate_feed_packages(feed["search"])
     if not package_ids:
-        raise RuntimeError(
-            "Could not enumerate any packages from the signed-build feed."
-        )
+        raise RuntimeError("Could not enumerate any packages from the EAP feed.")
 
     headlines = {
         "skia": latest_nightly(feed_versions(flat, "SkiaSharp")),
@@ -280,15 +273,6 @@ def collect_nightly(feed: dict, work_dir: str) -> tuple[dict[str, dict], str | N
     _log(f"  measured {len(packages)} packages "
          f"({sum(1 for p in packages.values() if p['natives'])} native)")
     return packages, headlines["skia"]
-
-
-def has_complete_nightly_families(feed: dict) -> bool:
-    """Whether both product families have a nightly on one feed."""
-    flat = feed["flat"]
-    return all(
-        latest_nightly(feed_versions(flat, package))
-        for package in ("SkiaSharp", "HarfBuzzSharp")
-    )
 
 
 # --------------------------------------------------------------------------- #
@@ -430,15 +414,9 @@ def main(argv: list[str]) -> int:
     try:
         # ---- Nightly -----------------------------------------------------
         if not args.released_only:
-            _log("Collecting nightly from the signed-build feed...")
+            _log("Collecting nightly from the EAP feed...")
             today = args.date or dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-            feed = resolve_signed_build_feed()
-            if not has_complete_nightly_families(feed):
-                _log(
-                    "  ! primary signed-build feed has no nightly packages; "
-                    "using the temporary legacy nightly source"
-                )
-                feed = resolve_signed_build_feed(LEGACY_NIGHTLY_INDEX_URL)
+            feed = resolve_eap_feed()
             packages, headline = collect_nightly(feed, work_dir)
             if packages:
                 # Raw snapshot (optional): full per-file breakdown, archived per day.

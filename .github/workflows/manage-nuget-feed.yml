@@ -4,8 +4,9 @@
 # Rather than deleting junk in place from a live feed, we mirror ONLY the
 # packages/versions that pass the rules into a clean destination. Currently
 # configured for the xamarin -> dnceng migration, and keeps the destination
-# feeds clean via per-feed rules (`dotnet-libraries` excludes the internal
-# '_'-prefixed CI wrapper packages; `dotnet-libraries-transport` keeps them).
+# feeds clean via per-feed rules (the public 'skiasharp' feed excludes the
+# internal '_'-prefixed CI wrapper packages; the internal 'skiasharp-ci' keeps
+# them).
 #
 #   * Manual dispatch (push unchecked)      -> DRY RUN only
 #     (inventory + diff + plan, read anonymously, no writes, NO secret in scope).
@@ -36,8 +37,8 @@ on:
         default: both
         options:
           - both
-          - dotnet-libraries
-          - dotnet-libraries-transport
+          - skiasharp
+          - skiasharp-ci
       push:
         description: 'Actually push packages (opt in). Unchecked = dry run.'
         type: boolean
@@ -58,7 +59,7 @@ jobs:
       matrix:
         # Both feeds run in parallel. All per-feed behaviour (source, destination,
         # and rules like excluding the internal '_' packages) lives in the script.
-        feed: [dotnet-libraries, dotnet-libraries-transport]
+        feed: [skiasharp, skiasharp-ci]
 
     # Serialize real mirrors of the same feed across runs.
     concurrency:
@@ -84,7 +85,7 @@ jobs:
           MATRIX_FEED: ${{ matrix.feed }}
         run: |
           set -euo pipefail
-          case "$FEED_INPUT" in both|dotnet-libraries|dotnet-libraries-transport|"") ;; *) echo "Invalid feed input"; exit 2 ;; esac
+          case "$FEED_INPUT" in both|skiasharp|skiasharp-ci|"") ;; *) echo "Invalid feed input"; exit 2 ;; esac
           case "$PUSH_INPUT" in true|false|"") ;; *) echo "Invalid push input"; exit 2 ;; esac
 
           if [ -z "$FEED_INPUT" ] || [ "$FEED_INPUT" = "both" ] || [ "$FEED_INPUT" = "$MATRIX_FEED" ]; then
@@ -119,8 +120,7 @@ jobs:
           # this evaluates to an empty string, so the token is never present in
           # the job environment (and therefore cannot appear in logs, even masked).
           AZURE_DEVOPS_PAT: ${{ steps.gate.outputs.push == 'true' && secrets.AZURE_DEVOPS_PAT || '' }}
-          # matrix.feed is a fixed workflow value
-          # (dotnet-libraries | dotnet-libraries-transport)
+          # matrix.feed is a fixed, workflow-controlled value (skiasharp | skiasharp-ci)
           # and gate.outputs.push is a validated 'true'/'false' — passed via env and
           # never interpolated into the script body.
           MIRROR_FEED: ${{ matrix.feed }}

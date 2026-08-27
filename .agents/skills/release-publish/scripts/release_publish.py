@@ -412,14 +412,20 @@ def validate_status_handoff(
                 f"{asset.get('version')}, expected {expected_version}"
             )
         locations = asset.get("locations") or []
-        if locations and not any(
-            PRODUCT_FEED_MARKER in str(location).lower()
-            for location in locations
-        ):
-            raise PublishError(
-                f"BAR build {bar.get('id')} has no dotnet-libraries feed "
-                f"location for {package_id}"
+        if locations:
+            has_product = any(
+                PRODUCT_FEED_MARKER in str(location).lower()
+                for location in locations
             )
+            has_transport = any(
+                TRANSPORT_FEED_MARKER in str(location).lower()
+                for location in locations
+            )
+            if not has_product or has_transport:
+                raise PublishError(
+                    f"BAR build {bar.get('id')} does not route {package_id} "
+                    "exclusively to dotnet-libraries"
+                )
         if not locations and not (
             (bar.get("routedAssets") or {}).get(package_id)
         ):
@@ -437,14 +443,20 @@ def validate_status_handoff(
                 "NonShipping asset"
             )
         locations = asset.get("locations") or []
-        if locations and not any(
-            TRANSPORT_FEED_MARKER in str(location).lower()
-            for location in locations
-        ):
-            raise PublishError(
-                f"BAR build {bar.get('id')} has no "
-                f"dotnet-libraries-transport location for {package_id}"
+        if locations:
+            has_transport = any(
+                TRANSPORT_FEED_MARKER in str(location).lower()
+                for location in locations
             )
+            has_product = any(
+                PRODUCT_FEED_MARKER in str(location).lower()
+                for location in locations
+            )
+            if not has_transport or has_product:
+                raise PublishError(
+                    f"BAR build {bar.get('id')} does not route {package_id} "
+                    "exclusively to dotnet-libraries-transport"
+                )
         if not locations and not routed_transport.get(package_id):
             raise PublishError(
                 f"BAR build {bar.get('id')} has no BAR location or exact "

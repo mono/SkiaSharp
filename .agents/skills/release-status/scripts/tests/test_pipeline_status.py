@@ -42,7 +42,7 @@ def make_run(
     }
 
 
-def test_detail(build_run_id=BUILD_RUN_ID, build_number=BUILD_NUMBER):
+def make_test_detail(build_run_id=BUILD_RUN_ID, build_number=BUILD_NUMBER):
     return {
         "resources": {
             "pipelines": {
@@ -63,7 +63,7 @@ def full_path_test_detail(
     build_run_id=BUILD_RUN_ID,
     build_number=BUILD_NUMBER,
 ):
-    detail = test_detail(build_run_id, build_number)
+    detail = make_test_detail(build_run_id, build_number)
     pipeline = detail["resources"]["pipelines"]["SkiaSharp"]["pipeline"]
     pipeline["name"] = r"\dotnet\skiasharp\skiasharp-package"
     return detail
@@ -164,13 +164,26 @@ class FakeDarc:
 
 
 class FakeFeeds:
-    def __init__(self, available=True):
+    def __init__(self, available=True, overrides=None, error_on=None):
         self.available = available
+        self.overrides = overrides or {}
+        self.error_on = error_on
         self.requests = []
 
     def has_version(self, index_url, package_id, version):
         self.requests.append((index_url, package_id, version))
-        return self.available
+        if self.error_on == (index_url, package_id):
+            raise status.StatusError("feed query failed")
+        if not self.available:
+            return False
+        if (index_url, package_id) in self.overrides:
+            return self.overrides[(index_url, package_id)]
+        expected = (
+            status.TRANSPORT_FEED_INDEX
+            if package_id.startswith("_")
+            else status.PRODUCT_FEED_INDEX
+        )
+        return index_url == expected
 
 
 class FakeRepo:
@@ -198,7 +211,7 @@ def complete_chain():
 def complete_ado():
     return FakeAdo(
         complete_chain(),
-        details={TESTS_RUN_ID: test_detail()},
+        details={TESTS_RUN_ID: make_test_detail()},
     )
 
 
@@ -283,205 +296,48 @@ class PipelineStatusTests(unittest.TestCase):
         ):
             status.FeedVerifier().flat_base(status.PRODUCT_FEED_INDEX)
 
-    def test_exact_artifact_selector_rejects_mutable_assignment(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "exact-artifact-selection"
-        )
-        marker = (
-            "Mutable latestFromBranch artifact selection is not supported"
-        )
+    def test_migration_requirement_matching_semantics(self):
+        requirement = {
+            "pattern": r"required",
+            "forbiddenPattern": r"forbidden",
+        }
         self.assertTrue(
             status.migration_requirement_satisfied(
-                marker,
+                "required",
                 requirement,
             )
         )
         self.assertFalse(
             status.migration_requirement_satisfied(
-                marker + "\n$versionType = 'latestFromBranch'\n",
-                requirement,
-            )
-        )
-
-    def test_package_output_root_requires_canonical_spelling(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "package-output-root"
-        )
-
-        def contract(root):
-            return (
-                f'DirectoryPath {root} = MakeAbsolute(Directory('
-                'Argument("outputPath", "output")));\n'
-                f'DirectoryPath OUTPUT_NUGETS_PATH = {root}.Combine("nugets");\n'
-                f'DirectoryPath OUTPUT_SPECIAL_NUGETS_PATH = {root}'
-                '.Combine("nugets-special");\n'
-                f'DirectoryPath OUTPUT_ARCADE_ASSETS_PATH = {root}'
-                '.Combine("arcade-assets");\n'
-                f'DirectoryPath OUTPUT_PDB_ARTIFACTS_PATH = {root}'
-                '.Combine("pdbs");\n'
-            )
-
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                contract("ROOT_OUTPUT_PATH"),
-                requirement,
-            )
-        )
-        for legacy in ("OUTPUT_PATH", "PACKAGE_OUTPUT_PATH"):
-            with self.subTest(legacy=legacy):
-                self.assertFalse(
-                    status.migration_requirement_satisfied(
-                        contract(legacy),
-                        requirement,
-                    )
-                )
-
-    def test_transport_download_has_no_commit_fallback(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "transport-download-family"
-        )
-        pr_or_branch = (
-            'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
-            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
-            "else version += \"branch.main\";\n"
-        )
-        commit_fallback = (
-            "else if (!string.IsNullOrEmpty(GIT_BRANCH_NAME))\n"
-            "else if (!string.IsNullOrEmpty(GIT_SHA))\n"
-        )
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                pr_or_branch,
+                "required forbidden",
                 requirement,
             )
         )
         self.assertFalse(
             status.migration_requirement_satisfied(
-                pr_or_branch + commit_fallback,
+                "unrelated",
                 requirement,
             )
         )
-
-    def test_transport_pack_emits_exactly_one_family(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "single-transport-family"
-        )
-        contract = (
-            'if (PREVIEW_LABEL.StartsWith ("pr."))\n'
-            'versions.Add ("pr", version);\n'
-            "else\n"
-            'versions.Add ("branch", version);\n'
-        )
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                contract,
-                requirement,
-            )
-        )
+        absent = {"absent": True}
+        self.assertTrue(status.migration_requirement_satisfied(None, absent))
         self.assertFalse(
-            status.migration_requirement_satisfied(
-                contract + 'versions.Add ("commit", version);\n',
-                requirement,
-            )
-        )
-
-    def test_real_pdb_contract_requires_all_safety_markers(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "real-pdb-artifacts"
-        )
-        contract = (
-            'if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) '
-            "{ continue; }\n"
-            "var packagePdbRoot = MakeAbsolute "
-            "(OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));\n"
-            'if (entryPath.StartsWith ("ref/")) { continue; }\n'
-            "var targetPath = packagePdbRoot"
-            ".CombineWithFilePath (entryPath).Collapse ();\n"
-            "var relative = packagePdbRoot.GetRelativePath (targetPath);\n"
-            'relative.Segments.Any (segment => segment == "..");\n'
-            'throw new Exception ("PDB package path escapes");\n'
-            "if (pdbCount == 0) "
-            'OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty");\n'
-        )
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                contract,
-                requirement,
-            )
-        )
-        self.assertFalse(
-            status.migration_requirement_satisfied(
-                contract + "System.IO.Path.Combine (\"bad\");\n",
-                requirement,
-            )
-        )
-
-    def test_public_artifact_contract_rejects_cache(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "public-arcade-artifacts"
-        )
-        contract = (
-            "target: nuget\nname: nuget\nname: nuget_special\n"
-            "name: arcade_shipping\nname: arcade_nonshipping\n"
-            "name: PdbArtifacts\nisProduction: false\n"
-        )
-        self.assertTrue(
-            status.migration_requirement_satisfied(
-                contract,
-                requirement,
-            )
-        )
-        self.assertFalse(
-            status.migration_requirement_satisfied(
-                contract + "enableCaching: true\n",
-                requirement,
-            )
-        )
-
-    def test_powershell_asset_assembler_must_be_absent(self):
-        requirement = next(
-            item
-            for item in status.MIGRATION_REQUIREMENTS
-            if item["id"] == "no-powershell-asset-assembler"
-        )
-        self.assertTrue(
-            status.migration_requirement_satisfied(None, requirement)
-        )
-        self.assertFalse(
-            status.migration_requirement_satisfied(
-                "production helper",
-                requirement,
-            )
+            status.migration_requirement_satisfied("present", absent)
         )
 
     def test_historical_branch_forms_have_explicit_release_roles(self):
         for branch in (
-            "release/4.150.3",
-            "release/4.150.4",
-            "release/4.151.2",
-            "release/4.151.3",
-            "release/4.152.0-rc.1",
-            "release/4.150.4-preview.1",
-            "release/4.151.3.1",
+            "release/9.9.4",
+            "release/9.9.4-rc.1",
+            "release/9.9.4-preview.1",
+            "release/9.9.4.1",
         ):
             with self.subTest(branch=branch):
                 self.assertEqual(
                     status.normalize_release_branch(branch),
                     branch,
                 )
-        for branch in ("release/4.150.x", "release/4.151.x"):
+        for branch in ("release/9.9.x",):
             with self.subTest(branch=branch):
                 with self.assertRaisesRegex(
                     status.StatusError,
@@ -748,7 +604,10 @@ class PipelineStatusTests(unittest.TestCase):
     def test_waits_for_connected_tests(self):
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo(complete_chain(), details={TESTS_RUN_ID: test_detail(999)}),
+            ado=FakeAdo(
+                complete_chain(),
+                details={TESTS_RUN_ID: make_test_detail(999)},
+            ),
             repo=FakeRepo(),
             darc=FakeDarc(),
         )
@@ -773,7 +632,10 @@ class PipelineStatusTests(unittest.TestCase):
         runs[1630][0]["result"] = "failed"
         report = status.build_report(
             COMMIT,
-            ado=FakeAdo(runs, details={TESTS_RUN_ID: test_detail()}),
+            ado=FakeAdo(
+                runs,
+                details={TESTS_RUN_ID: make_test_detail()},
+            ),
             repo=FakeRepo(),
             darc=FakeDarc(),
         )
@@ -865,7 +727,17 @@ class PipelineStatusTests(unittest.TestCase):
                     "4.152.0-preview.1.26421.1",
                 ),
                 (
+                    status.TRANSPORT_FEED_INDEX,
+                    "SkiaSharp",
+                    "4.152.0-preview.1.26421.1",
+                ),
+                (
                     status.PRODUCT_FEED_INDEX,
+                    "HarfBuzzSharp",
+                    "14.2.1-preview.1.26421.1",
+                ),
+                (
+                    status.TRANSPORT_FEED_INDEX,
                     "HarfBuzzSharp",
                     "14.2.1-preview.1.26421.1",
                 ),
@@ -875,7 +747,17 @@ class PipelineStatusTests(unittest.TestCase):
                     "0.0.0-branch.release-4.152.0-preview.1.1",
                 ),
                 (
+                    status.PRODUCT_FEED_INDEX,
+                    "_NativeAssets",
+                    "0.0.0-branch.release-4.152.0-preview.1.1",
+                ),
+                (
                     status.TRANSPORT_FEED_INDEX,
+                    "_NuGets",
+                    "0.0.0-branch.release-4.152.0-preview.1.1",
+                ),
+                (
+                    status.PRODUCT_FEED_INDEX,
                     "_NuGets",
                     "0.0.0-branch.release-4.152.0-preview.1.1",
                 ),
@@ -891,6 +773,113 @@ class PipelineStatusTests(unittest.TestCase):
             feeds=FakeFeeds(available=False),
         )
         self.assertEqual(report["nextAction"], "configure-feed-routing")
+
+    def test_null_locations_reject_cross_feed_duplicates(self):
+        record = bar_record(locations=[])
+        for asset in record["assets"]:
+            asset["locations"] = []
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
+            feeds=FakeFeeds(
+                overrides={
+                    (status.TRANSPORT_FEED_INDEX, "SkiaSharp"): True,
+                }
+            ),
+        )
+        self.assertEqual(report["nextAction"], "configure-feed-routing")
+
+    def test_null_locations_reject_wrong_feed_only(self):
+        cases = (
+            (
+                "SkiaSharp",
+                status.PRODUCT_FEED_INDEX,
+                status.TRANSPORT_FEED_INDEX,
+            ),
+            (
+                "_NuGets",
+                status.TRANSPORT_FEED_INDEX,
+                status.PRODUCT_FEED_INDEX,
+            ),
+        )
+        for package_id, expected, wrong in cases:
+            with self.subTest(package_id=package_id):
+                record = bar_record(locations=[])
+                for asset in record["assets"]:
+                    asset["locations"] = []
+                report = status.build_report(
+                    COMMIT,
+                    ado=complete_ado(),
+                    repo=FakeRepo(),
+                    darc=FakeDarc(record),
+                    feeds=FakeFeeds(
+                        overrides={
+                            (expected, package_id): False,
+                            (wrong, package_id): True,
+                        }
+                    ),
+                )
+                self.assertEqual(
+                    report["nextAction"],
+                    "configure-feed-routing",
+                )
+
+    def test_bar_locations_reject_correct_and_opposite_feeds(self):
+        for package_id, opposite in (
+            ("SkiaSharp", status.TRANSPORT_FEED_INDEX),
+            ("_NuGets", status.PRODUCT_FEED_INDEX),
+        ):
+            with self.subTest(package_id=package_id):
+                record = bar_record()
+                asset = next(
+                    item
+                    for item in record["assets"]
+                    if item["name"] == package_id
+                )
+                asset["locations"].append(opposite)
+                report = status.build_report(
+                    COMMIT,
+                    ado=complete_ado(),
+                    repo=FakeRepo(),
+                    darc=FakeDarc(record),
+                )
+                self.assertEqual(
+                    report["nextAction"],
+                    "configure-feed-routing",
+                )
+
+    def test_bar_locations_allow_neutral_source_artifact(self):
+        record = bar_record()
+        for asset in record["assets"]:
+            asset["locations"].append(
+                "https://dev.azure.com/dnceng/internal/_apis/build/"
+                "builds/3058119/artifacts"
+            )
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
+        )
+        self.assertEqual(report["nextAction"], "start-release-testing")
+
+    def test_opposite_feed_query_errors_fail_closed(self):
+        record = bar_record(locations=[])
+        for asset in record["assets"]:
+            asset["locations"] = []
+        report = status.build_report(
+            COMMIT,
+            ado=complete_ado(),
+            repo=FakeRepo(),
+            darc=FakeDarc(record),
+            feeds=FakeFeeds(
+                error_on=(status.TRANSPORT_FEED_INDEX, "SkiaSharp")
+            ),
+        )
+        self.assertEqual(report["nextAction"], "retry-bar-check")
+        self.assertIn("feed query failed", report["warnings"][0])
 
     def test_stable_bar_uses_exact_package_versions(self):
         repo = FakeRepo()
@@ -930,46 +919,6 @@ class PipelineStatusTests(unittest.TestCase):
             },
         )
 
-    def test_historical_stable_and_rc_package_families(self):
-        cases = (
-            (
-                {"skiaSharp": "4.150.3", "harfBuzzSharp": "14.2.1.3",
-                 "previewLabel": "stable"},
-                "4.150.3",
-                "14.2.1.3",
-            ),
-            (
-                {"skiaSharp": "4.151.2", "harfBuzzSharp": "14.2.1.102",
-                 "previewLabel": "stable"},
-                "4.151.2",
-                "14.2.1.102",
-            ),
-            (
-                {"skiaSharp": "4.152.0", "harfBuzzSharp": "14.2.1.200",
-                 "previewLabel": "rc.1"},
-                "4.152.0-rc.1.26425.1",
-                "14.2.1.200-rc.1.26425.1",
-            ),
-        )
-        for inputs, skia_version, harfbuzz_version in cases:
-            with self.subTest(inputs=inputs):
-                record = bar_record(
-                    stable=inputs["previewLabel"] == "stable",
-                    skia_version=skia_version,
-                    harfbuzz_version=harfbuzz_version,
-                )
-                versions, _ = status.package_versions_from_bar(
-                    record,
-                    inputs,
-                )
-                self.assertEqual(
-                    versions["test"],
-                    {
-                        "SkiaSharp": skia_version,
-                        "HarfBuzzSharp": harfbuzz_version,
-                    },
-                )
-
     def test_bar_build_must_match_exact_azure_build(self):
         record = bar_record()
         record["azureDevOpsBuildId"] = 999
@@ -988,7 +937,7 @@ class PipelineStatusTests(unittest.TestCase):
             extra_assets=[
                 {
                     "name": "_NuGets",
-                    "version": "0.0.0-branch.release-4.152.0-rc.1.1",
+                    "version": "0.0.0-branch.release-9.9.4.1",
                     "nonShipping": True,
                     "locations": ["transport"],
                 },

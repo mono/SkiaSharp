@@ -13,7 +13,7 @@ Prerequisites:
   - Default org/project configured: az devops configure --defaults organization=https://dev.azure.com/dnceng project=internal
 
 Usage:
-  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--pipeline PIPELINE] [--build-id BUILD_ID]
+  python3 query-cg-alerts.py --output FILE [--branch BRANCH] [--text] [--verbose] [--build-id BUILD_ID]
 
   # Standard usage — query all branches, write JSON to file (progress on stdout)
   python3 query-cg-alerts.py --output output/ai/cg-alerts-cache.json
@@ -227,8 +227,6 @@ def main():
     parser = argparse.ArgumentParser(description="Query CG alerts for SkiaSharp pipelines")
     parser.add_argument("--build-id", type=int, help="Specific build ID (skips branch discovery)")
     parser.add_argument("--branch", type=str, help="Query only this branch (e.g., 'main' or 'release/3.119.x')")
-    parser.add_argument("--pipeline", type=str, choices=["build"], default="build",
-                        help="Pipeline to query (default: build)")
     parser.add_argument("--text", action="store_true", help="Also print human-readable text summary to stdout")
     parser.add_argument("--output", "-o", type=str, required=True, help="Write JSON output to this file (required). Progress prints to stdout.")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show per-job progress (each CG log parsed)")
@@ -236,7 +234,7 @@ def main():
 
     token = get_token()
 
-    pipelines_to_query = [(args.pipeline, PIPELINES[args.pipeline])]
+    pipelines_to_query = [("build", PIPELINES["build"])]
 
     # Determine which builds to query
     builds_to_query = []  # list of (build_id, branch, build_number, pipeline_type)

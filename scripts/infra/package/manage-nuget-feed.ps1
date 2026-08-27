@@ -8,7 +8,7 @@
     Copies every GOOD package version that exists in the source feed but is
     missing from the destination feed. It is:
 
-      * Rules-driven — you only choose the feed (-Feed dotnet-libraries | dotnet-libraries-transport).
+      * Rules-driven — you only choose the feed (-Feed skiasharp | skiasharp-transport).
                       The script encodes each feed's source, destination and
                       cleanliness rules (see FEED PROFILES below).
       * Clean by default — known-bad versions (per-PR '-pr.*' builds and
@@ -34,14 +34,14 @@
 
     FEED PROFILES (intrinsic — this is "the difference" between the feeds):
 
-      dotnet-libraries  PUBLIC release feed.
-                    xamarin/public/SkiaSharp  ->  dnceng/public/dotnet-libraries
+      skiasharp     PUBLIC release feed.
+                    xamarin/public/SkiaSharp  ->  dnceng/public/skiasharp
                     Excludes the internal underscore-prefixed CI wrapper packages
                     (_NativeAssets, _NuGets, ...) so the public feed only
                     ever contains real, user-facing packages.
 
-      dotnet-libraries-transport  TRANSPORT build-input feed.
-                    xamarin/public/SkiaSharp-CI  ->  dnceng/public/dotnet-libraries-transport
+      skiasharp-transport  TRANSPORT build-input feed.
+                    xamarin/public/SkiaSharp-CI  ->  dnceng/public/skiasharp-transport
                     Keeps the underscore wrapper/artifact packages (used by the
                     build pipeline and externals-download). Still drops the bad
                     '-pr.*' / malformed versions like every feed.
@@ -50,8 +50,7 @@
     destination needs a PAT (packaging read/write on the destination org).
 
 .PARAMETER Feed
-    Which feed to mirror: 'dotnet-libraries' (public) or
-    'dotnet-libraries-transport' (transport).
+    Which feed to mirror: 'skiasharp' (public) or 'skiasharp-transport' (transport).
     This selects the source, destination and per-feed rules. Required.
 
 .PARAMETER Push
@@ -105,24 +104,24 @@
 
 .EXAMPLE
     # Dry run — see exactly what WOULD be copied to the public feed (safe)
-    ./manage-nuget-feed.ps1 -Feed dotnet-libraries
+    ./manage-nuget-feed.ps1 -Feed skiasharp
 
 .EXAMPLE
     # Real mirror of the public feed
     $env:AZURE_DEVOPS_PAT = '<pat>'
-    ./manage-nuget-feed.ps1 -Feed dotnet-libraries -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp -Push
 
 .EXAMPLE
     # Real mirror of the internal CI artifact feed
-    ./manage-nuget-feed.ps1 -Feed dotnet-libraries-transport -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp-transport -Push
 
 .EXAMPLE
     # Smoke-test the push path end to end on a single package first
-    ./manage-nuget-feed.ps1 -Feed dotnet-libraries -PackageFilter '^SkiaSharp$' -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp -PackageFilter '^SkiaSharp$' -Push
 
 .EXAMPLE
     # Quick CI-feed test: copy just 3 versions, then re-run to continue
-    ./manage-nuget-feed.ps1 -Feed dotnet-libraries-transport -Limit 3 -Push
+    ./manage-nuget-feed.ps1 -Feed skiasharp-transport -Limit 3 -Push
 
 .NOTES
     Exit codes:
@@ -135,7 +134,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet("dotnet-libraries", "dotnet-libraries-transport")]
+    [ValidateSet("skiasharp", "skiasharp-transport")]
     [string]$Feed,
 
     [switch]$Push,
@@ -546,22 +545,22 @@ function Publish-FeedPackage {
 #                    feed so nothing unexpected can ever land there.
 #   'ExcludeBad'   — DENYLIST: push everything EXCEPT known-bad versions
 #                    (-pr.* / malformed -preview-*). Keeps the 0.0.0-commit.* /
-#                    0.0.0-branch.* build artifacts. Used for the transport feed.
+#                    0.0.0-branch.* build artifacts. Used for the INTERNAL feed.
 $FeedProfiles = @{
-    'dotnet-libraries' = @{
+    'skiasharp' = @{
         Kind                = 'public release feed'
         SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp'
-        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'dotnet-libraries'
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp'
         # Public feed: drop the internal underscore-prefixed CI wrapper packages,
         # and only ever publish recognized releases (allowlist).
         ExcludePackageRegex = '^_'
         VersionPolicy       = 'ReleasesOnly'
     }
-    'dotnet-libraries-transport' = @{
+    'skiasharp-transport' = @{
         Kind                = 'transport build-input feed'
         SourceOrg           = 'xamarin'; SourceProject = 'public'; SourceFeed = 'SkiaSharp-CI'
-        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'dotnet-libraries-transport'
-        # Transport feed: keep the underscore wrapper/artifact packages and the
+        DestOrg             = 'dnceng';  DestProject   = 'public'; DestFeed   = 'skiasharp-transport'
+        # Internal feed: keep the underscore wrapper/artifact packages and the
         # commit/branch build versions; only drop the known-bad ones.
         ExcludePackageRegex = ''
         VersionPolicy       = 'ExcludeBad'
