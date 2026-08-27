@@ -69,7 +69,7 @@ If not stated, use the latest stable release. **.NET is forward-compatible** —
 
 ### 3. Environment check
 
-**⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{timestamp}/{number}/`** (NOT the SkiaSharp repo, which has `global.json` pinning SDK 8.0). Record SDK version, workload versions, and runtime version. `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format.
+**⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{timestamp}/{number}/`** (NOT the SkiaSharp repo, which pins its own SDK in `global.json`). Record SDK version, workload versions, and runtime version. `{timestamp}` is the current UTC time in `yyyyMMdd-HHmmss` format.
 
 Also check: Docker (`docker --version`), Playwright MCP tools, GPU availability, .NET workloads (`dotnet workload list`). Install missing workloads now — don't wait.
 

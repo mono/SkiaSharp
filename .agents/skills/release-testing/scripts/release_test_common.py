@@ -281,7 +281,7 @@ def test_args(
         f"-p:SkiaSharpVersion={skia}",
         f"-p:HarfBuzzSharpVersion={harfbuzz}",
         "-p:BaseFramework=net10.0",
-        "-p:SdkVersion=10.0.100",
+        "-p:SdkVersion=10.0.400",
         "-p:SdkAllowPrerelease=false",
     ]
     for name, value in (properties or {}).items():

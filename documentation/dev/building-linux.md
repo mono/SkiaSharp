@@ -4,7 +4,7 @@ This guide covers building libSkiaSharp.so for Linux distributions.
 
 ## Prerequisites
 
-- **.NET 8 SDK** - Pinned via `global.json`
+- **.NET 10 SDK** - Pinned via `global.json`
 - **Python 3**
 - **Clang 14+**
 - **Make**

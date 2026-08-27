@@ -21,8 +21,8 @@ Blazor, WASM, WebAssembly, browser, `SKCanvasView` (Blazor context), `SKHtmlCanv
 
 - .NET SDK matching `{reporter_tfm}` (e.g., SDK 10 for `net10.0`)
 - **⚠️ Run `dotnet --info` in `/tmp/skiasharp/repro/{timestamp}/` (NOT the SkiaSharp repo)** to see which SDK and
-  wasm-tools version will actually be used. The SkiaSharp repo has `global.json` pinning
-  to SDK 8.0, which won't be used for test projects in `/tmp/skiasharp/repro/{timestamp}/`.
+  wasm-tools version will actually be used. The SkiaSharp repo pins its own SDK in
+  `global.json`, which won't be used for test projects in `/tmp/skiasharp/repro/{timestamp}/`.
 - `wasm-tools` workload:
   ```bash
   dotnet workload install wasm-tools
