@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from release_common import ConflictError, PlanError, utcnow_iso
+from release_common import ConflictError, PlanError, build_envelope, utcnow_iso
 from release_git import GitRepository
 import release_github as gh
 from release_github import GitHubClient
@@ -103,11 +103,21 @@ def build_finish_plan(
             f"from the parsed release branch {release.release_branch!r}"
         )
 
+    draft_exists = existing_release is not None
+    draft_published = bool(existing_release and not existing_release.is_draft)
+    if draft_published:
+        next_action = "closeout"
+    elif draft_exists:
+        next_action = "plan-publication"
+    else:
+        next_action = "create-draft"
+
     plan = {
         "schemaVersion": FINISH_SCHEMA_VERSION,
         "operation": "finish",
         "generatedAt": utcnow_iso(),
         "toolingSha": tooling_sha,
+        "nextAction": next_action,
         "input": {"requestedVersion": requested_version},
         "receipt": {
             "skiaSharpVersion": receipt.skiasharp_version,
@@ -128,6 +138,9 @@ def build_finish_plan(
             ],
         },
         "release": {
+            "identity": release.raw,
+            "version": requested_version,
+            "branch": receipt.source_branch,
             "raw": release.raw,
             "numeric": release.numeric,
             "label": release.label,
@@ -144,8 +157,8 @@ def build_finish_plan(
         },
         "previousTag": previous_tag,
         "draft": {
-            "exists": existing_release is not None,
-            "isPublished": bool(existing_release and not existing_release.is_draft),
+            "exists": draft_exists,
+            "isPublished": draft_published,
             "status": draft_status,
         },
         "warnings": warnings,
@@ -180,7 +193,16 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
         expected_prerelease=not release["stable"],
     )
     if existing is not None:
-        return {"tag": tag_result, "draft": "done", "url": None, "alreadyExists": True}
+        is_published = not existing.is_draft
+        return build_envelope(
+            plan,
+            next_action=("closeout" if is_published else "plan-publication"),
+            tag=tag_result,
+            draft="done",
+            url=existing.url,
+            alreadyExists=True,
+            isPublished=is_published,
+        )
 
     generated = github.generate_notes(
         tag=tag, target_commitish=source_commit, previous_tag=plan.get("previousTag")
@@ -193,7 +215,15 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
         body=body,
         prerelease=not release["stable"],
     )
-    return {"tag": tag_result, "draft": "done", "bodySha256": gh.body_sha256(body), "alreadyExists": False}
+    return build_envelope(
+        plan,
+        next_action="plan-publication",
+        tag=tag_result,
+        draft="done",
+        bodySha256=gh.body_sha256(body),
+        alreadyExists=False,
+        isPublished=False,
+    )
 
 
 def plan_publication(plan: dict, *, github: GitHubClient) -> dict:
@@ -212,14 +242,25 @@ def plan_publication(plan: dict, *, github: GitHubClient) -> dict:
     if existing.is_prerelease != (not release["stable"]):
         raise ConflictError(f"draft {tag} prerelease flag does not match the release type")
     markers_present = gh.has_managed_markers(existing.body)
-    return {
-        "tag": tag,
-        "draftUrl": existing.url,
-        "isDraft": existing.is_draft,
-        "bodySha256": gh.body_sha256(existing.body),
-        "hasManagedMarkers": markers_present,
-        "readyToPublish": existing.is_draft and markers_present,
-    }
+    is_published = not existing.is_draft
+    ready_to_publish = existing.is_draft and markers_present
+    if is_published:
+        next_action = "closeout"
+    elif ready_to_publish:
+        next_action = "publish"
+    else:
+        next_action = "create-draft"
+    return build_envelope(
+        plan,
+        next_action=next_action,
+        tag=tag,
+        draftUrl=existing.url,
+        isDraft=existing.is_draft,
+        isPublished=is_published,
+        bodySha256=gh.body_sha256(existing.body),
+        hasManagedMarkers=markers_present,
+        readyToPublish=ready_to_publish,
+    )
 
 
 def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
@@ -236,43 +277,62 @@ def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
                 f"release {tag} is already published but targets "
                 f"{existing.target_commitish}, not the package source commit"
             )
-        return {"tag": tag, "status": "already-published", "url": existing.url}
+        return build_envelope(
+            plan, next_action="closeout", tag=tag, status="already-published", url=existing.url
+        )
     if gh.body_sha256(existing.body) != publication["bodySha256"]:
         raise ConflictError(f"draft {tag} body changed since plan-publication was generated")
     github.publish_release(tag=tag, title=release["title"], body=existing.body)
-    return {"tag": tag, "status": "published", "url": existing.url}
+    return build_envelope(plan, next_action="closeout", tag=tag, status="published", url=existing.url)
 
 
-@dataclass(frozen=True)
-class CloseoutInputs:
-    milestone_client: milestones.MilestoneClient
-    tags: list[str]
+def _closeout_operation_summary(op: milestones.ClosureOperation) -> dict:
+    return {
+        "milestone": op.milestone_title,
+        "tag": op.tag,
+        "status": op.status,
+        "openItemCount": len(op.open_items),
+        "moveTo": op.move_to_title,
+        "detail": op.detail,
+    }
 
 
-def plan_closeout(*, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
+def _closeout_next_action(operations: list[milestones.ClosureOperation], *, applied: bool) -> str:
+    statuses = {op.status for op in operations}
+    if "blocked" in statuses:
+        return "blocked"
+    if applied:
+        return "done"
+    return "closeout" if "pending" in statuses else "done"
+
+
+def plan_closeout(plan: dict, *, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
+    """Build the read-only closeout plan for the release described by ``plan``.
+
+    ``plan`` is the finish-plan.json produced earlier in the pipeline; it
+    supplies the standardized envelope context (tooling SHA, release
+    identity/version/branch, plan digest). The actual closure operations are
+    always recomputed from live milestone/tag state, since closeout may run
+    long after the plan was generated.
+    """
+
     all_milestones = milestone_client.milestones()
     operations, warnings = milestones.plan_closeout(
         milestones=all_milestones,
         tags=tags,
         open_items_for=milestone_client.open_milestone_items,
     )
-    return {
-        "operations": [
-            {
-                "milestone": op.milestone_title,
-                "tag": op.tag,
-                "status": op.status,
-                "openItemCount": len(op.open_items),
-                "moveTo": op.move_to_title,
-                "detail": op.detail,
-            }
-            for op in operations
-        ],
-        "warnings": warnings,
-    }
+    return build_envelope(
+        plan,
+        next_action=_closeout_next_action(operations, applied=False),
+        operations=[_closeout_operation_summary(op) for op in operations],
+        warnings=warnings,
+    )
 
 
-def apply_closeout(*, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
+def apply_closeout(plan: dict, *, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
+    """Apply closeout: move open items off shipped milestones and close them."""
+
     all_milestones = milestone_client.milestones()
     operations, warnings = milestones.plan_closeout(
         milestones=all_milestones,
@@ -284,4 +344,9 @@ def apply_closeout(*, milestone_client: milestones.MilestoneClient, tags: list[s
     results = milestones.apply_closeout(pending, milestone_client)
     for op in blocked:
         results.append({"milestone": op.milestone_title, "status": "blocked", "detail": op.detail})
-    return {"results": results, "warnings": warnings}
+    return build_envelope(
+        plan,
+        next_action=_closeout_next_action(operations, applied=True),
+        results=results,
+        warnings=warnings,
+    )

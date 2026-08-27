@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from release_common import PlanError, utcnow_iso, with_digest
+from release_common import PlanError, build_envelope, utcnow_iso
 from release_git import GitRepository
 from release_github import GitHubClient, GitHubError
 import release_model as model
@@ -444,16 +444,18 @@ def build_prepare_plan(
         "operation": "prepare",
         "generatedAt": utcnow_iso(),
         "toolingSha": tooling_sha,
+        "nextAction": _prepare_next_action(operations),
         "input": {
             "integrationTarget": normalized_target,
             "requestedVersion": requested_version,
         },
         "release": {
+            "identity": version.raw,
             "version": version.raw,
             "numeric": version.numeric,
             "label": label,
             "releaseType": version.release_type,
-            "releaseBranch": release_branch,
+            "branch": release_branch,
             "integrationBranch": version.integration_branch,
             "isHotfix": version.is_hotfix,
             "stable": version.stable,
@@ -492,6 +494,24 @@ def build_prepare_plan(
         "warnings": warnings,
     }
     return plan
+
+
+def _prepare_next_action(operations: list[dict]) -> str:
+    """Derive the standardized top-level ``nextAction`` from operation statuses.
+
+    Precedence: an immutable-state conflict always wins ("blocked"); then a
+    still-open write ("apply"); then a bump PR merely awaiting a human merge
+    ("await-merge"); otherwise everything already matches the plan ("done").
+    """
+
+    statuses = {op["status"] for op in operations}
+    if "blocked" in statuses:
+        return "blocked"
+    if "pending" in statuses:
+        return "apply"
+    if "awaiting-user" in statuses:
+        return "await-merge"
+    return "done"
 
 
 def _requires_package_bump(repo: GitRepository, base_ref: str, version: model.ReleaseVersion) -> bool:
@@ -540,7 +560,7 @@ def apply_prepare_plan(
     release = plan["release"]
     base = plan["base"]
     skia = plan["skia"]
-    release_branch = release["releaseBranch"]
+    release_branch = release["branch"]
     integration_branch = release["integrationBranch"]
 
     repo.fetch()
@@ -551,7 +571,7 @@ def apply_prepare_plan(
             "since the plan was generated; regenerate the plan"
         )
 
-    report: dict = {"releaseBranch": release_branch, "operations": []}
+    report: dict = {"operations": []}
 
     # 1. Maintenance branch (release/X.Y.x), local-only ref update; the
     #    branch is pushed alongside the release branch below.
@@ -607,13 +627,13 @@ def apply_prepare_plan(
     elif stable_bump:
         report["stableBumpPullRequestUrl"] = stable_bump["pullRequestUrl"]
 
-    return report
+    return build_envelope(plan, next_action="done", **report)
 
 
 def _prepare_and_push_release_commit(repo: GitRepository, plan: dict) -> None:
     release = plan["release"]
     base = plan["base"]
-    release_branch = release["releaseBranch"]
+    release_branch = release["branch"]
     repo.switch_create(release_branch, base["sha"])
     changed = update_version_files(
         repo.root,
