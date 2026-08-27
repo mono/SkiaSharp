@@ -134,7 +134,6 @@ Keep each distro/OS suffix unchanged when updating either kind of image. For exa
 Before merging a .NET upgrade PR, verify these items:
 
 - [ ] **`nuget.config`** — Must NOT contain `nuget.org` source (disallowed in CI)
-- [ ] **`scripts/azure-pipelines-complete.yml`** — `buildExternals` parameter must be reset to `'latest'` (not a specific build ID)
 - [ ] **All CI stages pass** — Tests, samples, API diff, and package stages must be green
 - [ ] **Documentation updated** — `documentation/dev/updating-dotnet-version.md` reflects any new learnings
 
@@ -217,7 +216,7 @@ Workloads are pinned via the `DOTNET_WORKLOAD_VERSION` pipeline variable, which 
 ## CI Troubleshooting
 
 ### Reusing Native Artifacts
-To speed up CI iteration when debugging managed code issues, set the `buildExternals` parameter to a previous build ID that has successful native stages. This skips native compilation and downloads artifacts from the specified build instead.
+Native artifacts are reused automatically through content-based caching: `scripts/infra/caching/repo-deps.py` hashes the native inputs and `Cache@2` restores a matching build, which sets `CACHE_SKIP` and skips native compilation. Nothing needs to be set by hand, and there is no way to point a run at an arbitrary previous build ID — artifacts are only ever downloaded from the current run or from an exact connected pipeline run.
 
 ### SDK Version Mismatch
 If CI agents don't have the exact SDK version in `global.json`, use `"rollForward": "latestPatch"` to accept any patch version in the same feature band (e.g., `10.0.100` accepts `10.0.102`).
