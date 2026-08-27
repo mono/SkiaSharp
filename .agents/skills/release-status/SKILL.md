@@ -37,8 +37,8 @@ This skill is **Step 2 of 5**:
 - Reject BARs with duplicate NonShipping transport package IDs (for example,
   multiple `_NuGets` identities); only the build's single PR-or-branch transport
   family belongs in BAR.
-- Build, connected Tests, and exact BAR package assets must be
-  ready before the default testing handoff.
+- Build, API Scan, connected Tests, and exact BAR package assets must be ready
+  before the default testing handoff.
 - The user may explicitly override only the wait for incomplete CI tests.
   Preserve all selected Build/Tests/BAR/package metadata and report the override.
 
@@ -64,6 +64,10 @@ transport feeds. Stable assets are exact
 | `wait-for-build` | Report that the exact combined Build has not started or is running. |
 | `retry-build` | Show the authoritative failed/canceled Build run. |
 | `retry-bar-check` | Report the exact BAR registration or identity failure. |
+| `run-api-scan` | Requeue the exact release Build with `runApiScan=true`; signing/BAR defaults do not imply API Scan. |
+| `wait-for-api-scan` | Report the API Scan stage progress. |
+| `retry-api-scan` | Show the failed API Scan stage and require a corrected Build. |
+| `retry-api-scan-check` | The API Scan timeline could not be read; retry status without attributing the error to BAR. |
 | `wait-for-tests-trigger` | Build passed; connected Tests have not started. |
 | `wait-for-tests` | Report tests progress; wait by default. |
 | `retry-tests` | Show failed/canceled tests and jobs. |
@@ -96,6 +100,7 @@ Render:
 | Build | `{buildRun.state}` | [run `{buildRun.runId}`]({buildRun.url}) | `{buildRun.buildNumber}` |
 | Tests | `{testsRun.state}` | [run `{testsRun.runId}`]({testsRun.url}) | `{testsRun.buildNumber}` |
 
+**API Scan:** `{apiScan.state}`
 **BAR build:** `{barBuild.id}` (`{barBuild.state}`)
 **BAR channels:** `{barBuild.channels}`
 **Default channel IDs:** `{barBuild.defaultChannelIds}`

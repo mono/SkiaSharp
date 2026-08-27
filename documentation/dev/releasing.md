@@ -138,9 +138,9 @@ revision buckets.
 | NuGet.org Publish | Currently started manually with repository owner `mono`, repository name `SkiaSharp`, and the exact tested commit SHA. |
 
 `main` and `release/*` select real signing and BAR registration automatically.
-When validating another branch manually, explicitly set `forceRealSigning`,
-`registerInBar`, and `runApiScan` to `true`; a safe-default run is not release
-evidence.
+API Scan is separate: queue the release Build with `runApiScan=true`. When
+validating another branch manually, also set `forceRealSigning` and
+`registerInBar` to `true`; a safe-default run is not release evidence.
 
 ---
 
@@ -254,9 +254,9 @@ Azure Artifacts and symbol destinations; it does not authorize NuGet.org
 publication.
 
 Release status evaluates the selected commit's release-tooling prerequisites
-before selecting any run. Readiness still requires one exact successful Build,
-its connected Tests run, the matching BAR, approved channel/feed routing, and
-successful release testing.
+before selecting any run. Readiness requires one exact successful Build, a
+successful API Scan stage, its connected Tests run, the matching BAR, approved
+channel/feed routing, and successful release testing.
 
 ### Stage 3: Testing (release-testing skill)
 

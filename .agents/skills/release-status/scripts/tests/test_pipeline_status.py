@@ -134,9 +134,10 @@ def bar_record(
 
 
 class FakeAdo:
-    def __init__(self, runs, details=None):
+    def __init__(self, runs, details=None, timelines=None):
         self.runs = runs
         self.details = details or {}
+        self.timelines = timelines or {}
 
     def list_runs(self, pipeline_id, branch):
         return self.runs.get(pipeline_id, [])
@@ -145,7 +146,17 @@ class FakeAdo:
         return self.details.get(run_id, {})
 
     def timeline(self, build_id):
-        return []
+        return self.timelines.get(
+            build_id,
+            [
+                {
+                    "type": "Stage",
+                    "name": "api_scan",
+                    "state": "completed",
+                    "result": "succeeded",
+                }
+            ],
+        )
 
     def release_config(self, build_id):
         return {
@@ -641,6 +652,64 @@ class PipelineStatusTests(unittest.TestCase):
         )
         self.assertEqual(report["state"], "blocked")
         self.assertEqual(report["nextAction"], "retry-tests")
+
+    def test_missing_api_scan_requires_explicit_release_build(self):
+        report = status.build_report(
+            COMMIT,
+            ado=FakeAdo(
+                complete_chain(),
+                details={TESTS_RUN_ID: make_test_detail()},
+                timelines={BUILD_RUN_ID: []},
+            ),
+            repo=FakeRepo(),
+            darc=FakeDarc(),
+        )
+        self.assertEqual(report["state"], "blocked")
+        self.assertEqual(report["nextAction"], "run-api-scan")
+        self.assertEqual(report["apiScan"]["state"], "missing")
+
+    def test_failed_api_scan_blocks_release(self):
+        runs = complete_chain()
+        runs[1642][0]["result"] = "failed"
+        report = status.build_report(
+            COMMIT,
+            ado=FakeAdo(
+                runs,
+                details={TESTS_RUN_ID: make_test_detail()},
+                timelines={
+                    BUILD_RUN_ID: [
+                        {
+                            "type": "Stage",
+                            "name": "api_scan",
+                            "state": "completed",
+                            "result": "failed",
+                        }
+                    ]
+                },
+            ),
+            repo=FakeRepo(),
+            darc=FakeDarc(),
+        )
+        self.assertEqual(report["nextAction"], "retry-api-scan")
+        self.assertEqual(report["apiScan"]["state"], "failed")
+
+    def test_api_scan_timeline_error_is_not_reported_as_bar_error(self):
+        class TimelineErrorAdo(FakeAdo):
+            def timeline(self, build_id):
+                raise status.StatusError("timeline unavailable")
+
+        report = status.build_report(
+            COMMIT,
+            ado=TimelineErrorAdo(
+                complete_chain(),
+                details={TESTS_RUN_ID: make_test_detail()},
+            ),
+            repo=FakeRepo(),
+            darc=FakeDarc(),
+        )
+        self.assertEqual(report["nextAction"], "retry-api-scan-check")
+        self.assertIsNotNone(report["barBuild"])
+        self.assertIn("timeline unavailable", report["warnings"][0])
 
     def test_bar_waits_for_default_channel_asset_locations(self):
         ado = complete_ado()

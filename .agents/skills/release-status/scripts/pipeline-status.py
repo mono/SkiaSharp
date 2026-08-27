@@ -864,6 +864,28 @@ def job_summary(records: list[dict]) -> dict:
     return summary
 
 
+def api_scan_state(records: list[dict]) -> str:
+    stages = [
+        record
+        for record in records
+        if record.get("type") == "Stage"
+        and (
+            record.get("name") == "api_scan"
+            or record.get("name") == "API Scan"
+        )
+    ]
+    if len(stages) != 1:
+        return "missing"
+    stage = stages[0]
+    if stage.get("state") != "completed":
+        return "running"
+    return (
+        "succeeded"
+        if stage.get("result") in SUCCESS_RESULTS
+        else "failed"
+    )
+
+
 def run_output(
     ado: AzureDevOps,
     pipeline: dict,
@@ -1263,6 +1285,23 @@ def build_report(
     bar = None
     versions = None
     bar_error = None
+    scan_error = None
+    scan_state = None
+    if build_run and build_state in (
+        "succeeded",
+        "warning",
+        "failed",
+        "canceled",
+    ):
+        try:
+            scan_state = api_scan_state(
+                ado.timeline(int(build_run["id"]))
+            )
+        except StatusError as error:
+            scan_error = str(error)
+            warnings.append(
+                f"Could not verify API Scan stage: {error}"
+            )
     if build_run and is_successful(build_run):
         try:
             config = ado.release_config(int(build_run["id"]))
@@ -1304,8 +1343,21 @@ def build_report(
                 )
         except StatusError:
             pass
+        if (
+            next_action == "retry-build"
+            and scan_state == "failed"
+        ):
+            next_action = "retry-api-scan"
     elif bar_error:
         state, next_action = "blocked", "retry-bar-check"
+    elif scan_error:
+        state, next_action = "blocked", "retry-api-scan-check"
+    elif scan_state == "missing":
+        state, next_action = "blocked", "run-api-scan"
+    elif scan_state == "running":
+        state, next_action = "running", "wait-for-api-scan"
+    elif scan_state == "failed":
+        state, next_action = "blocked", "retry-api-scan"
     elif tests_run is None:
         state, next_action = "waiting", "wait-for-tests-trigger"
     elif tests_state == "running":
@@ -1345,6 +1397,7 @@ def build_report(
             warnings,
         ),
         "barBuild": bar,
+        "apiScan": {"state": scan_state},
         "packageVersions": versions,
         "warnings": warnings,
     }
