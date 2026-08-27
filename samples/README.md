@@ -8,13 +8,15 @@ If you are looking to try out the samples, but are not looking to build this rep
 
 ## This Folder
 
-There are 2 main types of sample apps in this folder:
+There are 3 main types of sample apps in this folder:
 
  1. **Basic**  
     Demonstrates the simplest way to use SkiaSharp on a particular platform.
  1. **Gallery**  
     Each app contains several sample drawing to demonstrate different features
     of SkiaSharp.
+ 1. **Graphite**
+    Demonstrates Graphite-specific GPU architecture and performance characteristics.
 
 The "AppStoreCertificates" folder just contains the keystores and certificates to build the samples. This is more fore CI so it can build Release apps, so feel free to use your own.
 
