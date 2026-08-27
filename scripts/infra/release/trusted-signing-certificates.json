@@ -1,17 +1,33 @@
 {
-  "$schemaComment": "Reviewed NuGet.org repository-signing certificate fingerprints used to pin `dotnet nuget verify --certificate-fingerprint` for the anchor packages. Do not add author-signing certificates here: only a NuGet.org repository signature proves a package was actually published to nuget.org, which is the public receipt this tool relies on.",
-  "source": "https://devblogs.microsoft.com/dotnet/the-nuget-org-repository-signing-certificate-will-be-updated-as-soon-as-april-8th-2024/",
+  "$schemaComment": "Reviewed NuGet package-signing certificate fingerprints used to pin `dotnet nuget verify --all --certificate-fingerprint ...` for the anchor packages (SkiaSharp, SkiaSharp.HarfBuzz, HarfBuzzSharp). SkiaSharp packages carry both an author signature (Microsoft Corporation) and a repository signature (NuGet.org); --all verifies every signature present, so both roles must be represented here or verification of a dual-signed package would fail. Design for additive rotation: when a certificate is renewed, add the new fingerprint and keep the old one (do not remove it) so packages already signed with it keep verifying; only remove an entry after confirming no anchor package still carries that signature. validUntil is the certificate's own validity end (informational/audit only): an expired signing certificate does not invalidate packages already signed with it (NuGet timestamps the signature), so verification never filters by validUntil at runtime.",
   "hashAlgorithm": "SHA256",
   "certificates": [
     {
       "fingerprint": "5A2901D6ADA3D18260B9C6DFE2133C95D74B9EEF6AE0E5DC334C8454D1477DF4",
+      "role": "repository",
+      "subject": "NuGet.org",
       "description": "NuGet.org repository signing certificate used through April 2024",
+      "source": "https://devblogs.microsoft.com/dotnet/the-nuget-org-repository-signing-certificate-will-be-updated-as-soon-as-april-8th-2024/",
+      "validFrom": null,
       "validUntil": "2024-05-15"
     },
     {
       "fingerprint": "1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D",
+      "role": "repository",
+      "subject": "NuGet.org",
       "description": "NuGet.org repository signing certificate used from April 2024",
-      "validUntil": null
+      "source": "https://devblogs.microsoft.com/dotnet/the-nuget-org-repository-signing-certificate-will-be-updated-as-soon-as-april-8th-2024/",
+      "validFrom": "2024-04-08",
+      "validUntil": "2027-05-19"
+    },
+    {
+      "fingerprint": "566A31882BE208BE4422F7CFD66ED09F5D4524A5994F50CCC8B05EC0528C1353",
+      "role": "author",
+      "subject": "Microsoft Corporation",
+      "description": "Microsoft Corporation author signing certificate, observed live on SkiaSharp 4.151.1 via ./eng/common/dotnet.sh nuget verify --all",
+      "source": null,
+      "validFrom": null,
+      "validUntil": "2026-10-18"
     }
   ]
 }
