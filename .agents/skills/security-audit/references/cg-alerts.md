@@ -76,14 +76,12 @@ python3 .agents/skills/security-audit/scripts/query-cg-alerts.py \
   --build-id 14176611 --output output/ai/cg-alerts-cache.json
 ```
 
-## CG Portal Links
+## CG Portal
 
-**Registration:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321
+**Alerts:** https://dev.azure.com/dnceng/internal/_componentGovernance/dotnet-SkiaSharp
 
-**Active alerts:** https://devdiv.visualstudio.com/DevDiv/_componentGovernance/113321?_a=alerts&typeId=29227950&alerts-view-option=active
-
-The registration and alerts remain in the DevDiv Component Governance portal.
-The dnceng Build pipeline is the scan source, not the alert portal.
+The Component Governance registration, alerts, repository identity, and scan
+pipeline now live in the dnceng `internal` project.
 
 ### What the Script Does
 
@@ -92,11 +90,9 @@ The dnceng Build pipeline is the scan source, not the alert portal.
 3. Parses and deduplicates all CVEs across builds, pipelines, and jobs.
 4. Sorts by severity and reports which branches and pipelines are affected.
 
-> **Note:** There is no build-independent CG REST API. The `governance.visualstudio.com`
-> service does not expose alert data through any documented endpoint. The CG portal UI
-> aggregates from build results internally. Our script achieves the same result by
-> enumerating every CG log in the latest build of every active branch (no sampling), which
-> reports ALL active registration-level alerts.
+> **Note:** There is no documented build-independent CG alerts API. The script
+> enumerates every Component Governance log in the latest Build of every active
+> branch (no sampling) and reports all alerts observed by those scans.
 
 ## Manual Approach (for Debugging)
 
