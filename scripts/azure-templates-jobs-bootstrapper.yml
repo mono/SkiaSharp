@@ -220,8 +220,8 @@ jobs:
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
@@ -230,6 +230,18 @@ jobs:
           # install the correct version of the Android SDK
           - pwsh: .\scripts\infra\managed\install-android-sdk.ps1
             displayName: Install Android SDK
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools"
+            displayName: Install Android platform tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;35.0.0"
+            displayName: Install Android 35 build tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;36.0.0"
+            displayName: Install Android 36 build tools
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
@@ -336,6 +348,7 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
@@ -350,6 +363,7 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
