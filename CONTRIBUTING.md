@@ -76,7 +76,7 @@ Follow the comprehensive guide in [documentation/dev/adding-apis.md](documentati
 
 ### Prerequisites
 
-- **.NET 8 SDK** - The repo is pinned via `global.json`
+- **.NET 10 SDK** - The repo is pinned via `global.json`
 - **MAUI workload** - Required for mobile targets:
   ```bash
   dotnet workload install maui
