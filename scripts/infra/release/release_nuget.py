@@ -452,6 +452,56 @@ def load_fingerprints(path: Path) -> tuple[str, ...]:
     return tuple(cert["fingerprint"] for cert in data["certificates"])
 
 
+_NUGET_SECTION_HEADER = "# nuget versions"
+_FAMILY_HEADER_RE = re.compile(r"^#\s*(SkiaSharp|HarfBuzzSharp)\s*$")
+_NUGET_PACKAGE_LINE_RE = re.compile(r"^(\S+)\s+nuget\s+\S+\s*$")
+
+
+def extract_versions_txt_families(versions_text: str) -> dict[str, list[str]]:
+    """Parse the authoritative package inventory out of ``scripts/VERSIONS.txt``.
+
+    ``public-packages.json`` must be validated exactly against this: the
+    ``# nuget versions`` section's ``# SkiaSharp`` / ``# HarfBuzzSharp``
+    sub-headers and the ``<id> nuget <version>`` lines beneath each, not a
+    bare ``<PackageId>`` inference from project files or an ad hoc prefix
+    match. A package's declared family comes from which sub-header it falls
+    under in the file, so renaming/relabeling a family in ``VERSIONS.txt``
+    is authoritative over the package's own name.
+    """
+
+    lines = versions_text.splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.strip() == _NUGET_SECTION_HEADER)
+    except StopIteration:
+        raise NuGetError(
+            f"scripts/VERSIONS.txt has no {_NUGET_SECTION_HEADER!r} section"
+        ) from None
+
+    families: dict[str, list[str]] = {}
+    current_family: str | None = None
+    for line in lines[start + 1:]:
+        header_match = _FAMILY_HEADER_RE.fullmatch(line.strip())
+        if header_match:
+            current_family = header_match.group(1)
+            families.setdefault(current_family, [])
+            continue
+        package_match = _NUGET_PACKAGE_LINE_RE.fullmatch(line)
+        if package_match is None:
+            continue
+        if current_family is None:
+            raise NuGetError(
+                f"scripts/VERSIONS.txt has a nuget package line before any "
+                f"'# SkiaSharp'/'# HarfBuzzSharp' header: {line!r}"
+            )
+        families[current_family].append(package_match.group(1))
+    if not families:
+        raise NuGetError(
+            "scripts/VERSIONS.txt's nuget versions section has no "
+            "'# SkiaSharp'/'# HarfBuzzSharp' package families"
+        )
+    return families
+
+
 class VersionsFileReader(Protocol):
     """Reads scripts/VERSIONS.txt and scripts/azure-templates-variables.yml
     at an exact commit, without checking out a working tree."""
