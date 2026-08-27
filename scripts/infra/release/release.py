@@ -1,20 +1,42 @@
 #!/usr/bin/env python3
 """The stable release-automation CLI entry point.
 
-    release.py prepare plan
-    release.py prepare apply --plan <file>
-    release.py finish plan --version <exact public version>
-    release.py finish create-draft --plan <file>
-    release.py finish plan-publication --plan <file>
-    release.py finish publish --plan <file>
-    release.py finish closeout
-    release.py inspect --release-branch <release/X.Y.Z...>
+    release.py prepare plan --integration-target <main|release/X.Y.x> --output <file>
+    release.py prepare apply --plan <file> --output <file>
+    release.py finish plan --version <exact public version> --output <file>
+    release.py finish create-draft --plan <file> --output <file>
+    release.py finish plan-publication --plan <file> --output <file>
+    release.py finish publish --plan <file> --output <file>
+    release.py finish closeout --plan <file> --output <file> [--dry-run]
+    release.py inspect --release-branch <release/X.Y.Z...> --output <file>
     release.py render-plan --plan <file> --output <file>
 
-Every "plan" subcommand is read-only. Every "apply"/"create-draft"/"publish"/
-"closeout" subcommand takes an already schema-validated, digest-stamped plan
-file and revalidates live state before writing; none of them interpret plan
-fields as commands.
+Every "plan" subcommand (``prepare plan``, ``finish plan``) is read-only and
+writes a schema-validated, digest-stamped plan artifact to ``--output``.
+Every "apply"/"create-draft"/"plan-publication"/"publish"/"closeout"
+subcommand takes ``--plan <file>``, revalidates live state before writing,
+and never interprets plan fields as commands.
+
+Every plan and every command result shares the same standardized
+workflow-facing surface, so a thin workflow can read the same fields
+regardless of which command produced the file:
+
+- top-level ``toolingSha`` (the trusted tooling commit), ``planDigest``
+  (the plan's canonical digest -- results pass through the digest of the
+  plan they were produced from), and ``nextAction`` (what the workflow
+  should do next: e.g. ``"apply"``, ``"create-draft"``,
+  ``"plan-publication"``, ``"publish"``, ``"closeout"``, ``"done"``,
+  ``"blocked"``, ``"await-merge"``);
+- a nested ``release`` object with ``identity`` (the normalized release
+  identity/concurrency key, never including the CI build revision),
+  ``version`` (the exact release version -- for finish, the exact
+  published public NuGet.org version including the build revision), and
+  ``branch`` (the exact release branch).
+
+See ``schemas/prepare-plan.schema.json``, ``schemas/finish-plan.schema.json``,
+and ``schemas/result-envelope.schema.json``. ``inspect`` is the one
+exception: it has no plan input, so it omits ``toolingSha``/``planDigest``/
+``nextAction`` but still reports the same ``release`` object shape.
 
 Every subcommand accepts an optional ``--output <file>`` in addition to its
 existing stdout JSON, so a thin workflow step can read an exact file instead
@@ -24,12 +46,11 @@ etc. steps to consume); for every other subcommand ``--output`` is optional
 and, when given, receives the same JSON object that is printed to stdout.
 
 ``render-plan`` is the deterministic summary surface for thin workflows: it
-reads an already-validated prepare or finish plan file and projects a small,
-flat, schema-versioned set of fields a workflow can map directly to job
-outputs -- the trusted tooling SHA, the normalized release identity
-(concurrency key, never including the CI build revision), the exact release
-branch/version, and the plan's own canonical digest. See
-``schemas/plan-summary.schema.json``.
+reads any already-validated plan *or* command-result file (auto-detected)
+and projects a small, flat, schema-versioned set of fields a workflow can
+map directly to job outputs -- ``toolingSha``, ``nextAction``,
+``releaseIdentity``, ``releaseBranch``, ``releaseVersion``, and
+``planDigest``. See ``schemas/plan-summary.schema.json``.
 """
 
 from __future__ import annotations
@@ -45,6 +66,7 @@ import release_common as common
 import release_finish as finish
 import release_github as gh
 import release_milestones as milestones
+import release_model as model
 import release_nuget as nuget
 import release_prepare as prepare
 import release_summary as summary
@@ -139,22 +161,44 @@ def cmd_finish_publish(args: argparse.Namespace) -> int:
 
 
 def cmd_finish_closeout(args: argparse.Namespace) -> int:
+    plan = common.read_plan(Path(args.plan), schema_name=finish.FINISH_SCHEMA)
     repo = _repo(args.repo)
     repo.fetch()
     tags = list(repo.remote_tags().keys())
     client = GhCliMilestoneClient()
     if args.dry_run:
-        report = finish.plan_closeout(milestone_client=client, tags=tags)
+        report = finish.plan_closeout(plan, milestone_client=client, tags=tags)
     else:
-        report = finish.apply_closeout(milestone_client=client, tags=tags)
+        report = finish.apply_closeout(plan, milestone_client=client, tags=tags)
     common.emit(report, output=_output_path(args))
     return 0
 
 
 def cmd_inspect(args: argparse.Namespace) -> int:
+    """Read-only recovery/diagnostic report for one release branch/version.
+
+    Unlike every other subcommand, ``inspect`` has no plan input, so its
+    report intentionally does not carry the standardized ``toolingSha``/
+    ``planDigest``/``nextAction`` envelope (see ``result-envelope.schema.json``)
+    -- there is no plan to trace it back to. It still reports a ``release``
+    object with ``branch``/``version``/``identity`` for naming consistency
+    with every other command's report.
+    """
+
     repo = _repo(args.repo)
     repo.fetch()
-    report: dict = {"releaseBranch": args.release_branch}
+    identity = None
+    try:
+        identity = model.parse_release_branch(args.release_branch).raw
+    except common.PlanError:
+        identity = None
+    report: dict = {
+        "release": {
+            "branch": args.release_branch,
+            "version": args.version,
+            "identity": identity,
+        },
+    }
     ref = f"refs/remotes/origin/{args.release_branch}"
     report["branchExists"] = repo.ref_exists(ref)
     if report["branchExists"]:
@@ -165,7 +209,7 @@ def cmd_inspect(args: argparse.Namespace) -> int:
         report["tag"] = tag
         report["tagSha"] = repo.remote_tags().get(tag)
         existing = github.get_release(tag)
-        report["release"] = (
+        report["githubRelease"] = (
             None
             if existing is None
             else {
@@ -183,28 +227,37 @@ _SUMMARY_PLAN_SCHEMAS = {"prepare": prepare.PREPARE_SCHEMA, "finish": finish.FIN
 
 
 def cmd_render_plan(args: argparse.Namespace) -> int:
-    """Render the deterministic, flat plan-summary surface for a plan file.
+    """Render the deterministic, flat plan-summary surface for a plan *or*
+    command-result file (``--plan`` accepts either -- both are the file a
+    thin workflow step just wrote with ``--output``).
 
-    Reads and fully schema-validates and digest-verifies the plan (detecting
-    whether it is a prepare or finish plan from its own ``operation`` field)
-    before projecting any field, so a tampered plan file is rejected the
-    same way ``apply``/``create-draft``/etc. would reject it.
+    A document whose top-level ``operation`` is ``"prepare"`` or
+    ``"finish"`` is treated as a full plan: it is schema-validated and
+    digest-verified exactly like ``apply``/``create-draft``/etc. would.
+    Anything else is treated as a command result and is schema-validated
+    against the standardized result envelope instead (results are not
+    separately digested; they carry the source plan's digest unchanged).
+    Either way, a tampered or malformed file is rejected before any field
+    is projected.
     """
 
     plan_path = Path(args.plan)
     try:
         peeked = json.loads(plan_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        raise common.ValidationError(f"could not read plan file {plan_path}: {exc}") from exc
-    operation = peeked.get("operation") if isinstance(peeked, dict) else None
+        raise common.ValidationError(f"could not read {plan_path}: {exc}") from exc
+    if not isinstance(peeked, dict):
+        raise common.ValidationError(f"{plan_path} must contain a JSON object")
+
+    operation = peeked.get("operation")
     schema_name = _SUMMARY_PLAN_SCHEMAS.get(operation)
-    if schema_name is None:
-        raise common.ValidationError(
-            f"{plan_path} has unknown or missing 'operation' {operation!r}; "
-            f"expected one of {sorted(_SUMMARY_PLAN_SCHEMAS)}"
-        )
-    plan = common.read_plan(plan_path, schema_name=schema_name)
-    rendered = summary.summarize_plan(plan)
+    if schema_name is not None:
+        document = common.read_plan(plan_path, schema_name=schema_name)
+    else:
+        common.validate_result_envelope(peeked)
+        document = peeked
+
+    rendered = summary.summarize_document(document)
     common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
     common.emit(rendered, output=_output_path(args))
     return 0
@@ -359,6 +412,7 @@ def create_parser() -> argparse.ArgumentParser:
     publish_parser.set_defaults(func=cmd_finish_publish)
 
     closeout_parser = finish_sub.add_parser("closeout")
+    closeout_parser.add_argument("--plan", required=True)
     closeout_parser.add_argument("--dry-run", action="store_true")
     closeout_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     closeout_parser.set_defaults(func=cmd_finish_closeout)

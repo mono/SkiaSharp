@@ -9,10 +9,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gitrepo_helpers as helpers
-from release_common import ConflictError, PlanError
+from release_common import ConflictError, PlanError, with_digest
 from release_git import GitRepository
 import release_finish as finish
 import release_github as gh
+import release_milestones as milestones
 from release_github import PullRequestRef
 
 
@@ -67,11 +68,12 @@ class FakeGitHubClient:
 
 
 def make_finish_plan(*, tag="v3.119.0-preview.1", title="Version 3.119.0 (Preview 1)", stable=False, source_commit="a" * 40):
-    return {
+    plan = {
         "schemaVersion": 1,
         "operation": "finish",
         "generatedAt": "2024-01-01T00:00:00Z",
         "toolingSha": "b" * 40,
+        "nextAction": "create-draft",
         "input": {"requestedVersion": "3.119.0-preview.1.42"},
         "receipt": {
             "skiaSharpVersion": "3.119.0-preview.1.42",
@@ -84,6 +86,9 @@ def make_finish_plan(*, tag="v3.119.0-preview.1", title="Version 3.119.0 (Previe
             "packages": [],
         },
         "release": {
+            "identity": "3.119.0-preview.1",
+            "version": "3.119.0-preview.1.42",
+            "branch": "release/3.119.0-preview.1",
             "raw": "3.119.0-preview.1", "numeric": "3.119.0", "label": "preview.1",
             "releaseType": "preview", "stable": stable, "title": title, "tag": tag,
         },
@@ -92,6 +97,7 @@ def make_finish_plan(*, tag="v3.119.0-preview.1", title="Version 3.119.0 (Previe
         "draft": {"exists": False, "isPublished": False, "status": "pending"},
         "warnings": [],
     }
+    return with_digest(plan)
 
 
 class CreateDraftTests(unittest.TestCase):
@@ -114,6 +120,9 @@ class CreateDraftTests(unittest.TestCase):
         result = finish.create_draft(plan, repo=repo, github=github)
         self.assertEqual(result["draft"], "done")
         self.assertFalse(result["alreadyExists"])
+        self.assertEqual(result["nextAction"], "plan-publication")
+        self.assertEqual(result["planDigest"], plan["planDigest"])
+        self.assertEqual(result["release"]["branch"], "release/3.119.0-preview.1")
         self.assertEqual(repo.remote_tags().get("v3.119.0-preview.1"), sha)
         self.assertIn("v3.119.0-preview.1", github.releases)
 
@@ -202,8 +211,10 @@ class PublicationPlanAndPublishTests(unittest.TestCase):
         )
         plan = make_finish_plan(source_commit=source_commit)
         publication = finish.plan_publication(plan, github=github)
+        self.assertEqual(publication["nextAction"], "publish")
         result = finish.publish(plan, publication, github=github)
         self.assertEqual(result["status"], "published")
+        self.assertEqual(result["nextAction"], "closeout")
         self.assertFalse(github.releases[tag].is_draft)
 
     def test_publish_already_published_matching_release_is_success(self):
@@ -232,6 +243,105 @@ class PublicationPlanAndPublishTests(unittest.TestCase):
         publication = {"bodySha256": "stale-hash"}
         with self.assertRaises(ConflictError):
             finish.publish(plan, publication, github=github)
+
+
+class FakeMilestoneClient:
+    def __init__(self):
+        self._milestones: list = []
+        self.open_items: dict[int, list] = {}
+        self.moved: list[tuple[int, int]] = []
+        self.closed: list[int] = []
+
+    def milestones(self):
+        return list(self._milestones)
+
+    def open_milestone_items(self, milestone_number: int):
+        return self.open_items.get(milestone_number, [])
+
+    def update_item_milestone(self, item_number: int, milestone_number: int) -> None:
+        self.moved.append((item_number, milestone_number))
+        for number, items in list(self.open_items.items()):
+            self.open_items[number] = [item for item in items if item.number != item_number]
+
+    def close_milestone(self, milestone_number: int) -> None:
+        self.closed.append(milestone_number)
+        for m in self._milestones:
+            if m.number == milestone_number:
+                self._milestones[self._milestones.index(m)] = milestones.Milestone(
+                    number=m.number, title=m.title, state="closed"
+                )
+
+    def closing_issues(self, pull_request_number: int):
+        return []
+
+
+class CloseoutTests(unittest.TestCase):
+    def test_plan_closeout_reports_done_when_nothing_to_move(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [
+            milestones.Milestone(number=1, title="3.119.0", state="open"),
+            milestones.Milestone(number=2, title="3.119.1", state="open"),
+        ]
+        result = finish.plan_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(result["nextAction"], "closeout")
+        self.assertEqual(result["planDigest"], plan["planDigest"])
+        self.assertEqual(result["release"]["branch"], "release/3.119.0-preview.1")
+        self.assertEqual(len(result["operations"]), 1)
+        self.assertEqual(result["operations"][0]["status"], "pending")
+
+    def test_plan_closeout_next_action_done_when_nothing_shipped(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
+        result = finish.plan_closeout(plan, milestone_client=client, tags=[])
+        self.assertEqual(result["operations"], [])
+        self.assertEqual(result["nextAction"], "done")
+
+    def test_plan_closeout_next_action_blocked(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
+        client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
+        result = finish.plan_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(result["nextAction"], "blocked")
+        self.assertEqual(result["operations"][0]["status"], "blocked")
+
+    def test_apply_closeout_moves_items_and_closes(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [
+            milestones.Milestone(number=1, title="3.119.0", state="open"),
+            milestones.Milestone(number=2, title="3.119.1", state="open"),
+        ]
+        client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
+        result = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(client.moved, [(5, 2)])
+        self.assertEqual(client.closed, [1])
+        self.assertEqual(result["nextAction"], "done")
+        self.assertEqual(result["planDigest"], plan["planDigest"])
+
+    def test_apply_closeout_is_idempotent_when_rerun(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [
+            milestones.Milestone(number=1, title="3.119.0", state="open"),
+            milestones.Milestone(number=2, title="3.119.1", state="open"),
+        ]
+        first = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(first["nextAction"], "done")
+        second = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(second["results"], [])
+        self.assertEqual(second["nextAction"], "done")
+
+    def test_apply_closeout_reports_blocked_without_raising(self):
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
+        client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
+        result = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        self.assertEqual(result["nextAction"], "blocked")
+        self.assertEqual(result["results"][0]["status"], "blocked")
 
 
 if __name__ == "__main__":

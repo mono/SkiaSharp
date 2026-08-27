@@ -29,8 +29,11 @@ except ImportError as exc:  # pragma: no cover - exercised only when missing
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
 # The plan document field that carries the canonical digest. It is always
-# excluded from the digest computation itself.
-DIGEST_FIELD = "digest"
+# excluded from the digest computation itself. Named "planDigest" (rather
+# than the shorter "digest") so it never collides with an unrelated
+# command-specific "digest"-shaped field and so thin workflows can map it to
+# a job output unambiguously.
+DIGEST_FIELD = "planDigest"
 
 
 class ReleaseToolError(RuntimeError):
@@ -203,7 +206,7 @@ def write_plan(path: Path, plan: dict, *, schema_name: str) -> dict:
     stamped = with_digest(plan)
     # Stamping does not change any field the schema constrains other than the
     # digest itself, but re-validate defensively so a schema that happens to
-    # constrain "digest" is still honoured.
+    # constrain "planDigest" is still honoured.
     validate_against_schema(stamped, schema_name)
     path.write_text(json.dumps(stamped, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return stamped
@@ -227,6 +230,45 @@ def read_plan(path: Path, *, schema_name: str) -> dict:
     validate_against_schema(plan, schema_name)
     verify_digest(plan)
     return plan
+
+
+RESULT_ENVELOPE_SCHEMA = "result-envelope.schema.json"
+
+
+def build_envelope(plan: dict, *, next_action: str, **extra: Any) -> dict:
+    """Build the standardized workflow-facing envelope for a command result.
+
+    Every "apply"/"create-draft"/"plan-publication"/"publish"/"closeout"
+    result carries the same four workflow-facing fields as its source plan
+    -- ``toolingSha``, ``planDigest`` (passed through unchanged from the
+    plan; the result is not itself re-digested), ``nextAction``, and the
+    nested ``release`` identity/version/branch -- plus whatever
+    command-specific fields the caller supplies via ``extra``. This is the
+    shape :func:`validate_result_envelope` and ``release.py render-plan``
+    expect from every non-plan JSON document.
+    """
+
+    release = plan["release"]
+    envelope = {
+        "toolingSha": plan["toolingSha"],
+        DIGEST_FIELD: plan[DIGEST_FIELD],
+        "nextAction": next_action,
+        "release": {
+            "identity": release["identity"],
+            "version": release["version"],
+            "branch": release["branch"],
+        },
+    }
+    envelope.update(extra)
+    validate_result_envelope(envelope)
+    return envelope
+
+
+def validate_result_envelope(document: dict) -> None:
+    """Validate that a non-plan result document carries the standardized
+    workflow-facing envelope fields (see :func:`build_envelope`)."""
+
+    validate_against_schema(document, RESULT_ENVELOPE_SCHEMA)
 
 
 def print_json(value: Any) -> None:

@@ -5,7 +5,7 @@
   "type": "object",
   "additionalProperties": true,
   "required": [
-    "schemaVersion", "operation", "generatedAt", "toolingSha", "input",
+    "schemaVersion", "operation", "generatedAt", "toolingSha", "nextAction", "input",
     "receipt", "release", "tag", "previousTag", "draft", "warnings"
   ],
   "properties": {
@@ -13,7 +13,8 @@
     "operation": { "const": "finish" },
     "generatedAt": { "type": "string", "format": "date-time" },
     "toolingSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "planDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nextAction": { "enum": ["create-draft", "plan-publication", "closeout"] },
     "input": {
       "type": "object",
       "required": ["requestedVersion"],
@@ -55,8 +56,24 @@
     },
     "release": {
       "type": "object",
-      "required": ["raw", "numeric", "label", "releaseType", "stable", "title", "tag"],
+      "required": [
+        "identity", "version", "branch", "raw", "numeric", "label", "releaseType",
+        "stable", "title", "tag"
+      ],
       "properties": {
+        "identity": {
+          "type": "string",
+          "description": "The normalized release identity: the exact release version/branch without the CI build revision (same as `raw`). Safe to use as a repository-wide concurrency key."
+        },
+        "version": {
+          "type": "string",
+          "description": "The exact requested public NuGet.org version, including the CI build revision."
+        },
+        "branch": {
+          "type": "string",
+          "pattern": "^release/",
+          "description": "The exact release branch actually embedded in and verified against the published package (same as `receipt.sourceBranch`)."
+        },
         "raw": { "type": "string" },
         "numeric": { "type": "string" },
         "label": { "type": "string" },

@@ -9,7 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gitrepo_helpers as helpers
-from release_common import PlanError
+from release_common import PlanError, with_digest
 from release_git import GitRepository
 from release_github import GitHubClient, GitHubError, PullRequestRef
 import release_prepare as prepare
@@ -113,6 +113,8 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
             github=github,
         )
         self.assertEqual(plan["release"]["version"], "3.119.0-preview.1")
+        self.assertEqual(plan["release"]["identity"], "3.119.0-preview.1")
+        self.assertEqual(plan["release"]["branch"], "release/3.119.0-preview.1")
         self.assertEqual(plan["release"]["integrationBranch"], "release/3.119.x")
         self.assertEqual(plan["base"]["sha"], main_sha)
         self.assertEqual(plan["maintenanceBranch"]["action"], "create")
@@ -121,6 +123,7 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
         self.assertEqual(plan["skia"]["sha"], SKIA_SHA)
         self.assertTrue(any("maintenance branch" in w for w in plan["warnings"]))
         self.assertIsNone(plan["stableBump"])
+        self.assertEqual(plan["nextAction"], "apply")
         statuses = {op["id"]: op["status"] for op in plan["operations"]}
         self.assertEqual(statuses["create-maintenance-branch"], "pending")
         self.assertEqual(statuses["create-skia-ref"], "pending")
@@ -138,10 +141,11 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
             tooling_sha=main_sha,
             github=github,
         )
+        plan = with_digest(plan)
         report = prepare.apply_prepare_plan(
             plan, repo=fixture.repo, skia_repo=fixture.repo, github=github
         )
-        self.assertEqual(report["releaseBranch"], "release/3.119.0-preview.1")
+        self.assertEqual(report["release"]["branch"], "release/3.119.0-preview.1")
         self.assertTrue(fixture.repo.ref_exists("refs/remotes/origin/release/3.119.x"))
         self.assertEqual(fixture.repo.remote_sha("release/3.119.x"), main_sha)
         self.assertEqual(
@@ -163,12 +167,14 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
         self.assertEqual(statuses["create-maintenance-branch"], "done")
         self.assertEqual(statuses["create-skia-ref"], "done")
         self.assertEqual(statuses["create-release-branch"], "done")
+        self.assertEqual(replanned["nextAction"], "done")
 
         # Re-applying is idempotent: no exceptions, no forced updates.
         second_report = prepare.apply_prepare_plan(
-            replanned, repo=fixture.repo, skia_repo=fixture.repo, github=github
+            with_digest(replanned), repo=fixture.repo, skia_repo=fixture.repo, github=github
         )
-        self.assertEqual(second_report["releaseBranch"], "release/3.119.0-preview.1")
+        self.assertEqual(second_report["release"]["branch"], "release/3.119.0-preview.1")
+        self.assertEqual(second_report["nextAction"], "done")
 
 
 class PrepareSecondPrereleaseTests(unittest.TestCase):
@@ -374,6 +380,31 @@ class PrepareStableBumpTests(unittest.TestCase):
             prepare.plan_stable_bump(
                 fixture.repo, model.parse_release_version("3.119.5"), "1.8.8", github=github
             )
+
+    def test_full_plan_next_action_is_await_merge_when_only_bump_pr_pending(self):
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.create_remote_branch("release/3.119.0", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        github.create_ref(repository="mono/skia", ref="refs/heads/release/3.119.0", sha=SKIA_SHA)
+        github.pull_requests[("bump-version-3.119.1", "release/3.119.x")] = PullRequestRef(
+            number=9, url="https://example.invalid/pr/9"
+        )
+        plan = prepare.build_prepare_plan(
+            fixture.repo,
+            integration_target="main",
+            requested_version="3.119.0",
+            tooling_sha=main_sha,
+            github=github,
+        )
+        statuses = {op["id"]: op["status"] for op in plan["operations"]}
+        self.assertEqual(statuses["create-maintenance-branch"], "done")
+        self.assertEqual(statuses["create-skia-ref"], "done")
+        self.assertEqual(statuses["create-release-branch"], "done")
+        self.assertEqual(statuses["open-stable-bump-pr"], "awaiting-user")
+        self.assertEqual(plan["nextAction"], "await-merge")
 
 
 class VersionFileUpdateTests(unittest.TestCase):

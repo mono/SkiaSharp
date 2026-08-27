@@ -17,13 +17,15 @@ def make_prepare_plan(**overrides) -> dict:
         "operation": "prepare",
         "generatedAt": "2024-01-01T00:00:00Z",
         "toolingSha": "a" * 40,
+        "nextAction": "apply",
         "input": {"integrationTarget": "main", "requestedVersion": None},
         "release": {
+            "identity": "3.119.0-preview.1",
             "version": "3.119.0-preview.1",
             "numeric": "3.119.0",
             "label": "preview.1",
             "releaseType": "preview",
-            "releaseBranch": "release/3.119.0-preview.1",
+            "branch": "release/3.119.0-preview.1",
             "integrationBranch": "release/3.119.x",
             "isHotfix": False,
             "stable": False,
@@ -47,6 +49,7 @@ def make_finish_plan(**overrides) -> dict:
         "operation": "finish",
         "generatedAt": "2024-01-01T00:00:00Z",
         "toolingSha": "a" * 40,
+        "nextAction": "create-draft",
         "input": {"requestedVersion": "3.119.0-preview.1.42"},
         "receipt": {
             "skiaSharpVersion": "3.119.0-preview.1.42",
@@ -59,6 +62,9 @@ def make_finish_plan(**overrides) -> dict:
             "packages": [],
         },
         "release": {
+            "identity": "3.119.0-preview.1",
+            "version": "3.119.0-preview.1.42",
+            "branch": "release/3.119.0-preview.1",
             "raw": "3.119.0-preview.1", "numeric": "3.119.0", "label": "preview.1",
             "releaseType": "preview", "stable": False, "title": "Version 3.119.0 (Preview 1)",
             "tag": "v3.119.0-preview.1",
@@ -75,68 +81,108 @@ def make_finish_plan(**overrides) -> dict:
 class SummarizePrepareTests(unittest.TestCase):
     def test_derives_flat_fields(self):
         plan = make_prepare_plan()
-        rendered = summary.summarize_plan(plan)
+        rendered = summary.summarize_document(plan)
         self.assertEqual(rendered["schemaVersion"], 1)
         self.assertEqual(rendered["operation"], "prepare")
         self.assertEqual(rendered["toolingSha"], "a" * 40)
+        self.assertEqual(rendered["nextAction"], "apply")
         self.assertEqual(rendered["releaseIdentity"], "3.119.0-preview.1")
         self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
         self.assertEqual(rendered["releaseVersion"], "3.119.0-preview.1")
-        self.assertEqual(rendered["digest"], plan["digest"])
+        self.assertEqual(rendered["planDigest"], plan["planDigest"])
         self.assertEqual(rendered["warnings"], ["maintenance branch will be created"])
 
     def test_identity_never_carries_a_build_revision(self):
         plan = make_prepare_plan()
-        rendered = summary.summarize_plan(plan)
+        rendered = summary.summarize_document(plan)
         # Prepare release versions are never suffixed with a CI build number.
         self.assertEqual(rendered["releaseIdentity"], rendered["releaseVersion"])
 
     def test_validates_against_schema(self):
         plan = make_prepare_plan()
-        rendered = summary.summarize_plan(plan)
+        rendered = summary.summarize_document(plan)
         common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
 
 
 class SummarizeFinishTests(unittest.TestCase):
     def test_derives_flat_fields(self):
         plan = make_finish_plan()
-        rendered = summary.summarize_plan(plan)
+        rendered = summary.summarize_document(plan)
         self.assertEqual(rendered["operation"], "finish")
         self.assertEqual(rendered["toolingSha"], "a" * 40)
+        self.assertEqual(rendered["nextAction"], "create-draft")
         # The identity strips the CI build revision that the exact requested
         # public version carries.
         self.assertEqual(rendered["releaseIdentity"], "3.119.0-preview.1")
         self.assertEqual(rendered["releaseVersion"], "3.119.0-preview.1.42")
         self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
-        self.assertEqual(rendered["digest"], plan["digest"])
+        self.assertEqual(rendered["planDigest"], plan["planDigest"])
 
     def test_release_branch_comes_from_the_verified_receipt(self):
-        # The receipt's sourceBranch is the branch actually embedded in and
-        # verified against the published package -- it must be reported even
+        # release.branch is populated from the receipt's verified
+        # sourceBranch when the plan was built -- it must be reported even
         # if it differs from a naive f"release/{raw}" reconstruction.
         plan = make_finish_plan()
-        plan["receipt"]["sourceBranch"] = "release/3.119.x"
-        plan = common.with_digest({k: v for k, v in plan.items() if k != "digest"})
-        rendered = summary.summarize_plan(plan)
+        plan["release"]["branch"] = "release/3.119.x"
+        plan = common.with_digest({k: v for k, v in plan.items() if k != "planDigest"})
+        rendered = summary.summarize_document(plan)
         self.assertEqual(rendered["releaseBranch"], "release/3.119.x")
 
     def test_validates_against_schema(self):
         plan = make_finish_plan()
-        rendered = summary.summarize_plan(plan)
+        rendered = summary.summarize_document(plan)
+        common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
+
+
+class SummarizeResultDocumentTests(unittest.TestCase):
+    """A command result (apply/create-draft/plan-publication/publish/closeout)
+    carries the same envelope as a plan, minus ``operation``/``schemaVersion``,
+    and must summarize identically."""
+
+    def test_summarizes_a_result_envelope(self):
+        plan = make_finish_plan()
+        result = common.build_envelope(
+            plan, next_action="publish", tag="v3.119.0-preview.1", readyToPublish=True
+        )
+        rendered = summary.summarize_document(result)
+        self.assertNotIn("operation", rendered)
+        self.assertEqual(rendered["nextAction"], "publish")
+        self.assertEqual(rendered["releaseIdentity"], "3.119.0-preview.1")
+        self.assertEqual(rendered["releaseVersion"], "3.119.0-preview.1.42")
+        self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
+        self.assertEqual(rendered["planDigest"], plan["planDigest"])
+
+    def test_validates_against_schema(self):
+        plan = make_prepare_plan()
+        result = common.build_envelope(plan, next_action="done", operations=[])
+        rendered = summary.summarize_document(result)
         common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
 
 
 class SummarizeErrorTests(unittest.TestCase):
-    def test_rejects_unknown_operation(self):
-        plan = make_prepare_plan(operation="something-else")
-        with self.assertRaisesRegex(PlanError, "unknown operation"):
-            summary.summarize_plan(plan)
-
-    def test_rejects_missing_operation(self):
+    def test_rejects_document_missing_next_action(self):
         plan = make_prepare_plan()
-        del plan["operation"]
+        del plan["nextAction"]
+        with self.assertRaisesRegex(PlanError, "nextAction"):
+            summary.summarize_document(plan)
+
+    def test_rejects_document_missing_release_branch(self):
+        plan = make_prepare_plan()
+        del plan["release"]["branch"]
+        with self.assertRaisesRegex(PlanError, "release.branch"):
+            summary.summarize_document(plan)
+
+    def test_rejects_document_missing_tooling_sha(self):
+        plan = make_prepare_plan()
+        del plan["toolingSha"]
         with self.assertRaises(PlanError):
-            summary.summarize_plan(plan)
+            summary.summarize_document(plan)
+
+    def test_rejects_document_missing_plan_digest(self):
+        plan = make_prepare_plan()
+        del plan["planDigest"]
+        with self.assertRaises(PlanError):
+            summary.summarize_document(plan)
 
 
 if __name__ == "__main__":

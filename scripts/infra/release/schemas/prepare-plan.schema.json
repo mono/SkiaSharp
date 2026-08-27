@@ -9,6 +9,7 @@
     "operation",
     "generatedAt",
     "toolingSha",
+    "nextAction",
     "input",
     "release",
     "base",
@@ -25,7 +26,8 @@
     "operation": { "const": "prepare" },
     "generatedAt": { "type": "string", "format": "date-time" },
     "toolingSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
-    "digest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "planDigest": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "nextAction": { "enum": ["apply", "await-merge", "done", "blocked"] },
     "input": {
       "type": "object",
       "required": ["integrationTarget", "requestedVersion"],
@@ -37,15 +39,19 @@
     "release": {
       "type": "object",
       "required": [
-        "version", "numeric", "label", "releaseType", "releaseBranch",
+        "identity", "version", "numeric", "label", "releaseType", "branch",
         "integrationBranch", "isHotfix", "stable"
       ],
       "properties": {
+        "identity": {
+          "type": "string",
+          "description": "The normalized release identity: for prepare this always equals `version` since a release version never carries a CI build revision here."
+        },
         "version": { "type": "string" },
         "numeric": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(\\.\\d+)?$" },
         "label": { "type": "string" },
         "releaseType": { "type": "string" },
-        "releaseBranch": { "type": "string", "pattern": "^release/" },
+        "branch": { "type": "string", "pattern": "^release/" },
         "integrationBranch": { "type": "string", "pattern": "^release/\\d+\\.\\d+\\.x$" },
         "isHotfix": { "type": "boolean" },
         "stable": { "type": "boolean" }

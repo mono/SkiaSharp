@@ -15,10 +15,10 @@ class DigestTests(unittest.TestCase):
         stamped = common.with_digest(plan)
         self.assertEqual(stamped["a"], 1)
         self.assertEqual(stamped["b"], 2)
-        self.assertRegex(stamped["digest"], r"^[0-9a-f]{64}$")
+        self.assertRegex(stamped["planDigest"], r"^[0-9a-f]{64}$")
         # Key order must not affect the digest.
         reordered = common.with_digest({"a": 1, "b": 2})
-        self.assertEqual(stamped["digest"], reordered["digest"])
+        self.assertEqual(stamped["planDigest"], reordered["planDigest"])
 
     def test_verify_digest_accepts_untampered_plan(self):
         plan = common.with_digest({"value": 1})
@@ -112,6 +112,51 @@ class CommandRunnerTests(unittest.TestCase):
         result = runner.run(["echo", "hello"], cwd=Path.cwd())
         self.assertEqual(result.stdout.strip(), "hello")
         self.assertTrue(result.ok)
+
+
+class BuildEnvelopeTests(unittest.TestCase):
+    def _plan(self) -> dict:
+        return common.with_digest(
+            {
+                "toolingSha": "a" * 40,
+                "release": {
+                    "identity": "3.119.0-preview.1",
+                    "version": "3.119.0-preview.1.42",
+                    "branch": "release/3.119.0-preview.1",
+                },
+            }
+        )
+
+    def test_build_envelope_carries_standardized_fields(self):
+        plan = self._plan()
+        envelope = common.build_envelope(plan, next_action="publish", tag="v3.119.0-preview.1")
+        self.assertEqual(envelope["toolingSha"], "a" * 40)
+        self.assertEqual(envelope["planDigest"], plan["planDigest"])
+        self.assertEqual(envelope["nextAction"], "publish")
+        self.assertEqual(envelope["release"]["identity"], "3.119.0-preview.1")
+        self.assertEqual(envelope["release"]["version"], "3.119.0-preview.1.42")
+        self.assertEqual(envelope["release"]["branch"], "release/3.119.0-preview.1")
+        self.assertEqual(envelope["tag"], "v3.119.0-preview.1")
+
+    def test_build_envelope_validates_its_own_output(self):
+        plan = self._plan()
+        # An invalid toolingSha would violate result-envelope.schema.json;
+        # build_envelope must catch that defensively even though it produced
+        # the envelope itself.
+        broken_plan = dict(plan)
+        broken_plan["toolingSha"] = "not-a-sha"
+        with self.assertRaises(common.ValidationError):
+            common.build_envelope(broken_plan, next_action="done")
+
+    def test_validate_result_envelope_accepts_well_formed_document(self):
+        envelope = common.build_envelope(self._plan(), next_action="done")
+        common.validate_result_envelope(envelope)  # must not raise
+
+    def test_validate_result_envelope_rejects_missing_next_action(self):
+        envelope = common.build_envelope(self._plan(), next_action="done")
+        del envelope["nextAction"]
+        with self.assertRaises(common.ValidationError):
+            common.validate_result_envelope(envelope)
 
 
 if __name__ == "__main__":

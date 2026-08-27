@@ -56,8 +56,9 @@ class ParserWiringTests(unittest.TestCase):
 
     def test_finish_closeout_parses(self):
         parser = cli.create_parser()
-        args = parser.parse_args(["finish", "closeout", "--dry-run"])
+        args = parser.parse_args(["finish", "closeout", "--plan", "finish-plan.json", "--dry-run"])
         self.assertIs(args.func, cli.cmd_finish_closeout)
+        self.assertEqual(args.plan, "finish-plan.json")
         self.assertTrue(args.dry_run)
         self.assertIsNone(args.output)
 
@@ -122,13 +123,15 @@ class RenderPlanExecutionTests(unittest.TestCase):
             "operation": "prepare",
             "generatedAt": "2024-01-01T00:00:00Z",
             "toolingSha": "a" * 40,
+            "nextAction": "apply",
             "input": {"integrationTarget": "main", "requestedVersion": None},
             "release": {
+                "identity": "3.119.0-preview.1",
                 "version": "3.119.0-preview.1",
                 "numeric": "3.119.0",
                 "label": "preview.1",
                 "releaseType": "preview",
-                "releaseBranch": "release/3.119.0-preview.1",
+                "branch": "release/3.119.0-preview.1",
                 "integrationBranch": "release/3.119.x",
                 "isHotfix": False,
                 "stable": False,
@@ -159,8 +162,11 @@ class RenderPlanExecutionTests(unittest.TestCase):
         rendered = common.json.loads(output_path.read_text(encoding="utf-8"))
         self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
         self.assertEqual(rendered["releaseIdentity"], "3.119.0-preview.1")
+        self.assertEqual(rendered["releaseVersion"], "3.119.0-preview.1")
         self.assertEqual(rendered["toolingSha"], "a" * 40)
-        self.assertRegex(rendered["digest"], r"^[0-9a-f]{64}$")
+        self.assertEqual(rendered["nextAction"], "apply")
+        self.assertEqual(rendered["operation"], "prepare")
+        self.assertRegex(rendered["planDigest"], r"^[0-9a-f]{64}$")
 
     def test_render_plan_without_output_still_succeeds(self):
         plan_path = self._write_prepare_plan()
@@ -179,6 +185,26 @@ class RenderPlanExecutionTests(unittest.TestCase):
         plan_path.write_text('{"operation": "something-else"}', encoding="utf-8")
         exit_code = cli.main(["render-plan", "--plan", str(plan_path)])
         self.assertEqual(exit_code, 1)
+
+    def test_render_plan_also_supports_a_command_result_file(self):
+        # A "result" file (e.g. from `finish create-draft --output`) has no
+        # "operation" field but carries the same standardized envelope.
+        plan_path = self._write_prepare_plan()
+        plan = common.read_plan(plan_path, schema_name=__import__("release_prepare").PREPARE_SCHEMA)
+        result = common.build_envelope(plan, next_action="done", tag="v3.119.0-preview.1")
+        result_path = self.root / "apply-result.json"
+        common.write_json_file(result_path, result)
+
+        output_path = self.root / "result-summary.json"
+        exit_code = cli.main(
+            ["render-plan", "--plan", str(result_path), "--output", str(output_path)]
+        )
+        self.assertEqual(exit_code, 0)
+        rendered = common.json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertNotIn("operation", rendered)
+        self.assertEqual(rendered["nextAction"], "done")
+        self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
+        self.assertEqual(rendered["planDigest"], plan["planDigest"])
 
 
 class EmitHelperTests(unittest.TestCase):
