@@ -231,3 +231,25 @@ def read_plan(path: Path, *, schema_name: str) -> dict:
 
 def print_json(value: Any) -> None:
     print(json.dumps(value, indent=2, sort_keys=True))
+
+
+def write_json_file(path: Path, value: Any) -> None:
+    """Write ``value`` as deterministic, human-diffable JSON to ``path``.
+
+    Used for command reports that are not themselves a versioned/digested
+    plan artifact (apply/publish/closeout/inspect results, rendered plan
+    summaries): callers that need a re-consumable, schema-validated plan
+    file use :func:`write_plan` instead.
+    """
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def emit(value: Any, *, output: Path | None = None) -> None:
+    """Print ``value`` to stdout and, when ``output`` is given, also write it
+    to that exact path so thin workflows never have to scrape stdout."""
+
+    print_json(value)
+    if output is not None:
+        write_json_file(output, value)

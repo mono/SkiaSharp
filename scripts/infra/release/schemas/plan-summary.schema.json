@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/scripts/infra/release/schemas/plan-summary.schema.json",
+  "title": "Deterministic plan summary for thin workflow consumption",
+  "description": "The stable, flat surface `release.py render-plan` derives from a prepare or finish plan. Every field is a plain string so a thin workflow can map it directly to a step/job output with `jq -r '.field'` without knowing the full plan schema.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "operation",
+    "toolingSha",
+    "releaseIdentity",
+    "releaseBranch",
+    "releaseVersion",
+    "digest",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "enum": ["prepare", "finish"] },
+    "toolingSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "The trusted tooling commit the source plan was generated from."
+    },
+    "releaseIdentity": {
+      "type": "string",
+      "description": "The normalized release identity: the exact release version/branch without the CI build revision. Stable for a given release across preview/RC/stable/hotfix and safe to use as a repository-wide concurrency key."
+    },
+    "releaseBranch": {
+      "type": "string",
+      "pattern": "^release/",
+      "description": "The exact release branch."
+    },
+    "releaseVersion": {
+      "type": "string",
+      "description": "Prepare: the exact release version (same as releaseIdentity). Finish: the exact requested public NuGet.org version, including the CI build revision."
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "The canonical digest of the source plan this summary was rendered from, unchanged from the plan file."
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
