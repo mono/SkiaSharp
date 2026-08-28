@@ -54,6 +54,18 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 				first,
 				"file.txt",
 				TestContext.Current.CancellationToken));
+			var blob = (await repository.GitAsync(
+				["rev-parse", $"{first}:file.txt"],
+				cancellationToken: TestContext.Current.CancellationToken)).StandardOutput.Trim();
+			Assert.True(await repository.CommitExistsAsync(
+				first,
+				TestContext.Current.CancellationToken));
+			Assert.False(await repository.CommitExistsAsync(
+				blob,
+				TestContext.Current.CancellationToken));
+			Assert.False(await repository.CommitExistsAsync(
+				new string('f', 40),
+				TestContext.Current.CancellationToken));
 		}
 
 		[Fact]

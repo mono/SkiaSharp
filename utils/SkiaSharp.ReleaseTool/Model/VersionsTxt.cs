@@ -15,6 +15,8 @@ namespace SkiaSharp.ReleaseTool.Model
 
 	public static class VersionsTxt
 	{
+		private const string NuGetSectionHeader = "# nuget versions";
+
 		public static VersionsDocument Parse(string versionsText)
 		{
 			var seenRows = new HashSet<string>(StringComparer.Ordinal);
@@ -121,7 +123,58 @@ namespace SkiaSharp.ReleaseTool.Model
 			{
 				throw new PlanException("scripts/VERSIONS.txt must contain exactly one valid libSkiaSharp milestone row");
 			}
+
 			return (versions.SkiaSharp.Major, milestone);
+		}
+
+		public static IReadOnlyDictionary<string, IReadOnlyList<string>> ParsePackageFamilies(
+			string versionsText)
+		{
+			var lines = TextFileLines.Split(versionsText);
+			var starts = lines
+				.Select((line, index) => (line.Content, Index: index))
+				.Where(static item => item.Content.Trim() == NuGetSectionHeader)
+				.ToArray();
+			if (starts.Length != 1)
+				throw new PlanException($"scripts/VERSIONS.txt must contain exactly one '{NuGetSectionHeader}' section");
+
+			var families = new Dictionary<string, List<string>>(StringComparer.Ordinal);
+			string? currentFamily = null;
+			foreach (var line in lines.Skip(starts[0].Index + 1))
+			{
+				var trimmed = line.Content.Trim();
+				if (trimmed is "# SkiaSharp" or "# HarfBuzzSharp")
+				{
+					currentFamily = trimmed[2..];
+					families.TryAdd(currentFamily, []);
+					continue;
+				}
+
+				var columns = TextFileLines.Columns(line.Content);
+				if (columns.Length != 3 || columns[1] != "nuget")
+					continue;
+				if (currentFamily is null)
+					throw new PlanException("scripts/VERSIONS.txt has a nuget package row before a family heading");
+				if (families[currentFamily].Contains(columns[0], StringComparer.Ordinal))
+					throw new PlanException($"scripts/VERSIONS.txt contains duplicate package '{columns[0]}'");
+				_ = ReleaseVersionPolicy.ParseStableVersion(
+					columns[2],
+					$"{columns[0]} nuget version",
+					3,
+					4);
+				families[currentFamily].Add(columns[0]);
+			}
+
+			if (!families.TryGetValue("SkiaSharp", out var skia) || skia.Count == 0 ||
+				!families.TryGetValue("HarfBuzzSharp", out var harfBuzz) || harfBuzz.Count == 0)
+			{
+				throw new PlanException("scripts/VERSIONS.txt must declare non-empty SkiaSharp and HarfBuzzSharp package families");
+			}
+
+			return families.ToDictionary(
+				static pair => pair.Key,
+				static pair => (IReadOnlyList<string>)pair.Value,
+				StringComparer.Ordinal);
 		}
 
 		internal static bool IsFamilyNugetRow(string line, string family)

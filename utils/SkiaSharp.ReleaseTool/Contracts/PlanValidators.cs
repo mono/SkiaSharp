@@ -1,3 +1,4 @@
+using NuGet.Versioning;
 using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Model;
@@ -297,6 +298,239 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			if (result.StableBumpPullRequestUrl is not null)
 				PlanValidation.Require(result.StableBumpPullRequestUrl.IsAbsoluteUri, "stable bump pull request URL must be absolute");
 			PlanValidation.ValidateStrings(result.Warnings, "warnings");
+		}
+	}
+
+	public static class FinishPlanValidator
+	{
+		public static void Validate(FinishPlan plan)
+		{
+			try
+			{
+				ValidateCore(plan);
+			}
+			catch (PlanException ex)
+			{
+				throw new ValidationException(ex.Message, ex);
+			}
+		}
+
+		private static void ValidateCore(FinishPlan plan)
+		{
+			PlanValidation.ValidateHeader(
+				plan.SchemaVersion,
+				plan.Operation,
+				ReleaseOperation.Finish,
+				plan.PlanId,
+				plan.GeneratedAt,
+				plan.ToolingSha);
+			var requested = PublicReleaseVersion.Parse(plan.Input.RequestedVersion);
+			var identity = requested.Identity;
+			PlanValidation.Require(plan.Receipt.SkiaSharpVersion == requested.Text, "receipt.skiaSharpVersion must match input.requestedVersion");
+			PlanValidation.Require(plan.Receipt.Base == requested.Base, "receipt.base does not match the public version");
+			PlanValidation.Require(plan.Receipt.Label == identity.Label, "receipt.label does not match the release identity");
+			PlanValidation.Require(plan.Receipt.BuildRevision == requested.BuildRevision, "receipt.buildRevision does not match the public version");
+			PlanValidation.ValidateSha(plan.Receipt.SourceCommit, "receipt.sourceCommit");
+			PlanValidation.Require(
+				plan.Receipt.SourceBranch == identity.ReleaseBranch,
+				"receipt.sourceBranch must be the exact release branch");
+			_ = NuGetVersion.Parse(plan.Receipt.HarfBuzzSharpVersion);
+
+			var packageIds = new HashSet<string>(StringComparer.Ordinal);
+			(string Commit, string Branch)? harfBuzzSource = null;
+			foreach (var package in plan.Receipt.Packages ??
+				throw new ValidationException("receipt.packages must not be null"))
+			{
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(package.Id), "receipt package id must not be empty");
+				PlanValidation.Require(packageIds.Add(package.Id), $"receipt contains duplicate package '{package.Id}'");
+				_ = NuGetVersion.Parse(package.Version);
+				PlanValidation.ValidateSha(package.SourceCommit, $"receipt package {package.Id} sourceCommit");
+				_ = SkiaSharpReleaseIdentity.ParseBranch(package.SourceBranch);
+				if (package.Id.StartsWith("SkiaSharp", StringComparison.Ordinal))
+				{
+					PlanValidation.Require(package.Version == requested.Text, $"{package.Id} version is inconsistent");
+					PlanValidation.Require(package.SourceCommit == plan.Receipt.SourceCommit, $"{package.Id} sourceCommit is inconsistent");
+					PlanValidation.Require(package.SourceBranch == plan.Receipt.SourceBranch, $"{package.Id} sourceBranch is inconsistent");
+				}
+				else if (package.Id.StartsWith("HarfBuzzSharp", StringComparison.Ordinal))
+				{
+					PlanValidation.Require(package.Version == plan.Receipt.HarfBuzzSharpVersion, $"{package.Id} version is inconsistent");
+					harfBuzzSource ??= (package.SourceCommit, package.SourceBranch);
+					PlanValidation.Require(
+						harfBuzzSource == (package.SourceCommit, package.SourceBranch),
+						"HarfBuzzSharp package source commit and branch must be family-consistent");
+				}
+				else
+				{
+					throw new ValidationException($"receipt contains unsupported package family member '{package.Id}'");
+				}
+			}
+			foreach (var anchor in new[] { "SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp" })
+				PlanValidation.Require(packageIds.Contains(anchor), $"receipt is missing anchor '{anchor}'");
+
+			PlanValidation.Require(plan.Release.Identity == identity.Raw, "release.identity is inconsistent");
+			PlanValidation.Require(plan.Release.Version == requested.Text, "release.version is inconsistent");
+			PlanValidation.Require(plan.Release.Branch == plan.Receipt.SourceBranch, "release.branch is inconsistent");
+			PlanValidation.Require(plan.Release.Raw == identity.Raw, "release.raw is inconsistent");
+			PlanValidation.Require(plan.Release.Numeric == identity.Numeric, "release.numeric is inconsistent");
+			PlanValidation.Require(plan.Release.Label == identity.Label, "release.label is inconsistent");
+			PlanValidation.Require(plan.Release.ReleaseType == identity.ReleaseType, "release.releaseType is inconsistent");
+			PlanValidation.Require(plan.Release.Stable == identity.Stable, "release.stable is inconsistent");
+			PlanValidation.Require(plan.Release.Title == identity.Title, "release.title is inconsistent");
+			PlanValidation.Require(plan.Release.Tag == identity.Tag, "release.tag is inconsistent");
+
+			PlanValidation.Require(plan.Tag.Name == identity.Tag, "tag.name is inconsistent");
+			PlanValidation.Require(plan.Tag.TargetCommit == plan.Receipt.SourceCommit, "tag.targetCommit is inconsistent");
+			if (plan.Tag.ExistingSha is not null)
+				PlanValidation.ValidateSha(plan.Tag.ExistingSha, "tag.existingSha");
+			PlanValidation.Require(
+				(plan.Tag.Status == FinishState.Done) ==
+					(plan.Tag.ExistingSha == plan.Tag.TargetCommit),
+				"tag.status does not match existingSha");
+			if (plan.Tag.Status == FinishState.Pending)
+				PlanValidation.Require(plan.Tag.ExistingSha is null, "a pending tag must be absent");
+
+			if (plan.PreviousTag is not null)
+			{
+				var previous = SkiaSharpReleaseIdentity.ParseTag(plan.PreviousTag);
+				PlanValidation.Require(previous.CompareTo(identity) < 0, "previousTag must sort before the release");
+			}
+
+			ValidateDraft(plan);
+			ValidateOperations(plan);
+			PlanValidation.ValidateStrings(plan.Warnings, "warnings");
+		}
+
+		private static void ValidateDraft(FinishPlan plan)
+		{
+			var draft = plan.Draft;
+			PlanValidation.Require(draft.IsPublished == (draft.Exists && plan.NextAction == FinishNextAction.Closeout), "draft.isPublished is inconsistent");
+			if (draft.IsPublished)
+				PlanValidation.Require(plan.Tag.Status == FinishState.Done, "published release requires its authoritative tag");
+			PlanValidation.Require(
+				(draft.Status == FinishState.Done) == draft.Exists,
+				"draft.status does not match draft.exists");
+			if (!draft.Exists)
+			{
+				PlanValidation.Require(
+					draft.TargetCommitish is null && draft.Url is null && draft.Body is null,
+					"absent draft cannot have target, URL, or body");
+				PlanValidation.Require(draft.MarkerState == ManagedMarkerState.None, "absent draft cannot have markers");
+			}
+			else
+			{
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(draft.TargetCommitish), "existing draft must include targetCommitish");
+				PlanValidation.Require(draft.Url is { IsAbsoluteUri: true }, "draft.url must be absolute");
+				PlanValidation.Require(draft.Body is not null, "existing draft must include its body");
+				ManagedMarkerState actualMarkers;
+				try
+				{
+					actualMarkers = Finishing.ManagedReleaseMarkers.Inspect(draft.Body!);
+				}
+				catch (GitHubException ex)
+				{
+					throw new ValidationException(ex.Message, ex);
+				}
+				PlanValidation.Require(actualMarkers == draft.MarkerState, "draft.markerState does not match draft.body");
+				if (!draft.IsPublished)
+				{
+					PlanValidation.Require(
+						draft.TargetCommitish == plan.Receipt.SourceCommit,
+						"unpublished draft targetCommitish must be the package source commit");
+				}
+				else
+				{
+					var exactSha = draft.TargetCommitish!.Length == 40 &&
+						draft.TargetCommitish.All(static character =>
+							character is >= '0' and <= '9' or >= 'a' and <= 'f');
+					PlanValidation.Require(
+						draft.TargetCommitish == plan.Receipt.SourceCommit ||
+						(!exactSha &&
+							(draft.TargetCommitish is "main" ||
+							 draft.TargetCommitish == plan.Receipt.SourceBranch)),
+						"published release targetCommitish is not verified");
+				}
+			}
+
+			var expectedAction = draft switch
+			{
+				{ IsPublished: true } => FinishNextAction.Closeout,
+				{ Exists: true, MarkerState: ManagedMarkerState.Complete }
+					when plan.Tag.Status == FinishState.Done =>
+					FinishNextAction.PlanPublication,
+				_ => FinishNextAction.CreateDraft,
+			};
+			PlanValidation.Require(plan.NextAction == expectedAction, "nextAction does not match draft state");
+		}
+
+		private static void ValidateOperations(FinishPlan plan)
+		{
+			var operations = plan.Operations ??
+				throw new ValidationException("operations must not be null");
+			var byId = new Dictionary<FinishOperationId, FinishOperation>();
+			foreach (var operation in operations)
+			{
+				if (operation is null)
+					throw new ValidationException("operations must not contain null values");
+				PlanValidation.Require(byId.TryAdd(operation.Id, operation), $"operations contains duplicate id '{operation.Id}'");
+				var expectedKind = operation.Id switch
+				{
+					FinishOperationId.CreateTag => FinishOperationKind.GitTag,
+					FinishOperationId.CreateDraft or FinishOperationId.PublishRelease =>
+						FinishOperationKind.GitHubRelease,
+					FinishOperationId.Closeout => FinishOperationKind.ReleaseCloseout,
+					_ => throw new ValidationException($"unsupported finish operation '{operation.Id}'"),
+				};
+				PlanValidation.Require(operation.Kind == expectedKind, $"finish operation '{operation.Id}' has wrong kind");
+			}
+			PlanValidation.Require(byId.Count == 4, "operations must contain exactly four finish operations");
+			foreach (var id in Enum.GetValues<FinishOperationId>())
+				PlanValidation.Require(byId.ContainsKey(id), $"operations is missing '{id}'");
+
+			var published = plan.Draft.IsPublished;
+			var ready = plan.Draft.Exists && plan.Draft.MarkerState == ManagedMarkerState.Complete;
+			var expected = new Dictionary<FinishOperationId, PlanOperationStatus>
+			{
+				[FinishOperationId.CreateTag] =
+					plan.Tag.Status == FinishState.Done ? PlanOperationStatus.Done : PlanOperationStatus.Pending,
+				[FinishOperationId.CreateDraft] =
+					published ? PlanOperationStatus.Skipped :
+					ready ? PlanOperationStatus.Done : PlanOperationStatus.Pending,
+				[FinishOperationId.PublishRelease] =
+					published ? PlanOperationStatus.Done :
+					ready ? PlanOperationStatus.Pending : PlanOperationStatus.Skipped,
+				[FinishOperationId.Closeout] =
+					published ? PlanOperationStatus.Pending : PlanOperationStatus.Skipped,
+			};
+			foreach (var pair in expected)
+				PlanValidation.Require(byId[pair.Key].Status == pair.Value, $"finish operation '{pair.Key}' status is inconsistent");
+		}
+	}
+
+	public static class FinishPendingReportValidator
+	{
+		public static void Validate(FinishPendingReport report)
+		{
+			PlanValidation.Require(report.SchemaVersion == 1, "schemaVersion must be 1");
+			PlanValidation.Require(
+				report.Operation == FinishPendingOperation.FinishPlanPending,
+				"operation must be finish-plan-pending");
+			PlanValidation.Require(
+				report.GeneratedAt != default && report.GeneratedAt.Offset == TimeSpan.Zero,
+				"generatedAt must be a UTC timestamp");
+			PlanValidation.ValidateSha(report.ToolingSha, "toolingSha");
+			PlanValidation.Require(report.NextAction == PendingNextAction.Pending, "nextAction must be pending");
+			_ = PublicReleaseVersion.Parse(report.RequestedVersion);
+			PlanValidation.Require(report.MissingPackages is { Count: > 0 }, "missingPackages must not be empty");
+			foreach (var package in report.MissingPackages)
+			{
+				PlanValidation.Require(!string.IsNullOrWhiteSpace(package.Id), "pending package id must not be empty");
+				_ = NuGetVersion.Parse(package.Version);
+			}
+			PlanValidation.Require(double.IsFinite(report.ElapsedSeconds) && report.ElapsedSeconds >= 0, "elapsedSeconds must be nonnegative");
+			PlanValidation.Require(double.IsFinite(report.DeadlineSeconds) && report.DeadlineSeconds >= 0, "deadlineSeconds must be nonnegative");
+			PlanValidation.Require(report.ElapsedSeconds >= report.DeadlineSeconds, "elapsedSeconds must reach deadlineSeconds");
+			PlanValidation.Require(!string.IsNullOrWhiteSpace(report.Message), "message must not be empty");
 		}
 	}
 

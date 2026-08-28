@@ -13,6 +13,8 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		WriteIndented = true)]
 	[JsonSerializable(typeof(PreparePlan))]
 	[JsonSerializable(typeof(PrepareApplyResult))]
+	[JsonSerializable(typeof(FinishPlan))]
+	[JsonSerializable(typeof(FinishPendingReport))]
 	public partial class ReleaseJsonContext : JsonSerializerContext
 	{
 		public static ReleaseJsonContext Strict { get; } = new(CreateOptions());
@@ -36,6 +38,13 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			options.Converters.Add(new JsonStringEnumConverter<PlanOperationKind>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<PlanOperationStatus>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<ApplyOperationStatus>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishPendingOperation>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishNextAction>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<PendingNextAction>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishState>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<ManagedMarkerState>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishOperationId>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishOperationKind>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<ReleaseKind>(allowIntegerValues: false));
 			return options;
 		}

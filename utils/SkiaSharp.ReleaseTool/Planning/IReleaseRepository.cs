@@ -1,6 +1,6 @@
 namespace SkiaSharp.ReleaseTool.Planning
 {
-	public interface IReleaseRepository : IPrepareRepository
+	public interface IReleaseRepository : Finishing.IFinishRepository
 	{
 		string Root { get; }
 		Task FetchAsync(string remote = "origin", CancellationToken cancellationToken = default);

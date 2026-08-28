@@ -9,7 +9,10 @@
 		/// <summary>Every unhandled <see cref="ReleaseToolException"/> maps here.</summary>
 		public const int GenericError = 1;
 
+		/// <summary>NuGet.org has not finished indexing all required packages.</summary>
+		public const int Pending = 2;
+
 		/// <summary>The command was canceled.</summary>
-		public const int Canceled = 2;
+		public const int Canceled = 130;
 	}
 }
