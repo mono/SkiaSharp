@@ -295,3 +295,18 @@ def emit(value: Any, *, output: Path | None = None) -> None:
     print_json(value)
     if output is not None:
         write_json_file(output, value)
+
+
+def write_text_file(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text if text.endswith("\n") else text + "\n", encoding="utf-8")
+
+
+def emit_text(text: str, *, output: Path | None = None) -> None:
+    """Print ``text`` to stdout and, when ``output`` is given, also write it
+    to that exact path. Used for non-JSON renderings (e.g. Markdown)."""
+
+    text = text if text.endswith("\n") else text + "\n"
+    print(text, end="")
+    if output is not None:
+        write_text_file(output, text)

@@ -545,7 +545,6 @@ def apply_prepare_plan(
     plan: dict,
     *,
     repo: GitRepository,
-    skia_repo: GitRepository,
     github: GitHubClient,
 ) -> dict:
     """Apply an already schema-validated, digest-verified prepare plan.
@@ -554,7 +553,11 @@ def apply_prepare_plan(
     write, then performs the writes in the order the plan describes: the
     mono/skia ref, then the SkiaSharp release branch/commit, then (only for
     a stable release) the bump PR. Existing matching state is treated as
-    already done; nothing is force-updated.
+    already done; nothing is force-updated. The mono/skia counterpart ref is
+    created entirely through the GitHub refs API (see ``github.create_ref``
+    below), never by checking out or cloning the ``externals/skia``
+    submodule, so callers may check this repository out with
+    ``submodules: false``.
     """
 
     release = plan["release"]

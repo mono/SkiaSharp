@@ -15,7 +15,15 @@ Every "plan" subcommand (``prepare plan``, ``finish plan``) is read-only and
 writes a schema-validated, digest-stamped plan artifact to ``--output``.
 Every "apply"/"create-draft"/"plan-publication"/"publish"/"closeout"
 subcommand takes ``--plan <file>``, revalidates live state before writing,
-and never interprets plan fields as commands.
+and never interprets plan fields as commands. In every one of those cases
+``--plan`` is the *original* plan file written by ``prepare plan``/
+``finish plan`` (schema-validated against ``prepare-plan.schema.json``/
+``finish-plan.schema.json``) -- never a result file that ``apply``/
+``create-draft``/``publish``/``closeout`` itself wrote. In particular,
+``finish publish``, ``finish plan-publication``, and ``finish closeout``
+each re-read that same original finish plan on every invocation (not each
+other's output), which is what lets every one of them be rerun
+independently and idempotently.
 
 Every plan and every command result shares the same standardized
 workflow-facing surface, so a thin workflow can read the same fields
@@ -103,9 +111,8 @@ def cmd_prepare_plan(args: argparse.Namespace) -> int:
 def cmd_prepare_apply(args: argparse.Namespace) -> int:
     plan = common.read_plan(Path(args.plan), schema_name=prepare.PREPARE_SCHEMA)
     repo = _repo(args.repo)
-    skia_repo = GitRepository(root=(repo.root / prepare.SKIA_SUBMODULE_PATH))
     github = gh.GhCliGitHubClient()
-    report = prepare.apply_prepare_plan(plan, repo=repo, skia_repo=skia_repo, github=github)
+    report = prepare.apply_prepare_plan(plan, repo=repo, github=github)
     common.emit(report, output=_output_path(args))
     return 0
 
@@ -182,9 +189,10 @@ def cmd_finish_closeout(args: argparse.Namespace) -> int:
     tags = list(repo.remote_tags().keys())
     client = GhCliMilestoneClient()
     if args.dry_run:
-        report = finish.plan_closeout(plan, milestone_client=client, tags=tags)
+        report = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=tags)
     else:
-        report = finish.apply_closeout(plan, milestone_client=client, tags=tags)
+        github = gh.GhCliGitHubClient()
+        report = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=tags)
     common.emit(report, output=_output_path(args))
     return 0
 
@@ -242,7 +250,7 @@ _SUMMARY_PLAN_SCHEMAS = {"prepare": prepare.PREPARE_SCHEMA, "finish": finish.FIN
 
 
 def cmd_render_plan(args: argparse.Namespace) -> int:
-    """Render the deterministic, flat plan-summary surface for a plan *or*
+    """Render the deterministic plan-summary surface for a plan *or*
     command-result file (``--plan`` accepts either -- both are the file a
     thin workflow step just wrote with ``--output``).
 
@@ -253,7 +261,15 @@ def cmd_render_plan(args: argparse.Namespace) -> int:
     against the standardized result envelope instead (results are not
     separately digested; they carry the source plan's digest unchanged).
     Either way, a tampered or malformed file is rejected before any field
-    is projected.
+    is projected -- this validation happens identically regardless of
+    ``--format``.
+
+    ``--format json`` (the default, for compatibility) emits the flat
+    ``schemas/plan-summary.schema.json`` surface. ``--format markdown``
+    emits a deterministic, human-readable report built from the same
+    validated document, additionally including whichever of
+    operations/results/receipt/packages/tag/draft/stable-bump sections are
+    present.
     """
 
     plan_path = Path(args.plan)
@@ -272,14 +288,26 @@ def cmd_render_plan(args: argparse.Namespace) -> int:
         common.validate_result_envelope(peeked)
         document = peeked
 
-    rendered = summary.summarize_document(document)
-    common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
-    common.emit(rendered, output=_output_path(args))
+    if args.format == "markdown":
+        rendered_text = summary.render_markdown(document)
+        common.emit_text(rendered_text, output=_output_path(args))
+    else:
+        rendered = summary.summarize_document(document)
+        common.validate_against_schema(rendered, summary.SUMMARY_SCHEMA)
+        common.emit(rendered, output=_output_path(args))
     return 0
 
 
 class GhCliMilestoneClient:
-    """The real milestone client, backed by ``gh api``."""
+    """The real milestone client, backed by ``gh api``.
+
+    Every read here passes ``-X GET`` explicitly: ``gh api`` silently
+    switches its default HTTP method from GET to POST as soon as any
+    ``-f``/``-F`` flag is present (used here to pass query-string
+    parameters like ``state``/``per_page``/``milestone``), so a read that
+    relies on the implicit default would actually POST against a
+    list/read-only endpoint and fail.
+    """
 
     def __init__(self, repository: str = gh.GITHUB_REPOSITORY):
         self.repository = repository
@@ -295,6 +323,7 @@ class GhCliMilestoneClient:
         payload = self._api(
             [
                 f"repos/{self.repository}/milestones",
+                "-X", "GET",
                 "--paginate", "--slurp", "-f", "state=all", "-f", "per_page=100",
             ]
         )
@@ -320,6 +349,7 @@ class GhCliMilestoneClient:
         payload = self._api(
             [
                 f"repos/{self.repository}/issues",
+                "-X", "GET",
                 "--paginate", "--slurp",
                 "-f", f"milestone={milestone_number}",
                 "-f", "state=open",
@@ -337,6 +367,20 @@ class GhCliMilestoneClient:
                     )
                 )
         return result
+
+    def pull_request_milestone(self, pull_request_number: int) -> str | None:
+        payload = self._api(
+            ["-X", "GET", f"repos/{self.repository}/pulls/{pull_request_number}"]
+        )
+        milestone = (payload or {}).get("milestone")
+        return milestone["title"] if milestone else None
+
+    def issue_milestone(self, issue_number: int) -> str | None:
+        payload = self._api(
+            ["-X", "GET", f"repos/{self.repository}/issues/{issue_number}"]
+        )
+        milestone = (payload or {}).get("milestone")
+        return milestone["title"] if milestone else None
 
     def update_item_milestone(self, item_number: int, milestone_number: int) -> None:
         self.runner.run(
@@ -412,22 +456,37 @@ def create_parser() -> argparse.ArgumentParser:
     finish_plan_parser.set_defaults(func=cmd_finish_plan)
 
     create_draft_parser = finish_sub.add_parser("create-draft")
-    create_draft_parser.add_argument("--plan", required=True)
+    create_draft_parser.add_argument(
+        "--plan", required=True,
+        help="the original finish plan JSON file produced by 'finish plan' (not a result file)",
+    )
     create_draft_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     create_draft_parser.set_defaults(func=cmd_finish_create_draft)
 
-    plan_publication_parser = finish_sub.add_parser("plan-publication")
-    plan_publication_parser.add_argument("--plan", required=True)
+    plan_publication_parser = finish_sub.add_parser(
+        "plan-publication",
+        help="read-only: revalidate the actual remote draft against the original finish plan",
+    )
+    plan_publication_parser.add_argument(
+        "--plan", required=True,
+        help="the original finish plan JSON file produced by 'finish plan' (not a result file)",
+    )
     plan_publication_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     plan_publication_parser.set_defaults(func=cmd_finish_plan_publication)
 
     publish_parser = finish_sub.add_parser("publish")
-    publish_parser.add_argument("--plan", required=True)
+    publish_parser.add_argument(
+        "--plan", required=True,
+        help="the original finish plan JSON file produced by 'finish plan' (not a result file)",
+    )
     publish_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     publish_parser.set_defaults(func=cmd_finish_publish)
 
     closeout_parser = finish_sub.add_parser("closeout")
-    closeout_parser.add_argument("--plan", required=True)
+    closeout_parser.add_argument(
+        "--plan", required=True,
+        help="the original finish plan JSON file produced by 'finish plan' (not a result file)",
+    )
     closeout_parser.add_argument("--dry-run", action="store_true")
     closeout_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     closeout_parser.set_defaults(func=cmd_finish_closeout)
@@ -439,10 +498,14 @@ def create_parser() -> argparse.ArgumentParser:
     inspect_parser.set_defaults(func=cmd_inspect)
 
     render_plan_parser = subparsers.add_parser(
-        "render-plan", help="render a deterministic, flat plan summary for thin workflow consumption"
+        "render-plan", help="render a deterministic plan/result summary for thin workflow consumption"
     )
-    render_plan_parser.add_argument("--plan", required=True)
-    render_plan_parser.add_argument("--output", default=None, help="also write the summary JSON to this file")
+    render_plan_parser.add_argument("--plan", required=True, help="a plan file or a command-result file")
+    render_plan_parser.add_argument(
+        "--format", choices=("json", "markdown"), default="json",
+        help="json (default, for compatibility) or markdown",
+    )
+    render_plan_parser.add_argument("--output", default=None, help="also write the rendered summary to this file")
     render_plan_parser.set_defaults(func=cmd_render_plan)
 
     return parser
