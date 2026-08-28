@@ -553,11 +553,18 @@ def apply_prepare_plan(
     write, then performs the writes in the order the plan describes: the
     mono/skia ref, then the SkiaSharp release branch/commit, then (only for
     a stable release) the bump PR. Existing matching state is treated as
-    already done; nothing is force-updated. The mono/skia counterpart ref is
-    created entirely through the GitHub refs API (see ``github.create_ref``
-    below), never by checking out or cloning the ``externals/skia``
-    submodule, so callers may check this repository out with
-    ``submodules: false``.
+    already done only after revalidating it -- an already-existing release
+    branch is checked for both ancestry (the approved base must still be an
+    ancestor of its head) and version-state agreement (PREVIEW_LABEL/
+    SKIASHARP_VERSION at that head must match the plan), so drift
+    introduced after the plan was approved is a hard failure rather than
+    being silently accepted; nothing is ever force-updated. The mono/skia
+    counterpart ref is created entirely through the GitHub refs API (see
+    ``github.create_ref`` below), never by checking out or cloning the
+    ``externals/skia`` submodule, so callers may check this repository out
+    with ``submodules: false``. The returned envelope's ``nextAction`` is
+    ``"await-merge"`` (not ``"done"``) while a stable-bump PR was just
+    opened/found and is still unmerged.
     """
 
     release = plan["release"]
@@ -615,9 +622,16 @@ def apply_prepare_plan(
         _prepare_and_push_release_commit(repo, plan)
         report["operations"].append({"id": "create-release-branch", "status": "done"})
     else:
+        # The branch already exists -- possibly created by an earlier
+        # partial apply, or by something else entirely since the plan was
+        # approved. Never trust it just because a ref with the right name
+        # exists: revalidate it against this exact plan before treating it
+        # as done.
+        _verify_existing_release_branch(repo, plan, remote_sha)
         report["operations"].append({"id": "create-release-branch", "status": "done"})
 
     # 4. Stable bump PR.
+    next_action = "done"
     stable_bump = plan.get("stableBump")
     if stable_bump and stable_bump["status"] != "done":
         pr_url = stable_bump["pullRequestUrl"]
@@ -627,10 +641,47 @@ def apply_prepare_plan(
             {"id": "open-stable-bump-pr", "status": "done", "pullRequestUrl": pr_url}
         )
         report["stableBumpPullRequestUrl"] = pr_url
+        # Opening (or finding) the bump PR is itself done, but the release
+        # process is not: a human still has to merge it before this is
+        # truly finished.
+        next_action = "await-merge"
     elif stable_bump:
         report["stableBumpPullRequestUrl"] = stable_bump["pullRequestUrl"]
 
-    return build_envelope(plan, next_action="done", **report)
+    return build_envelope(plan, next_action=next_action, **report)
+
+
+def _verify_existing_release_branch(repo: GitRepository, plan: dict, remote_sha: str) -> None:
+    """Revalidate an already-existing release branch before treating it as
+    done (see ``apply_prepare_plan``'s "3. SkiaSharp release commit/ref").
+
+    Confirms the approved base SHA is still an ancestor of the live branch
+    head (catching a force-push or an unrelated branch created under the
+    same name after the plan was approved), and that the version-state
+    files at that head still match what this exact plan expects -- so
+    drift introduced between "prepare plan" and "prepare apply" is a hard
+    failure, never silently accepted.
+    """
+
+    base = plan["base"]
+    release = plan["release"]
+    if not repo.is_ancestor(base["sha"], remote_sha):
+        raise GitHubError(
+            f"existing release branch {release['branch']} ({remote_sha}) is not "
+            f"a descendant of the approved base {base['sha']}; drift was "
+            "introduced after the plan was approved"
+        )
+    state = read_version_state(repo, remote_sha)
+    if state.label != release["label"]:
+        raise GitHubError(
+            f"existing release branch {release['branch']} has PREVIEW_LABEL "
+            f"{state.label!r}, expected {release['label']!r}"
+        )
+    if state.skia != release["numeric"]:
+        raise GitHubError(
+            f"existing release branch {release['branch']} has SKIASHARP_VERSION "
+            f"{state.skia!r}, expected {release['numeric']!r}"
+        )
 
 
 def _prepare_and_push_release_commit(repo: GitRepository, plan: dict) -> None:

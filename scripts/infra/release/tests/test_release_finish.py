@@ -172,6 +172,73 @@ class CreateDraftTests(unittest.TestCase):
         with self.assertRaises(gh.GitHubError):
             finish.create_draft(plan, repo=repo, github=github)
 
+    def test_migrates_existing_marker_less_draft_instead_of_oscillating(self):
+        # Item 6 regression: an unpublished draft created by hand (or an
+        # older tool version) before managed markers existed used to make
+        # create-draft <-> plan-publication oscillate forever (create-draft
+        # saw *any* existing draft as "already done" -> plan-publication,
+        # but plan-publication saw no markers -> back to create-draft).
+        bare, worktree = helpers.create_bare_and_worktree(self.root, "repo")
+        (worktree / "file.txt").write_text("x", encoding="utf-8")
+        sha = helpers.commit_all(worktree, "init")
+        helpers.push(worktree)
+        repo = GitRepository(root=worktree)
+        repo.fetch()
+        plan = make_finish_plan(source_commit=sha)
+        github = FakeGitHubClient()
+        legacy_body = "## What's Changed\n* a hand-written or pre-marker release body"
+        github.releases["v3.119.0-preview.1"] = gh.ReleaseInfo(
+            tag_name="v3.119.0-preview.1", name="Version 3.119.0 (Preview 1)", is_draft=True,
+            is_prerelease=True, target_commitish=sha, body=legacy_body, url="https://example.invalid",
+        )
+
+        result = finish.create_draft(plan, repo=repo, github=github)
+
+        self.assertTrue(result["migrated"])
+        self.assertTrue(result["alreadyExists"])
+        self.assertFalse(result["isPublished"])
+        self.assertEqual(result["nextAction"], "plan-publication")
+        migrated_body = github.releases["v3.119.0-preview.1"].body
+        self.assertTrue(gh.has_managed_markers(migrated_body))
+        self.assertIn(legacy_body, migrated_body)  # the original notes are preserved, not discarded
+
+        # This must actually converge now: plan-publication reports ready,
+        # not another bounce back to create-draft.
+        publication = finish.plan_publication(plan, github=github)
+        self.assertTrue(publication["hasManagedMarkers"])
+        self.assertTrue(publication["readyToPublish"])
+        self.assertEqual(publication["nextAction"], "publish")
+
+        # Re-running create-draft again (idempotency) must not re-migrate.
+        second = finish.create_draft(plan, repo=repo, github=github)
+        self.assertFalse(second["migrated"])
+        self.assertTrue(second["alreadyExists"])
+
+    def test_never_rewrites_a_published_marker_less_release(self):
+        # A legacy *published* release without managed markers must never
+        # be rewritten by create-draft -- migration only ever applies to an
+        # unpublished draft.
+        bare, worktree = helpers.create_bare_and_worktree(self.root, "repo")
+        (worktree / "file.txt").write_text("x", encoding="utf-8")
+        sha = helpers.commit_all(worktree, "init")
+        helpers.push(worktree)
+        repo = GitRepository(root=worktree)
+        repo.fetch()
+        plan = make_finish_plan(source_commit=sha)
+        github = FakeGitHubClient()
+        published_body = "## What's Changed\n* already shipped, no markers"
+        github.releases["v3.119.0-preview.1"] = gh.ReleaseInfo(
+            tag_name="v3.119.0-preview.1", name="Version 3.119.0 (Preview 1)", is_draft=False,
+            is_prerelease=True, target_commitish=sha, body=published_body, url="https://example.invalid",
+        )
+
+        result = finish.create_draft(plan, repo=repo, github=github)
+
+        self.assertTrue(result["isPublished"])
+        self.assertFalse(result["migrated"])
+        self.assertEqual(result["nextAction"], "closeout")
+        self.assertEqual(github.releases["v3.119.0-preview.1"].body, published_body)  # untouched
+
 
 class PublicationPlanAndPublishTests(unittest.TestCase):
     def test_plan_publication_reports_readiness(self):
@@ -243,7 +310,76 @@ class PublicationPlanAndPublishTests(unittest.TestCase):
             target_commitish=source_commit, body=body, url="https://example.invalid",
         )
         plan = make_finish_plan(source_commit=source_commit)
-        publication = {"bodySha256": "stale-hash"}
+        publication = finish.plan_publication(plan, github=github)
+        # The draft body changes after the publication report was approved
+        # -- publish must detect this even though the publication report
+        # itself is otherwise valid and bound to this exact plan.
+        github.update_release_body(tag=tag, body=gh.build_initial_body("different notes"))
+        with self.assertRaisesRegex(ConflictError, "body changed"):
+            finish.publish(plan, publication, github=github)
+
+    def test_publish_rejects_publication_from_a_different_plan(self):
+        github = FakeGitHubClient()
+        tag = "v3.119.0-preview.1"
+        source_commit = "a" * 40
+        body = gh.build_initial_body("notes")
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0 (Preview 1)", is_draft=True, is_prerelease=True,
+            target_commitish=source_commit, body=body, url="https://example.invalid",
+        )
+        plan = make_finish_plan(source_commit=source_commit)
+        publication = finish.plan_publication(plan, github=github)
+        # Same tag (so the draft lookup still succeeds) but a genuinely
+        # different plan document -> a different planDigest.
+        other_plan = make_finish_plan(source_commit=source_commit, title="Version 9.9.9 (Different)")
+        with self.assertRaisesRegex(ConflictError, "different plan"):
+            finish.publish(other_plan, publication, github=github)
+
+    def test_publish_rejects_publication_for_a_different_tag(self):
+        github = FakeGitHubClient()
+        tag = "v3.119.0-preview.1"
+        source_commit = "a" * 40
+        body = gh.build_initial_body("notes")
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0 (Preview 1)", is_draft=True, is_prerelease=True,
+            target_commitish=source_commit, body=body, url="https://example.invalid",
+        )
+        plan = make_finish_plan(source_commit=source_commit)
+        publication = dict(finish.plan_publication(plan, github=github))
+        publication["tag"] = "v9.9.9"
+        with self.assertRaisesRegex(ConflictError, "for tag"):
+            finish.publish(plan, publication, github=github)
+
+    def test_publish_rejects_publication_without_managed_markers(self):
+        github = FakeGitHubClient()
+        tag = "v3.119.0-preview.1"
+        source_commit = "a" * 40
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0 (Preview 1)", is_draft=True, is_prerelease=True,
+            target_commitish=source_commit, body="legacy notes, no markers", url="https://example.invalid",
+        )
+        plan = make_finish_plan(source_commit=source_commit)
+        publication = finish.plan_publication(plan, github=github)
+        self.assertFalse(publication["hasManagedMarkers"])
+        self.assertFalse(publication["readyToPublish"])
+        self.assertEqual(publication["nextAction"], "create-draft")
+        with self.assertRaisesRegex(ConflictError, "managed marker"):
+            finish.publish(plan, publication, github=github)
+
+    def test_publish_rejects_a_hand_built_publication_missing_required_fields(self):
+        # A plausible-looking but incomplete stand-in (e.g. hand-built in a
+        # test, or a corrupted file) must not be accepted just because it
+        # happens to carry a matching bodySha256.
+        github = FakeGitHubClient()
+        tag = "v3.119.0-preview.1"
+        source_commit = "a" * 40
+        body = gh.build_initial_body("notes")
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0 (Preview 1)", is_draft=True, is_prerelease=True,
+            target_commitish=source_commit, body=body, url="https://example.invalid",
+        )
+        plan = make_finish_plan(source_commit=source_commit)
+        publication = {"bodySha256": gh.body_sha256(body)}
         with self.assertRaises(ConflictError):
             finish.publish(plan, publication, github=github)
 

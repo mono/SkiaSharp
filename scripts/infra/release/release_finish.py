@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
-from release_common import ConflictError, PlanError, build_envelope, utcnow_iso
+from release_common import ConflictError, DIGEST_FIELD, PlanError, build_envelope, utcnow_iso
 from release_git import GitRepository
 import release_github as gh
 from release_github import GitHubClient
@@ -167,7 +167,22 @@ def build_finish_plan(
 
 
 def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> dict:
-    """Apply ``finish create-draft``: push the tag and create/reconcile the draft."""
+    """Apply ``finish create-draft``: push the tag and create/reconcile the draft.
+
+    An existing unpublished draft that already carries the managed marker
+    body (created by a prior run of this same function) is treated as
+    already done. An existing unpublished draft that predates managed
+    markers -- created by hand, or by an older tool version -- is safely
+    migrated in place: its existing (GitHub-generated or hand-written)
+    body is preserved and wrapped with the managed markers instead of
+    being discarded, then re-read to verify the migration actually took
+    effect. Without this, ``plan-publication`` would keep reporting
+    ``next_action="create-draft"`` for a marker-less draft and this
+    function would keep reporting it "already done", oscillating forever
+    without ever converging on ``publish``. A published release is never
+    rewritten here, marked or not -- see ``plan_publication``/``publish``
+    for the only path that touches a published release's body.
+    """
 
     tag_info = plan["tag"]
     receipt = plan["receipt"]
@@ -191,15 +206,39 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
     )
     if existing is not None:
         is_published = not existing.is_draft
+        if is_published or gh.has_managed_markers(existing.body):
+            return build_envelope(
+                plan,
+                next_action=("closeout" if is_published else "plan-publication"),
+                tag=tag,
+                tagStatus="done",
+                draftStatus="done",
+                url=existing.url,
+                alreadyExists=True,
+                isPublished=is_published,
+                migrated=False,
+            )
+        # An unpublished draft exists but predates managed markers: migrate
+        # it in place rather than oscillating between create-draft and
+        # plan-publication forever.
+        migrated_body = gh.build_initial_body(existing.body)
+        github.update_release_body(tag=tag, body=migrated_body)
+        reloaded = github.get_release(tag)
+        if reloaded is None or not gh.has_managed_markers(reloaded.body):
+            raise ConflictError(
+                f"migrating draft {tag} to the managed-marker body did not verify"
+            )
         return build_envelope(
             plan,
-            next_action=("closeout" if is_published else "plan-publication"),
+            next_action="plan-publication",
             tag=tag,
             tagStatus="done",
             draftStatus="done",
-            url=existing.url,
+            url=reloaded.url,
+            bodySha256=gh.body_sha256(reloaded.body),
             alreadyExists=True,
-            isPublished=is_published,
+            isPublished=False,
+            migrated=True,
         )
 
     generated = github.generate_notes(
@@ -222,6 +261,7 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
         bodySha256=gh.body_sha256(body),
         alreadyExists=False,
         isPublished=False,
+        migrated=False,
     )
 
 
@@ -263,7 +303,23 @@ def plan_publication(plan: dict, *, github: GitHubClient) -> dict:
 
 
 def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
-    """Apply ``finish publish``: publish the existing draft unchanged."""
+    """Apply ``finish publish``: publish the existing draft unchanged.
+
+    ``publication`` must be the exact, persisted result of a prior
+    ``finish plan-publication`` run for this same plan -- never recomputed
+    in this process. This is what binds the human/environment approval
+    gate (which reviews that persisted plan-publication report before the
+    protected job running ``publish`` is allowed to proceed) to the
+    specific draft body it approved: :func:`_validate_publication_binding`
+    rejects a publication report generated from a different plan, for a
+    different tag, or that was never actually ready to publish, and the
+    body-hash comparison below still detects a draft edited after the
+    approved report was generated. Recomputing plan-publication here
+    instead of consuming a persisted report would let a single process
+    approve its own fresh recomputation, defeating the approval gate
+    entirely -- so this function only ever reads ``publication``, it never
+    calls :func:`plan_publication` itself.
+    """
 
     tag = plan["tag"]["name"]
     release = plan["release"]
@@ -279,10 +335,40 @@ def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
         return build_envelope(
             plan, next_action="closeout", tag=tag, status="already-published", url=existing.url
         )
+    _validate_publication_binding(plan, publication, tag=tag)
     if gh.body_sha256(existing.body) != publication["bodySha256"]:
         raise ConflictError(f"draft {tag} body changed since plan-publication was generated")
     github.publish_release(tag=tag, title=release["title"], body=existing.body)
     return build_envelope(plan, next_action="closeout", tag=tag, status="published", url=existing.url)
+
+
+def _validate_publication_binding(plan: dict, publication: dict, *, tag: str) -> None:
+    """Ensure ``publication`` is genuinely the matching, approved
+    plan-publication result for ``plan`` -- not a stale, mismatched, or
+    hand-built stand-in that happens to satisfy the body-hash check below."""
+
+    if publication.get(DIGEST_FIELD) != plan.get(DIGEST_FIELD):
+        raise ConflictError(
+            f"publication report for {tag} was generated from a different plan "
+            "(planDigest mismatch); rerun 'finish plan-publication' against this "
+            "exact plan and use its output"
+        )
+    if publication.get("tag") != tag:
+        raise ConflictError(
+            f"publication report is for tag {publication.get('tag')!r}, expected {tag!r}"
+        )
+    if not publication.get("hasManagedMarkers"):
+        raise ConflictError(
+            f"publication report for {tag} does not have the managed marker body; "
+            "run 'finish create-draft' to migrate it, then 'finish plan-publication' again"
+        )
+    if not publication.get("readyToPublish"):
+        raise ConflictError(
+            f"publication report for {tag} is not ready to publish "
+            f"(isPublished={publication.get('isPublished')}, isDraft={publication.get('isDraft')})"
+        )
+    if "bodySha256" not in publication:
+        raise ConflictError(f"publication report for {tag} is missing bodySha256")
 
 
 UPDATE_RELEASE_NOTES_WORKFLOW = "update-release-notes.lock.yml"
