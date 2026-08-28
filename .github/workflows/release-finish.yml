@@ -48,18 +48,40 @@ jobs:
         with:
           global-json-file: global.json
 
+      - name: Pre-warm the pinned .NET SDK
+        run: ./eng/common/dotnet.sh --version
+
       - name: Build immutable finalization plan
+        id: plan_command
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_VERSION: ${{ inputs.release_version }}
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/release-finish"
+          status=0
           python3 scripts/infra/release/release.py finish plan \
             --version "$RELEASE_VERSION" \
             --tooling-sha "$GITHUB_SHA" \
             --download-dir "$RUNNER_TEMP/release-finish/packages" \
-            --output "$RUNNER_TEMP/release-finish/plan.json"
+            --output "$RUNNER_TEMP/release-finish/plan.json" || status=$?
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          if [ "$status" -eq 2 ]; then
+            {
+              echo "# Release $RELEASE_VERSION is pending on NuGet.org"
+              echo
+              jq -r '.message' "$RUNNER_TEMP/release-finish/plan.json"
+              echo
+              echo "| Package | Version |"
+              echo "| --- | --- |"
+              jq -r '.missingPackages[] | "| `\(.id)` | `\(.version)` |"' \
+                "$RUNNER_TEMP/release-finish/plan.json"
+            } > "$RUNNER_TEMP/release-finish/summary.md"
+            cat "$RUNNER_TEMP/release-finish/summary.md" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          elif [ "$status" -ne 0 ]; then
+            exit "$status"
+          fi
           python3 scripts/infra/release/release.py render-plan \
             --plan "$RUNNER_TEMP/release-finish/plan.json" \
             --format markdown \
@@ -68,6 +90,7 @@ jobs:
 
       - name: Export immutable plan identity
         id: outputs
+        if: steps.plan_command.outputs.status == '0'
         run: |
           set -euo pipefail
           plan="$RUNNER_TEMP/release-finish/plan.json"
@@ -76,6 +99,7 @@ jobs:
           echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
 
       - name: Upload finalization plan
+        if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-finish-plan
@@ -84,6 +108,12 @@ jobs:
             ${{ runner.temp }}/release-finish/summary.md
           if-no-files-found: error
           retention-days: 30
+
+      - name: Stop while NuGet.org finishes indexing
+        if: steps.plan_command.outputs.status == '2'
+        run: |
+          echo "::error::Public package indexing is incomplete. Review the uploaded plan and rerun this workflow later."
+          exit 1
 
   create-draft:
     name: Create immutable tag and draft
@@ -188,6 +218,18 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Require approved tooling to remain on main
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          TOOLING_SHA: ${{ needs.plan.outputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEFAULT_BRANCH" --quiet
+          git merge-base --is-ancestor "$TOOLING_SHA" "origin/$DEFAULT_BRANCH" || {
+            echo "::error::Approved tooling $TOOLING_SHA is no longer an ancestor of origin/$DEFAULT_BRANCH."
+            exit 1
+          }
+
       - name: Download original finalization plan
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -255,11 +297,29 @@ jobs:
           persist-credentials: false
           submodules: false
 
+      - name: Require approved tooling to remain on main
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          TOOLING_SHA: ${{ needs.plan.outputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEFAULT_BRANCH" --quiet
+          git merge-base --is-ancestor "$TOOLING_SHA" "origin/$DEFAULT_BRANCH" || {
+            echo "::error::Approved tooling $TOOLING_SHA is no longer an ancestor of origin/$DEFAULT_BRANCH."
+            exit 1
+          }
+
+      - name: Download original finalization plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-finish-plan
+          path: ${{ runner.temp }}/release-finish/original
+
       - name: Download approved publication plan
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: release-publication-plan
-          path: ${{ runner.temp }}/release-finish
+          path: ${{ runner.temp }}/release-finish/publication
 
       - name: Require protected release environment
         env:
@@ -277,24 +337,24 @@ jobs:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
         run: |
           set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release-finish/result"
           python3 scripts/infra/release/release.py finish publish \
-            --plan "$RUNNER_TEMP/release-finish/plan.json" \
-            --publication "$RUNNER_TEMP/release-finish/publication-plan.json" \
-            --output "$RUNNER_TEMP/release-finish/publish-result.json"
+            --plan "$RUNNER_TEMP/release-finish/original/plan.json" \
+            --publication "$RUNNER_TEMP/release-finish/publication/publication-plan.json" \
+            --output "$RUNNER_TEMP/release-finish/result/publish-result.json"
           python3 scripts/infra/release/release.py render-plan \
-            --plan "$RUNNER_TEMP/release-finish/publish-result.json" \
+            --plan "$RUNNER_TEMP/release-finish/result/publish-result.json" \
             --format markdown \
-            --output "$RUNNER_TEMP/release-finish/publish-result.md"
-          cat "$RUNNER_TEMP/release-finish/publish-result.md" >> "$GITHUB_STEP_SUMMARY"
+            --output "$RUNNER_TEMP/release-finish/result/publish-result.md"
+          cat "$RUNNER_TEMP/release-finish/result/publish-result.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload publication result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-publication-result
           path: |
-            ${{ runner.temp }}/release-finish/plan.json
-            ${{ runner.temp }}/release-finish/publish-result.json
-            ${{ runner.temp }}/release-finish/publish-result.md
+            ${{ runner.temp }}/release-finish/result/publish-result.json
+            ${{ runner.temp }}/release-finish/result/publish-result.md
           if-no-files-found: error
           retention-days: 90
 
@@ -314,6 +374,9 @@ jobs:
        needs.publish.result == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    concurrency:
+      group: release-${{ needs.plan.outputs.release_identity }}
+      cancel-in-progress: false
     permissions:
       actions: write
       contents: read
@@ -328,6 +391,18 @@ jobs:
           fetch-tags: true
           persist-credentials: false
           submodules: false
+
+      - name: Require approved tooling to remain on main
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          TOOLING_SHA: ${{ needs.plan.outputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEFAULT_BRANCH" --quiet
+          git merge-base --is-ancestor "$TOOLING_SHA" "origin/$DEFAULT_BRANCH" || {
+            echo "::error::Approved tooling $TOOLING_SHA is no longer an ancestor of origin/$DEFAULT_BRANCH."
+            exit 1
+          }
 
       - name: Download original finalization plan
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

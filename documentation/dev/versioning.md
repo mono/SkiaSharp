@@ -30,8 +30,8 @@ Official CI derives package build suffixes from Arcade's
 `4.152.0-preview.0.26418.3` from build `20260818.3`.
 
 > **Note:** There are two Azure DevOps feeds:
-> - **Signed builds** (`skiasharp`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
-> - **Transport** (`skiasharp-transport`): unsigned, non-shipping build-input packages (`_NuGets`, `_NativeAssets`, etc.) routed separately by the same BAR/channel promotion
+> - **Signed builds** (`dotnet-libraries`): the permanent target feed for regular packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) promoted through Maestro after testing
+> - **Transport** (`dotnet-libraries-transport`): unsigned, non-shipping build-input packages (`_NuGets`, `_NativeAssets`, etc.) routed separately by the same BAR/channel promotion
 
 Typically, the pre-release labels are:
  - `-alpha` is very early and has not really been tested
