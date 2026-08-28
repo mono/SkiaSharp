@@ -1,4 +1,15 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - main
+      - release/*
+  paths:
+    exclude:
+      - .devcontainer/**
+      - .github/**
+      - .vscode/**
+      - documentation/docfx/releases/**
+      - README.md
 
 pr: none
 
@@ -16,16 +27,24 @@ parameters:
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Windows2022
+        name: $(DncEngInternalBuildPool)
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Windows2022
+        name: $(DncEngInternalBuildPool)
+        image: 1es-windows-2022
+        os: windows
+  - name: buildAgentWindowsNative
+    displayName: 'The Windows build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: $(DncEngInternalBuildPool)
+        image: 1es-windows-2022
         os: windows
   - name: buildAgentMac
     displayName: 'The macOS build agent configuration:'
@@ -35,61 +54,88 @@ parameters:
         name: Azure Pipelines
         vmImage: macos-15
         os: macos
+  - name: buildAgentMacNative
+    displayName: 'The macOS build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-14
+        os: macos
   - name: buildAgentLinux
     displayName: 'The Linux build agent configuration:'
     type: object
     default:
       pool:
-        name: Maui-1ESPT
-        image: 1ESPT-Ubuntu22.04
+        name: $(DncEngInternalBuildPool)
+        image: 1es-ubuntu-2204
+        os: linux
+  - name: buildAgentLinuxNative
+    displayName: 'The Linux build agent configuration for building the native assets:'
+    type: object
+    default:
+      pool:
+        name: $(DncEngInternalBuildPool)
+        image: 1es-ubuntu-2204
         os: linux
   - name: runApiScan
-    displayName: 'Run API Scan'
+    displayName: 'Run API Scan for this build (scheduled main builds run automatically)'
     type: boolean
     default: false
   - name: forceRealSigning
-    displayName: 'Ignore all logic and force Real signing on binaries'
+    displayName: 'Ignore branch selection and force ESRP real signing'
+    type: boolean
+    default: false
+  - name: registerInBar
+    displayName: 'Register a forced real-sign build in BAR'
     type: boolean
     default: false
 
 variables:
+  - template: /eng/common/templates-official/variables/pool-providers.yml@self
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
   repositories:
-    - repository: yaml-templates
+    - repository: 1ESPipelineTemplates
       type: git
-      name: DevDiv/Xamarin.yaml-templates
-      ref: refs/heads/main
-    - repository: 1ESTemplates
-      type: git
-      name: 1ESPipelineTemplates/MicroBuildTemplate
-  pipelines:
-    - pipeline: SkiaSharp
-      source: SkiaSharp-Native
-      trigger: true
+      name: 1ESPipelineTemplates/1ESPipelineTemplates
+      ref: refs/tags/release
 
 extends:
-  template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESTemplates
+  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
+    settings:
+      # Temporary during migration: collect required egress without blocking
+      # official builds. Switch to Enforce after mirrors/allowlisting are ready.
+      networkIsolationMode: Audit
     customBuildTags:
       - ES365AIMigrationTooling
     sdl:
-      sourceRepositoriesToScan:
-        exclude:
-        - repository: yaml-templates
+      armory:
+        break: true
       binskim:
         enabled: true
-        break: false
+        break: true
+      codeql:
+        compiled:
+          enabled: true
+        enabledOnNonDefaultBranches: true
       codeInspector:
         enabled: true
       credscan:
         enabled: true
-        # suppressionsFile: $(Build.SourcesDirectory)/scripts/infra/security/CredScanSuppressions.json
+        break: true
+      eslint:
+        break: true
       policheck:
         enabled: true
+        break: true
         exclusionsFile: $(Build.SourcesDirectory)/scripts/infra/security/PoliCheckExclusions.xml
+      psscriptanalyzer:
+        enabled: true
+        break: true
       spotBugs:
         enabled: false
       suppression:
@@ -100,49 +146,15 @@ extends:
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
-          buildPipelineType: 'package'
-          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
-            enableSigning: true
-            forceRealSigning: ${{ parameters.forceRealSigning }}
+          buildPipelineType: 'build'
           use1ESPipelineTemplates: true
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentWindowsNative: ${{ parameters.buildAgentWindowsNative }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
+          buildAgentMacNative: ${{ parameters.buildAgentMacNative }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
-        - template: security/apiscan/v0.yml@yaml-templates
-          parameters:
-            windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
-            windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
-            timeoutInMinutes: 480
-            stageDependsOn:
-              - package
-            scanArtifacts:
-              - nuget
-              - nuget_symbols
-              - native_msvc
-            sourceGdnSuppressionFile: $(Build.SourcesDirectory)/scripts/infra/security/source.gdnsuppress
-            tsaConfigFile: $(Build.SourcesDirectory)/scripts/infra/security/tsaoptions-v2.json
-            tsaUploadEnabled: true
-            apiScanSoftwareName: 'SkiaSharp'
-            apiScanSoftwareVersionNum: 3
-            apiScanPreserveLogsFolder: true
-            apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
-            apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
-            preScanSteps:
-              - pwsh: |
-                  $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-                  $surrogateFile = "$(Build.SourcesDirectory)\scripts\infra\security\APIScanSurrogates.in.xml"
-                  $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
-                  $destFile = "$destFolder\APIScanSurrogates.xml"
-                  New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
-                  $surrogateContents = (Get-Content $surrogateFile)
-                  $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
-                  $surrogateContents | Set-Content $destFile
-                displayName: Generate the surrogate files
-              - pwsh: |
-                  ./scripts/infra/package/extract-nupkg-files.ps1 `
-                    -SourcePath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg" `
-                    -DestinationPath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted" `
-                    -RemoveOriginal
-                displayName: Extract all the .nupkg files
+          buildAgentLinuxNative: ${{ parameters.buildAgentLinuxNative }}
+          forceRealSigning: ${{ parameters.forceRealSigning }}
+          registerInBar: ${{ parameters.registerInBar }}
+          runApiScan: ${{ parameters.runApiScan }}

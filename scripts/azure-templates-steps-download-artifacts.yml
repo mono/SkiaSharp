@@ -15,10 +15,11 @@ steps:
           $buildId = $env:BUILD_BUILDID
           Write-Host "Using BUILD_BUILDID = '$env:BUILD_BUILDID'"
         }
-        $versionType = 'specific'
         if ($buildId -eq 'latest') {
-          $versionType = 'latestFromBranch'
+          Write-Error "Mutable latestFromBranch artifact selection is not supported. Pass an exact Build run ID."
+          exit 1
         }
+        $versionType = 'specific'
         $pipelineId = "$env:SYSTEM_DEFINITIONID"
         if ($env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID) {
           $pipelineId = $env:RESOURCES_PIPELINE_SKIASHARP_PIPELINEID
