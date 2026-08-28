@@ -61,6 +61,13 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertNotIn("always() &&", text)
         self.assertGreaterEqual(text.count("!cancelled() &&"), 2)
 
+    def test_finish_read_jobs_can_discover_drafts_without_the_cross_repo_pat(self):
+        for name in ("plan", "plan-publication"):
+            job = self.job(FINISH, name)
+            self.assertIn("contents: write", job)
+            self.assertIn("GH_TOKEN: ${{ github.token }}", job)
+            self.assertNotIn("secrets.SKIASHARP_AUTOBUMP_TOKEN", job)
+
     def test_default_branch_guard_precedes_writes(self):
         for path in (PREPARE, FINISH):
             text = self.text(path)
