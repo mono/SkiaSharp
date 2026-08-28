@@ -3,6 +3,7 @@ using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Model;
 using SkiaSharp.ReleaseTool.Planning;
+using SkiaSharp.ReleaseTool.Processes;
 using SkiaSharp.ReleaseTool.Tests.Contracts;
 using SkiaSharp.ReleaseTool.Tests.Git;
 using Xunit;
@@ -365,6 +366,106 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		}
 
 		[Fact]
+		public async Task Hotfix_release_preserves_four_part_zero_HarfBuzz_version()
+		{
+			using var fixture = await ApplyFixture.CreateAsync(
+				"apply-harfbuzz-zero",
+				harfBuzz: "14.3.0.0");
+			_ = await fixture.Repository.GitAsync(
+				["tag", "v3.119.0", fixture.MainSha],
+				cancellationToken: TestContext.Current.CancellationToken);
+			var plan = await fixture.PlanAsync("3.119.0.1-preview.1");
+
+			_ = await new PreparePlanApplier(
+				fixture.Repository,
+				fixture.GitHub).ApplyAsync(
+					plan,
+					plan.PlanId,
+					TestContext.Current.CancellationToken);
+
+			var releaseSha = await fixture.Repository.RemoteShaAsync(
+				plan.Release.Branch,
+				cancellationToken: TestContext.Current.CancellationToken);
+			Assert.NotNull(releaseSha);
+			var versions = await fixture.Repository.ReadRefFileAsync(
+				releaseSha,
+				VersionFileEditor.VersionsPath,
+				TestContext.Current.CancellationToken);
+			Assert.Contains("HarfBuzzSharp file 14.3.0.0", versions);
+			Assert.Contains("HarfBuzzSharp nuget 14.3.0.0", versions);
+		}
+
+		[Fact]
+		public async Task Release_push_race_fetches_and_accepts_matching_remote_commit()
+		{
+			using var fixture = await ApplyFixture.CreateAsync("apply-release-race");
+			var plan = await fixture.PlanAsync();
+			var racer = await fixture.PrepareConcurrentBranchAsync(
+				plan.Release.Branch,
+				plan.Base.Sha,
+				SkiaSharpReleaseIdentity.Parse(plan.Release.Identity).Label);
+			var repository = new GitRepository(
+				fixture.Repository.Root,
+				new PushRaceProcessRunner(
+					new ProcessRunner(),
+					plan.Release.Branch,
+					racer.PushAsync));
+
+			var result = await new PreparePlanApplier(
+				repository,
+				fixture.GitHub).ApplyAsync(
+					plan,
+					plan.PlanId,
+					TestContext.Current.CancellationToken);
+
+			Assert.Equal(PrepareNextAction.Done, result.NextAction);
+			Assert.Equal(
+				racer.Sha,
+				await repository.RemoteShaAsync(
+					plan.Release.Branch,
+					cancellationToken: TestContext.Current.CancellationToken));
+			Assert.Equal(
+				("3.119.0", "preview.1"),
+				await fixture.ReadSkiaStateAsync(racer.Sha));
+		}
+
+		[Fact]
+		public async Task Stable_bump_push_race_fetches_and_accepts_matching_remote_commit()
+		{
+			using var fixture = await ApplyFixture.CreateAsync("apply-bump-race");
+			await fixture.CreateMaintenanceAsync();
+			var plan = await fixture.PlanAsync("3.119.0");
+			var bump = Assert.IsType<StableBumpInfo>(plan.StableBump);
+			var racer = await fixture.PrepareConcurrentBranchAsync(
+				bump.BumpBranch,
+				$"origin/{bump.IntegrationBranch}",
+				"preview.0",
+				bump.SkiaSharpVersion,
+				bump.HarfBuzzSharpVersion);
+			var repository = new GitRepository(
+				fixture.Repository.Root,
+				new PushRaceProcessRunner(
+					new ProcessRunner(),
+					bump.BumpBranch,
+					racer.PushAsync));
+
+			var result = await new PreparePlanApplier(
+				repository,
+				fixture.GitHub).ApplyAsync(
+					plan,
+					plan.PlanId,
+					TestContext.Current.CancellationToken);
+
+			Assert.Equal(PrepareNextAction.AwaitMerge, result.NextAction);
+			Assert.Equal(
+				racer.Sha,
+				await repository.RemoteShaAsync(
+					bump.BumpBranch,
+					cancellationToken: TestContext.Current.CancellationToken));
+			Assert.NotNull(result.StableBumpPullRequestUrl);
+		}
+
+		[Fact]
 		public async Task Plan_id_mismatch_and_dirty_worktree_are_rejected()
 		{
 			using var fixture = await ApplyFixture.CreateAsync("apply-gates");
@@ -404,15 +505,18 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			public GitRepository Repository { get; }
 			public FakePrepareGitHubClient GitHub { get; }
 			public string MainSha { get; }
+			public string BarePath { get; private init; } = "";
 
-			public static async Task<ApplyFixture> CreateAsync(string purpose)
+			public static async Task<ApplyFixture> CreateAsync(
+				string purpose,
+				string harfBuzz = "1.8.8")
 			{
 				var root = new TestDirectory(purpose);
-				var (_, worktree) = await GitRepoTestHelper.CreateBareAndWorktreeAsync(
+				var (bare, worktree) = await GitRepoTestHelper.CreateBareAndWorktreeAsync(
 					root.Path,
 					"repo",
 					TestContext.Current.CancellationToken);
-				WriteVersionFiles(worktree, "3.119.0", "1.8.8", "preview.0");
+				WriteVersionFiles(worktree, "3.119.0", harfBuzz, "preview.0");
 				await GitRepoTestHelper.AddGitlinkAsync(
 					worktree,
 					"externals/skia",
@@ -437,7 +541,10 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 					root,
 					repository,
 					new FakePrepareGitHubClient(),
-					mainSha);
+					mainSha)
+				{
+					BarePath = bare,
+				};
 			}
 
 			public async Task<PreparePlan> PlanAsync(string? version = null)
@@ -529,6 +636,57 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 					cancellationToken: TestContext.Current.CancellationToken);
 			}
 
+			public async Task<ConcurrentBranch> PrepareConcurrentBranchAsync(
+				string branch,
+				string startPoint,
+				string label,
+				string? skiaVersion = null,
+				string? harfBuzzVersion = null)
+			{
+				var worktree = Path.Combine(root.Path, "racer");
+				var runner = new ProcessRunner();
+				await RunGitAsync(runner, root.Path, "clone", BarePath, worktree);
+				await RunGitAsync(runner, worktree, "config", "user.email", "racer@example.com");
+				await RunGitAsync(runner, worktree, "config", "user.name", "Racing Release Bot");
+				await RunGitAsync(runner, worktree, "config", "commit.gpgsign", "false");
+				await RunGitAsync(runner, worktree, "switch", "-c", branch, startPoint);
+
+				var variablesPath = Path.Combine(worktree, VersionFileEditor.VariablesPath);
+				var versionsPath = Path.Combine(worktree, VersionFileEditor.VersionsPath);
+				var edits = VersionFileEditor.ComputeEdits(
+					await File.ReadAllTextAsync(
+						variablesPath,
+						TestContext.Current.CancellationToken),
+					await File.ReadAllTextAsync(
+						versionsPath,
+						TestContext.Current.CancellationToken),
+					label,
+					skiaVersion,
+					harfBuzzVersion);
+				await File.WriteAllTextAsync(
+					variablesPath,
+					edits.NewVariablesText,
+					TestContext.Current.CancellationToken);
+				await File.WriteAllTextAsync(
+					versionsPath,
+					edits.NewVersionsText,
+					TestContext.Current.CancellationToken);
+				await File.WriteAllTextAsync(
+					Path.Combine(worktree, "race-marker.txt"),
+					"created by concurrent release",
+					TestContext.Current.CancellationToken);
+				await RunGitAsync(runner, worktree, "add", "-A");
+				await RunGitAsync(runner, worktree, "commit", "-m", "Create matching release concurrently");
+				var sha = (await RunGitAsync(runner, worktree, "rev-parse", "HEAD")).Trim();
+				return new ConcurrentBranch(
+					sha,
+					async cancellationToken =>
+						_ = await runner.RunAsync(
+							["git", "push", "-u", "origin", branch],
+							worktree,
+							cancellationToken: cancellationToken));
+			}
+
 			public async Task<(string Version, string Label)> ReadSkiaStateAsync(
 				string reference)
 			{
@@ -565,10 +723,56 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 					$"HarfBuzzSharp nuget {harfBuzz}\n");
 			}
 
+			private static async Task<string> RunGitAsync(
+				IProcessRunner runner,
+				string workingDirectory,
+				params string[] arguments) =>
+				(await runner.RunAsync(
+					["git", .. arguments],
+					workingDirectory,
+					cancellationToken: TestContext.Current.CancellationToken)).StandardOutput;
+
 			private sealed class FixedTimeProvider : TimeProvider
 			{
 				public override DateTimeOffset GetUtcNow() =>
 					new(2026, 8, 28, 12, 0, 0, TimeSpan.Zero);
+			}
+		}
+
+		internal sealed record ConcurrentBranch(
+			string Sha,
+			Func<CancellationToken, Task> PushAsync);
+
+		private sealed class PushRaceProcessRunner(
+			IProcessRunner inner,
+			string branch,
+			Func<CancellationToken, Task> racePush) : IProcessRunner
+		{
+			private bool raced;
+
+			public async Task<ProcessRunResult> RunAsync(
+				IReadOnlyList<string> arguments,
+				string workingDirectory,
+				bool checkExitCode = true,
+				TimeSpan? timeout = null,
+				string? standardInput = null,
+				CancellationToken cancellationToken = default)
+			{
+				if (!raced &&
+					arguments.SequenceEqual(["git", "push", "-u", "origin", branch]))
+				{
+					raced = true;
+					await racePush(cancellationToken);
+					throw new ReleaseToolException("injected concurrent push rejection");
+				}
+
+				return await inner.RunAsync(
+					arguments,
+					workingDirectory,
+					checkExitCode,
+					timeout,
+					standardInput,
+					cancellationToken);
 			}
 		}
 	}

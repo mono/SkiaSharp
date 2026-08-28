@@ -95,7 +95,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					plan.MaintenanceBranch.BaseSha!,
 					cancellationToken).ConfigureAwait(false);
 				var identity = SkiaSharpReleaseIdentity.Parse(plan.Release.Identity);
-				if (state.Skia.ToNormalizedString() != identity.Numeric ||
+				if (state.SkiaText != identity.Numeric ||
 					state.Label != "preview.0")
 				{
 					throw new ConflictException(
@@ -254,7 +254,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			await EditCommitAndPushAsync(
 				identity.Label,
 				plan.Versions.RequiresPackageBump ? identity.Numeric : null,
-				plan.Versions.RequiresPackageBump ? baseState.HarfBuzz.ToNormalizedString() : null,
+				plan.Versions.RequiresPackageBump ? baseState.HarfBuzzText : null,
 				$"Bump the version to {identity.Raw}\n\n" +
 					$"Release-Base: {plan.Base.Sha}\n" +
 					$"Release-Skia: {plan.Skia.Sha}\n",
@@ -280,6 +280,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					cancellationToken: cancellationToken).ConfigureAwait(false);
 				if (raced is null)
 					throw;
+				await repository.FetchAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 				await VerifyReleaseBranchAsync(plan, raced, cancellationToken).ConfigureAwait(false);
 			}
 		}
@@ -300,7 +301,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			var identity = SkiaSharpReleaseIdentity.Parse(plan.Release.Identity);
 			var state = await ReadVersionStateAsync(sha, cancellationToken).ConfigureAwait(false);
 			if (state.Label != identity.Label ||
-				state.Skia.ToNormalizedString() != identity.Numeric)
+				state.SkiaText != identity.Numeric)
 			{
 				throw new ConflictException(
 					$"existing release branch {plan.Release.Branch} has version state {state.Skia}/{state.Label}, expected {identity.Numeric}/{identity.Label}");
@@ -330,7 +331,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			{
 				if (integrationState.Label != "preview.0" ||
 					(comparison == 0 &&
-						integrationState.HarfBuzz.ToNormalizedString() != stableBump.HarfBuzzSharpVersion))
+						integrationState.HarfBuzzText != stableBump.HarfBuzzSharpVersion))
 				{
 					throw new ConflictException("advanced integration branch does not match the stable bump plan");
 				}
@@ -342,7 +343,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 
 			var identity = SkiaSharpReleaseIdentity.Parse(plan.Release.Identity);
 			if (integrationState.Label != "preview.0" ||
-				integrationState.Skia.ToNormalizedString() != identity.Numeric)
+				integrationState.SkiaText != identity.Numeric)
 			{
 				throw new ConflictException(
 					$"integration branch {stableBump.IntegrationBranch} moved to {integrationState.Skia}/{integrationState.Label}");
@@ -455,6 +456,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					cancellationToken: cancellationToken).ConfigureAwait(false);
 				if (raced is null)
 					throw;
+				await repository.FetchAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 				await VerifyBumpBranchAsync(
 					stableBump,
 					integrationSha,
@@ -481,8 +483,8 @@ namespace SkiaSharp.ReleaseTool.Planning
 				bumpSha,
 				cancellationToken).ConfigureAwait(false);
 			if (state.Label != "preview.0" ||
-				state.Skia.ToNormalizedString() != stableBump.SkiaSharpVersion ||
-				state.HarfBuzz.ToNormalizedString() != stableBump.HarfBuzzSharpVersion)
+				state.SkiaText != stableBump.SkiaSharpVersion ||
+				state.HarfBuzzText != stableBump.HarfBuzzSharpVersion)
 			{
 				throw new ConflictException(
 					$"existing bump branch {stableBump.BumpBranch} has stale version state");
