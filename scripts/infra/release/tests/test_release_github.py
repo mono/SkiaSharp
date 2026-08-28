@@ -136,6 +136,49 @@ class ReleaseConflictTests(unittest.TestCase):
                 release, expected_title="Version 3.119.0", expected_target="a" * 40, expected_prerelease=False
             )
 
+    def test_published_release_with_legacy_branch_name_target_is_tolerated(self):
+        # Live regression: the real, already-published mono/SkiaSharp
+        # release v4.151.1 has targetCommitish == "main" (confirmed via
+        # `gh release view v4.151.1`), not the exact package source commit
+        # -- GitHub's target_commitish is only a fallback used if the named
+        # tag doesn't exist yet; once the tag exists (verified separately
+        # via check_tag_conflict), it is authoritative and target_commitish
+        # is no longer a trustworthy second opinion. This must reconcile,
+        # not block.
+        release = gh.ReleaseInfo(
+            tag_name="v4.151.1", name="Version 4.151.1", is_draft=False, is_prerelease=False,
+            target_commitish="main", body="notes", url="https://example.invalid",
+        )
+        gh.check_release_conflict(
+            release, expected_title="Version 4.151.1",
+            expected_target="279f93f4ffa7f9fe4e9c0bc298bedc3c9e439764", expected_prerelease=False,
+        )
+
+    def test_published_release_with_a_different_exact_sha_target_still_conflicts(self):
+        # A real (40-hex) target_commitish that simply disagrees is a
+        # genuine conflict, published or not.
+        release = gh.ReleaseInfo(
+            tag_name="v3.119.0", name="Version 3.119.0", is_draft=False, is_prerelease=False,
+            target_commitish="b" * 40, body="", url="https://example.invalid",
+        )
+        with self.assertRaises(gh.GitHubError):
+            gh.check_release_conflict(
+                release, expected_title="Version 3.119.0", expected_target="a" * 40, expected_prerelease=False
+            )
+
+    def test_draft_with_branch_name_target_still_conflicts(self):
+        # The branch-name leniency applies only to an already-published
+        # release; this tool always creates a draft with an exact SHA, so
+        # any disagreement on an unpublished draft remains a hard conflict.
+        release = gh.ReleaseInfo(
+            tag_name="v3.119.0", name="Version 3.119.0", is_draft=True, is_prerelease=False,
+            target_commitish="main", body="", url="https://example.invalid",
+        )
+        with self.assertRaises(gh.GitHubError):
+            gh.check_release_conflict(
+                release, expected_title="Version 3.119.0", expected_target="a" * 40, expected_prerelease=False
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

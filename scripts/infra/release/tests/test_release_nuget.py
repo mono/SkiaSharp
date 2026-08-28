@@ -132,17 +132,43 @@ class FakeVersionsFileReader:
         self.existing_commits: set[str] = set()
         self.branch_membership: dict[str, set[str]] = {}
 
-    def seed(self, commit: str, *, skiasharp_base: str, preview_label: str, harfbuzz_base: str, branch: str):
+    def seed(
+        self,
+        commit: str,
+        *,
+        skiasharp_base: str,
+        preview_label: str,
+        harfbuzz_base: str,
+        branch: str,
+        skiasharp_family: list[str] | None = None,
+        harfbuzzsharp_family: list[str] | None = None,
+    ):
+        # Defaults match exactly the packages _seed_family() publishes to
+        # FakeNuGetClient, so every existing test's "historical" family
+        # (derived here) and "actually published" set (seeded on the fake
+        # NuGet client) agree unless a test deliberately diverges them (see
+        # HistoricalFamilyDerivationTests below for the regression this is
+        # for: a *current* manifest containing a package that did not exist
+        # at the historical source commit).
+        skiasharp_family = (
+            skiasharp_family if skiasharp_family is not None
+            else ["SkiaSharp", "SkiaSharp.HarfBuzz", "SkiaSharp.Extra"]
+        )
+        harfbuzzsharp_family = (
+            harfbuzzsharp_family if harfbuzzsharp_family is not None
+            else ["HarfBuzzSharp", "HarfBuzzSharp.NativeAssets.Android"]
+        )
+        versions_lines = ["# nuget versions", "# SkiaSharp"]
+        versions_lines.extend(f"{pkg}                nuget       {skiasharp_base}" for pkg in skiasharp_family)
+        versions_lines.append("# HarfBuzzSharp")
+        versions_lines.extend(f"{pkg}                nuget       {harfbuzz_base}" for pkg in harfbuzzsharp_family)
         self.files[commit] = {
             "scripts/azure-templates-variables.yml": (
                 "variables:\n"
                 f"  SKIASHARP_VERSION: {skiasharp_base}\n"
                 f"  PREVIEW_LABEL: '{preview_label}'\n"
             ),
-            "scripts/VERSIONS.txt": (
-                f"SkiaSharp                nuget       {skiasharp_base}\n"
-                f"HarfBuzzSharp            nuget       {harfbuzz_base}\n"
-            ),
+            "scripts/VERSIONS.txt": "\n".join(versions_lines) + "\n",
         }
         self.existing_commits.add(commit)
         self.branch_membership.setdefault(branch, set()).add(commit)
@@ -479,11 +505,15 @@ class VerifyPublicReceiptTests(unittest.TestCase):
             ),
         )
 
-    def _reader(self, *, commit: str, branch: str, skiasharp_base: str, preview_label: str, harfbuzz_base: str):
+    def _reader(
+        self, *, commit: str, branch: str, skiasharp_base: str, preview_label: str, harfbuzz_base: str,
+        skiasharp_family: list[str] | None = None, harfbuzzsharp_family: list[str] | None = None,
+    ):
         reader = FakeVersionsFileReader()
         reader.seed(
             commit, skiasharp_base=skiasharp_base, preview_label=preview_label,
             harfbuzz_base=harfbuzz_base, branch=branch,
+            skiasharp_family=skiasharp_family, harfbuzzsharp_family=harfbuzzsharp_family,
         )
         return reader
 
@@ -617,6 +647,71 @@ class VerifyPublicReceiptTests(unittest.TestCase):
             )
         self.assertEqual(receipt.source_commit, commit)
         self.assertEqual(len(receipt.packages), 5)
+
+    def test_current_manifest_package_absent_at_source_commit_is_ignored(self):
+        # Regression for the live end-to-end bug found running
+        # `finish plan --version 4.151.1`: the *current* public-packages.json
+        # includes SkiaSharp.Vulkan.Silk.NET, which was introduced well after
+        # 4.151.1 shipped. At 4.151.1's embedded source commit,
+        # scripts/VERSIONS.txt only ever listed the older family (no Silk.NET
+        # package), so polling NuGet.org for a version of it that was never
+        # published used to eventually raise NotReadyError even though the
+        # release itself is perfectly valid. The receipt must be built from
+        # the family exactly as VERSIONS.txt declared it at the *source*
+        # commit, never the current manifest, so a later-added package must
+        # simply never be requested.
+        import tempfile
+
+        commit = "a" * 40
+        branch = "release/3.119.0"
+        client = FakeNuGetClient()
+        self._seed_family(
+            client, skiasharp_version="3.119.0", skia_commit=commit, branch=branch,
+            harfbuzzsharp_version="1.8.8.1",
+        )
+        # The historical VERSIONS.txt at `commit` only ever had the classic
+        # family (matches _seed_family's defaults) -- no later package.
+        reader = self._reader(
+            commit=commit, branch=branch, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1",
+        )
+        # The *current* manifest already includes a package added long after
+        # this release shipped, and it is deliberately never registered on
+        # the fake NuGet client at all -- if the code ever asks for it,
+        # get_catalog_entry returns None and wait_for_catalog_entry would
+        # raise NotReadyError.
+        manifest_with_later_package = {
+            "families": {
+                "SkiaSharp": [*MANIFEST["families"]["SkiaSharp"], "SkiaSharp.Vulkan.Silk.NET"],
+                "HarfBuzzSharp": list(MANIFEST["families"]["HarfBuzzSharp"]),
+            },
+            "anchorPackages": list(MANIFEST["anchorPackages"]),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            receipt = nuget.verify_public_receipt(
+                nuget=client, versions_reader=reader, requested_version="3.119.0",
+                manifest=manifest_with_later_package, download_dir=Path(tmp),
+                signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
+                sleep=lambda _seconds: None,  # fail fast, don't hang, if this regresses
+            )
+        self.assertEqual(receipt.source_commit, commit)
+        package_ids = {package.id for package in receipt.packages}
+        self.assertNotIn("SkiaSharp.Vulkan.Silk.NET", package_ids)
+        self.assertEqual(
+            package_ids,
+            {"SkiaSharp", "SkiaSharp.HarfBuzz", "SkiaSharp.Extra", "HarfBuzzSharp", "HarfBuzzSharp.NativeAssets.Android"},
+        )
+
+    def test_read_family_ids_at_commit_matches_historical_versions_txt(self):
+        reader = FakeVersionsFileReader()
+        reader.seed(
+            "a" * 40, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1",
+            branch="release/3.119.0",
+            skiasharp_family=["SkiaSharp", "SkiaSharp.HarfBuzz"],
+            harfbuzzsharp_family=["HarfBuzzSharp"],
+        )
+        families = nuget.read_family_ids_at_commit(reader, "a" * 40)
+        self.assertEqual(families["SkiaSharp"], ["SkiaSharp", "SkiaSharp.HarfBuzz"])
+        self.assertEqual(families["HarfBuzzSharp"], ["HarfBuzzSharp"])
 
     def test_reused_harfbuzzsharp_commit_from_earlier_release_is_allowed(self):
         import tempfile
@@ -804,9 +899,11 @@ class FakeCommandRunnerForVerify:
     def __init__(self, *, returncode: int = 0):
         self.returncode = returncode
         self.calls: list[list[str]] = []
+        self.cwds: list[Path] = []
 
     def run(self, args, *, cwd, check=True, timeout=120, input=None):
         self.calls.append(list(args))
+        self.cwds.append(Path(cwd))
         return CommandResult(args=tuple(args), returncode=self.returncode, stdout="", stderr="")
 
 
@@ -843,6 +940,38 @@ class DotNetSignatureVerifierTests(unittest.TestCase):
         verifier = nuget.DotNetSignatureVerifier(runner=runner)
         with self.assertRaises(nuget.NuGetError):
             verifier.verify(Path("/tmp/pkg.nupkg"), ("AAAA",))
+
+    def test_relative_nupkg_path_does_not_double_the_download_directory(self):
+        # Regression: passing a relative nupkg_path (download_dir defaults
+        # to a relative path, e.g. "finish-downloads") used to append that
+        # same relative path to argv *and* set cwd to its (also relative)
+        # parent, so the subprocess resolved the argv path a second time
+        # against the new cwd -- e.g. "finish-downloads/finish-downloads/
+        # SkiaSharp.4.151.1.nupkg" -- and dotnet nuget verify failed with a
+        # "could not find a part of the path" error. This was only caught by
+        # live-running `finish plan` end-to-end, never by a unit test using
+        # a fake runner that ignores real filesystem paths -- hence this
+        # test asserts the exact absolute argv/cwd shape instead.
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        relative_nupkg = Path("finish-downloads") / "SkiaSharp.4.151.1.nupkg"
+        verifier.verify(relative_nupkg, ("AAAA",))
+
+        expected_absolute = Path.cwd() / relative_nupkg
+        args = runner.calls[0]
+        self.assertEqual(args[-1], str(expected_absolute))
+        self.assertTrue(Path(args[-1]).is_absolute())
+        self.assertEqual(runner.cwds[0], expected_absolute.parent)
+        # The parent directory must appear exactly once in the argv path.
+        self.assertEqual(args[-1].count("finish-downloads"), 1)
+
+    def test_already_absolute_nupkg_path_is_passed_through_unchanged(self):
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        absolute_nupkg = Path.cwd() / "somewhere" / "SkiaSharp.1.0.0.nupkg"
+        verifier.verify(absolute_nupkg, ("AAAA",))
+        self.assertEqual(runner.calls[0][-1], str(absolute_nupkg))
+        self.assertEqual(runner.cwds[0], absolute_nupkg.parent)
 
 
 class DotnetCommandResolutionTests(unittest.TestCase):

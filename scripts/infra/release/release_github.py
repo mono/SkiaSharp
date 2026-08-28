@@ -370,6 +370,9 @@ def check_tag_conflict(existing_sha: str | None, expected_sha: str) -> None:
         )
 
 
+_FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+
+
 def check_release_conflict(
     existing: ReleaseInfo | None,
     *,
@@ -377,7 +380,24 @@ def check_release_conflict(
     expected_target: str,
     expected_prerelease: bool,
 ) -> None:
-    """Raise :class:`GitHubError` if an existing release mismatches the plan."""
+    """Raise :class:`GitHubError` if an existing release mismatches the plan.
+
+    ``target_commitish`` is only compared strictly when it is itself a full
+    40-hex commit SHA -- what every release this tool creates or manages
+    always sets. An already-*published* legacy release may instead carry a
+    branch name there (e.g. ``"main"``): observed live on real, older
+    mono/SkiaSharp releases (e.g. ``v4.151.1``), because GitHub's
+    ``target_commitish`` is only a fallback target used if the named tag
+    doesn't exist yet. Once the tag exists -- independently verified
+    elsewhere via :func:`check_tag_conflict` against the exact package
+    source commit -- the tag itself is authoritative and
+    ``target_commitish`` becomes purely informational, no longer
+    trustworthy as a second opinion. So a non-SHA ``target_commitish`` on
+    an already-published release is never treated as a conflict; a genuine
+    SHA-vs-SHA disagreement, or *any* disagreement while the release is
+    still an unpublished draft (which this tool always creates with an
+    exact SHA), still is.
+    """
 
     if existing is None:
         return
@@ -385,9 +405,12 @@ def check_release_conflict(
     if existing.name != expected_title:
         mismatches.append(f"title {existing.name!r} != {expected_title!r}")
     if existing.target_commitish != expected_target:
-        mismatches.append(
-            f"target {existing.target_commitish!r} != {expected_target!r}"
-        )
+        target_is_exact_sha = bool(_FULL_SHA_RE.fullmatch(existing.target_commitish))
+        legacy_published_target = (not existing.is_draft) and not target_is_exact_sha
+        if not legacy_published_target:
+            mismatches.append(
+                f"target {existing.target_commitish!r} != {expected_target!r}"
+            )
     if existing.is_prerelease != expected_prerelease:
         mismatches.append(
             f"prerelease {existing.is_prerelease} != {expected_prerelease}"

@@ -417,11 +417,23 @@ class DotNetSignatureVerifier:
     def verify(self, nupkg_path: Path, fingerprints: tuple[str, ...]) -> None:
         if not fingerprints:
             raise NuGetError("no trusted certificate fingerprints were provided")
+        # Make the path absolute before building argv: nupkg_path is
+        # normally relative (download_dir defaults to a relative path), and
+        # passing both a relative argv path *and* cwd=nupkg_path.parent
+        # (also relative) doubles the directory once the subprocess actually
+        # resolves the argv path against that new cwd (observed live:
+        # "Could not find a part of the path '.../finish-downloads/
+        # finish-downloads/SkiaSharp.<version>.nupkg'"). Path.absolute() (not
+        # .resolve()) is used deliberately: it only prepends the cwd to a
+        # relative path and never touches an already-absolute one, so it
+        # can't change an existing absolute path's text via symlink
+        # resolution (e.g. macOS's /tmp -> /private/tmp).
+        resolved_path = nupkg_path.absolute()
         args = [*self.dotnet_command, "nuget", "verify", "--all"]
         for fingerprint in fingerprints:
             args.extend(["--certificate-fingerprint", fingerprint])
-        args.append(str(nupkg_path))
-        result = self.runner.run(args, cwd=nupkg_path.parent, check=False)
+        args.append(str(resolved_path))
+        result = self.runner.run(args, cwd=resolved_path.parent, check=False)
         if not result.ok:
             raise NuGetError(
                 f"signature verification failed for {nupkg_path.name}: {result.stdout}{result.stderr}"
@@ -668,12 +680,15 @@ _PREVIEW_LABEL_RE = re.compile(r"^\s*PREVIEW_LABEL:\s*['\"]?([^'\"\r\n]+)", re.M
 _SKIA_NUGET_RE = re.compile(r"^SkiaSharp\s+nuget\s+(\S+)", re.MULTILINE)
 _HARFBUZZ_NUGET_RE = re.compile(r"^HarfBuzzSharp\s+nuget\s+(\S+)", re.MULTILINE)
 
+VARIABLES_PATH = "scripts/azure-templates-variables.yml"
+VERSIONS_PATH = "scripts/VERSIONS.txt"
+
 
 def read_versions_at_commit(reader: VersionsFileReader, commit: str) -> tuple[str, str, str]:
     """Return (skiasharp_base, preview_label, harfbuzzsharp_base) at ``commit``."""
 
-    variables = reader.read_file(commit, "scripts/azure-templates-variables.yml")
-    versions = reader.read_file(commit, "scripts/VERSIONS.txt")
+    variables = reader.read_file(commit, VARIABLES_PATH)
+    versions = reader.read_file(commit, VERSIONS_PATH)
     version_match = _SKIASHARP_VERSION_RE.search(variables)
     label_match = _PREVIEW_LABEL_RE.search(variables)
     skia_match = _SKIA_NUGET_RE.search(versions)
@@ -681,6 +696,26 @@ def read_versions_at_commit(reader: VersionsFileReader, commit: str) -> tuple[st
     if not (version_match and label_match and skia_match and harfbuzz_match):
         raise NuGetError(f"could not read version state at {commit}")
     return skia_match.group(1), label_match.group(1).strip(), harfbuzz_match.group(1)
+
+
+def read_family_ids_at_commit(reader: VersionsFileReader, commit: str) -> dict[str, list[str]]:
+    """Return the authoritative SkiaSharp/HarfBuzzSharp package-family ID
+    lists exactly as ``scripts/VERSIONS.txt`` declared them at ``commit``.
+
+    A historical release must never be checked against the *current*
+    ``public-packages.json``/``VERSIONS.txt`` family lists: a package added
+    to a family after that release shipped (e.g. ``SkiaSharp.Vulkan.
+    Silk.NET``, added well after SkiaSharp 4.151.1) never existed on
+    NuGet.org for that old version, so polling for it would eventually
+    raise :class:`NotReadyError` even though the release is perfectly
+    valid. Only the commit-exact ``VERSIONS.txt`` is authoritative for
+    which packages an already-published release actually requires; the
+    manifest's ``anchorPackages`` (which three packages are always
+    downloaded/hash/signature-verified) is separate, current-tooling
+    policy that does not change per release and is not derived here.
+    """
+
+    return extract_versions_txt_families(reader.read_file(commit, VERSIONS_PATH))
 
 
 def _fetch_and_verify_nuspec(nuget: NuGetClient, *, package_id: str, version: str) -> Nuspec:
@@ -714,7 +749,13 @@ def verify_public_receipt(
     """
 
     anchors = tuple(manifest["anchorPackages"])
-    families = manifest["families"]
+    # NOTE: manifest["families"] (public-packages.json's *current* family
+    # lists) is deliberately never used to decide which packages a
+    # historical release requires -- see read_family_ids_at_commit below,
+    # which derives that from the exact VERSIONS.txt at the resolved
+    # source commit instead. anchorPackages is current tooling policy
+    # (which three packages are always fully downloaded/hash/signature-
+    # verified) and does not change per release, so it is used as-is.
     # HarfBuzzSharp's own version is only known after the SkiaSharp anchor's
     # embedded commit is resolved and scripts/VERSIONS.txt is read there, so
     # it cannot be fetched in the same pass as the other two anchors.
@@ -763,6 +804,17 @@ def verify_public_receipt(
     base, build_revision = release.validate_public_version(requested_version)
 
     skia_base, preview_label, harfbuzz_base = read_versions_at_commit(versions_reader, source_commit)
+    # The exact package families this release requires -- as VERSIONS.txt
+    # declared them at the *source* commit, not the current tree. A package
+    # added to a family after this release shipped never existed on
+    # NuGet.org for this version and must never be polled for.
+    families = read_family_ids_at_commit(versions_reader, source_commit)
+    for required_family in ("SkiaSharp", "HarfBuzzSharp"):
+        if required_family not in families:
+            raise NuGetError(
+                f"scripts/VERSIONS.txt at {source_commit} has no {required_family!r} "
+                "package family section"
+            )
     if skia_base != base:
         raise NuGetError(
             f"SKIASHARP_VERSION at {source_commit} is {skia_base}, expected {base}"
