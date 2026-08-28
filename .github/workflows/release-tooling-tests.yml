@@ -1,0 +1,56 @@
+name: Release - Tooling Tests
+
+on:
+  pull_request:
+    paths:
+      - ".agents/skills/release-testing/**"
+      - ".github/workflows/release-*.yml"
+      - ".github/workflows/update-github-release-summaries.yml"
+      - ".github/workflows/update-release-notes.md"
+      - ".github/workflows/update-release-notes.lock.yml"
+      - "scripts/infra/caching/repo-deps.json"
+      - "scripts/infra/docs/release-notes-data.py"
+      - "scripts/infra/docs/release-notes-schema/**"
+      - "scripts/infra/docs/release_notes/**"
+      - "scripts/infra/release/**"
+  push:
+    branches: [main]
+    paths:
+      - ".agents/skills/release-testing/**"
+      - ".github/workflows/release-*.yml"
+      - ".github/workflows/update-github-release-summaries.yml"
+      - ".github/workflows/update-release-notes.md"
+      - ".github/workflows/update-release-notes.lock.yml"
+      - "scripts/infra/caching/repo-deps.json"
+      - "scripts/infra/docs/release-notes-data.py"
+      - "scripts/infra/docs/release-notes-schema/**"
+      - "scripts/infra/docs/release_notes/**"
+      - "scripts/infra/release/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-tooling-tests-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Run release automation tests
+        run: python3 -m unittest discover -s scripts/infra/release/tests -p 'test_*.py'
+
+      - name: Run exact release summary tests
+        run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p 'test_*.py'
+
+      - name: Run release smoke-testing tests
+        run: python3 -m unittest discover -s .agents/skills/release-testing/scripts/tests -p 'test_*.py'
+
+      - name: Validate cache dependency coverage
+        run: python3 scripts/infra/caching/repo-deps.py validate

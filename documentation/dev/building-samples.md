@@ -9,7 +9,7 @@ as the product packages. The Maestro `SkiaSharp` channel routes them to the
 separate **SkiaSharp Transport** Azure DevOps feed:
 
 ```
-https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json
+https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json
 ```
 
 These wrapper packages bundle the real NuGet packages inside their `tools/` directory:

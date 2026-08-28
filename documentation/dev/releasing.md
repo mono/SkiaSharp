@@ -48,8 +48,12 @@ Until the release GitHub App is available, approved write jobs use the
 `SKIASHARP_AUTOBUMP_TOKEN` repository secret. The token can write branches in
 both `mono/SkiaSharp` and `mono/skia`. It is an existing repository-level
 credential and is not fully isolated by environments; the workflows merely
-reference it only after approval. Replacing it with the GitHub App must not
-change release logic.
+reference it only after approval for branch/tag/release writes. Closeout also
+uses it without another approval so its workflow dispatch is attributed to a
+maintainer rather than `github-actions[bot]`; that path first requires the exact
+tag and published release and can only change milestones or dispatch convergent
+workflows. Replacing the broad token with a narrowly scoped GitHub App remains
+the required long-term hardening and must not change release logic.
 
 ## System boundaries
 
