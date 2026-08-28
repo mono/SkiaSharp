@@ -1,0 +1,361 @@
+name: Release - Finish
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: Exact public SkiaSharp version already available on NuGet.org
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  contents: read
+  deployments: read
+  pull-requests: read
+
+jobs:
+  plan:
+    name: Verify public packages and plan release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
+      release_identity: ${{ steps.outputs.outputs.release_identity }}
+      next_action: ${{ steps.outputs.outputs.next_action }}
+    steps:
+      - name: Require the default branch workflow
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          expected="refs/heads/$DEFAULT_BRANCH"
+          if [ "$GITHUB_REF" != "$expected" ]; then
+            echo "::error::Release workflows must be dispatched from $expected, not $GITHUB_REF."
+            exit 1
+          fi
+
+      - name: Checkout trusted release tooling
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          submodules: false
+
+      - name: Set up .NET for package signature verification
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Build immutable finalization plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/release-finish"
+          python3 scripts/infra/release/release.py finish plan \
+            --version "$RELEASE_VERSION" \
+            --tooling-sha "$GITHUB_SHA" \
+            --download-dir "$RUNNER_TEMP/release-finish/packages" \
+            --output "$RUNNER_TEMP/release-finish/plan.json"
+          python3 scripts/infra/release/release.py render-plan \
+            --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --format markdown \
+            --output "$RUNNER_TEMP/release-finish/summary.md"
+          cat "$RUNNER_TEMP/release-finish/summary.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Export immutable plan identity
+        id: outputs
+        run: |
+          set -euo pipefail
+          plan="$RUNNER_TEMP/release-finish/plan.json"
+          echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload finalization plan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-finish-plan
+          path: |
+            ${{ runner.temp }}/release-finish/plan.json
+            ${{ runner.temp }}/release-finish/summary.md
+          if-no-files-found: error
+          retention-days: 30
+
+  create-draft:
+    name: Create immutable tag and draft
+    needs: plan
+    if: needs.plan.outputs.next_action == 'create-draft'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: release-tag
+    concurrency:
+      group: release-${{ needs.plan.outputs.release_identity }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout approved tooling revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.tooling_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          submodules: false
+
+      - name: Require approved tooling to remain on main
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          TOOLING_SHA: ${{ needs.plan.outputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          git fetch origin "$DEFAULT_BRANCH" --quiet
+          git merge-base --is-ancestor "$TOOLING_SHA" "origin/$DEFAULT_BRANCH" || {
+            echo "::error::Approved tooling $TOOLING_SHA is no longer an ancestor of origin/$DEFAULT_BRANCH."
+            exit 1
+          }
+
+      - name: Require protected release environment
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/infra/release/release.py check-environment \
+            --name release-tag \
+            --default-branch "$DEFAULT_BRANCH" \
+            --output "$RUNNER_TEMP/release-tag-environment.json"
+
+      - name: Download approved finalization plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-finish-plan
+          path: ${{ runner.temp }}/release-finish
+
+      - name: Create or reconcile tag and draft
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$GH_TOKEN"
+          gh auth setup-git
+          python3 scripts/infra/release/release.py finish create-draft \
+            --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --output "$RUNNER_TEMP/release-finish/draft-result.json"
+          python3 scripts/infra/release/release.py render-plan \
+            --plan "$RUNNER_TEMP/release-finish/draft-result.json" \
+            --format markdown \
+            --output "$RUNNER_TEMP/release-finish/draft-result.md"
+          cat "$RUNNER_TEMP/release-finish/draft-result.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload draft result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-draft-result
+          path: |
+            ${{ runner.temp }}/release-finish/plan.json
+            ${{ runner.temp }}/release-finish/draft-result.json
+            ${{ runner.temp }}/release-finish/draft-result.md
+          if-no-files-found: error
+          retention-days: 90
+
+  plan-publication:
+    name: Plan GitHub Release publication
+    needs:
+      - plan
+      - create-draft
+    if: >-
+      always() &&
+      needs.plan.result == 'success' &&
+      (needs.create-draft.result == 'success' || needs.create-draft.result == 'skipped') &&
+      (needs.plan.outputs.next_action == 'create-draft' ||
+       needs.plan.outputs.next_action == 'plan-publication')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tooling_sha: ${{ needs.plan.outputs.tooling_sha }}
+      release_identity: ${{ needs.plan.outputs.release_identity }}
+      next_action: ${{ steps.outputs.outputs.next_action }}
+    steps:
+      - name: Checkout approved tooling revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.tooling_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          submodules: false
+
+      - name: Download original finalization plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-finish-plan
+          path: ${{ runner.temp }}/release-finish
+
+      - name: Audit publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/infra/release/release.py finish plan-publication \
+            --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --output "$RUNNER_TEMP/release-finish/publication-plan.json"
+          python3 scripts/infra/release/release.py render-plan \
+            --plan "$RUNNER_TEMP/release-finish/publication-plan.json" \
+            --format markdown \
+            --output "$RUNNER_TEMP/release-finish/publication-plan.md"
+          cat "$RUNNER_TEMP/release-finish/publication-plan.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Export publication state
+        id: outputs
+        run: |
+          set -euo pipefail
+          next_action=$(jq -r '.nextAction' "$RUNNER_TEMP/release-finish/publication-plan.json")
+          echo "next_action=$next_action" >> "$GITHUB_OUTPUT"
+          case "$next_action" in
+            publish|closeout) ;;
+            *)
+              echo "::error::Publication cannot continue: next action is '$next_action'."
+              exit 1
+              ;;
+          esac
+
+      - name: Upload publication plan
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-publication-plan
+          path: |
+            ${{ runner.temp }}/release-finish/plan.json
+            ${{ runner.temp }}/release-finish/publication-plan.json
+            ${{ runner.temp }}/release-finish/publication-plan.md
+          if-no-files-found: error
+          retention-days: 30
+
+  publish:
+    name: Publish GitHub Release
+    needs:
+      - plan
+      - plan-publication
+    if: needs.plan-publication.outputs.next_action == 'publish'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: release-publish
+    concurrency:
+      group: release-${{ needs.plan-publication.outputs.release_identity }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout approved tooling revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan-publication.outputs.tooling_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          submodules: false
+
+      - name: Download approved publication plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-publication-plan
+          path: ${{ runner.temp }}/release-finish
+
+      - name: Require protected release environment
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          python3 scripts/infra/release/release.py check-environment \
+            --name release-publish \
+            --default-branch "$DEFAULT_BRANCH" \
+            --output "$RUNNER_TEMP/release-publish-environment.json"
+
+      - name: Publish or reconcile GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 scripts/infra/release/release.py finish publish \
+            --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --publication "$RUNNER_TEMP/release-finish/publication-plan.json" \
+            --output "$RUNNER_TEMP/release-finish/publish-result.json"
+          python3 scripts/infra/release/release.py render-plan \
+            --plan "$RUNNER_TEMP/release-finish/publish-result.json" \
+            --format markdown \
+            --output "$RUNNER_TEMP/release-finish/publish-result.md"
+          cat "$RUNNER_TEMP/release-finish/publish-result.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload publication result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-publication-result
+          path: |
+            ${{ runner.temp }}/release-finish/plan.json
+            ${{ runner.temp }}/release-finish/publish-result.json
+            ${{ runner.temp }}/release-finish/publish-result.md
+          if-no-files-found: error
+          retention-days: 90
+
+  closeout:
+    name: Close out release
+    needs:
+      - plan
+      - plan-publication
+      - publish
+    if: >-
+      always() &&
+      needs.plan.result == 'success' &&
+      needs.publish.result != 'failure' &&
+      needs.publish.result != 'cancelled' &&
+      (needs.plan.outputs.next_action == 'closeout' ||
+       needs.plan-publication.outputs.next_action == 'closeout' ||
+       needs.publish.result == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      actions: write
+      contents: read
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout approved tooling revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.plan.outputs.tooling_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+          submodules: false
+
+      - name: Download original finalization plan
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-finish-plan
+          path: ${{ runner.temp }}/release-finish
+
+      - name: Reconcile milestones and dispatch release notes
+        env:
+          GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
+        run: |
+          set -euo pipefail
+          python3 scripts/infra/release/release.py finish closeout \
+            --plan "$RUNNER_TEMP/release-finish/plan.json" \
+            --output "$RUNNER_TEMP/release-finish/closeout-result.json"
+          python3 scripts/infra/release/release.py render-plan \
+            --plan "$RUNNER_TEMP/release-finish/closeout-result.json" \
+            --format markdown \
+            --output "$RUNNER_TEMP/release-finish/closeout-result.md"
+          cat "$RUNNER_TEMP/release-finish/closeout-result.md" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload closeout result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-closeout-result
+          path: |
+            ${{ runner.temp }}/release-finish/plan.json
+            ${{ runner.temp }}/release-finish/closeout-result.json
+            ${{ runner.temp }}/release-finish/closeout-result.md
+          if-no-files-found: error
+          retention-days: 90

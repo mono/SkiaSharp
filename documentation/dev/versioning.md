@@ -43,6 +43,12 @@ Each build emits one package family. Normal labels produce prerelease packages;
 `PREVIEW_LABEL=stable` produces exact packages from a real-signed internal
 `release/*` branch. Arcade promotion and NuGet.org publication remain separate.
 
+After publication, release finalization validates the exact public package
+version by composing the base version, `PREVIEW_LABEL`, and CI build revision.
+The Git tag is created at the repository commit embedded in the published
+SkiaSharp nuspec. The public package is therefore authoritative even if the
+release branch has advanced since the package was built.
+
 ### PR Packages
 
 PR builds (`-pr.<number>.<short-date>.<revision>` versions) are **not**

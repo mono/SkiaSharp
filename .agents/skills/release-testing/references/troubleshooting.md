@@ -22,43 +22,38 @@ package version, or skip policy.
 
 ## Package Resolution Errors
 
-### Packages appear missing but CI succeeded
+### Packages appear missing after publication
 
-**Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
+**Symptom:** The team pipeline shows success, but the requested public version
+is not yet available to the smoke planner.
 
-**Cause:** Using `.latestVersion` from the JSON instead of `.version`, or choosing the newest
-matching feed package instead of the exact package from the selected CI build. The feed contains
-multiple version streams (for example, 3.119.2 and 3.119.3) and CI builds, so either approach can
-return the wrong one.
+**Cause:** NuGet.org indexing is incomplete, the entered public version is
+wrong, or the published package family is incomplete.
 
-**Fix:** Rerun `release-status`. It verifies both exact package versions against
-the preview feed and reports `wait-for-packages` until both are indexed. Do not
-select a replacement version from the feed.
+**Fix:** Rerun the planner with the same exact version after indexing completes.
+It uses the repository release CLI to verify every required public package and
+never chooses a replacement version.
 
-**`ERROR: Could not resolve build metadata for run ...`** — confirm the selected `SkiaSharp`
-pipeline run ID and Azure CLI authentication.
+**`not yet visible on NuGet.org`** — wait and retry the same version.
 
-**`ERROR: Selected run came from ...`** — the selected run is not from the requested release
-branch. Return to release-status and select the correct run.
+**`package source commits disagree`** — the public package family is not a
+coherent SkiaSharp release. Do not test or tag it as one.
 
-**`ERROR: Selected source commit ... is not available locally`** — fetch the named release branch
-again. Do not checkout the branch; the remote-tracking fetch should make the commit available.
+**`source commit ... is not available locally`** — fetch the named release
+branch again. The planner reads the public package's repository commit; do not
+substitute the branch tip.
 
-**`ERROR: Selected source commit ... does not belong to ...`** — the run and release branch do not
-match. Re-check the selected run rather than reading version files from the branch's current tip.
+**`source commit ... does not belong to ...`** — package metadata and its exact
+release branch disagree. Treat this as a publication error.
 
-**`ERROR: Could not read release versions from ...`** — confirm the selected source commit contains
-both version files. Keep `HEAD` unchanged and inspect them with `git show {source-sha}:{path}`.
+**`could not read release versions from ...`** — confirm the package source
+commit contains both release version files.
 
-**`ERROR: Selected buildNumber ... does not match ...`** — the selected run is not from that
-release branch, or its source commit contains different version values. Re-check the run selected
-by release-status and its `sourceVersion`.
-
-| ❌ Wrong | ✅ Correct |
-|----------|-----------|
-| `.latestVersion` | `.version` |
-| Newest matching build | Exact selected CI build |
-| Prefix filtering to select a version | Exact version match |
+| Wrong | Correct |
+|-------|---------|
+| Newest matching package | Exact requested public version |
+| Branch tip metadata | Public package source commit |
+| Partial prefix search | Exact package ID and version |
 
 ---
 
@@ -69,9 +64,9 @@ by release-status and its `sourceVersion`.
 | Local `android` / `apple` tool is unavailable | Pinned manifest has not been restored | Run `python3 .agents/skills/release-testing/scripts/prepare-test-run.py`; it performs `dotnet tool restore` |
 | `the maui workload is not installed` | Missing workload | Record affected MAUI items, continue unrelated coverage, then ask whether to install `maui` or explicitly amend the matrix |
 | `the wasm-tools workload is not installed` | Missing workload | Record Blazor as failed, continue unrelated coverage, then ask whether to install `wasm-tools` or explicitly amend the matrix |
-| `SkiaSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
-| `HarfBuzzSharpVersion must be the exact package version from the selected CI build` | Missing version param | Add `-p:SkiaSharpVersion={skia-test-version} -p:HarfBuzzSharpVersion={hb-test-version}` to `dotnet test` |
-| Stable `X.Y.Z` package cannot be restored | Eventual public version was passed before publication | Use the exact `X.Y.Z-stable.{build}` and matching HarfBuzzSharp test packages |
+| `SkiaSharpVersion must be the exact package version` | Missing version param | Add both exact SkiaSharp and HarfBuzzSharp versions emitted by the planner |
+| `HarfBuzzSharpVersion must be the exact package version` | Missing version param | Use the distinct HarfBuzzSharp version emitted by the planner |
+| Stable `X.Y.Z` package cannot be restored | NuGet.org indexing is incomplete or publication failed | Retry the same exact version; do not substitute a prerelease/feed package |
 
 ## Appium Errors
 
