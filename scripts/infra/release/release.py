@@ -227,10 +227,17 @@ def cmd_finish_closeout(args: argparse.Namespace) -> int:
     tags = list(repo.remote_tags().keys())
     client = GhCliMilestoneClient()
     github = gh.GhCliGitHubClient()
+    schedule_client = milestones.HttpChromiumScheduleClient()
     if args.dry_run:
-        report = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=tags)
+        report = finish.plan_closeout(
+            plan, repo=repo, milestone_client=client, github=github,
+            schedule_client=schedule_client, tags=tags,
+        )
     else:
-        report = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=tags)
+        report = finish.apply_closeout(
+            plan, repo=repo, milestone_client=client, github=github,
+            schedule_client=schedule_client, tags=tags,
+        )
     common.emit(report, output=_output_path(args))
     return 0
 
@@ -391,7 +398,10 @@ class GhCliMilestoneClient:
         for page in pages:
             for item in page:
                 result.append(
-                    milestones.Milestone(number=item["number"], title=item["title"], state=item["state"])
+                    milestones.Milestone(
+                        number=item["number"], title=item["title"], state=item["state"],
+                        due_on=item.get("due_on"), description=item.get("description"),
+                    )
                 )
         return result
 
@@ -402,7 +412,20 @@ class GhCliMilestoneClient:
         if description:
             args.extend(["-f", f"description={description}"])
         payload = self._api(args)
-        return milestones.Milestone(number=payload["number"], title=payload["title"], state=payload["state"])
+        return milestones.Milestone(
+            number=payload["number"], title=payload["title"], state=payload["state"],
+            due_on=payload.get("due_on"), description=payload.get("description"),
+        )
+
+    def update_milestone(self, number: int, *, due_on: str, description: str) -> None:
+        self._api(
+            [
+                f"repos/{self.repository}/milestones/{number}",
+                "-X", "PATCH",
+                "-f", f"due_on={due_on}",
+                "-f", f"description={description}",
+            ]
+        )
 
     def open_milestone_items(self, milestone_number: int):
         payload = self._api(

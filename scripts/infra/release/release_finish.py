@@ -11,6 +11,7 @@ reviewed-summary prototype (5bb3346795e711cf6c6d2572445080b6c908e55a).
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Callable
 
@@ -375,6 +376,18 @@ UPDATE_RELEASE_NOTES_WORKFLOW = "update-release-notes.lock.yml"
 ISSUE_TEMPLATE_REFRESH_WORKFLOW = "auto-update-issue-template-versions.yml"
 
 
+def _schedule_operation_summary(op: milestones.ScheduleOperation) -> dict:
+    return {
+        "title": op.title,
+        "number": op.number,
+        "status": op.status,
+        "action": op.action,
+        "dueOn": op.due_on,
+        "description": op.description,
+        "changes": list(op.changes),
+    }
+
+
 def _closeout_operation_summary(op: milestones.ClosureOperation) -> dict:
     return {
         "milestone": op.milestone_title,
@@ -529,30 +542,95 @@ def _require_release_is_shipped(plan: dict, *, repo: GitRepository, github: GitH
         )
 
 
+DEFAULT_SCHEDULE_MILESTONE_COUNT = 3
+_VERSIONS_PATH_ON_MAIN = "scripts/VERSIONS.txt"
+
+
+def _read_current_major_and_milestone(repo: GitRepository) -> tuple[int, int]:
+    """Read the current SkiaSharp major version and Skia/Chromium milestone
+    from ``scripts/VERSIONS.txt`` on ``main`` -- never the release branch
+    being closed out, since schedule maintenance for the *upcoming*
+    milestones is a main-line concern independent of any specific release.
+    """
+
+    text = repo.read_ref_file("refs/remotes/origin/main", _VERSIONS_PATH_ON_MAIN)
+    return milestones.parse_current_major_and_milestone(text)
+
+
+def _plan_schedule_operations_for_release(
+    repo: GitRepository,
+    *,
+    schedule_client: milestones.ScheduleClient,
+    schedule_count: int,
+    existing: dict[str, milestones.Milestone],
+) -> tuple[list[milestones.ScheduleOperation], list[str]]:
+    """Compute the create/update schedule operations for the next
+    ``schedule_count`` Chromium/Skia milestones' preview/RC/stable
+    SkiaSharp milestones.
+
+    A Chromium schedule fetch failure for one milestone number (a network
+    error, an incomplete/unpublished schedule) is recorded as a warning and
+    that milestone number is simply skipped -- it never raises and never
+    blocks the rest of closeout (PR/issue reconciliation, milestone
+    rollover/closure, and the release-notes/issue-template dispatches all
+    proceed independently of schedule-fetch success).
+    """
+
+    warnings: list[str] = []
+    desired: list[milestones.DesiredMilestone] = []
+    major, current_milestone = _read_current_major_and_milestone(repo)
+    for number in range(current_milestone, current_milestone + schedule_count):
+        try:
+            schedule = schedule_client.fetch_schedule(number)
+        except milestones.MilestoneError as exc:
+            warnings.append(f"could not fetch Chromium schedule for m{number}: {exc}")
+            continue
+        desired.extend(milestones.desired_milestones(schedule, milestone=number, major=major))
+    operations = milestones.plan_schedule_operations(desired, existing, today=date.today())
+    return operations, warnings
+
+
 def plan_closeout(
     plan: dict,
     *,
     repo: GitRepository,
     milestone_client: milestones.MilestoneClient,
     github: GitHubClient,
+    schedule_client: milestones.ScheduleClient,
     tags: list[str],
+    schedule_count: int = DEFAULT_SCHEDULE_MILESTONE_COUNT,
 ) -> dict:
     """Build the read-only closeout plan for the release described by ``plan``.
 
     ``plan`` is the finish-plan.json produced earlier in the pipeline; it
     supplies the standardized envelope context (tooling SHA, release
-    identity/version/branch, plan digest). The actual PR/issue reconciliation
-    and milestone-advancement operations are always recomputed from live
-    Git/milestone/tag state, since closeout may run long after the plan was
-    generated. Before any of that, :func:`_require_release_is_shipped`
-    reverifies the release has actually shipped (exact tag, published
-    release) -- this is a read-only preview, but it must never present a
-    misleadingly "safe" plan for a release that has not actually shipped.
+    identity/version/branch, plan digest). The actual schedule/PR/issue
+    reconciliation and milestone-advancement operations are always
+    recomputed from live Git/milestone/tag/Chromium-schedule state, since
+    closeout may run long after the plan was generated. Before any of
+    that, :func:`_require_release_is_shipped` reverifies the release has
+    actually shipped (exact tag, published release) -- this is a
+    read-only preview, but it must never present a misleadingly "safe"
+    plan for a release that has not actually shipped.
+
+    The schedule (create/update the upcoming preview/RC/stable
+    milestones) is planned *before* rollover/closure, exactly as it would
+    be applied, so a milestone about to be created shows up as a valid
+    move-to target in this same preview (see ``creatable_titles`` on
+    :func:`release_milestones.plan_closeout`).
     """
 
     _require_release_is_shipped(plan, repo=repo, github=github)
 
     all_milestones = milestone_client.milestones()
+    existing_map = milestones.milestone_map(all_milestones)
+    schedule_ops, schedule_warnings = _plan_schedule_operations_for_release(
+        repo, schedule_client=schedule_client, schedule_count=schedule_count, existing=existing_map
+    )
+    creatable_titles = frozenset(
+        op.title for op in schedule_ops if op.action == "create" and op.status == "pending"
+    )
+
     reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(
         plan, repo=repo, milestone_client=milestone_client, all_milestones=all_milestones
     )
@@ -560,18 +638,20 @@ def plan_closeout(
         milestones=all_milestones,
         tags=tags,
         open_items_for=milestone_client.open_milestone_items,
+        creatable_titles=creatable_titles,
     )
     next_action = _closeout_next_action(advance_ops, applied=False)
-    if next_action == "done" and reconcile_ops:
+    if next_action == "done" and (reconcile_ops or any(op.status == "pending" for op in schedule_ops)):
         next_action = "closeout"
     return build_envelope(
         plan,
         next_action=next_action,
+        scheduleOperations=[_schedule_operation_summary(op) for op in schedule_ops],
         reconcileOperations=[_reconcile_operation_summary(op) for op in reconcile_ops],
         operations=[_closeout_operation_summary(op) for op in advance_ops],
         releaseNotesDispatch=_release_notes_dispatch_inputs(plan),
         issueTemplateRefreshNeeded=bool(plan["release"]["stable"]),
-        warnings=[*reconcile_warnings, *advance_warnings],
+        warnings=[*schedule_warnings, *reconcile_warnings, *advance_warnings],
     )
 
 
@@ -581,31 +661,47 @@ def apply_closeout(
     repo: GitRepository,
     milestone_client: milestones.MilestoneClient,
     github: GitHubClient,
+    schedule_client: milestones.ScheduleClient,
     tags: list[str],
+    schedule_count: int = DEFAULT_SCHEDULE_MILESTONE_COUNT,
 ) -> dict:
-    """Apply closeout: reconcile merged PRs/issues for the exact shipped
-    release to its own milestone, move any remaining open items off shipped
-    milestones and close them, then dispatch the release-notes sync and (for
-    a stable release) the issue-template refresh workflows.
+    """Apply closeout: create/update the upcoming preview/RC/stable
+    milestones from the Chromium/Skia schedule, reconcile merged PRs/issues
+    for the exact shipped release to its own milestone, move any remaining
+    open items off shipped milestones and close them, then dispatch the
+    release-notes sync and (for a stable release) the issue-template
+    refresh workflows.
+
+    The schedule step runs *before* rollover/closure and is applied first:
+    a milestone it creates becomes a real, numbered milestone immediately,
+    so it is available as a genuine move-to target for the closure step
+    that follows in this same invocation (milestones are re-fetched after
+    the schedule writes, specifically so this works). A Chromium schedule
+    fetch failure for one milestone number never raises and never blocks
+    anything else here -- it is recorded as a warning and that milestone
+    number is simply skipped (see
+    :func:`_plan_schedule_operations_for_release`); PR/issue reconciliation,
+    milestone rollover/closure, and both workflow dispatches all still run.
 
     The two workflow dispatches are unconditional on every successful
     invocation of this function -- never gated on there being new
-    milestone reconcile/advance work, and never gated on the milestone
-    advancement having fully succeeded (a "blocked" milestone -- no
-    eligible target for its open items -- does not withhold the
-    dispatch). A first closeout for a release with no milestone activity
-    at all must still generate its release notes; and if a prior
-    invocation completed the milestone writes but then failed before
-    reaching the dispatch (a crash, a network blip, an expired token), a
-    rerun that finds no new milestone work left to do must not silently
-    skip the dispatch too -- that would leave a published release with no
-    notes and no way to recover except by hand. Both dispatch targets
+    milestone reconcile/advance/schedule work, and never gated on the
+    milestone advancement or schedule maintenance having fully succeeded
+    (a "blocked" milestone -- no eligible target for its open items --
+    or a schedule-fetch warning does not withhold the dispatch). A first
+    closeout for a release with no milestone activity at all must still
+    generate its release notes; and if a prior invocation completed the
+    milestone writes but then failed before reaching the dispatch (a
+    crash, a network blip, an expired token), a rerun that finds no new
+    milestone work left to do must not silently skip the dispatch too --
+    that would leave a published release with no notes and no way to
+    recover except by hand. Both dispatch targets
     (``update-release-notes.lock.yml``, ``auto-update-issue-template-
     versions.yml``) are themselves convergent/idempotent, so redispatching
     them on every rerun is always safer than silently missing one.
-    Milestone reconciliation/advancement itself is still only-write-what's-
-    needed idempotent: rerunning after everything is already reconciled/
-    advanced performs no further milestone writes.
+    Milestone reconciliation/advancement/schedule maintenance itself is
+    still only-write-what's-needed idempotent: rerunning after everything
+    is already reconciled/advanced/up to date performs no further writes.
 
     Before any of that, :func:`_require_release_is_shipped` reverifies
     live state -- the exact tag still resolves to the receipt's source
@@ -619,6 +715,16 @@ def apply_closeout(
     _require_release_is_shipped(plan, repo=repo, github=github)
 
     all_milestones = milestone_client.milestones()
+    existing_map = milestones.milestone_map(all_milestones)
+    schedule_ops, schedule_warnings = _plan_schedule_operations_for_release(
+        repo, schedule_client=schedule_client, schedule_count=schedule_count, existing=existing_map
+    )
+    schedule_results = milestones.apply_schedule_operations(schedule_ops, milestone_client)
+
+    # Re-fetch: any milestone just created/updated above must be visible --
+    # with a real number -- to the reconcile/advance steps below.
+    all_milestones = milestone_client.milestones()
+
     reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(
         plan, repo=repo, milestone_client=milestone_client, all_milestones=all_milestones
     )
@@ -650,8 +756,9 @@ def apply_closeout(
     return build_envelope(
         plan,
         next_action=_closeout_next_action(advance_ops, applied=True),
+        scheduleResults=schedule_results,
         reconcileResults=[_reconcile_operation_summary(op) for op in reconcile_ops],
         results=results,
         dispatches=dispatches,
-        warnings=[*reconcile_warnings, *advance_warnings],
+        warnings=[*schedule_warnings, *reconcile_warnings, *advance_warnings],
     )

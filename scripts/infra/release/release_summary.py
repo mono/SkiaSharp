@@ -70,6 +70,8 @@ _CONSUMED_TOP_LEVEL_KEYS = frozenset(
         "input",
         "release",
         "warnings",
+        "scheduleOperations",
+        "scheduleResults",
         "operations",
         "results",
         "receipt",
@@ -85,6 +87,7 @@ _CONSUMED_TOP_LEVEL_KEYS = frozenset(
     }
 )
 
+_SCHEDULE_COLUMNS = ("title", "number", "action", "status", "dueOn", "description", "changes")
 _OPERATIONS_COLUMNS = (
     "id",
     "kind",
@@ -181,6 +184,22 @@ def render_markdown(document: dict) -> str:
     else:
         lines.append("_none_")
     lines.append("")
+
+    if isinstance(document.get("scheduleOperations"), list):
+        lines.append("## Schedule")
+        lines.append("")
+        lines.append(
+            _markdown_table(document["scheduleOperations"], preferred_columns=_SCHEDULE_COLUMNS).rstrip("\n")
+        )
+        lines.append("")
+
+    if isinstance(document.get("scheduleResults"), list):
+        lines.append("## Schedule results")
+        lines.append("")
+        lines.append(
+            _markdown_table(document["scheduleResults"], preferred_columns=_SCHEDULE_COLUMNS).rstrip("\n")
+        )
+        lines.append("")
 
     if isinstance(document.get("operations"), list):
         lines.append("## Operations")
