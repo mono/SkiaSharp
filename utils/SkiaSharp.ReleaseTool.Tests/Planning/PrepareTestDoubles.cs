@@ -1,3 +1,4 @@
+using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Planning;
 
 namespace SkiaSharp.ReleaseTool.Tests.Planning
@@ -20,6 +21,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		public string Root { get; }
 		public bool FetchCalled { get; private set; }
 		public List<string> ReleaseBranchNames { get; } = [];
+		public string CurrentBranch { get; private set; } = "main";
 
 		public void AddRef(
 			string reference,
@@ -125,6 +127,74 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			return Task.FromResult(!rejectedAncestry.Contains((ancestor, descendant)));
 		}
 
+		public Task RequireCleanAsync(
+			IReadOnlyList<string>? allowedUntrackedPaths = null,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			return Task.CompletedTask;
+		}
+
+		public Task<string> CurrentBranchAsync(CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			return Task.FromResult(CurrentBranch);
+		}
+
+		public Task UpdateLocalBranchAsync(
+			string branch,
+			string sha,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			refs[$"refs/heads/{branch}"] = sha;
+			return Task.CompletedTask;
+		}
+
+		public Task SwitchAsync(
+			string branch,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			CurrentBranch = branch;
+			return Task.CompletedTask;
+		}
+
+		public Task SwitchCreateAsync(
+			string branch,
+			string startPoint,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			refs[$"refs/heads/{branch}"] = refs.GetValueOrDefault(startPoint, startPoint);
+			CurrentBranch = branch;
+			return Task.CompletedTask;
+		}
+
+		public Task<string> CommitAsync(
+			string message,
+			IReadOnlyList<string>? paths = null,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake does not create commits.");
+
+		public Task PushBranchAsync(
+			string branch,
+			string remote = "origin",
+			bool setUpstream = true,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake does not push branches.");
+
+		public Task<string> ReadWorktreeFileAsync(
+			string path,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake has no worktree files.");
+
+		public Task WriteWorktreeFileAsync(
+			string path,
+			string content,
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake has no worktree files.");
+
 		private static string VersionsText(TestVersionState state)
 		{
 			var skiaFile = state.Skia.Split('.').Length == 3 ? $"{state.Skia}.0" : state.Skia;
@@ -142,6 +212,10 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		public Dictionary<string, string> Refs { get; } = new(StringComparer.Ordinal);
 		public Dictionary<(string Head, string Base), PullRequestInfo> PullRequests { get; } = [];
 		public List<(string Repository, string Reference)> RefRequests { get; } = [];
+		public List<(string Repository, string Reference, string Sha)> CreatedRefs { get; } = [];
+		public List<(string Head, string Base, string Title, string Body)> CreatedPullRequests { get; } = [];
+		public Func<string, string, string, Exception?>? CreateRefFailure { get; set; }
+		public Func<string, string, Exception?>? CreatePullRequestFailure { get; set; }
 
 		public Task<string?> GetRefShaAsync(
 			string repository,
@@ -160,6 +234,41 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			return Task.FromResult(PullRequests.GetValueOrDefault((head, @base)));
+		}
+
+		public Task CreateRefAsync(
+			string repository,
+			string reference,
+			string sha,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			if (CreateRefFailure?.Invoke(repository, reference, sha) is { } failure)
+				return Task.FromException(failure);
+			var key = $"{repository}:{reference}";
+			if (Refs.TryGetValue(key, out var existing) && existing != sha)
+				return Task.FromException(new GitHubException($"conflicting ref {key}"));
+			Refs[key] = sha;
+			CreatedRefs.Add((repository, reference, sha));
+			return Task.CompletedTask;
+		}
+
+		public Task<PullRequestInfo> CreatePullRequestAsync(
+			string head,
+			string @base,
+			string title,
+			string body,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			if (CreatePullRequestFailure?.Invoke(head, @base) is { } failure)
+				return Task.FromException<PullRequestInfo>(failure);
+			var pullRequest = new PullRequestInfo(
+				CreatedPullRequests.Count + 1,
+				new Uri($"https://example.invalid/pr/{CreatedPullRequests.Count + 1}"));
+			PullRequests[(head, @base)] = pullRequest;
+			CreatedPullRequests.Add((head, @base, title, body));
+			return Task.FromResult(pullRequest);
 		}
 	}
 }

@@ -13,5 +13,18 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string head,
 			string @base,
 			CancellationToken cancellationToken = default);
+
+		Task CreateRefAsync(
+			string repository,
+			string reference,
+			string sha,
+			CancellationToken cancellationToken = default);
+
+		Task<PullRequestInfo> CreatePullRequestAsync(
+			string head,
+			string @base,
+			string title,
+			string body,
+			CancellationToken cancellationToken = default);
 	}
 }

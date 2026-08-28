@@ -9,7 +9,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 {
 	public sealed class OctokitPrepareGitHubClient : IPrepareGitHubClient
 	{
-		private const string SkiaRepository = "mono/skia";
 		private readonly GitHubClient octokit;
 		private readonly HttpClient httpClient;
 		private readonly string? token;
@@ -50,7 +49,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string reference,
 			CancellationToken cancellationToken = default)
 		{
-			if (repository != SkiaRepository)
+			if (!TryParseRepository(repository, out _, out _))
 				throw new ValidationException($"unsupported GitHub ref repository '{repository}'");
 			if (!GitReferencePolicy.IsFullyQualified(reference))
 				throw new ValidationException("GitHub ref lookup requires a fully-qualified refs/... name");
@@ -169,6 +168,104 @@ namespace SkiaSharp.ReleaseTool.Planning
 				: new PullRequestInfo(pullRequest.Number, new Uri(pullRequest.HtmlUrl));
 		}
 
+		public async Task CreateRefAsync(
+			string repository,
+			string reference,
+			string sha,
+			CancellationToken cancellationToken = default)
+		{
+			if (!TryParseRepository(repository, out var owner, out var name))
+				throw new ValidationException($"unsupported GitHub ref repository '{repository}'");
+			if (!GitReferencePolicy.IsFullyQualified(reference))
+				throw new ValidationException("GitHub ref creation requires a fully-qualified refs/... name");
+			ValidateSha(sha);
+
+			try
+			{
+				_ = await octokit.Git.Reference
+					.Create(owner, name, new NewReference(reference, sha))
+					.WaitAsync(cancellationToken)
+					.ConfigureAwait(false);
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
+			catch (ApiException ex) when (
+				ex.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.UnprocessableEntity)
+			{
+				var actual = await GetRefShaAsync(
+					repository,
+					reference,
+					cancellationToken).ConfigureAwait(false);
+				if (actual == sha)
+					return;
+				throw new GitHubException(
+					$"GitHub ref {repository}:{reference} already exists at '{actual}', expected '{sha}'",
+					ex);
+			}
+			catch (Exception ex) when (ex is ApiException or HttpRequestException)
+			{
+				throw new GitHubException($"GitHub ref creation failed for {repository}:{reference}", ex);
+			}
+		}
+
+		public async Task<PullRequestInfo> CreatePullRequestAsync(
+			string head,
+			string @base,
+			string title,
+			string body,
+			CancellationToken cancellationToken = default)
+		{
+			try
+			{
+				var pullRequest = await octokit.PullRequest
+					.Create(
+						"mono",
+						"SkiaSharp",
+						new NewPullRequest(title, head, @base) { Body = body })
+					.WaitAsync(cancellationToken)
+					.ConfigureAwait(false);
+				if (pullRequest.Head.Ref != head ||
+					pullRequest.Base.Ref != @base ||
+					!string.Equals(
+						pullRequest.Head.Repository?.Owner?.Login,
+						"mono",
+						StringComparison.OrdinalIgnoreCase))
+				{
+					throw new GitHubException("GitHub returned unexpected pull request data after creation");
+				}
+				return new PullRequestInfo(pullRequest.Number, new Uri(pullRequest.HtmlUrl));
+			}
+			catch (OperationCanceledException)
+			{
+				throw;
+			}
+			catch (ApiException ex) when (
+				ex.StatusCode is HttpStatusCode.Conflict or HttpStatusCode.UnprocessableEntity)
+			{
+				var existing = await FindOpenPullRequestAsync(
+					head,
+					@base,
+					cancellationToken).ConfigureAwait(false);
+				if (existing is not null)
+					return existing;
+				throw new GitHubException(
+					$"GitHub rejected pull request creation for mono:{head} -> {@base}",
+					ex);
+			}
+			catch (GitHubException)
+			{
+				throw;
+			}
+			catch (Exception ex) when (ex is ApiException or HttpRequestException)
+			{
+				throw new GitHubException(
+					$"GitHub pull request creation failed for mono:{head} -> {@base}",
+					ex);
+			}
+		}
+
 		private async Task<IReadOnlyList<PullRequest>> SearchPullRequestsAsync(
 			PullRequestRequest request,
 			CancellationToken cancellationToken) =>
@@ -183,6 +280,28 @@ namespace SkiaSharp.ReleaseTool.Planning
 				character is not (>= '0' and <= '9' or >= 'a' and <= 'f')))
 			{
 				throw new GitHubException($"GitHub ref lookup returned invalid SHA '{sha}'");
+			}
+		}
+
+		private static bool TryParseRepository(
+			string repository,
+			out string owner,
+			out string name)
+		{
+			switch (repository)
+			{
+				case "mono/skia":
+					owner = "mono";
+					name = "skia";
+					return true;
+				case "mono/SkiaSharp":
+					owner = "mono";
+					name = "SkiaSharp";
+					return true;
+				default:
+					owner = "";
+					name = "";
+					return false;
 			}
 		}
 

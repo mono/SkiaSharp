@@ -204,7 +204,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 				ReleaseJsonContext.Strict.PreparePlan);
 
 			File.WriteAllText(path, json.Insert(json.IndexOf('{') + 1, "\n  \"unknown\": true,"));
-			Assert.Throws<ValidationException>(() => PlanStore.ReadPrepare(path));
+			Assert.Throws<ValidationException>(
+				() => PlanStore.ReadPrepare(path, PlanSamples.PlanId));
 
 			File.WriteAllText(
 				path,
@@ -212,7 +213,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 					"\"toolingSha\": \"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"",
 					"\"toolingSha\": \"bad\"",
 					StringComparison.Ordinal));
-			Assert.Throws<ValidationException>(() => PlanStore.ReadPrepare(path));
+			Assert.Throws<ValidationException>(
+				() => PlanStore.ReadPrepare(path, PlanSamples.PlanId));
 		}
 
 		private sealed record UnregisteredType(string Value);

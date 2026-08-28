@@ -17,9 +17,12 @@ namespace SkiaSharp.ReleaseTool.Git
 		Task<IReadOnlyList<string>> ReleaseBranchesAsync(string remote = "origin", CancellationToken cancellationToken = default);
 		Task<string> MergeBaseAsync(string a, string b, CancellationToken cancellationToken = default);
 		Task<bool> IsAncestorAsync(string ancestor, string descendant, CancellationToken cancellationToken = default);
-		Task RequireCleanAsync(CancellationToken cancellationToken = default);
+		Task RequireCleanAsync(
+			IReadOnlyList<string>? allowedUntrackedPaths = null,
+			CancellationToken cancellationToken = default);
 		Task<string> CurrentBranchAsync(CancellationToken cancellationToken = default);
 		Task CreateBranchAsync(string branch, string startPoint, CancellationToken cancellationToken = default);
+		Task UpdateLocalBranchAsync(string branch, string sha, CancellationToken cancellationToken = default);
 		Task SwitchAsync(string branch, CancellationToken cancellationToken = default);
 		Task SwitchCreateAsync(string branch, string startPoint, CancellationToken cancellationToken = default);
 		Task<string> CommitAsync(
@@ -33,5 +36,7 @@ namespace SkiaSharp.ReleaseTool.Git
 			CancellationToken cancellationToken = default);
 		Task PushTagAsync(string tag, string sha, string remote = "origin", CancellationToken cancellationToken = default);
 		Task<bool> ContainsCommitAsync(string branchRef, string commit, CancellationToken cancellationToken = default);
+		Task<string> ReadWorktreeFileAsync(string path, CancellationToken cancellationToken = default);
+		Task WriteWorktreeFileAsync(string path, string content, CancellationToken cancellationToken = default);
 	}
 }

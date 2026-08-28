@@ -90,4 +90,13 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		AwaitingUser,
 	}
 
+	public enum ApplyOperationStatus
+	{
+		[JsonStringEnumMemberName("done")]
+		Done,
+
+		[JsonStringEnumMemberName("skipped")]
+		Skipped,
+	}
+
 }

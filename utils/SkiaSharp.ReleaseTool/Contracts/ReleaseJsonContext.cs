@@ -12,6 +12,7 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
 		WriteIndented = true)]
 	[JsonSerializable(typeof(PreparePlan))]
+	[JsonSerializable(typeof(PrepareApplyResult))]
 	public partial class ReleaseJsonContext : JsonSerializerContext
 	{
 		public static ReleaseJsonContext Strict { get; } = new(CreateOptions());
@@ -34,6 +35,7 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			options.Converters.Add(new JsonStringEnumConverter<PlanOperationId>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<PlanOperationKind>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<PlanOperationStatus>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<ApplyOperationStatus>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<ReleaseKind>(allowIntegerValues: false));
 			return options;
 		}
