@@ -16,7 +16,7 @@ stages:
           - pwsh: ./scripts/infra/native/shared/set-build-variables.ps1 -UpdateBuildNumber
             displayName: Configure build variables
           - pwsh: ./scripts/infra/native/shared/tests/SetBuildVariables.Tests.ps1
-            displayName: Validate build pipeline contracts
+            displayName: Validate build identity rules
           - pwsh: ./scripts/infra/security/tests/PrepareApiScanInputs.Tests.ps1
             displayName: Validate API Scan input preparation
           - bash: python3 scripts/infra/caching/repo-deps.py validate
