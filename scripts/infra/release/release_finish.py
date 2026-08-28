@@ -484,8 +484,58 @@ def _release_notes_dispatch_inputs(plan: dict) -> dict[str, str]:
     return {"source_branch": "main", "min_version": numeric, "max_version": numeric, "force": "false"}
 
 
+def _require_release_is_shipped(plan: dict, *, repo: GitRepository, github: GitHubClient) -> None:
+    """Hard gate before any closeout milestone read/write: reverify live
+    state, never trust the plan document alone.
+
+    ``finish closeout`` is a public CLI; a caller must not be able to
+    trigger milestone reconciliation/advancement merely by supplying a
+    schema-valid, digest-verified finish plan whose tag/publish state was
+    true when the plan was generated (or was never true at all -- e.g. a
+    plan generated before ``create-draft``/``publish`` ever ran) but is
+    not true right now. This requires, freshly, that: the exact tag still
+    exists on the remote and still resolves to the receipt's exact source
+    commit (not moved, not missing); and a matching GitHub Release exists
+    for that tag and is published, not still a draft. Anything else is a
+    :class:`~release_common.ConflictError` raised before
+    ``milestone_client``/``github`` is touched for anything else.
+    """
+
+    tag = plan["tag"]["name"]
+    source_commit = plan["receipt"]["sourceCommit"]
+
+    tag_sha = repo.remote_tags().get(tag)
+    if tag_sha is None:
+        raise ConflictError(
+            f"cannot close out {tag}: it does not exist on the remote; "
+            "finish create-draft/publish must run before closeout"
+        )
+    if tag_sha != source_commit:
+        raise ConflictError(
+            f"cannot close out {tag}: it points to {tag_sha}, expected the "
+            f"package source commit {source_commit}"
+        )
+
+    release = github.get_release(tag)
+    if release is None:
+        raise ConflictError(
+            f"cannot close out {tag}: no GitHub release exists for it yet; "
+            "finish create-draft/publish must run before closeout"
+        )
+    if release.is_draft:
+        raise ConflictError(
+            f"cannot close out {tag}: its GitHub release is still an "
+            "unpublished draft; finish publish must run before closeout"
+        )
+
+
 def plan_closeout(
-    plan: dict, *, repo: GitRepository, milestone_client: milestones.MilestoneClient, tags: list[str]
+    plan: dict,
+    *,
+    repo: GitRepository,
+    milestone_client: milestones.MilestoneClient,
+    github: GitHubClient,
+    tags: list[str],
 ) -> dict:
     """Build the read-only closeout plan for the release described by ``plan``.
 
@@ -494,8 +544,13 @@ def plan_closeout(
     identity/version/branch, plan digest). The actual PR/issue reconciliation
     and milestone-advancement operations are always recomputed from live
     Git/milestone/tag state, since closeout may run long after the plan was
-    generated.
+    generated. Before any of that, :func:`_require_release_is_shipped`
+    reverifies the release has actually shipped (exact tag, published
+    release) -- this is a read-only preview, but it must never present a
+    misleadingly "safe" plan for a release that has not actually shipped.
     """
+
+    _require_release_is_shipped(plan, repo=repo, github=github)
 
     all_milestones = milestone_client.milestones()
     reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(
@@ -551,7 +606,17 @@ def apply_closeout(
     Milestone reconciliation/advancement itself is still only-write-what's-
     needed idempotent: rerunning after everything is already reconciled/
     advanced performs no further milestone writes.
+
+    Before any of that, :func:`_require_release_is_shipped` reverifies
+    live state -- the exact tag still resolves to the receipt's source
+    commit, and a matching GitHub Release exists and is published, not a
+    draft. ``finish closeout`` is a public CLI; it must never close
+    milestones just because it was handed a schema-valid,
+    digest-verified finish plan whose publish state is not (or is not
+    yet) actually true.
     """
+
+    _require_release_is_shipped(plan, repo=repo, github=github)
 
     all_milestones = milestone_client.milestones()
     reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(

@@ -401,8 +401,10 @@ class FakeMilestoneClient:
         self.pr_milestones: dict[int, str | None] = {}
         self.issue_milestones: dict[int, str | None] = {}
         self.pr_closing_issues: dict[int, list[int]] = {}
+        self.milestones_call_count = 0
 
     def milestones(self):
+        self.milestones_call_count += 1
         return list(self._milestones)
 
     def open_milestone_items(self, milestone_number: int):
@@ -468,15 +470,37 @@ class CloseoutTests(unittest.TestCase):
         repo.fetch()
         return repo, first_sha, second_sha
 
+    def _ship_plan(self, repo: GitRepository, github: "FakeGitHubClient", plan: dict) -> None:
+        """Satisfy _require_release_is_shipped for ``plan``: push its exact
+        tag to its exact source commit, and register a matching, published
+        (not draft) GitHub release for it. Every plan_closeout/apply_closeout
+        test must call this (with a plan whose source_commit is a real
+        commit in the fixture repo -- an arbitrary fake SHA can never be
+        pushed as a real tag) before exercising closeout, since closeout now
+        always reverifies live shipped state before touching milestones."""
+
+        tag = plan["tag"]["name"]
+        source_commit = plan["receipt"]["sourceCommit"]
+        repo.push_tag(tag, source_commit)
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name=plan["release"]["title"], is_draft=False,
+            is_prerelease=not plan["release"]["stable"], target_commitish=source_commit,
+            body="notes", url=f"https://example.invalid/{tag}",
+        )
+
     def test_plan_closeout_reports_done_when_nothing_to_move(self):
-        plan = make_finish_plan()
         repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=["v3.119.0"])
+        result = finish.plan_closeout(
+            plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"]
+        )
         self.assertEqual(result["nextAction"], "closeout")
         self.assertEqual(result["planDigest"], plan["planDigest"])
         self.assertEqual(result["release"]["branch"], "release/3.119.0-preview.1")
@@ -489,29 +513,37 @@ class CloseoutTests(unittest.TestCase):
         self.assertTrue(any("3.119.0-preview.1" in w for w in result["warnings"]))
 
     def test_plan_closeout_next_action_done_when_nothing_shipped(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         self.assertEqual(result["operations"], [])
         self.assertEqual(result["nextAction"], "done")
 
     def test_plan_closeout_next_action_blocked(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=["v3.119.0"])
+        result = finish.plan_closeout(
+            plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"]
+        )
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["operations"][0]["status"], "blocked")
 
     def test_plan_closeout_includes_release_notes_dispatch_inputs(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         self.assertEqual(
             result["releaseNotesDispatch"],
             {"source_branch": "main", "min_version": "3.119.0", "max_version": "3.119.0", "force": "false"},
@@ -519,22 +551,25 @@ class CloseoutTests(unittest.TestCase):
         self.assertFalse(result["issueTemplateRefreshNeeded"])  # default plan is a preview, not stable
 
     def test_plan_closeout_issue_template_refresh_needed_for_stable(self):
-        plan = make_finish_plan(stable=True)
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         self.assertTrue(result["issueTemplateRefreshNeeded"])
 
     def test_apply_closeout_moves_items_and_closes(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        github = FakeGitHubClient()
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(client.moved, [(5, 2)])
         self.assertEqual(client.closed, [1])
@@ -542,14 +577,15 @@ class CloseoutTests(unittest.TestCase):
         self.assertEqual(result["planDigest"], plan["planDigest"])
 
     def test_apply_closeout_is_idempotent_when_rerun(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
-        github = FakeGitHubClient()
         first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(first["nextAction"], "done")
         second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
@@ -557,12 +593,13 @@ class CloseoutTests(unittest.TestCase):
         self.assertEqual(second["nextAction"], "done")
 
     def test_apply_closeout_reports_blocked_without_raising(self):
-        plan = make_finish_plan()
-        repo, _, _ = self._repo_with_history()
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        github = FakeGitHubClient()
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["results"][0]["status"], "blocked")
@@ -570,12 +607,13 @@ class CloseoutTests(unittest.TestCase):
     def test_apply_closeout_reconciles_merged_pr_and_linked_issue_before_advancing(self):
         repo, previous_sha, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
         client.pr_closing_issues[100] = [200]
         client.issue_milestones[200] = None
-        github = FakeGitHubClient()
 
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
 
@@ -587,10 +625,11 @@ class CloseoutTests(unittest.TestCase):
     def test_apply_closeout_dispatches_release_notes_and_issue_template_when_work_done(self):
         repo, previous_sha, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
-        github = FakeGitHubClient()
 
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
 
@@ -611,10 +650,11 @@ class CloseoutTests(unittest.TestCase):
     def test_apply_closeout_does_not_dispatch_issue_template_for_non_stable_release(self):
         repo, previous_sha, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit, stable=False)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
-        github = FakeGitHubClient()
 
         finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
 
@@ -626,11 +666,12 @@ class CloseoutTests(unittest.TestCase):
         # advance work at all (no matching milestone, nothing shipped) must
         # still generate its release notes -- the dispatch must never be
         # gated on "did any milestone activity happen".
-        repo, _, _ = self._repo_with_history()
-        plan = make_finish_plan(stable=True)
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
-        github = FakeGitHubClient()
 
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
 
@@ -646,10 +687,11 @@ class CloseoutTests(unittest.TestCase):
         # than hidden missing state.
         repo, previous_sha, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
-        github = FakeGitHubClient()
 
         first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
@@ -668,10 +710,11 @@ class CloseoutTests(unittest.TestCase):
         # work, so it converges.
         repo, previous_sha, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
-        github = FakeGitHubClient()
         github.fail_next_dispatch_for.add(finish.UPDATE_RELEASE_NOTES_WORKFLOW)
 
         with self.assertRaises(gh.GitHubError):
@@ -688,13 +731,104 @@ class CloseoutTests(unittest.TestCase):
     def test_reconciliation_skipped_with_warning_when_target_milestone_missing(self):
         repo, _, source_commit = self._repo_with_history()
         plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = []  # no milestone at all
-        github = FakeGitHubClient()
 
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         self.assertEqual(result["reconcileResults"], [])
         self.assertTrue(any("no milestone titled" in w for w in result["warnings"]))
+
+    def test_apply_closeout_rejects_missing_tag(self):
+        # The plan's tag was never pushed at all (e.g. create-draft/publish
+        # never ran, or a caller hand-built/tampered a finish plan): closeout
+        # must refuse before ever touching the milestone client.
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()  # no release registered, and no tag pushed
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+
+        with self.assertRaisesRegex(ConflictError, "does not exist on the remote"):
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+        self.assertEqual(client.moved, [])
+        self.assertEqual(client.closed, [])
+
+        with self.assertRaisesRegex(ConflictError, "does not exist on the remote"):
+            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+
+    def test_apply_closeout_rejects_moved_tag(self):
+        # The tag exists but points somewhere other than the exact package
+        # source commit -- e.g. it was moved/re-tagged after publish, or the
+        # plan is stale. This must never be silently tolerated the way an
+        # already-published legacy branch-name target_commitish is (see
+        # check_release_conflict): the tag is the one thing this tool never
+        # force-updates, so a moved tag is always a hard conflict.
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        tag = plan["tag"]["name"]
+        # Push the tag to a *different* real commit than the plan's receipt.
+        (repo.root / "file.txt").write_text("v3", encoding="utf-8")
+        other_sha = helpers.commit_all(repo.root, "a different, later commit")
+        repo.push_tag(tag, other_sha)
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name=plan["release"]["title"], is_draft=False,
+            is_prerelease=not plan["release"]["stable"], target_commitish=other_sha,
+            body="notes", url=f"https://example.invalid/{tag}",
+        )
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+
+        with self.assertRaisesRegex(ConflictError, "expected the package source commit"):
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+
+    def test_apply_closeout_rejects_missing_release(self):
+        # The tag is correct, but no GitHub release exists for it at all
+        # (e.g. create-draft never ran even though the tag was somehow
+        # pushed): closeout must refuse before touching milestones.
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        tag = plan["tag"]["name"]
+        repo.push_tag(tag, source_commit)
+        github = FakeGitHubClient()  # no release registered for `tag`
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+
+        with self.assertRaisesRegex(ConflictError, "no GitHub release exists"):
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+
+    def test_apply_closeout_rejects_draft_only_release(self):
+        # A draft (not yet published) release must not let closeout run:
+        # "finish closeout is a public CLI and must not close milestones
+        # merely because a caller supplied a valid pre-publication finish
+        # plan."
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        tag = plan["tag"]["name"]
+        repo.push_tag(tag, source_commit)
+        github = FakeGitHubClient()
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name=plan["release"]["title"], is_draft=True,
+            is_prerelease=not plan["release"]["stable"], target_commitish=source_commit,
+            body="notes", url=f"https://example.invalid/{tag}",
+        )
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+
+        with self.assertRaisesRegex(ConflictError, "unpublished draft"):
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+
+        with self.assertRaisesRegex(ConflictError, "unpublished draft"):
+            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(client.milestones_call_count, 0)
+
 
     def test_resolve_reconciliation_range_returns_none_for_first_ever_release(self):
         repo, _, source_commit = self._repo_with_history(tag_previous=False)
