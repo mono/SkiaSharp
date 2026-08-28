@@ -55,6 +55,12 @@ tag and published release and can only change milestones or dispatch convergent
 workflows. Replacing the broad token with a narrowly scoped GitHub App remains
 the required long-term hardening and must not change release logic.
 
+GitHub returns draft releases only to callers with push access. The two
+read-only Finish planning jobs therefore receive job-scoped `contents: write`
+on `github.token` so they can discover and validate resumable drafts. Those
+jobs contain no mutation commands; the broader cross-repository token remains
+confined to environment-approved write jobs.
+
 ## System boundaries
 
 | System | Responsibility |

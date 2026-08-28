@@ -19,6 +19,13 @@ jobs:
     name: Verify public packages and plan release
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # GitHub only returns draft releases to tokens with push access. This job
+    # remains read-only, but needs contents:write to discover resumable drafts.
+    permissions:
+      actions: read
+      contents: write
+      deployments: read
+      pull-requests: read
     outputs:
       tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
       release_identity: ${{ steps.outputs.outputs.release_identity }}
@@ -204,6 +211,13 @@ jobs:
        needs.plan.outputs.next_action == 'plan-publication')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # GitHub only returns draft releases to tokens with push access. This job
+    # audits the draft without mutating it.
+    permissions:
+      actions: read
+      contents: write
+      deployments: read
+      pull-requests: read
     outputs:
       tooling_sha: ${{ needs.plan.outputs.tooling_sha }}
       release_identity: ${{ needs.plan.outputs.release_identity }}

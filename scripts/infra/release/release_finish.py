@@ -632,6 +632,7 @@ def _plan_schedule_operations_for_release(
     schedule_client: milestones.ScheduleClient,
     schedule_count: int,
     existing: dict[str, milestones.Milestone],
+    today: date | None = None,
 ) -> tuple[list[milestones.ScheduleOperation], list[str]]:
     """Compute the create/update schedule operations for the next
     ``schedule_count`` Chromium/Skia milestones' preview/RC/stable
@@ -655,7 +656,7 @@ def _plan_schedule_operations_for_release(
             warnings.append(f"could not fetch Chromium schedule for m{number}: {exc}")
             continue
         desired.extend(milestones.desired_milestones(schedule, milestone=number, major=major))
-    operations = milestones.plan_schedule_operations(desired, existing, today=date.today())
+    operations = milestones.plan_schedule_operations(desired, existing, today=today or date.today())
     return operations, warnings
 
 
@@ -668,6 +669,7 @@ def plan_closeout(
     schedule_client: milestones.ScheduleClient,
     tags: list[str],
     schedule_count: int = DEFAULT_SCHEDULE_MILESTONE_COUNT,
+    today: date | None = None,
 ) -> dict:
     """Build the read-only closeout plan for the release described by ``plan``.
 
@@ -694,7 +696,11 @@ def plan_closeout(
     all_milestones = milestone_client.milestones()
     existing_map = milestones.milestone_map(all_milestones)
     schedule_ops, schedule_warnings = _plan_schedule_operations_for_release(
-        repo, schedule_client=schedule_client, schedule_count=schedule_count, existing=existing_map
+        repo,
+        schedule_client=schedule_client,
+        schedule_count=schedule_count,
+        existing=existing_map,
+        today=today,
     )
     creatable_titles = frozenset(
         op.title for op in schedule_ops if op.action == "create" and op.status == "pending"
@@ -733,6 +739,7 @@ def apply_closeout(
     schedule_client: milestones.ScheduleClient,
     tags: list[str],
     schedule_count: int = DEFAULT_SCHEDULE_MILESTONE_COUNT,
+    today: date | None = None,
 ) -> dict:
     """Apply closeout: create/update the upcoming preview/RC/stable
     milestones from the Chromium/Skia schedule, reconcile merged PRs/issues
@@ -786,7 +793,11 @@ def apply_closeout(
     all_milestones = milestone_client.milestones()
     existing_map = milestones.milestone_map(all_milestones)
     schedule_ops, schedule_warnings = _plan_schedule_operations_for_release(
-        repo, schedule_client=schedule_client, schedule_count=schedule_count, existing=existing_map
+        repo,
+        schedule_client=schedule_client,
+        schedule_count=schedule_count,
+        existing=existing_map,
+        today=today,
     )
     schedule_results = milestones.apply_schedule_operations(schedule_ops, milestone_client)
 

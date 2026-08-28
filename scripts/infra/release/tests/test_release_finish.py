@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -1039,6 +1040,7 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
         "stable_cut": "2026-08-18T00:00:00",
         "stable_date": "2026-08-25T00:00:00",
     }
+    TODAY = date(2026, 8, 28)
 
     def test_apply_closeout_creates_missing_schedule_milestones(self):
         repo, source_commit = self._repo()
@@ -1051,7 +1053,7 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
 
         result = finish.apply_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=1, tags=[],
+            schedule_client=schedule_client, schedule_count=1, tags=[], today=self.TODAY,
         )
 
         self.assertEqual(schedule_client.calls, [119])
@@ -1080,7 +1082,7 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
 
         finish.apply_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=1, tags=[],
+            schedule_client=schedule_client, schedule_count=1, tags=[], today=self.TODAY,
         )
 
         self.assertEqual(len(milestone_client.updated), 1)
@@ -1101,14 +1103,14 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
 
         finish.apply_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=1, tags=[],
+            schedule_client=schedule_client, schedule_count=1, tags=[], today=self.TODAY,
         )
         created_count = len(milestone_client.created)
         self.assertGreater(created_count, 0)
 
         second = finish.apply_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=1, tags=[],
+            schedule_client=schedule_client, schedule_count=1, tags=[], today=self.TODAY,
         )
 
         # No new creates/updates the second time: everything already matches.
@@ -1132,7 +1134,7 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
 
         result = finish.apply_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=2, tags=[],
+            schedule_client=schedule_client, schedule_count=2, tags=[], today=self.TODAY,
         )
 
         self.assertEqual(milestone_client.created, [])
@@ -1155,7 +1157,7 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
 
         result = finish.plan_closeout(
             plan, repo=repo, milestone_client=milestone_client, github=github,
-            schedule_client=schedule_client, schedule_count=1, tags=[],
+            schedule_client=schedule_client, schedule_count=1, tags=[], today=self.TODAY,
         )
 
         self.assertEqual(milestone_client.created, [])  # a preview never writes
