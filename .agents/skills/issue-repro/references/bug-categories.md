@@ -147,7 +147,7 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 ### Strategy
 
 1. **Test on current platform first.** Document the result even if it works — "works on macOS ARM64" is useful data.
-2. **Docker for Linux variants.** See [platform-docker-linux.md](platform-docker-linux.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use the SDK image matching `{reporter_tfm}` with `sh` (not `bash`). **Always install `libfontconfig1`** (Debian) or `fontconfig` (Alpine) first.
+2. **Docker for Linux variants.** See [platform-docker-linux.md](platform-docker-linux.md). Use `--platform linux/amd64` or `linux/arm64`. For Alpine, use `sdk:8.0-alpine` with `sh` (not `bash`). **Always install `libfontconfig1`** (Debian) or `fontconfig` (Alpine) first.
 3. **SkiaSharp 1.68.x on Apple Silicon?** Use `--platform linux/amd64` — there are no arm64 natives for 1.x.
 4. **Record platform matrix:**
    | Platform | Result | Notes |
@@ -175,7 +175,7 @@ Rendering bugs rarely throw exceptions. The process succeeds, but the output is 
 1. **Create a minimal project from scratch** — don't modify existing test projects:
    ```bash
    mkdir -p /tmp/skiasharp/repro/{timestamp}/{number} && cd /tmp/skiasharp/repro/{timestamp}/{number}
-   dotnet new console --framework {reporter_tfm}
+   dotnet new console --framework net8.0
    dotnet add package SkiaSharp --version <version-from-issue>
    ```
 2. **Match the reporter's configuration.** Copy their `.csproj` settings exactly: TFM, RuntimeIdentifier, PublishTrimmed, PublishAot, SelfContained.

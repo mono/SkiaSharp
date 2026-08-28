@@ -61,7 +61,7 @@ dotnet run 2>&1
 # Debian/Ubuntu (default SDK images)
 apt-get update -qq && apt-get install -y -qq libfontconfig1
 
-# Alpine SDK images use sh, not bash
+# Alpine (sdk:8.0-alpine) — use sh not bash
 apk add --no-cache fontconfig
 ```
 
@@ -77,7 +77,7 @@ apk add --no-cache ttf-dejavu              # Alpine
 |---------|------------|-------------|
 | Linux x64 (Debian) | `--platform linux/amd64` | Default — most common deployment target |
 | Linux arm64 (Debian) | `--platform linux/arm64` | Native on Apple Silicon, tests arm64 natives |
-| Alpine musl | SDK image matching `{reporter_tfm}`, with the `-alpine` suffix | Tests musl libc compatibility |
+| Alpine musl | `sdk:8.0-alpine` | Tests musl libc compatibility |
 
 ## Run & Verify
 
@@ -94,7 +94,7 @@ All output comes through Docker stdout/stderr. Capture the full output of the `d
   "environment": {
     "os": "Linux (Docker)",
     "arch": "x64",
-    "dotnetVersion": "{actual SDK version from dotnet --info}",
+    "dotnetVersion": "8.0.xxx",
     "skiaSharpVersion": "{reporter_version}",
     "dockerUsed": true
   }

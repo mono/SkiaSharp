@@ -18,7 +18,7 @@ platform-reported bugs are actually in core SkiaSharp and reproducible in a cons
 
 ## Prerequisites
 
-- .NET SDK compatible with `{reporter_tfm}`; use the latest stable SDK if the issue does not specify a TFM
+- .NET SDK (8.0+ recommended; match `{reporter_tfm}` if specified)
 - No special workloads needed
 
 ## Create Project

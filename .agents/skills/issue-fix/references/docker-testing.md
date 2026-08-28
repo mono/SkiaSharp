@@ -4,14 +4,11 @@ Use Docker to test SkiaSharp on Linux when the host is macOS or Windows. Docker 
 
 ## Verified Configurations
 
-Match the SDK image and TFM to the reporter's project. If the issue does not specify a
-TFM, use the latest stable SDK and TFM. The .NET 8 commands below are retained as
-known-good, reproducible examples for reports targeting `net8.0`; they are not the
-default repository SDK.
+All configurations below have been tested end-to-end.
 
 | Image | Platform flag | SkiaSharp versions | libc | Notes |
 |-------|--------------|-------------------|------|-------|
-| `mcr.microsoft.com/dotnet/sdk:8.0` | `--platform linux/amd64` | 1.68.x, 2.88.x, 3.x | glibc (Debian) | Known-good `net8.0` baseline |
+| `mcr.microsoft.com/dotnet/sdk:8.0` | `--platform linux/amd64` | 1.68.x, 2.88.x, 3.x | glibc (Debian) | **Primary choice** |
 | `mcr.microsoft.com/dotnet/sdk:8.0` | `--platform linux/arm64` | 2.88.x, 3.x | glibc (Debian) | Native on Apple Silicon |
 | `mcr.microsoft.com/dotnet/sdk:8.0-alpine` | `--platform linux/amd64` | 2.88.x, 3.x | musl | Uses `sh` not `bash` |
 
