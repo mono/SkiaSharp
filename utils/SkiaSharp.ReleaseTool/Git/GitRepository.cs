@@ -188,37 +188,6 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ExpectedBooleanExit(result, "merge-base --is-ancestor");
 		}
 
-		public async Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
-			string rangeSpec,
-			CancellationToken cancellationToken = default)
-		{
-			var result = await GitAsync(
-				["log", "--first-parent", "--format=%s", rangeSpec],
-				cancellationToken: cancellationToken).ConfigureAwait(false);
-			return MachineLines(result.StandardOutput, "git log");
-		}
-
-		public async Task<string> CommitMessageAsync(
-			string commit,
-			CancellationToken cancellationToken = default)
-		{
-			var result = await GitAsync(
-				["show", "-s", "--format=%B", commit],
-				cancellationToken: cancellationToken).ConfigureAwait(false);
-			return result.StandardOutput.ReplaceLineEndings("\n").TrimEnd('\n');
-		}
-
-		public async Task<IReadOnlyList<string>> ChangedPathsAsync(
-			string from,
-			string to,
-			CancellationToken cancellationToken = default)
-		{
-			var result = await GitAsync(
-				["diff", "--name-only", $"{from}..{to}"],
-				cancellationToken: cancellationToken).ConfigureAwait(false);
-			return MachineLines(result.StandardOutput, "git diff --name-only");
-		}
-
 		public async Task RequireCleanAsync(CancellationToken cancellationToken = default)
 		{
 			var result = await GitAsync(

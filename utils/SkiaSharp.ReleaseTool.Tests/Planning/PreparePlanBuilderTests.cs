@@ -132,10 +132,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			repository.AddRemoteRelease(
 				"release/3.119.0",
 				releaseSha,
-				new TestVersionState("3.119.0", "1.8.8", "stable"),
-				MainSha,
-				SkiaSha,
-				packageBump: false);
+				new TestVersionState("3.119.0", "1.8.8", "stable"));
 			github.Refs["mono/skia:refs/heads/release/3.119.0"] = SkiaSha;
 			github.PullRequests[("bump-version-3.119.1", "release/3.119.x")] =
 				new PullRequestInfo(7, new Uri("https://example.invalid/pr/7"));
@@ -258,9 +255,46 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		}
 
 		[Fact]
-		public async Task Existing_release_branch_requires_ancestry_state_and_exact_commit_shape()
+		public async Task Existing_advanced_release_branch_is_resumable()
 		{
 			using var root = new TestDirectory("prepare-existing");
+			var (repository, github) = NewFixture(root.Path);
+			// This SHA represents the live head after the initial version bump,
+			// a main merge, and a later CI/pool fix. The recovery ref and remote
+			// branch both resolve to that advanced head.
+			var advancedReleaseSha = new string('c', 40);
+			repository.AddRef(
+				"refs/remotes/origin/release/3.119.0-rc.1",
+				advancedReleaseSha,
+				new TestVersionState("3.119.0", "1.8.8", "rc.1"),
+				SkiaSha);
+			repository.AddRemoteRelease(
+				"release/3.119.0-rc.1",
+				advancedReleaseSha,
+				new TestVersionState("3.119.0", "1.8.8", "rc.1"));
+			github.Refs[
+				"mono/skia:refs/heads/release/3.119.0-rc.1"] = SkiaSha;
+
+			var plan = await BuildAsync(repository, github, "3.119.0-rc.1");
+			Assert.Equal(advancedReleaseSha, plan.Base.Sha);
+			Assert.Equal(
+				"refs/remotes/origin/release/3.119.0-rc.1",
+				plan.Base.Ref);
+			Assert.Equal(RemoteState.Matching, plan.SkiaSharpRemoteState);
+			Assert.Equal(
+				PlanOperationStatus.Done,
+				Operation(plan, PlanOperationId.CreateReleaseBranch).Status);
+			Assert.Equal(PrepareNextAction.Apply, plan.NextAction);
+		}
+
+		[Theory]
+		[InlineData("3.120.0", "preview.2")]
+		[InlineData("3.119.0", "preview.3")]
+		public async Task Existing_release_branch_rejects_version_state_drift(
+			string liveVersion,
+			string liveLabel)
+		{
+			using var root = new TestDirectory("prepare-existing-drift");
 			var (repository, github) = NewFixture(root.Path);
 			repository.AddRef(
 				"refs/remotes/origin/release/3.119.x",
@@ -271,23 +305,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			repository.AddRemoteRelease(
 				"release/3.119.0-preview.2",
 				releaseSha,
-				new TestVersionState("3.119.0", "1.8.8", "preview.2"),
-				MainSha,
-				SkiaSha,
-				packageBump: false);
-			github.Refs[
-				"mono/skia:refs/heads/release/3.119.0-preview.2"] = SkiaSha;
+				new TestVersionState(liveVersion, "1.8.8", liveLabel));
 
-			var plan = await BuildAsync(repository, github, "3.119.0-preview.2");
-			Assert.Equal(RemoteState.Matching, plan.SkiaSharpRemoteState);
-			Assert.Equal(PrepareNextAction.Done, plan.NextAction);
-
-			repository.SetCommitShape(
-				MainSha,
-				releaseSha,
-				["unexpected"],
-				$"unexpected\n\nRelease-Base: {MainSha}\nRelease-Skia: {SkiaSha}",
-				[PreparePlanBuilder.VariablesPath]);
 			await Assert.ThrowsAsync<ConflictException>(
 				() => BuildAsync(repository, github, "3.119.0-preview.2"));
 		}
@@ -306,10 +325,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			repository.AddRemoteRelease(
 				"release/3.119.0-preview.2",
 				releaseSha,
-				new TestVersionState("3.119.0", "1.8.8", "preview.2"),
-				MainSha,
-				SkiaSha,
-				packageBump: false);
+				new TestVersionState("3.119.0", "1.8.8", "preview.2"));
 			repository.RejectAncestry(MainSha, releaseSha);
 
 			await Assert.ThrowsAsync<ConflictException>(
