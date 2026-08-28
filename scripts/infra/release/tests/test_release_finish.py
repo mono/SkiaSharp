@@ -22,6 +22,11 @@ class FakeGitHubClient:
         self.releases: dict[str, gh.ReleaseInfo] = {}
         self.generated_notes_calls: list[tuple[str, str, str | None]] = []
         self.dispatch_calls: list[dict] = []
+        # A workflow name in this set causes the *next* dispatch_workflow
+        # call for it to raise (and be removed from the set), simulating a
+        # transient failure (crash/network blip/expired token) so tests can
+        # exercise retry/recovery on a subsequent apply_closeout call.
+        self.fail_next_dispatch_for: set[str] = set()
 
     def find_open_pull_request(self, *, head, base):
         return None
@@ -65,6 +70,9 @@ class FakeGitHubClient:
         )
 
     def dispatch_workflow(self, *, workflow, ref, inputs):
+        if workflow in self.fail_next_dispatch_for:
+            self.fail_next_dispatch_for.discard(workflow)
+            raise gh.GitHubError(f"simulated transient dispatch failure for {workflow}")
         self.dispatch_calls.append({"workflow": workflow, "ref": ref, "inputs": dict(inputs)})
 
 
@@ -613,19 +621,69 @@ class CloseoutTests(unittest.TestCase):
         self.assertEqual(len(github.dispatch_calls), 1)
         self.assertEqual(github.dispatch_calls[0]["workflow"], finish.UPDATE_RELEASE_NOTES_WORKFLOW)
 
-    def test_apply_closeout_skips_dispatch_when_no_new_work(self):
-        # No matching milestone (so no reconciliation) and nothing shipped
-        # (so no advancement): rerunning must not fire either workflow.
+    def test_apply_closeout_dispatches_release_notes_even_with_no_milestone_work(self):
+        # A first closeout for a release with no milestone reconcile or
+        # advance work at all (no matching milestone, nothing shipped) must
+        # still generate its release notes -- the dispatch must never be
+        # gated on "did any milestone activity happen".
         repo, _, _ = self._repo_with_history()
-        plan = make_finish_plan()
+        plan = make_finish_plan(stable=True)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         github = FakeGitHubClient()
 
         result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
 
+        self.assertEqual(len(github.dispatch_calls), 2)
+        self.assertEqual({d["status"] for d in result["dispatches"]}, {"dispatched"})
+        self.assertEqual(github.dispatch_calls[0]["workflow"], finish.UPDATE_RELEASE_NOTES_WORKFLOW)
+        self.assertEqual(github.dispatch_calls[1]["workflow"], finish.ISSUE_TEMPLATE_REFRESH_WORKFLOW)
+
+    def test_apply_closeout_redispatches_on_rerun_with_no_new_work(self):
+        # Rerunning after everything is already reconciled/advanced must
+        # still redispatch both workflows on every successful invocation --
+        # they are convergent/idempotent, so a repeated dispatch is safer
+        # than hidden missing state.
+        repo, previous_sha, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        client.pr_milestones[100] = None
+        github = FakeGitHubClient()
+
+        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(len(github.dispatch_calls), 4)  # 2 workflows x 2 runs
+        self.assertEqual({d["status"] for d in first["dispatches"]}, {"dispatched"})
+        self.assertEqual({d["status"] for d in second["dispatches"]}, {"dispatched"})
+
+    def test_apply_closeout_dispatch_recovers_after_a_transient_failure(self):
+        # A dispatch failure that happens *after* the milestone writes for
+        # this invocation already succeeded used to be unrecoverable: a
+        # rerun would see no new reconcile/advance work left to do and
+        # silently skip the dispatch too, leaving a published release with
+        # no notes and no way to recover except by hand. Retrying now
+        # always redispatches regardless of whether there is new milestone
+        # work, so it converges.
+        repo, previous_sha, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        client.pr_milestones[100] = None
+        github = FakeGitHubClient()
+        github.fail_next_dispatch_for.add(finish.UPDATE_RELEASE_NOTES_WORKFLOW)
+
+        with self.assertRaises(gh.GitHubError):
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
         self.assertEqual(github.dispatch_calls, [])
-        self.assertEqual({d["status"] for d in result["dispatches"]}, {"skipped-no-new-work"})
+        # The milestone reconciliation from the failed attempt still landed.
+        self.assertEqual(client.pr_milestones[100], "3.119.0-preview.1")
+
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(len(github.dispatch_calls), 2)
+        self.assertEqual({d["status"] for d in second["dispatches"]}, {"dispatched"})
 
     def test_reconciliation_skipped_with_warning_when_target_milestone_missing(self):
         repo, _, source_commit = self._repo_with_history()
