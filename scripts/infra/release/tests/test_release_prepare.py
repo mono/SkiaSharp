@@ -89,6 +89,29 @@ class PrepareFixture:
         self.repo.git("branch", name, at)
         self.repo.push_branch(name)
 
+    def create_advanced_release_branch(
+        self,
+        name: str,
+        at: str,
+        *,
+        skiasharp_version: str,
+        preview_label: str,
+    ) -> str:
+        self.repo.git("switch", "-c", name, at)
+        helpers.write_variables(
+            self.worktree,
+            skiasharp_version=skiasharp_version,
+            preview_label=preview_label,
+        )
+        helpers.stage(self.worktree, "scripts/azure-templates-variables.yml")
+        helpers.commit_staged(self.worktree, f"Bump the version to {skiasharp_version}-{preview_label}")
+        (self.worktree / "ci-pool-fix.txt").write_text("follow-up\n", encoding="utf-8")
+        helpers.stage(self.worktree, "ci-pool-fix.txt")
+        tip = helpers.commit_staged(self.worktree, "Merge main and fix the CI pool")
+        self.repo.push_branch(name)
+        self.repo.git("switch", "main")
+        return tip
+
     def fetch(self) -> None:
         self.repo.fetch()
 
@@ -295,8 +318,13 @@ class PrepareStableTests(unittest.TestCase):
         fixture = PrepareFixture(self.root)
         main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
         # The maintenance branch was never created (simulating recovery from a
-        # broken run), but the RC branch for this exact line still exists.
-        fixture.create_remote_branch("release/3.119.0-rc.1", main_sha)
+        # broken run), but an RC branch with later legitimate commits exists.
+        rc_tip = fixture.create_advanced_release_branch(
+            "release/3.119.0-rc.1",
+            main_sha,
+            skiasharp_version="3.119.0",
+            preview_label="rc.1",
+        )
         fixture.fetch()
         github = FakeGitHubClient()
         plan = prepare.build_prepare_plan(
@@ -307,21 +335,81 @@ class PrepareStableTests(unittest.TestCase):
             github=github,
         )
         self.assertEqual(plan["base"]["ref"], "refs/remotes/origin/release/3.119.0-rc.1")
+        self.assertEqual(plan["base"]["sha"], rc_tip)
         self.assertEqual(plan["maintenanceBranch"]["action"], "create")
         self.assertEqual(plan["maintenanceBranch"]["baseSha"], main_sha)
+        self.assertEqual(plan["stableBump"]["status"], "pending")
 
-    def test_stable_requires_approved_base_when_no_recovery_candidate(self):
+    def test_existing_advanced_rc_uses_its_tip_and_creates_maintenance_from_main(self):
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        rc_tip = fixture.create_advanced_release_branch(
+            "release/3.119.0-rc.1",
+            main_sha,
+            skiasharp_version="3.119.0",
+            preview_label="rc.1",
+        )
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo,
+            integration_target="main",
+            requested_version="3.119.0-rc.1",
+            tooling_sha=main_sha,
+            github=github,
+        )
+        self.assertEqual(plan["base"]["sha"], rc_tip)
+        self.assertEqual(plan["maintenanceBranch"]["baseSha"], main_sha)
+        self.assertEqual(plan["skiaSharpRemoteState"], "matching")
+        self.assertEqual(plan["nextAction"], "apply")
+
+    def test_stable_uses_safe_main_when_no_recovery_candidate(self):
         fixture = PrepareFixture(self.root)
         main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
         fixture.fetch()
-        github = FakeGitHubClient()
-        with self.assertRaisesRegex(PlanError, "explicitly approved base"):
+        plan = prepare.build_prepare_plan(
+            fixture.repo,
+            integration_target="main",
+            requested_version="3.119.0",
+            tooling_sha=main_sha,
+            github=FakeGitHubClient(),
+        )
+        self.assertEqual(plan["base"]["sha"], main_sha)
+        self.assertEqual(plan["maintenanceBranch"]["baseSha"], main_sha)
+
+    def test_unsafe_main_requires_an_approved_preview_zero_base(self):
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(
+            skiasharp_version="3.119.0",
+            harfbuzzsharp_version="1.8.8",
+            preview_label="rc.1",
+        )
+        fixture.fetch()
+        with self.assertRaisesRegex(PlanError, "not a safe maintenance base"):
             prepare.build_prepare_plan(
                 fixture.repo,
                 integration_target="main",
                 requested_version="3.119.0",
                 tooling_sha=main_sha,
-                github=github,
+                github=FakeGitHubClient(),
+            )
+
+    def test_approved_base_must_be_same_numeric_preview_zero(self):
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(
+            skiasharp_version="3.119.0",
+            harfbuzzsharp_version="1.8.8",
+            preview_label="rc.1",
+        )
+        fixture.fetch()
+        with self.assertRaisesRegex(PlanError, "approved base.*not a safe maintenance base"):
+            prepare.build_prepare_plan(
+                fixture.repo,
+                integration_target="main",
+                requested_version="3.119.0",
+                tooling_sha=main_sha,
+                github=FakeGitHubClient(),
+                approved_base="refs/remotes/origin/main",
             )
 
     def test_stable_accepts_explicitly_approved_base(self):

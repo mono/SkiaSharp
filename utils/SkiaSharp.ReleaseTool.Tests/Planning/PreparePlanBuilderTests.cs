@@ -150,15 +150,16 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		{
 			using var root = new TestDirectory("prepare-recovery");
 			var (repository, github) = NewFixture(root.Path);
+			var rcSha = new string('c', 40);
 			repository.AddRef(
 				"refs/remotes/origin/release/3.119.0-preview.4",
-				MainSha,
+				new string('d', 40),
 				new TestVersionState("3.119.0", "1.8.8", "preview.4"),
 				SkiaSha);
 			repository.AddRef(
 				"refs/remotes/origin/release/3.119.0-rc.1",
-				MainSha,
-				new TestVersionState("3.119.0", "1.8.8", "preview.0"),
+				rcSha,
+				new TestVersionState("3.119.0", "1.8.8", "rc.1"),
 				SkiaSha);
 			repository.ReleaseBranchNames.AddRange(
 				["release/3.119.0-preview.4", "release/3.119.0-rc.1"]);
@@ -166,7 +167,10 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			var plan = await BuildAsync(repository, github, "3.119.0");
 
 			Assert.Equal("refs/remotes/origin/release/3.119.0-rc.1", plan.Base.Ref);
+			Assert.Equal(rcSha, plan.Base.Sha);
 			Assert.Equal(MaintenanceBranchAction.Create, plan.MaintenanceBranch.Action);
+			Assert.Equal(MainSha, plan.MaintenanceBranch.BaseSha);
+			Assert.Equal(PlanOperationStatus.Pending, plan.StableBump!.Status);
 		}
 
 		[Fact]
@@ -280,11 +284,31 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			Assert.Equal(
 				"refs/remotes/origin/release/3.119.0-rc.1",
 				plan.Base.Ref);
+			Assert.Equal(MainSha, plan.MaintenanceBranch.BaseSha);
 			Assert.Equal(RemoteState.Matching, plan.SkiaSharpRemoteState);
 			Assert.Equal(
 				PlanOperationStatus.Done,
 				Operation(plan, PlanOperationId.CreateReleaseBranch).Status);
 			Assert.Equal(PrepareNextAction.Apply, plan.NextAction);
+		}
+
+		[Theory]
+		[InlineData(null)]
+		[InlineData("refs/remotes/origin/main")]
+		public async Task Unsafe_maintenance_base_is_rejected(
+			string? approvedBase)
+		{
+			using var root = new TestDirectory("prepare-unsafe-maintenance");
+			var (repository, github) = NewFixture(root.Path);
+			repository.AddRef(
+				"refs/remotes/origin/main",
+				MainSha,
+				new TestVersionState("3.119.0", "1.8.8", "rc.1"),
+				SkiaSha);
+
+			var exception = await Assert.ThrowsAsync<PlanException>(
+				() => BuildAsync(repository, github, "3.119.0", approvedBase));
+			Assert.Contains("not a safe maintenance base", exception.Message);
 		}
 
 		[Theory]
@@ -344,13 +368,11 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		}
 
 		[Fact]
-		public async Task Invalid_target_and_missing_recovery_base_are_rejected()
+		public async Task Invalid_target_is_rejected()
 		{
 			using var root = new TestDirectory("prepare-invalid");
 			var (repository, github) = NewFixture(root.Path);
 
-			await Assert.ThrowsAsync<PlanException>(
-				() => BuildAsync(repository, github, "3.119.0"));
 			await Assert.ThrowsAsync<PlanException>(
 				() => new PreparePlanBuilder(repository, github).BuildAsync(
 					new PreparePlanRequest(

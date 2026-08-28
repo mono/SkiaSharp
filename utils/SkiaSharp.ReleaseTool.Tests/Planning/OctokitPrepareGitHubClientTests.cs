@@ -63,6 +63,62 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 					TestContext.Current.CancellationToken));
 		}
 
+		[Theory]
+		[InlineData(true)]
+		[InlineData(false)]
+		public async Task Raw_ref_body_IO_failures_are_typed(bool httpFailure)
+		{
+			Exception failure = httpFailure
+				? new HttpRequestException("body failed")
+				: new IOException("body failed");
+			using var httpClient = new HttpClient(new StubHandler(
+				_ => new HttpResponseMessage(HttpStatusCode.OK)
+				{
+					Content = new StreamContent(new ThrowingReadStream(failure)),
+				}))
+			{
+				BaseAddress = new Uri("https://api.github.test/"),
+			};
+			var client = new OctokitPrepareGitHubClient(httpClient, "token");
+
+			var exception = await Assert.ThrowsAsync<GitHubException>(
+				() => client.GetRefShaAsync(
+					"mono/skia",
+					"refs/heads/release/3.119.0",
+					TestContext.Current.CancellationToken));
+			Assert.Contains("could not be read", exception.Message);
+			Assert.Same(failure, exception.InnerException);
+		}
+
+		[Fact]
+		public async Task Raw_ref_body_timeout_is_typed_but_caller_cancellation_is_preserved()
+		{
+			using var timeoutHttp = new HttpClient(new StubHandler(
+				_ => new HttpResponseMessage(HttpStatusCode.OK)
+				{
+					Content = new StreamContent(
+						new ThrowingReadStream(new OperationCanceledException("timeout"))),
+				}))
+			{
+				BaseAddress = new Uri("https://api.github.test/"),
+			};
+			var client = new OctokitPrepareGitHubClient(timeoutHttp, "token");
+			var timeout = await Assert.ThrowsAsync<GitHubException>(
+				() => client.GetRefShaAsync(
+					"mono/skia",
+					"refs/heads/release/3.119.0",
+					TestContext.Current.CancellationToken));
+			Assert.Contains("timed out", timeout.Message);
+
+			using var canceled = new CancellationTokenSource();
+			canceled.Cancel();
+			await Assert.ThrowsAnyAsync<OperationCanceledException>(
+				() => client.GetRefShaAsync(
+					"mono/skia",
+					"refs/heads/release/3.119.0",
+					canceled.Token));
+		}
+
 		[Fact]
 		public void Token_resolution_prefers_GH_TOKEN()
 		{
@@ -122,6 +178,32 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 				Requests.Add(request);
 				return Task.FromResult(response(request));
 			}
+		}
+
+		private sealed class ThrowingReadStream(Exception exception) : Stream
+		{
+			public override bool CanRead => true;
+			public override bool CanSeek => false;
+			public override bool CanWrite => false;
+			public override long Length => throw new NotSupportedException();
+			public override long Position
+			{
+				get => throw new NotSupportedException();
+				set => throw new NotSupportedException();
+			}
+
+			public override void Flush() => throw new NotSupportedException();
+			public override int Read(byte[] buffer, int offset, int count) => throw exception;
+			public override ValueTask<int> ReadAsync(
+				Memory<byte> buffer,
+				CancellationToken cancellationToken = default) =>
+				ValueTask.FromException<int>(
+					cancellationToken.IsCancellationRequested
+						? new OperationCanceledException(cancellationToken)
+						: exception);
+			public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+			public override void SetLength(long value) => throw new NotSupportedException();
+			public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 		}
 	}
 }

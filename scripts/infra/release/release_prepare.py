@@ -177,6 +177,7 @@ class BaseSelection:
     sha: str
     maintenance_branch_exists: bool
     maintenance_branch_action: str  # "none" | "create"
+    maintenance_branch_base_ref: str | None
     maintenance_branch_base_sha: str | None
 
 
@@ -185,6 +186,7 @@ def select_base(
     version: model.ReleaseVersion,
     release_branches: list[str],
     *,
+    integration_target: str,
     approved_base: str | None,
 ) -> BaseSelection:
     integration = version.integration_branch
@@ -201,45 +203,74 @@ def select_base(
             tag_ref = f"refs/tags/v{parent_numeric}"
             if not repo.ref_exists(tag_ref):
                 raise PlanError(f"hotfix base tag {tag_ref} does not exist")
-            return BaseSelection(tag_ref, repo.resolve(tag_ref), integration_exists, "none", None)
+            return BaseSelection(
+                tag_ref, repo.resolve(tag_ref), integration_exists, "none", None, None
+            )
         candidate = latest_prerelease_branch(full_branches, version.numeric)
         if candidate is None:
             raise PlanError(
                 f"no prerelease branch found to base hotfix {version.raw} on"
             )
         ref = f"refs/remotes/origin/{candidate}"
-        return BaseSelection(ref, repo.resolve(ref), integration_exists, "none", None)
+        return BaseSelection(
+            ref, repo.resolve(ref), integration_exists, "none", None, None
+        )
 
     if integration_exists:
         return BaseSelection(
-            integration_ref, repo.resolve(integration_ref), True, "none", None
+            integration_ref, repo.resolve(integration_ref), True, "none", None, None
         )
 
-    # No maintenance branch yet.
-    if version.channel == "preview" and version.iteration == 1:
-        # First prerelease for a brand-new line: base on the audited main SHA
-        # and create the maintenance branch from that same commit.
-        main_ref = "refs/remotes/origin/main"
-        sha = repo.resolve(main_ref)
-        return BaseSelection(main_ref, sha, False, "create", sha)
-
-    # Any later prerelease or a stable/rc cut with no maintenance branch:
-    # only recover from a validated matching prerelease branch for the same
-    # numeric version, or require an explicit approved base.
-    candidate = latest_prerelease_branch(full_branches, version.numeric)
-    if candidate is not None:
-        ref = f"refs/remotes/origin/{candidate}"
-        sha = repo.resolve(ref)
-        return BaseSelection(ref, sha, False, "create", sha)
-    if approved_base:
+    # No maintenance branch yet. Its create point is independent from the
+    # release branch base: it must remain the same-numeric preview.0 state.
+    if approved_base is not None:
         if not repo.ref_exists(approved_base):
             raise PlanError(f"approved base {approved_base!r} does not exist")
-        sha = repo.resolve(approved_base)
-        return BaseSelection(approved_base, sha, False, "create", sha)
-    raise PlanError(
-        f"maintenance branch {integration} does not exist and no matching "
-        f"prerelease branch for {version.numeric} was found; pass an "
-        "explicitly approved base to recover"
+        maintenance_ref = approved_base
+    elif integration_target == "main":
+        maintenance_ref = "refs/remotes/origin/main"
+    else:
+        raise PlanError(
+            f"maintenance branch {integration} does not exist; pass an "
+            "explicitly approved preview.0 base to recover"
+        )
+
+    maintenance_state = read_version_state(repo, maintenance_ref)
+    if (
+        maintenance_state.skia != version.numeric
+        or maintenance_state.label != "preview.0"
+    ):
+        source = (
+            f"approved base {approved_base!r}"
+            if approved_base is not None
+            else f"integration target {integration_target}"
+        )
+        raise PlanError(
+            f"{source} is not a safe maintenance base for {version.numeric}: "
+            f"expected SkiaSharp {version.numeric} with PREVIEW_LABEL "
+            "'preview.0'; pass --approved-base with a matching ref"
+        )
+    maintenance_sha = repo.resolve(maintenance_ref)
+
+    if version.channel == "preview" and version.iteration == 1:
+        release_ref = maintenance_ref
+    else:
+        candidate = latest_prerelease_branch(full_branches, version.numeric)
+        release_ref = (
+            f"refs/remotes/origin/{candidate}"
+            if candidate is not None
+            else maintenance_ref
+        )
+    release_sha = (
+        maintenance_sha if release_ref == maintenance_ref else repo.resolve(release_ref)
+    )
+    return BaseSelection(
+        release_ref,
+        release_sha,
+        False,
+        "create",
+        maintenance_ref,
+        maintenance_sha,
     )
 
 
@@ -354,7 +385,13 @@ def build_prepare_plan(
             )
         version = _next_preview_version(state.skia, release_branch_names)
 
-    base = select_base(repo, version, release_branch_names, approved_base=approved_base)
+    base = select_base(
+        repo,
+        version,
+        release_branch_names,
+        integration_target=normalized_target,
+        approved_base=approved_base,
+    )
 
     release_branch = version.release_branch
     release_ref = f"refs/remotes/origin/{release_branch}"
@@ -422,7 +459,15 @@ def build_prepare_plan(
         # A hotfix's stable cut (release_type == "hotfix stable") never
         # advances the main line's next version, so no bump PR is planned.
         integration_ref = f"refs/remotes/origin/{version.integration_branch}"
-        state_ref = integration_ref if repo.ref_exists(integration_ref) else base.ref
+        state_ref = (
+            integration_ref
+            if repo.ref_exists(integration_ref)
+            else base.maintenance_branch_base_ref
+        )
+        if state_ref is None:
+            raise PlanError(
+                "missing maintenance branch has no validated creation point"
+            )
         stable_bump = plan_stable_bump(
             repo,
             version,

@@ -106,6 +106,14 @@ namespace SkiaSharp.ReleaseTool.Planning
 				{
 					throw new GitHubException("GitHub ref lookup returned an invalid response", ex);
 				}
+				catch (OperationCanceledException ex) when (!cancellationToken.IsCancellationRequested)
+				{
+					throw new GitHubException($"GitHub ref response timed out for {repository}:{reference}", ex);
+				}
+				catch (Exception ex) when (ex is HttpRequestException or IOException)
+				{
+					throw new GitHubException($"GitHub ref response could not be read for {repository}:{reference}", ex);
+				}
 
 				if (payload.Ref != reference || payload.Object.Type != "commit")
 					throw new GitHubException($"GitHub ref lookup returned unexpected ref data for {reference}");
