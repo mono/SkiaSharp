@@ -226,10 +226,10 @@ def cmd_finish_closeout(args: argparse.Namespace) -> int:
     repo.fetch()
     tags = list(repo.remote_tags().keys())
     client = GhCliMilestoneClient()
+    github = gh.GhCliGitHubClient()
     if args.dry_run:
-        report = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=tags)
+        report = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=tags)
     else:
-        github = gh.GhCliGitHubClient()
         report = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=tags)
     common.emit(report, output=_output_path(args))
     return 0
