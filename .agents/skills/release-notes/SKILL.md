@@ -1,6 +1,6 @@
 ---
 name: release-notes
-description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/_sources/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`prose.json`); a deterministic renderer builds the page.
+description: Write the polished prose for a SkiaSharp release-notes page. Use whenever the release-notes workflow asks you to fill in a version's notes, when you see a `data.json` for a release under `documentation/docfx/releases/_sources/`, or when a user asks to draft, polish, or regenerate release notes / a changelog for a SkiaSharp version. You produce ONE small JSON file of prose (`prose.json`) — website page prose plus, per exact shipment tag, the reviewed GitHub Release summary; a deterministic renderer/updater builds the page and the Release body.
 ---
 
 # Release notes — writing the prose
@@ -94,7 +94,9 @@ section on the SkiaSharp page (see `harfbuzz_summary` below). For **each** page:
 1. Read its `_sources/<version>.data.json`. It has:
    `prs` (title, author, community, tag), `previews` (each with its PR list),
    `contributors` (the authoritative roster), `breaking_candidates`, `tallies`,
-   and the banner/link facts.
+   `shipments` (format 4+; the exact git tag(s) this page rolls up — a preview,
+   an rc, and/or the stable release itself, see `release_summaries` below), and
+   the banner/link facts.
 2. Read the breaking sources it points at, if present: the version's
    `*.breaking.md` API diff and any `_sources/<version>.notes.md` sidecar. These
    are your material for the `breaking` slot — the API diff gives signature
@@ -214,6 +216,46 @@ heading, the ❤️ credit and the PR links.
   to `null`. When `data.harfbuzz` is absent (e.g. an unreleased head), omit it.
 - Good: `"Adds variable-font shaping and an HBColor value type, and refreshes the bundled HarfBuzz to 8.3.0."`
 - Bad: re-listing every PR, or repeating the SkiaSharp highlights verbatim.
+
+### `release_summaries` — optional, one entry per exact shipment tag
+
+This slot writes for a **different reader and a different surface** than
+everything above: instead of the website page, it converges the reviewed
+**GitHub Release** summary for one exact tag. A separate deterministic
+updater (`scripts/infra/docs/release_notes/update_github_summaries.py`) folds
+each entry into the managed `<!-- SKIASHARP:RELEASE-SUMMARY -->` region of
+that exact tag's GitHub Release, next to GitHub's own generated notes — which
+it never touches. A release ships immediately with GitHub-generated notes
+only; this slot's prose converges later, whenever this PR merges. There is no
+release-critical deadline for it.
+
+`data.shipments` (format 4+, present only on a **released** page) lists every
+exact tag this page rolls up — a preview, an rc, and/or the stable release
+itself — each with its own `tag` (e.g. `"v4.151.0-preview.1"`), `label`
+(e.g. `"Preview 1"`), and delta `prs` since the previous tag (globally, not
+just this page's). Write one `release_summaries` entry per tag you have
+enough to say something crisp about; **omit** a tag entirely rather than pad
+it — an omitted tag is simply not converged yet, never an error.
+
+Each entry is `{"headline": string, "body": string|null}`:
+
+- `headline` — one plain-language sentence naming what this exact shipment is
+  about. The updater prefixes it with the shipment's own script-owned label
+  (`**Preview 1**`) and appends deterministic NuGet/release-notes/changelog
+  links — never write a heading, a link, or `@handle` yourself.
+- `body` — optional, 1-3 sentences of extra detail; `null` when the headline
+  says enough.
+
+Both strings go through the same safety gate the retired release-publish
+teaser used (`scripts/infra/docs/release_notes/safety.py`): no code fence, no
+CVE/security/vulnerability wording (bundled-dependency bumps stay neutral —
+`"Updated libpng to 1.6.44."`, never "security fix"), no unwritten placeholder,
+no heading/list/table as the opening line, and never the literal text of a
+managed marker. A violation fails the updater loudly rather than shipping —
+fix the prose in a follow-up PR; it never blocks this one.
+
+- Good: `{"headline": "SkiaSharp 4.151.0 previews the Skia m151 engine update.", "body": "It brings the current upstream renderer into the 4.151 line without changing the managed API surface."}`
+- Bad: `{"headline": "Security fix for a bundled library."}` (never name security/CVE details) · `{"headline": "## What's New"}` (that's the renderer's job) · omitting `4.151.0-preview.1` and every other tag just because the stable tag isn't ready yet (converge each tag independently, as its own prose is ready).
 
 ## Why this is short
 

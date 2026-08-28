@@ -111,6 +111,18 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
+# Make the sibling ``release_notes`` package importable regardless of how this
+# script itself was loaded (as ``__main__``, or via release-notes-render.py's
+# ``importlib`` spec load of this file, which does not itself add this
+# directory to sys.path). ``release_notes.shipments`` is the fresh-ported,
+# independently unit-tested exact-shipment model that turns this script's own
+# tag/PR-diff helpers into the ``shipments`` data.json field the GitHub
+# Release summary updater consumes (see collect_shipments_for_page below).
+_THIS_DIR = Path(__file__).resolve().parent
+if str(_THIS_DIR) not in sys.path:
+    sys.path.insert(0, str(_THIS_DIR))
+from release_notes import shipments as _release_shipments  # noqa: E402
+
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
 # out of the working-tree patch the Prepare job hands to the Polish agent.
@@ -1032,6 +1044,39 @@ def _tag_date(tag):
                check=False).strip()
 
 
+def _tag_target_sha(tag):
+    # type: (str) -> str
+    """The 40-char commit SHA a tag points at, or '' when unknown."""
+    return run(["git", "rev-parse", "{}^{{commit}}".format(tag)],
+               check=False).strip()
+
+
+def collect_shipments_for_page(page_version):
+    # type: (str) -> list[dict]
+    """Every exact shipment (tag) for a RELEASED page's own core version.
+
+    A thin wrapper around ``release_notes.shipments.collect_shipments`` (the
+    fresh-ported, independently unit-tested exact-shipment model) that
+    supplies this script's own git-backed primitives -- ``git tag -l``,
+    ``_tag_date``, ``_tag_target_sha``, and ``get_prs_from_diff`` -- so the
+    generator and the model never disagree about tag parsing or PR deltas.
+    Only meaningful for a released (non-head) page; callers should not call
+    this for an unreleased head page (main/release/X.Y.x), which has no tag
+    of its own.
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    all_tags = [t.strip() for t in raw.splitlines() if t.strip()]
+    return _release_shipments.collect_shipments(
+        page_version,
+        all_tags,
+        tag_date=_tag_date,
+        target_sha=_tag_target_sha,
+        prs_between=lambda from_tag, to_tag: (
+            get_prs_from_diff(from_tag, to_tag) if from_tag else []
+        ),
+    )
+
+
 def collect_preview_milestones(page_version, base_version):
     # type: (str, Optional[str]) -> list[dict]
     """Preview/rc milestones rolled up into a page, newest first (regression R3).
@@ -1698,7 +1743,15 @@ def _release_date_display(version):
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
-_DATA_JSON_FORMAT_VERSION = 3
+#
+# 3 -> 4: added the "shipments" field (exact-shipment records for the GitHub
+# Release summary updater; see release_notes.shipments.collect_shipments).
+# This is the smallest compatible bump for that feature -- everything else
+# about the v3 shape is unchanged, and a v3 (or older) data.json is safely
+# skipped by the updater rather than rewritten (scripts/infra/docs/release_notes/
+# common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
+# release_notes/tests/test_common.py asserts the two stay equal).
+_DATA_JSON_FORMAT_VERSION = 4
 
 
 def _pr_is_community(pr):
@@ -1887,6 +1940,20 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
+    # Exact-shipment records (format 4+): one per exact git tag whose core
+    # matches this page, keyed by tag rather than by preview/rc label so the
+    # GitHub Release summary updater can look one up directly. Only a
+    # RELEASED page has any (an unreleased head page is never tagged) --
+    # collect_shipments_for_page is only ever called for those. Validated
+    # here (not just trusted from the caller) so a bug in shipment collection
+    # fails the Prepare run loudly instead of shipping a malformed data.json.
+    shipments = metadata.get("shipments") or []
+    shipment_errors = _release_shipments.validate_shipments(shipments)
+    if shipment_errors:
+        raise ValueError(
+            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
+        )
+
     return {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
@@ -1901,6 +1968,7 @@ def build_data_json(prs, metadata):
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
         "previews": previews,
+        "shipments": shipments,
         "prs": pr_map,
     }
 
@@ -1957,6 +2025,24 @@ def _data_json_unchanged(data_path, new_data):
     identical run yields an identical dict and the page is skipped. Any change to
     the PRs, roster, previews, links, or a companion's folded sha256 flips it and
     the page is re-polished. A missing or unparseable file counts as changed.
+
+    The comparison deliberately EXCLUDES ``format`` and ``shipments``:
+
+    * ``format`` is a code-owned migration marker (see
+      ``_DATA_JSON_FORMAT_VERSION``'s docstring), not page content — bumping
+      it alone (e.g. 3 -> 4 for the "shipments" field) must never discard a
+      page's already-reviewed prose or force a mass re-author across the
+      whole back-catalogue. That is exactly the "old data/prose safely
+      skipped, historical outputs not rewritten" contract the exact-summary
+      feature promises.
+    * ``shipments`` (format 4+) is exact-shipment data with no corresponding
+      *required* prose slot for the website page — it feeds the separate
+      GitHub Release summary updater, not release-notes-render.py — so its
+      mere presence, or a shift in an already-shipped tag's recorded facts,
+      must not by itself flip an otherwise-unchanged page to "changed".
+
+    A genuinely new/removed PR, roster change, preview, link, or companion
+    hash still flips this regardless of format/shipments, exactly as before.
     """
     if not data_path.exists():
         return False
@@ -1964,7 +2050,12 @@ def _data_json_unchanged(data_path, new_data):
         old = json.loads(data_path.read_text())
     except (ValueError, OSError):
         return False
-    return old == new_data
+
+    def _content(data):
+        return {key: value for key, value in data.items()
+                if key not in ("format", "shipments")}
+
+    return _content(old) == _content(new_data)
 
 
 # ── page-set discovery (shared by release-notes-index.py + release-notes-render.py) ──────
@@ -2316,6 +2407,11 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+    if not is_head:
+        # A released page corresponds to real git tag(s) with GitHub Releases;
+        # an unreleased head page (main/release/X.Y.x) is never tagged, so it
+        # has no shipments at all.
+        metadata["shipments"] = collect_shipments_for_page(version)
     companions = {}  # type: dict
     if notes_comp:
         companions["notes"] = notes_comp
