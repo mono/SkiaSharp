@@ -1,7 +1,8 @@
-﻿#if __IOS__ || __MACOS__ || __TVOS__
+﻿#nullable enable
+
+#if __IOS__ || __MACOS__ || __TVOS__
 using System;
 using System.ComponentModel;
-using System.Runtime.InteropServices;
 using CoreGraphics;
 using Foundation;
 using Metal;
@@ -19,9 +20,7 @@ namespace SkiaSharp.Views.tvOS
 	[DesignTimeVisible (true)]
 	public class SKGraphiteMetalView : MTKView, IMTKViewDelegate, IComponent
 	{
-#pragma warning disable 67
 		private event EventHandler? DisposedInternal;
-#pragma warning restore 67
 
 		private bool designMode;
 		private IMTLCommandQueue? commandQueue;
@@ -80,8 +79,11 @@ namespace SkiaSharp.Views.tvOS
 
 		protected virtual void OnRenderFailed (Exception exception)
 		{
-			if (RenderFailed is null)
-				throw new InvalidOperationException ("Graphite rendering failed.", exception);
+			if (RenderFailed is null) {
+				Console.Error.WriteLine ($"Graphite rendering failed: {exception}");
+				return;
+			}
+
 			RenderFailed.Invoke (this, new SKGraphiteRenderFailedEventArgs (exception));
 		}
 
@@ -181,6 +183,8 @@ namespace SkiaSharp.Views.tvOS
 				backendContext = null;
 				commandQueue?.Dispose ();
 				commandQueue = null;
+
+				DisposedInternal?.Invoke (this, EventArgs.Empty);
 			}
 
 			base.Dispose (disposing);
@@ -207,37 +211,59 @@ namespace SkiaSharp.Views.tvOS
 
 		private void EnsureGraphite ()
 		{
-			if (context is not null)
+			if (recorder is not null)
 				return;
 
 			var device = Device;
 			if (device is null)
 				return;
-			if (!MetalCanDriveGraphite (device.Handle))
+			if (!MetalCanDriveGraphite (device))
 				throw new PlatformNotSupportedException (
 					"The Metal device does not support a GPU family required by Graphite.");
 
-			commandQueue = device.CreateCommandQueue ()
-				?? throw new PlatformNotSupportedException ("Unable to create a Metal command queue.");
-			backendContext = new SKGraphiteMtlBackendContext {
-				Device = device,
-				Queue = commandQueue,
-			};
-			context = SKGraphiteContext.CreateMetal (backendContext)
-				?? throw new PlatformNotSupportedException ("Unable to create a Graphite Metal context.");
+			IMTLCommandQueue? newCommandQueue = null;
+			SKGraphiteMtlBackendContext? newBackendContext = null;
+			SKGraphiteContext? newContext = null;
+			SKGraphiteRecorder? newRecorder = null;
+			SKGraphiteImageCache? imageCache = null;
+			try {
+				newCommandQueue = device.CreateCommandQueue ()
+					?? throw new PlatformNotSupportedException ("Unable to create a Metal command queue.");
+				newBackendContext = new SKGraphiteMtlBackendContext {
+					Device = device,
+					Queue = newCommandQueue,
+				};
+				newContext = SKGraphiteContext.CreateMetal (newBackendContext)
+					?? throw new PlatformNotSupportedException ("Unable to create a Graphite Metal context.");
 
-			var imageCache = new SKGraphiteImageCache ();
-			recorder = context.CreateRecorder (
-				-1,
-				imageCache.FindOrCreate,
-				imageCache.Dispose);
-			if (recorder is null) {
-				imageCache.Dispose ();
-				throw new InvalidOperationException ("Unable to create a Graphite recorder.");
+				imageCache = new SKGraphiteImageCache ();
+				newRecorder = newContext.CreateRecorder (
+					-1,
+					imageCache.FindOrCreate,
+					imageCache.Dispose)
+					?? throw new InvalidOperationException ("Unable to create a Graphite recorder.");
+
+				commandQueue = newCommandQueue;
+				backendContext = newBackendContext;
+				context = newContext;
+				recorder = newRecorder;
+
+				newCommandQueue = null;
+				newBackendContext = null;
+				newContext = null;
+				newRecorder = null;
+				imageCache = null;
+			} finally {
+				newRecorder?.Dispose ();
+				if (newRecorder is null)
+					imageCache?.Dispose ();
+				newContext?.Dispose ();
+				newBackendContext?.Dispose ();
+				newCommandQueue?.Dispose ();
 			}
 		}
 
-		private static bool MetalCanDriveGraphite (IntPtr device)
+		private static bool MetalCanDriveGraphite (IMTLDevice device)
 		{
 			if (IsRunningOnAppleSimulator)
 				return true;
@@ -256,7 +282,6 @@ namespace SkiaSharp.Views.tvOS
 				return false;
 #endif
 
-			var selector = sel_registerName ("supportsFamily:");
 #if (__IOS__ && !__MACCATALYST__) || __TVOS__
 			var families = new ulong[] {
 				1009, 1008, 1007, 1006, 1005, 1004, 1003, 1002, 2002,
@@ -265,7 +290,7 @@ namespace SkiaSharp.Views.tvOS
 			var families = new ulong[] { 1009, 1008, 1007, 2002 };
 #endif
 			foreach (var family in families) {
-				if (objc_msgSend_supportsFamily (device, selector, family) != 0)
+				if (device.SupportsFamily ((MTLGpuFamily)family))
 					return true;
 			}
 			return false;
@@ -276,15 +301,6 @@ namespace SkiaSharp.Views.tvOS
 				Environment.GetEnvironmentVariable ("SIMULATOR_UDID")) ||
 			!string.IsNullOrEmpty (
 				Environment.GetEnvironmentVariable ("SIMULATOR_DEVICE_NAME"));
-
-		[DllImport ("/usr/lib/libobjc.dylib", EntryPoint = "objc_msgSend")]
-		private static extern byte objc_msgSend_supportsFamily (
-			IntPtr receiver,
-			IntPtr selector,
-			ulong family);
-
-		[DllImport ("/usr/lib/libobjc.dylib", CharSet = CharSet.Ansi)]
-		private static extern IntPtr sel_registerName (string name);
 	}
 }
 #endif

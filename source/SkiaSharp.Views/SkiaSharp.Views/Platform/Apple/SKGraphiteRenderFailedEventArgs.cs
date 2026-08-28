@@ -1,4 +1,6 @@
-﻿#if __IOS__ || __MACOS__ || __TVOS__
+﻿#nullable enable
+
+#if __IOS__ || __MACOS__ || __TVOS__
 using System;
 
 #if __IOS__
