@@ -102,6 +102,53 @@ namespace SkiaSharp.ReleaseTool.Tests.Processes
 		}
 
 		[Fact]
+		public async Task Successful_child_exit_wins_over_broken_stdin_pipe()
+		{
+			if (OperatingSystem.IsWindows())
+				return;
+
+			var input = new string('x', 4 * 1024 * 1024);
+			var result = await new ProcessRunner().RunAsync(
+				["/usr/bin/true"],
+				Environment.CurrentDirectory,
+				standardInput: input,
+				cancellationToken: TestContext.Current.CancellationToken);
+
+			Assert.True(result.Success);
+		}
+
+		[Fact]
+		public async Task Partial_read_child_exit_wins_over_broken_stdin_pipe()
+		{
+			if (OperatingSystem.IsWindows())
+				return;
+
+			var input = new string('x', 4 * 1024 * 1024);
+			var result = await new ProcessRunner().RunAsync(
+				["/bin/sh", "-c", "dd bs=1 count=1 of=/dev/null 2>/dev/null"],
+				Environment.CurrentDirectory,
+				standardInput: input,
+				cancellationToken: TestContext.Current.CancellationToken);
+
+			Assert.True(result.Success);
+		}
+
+		[Fact]
+		public async Task Cancellation_bounds_a_blocked_stdin_write()
+		{
+			using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+				TestContext.Current.CancellationToken);
+			cancellation.CancelAfter(TimeSpan.FromMilliseconds(200));
+
+			await Assert.ThrowsAnyAsync<OperationCanceledException>(
+				() => new ProcessRunner().RunAsync(
+					SleepCommand(30),
+					Environment.CurrentDirectory,
+					standardInput: new string('x', 4 * 1024 * 1024),
+					cancellationToken: cancellation.Token));
+		}
+
+		[Fact]
 		public async Task Recording_runner_honors_check_exit_code()
 		{
 			var runner = new RecordingProcessRunner();

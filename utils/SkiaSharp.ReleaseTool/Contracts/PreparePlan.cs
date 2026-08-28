@@ -1,5 +1,3 @@
-using SkiaSharp.ReleaseTool.Model;
-
 namespace SkiaSharp.ReleaseTool.Contracts
 {
 	public sealed record PreparePlan(
@@ -22,18 +20,13 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 	public sealed record PrepareInput(
 		string IntegrationTarget,
-		string? RequestedVersion);
+		string? RequestedVersion,
+		string? ApprovedBase);
 
 	public sealed record PrepareReleaseInfo(
 		string Identity,
 		string Version,
-		string Numeric,
-		string Label,
-		ReleaseKind ReleaseType,
-		string Branch,
-		string IntegrationBranch,
-		bool IsHotfix,
-		bool Stable);
+		string Branch);
 
 	public sealed record PrepareBaseInfo(
 		string Ref,
@@ -47,11 +40,9 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 	public sealed record PrepareSkiaInfo(
 		string Sha,
-		string ReleaseBranch,
 		RemoteState RemoteState);
 
 	public sealed record PrepareVersionsInfo(
-		string SkiaSharp,
 		bool RequiresPackageBump);
 
 	public sealed record PlanOperation(
