@@ -16,11 +16,11 @@ from release_notes import common, update_github_summaries as updater
 GH = common.import_release_github()
 
 
-def _release_info(tag, body):
+def _release_info(tag, body, *, is_draft=False):
     return GH.ReleaseInfo(
         tag_name=tag,
         name="Version",
-        is_draft=False,
+        is_draft=is_draft,
         is_prerelease=False,
         target_commitish="main",
         body=body,
@@ -31,10 +31,18 @@ def _release_info(tag, body):
 class FakeGitHubClient:
     """An in-memory GitHubSummaryClient fake -- never shells out to `gh`."""
 
-    def __init__(self, bodies=None, *, race_tags=frozenset(), fail_write_tags=frozenset()):
+    def __init__(
+        self,
+        bodies=None,
+        *,
+        race_tags=frozenset(),
+        fail_write_tags=frozenset(),
+        draft_tags=frozenset(),
+    ):
         self.bodies = dict(bodies or {})
         self.race_tags = set(race_tags)
         self.fail_write_tags = set(fail_write_tags)
+        self.draft_tags = set(draft_tags)
         self._calls: dict[str, int] = {}
         self.writes: list[tuple[str, str]] = []
 
@@ -45,7 +53,13 @@ class FakeGitHubClient:
         body = self.bodies[tag]
         if tag in self.race_tags and self._calls[tag] >= 2:
             body = body + "\n<!-- concurrently edited by someone else -->"
-        return _release_info(tag, body)
+        return _release_info(tag, body, is_draft=tag in self.draft_tags)
+
+    def publish(self, tag):
+        """Simulate Finish publishing the draft: the SAME body the draft
+        held becomes the published release's body -- exactly what happens
+        when the release-published event later fires."""
+        self.draft_tags.discard(tag)
 
     def update_release_body(self, *, tag, body):
         self.writes.append((tag, body))
@@ -269,6 +283,54 @@ class UpdateReleasesTests(unittest.TestCase):
         self.assertEqual(result.entries[0].status, "skipped")
         self.assertIn("no managed markers", result.entries[0].detail)
         self.assertEqual(client.writes, [])
+
+    def test_skips_an_unpublished_draft_without_any_patch(self):
+        # A cross-workflow race: Finish holds this exact release as an
+        # unpublished draft while its own environment approval is pending,
+        # and persists the draft body's hash to verify against before
+        # publishing. Patching it here would invalidate that hash out from
+        # under Finish and force an unrelated reapproval.
+        candidate = self._candidate()
+        client = FakeGitHubClient(
+            {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
+        )
+        result = updater.update_releases([candidate], client)
+        self.assertEqual(result.entries[0].status, "skipped")
+        self.assertIn("draft", result.entries[0].detail)
+        self.assertEqual(client.writes, [])
+
+    def test_skips_an_unpublished_draft_even_when_its_generated_body_is_unchanged(self):
+        candidate = self._candidate()
+        client = FakeGitHubClient(
+            {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
+        )
+        updater.update_releases([candidate], client)
+        # The draft's body -- including its GitHub-generated notes region --
+        # is byte-for-byte untouched; no PATCH was ever attempted.
+        self.assertEqual(client.bodies[candidate.tag], self.initial_body)
+        self.assertEqual(client.writes, [])
+
+    def test_converges_once_the_same_release_is_later_published(self):
+        # The exact scenario the fix targets: a draft is skipped on one run,
+        # then Finish publishes it (the release-published event fires, or
+        # this workflow's next run observes the now-published release), and
+        # the SAME candidate/client converges successfully with no
+        # intervening state change other than is_draft flipping to False.
+        candidate = self._candidate()
+        client = FakeGitHubClient(
+            {candidate.tag: self.initial_body}, draft_tags={candidate.tag}
+        )
+        draft_result = updater.update_releases([candidate], client)
+        self.assertEqual(draft_result.entries[0].status, "skipped")
+        self.assertEqual(client.writes, [])
+
+        client.publish(candidate.tag)
+        published_result = updater.update_releases([candidate], client)
+        self.assertEqual(published_result.entries[0].status, "updated")
+        self.assertEqual(len(client.writes), 1)
+        (_, written_body) = client.writes[0]
+        self.assertIn("A focused preview release.", written_body)
+        self.assertIn(GH.SUMMARY_START_MARKER, written_body)
 
     def test_is_idempotent_a_second_run_reports_unchanged_and_writes_nothing_more(self):
         candidate = self._candidate()
