@@ -97,6 +97,14 @@ class GitRepository:
     def is_ancestor(self, ancestor: str, descendant: str) -> bool:
         return self.git("merge-base", "--is-ancestor", ancestor, descendant, check=False).ok
 
+    def commit_subjects_first_parent(self, range_spec: str) -> list[str]:
+        """First-parent commit subjects for ``range_spec`` (e.g. ``a..b`` or
+        just ``b`` for "everything reachable from b"), oldest caller concern
+        first: used to find merged-PR commit messages for one release."""
+
+        result = self.git("log", "--first-parent", "--format=%s", range_spec)
+        return [line for line in result.stdout.splitlines() if line]
+
     def require_clean(self) -> None:
         status = self.git("status", "--porcelain", "--ignore-submodules").stdout
         if status.strip():

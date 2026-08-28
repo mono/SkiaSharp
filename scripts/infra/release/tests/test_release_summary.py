@@ -185,5 +185,135 @@ class SummarizeErrorTests(unittest.TestCase):
             summary.summarize_document(plan)
 
 
+class RenderMarkdownPrepareTests(unittest.TestCase):
+    def test_includes_header_and_summary_fields(self):
+        plan = make_prepare_plan()
+        text = summary.render_markdown(plan)
+        self.assertTrue(text.startswith("# Release 3.119.0-preview.1\n"))
+        self.assertIn("Next action", text)
+        self.assertIn("apply", text)
+        self.assertIn("Plan digest", text)
+        self.assertIn(plan["planDigest"], text)
+        self.assertIn("Tooling SHA", text)
+        self.assertIn("a" * 40, text)
+
+    def test_includes_warnings_section(self):
+        plan = make_prepare_plan()
+        text = summary.render_markdown(plan)
+        self.assertIn("## Warnings", text)
+        self.assertIn("maintenance branch will be created", text)
+
+    def test_warnings_section_reports_none_when_empty(self):
+        plan = make_prepare_plan(warnings=[])
+        text = summary.render_markdown(plan)
+        self.assertIn("## Warnings\n\n_none_", text)
+
+    def test_includes_operations_table(self):
+        plan = make_prepare_plan(
+            operations=[
+                {"id": "create-maintenance-branch", "kind": "git-ref", "status": "pending", "detail": "release/3.119.x"},
+                {"id": "create-skia-ref", "kind": "github-ref", "status": "done", "detail": None},
+            ]
+        )
+        text = summary.render_markdown(plan)
+        self.assertIn("## Operations", text)
+        self.assertIn("create-maintenance-branch", text)
+        self.assertIn("create-skia-ref", text)
+        self.assertIn("pending", text)
+
+    def test_no_operations_section_when_absent(self):
+        plan = make_prepare_plan()
+        del plan["operations"]
+        plan = common.with_digest({k: v for k, v in plan.items() if k != "planDigest"})
+        text = summary.render_markdown(plan)
+        self.assertNotIn("## Operations", text)
+
+    def test_is_deterministic_across_calls(self):
+        plan = make_prepare_plan()
+        first = summary.render_markdown(plan)
+        second = summary.render_markdown(plan)
+        self.assertEqual(first, second)
+
+    def test_is_deterministic_regardless_of_key_order(self):
+        plan = make_prepare_plan()
+        reordered = dict(reversed(list(plan.items())))
+        self.assertEqual(summary.render_markdown(plan), summary.render_markdown(reordered))
+
+
+class RenderMarkdownFinishTests(unittest.TestCase):
+    def test_includes_receipt_packages_tag_and_draft_sections(self):
+        plan = make_finish_plan()
+        plan["receipt"]["packages"] = [
+            {"id": "SkiaSharp", "version": "3.119.0-preview.1.42", "sourceCommit": "d" * 40, "sourceBranch": "release/3.119.0-preview.1"},
+        ]
+        plan = common.with_digest({k: v for k, v in plan.items() if k != "planDigest"})
+        text = summary.render_markdown(plan)
+        self.assertIn("## Receipt", text)
+        self.assertIn("### Packages", text)
+        self.assertIn("SkiaSharp", text)
+        self.assertIn("## Tag", text)
+        self.assertIn("v3.119.0-preview.1", text)
+        self.assertIn("Previous tag: `v3.118.0`", text)
+        self.assertIn("## Draft", text)
+
+    def test_previous_tag_none_renders_explicitly(self):
+        plan = make_finish_plan(previousTag=None)
+        text = summary.render_markdown(plan)
+        self.assertIn("Previous tag: _none_", text)
+
+
+class RenderMarkdownResultDocumentTests(unittest.TestCase):
+    def test_renders_operations_and_additional_fields_for_a_result(self):
+        base_plan = common.with_digest(
+            {
+                "toolingSha": "a" * 40,
+                "release": {"identity": "3.119.0-preview.1", "version": "3.119.0-preview.1.42", "branch": "release/3.119.0-preview.1"},
+            }
+        )
+        result = common.build_envelope(
+            base_plan, next_action="plan-publication", tag="v3.119.0-preview.1",
+            tagStatus="done", draftStatus="done", bodySha256="abc123", alreadyExists=False, isPublished=False,
+        )
+        text = summary.render_markdown(result)
+        self.assertIn("# Release 3.119.0-preview.1", text)
+        self.assertNotIn("Operation", text)  # no "operation" key on a result document
+        self.assertIn("## Tag", text)
+        self.assertIn("v3.119.0-preview.1", text)
+        self.assertIn("## Additional fields", text)
+        self.assertIn("tagStatus", text)
+        self.assertIn("bodySha256", text)
+
+    def test_renders_closeout_results_table(self):
+        base_plan = common.with_digest(
+            {
+                "toolingSha": "a" * 40,
+                "release": {"identity": "3.119.0-preview.1", "version": "3.119.0-preview.1.42", "branch": "release/3.119.0-preview.1"},
+            }
+        )
+        result = common.build_envelope(
+            base_plan, next_action="done",
+            results=[{"milestone": "3.119.0-preview.1", "status": "done", "movedTo": "3.119.0-preview.2"}],
+            warnings=[],
+        )
+        text = summary.render_markdown(result)
+        self.assertIn("## Results", text)
+        self.assertIn("3.119.0-preview.1", text)
+        self.assertIn("3.119.0-preview.2", text)
+
+    def test_table_cells_escape_pipe_characters(self):
+        base_plan = common.with_digest(
+            {
+                "toolingSha": "a" * 40,
+                "release": {"identity": "3.119.0-preview.1", "version": "3.119.0-preview.1.42", "branch": "release/3.119.0-preview.1"},
+            }
+        )
+        result = common.build_envelope(
+            base_plan, next_action="done",
+            operations=[{"id": "x", "status": "done", "detail": "a | b"}],
+        )
+        text = summary.render_markdown(result)
+        self.assertIn("a \\| b", text)
+
+
 if __name__ == "__main__":
     unittest.main()

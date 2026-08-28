@@ -181,9 +181,6 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
         if not repo.git("cat-file", "-e", f"{source_commit}^{{commit}}", check=False).ok:
             repo.fetch()
         repo.push_tag(tag, source_commit)
-        tag_result = "done"
-    else:
-        tag_result = "done"
 
     existing = github.get_release(tag)
     gh.check_release_conflict(
@@ -197,8 +194,9 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
         return build_envelope(
             plan,
             next_action=("closeout" if is_published else "plan-publication"),
-            tag=tag_result,
-            draft="done",
+            tag=tag,
+            tagStatus="done",
+            draftStatus="done",
             url=existing.url,
             alreadyExists=True,
             isPublished=is_published,
@@ -218,8 +216,9 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
     return build_envelope(
         plan,
         next_action="plan-publication",
-        tag=tag_result,
-        draft="done",
+        tag=tag,
+        tagStatus="done",
+        draftStatus="done",
         bodySha256=gh.body_sha256(body),
         alreadyExists=False,
         isPublished=False,
@@ -286,6 +285,10 @@ def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
     return build_envelope(plan, next_action="closeout", tag=tag, status="published", url=existing.url)
 
 
+UPDATE_RELEASE_NOTES_WORKFLOW = "update-release-notes.lock.yml"
+ISSUE_TEMPLATE_REFRESH_WORKFLOW = "auto-update-issue-template-versions.yml"
+
+
 def _closeout_operation_summary(op: milestones.ClosureOperation) -> dict:
     return {
         "milestone": op.milestone_title,
@@ -294,6 +297,17 @@ def _closeout_operation_summary(op: milestones.ClosureOperation) -> dict:
         "openItemCount": len(op.open_items),
         "moveTo": op.move_to_title,
         "detail": op.detail,
+    }
+
+
+def _reconcile_operation_summary(op: milestones.ReconcileOperation) -> dict:
+    return {
+        "kind": op.kind,
+        "number": op.number,
+        "viaPullRequest": op.via_pull_request,
+        "fromMilestone": op.from_milestone,
+        "toMilestone": op.to_milestone,
+        "status": op.status,
     }
 
 
@@ -306,47 +320,179 @@ def _closeout_next_action(operations: list[milestones.ClosureOperation], *, appl
     return "closeout" if "pending" in statuses else "done"
 
 
-def plan_closeout(plan: dict, *, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
+def resolve_reconciliation_range(
+    repo: GitRepository, *, previous_tag: str | None, source_commit: str
+) -> str | None:
+    """Return the exclusive lower-bound commit for ranging
+    ``git log <lower>..<source_commit>`` when reconciling merged PRs/issues
+    for one exact release, or ``None`` when there is no previous release
+    (the very first tag ever, ranging from the beginning of history).
+
+    Explicitly fails (:class:`~release_common.ConflictError`) rather than
+    guessing when the boundary is ambiguous: the previous tag has no
+    resolvable commit, or that commit is not an ancestor of the shipped
+    commit (a diverged or rewritten history).
+    """
+
+    if previous_tag is None:
+        return None
+    previous_sha = repo.remote_tags().get(previous_tag)
+    if previous_sha is None:
+        raise ConflictError(
+            f"cannot resolve previous tag {previous_tag!r} to a commit; the "
+            "release boundary for PR/issue reconciliation is ambiguous"
+        )
+    if not repo.is_ancestor(previous_sha, source_commit):
+        raise ConflictError(
+            f"previous tag {previous_tag!r} ({previous_sha}) is not an ancestor "
+            f"of the shipped commit {source_commit}; the release boundary for "
+            "PR/issue reconciliation is ambiguous"
+        )
+    return previous_sha
+
+
+def _reconcile_operations_for_release(
+    plan: dict,
+    *,
+    repo: GitRepository,
+    milestone_client: milestones.MilestoneClient,
+    all_milestones: list[milestones.Milestone],
+) -> tuple[list[milestones.ReconcileOperation], list[str]]:
+    """Plan reassigning merged PRs (and the issues they close) for the exact
+    shipped release to its own milestone, before that milestone is advanced
+    or closed. A missing target milestone is reported as a warning (nothing
+    to reconcile against) rather than a hard failure; an ambiguous commit
+    boundary always fails explicitly via :func:`resolve_reconciliation_range`.
+    """
+
+    release = plan["release"]
+    warnings: list[str] = []
+    target = next((m for m in all_milestones if m.title == release["identity"]), None)
+    if target is None:
+        warnings.append(
+            f"no milestone titled {release['identity']!r} exists; skipping "
+            "PR/issue reconciliation for this release"
+        )
+        return [], warnings
+
+    source_commit = plan["receipt"]["sourceCommit"]
+    lower_bound = resolve_reconciliation_range(
+        repo, previous_tag=plan.get("previousTag"), source_commit=source_commit
+    )
+    range_spec = f"{lower_bound}..{source_commit}" if lower_bound else source_commit
+    subjects = repo.commit_subjects_first_parent(range_spec)
+    pr_numbers = milestones.extract_merged_pull_requests(subjects)
+
+    operations = milestones.plan_reconcile(
+        pull_request_numbers=pr_numbers,
+        target_milestone=target,
+        get_pull_request_milestone=milestone_client.pull_request_milestone,
+        get_closing_issues=milestone_client.closing_issues,
+        get_issue_milestone=milestone_client.issue_milestone,
+    )
+    return operations, warnings
+
+
+def _release_notes_dispatch_inputs(plan: dict) -> dict[str, str]:
+    numeric = plan["receipt"]["base"]
+    return {"source_branch": "main", "min_version": numeric, "max_version": numeric, "force": "false"}
+
+
+def plan_closeout(
+    plan: dict, *, repo: GitRepository, milestone_client: milestones.MilestoneClient, tags: list[str]
+) -> dict:
     """Build the read-only closeout plan for the release described by ``plan``.
 
     ``plan`` is the finish-plan.json produced earlier in the pipeline; it
     supplies the standardized envelope context (tooling SHA, release
-    identity/version/branch, plan digest). The actual closure operations are
-    always recomputed from live milestone/tag state, since closeout may run
-    long after the plan was generated.
+    identity/version/branch, plan digest). The actual PR/issue reconciliation
+    and milestone-advancement operations are always recomputed from live
+    Git/milestone/tag state, since closeout may run long after the plan was
+    generated.
     """
 
     all_milestones = milestone_client.milestones()
-    operations, warnings = milestones.plan_closeout(
+    reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(
+        plan, repo=repo, milestone_client=milestone_client, all_milestones=all_milestones
+    )
+    advance_ops, advance_warnings = milestones.plan_closeout(
         milestones=all_milestones,
         tags=tags,
         open_items_for=milestone_client.open_milestone_items,
     )
+    next_action = _closeout_next_action(advance_ops, applied=False)
+    if next_action == "done" and reconcile_ops:
+        next_action = "closeout"
     return build_envelope(
         plan,
-        next_action=_closeout_next_action(operations, applied=False),
-        operations=[_closeout_operation_summary(op) for op in operations],
-        warnings=warnings,
+        next_action=next_action,
+        reconcileOperations=[_reconcile_operation_summary(op) for op in reconcile_ops],
+        operations=[_closeout_operation_summary(op) for op in advance_ops],
+        releaseNotesDispatch=_release_notes_dispatch_inputs(plan),
+        issueTemplateRefreshNeeded=bool(plan["release"]["stable"]),
+        warnings=[*reconcile_warnings, *advance_warnings],
     )
 
 
-def apply_closeout(plan: dict, *, milestone_client: milestones.MilestoneClient, tags: list[str]) -> dict:
-    """Apply closeout: move open items off shipped milestones and close them."""
+def apply_closeout(
+    plan: dict,
+    *,
+    repo: GitRepository,
+    milestone_client: milestones.MilestoneClient,
+    github: GitHubClient,
+    tags: list[str],
+) -> dict:
+    """Apply closeout: reconcile merged PRs/issues for the exact shipped
+    release to its own milestone, move any remaining open items off shipped
+    milestones and close them, then dispatch the release-notes sync and (for
+    a stable release) the issue-template refresh workflows.
+
+    Idempotent: rerunning after everything is already reconciled/advanced
+    performs no further milestone writes and does not re-dispatch either
+    workflow, since there is no new work to report through them.
+    """
 
     all_milestones = milestone_client.milestones()
-    operations, warnings = milestones.plan_closeout(
+    reconcile_ops, reconcile_warnings = _reconcile_operations_for_release(
+        plan, repo=repo, milestone_client=milestone_client, all_milestones=all_milestones
+    )
+    milestones.apply_reconcile(reconcile_ops, milestone_client)
+
+    advance_ops, advance_warnings = milestones.plan_closeout(
         milestones=all_milestones,
         tags=tags,
         open_items_for=milestone_client.open_milestone_items,
     )
-    pending = [op for op in operations if op.status == "pending"]
-    blocked = [op for op in operations if op.status == "blocked"]
+    pending = [op for op in advance_ops if op.status == "pending"]
+    blocked = [op for op in advance_ops if op.status == "blocked"]
     results = milestones.apply_closeout(pending, milestone_client)
     for op in blocked:
         results.append({"milestone": op.milestone_title, "status": "blocked", "detail": op.detail})
+
+    dispatches: list[dict] = []
+    if reconcile_ops or pending:
+        notes_inputs = _release_notes_dispatch_inputs(plan)
+        github.dispatch_workflow(workflow=UPDATE_RELEASE_NOTES_WORKFLOW, ref="main", inputs=notes_inputs)
+        dispatches.append(
+            {"workflow": UPDATE_RELEASE_NOTES_WORKFLOW, "inputs": notes_inputs, "status": "dispatched"}
+        )
+        if plan["release"]["stable"]:
+            github.dispatch_workflow(workflow=ISSUE_TEMPLATE_REFRESH_WORKFLOW, ref="main", inputs={})
+            dispatches.append(
+                {"workflow": ISSUE_TEMPLATE_REFRESH_WORKFLOW, "inputs": {}, "status": "dispatched"}
+            )
+    else:
+        dispatches.append({"workflow": UPDATE_RELEASE_NOTES_WORKFLOW, "status": "skipped-no-new-work"})
+        if plan["release"]["stable"]:
+            dispatches.append(
+                {"workflow": ISSUE_TEMPLATE_REFRESH_WORKFLOW, "status": "skipped-no-new-work"}
+            )
+
     return build_envelope(
         plan,
-        next_action=_closeout_next_action(operations, applied=True),
+        next_action=_closeout_next_action(advance_ops, applied=True),
+        reconcileResults=[_reconcile_operation_summary(op) for op in reconcile_ops],
         results=results,
-        warnings=warnings,
+        dispatches=dispatches,
+        warnings=[*reconcile_warnings, *advance_warnings],
     )

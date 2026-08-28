@@ -143,7 +143,7 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
         )
         plan = with_digest(plan)
         report = prepare.apply_prepare_plan(
-            plan, repo=fixture.repo, skia_repo=fixture.repo, github=github
+            plan, repo=fixture.repo, github=github
         )
         self.assertEqual(report["release"]["branch"], "release/3.119.0-preview.1")
         self.assertTrue(fixture.repo.ref_exists("refs/remotes/origin/release/3.119.x"))
@@ -171,7 +171,7 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
 
         # Re-applying is idempotent: no exceptions, no forced updates.
         second_report = prepare.apply_prepare_plan(
-            with_digest(replanned), repo=fixture.repo, skia_repo=fixture.repo, github=github
+            with_digest(replanned), repo=fixture.repo, github=github
         )
         self.assertEqual(second_report["release"]["branch"], "release/3.119.0-preview.1")
         self.assertEqual(second_report["nextAction"], "done")

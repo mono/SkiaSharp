@@ -21,6 +21,7 @@ class FakeGitHubClient:
     def __init__(self):
         self.releases: dict[str, gh.ReleaseInfo] = {}
         self.generated_notes_calls: list[tuple[str, str, str | None]] = []
+        self.dispatch_calls: list[dict] = []
 
     def find_open_pull_request(self, *, head, base):
         return None
@@ -64,7 +65,7 @@ class FakeGitHubClient:
         )
 
     def dispatch_workflow(self, *, workflow, ref, inputs):
-        raise NotImplementedError
+        self.dispatch_calls.append({"workflow": workflow, "ref": ref, "inputs": dict(inputs)})
 
 
 def make_finish_plan(*, tag="v3.119.0-preview.1", title="Version 3.119.0 (Preview 1)", stable=False, source_commit="a" * 40):
@@ -118,7 +119,9 @@ class CreateDraftTests(unittest.TestCase):
         plan = make_finish_plan(source_commit=sha)
         github = FakeGitHubClient()
         result = finish.create_draft(plan, repo=repo, github=github)
-        self.assertEqual(result["draft"], "done")
+        self.assertEqual(result["draftStatus"], "done")
+        self.assertEqual(result["tag"], "v3.119.0-preview.1")
+        self.assertEqual(result["tagStatus"], "done")
         self.assertFalse(result["alreadyExists"])
         self.assertEqual(result["nextAction"], "plan-publication")
         self.assertEqual(result["planDigest"], plan["planDigest"])
@@ -251,6 +254,9 @@ class FakeMilestoneClient:
         self.open_items: dict[int, list] = {}
         self.moved: list[tuple[int, int]] = []
         self.closed: list[int] = []
+        self.pr_milestones: dict[int, str | None] = {}
+        self.issue_milestones: dict[int, str | None] = {}
+        self.pr_closing_issues: dict[int, list[int]] = {}
 
     def milestones(self):
         return list(self._milestones)
@@ -258,10 +264,21 @@ class FakeMilestoneClient:
     def open_milestone_items(self, milestone_number: int):
         return self.open_items.get(milestone_number, [])
 
+    def _milestone_title(self, milestone_number: int) -> str | None:
+        for m in self._milestones:
+            if m.number == milestone_number:
+                return m.title
+        return None
+
     def update_item_milestone(self, item_number: int, milestone_number: int) -> None:
         self.moved.append((item_number, milestone_number))
         for number, items in list(self.open_items.items()):
             self.open_items[number] = [item for item in items if item.number != item_number]
+        title = self._milestone_title(milestone_number)
+        if item_number in self.pr_milestones:
+            self.pr_milestones[item_number] = title
+        if item_number in self.issue_milestones:
+            self.issue_milestones[item_number] = title
 
     def close_milestone(self, milestone_number: int) -> None:
         self.closed.append(milestone_number)
@@ -272,50 +289,109 @@ class FakeMilestoneClient:
                 )
 
     def closing_issues(self, pull_request_number: int):
-        return []
+        return self.pr_closing_issues.get(pull_request_number, [])
+
+    def pull_request_milestone(self, pull_request_number: int) -> str | None:
+        return self.pr_milestones.get(pull_request_number)
+
+    def issue_milestone(self, issue_number: int) -> str | None:
+        return self.issue_milestones.get(issue_number)
 
 
 class CloseoutTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _repo_with_history(self, *, tag_previous: bool = True):
+        """A real repo: an initial commit (optionally tagged v3.118.0), then
+        a PR-referencing commit that closes an issue, tagged as the shipped
+        release commit (matching make_finish_plan()'s default source_commit
+        is NOT used here -- callers read back the real SHA instead)."""
+
+        bare, worktree = helpers.create_bare_and_worktree(self.root, "repo")
+        (worktree / "file.txt").write_text("v1", encoding="utf-8")
+        first_sha = helpers.commit_all(worktree, "Initial commit")
+        repo = GitRepository(root=worktree)
+        if tag_previous:
+            repo.push_tag("v3.118.0", first_sha)
+        (worktree / "file.txt").write_text("v2", encoding="utf-8")
+        second_sha = helpers.commit_all(worktree, "Fix the thing (#100)")
+        helpers.push(worktree)
+        repo.fetch()
+        return repo, first_sha, second_sha
+
     def test_plan_closeout_reports_done_when_nothing_to_move(self):
         plan = make_finish_plan()
+        repo, _, source_commit = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
-        result = finish.plan_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=["v3.119.0"])
         self.assertEqual(result["nextAction"], "closeout")
         self.assertEqual(result["planDigest"], plan["planDigest"])
         self.assertEqual(result["release"]["branch"], "release/3.119.0-preview.1")
         self.assertEqual(len(result["operations"]), 1)
         self.assertEqual(result["operations"][0]["status"], "pending")
+        # No milestone titled "3.119.0-preview.1" (the plan's release
+        # identity) exists, so reconciliation is skipped with a warning
+        # rather than failing.
+        self.assertEqual(result["reconcileOperations"], [])
+        self.assertTrue(any("3.119.0-preview.1" in w for w in result["warnings"]))
 
     def test_plan_closeout_next_action_done_when_nothing_shipped(self):
         plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
-        result = finish.plan_closeout(plan, milestone_client=client, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
         self.assertEqual(result["operations"], [])
         self.assertEqual(result["nextAction"], "done")
 
     def test_plan_closeout_next_action_blocked(self):
         plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.plan_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=["v3.119.0"])
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["operations"][0]["status"], "blocked")
 
+    def test_plan_closeout_includes_release_notes_dispatch_inputs(self):
+        plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
+        client = FakeMilestoneClient()
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
+        self.assertEqual(
+            result["releaseNotesDispatch"],
+            {"source_branch": "main", "min_version": "3.119.0", "max_version": "3.119.0", "force": "false"},
+        )
+        self.assertFalse(result["issueTemplateRefreshNeeded"])  # default plan is a preview, not stable
+
+    def test_plan_closeout_issue_template_refresh_needed_for_stable(self):
+        plan = make_finish_plan(stable=True)
+        repo, _, _ = self._repo_with_history()
+        client = FakeMilestoneClient()
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, tags=[])
+        self.assertTrue(result["issueTemplateRefreshNeeded"])
+
     def test_apply_closeout_moves_items_and_closes(self):
         plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        github = FakeGitHubClient()
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(client.moved, [(5, 2)])
         self.assertEqual(client.closed, [1])
         self.assertEqual(result["nextAction"], "done")
@@ -323,25 +399,133 @@ class CloseoutTests(unittest.TestCase):
 
     def test_apply_closeout_is_idempotent_when_rerun(self):
         plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
-        first = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        github = FakeGitHubClient()
+        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(first["nextAction"], "done")
-        second = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(second["results"], [])
         self.assertEqual(second["nextAction"], "done")
 
     def test_apply_closeout_reports_blocked_without_raising(self):
         plan = make_finish_plan()
+        repo, _, _ = self._repo_with_history()
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.apply_closeout(plan, milestone_client=client, tags=["v3.119.0"])
+        github = FakeGitHubClient()
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["results"][0]["status"], "blocked")
+
+    def test_apply_closeout_reconciles_merged_pr_and_linked_issue_before_advancing(self):
+        repo, previous_sha, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        client.pr_milestones[100] = None
+        client.pr_closing_issues[100] = [200]
+        client.issue_milestones[200] = None
+        github = FakeGitHubClient()
+
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(client.pr_milestones[100], "3.119.0-preview.1")
+        self.assertEqual(client.issue_milestones[200], "3.119.0-preview.1")
+        kinds = {(item["kind"], item["number"]) for item in result["reconcileResults"]}
+        self.assertEqual(kinds, {("pull-request", 100), ("issue", 200)})
+
+    def test_apply_closeout_dispatches_release_notes_and_issue_template_when_work_done(self):
+        repo, previous_sha, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        client.pr_milestones[100] = None
+        github = FakeGitHubClient()
+
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(len(github.dispatch_calls), 2)
+        notes_call = github.dispatch_calls[0]
+        self.assertEqual(notes_call["workflow"], finish.UPDATE_RELEASE_NOTES_WORKFLOW)
+        self.assertEqual(notes_call["ref"], "main")
+        self.assertEqual(
+            notes_call["inputs"],
+            {"source_branch": "main", "min_version": "3.119.0", "max_version": "3.119.0", "force": "false"},
+        )
+        template_call = github.dispatch_calls[1]
+        self.assertEqual(template_call["workflow"], finish.ISSUE_TEMPLATE_REFRESH_WORKFLOW)
+        self.assertEqual(
+            {d["status"] for d in result["dispatches"]}, {"dispatched"}
+        )
+
+    def test_apply_closeout_does_not_dispatch_issue_template_for_non_stable_release(self):
+        repo, previous_sha, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit, stable=False)
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        client.pr_milestones[100] = None
+        github = FakeGitHubClient()
+
+        finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(len(github.dispatch_calls), 1)
+        self.assertEqual(github.dispatch_calls[0]["workflow"], finish.UPDATE_RELEASE_NOTES_WORKFLOW)
+
+    def test_apply_closeout_skips_dispatch_when_no_new_work(self):
+        # No matching milestone (so no reconciliation) and nothing shipped
+        # (so no advancement): rerunning must not fire either workflow.
+        repo, _, _ = self._repo_with_history()
+        plan = make_finish_plan()
+        client = FakeMilestoneClient()
+        client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
+        github = FakeGitHubClient()
+
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+
+        self.assertEqual(github.dispatch_calls, [])
+        self.assertEqual({d["status"] for d in result["dispatches"]}, {"skipped-no-new-work"})
+
+    def test_reconciliation_skipped_with_warning_when_target_milestone_missing(self):
+        repo, _, source_commit = self._repo_with_history()
+        plan = make_finish_plan(source_commit=source_commit)
+        client = FakeMilestoneClient()
+        client._milestones = []  # no milestone at all
+        github = FakeGitHubClient()
+
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        self.assertEqual(result["reconcileResults"], [])
+        self.assertTrue(any("no milestone titled" in w for w in result["warnings"]))
+
+    def test_resolve_reconciliation_range_returns_none_for_first_ever_release(self):
+        repo, _, source_commit = self._repo_with_history(tag_previous=False)
+        result = finish.resolve_reconciliation_range(repo, previous_tag=None, source_commit=source_commit)
+        self.assertIsNone(result)
+
+    def test_resolve_reconciliation_range_fails_explicitly_when_tag_unresolvable(self):
+        repo, _, source_commit = self._repo_with_history()
+        with self.assertRaises(ConflictError):
+            finish.resolve_reconciliation_range(
+                repo, previous_tag="v0.0.0-does-not-exist", source_commit=source_commit
+            )
+
+    def test_resolve_reconciliation_range_fails_explicitly_when_tag_not_an_ancestor(self):
+        repo, previous_sha, source_commit = self._repo_with_history()
+        # Tag a commit that is NOT an ancestor of source_commit: a sibling
+        # branch off the very first commit.
+        (repo.root / "other.txt").write_text("x", encoding="utf-8")
+        repo.git("checkout", "--detach", previous_sha)
+        sibling_sha = helpers.commit_all(repo.root, "unrelated sibling commit")
+        repo.push_tag("v3.118.5-unrelated", sibling_sha)
+        with self.assertRaises(ConflictError):
+            finish.resolve_reconciliation_range(
+                repo, previous_tag="v3.118.5-unrelated", source_commit=source_commit
+            )
 
 
 if __name__ == "__main__":

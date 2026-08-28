@@ -81,6 +81,10 @@ class MilestoneClient(Protocol):
 
     def closing_issues(self, pull_request_number: int) -> list[int]: ...
 
+    def pull_request_milestone(self, pull_request_number: int) -> str | None: ...
+
+    def issue_milestone(self, issue_number: int) -> str | None: ...
+
 
 def milestone_map(milestones: list[Milestone]) -> dict[str, Milestone]:
     result: dict[str, Milestone] = {}
