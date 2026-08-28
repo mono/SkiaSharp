@@ -42,6 +42,8 @@ class ReleaseWorkflowTests(unittest.TestCase):
         self.assertIn("--publication \"$RUNNER_TEMP/release-finish/publication-plan.json\"", text)
         self.assertIn("ref: ${{ needs.plan.outputs.tooling_sha }}", text)
         self.assertIn("ref: ${{ needs.plan-publication.outputs.tooling_sha }}", text)
+        self.assertNotIn("always() &&", text)
+        self.assertGreaterEqual(text.count("!cancelled() &&"), 2)
 
     def test_default_branch_guard_precedes_writes(self):
         for path in (PREPARE, FINISH):

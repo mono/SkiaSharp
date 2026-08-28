@@ -167,7 +167,7 @@ jobs:
       - plan
       - create-draft
     if: >-
-      always() &&
+      !cancelled() &&
       needs.plan.result == 'success' &&
       (needs.create-draft.result == 'success' || needs.create-draft.result == 'skipped') &&
       (needs.plan.outputs.next_action == 'create-draft' ||
@@ -305,7 +305,7 @@ jobs:
       - plan-publication
       - publish
     if: >-
-      always() &&
+      !cancelled() &&
       needs.plan.result == 'success' &&
       needs.publish.result != 'failure' &&
       needs.publish.result != 'cancelled' &&
