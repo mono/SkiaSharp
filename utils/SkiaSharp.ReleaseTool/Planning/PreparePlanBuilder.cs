@@ -58,6 +58,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			var baseSelection = await SelectBaseAsync(
 				identity,
 				releaseBranches,
+				integrationTarget,
 				request.ApprovedBase,
 				cancellationToken).ConfigureAwait(false);
 			var baseState = await ReadVersionStateAsync(baseSelection.Ref, cancellationToken).ConfigureAwait(false);
@@ -81,7 +82,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			if (baseSelection.Action == MaintenanceBranchAction.Create && !baseSelection.Exists)
 			{
 				warnings.Add(
-					$"maintenance branch {identity.IntegrationBranch} does not exist and will be created from {baseSelection.BaseSha}");
+					$"maintenance branch {identity.IntegrationBranch} does not exist and will be created from {baseSelection.MaintenanceBaseSha}");
 			}
 
 			var stableBump = identity.Stable && !identity.IsHotfix
@@ -118,7 +119,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					identity.IntegrationBranch,
 					baseSelection.Exists,
 					baseSelection.Action,
-					baseSelection.BaseSha),
+					baseSelection.MaintenanceBaseSha),
 				Skia: new PrepareSkiaInfo(skiaSha, skiaRemoteState),
 				SkiaSharpRemoteState: releaseRemoteState,
 				Versions: new PrepareVersionsInfo(requiresPackageBump),
@@ -169,6 +170,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 		private async Task<BaseSelection> SelectBaseAsync(
 			SkiaSharpReleaseIdentity identity,
 			IReadOnlyList<string> releaseBranches,
+			string integrationTarget,
 			string? approvedBase,
 			CancellationToken cancellationToken)
 		{
@@ -189,6 +191,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 						await repository.ResolveAsync(tagRef, cancellationToken).ConfigureAwait(false),
 						integrationExists,
 						MaintenanceBranchAction.None,
+						null,
 						null);
 				}
 
@@ -200,6 +203,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					await repository.ResolveAsync(hotfixRef, cancellationToken).ConfigureAwait(false),
 					integrationExists,
 					MaintenanceBranchAction.None,
+					null,
 					null);
 			}
 
@@ -210,32 +214,65 @@ namespace SkiaSharp.ReleaseTool.Planning
 					await repository.ResolveAsync(integrationRef, cancellationToken).ConfigureAwait(false),
 					true,
 					MaintenanceBranchAction.None,
+					null,
 					null);
 			}
 
-			if (identity.Channel == ReleaseKind.Preview && identity.Iteration == 1)
-			{
-				const string mainRef = "refs/remotes/origin/main";
-				var sha = await repository.ResolveAsync(mainRef, cancellationToken).ConfigureAwait(false);
-				return new BaseSelection(mainRef, sha, false, MaintenanceBranchAction.Create, sha);
-			}
-
-			var candidate = LatestPrereleaseBranch(releaseBranches, identity.Numeric);
-			if (candidate is not null)
-			{
-				var reference = $"refs/remotes/origin/{candidate}";
-				var sha = await repository.ResolveAsync(reference, cancellationToken).ConfigureAwait(false);
-				return new BaseSelection(reference, sha, false, MaintenanceBranchAction.Create, sha);
-			}
+			string maintenanceBaseRef;
 			if (approvedBase is not null)
 			{
 				if (!await repository.RefExistsAsync(approvedBase, cancellationToken).ConfigureAwait(false))
 					throw new PlanException($"approved base '{approvedBase}' does not exist");
-				var sha = await repository.ResolveAsync(approvedBase, cancellationToken).ConfigureAwait(false);
-				return new BaseSelection(approvedBase, sha, false, MaintenanceBranchAction.Create, sha);
+				maintenanceBaseRef = approvedBase;
 			}
-			throw new PlanException(
-				$"maintenance branch {identity.IntegrationBranch} does not exist and no matching prerelease branch for {identity.Numeric} was found; pass an explicitly approved base to recover");
+			else if (integrationTarget == "main")
+			{
+				maintenanceBaseRef = "refs/remotes/origin/main";
+			}
+			else
+			{
+				throw new PlanException(
+					$"maintenance branch {identity.IntegrationBranch} does not exist; pass an explicitly approved preview.0 base to recover");
+			}
+
+			var maintenanceState = await ReadVersionStateAsync(
+				maintenanceBaseRef,
+				cancellationToken).ConfigureAwait(false);
+			if (maintenanceState.Skia.ToNormalizedString() != identity.Numeric ||
+				maintenanceState.Label != "preview.0")
+			{
+				var source = approvedBase is null
+					? $"integration target {integrationTarget}"
+					: $"approved base '{approvedBase}'";
+				throw new PlanException(
+					$"{source} is not a safe maintenance base for {identity.Numeric}: expected SkiaSharp {identity.Numeric} with PREVIEW_LABEL 'preview.0'; pass --approved-base with a matching ref");
+			}
+			var maintenanceBaseSha = await repository.ResolveAsync(
+				maintenanceBaseRef,
+				cancellationToken).ConfigureAwait(false);
+
+			string releaseBaseRef;
+			if (identity.Channel == ReleaseKind.Preview && identity.Iteration == 1)
+			{
+				releaseBaseRef = maintenanceBaseRef;
+			}
+			else
+			{
+				var candidate = LatestPrereleaseBranch(releaseBranches, identity.Numeric);
+				releaseBaseRef = candidate is null
+					? maintenanceBaseRef
+					: $"refs/remotes/origin/{candidate}";
+			}
+			var releaseBaseSha = releaseBaseRef == maintenanceBaseRef
+				? maintenanceBaseSha
+				: await repository.ResolveAsync(releaseBaseRef, cancellationToken).ConfigureAwait(false);
+			return new BaseSelection(
+				releaseBaseRef,
+				releaseBaseSha,
+				false,
+				MaintenanceBranchAction.Create,
+				maintenanceBaseRef,
+				maintenanceBaseSha);
 		}
 
 		private async Task<RemoteState> GetReleaseRemoteStateAsync(
@@ -313,7 +350,8 @@ namespace SkiaSharp.ReleaseTool.Planning
 				integrationRef,
 				cancellationToken).ConfigureAwait(false)
 				? integrationRef
-				: baseSelection.Ref;
+				: baseSelection.MaintenanceBaseRef
+					?? throw new PlanException("missing maintenance branch has no validated creation point");
 			var state = await ReadVersionStateAsync(stateRef, cancellationToken).ConfigureAwait(false);
 			if (state.Label != "preview.0")
 			{
@@ -460,6 +498,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string Sha,
 			bool Exists,
 			MaintenanceBranchAction Action,
-			string? BaseSha);
+			string? MaintenanceBaseRef,
+			string? MaintenanceBaseSha);
 	}
 }

@@ -62,8 +62,8 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			{
 				PlanValidation.Require(!plan.MaintenanceBranch.Exists, "a maintenance branch marked for creation cannot already exist");
 				PlanValidation.Require(
-					plan.MaintenanceBranch.BaseSha == plan.Base.Sha,
-					"maintenanceBranch.baseSha must match base.sha when creating the branch");
+					plan.MaintenanceBranch.BaseSha is not null,
+					"maintenanceBranch.baseSha is required when creating the branch");
 			}
 			else
 			{
