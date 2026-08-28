@@ -402,10 +402,29 @@ class FakeMilestoneClient:
         self.issue_milestones: dict[int, str | None] = {}
         self.pr_closing_issues: dict[int, list[int]] = {}
         self.milestones_call_count = 0
+        self.created: list[str] = []
+        self.updated: list[tuple[int, str, str]] = []
+        self._next_number = 1000
 
     def milestones(self):
         self.milestones_call_count += 1
         return list(self._milestones)
+
+    def create_milestone(self, title: str, *, due_on: str | None, description: str | None):
+        number = self._next_number
+        self._next_number += 1
+        milestone = milestones.Milestone(number=number, title=title, state="open", due_on=due_on, description=description)
+        self._milestones.append(milestone)
+        self.created.append(title)
+        return milestone
+
+    def update_milestone(self, number: int, *, due_on: str, description: str) -> None:
+        self.updated.append((number, due_on, description))
+        for index, m in enumerate(self._milestones):
+            if m.number == number:
+                self._milestones[index] = milestones.Milestone(
+                    number=m.number, title=m.title, state=m.state, due_on=due_on, description=description
+                )
 
     def open_milestone_items(self, milestone_number: int):
         return self.open_items.get(milestone_number, [])
@@ -431,7 +450,7 @@ class FakeMilestoneClient:
         for m in self._milestones:
             if m.number == milestone_number:
                 self._milestones[self._milestones.index(m)] = milestones.Milestone(
-                    number=m.number, title=m.title, state="closed"
+                    number=m.number, title=m.title, state="closed", due_on=m.due_on, description=m.description
                 )
 
     def closing_issues(self, pull_request_number: int):
@@ -442,6 +461,48 @@ class FakeMilestoneClient:
 
     def issue_milestone(self, issue_number: int) -> str | None:
         return self.issue_milestones.get(issue_number)
+
+
+class FakeScheduleClient:
+    """A ScheduleClient stand-in: seeded schedules by milestone number,
+    raising release_milestones.MilestoneError (matching the real client's
+    behavior on a network/data problem) for anything unseeded."""
+
+    def __init__(self):
+        self.schedules: dict[int, dict] = {}
+        self.calls: list[int] = []
+
+    def seed(
+        self,
+        milestone: int,
+        *,
+        branch_point: str,
+        earliest_beta: str,
+        early_stable_cut: str,
+        early_stable: str,
+        stable_cut: str,
+        stable_date: str,
+    ) -> None:
+        self.schedules[milestone] = {
+            "branch_point": branch_point,
+            "earliest_beta": earliest_beta,
+            "early_stable_cut": early_stable_cut,
+            "early_stable": early_stable,
+            "stable_cut": stable_cut,
+            "stable_date": stable_date,
+        }
+
+    def fetch_schedule(self, milestone: int) -> dict:
+        self.calls.append(milestone)
+        if milestone not in self.schedules:
+            raise milestones.MilestoneError(f"no schedule seeded for m{milestone} (simulated)")
+        return self.schedules[milestone]
+
+
+# Used by every closeout test that is not itself about schedule maintenance:
+# paired with schedule_count=0, this is never actually called (the fetch
+# loop's range is empty), so a single shared instance is safe to reuse.
+_NULL_SCHEDULE_CLIENT = FakeScheduleClient()
 
 
 class CloseoutTests(unittest.TestCase):
@@ -456,9 +517,22 @@ class CloseoutTests(unittest.TestCase):
         """A real repo: an initial commit (optionally tagged v3.118.0), then
         a PR-referencing commit that closes an issue, tagged as the shipped
         release commit (matching make_finish_plan()'s default source_commit
-        is NOT used here -- callers read back the real SHA instead)."""
+        is NOT used here -- callers read back the real SHA instead). Also
+        seeds scripts/VERSIONS.txt with "SkiaSharp nuget 3.119.0" (major 3)
+        and "libSkiaSharp milestone 119" so schedule-maintenance tests can
+        read a current major/milestone from origin/main."""
 
         bare, worktree = helpers.create_bare_and_worktree(self.root, "repo")
+        (worktree / "scripts").mkdir(parents=True, exist_ok=True)
+        (worktree / "scripts" / "VERSIONS.txt").write_text(
+            "# nuget versions\n"
+            "# SkiaSharp\n"
+            "SkiaSharp                nuget       3.119.0\n"
+            "# HarfBuzzSharp\n"
+            "HarfBuzzSharp            nuget       1.8.8\n"
+            "libSkiaSharp             milestone   119\n",
+            encoding="utf-8",
+        )
         (worktree / "file.txt").write_text("v1", encoding="utf-8")
         first_sha = helpers.commit_all(worktree, "Initial commit")
         repo = GitRepository(root=worktree)
@@ -499,7 +573,7 @@ class CloseoutTests(unittest.TestCase):
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
         result = finish.plan_closeout(
-            plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"]
+            plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"]
         )
         self.assertEqual(result["nextAction"], "closeout")
         self.assertEqual(result["planDigest"], plan["planDigest"])
@@ -519,7 +593,7 @@ class CloseoutTests(unittest.TestCase):
         self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(result["operations"], [])
         self.assertEqual(result["nextAction"], "done")
 
@@ -532,7 +606,7 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
         result = finish.plan_closeout(
-            plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"]
+            plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"]
         )
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["operations"][0]["status"], "blocked")
@@ -543,7 +617,7 @@ class CloseoutTests(unittest.TestCase):
         github = FakeGitHubClient()
         self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(
             result["releaseNotesDispatch"],
             {"source_branch": "main", "min_version": "3.119.0", "max_version": "3.119.0", "force": "false"},
@@ -556,7 +630,7 @@ class CloseoutTests(unittest.TestCase):
         github = FakeGitHubClient()
         self._ship_plan(repo, github, plan)
         client = FakeMilestoneClient()
-        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertTrue(result["issueTemplateRefreshNeeded"])
 
     def test_apply_closeout_moves_items_and_closes(self):
@@ -570,7 +644,7 @@ class CloseoutTests(unittest.TestCase):
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"])
         self.assertEqual(client.moved, [(5, 2)])
         self.assertEqual(client.closed, [1])
         self.assertEqual(result["nextAction"], "done")
@@ -586,9 +660,9 @@ class CloseoutTests(unittest.TestCase):
             milestones.Milestone(number=1, title="3.119.0", state="open"),
             milestones.Milestone(number=2, title="3.119.1", state="open"),
         ]
-        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
+        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"])
         self.assertEqual(first["nextAction"], "done")
-        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"])
         self.assertEqual(second["results"], [])
         self.assertEqual(second["nextAction"], "done")
 
@@ -600,7 +674,7 @@ class CloseoutTests(unittest.TestCase):
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
         client.open_items[1] = [milestones.MilestoneItem(number=5, title="x", url="u", kind="issue")]
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=["v3.119.0"])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=["v3.119.0"])
         self.assertEqual(result["nextAction"], "blocked")
         self.assertEqual(result["results"][0]["status"], "blocked")
 
@@ -615,7 +689,7 @@ class CloseoutTests(unittest.TestCase):
         client.pr_closing_issues[100] = [200]
         client.issue_milestones[200] = None
 
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(client.pr_milestones[100], "3.119.0-preview.1")
         self.assertEqual(client.issue_milestones[200], "3.119.0-preview.1")
@@ -631,7 +705,7 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
 
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(len(github.dispatch_calls), 2)
         notes_call = github.dispatch_calls[0]
@@ -656,7 +730,7 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
 
-        finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(len(github.dispatch_calls), 1)
         self.assertEqual(github.dispatch_calls[0]["workflow"], finish.UPDATE_RELEASE_NOTES_WORKFLOW)
@@ -673,7 +747,7 @@ class CloseoutTests(unittest.TestCase):
         client = FakeMilestoneClient()
         client._milestones = [milestones.Milestone(number=1, title="3.119.0", state="open")]
 
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(len(github.dispatch_calls), 2)
         self.assertEqual({d["status"] for d in result["dispatches"]}, {"dispatched"})
@@ -693,8 +767,8 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
         client.pr_milestones[100] = None
 
-        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
-        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        first = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(len(github.dispatch_calls), 4)  # 2 workflows x 2 runs
         self.assertEqual({d["status"] for d in first["dispatches"]}, {"dispatched"})
@@ -718,12 +792,12 @@ class CloseoutTests(unittest.TestCase):
         github.fail_next_dispatch_for.add(finish.UPDATE_RELEASE_NOTES_WORKFLOW)
 
         with self.assertRaises(gh.GitHubError):
-            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(github.dispatch_calls, [])
         # The milestone reconciliation from the failed attempt still landed.
         self.assertEqual(client.pr_milestones[100], "3.119.0-preview.1")
 
-        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        second = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
 
         self.assertEqual(len(github.dispatch_calls), 2)
         self.assertEqual({d["status"] for d in second["dispatches"]}, {"dispatched"})
@@ -736,7 +810,7 @@ class CloseoutTests(unittest.TestCase):
         client = FakeMilestoneClient()
         client._milestones = []  # no milestone at all
 
-        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+        result = finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(result["reconcileResults"], [])
         self.assertTrue(any("no milestone titled" in w for w in result["warnings"]))
 
@@ -751,13 +825,13 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
 
         with self.assertRaisesRegex(ConflictError, "does not exist on the remote"):
-            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
         self.assertEqual(client.moved, [])
         self.assertEqual(client.closed, [])
 
         with self.assertRaisesRegex(ConflictError, "does not exist on the remote"):
-            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
 
     def test_apply_closeout_rejects_moved_tag(self):
@@ -784,7 +858,7 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
 
         with self.assertRaisesRegex(ConflictError, "expected the package source commit"):
-            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
 
     def test_apply_closeout_rejects_missing_release(self):
@@ -800,7 +874,7 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
 
         with self.assertRaisesRegex(ConflictError, "no GitHub release exists"):
-            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
 
     def test_apply_closeout_rejects_draft_only_release(self):
@@ -822,11 +896,11 @@ class CloseoutTests(unittest.TestCase):
         client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
 
         with self.assertRaisesRegex(ConflictError, "unpublished draft"):
-            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.apply_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
 
         with self.assertRaisesRegex(ConflictError, "unpublished draft"):
-            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, tags=[])
+            finish.plan_closeout(plan, repo=repo, milestone_client=client, github=github, schedule_client=_NULL_SCHEDULE_CLIENT, schedule_count=0, tags=[])
         self.assertEqual(client.milestones_call_count, 0)
 
 
@@ -854,6 +928,197 @@ class CloseoutTests(unittest.TestCase):
             finish.resolve_reconciliation_range(
                 repo, previous_tag="v3.118.5-unrelated", source_commit=source_commit
             )
+
+
+class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
+    """Integration-level tests for the closeout schedule step wired into
+    plan_closeout/apply_closeout: creating/updating the upcoming preview/
+    RC/stable milestones from the Chromium/Skia schedule, and never letting
+    a schedule-fetch failure block the rest of closeout (reconciliation,
+    milestone rollover, or either workflow dispatch)."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _repo(self):
+        """A real repo whose origin/main has scripts/VERSIONS.txt declaring
+        major=3, current Skia milestone=119, and an already-shipped,
+        published release/tag/GitHub-release for "3.119.0-preview.1"."""
+
+        bare, worktree = helpers.create_bare_and_worktree(self.root, "repo")
+        (worktree / "scripts").mkdir(parents=True, exist_ok=True)
+        (worktree / "scripts" / "VERSIONS.txt").write_text(
+            "# nuget versions\n"
+            "# SkiaSharp\n"
+            "SkiaSharp                nuget       3.119.0\n"
+            "# HarfBuzzSharp\n"
+            "HarfBuzzSharp            nuget       1.8.8\n"
+            "libSkiaSharp             milestone   119\n",
+            encoding="utf-8",
+        )
+        first_sha = helpers.commit_all(worktree, "Initial commit")
+        repo = GitRepository(root=worktree)
+        repo.push_tag("v3.118.0", first_sha)  # matches make_finish_plan()'s default previousTag
+        (worktree / "file.txt").write_text("v2", encoding="utf-8")
+        source_commit = helpers.commit_all(worktree, "Fix the thing (#100)")
+        helpers.push(worktree)
+        repo.fetch()
+        return repo, source_commit
+
+    def _ship(self, repo, github, plan):
+        tag = plan["tag"]["name"]
+        source_commit = plan["receipt"]["sourceCommit"]
+        repo.push_tag(tag, source_commit)
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name=plan["release"]["title"], is_draft=False,
+            is_prerelease=not plan["release"]["stable"], target_commitish=source_commit,
+            body="notes", url=f"https://example.invalid/{tag}",
+        )
+
+    SCHEDULE_119 = {
+        "branch_point": "2026-07-27T00:00:00",
+        "earliest_beta": "2026-07-29T00:00:00",
+        "early_stable_cut": "2026-08-11T00:00:00",
+        "early_stable": "2026-08-12T00:00:00",
+        "stable_cut": "2026-08-18T00:00:00",
+        "stable_date": "2026-08-25T00:00:00",
+    }
+
+    def test_apply_closeout_creates_missing_schedule_milestones(self):
+        repo, source_commit = self._repo()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship(repo, github, plan)
+        milestone_client = FakeMilestoneClient()
+        schedule_client = FakeScheduleClient()
+        schedule_client.seed(119, **self.SCHEDULE_119)
+
+        result = finish.apply_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=1, tags=[],
+        )
+
+        self.assertEqual(schedule_client.calls, [119])
+        self.assertEqual(
+            sorted(milestone_client.created),
+            ["3.119.0", "3.119.0-preview.1", "3.119.0-preview.2", "3.119.0-rc.1"],
+        )
+        schedule_titles = {r["title"]: r["status"] for r in result["scheduleResults"]}
+        self.assertTrue(all(status == "done" for status in schedule_titles.values()))
+
+    def test_apply_closeout_updates_schedule_milestone_with_wrong_due_date(self):
+        repo, source_commit = self._repo()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship(repo, github, plan)
+        milestone_client = FakeMilestoneClient()
+        # Pre-seed "3.119.0-preview.1" already existing but with a stale due date.
+        milestone_client._milestones = [
+            milestones.Milestone(
+                number=42, title="3.119.0-preview.1", state="open",
+                due_on="2020-01-01T00:00:00Z", description="stale description",
+            )
+        ]
+        schedule_client = FakeScheduleClient()
+        schedule_client.seed(119, **self.SCHEDULE_119)
+
+        finish.apply_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=1, tags=[],
+        )
+
+        self.assertEqual(len(milestone_client.updated), 1)
+        number, due_on, description = milestone_client.updated[0]
+        self.assertEqual(number, 42)
+        self.assertEqual(due_on, "2026-07-29T00:00:00Z")
+        self.assertNotEqual(description, "stale description")
+        self.assertNotIn("3.119.0-preview.1", milestone_client.created)
+
+    def test_apply_closeout_rerun_is_idempotent_for_schedule(self):
+        repo, source_commit = self._repo()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship(repo, github, plan)
+        milestone_client = FakeMilestoneClient()
+        schedule_client = FakeScheduleClient()
+        schedule_client.seed(119, **self.SCHEDULE_119)
+
+        finish.apply_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=1, tags=[],
+        )
+        created_count = len(milestone_client.created)
+        self.assertGreater(created_count, 0)
+
+        second = finish.apply_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=1, tags=[],
+        )
+
+        # No new creates/updates the second time: everything already matches.
+        self.assertEqual(len(milestone_client.created), created_count)
+        self.assertEqual(milestone_client.updated, [])
+        self.assertTrue(all(r["status"] == "done" for r in second["scheduleResults"]))
+
+    def test_schedule_fetch_failure_does_not_block_reconciliation_or_dispatch(self):
+        # Do not couple docs dispatch to schedule success: an unreachable
+        # Chromium schedule endpoint must not prevent PR/issue
+        # reconciliation, milestone rollover, or either workflow dispatch --
+        # it is recorded as an explicit warning only.
+        repo, source_commit = self._repo()
+        plan = make_finish_plan(source_commit=source_commit, stable=True)
+        github = FakeGitHubClient()
+        self._ship(repo, github, plan)
+        milestone_client = FakeMilestoneClient()
+        milestone_client._milestones = [milestones.Milestone(number=9, title="3.119.0-preview.1", state="open")]
+        milestone_client.pr_milestones[100] = None
+        schedule_client = FakeScheduleClient()  # nothing seeded -> every fetch fails
+
+        result = finish.apply_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=2, tags=[],
+        )
+
+        self.assertEqual(milestone_client.created, [])
+        self.assertEqual(milestone_client.updated, [])
+        self.assertTrue(any("could not fetch Chromium schedule" in w for w in result["warnings"]))
+        # Reconciliation still happened.
+        self.assertEqual(milestone_client.pr_milestones[100], "3.119.0-preview.1")
+        # Both dispatches still fired.
+        self.assertEqual(len(github.dispatch_calls), 2)
+        self.assertEqual({d["status"] for d in result["dispatches"]}, {"dispatched"})
+
+    def test_plan_closeout_previews_schedule_without_writing(self):
+        repo, source_commit = self._repo()
+        plan = make_finish_plan(source_commit=source_commit)
+        github = FakeGitHubClient()
+        self._ship(repo, github, plan)
+        milestone_client = FakeMilestoneClient()
+        schedule_client = FakeScheduleClient()
+        schedule_client.seed(119, **self.SCHEDULE_119)
+
+        result = finish.plan_closeout(
+            plan, repo=repo, milestone_client=milestone_client, github=github,
+            schedule_client=schedule_client, schedule_count=1, tags=[],
+        )
+
+        self.assertEqual(milestone_client.created, [])  # a preview never writes
+        self.assertEqual(milestone_client.updated, [])
+        actions = {op["title"]: op["action"] for op in result["scheduleOperations"]}
+        self.assertEqual(
+            actions,
+            {
+                "3.119.0-preview.1": "create",
+                "3.119.0-preview.2": "create",
+                "3.119.0-rc.1": "create",
+                "3.119.0": "create",
+            },
+        )
+        self.assertEqual(result["nextAction"], "closeout")
 
 
 if __name__ == "__main__":
