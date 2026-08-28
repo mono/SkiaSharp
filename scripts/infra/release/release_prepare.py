@@ -707,6 +707,55 @@ def _prepare_and_push_release_commit(repo: GitRepository, plan: dict) -> None:
     repo.push_branch(release_branch)
 
 
+def _verify_existing_bump_branch(repo: GitRepository, stable_bump: dict, remote_sha: str) -> None:
+    """Revalidate an already-pushed stable-bump branch before reusing it.
+
+    An existing remote branch under ``stable_bump["bumpBranch"]`` might be
+    stale (left over from an unrelated earlier attempt, or a branch name
+    collision) rather than the one this exact plan expects. Confirm the
+    live integration branch is still an ancestor of its head -- proving it
+    was actually branched from (a possibly since-advanced) integration
+    branch, not some unrelated history -- and that the version-state files
+    at that head match this plan's expectations: ``PREVIEW_LABEL`` reset to
+    ``preview.0`` and the next SkiaSharp/HarfBuzzSharp versions this bump is
+    supposed to advance to. A stale or conflicting branch is a hard
+    failure, never silently reused.
+    """
+
+    integration_branch = stable_bump["integrationBranch"]
+    integration_ref = f"refs/remotes/origin/{integration_branch}"
+    if not repo.ref_exists(integration_ref):
+        raise GitHubError(
+            f"integration branch {integration_branch} does not exist; cannot "
+            "validate the existing stable-bump branch against it"
+        )
+    integration_sha = repo.resolve(integration_ref)
+    if not repo.is_ancestor(integration_sha, remote_sha):
+        raise GitHubError(
+            f"existing stable-bump branch {stable_bump['bumpBranch']} ({remote_sha}) "
+            f"is not a descendant of integration branch {integration_branch} "
+            f"({integration_sha}); it is stale or conflicting and will not be reused"
+        )
+    state = read_version_state(repo, remote_sha)
+    if state.label != "preview.0":
+        raise GitHubError(
+            f"existing stable-bump branch {stable_bump['bumpBranch']} has "
+            f"PREVIEW_LABEL {state.label!r}, expected 'preview.0'"
+        )
+    if state.skia != stable_bump["skiaSharpVersion"]:
+        raise GitHubError(
+            f"existing stable-bump branch {stable_bump['bumpBranch']} has "
+            f"SkiaSharp version {state.skia!r}, expected "
+            f"{stable_bump['skiaSharpVersion']!r}"
+        )
+    if state.harfbuzz != stable_bump["harfBuzzSharpVersion"]:
+        raise GitHubError(
+            f"existing stable-bump branch {stable_bump['bumpBranch']} has "
+            f"HarfBuzzSharp version {state.harfbuzz!r}, expected "
+            f"{stable_bump['harfBuzzSharpVersion']!r}"
+        )
+
+
 def _create_stable_bump_pr(
     repo: GitRepository, github: GitHubClient, released_version: str, stable_bump: dict
 ) -> str:
@@ -724,6 +773,22 @@ def _create_stable_bump_pr(
         )
         repo.commit(stable_bump["title"], paths=changed)
         repo.push_branch(bump_branch)
+    else:
+        # The branch already exists -- possibly pushed by an earlier,
+        # partially-completed apply, or something else entirely. Never
+        # trust it just because a ref with the right name exists.
+        _verify_existing_bump_branch(repo, stable_bump, remote_sha)
+
+    # Idempotency: a PR may already be open for this branch -- from an
+    # earlier apply that crashed after opening it but before returning its
+    # URL (the plan's own recorded pullRequestUrl was null when this apply
+    # started), or one opened out-of-band/racily between plan and apply.
+    # Always check immediately before creating and reuse it rather than
+    # creating a duplicate.
+    existing_pr = github.find_open_pull_request(head=bump_branch, base=integration_branch)
+    if existing_pr is not None:
+        return existing_pr.url
+
     plan_obj = StableBumpPlan(
         integration_branch=integration_branch,
         bump_branch=bump_branch,

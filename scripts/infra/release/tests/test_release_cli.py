@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import release as cli
 import release_common as common
@@ -397,6 +398,106 @@ class FinishPublishExecutionTests(unittest.TestCase):
             ]
         )
         self.assertEqual(exit_code, 1)
+
+
+class FinishPlanPendingExecutionTests(unittest.TestCase):
+    """Opus 5 must-fix/operability item 5: when NuGet.org indexing has not
+    converged, ``finish plan`` must always write a machine-readable pending
+    report to ``--output`` (which always has a default for this
+    subcommand) and exit with a distinct, non-1 code, so a workflow step
+    marked ``if: always()`` can upload it and tell "rerun me later" apart
+    from a genuine failure."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        import gitrepo_helpers as helpers
+
+        self.repo_path = helpers.init_worktree(self.root / "repo")
+        (self.repo_path / "seed.txt").write_text("seed", encoding="utf-8")
+        helpers.commit_all(self.repo_path, "seed")
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def test_not_ready_error_writes_pending_report_and_exits_distinctly(self):
+        from unittest import mock
+
+        error = common.NotReadyError(
+            "2 package(s) not yet visible/listed on NuGet.org after 1200s "
+            "(deadline 1200s): SkiaSharp.Extra 3.119.0, HarfBuzzSharp 1.8.8.1; "
+            "rerun once indexing completes",
+            missing=(
+                {"id": "SkiaSharp.Extra", "version": "3.119.0"},
+                {"id": "HarfBuzzSharp", "version": "1.8.8.1"},
+            ),
+            elapsed_seconds=1200.0,
+            deadline_seconds=1200.0,
+        )
+        output_path = self.root / "finish-plan.json"
+        with mock.patch.object(cli.finish, "build_finish_plan", side_effect=error):
+            exit_code = cli.main(
+                [
+                    "--repo", str(self.repo_path),
+                    "finish", "plan",
+                    "--version", "3.119.0",
+                    "--tooling-sha", "a" * 40,
+                    "--output", str(output_path),
+                ]
+            )
+
+        self.assertEqual(exit_code, cli.FINISH_PLAN_PENDING_EXIT_CODE)
+        self.assertNotEqual(exit_code, 0)
+        self.assertNotEqual(exit_code, 1)
+        report = common.json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["nextAction"], "pending")
+        self.assertEqual(report["requestedVersion"], "3.119.0")
+        self.assertEqual(report["toolingSha"], "a" * 40)
+        self.assertEqual(
+            {item["id"] for item in report["missingPackages"]},
+            {"SkiaSharp.Extra", "HarfBuzzSharp"},
+        )
+        self.assertEqual(report["elapsedSeconds"], 1200.0)
+        self.assertEqual(report["deadlineSeconds"], 1200.0)
+        # A successful finish-plan file is written the same way -- confirm
+        # the pending shape is schema-valid on its own dedicated schema.
+        common.validate_against_schema(report, cli.finish.FINISH_PENDING_SCHEMA)
+
+    def test_pending_report_is_written_even_without_explicit_output(self):
+        # --output defaults to "finish-plan.json" for this subcommand, so
+        # the pending path must still honor that default rather than
+        # silently only printing to stdout.
+        from unittest import mock
+
+        error = common.NotReadyError(
+            "1 package(s) not yet visible/listed on NuGet.org after 30s "
+            "(deadline 1200s): SkiaSharp 3.119.0; rerun once indexing completes",
+            missing=({"id": "SkiaSharp", "version": "3.119.0"},),
+            elapsed_seconds=30.0,
+            deadline_seconds=1200.0,
+        )
+        import os
+
+        cwd = os.getcwd()
+        os.chdir(self.root)
+        try:
+            with mock.patch.object(cli.finish, "build_finish_plan", side_effect=error):
+                exit_code = cli.main(
+                    [
+                        "--repo", str(self.repo_path),
+                        "finish", "plan",
+                        "--version", "3.119.0",
+                        "--tooling-sha", "a" * 40,
+                    ]
+                )
+        finally:
+            os.chdir(cwd)
+
+        self.assertEqual(exit_code, cli.FINISH_PLAN_PENDING_EXIT_CODE)
+        default_output = self.root / "finish-plan.json"
+        self.assertTrue(default_output.is_file())
+        report = common.json.loads(default_output.read_text(encoding="utf-8"))
+        self.assertEqual(report["nextAction"], "pending")
 
 
 class CheckEnvironmentExecutionTests(unittest.TestCase):

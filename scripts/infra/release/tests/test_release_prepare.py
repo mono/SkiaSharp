@@ -393,6 +393,129 @@ class PrepareStableTests(unittest.TestCase):
         second_report = prepare.apply_prepare_plan(with_digest(replanned), repo=fixture.repo, github=github)
         self.assertEqual(second_report["nextAction"], "await-merge")
 
+    def test_apply_reuses_pr_found_immediately_before_create_on_retry(self):
+        # Opus 5 must-fix 1: the original approved plan's stableBump has a
+        # null pullRequestUrl (recorded at plan time, before any PR
+        # existed). Retrying apply with that exact same plan after a PR
+        # has since appeared -- e.g. a previous apply attempt crashed after
+        # opening it but before returning its URL, or something else
+        # opened it out-of-band/racily -- must reuse the existing open PR
+        # rather than creating a duplicate. _create_stable_bump_pr must
+        # call find_open_pull_request immediately before create, not rely
+        # on a value cached at plan time.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version="3.119.0",
+            tooling_sha=main_sha, github=github,
+        )
+        self.assertIsNone(plan["stableBump"]["pullRequestUrl"])
+
+        first_report = prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+        first_url = first_report["stableBumpPullRequestUrl"]
+        self.assertIsNotNone(first_url)
+        self.assertEqual(github._next_pr_number, 2)  # exactly one PR was created
+
+        # Retry with the exact original plan (still recording a null
+        # pullRequestUrl, as approved) -- must not create a second PR.
+        second_report = prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+        self.assertEqual(second_report["stableBumpPullRequestUrl"], first_url)
+        self.assertEqual(github._next_pr_number, 2)  # still exactly one PR
+
+    def test_apply_reuses_existing_valid_bump_branch_without_repushing(self):
+        # Opus 5 must-fix 2 (happy path): an already-pushed bump branch
+        # that correctly descends from the integration branch and carries
+        # the expected preview.0/SkiaSharp/HarfBuzzSharp version state
+        # (e.g. left over from a prior apply attempt that pushed the
+        # branch but crashed before opening the PR) must be reused, not
+        # rejected or re-committed.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version="3.119.0",
+            tooling_sha=main_sha, github=github,
+        )
+        bump_branch = plan["stableBump"]["bumpBranch"]
+        expected_skia = plan["stableBump"]["skiaSharpVersion"]
+        expected_harfbuzz = plan["stableBump"]["harfBuzzSharpVersion"]
+
+        # Simulate a prior partial apply: the bump branch was pushed with
+        # the correct version state, but the process crashed before ever
+        # opening a PR.
+        fixture.repo.git("switch", "-c", bump_branch, "refs/remotes/origin/main")
+        helpers.write_variables(fixture.worktree, skiasharp_version=expected_skia, preview_label="preview.0")
+        helpers.write_versions(fixture.worktree, skiasharp_version=expected_skia, harfbuzzsharp_version=expected_harfbuzz)
+        helpers.stage(fixture.worktree, "scripts")
+        helpers.commit_staged(fixture.worktree, "Bump to the next version")
+        fixture.repo.push_branch(bump_branch)
+        pushed_sha = fixture.repo.remote_sha(bump_branch)
+
+        report = prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
+        self.assertIsNotNone(report["stableBumpPullRequestUrl"])
+        # The branch was reused, not re-created/re-committed.
+        self.assertEqual(fixture.repo.remote_sha(bump_branch), pushed_sha)
+
+    def test_apply_rejects_existing_bump_branch_not_descended_from_integration(self):
+        # Opus 5 must-fix 2: an existing bump branch that is not a
+        # descendant of the live integration branch is stale/conflicting
+        # and must block rather than being silently reused.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version="3.119.0",
+            tooling_sha=main_sha, github=github,
+        )
+        bump_branch = plan["stableBump"]["bumpBranch"]
+
+        # Push the bump branch from unrelated history (an orphan commit),
+        # not descended from the integration branch at all.
+        fixture.repo.git("switch", "--orphan", "unrelated-history")
+        (fixture.worktree / "unrelated.txt").write_text("stale", encoding="utf-8")
+        fixture.repo.git("add", "unrelated.txt")
+        fixture.repo.git("commit", "-m", "unrelated commit")
+        fixture.repo.git("branch", bump_branch, "HEAD")
+        fixture.repo.push_branch(bump_branch)
+
+        with self.assertRaisesRegex(GitHubError, "not a descendant"):
+            prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
+    def test_apply_rejects_existing_bump_branch_with_wrong_version_state(self):
+        # Opus 5 must-fix 2: an existing bump branch that descends from
+        # the integration branch but carries the wrong version state
+        # (stale SkiaSharp version, in this case) must also block.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version="3.119.0",
+            tooling_sha=main_sha, github=github,
+        )
+        bump_branch = plan["stableBump"]["bumpBranch"]
+
+        fixture.repo.git("switch", "-c", bump_branch, "refs/remotes/origin/main")
+        # Wrong: some other version entirely, not the next preview.0 bump
+        # this plan expects.
+        helpers.write_variables(fixture.worktree, skiasharp_version="9.9.9", preview_label="preview.0")
+        helpers.write_versions(fixture.worktree, skiasharp_version="9.9.9", harfbuzzsharp_version="1.8.8")
+        helpers.stage(fixture.worktree, "scripts")
+        helpers.commit_staged(fixture.worktree, "wrong bump content")
+        fixture.repo.push_branch(bump_branch)
+
+        with self.assertRaisesRegex(GitHubError, "SkiaSharp version"):
+            prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
 
 class PrepareHotfixTests(unittest.TestCase):
     def setUp(self):

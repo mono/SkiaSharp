@@ -1,55 +1,8 @@
 {
-  "$schemaComment": "Required public package IDs on NuGet.org, grouped by version family. Authoritative source: scripts/VERSIONS.txt's '# nuget versions' section, whose '# SkiaSharp'/'# HarfBuzzSharp' sub-headers (not a bare <PackageId> inference) group each package line into its family. Kept synchronized by tests/test_release_nuget.py::PublicPackagesManifestTests via release_nuget.extract_versions_txt_families() so a newly introduced packable project cannot be silently omitted from the finish public-receipt gate.",
+  "$schemaComment": "Runtime-consumed release automation config. Only `anchorPackages` is read at runtime, by release_nuget.verify_public_receipt(): the exact three packages fully downloaded, hash-verified, and dotnet-signature-verified for every 'finish plan'/'finish apply', regardless of release version. Every other required SkiaSharp/HarfBuzzSharp-family package ID -- and the version it must carry -- is derived per release from scripts/VERSIONS.txt at the exact source commit the SkiaSharp anchor's own nuspec embeds (see release_nuget.read_family_ids_at_commit), never from a static list in this file. A static family list here previously implied it was authoritative for verifying any release, which it can never safely be for an already-published, older version: a package introduced to VERSIONS.txt after that version shipped never existed on NuGet.org for it, and polling for it would eventually and incorrectly time out. tests/test_release_nuget.py's PublicPackagesManifestTests cross-checks anchorPackages against the *current* scripts/VERSIONS.txt (so a newly introduced anchor candidate is never silently missed) as a maintenance-time sanity check only -- it has no bearing on verifying any specific release and is not consulted at runtime.",
   "anchorPackages": [
     "HarfBuzzSharp",
     "SkiaSharp",
     "SkiaSharp.HarfBuzz"
-  ],
-  "families": {
-    "HarfBuzzSharp": [
-      "HarfBuzzSharp",
-      "HarfBuzzSharp.NativeAssets.Android",
-      "HarfBuzzSharp.NativeAssets.Linux",
-      "HarfBuzzSharp.NativeAssets.MacCatalyst",
-      "HarfBuzzSharp.NativeAssets.Tizen",
-      "HarfBuzzSharp.NativeAssets.WebAssembly",
-      "HarfBuzzSharp.NativeAssets.Win32",
-      "HarfBuzzSharp.NativeAssets.iOS",
-      "HarfBuzzSharp.NativeAssets.macOS",
-      "HarfBuzzSharp.NativeAssets.tvOS"
-    ],
-    "SkiaSharp": [
-      "SkiaSharp",
-      "SkiaSharp.Direct3D.Vortice",
-      "SkiaSharp.HarfBuzz",
-      "SkiaSharp.NativeAssets.Android",
-      "SkiaSharp.NativeAssets.Linux",
-      "SkiaSharp.NativeAssets.Linux.NoDependencies",
-      "SkiaSharp.NativeAssets.MacCatalyst",
-      "SkiaSharp.NativeAssets.NanoServer",
-      "SkiaSharp.NativeAssets.Tizen",
-      "SkiaSharp.NativeAssets.WebAssembly",
-      "SkiaSharp.NativeAssets.Win32",
-      "SkiaSharp.NativeAssets.WinUI",
-      "SkiaSharp.NativeAssets.iOS",
-      "SkiaSharp.NativeAssets.macOS",
-      "SkiaSharp.NativeAssets.tvOS",
-      "SkiaSharp.Resources",
-      "SkiaSharp.SceneGraph",
-      "SkiaSharp.Skottie",
-      "SkiaSharp.Views",
-      "SkiaSharp.Views.Blazor",
-      "SkiaSharp.Views.Desktop.Common",
-      "SkiaSharp.Views.Gtk3",
-      "SkiaSharp.Views.Gtk4",
-      "SkiaSharp.Views.Maui.Controls",
-      "SkiaSharp.Views.Maui.Core",
-      "SkiaSharp.Views.Uno.WinUI",
-      "SkiaSharp.Views.WPF",
-      "SkiaSharp.Views.WinUI",
-      "SkiaSharp.Views.WindowsForms",
-      "SkiaSharp.Vulkan.SharpVk",
-      "SkiaSharp.Vulkan.Silk.NET"
-    ]
-  }
+  ]
 }

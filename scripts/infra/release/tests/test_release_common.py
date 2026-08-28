@@ -113,6 +113,20 @@ class CommandRunnerTests(unittest.TestCase):
         self.assertEqual(result.stdout.strip(), "hello")
         self.assertTrue(result.ok)
 
+    def test_subprocess_runner_raises_clean_error_on_timeout(self):
+        # Opus 5 must-fix 3: a hung subprocess must never surface a raw
+        # subprocess.TimeoutExpired -- only ReleaseToolError, with the
+        # argv and the timeout budget in the message, so callers never
+        # need to special-case a stdlib exception type.
+        runner = common.SubprocessCommandRunner()
+        with self.assertRaisesRegex(common.ReleaseToolError, r"timed out after 1s.*sleep.*5") as ctx:
+            runner.run(["sleep", "5"], cwd=Path.cwd(), timeout=1)
+        self.assertNotIsInstance(ctx.exception, type(None))
+        # Must not be (or wrap as) the raw stdlib exception type escaping.
+        import subprocess
+
+        self.assertNotIsInstance(ctx.exception, subprocess.TimeoutExpired)
+
 
 class BuildEnvelopeTests(unittest.TestCase):
     def _plan(self) -> dict:

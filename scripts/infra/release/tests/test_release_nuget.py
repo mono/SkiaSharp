@@ -194,6 +194,28 @@ class FakeSignatureVerifier:
             raise nuget.NuGetError("signature verification failed")
 
 
+class FakeClock:
+    """A controllable, instantly-advancing stand-in for wall-clock time.
+
+    ``sleep`` never actually blocks -- it only advances ``clock()`` by the
+    requested amount -- so a test exercising the real deadline-exceeded
+    path in :func:`release_nuget.poll_catalog_entries` /
+    :func:`release_nuget.verify_public_receipt` completes in real
+    microseconds instead of the real 20-minute default budget.
+    """
+
+    def __init__(self, *, start: float = 0.0):
+        self.now = start
+        self.sleep_calls: list[float] = []
+
+    def clock(self) -> float:
+        return self.now
+
+    def sleep(self, seconds: float) -> None:
+        self.sleep_calls.append(seconds)
+        self.now += seconds
+
+
 class CatalogEntryValidationTests(unittest.TestCase):
     def test_valid_entry_passes(self):
         nupkg = build_nupkg("SkiaSharp", "3.119.0")
@@ -222,14 +244,21 @@ class CatalogEntryValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(nuget.NuGetError, "identity mismatch"):
             nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.1")
 
-    def test_missing_dependency_groups_rejected_except_harfbuzzsharp(self):
+    def test_empty_dependency_groups_are_accepted_for_any_package(self):
+        # Opus 5 must-fix 6: the catalog leaf's dependencyGroups list is
+        # not a reliable indicator of anything -- plenty of legitimate,
+        # currently-published packages (native-asset-only packages, and
+        # HarfBuzzSharp itself) carry none. Only the explicit HarfBuzzSharp
+        # minimum-version cross-check (via the verified nuspec, in
+        # collapse_dependency_minimum_version) actually depends on
+        # dependency data, and it is validated there, not with a blanket
+        # non-empty requirement here.
         entry = nuget.CatalogEntry(
             id="SkiaSharp", version="3.119.0", listed=True, package_hash="abc",
             package_hash_algorithm="SHA512", package_size=10, dependency_groups=(),
             repository={"type": "git", "commit": "a" * 40, "branch": "release/3.119.0"},
         )
-        with self.assertRaisesRegex(nuget.NuGetError, "dependencyGroups"):
-            nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.0")
+        nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.0")
 
         harfbuzz_entry = nuget.CatalogEntry(
             id="HarfBuzzSharp", version="1.8.8.1", listed=True, package_hash="abc",
@@ -263,49 +292,87 @@ class CatalogEntryValidationTests(unittest.TestCase):
         nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.0")
 
 
-class WaitForCatalogEntryTests(unittest.TestCase):
-    def test_returns_immediately_when_already_listed(self):
+class PollCatalogEntriesTests(unittest.TestCase):
+    """Opus 5 must-fix/operability item 4: a single batched, shared-deadline
+    poll across a whole set of (package_id, version) pairs, replacing the
+    old per-package fixed attempt count -- see
+    :func:`release_nuget.poll_catalog_entries`."""
+
+    def test_returns_immediately_when_all_already_listed(self):
         client = FakeNuGetClient()
         nupkg = build_nupkg("SkiaSharp", "3.119.0")
         client.add("SkiaSharp", "3.119.0", nupkg)
-        sleeps = []
-        entry = nuget.wait_for_catalog_entry(
-            client, "SkiaSharp", "3.119.0", attempts=3, delay_seconds=1, sleep=sleeps.append
+        clock = FakeClock()
+        entries = nuget.poll_catalog_entries(
+            client, [("SkiaSharp", "3.119.0")],
+            deadline_at=clock.clock() + 1200.0, clock=clock.clock, sleep=clock.sleep,
         )
-        self.assertEqual(entry.version, "3.119.0")
-        self.assertEqual(sleeps, [])
+        self.assertEqual(entries[("SkiaSharp", "3.119.0")].version, "3.119.0")
+        self.assertEqual(clock.sleep_calls, [])  # never slept: nothing was missing
 
-    def test_polls_until_indexed_then_succeeds(self):
+    def test_polls_only_the_still_missing_subset_on_each_pass(self):
+        # One package is ready immediately; the other becomes ready only
+        # after one shared pass -- the already-resolved package must never
+        # be re-queried on the second pass.
         client = FakeNuGetClient()
-        sleeps = []
-        attempts_before_ready = 2
+        client.add("SkiaSharp", "3.119.0", build_nupkg("SkiaSharp", "3.119.0"))
+        query_log: list[tuple[str, str]] = []
+        real_get = client.get_catalog_entry
 
-        class DelayedClient:
-            def __init__(self):
-                self.calls = 0
+        calls_by_package: dict[str, int] = {}
 
-            def get_catalog_entry(self, package_id, version):
-                self.calls += 1
-                if self.calls <= attempts_before_ready:
-                    return None
-                nupkg = build_nupkg(package_id, version)
-                return catalog_entry_for(nupkg, package_id=package_id, version=version)
+        def _tracking_get(package_id, version):
+            query_log.append((package_id, version))
+            calls_by_package[package_id] = calls_by_package.get(package_id, 0) + 1
+            if package_id == "HarfBuzzSharp" and calls_by_package[package_id] == 1:
+                return None  # not ready on the first pass
+            return real_get(package_id, version)
 
-        delayed = DelayedClient()
-        entry = nuget.wait_for_catalog_entry(
-            delayed, "SkiaSharp", "3.119.0", attempts=5, delay_seconds=1, sleep=sleeps.append
+        client.add("HarfBuzzSharp", "1.8.8.1", build_nupkg("HarfBuzzSharp", "1.8.8.1"))
+        client.get_catalog_entry = _tracking_get
+        clock = FakeClock()
+
+        entries = nuget.poll_catalog_entries(
+            client, [("SkiaSharp", "3.119.0"), ("HarfBuzzSharp", "1.8.8.1")],
+            deadline_at=clock.clock() + 1200.0, poll_interval=30.0, clock=clock.clock, sleep=clock.sleep,
         )
-        self.assertIsNotNone(entry)
-        self.assertEqual(len(sleeps), attempts_before_ready)
 
-    def test_raises_not_ready_after_bounded_attempts(self):
+        self.assertEqual(set(entries), {("SkiaSharp", "3.119.0"), ("HarfBuzzSharp", "1.8.8.1")})
+        # SkiaSharp resolved on the first pass and must not be queried again.
+        self.assertEqual(calls_by_package["SkiaSharp"], 1)
+        self.assertEqual(calls_by_package["HarfBuzzSharp"], 2)
+        self.assertEqual(clock.sleep_calls, [30.0])  # exactly one shared sleep between the two passes
+
+    def test_raises_not_ready_with_full_missing_list_and_elapsed_deadline_context(self):
         client = FakeNuGetClient()
-        sleeps = []
-        with self.assertRaises(NotReadyError):
-            nuget.wait_for_catalog_entry(
-                client, "SkiaSharp", "3.119.0", attempts=3, delay_seconds=1, sleep=sleeps.append
+        client.add("SkiaSharp", "3.119.0", build_nupkg("SkiaSharp", "3.119.0"))
+        clock = FakeClock()
+        with self.assertRaises(NotReadyError) as ctx:
+            nuget.poll_catalog_entries(
+                client,
+                [("SkiaSharp", "3.119.0"), ("SkiaSharp.Extra", "3.119.0"), ("HarfBuzzSharp", "1.8.8.1")],
+                deadline_at=clock.clock() + 65.0, poll_interval=30.0, clock=clock.clock, sleep=clock.sleep,
             )
-        self.assertEqual(len(sleeps), 2)  # never sleeps after the last attempt
+        error = ctx.exception
+        self.assertEqual(
+            {item["id"] for item in error.missing}, {"SkiaSharp.Extra", "HarfBuzzSharp"}
+        )
+        self.assertEqual(error.deadline_seconds, 65.0)
+        self.assertIsNotNone(error.elapsed_seconds)
+        self.assertGreaterEqual(error.elapsed_seconds, 65.0)
+        self.assertIn("SkiaSharp.Extra", str(error))
+        self.assertIn("HarfBuzzSharp", str(error))
+        # The already-resolved package must never appear in the missing list.
+        self.assertNotIn("SkiaSharp", {item["id"] for item in error.missing})
+
+    def test_empty_request_list_resolves_immediately_without_sleeping(self):
+        client = FakeNuGetClient()
+        clock = FakeClock()
+        entries = nuget.poll_catalog_entries(
+            client, [], deadline_at=clock.clock() + 1200.0, clock=clock.clock, sleep=clock.sleep,
+        )
+        self.assertEqual(entries, {})
+        self.assertEqual(clock.sleep_calls, [])
 
 
 class NuspecParsingTests(unittest.TestCase):
@@ -429,10 +496,6 @@ class VerifyAnchorHashTests(unittest.TestCase):
 
 
 MANIFEST = {
-    "families": {
-        "SkiaSharp": ["SkiaSharp", "SkiaSharp.HarfBuzz", "SkiaSharp.Extra"],
-        "HarfBuzzSharp": ["HarfBuzzSharp", "HarfBuzzSharp.NativeAssets.Android"],
-    },
     "anchorPackages": ["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"],
 }
 
@@ -564,14 +627,16 @@ class VerifyPublicReceiptTests(unittest.TestCase):
         reader = self._reader(
             commit=commit, branch=branch, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1"
         )
+        clock = FakeClock()
         with tempfile.TemporaryDirectory() as tmp:
-            with self.assertRaises(NotReadyError):
+            with self.assertRaises(NotReadyError) as ctx:
                 nuget.verify_public_receipt(
                     nuget=client, versions_reader=reader, requested_version="3.119.0",
                     manifest=MANIFEST, download_dir=Path(tmp),
                     signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
-                    sleep=lambda _seconds: None,
+                    deadline_seconds=90.0, poll_interval=30.0, clock=clock.clock, sleep=clock.sleep,
                 )
+        self.assertEqual([item["id"] for item in ctx.exception.missing], ["SkiaSharp.Extra"])
 
     def test_mixed_skiasharp_source_commits_are_blocked(self):
         import tempfile
@@ -650,16 +715,22 @@ class VerifyPublicReceiptTests(unittest.TestCase):
 
     def test_current_manifest_package_absent_at_source_commit_is_ignored(self):
         # Regression for the live end-to-end bug found running
-        # `finish plan --version 4.151.1`: the *current* public-packages.json
-        # includes SkiaSharp.Vulkan.Silk.NET, which was introduced well after
-        # 4.151.1 shipped. At 4.151.1's embedded source commit,
-        # scripts/VERSIONS.txt only ever listed the older family (no Silk.NET
-        # package), so polling NuGet.org for a version of it that was never
-        # published used to eventually raise NotReadyError even though the
-        # release itself is perfectly valid. The receipt must be built from
-        # the family exactly as VERSIONS.txt declared it at the *source*
-        # commit, never the current manifest, so a later-added package must
-        # simply never be requested.
+        # `finish plan --version 4.151.1`: at the time, public-packages.json
+        # still carried a static "families" list, and its *current* entry
+        # included SkiaSharp.Vulkan.Silk.NET -- introduced well after 4.151.1
+        # shipped. At 4.151.1's embedded source commit, scripts/VERSIONS.txt
+        # only ever listed the older family (no Silk.NET package), so
+        # polling NuGet.org for a version of it that was never published
+        # used to eventually raise NotReadyError even though the release
+        # itself is perfectly valid. public-packages.json no longer carries
+        # any family list at all (see PublicPackagesManifestTests) precisely
+        # because it was runtime-dead and unsafe to rely on for an older
+        # release -- but this test keeps proving the code path defensively:
+        # even if a manifest dict is hand-constructed with a stray
+        # "families" key naming a later package, it must still never be
+        # requested. The receipt must be built from the family exactly as
+        # VERSIONS.txt declared it at the *source* commit, never anything
+        # else.
         import tempfile
 
         commit = "a" * 40
@@ -674,24 +745,29 @@ class VerifyPublicReceiptTests(unittest.TestCase):
         reader = self._reader(
             commit=commit, branch=branch, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1",
         )
-        # The *current* manifest already includes a package added long after
-        # this release shipped, and it is deliberately never registered on
-        # the fake NuGet client at all -- if the code ever asks for it,
-        # get_catalog_entry returns None and wait_for_catalog_entry would
-        # raise NotReadyError.
+        # A manifest carrying a stray "families" entry with a package added
+        # long after this release shipped, deliberately never registered on
+        # the fake NuGet client at all -- if the code ever asked for it,
+        # get_catalog_entry would return None and it would eventually raise
+        # NotReadyError.
         manifest_with_later_package = {
             "families": {
-                "SkiaSharp": [*MANIFEST["families"]["SkiaSharp"], "SkiaSharp.Vulkan.Silk.NET"],
-                "HarfBuzzSharp": list(MANIFEST["families"]["HarfBuzzSharp"]),
+                "SkiaSharp": ["SkiaSharp", "SkiaSharp.HarfBuzz", "SkiaSharp.Extra", "SkiaSharp.Vulkan.Silk.NET"],
+                "HarfBuzzSharp": ["HarfBuzzSharp", "HarfBuzzSharp.NativeAssets.Android"],
             },
             "anchorPackages": list(MANIFEST["anchorPackages"]),
         }
         with tempfile.TemporaryDirectory() as tmp:
+            clock = FakeClock()
             receipt = nuget.verify_public_receipt(
                 nuget=client, versions_reader=reader, requested_version="3.119.0",
                 manifest=manifest_with_later_package, download_dir=Path(tmp),
                 signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
-                sleep=lambda _seconds: None,  # fail fast, don't hang, if this regresses
+                # Fail fast (a short deadline, a fake clock so it never
+                # really sleeps) rather than hang for the real 20-minute
+                # default if this ever regresses into actually polling for
+                # the never-published later package.
+                deadline_seconds=5.0, clock=clock.clock, sleep=clock.sleep,
             )
         self.assertEqual(receipt.source_commit, commit)
         package_ids = {package.id for package in receipt.packages}
@@ -867,32 +943,51 @@ class VersionsTxtFamilyExtractionTests(unittest.TestCase):
 
 
 class PublicPackagesManifestTests(unittest.TestCase):
-    def test_public_packages_manifest_matches_versions_txt(self):
+    """Opus 5 must-fix/operability item 7: public-packages.json's `families`
+    lists were runtime-dead -- release_nuget.verify_public_receipt derives
+    the required package families per release from scripts/VERSIONS.txt at
+    the resolved source commit (see read_family_ids_at_commit), never from
+    a static manifest list, which can never safely describe an
+    already-published older release. The manifest is shrunk to just
+    `anchorPackages` (the only field actually read at runtime) plus policy
+    metadata; the "is this in sync with the current tree" expectation
+    lives here, against scripts/VERSIONS.txt directly, as a
+    maintenance-time sanity check with no bearing on verifying any
+    specific release.
+    """
+
+    def test_manifest_carries_no_dead_runtime_family_list(self):
+        import json
+
+        manifest_path = Path(__file__).resolve().parent.parent / "public-packages.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        self.assertNotIn(
+            "families", manifest,
+            "public-packages.json must not carry a static family list: "
+            "release_nuget.verify_public_receipt never consults it (families "
+            "are derived per-release from scripts/VERSIONS.txt at the source "
+            "commit instead), and its presence previously implied otherwise",
+        )
+        self.assertEqual(set(manifest), {"$schemaComment", "anchorPackages"})
+
+    def test_anchor_packages_are_declared_in_current_versions_txt(self):
         import json
 
         manifest_path = Path(__file__).resolve().parent.parent / "public-packages.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         versions_text = (REPO_ROOT / "scripts" / "VERSIONS.txt").read_text(encoding="utf-8")
-        # Authoritative source: the "# SkiaSharp"/"# HarfBuzzSharp" families
-        # declared in scripts/VERSIONS.txt's "# nuget versions" section, not a
-        # `<PackageId>` inference from project files.
-        expected = nuget.extract_versions_txt_families(versions_text)
-        for family in ("SkiaSharp", "HarfBuzzSharp"):
-            self.assertEqual(
-                set(manifest["families"][family]),
-                set(expected[family]),
-                f"public-packages.json[{family!r}] is out of sync with "
-                "scripts/VERSIONS.txt's '# nuget versions' section",
-            )
-
-    def test_anchor_packages_are_declared_in_families(self):
-        import json
-
-        manifest_path = Path(__file__).resolve().parent.parent / "public-packages.json"
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        declared = set(manifest["families"]["SkiaSharp"]) | set(manifest["families"]["HarfBuzzSharp"])
+        # Authoritative source for *this* maintenance-time check: the
+        # "# SkiaSharp"/"# HarfBuzzSharp" families declared in the current
+        # scripts/VERSIONS.txt's "# nuget versions" section -- this has no
+        # effect on how any specific (possibly older) release is verified.
+        current_families = nuget.extract_versions_txt_families(versions_text)
+        declared = set(current_families.get("SkiaSharp", [])) | set(current_families.get("HarfBuzzSharp", []))
         for anchor in manifest["anchorPackages"]:
-            self.assertIn(anchor, declared)
+            self.assertIn(
+                anchor, declared,
+                f"anchor package {anchor!r} is not declared under either family "
+                "in the current scripts/VERSIONS.txt",
+            )
 
 
 class FakeCommandRunnerForVerify:
@@ -900,10 +995,12 @@ class FakeCommandRunnerForVerify:
         self.returncode = returncode
         self.calls: list[list[str]] = []
         self.cwds: list[Path] = []
+        self.timeouts: list[int] = []
 
     def run(self, args, *, cwd, check=True, timeout=120, input=None):
         self.calls.append(list(args))
         self.cwds.append(Path(cwd))
+        self.timeouts.append(timeout)
         return CommandResult(args=tuple(args), returncode=self.returncode, stdout="", stderr="")
 
 
@@ -972,6 +1069,15 @@ class DotNetSignatureVerifierTests(unittest.TestCase):
         verifier.verify(absolute_nupkg, ("AAAA",))
         self.assertEqual(runner.calls[0][-1], str(absolute_nupkg))
         self.assertEqual(runner.cwds[0], absolute_nupkg.parent)
+
+    def test_uses_an_explicit_900_second_timeout(self):
+        # Opus 5 must-fix 3: dotnet nuget verify can be slow on a cold SDK
+        # (JIT warmup, trust chain building, certificate revocation
+        # checks) -- it must never rely on the runner's 120s default.
+        runner = FakeCommandRunnerForVerify()
+        verifier = nuget.DotNetSignatureVerifier(runner=runner)
+        verifier.verify(Path("/tmp/pkg.nupkg"), ("AAAA",))
+        self.assertEqual(runner.timeouts, [900])
 
 
 class DotnetCommandResolutionTests(unittest.TestCase):

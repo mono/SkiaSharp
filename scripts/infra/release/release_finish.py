@@ -15,7 +15,7 @@ from datetime import date
 from pathlib import Path
 from typing import Callable
 
-from release_common import ConflictError, DIGEST_FIELD, PlanError, build_envelope, utcnow_iso
+from release_common import ConflictError, DIGEST_FIELD, NotReadyError, PlanError, build_envelope, utcnow_iso
 from release_git import GitRepository
 import release_github as gh
 from release_github import GitHubClient
@@ -57,9 +57,19 @@ def build_finish_plan(
     signature_verifier: nuget.SignatureVerifier,
     download_dir: Path,
     tooling_sha: str,
+    deadline_seconds: float | None = None,
+    clock: Callable[[], float] | None = None,
     sleep: Callable[[float], None] | None = None,
 ) -> dict:
-    """Build the read-only finish plan (equivalent to ``finish plan``)."""
+    """Build the read-only finish plan (equivalent to ``finish plan``).
+
+    ``deadline_seconds``/``clock``/``sleep`` are passed straight through to
+    :func:`release_nuget.verify_public_receipt` when given, so tests can
+    inject a fake clock/sleep pair (and a short deadline) instead of the
+    real 20-minute wall-clock budget, without a CLI caller needing to know
+    about them at all -- ``None`` (the default for each) leaves that
+    function's own defaults untouched.
+    """
 
     repo.fetch()
     reader = GitVersionsFileReader(repo)
@@ -72,6 +82,10 @@ def build_finish_plan(
         signature_verifier=signature_verifier,
         fingerprints=fingerprints,
     )
+    if deadline_seconds is not None:
+        kwargs["deadline_seconds"] = deadline_seconds
+    if clock is not None:
+        kwargs["clock"] = clock
     if sleep is not None:
         kwargs["sleep"] = sleep
     receipt = nuget.verify_public_receipt(**kwargs)
@@ -177,6 +191,41 @@ def build_finish_plan(
         "warnings": warnings,
     }
     return plan
+
+
+FINISH_PENDING_SCHEMA = "finish-pending.schema.json"
+FINISH_PENDING_SCHEMA_VERSION = 1
+
+
+def build_pending_report(
+    *, requested_version: str, tooling_sha: str, error: NotReadyError
+) -> dict:
+    """Build the machine-readable pending report for a ``finish plan`` run
+    that could not complete because one or more packages are not yet
+    listed on NuGet.org.
+
+    Unlike :func:`build_finish_plan`'s successful output, this carries no
+    ``release``/``receipt``/``tag``/``draft`` shape at all: a
+    :class:`~release_common.NotReadyError` can be raised before the source
+    commit (and therefore the release identity) is even known, so there is
+    nothing for those fields to describe yet. ``nextAction`` is the literal
+    string ``"pending"`` -- distinct from every value the successful
+    finish-plan schema allows -- so a thin workflow can branch on it
+    without first checking which schema the file matches.
+    """
+
+    return {
+        "schemaVersion": FINISH_PENDING_SCHEMA_VERSION,
+        "operation": "finish-plan-pending",
+        "generatedAt": utcnow_iso(),
+        "toolingSha": tooling_sha,
+        "nextAction": "pending",
+        "requestedVersion": requested_version,
+        "missingPackages": list(error.missing),
+        "elapsedSeconds": error.elapsed_seconds,
+        "deadlineSeconds": error.deadline_seconds,
+        "message": str(error),
+    }
 
 
 def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> dict:
