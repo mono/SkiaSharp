@@ -5,6 +5,12 @@ provides: error types, a subprocess runner that never uses a shell, canonical
 JSON digesting, and JSON-schema validation helpers. Every other module in
 ``scripts/infra/release`` builds on top of these primitives so that behaviour
 stays deterministic and testable without touching the network.
+
+Schema validation is backed by :mod:`release_schema`, an in-repo,
+standard-library-only validator -- not the third-party ``jsonschema``
+package. ``scripts/infra/release`` has no pinned Python dependencies and no
+install step, so ``python3 scripts/infra/release/release.py ...`` must work
+unmodified on a stock runner with no ``pip install`` and no network access.
 """
 
 from __future__ import annotations
@@ -17,14 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Sequence
 
-try:
-    from jsonschema import Draft202012Validator
-except ImportError as exc:  # pragma: no cover - exercised only when missing
-    raise ImportError(
-        "the 'jsonschema' package is required by scripts/infra/release; "
-        "install it with 'pip install jsonschema'"
-    ) from exc
-
+import release_schema
 
 SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
 
@@ -189,13 +188,9 @@ def load_schema(name: str) -> dict:
 
 def validate_against_schema(instance: dict, schema_name: str) -> None:
     schema = load_schema(schema_name)
-    validator = Draft202012Validator(schema)
-    errors = sorted(validator.iter_errors(instance), key=lambda e: list(e.absolute_path))
-    if errors:
-        details = "; ".join(
-            f"{'.'.join(str(p) for p in error.absolute_path) or '(root)'}: {error.message}"
-            for error in errors
-        )
+    issues = release_schema.validate(instance, schema)
+    if issues:
+        details = "; ".join(f"{issue.formatted_path()}: {issue.message}" for issue in issues)
         raise ValidationError(f"plan failed schema validation ({schema_name}): {details}")
 
 
