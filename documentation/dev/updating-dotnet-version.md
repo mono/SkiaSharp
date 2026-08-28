@@ -19,10 +19,10 @@ This checklist documents every file that needs updating when bumping the .NET SD
 ### 1. SDK & Workloads
 
 - [ ] **`global.json`** — Update `sdk.version` to the new SDK feature band (e.g., `10.0.100`). Use `"rollForward": "latestPatch"` to accept any patch version available on CI agents.
-- [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version`; Arcade 11 requires a .NET 10.0.2xx-or-later CLI for `dotnet package download`.
-- [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. VS MSBuild 17.x requires .NET 10.0.1xx; SDK 10.0.2xx+ requires MSBuild 18. Install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
+- [ ] **`global.json` `tools.dotnet`** — Keep this equal to `sdk.version` and verify the selected SDK satisfies Arcade's CLI requirements for `dotnet package download`.
+- [ ] **`native/winui/global.json` and `DOTNET_VERSION_WINUI`** — Keep these on the latest SDK feature band supported by the Visual Studio MSBuild used for the C++/WinRT projection. Verify the current SDK/MSBuild compatibility matrix and install this SDK side-by-side in the WinUI native jobs instead of forcing the repository SDK onto them.
 - [ ] **`scripts/azure-templates-variables.yml`** — Update `DOTNET_VERSION` to the SDK patch and pin `DOTNET_WORKLOAD_VERSION` to a compatible workload set. The workload set may intentionally lag the SDK by whole feature bands when a newer set requires an unavailable Apple toolchain.
-- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. The current `10.0.202` workload set requires Xcode 26.3 and works on `Azure Pipelines` `macos-15`; the .NET SDK 10.0.4xx workload sets require Xcode 26.6, which is unavailable on that image. Keep native Apple builds on their separately pinned Xcode.
+- [ ] **Managed Apple pool and `XCODE_VERSION`** — Use an agent image containing the exact Xcode recommended by the workload set. Document any intentional cross-feature-band workload pin beside `DOTNET_WORKLOAD_VERSION`, including the unavailable toolchain that requires it. Keep native Apple builds on their separately pinned Xcode.
 - [ ] **`scripts/infra/managed/install-dotnet-workloads.ps1`** — Review the workload installation flow and Tizen manifest source (Samsung may update it independently).
 
 > **Note:** Do NOT set `workloadVersion` in `global.json`. Native builds skip SDK install but still read global.json, causing failures if the pinned workload version isn't pre-installed.
@@ -38,7 +38,7 @@ This checklist documents every file that needs updating when bumping the .NET SD
   - Update **SupportedOSPlatformVersion** minimums (check workload manifests for new minimums)
   - Sections to update: BasicTargetFrameworks, PlatformTargetFrameworks, Windows, MAUI, MAUI App, Uno, DefineConstants
 
-> **SupportedOSPlatformVersion:** Each .NET version may raise the minimum supported OS versions. For .NET 10: iOS/tvOS minimum is 12.2, MacCatalyst minimum is 15.0, macOS minimum is 12.0. These are enforced by the workloads and will cause build errors if too low.
+> **SupportedOSPlatformVersion:** Each .NET version may raise the minimum supported OS versions. Read the installed workload manifests and update the values in `source/SkiaSharp.Build.props`; workload validation fails when these values are too low.
 
 ### 3. NativeAssets Platform Projects (14 files)
 
@@ -119,7 +119,7 @@ All use `$(TFMPrevious)-platform$(TPVPrevious);$(TFMCurrent)-platform$(TPVCurren
   - The generated Dockerfile string in `tests/SkiaSharp.Tests.Integration/Tests/LinuxConsoleTests.cs`
 - [ ] Verify every complete MCR tag exists with `docker manifest inspect mcr.microsoft.com/dotnet/sdk:<tag>`. Verify SDKs installed by `dotnet-install.sh` have published artifacts for every host architecture used by the image.
 
-Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating `10.0` SDK tags intentionally validate the current .NET 10 servicing release.
+Images that run `dotnet` against the checked-out repository must provide an SDK compatible with the root `global.json`; this includes the local docs image, CI container-test images, and `tests/Dockerfile.linux`. The sample Dockerfiles and generated Linux integration-test project build isolated contexts without the repository `global.json`, so their floating current-major SDK tags intentionally validate the latest servicing release for `TFMCurrent`.
 
 Keep each distro/OS suffix unchanged when updating either kind of image. For example, an SDK bump should preserve suffixes such as `-noble`, `-alpine3.23`, `-azurelinux3.0`, and `-nanoserver-ltsc2022`. Runtime and ASP.NET base images are separate from the build SDK pin; do not change them as part of an SDK-only alignment unless the runtime itself is also being updated.
 

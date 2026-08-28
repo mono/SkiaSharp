@@ -32,10 +32,10 @@ iOS, Android, .NET MAUI, Xamarin, Xamarin.Forms, `SkiaSharp.Views.Maui.Controls`
 2. **Try Docker Linux.** Read `platform-docker-linux.md` — useful for bugs in the
    shared native layer.
 
-3. **Build-only test.** Even without a device, you can verify the project BUILDS:
+3. **Build-only test.** Even without a device, you can verify the project builds using
+   the reporter's platform TFM:
    ```bash
-   dotnet build -f net8.0-android   # Android
-   dotnet build -f net8.0-ios       # iOS (macOS only)
+   dotnet build -f {reporter_tfm}
    ```
    Build failures are valid reproductions if the reporter says "build fails."
 
@@ -63,11 +63,7 @@ Paste reporter's code in the event handler.
 ## Build & Run
 
 ```bash
-# Android emulator
-dotnet build -f net8.0-android -t:Run
-
-# iOS simulator (macOS only)
-dotnet build -f net8.0-ios -t:Run
+dotnet build -f {reporter_tfm} -t:Run
 ```
 
 ## Conclusion Mapping
@@ -97,15 +93,14 @@ dotnet build samples/Basic/Android/SkiaSharpSample/SkiaSharpSample.csproj
 # Mac Catalyst sample
 dotnet build samples/Basic/MacCatalyst/SkiaSharpSample/SkiaSharpSample.csproj
 
-# MAUI multi-platform sample
-dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net8.0-ios
-dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f net8.0-android
+# MAUI multi-platform sample: read its TargetFrameworks and select the current platform TFM
+dotnet build samples/Basic/Maui/SkiaSharpSample/SkiaSharpSample.csproj -f <current-platform-tfm>
 ```
 
 Build success alone is a useful data point. If a simulator/emulator is available, also run:
 ```bash
-dotnet build -f net8.0-ios -t:Run samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj
-dotnet build -f net8.0-android -t:Run samples/Basic/Android/SkiaSharpSample/SkiaSharpSample.csproj
+dotnet build samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj -t:Run
+dotnet build samples/Basic/Android/SkiaSharpSample/SkiaSharpSample.csproj -t:Run
 ```
 
 Temporarily modify the sample's drawing code to match the reporter's repro, then revert

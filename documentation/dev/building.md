@@ -19,7 +19,7 @@ This guide covers building SkiaSharp on Windows and macOS.
 
 Before building SkiaSharp, ensure you have:
 
-- **.NET 10 SDK** - The repository uses `global.json` to pin the SDK version
+- **.NET SDK pinned by the repository** - See `global.json` for the required version
 - **MAUI workload** - Required for mobile platform targets:
   ```bash
   dotnet workload install maui
@@ -48,7 +48,7 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 ### Dependencies
 
 **All Platforms:**
-- **.NET 10 SDK** - Pinned via `global.json`
+- **.NET SDK pinned by the repository** - See `global.json` for the required version
 - **MAUI workload** - `dotnet workload install maui`
 - **Cake .NET Tool** - `dotnet tool install -g cake.tool`
 
