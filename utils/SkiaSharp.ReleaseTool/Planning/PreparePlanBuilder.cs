@@ -71,8 +71,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 			var releaseRemoteState = await GetReleaseRemoteStateAsync(
 				identity,
 				baseSelection,
-				skiaSha,
-				requiresPackageBump,
 				cancellationToken).ConfigureAwait(false);
 			var skiaRemoteState = await GetSkiaRemoteStateAsync(
 				identity,
@@ -243,8 +241,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 		private async Task<RemoteState> GetReleaseRemoteStateAsync(
 			SkiaSharpReleaseIdentity identity,
 			BaseSelection baseSelection,
-			string skiaSha,
-			bool requiresPackageBump,
 			CancellationToken cancellationToken)
 		{
 			var remoteSha = await repository.RemoteShaAsync(
@@ -263,20 +259,14 @@ namespace SkiaSharp.ReleaseTool.Planning
 
 			await ValidateExistingReleaseBranchAsync(
 				identity,
-				baseSelection.Sha,
 				remoteSha,
-				skiaSha,
-				requiresPackageBump,
 				cancellationToken).ConfigureAwait(false);
 			return RemoteState.Matching;
 		}
 
 		private async Task ValidateExistingReleaseBranchAsync(
 			SkiaSharpReleaseIdentity identity,
-			string baseSha,
 			string remoteSha,
-			string skiaSha,
-			bool requiresPackageBump,
 			CancellationToken cancellationToken)
 		{
 			var state = await ReadVersionStateAsync(remoteSha, cancellationToken).ConfigureAwait(false);
@@ -289,33 +279,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 			{
 				throw new ConflictException(
 					$"existing release branch {identity.ReleaseBranch} has SkiaSharp version '{state.Skia}', expected '{identity.Numeric}'");
-			}
-
-			var subjects = await repository.CommitSubjectsFirstParentAsync(
-				$"{baseSha}..{remoteSha}",
-				cancellationToken).ConfigureAwait(false);
-			if (subjects.Count != 1 || subjects[0] != $"Bump the version to {identity.Raw}")
-				throw new ConflictException($"existing release branch {identity.ReleaseBranch} does not have exactly one expected release commit");
-
-			var message = await repository.CommitMessageAsync(remoteSha, cancellationToken).ConfigureAwait(false);
-			if (!message.Split('\n').Contains($"Release-Base: {baseSha}", StringComparer.Ordinal) ||
-				!message.Split('\n').Contains($"Release-Skia: {skiaSha}", StringComparer.Ordinal))
-			{
-				throw new ConflictException($"existing release branch {identity.ReleaseBranch} has invalid release commit trailers");
-			}
-
-			var actualPaths = await repository.ChangedPathsAsync(
-				baseSha,
-				remoteSha,
-				cancellationToken).ConfigureAwait(false);
-			var expectedPaths = requiresPackageBump
-				? new[] { VariablesPath, VersionsPath }
-				: new[] { VariablesPath };
-			if (!actualPaths.Order(StringComparer.Ordinal).SequenceEqual(
-				expectedPaths.Order(StringComparer.Ordinal),
-				StringComparer.Ordinal))
-			{
-				throw new ConflictException($"existing release branch {identity.ReleaseBranch} changes unexpected files");
 			}
 		}
 

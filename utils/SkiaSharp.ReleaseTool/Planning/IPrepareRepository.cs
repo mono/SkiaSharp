@@ -23,13 +23,5 @@ namespace SkiaSharp.ReleaseTool.Planning
 			string ancestor,
 			string descendant,
 			CancellationToken cancellationToken = default);
-		Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
-			string rangeSpec,
-			CancellationToken cancellationToken = default);
-		Task<string> CommitMessageAsync(string commit, CancellationToken cancellationToken = default);
-		Task<IReadOnlyList<string>> ChangedPathsAsync(
-			string from,
-			string to,
-			CancellationToken cancellationToken = default);
 	}
 }

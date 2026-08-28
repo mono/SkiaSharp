@@ -205,8 +205,10 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			}
 			PlanValidation.Require(
 				previous.Numeric == identity.Numeric &&
-				previous.CompareTo(identity) < 0,
-				"base.ref recovery release must precede the requested release on the same numeric version");
+				(previous.CompareTo(identity) < 0 ||
+					(previous.Raw == identity.Raw &&
+						plan.SkiaSharpRemoteState == RemoteState.Matching)),
+				"base.ref recovery release must precede or be the matching requested release on the same numeric version");
 		}
 
 		private static void ValidateStableBump(PreparePlan plan, SkiaSharpReleaseIdentity identity)

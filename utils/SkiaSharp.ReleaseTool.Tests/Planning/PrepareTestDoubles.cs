@@ -11,9 +11,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		private readonly Dictionary<string, string> gitlinks = new(StringComparer.Ordinal);
 		private readonly Dictionary<string, string> remoteBranches = new(StringComparer.Ordinal);
 		private readonly HashSet<(string Ancestor, string Descendant)> rejectedAncestry = [];
-		private readonly Dictionary<string, IReadOnlyList<string>> subjects = new(StringComparer.Ordinal);
-		private readonly Dictionary<string, string> messages = new(StringComparer.Ordinal);
-		private readonly Dictionary<string, IReadOnlyList<string>> paths = new(StringComparer.Ordinal);
 
 		public FakePrepareRepository(string root)
 		{
@@ -40,37 +37,15 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		public void AddRemoteRelease(
 			string branch,
 			string sha,
-			TestVersionState state,
-			string baseSha,
-			string skiaSha,
-			bool packageBump)
+			TestVersionState state)
 		{
 			remoteBranches[branch] = sha;
 			ReleaseBranchNames.Add(branch);
 			states[sha] = state;
-			subjects[$"{baseSha}..{sha}"] = [$"Bump the version to {branch["release/".Length..]}"];
-			messages[sha] =
-				$"Bump the version to {branch["release/".Length..]}\n\n" +
-				$"Release-Base: {baseSha}\nRelease-Skia: {skiaSha}";
-			paths[$"{baseSha}..{sha}"] = packageBump
-				? [PreparePlanBuilder.VariablesPath, PreparePlanBuilder.VersionsPath]
-				: [PreparePlanBuilder.VariablesPath];
 		}
 
 		public void RejectAncestry(string ancestor, string descendant) =>
 			rejectedAncestry.Add((ancestor, descendant));
-
-		public void SetCommitShape(
-			string baseSha,
-			string remoteSha,
-			IReadOnlyList<string> commitSubjects,
-			string message,
-			IReadOnlyList<string> changedPaths)
-		{
-			subjects[$"{baseSha}..{remoteSha}"] = commitSubjects;
-			messages[remoteSha] = message;
-			paths[$"{baseSha}..{remoteSha}"] = changedPaths;
-		}
 
 		public Task FetchAsync(
 			string remote = "origin",
@@ -148,31 +123,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			return Task.FromResult(!rejectedAncestry.Contains((ancestor, descendant)));
-		}
-
-		public Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
-			string rangeSpec,
-			CancellationToken cancellationToken = default)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			return Task.FromResult(subjects.GetValueOrDefault(rangeSpec) ?? []);
-		}
-
-		public Task<string> CommitMessageAsync(
-			string commit,
-			CancellationToken cancellationToken = default)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			return Task.FromResult(messages.GetValueOrDefault(commit) ?? "");
-		}
-
-		public Task<IReadOnlyList<string>> ChangedPathsAsync(
-			string from,
-			string to,
-			CancellationToken cancellationToken = default)
-		{
-			cancellationToken.ThrowIfCancellationRequested();
-			return Task.FromResult(paths.GetValueOrDefault($"{from}..{to}") ?? []);
 		}
 
 		private static string VersionsText(TestVersionState state)
