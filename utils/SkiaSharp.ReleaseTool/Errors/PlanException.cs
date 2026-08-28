@@ -1,9 +1,6 @@
 ﻿namespace SkiaSharp.ReleaseTool.Errors
 {
-	/// <summary>
-	/// A plan could not be constructed because inputs or state are invalid.
-	/// Mirrors Python's <c>release_common.PlanError</c>.
-	/// </summary>
+	/// <summary>A plan could not be constructed because inputs or state are invalid.</summary>
 	public sealed class PlanException : ReleaseToolException
 	{
 		public PlanException(string message)

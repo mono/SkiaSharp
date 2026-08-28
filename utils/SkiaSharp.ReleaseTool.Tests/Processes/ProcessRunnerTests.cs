@@ -1,118 +1,143 @@
-﻿using SkiaSharp.ReleaseTool.Errors;
+using System.Diagnostics;
+using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Processes;
 using Xunit;
 
 namespace SkiaSharp.ReleaseTool.Tests.Processes
 {
-	public class ProcessRunnerTests
+	public sealed class ProcessRunnerTests
 	{
-		// `sleep` on Windows requires a TTY (or errors on redirected
-		// stdin); `ping` is the well-known argv-only cross-platform
-		// stand-in that never needs a shell.
 		private static string[] SleepCommand(int seconds) => OperatingSystem.IsWindows()
 			? ["ping", "127.0.0.1", "-n", (seconds + 1).ToString()]
 			: ["sleep", seconds.ToString()];
 
 		[Fact]
-		public void Run_captures_stdout_and_succeeds()
+		public async Task Captures_machine_output()
 		{
-			var runner = new ProcessRunner();
-
-			var result = runner.Run(["git", "--version"], Environment.CurrentDirectory, cancellationToken: TestContext.Current.CancellationToken);
+			var result = await new ProcessRunner().RunAsync(
+				["git", "--version"],
+				Environment.CurrentDirectory,
+				cancellationToken: TestContext.Current.CancellationToken);
 
 			Assert.True(result.Success);
-			Assert.Equal(0, result.ExitCode);
 			Assert.Contains("git version", result.StandardOutput);
 		}
 
 		[Fact]
-		public void Run_with_checkExitCode_false_returns_failed_result_without_throwing()
+		public async Task Writes_standard_input_asynchronously()
 		{
-			var runner = new ProcessRunner();
-
-			var result = runner.Run(
-				["git", "not-a-real-git-subcommand"], Environment.CurrentDirectory,
-				checkExitCode: false, cancellationToken: TestContext.Current.CancellationToken);
-
-			Assert.False(result.Success);
-			Assert.NotEqual(0, result.ExitCode);
-		}
-
-		[Fact]
-		public void Run_with_checkExitCode_true_raises_ReleaseToolException_on_nonzero_exit()
-		{
-			var runner = new ProcessRunner();
-
-			var ex = Assert.Throws<ReleaseToolException>(
-				() => runner.Run(
-					["git", "not-a-real-git-subcommand"], Environment.CurrentDirectory,
-					cancellationToken: TestContext.Current.CancellationToken));
-
-			Assert.Contains("command failed", ex.Message);
-			Assert.Contains("not-a-real-git-subcommand", ex.Message);
-		}
-
-		[Fact]
-		public void Run_raises_clean_ReleaseToolException_on_timeout()
-		{
-			var runner = new ProcessRunner();
-
-			var ex = Assert.Throws<ReleaseToolException>(
-				() => runner.Run(
-					SleepCommand(30), Environment.CurrentDirectory, timeout: TimeSpan.FromSeconds(1),
-					cancellationToken: TestContext.Current.CancellationToken));
-
-			Assert.Matches("timed out after 1s", ex.Message);
-			// Must never leak (or wrap as) a raw framework exception type --
-			// exactly one exception type, ReleaseToolException, regardless
-			// of whether the command failed or timed out.
-			Assert.IsType<ReleaseToolException>(ex, exactMatch: true);
-		}
-
-		[Fact]
-		public void Run_honors_cancellation_distinctly_from_timeout()
-		{
-			var runner = new ProcessRunner();
-			using var cts = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
-			cts.CancelAfter(TimeSpan.FromMilliseconds(200));
-
-			Assert.Throws<OperationCanceledException>(
-				() => runner.Run(SleepCommand(30), Environment.CurrentDirectory, cancellationToken: cts.Token));
-		}
-
-		[Fact]
-		public void Run_throws_ArgumentException_for_empty_arguments()
-		{
-			var runner = new ProcessRunner();
-
-			Assert.Throws<ArgumentException>(
-				() => runner.Run([], Environment.CurrentDirectory, cancellationToken: TestContext.Current.CancellationToken));
-		}
-
-		[Fact]
-		public void RecordingProcessRunner_records_invocation_and_replays_response()
-		{
-			var runner = new RecordingProcessRunner();
-			runner.Enqueue(new ProcessRunResult(["git", "status"], 0, "clean\n", ""));
-
-			var result = runner.Run(
-				["git", "status"], "/repo", timeout: TimeSpan.FromSeconds(5),
+			var result = await new ProcessRunner().RunAsync(
+				["git", "hash-object", "--stdin"],
+				Environment.CurrentDirectory,
+				standardInput: "release input\n",
 				cancellationToken: TestContext.Current.CancellationToken);
 
-			Assert.Equal("clean\n", result.StandardOutput);
-			var invocation = Assert.Single(runner.Invocations);
-			Assert.Equal(["git", "status"], invocation.Arguments);
-			Assert.Equal("/repo", invocation.WorkingDirectory);
-			Assert.Equal(TimeSpan.FromSeconds(5), invocation.Timeout);
+			Assert.Equal(40, result.StandardOutput.Trim().Length);
 		}
 
 		[Fact]
-		public void RecordingProcessRunner_throws_when_no_response_queued()
+		public async Task Maps_nonzero_exit_to_release_tool_exception()
+		{
+			var runner = new ProcessRunner();
+
+			var uncheckedResult = await runner.RunAsync(
+				["git", "not-a-real-git-subcommand"],
+				Environment.CurrentDirectory,
+				checkExitCode: false,
+				cancellationToken: TestContext.Current.CancellationToken);
+			Assert.False(uncheckedResult.Success);
+
+			var exception = await Assert.ThrowsAsync<ReleaseToolException>(
+				() => runner.RunAsync(
+					["git", "not-a-real-git-subcommand"],
+					Environment.CurrentDirectory,
+					cancellationToken: TestContext.Current.CancellationToken));
+			Assert.Contains("command failed", exception.Message);
+		}
+
+		[Fact]
+		public async Task Timeout_covers_process_and_stream_draining()
+		{
+			var stopwatch = Stopwatch.StartNew();
+			var exception = await Assert.ThrowsAsync<ReleaseToolException>(
+				() => new ProcessRunner().RunAsync(
+					SleepCommand(30),
+					Environment.CurrentDirectory,
+					timeout: TimeSpan.FromMilliseconds(250),
+					cancellationToken: TestContext.Current.CancellationToken));
+
+			Assert.Contains("timed out", exception.Message);
+			Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(5));
+		}
+
+		[Fact]
+		public async Task Cancellation_kills_the_process_tree_and_remains_cancellation()
+		{
+			using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(
+				TestContext.Current.CancellationToken);
+			cancellation.CancelAfter(TimeSpan.FromMilliseconds(200));
+
+			await Assert.ThrowsAnyAsync<OperationCanceledException>(
+				() => new ProcessRunner().RunAsync(
+					SleepCommand(30),
+					Environment.CurrentDirectory,
+					cancellationToken: cancellation.Token));
+		}
+
+		[Fact]
+		public async Task Large_input_to_a_non_reader_is_bounded_by_timeout()
+		{
+			var input = new string('x', 4 * 1024 * 1024);
+			var stopwatch = Stopwatch.StartNew();
+
+			await Assert.ThrowsAsync<ReleaseToolException>(
+				() => new ProcessRunner().RunAsync(
+					SleepCommand(30),
+					Environment.CurrentDirectory,
+					timeout: TimeSpan.FromMilliseconds(300),
+					standardInput: input,
+					cancellationToken: TestContext.Current.CancellationToken));
+
+			Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(5));
+		}
+
+		[Fact]
+		public async Task Recording_runner_honors_check_exit_code()
 		{
 			var runner = new RecordingProcessRunner();
+			var failure = new ProcessRunResult(["git", "status"], 128, "", "fatal");
+			runner.Enqueue(failure);
+			await Assert.ThrowsAsync<ReleaseToolException>(
+				() => runner.RunAsync(
+					["git", "status"],
+					"/repo",
+					cancellationToken: TestContext.Current.CancellationToken));
 
-			Assert.Throws<InvalidOperationException>(
-				() => runner.Run(["git", "status"], "/repo", cancellationToken: TestContext.Current.CancellationToken));
+			runner.Enqueue(failure);
+			var result = await runner.RunAsync(
+				["git", "status"],
+				"/repo",
+				checkExitCode: false,
+				cancellationToken: TestContext.Current.CancellationToken);
+			Assert.Equal(128, result.ExitCode);
+			Assert.False(Assert.Single(runner.Invocations.Skip(1)).CheckExitCode);
+		}
+
+		[Fact]
+		public async Task Rejects_empty_arguments_and_nonpositive_timeout()
+		{
+			var runner = new ProcessRunner();
+			await Assert.ThrowsAsync<ArgumentException>(
+				() => runner.RunAsync(
+					[],
+					Environment.CurrentDirectory,
+					cancellationToken: TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+				() => runner.RunAsync(
+					["git", "--version"],
+					Environment.CurrentDirectory,
+					timeout: TimeSpan.Zero,
+					cancellationToken: TestContext.Current.CancellationToken));
 		}
 	}
 }

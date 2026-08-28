@@ -2,10 +2,7 @@
 
 namespace SkiaSharp.ReleaseTool.Git
 {
-	/// <summary>
-	/// A Git operation failed or returned an unexpected result. Mirrors
-	/// Python's <c>release_git.GitError</c>.
-	/// </summary>
+	/// <summary>A Git operation failed or returned unexpected machine output.</summary>
 	public sealed class GitException : ReleaseToolException
 	{
 		public GitException(string message)

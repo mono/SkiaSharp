@@ -1,13 +1,7 @@
-﻿using SkiaSharp.ReleaseTool.Processes;
+using SkiaSharp.ReleaseTool.Processes;
 
 namespace SkiaSharp.ReleaseTool.Tests.Processes
 {
-	/// <summary>
-	/// A recording, in-memory <see cref="IProcessRunner"/> fake: never
-	/// spawns a real process. Records every invocation (for argv-shape
-	/// assertions in higher-layer tests, e.g. <c>GitRepository</c>) and
-	/// replays pre-programmed responses in call order.
-	/// </summary>
 	internal sealed class RecordingProcessRunner : IProcessRunner
 	{
 		private readonly Queue<Func<RecordedInvocation, ProcessRunResult>> responses = new();
@@ -18,7 +12,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Processes
 
 		public void Enqueue(Func<RecordedInvocation, ProcessRunResult> handler) => responses.Enqueue(handler);
 
-		public ProcessRunResult Run(
+		public Task<ProcessRunResult> RunAsync(
 			IReadOnlyList<string> arguments,
 			string workingDirectory,
 			bool checkExitCode = true,
@@ -26,14 +20,19 @@ namespace SkiaSharp.ReleaseTool.Tests.Processes
 			string? standardInput = null,
 			CancellationToken cancellationToken = default)
 		{
+			cancellationToken.ThrowIfCancellationRequested();
 			var invocation = new RecordedInvocation(
 				[.. arguments], workingDirectory, checkExitCode, timeout, standardInput);
 			Invocations.Add(invocation);
-
 			if (responses.Count == 0)
+			{
 				throw new InvalidOperationException(
-					$"RecordingProcessRunner has no more responses queued for: {string.Join(' ', arguments)}");
-			return responses.Dequeue()(invocation);
+					$"RecordingProcessRunner has no response for: {string.Join(' ', arguments)}");
+			}
+
+			var result = responses.Dequeue()(invocation);
+			ProcessRunner.EnsureSuccess(result, checkExitCode);
+			return Task.FromResult(result);
 		}
 	}
 

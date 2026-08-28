@@ -13,6 +13,9 @@ on:
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
       - "scripts/infra/release/**"
+      - "utils/SkiaSharp.ReleaseTool/**"
+      - "utils/SkiaSharp.ReleaseTool.Tests/**"
+      - "utils/Utils.slnx"
   push:
     branches: [main]
     paths:
@@ -26,6 +29,9 @@ on:
       - "scripts/infra/docs/release-notes-schema/**"
       - "scripts/infra/docs/release_notes/**"
       - "scripts/infra/release/**"
+      - "utils/SkiaSharp.ReleaseTool/**"
+      - "utils/SkiaSharp.ReleaseTool.Tests/**"
+      - "utils/Utils.slnx"
   workflow_dispatch:
 
 permissions:
@@ -42,6 +48,20 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore C# release tooling
+        run: dotnet restore utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --locked-mode
+
+      - name: Build C# release tooling
+        run: dotnet build utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-restore
+
+      - name: Test C# release tooling
+        run: dotnet test utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-build --no-restore
 
       - name: Run release automation tests
         run: python3 -m unittest discover -s scripts/infra/release/tests -p 'test_*.py'

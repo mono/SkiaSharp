@@ -1,73 +1,162 @@
-﻿using System.Text.RegularExpressions;
+using NuGet.Versioning;
 using SkiaSharp.ReleaseTool.Errors;
 
 namespace SkiaSharp.ReleaseTool.Model
 {
-	/// <summary>
-	/// Read-only extraction of the handful of <c>scripts/VERSIONS.txt</c>
-	/// lines the release tooling cares about. Ported from the regexes in
-	/// Python's <c>release_prepare.py</c> (<c>_SKIA_NUGET_RE</c>,
-	/// <c>_HARFBUZZ_NUGET_RE</c>) and <c>release_milestones.py</c>
-	/// (<c>_SKIASHARP_NUGET_MAJOR_RE</c>, <c>_LIBSKIASHARP_MILESTONE_RE</c>).
-	/// Never a general-purpose VERSIONS.txt parser: only these four
-	/// specific, known line shapes are recognised.
-	/// </summary>
-	public static partial class VersionsTxt
+	public sealed record VersionsDocument(
+		NuGetVersion SkiaSharp,
+		NuGetVersion HarfBuzzSharp,
+		NuGetVersion SkiaSharpFile,
+		NuGetVersion HarfBuzzSharpFile,
+		int SkiaSharpComponentCount,
+		int HarfBuzzSharpComponentCount,
+		int SkiaSharpNugetRows,
+		int HarfBuzzSharpNugetRows);
+
+	public static class VersionsTxt
 	{
-		[GeneratedRegex(@"^SkiaSharp\s+nuget\s+(\S+)", RegexOptions.Multiline)]
-		private static partial Regex SkiaSharpNugetLine();
-
-		[GeneratedRegex(@"^HarfBuzzSharp\s+nuget\s+(\S+)", RegexOptions.Multiline)]
-		private static partial Regex HarfBuzzSharpNugetLine();
-
-		[GeneratedRegex(@"^SkiaSharp\s+nuget\s+(\d+)\.", RegexOptions.Multiline)]
-		private static partial Regex SkiaSharpNugetMajorLine();
-
-		[GeneratedRegex(@"^libSkiaSharp\s+milestone\s+(\d+)\s*$", RegexOptions.Multiline)]
-		private static partial Regex LibSkiaSharpMilestoneLine();
-
-		public static string ParseSkiaSharpNugetVersion(string versionsText)
+		public static VersionsDocument Parse(string versionsText)
 		{
-			if (!TryParseSkiaSharpNugetVersion(versionsText, out var value))
-				throw new PlanException("scripts/VERSIONS.txt has no 'SkiaSharp nuget X.Y.Z' line");
-			return value;
+			var seenRows = new HashSet<string>(StringComparer.Ordinal);
+			var skiaVersions = new List<NuGetVersion>();
+			var harfBuzzVersions = new List<NuGetVersion>();
+			NuGetVersion? skiaRoot = null;
+			NuGetVersion? harfBuzzRoot = null;
+			NuGetVersion? skiaFile = null;
+			NuGetVersion? harfBuzzFile = null;
+			var skiaComponentCount = 0;
+			var harfBuzzComponentCount = 0;
+
+			foreach (var line in TextFileLines.Split(versionsText))
+			{
+				var columns = TextFileLines.Columns(line.Content);
+				if (columns.Length < 3)
+					continue;
+
+				var package = columns[0];
+				var kind = columns[1];
+				if (kind == "nuget" &&
+					(package.StartsWith("SkiaSharp", StringComparison.Ordinal) ||
+					 package.StartsWith("HarfBuzzSharp", StringComparison.Ordinal)))
+				{
+					RequireUnique(seenRows, $"{package}\0{kind}", $"{package} {kind}");
+					var version = ReleaseVersionPolicy.ParseStableVersion(
+						columns[2], $"{package} nuget version", 3, 4);
+					if (package.StartsWith("SkiaSharp", StringComparison.Ordinal))
+					{
+						skiaVersions.Add(version);
+						if (package == "SkiaSharp")
+						{
+							skiaRoot = version;
+							ReleaseVersionPolicy.TryGetNumericParts(columns[2], out var parts);
+							skiaComponentCount = parts.Length;
+						}
+					}
+					else
+					{
+						harfBuzzVersions.Add(version);
+						if (package == "HarfBuzzSharp")
+						{
+							harfBuzzRoot = version;
+							ReleaseVersionPolicy.TryGetNumericParts(columns[2], out var parts);
+							harfBuzzComponentCount = parts.Length;
+						}
+					}
+				}
+				else if (kind == "file" && package is "SkiaSharp" or "HarfBuzzSharp")
+				{
+					RequireUnique(seenRows, $"{package}\0{kind}", $"{package} {kind}");
+					var version = ReleaseVersionPolicy.ParseStableVersion(
+						columns[2], $"{package} file version", 3, 4);
+					if (package == "SkiaSharp")
+						skiaFile = version;
+					else
+						harfBuzzFile = version;
+				}
+			}
+
+			if (skiaRoot is null || harfBuzzRoot is null || skiaFile is null || harfBuzzFile is null)
+				throw new PlanException("scripts/VERSIONS.txt is missing a required root nuget or file row");
+			RequireConsistent(skiaVersions, skiaRoot, "SkiaSharp nuget");
+			RequireConsistent(harfBuzzVersions, harfBuzzRoot, "HarfBuzzSharp nuget");
+
+			var expectedSkiaFile = skiaRoot.Version.Revision < 0
+				? new Version(skiaRoot.Major, skiaRoot.Minor, skiaRoot.Patch, 0)
+				: skiaRoot.Version;
+			if (!Equals(skiaFile.Version, expectedSkiaFile))
+				throw new PlanException("SkiaSharp file version does not match its nuget version");
+			if (!Equals(harfBuzzFile.Version, harfBuzzRoot.Version))
+				throw new PlanException("HarfBuzzSharp file version does not match its nuget version");
+
+			return new VersionsDocument(
+				skiaRoot,
+				harfBuzzRoot,
+				skiaFile,
+				harfBuzzFile,
+				skiaComponentCount,
+				harfBuzzComponentCount,
+				skiaVersions.Count,
+				harfBuzzVersions.Count);
 		}
 
-		public static string ParseHarfBuzzSharpNugetVersion(string versionsText)
-		{
-			if (!TryParseHarfBuzzSharpNugetVersion(versionsText, out var value))
-				throw new PlanException("scripts/VERSIONS.txt has no 'HarfBuzzSharp nuget X' line");
-			return value;
-		}
+		public static NuGetVersion ParseSkiaSharpNugetVersion(string versionsText) =>
+			Parse(versionsText).SkiaSharp;
 
-		internal static bool TryParseSkiaSharpNugetVersion(string versionsText, out string value)
-		{
-			var match = SkiaSharpNugetLine().Match(versionsText);
-			value = match.Success ? match.Groups[1].Value : "";
-			return match.Success;
-		}
+		public static NuGetVersion ParseHarfBuzzSharpNugetVersion(string versionsText) =>
+			Parse(versionsText).HarfBuzzSharp;
 
-		internal static bool TryParseHarfBuzzSharpNugetVersion(string versionsText, out string value)
-		{
-			var match = HarfBuzzSharpNugetLine().Match(versionsText);
-			value = match.Success ? match.Groups[1].Value : "";
-			return match.Success;
-		}
-
-		/// <summary>
-		/// Returns <c>(major, currentSkiaMilestone)</c> from
-		/// <c>scripts/VERSIONS.txt</c> -- e.g. major <c>4</c> from
-		/// <c>SkiaSharp nuget 4.152.0</c> and milestone <c>152</c> from
-		/// <c>libSkiaSharp milestone 152</c>.
-		/// </summary>
 		public static (int Major, int CurrentSkiaMilestone) ParseCurrentMajorAndMilestone(string versionsText)
 		{
-			var majorMatch = SkiaSharpNugetMajorLine().Match(versionsText);
-			var milestoneMatch = LibSkiaSharpMilestoneLine().Match(versionsText);
-			if (!majorMatch.Success || !milestoneMatch.Success)
-				throw new PlanException(
-					"scripts/VERSIONS.txt has no 'SkiaSharp nuget X.Y.Z' or 'libSkiaSharp milestone N' line");
-			return (int.Parse(majorMatch.Groups[1].Value), int.Parse(milestoneMatch.Groups[1].Value));
+			var versions = Parse(versionsText);
+			var milestones = TextFileLines.Split(versionsText)
+				.Select(static line => TextFileLines.Columns(line.Content))
+				.Where(static columns =>
+					columns.Length >= 3 &&
+					columns[0] == "libSkiaSharp" &&
+					columns[1] == "milestone")
+				.ToArray();
+			if (milestones.Length != 1 ||
+				!int.TryParse(milestones[0][2], out var milestone) ||
+				milestone < 0)
+			{
+				throw new PlanException("scripts/VERSIONS.txt must contain exactly one valid libSkiaSharp milestone row");
+			}
+			return (versions.SkiaSharp.Major, milestone);
+		}
+
+		internal static bool IsFamilyNugetRow(string line, string family)
+		{
+			var columns = TextFileLines.Columns(line);
+			return columns.Length >= 3 &&
+				columns[0].StartsWith(family, StringComparison.Ordinal) &&
+				columns[1] == "nuget";
+		}
+
+		internal static bool IsRootFileRow(string line, string family)
+		{
+			var columns = TextFileLines.Columns(line);
+			return columns.Length >= 3 && columns[0] == family && columns[1] == "file";
+		}
+
+		private static void RequireUnique(
+			HashSet<string> rows,
+			string key,
+			string description)
+		{
+			if (!rows.Add(key))
+				throw new PlanException($"scripts/VERSIONS.txt contains duplicate {description} rows");
+		}
+
+		private static void RequireConsistent(
+			IReadOnlyList<NuGetVersion> versions,
+			NuGetVersion expected,
+			string description)
+		{
+			if (versions.Count == 0 ||
+				versions.Any(version => !VersionComparer.VersionRelease.Equals(version, expected)))
+			{
+				throw new PlanException($"scripts/VERSIONS.txt has inconsistent {description} versions");
+			}
 		}
 	}
 }

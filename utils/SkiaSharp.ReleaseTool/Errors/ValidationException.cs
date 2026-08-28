@@ -1,9 +1,6 @@
 ﻿namespace SkiaSharp.ReleaseTool.Errors
 {
-	/// <summary>
-	/// A plan or a plan file failed schema, shape, or digest validation.
-	/// Mirrors Python's <c>release_common.ValidationError</c>.
-	/// </summary>
+	/// <summary>A plan or plan file failed shape or semantic validation.</summary>
 	public sealed class ValidationException : ReleaseToolException
 	{
 		public ValidationException(string message)
