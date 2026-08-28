@@ -76,6 +76,24 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			return Task.FromResult(refs[reference]);
 		}
 
+		public Task<bool> CommitExistsAsync(
+			string commit,
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			return Task.FromResult(states.ContainsKey(commit));
+		}
+
+		public Task<IReadOnlyDictionary<string, string>> RemoteTagsAsync(
+			string remote = "origin",
+			string pattern = "refs/tags/*",
+			CancellationToken cancellationToken = default)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			return Task.FromResult<IReadOnlyDictionary<string, string>>(
+				new Dictionary<string, string>(StringComparer.Ordinal));
+		}
+
 		public Task<string> ReadRefFileAsync(
 			string reference,
 			string path,

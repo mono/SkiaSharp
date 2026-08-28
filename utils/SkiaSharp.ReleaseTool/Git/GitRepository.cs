@@ -82,6 +82,18 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ParseSha(ParseSingleLine(result.StandardOutput, "resolved ref"), "resolved ref");
 		}
 
+		public async Task<bool> CommitExistsAsync(
+			string commit,
+			CancellationToken cancellationToken = default)
+		{
+			_ = ParseSha(commit, "commit");
+			var result = await GitAsync(
+				["rev-parse", "--verify", "--quiet", $"{commit}^{{commit}}"],
+				check: false,
+				cancellationToken: cancellationToken).ConfigureAwait(false);
+			return ExpectedBooleanExit(result, "rev-parse --verify --quiet");
+		}
+
 		public async Task<string> ReadRefFileAsync(
 			string reference,
 			string path,

@@ -1,10 +1,13 @@
 using System.CommandLine;
 using System.Text.Json;
+using SkiaSharp.ReleaseTool.Cli;
 using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
+using SkiaSharp.ReleaseTool.Finishing;
 using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Json;
 using SkiaSharp.ReleaseTool.Model;
+using SkiaSharp.ReleaseTool.NuGet;
 using SkiaSharp.ReleaseTool.Planning;
 
 namespace SkiaSharp.ReleaseTool
@@ -182,6 +185,7 @@ namespace SkiaSharp.ReleaseTool
 			var root = new RootCommand("SkiaSharp release automation CLI");
 			root.Options.Add(repoOption);
 			root.Subcommands.Add(prepareCommand);
+			root.Subcommands.Add(FinishPlanCommand.Create(repoOption, environment));
 			return await root.Parse(args).InvokeAsync().ConfigureAwait(false);
 		}
 	}
@@ -196,6 +200,10 @@ namespace SkiaSharp.ReleaseTool
 			string? path,
 			CancellationToken cancellationToken);
 		IPrepareGitHubClient CreateGitHubClient();
+		IFinishGitHubClient CreateFinishGitHubClient() =>
+			throw new NotSupportedException();
+		IPublicReceiptVerifier CreatePublicReceiptVerifier() =>
+			throw new NotSupportedException();
 	}
 
 	internal sealed class ReleaseCommandEnvironment : IReleaseCommandEnvironment
@@ -213,5 +221,13 @@ namespace SkiaSharp.ReleaseTool
 				cancellationToken: cancellationToken).ConfigureAwait(false);
 
 		public IPrepareGitHubClient CreateGitHubClient() => new OctokitPrepareGitHubClient();
+
+		public IFinishGitHubClient CreateFinishGitHubClient() =>
+			new OctokitFinishGitHubClient();
+
+		public IPublicReceiptVerifier CreatePublicReceiptVerifier() =>
+			new PublicReceiptVerifier(
+				new NuGetOrgPackageSource(),
+				new NuGetPackageSignatureVerifier());
 	}
 }

@@ -7,6 +7,7 @@ namespace SkiaSharp.ReleaseTool.Git
 		Task FetchAsync(string remote = "origin", CancellationToken cancellationToken = default);
 		Task<bool> RefExistsAsync(string reference, CancellationToken cancellationToken = default);
 		Task<string> ResolveAsync(string reference, CancellationToken cancellationToken = default);
+		Task<bool> CommitExistsAsync(string commit, CancellationToken cancellationToken = default);
 		Task<string> ReadRefFileAsync(string reference, string path, CancellationToken cancellationToken = default);
 		Task<string> ReadGitlinkAsync(string reference, string submodulePath, CancellationToken cancellationToken = default);
 		Task<string?> RemoteShaAsync(string branch, string remote = "origin", CancellationToken cancellationToken = default);

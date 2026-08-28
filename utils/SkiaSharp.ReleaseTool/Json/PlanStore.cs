@@ -18,6 +18,16 @@ namespace SkiaSharp.ReleaseTool.Json
 				ReleaseJsonContext.Strict.PrepareApplyResult,
 				PrepareApplyResultValidator.Validate);
 
+		public static void Write(string path, FinishPlan plan) =>
+			Write(path, plan, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate);
+
+		public static void Write(string path, FinishPendingReport report) =>
+			Write(
+				path,
+				report,
+				ReleaseJsonContext.Strict.FinishPendingReport,
+				FinishPendingReportValidator.Validate);
+
 		public static PreparePlan ReadPrepare(string path, Guid expectedPlanId) =>
 			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
 

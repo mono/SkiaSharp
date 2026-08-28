@@ -7,6 +7,77 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		[JsonStringEnumMemberName("prepare")]
 		Prepare,
 
+		[JsonStringEnumMemberName("finish")]
+		Finish,
+	}
+
+	public enum FinishPendingOperation
+	{
+		[JsonStringEnumMemberName("finish-plan-pending")]
+		FinishPlanPending,
+	}
+
+	public enum FinishNextAction
+	{
+		[JsonStringEnumMemberName("create-draft")]
+		CreateDraft,
+
+		[JsonStringEnumMemberName("plan-publication")]
+		PlanPublication,
+
+		[JsonStringEnumMemberName("closeout")]
+		Closeout,
+	}
+
+	public enum PendingNextAction
+	{
+		[JsonStringEnumMemberName("pending")]
+		Pending,
+	}
+
+	public enum FinishState
+	{
+		[JsonStringEnumMemberName("done")]
+		Done,
+
+		[JsonStringEnumMemberName("pending")]
+		Pending,
+	}
+
+	public enum ManagedMarkerState
+	{
+		[JsonStringEnumMemberName("none")]
+		None,
+
+		[JsonStringEnumMemberName("complete")]
+		Complete,
+	}
+
+	public enum FinishOperationId
+	{
+		[JsonStringEnumMemberName("create-tag")]
+		CreateTag,
+
+		[JsonStringEnumMemberName("create-draft")]
+		CreateDraft,
+
+		[JsonStringEnumMemberName("publish-release")]
+		PublishRelease,
+
+		[JsonStringEnumMemberName("closeout")]
+		Closeout,
+	}
+
+	public enum FinishOperationKind
+	{
+		[JsonStringEnumMemberName("git-tag")]
+		GitTag,
+
+		[JsonStringEnumMemberName("github-release")]
+		GitHubRelease,
+
+		[JsonStringEnumMemberName("release-closeout")]
+		ReleaseCloseout,
 	}
 
 	public enum PrepareNextAction
