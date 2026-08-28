@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import gzip
+import http.server
 import io
+import json
 import sys
+import threading
 import unittest
 import zipfile
 from pathlib import Path
@@ -73,8 +77,11 @@ def catalog_entry_for(nupkg_bytes: bytes, *, package_id: str, version: str, list
 
     if repository is None:
         # Derive the default from the nupkg's own embedded nuspec so the
-        # catalog entry and nuspec agree unless a test deliberately passes a
-        # conflicting ``repository`` to simulate catalog/nuspec disagreement.
+        # catalog entry's repository field is realistic by default; pass an
+        # explicit ``repository`` (including ``""``, matching real
+        # NuGet.org catalog leaves for some already-published versions) to
+        # simulate the catalog's repository field being absent/unreliable,
+        # since it is never cross-checked against the nuspec any more.
         embedded = nuget.parse_nuspec(nupkg_bytes)
         repository = {
             "type": embedded.repository.type,
@@ -205,6 +212,30 @@ class CatalogEntryValidationTests(unittest.TestCase):
         )
         nuget.verify_catalog_entry(harfbuzz_entry, package_id="HarfBuzzSharp", version="1.8.8.1")
 
+    def test_empty_string_repository_is_accepted(self):
+        # Real NuGet.org catalog leaves for some already-published versions
+        # (observed live for old SkiaSharp releases, e.g. 3.119.0) expose
+        # "repository" as an empty string even though the same package's
+        # nuspec has full repository metadata -- the catalog's repository
+        # field must never be required here; only the nuspec is
+        # authoritative for that (see verify_nuspec_repository).
+        entry = nuget.CatalogEntry(
+            id="SkiaSharp", version="3.119.0", listed=True, package_hash="abc",
+            package_hash_algorithm="SHA512", package_size=10,
+            dependency_groups=({"targetFramework": "net8.0", "dependencies": []},),
+            repository="",
+        )
+        nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.0")
+
+    def test_missing_repository_entirely_is_accepted(self):
+        entry = nuget.CatalogEntry(
+            id="SkiaSharp", version="3.119.0", listed=True, package_hash="abc",
+            package_hash_algorithm="SHA512", package_size=10,
+            dependency_groups=({"targetFramework": "net8.0", "dependencies": []},),
+            repository=None,
+        )
+        nuget.verify_catalog_entry(entry, package_id="SkiaSharp", version="3.119.0")
+
 
 class WaitForCatalogEntryTests(unittest.TestCase):
     def test_returns_immediately_when_already_listed(self):
@@ -304,64 +335,57 @@ class CollapseDependencyMinimumVersionTests(unittest.TestCase):
         self.assertEqual(nuget.collapse_dependency_minimum_version(groups, dependency_id="X"), "1.2.3")
 
 
-class RepositoryMetadataTests(unittest.TestCase):
-    def test_agreeing_metadata_is_accepted(self):
+class NuspecRepositoryVerificationTests(unittest.TestCase):
+    """verify_nuspec_repository is nuspec-only: the NuGet.org catalog's own
+    "repository" field is never consulted or cross-checked (see item 3 in
+    the follow-up review -- real catalog leaves for some already-published
+    versions expose it as an empty string even when the nuspec has full
+    metadata, so it cannot be a reliable cross-check source)."""
+
+    def test_valid_metadata_is_accepted(self):
         commit = "d" * 40
         nupkg = build_nupkg("SkiaSharp", "3.119.0", commit=commit, branch="release/3.119.0-preview.1")
         nuspec = nuget.parse_nuspec(nupkg)
-        result_commit, result_branch = nuget.verify_repository_metadata(
-            nuspec=nuspec,
-            catalog_repository={"type": "git", "commit": commit, "branch": "release/3.119.0-preview.1"},
-            package_id="SkiaSharp",
-            version="3.119.0",
+        result_commit, result_branch = nuget.verify_nuspec_repository(
+            nuspec, package_id="SkiaSharp", version="3.119.0"
         )
         self.assertEqual(result_commit, commit)
         self.assertEqual(result_branch, "release/3.119.0-preview.1")
 
     def test_rejects_non_git_repository_type(self):
-        nupkg = build_nupkg("SkiaSharp", "3.119.0")
-        nuspec = nuget.parse_nuspec(nupkg)
-        object.__setattr__(nuspec.repository, "type", "git")  # sanity: dataclass is frozen
+        raw = (
+            '<?xml version="1.0" encoding="utf-8"?>'
+            '<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">'
+            "<metadata><id>SkiaSharp</id><version>3.119.0</version>"
+            f'<repository type="svn" commit="{"a" * 40}" branch="release/3.119.0" '
+            'url="https://aka.ms/skiasharp-repo" />'
+            "</metadata></package>"
+        )
+        nuspec = nuget.parse_standalone_nuspec(raw.encode("utf-8"))
         with self.assertRaisesRegex(nuget.NuGetError, "not 'git'"):
-            nuget.verify_repository_metadata(
-                nuspec=nuspec,
-                catalog_repository={"type": "svn", "commit": "a" * 40, "branch": "release/3.119.0"},
-                package_id="SkiaSharp",
-                version="3.119.0",
-            )
+            nuget.verify_nuspec_repository(nuspec, package_id="SkiaSharp", version="3.119.0")
 
     def test_rejects_short_commit(self):
         nupkg = build_nupkg("SkiaSharp", "3.119.0", commit="abc123", branch="release/3.119.0")
         nuspec = nuget.parse_nuspec(nupkg)
         with self.assertRaisesRegex(nuget.NuGetError, "full SHA"):
-            nuget.verify_repository_metadata(
-                nuspec=nuspec,
-                catalog_repository={"type": "git", "commit": "abc123", "branch": "release/3.119.0"},
-                package_id="SkiaSharp",
-                version="3.119.0",
-            )
-
-    def test_rejects_nuspec_catalog_commit_disagreement(self):
-        nupkg = build_nupkg("SkiaSharp", "3.119.0", commit="a" * 40, branch="release/3.119.0")
-        nuspec = nuget.parse_nuspec(nupkg)
-        with self.assertRaisesRegex(nuget.NuGetError, "disagree"):
-            nuget.verify_repository_metadata(
-                nuspec=nuspec,
-                catalog_repository={"type": "git", "commit": "b" * 40, "branch": "release/3.119.0"},
-                package_id="SkiaSharp",
-                version="3.119.0",
-            )
+            nuget.verify_nuspec_repository(nuspec, package_id="SkiaSharp", version="3.119.0")
 
     def test_rejects_invalid_branch_grammar(self):
         nupkg = build_nupkg("SkiaSharp", "3.119.0", commit="a" * 40, branch="main")
         nuspec = nuget.parse_nuspec(nupkg)
         with self.assertRaisesRegex(nuget.NuGetError, "grammar"):
-            nuget.verify_repository_metadata(
-                nuspec=nuspec,
-                catalog_repository={"type": "git", "commit": "a" * 40, "branch": "main"},
-                package_id="SkiaSharp",
-                version="3.119.0",
-            )
+            nuget.verify_nuspec_repository(nuspec, package_id="SkiaSharp", version="3.119.0")
+
+    def test_does_not_reference_the_catalog_at_all(self):
+        # No catalog_repository parameter exists any more -- this is a
+        # signature/behavior check as much as a value check: passing only
+        # the nuspec must be enough to fully validate and extract identity.
+        import inspect
+
+        signature = inspect.signature(nuget.verify_nuspec_repository)
+        self.assertNotIn("catalog_repository", signature.parameters)
+        self.assertNotIn("catalog", signature.parameters)
 
 
 class VerifyAnchorHashTests(unittest.TestCase):
@@ -399,31 +423,61 @@ class VerifyPublicReceiptTests(unittest.TestCase):
         harfbuzzsharp_commit: str | None = None,
         harfbuzz_min_versions: dict[str, str] | None = None,
         extra_skiasharp_commit: str | None = None,
+        harfbuzz_wrapper_commit: str | None = None,
+        catalog_repository_override: object = "__unset__",
     ):
         harfbuzzsharp_commit = harfbuzzsharp_commit or skia_commit
         harfbuzz_min_versions = harfbuzz_min_versions or {"net8.0": harfbuzzsharp_version, "net9.0": harfbuzzsharp_version}
+
+        def _catalog_entry(nupkg_bytes, *, package_id, version):
+            if catalog_repository_override == "__unset__":
+                return None
+            return catalog_entry_for(
+                nupkg_bytes, package_id=package_id, version=version,
+                repository=catalog_repository_override,
+            )
+
         skiasharp_nupkg = build_nupkg("SkiaSharp", skiasharp_version, commit=skia_commit, branch=branch)
-        client.add("SkiaSharp", skiasharp_version, skiasharp_nupkg)
+        client.add(
+            "SkiaSharp", skiasharp_version, skiasharp_nupkg,
+            entry=_catalog_entry(skiasharp_nupkg, package_id="SkiaSharp", version=skiasharp_version),
+        )
 
         hbz_dep_groups = [(tfm, [("HarfBuzzSharp", version)]) for tfm, version in harfbuzz_min_versions.items()]
         harfbuzz_wrapper_nupkg = build_nupkg(
-            "SkiaSharp.HarfBuzz", skiasharp_version, commit=skia_commit, branch=branch,
+            "SkiaSharp.HarfBuzz", skiasharp_version,
+            commit=harfbuzz_wrapper_commit or skia_commit, branch=branch,
             dependency_groups=hbz_dep_groups,
         )
-        client.add("SkiaSharp.HarfBuzz", skiasharp_version, harfbuzz_wrapper_nupkg)
+        client.add(
+            "SkiaSharp.HarfBuzz", skiasharp_version, harfbuzz_wrapper_nupkg,
+            entry=_catalog_entry(harfbuzz_wrapper_nupkg, package_id="SkiaSharp.HarfBuzz", version=skiasharp_version),
+        )
 
         extra_commit = extra_skiasharp_commit or skia_commit
         extra_nupkg = build_nupkg("SkiaSharp.Extra", skiasharp_version, commit=extra_commit, branch=branch)
-        client.add("SkiaSharp.Extra", skiasharp_version, extra_nupkg)
+        client.add(
+            "SkiaSharp.Extra", skiasharp_version, extra_nupkg,
+            entry=_catalog_entry(extra_nupkg, package_id="SkiaSharp.Extra", version=skiasharp_version),
+        )
 
         harfbuzzsharp_nupkg = build_nupkg(
             "HarfBuzzSharp", harfbuzzsharp_version, commit=harfbuzzsharp_commit, branch=branch
         )
-        client.add("HarfBuzzSharp", harfbuzzsharp_version, harfbuzzsharp_nupkg)
+        client.add(
+            "HarfBuzzSharp", harfbuzzsharp_version, harfbuzzsharp_nupkg,
+            entry=_catalog_entry(harfbuzzsharp_nupkg, package_id="HarfBuzzSharp", version=harfbuzzsharp_version),
+        )
         harfbuzzsharp_native_nupkg = build_nupkg(
             "HarfBuzzSharp.NativeAssets.Android", harfbuzzsharp_version, commit=harfbuzzsharp_commit, branch=branch
         )
-        client.add("HarfBuzzSharp.NativeAssets.Android", harfbuzzsharp_version, harfbuzzsharp_native_nupkg)
+        client.add(
+            "HarfBuzzSharp.NativeAssets.Android", harfbuzzsharp_version, harfbuzzsharp_native_nupkg,
+            entry=_catalog_entry(
+                harfbuzzsharp_native_nupkg, package_id="HarfBuzzSharp.NativeAssets.Android",
+                version=harfbuzzsharp_version,
+            ),
+        )
 
     def _reader(self, *, commit: str, branch: str, skiasharp_base: str, preview_label: str, harfbuzz_base: str):
         reader = FakeVersionsFileReader()
@@ -510,6 +564,59 @@ class VerifyPublicReceiptTests(unittest.TestCase):
                     manifest=MANIFEST, download_dir=Path(tmp),
                     signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
                 )
+
+    def test_mismatched_harfbuzz_wrapper_anchor_commit_is_blocked(self):
+        # SkiaSharp.HarfBuzz is an anchor package within the SkiaSharp family
+        # (see MANIFEST); its own source-commit equality check must not be
+        # skipped just because it is downloaded/hash-verified like the
+        # other anchors.
+        import tempfile
+
+        commit = "a" * 40
+        other_commit = "c" * 40
+        branch = "release/3.119.0"
+        client = FakeNuGetClient()
+        self._seed_family(
+            client, skiasharp_version="3.119.0", skia_commit=commit, branch=branch,
+            harfbuzzsharp_version="1.8.8.1", harfbuzz_wrapper_commit=other_commit,
+        )
+        reader = self._reader(
+            commit=commit, branch=branch, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaisesRegex(nuget.NuGetError, "SkiaSharp.HarfBuzz.*embeds commit"):
+                nuget.verify_public_receipt(
+                    nuget=client, versions_reader=reader, requested_version="3.119.0",
+                    manifest=MANIFEST, download_dir=Path(tmp),
+                    signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
+                )
+
+    def test_empty_string_catalog_repository_is_accepted_when_nuspec_has_full_metadata(self):
+        # Real NuGet.org catalog leaves for some already-published versions
+        # (observed live for e.g. SkiaSharp 3.119.0) expose "repository" as
+        # an empty string on every package in the family even though every
+        # nuspec has full repository metadata; the whole receipt must still
+        # verify using the nuspec alone.
+        import tempfile
+
+        commit = "a" * 40
+        branch = "release/3.119.0"
+        client = FakeNuGetClient()
+        self._seed_family(
+            client, skiasharp_version="3.119.0", skia_commit=commit, branch=branch,
+            harfbuzzsharp_version="1.8.8.1", catalog_repository_override="",
+        )
+        reader = self._reader(
+            commit=commit, branch=branch, skiasharp_base="3.119.0", preview_label="stable", harfbuzz_base="1.8.8.1"
+        )
+        with tempfile.TemporaryDirectory() as tmp:
+            receipt = nuget.verify_public_receipt(
+                nuget=client, versions_reader=reader, requested_version="3.119.0",
+                manifest=MANIFEST, download_dir=Path(tmp),
+                signature_verifier=FakeSignatureVerifier(), fingerprints=("aa",),
+            )
+        self.assertEqual(receipt.source_commit, commit)
+        self.assertEqual(len(receipt.packages), 5)
 
     def test_reused_harfbuzzsharp_commit_from_earlier_release_is_allowed(self):
         import tempfile
@@ -906,6 +1013,241 @@ class LoadCertificatesValidationTests(unittest.TestCase):
             certificates = nuget.load_certificates(path)
             self.assertIsNone(certificates[0].valid_from)
             self.assertIsNone(certificates[0].valid_until)
+
+
+class _RegistrationHandler(http.server.BaseHTTPRequestHandler):
+    """Serves canned (optionally gzip-encoded) JSON/bytes responses.
+
+    Subclassed per-test (via ``type(...)``) so each test gets its own
+    isolated ``routes``/``gzip_paths`` class state instead of sharing one
+    global handler across the whole test module.
+    """
+
+    routes: dict[str, bytes] = {}
+    gzip_paths: set[str] = set()
+
+    def do_GET(self):  # noqa: N802 - http.server's required method name
+        body = self.routes.get(self.path)
+        if body is None:
+            self.send_response(404)
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        if self.path in self.gzip_paths:
+            self.send_header("Content-Encoding", "gzip")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format, *args):  # noqa: A002 - silence default stderr logging
+        pass
+
+
+class _LocalNuGetServer:
+    """A real local HTTP server standing in for nuget.org for one test.
+
+    Uses the standard library's own ``http.server`` (a real socket, a real
+    HTTP/1.1 response with real headers) so ``HttpNuGetClient`` is
+    exercised through an actual ``urllib.request.urlopen`` round trip --
+    the only way to prove gzip decompression genuinely works, since a
+    hand-built fake transport could trivially "pass" a broken
+    implementation by never actually gzip-encoding anything.
+    """
+
+    def __init__(self):
+        handler = type("_Handler", (_RegistrationHandler,), {"routes": {}, "gzip_paths": set()})
+        self.handler = handler
+        self.httpd = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.thread.start()
+
+    @property
+    def base_url(self) -> str:
+        return f"http://127.0.0.1:{self.httpd.server_port}"
+
+    def add_json(self, path: str, payload: object, *, gzip_encoded: bool) -> None:
+        raw = json.dumps(payload).encode("utf-8")
+        if gzip_encoded:
+            raw = gzip.compress(raw)
+            self.handler.gzip_paths.add(path)
+        self.handler.routes[path] = raw
+
+    def add_bytes(self, path: str, data: bytes) -> None:
+        self.handler.routes[path] = data
+
+    def shutdown(self) -> None:
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+class HttpNuGetClientRealTransportTests(unittest.TestCase):
+    """Item 1 (critical): registration5-gz-semver2 always compresses its
+    body; urllib.request never transparently decompresses it. These tests
+    run a real local HTTP server and a real HttpNuGetClient against it --
+    no mocked transport -- so a regression here (e.g. reverting to
+    ``response.read().decode("utf-8")`` without checking Content-Encoding)
+    fails with a genuine UnicodeDecodeError/JSONDecodeError, not a
+    trivially-satisfied fake.
+
+    Also covers item 2 (critical): the registration item's inlined
+    catalogEntry must always be dereferenced through its own "@id" to the
+    full catalog leaf, never trusted for packageHash/packageSize just
+    because it happens to carry "listed"."""
+
+    def setUp(self):
+        self.server = _LocalNuGetServer()
+        self.client = nuget.HttpNuGetClient(
+            registration_base=f"{self.server.base_url}/registration5-gz-semver2",
+            flat_container_base=f"{self.server.base_url}/v3-flatcontainer",
+        )
+
+    def tearDown(self):
+        self.server.shutdown()
+
+    def _leaf_payload(self, *, package_id: str, version: str, repository) -> dict:
+        return {
+            "@id": f"{self.server.base_url}/catalog0/data/2024.01.01/{package_id.lower()}.{version}.json",
+            "id": package_id,
+            "version": version,
+            "listed": True,
+            "packageHash": "YWJj",  # base64("abc"); value is never checked by this test
+            "packageHashAlgorithm": "SHA512",
+            "packageSize": 12345,
+            "dependencyGroups": [{"targetFramework": "net8.0", "dependencies": []}],
+            "repository": repository,
+        }
+
+    def test_decompresses_a_real_gzip_response_and_dereferences_the_leaf(self):
+        leaf_path = "/catalog0/data/2024.01.01/skiasharp.3.119.0.json"
+        leaf_url = f"{self.server.base_url}{leaf_path}"
+        index_path = "/registration5-gz-semver2/skiasharp/index.json"
+        # The real registration item's inlined catalogEntry has "listed"
+        # but never packageHash/packageSize/repository -- only the
+        # dereferenced leaf does. If get_catalog_entry ever stopped
+        # dereferencing (item 2's regression), this test would return an
+        # entry with an empty packageHash instead of failing outright, so
+        # the assertions below check the actual hash/size values.
+        self.server.add_json(
+            index_path,
+            {
+                "items": [
+                    {
+                        "items": [
+                            {
+                                "catalogEntry": {
+                                    "@id": leaf_url,
+                                    "id": "SkiaSharp",
+                                    "version": "3.119.0",
+                                    "listed": True,
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            gzip_encoded=True,
+        )
+        self.server.add_json(
+            leaf_path,
+            self._leaf_payload(
+                package_id="SkiaSharp", version="3.119.0",
+                repository={"type": "git", "commit": "a" * 40, "branch": "release/3.119.0"},
+            ),
+            gzip_encoded=True,
+        )
+
+        entry = self.client.get_catalog_entry("SkiaSharp", "3.119.0")
+
+        self.assertIsNotNone(entry)
+        self.assertTrue(entry.listed)
+        self.assertEqual(entry.package_hash, "YWJj")
+        self.assertEqual(entry.package_hash_algorithm, "SHA512")
+        self.assertEqual(entry.package_size, 12345)
+        self.assertEqual(entry.repository["commit"], "a" * 40)
+
+    def test_leaf_response_need_not_be_gzip_encoded(self):
+        # Defends against over-assuming: only the registration index/page
+        # responses are reliably gzip-compressed by nuget.org; a leaf
+        # dereference target must also work when served uncompressed.
+        leaf_path = "/catalog0/data/2024.01.01/skiasharp.3.119.0.json"
+        leaf_url = f"{self.server.base_url}{leaf_path}"
+        index_path = "/registration5-gz-semver2/skiasharp/index.json"
+        self.server.add_json(
+            index_path,
+            {"items": [{"items": [{"catalogEntry": {"@id": leaf_url, "version": "3.119.0", "listed": True}}]}]},
+            gzip_encoded=True,
+        )
+        self.server.add_json(
+            leaf_path,
+            self._leaf_payload(package_id="SkiaSharp", version="3.119.0", repository=""),
+            gzip_encoded=False,
+        )
+
+        entry = self.client.get_catalog_entry("SkiaSharp", "3.119.0")
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry.package_size, 12345)
+
+    def test_dereferences_a_paged_index(self):
+        # The real index.json can itself list "page" references (no
+        # "items" inlined) that must be fetched before scanning for the
+        # matching version.
+        leaf_path = "/catalog0/data/2024.01.01/skiasharp.3.119.0.json"
+        leaf_url = f"{self.server.base_url}{leaf_path}"
+        index_path = "/registration5-gz-semver2/skiasharp/index.json"
+        page_path = "/registration5-gz-semver2/skiasharp/page0.json"
+        page_url = f"{self.server.base_url}{page_path}"
+        self.server.add_json(index_path, {"items": [{"@id": page_url}]}, gzip_encoded=True)
+        self.server.add_json(
+            page_path,
+            {"items": [{"catalogEntry": {"@id": leaf_url, "version": "3.119.0", "listed": True}}]},
+            gzip_encoded=True,
+        )
+        self.server.add_json(
+            leaf_path,
+            self._leaf_payload(package_id="SkiaSharp", version="3.119.0", repository=""),
+            gzip_encoded=True,
+        )
+
+        entry = self.client.get_catalog_entry("SkiaSharp", "3.119.0")
+        self.assertIsNotNone(entry)
+        self.assertEqual(entry.package_size, 12345)
+
+    def test_returns_none_for_a_missing_package(self):
+        # No route registered at all for this package's index -> real 404.
+        self.assertIsNone(self.client.get_catalog_entry("DoesNotExist", "1.0.0"))
+
+    def test_returns_none_when_requested_version_is_absent(self):
+        leaf_url = f"{self.server.base_url}/unused.json"
+        index_path = "/registration5-gz-semver2/skiasharp/index.json"
+        self.server.add_json(
+            index_path,
+            {"items": [{"items": [{"catalogEntry": {"@id": leaf_url, "version": "9.9.9", "listed": True}}]}]},
+            gzip_encoded=True,
+        )
+        self.assertIsNone(self.client.get_catalog_entry("SkiaSharp", "3.119.0"))
+
+    def test_malformed_gzip_body_raises_explicit_nuget_error(self):
+        # Content-Encoding says gzip but the body is not valid gzip -- must
+        # surface as a clear NuGetError, not an unhandled exception.
+        index_path = "/registration5-gz-semver2/skiasharp/index.json"
+        self.server.add_bytes(index_path, b"not-actually-gzip")
+        self.server.handler.gzip_paths.add(index_path)
+        with self.assertRaisesRegex(nuget.NuGetError, "not valid gzip"):
+            self.client.get_catalog_entry("SkiaSharp", "3.119.0")
+
+    def test_download_package_and_get_nuspec_use_flat_container_base(self):
+        lower = "skiasharp"
+        nupkg_path = f"/v3-flatcontainer/{lower}/3.119.0/{lower}.3.119.0.nupkg"
+        nuspec_path = f"/v3-flatcontainer/{lower}/3.119.0/{lower}.nuspec"
+        self.server.add_bytes(nupkg_path, b"fake-nupkg-bytes")
+        self.server.add_bytes(nuspec_path, b"<package/>")
+
+        self.assertEqual(self.client.download_package("SkiaSharp", "3.119.0"), b"fake-nupkg-bytes")
+        self.assertEqual(self.client.get_nuspec("SkiaSharp", "3.119.0"), b"<package/>")
+
+    def test_get_nuspec_returns_none_for_404(self):
+        self.assertIsNone(self.client.get_nuspec("SkiaSharp", "9.9.9"))
 
 
 if __name__ == "__main__":

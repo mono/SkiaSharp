@@ -266,6 +266,30 @@ def validate_result_envelope(document: dict) -> None:
     validate_against_schema(document, RESULT_ENVELOPE_SCHEMA)
 
 
+def read_result_envelope(path: Path) -> dict:
+    """Load and schema-validate a previously *persisted* command-result file.
+
+    Used by any subcommand that consumes the output of an earlier step --
+    e.g. ``finish publish --publication`` reading the file a prior
+    ``finish plan-publication --output`` run wrote -- rather than a
+    schema-validated, digest-stamped plan. Unlike a plan, a result document
+    is not itself digested (it carries the digest of the plan it was
+    produced from, unchanged), so this checks the standardized
+    result-envelope shape only, not a digest.
+    """
+
+    if not path.is_file():
+        raise ValidationError(f"result file not found: {path}")
+    try:
+        document = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValidationError(f"result file is not valid JSON: {exc}") from exc
+    if not isinstance(document, dict):
+        raise ValidationError("result file must contain a JSON object")
+    validate_result_envelope(document)
+    return document
+
+
 def print_json(value: Any) -> None:
     print(json.dumps(value, indent=2, sort_keys=True))
 

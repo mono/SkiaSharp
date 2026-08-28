@@ -176,6 +176,62 @@ class PrepareFirstPrereleaseTests(unittest.TestCase):
         self.assertEqual(second_report["release"]["branch"], "release/3.119.0-preview.1")
         self.assertEqual(second_report["nextAction"], "done")
 
+    def test_apply_rejects_existing_release_branch_not_descended_from_approved_base(self):
+        # Item 4 regression: a release branch with the right name but whose
+        # head is not a descendant of the approved base (e.g. force-pushed,
+        # or created by something else entirely between "prepare plan" and
+        # "prepare apply") must fail loudly, never be silently accepted as
+        # "already done".
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version=None,
+            tooling_sha=main_sha, github=github,
+        )
+        release_branch = plan["release"]["branch"]
+
+        # An orphan commit (no parents) sharing the same tree as main_sha:
+        # its content matches, but it is not reachable from main_sha's
+        # history, so is_ancestor(main_sha, orphan_sha) is false.
+        tree = fixture.repo.git("rev-parse", f"{main_sha}^{{tree}}").stdout.strip()
+        orphan_sha = fixture.repo.git("commit-tree", tree, "-m", "unrelated history").stdout.strip()
+        fixture.create_remote_branch(release_branch, orphan_sha)
+        fixture.fetch()
+
+        with self.assertRaisesRegex(GitHubError, "not a descendant"):
+            prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
+    def test_apply_rejects_existing_release_branch_with_wrong_version_state(self):
+        # Item 4 regression: a release branch that IS a proper descendant of
+        # the approved base but whose version-state files disagree with the
+        # plan (e.g. a concurrent/earlier partial apply bumped to the wrong
+        # label) must also fail loudly rather than being treated as done.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version=None,
+            tooling_sha=main_sha, github=github,
+        )
+        release_branch = plan["release"]["branch"]
+
+        # A real descendant commit of main_sha, but left at PREVIEW_LABEL
+        # preview.5 instead of the plan's expected preview.1.
+        fixture.repo.git("branch", release_branch, main_sha)
+        fixture.repo.git("checkout", release_branch)
+        helpers.write_variables(fixture.worktree, skiasharp_version="3.119.0", preview_label="preview.5")
+        helpers.stage(fixture.worktree, "scripts")
+        helpers.commit_staged(fixture.worktree, "wrong label")
+        fixture.repo.push_branch(release_branch)
+        fixture.repo.git("checkout", "main")
+        fixture.fetch()
+
+        with self.assertRaisesRegex(GitHubError, "PREVIEW_LABEL"):
+            prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
 
 class PrepareSecondPrereleaseTests(unittest.TestCase):
     def setUp(self):
@@ -282,6 +338,45 @@ class PrepareStableTests(unittest.TestCase):
         )
         self.assertEqual(plan["base"]["sha"], main_sha)
         self.assertEqual(plan["maintenanceBranch"]["action"], "create")
+
+    def test_apply_stable_release_returns_await_merge_while_bump_pr_is_open(self):
+        # Item 8 regression: apply must not hardcode nextAction="done" once
+        # it has opened (or found) the stable-bump PR -- the release
+        # process is not finished until a human merges it.
+        fixture = PrepareFixture(self.root)
+        main_sha = fixture.seed_main(skiasharp_version="3.119.0", harfbuzzsharp_version="1.8.8")
+        fixture.create_remote_branch("release/3.119.x", main_sha)
+        fixture.fetch()
+        github = FakeGitHubClient()
+        plan = prepare.build_prepare_plan(
+            fixture.repo,
+            integration_target="main",
+            requested_version="3.119.0",
+            tooling_sha=main_sha,
+            github=github,
+        )
+        self.assertEqual(plan["stableBump"]["status"], "pending")
+        report = prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
+
+        self.assertEqual(report["nextAction"], "await-merge")
+        self.assertIsNotNone(report["stableBumpPullRequestUrl"])
+        bump_op = next(op for op in report["operations"] if op["id"] == "open-stable-bump-pr")
+        self.assertEqual(bump_op["status"], "done")  # the act of opening it is complete
+
+        # Re-planning while the PR is still open must also report
+        # await-merge, not done.
+        fixture.fetch()
+        replanned = prepare.build_prepare_plan(
+            fixture.repo, integration_target="main", requested_version="3.119.0",
+            tooling_sha=main_sha, github=github,
+        )
+        self.assertEqual(replanned["nextAction"], "await-merge")
+        self.assertEqual(replanned["stableBump"]["status"], "awaiting-user")
+
+        # Re-applying while still open is idempotent and still await-merge,
+        # not done.
+        second_report = prepare.apply_prepare_plan(with_digest(replanned), repo=fixture.repo, github=github)
+        self.assertEqual(second_report["nextAction"], "await-merge")
 
 
 class PrepareHotfixTests(unittest.TestCase):

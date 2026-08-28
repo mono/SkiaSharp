@@ -51,8 +51,16 @@ class ParserWiringTests(unittest.TestCase):
 
     def test_finish_publish_parses(self):
         parser = cli.create_parser()
-        args = parser.parse_args(["finish", "publish", "--plan", "finish-plan.json"])
+        args = parser.parse_args(
+            ["finish", "publish", "--plan", "finish-plan.json", "--publication", "publication.json"]
+        )
         self.assertIs(args.func, cli.cmd_finish_publish)
+        self.assertEqual(args.publication, "publication.json")
+
+    def test_finish_publish_requires_publication(self):
+        parser = cli.create_parser()
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["finish", "publish", "--plan", "finish-plan.json"])
 
     def test_finish_closeout_parses(self):
         parser = cli.create_parser()
@@ -232,6 +240,163 @@ class RenderPlanExecutionTests(unittest.TestCase):
         self.assertEqual(rendered["nextAction"], "done")
         self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
         self.assertEqual(rendered["planDigest"], plan["planDigest"])
+
+
+class FinishPublishExecutionTests(unittest.TestCase):
+    """End-to-end: ``finish publish`` must read ``--publication`` from disk
+    (never recompute ``plan_publication`` itself -- item 5) and validate it
+    is bound to the given ``--plan`` before publishing, with
+    ``GhCliGitHubClient`` swapped for a fake so no real ``gh`` call
+    happens."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    @staticmethod
+    def _finish_plan_dict(*, title="Version 3.119.0 (Preview 1)"):
+        return {
+            "schemaVersion": 1,
+            "operation": "finish",
+            "generatedAt": "2024-01-01T00:00:00Z",
+            "toolingSha": "b" * 40,
+            "nextAction": "plan-publication",
+            "input": {"requestedVersion": "3.119.0-preview.1.42"},
+            "receipt": {
+                "skiaSharpVersion": "3.119.0-preview.1.42",
+                "base": "3.119.0",
+                "label": "preview.1",
+                "buildRevision": "42",
+                "sourceCommit": "a" * 40,
+                "sourceBranch": "release/3.119.0-preview.1",
+                "harfBuzzSharpVersion": "1.8.8.1-preview.1.42",
+                "packages": [],
+            },
+            "release": {
+                "identity": "3.119.0-preview.1", "version": "3.119.0-preview.1.42",
+                "branch": "release/3.119.0-preview.1", "raw": "3.119.0-preview.1",
+                "numeric": "3.119.0", "label": "preview.1", "releaseType": "preview",
+                "stable": False, "title": title, "tag": "v3.119.0-preview.1",
+            },
+            "tag": {
+                "name": "v3.119.0-preview.1", "targetCommit": "a" * 40,
+                "existingSha": None, "status": "pending",
+            },
+            "previousTag": "v3.118.0",
+            "draft": {"exists": False, "isPublished": False, "status": "pending"},
+            "warnings": [],
+        }
+
+    def _write_finish_plan(self, *, title="Version 3.119.0 (Preview 1)"):
+        import release_finish as finish
+
+        return common.write_plan(
+            self.root / "finish-plan.json", self._finish_plan_dict(title=title),
+            schema_name=finish.FINISH_SCHEMA,
+        )
+
+    class _FakeGitHubClient:
+        def __init__(self, *, body):
+            import release_github as release_gh
+
+            self._gh = release_gh
+            self.release_info = release_gh.ReleaseInfo(
+                tag_name="v3.119.0-preview.1", name="Version 3.119.0 (Preview 1)", is_draft=True,
+                is_prerelease=True, target_commitish="a" * 40, body=body, url="https://example.invalid",
+            )
+            self.published = False
+
+        def get_release(self, tag):
+            return self.release_info
+
+        def publish_release(self, *, tag, title, body):
+            self.published = True
+            self.release_info = self._gh.ReleaseInfo(
+                tag_name=tag, name=title, is_draft=False, is_prerelease=self.release_info.is_prerelease,
+                target_commitish=self.release_info.target_commitish, body=body, url=self.release_info.url,
+            )
+
+    def test_publish_reads_publication_from_disk_and_succeeds(self):
+        from unittest import mock
+        import release_github as release_gh
+
+        plan = self._write_finish_plan()
+        body = release_gh.build_initial_body("notes")
+        fake_github = self._FakeGitHubClient(body=body)
+
+        publication = common.build_envelope(
+            plan, next_action="publish", tag="v3.119.0-preview.1",
+            draftUrl="https://example.invalid", isDraft=True, isPublished=False,
+            bodySha256=release_gh.body_sha256(body), hasManagedMarkers=True, readyToPublish=True,
+        )
+        publication_path = self.root / "publication.json"
+        common.write_json_file(publication_path, publication)
+
+        output_path = self.root / "publish-result.json"
+        with mock.patch.object(cli.gh, "GhCliGitHubClient", return_value=fake_github):
+            exit_code = cli.main(
+                [
+                    "finish", "publish",
+                    "--plan", str(self.root / "finish-plan.json"),
+                    "--publication", str(publication_path),
+                    "--output", str(output_path),
+                ]
+            )
+
+        self.assertEqual(exit_code, 0)
+        self.assertTrue(fake_github.published)
+        report = common.json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertEqual(report["status"], "published")
+
+    def test_publish_rejects_publication_from_a_different_plan(self):
+        from unittest import mock
+        import release_github as release_gh
+
+        self._write_finish_plan()
+        body = release_gh.build_initial_body("notes")
+        fake_github = self._FakeGitHubClient(body=body)
+
+        # A publication built from a plan with the same tag but different
+        # content (title) -- a different planDigest -- must be rejected
+        # even though the tag/body-hash would otherwise line up.
+        other_plan = common.with_digest(self._finish_plan_dict(title="Version 9.9.9 (Different)"))
+        publication = common.build_envelope(
+            other_plan, next_action="publish", tag="v3.119.0-preview.1",
+            draftUrl="https://example.invalid", isDraft=True, isPublished=False,
+            bodySha256=release_gh.body_sha256(body), hasManagedMarkers=True, readyToPublish=True,
+        )
+        publication_path = self.root / "publication.json"
+        common.write_json_file(publication_path, publication)
+
+        with mock.patch.object(cli.gh, "GhCliGitHubClient", return_value=fake_github):
+            exit_code = cli.main(
+                [
+                    "finish", "publish",
+                    "--plan", str(self.root / "finish-plan.json"),
+                    "--publication", str(publication_path),
+                ]
+            )
+
+        self.assertEqual(exit_code, 1)
+        self.assertFalse(fake_github.published)
+
+    def test_publish_rejects_a_malformed_publication_file(self):
+        self._write_finish_plan()
+        publication_path = self.root / "publication.json"
+        # Missing every required result-envelope field.
+        common.write_json_file(publication_path, {"onlyField": "x"})
+
+        exit_code = cli.main(
+            [
+                "finish", "publish",
+                "--plan", str(self.root / "finish-plan.json"),
+                "--publication", str(publication_path),
+            ]
+        )
+        self.assertEqual(exit_code, 1)
 
 
 class CheckEnvironmentExecutionTests(unittest.TestCase):
@@ -610,12 +775,17 @@ class PlanConsumptionDocumentationTests(unittest.TestCase):
                 "original finish plan", help_text, f"'finish {name} --help' does not document plan consumption"
             )
 
+    def test_publish_help_text_documents_publication_is_a_persisted_result(self):
+        help_text = self._finish_subparser("publish").format_help().lower().replace("\n", " ")
+        self.assertIn("plan-publication", help_text)
+        self.assertIn("persisted result", help_text)
+
     def test_publish_plan_publication_closeout_use_finish_schema(self):
         # Parser wiring: all three subcommands share --plan and route through
         # functions that call common.read_plan(..., schema_name=finish.FINISH_SCHEMA).
         parser = cli.create_parser()
         for args in (
-            ["finish", "publish", "--plan", "finish-plan.json"],
+            ["finish", "publish", "--plan", "finish-plan.json", "--publication", "publication.json"],
             ["finish", "plan-publication", "--plan", "finish-plan.json"],
             ["finish", "closeout", "--plan", "finish-plan.json"],
         ):

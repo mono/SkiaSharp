@@ -10,7 +10,9 @@ the SkiaSharp family) the same embedded source commit.
 
 from __future__ import annotations
 
+import gzip
 import hashlib
+import json
 import re
 import time
 import xml.etree.ElementTree as ElementTree
@@ -83,17 +85,29 @@ class NuGetClient(Protocol):
 
 
 class HttpNuGetClient:
-    """The real NuGet.org client, using only the standard library."""
+    """The real NuGet.org client, using only the standard library.
 
-    def __init__(self, *, timeout: int = 30):
+    ``registration_base``/``flat_container_base`` default to the real
+    NuGet.org endpoints but can be overridden (e.g. by tests pointing at a
+    local HTTP server) without any monkeypatching of module globals.
+    """
+
+    def __init__(
+        self,
+        *,
+        timeout: int = 30,
+        registration_base: str = REGISTRATION_BASE,
+        flat_container_base: str = FLAT_CONTAINER_BASE,
+    ):
         self.timeout = timeout
+        self.registration_base = registration_base
+        self.flat_container_base = flat_container_base
 
     def _get_json(self, url: str) -> dict | None:
         try:
             with urllib_request.urlopen(url, timeout=self.timeout) as response:  # noqa: S310
-                import json
-
-                return json.loads(response.read().decode("utf-8"))
+                raw = response.read()
+                content_encoding = response.headers.get("Content-Encoding", "")
         except HTTPError as exc:
             if exc.code == 404:
                 return None
@@ -101,8 +115,29 @@ class HttpNuGetClient:
         except URLError as exc:
             raise NuGetError(f"NuGet request to {url} failed: {exc}") from exc
 
+        # NuGet.org's registration5-gz-semver2 resource -- the only
+        # SemVer2-capable registration resource it publishes (registration5-
+        # semver2, without "-gz-", does not exist; only semver1 does, which
+        # omits SemVer2-shaped versions like our "-preview.N.NNNNN" build
+        # revisions) -- always compresses its response body and reliably
+        # sets this header for it. urllib.request never transparently
+        # decompresses a response the way e.g. `requests` does, so this
+        # must be handled explicitly here or every registration read
+        # silently receives raw gzip bytes instead of JSON. The magic-byte
+        # check is a defensive fallback in case a proxy ever strips the
+        # header while leaving the body compressed.
+        if content_encoding.lower() == "gzip" or raw[:2] == b"\x1f\x8b":
+            try:
+                raw = gzip.decompress(raw)
+            except OSError as exc:
+                raise NuGetError(f"NuGet response from {url} is not valid gzip: {exc}") from exc
+        try:
+            return json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            raise NuGetError(f"NuGet response from {url} is not valid JSON: {exc}") from exc
+
     def get_catalog_entry(self, package_id: str, version: str) -> CatalogEntry | None:
-        index_url = f"{REGISTRATION_BASE}/{package_id.lower()}/index.json"
+        index_url = f"{self.registration_base}/{package_id.lower()}/index.json"
         index = self._get_json(index_url)
         if index is None:
             return None
@@ -117,15 +152,32 @@ class HttpNuGetClient:
                 entry = item.get("catalogEntry", {})
                 if entry.get("version") != version:
                     continue
-                if "listed" not in entry and "@id" in entry:
-                    entry = self._get_json(entry["@id"]) or entry
-                return CatalogEntry.from_json(entry)
+                # The registration item's inlined catalogEntry is missing
+                # packageHash/packageSize/repository (it carries only
+                # listing metadata like "listed", "authors", "tags") --
+                # confirmed against nuget.org's real response shape. It
+                # must always be dereferenced through its own "@id" to the
+                # full catalog leaf; there is no shortcut based on which
+                # fields happen to be present inline.
+                catalog_id = entry.get("@id")
+                if not catalog_id:
+                    raise NuGetError(
+                        f"{package_id} {version} registration entry has no "
+                        "catalogEntry '@id' to dereference"
+                    )
+                leaf = self._get_json(catalog_id)
+                if leaf is None:
+                    raise NuGetError(
+                        f"{package_id} {version} catalogEntry '@id' {catalog_id} "
+                        "could not be resolved"
+                    )
+                return CatalogEntry.from_json(leaf)
         return None
 
     def download_package(self, package_id: str, version: str) -> bytes:
         lower_id = package_id.lower()
         lower_version = version.lower()
-        url = f"{FLAT_CONTAINER_BASE}/{lower_id}/{lower_version}/{lower_id}.{lower_version}.nupkg"
+        url = f"{self.flat_container_base}/{lower_id}/{lower_version}/{lower_id}.{lower_version}.nupkg"
         try:
             with urllib_request.urlopen(url, timeout=self.timeout) as response:  # noqa: S310
                 return response.read()
@@ -145,7 +197,7 @@ class HttpNuGetClient:
 
         lower_id = package_id.lower()
         lower_version = version.lower()
-        url = f"{FLAT_CONTAINER_BASE}/{lower_id}/{lower_version}/{lower_id}.nuspec"
+        url = f"{self.flat_container_base}/{lower_id}/{lower_version}/{lower_id}.nuspec"
         try:
             with urllib_request.urlopen(url, timeout=self.timeout) as response:  # noqa: S310
                 return response.read()
@@ -188,6 +240,18 @@ def wait_for_catalog_entry(
 
 
 def verify_catalog_entry(entry: CatalogEntry, *, package_id: str, version: str) -> None:
+    """Validate the catalog leaf's own trustworthy fields.
+
+    ``entry.repository`` is deliberately never required or checked here:
+    real NuGet.org catalog leaves for some already-published versions
+    (observed live for old SkiaSharp releases, e.g. 3.119.0) expose it as
+    an empty string even though the same package's nuspec has full
+    repository metadata, so it is not a reliable source either for
+    "is repository metadata present" or for cross-checking against the
+    nuspec. Only the nuspec is authoritative for repository metadata --
+    see :func:`verify_nuspec_repository`.
+    """
+
     if entry.id.lower() != package_id.lower() or entry.version != version:
         raise NuGetError(
             f"catalog entry identity mismatch: requested {package_id} {version}, "
@@ -203,8 +267,6 @@ def verify_catalog_entry(entry: CatalogEntry, *, package_id: str, version: str) 
         raise NuGetError(f"{package_id} {version} catalog entry is missing packageSize")
     if not entry.dependency_groups and package_id.lower() != "harfbuzzsharp":
         raise NuGetError(f"{package_id} {version} catalog entry has no dependencyGroups")
-    if not entry.repository:
-        raise NuGetError(f"{package_id} {version} catalog entry has no repository metadata")
 
 
 @dataclass(frozen=True)
@@ -366,32 +428,25 @@ class DotNetSignatureVerifier:
             )
 
 
-def verify_repository_metadata(
-    *,
-    nuspec: Nuspec,
-    catalog_repository: dict,
-    package_id: str,
-    version: str,
-) -> tuple[str, str]:
-    """Cross-check nuspec and catalog repository metadata; return (commit, branch)."""
+def verify_nuspec_repository(nuspec: Nuspec, *, package_id: str, version: str) -> tuple[str, str]:
+    """Validate and extract ``(commit, branch)`` from a package's own nuspec.
+
+    The NuGet.org catalog's own ``repository`` field is never used as a
+    cross-check source (see :func:`verify_catalog_entry`): only the nuspec
+    -- hash+signature verified for the anchor packages, and independently
+    downloaded for every other family package -- is authoritative for
+    repository metadata.
+    """
 
     repo = nuspec.repository
-    if repo.type != "git" or catalog_repository.get("type") != "git":
-        raise NuGetError(f"{package_id} {version} repository type is not 'git'")
+    if repo.type != "git":
+        raise NuGetError(f"{package_id} {version} nuspec repository type is not 'git'")
     if not repo.commit or not re.fullmatch(r"[0-9a-fA-F]{40}", repo.commit):
         raise NuGetError(f"{package_id} {version} nuspec repository commit is not a full SHA")
-    if repo.commit != catalog_repository.get("commit"):
-        raise NuGetError(
-            f"{package_id} {version} nuspec and catalog repository commits disagree"
-        )
     if not repo.branch or not model.RELEASE_BRANCH_RE.fullmatch(repo.branch):
         raise NuGetError(
-            f"{package_id} {version} repository branch {repo.branch!r} does not "
+            f"{package_id} {version} nuspec repository branch {repo.branch!r} does not "
             "match the exact release-branch grammar"
-        )
-    if repo.branch != catalog_repository.get("branch"):
-        raise NuGetError(
-            f"{package_id} {version} nuspec and catalog repository branches disagree"
         )
     # Deliberately not trusted: the RepositoryUrl is a Microsoft fwlink, not a
     # verifiable anchor. Binding happens via the resolved commit, not this URL.
@@ -688,12 +743,9 @@ def verify_public_receipt(
     for package_id in skiasharp_version_anchors:
         anchor_evidence[package_id] = _verify_anchor(package_id, requested_version)
 
-    skia_entry, skia_nuspec = anchor_evidence["SkiaSharp"]
-    source_commit, source_branch = verify_repository_metadata(
-        nuspec=skia_nuspec,
-        catalog_repository=skia_entry.repository or {},
-        package_id="SkiaSharp",
-        version=requested_version,
+    _, skia_nuspec = anchor_evidence["SkiaSharp"]
+    source_commit, source_branch = verify_nuspec_repository(
+        skia_nuspec, package_id="SkiaSharp", version=requested_version
     )
 
     if not versions_reader.commit_exists(source_commit):
@@ -754,24 +806,27 @@ def verify_public_receipt(
     packages: list[PackageReceipt] = []
     for package_id in families["SkiaSharp"]:
         if package_id in anchor_evidence:
-            entry, nuspec = anchor_evidence[package_id]
+            _, nuspec = anchor_evidence[package_id]
         else:
             entry = wait_for_catalog_entry(nuget, package_id, requested_version, sleep=sleep)
             verify_catalog_entry(entry, package_id=package_id, version=requested_version)
             nuspec = _fetch_and_verify_nuspec(
                 nuget, package_id=package_id, version=requested_version
             )
-            nuspec_commit, _ = verify_repository_metadata(
-                nuspec=nuspec,
-                catalog_repository=entry.repository or {},
-                package_id=package_id,
-                version=requested_version,
+        # Every SkiaSharp-family package -- anchor or not -- must embed the
+        # same source commit as the SkiaSharp anchor itself. This used to be
+        # skipped for anchors (SkiaSharp itself trivially matches since
+        # source_commit was derived from its own nuspec, but SkiaSharp.
+        # HarfBuzz is also an anchor and its own nuspec was never
+        # independently checked here).
+        nuspec_commit, _ = verify_nuspec_repository(
+            nuspec, package_id=package_id, version=requested_version
+        )
+        if nuspec_commit != source_commit:
+            raise NuGetError(
+                f"{package_id} {requested_version} embeds commit "
+                f"{nuspec_commit}, expected {source_commit}"
             )
-            if nuspec_commit != source_commit:
-                raise NuGetError(
-                    f"{package_id} {requested_version} embeds commit "
-                    f"{nuspec_commit}, expected {source_commit}"
-                )
         packages.append(
             PackageReceipt(
                 id=package_id,
@@ -783,7 +838,7 @@ def verify_public_receipt(
 
     for package_id in families["HarfBuzzSharp"]:
         if package_id in anchor_evidence:
-            entry, nuspec = anchor_evidence[package_id]
+            _, nuspec = anchor_evidence[package_id]
         else:
             entry = wait_for_catalog_entry(nuget, package_id, expected_harfbuzzsharp_version, sleep=sleep)
             verify_catalog_entry(entry, package_id=package_id, version=expected_harfbuzzsharp_version)
@@ -792,13 +847,10 @@ def verify_public_receipt(
             )
         # HarfBuzzSharp packages may legitimately keep an older embedded
         # commit: an unchanged HarfBuzzSharp version can be reused across
-        # SkiaSharp releases, so only its own internal nuspec/catalog
-        # agreement is checked, not equality with source_commit.
-        package_commit, package_branch = verify_repository_metadata(
-            nuspec=nuspec,
-            catalog_repository=entry.repository or {},
-            package_id=package_id,
-            version=expected_harfbuzzsharp_version,
+        # SkiaSharp releases, so only its own nuspec is validated here, not
+        # equality with source_commit.
+        package_commit, package_branch = verify_nuspec_repository(
+            nuspec, package_id=package_id, version=expected_harfbuzzsharp_version
         )
         packages.append(
             PackageReceipt(

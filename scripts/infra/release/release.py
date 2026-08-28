@@ -6,7 +6,7 @@
     release.py finish plan --version <exact public version> --output <file>
     release.py finish create-draft --plan <file> --output <file>
     release.py finish plan-publication --plan <file> --output <file>
-    release.py finish publish --plan <file> --output <file>
+    release.py finish publish --plan <file> --publication <file> --output <file>
     release.py finish closeout --plan <file> --output <file> [--dry-run]
     release.py inspect --release-branch <release/X.Y.Z...> --output <file>
     release.py render-plan --plan <file> --output <file>
@@ -25,6 +25,18 @@ and never interprets plan fields as commands. In every one of those cases
 each re-read that same original finish plan on every invocation (not each
 other's output), which is what lets every one of them be rerun
 independently and idempotently.
+
+``finish publish`` additionally requires ``--publication <file>``: the
+persisted result of a prior, separate ``finish plan-publication --output
+<file>`` run -- typically reviewed/approved via a protected GitHub Actions
+environment before the job running ``publish`` is allowed to proceed.
+``publish`` never calls ``plan_publication`` itself; it only reads that
+file, validates it is bound to this exact plan (matching ``planDigest``
+and tag) and was actually ready to publish, and compares the *current*
+draft body hash against the hash that report approved. Recomputing
+plan-publication inside the same process as publish would let one process
+both compute and approve that decision, defeating the point of gating
+publish behind a separately reviewed step.
 
 Every plan and every command result shares the same standardized
 workflow-facing surface, so a thin workflow can read the same fields
@@ -188,9 +200,21 @@ def cmd_finish_plan_publication(args: argparse.Namespace) -> int:
 
 
 def cmd_finish_publish(args: argparse.Namespace) -> int:
+    """Publish the draft, gated on a previously *persisted* plan-publication
+    approval -- never a fresh recomputation in this process.
+
+    ``--publication`` must be the exact file a prior, separate
+    ``finish plan-publication --output <file>`` run wrote (typically
+    reviewed/approved via a protected GitHub Actions environment before
+    this step is allowed to run). This never calls
+    ``finish.plan_publication`` itself: doing so would let this same
+    process both compute and approve the publication decision, defeating
+    the point of gating ``publish`` behind a separate, human-reviewed step.
+    """
+
     plan = common.read_plan(Path(args.plan), schema_name=finish.FINISH_SCHEMA)
+    publication = common.read_result_envelope(Path(args.publication))
     github = gh.GhCliGitHubClient()
-    publication = finish.plan_publication(plan, github=github)
     report = finish.publish(plan, publication, github=github)
     common.emit(report, output=_output_path(args))
     return 0
@@ -513,6 +537,14 @@ def create_parser() -> argparse.ArgumentParser:
     publish_parser.add_argument(
         "--plan", required=True,
         help="the original finish plan JSON file produced by 'finish plan' (not a result file)",
+    )
+    publish_parser.add_argument(
+        "--publication", required=True,
+        help=(
+            "the persisted result of a prior 'finish plan-publication --output FILE' run, "
+            "approved via the deployment environment gate before this step runs; publish "
+            "never recomputes plan-publication itself"
+        ),
     )
     publish_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
     publish_parser.set_defaults(func=cmd_finish_publish)
