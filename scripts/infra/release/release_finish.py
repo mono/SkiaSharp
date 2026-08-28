@@ -267,14 +267,22 @@ def create_draft(plan: dict, *, repo: GitRepository, github: GitHubClient) -> di
 
 
 def plan_publication(plan: dict, *, github: GitHubClient) -> dict:
-    """Build ``finish plan-publication``: reads and validates the actual draft."""
+    """Build ``finish plan-publication``: reads and validates the actual draft.
+
+    ``existing`` may already be published (e.g. re-running plan-publication
+    after ``publish`` to reconcile ``next_action``), so the target check
+    reuses :func:`release_github.target_commitish_conflicts` -- the same
+    strict-for-drafts, tolerant-for-published-legacy-branch-targets rule
+    :func:`release_github.check_release_conflict` applies in create-draft --
+    rather than a stricter, open-coded equality check.
+    """
 
     tag = plan["tag"]["name"]
     release = plan["release"]
     existing = github.get_release(tag)
     if existing is None:
         raise PlanError(f"no draft or release exists for {tag}; run create-draft first")
-    if existing.target_commitish != plan["receipt"]["sourceCommit"]:
+    if gh.target_commitish_conflicts(existing, plan["receipt"]["sourceCommit"]):
         raise ConflictError(
             f"draft {tag} targets {existing.target_commitish}, expected "
             f"{plan['receipt']['sourceCommit']}"
@@ -328,7 +336,7 @@ def publish(plan: dict, publication: dict, *, github: GitHubClient) -> dict:
     if existing is None:
         raise PlanError(f"no draft exists for {tag}")
     if not existing.is_draft:
-        if existing.target_commitish != plan["receipt"]["sourceCommit"]:
+        if gh.target_commitish_conflicts(existing, plan["receipt"]["sourceCommit"]):
             raise ConflictError(
                 f"release {tag} is already published but targets "
                 f"{existing.target_commitish}, not the package source commit"

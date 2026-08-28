@@ -204,14 +204,39 @@ class GhCliGitHubClient:
         )
 
     def ref_sha(self, *, repository: str, ref: str) -> str | None:
+        """Return the SHA a ref currently points to, or ``None`` if absent.
+
+        Uses GitHub's singular "get a reference" endpoint
+        (``git/ref/{ref}``, with the leading ``refs/`` stripped) rather
+        than the plural "list matching references" endpoint
+        (``git/refs/{ref}``). The plural endpoint performs a *string*
+        prefix match on ref names -- not a git-tree-hierarchy match -- so
+        a query for ``refs/heads/release/6.0.x`` can also match a longer,
+        unrelated branch such as ``release/6.0.x-preview`` or
+        ``release/6.0.x-rc.1`` (created for a later channel of the same
+        release) and return a JSON *array* instead of a single object,
+        crashing a caller that calls ``.get(...)`` on it as a dict. The
+        singular endpoint always resolves exactly one ref (404 if
+        absent), so this cannot happen there; the list handling below is
+        kept only as a defensive fallback that exact-matches the
+        requested ref by name, in case a response ever still comes back
+        as a list.
+        """
+
+        stripped = ref[len("refs/"):] if ref.startswith("refs/") else ref
         result = self.runner.run(
-            ["gh", "api", f"repos/{repository}/git/{ref}"],
+            ["gh", "api", f"repos/{repository}/git/ref/{stripped}"],
             cwd=Path.cwd(),
             check=False,
         )
         if not result.ok:
             return None
         payload = json.loads(result.stdout)
+        if isinstance(payload, list):
+            exact = [item for item in payload if item.get("ref") == ref]
+            if len(exact) != 1:
+                return None
+            payload = exact[0]
         return payload.get("object", {}).get("sha")
 
     def get_release(self, tag: str) -> ReleaseInfo | None:
@@ -373,14 +398,8 @@ def check_tag_conflict(existing_sha: str | None, expected_sha: str) -> None:
 _FULL_SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 
-def check_release_conflict(
-    existing: ReleaseInfo | None,
-    *,
-    expected_title: str,
-    expected_target: str,
-    expected_prerelease: bool,
-) -> None:
-    """Raise :class:`GitHubError` if an existing release mismatches the plan.
+def target_commitish_conflicts(existing: ReleaseInfo, expected_target: str) -> bool:
+    """Return whether ``existing.target_commitish`` disagrees with ``expected_target``.
 
     ``target_commitish`` is only compared strictly when it is itself a full
     40-hex commit SHA -- what every release this tool creates or manages
@@ -397,6 +416,31 @@ def check_release_conflict(
     SHA-vs-SHA disagreement, or *any* disagreement while the release is
     still an unpublished draft (which this tool always creates with an
     exact SHA), still is.
+
+    This is the single rule shared by :func:`check_release_conflict` and
+    the ``finish plan-publication`` / ``finish publish`` binding checks in
+    :mod:`release_finish`, so a published legacy release is never treated
+    more strictly in one call site than the other.
+    """
+
+    if existing.target_commitish == expected_target:
+        return False
+    target_is_exact_sha = bool(_FULL_SHA_RE.fullmatch(existing.target_commitish))
+    legacy_published_target = (not existing.is_draft) and not target_is_exact_sha
+    return not legacy_published_target
+
+
+def check_release_conflict(
+    existing: ReleaseInfo | None,
+    *,
+    expected_title: str,
+    expected_target: str,
+    expected_prerelease: bool,
+) -> None:
+    """Raise :class:`GitHubError` if an existing release mismatches the plan.
+
+    See :func:`target_commitish_conflicts` for the ``target_commitish``
+    comparison rule applied below.
     """
 
     if existing is None:
@@ -404,13 +448,10 @@ def check_release_conflict(
     mismatches = []
     if existing.name != expected_title:
         mismatches.append(f"title {existing.name!r} != {expected_title!r}")
-    if existing.target_commitish != expected_target:
-        target_is_exact_sha = bool(_FULL_SHA_RE.fullmatch(existing.target_commitish))
-        legacy_published_target = (not existing.is_draft) and not target_is_exact_sha
-        if not legacy_published_target:
-            mismatches.append(
-                f"target {existing.target_commitish!r} != {expected_target!r}"
-            )
+    if target_commitish_conflicts(existing, expected_target):
+        mismatches.append(
+            f"target {existing.target_commitish!r} != {expected_target!r}"
+        )
     if existing.is_prerelease != expected_prerelease:
         mismatches.append(
             f"prerelease {existing.is_prerelease} != {expected_prerelease}"
