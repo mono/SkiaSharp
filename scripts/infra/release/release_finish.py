@@ -533,9 +533,24 @@ def apply_closeout(
     milestones and close them, then dispatch the release-notes sync and (for
     a stable release) the issue-template refresh workflows.
 
-    Idempotent: rerunning after everything is already reconciled/advanced
-    performs no further milestone writes and does not re-dispatch either
-    workflow, since there is no new work to report through them.
+    The two workflow dispatches are unconditional on every successful
+    invocation of this function -- never gated on there being new
+    milestone reconcile/advance work, and never gated on the milestone
+    advancement having fully succeeded (a "blocked" milestone -- no
+    eligible target for its open items -- does not withhold the
+    dispatch). A first closeout for a release with no milestone activity
+    at all must still generate its release notes; and if a prior
+    invocation completed the milestone writes but then failed before
+    reaching the dispatch (a crash, a network blip, an expired token), a
+    rerun that finds no new milestone work left to do must not silently
+    skip the dispatch too -- that would leave a published release with no
+    notes and no way to recover except by hand. Both dispatch targets
+    (``update-release-notes.lock.yml``, ``auto-update-issue-template-
+    versions.yml``) are themselves convergent/idempotent, so redispatching
+    them on every rerun is always safer than silently missing one.
+    Milestone reconciliation/advancement itself is still only-write-what's-
+    needed idempotent: rerunning after everything is already reconciled/
+    advanced performs no further milestone writes.
     """
 
     all_milestones = milestone_client.milestones()
@@ -556,23 +571,16 @@ def apply_closeout(
         results.append({"milestone": op.milestone_title, "status": "blocked", "detail": op.detail})
 
     dispatches: list[dict] = []
-    if reconcile_ops or pending:
-        notes_inputs = _release_notes_dispatch_inputs(plan)
-        github.dispatch_workflow(workflow=UPDATE_RELEASE_NOTES_WORKFLOW, ref="main", inputs=notes_inputs)
+    notes_inputs = _release_notes_dispatch_inputs(plan)
+    github.dispatch_workflow(workflow=UPDATE_RELEASE_NOTES_WORKFLOW, ref="main", inputs=notes_inputs)
+    dispatches.append(
+        {"workflow": UPDATE_RELEASE_NOTES_WORKFLOW, "inputs": notes_inputs, "status": "dispatched"}
+    )
+    if plan["release"]["stable"]:
+        github.dispatch_workflow(workflow=ISSUE_TEMPLATE_REFRESH_WORKFLOW, ref="main", inputs={})
         dispatches.append(
-            {"workflow": UPDATE_RELEASE_NOTES_WORKFLOW, "inputs": notes_inputs, "status": "dispatched"}
+            {"workflow": ISSUE_TEMPLATE_REFRESH_WORKFLOW, "inputs": {}, "status": "dispatched"}
         )
-        if plan["release"]["stable"]:
-            github.dispatch_workflow(workflow=ISSUE_TEMPLATE_REFRESH_WORKFLOW, ref="main", inputs={})
-            dispatches.append(
-                {"workflow": ISSUE_TEMPLATE_REFRESH_WORKFLOW, "inputs": {}, "status": "dispatched"}
-            )
-    else:
-        dispatches.append({"workflow": UPDATE_RELEASE_NOTES_WORKFLOW, "status": "skipped-no-new-work"})
-        if plan["release"]["stable"]:
-            dispatches.append(
-                {"workflow": ISSUE_TEMPLATE_REFRESH_WORKFLOW, "status": "skipped-no-new-work"}
-            )
 
     return build_envelope(
         plan,
