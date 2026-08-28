@@ -1,24 +1,14 @@
-﻿using System.Diagnostics;
+using System.ComponentModel;
+using System.Diagnostics;
 using SkiaSharp.ReleaseTool.Errors;
 
 namespace SkiaSharp.ReleaseTool.Processes
 {
-	/// <summary>
-	/// The real runner used outside of tests. Mirrors Python's
-	/// <c>release_common.SubprocessCommandRunner</c>: always argv-only
-	/// (<see cref="ProcessStartInfo.ArgumentList"/>, never a shell
-	/// string), captures stdout/stderr, and maps both a non-zero exit and
-	/// a timed-out process to <see cref="ReleaseToolException"/> --
-	/// callers never need to special-case a platform exception type.
-	/// </summary>
 	public sealed class ProcessRunner : IProcessRunner
 	{
-		/// <summary>Matches Python's <c>CommandRunner.run</c> default of 120s.</summary>
 		public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(120);
 
-		private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(50);
-
-		public ProcessRunResult Run(
+		public async Task<ProcessRunResult> RunAsync(
 			IReadOnlyList<string> arguments,
 			string workingDirectory,
 			bool checkExitCode = true,
@@ -27,11 +17,14 @@ namespace SkiaSharp.ReleaseTool.Processes
 			CancellationToken cancellationToken = default)
 		{
 			if (arguments.Count == 0)
-				throw new ArgumentException("arguments must contain at least the executable name.", nameof(arguments));
+				throw new ArgumentException("Arguments must contain an executable name.", nameof(arguments));
+			cancellationToken.ThrowIfCancellationRequested();
 
 			var effectiveTimeout = timeout ?? DefaultTimeout;
-			var argv = arguments.ToArray();
+			if (effectiveTimeout <= TimeSpan.Zero)
+				throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be positive.");
 
+			var argv = arguments.ToArray();
 			var startInfo = new ProcessStartInfo
 			{
 				FileName = argv[0],
@@ -42,58 +35,126 @@ namespace SkiaSharp.ReleaseTool.Processes
 				UseShellExecute = false,
 				CreateNoWindow = true,
 			};
-			for (var i = 1; i < argv.Length; i++)
-				startInfo.ArgumentList.Add(argv[i]);
+			for (var index = 1; index < argv.Length; index++)
+				startInfo.ArgumentList.Add(argv[index]);
 
 			using var process = new Process { StartInfo = startInfo };
-			process.Start();
-
-			// Read raw text rather than line-by-line events: `Process`'s
-			// line-based OutputDataReceived/ErrorDataReceived normalize
-			// away whether the stream actually ended with a trailing
-			// newline, which would silently corrupt e.g. `git show` output
-			// that has none. Starting both reads immediately (before
-			// waiting for exit) avoids the classic redirected-output
-			// deadlock if the child writes more than the OS pipe buffer.
-			var stdoutTask = process.StandardOutput.ReadToEndAsync();
-			var stderrTask = process.StandardError.ReadToEndAsync();
-
-			if (standardInput is not null)
+			try
 			{
-				process.StandardInput.Write(standardInput);
-				process.StandardInput.Close();
+				process.Start();
+			}
+			catch (Exception ex) when (ex is InvalidOperationException or Win32Exception)
+			{
+				throw new ReleaseToolException($"could not start command: {FormatCommand(argv)}", ex);
 			}
 
-			WaitWithTimeoutAndCancellation(process, argv, effectiveTimeout, cancellationToken);
-			process.WaitForExit();
+			using var timeoutSource = new CancellationTokenSource();
+			timeoutSource.CancelAfter(effectiveTimeout);
+			using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+				cancellationToken,
+				timeoutSource.Token);
+			var token = linkedSource.Token;
+
+			var standardOutputTask = process.StandardOutput.ReadToEndAsync(token);
+			var standardErrorTask = process.StandardError.ReadToEndAsync(token);
+			var standardInputTask = WriteStandardInputAsync(process, standardInput, token);
+			var exitTask = process.WaitForExitAsync(token);
+
+			try
+			{
+				await Task.WhenAll(
+					exitTask,
+					standardInputTask,
+					standardOutputTask,
+					standardErrorTask).WaitAsync(token).ConfigureAwait(false);
+			}
+			catch (OperationCanceledException) when (token.IsCancellationRequested)
+			{
+				KillProcessTree(process);
+				await ObserveAsync(exitTask, standardInputTask, standardOutputTask, standardErrorTask).ConfigureAwait(false);
+
+				if (cancellationToken.IsCancellationRequested)
+					throw new OperationCanceledException(cancellationToken);
+				throw new ReleaseToolException(
+					$"command timed out after {effectiveTimeout.TotalSeconds:g}s: {FormatCommand(argv)}");
+			}
+			catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+			{
+				KillProcessTree(process);
+				throw new ReleaseToolException($"command I/O failed: {FormatCommand(argv)}", ex);
+			}
 
 			var result = new ProcessRunResult(
-				argv, process.ExitCode, stdoutTask.GetAwaiter().GetResult(), stderrTask.GetAwaiter().GetResult());
-			if (checkExitCode && !result.Success)
-			{
-				var detail = FirstNonEmpty(result.StandardError, result.StandardOutput) ?? "no output";
-				throw new ReleaseToolException(
-					$"command failed ({result.ExitCode}): {string.Join(' ', argv)}\n{detail}");
-			}
+				argv,
+				process.ExitCode,
+				await standardOutputTask.ConfigureAwait(false),
+				await standardErrorTask.ConfigureAwait(false));
+			EnsureSuccess(result, checkExitCode);
 			return result;
 		}
 
-		private static void WaitWithTimeoutAndCancellation(
-			Process process, string[] argv, TimeSpan timeout, CancellationToken cancellationToken)
+		internal static void EnsureSuccess(ProcessRunResult result, bool checkExitCode)
 		{
-			var stopwatch = Stopwatch.StartNew();
-			while (!process.WaitForExit((int)PollInterval.TotalMilliseconds))
+			if (!checkExitCode || result.Success)
+				return;
+			var detail = FirstNonEmpty(result.StandardError, result.StandardOutput) ?? "no output";
+			throw new ReleaseToolException(
+				$"command failed ({result.ExitCode}): {FormatCommand(result.Arguments)}\n{detail}");
+		}
+
+		private static async Task WriteStandardInputAsync(
+			Process process,
+			string? standardInput,
+			CancellationToken cancellationToken)
+		{
+			if (standardInput is null)
+				return;
+			try
 			{
-				if (cancellationToken.IsCancellationRequested)
+				await process.StandardInput.WriteAsync(
+					standardInput.AsMemory(),
+					cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				process.StandardInput.Close();
+			}
+		}
+
+		private static void KillProcessTree(Process process)
+		{
+			try
+			{
+				if (!process.HasExited)
+					process.Kill(entireProcessTree: true);
+			}
+			catch (InvalidOperationException)
+			{
+			}
+			catch (NotSupportedException)
+			{
+				try
 				{
-					KillProcessTree(process);
-					cancellationToken.ThrowIfCancellationRequested();
+					if (!process.HasExited)
+						process.Kill();
 				}
-				if (stopwatch.Elapsed >= timeout)
+				catch (InvalidOperationException)
 				{
-					KillProcessTree(process);
-					throw new ReleaseToolException(
-						$"command timed out after {(int)timeout.TotalSeconds}s: {string.Join(' ', argv)}");
+				}
+			}
+		}
+
+		private static async Task ObserveAsync(params Task[] tasks)
+		{
+			foreach (var task in tasks)
+			{
+				try
+				{
+					await task.ConfigureAwait(false);
+				}
+				catch (Exception ex) when (
+					ex is OperationCanceledException or IOException or ObjectDisposedException or InvalidOperationException)
+				{
 				}
 			}
 		}
@@ -109,17 +170,7 @@ namespace SkiaSharp.ReleaseTool.Processes
 			return null;
 		}
 
-		private static void KillProcessTree(Process process)
-		{
-			try
-			{
-				if (!process.HasExited)
-					process.Kill(entireProcessTree: true);
-			}
-			catch (InvalidOperationException)
-			{
-				// The process already exited between the check above and Kill().
-			}
-		}
+		private static string FormatCommand(IEnumerable<string> arguments) =>
+			string.Join(' ', arguments);
 	}
 }

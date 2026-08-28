@@ -1,185 +1,220 @@
-﻿using SkiaSharp.ReleaseTool.Git;
+using SkiaSharp.ReleaseTool.Git;
+using SkiaSharp.ReleaseTool.Processes;
+using SkiaSharp.ReleaseTool.Tests.Processes;
 using Xunit;
 
 namespace SkiaSharp.ReleaseTool.Tests.Git
 {
-	/// <summary>
-	/// Ported test-for-test from Python's <c>tests/test_release_git.py</c>:
-	/// every test exercises <see cref="GitRepository"/> against a real,
-	/// throwaway on-disk repository rather than a fake.
-	/// </summary>
-	public sealed class GitRepositoryTests : IDisposable
+	public sealed class GitRepositoryTests
 	{
-		private readonly DirectoryInfo root = Directory.CreateTempSubdirectory("skiasharp-release-tool-git-tests-");
-
-		public void Dispose()
+		[Fact]
+		public async Task Real_repository_operations_round_trip()
 		{
-			try
-			{
-				root.Delete(recursive: true);
-			}
-			catch (IOException)
-			{
-				// Best-effort cleanup only; a stray file handle on a
-				// throwaway temp directory must never fail the test.
-			}
+			using var root = new TestDirectory("git-round-trip");
+			var (_, worktree) = await GitRepoTestHelper.CreateBareAndWorktreeAsync(
+				root.Path,
+				"repo",
+				TestContext.Current.CancellationToken);
+			File.WriteAllText(Path.Combine(worktree, "file.txt"), "first\r\nsecond\r\n");
+			var first = await GitRepoTestHelper.CommitAllAsync(
+				worktree,
+				"first",
+				TestContext.Current.CancellationToken);
+			await GitRepoTestHelper.PushAsync(worktree, TestContext.Current.CancellationToken);
+			File.WriteAllText(Path.Combine(worktree, "file.txt"), "updated");
+			var second = await GitRepoTestHelper.CommitAllAsync(
+				worktree,
+				"second",
+				TestContext.Current.CancellationToken);
+
+			var repository = await GitRepository.DiscoverAsync(
+				worktree,
+				cancellationToken: TestContext.Current.CancellationToken);
+			await repository.FetchAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+			Assert.True(await repository.RefExistsAsync(
+				"refs/remotes/origin/main",
+				TestContext.Current.CancellationToken));
+			Assert.Equal(first, await repository.RemoteShaAsync(
+				"main",
+				cancellationToken: TestContext.Current.CancellationToken));
+			Assert.True(await repository.IsAncestorAsync(
+				first,
+				second,
+				TestContext.Current.CancellationToken));
+			Assert.False(await repository.IsAncestorAsync(
+				second,
+				first,
+				TestContext.Current.CancellationToken));
+			Assert.Equal(first, await repository.MergeBaseAsync(
+				first,
+				second,
+				TestContext.Current.CancellationToken));
+			Assert.Equal("first\r\nsecond\r\n", await repository.ReadRefFileAsync(
+				first,
+				"file.txt",
+				TestContext.Current.CancellationToken));
 		}
 
 		[Fact]
-		public void Discover_finds_repo_root()
+		public async Task Gitlink_and_tag_parsing_round_trip()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "hi");
-			GitRepoTestHelper.CommitAll(worktree, "init");
-			var nested = Directory.CreateDirectory(Path.Combine(worktree, "sub"));
-
-			var repo = GitRepository.Discover(nested.FullName);
-
-			// Compare by content rather than by string equality: on macOS
-			// a temp directory path routes through a `/tmp` -> `/private/tmp`
-			// symlink that `git rev-parse --show-toplevel` resolves but the
-			// original `worktree` string does not.
-			Assert.True(File.Exists(Path.Combine(repo.Root, "file.txt")));
-		}
-
-		[Fact]
-		public void RefExists_and_RemoteSha_round_trip()
-		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "hi");
-			var sha = GitRepoTestHelper.CommitAll(worktree, "init");
-			GitRepoTestHelper.Push(worktree);
-			var repo = new GitRepository(worktree);
-
-			repo.Fetch();
-
-			Assert.True(repo.RefExists("refs/remotes/origin/main"));
-			Assert.Equal(sha, repo.RemoteSha("main"));
-			Assert.Null(repo.RemoteSha("does-not-exist"));
-		}
-
-		[Fact]
-		public void ReadRefFile_reads_file_content_at_ref()
-		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "hello world");
-			GitRepoTestHelper.CommitAll(worktree, "init");
-			var repo = new GitRepository(worktree);
-
-			Assert.Equal("hello world", repo.ReadRefFile("HEAD", "file.txt"));
-		}
-
-		[Fact]
-		public void ReadGitlink_returns_the_submodule_sha()
-		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
+			using var root = new TestDirectory("git-tag");
+			var (_, worktree) = await GitRepoTestHelper.CreateBareAndWorktreeAsync(
+				root.Path,
+				"repo",
+				TestContext.Current.CancellationToken);
 			var skiaSha = new string('a', 40);
-			GitRepoTestHelper.AddGitlink(worktree, "externals/skia", skiaSha);
-			File.WriteAllText(Path.Combine(worktree, "root.txt"), "x");
-			GitRepoTestHelper.Stage(worktree, "root.txt");
-			GitRepoTestHelper.CommitStaged(worktree, "init");
-			var repo = new GitRepository(worktree);
+			await GitRepoTestHelper.AddGitlinkAsync(
+				worktree,
+				"externals/skia",
+				skiaSha,
+				TestContext.Current.CancellationToken);
+			File.WriteAllText(Path.Combine(worktree, "root.txt"), "content");
+			await GitRepoTestHelper.StageAsync(
+				worktree,
+				TestContext.Current.CancellationToken,
+				"root.txt");
+			var commit = await GitRepoTestHelper.CommitStagedAsync(
+				worktree,
+				"initial",
+				TestContext.Current.CancellationToken);
+			await GitRepoTestHelper.PushAsync(worktree, TestContext.Current.CancellationToken);
 
-			Assert.Equal(skiaSha, repo.ReadGitlink("HEAD", "externals/skia"));
+			var repository = new GitRepository(worktree);
+			Assert.Equal(
+				skiaSha,
+				await repository.ReadGitlinkAsync(
+					"HEAD",
+					"externals/skia",
+					TestContext.Current.CancellationToken));
+
+			await repository.PushTagAsync(
+				"v3.119.0",
+				commit,
+				cancellationToken: TestContext.Current.CancellationToken);
+			Assert.Equal(
+				commit,
+				(await repository.RemoteTagsAsync(
+					cancellationToken: TestContext.Current.CancellationToken))["v3.119.0"]);
 		}
 
 		[Fact]
-		public void ReadGitlink_rejects_non_gitlink_path()
+		public async Task Expected_exit_one_is_false_but_exit_128_is_fatal()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "hi");
-			GitRepoTestHelper.CommitAll(worktree, "init");
-			var repo = new GitRepository(worktree);
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(1));
+			runner.Enqueue(Result(128, standardError: "fatal: bad ref"));
+			runner.Enqueue(Result(1));
+			runner.Enqueue(Result(128, standardError: "fatal: bad commit"));
+			var repository = new GitRepository("/repo", runner);
 
-			Assert.Throws<GitException>(() => repo.ReadGitlink("HEAD", "file.txt"));
+			Assert.False(await repository.RefExistsAsync(
+				"refs/heads/missing",
+				TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RefExistsAsync(
+					"refs/heads/bad",
+					TestContext.Current.CancellationToken));
+			Assert.False(await repository.IsAncestorAsync(
+				"a",
+				"b",
+				TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.IsAncestorAsync(
+					"bad",
+					"b",
+					TestContext.Current.CancellationToken));
 		}
 
 		[Fact]
-		public void MergeBase_and_IsAncestor()
+		public async Task Ls_remote_parsing_is_exact_and_CRLF_safe()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			var first = GitRepoTestHelper.CommitAll(worktree, "first");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v2");
-			var second = GitRepoTestHelper.CommitAll(worktree, "second");
-			var repo = new GitRepository(worktree);
+			var sha = new string('a', 40);
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(0, $"{sha}\trefs/heads/main\r\n"));
+			runner.Enqueue(Result(0, $"{sha} refs/heads/main\n"));
+			runner.Enqueue(Result(0, $"{sha}\trefs/heads/other\n"));
+			var repository = new GitRepository("/repo", runner);
 
-			Assert.Equal(first, repo.MergeBase(first, second));
-			Assert.True(repo.IsAncestor(first, second));
-			Assert.False(repo.IsAncestor(second, first));
+			Assert.Equal(sha, await repository.RemoteShaAsync(
+				"main",
+				cancellationToken: TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RemoteShaAsync(
+					"main",
+					cancellationToken: TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RemoteShaAsync(
+					"main",
+					cancellationToken: TestContext.Current.CancellationToken));
 		}
 
 		[Fact]
-		public void RequireClean_detects_dirty_worktree()
+		public async Task Annotated_tags_use_peeled_SHA_and_reject_malformed_refs()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			GitRepoTestHelper.CommitAll(worktree, "first");
-			var repo = new GitRepository(worktree);
+			var tagObject = new string('a', 40);
+			var commit = new string('b', 40);
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(
+				0,
+				$"{tagObject}\trefs/tags/v3.119.0\r\n" +
+				$"{commit}\trefs/tags/v3.119.0^{{}}\r\n"));
+			runner.Enqueue(Result(0, $"{commit}\trefs/heads/main\n"));
+			var repository = new GitRepository("/repo", runner);
 
-			repo.RequireClean(); // must not throw
-
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "dirty");
-			Assert.Throws<GitException>(() => repo.RequireClean());
+			Assert.Equal(
+				commit,
+				(await repository.RemoteTagsAsync(
+					cancellationToken: TestContext.Current.CancellationToken))["v3.119.0"]);
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RemoteTagsAsync(
+					cancellationToken: TestContext.Current.CancellationToken));
 		}
 
 		[Fact]
-		public void ReleaseBranches_lists_remote_release_branches()
+		public async Task Malformed_SHA_gitlink_and_branch_output_is_rejected()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			GitRepoTestHelper.CommitAll(worktree, "first");
-			GitRepoTestHelper.Push(worktree);
-			var repo = new GitRepository(worktree);
-			repo.Git(["branch", "release/3.119.0-preview.1"]);
-			repo.PushBranch("release/3.119.0-preview.1");
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(0, "short\n"));
+			runner.Enqueue(Result(0, $"{new string('a', 40)} commit externals/skia\n"));
+			runner.Enqueue(Result(0, "not-a-release-branch\n"));
+			var repository = new GitRepository("/repo", runner);
 
-			repo.Fetch();
-
-			Assert.Equal(["release/3.119.0-preview.1"], repo.ReleaseBranches());
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.ResolveAsync(
+					"HEAD",
+					TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.ReadGitlinkAsync(
+					"HEAD",
+					"externals/skia",
+					TestContext.Current.CancellationToken));
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.ReleaseBranchesAsync(
+					cancellationToken: TestContext.Current.CancellationToken));
 		}
 
 		[Fact]
-		public void PushTag_and_RemoteTags_round_trip()
+		public async Task Read_ref_file_preserves_machine_output_exactly()
 		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			var sha = GitRepoTestHelper.CommitAll(worktree, "first");
-			GitRepoTestHelper.Push(worktree);
-			var repo = new GitRepository(worktree);
+			const string output = "line one\r\nline two\r\n";
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(0, output));
+			var repository = new GitRepository("/repo", runner);
 
-			repo.PushTag("v3.119.0", sha);
-
-			Assert.Equal(sha, repo.RemoteTags()["v3.119.0"]);
+			Assert.Equal(
+				output,
+				await repository.ReadRefFileAsync(
+					"HEAD",
+					"file.txt",
+					TestContext.Current.CancellationToken));
 		}
 
-		[Fact]
-		public void ContainsCommit_reports_reachability_from_a_remote_ref()
-		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			var first = GitRepoTestHelper.CommitAll(worktree, "first");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v2");
-			GitRepoTestHelper.CommitAll(worktree, "second");
-			GitRepoTestHelper.Push(worktree);
-			var repo = new GitRepository(worktree);
-
-			repo.Fetch();
-
-			Assert.True(repo.ContainsCommit("refs/remotes/origin/main", first));
-		}
-
-		[Fact]
-		public void CommitSubjectsFirstParent_returns_oldest_first()
-		{
-			var (_, worktree) = GitRepoTestHelper.CreateBareAndWorktree(root.FullName, "repo");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v1");
-			GitRepoTestHelper.CommitAll(worktree, "first commit");
-			File.WriteAllText(Path.Combine(worktree, "file.txt"), "v2");
-			GitRepoTestHelper.CommitAll(worktree, "second commit");
-			var repo = new GitRepository(worktree);
-
-			Assert.Equal(["second commit", "first commit"], repo.CommitSubjectsFirstParent("HEAD"));
-		}
+		private static ProcessRunResult Result(
+			int exitCode,
+			string standardOutput = "",
+			string standardError = "") =>
+			new(["git"], exitCode, standardOutput, standardError);
 	}
 }

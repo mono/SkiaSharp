@@ -1,120 +1,80 @@
-﻿using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
 
 namespace SkiaSharp.ReleaseTool.Json
 {
-	/// <summary>
-	/// Reads and writes the two digested, approval-bearing plan artifacts
-	/// (<see cref="Artifacts.PreparePlan"/>, <see cref="Artifacts.FinishPlan"/>).
-	/// Mirrors Python's <c>release_common.write_plan</c>/<c>read_plan</c>:
-	/// the file on disk is the pretty, sorted-keys, UTF-8-without-BOM,
-	/// trailing-newline form; <see cref="CanonicalJson"/>'s compact form
-	/// is used only to compute/verify the <c>planDigest</c> field, never
-	/// written anywhere.
-	/// </summary>
+	/// <summary>Strict, source-generated persistence for release plans.</summary>
 	public static class PlanStore
 	{
-		private const string DigestPropertyName = "planDigest";
+		public static void Write(string path, PreparePlan plan) =>
+			Write(path, plan, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate);
 
-		/// <summary>
-		/// Recomputes <paramref name="plan"/>'s canonical digest (ignoring
-		/// any value it currently carries), stamps it, and writes the
-		/// pretty-printed result to <paramref name="path"/>. Returns the
-		/// same instance, mutated in place with its digest populated.
-		/// </summary>
-		public static T Write<T>(string path, T plan, JsonTypeInfo<T> typeInfo)
-			where T : IDigestedPlan
+		public static void Write(string path, FinishPlan plan) =>
+			Write(path, plan, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate);
+
+		public static PreparePlan ReadPrepare(string path, Guid? expectedPlanId = null) =>
+			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
+
+		public static FinishPlan ReadFinish(string path, Guid? expectedPlanId = null) =>
+			Read(path, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate, expectedPlanId);
+
+		private static void Write<T>(
+			string path,
+			T plan,
+			JsonTypeInfo<T> typeInfo,
+			Action<T> validate)
 		{
-			using (var beforeDigest = JsonDocument.Parse(JsonSerializer.Serialize(plan, typeInfo)))
+			validate(plan);
+			var bytes = JsonSerializer.SerializeToUtf8Bytes(plan, typeInfo);
+			var fullPath = Path.GetFullPath(path);
+			var directory = Path.GetDirectoryName(fullPath)!;
+			Directory.CreateDirectory(directory);
+			var stagingPath = Path.Combine(
+				directory,
+				$".{Path.GetFileName(path)}.{Guid.NewGuid():N}.writing");
+			try
 			{
-				plan.PlanDigest = CanonicalJson.ComputeSha256Hex(beforeDigest.RootElement, DigestPropertyName);
+				File.WriteAllBytes(stagingPath, bytes);
+				File.Move(stagingPath, fullPath, overwrite: true);
 			}
-
-			using var stamped = JsonDocument.Parse(JsonSerializer.Serialize(plan, typeInfo));
-			WriteFile(path, CanonicalJson.ToPrettyString(stamped.RootElement));
-			return plan;
+			finally
+			{
+				File.Delete(stagingPath);
+			}
 		}
 
-		/// <summary>
-		/// Loads, digest-verifies, and strictly deserializes a plan file.
-		/// This is the only supported way a later "apply"/"create-draft"
-		/// step should consume a plan file; it never interprets unknown
-		/// fields as anything other than tampering (see
-		/// <see cref="System.Text.Json.Serialization.JsonUnmappedMemberHandlingAttribute"/>
-		/// on <typeparamref name="T"/> and its nested DTOs).
-		/// </summary>
-		public static T Read<T>(string path, JsonTypeInfo<T> typeInfo)
-			where T : IDigestedPlan
+		private static T Read<T>(
+			string path,
+			JsonTypeInfo<T> typeInfo,
+			Action<T> validate,
+			Guid? expectedPlanId)
 		{
 			if (!File.Exists(path))
 				throw new ValidationException($"plan file not found: {path}");
-			var text = File.ReadAllText(path, Encoding.UTF8);
 
-			JsonDocument document;
+			T plan;
 			try
 			{
-				document = JsonDocument.Parse(text);
+				plan = JsonSerializer.Deserialize(File.ReadAllBytes(path), typeInfo)
+					?? throw new ValidationException("plan file must contain a JSON object");
 			}
 			catch (JsonException ex)
 			{
-				throw new ValidationException($"plan file is not valid JSON: {ex.Message}", ex);
+				throw new ValidationException($"plan file failed shape validation: {ex.Message}", ex);
 			}
-			using (document)
+
+			validate(plan);
+			var actualPlanId = plan switch
 			{
-				if (document.RootElement.ValueKind != JsonValueKind.Object)
-					throw new ValidationException("plan file must contain a JSON object");
-
-				VerifyDigest(document.RootElement);
-
-				try
-				{
-					return JsonSerializer.Deserialize(text, typeInfo)
-						?? throw new ValidationException("plan file must contain a JSON object");
-				}
-				catch (JsonException ex)
-				{
-					throw new ValidationException($"plan file failed shape validation: {ex.Message}", ex);
-				}
-			}
-		}
-
-		/// <summary>
-		/// Raises <see cref="ValidationException"/> if <paramref name="root"/>'s
-		/// stored <c>planDigest</c> does not match its recomputed
-		/// canonical digest. Exposed separately from <see cref="Read{T}"/>
-		/// so tests can assert digest tampering is caught independently
-		/// of the strict-shape check.
-		/// </summary>
-		public static void VerifyDigest(JsonElement root)
-		{
-			if (!root.TryGetProperty(DigestPropertyName, out var digestElement) ||
-				digestElement.ValueKind != JsonValueKind.String ||
-				string.IsNullOrEmpty(digestElement.GetString()))
-			{
-				throw new ValidationException("plan is missing its canonical digest");
-			}
-
-			var stored = digestElement.GetString()!;
-			var expected = CanonicalJson.ComputeSha256Hex(root, DigestPropertyName);
-			if (!string.Equals(stored, expected, StringComparison.Ordinal))
-			{
-				throw new ValidationException(
-					"plan digest mismatch: the plan file was modified after it was generated " +
-					$"(expected {expected}, found {stored})");
-			}
-		}
-
-		private static void WriteFile(string path, string prettyJson)
-		{
-			var directory = Path.GetDirectoryName(path);
-			if (!string.IsNullOrEmpty(directory))
-				Directory.CreateDirectory(directory);
-			// UTF-8 without a byte-order mark, trailing "\n" appended --
-			// matches Python's `Path.write_text(json.dumps(...) + "\n",
-			// encoding="utf-8")`.
-			File.WriteAllText(path, prettyJson + "\n", new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+				PreparePlan prepare => prepare.PlanId,
+				FinishPlan finish => finish.PlanId,
+				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
+			};
+			if (expectedPlanId is { } expected && actualPlanId != expected)
+				throw new ValidationException($"planId '{actualPlanId}' does not match expected correlation id '{expected}'");
+			return plan;
 		}
 	}
 }
