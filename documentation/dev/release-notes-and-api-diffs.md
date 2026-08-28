@@ -1375,14 +1375,33 @@ later, whenever its release-notes PR merges — there is no release-critical dea
 it, and a release may indefinitely carry generated notes only.
 
 **Compatibility.** Bumping `_DATA_JSON_FORMAT_VERSION` (3 → 4) to add `shipments` is
-deliberately the *smallest* compatible upgrade: `_data_json_unchanged()` excludes both
-`format` and `shipments` from its change-detection comparison, so the bump alone never
-flips an otherwise-unchanged page to "changed" and never discards its already-reviewed
-prose — the whole back-catalogue of historical pages is untouched until it is
-regenerated for a genuine content reason (or an explicit `--force`). The updater itself
-silently skips (never errors on) a page whose `data.json` predates format 4, unless a
-caller explicitly names one of its exact tags — then it fails loudly with an actionable
-"force-regenerate this version" message instead of a silent no-op.
+deliberately the *smallest* compatible upgrade, and change detection is a THREE-way
+split, not two, precisely so this stays true:
+
+- `_data_json_unchanged()` is the genuine no-op check — strict equality, including
+  `format`/`shipments`. Only when this is true does an unforced run skip a page
+  entirely.
+- `_website_content_unchanged()` ignores `format`/`shipments` — it is true whenever
+  the PRs/roster/previews/links/companions a rendered page and its required prose
+  depend on have not moved, even across a format bump or a shipments-only change.
+- `_classify_data_write()` combines the two into the actual outcome. A page whose
+  website content is unchanged but whose `shipments` moved (a new/altered exact tag,
+  with every other fact identical) is **always written, regardless of `--force`** —
+  fixing a real correctness bug an earlier version of this split had: excluding
+  `shipments` from *every* comparison meant a newly published preview/RC tag could be
+  the only fact that changed, so the page was silently skipped, its shipment never
+  reached `data.json`, and the GitHub summary updater could never converge a summary
+  for it. That case now writes the refreshed `shipments`, but still preserves the
+  reviewed prose and still does **not** add the page to files-to-polish — there is
+  nothing for the Polish AI to do. A genuine website-content change still always
+  writes, discards prose, and returns the page for polish, exactly as before shipments
+  existed. A truly unchanged page (not even `shipments` different) still skips
+  entirely unless `--force`, which still preserves the historical `--force` behavior of
+  returning even a fully-unchanged page for polish without touching its prose. The
+  updater itself silently skips (never errors on) a page whose `data.json` predates
+  format 4, unless a caller explicitly names one of its exact tags — then it fails
+  loudly with an actionable "force-regenerate this version" message instead of a
+  silent no-op.
 
 **Agent side.** The `release-notes` skill's `release_summaries` slot
 (`.agents/skills/release-notes/SKILL.md`) is optional and per-tag: the agent may
