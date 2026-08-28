@@ -129,7 +129,7 @@ Single source of truth for all commands:
 > after native changes will cause `EntryPointNotFoundException` at runtime because the downloaded
 > binaries don't contain your new functions.
 
-> **Note:** For release verification, see `/release-testing` command for the full platform matrix.
+> **Note:** For optional public-package smoke testing, see `/release-testing`.
 
 **Recovery Commands:**
 
@@ -386,6 +386,11 @@ See [documentation/dev/debugging-methodology.md](documentation/dev/debugging-met
 
 Custom slash commands are available for specialized workflows. Use these for complex tasks that benefit from structured processes.
 
+Repository releases are not started or published through slash commands. Use
+the **Release - Prepare** GitHub workflow, the team-owned Azure DevOps
+publication pipeline, and then **Release - Finish**. See
+[`documentation/dev/releasing.md`](documentation/dev/releasing.md).
+
 ### When to Use Commands
 
 | Task | Command | Triggers |
@@ -400,11 +405,7 @@ Custom slash commands are available for specialized workflows. Use these for com
 | Update dependency | `/native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `/api-docs` | "document", "fill in missing docs" |
 | Security check | `/security-audit` | "audit CVEs", "security overview" (read-only) |
-| Start release (Step 1/5) | `/release-branch` | "release now", "start release X" |
-| Check release status (Step 2/5) | `/release-status` | "check release status", "how is the build", "pipeline status" |
-| Test release (Step 3/5) | `/release-testing` | "test the release", "verify packages" |
-| Publish release (Step 4/5) | `/release-publish` | "push to nuget", "tag release" |
-| Release milestones (Step 5/5) | `/release-milestones` | "reconcile milestones", "advance milestone schedule", "close release milestone" |
+| Smoke-test an exact release | `/release-testing` | "smoke test 4.x", "verify public packages" |
 | Release notes | `/release-notes` | "generate release notes", "regenerate 3.119.x", "write release notes for" |
 | Skia analyst | `/skia-analyst` | "what changed", "what are we missing", "feature gap", "api diff", "scout features", "diff tags" |
 | Update Skia | `/update-skia` | "update to milestone NNN", "bump Skia" |

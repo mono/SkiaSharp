@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 import importlib.util
+import json
 from pathlib import Path
 import shlex
 import sys
+from types import SimpleNamespace
 import unittest
+from unittest import mock
 
 
 SCRIPTS = Path(__file__).resolve().parent.parent
@@ -38,19 +41,27 @@ RUNNERS = {
 }
 
 
-STATUS = {
-    "packageVersions": {
-        "test": {
-            "SkiaSharp": "4.152.0-preview.1.1",
-            "HarfBuzzSharp": "14.2.1-preview.1.1",
-        }
-    }
+SKIA_VERSION = "4.152.0-preview.1.1"
+HARFBUZZ_VERSION = "14.2.1-preview.1.1"
+FINISH_PLAN = {
+    "receipt": {
+        "skiaSharpVersion": SKIA_VERSION,
+        "harfBuzzSharpVersion": HARFBUZZ_VERSION,
+        "sourceCommit": "a" * 40,
+        "packages": [{"id": "SkiaSharp"}, {"id": "HarfBuzzSharp"}],
+    },
+    "release": {"branch": "release/4.152.0-preview.1"},
+    "warnings": ["example"],
 }
 
 
 class ReleaseTestPlanTests(unittest.TestCase):
     def test_full_macos_matrix(self):
-        matrix, missing = planner.build_matrix(STATUS, "macOS")
+        matrix, missing = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -71,7 +82,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_linux_matrix_reports_apple_and_windows_gaps(self):
-        matrix, missing = planner.build_matrix(STATUS, "Linux")
+        matrix, missing = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "Linux",
+        )
         self.assertEqual(
             [item["id"] for item in matrix],
             [
@@ -92,7 +107,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_matrix_commands_use_platform_runners(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         for item in matrix:
             self.assertNotIn("selectedByDefault", item)
             command = item["command"]
@@ -128,7 +147,11 @@ class ReleaseTestPlanTests(unittest.TestCase):
         )
 
     def test_every_planned_command_round_trips_through_runner_parser(self):
-        matrix, _ = planner.build_matrix(STATUS, "macOS")
+        matrix, _ = planner.build_matrix(
+            SKIA_VERSION,
+            HARFBUZZ_VERSION,
+            "macOS",
+        )
         for item in matrix:
             argv = shlex.split(item["command"])
             script_index = next(
@@ -151,62 +174,31 @@ class ReleaseTestPlanTests(unittest.TestCase):
             self.assertEqual(parsed.skia, "4.152.0-preview.1.1")
             self.assertEqual(parsed.harfbuzz, "14.2.1-preview.1.1")
 
-    def test_status_override_is_limited_to_tests_wait(self):
-        base = {
-            "managedRun": {"state": "succeeded"},
-            "packageFeed": {"state": "ready"},
-        }
-        self.assertEqual(
-            planner.plan_eligibility(
-                {**base, "nextAction": "wait-for-tests"},
-                allow_incomplete_ci=True,
-            ),
-            (True, True),
-        )
-        with self.assertRaisesRegex(
-            planner.PlanError,
-            "only the tests wait",
-        ):
-            planner.plan_eligibility(
-                {**base, "nextAction": "wait-for-managed"},
-                allow_incomplete_ci=True,
-            )
-        with self.assertRaisesRegex(
-            planner.PlanError,
-            "only the tests wait",
-        ):
-            planner.plan_eligibility(
-                {**base, "nextAction": "retry-tests"},
-                allow_incomplete_ci=True,
-            )
+    @mock.patch.object(planner.common, "run_checked")
+    def test_receipt_report_uses_finish_plan(self, run_checked):
+        def write_plan(args, *, cwd, timeout):
+            output = Path(args[args.index("--output") + 1])
+            output.write_text(json.dumps(FINISH_PLAN), encoding="utf-8")
+            return SimpleNamespace(stdout="")
+
+        run_checked.side_effect = write_plan
+        result = planner.receipt_report(Path("/repo"), SKIA_VERSION)
+
+        self.assertEqual(result, FINISH_PLAN)
+        args = run_checked.call_args.args[0]
+        self.assertEqual(args[1], str(planner.RELEASE_CLI))
+        self.assertEqual(args[2:4], ["finish", "plan"])
+        self.assertIn(SKIA_VERSION, args)
+        self.assertEqual(run_checked.call_args.kwargs["timeout"], 600)
 
     def test_release_summary_is_flat(self):
-        status = {
-            "branch": "release/4.152.0-preview.1",
-            "commit": "a" * 40,
-            "state": "ready",
-            "nextAction": "start-release-testing",
-            "warnings": ["example"],
-            "managedRun": {
-                "state": "succeeded",
-                "runId": 20,
-                "buildNumber": "build",
-                "sourceBranch": "refs/heads/release/x",
-                "sourceVersion": "a" * 40,
-                "url": "managed",
-            },
-            "testsRun": {"runId": 30, "url": "tests"},
-            "packageVersions": {
-                "test": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
-                "public": {"SkiaSharp": "s", "HarfBuzzSharp": "h"},
-            },
-        }
-        summary = planner.release_summary(
-            status,
-            status_override=False,
-        )
-        self.assertEqual(summary["managedRunId"], 20)
-        self.assertEqual(summary["testsRunId"], 30)
+        summary = planner.release_summary(FINISH_PLAN)
+
+        self.assertEqual(summary["branch"], "release/4.152.0-preview.1")
+        self.assertEqual(summary["commit"], "a" * 40)
+        self.assertEqual(summary["state"], "public")
+        self.assertEqual(summary["publicPackages"]["SkiaSharp"], SKIA_VERSION)
+        self.assertEqual(summary["verifiedPackageCount"], 2)
         self.assertEqual(summary["warnings"], ["example"])
         self.assertNotIn("managedRun", summary)
         self.assertNotIn("testsRun", summary)

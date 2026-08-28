@@ -112,8 +112,8 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
 {
   "branch": "release/3.119.x",
   "verdict": "cascade",
-  "summary": "Tests red independently (Guardian TSA); Native/Managed warnings only — no cascade.",
-  "rootPipeline": "SkiaSharp-Tests",
+  "summary": "Tests red independently (Guardian TSA); Build warning only - no cascade.",
+  "rootPipeline": "skiasharp-tests",
   "cascadedPipelines": []
 }
 ```
@@ -136,7 +136,7 @@ Array of chain analysis verdicts. One entry per branch with ≥1 red internal pi
   "severity": "high",
   "footprint": {
     "branches": ["release/3.119.x"],
-    "pipelines": ["mono-SkiaSharp", "SkiaSharp-Tests"]
+    "pipelines": ["mono-SkiaSharp", "skiasharp-tests"]
   },
   "firstSeen": "2026-05-25T10:00:00Z",
   "lastSeen": "2026-05-29T10:00:00Z",

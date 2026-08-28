@@ -10,16 +10,12 @@ import platform
 import re
 import shlex
 import sys
+import tempfile
 
 import release_test_common as common
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-STATUS_SCRIPT = (
-    SCRIPT_DIR.parent.parent
-    / "release-status"
-    / "scripts"
-    / "pipeline-status.py"
-)
+RELEASE_CLI = SCRIPT_DIR.parents[3] / "scripts" / "infra" / "release" / "release.py"
 
 
 PlanError = common.ReleaseTestError
@@ -46,14 +42,27 @@ def format_command(
     return f"& {formatted}" if formatted.startswith("'") else formatted
 
 
-def status_report(root: Path, target: str) -> dict:
-    return parse_json_output(
+def receipt_report(root: Path, version: str) -> dict:
+    with tempfile.TemporaryDirectory(prefix="skiasharp-release-smoke-") as temp:
+        output = Path(temp) / "finish-plan.json"
+        packages = Path(temp) / "packages"
         common.run_checked(
-            [sys.executable, str(STATUS_SCRIPT), target],
+            [
+                sys.executable,
+                str(RELEASE_CLI),
+                "finish",
+                "plan",
+                "--version",
+                version,
+                "--download-dir",
+                str(packages),
+                "--output",
+                str(output),
+            ],
             cwd=root,
-            timeout=180,
-        ).stdout
-    )
+            timeout=600,
+        )
+        return json.loads(output.read_text(encoding="utf-8"))
 
 
 def runner_command(
@@ -108,12 +117,10 @@ def matrix_item(
 
 
 def build_matrix(
-    status: dict,
+    skia_version: str,
+    harfbuzz_version: str,
     host_os: str,
 ) -> tuple[list[dict], list[str]]:
-    versions = status["packageVersions"]["test"]
-    skia = versions["SkiaSharp"]
-    harfbuzz = versions["HarfBuzzSharp"]
     matrix: list[dict] = []
     missing: list[str] = []
 
@@ -133,8 +140,8 @@ def build_matrix(
                 target=target,
                 runner_script=runner_script,
                 runner_args=runner_args,
-                skia_version=skia,
-                harfbuzz_version=harfbuzz,
+                skia_version=skia_version,
+                harfbuzz_version=harfbuzz_version,
                 estimated_minutes=minutes,
                 visual=visual,
             )
@@ -239,87 +246,30 @@ def build_matrix(
     return matrix, missing
 
 
-def release_summary(status: dict, *, status_override: bool) -> dict:
-    managed = status.get("managedRun") or {}
-    tests = status.get("testsRun") or {}
-    versions = status.get("packageVersions") or {}
+def release_summary(plan: dict) -> dict:
+    receipt = plan["receipt"]
+    release = plan["release"]
     return {
-        "branch": status.get("branch"),
-        "commit": status.get("commit"),
-        "state": status.get("state"),
-        "nextAction": status.get("nextAction"),
-        "statusOverride": status_override,
-        "warnings": status.get("warnings") or [],
-        "managedRunId": managed.get("runId"),
-        "testsRunId": tests.get("runId"),
-        "buildNumber": managed.get("buildNumber"),
-        "sourceBranch": managed.get("sourceBranch"),
-        "sourceVersion": managed.get("sourceVersion"),
-        "managedRunUrl": managed.get("url"),
-        "testsRunUrl": tests.get("url"),
-        "testPackages": versions.get("test"),
-        "publicPackages": versions.get("public"),
+        "branch": release["branch"],
+        "commit": receipt["sourceCommit"],
+        "state": "public",
+        "warnings": plan.get("warnings") or [],
+        "publicPackages": {
+            "SkiaSharp": receipt["skiaSharpVersion"],
+            "HarfBuzzSharp": receipt["harfBuzzSharpVersion"],
+        },
+        "verifiedPackageCount": len(receipt["packages"]),
     }
-
-
-def plan_eligibility(
-    status: dict,
-    *,
-    allow_incomplete_ci: bool,
-) -> tuple[bool, bool]:
-    next_action = status.get("nextAction")
-    ready = next_action == "start-release-testing"
-    if not ready and not allow_incomplete_ci:
-        return False, False
-    if not ready and next_action not in {
-        "wait-for-tests-trigger",
-        "wait-for-tests",
-    }:
-        raise PlanError(
-            "--allow-incomplete-ci may override only the tests wait"
-        )
-    managed_state = (status.get("managedRun") or {}).get("state")
-    feed_state = (status.get("packageFeed") or {}).get("state")
-    if managed_state not in ("succeeded", "warning"):
-        raise PlanError(
-            "Cannot override an incomplete/failed managed package build"
-        )
-    if feed_state != "ready":
-        raise PlanError("Cannot plan tests until both packages are available")
-    return True, not ready
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("release_branch_or_commit")
-    parser.add_argument("--allow-incomplete-ci", action="store_true")
+    parser.add_argument("release_version")
     args = parser.parse_args()
 
     try:
         root = common.repository_root()
-        status = status_report(root, args.release_branch_or_commit)
-        eligible, status_override = plan_eligibility(
-            status,
-            allow_incomplete_ci=args.allow_incomplete_ci,
-        )
-        if not eligible:
-            print(
-                json.dumps(
-                    {
-                        "schemaVersion": 5,
-                        "release": release_summary(
-                            status,
-                            status_override=False,
-                        ),
-                        "readyToPlan": False,
-                        "nextAction": status.get("nextAction"),
-                        "matrix": [],
-                        "overrideFlag": "--allow-incomplete-ci",
-                    },
-                    indent=2,
-                )
-            )
-            return 0
+        plan = receipt_report(root, args.release_version)
 
         host_os = (
             "macOS"
@@ -328,15 +278,17 @@ def main() -> int:
             if sys.platform == "win32"
             else "Linux"
         )
-        matrix, missing = build_matrix(status, host_os)
+        receipt = plan["receipt"]
+        matrix, missing = build_matrix(
+            receipt["skiaSharpVersion"],
+            receipt["harfBuzzSharpVersion"],
+            host_os,
+        )
         print(
             json.dumps(
                 {
-                    "schemaVersion": 5,
-                    "release": release_summary(
-                        status,
-                        status_override=status_override,
-                    ),
+                    "schemaVersion": 6,
+                    "release": release_summary(plan),
                     "readyToPlan": True,
                     "nextAction": "approve-test-matrix",
                     "host": {
@@ -348,6 +300,7 @@ def main() -> int:
                         item["id"] for item in matrix
                     ],
                     "missingCoverage": missing,
+                    "source": "NuGet.org",
                 },
                 indent=2,
             )

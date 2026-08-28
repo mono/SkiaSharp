@@ -1,393 +1,306 @@
 # Release Guide
 
-How to release SkiaSharp: create branch → wait for CI → test → publish →
-maintain milestones.
+SkiaSharp releases use two repository-owned GitHub Actions workflows around the
+team-owned Azure DevOps publication pipeline:
+
+```text
+Release - Prepare -> dnceng build/test/publish -> Release - Finish
+```
+
+The GitHub workflows own repository state. Azure DevOps, Arcade, Darc, and
+Maestro own package state.
 
 ## Irreversible operations
 
-**Tags and releases cannot be deleted.** Once a tag is pushed or a release is published, it's permanent. Each skill confirms before destructive operations - always review carefully before proceeding.
+Release refs, tags, public package versions, and published GitHub Releases are
+treated as immutable.
 
-- Wrong tag pushed → Cannot delete, must create new release
-- Wrong version published to NuGet.org → Cannot unpublish, must release new version
-- Branch deleted prematurely → May lose CI artifacts
+- Never force-update an existing release ref.
+- Never move or delete a release tag.
+- Never replace a conflicting published GitHub Release.
+- NuGet.org packages cannot be replaced; publish a new version to recover.
 
-## Skills
+Every GitHub write follows a read-only plan and a protected environment
+approval. Rerunning a workflow reconciles matching partial state instead of
+duplicating it.
 
-The release process is handled by five skills in order:
+## Required repository configuration
 
-| Step | Skill | Purpose | Trigger |
-|------|-------|---------|---------|
-| 1 | [release-branch](../../.agents/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
-| 2 | [release-status](../../.agents/skills/release-status/SKILL.md) | Track pipeline chain progress | "check release status", "how is the build" |
-| 3 | [release-testing](../../.agents/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
-| 4 | [release-publish](../../.agents/skills/release-publish/SKILL.md) | Publish packages, create tag/draft, publish release | "publish X.Y.Z", "finalize" |
-| 5 | [release-milestones](../../.agents/skills/release-milestones/SKILL.md) | Reconcile assignments and advance milestones | "reconcile milestones", "advance milestone schedule" |
+Configure these protected GitHub environments:
 
-Each skill confirms with `ask_user` before executing destructive operations.
-`done` and `pending` have the same meaning throughout; additional statuses such
-as `running`, `failed`, `blocked`, `awaiting-user`, and `skipped` are
-skill-specific and documented by the script that emits them.
+| Environment | Protects |
+|-------------|----------|
+| `release-branching` | Creating maintenance/exact release refs and bump PRs |
+| `release-tag` | Pushing the immutable package-source tag and creating a draft |
+| `release-publish` | Publishing the reviewed GitHub Release draft |
 
-## Reference Tables
+Each environment must:
 
-### Version Patterns
+- require named reviewers;
+- prevent self-review;
+- allow deployments from the default branch only.
 
-| Release Type | Version Format | Branch | Test Package | Public Version | Tag |
-|--------------|----------------|--------|--------------|----------------|-----|
-| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
-| RC | `X.Y.Z-rc.N` | `release/X.Y.Z-rc.N` | `X.Y.Z-rc.N.{build}` | `X.Y.Z-rc.N.{build}` | `vX.Y.Z-rc.N.{build}` |
-| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z` | `X.Y.Z` | `vX.Y.Z` |
-| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
-| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F` | `X.Y.Z.F` | `vX.Y.Z.F` |
+Each protected job verifies this configuration before loading a write token.
+GitHub otherwise auto-creates an unknown environment without protection, so a
+missing or misconfigured environment is a hard failure.
 
-`{build}` is Arcade's `short-date.revision` identity. `PREVIEW_LABEL=stable`
-produces the exact public version from a real-signed `release/*` build. Arcade
-registers, validates, and promotes the BAR through its configured default
-channel; NuGet.org publication remains a separate protected operation.
+Until the release GitHub App is available, approved write jobs use the
+`SKIASHARP_AUTOBUMP_TOKEN` repository secret. The token can write branches in
+both `mono/SkiaSharp` and `mono/skia`. It is an existing repository-level
+credential and is not fully isolated by environments; the workflows merely
+reference it only after approval. Replacing it with the GitHub App must not
+change release logic.
 
-### Release Type → Base Branch
+## System boundaries
 
-Releases are cut from the line's **integration branch**: `main` for the newest
-in-development line, or `release/X.Y.x` for an established/maintenance line. Each
-integration branch sits at the next unreleased version with `PREVIEW_LABEL:
-preview.0`, and is bumped to the next version **as soon as its stable is cut**
-(immediately at branch time, not when the release publishes).
+| System | Responsibility |
+|--------|----------------|
+| GitHub `Release - Prepare` | Version planning, maintenance/exact refs, bump PR |
+| dnceng Build 1642 | Native/managed build, signing, API Scan, BAR registration |
+| dnceng Tests 1630 | Connected tests for the exact Build run |
+| Arcade/Darc/Maestro | BAR validation and configured feed promotion |
+| Team release pipeline | Protected publication to NuGet.org |
+| GitHub `Release - Finish` | Public-package verification, tag, release, closeout |
+| Release-notes workflow | Reviewed website prose and delayed GitHub summary |
 
-| Type | Base (integration branch) | PREVIEW_LABEL |
-|------|---------------------------|---------------|
-| Preview / RC | `release/X.Y.x` (or `main` if the line isn't forked yet) | `preview.N` / `rc.N` |
-| Stable | `release/X.Y.x` | `stable` |
-| Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
-| Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
+Public CI definition 345 validates repository changes. It is not release
+publication evidence.
 
-> **Stable is cut from `release/X.Y.x`** — the integration branch that already
-> produced the line's previews/rcs — not from `release/X.Y.Z-preview.{latest}`.
+## Step 1: Prepare
 
-### mono/skia Counterpart Branches
+Run **Release - Prepare** from the default branch in the Actions tab.
 
-Every SkiaSharp `release/{version}` branch has an **identically-named**
-`release/{version}` branch in the [mono/skia](https://github.com/mono/skia) fork,
-created at the exact `externals/skia` submodule commit the SkiaSharp branch
-references (skia branch HEAD **==** submodule SHA). This locks the Skia source for
-the release so it stays auditable, reproducible, and safe from garbage collection.
+Inputs:
 
-- Created by the [release-branch](../../.agents/skills/release-branch/SKILL.md) skill
-  alongside the local SkiaSharp branch, validated at the pinned gitlink, then pushed
-  first by the paired-branch script — for **every** cut (preview, rc, stable,
-  and `release/X.Y.x` integration forks).
-- `main` is the exception: it tracks the `skiasharp` integration branch, not a
-  `release/*` counterpart.
+| Input | Value |
+|-------|-------|
+| `target` | `main` or an exact maintenance branch such as `release/4.151.x` |
+| `release_version` | Exact branch version, or empty to detect the next preview |
 
-### HarfBuzzSharp Versioning
+The read-only plan determines:
 
-HarfBuzzSharp versions are modeled as `X.Y.Z.N`. Revision zero is written in
-the normalized 3-part form `X.Y.Z`.
+- the exact release type and version;
+- the integration/base commit;
+- the Skia gitlink commit and matching `mono/skia` ref;
+- the maintenance branch and exact release branch;
+- version-file changes;
+- any stable post-cut bump PR;
+- operations already completed or blocked.
 
-| Digits | Meaning |
-|--------|---------|
-| X.Y.Z | Native HarfBuzz version (e.g., `8.3.1`) |
-| N | Skia milestone bucket plus the release revision within that milestone |
+The plan records the exact tooling, base, and Skia commits. The
+`release-branching` job waits for approval, checks out that exact tooling
+revision, revalidates the refs, and then applies the plan.
 
-For each native HarfBuzz `X.Y.Z`, the Skia milestone that first adopts it is
-the base milestone. It reserves 100 revision values, and each later milestone
-that continues using the same native version advances to the next bucket:
+### Branch types
 
-| Milestone relative to the base | HarfBuzzSharp revisions |
-|--------------------------------|----------------------------|
-| Base milestone | 0–99 |
-| Base + 1 | 100–199 |
-| Base + 2 | 200–299 |
+Integration targets:
 
-The bucket base is
-`(current Skia milestone - HarfBuzz adoption milestone) * 100`. For example,
-HarfBuzz 14.2.1 was adopted by M150, so M150 uses `14.2.1` through
-`14.2.1.99`, M151 uses `14.2.1.100` through `14.2.1.199`, and M152 uses
-`14.2.1.200` through `14.2.1.299`. This keeps parallel Skia release lines
-ordered and prevents them from publishing the same package version.
-
-**When native HarfBuzz upgrades:** Reset `N` to zero and make the adopting
-milestone the new base. For example, an M152 upgrade from `14.2.1.203` to
-HarfBuzz 14.3.1 becomes `14.3.1` (`N = 0`), and M153 would start at
-`14.3.1.100`. HarfBuzz upgrades are made on `main` and are not backported;
-older release lines remain on their existing native HarfBuzz version and
-revision buckets.
-
-### Feeds
-
-| Feed | URL | Purpose |
-|------|-----|---------|
-| Signed builds | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp/nuget/v3/index.json` | Permanent target for signed packages promoted through the Maestro `SkiaSharp` channel |
-| Transport | `https://pkgs.dev.azure.com/dnceng/public/_packaging/skiasharp-transport/nuget/v3/index.json` | Unsigned non-shipping `_NuGets`, `_NativeAssets*`, and dependency chunks used by local and CI builds |
-| Stable | NuGet.org | Public releases |
-
-> **Note:** One BAR records both product and transport packages. Maestro routes
-> `IsShipping=true` packages to `skiasharp`, `IsShipping=false` packages to
-> `skiasharp-transport`, and symbol blobs to the configured symbol targets.
-> NuGet.org publication remains a separate protected operation.
-
-### Pipelines
-
-| Pipeline | Purpose |
-|----------|---------|
-| [mono-SkiaSharp](https://dev.azure.com/dnceng-public/public/_build?definitionId=345) | Public PR and branch validation. Builds native/managed outputs and publishes raw NuGets, prepared Shipping/NonShipping artifacts, and loose PDBs for direct inspection. |
-| [skiasharp-package](https://dev.azure.com/dnceng/internal/_build?definitionId=1642) | Repeats the deterministic build/package work, then adds protected API Scan, real signing, BAR registration, standard validation, and Darc promotion. |
-| [skiasharp-tests](https://dev.azure.com/dnceng/internal/_build?definitionId=1630) | Runs the connected test suite on Microsoft-hosted Azure Pipelines agents. |
-| NuGet.org Publish | Gathers one exact BAR build and publishes it after protected human approval. |
-
-`main` and `release/*` select real signing and BAR registration automatically.
-When validating another branch manually, explicitly set `forceRealSigning`,
-`registerInBar`, and `runApiScan` to `true`; a safe-default run is not release
-evidence.
-
----
-
-## Workflow Diagrams
-
-### Stage 1: Preparation (release-branch skill)
-
-```mermaid
-flowchart TB
-    START([User requests release]) --> PROVIDED{Exact version supplied?}
-    PROVIDED -->|Yes| EXACT[Use exact version]
-    PROVIDED -->|No| DETECT
-
-    DETECT["Read-Only Detector
-    ∙ Accept only main or release/X.Y.x
-    ∙ Validate integration-line version state
-    ∙ Calculate exact next preview
-    ∙ No execution capability"]
-    DETECT --> EXACT
-    EXACT --> DRYRUN
-
-    DRYRUN["Exact-Version Executor Dry Run
-    ∙ Reject integration-branch arguments
-    ∙ Select and validate immutable base refs
-    ∙ Check SkiaSharp + mono/skia remote state
-    ∙ Plan stable post-cut bump when needed
-    ∙ No checkout, commit, submodule, or remote changes"]
-
-    DRYRUN --> VALID{Plan valid?}
-    VALID -->|No| ERROR([Error])
-    VALID -->|Yes| CONFIRM{User confirms complete plan?}
-    CONFIRM -->|No| ABORT([Abort])
-    CONFIRM -->|Yes| EXECUTE
-
-    EXECUTE["Release Script Execute
-    ∙ Initialize submodules recursively
-    ∙ Create matching local release branches
-    ∙ Update + commit version files
-    ∙ Validate gitlink and both refs
-    ∙ Push mono/skia, then SkiaSharp"]
-
-    EXECUTE --> CI([CI Build Started])
-    EXECUTE --> IS_STABLE{Stable cut?}
-    IS_STABLE -->|No| DONE([Done - wait 2-4 hours])
-    IS_STABLE -->|Yes| BUMP
-
-    BUMP["Automate Integration Bump
-    ∙ Create + push next-version branch
-    ∙ Update SkiaSharp + HarfBuzzSharp versions
-    ∙ Open complete-template PR
-    ∙ Leave merge to a maintainer"]
-    
-    CI --> DONE
-    BUMP --> DONE
-
-    classDef error fill:#ffebee,stroke:#c62828
-    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class ABORT,ERROR error
-    class START,CI,DONE endpoint
+```text
+main
+release/X.Y.x
 ```
 
-### Stage 2: Status Tracking (release-status skill)
+Exact immutable release refs:
 
-After the branch is pushed, query the connected Build + Tests chain for the
-exact release commit:
-
-```bash
-python3 .agents/skills/release-status/scripts/pipeline-status.py release/{version}
+```text
+release/X.Y.Z-preview.N
+release/X.Y.Z-rc.N
+release/X.Y.Z
+release/X.Y.Z.F-preview.N
+release/X.Y.Z.F-rc.N
+release/X.Y.Z.F
 ```
 
-The JSON report links the combined Build run to its downstream Tests run,
-provides immutable source/run metadata, and carries the exact Build, Tests, and
-BAR IDs together with the signed package versions. Release testing starts only
-after the connected Tests run succeeds unless the release manager records an
-explicit override.
+The first prerelease for a new line creates `release/X.Y.x` from the audited
+main commit before creating the exact release ref. Later prereleases and the
+stable release use that maintenance line. A stable release never invents a
+missing maintenance base silently.
 
-#### BAR channels and signed-package retrieval
+Every exact SkiaSharp release ref has a matching `mono/skia` ref at the existing
+Skia gitlink commit.
 
-The Build pipeline puts signed product packages, unsigned transport packages,
-and symbol blobs in one BAR, validates it, then invokes standard Darc promotion.
-The configured Maestro channel routes each asset class to its destination.
+### Stable bump PR
 
-Use the BAR ID emitted by release status and gather that immutable build:
+A stable cut plans and opens a PR that advances the maintenance integration
+branch to its next patch version and resets `PREVIEW_LABEL` to `preview.0`.
+Branch protection and a maintainer own the merge; release automation never
+auto-merges it.
 
-```bash
-darc get-build \
-  --id {bar-build} \
-  --extended \
-  --output-format json
+### Prepare output
 
-darc gather-drop \
-  --id {bar-build} \
-  --output-dir output/darc/{bar-build} \
-  --asset-filter '^(SkiaSharp|HarfBuzzSharp)(\..*)?$' \
-  --no-workarounds \
-  --include-released
+The final summary contains:
 
-dotnet nuget verify --all \
-  output/darc/{bar-build}/shipping/packages/*.nupkg
-```
+- release and maintenance branches;
+- exact SkiaSharp and Skia commits;
+- base SkiaSharp/HarfBuzzSharp versions;
+- prerelease label;
+- bump PR URL;
+- links to Build 1642 and Tests 1630.
 
-Do not select release inputs by channel or latest location. Record the exact BAR
-ID and use `output/darc/{bar-build}/shipping/packages` as the local NuGet source.
+For previews and RCs, the final public package version is not known until the
+build revision is assigned. Prepare reports the base plus label, not a guessed
+package version.
 
-### Stage 3: Testing (release-testing skill)
+## Step 2: Build, test, and publish packages
 
-```mermaid
-flowchart TB
-    START([Release status ready]) --> PLAN
+Pushing the exact release ref starts the normal dnceng build and connected test
+flow.
 
-    PLAN["Read-Only Matrix Planner
-    ∙ Carry exact run/package metadata
-    ∙ Select exact policy versions
-    ∙ Select the host-specific matrix
-    ∙ Generate one runner command per item"]
+1. Build 1642 builds, signs, and registers one Arcade BAR.
+2. Tests 1630 runs against that exact build.
+3. Run and approve the team-owned release pipeline.
+4. Wait for the public packages to appear on NuGet.org.
+5. Optionally run the release smoke-testing skill against that exact public
+   version before announcing it.
 
-    PLAN --> APPROVE{User approves matrix?}
-    APPROVE -->|No| STOP([Stop or customize])
-    APPROVE -->|Yes| PREPARE
+GitHub does not queue or approve the team pipeline. The protected team pipeline
+remains the authority for package publication.
 
-    PREPARE["Prepare Approved Run
-    ∙ Restore pinned .NET tools
-    ∙ Clear prior test output"]
+## Step 3: Finish
 
-    PREPARE --> TESTS
-    TESTS["Run Approved Items Sequentially
-    ∙ Check exact target prerequisites
-    ∙ Run exact-package test command
-    ∙ Always clean up"]
+After publication, run **Release - Finish** from the default branch.
 
-    TESTS --> RESULT{All approved items pass?}
-    RESULT -->|No| FAIL([Release testing failed])
-    RESULT -->|Yes| ARTIFACTS{Screenshots and coverage complete?}
-    ARTIFACTS -->|No| FAIL
-    ARTIFACTS -->|Yes| READY([Ready for publish])
+Input:
 
-    classDef error fill:#ffebee,stroke:#c62828
-    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class STOP,FAIL error
-    class START,READY endpoint
-```
+| Input | Value |
+|-------|-------|
+| `release_version` | Exact public SkiaSharp version on NuGet.org |
 
-The release manager may explicitly override the testing gate. Record the
-override and continue without searching for additional evidence.
+No private BAR or Azure run ID is required. NuGet.org is the public release
+receipt.
 
-| Mobile coverage | Exact test target |
-|-----------------|-------------------|
-| Android minimum / maximum | `26` / `37.1` |
-| iOS minimum / maximum | `18.6` / `26.5` |
+### Public package verification
 
-These are release-test targets, not product support minimums.
+Finish:
 
-### Stage 4: Publishing (release-publish skill)
+1. Resolves the exact NuGet registration/catalog entry.
+2. Requires the package to be listed.
+3. Verifies catalog SHA512 metadata.
+4. Downloads and signature-verifies the anchor packages.
+5. Reads source repository metadata from the hash/signature-verified nuspec and
+   version/dependency metadata from the public package records.
+6. Fetches the SkiaSharp commit embedded in the public package.
+7. Validates version files at that commit.
+8. Verifies the complete public package family declared by `VERSIONS.txt` at
+   that commit, so packages introduced on newer branches are not imposed on an
+   older release.
 
-```mermaid
-flowchart TB
-    START([Testing gate satisfied]) --> DETECT
-    DETECT["Read-only detector
-    ∙ Pin source SHA
-    ∙ Pin combined Build + Tests runs
-    ∙ Pin BAR build ID + package versions"] --> GATHER
-    GATHER["Gather exact BAR build
-    ∙ Verify repository/branch/commit/channel
-    ∙ Verify package versions + signatures"] --> PUSH_AUDIT
-    PUSH_AUDIT["NuGet.org dry run
-    ∙ Preview exact BAR ID + versions
-    ∙ Confirm packages are absent"] --> APPROVE1{Queue protected publisher?}
-    APPROVE1 -->|No| STOP([Stop])
-    APPROVE1 -->|Yes| PUSH
-    PUSH["Queue NuGet.org publisher
-    ∙ Pass immutable BAR build ID
-    ∙ Return run ID + approval URL"] --> AZURE_APPROVAL{Human approves versions/destination?}
-    AZURE_APPROVAL -->|No| STOP
-    AZURE_APPROVAL -->|Yes| WAIT
-    WAIT["Protected publisher
-    ∙ Gather + verify exact BAR build
-    ∙ Push NuGet.org packages
-    ∙ Verify indexed versions"] --> DRAFT_AUDIT
-    DRAFT_AUDIT["Draft dry-run
-    ∙ Select immediate previous release tag
-    ∙ Review exact tag + source SHA"] --> APPROVE2{Create tag and draft?}
-    APPROVE2 -->|No| STOP
-    APPROVE2 -->|Yes| DRAFT
-    DRAFT["Create release draft
-    ∙ Push exact tag
-    ∙ Create generated-notes draft
-    ∙ Download draft body"] --> TEASER
-    TEASER["Human teaser
-    ∙ Read downloaded draft notes
-    ∙ Write customer-facing teaser"] --> PUBLICATION_AUDIT
-    PUBLICATION_AUDIT["Publication dry-run
-    ∙ Assemble final body
-    ∙ Review body SHA
-    ∙ Review draft + publication operations"] --> APPROVE3{Publish draft?}
-    APPROVE3 -->|No| STOP
-    APPROVE3 -->|Yes| PUBLISH
-    PUBLISH["Publish
-    ∙ Dispatch website notes
-    ∙ Upload body + publish draft"] --> HANDOFF([Release milestones])
+The tag target is the source commit embedded in the published `SkiaSharp`
+package. If the release branch has advanced, Finish reports the difference and
+still plans to tag the package commit. If SkiaSharp-family packages disagree on
+their source commit, finalization stops.
 
-    classDef error fill:#ffebee,stroke:#c62828
-    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class STOP error
-    class START,HANDOFF endpoint
-```
+HarfBuzzSharp packages may come from an older SkiaSharp commit when their base
+version was reused. Finish validates their expected version and dependency
+relationship but does not require their source commit to equal the SkiaSharp
+commit.
 
-The release-publish detector is also the recovery entry point: it reconstructs
-the immutable source, pipeline, BAR, package, and test pins. The protected
-publisher accepts the BAR build ID rather than a mutable branch or latest-build
-selector. Successful publication with delayed NuGet indexing remains a
-resumable `wait-for-nuget` state.
+### Public version composition
 
-### Stage 5: Release Milestones (release-milestones skill)
+`scripts/VERSIONS.txt` contains package base versions and
+`scripts/azure-templates-variables.yml` contains `PREVIEW_LABEL`.
 
-```mermaid
-flowchart TB
-    START([GitHub Release published]) --> RECONCILE
-    RECONCILE["Assignment reconciliation dry-run
-    ∙ Detect shipped tagged releases
-    ∙ Roll unshipped ranges forward
-    ∙ Reconcile PRs + linked issues"] --> RECONCILE_DECIDE{Assignments?}
-    RECONCILE_DECIDE -->|Warnings| BLOCKED([Investigate boundaries/missing milestones])
-    RECONCILE_DECIDE -->|Pending| RECONCILE_APPROVE{Approve assignments?}
-    RECONCILE_APPROVE -->|No| STOP([Stop])
-    RECONCILE_APPROVE -->|Yes| RECONCILE_APPLY[Apply shipped assignments]
-    RECONCILE_APPLY --> RECONCILE
-    RECONCILE_DECIDE -->|Complete| ADVANCE
-    ADVANCE["Milestone advancement dry-run
-    ∙ Maintain upcoming Chromium dates
-    ∙ Detect milestones with release tags
-    ∙ Move open issues/PRs to next unshipped milestone
-    ∙ Close shipped milestones"] --> ADVANCE_DECIDE{Changes?}
-    ADVANCE_DECIDE -->|Warnings| BLOCKED
-    ADVANCE_DECIDE -->|Pending| ADVANCE_APPROVE{Approve advancement?}
-    ADVANCE_APPROVE -->|No| STOP
-    ADVANCE_APPROVE -->|Yes| ADVANCE_APPLY[Apply schedule, moves, and closure]
-    ADVANCE_APPLY --> ADVANCE
-    ADVANCE_DECIDE -->|Complete| DONE([Release complete])
+| Label | Public form |
+|-------|-------------|
+| `stable` | `X.Y.Z` or `X.Y.Z.F` |
+| `preview.N` | `{base}-preview.N.{buildRevision}` |
+| `rc.N` | `{base}-rc.N.{buildRevision}` |
 
-    classDef error fill:#ffebee,stroke:#c62828
-    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
-    class BLOCKED,STOP error
-    class START,DONE endpoint
-```
+The same label/build revision is applied to the SkiaSharp and HarfBuzzSharp base
+versions. Finish validates this composition rather than comparing a prerelease
+version directly with the base in `VERSIONS.txt`.
 
-The same skill can run independently to advance upcoming milestones from the
-Chromium schedule or reconcile shipped assignments at any time.
+### Tag and draft approval
 
----
+The first Finish plan shows:
 
-## Related Documentation
+- every required public package and version;
+- the package source commit and release branch;
+- the exact tag and previous release tag;
+- tag/draft operations and conflicts;
+- a preliminary milestone closeout.
 
-- [Versioning](versioning.md) — Version numbering scheme explanation
+The `release-tag` environment then gates:
+
+- pushing the tag directly to the public package commit;
+- creating or reconciling a GitHub draft;
+- preserving GitHub-generated notes inside managed markers.
+
+An existing matching tag/draft is success. An existing tag or release pointing
+to another commit is a blocking conflict.
+
+### Publication approval
+
+After draft creation, a second read-only job downloads the actual remote draft
+and reports its URL, body hash, tag target, prerelease state, and closeout
+effects.
+
+The `release-publish` environment gates publication of that exact draft.
+The approved publication artifact contains the remote draft body hash; the write
+job fails if the draft body or managed-marker state changed while approval was
+pending.
+
+### Automatic closeout
+
+After publication, Finish:
+
+- creates or updates the next three preview/RC/stable milestones from the
+  Chromium/Skia schedule;
+- reconciles shipped PRs and linked issues;
+- moves open milestone items to the next unshipped milestone;
+- closes the shipped milestone after propagation checks;
+- dispatches targeted release-note generation;
+- refreshes issue-template release choices;
+- reports, but never merges, the stable bump PR.
+
+Closeout is idempotent. Ambiguous milestone boundaries stop without changing
+unrelated milestones.
+
+## Release summaries
+
+The initial GitHub Release is published with GitHub-generated notes and an empty
+managed summary region. This intentionally avoids waiting for AI prose on the
+release critical path.
+
+The **Sync - Release Notes & API Diffs** workflow later:
+
+1. deterministically regenerates release facts;
+2. asks the release-notes skill to write consumer-facing prose;
+3. opens a normal review PR.
+
+After that PR merges, **Update GitHub Release summaries** replaces only the
+managed summary region. It never rewrites GitHub-generated notes or updates an
+unmarked historical release.
+
+## Smoke testing
+
+Release smoke testing remains an optional skill because it involves host/device
+setup, screenshots, and human judgment.
+
+It consumes an exact public NuGet version.
+
+It never selects a newer package implicitly. If smoke testing becomes a
+mandatory machine-enforced gate, move its result into CI or the team pipeline
+rather than relying on local skill state.
+
+## Recovery
+
+Both workflows are reconciliation based:
+
+- rerun Prepare with the same target/version to recover partial branch or PR
+  creation;
+- rerun Finish with the same public version after NuGet indexing completes;
+- matching branches, PRs, tags, drafts, releases, summaries, and milestone state
+  are reported as done;
+- conflicting immutable state is blocked.
+
+The release CLI under `scripts/infra/release/` exposes the same plan/apply
+operations for diagnostics. Never edit a plan JSON or execute a command copied
+from it; regenerate the plan from current state.
+
+## Related documentation
+
+- [Versioning](versioning.md)
+- [NuGet packages](packages.md)
+- [Release notes and API diffs](release-notes-and-api-diffs.md)
+- [Memory management](memory-management.md)

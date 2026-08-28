@@ -3,69 +3,41 @@
 Helper scripts that keep SkiaSharp's GitHub **milestones**, **release schedule**,
 and the **issue-template version dropdowns** in sync with what actually ships.
 
-All three read the shared source of truth in
+The tooling reads the shared source of truth in
 [`scripts/VERSIONS.txt`](../../VERSIONS.txt) (the `SkiaSharp nuget X.Y.Z` and
 `libSkiaSharp milestone N` lines) and talk to GitHub through the
 [`gh`](https://cli.github.com/) CLI, which must be authenticated.
 
-| Script | Language | What it manages | Automated? |
-|--------|----------|-----------------|------------|
-| [`advance-release-milestones.py`](../../../.agents/skills/release-milestones/scripts/advance-release-milestones.py) | Python | Creates/updates upcoming milestones, moves open issues and PRs forward, and closes tagged milestones. | No — use release-milestones. |
-| [`reconcile-release-assignments.py`](../../../.agents/skills/release-milestones/scripts/reconcile-release-assignments.py) | Python | Fixes shipped PR/linked-issue assignments. | No — use release-milestones. |
-| [`update-bug-template.py`](update-bug-template.py) | Python | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily workflow. |
+| Component | What it manages | Automated? |
+|-----------|-----------------|------------|
+| [`release_milestones.py`](../release/release_milestones.py) | Reconciles shipped PR/issue assignments, moves open work, and closes tagged milestones. | **Yes** — `Release - Finish` closeout |
+| [`update-bug-template.py`](update-bug-template.py) | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily and post-release workflows |
 
 ---
 
-## `advance-release-milestones.py`
+## Release closeout
 
-Fetches the Chromium release schedule from `chromiumdash.appspot.com` and
-creates/updates GitHub milestones for the next few Skia milestones, with due
-dates derived from the Chrome cadence:
+The release CLI consumes the immutable Finish plan:
 
-| Chrome phase | SkiaSharp milestone | Work starts on |
-|--------------|---------------------|----------------|
-| Beta | `Preview.1` | Branch day |
-| Early Stable | `Preview.2` | Early Stable Cut day |
-| Stable Cut | `RC` | Early Stable day |
-| Stable | `Stable` | Stable Cut day |
-
-```bash
-# preview the next 3 milestones without touching anything
-python3 .agents/skills/release-milestones/scripts/advance-release-milestones.py \
-  --dry-run --count 3
-
-# create/update them
-python3 .agents/skills/release-milestones/scripts/advance-release-milestones.py
-```
-
-Flags: `--dry-run`, `--count <n>` (default 3), `--repo <owner/repo>`
-(default `mono/SkiaSharp`).
-
-During the same advancement, exact release tags make their matching milestones
-shipped. Open issues and pull requests move to the next unshipped milestone in
-release order. The script waits for GitHub to reflect those moves, verifies no
-new open item appeared, then closes the shipped milestone.
-
-## `reconcile-release-assignments.py`
-
-Detects shipped releases from exact remote tags, uses release-branch merge-bases
-as first-parent commit-range boundaries, and rolls unshipped preview/RC ranges
-forward to the next shipped release. Every PR in those ranges — and any issues
-it closed — is assigned to the milestone where it actually shipped.
-
-```bash
-# report what would change
-python3 .agents/skills/release-milestones/scripts/reconcile-release-assignments.py \
+```text
+python3 scripts/infra/release/release.py finish closeout \
+  --plan finish-plan.json \
   --dry-run
-
-# reconcile a specific version instead of the one in VERSIONS.txt
-python3 .agents/skills/release-milestones/scripts/reconcile-release-assignments.py \
-  --version 4.150.0 --dry-run
-
 ```
 
-Flags: `--dry-run`, `--version <x.y.z>` (defaults to VERSIONS.txt), and
-`--repo <owner/repo>`.
+It determines shipped releases from immutable tags, reconciles merged PRs and
+their linked issues to the release where they shipped, moves remaining open
+items to the next unshipped milestone, and closes the shipped milestone. The
+command is idempotent and blocks on ambiguous release boundaries.
+
+Before rollover, it also fetches the Chromium release schedule and creates or
+updates the next three SkiaSharp preview/RC/stable milestones and due dates.
+Schedule lookup failures are reported as warnings and do not suppress release
+notes or issue-template dispatches.
+
+The normal `Release - Finish` workflow performs this automatically after the
+GitHub Release is published. The CLI command exists for read-only diagnostics
+and recovery.
 
 ## `update-bug-template.py`
 
@@ -104,5 +76,5 @@ used to validate the result.
 The [`Sync - Issue Template Versions`](../../../.github/workflows/auto-update-issue-template-versions.yml)
 workflow runs `update-bug-template.py` daily (09:00 UTC) and opens/updates a PR
 when the dropdowns drift. It can also be triggered manually via
-**workflow_dispatch**. The release-milestones paths are not scheduled; run them
-through the release-milestones skill.
+**workflow_dispatch**. Stable release closeout dispatches the same workflow so
+the public version list can converge immediately.
