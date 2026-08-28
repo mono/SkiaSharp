@@ -278,6 +278,24 @@ class PublicationPlanAndPublishTests(unittest.TestCase):
         with self.assertRaises(ConflictError):
             finish.plan_publication(plan, github=github)
 
+    def test_plan_publication_tolerates_published_release_with_legacy_branch_target(self):
+        # Item 3 regression: an already-published release with a legacy
+        # branch-name target_commitish (e.g. "main") must reconcile through
+        # plan_publication just like it does through check_release_conflict
+        # in create-draft -- the tag is authoritative once it exists, not
+        # target_commitish. Must not be treated more strictly here.
+        github = FakeGitHubClient()
+        tag = "v3.119.0"
+        source_commit = "a" * 40
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0", is_draft=False, is_prerelease=False,
+            target_commitish="main", body=gh.build_initial_body("notes"), url="https://example.invalid",
+        )
+        plan = make_finish_plan(tag=tag, title="Version 3.119.0", stable=True, source_commit=source_commit)
+        result = finish.plan_publication(plan, github=github)
+        self.assertTrue(result["isPublished"])
+        self.assertEqual(result["nextAction"], "closeout")
+
     def test_publish_publishes_matching_draft(self):
         github = FakeGitHubClient()
         tag = "v3.119.0-preview.1"
@@ -307,6 +325,37 @@ class PublicationPlanAndPublishTests(unittest.TestCase):
         publication = {"bodySha256": gh.body_sha256("irrelevant")}
         result = finish.publish(plan, publication, github=github)
         self.assertEqual(result["status"], "already-published")
+
+    def test_publish_tolerates_already_published_release_with_legacy_branch_target(self):
+        # Item 3 regression: publish's already-published short-circuit must
+        # use the same tolerant target_commitish rule as plan_publication
+        # and create-draft, not a stricter open-coded equality check.
+        github = FakeGitHubClient()
+        tag = "v3.119.0"
+        source_commit = "a" * 40
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0", is_draft=False, is_prerelease=False,
+            target_commitish="main", body="already published", url="https://example.invalid",
+        )
+        plan = make_finish_plan(tag=tag, title="Version 3.119.0", stable=True, source_commit=source_commit)
+        publication = {"bodySha256": gh.body_sha256("irrelevant")}
+        result = finish.publish(plan, publication, github=github)
+        self.assertEqual(result["status"], "already-published")
+        self.assertEqual(result["nextAction"], "closeout")
+
+    def test_publish_still_rejects_already_published_release_with_a_different_exact_sha(self):
+        # A genuine SHA-vs-SHA disagreement on an already-published release
+        # remains a hard conflict, unlike the legacy branch-name case above.
+        github = FakeGitHubClient()
+        tag = "v3.119.0"
+        github.releases[tag] = gh.ReleaseInfo(
+            tag_name=tag, name="Version 3.119.0", is_draft=False, is_prerelease=False,
+            target_commitish="c" * 40, body="already published", url="https://example.invalid",
+        )
+        plan = make_finish_plan(tag=tag, title="Version 3.119.0", stable=True, source_commit="a" * 40)
+        publication = {"bodySha256": gh.body_sha256("irrelevant")}
+        with self.assertRaises(ConflictError):
+            finish.publish(plan, publication, github=github)
 
     def test_publish_rejects_body_changed_since_plan(self):
         github = FakeGitHubClient()

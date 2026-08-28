@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gitrepo_helpers as helpers
+import release_common as common
 from release_common import PlanError, with_digest
 from release_git import GitRepository
 from release_github import GitHubClient, GitHubError, PullRequestRef
@@ -356,6 +357,11 @@ class PrepareStableTests(unittest.TestCase):
             github=github,
         )
         self.assertEqual(plan["stableBump"]["status"], "pending")
+        # Regression: an "awaiting-user" operation status (emitted below,
+        # once the bump PR is open) must be schema-valid -- writing a plan
+        # is the boundary that actually enforces the schema, unlike
+        # constructing the in-memory dict directly.
+        common.write_plan(self.root / "prepare-plan.json", plan, schema_name=prepare.PREPARE_SCHEMA)
         report = prepare.apply_prepare_plan(with_digest(plan), repo=fixture.repo, github=github)
 
         self.assertEqual(report["nextAction"], "await-merge")
@@ -372,6 +378,15 @@ class PrepareStableTests(unittest.TestCase):
         )
         self.assertEqual(replanned["nextAction"], "await-merge")
         self.assertEqual(replanned["stableBump"]["status"], "awaiting-user")
+        awaiting_op = next(op for op in replanned["operations"] if op["id"] == "open-stable-bump-pr")
+        self.assertEqual(awaiting_op["status"], "awaiting-user")
+        # This is the exact plan CLI callers persist and later re-read: it
+        # must round-trip through schema validation without raising, since
+        # the schema is the source of truth for the enum, not just the code
+        # path that produces the value.
+        common.write_plan(
+            self.root / "prepare-plan-awaiting-user.json", replanned, schema_name=prepare.PREPARE_SCHEMA
+        )
 
         # Re-applying while still open is idempotent and still await-merge,
         # not done.
