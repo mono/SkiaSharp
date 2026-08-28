@@ -14,7 +14,9 @@ from release_git import GitRepository
 import release_finish as finish
 import release_github as gh
 import release_milestones as milestones
+import release_nuget as nuget
 from release_github import PullRequestRef
+from test_release_nuget import FakeNuGetClient, FakeSignatureVerifier, build_nupkg, catalog_entry_for
 
 
 class FakeGitHubClient:
@@ -1168,6 +1170,152 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
             },
         )
         self.assertEqual(result["nextAction"], "closeout")
+
+
+class BuildFinishPlanNextActionTests(unittest.TestCase):
+    """Plan-level regressions for ``build_finish_plan`` itself (the actual
+    ``finish plan`` entry point), not just ``plan_publication``'s own
+    internal ``next_action`` rule: ``finish plan`` previously emitted
+    ``plan-publication`` for *any* existing draft without inspecting its
+    body for managed markers, so a workflow driven purely by ``finish
+    plan``'s ``nextAction`` would skip ``create-draft`` entirely and could
+    never reach the marker-less-draft migration path there. Uses a real,
+    throwaway git repository (exercising the actual ``GitVersionsFileReader``
+    ``build_finish_plan`` hard-codes) plus a fake in-memory NuGet client, so
+    this is a genuine end-to-end plan-generation test, not just a unit test
+    of an extracted helper.
+    """
+
+    SOURCE_BRANCH = "release/3.119.0-preview.1"
+    REQUESTED_VERSION = "3.119.0-preview.1.42"
+    TAG = "v3.119.0-preview.1"
+    TITLE = "Version 3.119.0 (Preview 1)"
+    MANIFEST = {"anchorPackages": ["SkiaSharp", "SkiaSharp.HarfBuzz", "HarfBuzzSharp"]}
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _repo(self) -> tuple[GitRepository, str]:
+        _, worktree = helpers.create_bare_and_worktree(self.root, "finish-plan")
+        (worktree / "scripts").mkdir(parents=True, exist_ok=True)
+        (worktree / "scripts" / "VERSIONS.txt").write_text(
+            "# nuget versions\n"
+            "# SkiaSharp\n"
+            "SkiaSharp                nuget       3.119.0\n"
+            "SkiaSharp.HarfBuzz       nuget       3.119.0\n"
+            "# HarfBuzzSharp\n"
+            "HarfBuzzSharp            nuget       1.8.8\n",
+            encoding="utf-8",
+        )
+        (worktree / "scripts" / "azure-templates-variables.yml").write_text(
+            "variables:\n"
+            "  SKIASHARP_VERSION: 3.119.0\n"
+            "  PREVIEW_LABEL: 'preview.1'\n",
+            encoding="utf-8",
+        )
+        source_commit = helpers.commit_all(worktree, "Initial commit")
+        repo = GitRepository(root=worktree)
+        repo.git("branch", self.SOURCE_BRANCH, source_commit)
+        repo.push_branch(self.SOURCE_BRANCH)
+        repo.fetch()
+        return repo, source_commit
+
+    def _nuget_client(self, *, source_commit: str) -> FakeNuGetClient:
+        client = FakeNuGetClient()
+        for package_id, version, dependency_groups in (
+            ("SkiaSharp", self.REQUESTED_VERSION, None),
+            (
+                "SkiaSharp.HarfBuzz", self.REQUESTED_VERSION,
+                [("net8.0", [("HarfBuzzSharp", "1.8.8-preview.1.42")])],
+            ),
+            ("HarfBuzzSharp", "1.8.8-preview.1.42", None),
+        ):
+            nupkg = build_nupkg(
+                package_id, version, commit=source_commit, branch=self.SOURCE_BRANCH,
+                dependency_groups=dependency_groups,
+            )
+            # catalog_entry_for() derives its own repository field from the
+            # nupkg's embedded nuspec by default, so the two stay
+            # consistent without needing to specify it again here.
+            client.add(package_id, version, nupkg, entry=catalog_entry_for(
+                nupkg, package_id=package_id, version=version,
+            ))
+        return client
+
+    def _build_plan(self, *, github_factory) -> dict:
+        repo, source_commit = self._repo()
+        client = self._nuget_client(source_commit=source_commit)
+        github = github_factory(source_commit)
+        return finish.build_finish_plan(
+            requested_version=self.REQUESTED_VERSION,
+            nuget_client=client,
+            repo=repo,
+            github=github,
+            manifest=self.MANIFEST,
+            fingerprints=("dummy-fingerprint",),
+            signature_verifier=FakeSignatureVerifier(),
+            download_dir=self.root / "downloads",
+            tooling_sha="b" * 40,
+        )
+
+    def test_no_release_yet_routes_to_create_draft(self):
+        plan = self._build_plan(github_factory=lambda source_commit: FakeGitHubClient())
+        self.assertEqual(plan["nextAction"], "create-draft")
+        self.assertFalse(plan["draft"]["exists"])
+        self.assertFalse(plan["draft"]["hasManagedMarkers"])
+
+    def test_unpublished_draft_without_managed_markers_routes_to_create_draft(self):
+        # Item regression: this is the exact case that previously fell
+        # through to plan-publication, even though only create_draft knows
+        # how to migrate a marker-less draft in place.
+        def _github_factory(source_commit):
+            github = FakeGitHubClient()
+            github.releases[self.TAG] = gh.ReleaseInfo(
+                tag_name=self.TAG, name=self.TITLE, is_draft=True, is_prerelease=True,
+                target_commitish=source_commit, body="legacy notes, no markers", url="https://example.invalid",
+            )
+            return github
+
+        plan = self._build_plan(github_factory=_github_factory)
+        self.assertEqual(plan["nextAction"], "create-draft")
+        self.assertTrue(plan["draft"]["exists"])
+        self.assertFalse(plan["draft"]["isPublished"])
+        self.assertFalse(plan["draft"]["hasManagedMarkers"])
+
+    def test_unpublished_draft_with_managed_markers_routes_to_plan_publication(self):
+        def _github_factory(source_commit):
+            github = FakeGitHubClient()
+            github.releases[self.TAG] = gh.ReleaseInfo(
+                tag_name=self.TAG, name=self.TITLE, is_draft=True, is_prerelease=True,
+                target_commitish=source_commit, body=gh.build_initial_body("notes"),
+                url="https://example.invalid",
+            )
+            return github
+
+        plan = self._build_plan(github_factory=_github_factory)
+        self.assertEqual(plan["nextAction"], "plan-publication")
+        self.assertTrue(plan["draft"]["exists"])
+        self.assertFalse(plan["draft"]["isPublished"])
+        self.assertTrue(plan["draft"]["hasManagedMarkers"])
+
+    def test_published_release_routes_to_closeout(self):
+        def _github_factory(source_commit):
+            github = FakeGitHubClient()
+            github.releases[self.TAG] = gh.ReleaseInfo(
+                tag_name=self.TAG, name=self.TITLE, is_draft=False, is_prerelease=True,
+                target_commitish=source_commit, body=gh.build_initial_body("notes"),
+                url="https://example.invalid",
+            )
+            return github
+
+        plan = self._build_plan(github_factory=_github_factory)
+        self.assertEqual(plan["nextAction"], "closeout")
+        self.assertTrue(plan["draft"]["exists"])
+        self.assertTrue(plan["draft"]["isPublished"])
 
 
 if __name__ == "__main__":

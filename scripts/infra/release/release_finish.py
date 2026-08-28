@@ -106,11 +106,22 @@ def build_finish_plan(
 
     draft_exists = existing_release is not None
     draft_published = bool(existing_release and not existing_release.is_draft)
+    draft_has_markers = bool(existing_release and gh.has_managed_markers(existing_release.body))
     if draft_published:
         next_action = "closeout"
-    elif draft_exists:
+    elif draft_exists and draft_has_markers:
+        # An unpublished draft already carrying the managed marker body is
+        # ready for a fresh publication review.
         next_action = "plan-publication"
     else:
+        # No draft yet, or an unpublished draft that predates managed
+        # markers (created by hand, or by an older tool version): either
+        # way, only ``create_draft`` knows how to create it or safely
+        # migrate it in place, so route there rather than sending the
+        # workflow straight to ``plan-publication``, which cannot create
+        # or migrate anything and would otherwise be stuck reporting
+        # ``next_action="create-draft"`` from *inside* its own response
+        # without the CLI ever routing back to it.
         next_action = "create-draft"
 
     plan = {
@@ -161,6 +172,7 @@ def build_finish_plan(
             "exists": draft_exists,
             "isPublished": draft_published,
             "status": draft_status,
+            "hasManagedMarkers": draft_has_markers,
         },
         "warnings": warnings,
     }
