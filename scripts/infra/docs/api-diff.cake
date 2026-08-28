@@ -83,9 +83,9 @@ Task ("docs-api-diff")
             Information ($"Skipping '{id}' — no version found in VERSIONS.txt.");
             continue;
         }
-        var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
-            ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
-            : version;
+        var localNugetVersion = string.IsNullOrEmpty (PREVIEW_NUGET_SUFFIX)
+            ? version
+            : $"{version}-{PREVIEW_NUGET_SUFFIX}";
 
         var localNupkgPath = $"{OUTPUT_NUGETS_PATH}/{id}.{localNugetVersion}.nupkg";
         if (!FileExists(localNupkgPath)) {
