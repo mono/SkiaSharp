@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import gitrepo_helpers as helpers
+import release_common as common
 from release_common import ConflictError, PlanError, with_digest
 from release_git import GitRepository
 import release_finish as finish
@@ -1170,6 +1171,43 @@ class ScheduleMaintenanceIntegrationTests(unittest.TestCase):
             },
         )
         self.assertEqual(result["nextAction"], "closeout")
+
+
+class BuildPendingReportTests(unittest.TestCase):
+    """Opus 5 must-fix/operability item 5: the machine-readable pending
+    report a ``NotReadyError`` produces for ``finish plan --output``."""
+
+    def test_pending_report_carries_missing_packages_and_deadline_context(self):
+        from release_common import NotReadyError
+
+        error = NotReadyError(
+            "2 package(s) not yet visible/listed on NuGet.org after 1200s "
+            "(deadline 1200s): SkiaSharp.Extra 3.119.0, HarfBuzzSharp 1.8.8.1; "
+            "rerun once indexing completes",
+            missing=(
+                {"id": "SkiaSharp.Extra", "version": "3.119.0"},
+                {"id": "HarfBuzzSharp", "version": "1.8.8.1"},
+            ),
+            elapsed_seconds=1200.0,
+            deadline_seconds=1200.0,
+        )
+        report = finish.build_pending_report(
+            requested_version="3.119.0", tooling_sha="a" * 40, error=error
+        )
+        self.assertEqual(report["nextAction"], "pending")
+        self.assertEqual(report["requestedVersion"], "3.119.0")
+        self.assertEqual(report["toolingSha"], "a" * 40)
+        self.assertEqual(
+            report["missingPackages"],
+            [
+                {"id": "SkiaSharp.Extra", "version": "3.119.0"},
+                {"id": "HarfBuzzSharp", "version": "1.8.8.1"},
+            ],
+        )
+        self.assertEqual(report["elapsedSeconds"], 1200.0)
+        self.assertEqual(report["deadlineSeconds"], 1200.0)
+        self.assertIn("SkiaSharp.Extra", report["message"])
+        common.validate_against_schema(report, finish.FINISH_PENDING_SCHEMA)
 
 
 class BuildFinishPlanNextActionTests(unittest.TestCase):

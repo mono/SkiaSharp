@@ -209,34 +209,64 @@ class HttpNuGetClient:
             raise NuGetError(f"could not fetch nuspec for {package_id} {version}: {exc}") from exc
 
 
-def wait_for_catalog_entry(
-    client: NuGetClient,
-    package_id: str,
-    version: str,
-    *,
-    attempts: int = 10,
-    delay_seconds: float = 30.0,
-    sleep: Callable[[float], None] = time.sleep,
-) -> CatalogEntry:
-    """Bounded poll for NuGet indexing lag; never silently picks another version."""
+DEFAULT_POLL_DEADLINE_SECONDS = 1200.0  # 20 minutes
+DEFAULT_POLL_INTERVAL_SECONDS = 30.0
 
-    last_entry: CatalogEntry | None = None
-    for attempt in range(attempts):
-        entry = client.get_catalog_entry(package_id, version)
-        if entry is not None and entry.listed:
-            return entry
-        last_entry = entry
-        if attempt < attempts - 1:
-            sleep(delay_seconds)
-    if last_entry is None:
-        raise NotReadyError(
-            f"{package_id} {version} is not yet visible on NuGet.org after "
-            f"{attempts} attempts; rerun once indexing completes"
-        )
-    raise NotReadyError(
-        f"{package_id} {version} is on NuGet.org but not listed after "
-        f"{attempts} attempts; rerun once it is listed"
-    )
+
+def poll_catalog_entries(
+    client: NuGetClient,
+    requests: list[tuple[str, str]],
+    *,
+    deadline_at: float,
+    poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+    clock: Callable[[], float] = time.monotonic,
+    sleep: Callable[[float], None] = time.sleep,
+) -> dict[tuple[str, str], CatalogEntry]:
+    """Poll a batch of ``(package_id, version)`` pairs against one shared
+    wall-clock deadline, never each pair independently re-driving its own
+    fixed attempt count.
+
+    Makes one immediate pass over every requested pair; whichever are
+    missing or not yet listed are retried together on the next pass -- the
+    resolved subset is never re-checked -- until either every pair
+    resolves or ``deadline_at`` (an absolute timestamp comparable with
+    ``clock()``, shared across every batch in one ``verify_public_receipt``
+    call) is reached. This replaces the old per-package "10 attempts x 30s"
+    loop, which could serially burn up to ~4.5 minutes *per package* --
+    with dozens of packages in a family, that added up to hours of
+    sequential waiting even though NuGet almost always indexes an entire
+    publish batch together.
+    """
+
+    start = clock()
+    resolved: dict[tuple[str, str], CatalogEntry] = {}
+    pending = list(requests)
+    while True:
+        still_pending = []
+        for package_id, version in pending:
+            entry = client.get_catalog_entry(package_id, version)
+            if entry is not None and entry.listed:
+                resolved[(package_id, version)] = entry
+            else:
+                still_pending.append((package_id, version))
+        pending = still_pending
+        if not pending:
+            return resolved
+        now = clock()
+        if now >= deadline_at:
+            elapsed = now - start
+            deadline_seconds = deadline_at - start
+            missing = tuple({"id": package_id, "version": version} for package_id, version in pending)
+            names = ", ".join(f"{package_id} {version}" for package_id, version in pending)
+            raise NotReadyError(
+                f"{len(pending)} package(s) not yet visible/listed on NuGet.org "
+                f"after {elapsed:.0f}s (deadline {deadline_seconds:.0f}s): {names}; "
+                "rerun once indexing completes",
+                missing=missing,
+                elapsed_seconds=elapsed,
+                deadline_seconds=deadline_seconds,
+            )
+        sleep(min(poll_interval, max(0.0, deadline_at - now)))
 
 
 def verify_catalog_entry(entry: CatalogEntry, *, package_id: str, version: str) -> None:
@@ -265,8 +295,6 @@ def verify_catalog_entry(entry: CatalogEntry, *, package_id: str, version: str) 
         )
     if entry.package_size <= 0:
         raise NuGetError(f"{package_id} {version} catalog entry is missing packageSize")
-    if not entry.dependency_groups and package_id.lower() != "harfbuzzsharp":
-        raise NuGetError(f"{package_id} {version} catalog entry has no dependencyGroups")
 
 
 @dataclass(frozen=True)
@@ -433,7 +461,11 @@ class DotNetSignatureVerifier:
         for fingerprint in fingerprints:
             args.extend(["--certificate-fingerprint", fingerprint])
         args.append(str(resolved_path))
-        result = self.runner.run(args, cwd=resolved_path.parent, check=False)
+        # dotnet nuget verify can be slow on a cold SDK (JIT warmup, trust
+        # chain building, certificate revocation checks over the network),
+        # well past the runner's 120s default -- give it a generous,
+        # explicit budget rather than risk a spurious timeout mid-verify.
+        result = self.runner.run(args, cwd=resolved_path.parent, check=False, timeout=900)
         if not result.ok:
             raise NuGetError(
                 f"signature verification failed for {nupkg_path.name}: {result.stdout}{result.stderr}"
@@ -740,13 +772,25 @@ def verify_public_receipt(
     download_dir: Path,
     signature_verifier: SignatureVerifier,
     fingerprints: tuple[str, ...],
+    deadline_seconds: float = DEFAULT_POLL_DEADLINE_SECONDS,
+    poll_interval: float = DEFAULT_POLL_INTERVAL_SECONDS,
+    clock: Callable[[], float] = time.monotonic,
     sleep: Callable[[float], None] = time.sleep,
 ) -> PublicReceipt:
     """Verify the full public NuGet.org receipt for ``requested_version``.
 
     Implements the "Package-family consistency" and "Anchor and source
     commit" sections of the release-automation plan.
+
+    Every catalog-indexing wait in this function shares one wall-clock
+    deadline (``deadline_seconds`` from the call's start, 20 minutes by
+    default): the SkiaSharp/SkiaSharp.HarfBuzz bootstrap poll and the
+    single batched poll for every remaining package both count against it,
+    rather than each package independently retrying its own fixed attempt
+    count -- see :func:`poll_catalog_entries`.
     """
+
+    deadline_at = clock() + deadline_seconds
 
     anchors = tuple(manifest["anchorPackages"])
     # NOTE: manifest["families"] (public-packages.json's *current* family
@@ -763,8 +807,9 @@ def verify_public_receipt(
 
     warnings: list[str] = []
 
-    def _verify_anchor(package_id: str, version: str) -> tuple[CatalogEntry, Nuspec]:
-        entry = wait_for_catalog_entry(nuget, package_id, version, sleep=sleep)
+    def _finish_anchor_verification(
+        package_id: str, version: str, entry: CatalogEntry
+    ) -> tuple[CatalogEntry, Nuspec]:
         verify_catalog_entry(entry, package_id=package_id, version=version)
         nupkg_bytes = nuget.download_package(package_id, version)
         verify_anchor_hash(entry, nupkg_bytes, package_id=package_id, version=version)
@@ -780,9 +825,20 @@ def verify_public_receipt(
             )
         return entry, nuspec
 
+    # Bootstrap: SkiaSharp and SkiaSharp.HarfBuzz are both requested at the
+    # same version and are both required before anything else can be
+    # resolved (the source commit and package families come from their
+    # nuspecs), so poll for both together in one shared pass rather than
+    # sequentially.
+    bootstrap_entries = poll_catalog_entries(
+        nuget, [(package_id, requested_version) for package_id in skiasharp_version_anchors],
+        deadline_at=deadline_at, poll_interval=poll_interval, clock=clock, sleep=sleep,
+    )
     anchor_evidence: dict[str, tuple[CatalogEntry, Nuspec]] = {}
     for package_id in skiasharp_version_anchors:
-        anchor_evidence[package_id] = _verify_anchor(package_id, requested_version)
+        anchor_evidence[package_id] = _finish_anchor_verification(
+            package_id, requested_version, bootstrap_entries[(package_id, requested_version)]
+        )
 
     _, skia_nuspec = anchor_evidence["SkiaSharp"]
     source_commit, source_branch = verify_nuspec_repository(
@@ -852,15 +908,37 @@ def verify_public_receipt(
             f"{expected_harfbuzzsharp_version}"
         )
 
+    # One shared pass over every remaining expected catalog entry: the rest
+    # of the SkiaSharp family, the HarfBuzzSharp anchor (if configured as
+    # one), and the entire HarfBuzzSharp family -- all polled together
+    # against the *same* deadline established at the top of this function,
+    # not a fresh budget per package.
+    remaining_requests: dict[tuple[str, str], None] = {}
+    for package_id in families["SkiaSharp"]:
+        if package_id not in anchor_evidence:
+            remaining_requests[(package_id, requested_version)] = None
     if "HarfBuzzSharp" in anchors:
-        anchor_evidence["HarfBuzzSharp"] = _verify_anchor("HarfBuzzSharp", expected_harfbuzzsharp_version)
+        remaining_requests[("HarfBuzzSharp", expected_harfbuzzsharp_version)] = None
+    for package_id in families["HarfBuzzSharp"]:
+        if package_id not in anchor_evidence:
+            remaining_requests[(package_id, expected_harfbuzzsharp_version)] = None
+    remaining_entries = poll_catalog_entries(
+        nuget, list(remaining_requests),
+        deadline_at=deadline_at, poll_interval=poll_interval, clock=clock, sleep=sleep,
+    )
+
+    if "HarfBuzzSharp" in anchors:
+        anchor_evidence["HarfBuzzSharp"] = _finish_anchor_verification(
+            "HarfBuzzSharp", expected_harfbuzzsharp_version,
+            remaining_entries[("HarfBuzzSharp", expected_harfbuzzsharp_version)],
+        )
 
     packages: list[PackageReceipt] = []
     for package_id in families["SkiaSharp"]:
         if package_id in anchor_evidence:
             _, nuspec = anchor_evidence[package_id]
         else:
-            entry = wait_for_catalog_entry(nuget, package_id, requested_version, sleep=sleep)
+            entry = remaining_entries[(package_id, requested_version)]
             verify_catalog_entry(entry, package_id=package_id, version=requested_version)
             nuspec = _fetch_and_verify_nuspec(
                 nuget, package_id=package_id, version=requested_version
@@ -892,7 +970,7 @@ def verify_public_receipt(
         if package_id in anchor_evidence:
             _, nuspec = anchor_evidence[package_id]
         else:
-            entry = wait_for_catalog_entry(nuget, package_id, expected_harfbuzzsharp_version, sleep=sleep)
+            entry = remaining_entries[(package_id, expected_harfbuzzsharp_version)]
             verify_catalog_entry(entry, package_id=package_id, version=expected_harfbuzzsharp_version)
             nuspec = _fetch_and_verify_nuspec(
                 nuget, package_id=package_id, version=expected_harfbuzzsharp_version

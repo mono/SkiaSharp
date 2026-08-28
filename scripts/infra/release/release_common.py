@@ -62,7 +62,26 @@ class NotReadyError(ReleaseToolError):
 
     Distinguished from :class:`ConflictError` because the caller should
     report a bounded, rerunnable "pending" result rather than a hard failure.
+
+    Carries structured context -- beyond the human-readable message -- so a
+    caller (in particular ``finish plan``'s ``--output`` pending report) can
+    surface exactly which packages are still missing/unlisted and how much
+    of the polling budget was spent, without having to re-parse the message
+    text.
     """
+
+    def __init__(
+        self,
+        message: str,
+        *,
+        missing: tuple[dict, ...] = (),
+        elapsed_seconds: float | None = None,
+        deadline_seconds: float | None = None,
+    ):
+        super().__init__(message)
+        self.missing = missing
+        self.elapsed_seconds = elapsed_seconds
+        self.deadline_seconds = deadline_seconds
 
 
 @dataclass(frozen=True)
@@ -110,14 +129,19 @@ class SubprocessCommandRunner(CommandRunner):
         input: str | None = None,
     ) -> CommandResult:
         args = tuple(args)
-        completed = subprocess.run(
-            args,
-            cwd=str(cwd),
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-            input=input,
-        )
+        try:
+            completed = subprocess.run(
+                args,
+                cwd=str(cwd),
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                input=input,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise ReleaseToolError(
+                f"command timed out after {timeout}s: {' '.join(args)}"
+            ) from exc
         result = CommandResult(
             args=args,
             returncode=completed.returncode,

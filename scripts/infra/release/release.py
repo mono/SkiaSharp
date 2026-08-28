@@ -59,6 +59,17 @@ and ``schemas/result-envelope.schema.json``. ``inspect`` is the one
 exception: it has no plan input, so it omits ``toolingSha``/``planDigest``/
 ``nextAction`` but still reports the same ``release`` object shape.
 
+If ``finish plan`` cannot complete because one or more required packages are
+not yet listed on NuGet.org (bounded by one shared 20-minute polling
+deadline -- see ``release_nuget.poll_catalog_entries``), it always writes a
+distinctly-shaped pending report (``schemas/finish-pending.schema.json``:
+``nextAction: "pending"``, the requested version, the exact missing package
+IDs/versions, and elapsed/deadline context) to ``--output`` -- which always
+has a default value for this subcommand -- and exits with
+``FINISH_PLAN_PENDING_EXIT_CODE`` (2), distinct from the generic ``1`` every
+other error maps to, so a workflow step can upload that file with
+``if: always()`` and tell "rerun me later" apart from a genuine failure.
+
 Every subcommand accepts an optional ``--output <file>`` in addition to its
 existing stdout JSON, so a thin workflow step can read an exact file instead
 of scraping stdout. ``prepare plan``/``finish plan`` always write their
@@ -156,6 +167,17 @@ def _dotnet_command(repo_root: Path) -> tuple[str, ...]:
     return ("dotnet",)
 
 
+FINISH_PLAN_PENDING_EXIT_CODE = 2
+"""``finish plan``'s exit code when NuGet.org indexing has not converged.
+
+Distinct from the generic ``1`` every other :class:`~release_common.
+ReleaseToolError` maps to in :func:`main`, so a workflow can tell "rerun me
+later, nothing is wrong" (this code, with a pending report always written
+to ``--output`` so ``if: always()`` can upload it) apart from a genuine
+failure.
+"""
+
+
 def cmd_finish_plan(args: argparse.Namespace) -> int:
     repo = _repo(args.repo)
     package_dir = Path(__file__).resolve().parent
@@ -166,17 +188,32 @@ def cmd_finish_plan(args: argparse.Namespace) -> int:
     signature_verifier = nuget.DotNetSignatureVerifier(
         runner=common.DEFAULT_RUNNER, dotnet_command=_dotnet_command(repo.root)
     )
-    plan = finish.build_finish_plan(
-        requested_version=args.version,
-        nuget_client=nuget_client,
-        repo=repo,
-        github=github,
-        manifest=manifest,
-        fingerprints=fingerprints,
-        signature_verifier=signature_verifier,
-        download_dir=Path(args.download_dir),
-        tooling_sha=args.tooling_sha or repo.resolve("HEAD"),
-    )
+    tooling_sha = args.tooling_sha or repo.resolve("HEAD")
+    try:
+        plan = finish.build_finish_plan(
+            requested_version=args.version,
+            nuget_client=nuget_client,
+            repo=repo,
+            github=github,
+            manifest=manifest,
+            fingerprints=fingerprints,
+            signature_verifier=signature_verifier,
+            download_dir=Path(args.download_dir),
+            tooling_sha=tooling_sha,
+        )
+    except common.NotReadyError as error:
+        # Always write the pending report to --output (which always has a
+        # default value for this subcommand), regardless of whether the
+        # caller passed --output explicitly, so a workflow step marked
+        # `if: always()` can upload it even though this run did not
+        # succeed -- unlike a hard ReleaseToolError, this one is expected
+        # to be rerun later once NuGet.org finishes indexing.
+        pending = finish.build_pending_report(
+            requested_version=args.version, tooling_sha=tooling_sha, error=error
+        )
+        common.validate_against_schema(pending, finish.FINISH_PENDING_SCHEMA)
+        common.emit(pending, output=Path(args.output) if args.output else None)
+        return FINISH_PLAN_PENDING_EXIT_CODE
     stamped = common.write_plan(Path(args.output), plan, schema_name=finish.FINISH_SCHEMA)
     common.print_json(stamped)
     return 0

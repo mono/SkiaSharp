@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/mono/SkiaSharp/scripts/infra/release/schemas/finish-pending.schema.json",
+  "title": "Release Finish plan -- pending (NuGet.org indexing not yet complete)",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "schemaVersion",
+    "operation",
+    "generatedAt",
+    "toolingSha",
+    "nextAction",
+    "requestedVersion",
+    "missingPackages",
+    "message"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "operation": { "const": "finish-plan-pending" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "toolingSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "nextAction": { "const": "pending" },
+    "requestedVersion": { "type": "string" },
+    "missingPackages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "version"],
+        "properties": {
+          "id": { "type": "string" },
+          "version": { "type": "string" }
+        }
+      }
+    },
+    "elapsedSeconds": { "type": ["number", "null"] },
+    "deadlineSeconds": { "type": ["number", "null"] },
+    "message": { "type": "string" }
+  }
+}
