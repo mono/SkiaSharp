@@ -10,6 +10,7 @@
     release.py finish closeout --plan <file> --output <file> [--dry-run]
     release.py inspect --release-branch <release/X.Y.Z...> --output <file>
     release.py render-plan --plan <file> --output <file>
+    release.py check-environment --name <environment> --default-branch <branch> --output <file>
 
 Every "plan" subcommand (``prepare plan``, ``finish plan``) is read-only and
 writes a schema-validated, digest-stamped plan artifact to ``--output``.
@@ -59,6 +60,18 @@ and projects a small, flat, schema-versioned set of fields a workflow can
 map directly to job outputs -- ``toolingSha``, ``nextAction``,
 ``releaseIdentity``, ``releaseBranch``, ``releaseVersion``, and
 ``planDigest``. See ``schemas/plan-summary.schema.json``.
+
+``check-environment`` is a read-only gate, independent of any plan: it
+verifies a named GitHub Actions environment (``release-branching``,
+``release-tag``, ``release-publish``) actually exists with the exact
+protection a protected workflow job is relying on -- a ``required_reviewers``
+rule with at least one reviewer and ``prevent_self_review`` enabled, custom
+deployment branch policies enabled, and an allowed-branch set that is
+exactly the repository's default branch. It exits nonzero (after still
+writing its JSON report) for a missing or under-protected environment,
+because GitHub would otherwise silently auto-create an unprotected
+environment on first use and run the job anyway. Every protected job's
+first step, before any write or auth operation, must be this check.
 """
 
 from __future__ import annotations
@@ -71,6 +84,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import release_common as common
+import release_environment as environment
 import release_finish as finish
 import release_github as gh
 import release_milestones as milestones
@@ -244,6 +258,27 @@ def cmd_inspect(args: argparse.Namespace) -> int:
         )
     common.emit(report, output=_output_path(args))
     return 0
+
+
+def cmd_check_environment(args: argparse.Namespace) -> int:
+    """Read-only gate: verify a GitHub Actions environment's protection.
+
+    Every protected workflow job (``release-branching``, ``release-tag``,
+    ``release-publish``) must run this as its first step, before any write
+    or auth operation. It never creates or modifies anything -- it only
+    fails loudly (nonzero exit, plus a ``reasons`` list in its report) when
+    the named environment does not exist yet or is missing any of the
+    required protections, so a job cannot silently run against whatever
+    unprotected environment GitHub would otherwise auto-create on first
+    use. See ``release_environment.check_environment`` for the exact
+    policy enforced.
+    """
+
+    client = environment.GhCliEnvironmentClient()
+    snapshot = client.get_environment(args.name)
+    result = environment.check_environment(snapshot, name=args.name, default_branch=args.default_branch)
+    common.emit(environment.check_result_to_dict(result), output=_output_path(args))
+    return 0 if result.ok else 1
 
 
 _SUMMARY_PLAN_SCHEMAS = {"prepare": prepare.PREPARE_SCHEMA, "finish": finish.FINISH_SCHEMA}
@@ -507,6 +542,21 @@ def create_parser() -> argparse.ArgumentParser:
     )
     render_plan_parser.add_argument("--output", default=None, help="also write the rendered summary to this file")
     render_plan_parser.set_defaults(func=cmd_render_plan)
+
+    check_environment_parser = subparsers.add_parser(
+        "check-environment",
+        help=(
+            "read-only gate: fail unless a GitHub Actions environment exists with the "
+            "required protections; run this first in every protected job"
+        ),
+    )
+    check_environment_parser.add_argument("--name", required=True, help="the GitHub environment name")
+    check_environment_parser.add_argument(
+        "--default-branch", required=True,
+        help="the repository default branch; must be the environment's only allowed deployment branch",
+    )
+    check_environment_parser.add_argument("--output", default=None, help="also write the JSON report to this file")
+    check_environment_parser.set_defaults(func=cmd_check_environment)
 
     return parser
 

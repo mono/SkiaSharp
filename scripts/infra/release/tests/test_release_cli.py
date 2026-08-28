@@ -87,6 +87,33 @@ class ParserWiringTests(unittest.TestCase):
         args = parser.parse_args(["render-plan", "--plan", "prepare-plan.json"])
         self.assertIsNone(args.output)
 
+    def test_check_environment_parses(self):
+        parser = cli.create_parser()
+        args = parser.parse_args(
+            ["check-environment", "--name", "release-tag", "--default-branch", "main"]
+        )
+        self.assertIs(args.func, cli.cmd_check_environment)
+        self.assertEqual(args.name, "release-tag")
+        self.assertEqual(args.default_branch, "main")
+        self.assertIsNone(args.output)
+
+    def test_check_environment_accepts_optional_output(self):
+        parser = cli.create_parser()
+        args = parser.parse_args(
+            [
+                "check-environment", "--name", "release-publish", "--default-branch", "main",
+                "--output", "check.json",
+            ]
+        )
+        self.assertEqual(args.output, "check.json")
+
+    def test_check_environment_requires_name_and_default_branch(self):
+        parser = cli.create_parser()
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["check-environment", "--default-branch", "main"])
+        with self.assertRaises(SystemExit):
+            parser.parse_args(["check-environment", "--name", "release-tag"])
+
     def test_missing_subcommand_errors(self):
         parser = cli.create_parser()
         with self.assertRaises(SystemExit):
@@ -205,6 +232,90 @@ class RenderPlanExecutionTests(unittest.TestCase):
         self.assertEqual(rendered["nextAction"], "done")
         self.assertEqual(rendered["releaseBranch"], "release/3.119.0-preview.1")
         self.assertEqual(rendered["planDigest"], plan["planDigest"])
+
+
+class CheckEnvironmentExecutionTests(unittest.TestCase):
+    """End-to-end: runs ``check-environment`` through the CLI's own argument
+    parsing and I/O, with ``GhCliEnvironmentClient`` swapped for a fake so no
+    real ``gh`` call happens -- exactly the injection point a workflow test
+    would use, and proof this is a real read-only gate, not a stub."""
+
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+
+    def tearDown(self):
+        self._tmp.cleanup()
+
+    def _patch_client(self, snapshot):
+        from unittest import mock
+
+        class _FakeClient:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def get_environment(self, name):
+                return snapshot
+
+        return mock.patch.object(cli.environment, "GhCliEnvironmentClient", _FakeClient)
+
+    def test_well_configured_environment_exits_zero_and_writes_report(self):
+        import release_environment as environment
+
+        snapshot = environment.EnvironmentSnapshot(
+            name="release-tag",
+            protection_rule_types=("required_reviewers", "branch_policy"),
+            required_reviewers=environment.RequiredReviewersRule(reviewer_count=2, prevent_self_review=True),
+            protected_branches=False,
+            custom_branch_policies=True,
+            branch_policies=(environment.BranchPolicy(name="main", kind="branch"),),
+        )
+        output_path = self.root / "check.json"
+        with self._patch_client(snapshot):
+            exit_code = cli.main(
+                [
+                    "check-environment", "--name", "release-tag", "--default-branch", "main",
+                    "--output", str(output_path),
+                ]
+            )
+        self.assertEqual(exit_code, 0)
+        report = common.json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertTrue(report["ok"])
+        self.assertEqual(report["reasons"], [])
+        self.assertEqual(report["allowedBranches"], ["main"])
+        self.assertEqual(report["reviewerCount"], 2)
+
+    def test_missing_environment_exits_nonzero_and_still_writes_report(self):
+        output_path = self.root / "check.json"
+        with self._patch_client(None):
+            exit_code = cli.main(
+                [
+                    "check-environment", "--name", "release-publish", "--default-branch", "main",
+                    "--output", str(output_path),
+                ]
+            )
+        self.assertEqual(exit_code, 1)
+        report = common.json.loads(output_path.read_text(encoding="utf-8"))
+        self.assertFalse(report["exists"])
+        self.assertFalse(report["ok"])
+        self.assertTrue(report["reasons"])
+
+    def test_misconfigured_environment_exits_nonzero_without_output(self):
+        import release_environment as environment
+
+        snapshot = environment.EnvironmentSnapshot(
+            name="release-branching",
+            protection_rule_types=("branch_policy",),
+            required_reviewers=None,
+            protected_branches=False,
+            custom_branch_policies=True,
+            branch_policies=(environment.BranchPolicy(name="main", kind="branch"),),
+        )
+        with self._patch_client(snapshot):
+            exit_code = cli.main(
+                ["check-environment", "--name", "release-branching", "--default-branch", "main"]
+            )
+        self.assertEqual(exit_code, 1)
 
 
 class EmitHelperTests(unittest.TestCase):
