@@ -1357,12 +1357,23 @@ broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's
   strings.
 - **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
   tag with both `shipments` facts and a `release_summaries` entry, and for each one:
-  preflights (skip — never an error — a release that does not exist, has no managed
-  markers at all, i.e. a historical release published before this feature, or is
-  already current), re-reads every planned release immediately before the first write
-  as a race barrier (`gh`/the REST API has no conditional PATCH), writes, then re-reads
-  and requires the stored body to equal the intended body exactly. Any preflight or
-  race failure aborts the **whole batch** before a single write.
+  preflights (skip — never an error — a release that does not exist, is still an
+  **unpublished draft** (see below), has no managed markers at all, i.e. a historical
+  release published before this feature, or is already current), re-reads every
+  planned release immediately before the first write as a race barrier (`gh`/the REST
+  API has no conditional PATCH), writes, then re-reads and requires the stored body to
+  equal the intended body exactly. Any preflight or race failure aborts the **whole
+  batch** before a single write.
+
+**Drafts.** Finish creates the release as a **draft** and persists a hash of its exact
+initial body, holding it there until its own environment approval publishes it. If the
+summary updater patched that draft's body in the meantime, the persisted hash would go
+stale out from under Finish — a genuine cross-workflow race that would force an
+unrelated reapproval with no actual content problem. So `update_releases()` checks
+`existing.is_draft` in preflight and skips (never errors on, never patches) any draft,
+with an explicit `skipped` result/detail; it converges once GitHub's `release`
+(published) event fires — the workflow's own `release: types: [published]` trigger —
+or on this workflow's next scheduled/dispatched run after that, whichever comes first.
 
 **Markers.** The updater imports — never redefines — the managed markers and body
 helpers from `scripts/infra/release/release_github.py` (`SUMMARY_START_MARKER`,
