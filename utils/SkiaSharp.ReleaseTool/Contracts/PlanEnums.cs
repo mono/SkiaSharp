@@ -7,8 +7,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		[JsonStringEnumMemberName("prepare")]
 		Prepare,
 
-		[JsonStringEnumMemberName("finish")]
-		Finish,
 	}
 
 	public enum PrepareNextAction
@@ -24,18 +22,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 		[JsonStringEnumMemberName("blocked")]
 		Blocked,
-	}
-
-	public enum FinishNextAction
-	{
-		[JsonStringEnumMemberName("create-draft")]
-		CreateDraft,
-
-		[JsonStringEnumMemberName("plan-publication")]
-		PlanPublication,
-
-		[JsonStringEnumMemberName("closeout")]
-		Closeout,
 	}
 
 	public enum MaintenanceBranchAction
@@ -104,12 +90,4 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		AwaitingUser,
 	}
 
-	public enum CompletionStatus
-	{
-		[JsonStringEnumMemberName("done")]
-		Done,
-
-		[JsonStringEnumMemberName("pending")]
-		Pending,
-	}
 }

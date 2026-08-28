@@ -3,6 +3,7 @@ using System.Text.Json;
 using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Json;
+using SkiaSharp.ReleaseTool.Model;
 using Xunit;
 
 namespace SkiaSharp.ReleaseTool.Tests.Contracts
@@ -23,23 +24,12 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			Assert.NotNull(copy);
 			Assert.Equal(PlanSamples.PlanId, copy.PlanId);
 			Assert.Contains("\"nextAction\": \"done\"", json);
+			Assert.DoesNotContain("\"numeric\":", json, StringComparison.Ordinal);
+			Assert.DoesNotContain("\"releaseType\":", json, StringComparison.Ordinal);
+			Assert.DoesNotContain("\"integrationBranch\":", json, StringComparison.Ordinal);
+			Assert.DoesNotContain("\"releaseBranch\":", json, StringComparison.Ordinal);
 			Assert.Throws<InvalidOperationException>(
 				() => JsonSerializer.Serialize(new UnregisteredType("reflection is disabled")));
-		}
-
-		[Fact]
-		public void Finish_plan_round_trips_semantically()
-		{
-			var json = JsonSerializer.Serialize(
-				PlanSamples.Finish(),
-				ReleaseJsonContext.Strict.FinishPlan);
-			var copy = JsonSerializer.Deserialize(
-				json,
-				ReleaseJsonContext.Strict.FinishPlan);
-
-			Assert.NotNull(copy);
-			FinishPlanValidator.Validate(copy);
-			Assert.Equal("3.119.0-preview.2.12345.7", copy.Release.Version);
 		}
 
 		[Theory]
@@ -102,15 +92,18 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			return new TheoryData<PreparePlan, string>
 			{
 				{ valid with { SchemaVersion = 2 }, "schemaVersion" },
-				{ valid with { Operation = ReleaseOperation.Finish }, "operation" },
+				{ valid with { Operation = (ReleaseOperation)999 }, "operation" },
 				{ valid with { PlanId = Guid.Empty }, "planId" },
 				{ valid with { GeneratedAt = valid.GeneratedAt.ToOffset(TimeSpan.FromHours(2)) }, "UTC" },
 				{ valid with { ToolingSha = "not-a-sha" }, "40-hex" },
+				{ valid with { ToolingSha = new string('A', 40) }, "lowercase" },
 				{ valid with { Release = valid.Release with { Identity = "3.119" } }, "invalid release version" },
 				{ valid with { Release = valid.Release with { Branch = "release/wrong" } }, "release.branch" },
-				{ valid with { Release = valid.Release with { Label = "preview.3" } }, "release.label" },
 				{ valid with { Input = valid.Input with { IntegrationTarget = "feature/unsafe" } }, "integration target" },
-				{ valid with { Skia = valid.Skia with { ReleaseBranch = "release/3.119.0" } }, "skia.releaseBranch" },
+				{ valid with { Input = valid.Input with { IntegrationTarget = "origin/release/3.119.x" } }, "normalized" },
+				{ valid with { Input = valid.Input with { IntegrationTarget = "release/3.118.x" } }, "release.integrationBranch" },
+				{ valid with { Operations = [null!] }, "null values" },
+				{ valid with { Warnings = null! }, "warnings" },
 				{
 					valid with
 					{
@@ -125,6 +118,37 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 					"nextAction"
 				},
 			};
+		}
+
+		[Fact]
+		public void Hotfix_preview_and_stable_oracle_plans_validate()
+		{
+			var preview = HotfixPlan("3.119.0.1-preview.1", "refs/tags/v3.119.0");
+			PreparePlanValidator.Validate(preview);
+			Assert.Equal(PlanOperationStatus.Skipped, preview.Operations[0].Status);
+
+			var stable = HotfixPlan(
+				"3.119.0.1",
+				"refs/remotes/origin/release/3.119.0.1-rc.1");
+			PreparePlanValidator.Validate(stable);
+			Assert.Null(stable.StableBump);
+		}
+
+		[Fact]
+		public void Hotfix_preview_requires_exact_stable_parent_tag()
+		{
+			var valid = HotfixPlan("3.119.0.1-preview.1", "refs/tags/v3.119.0");
+
+			Assert.Throws<ValidationException>(
+				() => PreparePlanValidator.Validate(valid with
+				{
+					Base = valid.Base with { Ref = "refs/tags/v3.119.0-preview.1" },
+				}));
+			Assert.Throws<ValidationException>(
+				() => PreparePlanValidator.Validate(valid with
+				{
+					Base = valid.Base with { Ref = "refs/tags/v3.119.0.1" },
+				}));
 		}
 
 		[Fact]
@@ -149,39 +173,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			};
 			Assert.Throws<ValidationException>(
 				() => PreparePlanValidator.Validate(invalidUri));
-		}
-
-		[Theory]
-		[MemberData(nameof(InvalidFinishPlans))]
-		public void Finish_semantic_validation_rejects_inconsistent_plans(
-			FinishPlan plan,
-			string message)
-		{
-			var exception = Assert.Throws<ValidationException>(
-				() => FinishPlanValidator.Validate(plan));
-			Assert.Contains(message, exception.Message, StringComparison.OrdinalIgnoreCase);
-		}
-
-		public static TheoryData<FinishPlan, string> InvalidFinishPlans()
-		{
-			var valid = PlanSamples.Finish();
-			return new TheoryData<FinishPlan, string>
-			{
-				{ valid with { Release = valid.Release with { Tag = "v3.119.0" } }, "release.tag" },
-				{ valid with { Release = valid.Release with { Version = "3.119.0-preview.2.1234.7" } }, "build revision" },
-				{ valid with { Receipt = valid.Receipt with { SourceCommit = "bad" } }, "sourceCommit" },
-				{ valid with { Receipt = valid.Receipt with { Label = "preview.1" } }, "receipt.label" },
-				{ valid with { Tag = valid.Tag with { Name = "v3.119.0-preview.1" } }, "tag.name" },
-				{ valid with { PreviousTag = "v3.120.0" }, "previousTag" },
-				{
-					valid with
-					{
-						Draft = new DraftInfo(true, false, CompletionStatus.Done, true),
-						NextAction = FinishNextAction.CreateDraft,
-					},
-					"nextAction"
-				},
-			};
 		}
 
 		[Fact]
@@ -225,5 +216,48 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 		}
 
 		private sealed record UnregisteredType(string Value);
+
+		private static PreparePlan HotfixPlan(string version, string baseRef)
+		{
+			var source = PlanSamples.Prepare();
+			var identity = SkiaSharpReleaseIdentity.Parse(version);
+			return source with
+			{
+				Input = new PrepareInput("main", version, null),
+				Release = new PrepareReleaseInfo(
+					version,
+					version,
+					identity.ReleaseBranch),
+				Base = new PrepareBaseInfo(baseRef, PlanSamples.Sha('b')),
+				MaintenanceBranch = new MaintenanceBranchInfo(
+					identity.IntegrationBranch,
+					false,
+					MaintenanceBranchAction.None,
+					null),
+				Skia = new PrepareSkiaInfo(
+					PlanSamples.Sha('c'),
+					RemoteState.Matching),
+				Versions = new PrepareVersionsInfo(false),
+				Operations =
+				[
+					new PlanOperation(
+						PlanOperationId.CreateMaintenanceBranch,
+						PlanOperationKind.GitRef,
+						PlanOperationStatus.Skipped,
+						identity.IntegrationBranch),
+					new PlanOperation(
+						PlanOperationId.CreateSkiaRef,
+						PlanOperationKind.GitHubRef,
+						PlanOperationStatus.Done,
+						null),
+					new PlanOperation(
+						PlanOperationId.CreateReleaseBranch,
+						PlanOperationKind.GitRef,
+						PlanOperationStatus.Done,
+						null),
+				],
+				StableBump = null,
+			};
+		}
 	}
 }

@@ -193,7 +193,7 @@ namespace SkiaSharp.ReleaseTool.Model
 			var identityLabels = Version.ReleaseLabels.ToArray();
 			var publicLabels = publicVersion.ReleaseLabels.ToArray();
 			if (publicLabels.Length <= identityLabels.Length ||
-				!publicLabels.Take(identityLabels.Length).SequenceEqual(identityLabels, StringComparer.OrdinalIgnoreCase))
+				!publicLabels.Take(identityLabels.Length).SequenceEqual(identityLabels, StringComparer.Ordinal))
 			{
 				throw new PlanException($"public version '{value}' has the wrong release label");
 			}

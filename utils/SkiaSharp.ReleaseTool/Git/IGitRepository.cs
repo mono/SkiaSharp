@@ -20,6 +20,11 @@ namespace SkiaSharp.ReleaseTool.Git
 		Task<IReadOnlyList<string>> CommitSubjectsFirstParentAsync(
 			string rangeSpec,
 			CancellationToken cancellationToken = default);
+		Task<string> CommitMessageAsync(string commit, CancellationToken cancellationToken = default);
+		Task<IReadOnlyList<string>> ChangedPathsAsync(
+			string from,
+			string to,
+			CancellationToken cancellationToken = default);
 		Task RequireCleanAsync(CancellationToken cancellationToken = default);
 		Task<string> CurrentBranchAsync(CancellationToken cancellationToken = default);
 		Task CreateBranchAsync(string branch, string startPoint, CancellationToken cancellationToken = default);

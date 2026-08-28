@@ -19,6 +19,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 			await RunGitAsync(worktree, cancellationToken, "init", "-b", "main");
 			await RunGitAsync(worktree, cancellationToken, "config", "user.email", "release-bot@example.com");
 			await RunGitAsync(worktree, cancellationToken, "config", "user.name", "Release Bot");
+			await RunGitAsync(worktree, cancellationToken, "config", "core.autocrlf", "false");
+			await RunGitAsync(worktree, cancellationToken, "config", "commit.gpgsign", "false");
 			await RunGitAsync(worktree, cancellationToken, "remote", "add", "origin", bare);
 			return (bare, worktree);
 		}

@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Text;
 using SkiaSharp.ReleaseTool.Errors;
 
 namespace SkiaSharp.ReleaseTool.Processes
@@ -7,6 +8,7 @@ namespace SkiaSharp.ReleaseTool.Processes
 	public sealed class ProcessRunner : IProcessRunner
 	{
 		public static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(120);
+		private static readonly Encoding Utf8NoBom = new UTF8Encoding(false);
 
 		public async Task<ProcessRunResult> RunAsync(
 			IReadOnlyList<string> arguments,
@@ -34,7 +36,11 @@ namespace SkiaSharp.ReleaseTool.Processes
 				RedirectStandardInput = standardInput is not null,
 				UseShellExecute = false,
 				CreateNoWindow = true,
+				StandardOutputEncoding = Utf8NoBom,
+				StandardErrorEncoding = Utf8NoBom,
 			};
+			if (standardInput is not null)
+				startInfo.StandardInputEncoding = Utf8NoBom;
 			for (var index = 1; index < argv.Length; index++)
 				startInfo.ArgumentList.Add(argv[index]);
 
@@ -78,7 +84,7 @@ namespace SkiaSharp.ReleaseTool.Processes
 				throw new ReleaseToolException(
 					$"command timed out after {effectiveTimeout.TotalSeconds:g}s: {FormatCommand(argv)}");
 			}
-			catch (Exception ex) when (ex is IOException or ObjectDisposedException)
+			catch (Exception ex) when (ex is IOException or ObjectDisposedException or InvalidOperationException)
 			{
 				KillProcessTree(process);
 				throw new ReleaseToolException($"command I/O failed: {FormatCommand(argv)}", ex);
@@ -115,9 +121,22 @@ namespace SkiaSharp.ReleaseTool.Processes
 					standardInput.AsMemory(),
 					cancellationToken).ConfigureAwait(false);
 			}
+			catch (Exception ex) when (
+				ex is IOException or ObjectDisposedException or InvalidOperationException)
+			{
+				// A child may successfully exit after consuming only the input it
+				// needs. Its exit code, not the resulting broken pipe, is authoritative.
+			}
 			finally
 			{
-				process.StandardInput.Close();
+				try
+				{
+					process.StandardInput.Close();
+				}
+				catch (Exception ex) when (
+					ex is IOException or ObjectDisposedException or InvalidOperationException)
+				{
+				}
 			}
 		}
 

@@ -1,9 +1,10 @@
 using SkiaSharp.ReleaseTool.Errors;
+using SkiaSharp.ReleaseTool.Planning;
 using SkiaSharp.ReleaseTool.Processes;
 
 namespace SkiaSharp.ReleaseTool.Git
 {
-	public sealed class GitRepository : IGitRepository
+	public sealed class GitRepository : IGitRepository, IReleaseRepository
 	{
 		private const string TagRefPrefix = "refs/tags/";
 		private const string PeeledTagSuffix = "^{}";
@@ -61,6 +62,11 @@ namespace SkiaSharp.ReleaseTool.Git
 
 		public async Task<bool> RefExistsAsync(string reference, CancellationToken cancellationToken = default)
 		{
+			if (!GitReferencePolicy.IsFullyQualified(reference))
+			{
+				throw new GitException(
+					$"ref must be a fully-qualified, well-formed refs/... name: '{reference}'");
+			}
 			var result = await GitAsync(
 				["show-ref", "--verify", "--quiet", reference],
 				check: false,
@@ -192,6 +198,27 @@ namespace SkiaSharp.ReleaseTool.Git
 			return MachineLines(result.StandardOutput, "git log");
 		}
 
+		public async Task<string> CommitMessageAsync(
+			string commit,
+			CancellationToken cancellationToken = default)
+		{
+			var result = await GitAsync(
+				["show", "-s", "--format=%B", commit],
+				cancellationToken: cancellationToken).ConfigureAwait(false);
+			return result.StandardOutput.ReplaceLineEndings("\n").TrimEnd('\n');
+		}
+
+		public async Task<IReadOnlyList<string>> ChangedPathsAsync(
+			string from,
+			string to,
+			CancellationToken cancellationToken = default)
+		{
+			var result = await GitAsync(
+				["diff", "--name-only", $"{from}..{to}"],
+				cancellationToken: cancellationToken).ConfigureAwait(false);
+			return MachineLines(result.StandardOutput, "git diff --name-only");
+		}
+
 		public async Task RequireCleanAsync(CancellationToken cancellationToken = default)
 		{
 			var result = await GitAsync(
@@ -285,7 +312,7 @@ namespace SkiaSharp.ReleaseTool.Git
 		private static string ParseSha(string value, string description)
 		{
 			if (value.Length != 40 || value.Any(static character =>
-				character is not (>= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F')))
+				character is not (>= '0' and <= '9' or >= 'a' and <= 'f')))
 			{
 				throw new GitException($"{description} is not a 40-hex SHA: '{value}'");
 			}

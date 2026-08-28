@@ -8,5 +8,8 @@
 
 		/// <summary>Every unhandled <see cref="ReleaseToolException"/> maps here.</summary>
 		public const int GenericError = 1;
+
+		/// <summary>The command was canceled.</summary>
+		public const int Canceled = 2;
 	}
 }

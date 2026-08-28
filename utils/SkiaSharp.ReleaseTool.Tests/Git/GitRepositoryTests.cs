@@ -127,6 +127,25 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 					TestContext.Current.CancellationToken));
 		}
 
+		[Theory]
+		[InlineData("main")]
+		[InlineData("origin/main")]
+		[InlineData("refs/heads/bad ref")]
+		[InlineData("refs/heads/../bad")]
+		[InlineData("refs/heads/bad^name")]
+		[InlineData("refs/heads/topic./child")]
+		public async Task Ref_exists_rejects_noncanonical_refs_before_git(string reference)
+		{
+			var runner = new RecordingProcessRunner();
+			var repository = new GitRepository("/repo", runner);
+
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RefExistsAsync(
+					reference,
+					TestContext.Current.CancellationToken));
+			Assert.Empty(runner.Invocations);
+		}
+
 		[Fact]
 		public async Task Ls_remote_parsing_is_exact_and_CRLF_safe()
 		{
@@ -193,6 +212,19 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 			await Assert.ThrowsAsync<GitException>(
 				() => repository.ReleaseBranchesAsync(
 					cancellationToken: TestContext.Current.CancellationToken));
+		}
+
+		[Fact]
+		public async Task Uppercase_SHA_output_is_rejected()
+		{
+			var runner = new RecordingProcessRunner();
+			runner.Enqueue(Result(0, $"{new string('A', 40)}\n"));
+			var repository = new GitRepository("/repo", runner);
+
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.ResolveAsync(
+					"HEAD",
+					TestContext.Current.CancellationToken));
 		}
 
 		[Fact]

@@ -11,14 +11,8 @@ namespace SkiaSharp.ReleaseTool.Json
 		public static void Write(string path, PreparePlan plan) =>
 			Write(path, plan, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate);
 
-		public static void Write(string path, FinishPlan plan) =>
-			Write(path, plan, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate);
-
 		public static PreparePlan ReadPrepare(string path, Guid? expectedPlanId = null) =>
 			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
-
-		public static FinishPlan ReadFinish(string path, Guid? expectedPlanId = null) =>
-			Read(path, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate, expectedPlanId);
 
 		private static void Write<T>(
 			string path,
@@ -69,7 +63,6 @@ namespace SkiaSharp.ReleaseTool.Json
 			var actualPlanId = plan switch
 			{
 				PreparePlan prepare => prepare.PlanId,
-				FinishPlan finish => finish.PlanId,
 				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
 			};
 			if (expectedPlanId is { } expected && actualPlanId != expected)

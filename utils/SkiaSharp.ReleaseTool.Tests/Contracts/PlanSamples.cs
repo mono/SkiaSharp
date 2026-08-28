@@ -1,5 +1,4 @@
 using SkiaSharp.ReleaseTool.Contracts;
-using SkiaSharp.ReleaseTool.Model;
 
 namespace SkiaSharp.ReleaseTool.Tests.Contracts
 {
@@ -14,17 +13,14 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			GeneratedAt: new DateTimeOffset(2026, 8, 28, 12, 0, 0, TimeSpan.Zero),
 			ToolingSha: Sha('a'),
 			NextAction: PrepareNextAction.Done,
-			Input: new PrepareInput("release/3.119.x", "3.119.0-preview.2"),
+			Input: new PrepareInput(
+				"release/3.119.x",
+				"3.119.0-preview.2",
+				null),
 			Release: new PrepareReleaseInfo(
 				"3.119.0-preview.2",
 				"3.119.0-preview.2",
-				"3.119.0",
-				"preview.2",
-				ReleaseKind.Preview,
-				"release/3.119.0-preview.2",
-				"release/3.119.x",
-				false,
-				false),
+				"release/3.119.0-preview.2"),
 			Base: new PrepareBaseInfo("refs/remotes/origin/release/3.119.x", Sha('b')),
 			MaintenanceBranch: new MaintenanceBranchInfo(
 				"release/3.119.x",
@@ -33,10 +29,9 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 				null),
 			Skia: new PrepareSkiaInfo(
 				Sha('c'),
-				"release/3.119.0-preview.2",
 				RemoteState.Matching),
 			SkiaSharpRemoteState: RemoteState.Matching,
-			Versions: new PrepareVersionsInfo("3.119.0", false),
+			Versions: new PrepareVersionsInfo(false),
 			Operations:
 			[
 				new PlanOperation(
@@ -58,58 +53,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			StableBump: null,
 			Warnings: []);
 
-		public static FinishPlan Finish() => new(
-			SchemaVersion: 1,
-			Operation: ReleaseOperation.Finish,
-			PlanId: PlanId,
-			GeneratedAt: new DateTimeOffset(2026, 8, 28, 12, 0, 0, TimeSpan.Zero),
-			ToolingSha: Sha('d'),
-			NextAction: FinishNextAction.CreateDraft,
-			Input: new FinishInput("3.119.0-preview.2.12345.7"),
-			Receipt: new ReceiptInfo(
-				"3.119.0-preview.2.12345.7",
-				"3.119.0",
-				"preview.2",
-				"12345.7",
-				Sha('e'),
-				"release/3.119.0-preview.2",
-				"1.8.8.3",
-				[
-					new PackageReceipt(
-						"SkiaSharp",
-						"3.119.0-preview.2.12345.7",
-						Sha('e'),
-						"release/3.119.0-preview.2"),
-					new PackageReceipt(
-						"HarfBuzzSharp",
-						"1.8.8.3",
-						Sha('e'),
-						"release/3.119.0-preview.2"),
-				]),
-			Release: new FinishReleaseInfo(
-				"3.119.0-preview.2",
-				"3.119.0-preview.2.12345.7",
-				"release/3.119.0-preview.2",
-				"3.119.0-preview.2",
-				"3.119.0",
-				"preview.2",
-				ReleaseKind.Preview,
-				false,
-				"Version 3.119.0 (Preview 2)",
-				"v3.119.0-preview.2"),
-			Tag: new TagInfo(
-				"v3.119.0-preview.2",
-				Sha('e'),
-				null,
-				CompletionStatus.Pending),
-			PreviousTag: "v3.119.0-preview.1",
-			Draft: new DraftInfo(
-				false,
-				false,
-				CompletionStatus.Pending,
-				false),
-			Warnings: []);
-
 		public static PreparePlan StablePrepare()
 		{
 			var preview = Prepare();
@@ -120,14 +63,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 				Release = new PrepareReleaseInfo(
 					"3.119.0",
 					"3.119.0",
-					"3.119.0",
-					"stable",
-					ReleaseKind.Stable,
-					"release/3.119.0",
-					"release/3.119.x",
-					false,
-					true),
-				Skia = preview.Skia with { ReleaseBranch = "release/3.119.0" },
+					"release/3.119.0"),
 				Operations =
 				[
 					.. preview.Operations,

@@ -149,6 +149,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Model
 		[InlineData("3.120.0-preview.2.12345.1")]
 		[InlineData("3.119.0-preview.2.1.2.3")]
 		[InlineData("3.119.0-preview.2.1+metadata")]
+		[InlineData("3.119.0-Preview.2.12345.1")]
 		public void Public_version_validation_rejects_inconsistent_versions(string value)
 		{
 			var identity = SkiaSharpReleaseIdentity.Parse("3.119.0-preview.2");

@@ -1,5 +1,5 @@
-using NuGet.Versioning;
 using SkiaSharp.ReleaseTool.Errors;
+using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Model;
 
 namespace SkiaSharp.ReleaseTool.Contracts
@@ -30,25 +30,28 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 			var identity = SkiaSharpReleaseIdentity.Parse(plan.Release.Identity);
 			PlanValidation.Require(plan.Release.Version == identity.Raw, "release.version must equal release.identity");
-			PlanValidation.Require(plan.Release.Numeric == identity.Numeric, "release.numeric does not match release.identity");
-			PlanValidation.Require(plan.Release.Label == identity.Label, "release.label does not match release.identity");
-			PlanValidation.Require(plan.Release.ReleaseType == identity.ReleaseType, "release.releaseType does not match release.identity");
 			PlanValidation.Require(plan.Release.Branch == identity.ReleaseBranch, "release.branch does not match release.identity");
-			PlanValidation.Require(
-				plan.Release.IntegrationBranch == identity.IntegrationBranch,
-				"release.integrationBranch does not match release.identity");
-			PlanValidation.Require(plan.Release.IsHotfix == identity.IsHotfix, "release.isHotfix does not match release.identity");
-			PlanValidation.Require(plan.Release.Stable == identity.Stable, "release.stable does not match release.identity");
 
-			ReleaseVersionPolicy.NormalizeIntegrationBranch(plan.Input.IntegrationTarget);
+			var normalizedTarget = ReleaseVersionPolicy.NormalizeIntegrationBranch(plan.Input.IntegrationTarget);
+			PlanValidation.Require(
+				plan.Input.IntegrationTarget == normalizedTarget,
+				"input.integrationTarget must already be normalized");
+			PlanValidation.Require(
+				normalizedTarget == "main" || normalizedTarget == identity.IntegrationBranch,
+				"input.integrationTarget must be main or release.integrationBranch");
 			if (plan.Input.RequestedVersion is not null)
 				PlanValidation.Require(plan.Input.RequestedVersion == identity.Raw, "input.requestedVersion does not match release.identity");
+			if (plan.Input.ApprovedBase is not null)
+			{
+				PlanValidation.Require(
+					GitReferencePolicy.IsFullyQualified(plan.Input.ApprovedBase),
+					"input.approvedBase must be a fully-qualified, well-formed refs/... name");
+			}
 
 			PlanValidation.Require(!string.IsNullOrWhiteSpace(plan.Base.Ref), "base.ref must not be empty");
-			ValidateBaseRef(plan.Base.Ref, identity);
+			ValidateBaseRef(plan, identity);
 			PlanValidation.ValidateSha(plan.Base.Sha, "base.sha");
 			PlanValidation.ValidateSha(plan.Skia.Sha, "skia.sha");
-			PlanValidation.Require(plan.Skia.ReleaseBranch == identity.ReleaseBranch, "skia.releaseBranch does not match release.branch");
 
 			PlanValidation.Require(
 				plan.MaintenanceBranch.Name == identity.IntegrationBranch,
@@ -64,14 +67,13 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			}
 			else
 			{
-				PlanValidation.Require(plan.MaintenanceBranch.Exists, "maintenanceBranch.action 'none' requires an existing branch");
+				PlanValidation.Require(
+					plan.MaintenanceBranch.Exists || identity.IsHotfix,
+					"maintenanceBranch.action 'none' requires an existing branch except for hotfix releases");
+				PlanValidation.Require(
+					plan.MaintenanceBranch.BaseSha is null,
+					"maintenanceBranch.baseSha must be null when action is 'none'");
 			}
-
-			var versionState = ReleaseVersionPolicy.ParseStableVersion(
-				plan.Versions.SkiaSharp, "versions.skiaSharp", identity.ComponentCount);
-			PlanValidation.Require(
-				Equals(versionState.Version, identity.Version.Version),
-				"versions.skiaSharp does not match release.numeric");
 
 			ValidateOperations(plan);
 			ValidateStableBump(plan, identity);
@@ -80,9 +82,13 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 		private static void ValidateOperations(PreparePlan plan)
 		{
+			var planOperations = plan.Operations
+				?? throw new ValidationException("operations must not be null");
 			var operations = new Dictionary<PlanOperationId, PlanOperation>();
-			foreach (var operation in plan.Operations)
+			foreach (var operation in planOperations)
 			{
+				if (operation is null)
+					throw new ValidationException("operations must not contain null values");
 				PlanValidation.Require(
 					operations.TryAdd(operation.Id, operation),
 					$"operations contains duplicate id '{operation.Id}'");
@@ -101,7 +107,9 @@ namespace SkiaSharp.ReleaseTool.Contracts
 				[PlanOperationId.CreateMaintenanceBranch] =
 					plan.MaintenanceBranch.Action == MaintenanceBranchAction.Create
 						? PlanOperationStatus.Pending
-						: PlanOperationStatus.Done,
+						: plan.MaintenanceBranch.Exists
+							? PlanOperationStatus.Done
+							: PlanOperationStatus.Skipped,
 				[PlanOperationId.CreateSkiaRef] = StatusFor(plan.Skia.RemoteState),
 				[PlanOperationId.CreateReleaseBranch] = StatusFor(plan.SkiaSharpRemoteState),
 			};
@@ -120,7 +128,7 @@ namespace SkiaSharp.ReleaseTool.Contracts
 					$"operation '{expected.Key}' status is inconsistent");
 			}
 
-			var statuses = plan.Operations.Select(static operation => operation.Status).ToHashSet();
+			var statuses = planOperations.Select(static operation => operation.Status).ToHashSet();
 			var expectedAction = statuses.Contains(PlanOperationStatus.Blocked)
 				? PrepareNextAction.Blocked
 				: statuses.Contains(PlanOperationStatus.Pending)
@@ -139,10 +147,49 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			_ => throw new ValidationException($"unsupported remote state '{state}'"),
 		};
 
-		private static void ValidateBaseRef(string baseRef, SkiaSharpReleaseIdentity identity)
+		private static void ValidateBaseRef(
+			PreparePlan plan,
+			SkiaSharpReleaseIdentity identity)
 		{
+			var baseRef = plan.Base.Ref;
+			if (plan.Input.ApprovedBase == baseRef &&
+				plan.MaintenanceBranch.Action == MaintenanceBranchAction.Create)
+			{
+				PlanValidation.Require(
+					!plan.MaintenanceBranch.Exists,
+					"approved base recovery requires maintenance branch creation");
+				return;
+			}
+
+			const string tagPrefix = "refs/tags/";
+			if (baseRef.StartsWith(tagPrefix, StringComparison.Ordinal))
+			{
+				PlanValidation.Require(
+					identity.IsHotfix && !identity.Stable,
+					"base.ref may be a tag only for a hotfix prerelease");
+				SkiaSharpReleaseIdentity parent;
+				try
+				{
+					parent = SkiaSharpReleaseIdentity.ParseTag(baseRef[tagPrefix.Length..]);
+				}
+				catch (PlanException ex)
+				{
+					throw new ValidationException("base.ref hotfix tag is invalid", ex);
+				}
+				var expectedParent = identity.Version.Version.ToString(3);
+				PlanValidation.Require(
+					parent.Stable &&
+					!parent.IsHotfix &&
+					parent.Numeric == expectedParent &&
+					baseRef == $"refs/tags/v{expectedParent}",
+					"base.ref must be the exact stable three-part parent tag for a hotfix prerelease");
+				return;
+			}
+
 			const string prefix = "refs/remotes/origin/";
-			PlanValidation.Require(baseRef.StartsWith(prefix, StringComparison.Ordinal), "base.ref must be an origin remote ref");
+			PlanValidation.Require(
+				baseRef.StartsWith(prefix, StringComparison.Ordinal),
+				"base.ref must be an origin remote ref or the approved recovery ref");
 			var branch = baseRef[prefix.Length..];
 			if (branch == "main" || branch == identity.IntegrationBranch)
 				return;
@@ -194,119 +241,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		}
 	}
 
-	public static class FinishPlanValidator
-	{
-		public static void Validate(FinishPlan plan)
-		{
-			try
-			{
-				ValidateCore(plan);
-			}
-			catch (PlanException ex)
-			{
-				throw new ValidationException(ex.Message, ex);
-			}
-		}
-
-		private static void ValidateCore(FinishPlan plan)
-		{
-			PlanValidation.ValidateHeader(
-				plan.SchemaVersion,
-				plan.Operation,
-				ReleaseOperation.Finish,
-				plan.PlanId,
-				plan.GeneratedAt,
-				plan.ToolingSha);
-
-			var identity = SkiaSharpReleaseIdentity.Parse(plan.Release.Identity);
-			PlanValidation.Require(plan.Release.Raw == identity.Raw, "release.raw does not match release.identity");
-			PlanValidation.Require(plan.Release.Numeric == identity.Numeric, "release.numeric does not match release.identity");
-			PlanValidation.Require(plan.Release.Label == identity.Label, "release.label does not match release.identity");
-			PlanValidation.Require(plan.Release.ReleaseType == identity.ReleaseType, "release.releaseType does not match release.identity");
-			PlanValidation.Require(plan.Release.Stable == identity.Stable, "release.stable does not match release.identity");
-			PlanValidation.Require(plan.Release.Title == identity.Title, "release.title does not match release.identity");
-			PlanValidation.Require(plan.Release.Tag == identity.Tag, "release.tag does not match release.identity");
-			PlanValidation.Require(plan.Release.Branch == identity.ReleaseBranch, "release.branch does not match release.identity");
-
-			var (numeric, buildRevision) = identity.ValidatePublicVersion(plan.Release.Version);
-			PlanValidation.Require(plan.Input.RequestedVersion == plan.Release.Version, "input.requestedVersion does not match release.version");
-			PlanValidation.Require(plan.Receipt.SkiaSharpVersion == plan.Release.Version, "receipt.skiaSharpVersion does not match release.version");
-			PlanValidation.Require(plan.Receipt.Base == numeric, "receipt.base does not match release.numeric");
-			PlanValidation.Require(plan.Receipt.Label == identity.Label, "receipt.label does not match release.label");
-			PlanValidation.Require(plan.Receipt.BuildRevision == buildRevision, "receipt.buildRevision is inconsistent");
-			PlanValidation.Require(plan.Receipt.SourceBranch == identity.ReleaseBranch, "receipt.sourceBranch does not match release.branch");
-			PlanValidation.ValidateSha(plan.Receipt.SourceCommit, "receipt.sourceCommit");
-			ReleaseVersionPolicy.ParseStableVersion(
-				plan.Receipt.HarfBuzzSharpVersion, "receipt.harfBuzzSharpVersion", 3, 4);
-			ValidatePackages(plan);
-			ValidateTag(plan, identity);
-			ValidateDraft(plan);
-			PlanValidation.ValidateStrings(plan.Warnings, "warnings");
-		}
-
-		private static void ValidatePackages(FinishPlan plan)
-		{
-			var packages = new Dictionary<string, PackageReceipt>(StringComparer.Ordinal);
-			foreach (var package in plan.Receipt.Packages)
-			{
-				PlanValidation.Require(!string.IsNullOrWhiteSpace(package.Id), "package id must not be empty");
-				PlanValidation.Require(packages.TryAdd(package.Id, package), $"receipt.packages contains duplicate id '{package.Id}'");
-				PlanValidation.Require(package.SourceCommit == plan.Receipt.SourceCommit, $"package '{package.Id}' sourceCommit is inconsistent");
-				PlanValidation.Require(package.SourceBranch == plan.Receipt.SourceBranch, $"package '{package.Id}' sourceBranch is inconsistent");
-				PlanValidation.Require(
-					NuGetVersion.TryParse(package.Version, out var packageVersion) && !packageVersion.HasMetadata,
-					$"package '{package.Id}' has an invalid version");
-			}
-
-			PlanValidation.Require(
-				packages.TryGetValue("SkiaSharp", out var skiaSharp) &&
-				skiaSharp.Version == plan.Receipt.SkiaSharpVersion,
-				"receipt.packages must contain the matching SkiaSharp package");
-			PlanValidation.Require(
-				packages.TryGetValue("HarfBuzzSharp", out var harfBuzz) &&
-				harfBuzz.Version == plan.Receipt.HarfBuzzSharpVersion,
-				"receipt.packages must contain the matching HarfBuzzSharp package");
-		}
-
-		private static void ValidateTag(FinishPlan plan, SkiaSharpReleaseIdentity identity)
-		{
-			PlanValidation.Require(plan.Tag.Name == identity.Tag, "tag.name does not match release.tag");
-			PlanValidation.Require(plan.Tag.TargetCommit == plan.Receipt.SourceCommit, "tag.targetCommit does not match receipt.sourceCommit");
-			if (plan.Tag.ExistingSha is null)
-				PlanValidation.Require(plan.Tag.Status == CompletionStatus.Pending, "a missing tag must be pending");
-			else
-			{
-				PlanValidation.ValidateSha(plan.Tag.ExistingSha, "tag.existingSha");
-				PlanValidation.Require(plan.Tag.ExistingSha == plan.Tag.TargetCommit, "tag.existingSha conflicts with tag.targetCommit");
-				PlanValidation.Require(plan.Tag.Status == CompletionStatus.Done, "an existing matching tag must be done");
-			}
-
-			if (plan.PreviousTag is not null)
-			{
-				var previous = SkiaSharpReleaseIdentity.ParseTag(plan.PreviousTag);
-				PlanValidation.Require(
-					VersionComparer.VersionRelease.Compare(previous.Version, identity.Version) < 0,
-					"previousTag must precede the current release tag");
-			}
-		}
-
-		private static void ValidateDraft(FinishPlan plan)
-		{
-			PlanValidation.Require(
-				plan.Draft.Status == (plan.Draft.Exists ? CompletionStatus.Done : CompletionStatus.Pending),
-				"draft.status does not match draft.exists");
-			PlanValidation.Require(!plan.Draft.IsPublished || plan.Draft.Exists, "a published draft must exist");
-			PlanValidation.Require(!plan.Draft.HasManagedMarkers || plan.Draft.Exists, "managed markers require an existing draft");
-
-			var expectedAction = plan.Draft.IsPublished
-				? FinishNextAction.Closeout
-				: plan.Draft.Exists && plan.Draft.HasManagedMarkers
-					? FinishNextAction.PlanPublication
-					: FinishNextAction.CreateDraft;
-			PlanValidation.Require(plan.NextAction == expectedAction, "nextAction does not match draft state");
-		}
-	}
-
 	internal static class PlanValidation
 	{
 		public static void ValidateHeader(
@@ -325,11 +259,12 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		}
 
 		public static void ValidateSha(string value, string name) =>
-			Require(value.Length == 40 && value.All(IsHex), $"{name} must be a 40-hex SHA");
+			Require(value is not null && value.Length == 40 && value.All(IsHex), $"{name} must be a lowercase 40-hex SHA");
 
 		public static void ValidateStrings(IReadOnlyList<string> values, string name)
 		{
-			foreach (var value in values)
+			var strings = values ?? throw new ValidationException($"{name} must not be null");
+			foreach (var value in strings)
 				Require(value is not null, $"{name} must not contain null values");
 		}
 
@@ -340,6 +275,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		}
 
 		private static bool IsHex(char value) =>
-			value is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+			value is >= '0' and <= '9' or >= 'a' and <= 'f';
 	}
 }
