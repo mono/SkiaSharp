@@ -40,6 +40,8 @@ namespace SkiaSharp.ReleaseTool.Tests.Model
 
 			Assert.Equal("3.119.0", state.Skia.ToNormalizedString());
 			Assert.Equal("1.8.8.1", state.HarfBuzz.ToNormalizedString());
+			Assert.Equal("3.119.0", state.SkiaText);
+			Assert.Equal("1.8.8.1", state.HarfBuzzText);
 			Assert.Equal("preview.0", state.Label);
 
 			var mismatched = VariablesText.Replace("3.119.0", "3.120.0", StringComparison.Ordinal);
@@ -84,6 +86,18 @@ namespace SkiaSharp.ReleaseTool.Tests.Model
 		{
 			Assert.Equal("preview.0", VariablesYaml.ParsePreviewLabel(VariablesText));
 			Assert.False(SkiaSharpReleaseIdentity.TryParse("3.119.0-preview.0", out _));
+		}
+
+		[Fact]
+		public void Version_state_preserves_four_part_zero_versions()
+		{
+			var versions = VersionsText.Replace("1.8.8.1", "1.8.8.0", StringComparison.Ordinal);
+
+			var state = VersionStateReader.Parse(VariablesText, versions);
+
+			Assert.Equal("1.8.8", state.HarfBuzz.ToNormalizedString());
+			Assert.Equal("1.8.8.0", state.HarfBuzzText);
+			Assert.Equal(4, state.HarfBuzzComponentCount);
 		}
 
 		[Fact]

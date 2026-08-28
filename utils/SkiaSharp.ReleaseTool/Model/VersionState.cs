@@ -6,7 +6,16 @@ namespace SkiaSharp.ReleaseTool.Model
 	public sealed record VersionState(
 		NuGetVersion Skia,
 		NuGetVersion HarfBuzz,
-		string Label);
+		string Label,
+		int SkiaComponentCount,
+		int HarfBuzzComponentCount)
+	{
+		public string SkiaText =>
+			ReleaseVersionPolicy.FormatNumeric(Skia, SkiaComponentCount);
+
+		public string HarfBuzzText =>
+			ReleaseVersionPolicy.FormatNumeric(HarfBuzz, HarfBuzzComponentCount);
+	}
 
 	public static class VersionStateReader
 	{
@@ -24,7 +33,12 @@ namespace SkiaSharp.ReleaseTool.Model
 				throw new PlanException(
 					$"SKIASHARP_VERSION '{variableVersion}' does not match VERSIONS.txt '{versions.SkiaSharp}'");
 			}
-			return new VersionState(versions.SkiaSharp, versions.HarfBuzzSharp, label);
+			return new VersionState(
+				versions.SkiaSharp,
+				versions.HarfBuzzSharp,
+				label,
+				versions.SkiaSharpComponentCount,
+				versions.HarfBuzzSharpComponentCount);
 		}
 	}
 }

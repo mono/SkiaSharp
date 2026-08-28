@@ -63,7 +63,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 				cancellationToken).ConfigureAwait(false);
 			var baseState = await ReadVersionStateAsync(baseSelection.Ref, cancellationToken).ConfigureAwait(false);
 			var requiresPackageBump =
-				baseState.Skia.ToNormalizedString() != identity.Numeric;
+				baseState.SkiaText != identity.Numeric;
 			var skiaSha = await repository.ReadGitlinkAsync(
 				baseSelection.Ref,
 				SkiaSubmodulePath,
@@ -142,7 +142,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 					$"{targetRef["refs/remotes/origin/".Length..]} PREVIEW_LABEL is '{state.Label}'; cannot calculate the next preview automatically");
 			}
 
-			var current = state.Skia.ToNormalizedString();
+			var current = state.SkiaText;
 			if (releaseBranches.Contains($"release/{current}", StringComparer.Ordinal))
 				throw new PlanException($"stable branch release/{current} already exists");
 			if (releaseBranches.Any(branch =>
@@ -238,7 +238,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 			var maintenanceState = await ReadVersionStateAsync(
 				maintenanceBaseRef,
 				cancellationToken).ConfigureAwait(false);
-			if (maintenanceState.Skia.ToNormalizedString() != identity.Numeric ||
+			if (maintenanceState.SkiaText != identity.Numeric ||
 				maintenanceState.Label != "preview.0")
 			{
 				var source = approvedBase is null
@@ -312,7 +312,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 				throw new ConflictException(
 					$"existing release branch {identity.ReleaseBranch} has PREVIEW_LABEL '{state.Label}', expected '{identity.Label}'");
 			}
-			if (state.Skia.ToNormalizedString() != identity.Numeric)
+			if (state.SkiaText != identity.Numeric)
 			{
 				throw new ConflictException(
 					$"existing release branch {identity.ReleaseBranch} has SkiaSharp version '{state.Skia}', expected '{identity.Numeric}'");
@@ -361,7 +361,7 @@ namespace SkiaSharp.ReleaseTool.Planning
 
 			var (nextSkia, nextHarfBuzz) = HarfBuzzVersioning.CalculateNextVersions(
 				identity.Numeric,
-				baseState.HarfBuzz.ToNormalizedString());
+				baseState.HarfBuzzText);
 			var bumpBranch = $"bump-version-{nextSkia}";
 			var pullRequest = await github.FindOpenPullRequestAsync(
 				bumpBranch,
