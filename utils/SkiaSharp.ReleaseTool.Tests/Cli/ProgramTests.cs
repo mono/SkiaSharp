@@ -85,6 +85,54 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 			Assert.Equal("error: operation canceled" + Environment.NewLine, environment.Error.ToString());
 		}
 
+		[Fact]
+		public async Task Prepare_apply_requires_correlation_and_writes_typed_result()
+		{
+			using var fixture = await PreparePlanApplierTests.ApplyFixture.CreateAsync(
+				"cli-apply");
+			var plan = await fixture.PlanAsync();
+			var planPath = Path.Combine(fixture.Repository.Root, "approved-plan.json");
+			PlanStore.Write(planPath, plan);
+			var environment = new FakeEnvironment(
+				fixture.Repository,
+				fixture.GitHub);
+
+			var missingCorrelation = await Program.InvokeAsync(
+				["prepare", "apply", "--plan", "approved-plan.json"],
+				environment);
+			Assert.NotEqual(ExitCodes.Success, missingCorrelation);
+
+			var mismatch = await Program.InvokeAsync(
+				[
+					"prepare", "apply",
+					"--plan", "approved-plan.json",
+					"--expected-plan-id", Guid.NewGuid().ToString(),
+				],
+				environment);
+			Assert.Equal(ExitCodes.GenericError, mismatch);
+
+			environment.Error.GetStringBuilder().Clear();
+			var exitCode = await Program.InvokeAsync(
+				[
+					"prepare", "apply",
+					"--plan", "approved-plan.json",
+					"--expected-plan-id", plan.PlanId.ToString(),
+					"--output", "apply-result.json",
+				],
+				environment);
+
+			Assert.Equal(ExitCodes.Success, exitCode);
+			var outputPath = Path.Combine(
+				fixture.Repository.Root,
+				"apply-result.json");
+			var result = JsonSerializer.Deserialize(
+				File.ReadAllText(outputPath),
+				ReleaseJsonContext.Strict.PrepareApplyResult);
+			Assert.NotNull(result);
+			Assert.Equal(plan.PlanId, result.PlanId);
+			PrepareApplyResultValidator.Validate(result);
+		}
+
 		private sealed class FakeEnvironment(
 			IReleaseRepository repository,
 			IPrepareGitHubClient github) : IReleaseCommandEnvironment

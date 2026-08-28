@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.Json;
+using SkiaSharp.ReleaseTool.Contracts;
 using SkiaSharp.ReleaseTool.Errors;
 using SkiaSharp.ReleaseTool.Git;
 using SkiaSharp.ReleaseTool.Json;
@@ -43,6 +44,21 @@ namespace SkiaSharp.ReleaseTool
 			{
 				Description = "Prepare plan output path.",
 				DefaultValueFactory = _ => "prepare-plan.json",
+			};
+			var planFileOption = new Option<string>("--plan")
+			{
+				Description = "Approved prepare plan file.",
+				Required = true,
+			};
+			var expectedPlanIdOption = new Option<Guid>("--expected-plan-id")
+			{
+				Description = "Plan correlation identifier emitted by prepare plan.",
+				Required = true,
+			};
+			var applyOutputOption = new Option<string>("--output")
+			{
+				Description = "Prepare apply result output path.",
+				DefaultValueFactory = _ => "prepare-apply-result.json",
 			};
 
 			var planCommand = new Command("plan", "Discover release state and write a read-only prepare plan.");
@@ -100,8 +116,69 @@ namespace SkiaSharp.ReleaseTool
 				}
 			});
 
+			var applyCommand = new Command("apply", "Apply an approved prepare plan.");
+			applyCommand.Options.Add(planFileOption);
+			applyCommand.Options.Add(expectedPlanIdOption);
+			applyCommand.Options.Add(applyOutputOption);
+			applyCommand.SetAction(async (parseResult, cancellationToken) =>
+			{
+				try
+				{
+					var repository = await environment.OpenRepositoryAsync(
+						parseResult.GetValue(repoOption),
+						cancellationToken).ConfigureAwait(false);
+					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var planPath = Path.Combine(
+						repository.Root,
+						parseResult.GetRequiredValue(planFileOption));
+					PreparePlan plan;
+					try
+					{
+						plan = PlanStore.ReadPrepare(planPath, expectedPlanId);
+					}
+					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+					{
+						throw new ReleaseToolException($"could not read prepare plan '{planPath}'", ex);
+					}
+
+					var output = parseResult.GetRequiredValue(applyOutputOption);
+					var outputPath = Path.Combine(repository.Root, output);
+					var result = await new PreparePlanApplier(
+						repository,
+						environment.CreateGitHubClient()).ApplyAsync(
+							plan,
+							expectedPlanId,
+							cancellationToken,
+							[planPath, outputPath]).ConfigureAwait(false);
+					try
+					{
+						PlanStore.Write(outputPath, result);
+					}
+					catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+					{
+						throw new ReleaseToolException($"could not write prepare apply result '{output}'", ex);
+					}
+					await environment.StandardOutput.WriteLineAsync(
+						JsonSerializer.Serialize(
+							result,
+							Contracts.ReleaseJsonContext.Strict.PrepareApplyResult)).ConfigureAwait(false);
+					return ExitCodes.Success;
+				}
+				catch (OperationCanceledException)
+				{
+					await environment.StandardError.WriteLineAsync("error: operation canceled").ConfigureAwait(false);
+					return ExitCodes.Canceled;
+				}
+				catch (ReleaseToolException ex)
+				{
+					await environment.StandardError.WriteLineAsync($"error: {ex.Message}").ConfigureAwait(false);
+					return ExitCodes.GenericError;
+				}
+			});
+
 			var prepareCommand = new Command("prepare", "Prepare a release.");
 			prepareCommand.Subcommands.Add(planCommand);
+			prepareCommand.Subcommands.Add(applyCommand);
 			var root = new RootCommand("SkiaSharp release automation CLI");
 			root.Options.Add(repoOption);
 			root.Subcommands.Add(prepareCommand);

@@ -188,13 +188,35 @@ namespace SkiaSharp.ReleaseTool.Git
 			return ExpectedBooleanExit(result, "merge-base --is-ancestor");
 		}
 
-		public async Task RequireCleanAsync(CancellationToken cancellationToken = default)
+		public async Task RequireCleanAsync(
+			IReadOnlyList<string>? allowedUntrackedPaths = null,
+			CancellationToken cancellationToken = default)
 		{
 			var result = await GitAsync(
-				["status", "--porcelain", "--ignore-submodules"],
+				[
+					"status",
+					"--porcelain=v1",
+					"-z",
+					"--untracked-files=all",
+					"--ignore-submodules",
+				],
 				cancellationToken: cancellationToken).ConfigureAwait(false);
-			if (result.StandardOutput.Length > 0)
-				throw new GitException($"working tree at {Root} is not clean:\n{result.StandardOutput}");
+			if (result.StandardOutput.Length == 0)
+				return;
+
+			var allowed = (allowedUntrackedPaths ?? [])
+				.Select(Path.GetFullPath)
+				.Select(path => Path.GetRelativePath(Root, path).Replace('\\', '/'))
+				.ToHashSet(StringComparer.Ordinal);
+			var disallowed = result.StandardOutput
+				.Split('\0', StringSplitOptions.RemoveEmptyEntries)
+				.Where(entry =>
+					entry.Length < 4 ||
+					!entry.StartsWith("?? ", StringComparison.Ordinal) ||
+					!allowed.Contains(entry[3..]))
+				.ToArray();
+			if (disallowed.Length > 0)
+				throw new GitException($"working tree at {Root} is not clean:\n{string.Join('\n', disallowed)}");
 		}
 
 		public async Task<string> CurrentBranchAsync(CancellationToken cancellationToken = default)
@@ -210,6 +232,14 @@ namespace SkiaSharp.ReleaseTool.Git
 			string startPoint,
 			CancellationToken cancellationToken = default) =>
 			_ = await GitAsync(["branch", branch, startPoint], cancellationToken: cancellationToken).ConfigureAwait(false);
+
+		public async Task UpdateLocalBranchAsync(
+			string branch,
+			string sha,
+			CancellationToken cancellationToken = default) =>
+			_ = await GitAsync(
+				["update-ref", $"refs/heads/{branch}", sha],
+				cancellationToken: cancellationToken).ConfigureAwait(false);
 
 		public async Task SwitchAsync(string branch, CancellationToken cancellationToken = default) =>
 			_ = await GitAsync(["switch", branch], cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -259,6 +289,17 @@ namespace SkiaSharp.ReleaseTool.Git
 			string commit,
 			CancellationToken cancellationToken = default) =>
 			IsAncestorAsync(commit, branchRef, cancellationToken);
+
+		public Task<string> ReadWorktreeFileAsync(
+			string path,
+			CancellationToken cancellationToken = default) =>
+			File.ReadAllTextAsync(Path.Combine(Root, path), cancellationToken);
+
+		public Task WriteWorktreeFileAsync(
+			string path,
+			string content,
+			CancellationToken cancellationToken = default) =>
+			File.WriteAllTextAsync(Path.Combine(Root, path), content, cancellationToken);
 
 		private static bool ExpectedBooleanExit(ProcessRunResult result, string operation) =>
 			result.ExitCode switch

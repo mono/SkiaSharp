@@ -243,6 +243,37 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 					TestContext.Current.CancellationToken));
 		}
 
+		[Fact]
+		public async Task Clean_check_allows_only_exact_untracked_artifacts()
+		{
+			using var root = new TestDirectory("git-clean-allow");
+			var (_, worktree) = await GitRepoTestHelper.CreateBareAndWorktreeAsync(
+				root.Path,
+				"repo",
+				TestContext.Current.CancellationToken);
+			File.WriteAllText(Path.Combine(worktree, "tracked.txt"), "tracked");
+			_ = await GitRepoTestHelper.CommitAllAsync(
+				worktree,
+				"initial",
+				TestContext.Current.CancellationToken);
+			var repository = new GitRepository(worktree);
+			var plan = Path.Combine(worktree, "artifacts", "my plan.json");
+			Directory.CreateDirectory(Path.GetDirectoryName(plan)!);
+			File.WriteAllText(plan, "{}");
+
+			await repository.RequireCleanAsync(
+				[plan],
+				TestContext.Current.CancellationToken);
+
+			File.WriteAllText(
+				Path.Combine(worktree, "artifacts", "unexpected.json"),
+				"{}");
+			await Assert.ThrowsAsync<GitException>(
+				() => repository.RequireCleanAsync(
+					[plan],
+					TestContext.Current.CancellationToken));
+		}
+
 		private static ProcessRunResult Result(
 			int exitCode,
 			string standardOutput = "",

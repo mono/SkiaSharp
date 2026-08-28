@@ -11,7 +11,14 @@ namespace SkiaSharp.ReleaseTool.Json
 		public static void Write(string path, PreparePlan plan) =>
 			Write(path, plan, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate);
 
-		public static PreparePlan ReadPrepare(string path, Guid? expectedPlanId = null) =>
+		public static void Write(string path, PrepareApplyResult result) =>
+			Write(
+				path,
+				result,
+				ReleaseJsonContext.Strict.PrepareApplyResult,
+				PrepareApplyResultValidator.Validate);
+
+		public static PreparePlan ReadPrepare(string path, Guid expectedPlanId) =>
 			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
 
 		private static void Write<T>(
@@ -43,7 +50,7 @@ namespace SkiaSharp.ReleaseTool.Json
 			string path,
 			JsonTypeInfo<T> typeInfo,
 			Action<T> validate,
-			Guid? expectedPlanId)
+			Guid expectedPlanId)
 		{
 			if (!File.Exists(path))
 				throw new ValidationException($"plan file not found: {path}");
@@ -65,8 +72,8 @@ namespace SkiaSharp.ReleaseTool.Json
 				PreparePlan prepare => prepare.PlanId,
 				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
 			};
-			if (expectedPlanId is { } expected && actualPlanId != expected)
-				throw new ValidationException($"planId '{actualPlanId}' does not match expected correlation id '{expected}'");
+			if (actualPlanId != expectedPlanId)
+				throw new ValidationException($"planId '{actualPlanId}' does not match expected correlation id '{expectedPlanId}'");
 			return plan;
 		}
 	}

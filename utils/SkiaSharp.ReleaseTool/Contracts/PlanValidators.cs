@@ -243,6 +243,63 @@ namespace SkiaSharp.ReleaseTool.Contracts
 		}
 	}
 
+	public static class PrepareApplyResultValidator
+	{
+		public static void Validate(PrepareApplyResult result)
+		{
+			PlanValidation.Require(result.SchemaVersion == 1, "schemaVersion must be 1");
+			PlanValidation.Require(result.PlanId != Guid.Empty, "planId must not be empty");
+			PlanValidation.ValidateSha(result.ToolingSha, "toolingSha");
+			PlanValidation.Require(
+				result.NextAction is PrepareNextAction.Done or PrepareNextAction.AwaitMerge,
+				"nextAction must be done or await-merge");
+
+			var identity = SkiaSharpReleaseIdentity.Parse(result.Release.Identity);
+			PlanValidation.Require(result.Release.Version == identity.Raw, "release.version must equal release.identity");
+			PlanValidation.Require(result.Release.Branch == identity.ReleaseBranch, "release.branch does not match release.identity");
+
+			var operations = result.Operations
+				?? throw new ValidationException("operations must not be null");
+			var ids = new HashSet<PlanOperationId>();
+			foreach (var operation in operations)
+			{
+				if (operation is null)
+					throw new ValidationException("operations must not contain null values");
+				PlanValidation.Require(ids.Add(operation.Id), $"operations contains duplicate id '{operation.Id}'");
+				if (operation.Id != PlanOperationId.OpenStableBumpPullRequest)
+				{
+					PlanValidation.Require(
+						operation.PullRequestUrl is null,
+						$"operation '{operation.Id}' cannot carry a pull request URL");
+				}
+				if (operation.PullRequestUrl is not null)
+					PlanValidation.Require(operation.PullRequestUrl.IsAbsoluteUri, "pull request URL must be absolute");
+			}
+			foreach (var required in new[]
+			{
+				PlanOperationId.CreateMaintenanceBranch,
+				PlanOperationId.CreateSkiaRef,
+				PlanOperationId.CreateReleaseBranch,
+			})
+			{
+				PlanValidation.Require(ids.Contains(required), $"operations is missing '{required}'");
+			}
+
+			var stableOperation = operations.SingleOrDefault(
+				static operation => operation.Id == PlanOperationId.OpenStableBumpPullRequest);
+			PlanValidation.Require(
+				result.StableBumpPullRequestUrl == stableOperation?.PullRequestUrl,
+				"stableBumpPullRequestUrl does not match the operation result");
+			PlanValidation.Require(
+				(result.NextAction == PrepareNextAction.AwaitMerge) ==
+					(result.StableBumpPullRequestUrl is not null),
+				"await-merge requires a stable bump pull request URL");
+			if (result.StableBumpPullRequestUrl is not null)
+				PlanValidation.Require(result.StableBumpPullRequestUrl.IsAbsoluteUri, "stable bump pull request URL must be absolute");
+			PlanValidation.ValidateStrings(result.Warnings, "warnings");
+		}
+	}
+
 	internal static class PlanValidation
 	{
 		public static void ValidateHeader(
