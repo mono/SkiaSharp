@@ -51,7 +51,7 @@ RUN apt-get update \
 # does not require ICU. The Cake build only shells out to the Tizen toolchain and
 # does path/string work, so culture-insensitive formatting has no effect on the
 # produced native libraries.
-ARG DOTNET_SDK_VERSION=10.0.203
+ARG DOTNET_SDK_VERSION=10.0.400
 ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
 RUN curl -fsSL https://builds.dotnet.microsoft.com/dotnet/scripts/v1/dotnet-install.sh -o dotnet-install.sh \
     && bash dotnet-install.sh --version ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \

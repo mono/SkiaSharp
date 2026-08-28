@@ -15,6 +15,6 @@
 # The base image already provides everything the native library links against (libstdc++, libgcc,
 # libc, ICU), so there is deliberately nothing to install here.
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0.203-azurelinux3.0
+FROM mcr.microsoft.com/dotnet/sdk:10.0.400-azurelinux3.0
 
 WORKDIR /work
