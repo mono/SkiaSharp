@@ -132,13 +132,12 @@ stages:
             - name: native_wasm_3_1_56_SIMD_Threading_linux
             - name: native_wasm_3_1_56_Threading_linux
 
-      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
-        - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
-          parameters:
-            name: native_msvc
-            displayName: Merge Native MSVC Artifacts
-            buildAgent: ${{ parameters.buildAgentHost }}
-            requiredArtifacts:
-              - name: native_win32_x86_msvc_windows
-              - name: native_win32_x64_msvc_windows
-              - name: native_win32_arm64_msvc_windows
+      - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
+        parameters:
+          name: native_msvc
+          displayName: Merge Native MSVC Artifacts
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            - name: native_win32_x86_msvc_windows
+            - name: native_win32_x64_msvc_windows
+            - name: native_win32_arm64_msvc_windows

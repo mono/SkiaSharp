@@ -1,3 +1,4 @@
+using System.IO.Compression;
 using System.Xml.Linq;
 
 DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
@@ -9,27 +10,44 @@ DirectoryPath ROOT_PATH = MakeAbsolute(Directory("../../.."));
 // NUGET — pack NuGet packages
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+FilePath[] GetNuGetPackages (DirectoryPath directory, string description)
+{
+    if (!DirectoryExists (directory))
+        throw new Exception ($"The {description} NuGet directory does not exist: '{directory}'.");
+
+    var packages = GetFiles ($"{directory}/**/*.nupkg").ToArray ();
+    if (packages.Length == 0)
+        throw new Exception ($"No {description} NuGet packages were found in '{directory}'.");
+
+    var duplicates = packages
+        .GroupBy (package => package.GetFilename ().ToString (), StringComparer.OrdinalIgnoreCase)
+        .Where (group => group.Count () > 1)
+        .Select (group => group.Key)
+        .ToArray ();
+    if (duplicates.Length != 0)
+        throw new Exception (
+            $"{description} NuGet packages contain duplicate names: {string.Join (", ", duplicates)}");
+
+    return packages;
+}
+
 Task ("nuget-normal")
     .Description ("Pack all NuGets (build all required dependencies).")
     .Does (() =>
 {
+    EnsureDirectoryExists ($"{OUTPUT_NUGETS_PATH}");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.nupkg");
+    DeleteFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg");
+
     var props = new Dictionary<string, string> (MSBUILD_VERSION_PROPERTIES) {
         { "BuildingInsideUnoSourceGenerator", "true" },
         { "BuildProjectReferences", "false" },
+        { "VersionSuffix", PREVIEW_NUGET_SUFFIX },
     };
 
-    // pack stable
+    // Each build produces one coherent package family. Preview labels use a
+    // unique suffix; PREVIEW_LABEL=stable clears the suffix for an exact release.
     RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pack", properties: props);
-
-    // pack preview
-    props ["VersionSuffix"] = PREVIEW_NUGET_SUFFIX;
-    RunDotNetPack ($"{ROOT_PATH}/source/SkiaSharpSource.{CURRENT_PLATFORM}.slnf", bl: ".pre.pack", properties: props);
-
-    // move symbols to a special location to avoid signing
-    EnsureDirectoryExists ($"{OUTPUT_SYMBOLS_NUGETS_PATH}");
-    DeleteFiles ($"{OUTPUT_SYMBOLS_NUGETS_PATH}/*.nupkg");
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.snupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
-    MoveFiles ($"{OUTPUT_NUGETS_PATH}/*.symbols.nupkg", OUTPUT_SYMBOLS_NUGETS_PATH);
 });
 
 Task ("nuget-special")
@@ -47,18 +65,13 @@ Task ("nuget-special")
             v += $".{BUILD_COUNTER}";
         versions.Add ("pr", v);
     } else {
-        if (!string.IsNullOrEmpty (GIT_SHA)) {
-            var v = $"0.0.0-commit.{GIT_SHA}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("commit", v);
-        }
-        if (!string.IsNullOrEmpty (GIT_BRANCH_NAME)) {
-            var v = $"0.0.0-branch.{GIT_BRANCH_NAME.Replace ("/", ".")}";
-            if (!string.IsNullOrEmpty (BUILD_COUNTER))
-                v += $".{BUILD_COUNTER}";
-            versions.Add ("branch", v);
-        }
+        var branchName = string.IsNullOrEmpty (GIT_BRANCH_NAME)
+            ? "main"
+            : GIT_BRANCH_NAME.Replace ("/", ".");
+        var v = $"0.0.0-branch.{branchName}";
+        if (!string.IsNullOrEmpty (BUILD_COUNTER))
+            v += $".{BUILD_COUNTER}";
+        versions.Add ("branch", v);
     }
     Information ("Detected {0} special versions to process:", versions.Count);
     var max = 0;
@@ -142,28 +155,22 @@ Task ("nuget-special")
         }
     }
 
-    // NuGets and Symbols: bin-pack all nupkgs into ~200 MB numbered chunks
+    // Bin-pack the build's normal NuGets into ~200 MB chunks
     if (GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").Count > 0) {
         const long MAX_CHUNK_SIZE = 200L * 1024 * 1024;
 
         var metaPackages = new[] {
-            new { Id = "_NuGets",         SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = false },
-            new { Id = "_NuGetsPreview",  SourceDir = "nugets",         IncludeSnupkg = false, IsPreview = true },
-            new { Id = "_Symbols",        SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = false },
-            new { Id = "_SymbolsPreview", SourceDir = "nugets-symbols", IncludeSnupkg = true,  IsPreview = true },
+            new { Id = "_NuGets" },
         };
 
         foreach (var meta in metaPackages) {
             // enumerate matching files
-            var allFiles = GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nupkg").ToList ();
-            if (meta.IncludeSnupkg)
-                allFiles.AddRange (GetFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.snupkg"));
+            var allFiles = GetFiles ($"{ROOT_PATH}/output/nugets/*.nupkg").ToList ();
 
             var matchingFiles = allFiles
                 .Where (f => {
                     var name = f.GetFilename ().ToString ();
-                    if (name.StartsWith ("_")) return false;
-                    return meta.IsPreview ? name.Contains ("-") : !name.Contains ("-");
+                    return !name.StartsWith ("_") && !name.EndsWith (".symbols.nupkg");
                 })
                 .Select (f => new { Path = f, Size = new FileInfo (f.FullPath).Length })
                 .OrderByDescending (f => f.Size)
@@ -204,9 +211,9 @@ Task ("nuget-special")
                 // pack each chunk as a numbered dependency
                 for (int i = 0; i < chunks.Count; i++) {
                     var chunkId = $"{meta.Id}.Dependencies.{i + 1}";
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{chunkId}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{chunkId}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
 
                     var xdoc = XDocument.Load ($"{ROOT_PATH}/scripts/infra/package/nuget/_Dependencies.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
@@ -240,9 +247,9 @@ Task ("nuget-special")
 
                 // pack the parent meta-package with dependencies on all chunks
                 {
-                    var nuspec = $"{ROOT_PATH}/output/{meta.SourceDir}/{meta.Id}.nuspec";
+                    var nuspec = $"{ROOT_PATH}/output/nugets/{meta.Id}.nuspec";
 
-                    DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                    DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
 
                     var xdoc = XDocument.Load (ROOT_PATH + $"/scripts/infra/package/nuget/{meta.Id}.nuspec");
                     var xmeta = xdoc.Root.Element ("metadata");
@@ -271,10 +278,102 @@ Task ("nuget-special")
                         });
                 }
 
-                DeleteFiles ($"{ROOT_PATH}/output/{meta.SourceDir}/*.nuspec");
+                DeleteFiles ($"{ROOT_PATH}/output/nugets/*.nuspec");
             }
         }
     }
+});
+
+Task ("nuget-assemble-arcade-assets")
+    .Description ("Prepare Arcade package views and loose PDB artifacts.")
+    .Does (() =>
+{
+    var productPackages = GetNuGetPackages (OUTPUT_NUGETS_PATH, "product");
+    var transportPackages = GetNuGetPackages (OUTPUT_SPECIAL_NUGETS_PATH, "transport");
+
+    var shipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("Shipping");
+    var nonShipping = OUTPUT_ARCADE_ASSETS_PATH.Combine ("NonShipping");
+    CleanDir (OUTPUT_ARCADE_ASSETS_PATH);
+    CleanDir (OUTPUT_PDB_ARTIFACTS_PATH);
+    EnsureDirectoryExists (shipping);
+    EnsureDirectoryExists (nonShipping);
+
+    foreach (var package in productPackages)
+        CopyFileToDirectory (package, shipping);
+    foreach (var package in transportPackages)
+        CopyFileToDirectory (package, nonShipping);
+
+    var productNames = new HashSet<string> (
+        productPackages.Select (package => package.GetFilename ().ToString ()),
+        StringComparer.OrdinalIgnoreCase);
+    var explicitSymbolCount = 0;
+    var pdbCount = 0;
+
+    foreach (var package in productPackages.Where (package =>
+        !package.GetFilename ().ToString ()
+            .EndsWith (".symbols.nupkg", StringComparison.OrdinalIgnoreCase))) {
+        var packageBaseName = package.GetFilenameWithoutExtension ().ToString ();
+        if (productNames.Contains ($"{packageBaseName}.symbols.nupkg")) {
+            explicitSymbolCount++;
+            continue;
+        }
+
+        var packagePdbRoot = MakeAbsolute (
+            OUTPUT_PDB_ARTIFACTS_PATH.Combine (packageBaseName));
+        var archive = ZipFile.OpenRead (package.FullPath);
+        try {
+            foreach (var entry in archive.Entries) {
+                var entryPath = entry.FullName.Replace ('\\', '/');
+                if (!entry.Name.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase) ||
+                    entryPath.StartsWith ("ref/", StringComparison.OrdinalIgnoreCase)) {
+                    continue;
+                }
+
+                var targetPath = MakeAbsolute (packagePdbRoot
+                    .CombineWithFilePath (entryPath)
+                    .Collapse ());
+                var relativeTargetPath = packagePdbRoot.GetRelativePath (targetPath);
+                if (relativeTargetPath.Segments.Any (segment => segment == "..")) {
+                    throw new Exception (
+                        $"PDB package path escapes its extraction root: {entry.FullName}");
+                }
+
+                EnsureDirectoryExists (targetPath.GetDirectory ());
+                var sourceStream = entry.Open ();
+                var targetStream = Context.FileSystem.GetFile (targetPath).Open (
+                    System.IO.FileMode.Create,
+                    System.IO.FileAccess.Write,
+                    System.IO.FileShare.None);
+                try {
+                    sourceStream.CopyTo (targetStream);
+                } finally {
+                    targetStream.Dispose ();
+                    sourceStream.Dispose ();
+                }
+                pdbCount++;
+            }
+        } finally {
+            archive.Dispose ();
+        }
+    }
+
+    if (pdbCount == 0) {
+        var emptyStream = Context.FileSystem
+            .GetFile (OUTPUT_PDB_ARTIFACTS_PATH.CombineWithFilePath (".empty"))
+            .Open (
+                System.IO.FileMode.Create,
+                System.IO.FileAccess.Write,
+                System.IO.FileShare.None);
+        emptyStream.Dispose ();
+    }
+
+    Information (
+        "Arcade assets prepared: {0} product package(s), {1} explicit symbol package(s), " +
+        "{2} loose PDB(s), {3} transport package(s).",
+        productPackages.Length,
+        explicitSymbolCount,
+        pdbCount,
+        transportPackages.Length);
 });
 
 RunTarget(TARGET);

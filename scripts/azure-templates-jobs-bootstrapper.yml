@@ -25,6 +25,8 @@ parameters:
   installAndroidSdk: true                       # whether or not to install the Android SDK
   installWindowsSdk: false                      # whether or not to install the Windows SDK
   installDotNet: true                           # whether or not to install the dotnet SDK
+  additionalDotNetSdks: []                      # additional SDKs to install side-by-side
+  installDotNetWorkloads: true                  # whether or not to install the .NET workloads
   installLlvm: true                             # whether or not to install the LLVM compiler
   installEmsdk: false                           # whether or not to install the Emscripten SDK
   installNinja: false                           # whether or not to install the ninja build system
@@ -69,6 +71,8 @@ jobs:
             displayName: 'Publish the ${{ additionalArtifact.name }} artifacts'
             artifactName: ${{ additionalArtifact.name }}
             targetPath: ${{ additionalArtifact.path }}
+            ${{ if ne(additionalArtifact.isProduction, '') }}:
+              isProduction: ${{ additionalArtifact.isProduction }}
           - ${{ if eq(additionalArtifact.always, 'true') }}:
             - output: pipelineArtifact
               displayName: 'Publish the failed ${{ additionalArtifact.name }} artifacts'
@@ -191,6 +195,14 @@ jobs:
             version: $(DOTNET_VERSION)
           retryCountOnTaskFailure: 3
           displayName: Install .NET $(DOTNET_VERSION)
+        - ${{ each sdkVersion in parameters.additionalDotNetSdks }}:
+          - task: UseDotNet@2
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+            inputs:
+              packageType: 'sdk'
+              version: ${{ sdkVersion }}
+            retryCountOnTaskFailure: 3
+            displayName: Install additional .NET ${{ sdkVersion }}
         - ${{ if eq(parameters.buildAgent.pool.os, 'linux') }}:
           - pwsh: .\scripts\infra\native\shared\patch-dotnet.ps1 -InstallDir "$env:AGENT_TOOLSDIRECTORY/dotnet"
             displayName: Fix the Microsoft.WinFX.* file
@@ -208,8 +220,8 @@ jobs:
             displayName: Install Ninja
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
-        # install the bits needed for Android on macOS and Windows
-        - ${{ if and(eq(parameters.installAndroidSdk, 'true'), ne(parameters.buildAgent.pool.os, 'linux')) }}:
+        # install the bits needed for Android
+        - ${{ if eq(parameters.installAndroidSdk, 'true') }}:
           # install the correct version of the JDK
           - pwsh: .\scripts\infra\managed\install-openjdk.ps1
             displayName: Install OpenJDK
@@ -220,13 +232,25 @@ jobs:
             displayName: Install Android SDK
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "platform-tools"
+            displayName: Install Android platform tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;35.0.0"
+            displayName: Install Android 35 build tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
+          - pwsh: .\scripts\infra\managed\install-android-package.ps1 -Package "build-tools;36.0.0"
+            displayName: Install Android 36 build tools
+            retryCountOnTaskFailure: 3
+            condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
           # install the required version of the Android Platforms
           - pwsh: .\scripts\infra\managed\install-android-platform.ps1 -API "$(ANDROID_PLATFORM_VERSIONS)"
             displayName: Install Android APIs
             retryCountOnTaskFailure: 3
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
         # install workloads
-        - ${{ if eq(parameters.installDotNet, 'true') }}:
+        - ${{ if and(eq(parameters.installDotNet, 'true'), eq(parameters.installDotNetWorkloads, 'true')) }}:
           - pwsh: .\scripts\infra\managed\install-dotnet-workloads.ps1 -Tizen "$env:DOTNET_WORKLOAD_TIZEN" -Workloads "${{ parameters.dotnetWorkloads }}" -WorkloadSetVersion "$env:DOTNET_WORKLOAD_VERSION"
             condition: and(succeeded(), ne(variables['CACHE_SKIP'], 'true'))
             retryCountOnTaskFailure: 3
@@ -324,6 +348,7 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
                 LLVM_HOME: $(LLVM_HOME)
                 # There seems to be a bug in some verions of mspdbcmf.exe. This looks to be fixed in a VS preview.
@@ -338,6 +363,7 @@ jobs:
                 dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }}
 
               env:
+                AndroidSdkDirectory: $(AndroidSdkDirectory)
                 JavaSdkDirectory: $(JAVA_HOME)
               displayName: Run the bootstrapper for ${{ parameters.target }}
               retryCountOnTaskFailure: ${{ parameters.retryCount }}
