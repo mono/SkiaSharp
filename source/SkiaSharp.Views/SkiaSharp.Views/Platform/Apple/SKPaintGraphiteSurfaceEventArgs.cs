@@ -48,7 +48,7 @@ namespace SkiaSharp.Views.tvOS
 
 		public SKImageInfo RawInfo { get; }
 
-		internal bool ContextUnrecoverable { get; private set; }
+		internal SKGraphiteInsertStatus? ContextFailureStatus { get; private set; }
 
 		public SKGraphiteRecorder? CreateRecorder () =>
 			CreateRecorder (-1);
@@ -72,9 +72,8 @@ namespace SkiaSharp.Views.tvOS
 
 			var status = Context.InsertRecording (recording);
 			if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
-				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed ||
-				status == SKGraphiteInsertStatus.OutOfOrderRecording) {
-				ContextUnrecoverable = true;
+				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed) {
+				ContextFailureStatus ??= status;
 			}
 			return status;
 		}

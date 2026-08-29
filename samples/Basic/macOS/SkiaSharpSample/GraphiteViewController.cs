@@ -104,14 +104,25 @@ public class GraphiteViewController : NSViewController
 	void OnRenderFailed(object? sender, SKGraphiteRenderFailedEventArgs e)
 	{
 		renderFailed = true;
+		renderer?.Dispose();
+		renderer = null;
 		BeginInvokeOnMainThread(() =>
 		{
 			fpsLabel.StringValue = "  RENDER FAILED  ";
-			new NSAlert
+			var alert = new NSAlert
 			{
 				MessageText = "Graphite rendering failed",
 				InformativeText = e.Exception.Message,
-			}.RunModal();
+			};
+			alert.AddButton("Retry");
+			alert.AddButton("Cancel");
+			if (alert.RunModal() == (nint)NSAlertButtonReturn.First)
+			{
+				renderFailed = false;
+				fpsCounter = new FpsCounter();
+				fpsCounter.Start();
+				skiaView.Paused = false;
+			}
 		});
 	}
 

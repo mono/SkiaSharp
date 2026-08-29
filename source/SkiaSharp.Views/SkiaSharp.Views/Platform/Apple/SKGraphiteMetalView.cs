@@ -28,7 +28,7 @@ namespace SkiaSharp.Views.tvOS
 		private SKGraphiteContext? context;
 		private SKGraphiteRecorder? recorder;
 		private ulong frameId;
-		private bool contextUnrecoverable;
+		private bool requiresContextRecreation;
 
 		ISite? IComponent.Site { get; set; }
 
@@ -105,6 +105,8 @@ namespace SkiaSharp.Views.tvOS
 				return;
 
 			try {
+				if (requiresContextRecreation)
+					DisposeGraphiteContext (submit: false);
 				EnsureGraphite ();
 				if (context is null || recorder is null || commandQueue is null)
 					return;
@@ -134,8 +136,11 @@ namespace SkiaSharp.Views.tvOS
 					try {
 						OnPaintSurface (eventArgs);
 					} finally {
-						contextUnrecoverable |= eventArgs.ContextUnrecoverable;
+						requiresContextRecreation |= eventArgs.ContextFailureStatus.HasValue;
 					}
+					if (eventArgs.ContextFailureStatus is { } failureStatus)
+						throw new InvalidOperationException (
+							$"Unable to insert a Graphite recording: {failureStatus}.");
 				}
 
 				using var recording = recorder.Snap ()
@@ -148,7 +153,7 @@ namespace SkiaSharp.Views.tvOS
 					MarkBoundary = true,
 					FrameID = ++frameId,
 				})) {
-					contextUnrecoverable = true;
+					requiresContextRecreation = true;
 					throw new InvalidOperationException ("Unable to submit the Graphite frame.");
 				}
 
@@ -157,6 +162,9 @@ namespace SkiaSharp.Views.tvOS
 				commandBuffer.PresentDrawable (drawable);
 				commandBuffer.Commit ();
 			} catch (Exception exception) {
+				requiresContextRecreation |= context?.IsDeviceLost == true;
+				recorder?.Dispose ();
+				recorder = null;
 				Paused = true;
 				OnRenderFailed (exception);
 			}
@@ -167,21 +175,9 @@ namespace SkiaSharp.Views.tvOS
 			if (disposing) {
 				Paused = true;
 				Delegate = null;
-
-				if (context is not null &&
-					!context.IsDeviceLost &&
-					!contextUnrecoverable) {
-					context.Submit (new SKGraphiteSubmitInfo { Sync = true });
-				}
-
-				recorder?.Dispose ();
-				recorder = null;
-				context?.Dispose ();
-				context = null;
-				backendContext?.Dispose ();
-				backendContext = null;
-				commandQueue?.Dispose ();
-				commandQueue = null;
+				DisposeGraphite (
+					submit: context?.IsDeviceLost != true &&
+						!requiresContextRecreation);
 
 				DisposedInternal?.Invoke (this, EventArgs.Empty);
 			}
@@ -198,9 +194,31 @@ namespace SkiaSharp.Views.tvOS
 			if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
 				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed ||
 				status == SKGraphiteInsertStatus.OutOfOrderRecording) {
-				contextUnrecoverable = true;
+				requiresContextRecreation = true;
 			}
 			return status;
+		}
+
+		private void DisposeGraphiteContext (bool submit)
+		{
+			if (submit && context is not null)
+				context.Submit (new SKGraphiteSubmitInfo { Sync = true });
+
+			recorder?.Dispose ();
+			recorder = null;
+			context?.Dispose ();
+			context = null;
+			frameId = 0;
+			requiresContextRecreation = false;
+		}
+
+		private void DisposeGraphite (bool submit)
+		{
+			DisposeGraphiteContext (submit);
+			backendContext?.Dispose ();
+			backendContext = null;
+			commandQueue?.Dispose ();
+			commandQueue = null;
 		}
 
 		private void Initialize ()
@@ -234,35 +252,34 @@ namespace SkiaSharp.Views.tvOS
 				throw new PlatformNotSupportedException (
 					"The Metal device does not support a GPU family required by Graphite.");
 
-			IMTLCommandQueue? newCommandQueue = null;
-			SKGraphiteMtlBackendContext? newBackendContext = null;
+			commandQueue ??= device.CreateCommandQueue ()
+				?? throw new PlatformNotSupportedException ("Unable to create a Metal command queue.");
+			backendContext ??= new SKGraphiteMtlBackendContext {
+				Device = device,
+				Queue = commandQueue,
+			};
+
 			SKGraphiteContext? newContext = null;
 			SKGraphiteRecorder? newRecorder = null;
 			SKGraphiteImageCache? imageCache = null;
 			try {
-				newCommandQueue = device.CreateCommandQueue ()
-					?? throw new PlatformNotSupportedException ("Unable to create a Metal command queue.");
-				newBackendContext = new SKGraphiteMtlBackendContext {
-					Device = device,
-					Queue = newCommandQueue,
-				};
-				newContext = SKGraphiteContext.CreateMetal (newBackendContext)
-					?? throw new PlatformNotSupportedException ("Unable to create a Graphite Metal context.");
+				var targetContext = context;
+				if (targetContext is null) {
+					newContext = SKGraphiteContext.CreateMetal (backendContext)
+						?? throw new PlatformNotSupportedException ("Unable to create a Graphite Metal context.");
+					targetContext = newContext;
+				}
 
 				imageCache = new SKGraphiteImageCache ();
-				newRecorder = newContext.CreateRecorder (
+				newRecorder = targetContext.CreateRecorder (
 					-1,
 					imageCache.FindOrCreate,
 					imageCache.Dispose)
 					?? throw new InvalidOperationException ("Unable to create a Graphite recorder.");
 
-				commandQueue = newCommandQueue;
-				backendContext = newBackendContext;
-				context = newContext;
+				context ??= newContext;
 				recorder = newRecorder;
 
-				newCommandQueue = null;
-				newBackendContext = null;
 				newContext = null;
 				newRecorder = null;
 				imageCache = null;
@@ -271,8 +288,6 @@ namespace SkiaSharp.Views.tvOS
 				if (newRecorder is null)
 					imageCache?.Dispose ();
 				newContext?.Dispose ();
-				newBackendContext?.Dispose ();
-				newCommandQueue?.Dispose ();
 			}
 		}
 
