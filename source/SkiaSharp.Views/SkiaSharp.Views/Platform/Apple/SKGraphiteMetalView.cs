@@ -3,6 +3,7 @@
 #if __IOS__ || __MACOS__ || __TVOS__
 using System;
 using System.ComponentModel;
+using System.Threading;
 using CoreGraphics;
 using Foundation;
 using Metal;
@@ -22,6 +23,7 @@ namespace SkiaSharp.Views.tvOS
 	{
 		private event EventHandler? DisposedInternal;
 
+		private bool initialized;
 		private bool designMode;
 		private IMTLCommandQueue? commandQueue;
 		private SKGraphiteMtlBackendContext? backendContext;
@@ -29,6 +31,16 @@ namespace SkiaSharp.Views.tvOS
 		private SKGraphiteRecorder? recorder;
 		private ulong frameId;
 		private bool requiresContextRecreation;
+		private bool requiresBackendRecreation;
+		private IntPtr graphiteDeviceHandle;
+		private int pendingMetalFailure;
+#if __IOS__ || __TVOS__
+		private NSObject? willResignActiveObserver;
+		private NSObject? didEnterBackgroundObserver;
+		private NSObject? didBecomeActiveObserver;
+		private bool applicationActive = true;
+		private bool resumeAfterActivation;
+#endif
 
 		ISite? IComponent.Site { get; set; }
 
@@ -84,7 +96,9 @@ namespace SkiaSharp.Views.tvOS
 				return;
 			}
 
-			RenderFailed.Invoke (this, new SKGraphiteRenderFailedEventArgs (exception));
+			RenderFailed.Invoke (this, new SKGraphiteRenderFailedEventArgs (
+				exception,
+				requiresContextRecreation || requiresBackendRecreation));
 		}
 
 		void IMTKViewDelegate.DrawableSizeWillChange (MTKView view, CGSize size)
@@ -101,12 +115,23 @@ namespace SkiaSharp.Views.tvOS
 
 		void IMTKViewDelegate.Draw (MTKView view)
 		{
+			using var autoreleasePool = new NSAutoreleasePool ();
+
 			if (designMode)
 				return;
 
+			var insertedExternalRecording = false;
 			try {
-				if (requiresContextRecreation)
+				if (requiresBackendRecreation)
+					DisposeGraphite (submit: false);
+				else if (requiresContextRecreation)
 					DisposeGraphiteContext (submit: false);
+				if (graphiteDeviceHandle != IntPtr.Zero &&
+					Device?.Handle != graphiteDeviceHandle) {
+					requiresBackendRecreation = true;
+					throw new InvalidOperationException (
+						"The Metal device changed. Dispose external Recorders before retrying.");
+				}
 				EnsureGraphite ();
 				if (context is null || recorder is null || commandQueue is null)
 					return;
@@ -136,6 +161,7 @@ namespace SkiaSharp.Views.tvOS
 					try {
 						OnPaintSurface (eventArgs);
 					} finally {
+						insertedExternalRecording = eventArgs.HasInsertedRecording;
 						requiresContextRecreation |= eventArgs.ContextFailureStatus.HasValue;
 					}
 					if (eventArgs.ContextFailureStatus is { } failureStatus)
@@ -159,9 +185,11 @@ namespace SkiaSharp.Views.tvOS
 
 				using var commandBuffer = commandQueue.CommandBuffer ()
 					?? throw new InvalidOperationException ("Unable to create a Metal presentation command buffer.");
+				commandBuffer.AddCompletedHandler (HandleMetalCommandBufferCompleted);
 				commandBuffer.PresentDrawable (drawable);
 				commandBuffer.Commit ();
 			} catch (Exception exception) {
+				requiresContextRecreation |= insertedExternalRecording;
 				requiresContextRecreation |= context?.IsDeviceLost == true;
 				recorder?.Dispose ();
 				recorder = null;
@@ -175,9 +203,18 @@ namespace SkiaSharp.Views.tvOS
 			if (disposing) {
 				Paused = true;
 				Delegate = null;
+#if __IOS__ || __TVOS__
+				willResignActiveObserver?.Dispose ();
+				willResignActiveObserver = null;
+				didEnterBackgroundObserver?.Dispose ();
+				didEnterBackgroundObserver = null;
+				didBecomeActiveObserver?.Dispose ();
+				didBecomeActiveObserver = null;
+#endif
 				DisposeGraphite (
 					submit: context?.IsDeviceLost != true &&
-						!requiresContextRecreation);
+						!requiresContextRecreation &&
+						!requiresBackendRecreation);
 
 				DisposedInternal?.Invoke (this, EventArgs.Empty);
 			}
@@ -191,6 +228,8 @@ namespace SkiaSharp.Views.tvOS
 				throw new InvalidOperationException ("The Graphite context is unavailable.");
 
 			var status = context.InsertRecording (recording);
+			// The view exclusively controls its presentation Recorder, so an ordering
+			// failure here cannot be repaired by external code.
 			if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
 				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed ||
 				status == SKGraphiteInsertStatus.OutOfOrderRecording) {
@@ -219,14 +258,20 @@ namespace SkiaSharp.Views.tvOS
 			backendContext = null;
 			commandQueue?.Dispose ();
 			commandQueue = null;
+			graphiteDeviceHandle = IntPtr.Zero;
+			requiresBackendRecreation = false;
 		}
 
 		private void Initialize ()
 		{
+			if (initialized)
+				return;
+
 			designMode = ((IComponent)this).Site?.DesignMode == true ||
 				!EnvironmentExtensions.IsValidEnvironment;
 			if (designMode)
 				return;
+			initialized = true;
 
 			var device = Device ?? MTLDevice.SystemDefault;
 			if (device is null)
@@ -238,6 +283,29 @@ namespace SkiaSharp.Views.tvOS
 			SampleCount = 1;
 			FramebufferOnly = false;
 			Delegate = this;
+#if __IOS__ || __TVOS__
+			willResignActiveObserver = UIKit.UIApplication.Notifications.ObserveWillResignActive (
+				(_, _) => {
+					if (!applicationActive)
+						return;
+					applicationActive = false;
+					resumeAfterActivation = !Paused;
+					Paused = true;
+				});
+			didEnterBackgroundObserver = UIKit.UIApplication.Notifications.ObserveDidEnterBackground (
+				(_, _) => ReleaseDrawables ());
+			didBecomeActiveObserver = UIKit.UIApplication.Notifications.ObserveDidBecomeActive (
+				(_, _) => {
+					if (applicationActive)
+						return;
+					applicationActive = true;
+					if (!resumeAfterActivation)
+						return;
+					resumeAfterActivation = false;
+					Paused = false;
+					SetNeedsDisplay ();
+				});
+#endif
 		}
 
 		private void EnsureGraphite ()
@@ -258,6 +326,7 @@ namespace SkiaSharp.Views.tvOS
 				Device = device,
 				Queue = commandQueue,
 			};
+			graphiteDeviceHandle = device.Handle;
 
 			SKGraphiteContext? newContext = null;
 			SKGraphiteRecorder? newRecorder = null;
@@ -293,9 +362,6 @@ namespace SkiaSharp.Views.tvOS
 
 		private static bool MetalCanDriveGraphite (IMTLDevice device)
 		{
-			if (IsRunningOnAppleSimulator)
-				return true;
-
 #if __MACCATALYST__
 			if (!OperatingSystem.IsMacCatalystVersionAtLeast (13, 1))
 				return false;
@@ -306,9 +372,12 @@ namespace SkiaSharp.Views.tvOS
 			if (!OperatingSystem.IsTvOSVersionAtLeast (13))
 				return false;
 #elif __MACOS__
-			if (!OperatingSystem.IsMacOSVersionAtLeast (10, 15))
+			if (!OperatingSystem.IsMacOSVersionAtLeast (12))
 				return false;
 #endif
+
+			if (IsRunningOnAppleSimulator)
+				return true;
 
 #if (__IOS__ && !__MACCATALYST__) || __TVOS__
 			var families = new ulong[] {
@@ -324,11 +393,59 @@ namespace SkiaSharp.Views.tvOS
 			return false;
 		}
 
+		private void HandleMetalCommandBufferCompleted (IMTLCommandBuffer commandBuffer)
+		{
+			if (commandBuffer.Status != MTLCommandBufferStatus.Error ||
+				Interlocked.Exchange (ref pendingMetalFailure, 1) != 0) {
+				return;
+			}
+
+			var error = commandBuffer.Error;
+			var code = error is null
+				? MTLCommandBufferError.Internal
+				: (MTLCommandBufferError)(long)error.Code;
+			var message = error?.LocalizedDescription ??
+				"The Metal presentation command buffer failed.";
+#if __IOS__ || __TVOS__
+			const long notPermittedErrorCode = 7;
+			if (!applicationActive && (long)code == notPermittedErrorCode) {
+				Interlocked.Exchange (ref pendingMetalFailure, 0);
+				return;
+			}
+#endif
+			var recreateBackend =
+				code == MTLCommandBufferError.DeviceRemoved ||
+				code == MTLCommandBufferError.Blacklisted;
+
+			BeginInvokeOnMainThread (() => {
+				try {
+					if (Handle == IntPtr.Zero)
+						return;
+
+#if __MACOS__
+					if (code == MTLCommandBufferError.DeviceRemoved &&
+						PreferredDevice is { } preferredDevice) {
+						Device = preferredDevice;
+					}
+#endif
+					requiresBackendRecreation |= recreateBackend;
+					recorder?.Dispose ();
+					recorder = null;
+					Paused = true;
+					OnRenderFailed (new InvalidOperationException (
+						$"Metal presentation failed ({code}): {message}"));
+				} finally {
+					Interlocked.Exchange (ref pendingMetalFailure, 0);
+				}
+			});
+		}
+
 		private static bool IsRunningOnAppleSimulator =>
-			!string.IsNullOrEmpty (
-				Environment.GetEnvironmentVariable ("SIMULATOR_UDID")) ||
-			!string.IsNullOrEmpty (
-				Environment.GetEnvironmentVariable ("SIMULATOR_DEVICE_NAME"));
+#if __IOS__ || __TVOS__
+			ObjCRuntime.Runtime.Arch == ObjCRuntime.Arch.SIMULATOR;
+#else
+			false;
+#endif
 	}
 }
 #endif

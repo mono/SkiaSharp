@@ -50,6 +50,8 @@ namespace SkiaSharp.Views.tvOS
 
 		internal SKGraphiteInsertStatus? ContextFailureStatus { get; private set; }
 
+		internal bool HasInsertedRecording { get; private set; }
+
 		public SKGraphiteRecorder? CreateRecorder () =>
 			CreateRecorder (-1);
 
@@ -71,10 +73,14 @@ namespace SkiaSharp.Views.tvOS
 				throw new ArgumentNullException (nameof (recording));
 
 			var status = Context.InsertRecording (recording);
-			if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
+			if (status == SKGraphiteInsertStatus.Success) {
+				HasInsertedRecording = true;
+			} else if (status == SKGraphiteInsertStatus.AddCommandsFailed ||
 				status == SKGraphiteInsertStatus.AsyncShaderCompilesFailed) {
 				ContextFailureStatus ??= status;
 			}
+			// An external Recorder can repair an out-of-order insertion by submitting
+			// its missing Recording, so preserve that status for the caller.
 			return status;
 		}
 	}

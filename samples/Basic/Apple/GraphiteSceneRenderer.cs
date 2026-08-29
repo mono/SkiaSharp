@@ -81,11 +81,11 @@ internal sealed class GraphiteSceneRenderer : IDisposable
 
 	public void Dispose()
 	{
-		for (var i = workers.Length - 1; i >= 0; i--)
-			workers[i]?.Dispose();
 		foreach (var image in displayImages)
 			image.Dispose();
 		displayImages = Array.Empty<SKImage>();
+		for (var i = workers.Length - 1; i >= 0; i--)
+			workers[i]?.Dispose();
 		touchPaint.Dispose();
 	}
 

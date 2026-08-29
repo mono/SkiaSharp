@@ -14,11 +14,21 @@ namespace SkiaSharp.Views.tvOS
 	public sealed class SKGraphiteRenderFailedEventArgs : EventArgs
 	{
 		public SKGraphiteRenderFailedEventArgs (Exception exception)
+			: this (exception, false)
+		{
+		}
+
+		public SKGraphiteRenderFailedEventArgs (
+			Exception exception,
+			bool requiresContextRecreation)
 		{
 			Exception = exception ?? throw new ArgumentNullException (nameof (exception));
+			RequiresContextRecreation = requiresContextRecreation;
 		}
 
 		public Exception Exception { get; }
+
+		public bool RequiresContextRecreation { get; }
 	}
 }
 #endif
