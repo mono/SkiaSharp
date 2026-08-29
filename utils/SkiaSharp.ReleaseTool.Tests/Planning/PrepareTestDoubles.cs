@@ -202,6 +202,13 @@ namespace SkiaSharp.ReleaseTool.Tests.Planning
 			CancellationToken cancellationToken = default) =>
 			throw new NotSupportedException("The planning fake does not push branches.");
 
+		public Task PushTagAsync(
+			string tag,
+			string sha,
+			string remote = "origin",
+			CancellationToken cancellationToken = default) =>
+			throw new NotSupportedException("The planning fake does not push tags.");
+
 		public Task<string> ReadWorktreeFileAsync(
 			string path,
 			CancellationToken cancellationToken = default) =>

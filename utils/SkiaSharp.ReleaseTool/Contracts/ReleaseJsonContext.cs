@@ -15,6 +15,9 @@ namespace SkiaSharp.ReleaseTool.Contracts
 	[JsonSerializable(typeof(PrepareApplyResult))]
 	[JsonSerializable(typeof(FinishPlan))]
 	[JsonSerializable(typeof(FinishPendingReport))]
+	[JsonSerializable(typeof(FinishCreateDraftResult))]
+	[JsonSerializable(typeof(FinishPublicationPlan))]
+	[JsonSerializable(typeof(FinishPublishResult))]
 	public partial class ReleaseJsonContext : JsonSerializerContext
 	{
 		public static ReleaseJsonContext Strict { get; } = new(CreateOptions());
@@ -45,6 +48,9 @@ namespace SkiaSharp.ReleaseTool.Contracts
 			options.Converters.Add(new JsonStringEnumConverter<ManagedMarkerState>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<FinishOperationId>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<FinishOperationKind>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishArtifactOperation>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<FinishWriteStatus>(allowIntegerValues: false));
+			options.Converters.Add(new JsonStringEnumConverter<BodyHashAlgorithm>(allowIntegerValues: false));
 			options.Converters.Add(new JsonStringEnumConverter<ReleaseKind>(allowIntegerValues: false));
 			return options;
 		}

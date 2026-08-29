@@ -10,6 +10,37 @@ namespace SkiaSharp.ReleaseTool.Finishing
 		public const string GeneratedNotesEnd = "<!-- SKIASHARP:GITHUB-GENERATED-NOTES:END -->";
 
 		public static Contracts.ManagedMarkerState Inspect(string body)
+			=> Locate(body) is null
+				? Contracts.ManagedMarkerState.None
+				: Contracts.ManagedMarkerState.Complete;
+
+		public static string BuildInitialBody(string generatedNotesBody) =>
+			$"{SummaryStart}\n\n{SummaryEnd}\n\n" +
+			$"{GeneratedNotesStart}\n{generatedNotesBody.Trim()}\n{GeneratedNotesEnd}\n";
+
+		public static bool HasGeneratedNotes(string body)
+		{
+			var positions = Locate(body);
+			if (positions is null)
+				return false;
+			var start = positions.Value.GeneratedStart + GeneratedNotesStart.Length;
+			return !string.IsNullOrWhiteSpace(
+				body[start..positions.Value.GeneratedEnd]);
+		}
+
+		public static string ReplaceGeneratedNotes(string body, string generatedNotes)
+		{
+			var positions = Locate(body) ??
+				throw new GitHubException("release body has no managed markers");
+			var ownedStart = positions.GeneratedStart + GeneratedNotesStart.Length;
+			return body[..ownedStart] +
+				"\n" +
+				generatedNotes.Trim() +
+				"\n" +
+				body[positions.GeneratedEnd..];
+		}
+
+		private static MarkerPositions? Locate(string body)
 		{
 			var markers = new[]
 			{
@@ -33,7 +64,7 @@ namespace SkiaSharp.ReleaseTool.Finishing
 			}
 
 			if (positions.All(static position => position < 0))
-				return Contracts.ManagedMarkerState.None;
+				return null;
 			if (positions.Any(static position => position < 0))
 				throw new GitHubException("release body has incomplete managed markers");
 			if (!(positions[0] < positions[1] &&
@@ -42,7 +73,17 @@ namespace SkiaSharp.ReleaseTool.Finishing
 			{
 				throw new GitHubException("release body managed markers are out of order");
 			}
-			return Contracts.ManagedMarkerState.Complete;
+			return new MarkerPositions(
+				positions[0],
+				positions[1],
+				positions[2],
+				positions[3]);
 		}
+
+		private readonly record struct MarkerPositions(
+			int SummaryStart,
+			int SummaryEnd,
+			int GeneratedStart,
+			int GeneratedEnd);
 	}
 }
