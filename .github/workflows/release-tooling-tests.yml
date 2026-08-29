@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - ".agents/skills/release-testing/**"
+      - ".github/actions/setup-release-tool/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
       - ".github/workflows/update-release-notes.md"
@@ -20,6 +21,7 @@ on:
     branches: [main]
     paths:
       - ".agents/skills/release-testing/**"
+      - ".github/actions/setup-release-tool/**"
       - ".github/workflows/release-*.yml"
       - ".github/workflows/update-github-release-summaries.yml"
       - ".github/workflows/update-release-notes.md"
@@ -49,22 +51,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      - name: Set up exact release tooling
+        uses: ./.github/actions/setup-release-tool
         with:
-          global-json-file: global.json
+          tooling-sha: ${{ github.sha }}
 
-      - name: Restore C# release tooling
+      - name: Restore C# release tooling tests
         run: dotnet restore utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --locked-mode
 
-      - name: Build C# release tooling
+      - name: Build C# release tooling tests
         run: dotnet build utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-restore
 
       - name: Test C# release tooling
         run: dotnet test utils/SkiaSharp.ReleaseTool.Tests/SkiaSharp.ReleaseTool.Tests.csproj --configuration Release --no-build --no-restore
-
-      - name: Run release automation tests
-        run: python3 -m unittest discover -s scripts/infra/release/tests -p 'test_*.py'
 
       - name: Run exact release summary tests
         run: python3 -m unittest discover -s scripts/infra/docs/release_notes/tests -p 'test_*.py'

@@ -5,12 +5,13 @@ and the **issue-template version dropdowns** in sync with what actually ships.
 
 The tooling reads the shared source of truth in
 [`scripts/VERSIONS.txt`](../../VERSIONS.txt) (the `SkiaSharp nuget X.Y.Z` and
-`libSkiaSharp milestone N` lines) and talk to GitHub through the
-[`gh`](https://cli.github.com/) CLI, which must be authenticated.
+`libSkiaSharp milestone N` lines). C# release closeout uses Octokit; the
+standalone issue-template updater uses the authenticated
+[`gh`](https://cli.github.com/) CLI.
 
 | Component | What it manages | Automated? |
 |-----------|-----------------|------------|
-| [`release_milestones.py`](../release/release_milestones.py) | Reconciles shipped PR/issue assignments, moves open work, and closes tagged milestones. | **Yes** — `Release - Finish` closeout |
+| [`SkiaSharp.ReleaseTool`](../../../utils/SkiaSharp.ReleaseTool/) | Reconciles shipped PR/issue assignments, moves open work, and closes tagged milestones. | **Yes** — `Release - Finish` closeout |
 | [`update-bug-template.py`](update-bug-template.py) | Regenerates the version dropdowns in the bug-report issue template. | **Yes** — daily and post-release workflows |
 
 ---
@@ -20,8 +21,11 @@ The tooling reads the shared source of truth in
 The release CLI consumes the immutable Finish plan:
 
 ```text
-python3 scripts/infra/release/release.py finish closeout \
+dotnet run --no-build --no-restore --configuration Release \
+  --project utils/SkiaSharp.ReleaseTool/SkiaSharp.ReleaseTool.csproj -- \
+  finish closeout \
   --plan finish-plan.json \
+  --expected-plan-id <planId-guid> \
   --dry-run
 ```
 

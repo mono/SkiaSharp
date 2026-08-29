@@ -91,4 +91,50 @@ namespace SkiaSharp.ReleaseTool.Environments
 		private static string FormatNames(IEnumerable<string> names) =>
 			string.Join(", ", names.Select(name => $"'{name}'"));
 	}
+
+	internal static class EnvironmentCheckReportValidator
+	{
+		public static void Validate(EnvironmentCheckReport report)
+		{
+			if (string.IsNullOrWhiteSpace(report.Name))
+				throw new ValidationException("environment report name must not be empty");
+			if (string.IsNullOrWhiteSpace(report.DefaultBranch))
+				throw new ValidationException("environment report defaultBranch must not be empty");
+			ValidateStrings(report.Reasons, "reasons");
+			ValidateStrings(report.ProtectionRuleTypes, "protectionRuleTypes");
+			ValidateStrings(report.AllowedBranches, "allowedBranches");
+			if (report.ReviewerCount < 0)
+				throw new ValidationException("environment report reviewerCount must be nonnegative");
+			if (report.Ok != (report.Exists && report.Reasons.Count == 0))
+				throw new ValidationException("environment report ok is inconsistent with exists and reasons");
+			if (!report.Exists &&
+				(report.ReviewerCount != 0 ||
+				 report.PreventSelfReview ||
+				 report.CustomBranchPolicies ||
+				 report.AllowedBranches.Count != 0 ||
+				 report.ProtectionRuleTypes.Count != 0))
+			{
+				throw new ValidationException("missing environment report contains configured protection state");
+			}
+			if (report.Ok &&
+				(!report.CustomBranchPolicies ||
+				 !report.PreventSelfReview ||
+				 report.ReviewerCount < 1 ||
+				 report.AllowedBranches.Count != 1 ||
+				 report.AllowedBranches[0] != report.DefaultBranch))
+			{
+				throw new ValidationException("successful environment report contains unsafe protection state");
+			}
+		}
+
+		private static void ValidateStrings(IReadOnlyList<string> values, string name)
+		{
+			if (values is null)
+				throw new ValidationException($"environment report {name} must not be null");
+			if (values.Any(string.IsNullOrWhiteSpace))
+				throw new ValidationException($"environment report {name} must not contain empty values");
+			if (values.Distinct(StringComparer.Ordinal).Count() != values.Count)
+				throw new ValidationException($"environment report {name} must not contain duplicates");
+		}
+	}
 }

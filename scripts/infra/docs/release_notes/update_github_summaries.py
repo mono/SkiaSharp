@@ -34,7 +34,7 @@ _DOCS_DIR = _PACKAGE_DIR.parent
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import common, render_summary, safety, shipments as shipments_module
+from release_notes import common, github, render_summary, safety, shipments as shipments_module
 
 SOURCES_DIR = "documentation/docfx/releases/_sources"
 
@@ -246,13 +246,11 @@ def render_managed_summary(
 class GitHubSummaryClient(Protocol):
     """The narrow surface the updater needs from a GitHub client.
 
-    Production wires ``release_github.GhCliGitHubClient`` (which already
-    implements exactly this shape via ``gh release view``/``gh release
-    edit``); tests use an in-memory fake, so no test ever shells out to
-    ``gh`` or the network.
+    Production wires this package's minimal REST client; tests use an
+    in-memory fake, so no test uses the network.
     """
 
-    def get_release(self, tag: str):  # -> release_github.ReleaseInfo | None
+    def get_release(self, tag: str):  # -> github.ReleaseInfo | None
         ...
 
     def update_release_body(self, *, tag: str, body: str) -> None:
@@ -289,14 +287,13 @@ def update_releases(
        single write is sent.
     2. **Race barrier** -- immediately before the first write, re-fetch every
        staged release and require its body to be byte-identical to what
-       preflight read. ``gh``/the REST API has no conditional PATCH, so this
+       preflight read. The REST API has no conditional PATCH, so this
        is the last chance to detect a concurrent edit; any drift aborts the
        whole batch with none written.
     3. **Write + verify** -- PATCH the body, then re-fetch and require the
        stored body to equal the intended new body exactly.
     """
 
-    gh = common.import_release_github()
     result = UpdateResult()
     plans: list[PlannedUpdate] = []
     errors: list[str] = []
@@ -324,7 +321,7 @@ def update_releases(
                     "or the next run",
                 )
                 continue
-            if not gh.has_managed_markers(existing.body):
+            if not github.has_managed_markers(existing.body):
                 result.add(
                     candidate.tag,
                     "skipped",
@@ -332,7 +329,7 @@ def update_releases(
                 )
                 continue
             summary_text = render_managed_summary(candidate, renderer)
-            new_body = gh.replace_managed_summary(existing.body, summary_text)
+            new_body = github.replace_managed_summary(existing.body, summary_text)
             if new_body is None:
                 result.add(
                     candidate.tag, "skipped", "release body markers disappeared before write"
@@ -346,7 +343,7 @@ def update_releases(
             plans.append(PlannedUpdate(candidate, existing.body, new_body))
         except UpdateError as exc:
             errors.append("{}: {}".format(candidate.tag, exc))
-        except gh.GitHubError as exc:
+        except github.GitHubError as exc:
             errors.append("{}: {}".format(candidate.tag, exc))
 
     if errors:
@@ -417,8 +414,7 @@ def main(argv: list[str] | None = None) -> int:
         repository = RepositoryView(args.root.resolve())
         tag = args.tag if args.event in ("release", "workflow_dispatch") else None
         candidates = select_candidates(repository, tag=tag)
-        gh = common.import_release_github()
-        client = gh.GhCliGitHubClient(args.repository)
+        client = github.RestGitHubClient(args.repository)
         result = update_releases(candidates, client)
         _write_summary(result)
         return 0

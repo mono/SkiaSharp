@@ -11,9 +11,9 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import common, update_github_summaries as updater
+from release_notes import github, update_github_summaries as updater
 
-GH = common.import_release_github()
+GH = github
 
 
 def _release_info(tag, body, *, is_draft=False):
@@ -29,7 +29,7 @@ def _release_info(tag, body, *, is_draft=False):
 
 
 class FakeGitHubClient:
-    """An in-memory GitHubSummaryClient fake -- never shells out to `gh`."""
+    """An in-memory GitHubSummaryClient fake with no network access."""
 
     def __init__(
         self,
@@ -461,7 +461,7 @@ class MainEndToEndTests(unittest.TestCase):
         self.fixture.write_page("4.151.0", data=_data(), prose=_prose())
         initial_body = GH.build_initial_body("## What's Changed\n")
         fake_client = FakeGitHubClient({"v4.151.0-preview.1": initial_body})
-        with mock.patch.object(GH, "GhCliGitHubClient", return_value=fake_client):
+        with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
                 "--event", "push",
                 "--repository", "mono/SkiaSharp",
@@ -473,7 +473,7 @@ class MainEndToEndTests(unittest.TestCase):
     def test_reports_a_nonzero_exit_and_writes_a_summary_on_failure(self):
         self.fixture.write_page("4.151.0", data=_data(format_version=3), prose=_prose())
         fake_client = FakeGitHubClient({})
-        with mock.patch.object(GH, "GhCliGitHubClient", return_value=fake_client):
+        with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
                 "--event", "workflow_dispatch",
                 "--tag", "v4.151.0-preview.1",
@@ -484,7 +484,7 @@ class MainEndToEndTests(unittest.TestCase):
 
     def test_a_quiet_run_with_no_eligible_summaries_still_exits_zero(self):
         fake_client = FakeGitHubClient({})
-        with mock.patch.object(GH, "GhCliGitHubClient", return_value=fake_client):
+        with mock.patch.object(GH, "RestGitHubClient", return_value=fake_client):
             exit_code = updater.main([
                 "--event", "push",
                 "--root", str(self.fixture.root),

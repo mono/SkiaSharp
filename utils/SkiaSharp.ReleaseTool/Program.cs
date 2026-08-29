@@ -189,6 +189,7 @@ namespace SkiaSharp.ReleaseTool
 			root.Subcommands.Add(prepareCommand);
 			root.Subcommands.Add(FinishPlanCommand.Create(repoOption, environment));
 			root.Subcommands.Add(CheckEnvironmentCommand.Create(environment));
+			root.Subcommands.Add(RenderPlanCommand.Create(environment));
 			return await root.Parse(args).InvokeAsync().ConfigureAwait(false);
 		}
 	}

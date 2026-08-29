@@ -15,7 +15,12 @@ import tempfile
 import release_test_common as common
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-RELEASE_CLI = SCRIPT_DIR.parents[3] / "scripts" / "infra" / "release" / "release.py"
+RELEASE_PROJECT = (
+    SCRIPT_DIR.parents[3]
+    / "utils"
+    / "SkiaSharp.ReleaseTool"
+    / "SkiaSharp.ReleaseTool.csproj"
+)
 
 
 PlanError = common.ReleaseTestError
@@ -45,17 +50,43 @@ def format_command(
 def receipt_report(root: Path, version: str) -> dict:
     with tempfile.TemporaryDirectory(prefix="skiasharp-release-smoke-") as temp:
         output = Path(temp) / "finish-plan.json"
-        packages = Path(temp) / "packages"
         common.run_checked(
             [
-                sys.executable,
-                str(RELEASE_CLI),
+                "dotnet",
+                "restore",
+                str(RELEASE_PROJECT),
+                "--locked-mode",
+            ],
+            cwd=root,
+            timeout=600,
+        )
+        common.run_checked(
+            [
+                "dotnet",
+                "build",
+                str(RELEASE_PROJECT),
+                "--configuration",
+                "Release",
+                "--no-restore",
+            ],
+            cwd=root,
+            timeout=600,
+        )
+        common.run_checked(
+            [
+                "dotnet",
+                "run",
+                "--no-build",
+                "--no-restore",
+                "--configuration",
+                "Release",
+                "--project",
+                str(RELEASE_PROJECT),
+                "--",
                 "finish",
                 "plan",
                 "--version",
                 version,
-                "--download-dir",
-                str(packages),
                 "--output",
                 str(output),
             ],

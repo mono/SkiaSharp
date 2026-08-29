@@ -136,10 +136,9 @@ class RenderGithubReleaseSummaryTests(unittest.TestCase):
             )
 
     def test_raises_value_error_when_prose_smuggles_a_managed_marker(self):
-        gh = safety._gh
         prose = _sample_prose()
         prose["release_summaries"]["v4.151.0-preview.1"]["body"] = (
-            "Safe start. {} sneaky.".format(gh.SUMMARY_END_MARKER)
+            "Safe start. {} sneaky.".format(safety.github.SUMMARY_END_MARKER)
         )
         with self.assertRaises(ValueError):
             render_summary.render_github_release_summary(

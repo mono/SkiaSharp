@@ -8,7 +8,7 @@ _DOCS_DIR = Path(__file__).resolve().parents[2]
 if str(_DOCS_DIR) not in sys.path:
     sys.path.insert(0, str(_DOCS_DIR))
 
-from release_notes import safety
+from release_notes import github, safety
 
 
 class ValidateProseTextTests(unittest.TestCase):
@@ -36,12 +36,11 @@ class ValidateProseTextTests(unittest.TestCase):
         self.assertTrue(any("code fence" in error for error in errors))
 
     def test_rejects_every_managed_marker(self):
-        gh = safety._gh
         for marker in (
-            gh.SUMMARY_START_MARKER,
-            gh.SUMMARY_END_MARKER,
-            gh.GENERATED_START_MARKER,
-            gh.GENERATED_END_MARKER,
+            github.SUMMARY_START_MARKER,
+            github.SUMMARY_END_MARKER,
+            github.GENERATED_START_MARKER,
+            github.GENERATED_END_MARKER,
             safety.RELEASE_LINKS_MARKER,
         ):
             with self.subTest(marker=marker):
