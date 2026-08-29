@@ -111,6 +111,18 @@ from typing import Optional, Tuple
 REPO = "mono/SkiaSharp"
 RELEASES_DIR = Path("documentation/docfx/releases")
 
+# Make the sibling ``release_notes`` package importable regardless of how this
+# script itself was loaded (as ``__main__``, or via release-notes-render.py's
+# ``importlib`` spec load of this file, which does not itself add this
+# directory to sys.path). ``release_notes.shipments`` is the fresh-ported,
+# independently unit-tested exact-shipment model that turns this script's own
+# tag/PR-diff helpers into the ``shipments`` data.json field the GitHub
+# Release summary updater consumes (see collect_shipments_for_page below).
+_THIS_DIR = Path(__file__).resolve().parent
+if str(_THIS_DIR) not in sys.path:
+    sys.path.insert(0, str(_THIS_DIR))
+from release_notes import shipments as _release_shipments  # noqa: E402
+
 # The Prepare phase ALWAYS writes the machine-readable "Files to polish" list to a
 # file (overridable with --polish-list). output/ is gitignored, so the list stays
 # out of the working-tree patch the Prepare job hands to the Polish agent.
@@ -1032,6 +1044,39 @@ def _tag_date(tag):
                check=False).strip()
 
 
+def _tag_target_sha(tag):
+    # type: (str) -> str
+    """The 40-char commit SHA a tag points at, or '' when unknown."""
+    return run(["git", "rev-parse", "{}^{{commit}}".format(tag)],
+               check=False).strip()
+
+
+def collect_shipments_for_page(page_version):
+    # type: (str) -> list[dict]
+    """Every exact shipment (tag) for a RELEASED page's own core version.
+
+    A thin wrapper around ``release_notes.shipments.collect_shipments`` (the
+    fresh-ported, independently unit-tested exact-shipment model) that
+    supplies this script's own git-backed primitives -- ``git tag -l``,
+    ``_tag_date``, ``_tag_target_sha``, and ``get_prs_from_diff`` -- so the
+    generator and the model never disagree about tag parsing or PR deltas.
+    Only meaningful for a released (non-head) page; callers should not call
+    this for an unreleased head page (main/release/X.Y.x), which has no tag
+    of its own.
+    """
+    raw = run(["git", "tag", "-l", "v*"], check=False)
+    all_tags = [t.strip() for t in raw.splitlines() if t.strip()]
+    return _release_shipments.collect_shipments(
+        page_version,
+        all_tags,
+        tag_date=_tag_date,
+        target_sha=_tag_target_sha,
+        prs_between=lambda from_tag, to_tag: (
+            get_prs_from_diff(from_tag, to_tag) if from_tag else []
+        ),
+    )
+
+
 def collect_preview_milestones(page_version, base_version):
     # type: (str, Optional[str]) -> list[dict]
     """Preview/rc milestones rolled up into a page, newest first (regression R3).
@@ -1698,7 +1743,15 @@ def _release_date_display(version):
 # Deterministic sidecar (`<version>.data.json`) FORMAT VERSION — the v2 pipeline
 # (data.json + prose.json + release-notes-render.py) keys change-detection on the whole
 # data.json dict. Bump when the data.json schema changes.
-_DATA_JSON_FORMAT_VERSION = 3
+#
+# 3 -> 4: added the "shipments" field (exact-shipment records for the GitHub
+# Release summary updater; see release_notes.shipments.collect_shipments).
+# This is the smallest compatible bump for that feature -- everything else
+# about the v3 shape is unchanged, and a v3 (or older) data.json is safely
+# skipped by the updater rather than rewritten (scripts/infra/docs/release_notes/
+# common.py's ``DATA_FORMAT`` must be bumped in lockstep -- a test in
+# release_notes/tests/test_common.py asserts the two stay equal).
+_DATA_JSON_FORMAT_VERSION = 4
 
 
 def _pr_is_community(pr):
@@ -1887,6 +1940,20 @@ def build_data_json(prs, metadata):
         "internal": sum(1 for p in prs if p.get("category") == "internal"),
     }
 
+    # Exact-shipment records (format 4+): one per exact git tag whose core
+    # matches this page, keyed by tag rather than by preview/rc label so the
+    # GitHub Release summary updater can look one up directly. Only a
+    # RELEASED page has any (an unreleased head page is never tagged) --
+    # collect_shipments_for_page is only ever called for those. Validated
+    # here (not just trusted from the caller) so a bug in shipment collection
+    # fails the Prepare run loudly instead of shipping a malformed data.json.
+    shipments = metadata.get("shipments") or []
+    shipment_errors = _release_shipments.validate_shipments(shipments)
+    if shipment_errors:
+        raise ValueError(
+            "invalid shipments for {}: {}".format(version, "; ".join(shipment_errors))
+        )
+
     return {
         "format": _DATA_JSON_FORMAT_VERSION,
         "version": version,
@@ -1901,6 +1968,7 @@ def build_data_json(prs, metadata):
         "breaking_candidates": breaking_candidates,
         "contributors": contributors,
         "previews": previews,
+        "shipments": shipments,
         "prs": pr_map,
     }
 
@@ -1949,14 +2017,35 @@ def _prune_page_and_sources(page_path):
             gen.unlink()
 
 
+def _strip_format_and_shipments(data):
+    # type: (dict) -> dict
+    """``data`` with the "format" and "shipments" keys removed.
+
+    Shared by both change-detection comparisons below: neither key has any
+    bearing on the rendered WEBSITE page or the prose the Polish AI must
+    write. ``format`` is a code-owned migration marker (see
+    ``_DATA_JSON_FORMAT_VERSION``'s docstring); ``shipments`` (format 4+) is
+    exact-shipment data consumed only by the separate GitHub Release summary
+    updater (`release_notes.update_github_summaries`), never by
+    release-notes-render.py.
+    """
+    return {key: value for key, value in data.items()
+            if key not in ("format", "shipments")}
+
+
 def _data_json_unchanged(data_path, new_data):
     # type: (Path, dict) -> bool
-    """True when the committed data.json equals the freshly-computed facts.
+    """True when the committed data.json is byte-for-byte (dict-)identical to
+    the freshly-computed facts, INCLUDING ``format``/``shipments``.
 
-    data.json is the change-detection key (§4.6): it has no timestamp, so an
-    identical run yields an identical dict and the page is skipped. Any change to
-    the PRs, roster, previews, links, or a companion's folded sha256 flips it and
-    the page is re-polished. A missing or unparseable file counts as changed.
+    This is the genuine no-op check: only when this is true is there truly
+    nothing at all to write, so an unforced run may skip the page entirely
+    (§4.6). A missing or unparseable file counts as changed. Note this is
+    strictly narrower than ``_website_content_unchanged`` below — a page can
+    have unchanged *website content* (PRs/roster/previews/links) while still
+    being "changed" here because a new/altered exact shipment tag appeared;
+    callers must write the page in that case (see ``_write_page``) even
+    though it is not this function that gates whether to do so.
     """
     if not data_path.exists():
         return False
@@ -1965,6 +2054,68 @@ def _data_json_unchanged(data_path, new_data):
     except (ValueError, OSError):
         return False
     return old == new_data
+
+
+def _website_content_unchanged(data_path, new_data):
+    # type: (Path, dict) -> bool
+    """True when the WEBSITE-FACING content is unchanged, ignoring ``format``
+    and ``shipments``.
+
+    Any change to the PRs, roster, previews, links, or a companion's folded
+    sha256 flips this and the page must be re-polished (prose discarded,
+    returned for the files-to-polish list). It stays True across a bare
+    format bump or a shipments-only change (a new/altered exact tag with no
+    other fact moving) — see §4.8: that case still needs data.json rewritten
+    so the new/changed shipment is available to the GitHub Release summary
+    updater, but the reviewed website prose is still valid and must be
+    preserved, and the page must NOT be added to files-to-polish (there is
+    nothing for the Polish AI to do). A missing or unparseable file counts as
+    changed (matches ``_data_json_unchanged``).
+    """
+    if not data_path.exists():
+        return False
+    try:
+        old = json.loads(data_path.read_text())
+    except (ValueError, OSError):
+        return False
+    return _strip_format_and_shipments(old) == _strip_format_and_shipments(new_data)
+
+
+def _classify_data_write(fully_unchanged, website_content_unchanged, force):
+    # type: (bool, bool, bool) -> Optional[dict]
+    """Decide what ``_write_page`` must do with a freshly-computed data.json,
+    given the two change-detection facts above. Pure decision table (§4.8),
+    deliberately decoupled from git/file I/O so its three-way split is
+    directly unit testable without a real git repository:
+
+    * Returns ``None`` — skip entirely, no write at all. Only when nothing
+      whatsoever changed (``fully_unchanged``) and the caller did not force a
+      rebuild.
+    * Otherwise returns ``{"delete_prose": bool, "add_to_polish": bool}``:
+
+      - Website content changed (``website_content_unchanged`` is False) —
+        ``{"delete_prose": True, "add_to_polish": True}``. Same as before
+        exact shipments existed: the reviewed prose is stale by definition.
+      - Website content unchanged but format/shipments moved (a new/altered
+        exact shipment tag, or a bare format bump, with every other fact
+        identical) — ``{"delete_prose": False, "add_to_polish": False}``.
+        THIS is the case a prior version of this function got wrong: it must
+        still be WRITTEN (regardless of ``force``) so the new/changed
+        shipment reaches data.json for the GitHub summary updater to
+        converge, but the reviewed prose is untouched and there is nothing
+        for the Polish AI to do, so the page must not appear in
+        files-to-polish.
+      - Fully unchanged, reached only via an explicit ``force`` — preserves
+        the exact pre-shipments ``--force`` behavior:
+        ``{"delete_prose": False, "add_to_polish": True}``.
+    """
+    if not force and fully_unchanged:
+        return None
+    if not website_content_unchanged:
+        return {"delete_prose": True, "add_to_polish": True}
+    if fully_unchanged:
+        return {"delete_prose": False, "add_to_polish": True}
+    return {"delete_prose": False, "add_to_polish": False}
 
 
 # ── page-set discovery (shared by release-notes-index.py + release-notes-render.py) ──────
@@ -2316,6 +2467,11 @@ def _write_page(branch, all_branches, verbose=False, force=False,
         metadata["api_diff_link"] = api_diff_link
     if harfbuzz:
         metadata["harfbuzz"] = harfbuzz
+    if not is_head:
+        # A released page corresponds to real git tag(s) with GitHub Releases;
+        # an unreleased head page (main/release/X.Y.x) is never tagged, so it
+        # has no shipments at all.
+        metadata["shipments"] = collect_shipments_for_page(version)
     companions = {}  # type: dict
     if notes_comp:
         companions["notes"] = notes_comp
@@ -2331,32 +2487,69 @@ def _write_page(branch, all_branches, verbose=False, force=False,
     # identical run produces a byte-identical dict and the page is skipped. The
     # generator NEVER writes the .md — release-notes-render.py produces it from
     # data.json + prose.json during Polish.
+    #
+    # Three distinct outcomes (§4.8), not two — see _classify_data_write's
+    # docstring for the full decision table:
+    #
+    #  1. Fully unchanged (byte-identical dict, including format/shipments) —
+    #     the genuine no-op. Skipped entirely unless --force, matching the
+    #     exact prior (pre-shipments) behavior: a forced write here still
+    #     returns the page for polish without touching prose, since nothing
+    #     about it — including its shipments — actually changed.
+    #  2. Website content changed (PRs/roster/previews/links/companions) —
+    #     always written, prose discarded, page returned for polish. Same as
+    #     before shipments existed.
+    #  3. Website content UNCHANGED but format/shipments differ (e.g. a new or
+    #     re-tagged exact shipment appeared with no other fact moving) — this
+    #     is the bug this split fixes: previously such a page was silently
+    #     skipped (never written), so its new shipment never reached
+    #     data.json and the GitHub summary updater could never converge a
+    #     summary for it. Now it is ALWAYS written (regardless of --force),
+    #     but the reviewed prose is preserved and the page is never added to
+    #     files-to-polish — there is nothing here for the Polish AI to do.
     data = build_data_json(prs, metadata)
     data_path = _data_json_path(output_path)
-    changed = not _data_json_unchanged(data_path, data)
-    if not force and not changed:
+    fully_unchanged = _data_json_unchanged(data_path, data)
+    website_content_unchanged = _website_content_unchanged(data_path, data)
+    action = _classify_data_write(fully_unchanged, website_content_unchanged, force)
+
+    if action is None:
         log("  Skipping {} (unchanged)".format(output_path))
         return None
 
     data_path.parent.mkdir(parents=True, exist_ok=True)
     data_path.write_text(json.dumps(data, indent=2) + "\n")
-    log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
-    if changed:
+
+    if action["delete_prose"]:
+        log("  Wrote {} ({} PRs)".format(data_path, len(prs)))
         # The facts moved (new/removed PRs, re-tags, roster shifts), so the committed
         # prose is stale by definition. DELETE it to FORCE the Polish agent to
         # re-author the page from the fresh data.json — instead of letting it judge
         # whether the old prose still "matches", which silently dropped brand-new
         # product PRs (§4.6). The human-owned <version>.notes.md sidecar is left in
         # place. render --all then hard-fails until fresh prose exists, so a changed
-        # page can never ship with stale prose. Scoped to a genuine change (not a bare
-        # --force re-render) so re-rendering after a format/skill tweak does not throw
+        # page can never ship with stale prose. Scoped to a genuine content change
+        # (not a bare --force re-render, and not a shipments-only change) so
+        # re-rendering after a format/skill tweak or a new preview tag does not throw
         # away good prose. The .md itself is not deleted — render overwrites it wholesale
         # from the new prose.
         prose_path = _prose_json_path(output_path)
         if prose_path.exists():
             prose_path.unlink()
             log("  Discarded {} (data changed — forcing full re-author)".format(prose_path))
-    return str(output_path)
+    elif fully_unchanged:
+        # Reached only via --force with truly nothing different (not even
+        # shipments). Preserve the exact pre-shipments --force behavior: still
+        # return the page for polish, but prose is untouched.
+        log("  Wrote {} ({} PRs, forced; unchanged)".format(data_path, len(prs)))
+    else:
+        # Website content is unchanged but format/shipments moved (a new/altered
+        # exact shipment, or a bare format bump) — write the updated facts so the
+        # GitHub summary updater sees them, but there is no polish work here.
+        log("  Wrote {} ({} PRs; shipment/format metadata only — prose preserved, "
+            "no polish needed)".format(data_path, len(prs)))
+
+    return str(output_path) if action["add_to_polish"] else None
 
 
 # ── Main ─────────────────────────────────────────────────────────────

@@ -68,6 +68,7 @@ behavior is to do the same full pipeline and let the engines skip safely.
   - §4.5 The HarfBuzz section on a SkiaSharp page
   - §4.6 How it runs
   - §4.7 Manual additions & breaking-change summaries (companion files)
+  - §4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
 - **§5 — API-diff engine (`api-diff.cake`)**
   - §5.1 Inputs & outputs
   - §5.2 Behavior
@@ -898,9 +899,10 @@ The release-notes pipeline has three script-owned producers, split by artifact:
   (§4.7). It emits `_sources/<stem>.data.json` for each changed SkiaSharp page and
   writes the Files-to-polish list to `output/files-to-polish.txt` (or
   `--polish-list`). On released pages it adds `data.harfbuzz` from the co-release map
-  and the HarfBuzz-owned path filter (§4.5). It owns the shared low-level helpers
-  (git/version parsing), the page-set discovery helper `get_version_files`, and
-  `cadence_milestones()`.
+  and the HarfBuzz-owned path filter (§4.5), and (format 4+) `data.shipments` — the
+  exact-tag facts the separate GitHub Release summary updater consumes (§4.8). It owns
+  the shared low-level helpers (git/version parsing), the page-set discovery helper
+  `get_version_files`, and `cadence_milestones()`.
 - **`release-notes-index.py` (Prepare, network-capable) — aggregate index data.** Inputs are
   the remote branch list and the live Chromium Dash schedule. It emits only
   `releases/_sources/index.json`:
@@ -1308,6 +1310,115 @@ or changing flips the `api-breaking-diff` candidate hash. Either re-polishes **o
 the affected page. The full non-breaking API diff is deliberately **not**
 folder-hashed (§4.6): its change signal is already carried by the PR set and the
 `api_links` entry, so a routine diff refresh does not force a spurious re-polish.
+
+---
+
+### 4.8 Exact-shipment summaries and the GitHub Release updater (`release_notes/`, format 4+)
+
+A released page's `data.json` (format 4+; see `_DATA_JSON_FORMAT_VERSION`'s docstring
+in `release-notes-data.py`) carries one additional field, `shipments`: an array of one
+record per exact `v*` tag whose core matches this page — a preview, an rc, and/or the
+stable release itself — each with `tag`, `core_version`, `public_version`, `channel`
+(`preview`/`rc`/`stable`), `label`, `previous_tag` (the immediately preceding tag in
+GLOBAL sort order, not just this page's), `target_sha`, `date`, `changelog_url`, and the
+delta `prs` since `previous_tag`. It has no bearing on the rendered website page — it
+exists so a **separate, deterministic, classic (non-agentic) GitHub Actions workflow**,
+`update-github-release-summaries.yml`
+(`scripts/infra/docs/release_notes/update_github_summaries.py`), can converge a
+maintainer-reviewed summary into the matching GitHub Release without waiting on, or
+gating, the release itself.
+
+This is a fresh, narrowly-scoped port of the durable architecture from an earlier
+reviewed-summaries prototype (planning ref
+`5bb3346795e711cf6c6d2572445080b6c908e55a`) — not its generated historical pages or its
+broader format churn. `scripts/infra/docs/release_notes/` is the whole feature's home:
+
+- **`common.py`** — the exact-release tag grammar (`EXACT_RELEASE_TAG_RE`, stricter than
+  `release-notes-data.py`'s lenient `_parse_tag`: it rejects decorative/legacy labels
+  like `-beta` or `-gpu1` outright, so the exact-summary path never associates a summary
+  with a tag it cannot confidently classify), and the `DATA_FORMAT` constant that must
+  stay equal to `_DATA_JSON_FORMAT_VERSION` (a test enforces this).
+- **`shipments.py`** — `collect_shipments()`, the pure function (every git/PR access
+  injected) that builds the `shipments` array, and `validate_shipment(s)`, the
+  structural guard applied both when writing and when the updater reads it back.
+- **`safety.py`** — the prose-safety gate, ported in spirit from the retired
+  `release-publish` skill's pre-consolidation GitHub Release "teaser" guard:
+  no code fence, no CVE/security/vulnerability wording, no unwritten
+  placeholder, and a real opening sentence — plus a design-specific rule the teaser
+  never needed: prose must never contain the literal text of a managed marker (an
+  untrusted PR title an agent paraphrased, or a compromised prose.json entry, could
+  otherwise smuggle a marker byte sequence and corrupt the region boundaries the
+  updater trusts).
+- **`render_summary.py`** — turns one shipment + its reviewed
+  `prose.json["release_summaries"][tag]` entry (`{"headline": string, "body":
+  string|null}`) into the exact Markdown for the managed summary region. Scripts own
+  every heading, link, and contributor `@handle`; the agent supplies only the two prose
+  strings.
+- **`update_github_summaries.py`** — the workflow's entry point. It selects every exact
+  tag with both `shipments` facts and a `release_summaries` entry, and for each one:
+  preflights (skip — never an error — a release that does not exist, is still an
+  **unpublished draft** (see below), has no managed markers at all, i.e. a historical
+  release published before this feature, or is already current), re-reads every
+  planned release immediately before the first write as a race barrier (the REST
+  API has no conditional PATCH), writes, then re-reads and requires the stored body to
+  equal the intended body exactly. Any preflight or race failure aborts the **whole
+  batch** before a single write.
+
+**Drafts.** Finish creates the release as a **draft** and persists a hash of its exact
+initial body, holding it there until its own environment approval publishes it. If the
+summary updater patched that draft's body in the meantime, the persisted hash would go
+stale out from under Finish — a genuine cross-workflow race that would force an
+unrelated reapproval with no actual content problem. So `update_releases()` checks
+`existing.is_draft` in preflight and skips (never errors on, never patches) any draft,
+with an explicit `skipped` result/detail; it converges once GitHub's `release`
+(published) event fires — the workflow's own `release: types: [published]` trigger —
+or on this workflow's next scheduled/dispatched run after that, whichever comes first.
+
+**Markers.** The exact-summary package owns the four managed marker constants and
+body helpers in `scripts/infra/docs/release_notes/github.py`. Its minimal REST client
+updates only published release bodies without a `gh` CLI dependency. The C# Finish
+tool carries the same literal marker contract when it composes a new release's initial
+body (empty summary region + GitHub's generated notes); C# contract tests protect those
+bytes. Finish always publishes immediately with generated notes only; the reviewed
+summary converges later, whenever its release-notes PR merges — there is no
+release-critical deadline for it, and a release may indefinitely carry generated notes
+only.
+
+**Compatibility.** Bumping `_DATA_JSON_FORMAT_VERSION` (3 → 4) to add `shipments` is
+deliberately the *smallest* compatible upgrade, and change detection is a THREE-way
+split, not two, precisely so this stays true:
+
+- `_data_json_unchanged()` is the genuine no-op check — strict equality, including
+  `format`/`shipments`. Only when this is true does an unforced run skip a page
+  entirely.
+- `_website_content_unchanged()` ignores `format`/`shipments` — it is true whenever
+  the PRs/roster/previews/links/companions a rendered page and its required prose
+  depend on have not moved, even across a format bump or a shipments-only change.
+- `_classify_data_write()` combines the two into the actual outcome. A page whose
+  website content is unchanged but whose `shipments` moved (a new/altered exact tag,
+  with every other fact identical) is **always written, regardless of `--force`** —
+  fixing a real correctness bug an earlier version of this split had: excluding
+  `shipments` from *every* comparison meant a newly published preview/RC tag could be
+  the only fact that changed, so the page was silently skipped, its shipment never
+  reached `data.json`, and the GitHub summary updater could never converge a summary
+  for it. That case now writes the refreshed `shipments`, but still preserves the
+  reviewed prose and still does **not** add the page to files-to-polish — there is
+  nothing for the Polish AI to do. A genuine website-content change still always
+  writes, discards prose, and returns the page for polish, exactly as before shipments
+  existed. A truly unchanged page (not even `shipments` different) still skips
+  entirely unless `--force`, which still preserves the historical `--force` behavior of
+  returning even a fully-unchanged page for polish without touching its prose. The
+  updater itself silently skips (never errors on) a page whose `data.json` predates
+  format 4, unless a caller explicitly names one of its exact tags — then it fails
+  loudly with an actionable "force-regenerate this version" message instead of a
+  silent no-op.
+
+**Agent side.** The `release-notes` skill's `release_summaries` slot
+(`.agents/skills/release-notes/SKILL.md`) is optional and per-tag: the agent may
+converge as many or as few of a page's `shipments` as it has crisp prose for, omitting
+the rest — an omitted tag is simply "not converged yet", never an error, and getting one
+entry wrong never blocks the website-notes PR (`safety.py`'s violations surface only
+when `update-github-release-summaries.yml` next runs).
 
 ---
 
