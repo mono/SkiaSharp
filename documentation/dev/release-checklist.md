@@ -96,9 +96,20 @@ After NuGet.org publication, the separate public-package smoke-testing tool may 
 - **First preview when maintenance is missing:** select an explicitly audited `main` commit whose numeric version is the target and whose `PREVIEW_LABEL` is `preview.0`; use it as both release base and maintenance creation point.
 - **Later preview, RC, or stable when maintenance is missing:** continue from the latest exact validated prerelease lineage intended for the release, but independently create maintenance from the audited target-version `preview.0` point on `main`.
 - **4.152 stable recovery:** continue from the RC1 source lineage and create `release/4.152.x` separately from the audited `4.152.0` `preview.0` point.
-- **Hotfix preview/RC:** base on immutable parent stable tag `vX.Y.Z`; do not create or advance maintenance.
-- **Hotfix stable:** base on an explicitly selected prerelease branch for the same four-part version; do not create maintenance and do not open the normal stable bump PR.
+- **Hotfix from a release branch:** an operator may explicitly select any `release/*` branch as the source, but must also supply the requested four-part hotfix identity and freeze the branch's exact SHA. Validate that the selected source is an intentional base for that hotfix; never infer a new hotfix merely from seeing a release branch.
+- **Hotfix preview/RC:** the immutable parent stable tag `vX.Y.Z` remains the preferred first base. An explicitly selected `release/*` branch is also valid when its exact state and lineage are reviewed for the requested `X.Y.Z.F` hotfix. Do not create or advance maintenance.
+- **Hotfix stable:** base on an explicitly selected prerelease branch for the same four-part version, or another explicitly reviewed `release/*` source containing that hotfix lineage. Do not create maintenance and do not open the normal stable bump PR.
 - A missing-maintenance creation point and a later release base are separate reviewed inputs; never collapse them to whichever ref is newest.
+
+### Source branch discovery matrix
+
+| Source branch | Without explicit release identity | With explicit release identity |
+| --- | --- | --- |
+| `main` | Infer only the single unambiguous next preview while repository state is `preview.0`; otherwise require an explicit identity. | Start the requested normal release when version/base policy accepts `main`; a hotfix still requires an explicitly reviewed hotfix base. |
+| `release/X.Y.x` | Infer only the single unambiguous next preview while repository state is `preview.0`; otherwise require an explicit identity. | Start the requested preview, RC, stable, or four-part hotfix after exact SHA, version-state, and lineage validation. |
+| Exact `release/{identity}` | Resume that exact existing identity, including an existing hotfix branch. | Start a later channel/stable transition or a four-part hotfix from the selected branch only after exact SHA, version-state, and lineage validation. |
+
+Discovery never invents a four-part hotfix identity. Any new hotfix requires an explicit `X.Y.Z.F[-preview.N|-rc.N]`; only resuming an already exact hotfix branch may derive that same identity from the branch name.
 
 ## Host-agnostic preconditions, safety, and status
 
@@ -776,181 +787,461 @@ This section explains provenance only. It does not add release gates, restore ol
 
 ## Illustrative C# checklist definition
 
-This non-normative API sketch shows one possible host-independent C# definition. SDK names remain illustrative: reusable primitives own remote checks, safe actions, rereads, and typed outputs, while SkiaSharp supplies release values and concise policy callbacks.
+This non-normative sketch applies [Release checklist framework](release-checklist-framework.md). Discovery finishes and freezes its result before the first node is composed. Reusable primitives own authoritative checks, guarded actions, rereads, typed values, and scopes; the separate `SkiaSharp.ReleaseChecklist` app supplies frozen SkiaSharp policy.
 
-Discovery happens before the checklist is built. The caller supplies either an explicit release identity or a branch/integration ref, with `--public-version` available as an override. An exact release branch determines its identity; an integration branch reads current version state and normalized `v{numeric}*` tags and `release/{numeric}*` branches. Integration discovery may infer only one unambiguous next preview iteration while `PREVIEW_LABEL=preview.0`; every RC, stable, or channel transition requires `--release`.
+The caller supplies an explicit release identity or a source branch, with `--public-version` as an exact override. Sources are `main`, maintenance `release/X.Y.x`, or exact `release/{identity}`. An exact release branch without `--release` resumes that identity, including an existing hotfix. Starting an RC, stable, channel transition, or new four-part hotfix requires `--release`; a selected `release/*` hotfix base must pass exact SHA, version-state, and lineage validation. Only one unambiguous next preview may be inferred from `main` or maintenance while `PREVIEW_LABEL=preview.0`.
+
+Plain C# chooses one post-discovery composition branch. A stable non-hotfix definition contains the bump/PR subtree and one public sequence; every other definition contains one direct public sequence. Both conditional nodes are never materialized, so public IDs occur exactly once.
+
+```text
+release — Release SkiaSharp [Sequence]
+├── release-source — Establish release source state [Sequence]
+│   ├── validate-base — Validate the selected release base [Step]
+│   ├── maintenance-branch — Create or verify the maintenance branch [Step]
+│   ├── exact-release-branches — Create or verify exact release branches [Parallel]
+│   │   ├── mono-skia-release-branch — Create or verify the mono/skia branch [Step]
+│   │   └── skiasharp-release-branch — Create or verify the SkiaSharp branch [Step]
+│   └── release-source-ready — Authoritatively verify release source state [Step; Check.All]
+└── stable-non-hotfix — Complete stable non-hotfix release [Sequence; stable non-hotfix only]
+    ├── stable-bump-branch — Create or verify the stable bump branch [Step]
+    ├── stable-bump-pull-request — Open or verify the stable bump pull request [Step]
+    └── stable-public-gates — Report merge state and converge publication independently [Parallel]
+        ├── stable-bump-pull-request-merged — Report whether a maintainer merged the bump [Step]
+        └── stable-public-release — Converge the exact stable public release [Sequence]
+OR
+└── direct-public-release — Converge the direct public release [Sequence; every other release]
+
+public release sequence (present once under the selected branch)
+├── exact-public-nuget-package — Find the exact public SkiaSharp package [Step]
+├── complete-public-receipt — Verify the complete public package receipt [Step]
+├── effective-and-previous-tags — Verify effective and previous release tags [Step]
+├── release-tag — Create or verify the immutable release tag [Step]
+├── release-draft — Create, migrate, or verify the GitHub Release draft [Step]
+├── publish-release — Publish the approved GitHub Release draft [Step]
+└── closeout — Converge public repository state after publication [Parallel]
+    ├── schedule-and-reconciliation — Schedule, reconcile, and roll over milestones [Sequence]
+    │   ├── public-schedule — Create or update the public milestone schedule [Step]
+    │   └── reconcile-and-rollover — Reconcile shipped work and close milestones [Step]
+    ├── release-notes-and-summary — Generate notes and converge the reviewed summary [Sequence]
+    │   ├── release-notes — Generate release notes for the exact shipment [Step]
+    │   └── reviewed-summary — Converge the reviewed GitHub Release summary [Step]
+    └── stable-issue-template — Refresh stable release choices in issue templates [Step; conditional]
+```
 
 ```csharp
 using NuGet.Versioning;
-using ReleaseChecklist;
+using ReleaseChecklist.Core;
 using ReleaseChecklist.Git;
 using ReleaseChecklist.GitHub;
 using ReleaseChecklist.NuGet;
 
-enum StepStatus { Done, NotDone, Blocked, Skipped }
+enum ReleaseSourceKind { Main, Maintenance, ExactRelease }
 
-[Flags]
-enum ReleaseCapability
+static class ReleaseCapabilities
 {
-    None = 0,
-    Branching = 1,
-    Tag = 2,
-    Draft = 4,
-    Publish = 8,
-    Closeout = 16,
+    public static readonly ChecklistCapability Branching = new("branching");
+    public static readonly ChecklistCapability Tag = new("tag");
+    public static readonly ChecklistCapability Draft = new("draft");
+    public static readonly ChecklistCapability Publish = new("publish");
+    public static readonly ChecklistCapability Closeout = new("closeout");
 }
 
 var options = ReleaseOptions.Parse(args);
-var builder = ReleaseChecklist.CreateBuilder(options);
-var local = builder.AddGitRepository(builder.RepositoryRoot, "origin");
-var github = builder.AddGitHubRepository("mono", "SkiaSharp");
-var skia = builder.AddGitHubRepository("mono", "skia");
-var nuget = builder.AddNuGetSource("https://api.nuget.org/v3/index.json");
-var found = await ReleaseDiscovery.DiscoverAsync(options, local, github, nuget, builder.CancellationToken);
+var environment = ReleaseEnvironment.Open(options);
+var local = environment.AddGitRepository(environment.RepositoryRoot, "origin");
+var github = environment.AddGitHubRepository("mono", "SkiaSharp");
+var skia = environment.AddGitHubRepository("mono", "skia");
+var nuget = environment.AddNuGetSource("https://api.nuget.org/v3/index.json");
 
-var root = builder.Root("release");
-var prepare = root.Step("prepare-repository", Check: CheckResult.Done);
-var validatedBase = prepare.Step(
-    "validate-base",
-    Check: ctx => SkiaSharpPolicy.CheckBaseAsync(local, found, ctx));
-var maintenance = validatedBase.GitBranch(
-    "maintenance-branch", local, found.MaintenanceBranch, found.MaintenanceBaseRef,
-    expectedTarget: found.MaintenanceBaseSha,
-    configure: ctx => SkiaSharpVersionFiles.ConfigureMaintenance(ctx, found),
-    requiredWhen: found.Identity.RequiresMaintenanceBranch,
-    capability: ReleaseCapability.Branching);
-var skiaBranch = maintenance.GitHubBranch(
-    "mono-skia-release-branch", skia, found.ReleaseBranch, found.SkiaGitlink,
-    acceptExisting: actual => SkiaSharpPolicy.ValidSkiaReleaseBranch(found, actual),
-    capability: ReleaseCapability.Branching);
-var releaseBranch = skiaBranch.GitBranch(
-    "skiasharp-release-branch", local, found.ReleaseBranch, found.BaseSha,
-    configure: ctx => SkiaSharpVersionFiles.ConfigureRelease(ctx, found),
-    acceptExisting: actual => SkiaSharpPolicy.ValidReleaseBranch(found, actual),
-    capability: ReleaseCapability.Branching);
+var found = await ReleaseDiscovery.DiscoverAsync(
+    options, local, github, nuget, environment.CancellationToken);
+// No node has been composed above this line. "found" is now immutable.
 
-if (found.Identity.IsStable)
+var worktreeScope = new MutationScope(
+    MutationScopeKind.LocalWorktree,
+    local.FrozenWorktreeIdentity);
+var maintenanceRefScope = new MutationScope(
+    MutationScopeKind.GitRef,
+    $"mono/SkiaSharp@{found.MaintenanceBranch.FullRef}");
+var skiaReleaseRefScope = new MutationScope(
+    MutationScopeKind.GitRef,
+    $"mono/skia@{found.ReleaseBranch.FullRef}");
+var releaseRefScope = new MutationScope(
+    MutationScopeKind.GitRef,
+    $"mono/SkiaSharp@{found.ReleaseBranch.FullRef}");
+var tagRefScope = new MutationScope(
+    MutationScopeKind.GitRef,
+    $"mono/SkiaSharp@{found.Tags.EffectiveName.FullRef}");
+var githubReleaseScope = new MutationScope(
+    MutationScopeKind.GitHubRelease,
+    $"mono/SkiaSharp@{found.Tags.EffectiveName}");
+var milestonesScope = new MutationScope(
+    MutationScopeKind.GitHubMilestones,
+    "mono/SkiaSharp");
+var releaseNotesScope = new MutationScope(
+    MutationScopeKind.GitHubWorkflowTarget,
+    "mono/SkiaSharp@refs/heads/bot/release-notes");
+var issueTemplateScope = new MutationScope(
+    MutationScopeKind.GitHubWorkflowTarget,
+    "mono/SkiaSharp@refs/heads/automation/update-issue-template-versions");
+
+var publicScopes = MutationScopes.Create(
+    tagRefScope,
+    githubReleaseScope,
+    milestonesScope,
+    releaseNotesScope,
+    issueTemplateScope);
+
+var builder = ReleaseChecklist.CreateBuilder(options, environment);
+var definition = builder.Sequence("release", "Release SkiaSharp", release =>
 {
-    var stableBump = releaseBranch.Group("stable-bump-follow-up", Check: CheckResult.Done);
-    var bumpBranch = stableBump.GitBranch(
-        "stable-bump-branch", local, SkiaSharpVersions.NextPreviewBranch(found.Identity),
-        found.MaintenanceBranch, configure: SkiaSharpVersionFiles.ConfigureNextPreview,
+    release.Sequence("release-source", "Establish release source state", source =>
+    {
+        source.Step(
+            "validate-base", "Validate the selected release base",
+            Check: ctx => SkiaSharpPolicy.CheckBaseAsync(local, found, ctx));
+
+        var maintenance = source.GitBranch(
+            "maintenance-branch", "Create or verify the maintenance branch",
+            local,
+            found.MaintenanceBranch,
+            found.MaintenanceBaseRef,
+            expectedTarget: found.MaintenanceBaseSha,
+            configure: ctx => SkiaSharpVersionFiles.ConfigureMaintenance(ctx, found),
+            when: Condition.From(_ => found.Identity.RequiresMaintenanceBranch),
+            capability: ReleaseCapabilities.Branching,
+            mutationScopes: MutationScopes.Create(worktreeScope, maintenanceRefScope));
+
+        var releaseBranches = source.Parallel(
+            "exact-release-branches", "Create or verify exact release branches",
+            parallel =>
+            {
+                var skiaBranch = parallel.GitHubBranch(
+                    "mono-skia-release-branch", "Create or verify the mono/skia branch",
+                    skia,
+                    found.ReleaseBranch,
+                    found.SkiaGitlink,
+                    acceptExisting: actual => SkiaSharpPolicy.ValidSkiaReleaseBranch(found, actual),
+                    capability: ReleaseCapabilities.Branching,
+                    mutationScopes: MutationScopes.Create(skiaReleaseRefScope));
+
+                var releaseBranch = parallel.GitBranch(
+                    "skiasharp-release-branch", "Create or verify the SkiaSharp branch",
+                    local,
+                    found.ReleaseBranch,
+                    found.BaseSha,
+                    configure: ctx => SkiaSharpVersionFiles.ConfigureRelease(ctx, found),
+                    acceptExisting: actual => SkiaSharpPolicy.ValidReleaseBranch(found, actual),
+                    capability: ReleaseCapabilities.Branching,
+                    mutationScopes: MutationScopes.Create(worktreeScope, releaseRefScope));
+
+                return (Skia: skiaBranch, SkiaSharp: releaseBranch);
+            });
+
+        // Deliberate authoritative reread barrier; the preceding Parallel already provides fan-in.
+        source.Step(
+            "release-source-ready", "Authoritatively verify release source state",
+            Check: Check.All(
+                maintenance.DesiredState,
+                releaseBranches.Skia.DesiredState,
+                releaseBranches.SkiaSharp.DesiredState));
+    });
+
+    if (found.Identity.IsStable && !found.Identity.IsHotfix)
+    {
+        release.Sequence(
+            "stable-non-hotfix", "Complete stable non-hotfix release",
+            AddStableRelease);
+    }
+    else
+    {
+        release.Sequence(
+            "direct-public-release", "Converge the direct public release",
+            AddPublicRelease);
+    }
+});
+
+void AddStableRelease(IChecklistChildren stable)
+{
+    var bumpBranchName = SkiaSharpVersions.NextPreviewBranch(found.Identity);
+    var bumpRefScope = new MutationScope(
+        MutationScopeKind.GitRef,
+        $"mono/SkiaSharp@{bumpBranchName.FullRef}");
+
+    var bumpBranch = stable.GitBranch(
+        "stable-bump-branch", "Create or verify the stable bump branch",
+        local,
+        bumpBranchName,
+        found.MaintenanceBranch,
+        configure: SkiaSharpVersionFiles.ConfigureNextPreview,
         acceptExisting: SkiaSharpPolicy.ValidStableBumpBranch,
-        capability: ReleaseCapability.Branching);
-    var bumpPullRequest = bumpBranch.GitHubPullRequest(
-        "stable-bump-pull-request", github, bumpBranch.Name, found.MaintenanceBranch,
-        capability: ReleaseCapability.Branching);
-    var bumpMerged = bumpPullRequest.Step(
-        "stable-bump-pull-request-merged",
-        Check: ctx => github.CheckPullRequestMergedAsync(bumpPullRequest.Number, ctx));
+        capability: ReleaseCapabilities.Branching,
+        mutationScopes: MutationScopes.Create(worktreeScope, bumpRefScope));
+
+    var pullRequest = stable.GitHubPullRequest(
+        "stable-bump-pull-request", "Open or verify the stable bump pull request",
+        github,
+        bumpBranch.Value.Select(branch => branch.Name),
+        found.MaintenanceBranch,
+        capability: ReleaseCapabilities.Branching,
+        mutationScopes: MutationScopes.Create(bumpRefScope));
+
+    stable.Parallel(
+        "stable-public-gates", "Report merge state and converge publication independently",
+        parallel =>
+        {
+            parallel.Step(
+                "stable-bump-pull-request-merged", "Report whether a maintainer merged the bump",
+                Check: ctx => github.CheckPullRequestMergedAsync(
+                    pullRequest.Value.Get(ctx).Number,
+                    ctx),
+                mutationScopes: MutationScopes.None);
+
+            parallel.Sequence(
+                "stable-public-release", "Converge the exact stable public release",
+                mutationScopes: publicScopes,
+                children: AddPublicRelease);
+        });
 }
 
-// These are siblings because both are created from releaseBranch.
-var publicPackage = releaseBranch.NuGetPackage(
-    "exact-public-nuget-package", nuget, "SkiaSharp", found.PublicVersion);
-var receipt = publicPackage.NuGetReceipt(
-    "complete-public-receipt", publicPackage,
-    configure: value => SkiaSharpPackages.RequireCompleteHistoricalReceipt(
-        value, found.ReleaseBranch, local, versionsFile: "scripts/VERSIONS.txt",
-        certificates: "scripts/infra/release/trusted-signing-certificates.json"));
-var tags = receipt.Step<TagSelection>(
-    "effective-and-previous-tags",
-    Check: ctx => SkiaSharpTags.SelectEffectiveAndPreviousAsync(
-        local, found.Identity, receipt.SourceCommit,
-        normalizeHistoricalAndNewNames: true,
-        blockOnMultipleCurrentNames: true,
-        ctx));
-var tag = tags.GitTag(
-    "release-tag", local, tags.Value.EffectiveName, receipt.SourceCommit,
-    createPreferredNameWhenAbsent: $"v{found.Identity}",
-    capability: ReleaseCapability.Tag);
-var draft = tag.GitHubRelease(
-    "release-draft", github, tags.Value.EffectiveName, receipt.SourceCommit,
-    SkiaSharpVersions.ReleaseTitle(found.Identity), found.Identity.IsPrerelease,
-    body: ctx => SkiaSharpReleaseBody.CreateOrMigrateAsync(tags.Value.Previous, receipt, ctx),
-    draft: true,
-    capability: ReleaseCapability.Draft);
-var observation = draft.Step<PublicationObservation>(
-    "publication-observation",
-    Check: ctx => PublicationObservation.CaptureAsync(
-        tag: tags.Value.EffectiveName,
-        releaseId: draft.Id,
-        targetCommit: receipt.SourceCommit,
+void AddPublicRelease(IChecklistChildren release)
+{
+    var package = release.NuGetPackage(
+        "exact-public-nuget-package", "Find the exact public SkiaSharp package",
+        nuget,
+        "SkiaSharp",
+        found.PublicVersion);
+
+    var receipt = release.NuGetReceipt(
+        "complete-public-receipt", "Verify the complete public package receipt",
+        package.Value,
+        configure: value => SkiaSharpPackages.RequireCompleteHistoricalReceipt(
+            value,
+            found.ReleaseBranch,
+            local,
+            versionsFile: "scripts/VERSIONS.txt",
+            certificates: "scripts/infra/release/trusted-signing-certificates.json"));
+
+    var tags = release.Step<TagSelection>(
+        "effective-and-previous-tags", "Verify effective and previous release tags",
+        Check: ctx => SkiaSharpTags.VerifyFrozenSelectionAsync(
+            local,
+            found.Tags,
+            found.Identity,
+            receipt.Value.Get(ctx).SourceCommit,
+            normalizeHistoricalAndNewNames: true,
+            blockOnMultipleCurrentNames: true,
+            ctx));
+
+    release.GitTag(
+        "release-tag", "Create or verify the immutable release tag",
+        local,
+        found.Tags.EffectiveName,
+        receipt.Value.Select(value => value.SourceCommit),
+        capability: ReleaseCapabilities.Tag,
+        mutationScope: tagRefScope);
+
+    var draft = release.GitHubReleaseDraft(
+        "release-draft", "Create, migrate, or verify the GitHub Release draft",
+        github,
+        found.Tags.EffectiveName,
+        receipt.Value.Select(value => value.SourceCommit),
         title: SkiaSharpVersions.ReleaseTitle(found.Identity),
         prerelease: found.Identity.IsPrerelease,
-        bodySha256: draft.BodySha256,
-        observedAt: ctx.Clock.UtcNow,
-        onlyMutation: ReleaseMutation.PublishGitHubRelease,
-        ctx));
-var published = observation.GitHubRelease(
-    "publish-release", github, draft.Id, publishUsing: observation.Value,
-    capability: ReleaseCapability.Publish);
-var closeout = published.Step("closeout", Check: CheckResult.Done);
+        body: ctx => SkiaSharpReleaseBody.CreateOrMigrateAsync(
+            tags.Value.Get(ctx).Previous,
+            receipt.Value.Get(ctx),
+            ctx),
+        capability: ReleaseCapabilities.Draft,
+        mutationScope: githubReleaseScope);
 
-var schedule = closeout.Milestone(
-    "public-schedule", github, ChromiumSchedule.Public,
-    SkiaSharpMilestones.CurrentAndNextTwo,
-    staleCreateCutoff: TimeSpan.FromDays(30),
-    capability: ReleaseCapability.Closeout);
-var reconciliation = schedule.Step(
-    "reconcile-and-rollover",
-    Check: ctx => SkiaSharpReconciliation.CheckAsync(
-        github, found, receipt, tags.Value.Previous, ctx),
-    Action: ctx => SkiaSharpReconciliation.ApplyAsync(github, found, ctx),
-    capability: ReleaseCapability.Closeout);
+    var published = release.PublishGitHubRelease(
+        "publish-release", "Publish the approved GitHub Release draft",
+        github,
+        tag: found.Tags.EffectiveName,
+        sourceTarget: receipt.Value.Select(value => value.SourceCommit),
+        title: SkiaSharpVersions.ReleaseTitle(found.Identity),
+        prerelease: found.Identity.IsPrerelease,
+        exactBodySha256: draft.Value.Select(value => value.BodySha256),
+        capability: ReleaseCapabilities.Publish,
+        mutationScope: githubReleaseScope);
 
-var notes = closeout.WorkflowDispatch(
-    "release-notes", github, "update-release-notes.lock.yml", "main",
-    inputs: SkiaSharpReleaseNotes.DispatchInputs(found.Identity),
-    satisfiedWhen: SkiaSharpReleaseNotes.ExactShipmentQueuedOrRendered,
-    capability: ReleaseCapability.Closeout);
-var reviewedSummary = notes.GitHubRelease(
-    "reviewed-summary", github, published.Id,
-    body: SkiaSharpReleaseNotes.ReviewedSummary,
-    capability: ReleaseCapability.Closeout);
+    AddCloseout(release, receipt, tags, published);
+}
 
-var issueTemplate = closeout.WorkflowDispatch(
-    "issue-template", github, "auto-update-issue-template-versions.yml", "main",
-    when: found.Identity.IsStable,
-    satisfiedWhen: SkiaSharpIssueTemplates.ContainsRelease,
-    capability: ReleaseCapability.Closeout);
+void AddCloseout(
+    IChecklistChildren release,
+    StepHandle<NuGetReceipt> receipt,
+    StepHandle<TagSelection> tags,
+    StepHandle<GitHubReleaseState> published)
+{
+    release.Parallel(
+        "closeout", "Converge public repository state after publication",
+        closeout =>
+        {
+            closeout.Sequence(
+                "schedule-and-reconciliation", "Schedule, reconcile, and roll over milestones",
+                mutationScopes: MutationScopes.Create(milestonesScope),
+                children: ordered =>
+                {
+                    var schedule = ordered.GitHubMilestoneSchedule(
+                        "public-schedule", "Create or update the public milestone schedule",
+                        github,
+                        ChromiumSchedule.Public,
+                        SkiaSharpMilestones.CurrentAndNextTwo,
+                        staleCreateCutoff: TimeSpan.FromDays(30),
+                        unavailableSchedule: PublicDataPolicy.DoneWithWarning,
+                        capability: ReleaseCapabilities.Closeout,
+                        mutationScope: milestonesScope);
 
-return await builder.RunAsync();
+                    ordered.Step(
+                        "reconcile-and-rollover", "Reconcile shipped work and close milestones",
+                        Check: ctx => SkiaSharpReconciliation.CheckAsync(
+                            github,
+                            found,
+                            receipt.Value.Get(ctx),
+                            tags.Value.Get(ctx).Previous,
+                            schedule.Value.Get(ctx),
+                            ctx),
+                        Action: (ctx, approved, token) => SkiaSharpReconciliation.ApplyAsync(
+                            github,
+                            found,
+                            approved,
+                            ctx,
+                            token),
+                        capability: ReleaseCapabilities.Closeout,
+                        mutationScope: milestonesScope);
+                });
+
+            closeout.Sequence(
+                "release-notes-and-summary", "Generate notes and converge the reviewed summary",
+                mutationScopes: MutationScopes.Create(releaseNotesScope),
+                children: notes =>
+                {
+                    notes.GitHubWorkflowDispatch(
+                        "release-notes", "Generate release notes for the exact shipment",
+                        github,
+                        workflow: "update-release-notes.lock.yml",
+                        dispatchRef: "refs/heads/main",
+                        effectiveWriteBranch: "refs/heads/bot/release-notes",
+                        inputs: SkiaSharpReleaseNotes.DispatchInputs(found.Identity),
+                        satisfiedWhen: SkiaSharpReleaseNotes.ExactShipmentQueuedOrRendered,
+                        capability: ReleaseCapabilities.Closeout,
+                        mutationScope: releaseNotesScope);
+
+                    notes.GitHubWorkflowConvergence(
+                        "reviewed-summary", "Converge the reviewed GitHub Release summary",
+                        github,
+                        workflow: "update-release-notes.lock.yml",
+                        dispatchRef: "refs/heads/main",
+                        effectiveWriteBranch: "refs/heads/bot/release-notes",
+                        target: published.Value,
+                        policy: SkiaSharpReleaseNotes.ReviewedSummaryConvergence(
+                            publishedOnly: true,
+                            skipUnmarked: true,
+                            managedRegionOnly: true,
+                            requireBatchDriftBarrier: true,
+                            verifyAfterWrite: true),
+                        capability: ReleaseCapabilities.Closeout,
+                        mutationScope: releaseNotesScope);
+                });
+
+            closeout.GitHubWorkflowDispatch(
+                "stable-issue-template", "Refresh stable release choices in issue templates",
+                github,
+                workflow: "auto-update-issue-template-versions.yml",
+                dispatchRef: "refs/heads/main",
+                effectiveWriteBranch: "refs/heads/automation/update-issue-template-versions",
+                when: Condition.From(_ => found.Identity.IsStable),
+                satisfiedWhen: SkiaSharpIssueTemplates.ContainsRelease,
+                capability: ReleaseCapabilities.Closeout,
+                mutationScopes: MutationScopes.Create(issueTemplateScope));
+        });
+}
+
+var host = ReleaseChecklistHost.Create(options, environment);
+return await ChecklistRunner.RunAsync(definition, host, options.Mode);
 ```
 
-The stable-bump and exact-public-package branches are siblings. The PR merge node has no action, so an unmerged PR remains `NotDone` without preventing the package sibling from being processed. `NuGetPackage` is the only opaque external boundary: no discovered version or no listed package is `NotDone`; ambiguous valid candidates are `Blocked`.
+`exact-release-branches` declares disjoint direct-branch sets: the mono/skia ref versus the local worktree plus SkiaSharp ref. `stable-public-gates` declares an explicit empty set for its human merge branch and the complete `publicScopes` set for its public branch. `closeout` declares the milestone collection, `bot/release-notes`, and `automation/update-issue-template-versions` as three disjoint targets. Ordered steps within a direct branch intentionally reuse their branch scope.
 
-The discovery result contains compiler-typed values rather than caller-maintained strings:
+`publish-release` owns its check and approval. Its check captures the frozen tag, current release ID, source target, title, prerelease flag, exact body SHA256, observation time, and `PublishGitHubRelease` mutation kind. Immediately before execution the runner rereads and requires the exact approved observation; the action then uses GitHub's conditional update when available, or performs its own immediate reread and comparison. There is no separate approval-observation node.
+
+`reviewed-summary` is the #4895 workflow convergence primitive, not a direct full-body GitHub Release writer. It owns published-only/unmarked skipping, managed-region patching, the batch drift barrier, workflow dispatch/convergence, and post-write verification. Its scope is the effective write branch even though dispatch is sent to `main`.
+
+SDK wrappers use the common receiver and capability type. They return condition-aware typed handles and declare all action scopes:
+
+```csharp
+static StepHandle<GitBranchState> GitBranch(
+    this IChecklistChildren parent,
+    string id,
+    string title,
+    GitRepository repository,
+    GitBranchName name,
+    GitCommit target,
+    Func<GitBranchState, bool>? acceptExisting,
+    ChecklistCapability capability,
+    IReadOnlySet<MutationScope> mutationScopes,
+    IChecklistCondition? when = null,
+    Func<ChecklistContext, ValueTask<GitCommitDescription?>>? configure = null)
+{
+    var applicable = when ?? Condition.Always;
+    var check = new GitBranchCheck(repository, name, target, acceptExisting);
+    var action = new CreateGitBranch(repository, name, target, configure, mutationScopes);
+
+    return parent.Step<GitBranchState>(
+        id,
+        title,
+        when: applicable,
+        check: check,
+        action: action,
+        capability: capability,
+        desiredState: Check.When(applicable, check));
+}
+```
+
+`CreateGitBranch` implements `IConcurrentChecklistAction`. The generic delegate-action overload instead requires one explicit `mutationScope`, as shown by `reconcile-and-rollover`. `Build()` validates wrapper metadata, globally unique IDs, typed producer ordering and condition implication, and complete/disjoint direct parallel branch sets.
+
+The discovery result freezes all definition-time identities, including the effective tag used by mutation scopes. It retains missing versus ambiguous public versions and all source-mode validation:
 
 ```csharp
 sealed record ReleaseDiscovery(
     ReleaseIdentity Identity,
+    ReleaseSourceKind SourceKind,
     GitReference BaseRef,
     GitCommit BaseSha,
     GitBranchName ReleaseBranch,
     GitBranchName MaintenanceBranch,
-    GitReference MaintenanceBaseRef,
-    GitCommit MaintenanceBaseSha,
+    GitReference? MaintenanceBaseRef,
+    GitCommit? MaintenanceBaseSha,
     GitCommit SkiaGitlink,
+    TagSelection Tags,
     Discovered<NuGetVersion> PublicVersion)
 {
     public static async Task<ReleaseDiscovery> DiscoverAsync(
-        ReleaseOptions options, GitRepository git, GitHubRepository github,
-        NuGetSource nuget, CancellationToken token)
+        ReleaseOptions options,
+        GitRepository git,
+        GitHubRepository github,
+        NuGetSource nuget,
+        CancellationToken token)
     {
         var source = options.Branch ?? await git.CurrentIntegrationRefAsync(token);
-        ReleaseIdentity identity;
+        var sourceKind = SkiaSharpBranches.ClassifySource(source);
+        var resumingExactBranch = options.Release is null &&
+            sourceKind == ReleaseSourceKind.ExactRelease;
 
+        ReleaseIdentity identity;
         if (options.Release is { } supplied)
             identity = ReleaseIdentity.Parse(supplied);
-        else if (SkiaSharpVersions.TryParseExactReleaseBranch(source, out var fromBranch))
-            identity = fromBranch;
-        else
+        else if (sourceKind == ReleaseSourceKind.ExactRelease)
+            identity = SkiaSharpVersions.ParseExactReleaseBranch(source);
+        else if (sourceKind is ReleaseSourceKind.Main or ReleaseSourceKind.Maintenance)
         {
-            SkiaSharpPolicy.RequireIntegrationRef(source);
             var versions = await SkiaSharpPolicy.ReadCurrentVersionsAsync(git, source, token);
-            var tags = (await git.ListTagsAsync($"v{versions.Numeric}*", token)).Select(SkiaSharpTags.Normalize);
-            var branches = (await github.ListBranchesAsync($"release/{versions.Numeric}*", token)).Select(SkiaSharpBranches.Normalize);
+            var tags = (await git.ListTagsAsync($"v{versions.Numeric}*", token))
+                .Select(SkiaSharpTags.Normalize);
+            var branches = (await github.ListBranchesAsync($"release/{versions.Numeric}*", token))
+                .Select(SkiaSharpBranches.Normalize);
 
             if (versions.PreviewLabel != "preview.0")
                 throw new ExplicitReleaseRequiredException("RC, stable, and channel transitions require --release.");
@@ -958,18 +1249,50 @@ sealed record ReleaseDiscovery(
             identity = SkiaSharpPolicy.InferUnambiguousNextPreviewIteration(versions, tags, branches)
                 ?? throw new ExplicitReleaseRequiredException("Specify --release.");
         }
+        else
+        {
+            throw new UnsupportedReleaseSourceException(source);
+        }
+
+        if (identity.IsHotfix)
+        {
+            if (resumingExactBranch)
+            {
+                await SkiaSharpPolicy.RequireResumableExactBranchAsync(
+                    git, source, identity, token);
+            }
+            else
+            {
+                if (options.Release is null)
+                    throw new ExplicitReleaseRequiredException("Starting a hotfix requires --release.");
+
+                await SkiaSharpPolicy.RequireExplicitHotfixBaseAsync(
+                    git, source, sourceKind, identity, token);
+            }
+        }
 
         var releaseBranch = GitBranchName.Parse($"release/{identity}");
-        var (baseRef, baseSha) = await SkiaSharpPolicy.ResolveReleaseBaseAsync(git, source, identity, token);
+        var (baseRef, baseSha) = await SkiaSharpPolicy.ResolveReleaseBaseAsync(
+            git, source, sourceKind, identity, token);
         var (maintenanceBranch, maintenanceRef, maintenanceSha) =
-            await SkiaSharpPolicy.ResolveMaintenanceBaseAsync(git, identity, baseSha, token);
+            await SkiaSharpPolicy.ResolveMaintenanceBaseAsync(
+                git, sourceKind, identity, baseSha, token);
         var skiaGitlink = await git.ReadGitlinkAsync(baseSha, "externals/skia", token);
+        var frozenTags = await SkiaSharpTags.FreezeEffectiveAndPreviousAsync(
+            git, identity, blockOnMultipleCurrentNames: true, token);
 
         Discovered<NuGetVersion> publicVersion;
         if (options.PublicVersion is { } exact)
-            publicVersion = Discovered.Known(NuGetVersion.Parse(exact));
+        {
+            publicVersion = Discovered.Known(
+                SkiaSharpVersions.RequireExactPublicVersion(
+                    identity,
+                    NuGetVersion.Parse(exact)));
+        }
         else if (identity.IsStable)
+        {
             publicVersion = Discovered.Known(identity.ToNuGetVersion());
+        }
         else
         {
             var matches = await nuget.FindVersionsAsync("SkiaSharp", $"{identity}.*", token);
@@ -983,69 +1306,45 @@ sealed record ReleaseDiscovery(
             };
         }
 
-        return new(identity, baseRef, baseSha, releaseBranch, maintenanceBranch,
-            maintenanceRef, maintenanceSha, skiaGitlink, publicVersion);
+        return new(
+            identity,
+            sourceKind,
+            baseRef,
+            baseSha,
+            releaseBranch,
+            maintenanceBranch,
+            maintenanceRef,
+            maintenanceSha,
+            skiaGitlink,
+            frozenTags,
+            publicVersion);
     }
 }
 ```
 
-The tree is the dependency model. A child is reached only after its parent is `Done` or `Skipped`; otherwise that subtree is not evaluated or applied. Siblings remain independent and run in declared order. Preview evaluates every reachable node and reports status and action availability. Execute performs authorized available actions depth-first, rereads after each action, and continues to later siblings. Reusable `GitBranch`, `GitTag`, `GitHubBranch`, `NuGetPackage`, `NuGetReceipt`, `GitHubRelease`, `Milestone`, and `WorkflowDispatch` primitives own checks, idempotent actions, conflicts, and authoritative rereads; repository state remains the only durable state.
-
-The host owns approval. No capability means preview-only. A grant covers only nodes requiring that exact `Branching`, `Tag`, `Draft`, `Publish`, or `Closeout` capability and binds approval to the node's exact observation.
-
-```csharp
-static async Task RunTreeAsync(Checklist tree, RunHost host, RunMode mode)
-{
-    await VisitAsync(tree.Root);
-
-    async Task VisitAsync(Node node)
-    {
-        var result = await node.Check(host.Context);
-        host.Report(node, result, ActionAvailable(node, result), host.IsAuthorized(node.Capability));
-
-        if (mode == RunMode.Execute &&
-            result.Status == StepStatus.NotDone &&
-            node.Action is not null &&
-            node.Capability != ReleaseCapability.None &&
-            host.Capabilities.Contains(node.Capability))
-        {
-            await host.VerifyApprovalAsync(node.Id, result.Observation, node.Capability);
-            await node.Action(host.Context, result.Observation);
-            result = await node.Check(host.Context);
-            host.Report(node, result, ActionAvailable(node, result), host.IsAuthorized(node.Capability));
-
-            if (result.Status is not (StepStatus.Done or StepStatus.Skipped))
-                throw new ChecklistConvergenceException(node.Id, $"The action did not converge: {result.Detail}");
-        }
-
-        if (result.Status is not (StepStatus.Done or StepStatus.Skipped))
-            return;
-
-        foreach (var child in node.Children)
-            await VisitAsync(child);
-    }
-
-    bool ActionAvailable(Node node, CheckResult result) =>
-        result.Status == StepStatus.NotDone &&
-        node.Action is not null;
-}
-```
+A conditional maintenance value is consumed through its condition-aware `DesiredState`; required typed value parameters come only from ordered predecessors. Callback `Get` calls remain runtime guarded. The release-source check is a deliberate authoritative reread barrier after the branch sequence/parallel, not machinery required merely for fan-in.
 
 Minimal CLI examples:
 
 ```bash
-# Branch-based preview; main may infer only an unambiguous next preview iteration.
+# Branch-based preview; main may infer only one unambiguous next preview iteration.
 dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/main
 
-# Explicit release preview for transitions discovery must not infer.
-dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --release 4.152.0-rc.1
+# Maintenance may infer a preview; RC/stable transitions are explicit.
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.152.x
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.152.x --release 4.152.0-rc.1
 
-# Resume from the release branch and auto-detect the unique valid public package version.
+# Resume an exact normal or hotfix branch.
 dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.152.0-rc.1
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.151.0.1-preview.1
 
-# Override a missing or ambiguous public package version.
+# Start an explicitly validated four-part hotfix from maintenance or an exact release branch.
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.151.x --release 4.151.1.1-preview.1
+dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --branch refs/remotes/origin/release/4.151.0 --release 4.151.0.1-preview.1
+
+# Override a missing or ambiguous exact public package version.
 dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --release 4.152.0-rc.1 --public-version 4.152.0-rc.1.26426.14
 
-# Execute only the approved tag capability against the exact observation.
+# Execute one exact capability against one exact observation.
 dotnet run --project utils/SkiaSharp.ReleaseChecklist -- --release 4.152.0-rc.1 --apply tag --expect-observation-sha256 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
