@@ -30,11 +30,13 @@ namespace SkiaSharp.ReleaseTool.Cli
 				Description = "Finish plan or pending report output path.",
 				DefaultValueFactory = _ => "finish-plan.json",
 			};
+			var summaryOption = SummaryOption("Optional finish plan or pending Markdown summary path.");
 
 			var plan = new Command("plan", "Verify the public receipt and plan tag/release state.");
 			plan.Options.Add(versionOption);
 			plan.Options.Add(toolingShaOption);
 			plan.Options.Add(outputOption);
+			plan.Options.Add(summaryOption);
 			plan.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -63,7 +65,10 @@ namespace SkiaSharp.ReleaseTool.Cli
 						var result = await builder.BuildAsync(
 							new FinishPlanRequest(requestedVersion, toolingSha),
 							cancellationToken).ConfigureAwait(false);
-						Write(outputPath, output, result);
+						Write(output, "finish plan", () => PlanStore.Write(outputPath, result));
+						ReleaseSummary.Write(
+							SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+							result);
 						await environment.StandardOutput.WriteLineAsync(
 							JsonSerializer.Serialize(
 								result,
@@ -83,7 +88,10 @@ namespace SkiaSharp.ReleaseTool.Cli
 							ElapsedSeconds: ex.Elapsed.TotalSeconds,
 							DeadlineSeconds: ex.Deadline.TotalSeconds,
 							Message: ex.Message);
-						Write(outputPath, output, report);
+						Write(output, "finish pending report", () => PlanStore.Write(outputPath, report));
+						ReleaseSummary.Write(
+							SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+							report);
 						await environment.StandardOutput.WriteLineAsync(
 							JsonSerializer.Serialize(
 								report,
@@ -118,20 +126,19 @@ namespace SkiaSharp.ReleaseTool.Cli
 		{
 			var planOption = PlanOption();
 			var expectedPlanIdOption = ExpectedPlanIdOption();
-			var dryRunOption = new Option<bool>("--dry-run")
-			{
-				Description = "Write a live read-only closeout plan instead of applying it.",
-			};
+			var expectedPlanSha256Option = ExpectedPlanSha256Option();
 			var outputOption = OutputOption(
-				"Finish closeout plan or result output path.",
+				"Finish closeout result output path.",
 				"finish-closeout.json");
+			var summaryOption = SummaryOption("Optional closeout result Markdown summary path.");
 			var command = new Command(
 				"closeout",
-				"Plan or apply schedule, milestone reconciliation, closure, and workflow dispatch.");
+				"Apply schedule, milestone reconciliation, closure, and workflow dispatch.");
 			command.Options.Add(planOption);
 			command.Options.Add(expectedPlanIdOption);
-			command.Options.Add(dryRunOption);
+			command.Options.Add(expectedPlanSha256Option);
 			command.Options.Add(outputOption);
+			command.Options.Add(summaryOption);
 			command.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -140,10 +147,15 @@ namespace SkiaSharp.ReleaseTool.Cli
 						parseResult.GetValue(repositoryOption),
 						cancellationToken).ConfigureAwait(false);
 					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var expectedPlanSha256 =
+						parseResult.GetRequiredValue(expectedPlanSha256Option);
 					var planPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(planOption));
-					var approvedPlan = ReadFinish(planPath, expectedPlanId);
+					var approvedPlan = ReadFinish(
+						planPath,
+						expectedPlanId,
+						expectedPlanSha256);
 					var output = parseResult.GetRequiredValue(outputOption);
 					var outputPath = Path.Combine(repository.Root, output);
 					var service = new FinishCloseoutService(
@@ -151,30 +163,18 @@ namespace SkiaSharp.ReleaseTool.Cli
 						environment.CreateCloseoutGitHubClient(),
 						environment.CreateChromiumScheduleClient(),
 						environment.TimeProvider);
-					if (parseResult.GetValue(dryRunOption))
-					{
-						var result = await service.PlanAsync(
-							approvedPlan,
-							expectedPlanId,
-							cancellationToken).ConfigureAwait(false);
-						Write(outputPath, output, result);
-						await environment.StandardOutput.WriteLineAsync(
-							JsonSerializer.Serialize(
-								result,
-								ReleaseJsonContext.Strict.FinishCloseoutPlan)).ConfigureAwait(false);
-					}
-					else
-					{
-						var result = await service.ApplyAsync(
-							approvedPlan,
-							expectedPlanId,
-							cancellationToken).ConfigureAwait(false);
-						Write(outputPath, output, result);
-						await environment.StandardOutput.WriteLineAsync(
-							JsonSerializer.Serialize(
-								result,
-								ReleaseJsonContext.Strict.FinishCloseoutResult)).ConfigureAwait(false);
-					}
+					var result = await service.ApplyAsync(
+						approvedPlan,
+						expectedPlanId,
+						cancellationToken).ConfigureAwait(false);
+					Write(output, "finish closeout result", () => PlanStore.Write(outputPath, result));
+					ReleaseSummary.Write(
+						SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+						result);
+					await environment.StandardOutput.WriteLineAsync(
+						JsonSerializer.Serialize(
+							result,
+							ReleaseJsonContext.Strict.FinishCloseoutResult)).ConfigureAwait(false);
 					return ExitCodes.Success;
 				}
 				catch (OperationCanceledException)
@@ -197,15 +197,19 @@ namespace SkiaSharp.ReleaseTool.Cli
 		{
 			var planOption = PlanOption();
 			var expectedPlanIdOption = ExpectedPlanIdOption();
+			var expectedPlanSha256Option = ExpectedPlanSha256Option();
 			var outputOption = OutputOption(
 				"Finish create-draft result output path.",
 				"finish-create-draft-result.json");
+			var summaryOption = SummaryOption("Optional create-draft result Markdown summary path.");
 			var command = new Command(
 				"create-draft",
 				"Push the immutable release tag and create or reconcile its draft.");
 			command.Options.Add(planOption);
 			command.Options.Add(expectedPlanIdOption);
+			command.Options.Add(expectedPlanSha256Option);
 			command.Options.Add(outputOption);
+			command.Options.Add(summaryOption);
 			command.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -214,10 +218,15 @@ namespace SkiaSharp.ReleaseTool.Cli
 						parseResult.GetValue(repositoryOption),
 						cancellationToken).ConfigureAwait(false);
 					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var expectedPlanSha256 =
+						parseResult.GetRequiredValue(expectedPlanSha256Option);
 					var planPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(planOption));
-					var approvedPlan = ReadFinish(planPath, expectedPlanId);
+					var approvedPlan = ReadFinish(
+						planPath,
+						expectedPlanId,
+						expectedPlanSha256);
 					var output = parseResult.GetRequiredValue(outputOption);
 					var outputPath = Path.Combine(repository.Root, output);
 					var result = await new FinishService(
@@ -232,7 +241,10 @@ namespace SkiaSharp.ReleaseTool.Cli
 								repository.Root,
 								planPath,
 								outputPath)).ConfigureAwait(false);
-					Write(outputPath, output, result);
+					Write(output, "finish create-draft result", () => PlanStore.Write(outputPath, result));
+					ReleaseSummary.Write(
+						SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+						result);
 					await environment.StandardOutput.WriteLineAsync(
 						JsonSerializer.Serialize(
 							result,
@@ -259,15 +271,19 @@ namespace SkiaSharp.ReleaseTool.Cli
 		{
 			var planOption = PlanOption();
 			var expectedPlanIdOption = ExpectedPlanIdOption();
+			var expectedPlanSha256Option = ExpectedPlanSha256Option();
 			var outputOption = OutputOption(
 				"Publication approval plan output path.",
 				"finish-publication-plan.json");
+			var summaryOption = SummaryOption("Optional publication plan Markdown summary path.");
 			var command = new Command(
 				"plan-publication",
 				"Bind publication approval to the exact live draft body.");
 			command.Options.Add(planOption);
 			command.Options.Add(expectedPlanIdOption);
+			command.Options.Add(expectedPlanSha256Option);
 			command.Options.Add(outputOption);
+			command.Options.Add(summaryOption);
 			command.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -276,10 +292,15 @@ namespace SkiaSharp.ReleaseTool.Cli
 						parseResult.GetValue(repositoryOption),
 						cancellationToken).ConfigureAwait(false);
 					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var expectedPlanSha256 =
+						parseResult.GetRequiredValue(expectedPlanSha256Option);
 					var planPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(planOption));
-					var approvedPlan = ReadFinish(planPath, expectedPlanId);
+					var approvedPlan = ReadFinish(
+						planPath,
+						expectedPlanId,
+						expectedPlanSha256);
 					var output = parseResult.GetRequiredValue(outputOption);
 					var outputPath = Path.Combine(repository.Root, output);
 					var result = await new FinishService(
@@ -290,7 +311,10 @@ namespace SkiaSharp.ReleaseTool.Cli
 							approvedPlan,
 							expectedPlanId,
 							cancellationToken).ConfigureAwait(false);
-					Write(outputPath, output, result);
+					Write(output, "finish publication plan", () => PlanStore.Write(outputPath, result));
+					ReleaseSummary.Write(
+						SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+						result);
 					await environment.StandardOutput.WriteLineAsync(
 						JsonSerializer.Serialize(
 							result,
@@ -317,6 +341,7 @@ namespace SkiaSharp.ReleaseTool.Cli
 		{
 			var planOption = PlanOption();
 			var expectedPlanIdOption = ExpectedPlanIdOption();
+			var expectedPlanSha256Option = ExpectedPlanSha256Option();
 			var publicationOption = new Option<string>("--publication")
 			{
 				Description = "Approved finish plan-publication artifact.",
@@ -327,17 +352,26 @@ namespace SkiaSharp.ReleaseTool.Cli
 				Description = "Publication correlation identifier emitted by finish plan-publication.",
 				Required = true,
 			};
+			var expectedPublicationSha256Option = new Option<string>("--expected-publication-sha256")
+			{
+				Description = "Exact lowercase SHA256 digest of the approved publication plan bytes.",
+				Required = true,
+			};
 			var outputOption = OutputOption(
 				"Finish publish result output path.",
 				"finish-publish-result.json");
+			var summaryOption = SummaryOption("Optional publication result Markdown summary path.");
 			var command = new Command(
 				"publish",
 				"Publish the approved existing draft without changing its body.");
 			command.Options.Add(planOption);
 			command.Options.Add(expectedPlanIdOption);
+			command.Options.Add(expectedPlanSha256Option);
 			command.Options.Add(publicationOption);
 			command.Options.Add(expectedPublicationPlanIdOption);
+			command.Options.Add(expectedPublicationSha256Option);
 			command.Options.Add(outputOption);
+			command.Options.Add(summaryOption);
 			command.SetAction(async (parseResult, cancellationToken) =>
 			{
 				try
@@ -346,19 +380,27 @@ namespace SkiaSharp.ReleaseTool.Cli
 						parseResult.GetValue(repositoryOption),
 						cancellationToken).ConfigureAwait(false);
 					var expectedPlanId = parseResult.GetRequiredValue(expectedPlanIdOption);
+					var expectedPlanSha256 =
+						parseResult.GetRequiredValue(expectedPlanSha256Option);
 					var expectedPublicationPlanId =
 						parseResult.GetRequiredValue(expectedPublicationPlanIdOption);
+					var expectedPublicationSha256 =
+						parseResult.GetRequiredValue(expectedPublicationSha256Option);
 					var planPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(planOption));
 					var publicationPath = Path.Combine(
 						repository.Root,
 						parseResult.GetRequiredValue(publicationOption));
-					var approvedPlan = ReadFinish(planPath, expectedPlanId);
+					var approvedPlan = ReadFinish(
+						planPath,
+						expectedPlanId,
+						expectedPlanSha256);
 					var publication = ReadPublication(
 						publicationPath,
 						expectedPlanId,
-						expectedPublicationPlanId);
+						expectedPublicationPlanId,
+						expectedPublicationSha256);
 					var output = parseResult.GetRequiredValue(outputOption);
 					var outputPath = Path.Combine(repository.Root, output);
 					var result = await new FinishService(
@@ -376,7 +418,10 @@ namespace SkiaSharp.ReleaseTool.Cli
 								planPath,
 								publicationPath,
 								outputPath)).ConfigureAwait(false);
-					Write(outputPath, output, result);
+					Write(output, "finish publish result", () => PlanStore.Write(outputPath, result));
+					ReleaseSummary.Write(
+						SummaryPath(repository.Root, parseResult.GetValue(summaryOption)),
+						result);
 					await environment.StandardOutput.WriteLineAsync(
 						JsonSerializer.Serialize(
 							result,
@@ -411,6 +456,19 @@ namespace SkiaSharp.ReleaseTool.Cli
 				Required = true,
 			};
 
+		private static Option<string> ExpectedPlanSha256Option() =>
+			new("--expected-plan-sha256")
+			{
+				Description = "Exact lowercase SHA256 digest of the approved finish plan bytes.",
+				Required = true,
+			};
+
+		private static Option<string?> SummaryOption(string description) =>
+			new("--summary")
+			{
+				Description = description,
+			};
+
 		private static Option<string> OutputOption(
 			string description,
 			string defaultPath) =>
@@ -434,11 +492,14 @@ namespace SkiaSharp.ReleaseTool.Cli
 				.Distinct(StringComparer.Ordinal)
 				.ToArray();
 
-		private static FinishPlan ReadFinish(string path, Guid expectedPlanId)
+		private static FinishPlan ReadFinish(
+			string path,
+			Guid expectedPlanId,
+			string expectedPlanSha256)
 		{
 			try
 			{
-				return PlanStore.ReadFinish(path, expectedPlanId);
+				return PlanStore.ReadFinish(path, expectedPlanId, expectedPlanSha256);
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
@@ -449,14 +510,16 @@ namespace SkiaSharp.ReleaseTool.Cli
 		private static FinishPublicationPlan ReadPublication(
 			string path,
 			Guid expectedPlanId,
-			Guid expectedPublicationPlanId)
+			Guid expectedPublicationPlanId,
+			string expectedPublicationSha256)
 		{
 			try
 			{
 				return PlanStore.ReadPublication(
 					path,
 					expectedPlanId,
-					expectedPublicationPlanId);
+					expectedPublicationPlanId,
+					expectedPublicationSha256);
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
@@ -464,103 +527,22 @@ namespace SkiaSharp.ReleaseTool.Cli
 			}
 		}
 
-		private static void Write(string path, string displayPath, FinishPlan plan)
-		{
-			try
-			{
-				PlanStore.Write(path, plan);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish plan '{displayPath}'", ex);
-			}
-		}
-
-		private static void Write(string path, string displayPath, FinishPendingReport report)
-		{
-			try
-			{
-				PlanStore.Write(path, report);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish pending report '{displayPath}'", ex);
-			}
-		}
-
 		private static void Write(
-			string path,
 			string displayPath,
-			FinishCreateDraftResult result)
+			string description,
+			Action write)
 		{
 			try
 			{
-				PlanStore.Write(path, result);
+				write();
 			}
 			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 			{
-				throw new ReleaseToolException($"could not write finish create-draft result '{displayPath}'", ex);
+				throw new ReleaseToolException($"could not write {description} '{displayPath}'", ex);
 			}
 		}
 
-		private static void Write(
-			string path,
-			string displayPath,
-			FinishPublicationPlan plan)
-		{
-			try
-			{
-				PlanStore.Write(path, plan);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish publication plan '{displayPath}'", ex);
-			}
-		}
-
-		private static void Write(
-			string path,
-			string displayPath,
-			FinishPublishResult result)
-		{
-			try
-			{
-				PlanStore.Write(path, result);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish publish result '{displayPath}'", ex);
-			}
-		}
-
-		private static void Write(
-			string path,
-			string displayPath,
-			FinishCloseoutPlan plan)
-		{
-			try
-			{
-				PlanStore.Write(path, plan);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish closeout plan '{displayPath}'", ex);
-			}
-		}
-
-		private static void Write(
-			string path,
-			string displayPath,
-			FinishCloseoutResult result)
-		{
-			try
-			{
-				PlanStore.Write(path, result);
-			}
-			catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-			{
-				throw new ReleaseToolException($"could not write finish closeout result '{displayPath}'", ex);
-			}
-		}
+		private static string? SummaryPath(string repositoryRoot, string? path) =>
+			string.IsNullOrWhiteSpace(path) ? null : Path.Combine(repositoryRoot, path);
 	}
 }

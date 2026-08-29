@@ -9,85 +9,63 @@ namespace SkiaSharp.ReleaseTool.Json
 	public static class PlanStore
 	{
 		public static void Write(string path, PreparePlan plan) =>
-			Write(path, plan, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate);
+			Write(path, plan, ReleaseJsonContext.Strict.PreparePlan);
 
 		public static void Write(string path, PrepareApplyResult result) =>
-			Write(
-				path,
-				result,
-				ReleaseJsonContext.Strict.PrepareApplyResult,
-				PrepareApplyResultValidator.Validate);
+			Write(path, result, ReleaseJsonContext.Strict.PrepareApplyResult);
 
 		public static void Write(string path, FinishPlan plan) =>
-			Write(path, plan, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate);
+			Write(path, plan, ReleaseJsonContext.Strict.FinishPlan);
 
 		public static void Write(string path, FinishPendingReport report) =>
-			Write(
-				path,
-				report,
-				ReleaseJsonContext.Strict.FinishPendingReport,
-				FinishPendingReportValidator.Validate);
+			Write(path, report, ReleaseJsonContext.Strict.FinishPendingReport);
 
 		public static void Write(string path, FinishCreateDraftResult result) =>
-			Write(
-				path,
-				result,
-				ReleaseJsonContext.Strict.FinishCreateDraftResult,
-				FinishCreateDraftResultValidator.Validate);
+			Write(path, result, ReleaseJsonContext.Strict.FinishCreateDraftResult);
 
 		public static void Write(string path, FinishPublicationPlan plan) =>
-			Write(
-				path,
-				plan,
-				ReleaseJsonContext.Strict.FinishPublicationPlan,
-				FinishPublicationPlanValidator.Validate);
+			Write(path, plan, ReleaseJsonContext.Strict.FinishPublicationPlan);
 
 		public static void Write(string path, FinishPublishResult result) =>
-			Write(
-				path,
-				result,
-				ReleaseJsonContext.Strict.FinishPublishResult,
-				FinishPublishResultValidator.Validate);
-
-		public static void Write(string path, FinishCloseoutPlan plan) =>
-			Write(
-				path,
-				plan,
-				ReleaseJsonContext.Strict.FinishCloseoutPlan,
-				FinishCloseoutPlanValidator.Validate);
+			Write(path, result, ReleaseJsonContext.Strict.FinishPublishResult);
 
 		public static void Write(string path, FinishCloseoutResult result) =>
-			Write(
-				path,
-				result,
-				ReleaseJsonContext.Strict.FinishCloseoutResult,
-				FinishCloseoutResultValidator.Validate);
+			Write(path, result, ReleaseJsonContext.Strict.FinishCloseoutResult);
 
-		public static PreparePlan ReadPrepare(string path, Guid expectedPlanId) =>
-			Read(path, ReleaseJsonContext.Strict.PreparePlan, PreparePlanValidator.Validate, expectedPlanId);
-
-		public static FinishPlan ReadFinish(string path, Guid expectedPlanId) =>
-			Read(path, ReleaseJsonContext.Strict.FinishPlan, FinishPlanValidator.Validate, expectedPlanId);
-
-		public static FinishCloseoutPlan ReadCloseout(
+		public static PreparePlan ReadPrepare(
 			string path,
-			Guid expectedPlanId) =>
+			Guid expectedPlanId,
+			string expectedSha256) =>
 			Read(
 				path,
-				ReleaseJsonContext.Strict.FinishCloseoutPlan,
-				FinishCloseoutPlanValidator.Validate,
-				expectedPlanId);
+				ReleaseJsonContext.Strict.PreparePlan,
+				PreparePlanValidator.Validate,
+				expectedPlanId,
+				expectedSha256);
+
+		public static FinishPlan ReadFinish(
+			string path,
+			Guid expectedPlanId,
+			string expectedSha256) =>
+			Read(
+				path,
+				ReleaseJsonContext.Strict.FinishPlan,
+				FinishPlanValidator.Validate,
+				expectedPlanId,
+				expectedSha256);
 
 		public static FinishPublicationPlan ReadPublication(
 			string path,
 			Guid expectedPlanId,
-			Guid expectedPublicationPlanId)
+			Guid expectedPublicationPlanId,
+			string expectedSha256)
 		{
 			var plan = Read(
 				path,
 				ReleaseJsonContext.Strict.FinishPublicationPlan,
 				FinishPublicationPlanValidator.Validate,
-				expectedPlanId);
+				expectedPlanId,
+				expectedSha256);
 			if (plan.PublicationPlanId != expectedPublicationPlanId)
 			{
 				throw new ValidationException(
@@ -99,10 +77,8 @@ namespace SkiaSharp.ReleaseTool.Json
 		private static void Write<T>(
 			string path,
 			T plan,
-			JsonTypeInfo<T> typeInfo,
-			Action<T> validate)
+			JsonTypeInfo<T> typeInfo)
 		{
-			validate(plan);
 			var bytes = JsonSerializer.SerializeToUtf8Bytes(plan, typeInfo);
 			var fullPath = Path.GetFullPath(path);
 			var directory = Path.GetDirectoryName(fullPath)!;
@@ -125,15 +101,14 @@ namespace SkiaSharp.ReleaseTool.Json
 			string path,
 			JsonTypeInfo<T> typeInfo,
 			Action<T> validate,
-			Guid expectedPlanId)
+			Guid expectedPlanId,
+			string expectedSha256)
 		{
-			if (!File.Exists(path))
-				throw new ValidationException($"plan file not found: {path}");
-
 			T plan;
 			try
 			{
-				plan = JsonSerializer.Deserialize(File.ReadAllBytes(path), typeInfo)
+				var bytes = ArtifactHash.ReadAndVerify(path, expectedSha256);
+				plan = JsonSerializer.Deserialize(bytes, typeInfo)
 					?? throw new ValidationException("plan file must contain a JSON object");
 			}
 			catch (JsonException ex)
@@ -141,13 +116,23 @@ namespace SkiaSharp.ReleaseTool.Json
 				throw new ValidationException($"plan file failed shape validation: {ex.Message}", ex);
 			}
 
-			validate(plan);
+			try
+			{
+				validate(plan);
+			}
+			catch (ReleaseToolException)
+			{
+				throw;
+			}
+			catch (Exception ex) when (ex is ArgumentException or FormatException or OverflowException)
+			{
+				throw new ValidationException($"plan file failed semantic validation: {ex.Message}", ex);
+			}
 			var actualPlanId = plan switch
 			{
 				PreparePlan prepare => prepare.PlanId,
 				FinishPlan finish => finish.PlanId,
 				FinishPublicationPlan publication => publication.PlanId,
-				FinishCloseoutPlan closeout => closeout.PlanId,
 				_ => throw new InvalidOperationException($"Unsupported plan type {typeof(T).Name}."),
 			};
 			if (actualPlanId != expectedPlanId)

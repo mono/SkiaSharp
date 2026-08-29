@@ -220,7 +220,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 				ReadyToPublish: existing.IsDraft,
 				BodyHashAlgorithm: BodyHashAlgorithm.Sha256,
 				BodyHash: BodyHash(existing.Body));
-			FinishPublicationPlanValidator.Validate(result);
 			return result;
 		}
 
@@ -392,7 +391,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 					new(FinishOperationId.CreateTag, tagStatus),
 					new(FinishOperationId.CreateDraft, draftStatus),
 				]);
-			FinishCreateDraftResultValidator.Validate(result);
 			return result;
 		}
 
@@ -420,13 +418,11 @@ namespace SkiaSharp.ReleaseTool.Finishing
 				[
 					new(FinishOperationId.PublishRelease, status),
 				]);
-			FinishPublishResultValidator.Validate(result);
 			return result;
 		}
 
 		private static void ValidatePlanCorrelation(FinishPlan plan, Guid expectedPlanId)
 		{
-			FinishPlanValidator.Validate(plan);
 			if (plan.PlanId != expectedPlanId)
 			{
 				throw new ValidationException(
@@ -439,7 +435,6 @@ namespace SkiaSharp.ReleaseTool.Finishing
 			FinishPublicationPlan publication,
 			Guid expectedPublicationPlanId)
 		{
-			FinishPublicationPlanValidator.Validate(publication);
 			if (publication.PublicationPlanId != expectedPublicationPlanId)
 			{
 				throw new ValidationException(

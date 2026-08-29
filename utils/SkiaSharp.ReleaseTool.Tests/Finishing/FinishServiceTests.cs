@@ -45,7 +45,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Finishing
 				ManagedReleaseMarkers.BuildInitialBody(fixture.GitHub.GeneratedNotes),
 				fixture.GitHub.Release!.Body);
 			Assert.Equal(FinishService.BodyHash(fixture.GitHub.Release.Body), result.BodyHash);
-			FinishCreateDraftResultValidator.Validate(result);
 		}
 
 		[Fact]

@@ -11,7 +11,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 	public sealed class FinishWriteContractTests
 	{
 		[Fact]
-		public async Task Finish_and_publication_store_reads_require_both_correlations()
+		public async Task Finish_and_publication_store_reads_require_correlations_and_digests()
 		{
 			using var fixture = await FinishTestFixture.CreateAsync("finish-store");
 			await fixture.EnsureTagAsync();
@@ -25,28 +25,42 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 
 			PlanStore.Write(finishPath, fixture.Plan);
 			PlanStore.Write(publicationPath, publication);
+			var finishHash = ArtifactHash.ComputeFile(finishPath);
+			var publicationHash = ArtifactHash.ComputeFile(publicationPath);
 
 			Assert.Equal(
 				fixture.Plan.PlanId,
-				PlanStore.ReadFinish(finishPath, fixture.Plan.PlanId).PlanId);
+				PlanStore.ReadFinish(
+					finishPath,
+					fixture.Plan.PlanId,
+					finishHash).PlanId);
 			Assert.Equal(
 				publication.PublicationPlanId,
 				PlanStore.ReadPublication(
 					publicationPath,
 					fixture.Plan.PlanId,
-					publication.PublicationPlanId).PublicationPlanId);
+					publication.PublicationPlanId,
+					publicationHash).PublicationPlanId);
 			Assert.Throws<ValidationException>(() =>
-				PlanStore.ReadFinish(finishPath, Guid.NewGuid()));
+				PlanStore.ReadFinish(finishPath, Guid.NewGuid(), finishHash));
 			Assert.Throws<ValidationException>(() =>
 				PlanStore.ReadPublication(
 					publicationPath,
 					Guid.NewGuid(),
-					publication.PublicationPlanId));
+					publication.PublicationPlanId,
+					publicationHash));
 			Assert.Throws<ValidationException>(() =>
 				PlanStore.ReadPublication(
 					publicationPath,
 					fixture.Plan.PlanId,
-					Guid.NewGuid()));
+					Guid.NewGuid(),
+					publicationHash));
+			Assert.Throws<ValidationException>(() =>
+				PlanStore.ReadPublication(
+					publicationPath,
+					fixture.Plan.PlanId,
+					publication.PublicationPlanId,
+					new string('0', 64)));
 			Assert.DoesNotContain(
 				Directory.EnumerateFiles(
 					fixture.Repository.Root,

@@ -126,7 +126,6 @@ namespace SkiaSharp.ReleaseTool.Planning
 				Operations: operations,
 				StableBump: stableBump,
 				Warnings: warnings);
-			PreparePlanValidator.Validate(plan);
 			return plan;
 		}
 

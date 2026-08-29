@@ -32,7 +32,7 @@ with AI-powered analysis to identify patterns, regressions, and actionable fixes
 
 This skill gives a **broad overview** of CI health across multiple branches.
 For one exact release, use the `Release - Prepare` / `Release - Finish` workflow
-summaries or the C# release tool's read-only plan and `render-plan` commands.
+summaries or the C# release tool's read-only plan commands with `--summary`.
 
 ## Pipelines Tracked
 

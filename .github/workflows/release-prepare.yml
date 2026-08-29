@@ -28,6 +28,7 @@ jobs:
     outputs:
       tooling_sha: ${{ steps.outputs.outputs.tooling_sha }}
       plan_id: ${{ steps.outputs.outputs.plan_id }}
+      plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}
       release_identity: ${{ steps.outputs.outputs.release_identity }}
       next_action: ${{ steps.outputs.outputs.next_action }}
     steps:
@@ -72,15 +73,12 @@ jobs:
             --integration-target "$RELEASE_TARGET"
             --tooling-sha "$GITHUB_SHA"
             --output "$RUNNER_TEMP/release-prepare/plan.json"
+            --summary "$RUNNER_TEMP/release-prepare/summary.md"
           )
           if [ -n "$RELEASE_VERSION" ]; then
             args+=(--version "$RELEASE_VERSION")
           fi
           "${release_tool[@]}" "${args[@]}"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-prepare/plan.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-prepare/summary.md"
           cat "$RUNNER_TEMP/release-prepare/summary.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Export immutable plan identity
@@ -90,6 +88,7 @@ jobs:
           plan="$RUNNER_TEMP/release-prepare/plan.json"
           echo "tooling_sha=$(jq -r '.toolingSha' "$plan")" >> "$GITHUB_OUTPUT"
           echo "plan_id=$(jq -r '.planId' "$plan")" >> "$GITHUB_OUTPUT"
+          echo "plan_sha256=$(sha256sum "$plan" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
           echo "release_identity=$(jq -r '.release.identity' "$plan")" >> "$GITHUB_OUTPUT"
           echo "next_action=$(jq -r '.nextAction' "$plan")" >> "$GITHUB_OUTPUT"
 
@@ -176,10 +175,12 @@ jobs:
           GH_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           RELEASE_GIT_TOKEN: ${{ secrets.SKIASHARP_AUTOBUMP_TOKEN }}
           EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}
+          EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
         run: |
           set -euo pipefail
           test -n "$GH_TOKEN"
           test -n "$EXPECTED_PLAN_ID"
+          test -n "$EXPECTED_PLAN_SHA256"
           auth_dir="$RUNNER_TEMP/release-git-auth"
           askpass="$auth_dir/askpass.sh"
           mkdir -p "$auth_dir"
@@ -206,11 +207,9 @@ jobs:
           "${release_tool[@]}" prepare apply \
             --plan "$RUNNER_TEMP/release-prepare/plan.json" \
             --expected-plan-id "$EXPECTED_PLAN_ID" \
-            --output "$RUNNER_TEMP/release-prepare/result.json"
-          "${release_tool[@]}" render-plan \
-            --plan "$RUNNER_TEMP/release-prepare/result.json" \
-            --format markdown \
-            --output "$RUNNER_TEMP/release-prepare/result.md"
+            --expected-plan-sha256 "$EXPECTED_PLAN_SHA256" \
+            --output "$RUNNER_TEMP/release-prepare/result.json" \
+            --summary "$RUNNER_TEMP/release-prepare/result.md"
           cat "$RUNNER_TEMP/release-prepare/result.md" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload release result

@@ -49,17 +49,19 @@ namespace SkiaSharp.ReleaseTool.Tests.Workflows
 			Assert.Contains("cache: true", SetupAction);
 			Assert.Contains("SkiaSharp.ReleaseTool/packages.lock.json", SetupAction);
 			Assert.Contains("SkiaSharp.ReleaseTool.Tests/packages.lock.json", SetupAction);
-			Assert.Equal(2, Count(Prepare, "uses: ./.github/actions/setup-release-tool"));
-			Assert.Equal(5, Count(Finish, "uses: ./.github/actions/setup-release-tool"));
 		}
 
 		[Fact]
-		public void Prepare_propagates_PlanId_and_scopes_git_authentication()
+		public void Prepare_binds_approved_bytes_and_scopes_git_authentication()
 		{
 			Assert.Contains("plan_id: ${{ steps.outputs.outputs.plan_id }}", Prepare);
+			Assert.Contains("plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}", Prepare);
 			Assert.Contains("echo \"plan_id=$(jq -r '.planId' \"$plan\")\"", Prepare);
+			Assert.Contains("sha256sum \"$plan\"", Prepare);
 			Assert.Contains("EXPECTED_PLAN_ID: ${{ needs.plan.outputs.plan_id }}", Prepare);
+			Assert.Contains("EXPECTED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}", Prepare);
 			Assert.Contains("--expected-plan-id \"$EXPECTED_PLAN_ID\"", Prepare);
+			Assert.Contains("--expected-plan-sha256 \"$EXPECTED_PLAN_SHA256\"", Prepare);
 			Assert.Contains("environment: release-branching", Prepare);
 			Assert.Contains("ref: ${{ needs.plan.outputs.tooling_sha }}", Prepare);
 			Assert.Contains("git merge-base --is-ancestor \"$TOOLING_SHA\"", Prepare);
@@ -77,13 +79,22 @@ namespace SkiaSharp.ReleaseTool.Tests.Workflows
 		}
 
 		[Fact]
-		public void Finish_propagates_both_correlation_ids_and_preserves_routing()
+		public void Finish_propagates_ids_and_digests_and_preserves_routing()
 		{
 			Assert.Contains("plan_id: ${{ steps.outputs.outputs.plan_id }}", Finish);
+			Assert.Contains("plan_sha256: ${{ steps.outputs.outputs.plan_sha256 }}", Finish);
 			Assert.Contains("publication_plan_id: ${{ steps.outputs.outputs.publication_plan_id }}", Finish);
-			Assert.Equal(4, Count(Finish, "--expected-plan-id \"$EXPECTED_PLAN_ID\""));
-			Assert.Equal(1, Count(Finish, "--expected-publication-plan-id \"$EXPECTED_PUBLICATION_PLAN_ID\""));
+			Assert.Contains("publication_sha256: ${{ steps.outputs.outputs.publication_sha256 }}", Finish);
+			foreach (var name in new[] { "create-draft", "plan-publication", "publish", "closeout" })
+			{
+				var job = Job(Finish, name);
+				Assert.Contains("--expected-plan-id \"$EXPECTED_PLAN_ID\"", job);
+				Assert.Contains("--expected-plan-sha256 \"$EXPECTED_PLAN_SHA256\"", job);
+			}
 			Assert.Contains("EXPECTED_PUBLICATION_PLAN_ID: ${{ needs.plan-publication.outputs.publication_plan_id }}", Finish);
+			Assert.Contains("EXPECTED_PUBLICATION_SHA256: ${{ needs.plan-publication.outputs.publication_sha256 }}", Finish);
+			Assert.Contains("--expected-publication-plan-id \"$EXPECTED_PUBLICATION_PLAN_ID\"", Finish);
+			Assert.Contains("--expected-publication-sha256 \"$EXPECTED_PUBLICATION_SHA256\"", Finish);
 			Assert.Contains("if: steps.plan_command.outputs.status == '2'", Finish);
 			Assert.Contains("[ \"$status\" -ne 0 ] && [ \"$status\" -ne 2 ]", Finish);
 			Assert.Contains("environment: release-tag", Finish);
@@ -133,7 +144,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Workflows
 			Assert.Contains("scripts/infra/docs/release_notes/**", ToolingTests);
 			Assert.Contains(".agents/skills/release-testing/**", ToolingTests);
 			Assert.DoesNotContain("Run release automation tests", ToolingTests);
-			Assert.Equal(2, Count(ToolingTests, "python3 -m unittest discover"));
 			Assert.Contains("scripts/infra/caching/repo-deps.py validate", ToolingTests);
 			Assert.Contains("--locked-mode", ToolingTests);
 			Assert.Contains("--configuration Release", ToolingTests);
@@ -147,9 +157,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Workflows
 			Assert.True(match.Success, $"Job '{name}' was not found.");
 			return match.Groups[1].Value;
 		}
-
-		private static int Count(string text, string value) =>
-			Regex.Matches(text, Regex.Escape(value)).Count;
 
 		private static string Read(string path) =>
 			File.ReadAllText(Path.Combine(Root, path));

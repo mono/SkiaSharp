@@ -46,9 +46,6 @@ namespace SkiaSharp.ReleaseTool.Contracts
 
 	public enum FinishCloseoutOperation
 	{
-		[JsonStringEnumMemberName("finish-plan-closeout")]
-		Plan,
-
 		[JsonStringEnumMemberName("finish-closeout")]
 		Apply,
 	}

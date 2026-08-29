@@ -14,45 +14,13 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 	public sealed class CloseoutProgramTests
 	{
 		[Fact]
-		public async Task Dry_run_writes_strict_closeout_plan_without_dispatching()
-		{
-			using var directory = new TestDirectory("closeout-cli-plan");
-			var plan = FinishCloseoutServiceTests.CreatePlan(stable: true, previousTag: null);
-			PlanStore.Write(Path.Combine(directory.Path, "finish.json"), plan);
-			var environment = new CloseoutEnvironment(
-				new FakeCloseoutRepository(plan, directory.Path),
-				CreateGitHub(plan),
-				new FakeChromiumScheduleClient());
-
-			var exit = await Program.InvokeAsync(
-				[
-					"--repo", directory.Path,
-					"finish", "closeout",
-					"--plan", "finish.json",
-					"--expected-plan-id", plan.PlanId.ToString(),
-					"--dry-run",
-					"--output", "closeout.json",
-				],
-				environment);
-
-			Assert.Equal(0, exit);
-			var json = await File.ReadAllTextAsync(
-				Path.Combine(directory.Path, "closeout.json"),
-				TestContext.Current.CancellationToken);
-			var result = JsonSerializer.Deserialize(
-				json,
-				ReleaseJsonContext.Strict.FinishCloseoutPlan);
-			Assert.NotNull(result);
-			Assert.Equal(plan.PlanId, result.PlanId);
-			Assert.Empty(environment.GitHub.Dispatches);
-		}
-
-		[Fact]
 		public async Task Apply_writes_result_and_wrong_correlation_is_rejected()
 		{
 			using var directory = new TestDirectory("closeout-cli-apply");
 			var plan = FinishCloseoutServiceTests.CreatePlan(stable: true, previousTag: null);
-			PlanStore.Write(Path.Combine(directory.Path, "finish.json"), plan);
+			var planPath = Path.Combine(directory.Path, "finish.json");
+			PlanStore.Write(planPath, plan);
+			var planHash = ArtifactHash.ComputeFile(planPath);
 			var environment = new CloseoutEnvironment(
 				new FakeCloseoutRepository(plan, directory.Path),
 				CreateGitHub(plan),
@@ -64,6 +32,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"finish", "closeout",
 					"--plan", "finish.json",
 					"--expected-plan-id", Guid.NewGuid().ToString(),
+					"--expected-plan-sha256", planHash,
 					"--output", "rejected.json",
 				],
 				environment);
@@ -73,7 +42,9 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 					"finish", "closeout",
 					"--plan", "finish.json",
 					"--expected-plan-id", plan.PlanId.ToString(),
+					"--expected-plan-sha256", planHash,
 					"--output", "result.json",
+					"--summary", "result.md",
 				],
 				environment);
 
@@ -88,6 +59,11 @@ namespace SkiaSharp.ReleaseTool.Tests.Cli
 				ReleaseJsonContext.Strict.FinishCloseoutResult);
 			Assert.NotNull(result);
 			Assert.Equal(FinishCloseoutNextAction.Done, result.NextAction);
+			Assert.Contains(
+				plan.PlanId.ToString(),
+				await File.ReadAllTextAsync(
+					Path.Combine(directory.Path, "result.md"),
+					TestContext.Current.CancellationToken));
 		}
 
 		private static FakeCloseoutGitHubClient CreateGitHub(FinishPlan plan) =>

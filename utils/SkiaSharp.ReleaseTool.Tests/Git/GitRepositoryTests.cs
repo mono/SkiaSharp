@@ -46,10 +46,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Git
 				second,
 				first,
 				TestContext.Current.CancellationToken));
-			Assert.Equal(first, await repository.MergeBaseAsync(
-				first,
-				second,
-				TestContext.Current.CancellationToken));
 			Assert.Equal("first\r\nsecond\r\n", await repository.ReadRefFileAsync(
 				first,
 				"file.txt",

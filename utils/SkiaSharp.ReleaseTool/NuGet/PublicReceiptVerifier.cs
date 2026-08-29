@@ -78,6 +78,9 @@ namespace SkiaSharp.ReleaseTool.NuGet
 				new PackageRequest("SkiaSharp", requestedVersion.Version),
 				new PackageRequest("SkiaSharp.HarfBuzz", requestedVersion.Version),
 			};
+			RequireConfiguredAnchors(
+				policies,
+				bootstrapRequests.Select(static request => request.Id));
 			var bootstrapCatalog = await PollAsync(
 				bootstrapRequests,
 				started,
@@ -176,6 +179,7 @@ namespace SkiaSharp.ReleaseTool.NuGet
 				if (!requests.Any(request => request.Id == anchor))
 					throw new NuGetReceiptException($"historical package inventory does not contain required anchor '{anchor}'");
 			}
+			RequireConfiguredAnchors(policies, ["HarfBuzzSharp"]);
 
 			var bootstrap = new Dictionary<PackageRequest, VerifiedPackage>
 			{
@@ -232,6 +236,17 @@ namespace SkiaSharp.ReleaseTool.NuGet
 				harfBuzzVersion,
 				packages,
 				warnings);
+		}
+
+		private static void RequireConfiguredAnchors(
+			ReleasePolicies policies,
+			IEnumerable<string> required)
+		{
+			foreach (var id in required)
+			{
+				if (!policies.AnchorPackages.Contains(id))
+					throw new NuGetReceiptException($"public package policy is missing required anchor '{id}'");
+			}
 		}
 
 		private async Task<IReadOnlyDictionary<PackageRequest, CatalogPackage>> PollAsync(

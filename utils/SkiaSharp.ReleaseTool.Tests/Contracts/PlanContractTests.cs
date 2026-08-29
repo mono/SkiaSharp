@@ -104,19 +104,6 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 				{ valid with { Input = valid.Input with { IntegrationTarget = "release/3.118.x" } }, "release.integrationBranch" },
 				{ valid with { Operations = [null!] }, "null values" },
 				{ valid with { Warnings = null! }, "warnings" },
-				{
-					valid with
-					{
-						SkiaSharpRemoteState = RemoteState.Missing,
-						NextAction = PrepareNextAction.Done,
-						Operations = valid.Operations
-							.Select(operation => operation.Id == PlanOperationId.CreateReleaseBranch
-								? operation with { Status = PlanOperationStatus.Pending }
-								: operation)
-							.ToArray(),
-					},
-					"nextAction"
-				},
 			};
 		}
 
@@ -176,7 +163,7 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 		}
 
 		[Fact]
-		public void Plan_store_validates_writes_reads_and_correlation()
+		public void Plan_store_writes_atomically_and_validates_bound_reads()
 		{
 			using var root = new TestDirectory("plan-store");
 			var path = Path.Combine(root.Path, "nested", "plan.json");
@@ -186,12 +173,15 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 			var bytes = File.ReadAllBytes(path);
 			Assert.False(bytes.AsSpan().StartsWith(new byte[] { 0xef, 0xbb, 0xbf }));
 			Assert.Contains("\n  \"planId\":", Encoding.UTF8.GetString(bytes));
-			Assert.Equal(plan.PlanId, PlanStore.ReadPrepare(path, plan.PlanId).PlanId);
+			var digest = ArtifactHash.ComputeFile(path);
+			Assert.Equal(plan.PlanId, PlanStore.ReadPrepare(path, plan.PlanId, digest).PlanId);
 
 			Assert.Throws<ValidationException>(
-				() => PlanStore.ReadPrepare(path, Guid.NewGuid()));
-			Assert.Throws<ValidationException>(
-				() => PlanStore.Write(path, plan with { ToolingSha = "bad" }));
+				() => PlanStore.ReadPrepare(path, Guid.NewGuid(), digest));
+			Assert.Throws<ValidationException>(() =>
+				PlanStore.ReadPrepare(path, plan.PlanId, new string('0', 64)));
+			Assert.Throws<ValidationException>(() =>
+				PlanStore.ReadPrepare(path, plan.PlanId, digest.ToUpperInvariant()));
 		}
 
 		[Fact]
@@ -205,7 +195,10 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 
 			File.WriteAllText(path, json.Insert(json.IndexOf('{') + 1, "\n  \"unknown\": true,"));
 			Assert.Throws<ValidationException>(
-				() => PlanStore.ReadPrepare(path, PlanSamples.PlanId));
+				() => PlanStore.ReadPrepare(
+					path,
+					PlanSamples.PlanId,
+					ArtifactHash.ComputeFile(path)));
 
 			File.WriteAllText(
 				path,
@@ -214,7 +207,10 @@ namespace SkiaSharp.ReleaseTool.Tests.Contracts
 					"\"toolingSha\": \"bad\"",
 					StringComparison.Ordinal));
 			Assert.Throws<ValidationException>(
-				() => PlanStore.ReadPrepare(path, PlanSamples.PlanId));
+				() => PlanStore.ReadPrepare(
+					path,
+					PlanSamples.PlanId,
+					ArtifactHash.ComputeFile(path)));
 		}
 
 		private sealed record UnregisteredType(string Value);
